@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
+from compiler.pyassem import CONV
 
 ###############################################################################
 # Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
@@ -140,7 +141,9 @@ boundings_xml='''<?xml version="1.0" encoding="UTF-8" ?>
 %(boundings)s
 </LayerBoundings>
 '''
-   
+
+#a list of file extensions that we will convert first with tiler tools to give better results
+convert_extensions=(".kap",".map",".geo")  
 
 #use this to split the charts into several layers
 #charts with a resolution between 2 levels we go to the lower level
@@ -180,7 +183,6 @@ import shutil
 import itertools
 from optparse import OptionParser
 import xml.sax as sax 
-import gdal_tiler as tilerTools
 import Image
 import operator
 import math
@@ -189,6 +191,12 @@ from stat import *
 import Queue
 import threading
 import time
+import site
+import subprocess
+
+TilerTools=None
+
+
 
 def ld(*parms):
     logging.debug(' '.join(itertools.imap(repr,parms)))
@@ -197,6 +205,20 @@ def warn(txt):
   logging.warning(txt)
 def log(txt):
   logging.info(time.strftime("%Y/%m/%d-%H:%M:%S ",time.localtime())+txt)
+  
+#---------------------------
+#tiler tools stuff
+def findTilerTools(ttdir=None):
+  if ttdir is None:
+    ttdir=os.environ.get("TILERTOOLS")
+  if ttdir is None:
+    ttdir=os.path[0]
+  if ttdir is not None:
+    if os.path.exists(os.path.join(ttdir,"gdal_tiler.py")):
+      log("using tiler tools from "+ttdir)
+      return ttdir
+  print "unable to find gdal_tiler.py, either set the environment variable TILERTOOLS or use the option -a to point to the tile_tools directory"
+  sys.exit(1)
 
 #---------------------------
 #get a zoom level from the mpp
@@ -314,7 +336,7 @@ class ChartList():
     if fname is None:
       fname=LISTFILE
     if sdir is not None:
-      print "sdir=",sdir
+      ld("sdir",sdir)
       if not os.access(sdir,os.F_OK):
         os.makedirs(sdir,0777)
       fname=os.path.join(sdir,LISTFILE)
@@ -803,6 +825,18 @@ def readDir(dir):
       warn("entry "+path+" not found")
   return rt
 
+#------------------------------------------------
+#tiler tools map2gdal
+
+def convertChart(chart,outdir):
+  args=[sys.executable,os.path.join(TilerTools,"map2gdal.py"),"-t",outdir]
+  if options.verbose == 2:
+    args.append("-d")
+  args.append(chart)
+  subprocess.call(args)
+  
+  
+
 #-------------------------------------
 #create a chartlist.xml file by reading all charts
 def createChartList(args,outdir):
@@ -821,6 +855,17 @@ def createChartList(args,outdir):
   ld("chartlist",chartlist)
   charts=ChartList()
   for chart in chartlist:
+    log("handling "+chart)
+    for xt in convert_extensions:
+      if chart.upper().endswith(xt.upper()):
+        log("converting "+chart+" with tiler_tools")
+        oname=chart
+        (base,ext)=os.path.splitext(os.path.basename(chart))
+        chart=os.path.join(outdir,BASETILES,base+".vrt")
+        convertChart(oname, os.path.join(outdir,BASETILES))
+        if not os.path.exists(chart):
+          warn("converting "+oname+" to "+chart+" failed - trying to use native")
+          chart=oname
     ld("try to load",chart)
     dataset = gdal.Open( chart, GA_ReadOnly )
     if dataset is None:
@@ -956,7 +1001,7 @@ def generateBaseTiles(chartEntry,outdir):
   tdir=getTilesDir(chartEntry, outdir, False)
   if not options.update == 1:
     if os.path.isdir(tdir):
-      log("removin old dir "+tdir)
+      log("removing old dir "+tdir)
       shutil.rmtree(tdir,True)
   else:
     tilesdir=os.path.join(tdir,str(chartEntry.getBaseZoomLevel()))
@@ -975,13 +1020,14 @@ def generateBaseTiles(chartEntry,outdir):
       log(" removing old dir "+tilesdir)
       shutil.rmtree(tilesdir,True)
   opath=getTilesDir(chartEntry,outdir,True)
-  args=["gdal_tiler.py","-c","-t",opath,"-p","tms","-z",str(chartEntry.getBaseZoomLevel())]
+  args=[sys.executable,os.path.join(TilerTools,"gdal_tiler.py"),"-c","-t",opath,"-p","tms","-z",str(chartEntry.getBaseZoomLevel())]
   if options.verbose == 2:
     args.append("-d")
   args.append(chartEntry.filename)
   log("running "+" ".join(args))
   ld("gdal_tiler args:",args)
-  tilerTools.main(args)
+  if subprocess.call(args) != 0:
+    raise "unable to convert chart "+chartEntry.filename
 
 #-------------------------------------
 #create the base tiles from the chartlist
@@ -1166,7 +1212,7 @@ def mergeAllTiles(outdir):
  
 def main(argv):
   
-  global LISTFILE,layer_zoom_levels,options,MAXUPSCALE
+  global LISTFILE,layer_zoom_levels,options,MAXUPSCALE,TilerTools
   usage="usage: %prog <options> outdir indir|infile..."
   parser = OptionParser(
         usage = usage,
@@ -1181,6 +1227,7 @@ def main(argv):
   parser.add_option("-l", "--layers", dest="layers", help="list of layers layer:title,layer:title,..., default=%s" % ",".join(["%d:%s" % (lz[0],lz[1]) for lz in layer_zoom_levels]))
   parser.add_option("-s", "--scale", dest="upscale", help="max upscaling when sorting a chart into the layers (default: %f)" % MAXUPSCALE)
   parser.add_option("-t", "--threads", dest="threads", help="number of worker threads, default 4")
+  parser.add_option("-a", "--add", dest="ttdir", help="directory where to search for tiler tools (if not set use environment TILERTOOLS or current dir)")
   parser.add_option("-u", "--update", action="store_const", const=1, dest="update", help="update existing charts (if not set, existing ones are regenerated")
   (options, args) = parser.parse_args(argv[1:])
   logging.basicConfig(level=logging.DEBUG if options.verbose==2 else 
@@ -1207,6 +1254,7 @@ def main(argv):
   if (len(args) < 1):
     print usage
     sys.exit(1)
+  TilerTools=findTilerTools(options.ttdir)
   init_srs()
   outdir=args.pop(0)
   ld("outdir",outdir)
