@@ -1,0 +1,68 @@
+Coordinates in WGS84 (lat/lon EPSG:4326) and Global Mercator (EPSG:900913)
+==========================================================================
+echo 180 85 | gdaltransform  -s_srs EPSG:4326 -t_srs y
+20037508.3427892 19971868.8804086 0
+
+echo 0 0 | gdaltransform  -s_srs EPSG:4326 -t_srs EPSG:900913
+0 -7.08115455161362e-010 0
+
+echo -180 -85 | gdaltransform  -s_srs EPSG:4326 -t_srs EPSG:900913
+-20037508.3427892 -19971868.8804086 0
+
+TMS tiles and pixels count fomr 0,0 in lower left corner
+========================================================
+x: GlobalMercator Class
+y= x.LatLonToMeters(-85,-180)
+print x.MetersToPixels(y[0],y[1],0)
+(0.0, 0.41930618522989693) -> already some rounding error here!
+print x.MetersToPixels(y[0],y[1],6)
+(0.0, 26.835595854713404)
+
+GDAL 
+====
+our SRS:
+print read_charts.TARGET_SRS
+PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6378137,0],EXTENSION["PROJ4_GRIDS","@null"]],PRIMEM["Greenwich",0],UNIT["
+degree",0.0174532925199433]],PROJECTION["Mercator_1SP"],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAM
+ETER["false_northing",0],EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +nadgrids=@null +wktext"]]
+print read_charts.TARGET_SRSP4
++proj=merc +a=6378137 +b=6378137 +nadgrids=@null +wktext
+
+we could also use
+srs=osr.CreateSpatialReference()
+srs.ImportFromEPSG(900913)
+srs.ExportToWkt()
+
+
+
+gives us upper left corner in meters (after fransform to EPSG:900913) in GeoTransform(0,3)
+and rasterXSize and rasterYSize
+with ApplyGeoTransform we get lower right corner! (higher x and lower y)
+example for N0S40_1.kap:
+1. untransformed:
+geotr=dataset.GetGeoTransform()
+print geotr
+(38591.59073349887, 6.923300499326433, 0.0, 7208204.939745273, 0.0, -6.922963101106682)
+2. transform
+t_ds=read_charts.gdal.AutoCreateWarpedVRT(dataset,None,read_charts.TARGET_SRS)
+geotr=t_ds.GetGeoTransform()
+print geotr
+(1485744.9710460543, 6.933828786117971, 0.0, 7242966.254511363, 0.0, -6.933828786117971)
+lr_c=read_charts.gdal.ApplyGeoTransform(geotr,t_ds.RasterXSize,t_ds.RasterYSize)
+print lr_c
+[1526904.1787204505, 7183605.746273407]
+
+Bounds
+======
+For bounds we always use upper left(lower x, higher y) and lower right(higher x, lower y).
+Remark: tiles will count like x and y - has to be considered...
+
+Upper Tiles
+===========
+we compute upper tiles from a list ll (x,y), lr(x+1,y),ul(x,y+1),ur(x+1,y+1) - PIL has 0,0 in upper left!
+
+
+
+
+
+
