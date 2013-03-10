@@ -28,6 +28,8 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 */
+
+var MAXUPSCALE=8; //3 levels upscale (otherwise we need too much mem)
 OpenLayers.Control.ClickBar = OpenLayers.Class(OpenLayers.Control, {
 
     clickBarDiv: null,
@@ -193,6 +195,30 @@ OpenLayers.Layer.TilerToolsXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
 
     return {'x': x, 'y': y, 'z': z};
   },
+  //handle our list of bounding boxes - return null if the tile is not within
+  getURL: function (bounds) {
+	  var fits=false;
+	  if (this.boundings != null){
+		  for (var i in this.boundings){
+			  if (this.boundings[i].intersectsBounds(bounds)){
+				  fits=true;
+				  break;
+			  }
+		  }
+	  }
+	  if (! fits){
+		  return null;
+	  }
+      var xyz = this.getXYZ(bounds);
+      var url = this.url;
+      if (OpenLayers.Util.isArray(url)) {
+          var s = '' + xyz.x + xyz.y + xyz.z;
+          url = this.selectUrl(s, url);
+      }
+      
+      return OpenLayers.String.format(url, xyz);
+  },
+  
             // openlayers 2.11 and below do not take into account TileOrigin
   getTileBounds: function(viewPortPx) { 
     var origin = this.getTileOrigin();
@@ -216,7 +242,7 @@ OpenLayers.Layer.TilerToolsXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
 
 
 function log(msg) {
-  try { console.log.apply(console,arguments) } 
+  try { console.log.apply(console,arguments); } 
   catch (e) {
       setTimeout(function() {
           throw new Error(msg);
@@ -260,9 +286,9 @@ function read_xml(url) {
           log(request.responseText);
         }
     } catch (e) {
-        log(e)
+        log(e);
         if (e.code == 101) {
-            alert('Google Chrome requires to run with "--allow-file-access-from-files" switch to load XML from local files')
+            alert('Google Chrome requires to run with "--allow-file-access-from-files" switch to load XML from local files');
         }
     }
     //log(request);
@@ -322,7 +348,7 @@ function read_map_parameters(url) {
     rt.tileset_lst=[];
     rt.min_res = Number.MAX_VALUE;
     rt.max_res = 0;
-    for (i=0; i<tileset_el_lst.length; i++) {
+    for (var i=0; i<tileset_el_lst.length; i++) {
         var zoom = parseInt(tileset_el_lst[i].getAttribute('order'));
         var res = parseFloat(tileset_el_lst[i].getAttribute('units-per-pixel'));
         rt.layer_resolutions[i]=res;
@@ -335,23 +361,52 @@ function read_map_parameters(url) {
     }
     return rt;
 }
-
-function read_tile_list(url) {    
-	var rt={};
-    var tilemap=read_xml(url);
-    if (tilemap == null) {
+function read_layerboundings(url) {    
+	var rt=[];
+    var boundings=read_xml(url);
+    if (boundings == null) {
       error('Cannot read '+url);
         return null;
     }
-    rt.title = tilemap.getElementsByTagName("Title")[0].textContent;
-    document.title = rt.title;
-
-    var tilemap_el_lst=tilemap.getElementsByTagName("TileMap");
-    rt.tile_list=[]
-    for (i=0; i<tilemap_el_lst.length; i++) {
-        var url=tilemap_el_lst[i].getAttribute('href');
-        rt.tile_list[i]=url;
+    var box_list = boundings.getElementsByTagName("BoundingBox");
+    if (box_list == null){
+    	error("cannot read boundings");
+    	return null;
     }
+    for (var i=0;i<box_list.length;i++){
+    	var box=box_list[i];
+    	var bounds=new OpenLayers.Bounds(e2f(box,'minx'),e2f(box,'miny'),e2f(box,'maxx'),e2f(box,'maxy'));
+    	rt.push(bounds);
+    }
+    return rt;
+}
+function read_tile_list(url) {    
+	var rt={};
+	var urllist=[];
+	if (typeof url === 'object' && url !== null && typeof url.length === 'number'){
+		urllist=url;
+	}
+	else {
+		urllist.concat(url);
+	}
+	for (urli in urllist) {
+		var url=urllist[urli];
+		var tilemap = read_xml(url);
+		var baseurl = url.replace(/[^\/]*$/, '');
+		if (tilemap == null) {
+			error('Cannot read ' + url);
+			return null;
+		}
+		rt.title = tilemap.getElementsByTagName("Title")[0].textContent;
+		document.title = rt.title;
+
+		var tilemap_el_lst = tilemap.getElementsByTagName("TileMap");
+		rt.tile_list = [];
+		for ( var i = 0; i < tilemap_el_lst.length; i++) {
+			var url = tilemap_el_lst[i].getAttribute('href');
+			rt.tile_list[i] = baseurl + url;
+		}
+	}
     return rt;
 }
 function formatLonlats(lonLat) {
@@ -362,7 +417,7 @@ function formatLonlats(lonLat) {
   return ns + ', ' + ew + ' (' + (Math.round(lat * 10000) / 10000) + ', ' + (Math.round(long * 10000) / 10000) + ')';
 }
 
-var tile_list=['tilemap.xml']
+var tile_list=['tilemap.xml'];
 var tiler_overlays=[];
 
 var urlpar=OpenLayers.Util.getParameters();
@@ -379,8 +434,8 @@ OpenLayers.Util.extend( OpenLayers.INCHES_PER_UNIT, {
 log('OpenLayers.VERSION_NUMBER',OpenLayers.VERSION_NUMBER);
 
 function initialize_openlayers() {
-	var tile_list=[]
-	var entry_list=["avnav.xml"]
+	var tile_list=[];
+	var entry_list=["avnav.xml"];
 	var urlpar=OpenLayers.Util.getParameters();
 	if (urlpar.charts!= null){
 		entry_list=[].concat(urlpar.charts);
@@ -388,14 +443,20 @@ function initialize_openlayers() {
 	tiles=read_tile_list(entry_list);
 	tile_list=tiles.tile_list;
 	tile_parameters=[];
-	minRes=99999999; //strange default...
+	var minRes=99999999; //strange default...
+	var maxRes=0;
+	
+	var firstLayer=null;
 	for (var i in tile_list){
 		tile_parameters[i]=read_map_parameters(tile_list[i]);
 		if (tile_parameters[i].min_res < minRes) minRes=tile_parameters[i].min_res;
+		if (tile_parameters[i].max_res > maxRes) maxRes=tile_parameters[i].max_res;
+		var boundingsurl=tile_list[i].replace(/[^\/]*$/,'')+"boundings.xml";
+		tile_parameters[i].boundings=read_layerboundings(boundingsurl);
 	}
     var map = new OpenLayers.Map('map', {
           projection: new OpenLayers.Projection("EPSG:900913"), //mapProjection,
-          projection: new OpenLayers.Projection("EPSG:4326"),
+          //projection: new OpenLayers.Projection("EPSG:4326"),
           displayProjection: new OpenLayers.Projection("EPSG:4326"),
           units: "m",
           maxResolution: 156543.0339,
@@ -422,25 +483,28 @@ function initialize_openlayers() {
             });
     for (var layeridx =tile_parameters.length-1 ; layeridx>= 0;layeridx--){
     	var layer=tile_parameters[layeridx];
+    	if (firstLayer==null)firstLayer=layer;
     	var baseurl="";
     	var dir=tile_list[layeridx].replace(/\/[^\/]*$/,'');
     	if (dir != tile_list[layeridx]){
     		baseurl=dir+"/";
     	}
+    	var layerminRes=minRes;
+    	if (layerminRes < layer.min_res/MAXUPSCALE) layerminRes=layer.min_res/MAXUPSCALE;
     	var tiler_overlay = new OpenLayers.Layer.TilerToolsXYZ( layer.title, baseurl+"${z}/${x}/${y}."+layer.tile_ext,
         {
-            sphericalMecator: true,
             wrapDateLine: true,
             maxExtent: layer.layer_extent,
             tileOrigin: layer.tile_origin,
             tileSize: layer.tile_size,
             //resolutions: layer_resolutions,
             maxResolution: layer.max_res,
-            minResolution: minRes,
+            minResolution: layerminRes,
             serverResolutions: layer.layer_resolutions,
             isBaseLayer: false,
             profile: layer.layer_profile,
             displayOutsideMaxExtent: false,
+            boundings: layer.boundings
 
         });
     	tiler_overlays.push(tiler_overlay);
@@ -461,7 +525,10 @@ function initialize_openlayers() {
         );
 
     map.addLayers([osm].concat(tiler_overlays));
-    map.zoomToExtent(layer.layer_extent,true);
+    map.zoomToExtent(firstLayer.layer_extent,true);
+    var initialZoom=map.getZoomForResolution(maxRes)+1;
+    
+    map.zoomTo(initialZoom);
 
     map.addControl(new OpenLayers.Control.MousePosition( {id: "ll_mouse", formatOutput: formatLonlats} ));
     map.addControl(new OpenLayers.Control.MousePosition( {id: "utm_mouse", prefix: "UTM ", displayProjection: map.baseLayer.projection, numDigits: 0} ));
