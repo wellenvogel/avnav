@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- vim: ts=2 sw=2 et 
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="EN">
+  <head>
+<!--
+###############################################################################
+# Copyright (c) 2012, Andreas Vogel andreas@wellenvogel.net
+# parts of the software are taken from tiler_tools
+# http://code.google.com/p/tilers-tools/
+# the license below applies also to this complete software
+#
+###############################################################################
+# Copyright (c) 2011, Vadim Shlyakhov
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+###############################################################################
+-->
+    <title>tiles-openlayers</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <script src='http://openlayers.org/api/2.12/OpenLayers.js'></script>
+
+
+	<style>
+.olLayerGoogleCopyright {
+	visibility: hidden;
+	right: 3px;
+	bottom: 2px;
+	left: auto;
+}
+
+html,body {
+	height: 99%;
+	width: 99%;
+}
+
+#map {
+	width: 100%;
+	height: 100%;
+	border: 1px solid black;
+}
+
+.clickbar {
+	top: 30px;
+	right: 20px;
+	border: 1px solid black;
+	border-radius: 3px;
+	background: white;
+	padding-left: 4px;
+	padding-right: 4px;
+	font: 10px monospace;
+	cursor: pointer;
+}
+
+.olControlMousePosition {
+	position: absolute;
+	right: 10px;
+	top: 0px;
+	height: 15px;
+	font-size: 8pt;
+	background-color: white
+}
+
+#utm_mouse {
+	top: 15px;
+}
+
+.olImageLoadError {
+	background-color: transparent !important;
+}
+</style>
+
+	<script  src="mapviewer_base.js"></script>
+
+	</head>
+
+	<body onload="initialize_openlayers()">
+	    <div id='map'></div>
+	</body>
+</html>
