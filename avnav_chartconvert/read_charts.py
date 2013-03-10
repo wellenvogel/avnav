@@ -133,6 +133,7 @@ layer_tileset_xml='''
 '''
 boundingbox_xml='''
 <BoundingBox minx="%(minx).11G" miny="%(miny).11G" maxx="%(maxx).11G" maxy="%(maxy).11G"
+   minlon="%(minlon).11G" minlat="%(minlat).11G" maxlon="%(maxlon).11G" maxlat="%(maxlat).11G"
    title="%(title)s"/>
 '''
 boundings_xml='''<?xml version="1.0" encoding="UTF-8" ?>
@@ -592,6 +593,7 @@ class BuildPyramid:
       builddict={}
       for currenttile in buildts:
         builddict[currenttile.tile]=currenttile
+      currentLevel-=1
       buildtiles=self.getZoomLevelTiles(currentLevel)
       ld("build level",currentLevel," num",len(buildtiles))
       for currenttile in buildtiles:
@@ -605,7 +607,7 @@ class BuildPyramid:
         nextbuildts.append(createUpperTile(currenttile, mergets))
       buildts=nextbuildts
       nextbuildts=None
-      currentLevel-=1
+    
 
 #----------------------------
 #handler thread for a pyramid
@@ -905,7 +907,7 @@ def getTilesDir(chartEntry,outdir,inp):
 
 #-------------------------------------
 #get the next level (smaller zoom) tile set from a given tileset
-def getNetxLevelTiles(tiles):
+def getLowerLevelTiles(tiles):
   rt=set()
   for tile in tiles:
     ntile=(tile[0]-1,int(tile[1]/2),int(tile[2]/2))
@@ -1100,7 +1102,7 @@ def mergeLayerTiles(chartlist,outdir,layer):
     t.start()
   for currentZoom in range(layermaxzoom-1,layerminzoom-1,-1):
     idx+=1
-    layerztiles=getNetxLevelTiles(layerztiles)
+    layerztiles=getLowerLevelTiles(layerztiles)
     numalltiles+=len(layerztiles)
     tilespyramid.append(layerztiles)
   #in tlespyramid we now have all tiles for the layer min. zoom at index idx, maxZoom at index 0
@@ -1110,7 +1112,7 @@ def mergeLayerTiles(chartlist,outdir,layer):
   numdone=0
   percent=-1
   numjobs=0
-  log("handling "+str(numminzoom)+" pyramids on "+str(layerminzoom)+" (having: "+str(numalltiles)+" tiles)")
+  log("handling "+str(numminzoom)+" pyramids on min zoom "+str(layerminzoom)+" (having: "+str(numalltiles)+" tiles)")
   for topleveltile in tilespyramid[idx]:
     ld("handling toplevel tile ",topleveltile)
     
@@ -1127,7 +1129,7 @@ def mergeLayerTiles(chartlist,outdir,layer):
     requestQueue.put(buildpyramid)
     numjobs+=1
     
-  log("waiting for generators with "+options.threads+" threads")
+  log("waiting for generators with "+str(options.threads)+" threads")
   while not requestQueue.empty():
     npercent=int(requestQueue.qsize()*100/numjobs)
     if npercent != percent and options.verbose != 0:
@@ -1173,7 +1175,11 @@ def mergeLayerTiles(chartlist,outdir,layer):
                                             "minx": ce.bounds[0],
                                             "miny": ce.bounds[1],
                                             "maxx": ce.bounds[2],
-                                            "maxy": ce.bounds[3] })
+                                            "maxy": ce.bounds[3],
+                                            "minlon":0,
+                                            "minlat":0,
+                                            "maxlon":0,
+                                            "maxlat":0 })
   boundstr=boundings_xml % {"boundings": boundings}
   with open(layerboundingsfile,"w") as f:
     f.write(boundstr)
