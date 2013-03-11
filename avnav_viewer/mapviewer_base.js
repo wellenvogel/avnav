@@ -35,6 +35,8 @@ var properties={
 		showOSM: true
 };
 var zoomOffset=0;
+var map=null;
+var rightWidth=120; //the control button panel
 OpenLayers.Control.ClickBar = OpenLayers.Class(OpenLayers.Control, {
 
     clickBarDiv: null,
@@ -480,7 +482,100 @@ function getZoomForResolution(res){
        
 log('OpenLayers.VERSION_NUMBER',OpenLayers.VERSION_NUMBER);
 
+//button functions
+function btnZoomIn(){
+	map.zoomIn();
+}
+function btnZoomOut(){
+	map.zoomOut();
+}
+
+function showLayerDialog(){
+	var dhtml='<div><ol id="selectLayerList" class="avn_selectList">';
+	var layers=map.layers;
+	for (var i in layers){
+		var layer=layers[i];
+		dhtml+='<ul id="'+layer.name+'" ';
+		if (layer.getVisibility() && layer.calculateInRange()) dhtml+='class="ui-selected" ';
+		if (! layer.calculateInRange()) dhtml+='class="avn_disabled ui-disabled"';
+		dhtml+='>'+layer.name+'</ul>';
+	}
+	dhtml+="</ol></div>";
+	//$(dhtml).find('ol').selectable();
+	var w=$('body').width();
+	var h=$('body').height();
+	var dialog=$(dhtml).dialog({
+		title: 'Layer',
+		autoOpen: false,
+		modal:true,
+		dialogClass: 'avn_dialog',
+		width: Math.ceil(w*0.8),
+		height:Math.ceil(h*0.8),
+		buttons: [
+			{ 	text: "Cancel", 
+				click: function(){ 
+					$(this).dialog("destroy");
+					$('.avn_btLayerSwitch').show();
+					}
+			},
+			{
+				text: "Ok",
+				click: function(){
+					$( "ul", this ).each(function(idx,el){
+						  if ($(el).hasClass('avn_disabled')) return;
+				          if ($(el).hasClass('ui-selected')){
+				        	  map.layers[idx].setVisibility(true);
+				          }
+				          else {
+				        	  map.layers[idx].setVisibility(false);
+				          }
+				        });
+					$(this).dialog("destroy");
+					$('.avn_btLayerSwitch').show();
+				}
+			}
+		]
+			
+	});
+	$(dialog).dialog('open');
+	$('#selectLayerList').selectable({filter: ':not(.avn_disabled)'});
+}
+
+function btnLayerSwitch(){
+	$('.avn_btLayerSwitch').hide();
+	showLayerDialog();
+	
+	
+}
+
+//event handlers
+
+function mouseEvent(e){
+		if (e.xy == null) return;
+	    var lonLat = this.getLonLatFromViewPortPx(e.xy).transform(this.getProjectionObject(), this.displayProjection);
+	    var lat = lonLat.lat;
+	    var long = lonLat.lon;
+	    var ns=formatLonLatsDecimal(lat, 'lat');
+	    var ew=formatLonLatsDecimal(long, 'lon');
+	    var txt=ew+", "+ns;
+	    $('#boatPosition').text(txt);
+	    //OpenLayers.Util.getElement("tooltip").innerHTML = "<label>Latitude: " + position.lat + "</label><br/><label>Longitude: " + position.lon + "</label>";
+}
+
+//do the layout
+function adjustSizes(){
+	var w=$('body').width();
+	var rw=120;
+	if (w < 640) rw=60;
+	rightWidth=rw;
+	var rightWidthOffset=rightWidth+1;
+	$('.avn_leftPanel').css('right',rightWidthOffset+"px");
+	$('.avn_rightPanel').css('width',rightWidth+"px");
+	
+}
+
 function initialize_openlayers() {
+	adjustSizes();
 	var tile_list=[];
 	var entry_list=["avnav.xml"];
 	var urlpar=OpenLayers.Util.getParameters();
@@ -501,24 +596,22 @@ function initialize_openlayers() {
 		var boundingsurl=tile_list[i].replace(/[^\/]*$/,'')+"boundings.xml";
 		tile_parameters[i].boundings=read_layerboundings(boundingsurl);
 	}
-    var map = new OpenLayers.Map('map', {
+	
+    map = new OpenLayers.Map('map', {
           projection: new OpenLayers.Projection("EPSG:900913"), //mapProjection,
           displayProjection: new OpenLayers.Projection("EPSG:4326"),
           units: "m",
           //maxResolution: 156543.0339,
           maxExtent: new OpenLayers.Bounds(-20037508.342789, -20037508.342789, 20037508.342789, 20037508.342789),
             controls: [
+                
+                new OpenLayers.Control.MousePosition( {div: $('boatPosition'), formatOutput: formatLonlats} ),
                 new OpenLayers.Control.Navigation(),
-                new OpenLayers.Control.PanZoomBar(),
-                new OpenLayers.Control.MousePosition(),
                 new OpenLayers.Control.KeyboardDefaults(),
-                new OpenLayers.Control.LayerSwitcher({
-                    'ascending':false
-                }),
                 new OpenLayers.Control.ScaleLine({
                     maxWidth: 50,
                     bottomOutUnits: 'NM',
-                    bottomInUnits: 'cbl'                            
+                    bottomInUnits: 'm'                            
                 }),
             ]
     });
@@ -602,13 +695,36 @@ function initialize_openlayers() {
     
     map.zoomTo(initialZoom);
 
-    map.addControl(new OpenLayers.Control.MousePosition( {id: "ll_mouse", formatOutput: formatLonlats} ));
-    map.addControl(new OpenLayers.Control.MousePosition( {id: "utm_mouse", prefix: "UTM ", displayProjection: map.baseLayer.projection, numDigits: 0} ));
-    map.addControl(new OpenLayers.Control.Graticule({ id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
+   
+    map.addControl(new OpenLayers.Control.Graticule({name: 'Grid', id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
     		autoActivate: false}));
     map.events.register("zoomend",map,function(e){
     	if ((map.zoom +zoomOffset) < properties.minGridLedvel) map.getControl('grid').deactivate();
     	else map.getControl('grid').activate();
     });
+    map.events.register("mousemove", map, mouseEvent);
+    $('.avn_btZoomIn').button({
+    	icons: {
+      		 primary: "ui-icon-plus"
+      	 },
+      	 text: false,
+      	 label: 'Zoom In'
+    });
+	$('.avn_btZoomOut').button({
+	icons: {
+  		 primary: "ui-icon-minus"
+  	 },
+  	 text: false,
+  	 label: 'Zoom Out'
+   	});
+	$('.avn_btLayerSwitch').button({
+		icons: {
+	  		 primary: "ui-icon-grip-solid-horizontal"
+	  	 },
+	  	 text: false,
+	  	label: 'Layer'
+	   	});
+	
+    $(window).resize(adjustSizes);
 
 }
