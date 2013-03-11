@@ -106,6 +106,7 @@ overview_xml='''<?xml version="1.0" encoding="UTF-8" ?>
    <TileMaps>
    %(tilemaps)s
    </TileMaps>
+   %(bounding)s
  </TileMapService>
  '''
 overview_tilemap_xml='''
@@ -148,6 +149,9 @@ boundings_xml='''<?xml version="1.0" encoding="UTF-8" ?>
 
 #a list of file extensions that we will convert first with tiler tools to give better results
 convert_extensions=(".kap",".map",".geo")  
+
+#the number of pixels the lowest scale layer should fit on its min zoomlevel
+MINZOOMPIXEL=600
 
 #use this to split the charts into several layers
 #charts with a resolution between 2 levels we go to the lower level
@@ -233,7 +237,22 @@ def zoomFromMpp(mpp):
   return MAXZOOM
 
 
+#create a bounding box xml from a bounds tuple
+#bounds: ulx,uly,lrx,lry
 
+def createBoundingsXml(bounds,title):
+  (ullon,ullat)=coord2lonlat((bounds[0],bounds[1]))
+  (lrlon,lrlat)=coord2lonlat((bounds[2],bounds[3]))
+  return boundingbox_xml % {"title": title,
+                                            "minx": bounds[0],
+                                            "maxy": bounds[1],
+                                            "maxx": bounds[2],
+                                            "miny": bounds[3],
+                                            "minlon":ullon,
+                                            "maxlat":ullat,
+                                            "maxlon":lrlon,
+                                            "minlat":lrlat }
+  
 #---------------------------
 #get a zoom level from the mpp
 class ChartEntry():
@@ -259,9 +278,9 @@ class ChartEntry():
     return rt
 
   def toXML(self):
-    rt="""<chart filename="%(filename)s" title="%(title)s" mpp="%(mpp)f">
-    <BoundingBox ulx="%(b1)f" uly="%(b2)f" lrx="%(b3)f" lry="%(b4)f"/>
-    </chart>""" % self.getParam()
+    rt="""<chart filename="%(filename)s" title="%(title)s" mpp="%(mpp)f">""" % self.getParam()
+    rt+=createBoundingsXml(self.bounds, self.bounds)
+    rt+="</chart>"
     return rt
   def updateCornerTiles(self,zoom):
     self.ultile,self.lrtile=corner_tiles(zoom,self.bounds)
@@ -447,14 +466,14 @@ class ChartListHandler(sax.handler.ContentHandler):
       self.mpp = float(attrs["mpp"])
       ld("Parser chart",self.fname,self.title,self.mpp)
     elif name == "BoundingBox":
-      ulx=float(attrs["ulx"])
-      uly=float(attrs["uly"])
-      lrx=float(attrs["lrx"])
-      lry=float(attrs["lry"])
-      assert ulx is not None,"missing value ulx in BoundingBox"
-      assert uly is not None,"missing value uly in BoundingBox"
-      assert lrx is not None,"missing value lrx in BoundingBox"
-      assert lry is not None,"missing value lry in BoundingBox"
+      ulx=float(attrs["minx"])
+      uly=float(attrs["maxy"])
+      lrx=float(attrs["maxx"])
+      lry=float(attrs["miny"])
+      assert ulx is not None,"missing value minx in BoundingBox"
+      assert uly is not None,"missing value maxy in BoundingBox"
+      assert lrx is not None,"missing value maxx in BoundingBox"
+      assert lry is not None,"missing value miny in BoundingBox"
       self.box=(ulx,uly,lrx,lry)
       ld("Parser box",self.box)
   def endElement(self, name): 
@@ -864,14 +883,23 @@ def createChartList(args,outdir):
     log("handling "+chart)
     for xt in convert_extensions:
       if chart.upper().endswith(xt.upper()):
-        log("converting "+chart+" with tiler_tools")
         oname=chart
         (base,ext)=os.path.splitext(os.path.basename(chart))
         chart=os.path.join(outdir,BASETILES,base+".vrt")
-        convertChart(oname, os.path.join(outdir,BASETILES))
-        if not os.path.exists(chart):
-          warn("converting "+oname+" to "+chart+" failed - trying to use native")
-          chart=oname
+        doSkip=False
+        if options.update == 1:
+          if os.path.exists(chart):
+            ostat=os.stat(oname)
+            cstat=os.stat(chart)
+            if (cstat.st_mtime >= ostat.st_mtime):
+              log(chart +" newer as "+oname+" no need to recreate")
+              doSkip=True
+        if not doSkip:
+          log("converting "+chart+" with tiler_tools")
+          convertChart(oname, os.path.join(outdir,BASETILES))
+          if not os.path.exists(chart):
+            warn("converting "+oname+" to "+chart+" failed - trying to use native")
+            chart=oname
     ld("try to load",chart)
     dataset = gdal.Open( chart, GA_ReadOnly )
     if dataset is None:
@@ -1063,14 +1091,26 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
     layerminzoom -=MAXOVERLAP
   if layerminzoom < 1:
     layerminzoom=1
+  layercharts=chartlist.filterByLayer(layer)
+  layerulx,layeruly,layerlrx,layerlry=layercharts.getChartsBoundingBox()
+  if layer == (len(layer_zoom_levels)-1):
+    #for the layer with the lowest resolution select a minzoom
+    #to fit app. into 600px
+    xw=layerlrx-layerulx
+    yw=layeruly-layerlry
+    while layerminzoom > 0:
+      mpp=zoom_mpp[layerminzoom]
+      xpix=xw/mpp
+      ypix=yw/mpp
+      if xpix < MINZOOMPIXEL or ypix < MINZOOMPIXEL:
+        break
+      layerminzoom-=1
   layermaxzoom=layer_zoom_levels[layer][0]
   log("collecting base tiles for layer "+str(layer)+" ("+layername+") minzoom="+str(layerminzoom)+", maxzoom="+str(layermaxzoom))
-  layercharts=chartlist.filterByLayer(layer)
   layerxmlfile=os.path.join(outdir,OUTTILES,layername,LAYERFILE)
   layerboundingsfile=os.path.join(outdir,OUTTILES,layername,LAYERBOUNDING)
   
   layerdir=os.path.join(outdir,OUTTILES,layername)
-  layerulx,layeruly,layerlrx,layerlry=layercharts.getChartsBoundingBox()
   if not onlyOverview:
     if options.update == 1:
       for lc in layercharts.tlist:
@@ -1180,17 +1220,7 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
   log(layerxmlfile+" written")
   boundings=""
   for ce in layercharts.tlist:
-    (ullon,ullat)=coord2lonlat((ce.bounds[0],ce.bounds[1]))
-    (lrlon,lrlat)=coord2lonlat((ce.bounds[2],ce.bounds[3]))
-    boundings=boundings+(boundingbox_xml % {"title": ce.title,
-                                            "minx": ce.bounds[0],
-                                            "maxy": ce.bounds[1],
-                                            "maxx": ce.bounds[2],
-                                            "miny": ce.bounds[3],
-                                            "minlon":ullon,
-                                            "maxlat":ullat,
-                                            "maxlon":lrlon,
-                                            "minlat":lrlat })
+    boundings+=createBoundingsXml(ce.bounds, ce.title)
   boundstr=boundings_xml % {"boundings": boundings}
   with open(layerboundingsfile,"w") as f:
     f.write(boundstr)
@@ -1219,7 +1249,8 @@ def mergeAllTiles(outdir,onlyOverview=False):
               "url":layername+"/"+LAYERFILE
               }
   overviewstr=overview_xml % {
-              "tilemaps":tilemaps
+              "tilemaps":tilemaps,
+              "bounding":createBoundingsXml(chartlist.getChartsBoundingBox(), "avnav")
                               }
   with open(overviewfname,"w") as f:
     f.write(overviewstr)
