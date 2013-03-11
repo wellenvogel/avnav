@@ -96,6 +96,9 @@ MAXZOOM=32
 #this is only used when sorting into layers
 MAXUPSCALE=2
 
+#how many levels do we overlap (i.e. produce downscaled tiles) between layers
+MAXOVERLAP=1
+
 #an xml description of the layers we generated - following the TMS spec
 overview_xml='''<?xml version="1.0" encoding="UTF-8" ?>
  <TileMapService version="1.0.0" >
@@ -148,7 +151,7 @@ convert_extensions=(".kap",".map",".geo")
 
 #use this to split the charts into several layers
 #charts with a resolution between 2 levels we go to the lower level
-layer_zoom_levels=[(6,"World"),(10,"Overview"),(14,"Nav"),(16,"Detail"),(19,"Max")]
+layer_zoom_levels=[(6,"Base"),(10,"World"),(13,"Overview"),(15,"Nav"),(16,"Detail"),(19,"Max")]
 
 #the target SRS in wkt format
 TARGET_SRS=None
@@ -234,6 +237,7 @@ def zoomFromMpp(mpp):
 #---------------------------
 #get a zoom level from the mpp
 class ChartEntry():
+  #bounds: upperleftx,upperlefty,lowerrightx,lowerrighty
   def __init__(self,filename,title,mpp,bounds,layer):
     self.filename=filename
     self.title=title
@@ -1048,13 +1052,17 @@ def generateAllBaseTiles(outdir):
 #first build the pyramid of tile ids for all zoom layers
 #then for each top level tile (lowest zoom) build all tiles below in one run
 #all of them are first loaded into memory and afterwards both saved and merged
-def mergeLayerTiles(chartlist,outdir,layer):
+def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
   maxfiletime=None
   layername=layer_zoom_levels[layer][1]
   layerminzoom=layer_zoom_levels[layer][0]
   #layers are now sorted reverse...??
   if layer < (len(layer_zoom_levels) -1):
     layerminzoom=layer_zoom_levels[layer+1][0]
+  if MAXOVERLAP > 0:
+    layerminzoom -=MAXOVERLAP
+  if layerminzoom < 1:
+    layerminzoom=1
   layermaxzoom=layer_zoom_levels[layer][0]
   log("collecting base tiles for layer "+str(layer)+" ("+layername+") minzoom="+str(layerminzoom)+", maxzoom="+str(layermaxzoom))
   layercharts=chartlist.filterByLayer(layer)
@@ -1062,86 +1070,87 @@ def mergeLayerTiles(chartlist,outdir,layer):
   layerboundingsfile=os.path.join(outdir,OUTTILES,layername,LAYERBOUNDING)
   
   layerdir=os.path.join(outdir,OUTTILES,layername)
-  if options.update == 1:
-    for lc in layercharts.tlist:
-      if os.path.exists(lc.filename):
-        st=os.stat(lc.filename)
-        if maxfiletime is None or st.st_mtime > maxfiletime:
-          maxfiletime=st.st_mtime
-          ld("setting maxtime ",lc.filename,maxfiletime)
-    st=os.stat(os.path.join(outdir,LISTFILE))
-    if st.st_mtime > maxfiletime:
-      maxfiletime=st.st_mtime
-    ld("maxfiletime",maxfiletime)
-    if os.path.exists(layerxmlfile):
-      st=os.stat(layerxmlfile)
-      if st.st_mtime >= maxfiletime:
-        log("layerinfo "+layerxmlfile+" is newer then all files from layer, skip generation")
-        return
-  else:
-    if os.path.exists(layerdir):
-      log("deleting old layerdata "+layerdir)
-      shutil.rmtree(layerdir,True)
-  if len(layercharts.tlist) == 0:
-    log("layer "+layername+" has no tiles")
-    return
-  #TODO: skip if we have no charts at all
   layerulx,layeruly,layerlrx,layerlry=layercharts.getChartsBoundingBox()
-  #collect the tiles for the max zoom level
-  tilespyramid=[]
-  layermaxzoomtiles=layercharts.getTilesSet(layermaxzoom)
-  #compute the upper level tiles
-  layerztiles=layermaxzoomtiles
-  idx=0
-  tilespyramid.append(layerztiles)
-  numalltiles=len(layerztiles)
-  requestQueue=Queue.Queue(0)
-  for x in range(int(options.threads)):
-    t=PyramidHandler(requestQueue)
-    t.setDaemon(True)
-    t.start()
-  for currentZoom in range(layermaxzoom-1,layerminzoom-1,-1):
-    idx+=1
-    layerztiles=getLowerLevelTiles(layerztiles)
-    numalltiles+=len(layerztiles)
+  if not onlyOverview:
+    if options.update == 1:
+      for lc in layercharts.tlist:
+        if os.path.exists(lc.filename):
+          st=os.stat(lc.filename)
+          if maxfiletime is None or st.st_mtime > maxfiletime:
+            maxfiletime=st.st_mtime
+            ld("setting maxtime ",lc.filename,maxfiletime)
+      st=os.stat(os.path.join(outdir,LISTFILE))
+      if st.st_mtime > maxfiletime:
+        maxfiletime=st.st_mtime
+      ld("maxfiletime",maxfiletime)
+      if os.path.exists(layerxmlfile):
+        st=os.stat(layerxmlfile)
+        if st.st_mtime >= maxfiletime:
+          log("layerinfo "+layerxmlfile+" is newer then all files from layer, skip generation")
+          return
+    else:
+      if os.path.exists(layerdir):
+        log("deleting old layerdata "+layerdir)
+        shutil.rmtree(layerdir,True)
+    if len(layercharts.tlist) == 0:
+      log("layer "+layername+" has no tiles")
+      return
+    #TODO: skip if we have no charts at all
+    #collect the tiles for the max zoom level
+    tilespyramid=[]
+    layermaxzoomtiles=layercharts.getTilesSet(layermaxzoom)
+    #compute the upper level tiles
+    layerztiles=layermaxzoomtiles
+    idx=0
     tilespyramid.append(layerztiles)
-  #in tlespyramid we now have all tiles for the layer min. zoom at index idx, maxZoom at index 0
-  #now go top down
-  #always take one tile of the highest layer and completely compute all tiles for this one
-  numminzoom=len(tilespyramid[idx])
-  numdone=0
-  percent=-1
-  numjobs=0
-  log("handling "+str(numminzoom)+" pyramids on min zoom "+str(layerminzoom)+" (having: "+str(numalltiles)+" tiles)")
-  for topleveltile in tilespyramid[idx]:
-    ld("handling toplevel tile ",topleveltile)
-    
-    buildpyramid=BuildPyramid(layercharts,layername,outdir)
-    buildpyramid.addZoomLevelTiles(set([topleveltile]))
-    numtiles=1
-    for buildidx in range(1,idx+1):
-      nextlevel=set()
-      for tile in buildpyramid.getZoomLevelTiles(buildidx-1):
-        nextlevel.update(getUpperTiles(tile))
-      buildpyramid.addZoomLevelTiles(nextlevel & tilespyramid[idx-buildidx])
-      numtiles+=len(buildpyramid.getZoomLevelTiles(buildidx))
-    ld("handling buildpyramid of len",numtiles)
-    requestQueue.put(buildpyramid)
-    numjobs+=1
-    
-  log("waiting for generators with "+str(options.threads)+" threads")
-  while not requestQueue.empty():
-    npercent=int(requestQueue.qsize()*100/numjobs)
-    if npercent != percent and options.verbose != 0:
-      percent=npercent
-      sys.stdout.write("\r%2d%%" % percent)
-      sys.stdout.flush()
-    time.sleep(0.05)
-  if options.verbose != 0:
-    print
-  log("tile merge finished for layer "+layername+", waiting for background threads")
-  requestQueue.join()
-  log("tile merge finished for layer "+layername)
+    numalltiles=len(layerztiles)
+    requestQueue=Queue.Queue(0)
+    for x in range(int(options.threads)):
+      t=PyramidHandler(requestQueue)
+      t.setDaemon(True)
+      t.start()
+    for currentZoom in range(layermaxzoom-1,layerminzoom-1,-1):
+      idx+=1
+      layerztiles=getLowerLevelTiles(layerztiles)
+      numalltiles+=len(layerztiles)
+      tilespyramid.append(layerztiles)
+    #in tlespyramid we now have all tiles for the layer min. zoom at index idx, maxZoom at index 0
+    #now go top down
+    #always take one tile of the highest layer and completely compute all tiles for this one
+    numminzoom=len(tilespyramid[idx])
+    numdone=0
+    percent=-1
+    numjobs=0
+    log("handling "+str(numminzoom)+" pyramids on min zoom "+str(layerminzoom)+" (having: "+str(numalltiles)+" tiles)")
+    for topleveltile in tilespyramid[idx]:
+      ld("handling toplevel tile ",topleveltile)
+      
+      buildpyramid=BuildPyramid(layercharts,layername,outdir)
+      buildpyramid.addZoomLevelTiles(set([topleveltile]))
+      numtiles=1
+      for buildidx in range(1,idx+1):
+        nextlevel=set()
+        for tile in buildpyramid.getZoomLevelTiles(buildidx-1):
+          nextlevel.update(getUpperTiles(tile))
+        buildpyramid.addZoomLevelTiles(nextlevel & tilespyramid[idx-buildidx])
+        numtiles+=len(buildpyramid.getZoomLevelTiles(buildidx))
+      ld("handling buildpyramid of len",numtiles)
+      requestQueue.put(buildpyramid)
+      numjobs+=1
+      
+    log("waiting for generators with "+str(options.threads)+" threads")
+    while not requestQueue.empty():
+      npercent=int(requestQueue.qsize()*100/numjobs)
+      if npercent != percent and options.verbose != 0:
+        percent=npercent
+        sys.stdout.write("\r%2d%%" % percent)
+        sys.stdout.flush()
+      time.sleep(0.05)
+    if options.verbose != 0:
+      print
+    log("all merge jobs started for layer "+layername+", waiting for background threads to finish their jobs")
+    requestQueue.join()
+    log("tile merge finished for layer "+layername)
   #writing layer.xml
   order=0
   tilesets=""
@@ -1171,15 +1180,17 @@ def mergeLayerTiles(chartlist,outdir,layer):
   log(layerxmlfile+" written")
   boundings=""
   for ce in layercharts.tlist:
+    (ullon,ullat)=coord2lonlat((ce.bounds[0],ce.bounds[1]))
+    (lrlon,lrlat)=coord2lonlat((ce.bounds[2],ce.bounds[3]))
     boundings=boundings+(boundingbox_xml % {"title": ce.title,
                                             "minx": ce.bounds[0],
-                                            "miny": ce.bounds[1],
+                                            "maxy": ce.bounds[1],
                                             "maxx": ce.bounds[2],
-                                            "maxy": ce.bounds[3],
-                                            "minlon":0,
-                                            "minlat":0,
-                                            "maxlon":0,
-                                            "maxlat":0 })
+                                            "miny": ce.bounds[3],
+                                            "minlon":ullon,
+                                            "maxlat":ullat,
+                                            "maxlon":lrlon,
+                                            "minlat":lrlat })
   boundstr=boundings_xml % {"boundings": boundings}
   with open(layerboundingsfile,"w") as f:
     f.write(boundstr)
@@ -1187,7 +1198,7 @@ def mergeLayerTiles(chartlist,outdir,layer):
   
 #merge the already created base tiles
 #-------------------------------------
-def mergeAllTiles(outdir):
+def mergeAllTiles(outdir,onlyOverview=False):
   chartlist=readChartList(outdir)
   ld("chartlist read:",str(chartlist))
   log("layers:"+str(layer_zoom_levels))
@@ -1197,8 +1208,8 @@ def mergeAllTiles(outdir):
   maxzoom=layer_zoom_levels[maxlayer][0]
   ld("minzoom",minzoom,"maxzoom",maxzoom)
   for layer in range(minlayer,maxlayer+1):
-    mergeLayerTiles(chartlist, outdir, layer)   
-  log("tile merge completely finished")
+    mergeLayerTiles(chartlist, outdir, layer,onlyOverview)   
+    log("tile merge completely finished")
   overviewfname=os.path.join(outdir,OUTTILES,OVERVIEW)
   tilemaps=""
   for layer in range(minlayer,maxlayer+1):
@@ -1218,7 +1229,7 @@ def mergeAllTiles(outdir):
  
 def main(argv):
   
-  global LISTFILE,layer_zoom_levels,options,MAXUPSCALE,TilerTools
+  global LISTFILE,layer_zoom_levels,options,MAXUPSCALE,TilerTools,MAXOVERLAP
   usage="usage: %prog <options> outdir indir|infile..."
   parser = OptionParser(
         usage = usage,
@@ -1232,6 +1243,7 @@ def main(argv):
   parser.add_option("-m", "--mode", dest="mode", help="runmode, one of chartlist|generate|merge, default depends on parameters")
   parser.add_option("-l", "--layers", dest="layers", help="list of layers layer:title,layer:title,..., default=%s" % ",".join(["%d:%s" % (lz[0],lz[1]) for lz in layer_zoom_levels]))
   parser.add_option("-s", "--scale", dest="upscale", help="max upscaling when sorting a chart into the layers (default: %f)" % MAXUPSCALE)
+  parser.add_option("-o", "--overlap", dest="overlap", help="max overlap of zoomlevels between layers (default: %f)" % MAXOVERLAP)
   parser.add_option("-t", "--threads", dest="threads", help="number of worker threads, default 4")
   parser.add_option("-a", "--add", dest="ttdir", help="directory where to search for tiler tools (if not set use environment TILERTOOLS or current dir)")
   parser.add_option("-u", "--update", action="store_const", const=1, dest="update", help="update existing charts (if not set, existing ones are regenerated")
@@ -1254,6 +1266,9 @@ def main(argv):
   if options.upscale is not None:
     MAXUPSCALE=float(options.upscale)
     ld("upscale ",MAXUPSCALE)
+  if options.overlap is not None:
+    MAXOVERLAP=int(options.overlap)
+    ld("upscale ",MAXOVERLAP)
 
   ld(os.name)
   ld(options)
@@ -1269,7 +1284,7 @@ def main(argv):
     mode="chartlist"
   if options.mode is not None:
     mode=options.mode
-    assert (mode == "chartlist" or mode == "generate" or mode == "all" or mode == "merge"), "invalid mode "+mode+", allowed: chartlist,generate,merge,all"
+    assert (mode == "chartlist" or mode == "generate" or mode == "all" or mode == "merge" or mode == "overview"), "invalid mode "+mode+", allowed: chartlist,generate,merge,all,overview"
   log("running in mode "+mode)
   if mode == "chartlist" or mode == "all":
     log("layers:"+str(layer_zoom_levels))
@@ -1278,9 +1293,9 @@ def main(argv):
   if mode == "generate" or mode == "all":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
     generateAllBaseTiles(outdir)
-  if mode == "merge" or mode == "all" or mode == "generate":
+  if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
-    mergeAllTiles(outdir)
+    mergeAllTiles(outdir,(mode == "overview"))
 
 
 
