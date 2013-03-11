@@ -29,7 +29,12 @@
 ###############################################################################
 */
 
-var MAXUPSCALE=8; //3 levels upscale (otherwise we need too much mem)
+var properties={
+		maxUpscale:8, //3 levels upscale (otherwise we need too much mem)
+		minGridLedvel: 10,
+		showOSM: true
+};
+var zoomOffset=0;
 OpenLayers.Control.ClickBar = OpenLayers.Class(OpenLayers.Control, {
 
     clickBarDiv: null,
@@ -145,7 +150,7 @@ OpenLayers.Control.ClickBar = OpenLayers.Class(OpenLayers.Control, {
     
     ratioDisplay: function (){
         var s = OpenLayers.Number.format(this.ratio,1);
-        this.clickBarDiv.innerHTML = '<- ' + s + ' ->'
+        this.clickBarDiv.innerHTML = '<- ' + s + ' ->';
         this.reportRatio(this.ratio);    
         },
 
@@ -412,9 +417,39 @@ function read_tile_list(url) {
 function formatLonlats(lonLat) {
   var lat = lonLat.lat;
   var long = lonLat.lon;
+  /*
   var ns = OpenLayers.Util.getFormattedLonLat(lat);
   var ew = OpenLayers.Util.getFormattedLonLat(long,'lon');
+  */
+  var ns=formatLonLatsDecimal(lat, 'lat');
+  var ew=formatLonLatsDecimal(long, 'lon');
   return ns + ', ' + ew + ' (' + (Math.round(lat * 10000) / 10000) + ', ' + (Math.round(long * 10000) / 10000) + ')';
+}
+
+//copied from OpenLayers.Util.getFormattedLonLat
+function formatLonLatsDecimal(coordinate,axis){
+	coordinate = (coordinate+540)%360 - 180; // normalize for sphere being round
+
+    var abscoordinate = Math.abs(coordinate);
+    var coordinatedegrees = Math.floor(abscoordinate);
+
+    var coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
+        
+    if( coordinatedegrees < 10 ) {
+        coordinatedegrees = "0" + coordinatedegrees;
+    }
+    var str = coordinatedegrees + "\u00B0";
+
+    if( coordinateminutes < 10 ) {
+        str +="0";
+    }
+    str += coordinateminutes.toFixed(2) + "'";
+    if (axis == "lon") {
+        str += coordinate < 0 ? OpenLayers.i18n("W") : OpenLayers.i18n("E");
+    } else {
+        str += coordinate < 0 ? OpenLayers.i18n("S") : OpenLayers.i18n("N");
+    }
+    return str;
 }
 
 var tile_list=['tilemap.xml'];
@@ -430,6 +465,18 @@ OpenLayers.Util.extend( OpenLayers.INCHES_PER_UNIT, {
     "cbl": OpenLayers.INCHES_PER_UNIT["nmi"]/10,
 });
 
+//a bit a hack to determine the best zoom for a resolution
+function getZoomForResolution(res){
+	var resolutions=OpenLayers.Layer.Bing.prototype.serverResolutions;
+	var rt=0;
+	for (;rt<resolutions.length;rt++){
+		//we allow for 10% being below...
+		if ((resolutions[rt] * 0.9)<=res){ 
+			return rt;
+		}
+	}
+	return rt-1;
+}
        
 log('OpenLayers.VERSION_NUMBER',OpenLayers.VERSION_NUMBER);
 
@@ -456,10 +503,9 @@ function initialize_openlayers() {
 	}
     var map = new OpenLayers.Map('map', {
           projection: new OpenLayers.Projection("EPSG:900913"), //mapProjection,
-          //projection: new OpenLayers.Projection("EPSG:4326"),
           displayProjection: new OpenLayers.Projection("EPSG:4326"),
           units: "m",
-          maxResolution: 156543.0339,
+          //maxResolution: 156543.0339,
           maxExtent: new OpenLayers.Bounds(-20037508.342789, -20037508.342789, 20037508.342789, 20037508.342789),
             controls: [
                 new OpenLayers.Control.Navigation(),
@@ -476,35 +522,60 @@ function initialize_openlayers() {
                 }),
             ]
     });
-    var osm = new OpenLayers.Layer.OSM(
+    var osm = null;
+    
+    //tricky handling of min and max zoom layers...
+    //we set for all layers minRes/maxRes except for the base layer, weher we set maxRes and maxZoomLevel
+    //with setting maxRes, we have zoom level 0 at maxRes - so we have to set zoomOffset for all layers...
+    zoomOffset=getZoomForResolution(maxRes);
+    
+    if (properties.showOSM) {
+    	osm=new OpenLayers.Layer.OSM(
             "Open Street Map",'http://tile.openstreetmap.org/${z}/${x}/${y}.png',
             {
-                displayOutsideMaxExtent: false,
+                displayOutsideMaxExtent: false, 
+                maxZoomLevel: getZoomForResolution(minRes)-zoomOffset,
+                maxResolution: maxRes,
+        		zoomOffset: zoomOffset
+                
             });
+    }
+    else {
+    	osm=new OpenLayers.Layer("Blank",{
+    		isBaseLayer: true,
+    		maxZoomLevel: getZoomForResolution(minRes)-zoomOffset,
+    		maxResolution: maxRes,
+    		zoomOffset: zoomOffset
+    		});
+    }
     for (var layeridx =tile_parameters.length-1 ; layeridx>= 0;layeridx--){
     	var layer=tile_parameters[layeridx];
-    	if (firstLayer==null)firstLayer=layer;
+    	var isBaseLayer=false;
+    	if (firstLayer==null){
+    		firstLayer=layer;
+    		if (osm == null) isBaseLayer=true;
+    	}
     	var baseurl="";
     	var dir=tile_list[layeridx].replace(/\/[^\/]*$/,'');
     	if (dir != tile_list[layeridx]){
     		baseurl=dir+"/";
     	}
     	var layerminRes=minRes;
-    	if (layerminRes < layer.min_res/MAXUPSCALE) layerminRes=layer.min_res/MAXUPSCALE;
+    	if (layerminRes < layer.min_res/properties.maxUpscale) layerminRes=layer.min_res/properties.maxUpscale;
     	var tiler_overlay = new OpenLayers.Layer.TilerToolsXYZ( layer.title, baseurl+"${z}/${x}/${y}."+layer.tile_ext,
         {
-            wrapDateLine: true,
+            //wrapDateLine: true,
             maxExtent: layer.layer_extent,
             tileOrigin: layer.tile_origin,
             tileSize: layer.tile_size,
-            //resolutions: layer_resolutions,
             maxResolution: layer.max_res,
-            minResolution: layerminRes,
+            minResolution: 0.999*layerminRes, //we lower minres by 1%% to allow for correct computation of zoom levels
             serverResolutions: layer.layer_resolutions,
-            isBaseLayer: false,
+            isBaseLayer: isBaseLayer,
             profile: layer.layer_profile,
             displayOutsideMaxExtent: false,
-            boundings: layer.boundings
+            boundings: layer.boundings,
+            zoomOffset: zoomOffset
 
         });
     	tiler_overlays.push(tiler_overlay);
@@ -513,7 +584,7 @@ function initialize_openlayers() {
      map.addControl(
           new OpenLayers.Control.ClickBar({
               displayClass: "clickbar",
-              ratio: 0.8,
+              ratio: 1.0,
               reportRatio: function(ratio){
                   log(ratio);
               if (OpenLayers.Util.alphaHack() == false)
@@ -525,6 +596,7 @@ function initialize_openlayers() {
         );
 
     map.addLayers([osm].concat(tiler_overlays));
+    //map.maxZoomLevel=osm.getZoomForResolution(minRes);
     map.zoomToExtent(firstLayer.layer_extent,true);
     var initialZoom=map.getZoomForResolution(maxRes)+1;
     
@@ -532,6 +604,11 @@ function initialize_openlayers() {
 
     map.addControl(new OpenLayers.Control.MousePosition( {id: "ll_mouse", formatOutput: formatLonlats} ));
     map.addControl(new OpenLayers.Control.MousePosition( {id: "utm_mouse", prefix: "UTM ", displayProjection: map.baseLayer.projection, numDigits: 0} ));
-    map.addControl(new OpenLayers.Control.Graticule({ intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333] }));
+    map.addControl(new OpenLayers.Control.Graticule({ id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
+    		autoActivate: false}));
+    map.events.register("zoomend",map,function(e){
+    	if ((map.zoom +zoomOffset) < properties.minGridLedvel) map.getControl('grid').deactivate();
+    	else map.getControl('grid').activate();
+    });
 
 }
