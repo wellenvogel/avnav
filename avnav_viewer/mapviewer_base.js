@@ -32,7 +32,8 @@
 var properties={
 		maxUpscale:8, //3 levels upscale (otherwise we need too much mem)
 		minGridLedvel: 10,
-		showOSM: true
+		showOSM: true,
+		rightPanelWidth: 60,
 };
 var zoomOffset=0;
 var map=null;
@@ -416,16 +417,16 @@ function read_tile_list(url) {
 	}
     return rt;
 }
-function formatLonlats(lonLat) {
+
+function mapPosToLonLat(pos){
+	return pos.transform(map.getProjectionObject(), map.displayProjection);
+}
+function formatLonLats(lonLat) {
   var lat = lonLat.lat;
   var long = lonLat.lon;
-  /*
-  var ns = OpenLayers.Util.getFormattedLonLat(lat);
-  var ew = OpenLayers.Util.getFormattedLonLat(long,'lon');
-  */
   var ns=formatLonLatsDecimal(lat, 'lat');
   var ew=formatLonLatsDecimal(long, 'lon');
-  return ns + ', ' + ew + ' (' + (Math.round(lat * 10000) / 10000) + ', ' + (Math.round(long * 10000) / 10000) + ')';
+  return ew + ', ' + ns;
 }
 
 //copied from OpenLayers.Util.getFormattedLonLat
@@ -439,6 +440,9 @@ function formatLonLatsDecimal(coordinate,axis){
         
     if( coordinatedegrees < 10 ) {
         coordinatedegrees = "0" + coordinatedegrees;
+    }
+    if (coordinatedegrees < 100 && axis == 'lon'){
+    	coordinatedegrees = "0" + coordinatedegrees;
     }
     var str = coordinatedegrees + "\u00B0";
 
@@ -560,21 +564,18 @@ function btnLayerSwitch(){
 
 function mouseEvent(e){
 		if (e.xy == null) return;
-	    var lonLat = this.getLonLatFromViewPortPx(e.xy).transform(this.getProjectionObject(), this.displayProjection);
-	    var lat = lonLat.lat;
-	    var long = lonLat.lon;
-	    var ns=formatLonLatsDecimal(lat, 'lat');
-	    var ew=formatLonLatsDecimal(long, 'lon');
-	    var txt=ew+", "+ns;
-	    $('#boatPosition').text(txt);
-	    //OpenLayers.Util.getElement("tooltip").innerHTML = "<label>Latitude: " + position.lat + "</label><br/><label>Longitude: " + position.lon + "</label>";
+	    $('#markerPosition').text(formatLonLats(mapPosToLonLat(this.getLonLatFromViewPortPx(e.xy))));
+}
+
+function moveEnd(){
+	$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
 }
 
 //do the layout
 function adjustSizes(){
 	var w=$('body').width();
-	var rw=120;
-	if (w < 640) rw=60;
+	var rw=properties.rightPanelWidth;
+	//if (w < 640) rw=60;
 	rightWidth=rw;
 	var rightWidthOffset=rightWidth+1;
 	$('.avn_leftPanel').css('right',rightWidthOffset+"px");
@@ -613,7 +614,7 @@ function initialize_openlayers() {
           maxExtent: new OpenLayers.Bounds(-20037508.342789, -20037508.342789, 20037508.342789, 20037508.342789),
             controls: [
                 
-                new OpenLayers.Control.MousePosition( {div: $('boatPosition'), formatOutput: formatLonlats} ),
+                //new OpenLayers.Control.MousePosition( {div: $('#markerPosition'), formatOutput: formatLonlats} ),
                 new OpenLayers.Control.Navigation(),
                 new OpenLayers.Control.KeyboardDefaults(),
                 new OpenLayers.Control.ScaleLine({
@@ -713,6 +714,7 @@ function initialize_openlayers() {
     	else map.getControl('grid').activate();
     });
     map.events.register("mousemove", map, mouseEvent);
+    map.events.register("moveend", map, moveEnd);
     $('.avn_btZoomIn').button({
     	icons: {
       		 primary: "ui-icon-plus"
@@ -734,6 +736,7 @@ function initialize_openlayers() {
 	  	 text: false,
 	  	label: 'Layer'
 	   	});
+	$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
 	
     $(window).resize(adjustSizes);
 

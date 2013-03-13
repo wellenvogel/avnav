@@ -4,63 +4,51 @@ html,body {
 	width: 100%;
 	margin: 0;
 	padding: 0;
+	font-family: Verdana,Arial,sans-serif;
+	font-size: 0.8em;
 }
 
 .avn_panel{
 	position: absolute;
+	overflow: hidden;
 }
 
 .avn_leftPanel{
-	left: 0px;
-	top: 0px;
-	bottom: 0px;
-	right: 120px;
-	overflow: hidden;
+
 }
 .avn_leftTop{
-	left: 0px;
-	top: 0px;
-	right: 0px;
-	height: 20px;
+	
 	background-color: blue;
 }
 .avn_leftBottom{
-	bottom: 0px;
-	height: 20px;
-	left: 0px;
-	right: 0px;
-	background-color: grey;
+	
+	background-color: #AAADB8;
+	text-align: center;
 }
 
 .avn_map{
-	position: absolute;
-	top: 21px;
-	bottom: 21px;
-	left: 0px;
-	right: 0px;
 	border: 1px solid black;
 	
 }
 
 .avn_rightPanel{
-	top: 0px;
-	bottom: 0px;
-	right: 0px;
-	width: 119px;
+	
 	background-color: lightblue;
-	overflow: hidden;
+}
+
+.avn_inner{
+	display: inline-block;
 }
 
 .avn_position{
 
-height: 3em;
-font-size: 0.8em;
 border-color: black;
 border-style: solid;
 border-width: 1px;
+background-color: white;
 }
 
-.avn_button{
+button.avn_button{
 	width: 50px;
 	height: 50px;
 	margin: 3px 3px 3px 3px;
@@ -70,19 +58,99 @@ border-width: 1px;
 .avn_selectList	.ui-selected { background: #1E6CCF; color: white;}
 .avn_selectList { list-style-type: none; margin: 0; padding: 0; }
 .avn_selectList ul {margin-top: 2px; margin-bottom: 2px;}
-.avn_selectList { margin: 3px; padding: 0.4em; padding-left: 30px;font-size: 1em;  }
+.avn_selectList { margin: 3px; padding: 0.4em; padding-left: 30px;/*font-size: 1em; */ }
 
 .avn_disabled {
 	color: grey;
 }
 
+.avn_label{
+	padding-left: 5px;
+	padding-right: 5px;
+}
+.avn_position{
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+/*------------------------------------------------------------------------------- 
+	element positioning
+  -------------------------------------------------------------------------------
+	1. left panel */
+#leftPanel{
+	left: 0px;
+	top: 0px;
+	bottom: 0px;
+	right: 120px;
+	overflow: hidden;
+}
+  
+/*
+    2. left top
+*/
+
+#leftTop{
+	left: 0px;
+	top: 0px;
+	right: 0px;
+	height: 20px;
+}
+
+/*
+	3. map
+*/
+
+#map{
+	top: 21px;
+	bottom: 21px;
+	left: 0px;
+	right: 0px;
+	
+}
+    
+
+/*
+	4. bottom line (20 px height) - see .avn_leftBottom
+*/
+   
+#leftBottom{
+	
+   	bottom: 0px;
+	height: 20px;
+	left: 0px;
+	right: 0px;
+}
+
+#markerPositionLabel{
+	float: left;
+	line-height: 20px; /* same as bootom container - set centered */
+}
+#markerPosition{
+	float: left;
+	line-height: 18px; /*has 1 px border */
+}
+
+/*
+	5. right panel
+*/
+
+#rightPanel{
+	top: 0px;
+	bottom: 0px;
+	right: 0px;
+	width: 119px;
+}
+
+/*------------------------------------------------------------------------------- 
+	end element positioning
+  -------------------------------------------------------------------------------*/
 /* overwriting some jquery ui defaults */
 
 .ui-dialog-title {
-	font-size: 0.8em;
+	/*font-size: 0.8em;*/
 }
 .ui-button-text {
-	font-size: 0.8em;
+	/*font-size: 0.8em;*/
 }
 
 .olControlButtonItemActive {
