@@ -509,13 +509,13 @@ function showLayerDialog(){
 		autoOpen: false,
 		modal:true,
 		dialogClass: 'avn_dialog',
-		width: Math.ceil(w*0.8),
-		height:Math.ceil(h*0.8),
+		maxWidth: Math.ceil(w*0.8),
+		maxHeight:Math.ceil(h*0.8),
 		buttons: [
 			{ 	text: "Cancel", 
 				click: function(){ 
-					$(this).dialog("destroy");
-					$('.avn_btLayerSwitch').show();
+					$(this).dialog("close");
+					
 					}
 			},
 			{
@@ -530,15 +530,23 @@ function showLayerDialog(){
 				        	  map.layers[idx].setVisibility(false);
 				          }
 				        });
-					$(this).dialog("destroy");
-					$('.avn_btLayerSwitch').show();
+					$(this).dialog("close");
+					
 				}
 			}
-		]
+		],
+		close: function(){
+			$('.avn_btLayerSwitch').show();
+			$(this).dialog("destroy");
+		}
 			
 	});
 	$(dialog).dialog('open');
-	$('#selectLayerList').selectable({filter: ':not(.avn_disabled)'});
+	//allow for toggle behavior
+	$('#selectLayerList').bind( "mousedown", function ( e ) {
+	    e.metaKey = true;
+	} ).selectable({filter: ':not(.avn_disabled)'});
+	$('.ui-dialog-content').niceScroll();
 }
 
 function btnLayerSwitch(){
@@ -673,8 +681,9 @@ function initialize_openlayers() {
         });
     	tiler_overlays.push(tiler_overlay);
     }   
-
-     map.addControl(
+    
+    if (properties.showAlphaSwitch != null){
+    map.addControl(
           new OpenLayers.Control.ClickBar({
               displayClass: "clickbar",
               ratio: 1.0,
@@ -687,6 +696,7 @@ function initialize_openlayers() {
               },
           })
         );
+	}
 
     map.addLayers([osm].concat(tiler_overlays));
     //map.maxZoomLevel=osm.getZoomForResolution(minRes);
@@ -696,7 +706,7 @@ function initialize_openlayers() {
     map.zoomTo(initialZoom);
 
    
-    map.addControl(new OpenLayers.Control.Graticule({name: 'Grid', id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
+    map.addControl(new OpenLayers.Control.Graticule({layerName: 'Grid', id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
     		autoActivate: false}));
     map.events.register("zoomend",map,function(e){
     	if ((map.zoom +zoomOffset) < properties.minGridLedvel) map.getControl('grid').deactivate();
