@@ -34,10 +34,13 @@ var properties={
 		minGridLedvel: 10,
 		showOSM: true,
 		rightPanelWidth: 60,
+		loggingEnabled: true,
 };
 var zoomOffset=0;
 var map=null;
-var rightWidth=120; //the control button panel
+var rightWidth=60; //the control button panel
+var markerFeature=null;
+
 OpenLayers.Control.ClickBar = OpenLayers.Class(OpenLayers.Control, {
 
     clickBarDiv: null,
@@ -250,12 +253,17 @@ OpenLayers.Layer.TilerToolsXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
 
 
 function log(msg) {
+	if (! properties.loggingEnabled) return;
   try { console.log.apply(console,arguments); } 
   catch (e) {
       setTimeout(function() {
           throw new Error(msg);
       }, 0);
   }
+}
+
+function logMapPos(txt,lonlat){
+	log("pos: "+txt+" lon="+lonlat.lon+" , lat="+lonlat.lat);
 }
 
 function error(msg) {
@@ -559,16 +567,67 @@ function btnLayerSwitch(){
 	
 	
 }
+function btnLockMarker(){
+	if (markerFeature.attributes.isLocked){
+		markerFeature.geometry.calculateBounds();
+		markerFeature.move(map.getCenter());
+		logMapPos("unlock-marker",markerFeature.geometry.bounds.getCenterLonLat());
+		logMapPos("unlock-map",map.getCenter());
+		$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry.bounds.getCenterLonLat())));
+		markerFeature.attributes.isLocked=false;
+		$("#btnLockMarker").button("option",{	
+		   	 icons: {
+		   		 primary: "ui-icon-unlocked"
+		   	 }});
+	}else {		
+		$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
+		markerFeature.attributes.isLocked=true;
+		markerFeature.geometry.calculateBounds();
+		logMapPos("lock-marker",markerFeature.geometry.bounds.getCenterLonLat());
+		logMapPos("lock-map",map.getCenter());
+		$("#btnLockMarker").button("option",{	
+		   	 icons: {
+		   		 primary: "ui-icon-locked"
+		   	 }});
+	}
+}
 
 //event handlers
 
 function mouseEvent(e){
 		if (e.xy == null) return;
-	    $('#markerPosition').text(formatLonLats(mapPosToLonLat(this.getLonLatFromViewPortPx(e.xy))));
+	    //$('#markerPosition').text(formatLonLats(mapPosToLonLat(this.getLonLatFromViewPortPx(e.xy))));
 }
 
-function moveEnd(){
-	$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
+function moveEvent(){
+	if (! markerFeature.attributes.isLocked){
+		markerFeature.move(map.getCenter());
+		markerFeature.geometry.calculateBounds();
+		$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
+		logMapPos("move-marker",markerFeature.geometry.bounds.getCenterLonLat());
+		logMapPos("move-map",map.getCenter());
+	}
+	else {
+		/*
+		markerFeature.geometry.calculateBounds();
+		logMapPos("move-marker",markerFeature.geometry.bounds.getCenterLonLat());
+		$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry.bounds.getCenterLonLat())));
+		*/
+	}
+}
+function moveEndEvent(){
+	if (! markerFeature.attributes.isLocked){
+		markerFeature.move(map.getCenter());
+		markerFeature.geometry.calculateBounds();
+		$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
+		logMapPos("marker",markerFeature.geometry.bounds.getCenterLonLat());
+		logMapPos("map",map.getCenter());
+	}
+	else {
+		markerFeature.geometry.calculateBounds();
+		$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry.bounds.getCenterLonLat())));
+	}
+	
 }
 
 //do the layout
@@ -698,15 +757,31 @@ function initialize_openlayers() {
           })
         );
 	}
-
-    map.addLayers([osm].concat(tiler_overlays));
+    //the vector layers
+    var markerLayer=new OpenLayers.Layer.Vector("Marker");
+    //test style
+    
+    var style_mark = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
+    style_mark.graphicWidth = 40;
+    style_mark.graphicHeight = 40;
+    
+    style_mark.externalGraphic = "images/Marker1.png";
+    // title only works in Firefox and Internet Explorer
+    style_mark.title = "Marker";
+    style_mark.rotation=0;
+    style_mark.fillOpacity=1;
+    
+    map.addLayers([osm].concat(tiler_overlays).concat([markerLayer]));
     //map.maxZoomLevel=osm.getZoomForResolution(minRes);
     map.zoomToExtent(firstLayer.layer_extent,true);
     var initialZoom=map.getZoomForResolution(maxRes)+1;
     
     map.zoomTo(initialZoom);
-
-   
+    var center=map.getCenter();
+    var point=new OpenLayers.Geometry.Point(center.lon,center.lat);
+    markerFeature=new OpenLayers.Feature.Vector(point,{isLocked:false},style_mark);
+    markerLayer.addFeatures([markerFeature]);
+    
     map.addControl(new OpenLayers.Control.Graticule({layerName: 'Grid', id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
     		autoActivate: false}));
     map.events.register("zoomend",map,function(e){
@@ -714,7 +789,8 @@ function initialize_openlayers() {
     	else map.getControl('grid').activate();
     });
     map.events.register("mousemove", map, mouseEvent);
-    map.events.register("moveend", map, moveEnd);
+    map.events.register("moveend", map, moveEndEvent);
+    map.events.register("move", map, moveEvent);
     $('.avn_btZoomIn').button({
     	icons: {
       		 primary: "ui-icon-plus"
@@ -735,6 +811,13 @@ function initialize_openlayers() {
 	  	 },
 	  	 text: false,
 	  	label: 'Layer'
+	   	});
+	$('.avn_btLockMarker').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+	  	 text: false,
+	  	label: 'Marker'
 	   	});
 	$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
 	
