@@ -733,6 +733,8 @@ function testpos(){
 
 //do the layout
 function adjustSizes(){
+	return;
+	//currently we try to do everything in css...
 	var w=$('body').width();
 	var rw=properties.rightPanelWidth;
 	//if (w < 640) rw=60;

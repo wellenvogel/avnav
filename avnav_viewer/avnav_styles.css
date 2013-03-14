@@ -51,6 +51,7 @@ border-color: black;
 border-style: solid;
 border-width: 1px;
 background-color: white;
+font-size: 16px;
 }
 
 button.avn_button{
@@ -104,7 +105,14 @@ button.avn_buttonInactive{
 .avn_selectList	.ui-selected { background: #1E6CCF; color: white;}
 .avn_selectList { list-style-type: none; margin: 0; padding: 0; }
 .avn_selectList ul {margin-top: 2px; margin-bottom: 2px;}
-.avn_selectList { margin: 3px; padding: 0.4em; padding-left: 30px;/*font-size: 1em; */ }
+.avn_selectList { 
+	margin-top: 3px;
+	margin-bottom: 3px;
+	margin-right: 25px; /*for scrolling on tablet*/
+	padding: 0.4em; 
+	padding-left: 10px;
+	font-size: 16px; 
+	}
 
 .avn_disabled {
 	color: grey;
@@ -127,7 +135,7 @@ button.avn_buttonInactive{
 	left: 0px;
 	top: 0px;
 	bottom: 0px;
-	right: 120px;
+	right: 60px;      
 	overflow: hidden;
 }
   
@@ -139,11 +147,11 @@ button.avn_buttonInactive{
 	left: 0px;
 	top: 0px;
 	right: 0px;
-	height: 20px;
+	height: 30px;
 }
 .avn_top_content{
 	float: left;
-	line-height: 18px;
+	line-height: 28px;
 }
 
 
@@ -152,8 +160,8 @@ button.avn_buttonInactive{
 */
 
 #map{
-	top: 21px;
-	bottom: 21px;
+	top: 31px;
+	bottom: 31px;
 	left: 0px;
 	right: 0px;
 	
@@ -167,14 +175,14 @@ button.avn_buttonInactive{
 #leftBottom{
 	
    	bottom: 0px;
-	height: 20px;
+	height: 30px;
 	left: 0px;
 	right: 0px;
 }
 
 .avn_bottom_content{
 	float: left;
-	line-height: 18px; /*has 1 px border */
+	line-height: 28px; /*has 1 px border */
 }
 
 /*
@@ -185,7 +193,7 @@ button.avn_buttonInactive{
 	top: 0px;
 	bottom: 0px;
 	right: 0px;
-	width: 119px;
+	width: 60px;
 }
 
 /*------------------------------------------------------------------------------- 
