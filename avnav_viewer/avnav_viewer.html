@@ -58,23 +58,32 @@
 
 	<body onload="initialize_openlayers()">
 		<div id='leftPanel' class='avn_panel avn_leftPanel'>
-		<div id='leftTop' class='avn_panel avn_leftTop'></div>
+		<div id='leftTop' class='avn_panel avn_leftTop'>
+		<div id='leftTopInner' class='avn_inner'>
+		<div id='boatPositionLabel' class='avn_label avn_text avn_top_content'>Pos</div>
+		<div id='boatPosition' class='avn_display avn_position avn_top_content'>-------------</div>
+		<div id='boatCourseLabel' class='avn_label avn_text avn_top_content'>CoG</div>
+		<div id='boatCourse' class='avn_display avn_position avn_top_content'>000</div>
+		<div id='boatSpeedLabel' class='avn_label avn_text avn_top_content'>SoG</div>
+		<div id='boatSpeed' class='avn_display avn_position avn_top_content'>000</div>
+		</div>
+		</div>
 	    <div id='map' class='avn_panel avn_map'></div>
 	    <div id='leftBottom' class='avn_panel avn_leftBottom'>
 	    <div id='leftBottomInner' class='avn_inner'>
-	    <div id='markerPositionLabel' class='avn_label avn_text'>MarkerPosition</div>
-	    <div id='markerPosition' class='avn_display avn_position'>0E,0N</div>
+	    <div id='markerPositionLabel' class='avn_label avn_text avn_bottom_content'>MarkerPosition</div>
+	    <div id='markerPosition' class='avn_display avn_position avn_bottom_content'>0E,0N</div>
 	    </div>
 	    </div>
 	    </div>
 	    <div id='rightPanel' class='avn_panel avn_rightPanel'>
-	    <div id='boatPosition' class='avn_display avn_position'></div>
 	    <div id='controlButtons' class='avn_butonpanel'>
 	    <button type="button" onclick="btnZoomIn();" class="avn_button avn_btZoomIn">+</button>
 	    <button type="button" onclick="btnZoomOut();" class="avn_button avn_btZoomOut">-</button>
 	    </div>
 	    <button id="btnLayerSwitch" type="button" onclick="btnLayerSwitch();" class="avn_button avn_btLayerSwitch">-</button>
 	    <button id="btnLockMarker" type="button" onclick="btnLockMarker();" class="avn_toggleButton avn_btLockMarker">T</button>
+	    <button id="btnLockPos" type="button" onclick="btnLockPos();" class="avn_toggleButton avn_btLockPos">T</button>
 	    </div>
 	</body>
 </html>

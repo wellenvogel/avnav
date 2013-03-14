@@ -19,6 +19,7 @@ html,body {
 .avn_leftTop{
 	
 	background-color: blue;
+	text-align: center;
 }
 .avn_leftBottom{
 	
@@ -60,6 +61,29 @@ button.avn_toggleButton{
 	margin: 3px 3px 3px 3px;
 }
 
+button.avn_buttonActive{
+	border: 4px solid #1DB81D;
+}
+
+button.avn_buttonActiveError{
+	border: 4px solid #EC420C;
+}
+
+button.avn_buttonInactive{
+	border: 4px solid #E6E6E6;
+}
+
+#btnLockPos .ui-icon {
+	background-image: url(Images/Sail-Boat-40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 10px;
+	top: 10px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 20px 20px;
+}
 .avn_selectList	.ui-selecting { background: #1E6CCF;}
 .avn_selectList	.ui-selected { background: #1E6CCF; color: white;}
 .avn_selectList { list-style-type: none; margin: 0; padding: 0; }
@@ -101,6 +125,15 @@ button.avn_toggleButton{
 	right: 0px;
 	height: 20px;
 }
+.avn_top_content{
+	float: left;
+}
+.avn_top_content .avn_label{
+	line-height: 20px; /* same as top container - set centered */
+}
+.avn_top_content .avn_position{
+	line-height: 18px; /*has 1 px border */
+}
 
 /*
 	3. map
@@ -127,12 +160,13 @@ button.avn_toggleButton{
 	right: 0px;
 }
 
-#markerPositionLabel{
+.avn_bottom_content{
 	float: left;
+}
+.avn_bottom_content .avn_label{
 	line-height: 20px; /* same as bootom container - set centered */
 }
-#markerPosition{
-	float: left;
+.avn_bottom_content .avn_position{
 	line-height: 18px; /*has 1 px border */
 }
 

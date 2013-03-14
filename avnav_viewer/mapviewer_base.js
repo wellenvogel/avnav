@@ -35,12 +35,17 @@ var properties={
 		showOSM: true,
 		rightPanelWidth: 60,
 		loggingEnabled: true,
+		positionQueryTimeout: 1000, //1000ms
 };
 var zoomOffset=0;
+var maxZoom=0;
 var map=null;
 var rightWidth=60; //the control button panel
 var markerFeature=null;
-
+var boatFeature=null;
+var timer=null;
+var handleBoat=true;
+var currentAngle=0;
 OpenLayers.Control.ClickBar = OpenLayers.Class(OpenLayers.Control, {
 
     clickBarDiv: null,
@@ -427,7 +432,25 @@ function read_tile_list(url) {
 }
 
 function mapPosToLonLat(pos){
-	return pos.transform(map.getProjectionObject(), map.displayProjection);
+	return pos.clone().transform(map.getProjectionObject(), map.displayProjection);
+}
+
+function lonLatToMap(lonlat){
+	return lonlat.clone().transform( map.displayProjection,map.getProjectionObject());
+}
+
+function formatDecimal(number,fix,fract){
+	var rt=number.toFixed(fract);
+	var v=10;
+	fix-=1;
+	while (fix > 0){
+		if (number < v){
+			rt="0"+rt;
+		}
+		v=v*10;
+		fix-=1;
+	}
+	return rt;
 }
 function formatLonLats(lonLat) {
   var lat = lonLat.lat;
@@ -494,9 +517,42 @@ function getZoomForResolution(res){
        
 log('OpenLayers.VERSION_NUMBER',OpenLayers.VERSION_NUMBER);
 
+//------------------ center map to feature ------------------
+
+function moveMapToFeature(feature,force){
+	var f=force || false;
+	if (! feature.layer.getVisibility() && ! f) return;
+	var lonlat=new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
+	map.moveTo(lonlat,map.zoom);
+}
+
+//------------------ boat position ----------------------
+//lonlat in wgs84,course in degree,speed in ??
+function setBoatPosition(lon,lat,course,speed){
+	boatFeature.geometry.calculateBounds(); //not sure - but seems to be necessary
+	var lonlat=new OpenLayers.LonLat(lon,lat);
+	$('#boatPosition').text(formatLonLats(lonlat));
+	$('#boatCourse').text(formatDecimal(course,3,0));
+	$('#boatSpeed').text(formatDecimal(speed,2,1));
+	if (boatFeature.layer.getVisibility()){
+		var mlonlat = lonLatToMap(lonlat);
+		boatFeature.attributes.angle = course;
+		boatFeature.move(mlonlat);
+		boatFeature.style.rotation = course;
+		// boatFeature.geometry.rotate(course);
+		boatFeature.geometry.calculateBounds();
+		logMapPos("boat", boatFeature.geometry.bounds.getCenterLonLat());
+		if (boatFeature.attributes.isLocked ) {
+			moveMapToFeature(boatFeature);
+		}
+	}
+	
+	
+}
+
 //button functions
 function btnZoomIn(){
-	map.zoomIn();
+	if (map.zoom < maxZoom)	map.zoomIn();
 }
 function btnZoomOut(){
 	map.zoomOut();
@@ -541,6 +597,11 @@ function showLayerDialog(){
 				          else {
 				        	  map.layers[idx].setVisibility(false);
 				          }
+				          if (map.layers[idx]==boatFeature.layer){
+				        	  moveMapToFeature(boatFeature);
+				        	  handleToggleButton('#btnLockPos',boatFeature.attributes.isLocked
+				        			  && map.layers[idx].getVisibility());
+				          }
 				        });
 					$(this).dialog("close");
 					
@@ -550,6 +611,7 @@ function showLayerDialog(){
 		close: function(){
 			$('.avn_btLayerSwitch').show();
 			$(this).dialog("destroy");
+			moveEndEvent(); //update displays or markers
 		}
 			
 	});
@@ -566,6 +628,18 @@ function btnLayerSwitch(){
 	showLayerDialog();
 	
 	
+}
+function handleToggleButton(id,onoff,onClass){
+	var oc=onClass || "avn_buttonActive";
+	if (onoff){
+		$(id).addClass(oc);
+		$(id).removeClass("avn_buttonInactive");
+	}
+	else {
+		$(id).removeClass("avn_buttonActive");
+		$(id).removeClass("avn_buttonActiveError");
+		$(id).addClass("avn_buttonInactive");
+	}
 }
 function btnLockMarker(){
 	if (markerFeature.attributes.isLocked){
@@ -590,6 +664,18 @@ function btnLockMarker(){
 		   		 primary: "ui-icon-locked"
 		   	 }});
 	}
+}
+function btnLockPos(){
+	if (! boatFeature.layer.getVisibility()){
+		//just to be sure
+		handleToggleButton('#btnLockPos',false);
+		return;
+	}
+	boatFeature.attributes.isLocked=!boatFeature.attributes.isLocked;
+	if (boatFeature.attributes.isLocked){
+		moveMapToFeature(boatFeature);
+	}
+	handleToggleButton('#btnLockPos',boatFeature.attributes.isLocked);
 }
 
 //event handlers
@@ -628,6 +714,25 @@ function moveEndEvent(){
 		$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry.bounds.getCenterLonLat())));
 	}
 	
+}
+
+//test positioning the booat
+
+function testpos(){
+	var centerPoint=new OpenLayers.Geometry.Point(1510540.0564605 ,7209284.513336);
+	var rot=5;
+	currentAngle+=rot;
+	if (currentAngle > 360) currentAngle-=360;
+	boatFeature.geometry.calculateBounds();
+	var radius=boatFeature.geometry.distanceTo(centerPoint);
+	var w=currentAngle*Math.PI/180;
+	var newBoatPos=new OpenLayers.Geometry.Point(centerPoint.x+radius*Math.sin(w),centerPoint.y+radius*Math.cos(w));
+	var course=currentAngle+90;
+	if(course>360){course -= 360;}
+	var speed=5.5;
+	var latlonb=mapPosToLonLat(newBoatPos);
+	if (handleBoat) setBoatPosition(latlonb.x,latlonb.y, course, speed);
+	timer=window.setTimeout(testpos,properties.positionQueryTimeout);
 }
 
 //do the layout
@@ -689,7 +794,7 @@ function initialize_openlayers() {
     //we set for all layers minRes/maxRes except for the base layer, weher we set maxRes and maxZoomLevel
     //with setting maxRes, we have zoom level 0 at maxRes - so we have to set zoomOffset for all layers...
     zoomOffset=getZoomForResolution(maxRes);
-    
+    maxZoom=getZoomForResolution(minRes)-zoomOffset; //zoom of map
     if (properties.showOSM) {
     	osm=new OpenLayers.Layer.OSM(
             "Open Street Map",'http://tile.openstreetmap.org/${z}/${x}/${y}.png',
@@ -759,6 +864,7 @@ function initialize_openlayers() {
 	}
     //the vector layers
     var markerLayer=new OpenLayers.Layer.Vector("Marker");
+    var boatLayer=new OpenLayers.Layer.Vector("Boat");
     //test style
     
     var style_mark = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
@@ -771,7 +877,20 @@ function initialize_openlayers() {
     style_mark.rotation=0;
     style_mark.fillOpacity=1;
     
-    map.addLayers([osm].concat(tiler_overlays).concat([markerLayer]));
+    var style_boat = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
+    //must fit to the dimensions of the boat: 100x400, offset 50,241
+    style_boat.graphicWidth = 20;
+    style_boat.graphicHeight = 80;
+    style_boat.graphicXOffset=-10;
+    style_boat.graphicYOffset=-48;
+    
+    style_boat.externalGraphic = "images/Boat2.png";
+    // title only works in Firefox and Internet Explorer
+    style_boat.title = "Boat";
+    style_boat.rotation=20;
+    style_boat.fillOpacity=1;
+    
+    map.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer]));
     //map.maxZoomLevel=osm.getZoomForResolution(minRes);
     map.zoomToExtent(firstLayer.layer_extent,true);
     var initialZoom=map.getZoomForResolution(maxRes)+1;
@@ -780,7 +899,10 @@ function initialize_openlayers() {
     var center=map.getCenter();
     var point=new OpenLayers.Geometry.Point(center.lon,center.lat);
     markerFeature=new OpenLayers.Feature.Vector(point,{isLocked:false},style_mark);
+    var boatPoint=new OpenLayers.Geometry.Point(1509813.9046919 ,7220215.0083809); //put the boat at a nice pos
+    boatFeature=new OpenLayers.Feature.Vector(boatPoint,{isLocked:false,angle:20},style_boat);
     markerLayer.addFeatures([markerFeature]);
+    boatLayer.addFeatures([boatFeature]);
     
     map.addControl(new OpenLayers.Control.Graticule({layerName: 'Grid', id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
     		autoActivate: false}));
@@ -819,8 +941,18 @@ function initialize_openlayers() {
 	  	 text: false,
 	  	label: 'Marker'
 	   	});
+	$('.avn_btLockPos').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+		text: false,
+	  	label: 'Position'
+	   	});
 	$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
 	
+	$('.avn_toggleButton').addClass("avn_buttonInactive");
+	
     $(window).resize(adjustSizes);
+    timer=window.setTimeout(testpos,properties.positionQueryTimeout);
 
 }
