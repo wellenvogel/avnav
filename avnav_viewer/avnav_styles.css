@@ -51,7 +51,7 @@ border-color: black;
 border-style: solid;
 border-width: 1px;
 background-color: white;
-font-size: 16px;
+font-size: 15px;
 }
 
 button.avn_button{
@@ -101,6 +101,19 @@ button.avn_buttonInactive{
 	margin-left: 0px;
 	background-size: 20px 20px;
 }
+
+#btnLayerSwitch .ui-icon{
+	background-image: url(Images/Layer40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
+
 .avn_selectList	.ui-selecting { background: #1E6CCF;}
 .avn_selectList	.ui-selected { background: #1E6CCF; color: white;}
 .avn_selectList { list-style-type: none; margin: 0; padding: 0; }

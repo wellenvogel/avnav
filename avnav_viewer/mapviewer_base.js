@@ -37,6 +37,7 @@ var properties={
 		loggingEnabled: true,
 		positionQueryTimeout: 1000, //1000ms
 		bearingColor: "#DDA01F",
+		navUrl: "avnav_navi.php"
 };
 var zoomOffset=0;
 var maxZoom=0;
@@ -544,28 +545,66 @@ function moveMapToFeature(feature,force){
 	map.moveTo(lonlat,map.zoom);
 }
 
+
+//------------------ position requests -------------------
+
+function queryPosition(){
+	var url=properties.navUrl;
+	var urlparam=OpenLayers.Util.getParameters();
+	if (urlparam.demo != null){
+		url+="?demo="+urlparam.demo;
+	}
+	$.ajax({
+		url: url,
+		success: function(data,status){
+			if (data.class != null && data.class == "TPV" && 
+					data.tag != null && data.tag =="GGA" &&
+					data.mode != null && data.mode == 2){
+				var rtime=null;
+				if (data.time != null) rtime=OpenLayers.Date.parse(data.time);
+				setBoatPosition(data.lon, data.lat, null, null, rtime);
+				timer=window.setTimeout(queryPosition,properties.positionQueryTimeout);
+			}
+		},
+		error: function(status,data,error){
+			log("query position error");
+			timer=window.setTimeout(queryPosition,properties.positionQueryTimeout);
+		},
+		timeout: 10000
+	});
+}
+
 //------------------ boat position ----------------------
 //lonlat in wgs84,course in degree,speed in ??, time as date object(??)
 function setBoatPosition(lon,lat,course,speed,time){
 	boatFeature.geometry.calculateBounds(); //not sure - but seems to be necessary
 	boatFeature.attributes.validPosition=true;
-	boatFeature.attributes.course=course;
-	boatFeature.attributes.speed=speed;
-	var lastLon=boatFeature.attributes.lon||0;
+	boatFeature.attributes.course=course||0;
+	boatFeature.attributes.speed=speed||0;
+	var lastlon=boatFeature.attributes.lon||0;
 	var lastlat=boatFeature.attributes.lat||0;
-	boatFeature.attributes.lon=lon
-	boatFeature.attributes.lat=lat;
+	boatFeature.attributes.lon=lon||0;
+	boatFeature.attributes.lat=lat||0;
+	var lonlat=new OpenLayers.LonLat(lon||0,lat||0);
 	var curDate=time|| new Date();
+	if (course == null || speed == null){
+		//compute by our own
+		dst=computeDistances(new OpenLayers.LonLat(lastlon,lastlat),lonlat);
+		if (course == null) boatFeature.attributes.course=dst.course;
+		if (speed == null && dst.dts != 0 && boatFeature.attributes.date != null) 
+			var tdiff=curDate.getTime()-boatFeature.attributes.date.getTime();
+			if (tdiff > 0) boatFeature.attributes.speed=dst.dtsnm*3600*1000/tdiff;
+	}
+	
 	boatFeature.attributes.date=curDate;
 	var datestr=formatTime(curDate);
-	var lonlat=new OpenLayers.LonLat(lon,lat);
 	$('#boatPosition').text(formatLonLats(lonlat));
-	$('#boatCourse').text(formatDecimal(course,3,0));
-	$('#boatSpeed').text(formatDecimal(speed,2,1));
+	$('#boatCourse').text(formatDecimal(boatFeature.attributes.course,3,0));
+	$('#boatSpeed').text(formatDecimal(boatFeature.attributes.speed,2,1));
 	$('#boatLocalTime').text(datestr);
 	if (boatFeature.layer.getVisibility()){
 		var mlonlat = lonLatToMap(lonlat);
-		boatFeature.style.rotation = course;
+		boatFeature.style.rotation = boatFeature.attributes.course;
 		boatFeature.move(mlonlat);
 		//boatFeature.layer.redraw();
 		// boatFeature.geometry.rotate(course);
@@ -581,9 +620,13 @@ function setBoatPosition(lon,lat,course,speed,time){
 
 //--------------- distances ------------------------------
 //compute the set of distance parameters between 2 geometries
-function computeDistances(src,dst){
-	var srcll=mapPosToLonLat(src);
-	var dstll=mapPosToLonLat(dst);
+function computeDistances(src,dst,convert){
+	var srcll=src;
+	var dstll=dst;
+	if (convert != null && convert){
+		srcll=mapPosToLonLat(src);
+		dstll=mapPosToLonLat(dst);
+	}
 	var dts=OpenLayers.Spherical.computeDistanceBetween(srcll,dstll);
 	var rt={
 	};
@@ -600,7 +643,7 @@ function computeDistances(src,dst){
 function updateCourseDisplay(){
 	$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry)));
 	if (! boatFeature.attributes.validPosition) return;
-	var dst=computeDistances(boatFeature.geometry,markerFeature.geometry);
+	var dst=computeDistances(boatFeature.geometry,markerFeature.geometry,true);
 	$('#bearing').text(formatDecimal(dst.course,3,0));
 	$('#distance').text(formatDecimal(dst.dtsnm,3,1));
 	var speed=boatFeature.attributes.speed||0;
@@ -1036,6 +1079,7 @@ function initialize_openlayers() {
 	});
 	
     $(window).resize(adjustSizes);
-    timer=window.setTimeout(testpos,properties.positionQueryTimeout);
+    queryPosition();
+    //timer=window.setTimeout(testpos,properties.positionQueryTimeout);
 
 }
