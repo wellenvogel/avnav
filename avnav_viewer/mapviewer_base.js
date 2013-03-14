@@ -457,7 +457,7 @@ function formatLonLats(lonLat) {
   var long = lonLat.lon;
   var ns=formatLonLatsDecimal(lat, 'lat');
   var ew=formatLonLatsDecimal(long, 'lon');
-  return ew + ', ' + ns;
+  return ns + ', ' + ew;
 }
 
 //copied from OpenLayers.Util.getFormattedLonLat
@@ -522,6 +522,7 @@ log('OpenLayers.VERSION_NUMBER',OpenLayers.VERSION_NUMBER);
 function moveMapToFeature(feature,force){
 	var f=force || false;
 	if (! feature.layer.getVisibility() && ! f) return;
+	if (feature.attributes.validPosition != null && ! feature.attributes.validPosition) return;
 	var lonlat=new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
 	map.moveTo(lonlat,map.zoom);
 }
@@ -530,15 +531,16 @@ function moveMapToFeature(feature,force){
 //lonlat in wgs84,course in degree,speed in ??
 function setBoatPosition(lon,lat,course,speed){
 	boatFeature.geometry.calculateBounds(); //not sure - but seems to be necessary
+	boatFeature.attributes.validPosition=true;
 	var lonlat=new OpenLayers.LonLat(lon,lat);
 	$('#boatPosition').text(formatLonLats(lonlat));
 	$('#boatCourse').text(formatDecimal(course,3,0));
 	$('#boatSpeed').text(formatDecimal(speed,2,1));
 	if (boatFeature.layer.getVisibility()){
 		var mlonlat = lonLatToMap(lonlat);
-		boatFeature.attributes.angle = course;
-		boatFeature.move(mlonlat);
 		boatFeature.style.rotation = course;
+		boatFeature.move(mlonlat);
+		//boatFeature.layer.redraw();
 		// boatFeature.geometry.rotate(course);
 		boatFeature.geometry.calculateBounds();
 		logMapPos("boat", boatFeature.geometry.bounds.getCenterLonLat());
@@ -649,21 +651,15 @@ function btnLockMarker(){
 		logMapPos("unlock-map",map.getCenter());
 		$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry.bounds.getCenterLonLat())));
 		markerFeature.attributes.isLocked=false;
-		$("#btnLockMarker").button("option",{	
-		   	 icons: {
-		   		 primary: "ui-icon-unlocked"
-		   	 }});
+		
 	}else {		
 		$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
 		markerFeature.attributes.isLocked=true;
 		markerFeature.geometry.calculateBounds();
 		logMapPos("lock-marker",markerFeature.geometry.bounds.getCenterLonLat());
 		logMapPos("lock-map",map.getCenter());
-		$("#btnLockMarker").button("option",{	
-		   	 icons: {
-		   		 primary: "ui-icon-locked"
-		   	 }});
 	}
+	handleToggleButton('#btnLockMarker',markerFeature.attributes.isLocked);
 }
 function btnLockPos(){
 	if (! boatFeature.layer.getVisibility()){
@@ -900,7 +896,7 @@ function initialize_openlayers() {
     var point=new OpenLayers.Geometry.Point(center.lon,center.lat);
     markerFeature=new OpenLayers.Feature.Vector(point,{isLocked:false},style_mark);
     var boatPoint=new OpenLayers.Geometry.Point(1509813.9046919 ,7220215.0083809); //put the boat at a nice pos
-    boatFeature=new OpenLayers.Feature.Vector(boatPoint,{isLocked:false,angle:20},style_boat);
+    boatFeature=new OpenLayers.Feature.Vector(boatPoint,{isLocked:false,angle:0,validPosition:false},style_boat);
     markerLayer.addFeatures([markerFeature]);
     boatLayer.addFeatures([boatFeature]);
     
@@ -951,6 +947,15 @@ function initialize_openlayers() {
 	$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
 	
 	$('.avn_toggleButton').addClass("avn_buttonInactive");
+	
+	$('#leftBottom').click(function(e){
+		if (markerFeature.attributes.isLocked && ! boatFeature.attributes.isLocked){
+			moveMapToFeature(markerFeature,true);
+		}
+	});
+	$('#leftTop').click(function(e){
+		moveMapToFeature(boatFeature,true);
+	});
 	
     $(window).resize(adjustSizes);
     timer=window.setTimeout(testpos,properties.positionQueryTimeout);

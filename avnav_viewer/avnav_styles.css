@@ -18,8 +18,12 @@ html,body {
 }
 .avn_leftTop{
 	
-	background-color: blue;
+	background-color: #1602FC;
 	text-align: center;
+}
+
+.avn_leftTop .avn_label {
+	color: white;
 }
 .avn_leftBottom{
 	
@@ -84,6 +88,18 @@ button.avn_buttonInactive{
 	margin-left: 0px;
 	background-size: 20px 20px;
 }
+
+#btnLockMarker .ui-icon{
+	background-image: url(Images/Marker1.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 10px;
+	top: 10px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 20px 20px;
+}
 .avn_selectList	.ui-selecting { background: #1E6CCF;}
 .avn_selectList	.ui-selected { background: #1E6CCF; color: white;}
 .avn_selectList { list-style-type: none; margin: 0; padding: 0; }
@@ -127,13 +143,9 @@ button.avn_buttonInactive{
 }
 .avn_top_content{
 	float: left;
+	line-height: 18px;
 }
-.avn_top_content .avn_label{
-	line-height: 20px; /* same as top container - set centered */
-}
-.avn_top_content .avn_position{
-	line-height: 18px; /*has 1 px border */
-}
+
 
 /*
 	3. map
@@ -162,11 +174,6 @@ button.avn_buttonInactive{
 
 .avn_bottom_content{
 	float: left;
-}
-.avn_bottom_content .avn_label{
-	line-height: 20px; /* same as bootom container - set centered */
-}
-.avn_bottom_content .avn_position{
 	line-height: 18px; /*has 1 px border */
 }
 
