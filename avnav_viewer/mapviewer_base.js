@@ -36,6 +36,7 @@ var properties={
 		rightPanelWidth: 60, //currently not used
 		loggingEnabled: true,
 		positionQueryTimeout: 1000, //1000ms
+		bearingColor: "#DDA01F",
 };
 var zoomOffset=0;
 var maxZoom=0;
@@ -43,6 +44,7 @@ var map=null;
 var rightWidth=60; //the control button panel
 var markerFeature=null;
 var boatFeature=null;
+var headingFeature=null;
 var timer=null;
 var handleBoat=true;
 var currentAngle=0;
@@ -596,6 +598,7 @@ function computeDistances(src,dst){
 
 //update the display of brg,dst,eta
 function updateCourseDisplay(){
+	$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry)));
 	if (! boatFeature.attributes.validPosition) return;
 	var dst=computeDistances(boatFeature.geometry,markerFeature.geometry);
 	$('#bearing').text(formatDecimal(dst.course,3,0));
@@ -617,7 +620,9 @@ function updateCourseDisplay(){
 		etastr=formatTime(targetDate);
 	}
 	$('#eta').text(etastr);
+	headingFeature.layer.drawFeature(headingFeature);
 }
+
 
 //button functions
 function btnZoomIn(){
@@ -670,6 +675,7 @@ function showLayerDialog(){
 				        	  moveMapToFeature(boatFeature);
 				        	  handleToggleButton('#btnLockPos',boatFeature.attributes.isLocked
 				        			  && map.layers[idx].getVisibility());
+				        	  updateCourseDisplay();
 				          }
 				        });
 					$(this).dialog("close");
@@ -716,15 +722,15 @@ function btnLockMarker(){
 		markerFeature.move(map.getCenter());
 		logMapPos("unlock-marker",markerFeature.geometry.bounds.getCenterLonLat());
 		logMapPos("unlock-map",map.getCenter());
-		$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry.bounds.getCenterLonLat())));
 		markerFeature.attributes.isLocked=false;
+		headingFeature.style.display="none";
 		
 	}else {		
-		$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
 		markerFeature.attributes.isLocked=true;
 		markerFeature.geometry.calculateBounds();
 		logMapPos("lock-marker",markerFeature.geometry.bounds.getCenterLonLat());
 		logMapPos("lock-map",map.getCenter());
+		headingFeature.style.display=null;
 	}
 	handleToggleButton('#btnLockMarker',markerFeature.attributes.isLocked);
 	updateCourseDisplay();
@@ -753,32 +759,25 @@ function moveEvent(){
 	if (! markerFeature.attributes.isLocked){
 		markerFeature.move(map.getCenter());
 		markerFeature.geometry.calculateBounds();
-		$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
-		logMapPos("move-marker",markerFeature.geometry.bounds.getCenterLonLat());
+		logMapPos("move-marker",markerFeature.geometry);
 		logMapPos("move-map",map.getCenter());
 		updateCourseDisplay();
 	}
 	else {
-		/*
-		markerFeature.geometry.calculateBounds();
-		logMapPos("move-marker",markerFeature.geometry.bounds.getCenterLonLat());
-		$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry.bounds.getCenterLonLat())));
-		*/
+		;
 	}
 }
 function moveEndEvent(){
 	if (! markerFeature.attributes.isLocked){
 		markerFeature.move(map.getCenter());
 		markerFeature.geometry.calculateBounds();
-		$('#markerPosition').text(formatLonLats(mapPosToLonLat(map.getCenter())));
 		logMapPos("marker",markerFeature.geometry.bounds.getCenterLonLat());
 		logMapPos("map",map.getCenter());
-		updateCourseDisplay();
 	}
 	else {
 		markerFeature.geometry.calculateBounds();
-		$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry.bounds.getCenterLonLat())));
 	}
+	updateCourseDisplay();
 	
 }
 
@@ -846,7 +845,6 @@ function initialize_openlayers() {
           maxExtent: new OpenLayers.Bounds(-20037508.342789, -20037508.342789, 20037508.342789, 20037508.342789),
             controls: [
                 
-                //new OpenLayers.Control.MousePosition( {div: $('#markerPosition'), formatOutput: formatLonlats} ),
                 new OpenLayers.Control.Navigation(),
                 new OpenLayers.Control.KeyboardDefaults(),
                 new OpenLayers.Control.ScaleLine({
@@ -933,7 +931,7 @@ function initialize_openlayers() {
     //the vector layers
     var markerLayer=new OpenLayers.Layer.Vector("Marker");
     var boatLayer=new OpenLayers.Layer.Vector("Boat");
-    //test style
+    var headingLayer=new OpenLayers.Layer.Vector("Heading");
     
     var style_mark = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
     style_mark.graphicWidth = 40;
@@ -958,7 +956,13 @@ function initialize_openlayers() {
     style_boat.rotation=20;
     style_boat.fillOpacity=1;
     
-    map.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer]));
+    var style_bearing = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
+    style_bearing.fillOpacity=1;
+    style_bearing.display="none";
+    style_bearing.strokeColor=properties.bearingColor;
+    
+    
+    map.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer,headingLayer]));
     //map.maxZoomLevel=osm.getZoomForResolution(minRes);
     map.zoomToExtent(firstLayer.layer_extent,true);
     var initialZoom=map.getZoomForResolution(maxRes)+1;
@@ -969,8 +973,10 @@ function initialize_openlayers() {
     markerFeature=new OpenLayers.Feature.Vector(point,{isLocked:false},style_mark);
     var boatPoint=new OpenLayers.Geometry.Point(1509813.9046919 ,7220215.0083809); //put the boat at a nice pos
     boatFeature=new OpenLayers.Feature.Vector(boatPoint,{isLocked:false,angle:0,validPosition:false},style_boat);
+    headingFeature=new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString([boatPoint,point]),{},style_bearing);
     markerLayer.addFeatures([markerFeature]);
     boatLayer.addFeatures([boatFeature]);
+    headingLayer.addFeatures([headingFeature]);
     
     map.addControl(new OpenLayers.Control.Graticule({layerName: 'Grid', id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
     		autoActivate: false}));
