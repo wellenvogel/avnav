@@ -1,0 +1,11 @@
+<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <title>Marker1</title>
+ <g>
+  <title>Layer 1</title>
+  <circle id="svg_5" r="23" cy="64" cx="64" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="3" stroke="#000000" fill="#ffff00"/>
+  <line id="svg_10" y2="64.25" x2="127.75" y1="64" x1="0.25" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="2" stroke="#000000" fill="none"/>
+  <line id="svg_11" y2="127.75" x2="64" y1="0.25" x1="64" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="2" stroke="#000000" fill="none"/>
+ </g>
+</svg>
+
