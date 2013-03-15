@@ -32,6 +32,7 @@ from xml.sax._exceptions import SAXParseException
 import threading
 import datetime
 import traceback
+import pprint
 
 hasSerial=False
 loggingInitialized=False
@@ -135,9 +136,10 @@ class AVNConfig(sax.handler.ContentHandler):
 #data is the decoded string
 class AVNDataEntry():
   knownClasses=("TPV")
+  EMPTY_CLASS="EMPTY"
   def __init__(self):
-    self.key="EMPTY"
-    self.data={}
+    self.key=self.createKey(self.EMPTY_CLASS,'')
+    self.data={'class':self.EMPTY_CLASS,'time':None}
     self.timestamp=None
   
   #create a key from prefix and suffix
@@ -181,13 +183,13 @@ class AVNDataEntry():
     return cls.fromData(data)
   
   def __str__(self):
-    rt="AVNDataEntry: %s=%s" % (self.key,implode(self.data))
+    rt="AVNDataEntry: %s=%s" % (self.key,pprint.pformat(self.data))
     return rt
   def toJson(self):
     return json.dumps(self.data)
   
 
-
+#the main List of navigational items received
 class AVNNavData():
   def __init__(self):
     self.list={}
@@ -207,6 +209,17 @@ class AVNNavData():
     return rt
   def getFilteredEntries(self,prefix,suffixlist):
     rt={}
+    if len(suffixlist) == 0:
+      #return all
+      searchprefix=AVNDataEntry.createKey(prefix,'')
+      prfxlen=len(searchprefix)
+      self.listLock.acquire();
+      for k in self.list.keys():
+        e=self.list[k]
+        if e.key[0:prfxlen]==searchprefix:
+          rt[e.key]=e
+      self.listLock.release()
+      return rt
     for sfx in suffixlist:
       k=AVNDataEntry.createKey(prefix, sfx)
       entry=self.list.get(k)
@@ -215,6 +228,31 @@ class AVNNavData():
     return rt
   def getFilteredEntriesAsJson(self,prefix,suffixlist):
     return json.dumps(self.getFilteredEntries(prefix, suffixlist))
+  
+  def getMergedEntries(self,prefix,suffixlist):
+    fe=self.getFilteredEntries(prefix, suffixlist)
+    rt=AVNDataEntry()
+    rt.key=rt.createKey(prefix, '')
+    for k in fe:
+      e=fe[k]
+      if not rt.timestamp:
+        e.timestamp=rt.timestamp
+      newer=False
+      if e.timestamp > rt.timestamp:
+        newer=True
+      k='class'
+      if not k in rt.data or rt.data[k] == rt.EMPTY_CLASS:
+        rt.data[k]=e.data[k]
+      if e.data[k] != rt.data[k] and rt.data[k] != rt.EMPTY_CLASS:
+        warn("mixing different classes in merge, ignore"+str(e))
+        continue
+      for k in e.data.keys():
+        if not (k in rt.data) or newer :
+          rt.data[k] = e.data[k]
+    ld("getMergedEntries",prefix,suffixlist,rt)
+    return rt    
+              
+        
   
   def __str__(self):
     rt="AVNNavData \n";
@@ -379,7 +417,8 @@ def main(args):
           warn("unable to start serial reader: "+str(e))
   while True:
     time.sleep(3)
-    log(str(navData))  
+    log(str(navData))
+    log("entries for TPV: "+str(navData.getMergedEntries("TPV", [])))  
  
 if __name__ == "__main__":
     main(sys.argv)
