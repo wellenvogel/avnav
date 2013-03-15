@@ -84,7 +84,7 @@ if (isset($_REQUEST['demo'])){
 		}
 		fclose($f);
 		if ($trkpnt == null){
-			$idx=0;
+			$idx=-1;
 		}
 		$if=fopen($idxname,"w");
 		if ($if){

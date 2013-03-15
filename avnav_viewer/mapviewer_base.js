@@ -563,8 +563,8 @@ function queryPosition(){
 				var rtime=null;
 				if (data.time != null) rtime=OpenLayers.Date.parse(data.time);
 				setBoatPosition(data.lon, data.lat, null, null, rtime);
-				timer=window.setTimeout(queryPosition,properties.positionQueryTimeout);
 			}
+			timer=window.setTimeout(queryPosition,properties.positionQueryTimeout);
 		},
 		error: function(status,data,error){
 			log("query position error");
