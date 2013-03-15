@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AVNServer debug="2" >
+<Readers>
+<AVNSerialReader name="com4reader" port="3"/>
+</Readers>
+</AVNServer>

@@ -1,0 +1,49 @@
+
+========== anvnav_server concepts =================================
+=          (C) Andreas Vogel andreas@wellenvogel.net
+=          2013/03/15
+=
+===================================================================
+
+Basics
+------
+The python server will maintain all the navigational information. 
+Basically it will internally keep a list of received nmea data and will provide it via various access interfaces.
+In step 1 the following input and output interfaces will be supported:
+Input:
+	serial input using pyserial (basic NMEA sequences like GGA)
+	gpsd (via python adapter or directly???)
+	tcp listener for testing (basic nmea input?)
+Output:
+	http requests with json responses
+	?http for static pages
+The server will run as a daemon process. It will read its configuration from an xml file avnav_server.xml.
+There the input and output options will be configured.
+Internally the main data structure is a dictionary with all received data. The key consist of a prefix and a suffix. 
+It is closely related to the json data that can received from gpsd (http://catb.org/gpsd/index.html, http://catb.org/gpsd/gpsd_json.html)
+So for normal gps data the key will be TPV-<nmeatag> - e.g. TPV-GGA.
+As data the server will store:
+	timestamp	- 	local timestamp of the last update
+	data		-	a python dictionary that contains the json decoded data (gpsd format)
+Format of AIS data still tbd.
+
+Input/Output
+------------
+For each of the input/output sources a separate thread will be used.
+Input sources will read NMEA data and will store them into the navdata dictionary, updating previous values. New values will overwrite old ones.
+For the HTTP input the SimpleHTTPServer module is used.
+
+Tracking
+--------
+If valid position reports are received, an automatic track file (gpx) is written (and a set of trackpoints is stored locally).
+Normally the trackfile is written at fixed intervals and changed every day.
+
+HTTP Interface
+--------------  	
+The HTTP API support get requests.
+Beside normal static pages from configured directories, there is a navquery URL used to retrieve navigational information.
+The basic query looks like:
+	http://avnav/<navi_url>?filter=TPV&bbox=54.531,13.014,54.799,13.255
+This will return all TPV data currently available. You can further restrict this by e.g. using TPV-GGA.
+AIS data still tbd.
+
