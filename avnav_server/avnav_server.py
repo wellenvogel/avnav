@@ -33,6 +33,13 @@ import threading
 import datetime
 import traceback
 import pprint
+import socket
+import SocketServer
+import BaseHTTPServer
+import SimpleHTTPServer
+import posixpath
+import urllib
+import itertools
 
 hasSerial=False
 loggingInitialized=False
@@ -91,6 +98,7 @@ class AVNConfig(sax.handler.ContentHandler):
                      }
     self.serialreader={}
     self.gpsdreader={}
+    self.httppathmappings={}
     sax.handler.ContentHandler.__init__(self)
     pass
   
@@ -101,8 +109,8 @@ class AVNConfig(sax.handler.ContentHandler):
       return False
     try:
       parser=sax.parse(filename,self)
-    except SAXParseException as e:
-      warn("error parsing cfg file "+filename+": "+str(e))
+    except:
+      warn("error parsing cfg file "+filename+": "+traceback.format_exc())
       return False
     return True
     
@@ -126,6 +134,12 @@ class AVNConfig(sax.handler.ContentHandler):
         else:
           sparam[k]=v
       self.serialreader[sparam['name']]=sparam
+    if name == "AVNHttpServerDirectory":
+      if attrs.get('urlpath') is None:
+        raise SAXParseException("missing mandatory parameter urlpath for "+name)
+      if attrs.get('path') is None:
+        raise SAXParseException("missing mandatory parameter path for "+name)
+      self.httppathmappings[attrs['urlpath']]=attrs['path']
     pass
   def endElement(self, name):   
     pass
@@ -178,7 +192,7 @@ class AVNDataEntry():
     try:
       data=json.loads(jsondata)
     except:
-      log("unable to parse json data "+jsondata)
+      log("unable to parse json data "+jsondata+": "+traceback.format_exc())
       return None
     return cls.fromData(data)
   
@@ -233,8 +247,8 @@ class AVNNavData():
     fe=self.getFilteredEntries(prefix, suffixlist)
     rt=AVNDataEntry()
     rt.key=rt.createKey(prefix, '')
-    for k in fe:
-      e=fe[k]
+    for kf in fe:
+      e=fe[kf]
       if not rt.timestamp:
         e.timestamp=rt.timestamp
       newer=False
@@ -247,7 +261,7 @@ class AVNNavData():
         warn("mixing different classes in merge, ignore"+str(e))
         continue
       for k in e.data.keys():
-        if not (k in rt.data) or newer :
+        if not (k in rt.data) or newer or rt.data.get(k) is None:
           rt.data[k] = e.data[k]
     ld("getMergedEntries",prefix,suffixlist,rt)
     return rt    
@@ -282,19 +296,24 @@ class AVNSerialReader(threading.Thread):
   def run(self):
     f=None
     try:
-      num=int(self.param['port'])
+      pnum=int(self.param['port'])
     except:
-      num=self.param['port']
+      pnum=self.param['port']
+    portname=self.param['port']
     timeout=float(self.param['timeout'])
     porttimeout=timeout*10
     name=self.getName()
-    log(name+": serial reader started for "+str(num))
+    log(name+": serial reader started for "+portname)
     while True:
       lastTime=time.time()
       try:
-        f=serial.Serial(num,timeout=2)
-      except Exception as e:
-        log(name+"Exception on opening "+str(num)+" : "+str(e))
+        f=serial.Serial(pnum,timeout=2)
+      except Exception:
+        try:
+          tf=traceback.format_exc(3).decode(errors='ignore')
+        except:
+          tf="unable to decode exception"
+        log(name+"Exception on opening "+portname+" : "+tf)
         if f is not None:
           f.close()
         time.sleep(porttimeout/2)
@@ -308,7 +327,7 @@ class AVNSerialReader(threading.Thread):
           lastTime=time.time()
         if (time.time() - lastTime) > porttimeout:
           f.close()
-          log(name+ "Reopen port "+(num)+" - timeout elapsed")
+          log(name+ "Reopen port "+portname+" - timeout elapsed")
           break
   
   #returns an iso 8601 timestring
@@ -322,15 +341,21 @@ class AVNSerialReader(threading.Thread):
     ld("curts/gpsdt before corr",curdt,gpsdt)
     #now correct the time if we are just chaning from one day to another
     #this assumes that our system time is not more then one day off...(???)
-    if (curdt - gpsdt) > datetime.timedelta(0,12) and curdt.time().hour < 12:
+    if (curdt - gpsdt) > datetime.timedelta(hours=12) and curdt.time().hour < 12:
       #we are in the evening and the gps is already in the morning... (and we accidently put it to the past morning)
       #so we have to hurry up to the next day...
       gpsdt=datetime.datetime.combine(curdt+datetime.timedelta(1),gpsts)
-    if (gpsdt - curdt) > datetime.timedelta(0,12) and curdt.time().hour> 12:
+    if (gpsdt - curdt) > datetime.timedelta(hours=12) and curdt.time().hour> 12:
       #now we are faster - the gps is still in the evening of the past day - but we assume it at the coming evening
       gpsdt=datetime.datetime.combine(curdt-datetime.timedelta(1),gpsts)
     ld("curts/gpsdt after corr",curdt,gpsdt)
-    return gpsdt.isoformat()
+    rt=gpsdt.isoformat()
+    #seems that isoformat does not well harmonize with OpenLayers.Date
+    #they expect at leas a timezone info
+    #as we are at GMT we should have a "Z" at the end
+    if not rt[-1:]=="Z":
+      rt+="Z"
+    return rt
   
   #parse the nmea psoition fields:
   #gggmm.dec,N  - 1-3 characters grad, mm 2 didgits minutes
@@ -385,11 +410,132 @@ class AVNSerialReader(threading.Thread):
           rt['speed']=float(darray[3]or '0')*NM/3600
         self.navdata.addEntry(AVNDataEntry.fromData(rt))
         return
+    except Exception:
+        warn(self.getName()+" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
+
+#a HTTP server with threads for each request
+class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer):
+  def __init__(self,navdata,basedir,server_address,RequestHandlerClass,navurl,pathMappings=None):
+    self.navdata=navdata
+    self.basedir=basedir
+    self.pathmappings=pathMappings
+    self.navurl=navurl
+    BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
+
+class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+  def __init__(self,request,client_address,server):
+    ld("receiver thread started",client_address)
+    SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
+  
+  #overwrite this from SimpleHTTPRequestHandler
+  def send_head(self):
+    path=self.translate_path(self.path)
+    if path is None:
+      return
+    """Common code for GET and HEAD commands.
+
+    This sends the response code and MIME headers.
+
+    Return value is either a file object (which has to be copied
+    to the outputfile by the caller unless the command was HEAD,
+    and must be closed by the caller under all circumstances), or
+    None, in which case the caller has nothing further to do.
+
+    """
+    
+    f = None
+    if os.path.isdir(path):
+        if not self.path.endswith('/'):
+            # redirect browser - doing basically what apache does
+            self.send_response(301)
+            self.send_header("Location", self.path + "/")
+            self.end_headers()
+            return None
+        for index in "index.html", "index.htm":
+            index = os.path.join(path, index)
+            if os.path.exists(index):
+                path = index
+                break
+        else:
+            return self.list_directory(path)
+    ctype = self.guess_type(path)
+    try:
+        # Always read in binary mode. Opening files in text mode may cause
+        # newline translations, making the actual size of the content
+        # transmitted *less* than the content-length!
+        f = open(path, 'rb')
+    except IOError:
+        self.send_error(404, "File not found")
+        return None
+    self.send_response(200)
+    self.send_header("Content-type", ctype)
+    fs = os.fstat(f.fileno())
+    self.send_header("Content-Length", str(fs[6]))
+    self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+    self.end_headers()
+    return f
+    
+  #overwrite this from SimpleHTTPRequestHandler
+  def translate_path(self, path):
+      """Translate a /-separated PATH to the local filename syntax.
+
+      Components that mean special things to the local file system
+      (e.g. drive or directory names) are ignored.  (XXX They should
+      probably be diagnosed.)
+
+      """
+      # abandon query parameters
+      (path,sep,query) = path.partition('?')
+      path = path.split('#',1)[0]
+      path = posixpath.normpath(urllib.unquote(path))
+      if path==self.server.navurl:
+        self.handleNavRequest(path,query)
+        return None
+      words = path.split('/')
+      words = filter(None, words)
+      path = ""
+      for word in words:
+          drive, word = os.path.splitdrive(word)
+          head, word = os.path.split(word)
+          if word in (".",".."): continue
+          path = os.path.join(path, word)
+      ld("request path/query",path,query)
+      #pathmappings expect to have absolute pathes!
+      if not self.server.pathmappings is None:
+        for mk in self.server.pathmappings.keys():
+          if path.find(mk) == 0:
+            path=self.server.pathmappings[mk]+path[len(mk):]
+            ld("remapped path to",path)
+            return path
+      path=os.path.join(self.server.basedir,path)
+      return path
+      
+  #handle a navigational query
+  #query could be: filter=TPV&bbox=54.531,13.014,54.799,13.255
+  #filter is a key of the map in the form prefix-suffix
+  def handleNavRequest(self,path,query):
+    try:
+      rtv=self.server.navdata.getMergedEntries("TPV",[])
+      rt=json.dumps(rtv.data)
     except Exception as e:
-        warn(self.getName()+" error "+str(e)+" parsing nmea data "+str(data)+"\n"+traceback.format_exc())
+      ld("unable to process request for ",path,query)
+      self.send_response(500);
+      self.end_headers()
+      return
+    self.send_response(200)
+    self.send_header("Content-type", "application/json")
+    self.send_header("Content-Length", len(rt))
+    self.send_header("Last-Modified", self.date_time_string())
+    self.end_headers()
+    self.wfile.write(rt)
+    ld("request",path,query,rt)
+
+      
+
         
 
 def main(args):
+  global loggingInitialized
   cfgname=None
   if len(args) < 2:
     cfgname=os.path.join(os.path.dirname(args[0]),"avnav_server.xml")
@@ -403,6 +549,7 @@ def main(args):
   loglevel=int(cfg.parameters.get('debug') or '0')
   logging.basicConfig(level=logging.DEBUG if loglevel==2 else 
       (logging.ERROR if loglevel==0 else logging.INFO))
+  loggingInitialized=True
   if len(cfg.serialreader.keys()) > 0:
     if not hasSerial:
       warn("serial readers configured but serial module not available, ignore them")
@@ -413,8 +560,24 @@ def main(args):
           sthread=AVNSerialReader(serialcfg,navData)
           sthread.start()
           allThreads.append(sthread)
-        except Exception as e:
-          warn("unable to start serial reader: "+str(e))
+        except Exception:
+          warn("unable to start serial reader: "+traceback.format_exc())
+  serverbasedir=cfg.parameters['basedir'];
+  if serverbasedir==".":
+    serverbasedir=os.getcwd()
+  port=cfg.parameters['httpPort']
+  host=cfg.parameters.get('httpHost')
+  if host is None:
+    host=""
+  log("HTTP server host="+host+", port="+port+", base="+serverbasedir)
+  httpd=AVNHTTPServer(navData, serverbasedir, (host,int(port)), AVNHTTPHandler,cfg.parameters.get('navurl'),cfg.httppathmappings)
+  # Start a thread with the server -- that thread will then start one
+  # more thread for each request
+  server_thread = threading.Thread(target=httpd.serve_forever)
+  # Exit the server thread when the main thread terminates
+  server_thread.daemon = True
+  server_thread.start()
+  log("HTTP loop running in thread:"+server_thread.name)
   while True:
     time.sleep(3)
     log(str(navData))
