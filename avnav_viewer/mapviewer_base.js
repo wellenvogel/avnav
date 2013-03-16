@@ -556,13 +556,15 @@ function queryPosition(){
 	}
 	$.ajax({
 		url: url,
+		dataType: 'json',
+		cache:	false,
 		success: function(data,status){
 			if (data.class != null && data.class == "TPV" && 
 					data.tag != null && data.tag =="GGA" &&
-					data.mode != null && data.mode == 2){
+					data.mode != null && data.mode >=1){
 				var rtime=null;
 				if (data.time != null) rtime=OpenLayers.Date.parse(data.time);
-				setBoatPosition(data.lon, data.lat, null, null, rtime);
+				setBoatPosition(data.lon, data.lat, data.track, data.speed, rtime);
 			}
 			timer=window.setTimeout(queryPosition,properties.positionQueryTimeout);
 		},
@@ -575,12 +577,12 @@ function queryPosition(){
 }
 
 //------------------ boat position ----------------------
-//lonlat in wgs84,course in degree,speed in ??, time as date object(??)
+//lonlat in wgs84,course in degree,speed in m/s, time as date object
 function setBoatPosition(lon,lat,course,speed,time){
 	boatFeature.geometry.calculateBounds(); //not sure - but seems to be necessary
 	boatFeature.attributes.validPosition=true;
 	boatFeature.attributes.course=course||0;
-	boatFeature.attributes.speed=speed||0;
+	boatFeature.attributes.speed=(speed||0)*3600/NM;
 	var lastlon=boatFeature.attributes.lon||0;
 	var lastlat=boatFeature.attributes.lat||0;
 	boatFeature.attributes.lon=lon||0;
