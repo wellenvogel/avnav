@@ -37,7 +37,10 @@ var properties={
 		loggingEnabled: true,
 		positionQueryTimeout: 1000, //1000ms
 		bearingColor: "#DDA01F",
-		navUrl: "avnav_navi.php"
+		navUrl: "avnav_navi.php",
+		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
+		statusErrorImage: "images/RedBubble40.png",
+		statusOkImage: "images/GreenBubble40.png",
 };
 var zoomOffset=0;
 var maxZoom=0;
@@ -50,6 +53,7 @@ var timer=null;
 var handleBoat=true;
 var currentAngle=0;
 var NM=1852;
+var gpsErrors=0;
 OpenLayers.Control.ClickBar = OpenLayers.Class(OpenLayers.Control, {
 
     clickBarDiv: null,
@@ -540,7 +544,9 @@ log('OpenLayers.VERSION_NUMBER',OpenLayers.VERSION_NUMBER);
 function moveMapToFeature(feature,force){
 	var f=force || false;
 	if (! feature.layer.getVisibility() && ! f) return;
-	if (feature.attributes.validPosition != null && ! feature.attributes.validPosition) return;
+	if (feature.attributes.validPosition != null && ! feature.attributes.validPosition) {
+		if (feature.attributes.oldPosition != null && ! feature.attributes.oldPosition) return;
+	}
 	var lonlat=new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
 	map.moveTo(lonlat,map.zoom);
 }
@@ -560,16 +566,21 @@ function queryPosition(){
 		cache:	false,
 		success: function(data,status){
 			if (data.class != null && data.class == "TPV" && 
-					data.tag != null && data.tag =="GGA" &&
+					data.tag != null && data.lon != null && data.lat != null &&
 					data.mode != null && data.mode >=1){
 				var rtime=null;
 				if (data.time != null) rtime=OpenLayers.Date.parse(data.time);
+				handleGpsStatus(true);
 				setBoatPosition(data.lon, data.lat, data.track, data.speed, rtime);
+			}
+			else{
+				handleGpsStatus(false);
 			}
 			timer=window.setTimeout(queryPosition,properties.positionQueryTimeout);
 		},
 		error: function(status,data,error){
 			log("query position error");
+			handleGpsStatus(false);
 			timer=window.setTimeout(queryPosition,properties.positionQueryTimeout);
 		},
 		timeout: 10000
@@ -581,6 +592,7 @@ function queryPosition(){
 function setBoatPosition(lon,lat,course,speed,time){
 	boatFeature.geometry.calculateBounds(); //not sure - but seems to be necessary
 	boatFeature.attributes.validPosition=true;
+	boatFeature.attributes.oldPosition=true;
 	boatFeature.attributes.course=course||0;
 	boatFeature.attributes.speed=(speed||0)*3600/NM;
 	var lastlon=boatFeature.attributes.lon||0;
@@ -620,6 +632,43 @@ function setBoatPosition(lon,lat,course,speed,time){
 	
 }
 
+function handleGpsStatus(ok,force){
+	var hasChanged=false;
+	var doForce=force||false;
+	if (! ok){
+		gpsErrors++;
+		if (gpsErrors >= properties.maxGpsErrors){
+			if (boatFeature.attributes.validPosition){
+				hasChanged=true;
+				boatFeature.attributes.validPosition=false;
+			}
+			
+		}
+	}
+	else{
+		gpsErrors=0;
+		if (!boatFeature.attributes.validPosition){
+			hasChanged=true;
+			boatFeature.attributes.validPosition=true;
+		}
+	}
+	if (hasChanged|| doForce){
+		if (!ok){
+			if (! boatFeature.attributes.oldPosition)headingFeature.style.display="none";
+			if (! boatFeature.attributes.oldPosition) boatFeature.style.display="none";
+			$('#boatPositionStatus').attr('src',properties.statusErrorImage);
+		}
+		else {
+			if (markerFeature.attributes.isLocked) headingFeature.style.display=null;
+			boatFeature.style.display=null;
+			$('#boatPositionStatus').attr('src',properties.statusOkImage);
+		}
+		headingFeature.layer.drawFeature(headingFeature);
+		boatFeature.layer.drawFeature(boatFeature);
+		updateCourseDisplay();
+		handleToggleButton('#btnLockPos',boatFeature.attributes.isLocked,(boatFeature.attributes.validPosition?'avn_buttonActive':'avn_buttonActiveError'));
+	}
+}
 //--------------- distances ------------------------------
 //compute the set of distance parameters between 2 geometries
 function computeDistances(src,dst,convert){
@@ -644,7 +693,13 @@ function computeDistances(src,dst,convert){
 //update the display of brg,dst,eta
 function updateCourseDisplay(){
 	$('#markerPosition').text(formatLonLats(mapPosToLonLat(markerFeature.geometry)));
-	if (! boatFeature.attributes.validPosition) return;
+	var etastr="--:--:--";
+	if (! boatFeature.attributes.validPosition) {
+		$('#eta').text(etastr);
+		$('#bearing').text("---");
+		$('#distance').text("---");
+		return;
+	}
 	var dst=computeDistances(boatFeature.geometry,markerFeature.geometry,true);
 	$('#bearing').text(formatDecimal(dst.course,3,0));
 	$('#distance').text(formatDecimal(dst.dtsnm,3,1));
@@ -752,6 +807,8 @@ function btnLayerSwitch(){
 function handleToggleButton(id,onoff,onClass){
 	var oc=onClass || "avn_buttonActive";
 	if (onoff){
+		$(id).removeClass("avn_buttonActive");
+		$(id).removeClass("avn_buttonActiveError");
 		$(id).addClass(oc);
 		$(id).removeClass("avn_buttonInactive");
 	}
@@ -775,22 +832,23 @@ function btnLockMarker(){
 		markerFeature.geometry.calculateBounds();
 		logMapPos("lock-marker",markerFeature.geometry.bounds.getCenterLonLat());
 		logMapPos("lock-map",map.getCenter());
-		headingFeature.style.display=null;
+		if (boatFeature.attributes.validPosition) headingFeature.style.display=null;
 	}
+	headingFeature.layer.drawFeature(headingFeature);
 	handleToggleButton('#btnLockMarker',markerFeature.attributes.isLocked);
 	updateCourseDisplay();
 }
 function btnLockPos(){
-	if (! boatFeature.layer.getVisibility()){
+	if (! boatFeature.layer.getVisibility() ){
 		//just to be sure
 		handleToggleButton('#btnLockPos',false);
 		return;
 	}
 	boatFeature.attributes.isLocked=!boatFeature.attributes.isLocked;
-	if (boatFeature.attributes.isLocked){
+	if (boatFeature.attributes.isLocked && boatFeature.attributes.validPosition){
 		moveMapToFeature(boatFeature);
 	}
-	handleToggleButton('#btnLockPos',boatFeature.attributes.isLocked);
+	handleToggleButton('#btnLockPos',boatFeature.attributes.isLocked,(boatFeature.attributes.validPosition?'avn_buttonActive':'avn_buttonActiveError'));
 }
 
 //event handlers
@@ -1000,6 +1058,7 @@ function initialize_openlayers() {
     style_boat.title = "Boat";
     style_boat.rotation=20;
     style_boat.fillOpacity=1;
+    style_boat.display="none"; //only show the boat once we have valid gps data
     
     var style_bearing = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
     style_bearing.fillOpacity=1;
@@ -1017,11 +1076,12 @@ function initialize_openlayers() {
     var point=new OpenLayers.Geometry.Point(center.lon,center.lat);
     markerFeature=new OpenLayers.Feature.Vector(point,{isLocked:false},style_mark);
     var boatPoint=new OpenLayers.Geometry.Point(1509813.9046919 ,7220215.0083809); //put the boat at a nice pos
-    boatFeature=new OpenLayers.Feature.Vector(boatPoint,{isLocked:false,angle:0,validPosition:false},style_boat);
+    boatFeature=new OpenLayers.Feature.Vector(boatPoint,{isLocked:false,angle:0,validPosition:false, oldPosition:false},style_boat);
     headingFeature=new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString([boatPoint,point]),{},style_bearing);
     markerLayer.addFeatures([markerFeature]);
     boatLayer.addFeatures([boatFeature]);
     headingLayer.addFeatures([headingFeature]);
+    handleGpsStatus(false, true);
     
     map.addControl(new OpenLayers.Control.Graticule({layerName: 'Grid', id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
     		autoActivate: false}));

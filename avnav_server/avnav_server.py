@@ -31,6 +31,7 @@ import time
 from xml.sax._exceptions import SAXParseException
 import threading
 import datetime
+import calendar
 import traceback
 import pprint
 import socket
@@ -79,6 +80,22 @@ def err(txt):
   
 
 
+class AVNUtil():
+  #convert a datetime UTC to a timestamp
+  @classmethod
+  def datetimeToTsUTC(cls,dt):
+    if dt is None:
+      return None
+    #subtract the EPOCH
+    td = (dt - datetime.datetime(1970,1,1, tzinfo=None))
+    ts=((td.days*24*3600+td.seconds)*10**6 + td.microseconds)/1e6
+    return ts
+  
+  #now timestamp in utc
+  @classmethod
+  def utcnow(cls):
+    return cls.datetimeToTsUTC(datetime.datetime.utcnow())
+
 class AVNConfig(sax.handler.ContentHandler):
   #serial port: on windows a device (0...n - mapping to com1...com[n+1])
   #             on linux/osx - a device name
@@ -94,7 +111,8 @@ class AVNConfig(sax.handler.ContentHandler):
                      "navurl":"avnav_navi.php",
                      "httpPort":"8080",
                      "numThreads":"5",
-                     "debug":0
+                     "debug":0,
+                     "expiryTime":20, #time after which an entry is considered to be expired
                      }
     self.serialreader={}
     self.gpsdreader={}
@@ -197,7 +215,7 @@ class AVNDataEntry():
     return cls.fromData(data)
   
   def __str__(self):
-    rt="AVNDataEntry: %s=%s" % (self.key,pprint.pformat(self.data))
+    rt="AVNDataEntry: %s(ts=%f)=%s" % (self.key,(self.timestamp if self.timestamp is not None else 0),pprint.pformat(self.data))
     return rt
   def toJson(self):
     return json.dumps(self.data)
@@ -205,20 +223,41 @@ class AVNDataEntry():
 
 #the main List of navigational items received
 class AVNNavData():
-  def __init__(self):
+  def __init__(self,expiryTime):
     self.list={}
     self.listLock=threading.Lock()
-  #TODO: locking!
+    self.expiryTime=expiryTime
+  
+  #add an entry to the list
+  #do not add if there is already such an entry with newer timestamp
   def addEntry(self,navEntry):
     if navEntry.timestamp is None:
-      navEntry.timestamp=time.time()
+      navEntry.timestamp=AVNUtil.utcnow()
     ld("AVNNavData add entry",navEntry)
     self.listLock.acquire()
+    if navEntry.key in self.list:
+      if self.list[navEntry.key].timestamp > navEntry.timestamp:
+        log("not adding entry, older ts"+str(navEntry))
+        self.listLock.release()
+        return
     self.list[navEntry.key]=navEntry
+    log("adding entry"+str(navEntry))
     self.listLock.release()
+  #check for an entry being expired
+  #the list must already being locked!
+  #returns the entry or None
+  def __checkExpired__(self,entry,key):
+    et=AVNUtil.utcnow()-self.expiryTime
+    if entry.timestamp < et:
+      log("remove expired entry "+str(entry)+", et="+str(et))
+      del self.list[key]
+      return None
+    return entry
+  #find an entry - return None if none found or expired...
   def getEntry(self,key):
     self.listLock.acquire()
     rt=self.list.get(key)
+    rt=self.__checkExpired__(rt, key)
     self.listLock.release()
     return rt
   def getFilteredEntries(self,prefix,suffixlist):
@@ -232,8 +271,13 @@ class AVNNavData():
         e=self.list[k]
         if e.key[0:prfxlen]==searchprefix:
           rt[e.key]=e
+      nrt={}
+      for k in rt.keys():
+        e=self.__checkExpired__(rt[k], k)
+        if e is not None:
+          nrt[k]=e
       self.listLock.release()
-      return rt
+      return nrt
     for sfx in suffixlist:
       k=AVNDataEntry.createKey(prefix, sfx)
       entry=self.list.get(k)
@@ -249,8 +293,8 @@ class AVNNavData():
     rt.key=rt.createKey(prefix, '')
     for kf in fe:
       e=fe[kf]
-      if not rt.timestamp:
-        e.timestamp=rt.timestamp
+      if rt.timestamp is None:
+        rt.timestamp=e.timestamp
       newer=False
       if e.timestamp > rt.timestamp:
         newer=True
@@ -349,13 +393,8 @@ class AVNSerialReader(threading.Thread):
       #now we are faster - the gps is still in the evening of the past day - but we assume it at the coming evening
       gpsdt=datetime.datetime.combine(curdt-datetime.timedelta(1),gpsts)
     ld("curts/gpsdt after corr",curdt,gpsdt)
-    rt=gpsdt.isoformat()
-    #seems that isoformat does not well harmonize with OpenLayers.Date
-    #they expect at leas a timezone info
-    #as we are at GMT we should have a "Z" at the end
-    if not rt[-1:]=="Z":
-      rt+="Z"
-    return rt
+    
+    return gpsdt
   
   #parse the nmea psoition fields:
   #gggmm.dec,N  - 1-3 characters grad, mm 2 didgits minutes
@@ -375,6 +414,23 @@ class AVNSerialReader(threading.Thread):
     ld("pos",pos,rt)
     return rt
   
+  
+  
+  #add a valid dataset to nav data
+  #timedate is a datetime object as returned by gpsTimeToTime
+  #fill this additionally into the time part of data
+  def addToNavData(self,data,timedate):
+    if timedate is not None:
+      t=timedate.isoformat()
+      #seems that isoformat does not well harmonize with OpenLayers.Date
+      #they expect at leas a timezone info
+      #as we are at GMT we should have a "Z" at the end
+      if not t[-1:]=="Z":
+        t+="Z"
+      data['time']=t
+    de=AVNDataEntry.fromData(data)
+    de.timestamp=AVNUtil.datetimeToTsUTC(timedate)
+    self.navdata.addEntry(de)
   #parse a line of NMEA data and store it in the navdata array      
   def parseData(self,data):
     darray=data.split(",")
@@ -385,20 +441,18 @@ class AVNSerialReader(threading.Thread):
     rt={'class':'TPV','tag':tag}
     try:
       if tag=='GGA':
-        rt['time']=self.gpsTimeToTime(darray[1])
         rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
         rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
         rt['mode']=int(darray[6] or '0')
-        self.navdata.addEntry(AVNDataEntry.fromData(rt))
+        self.addToNavData(rt, self.gpsTimeToTime(darray[1]))
         return
       if tag=='GLL':
         rt['mode']=1
         if len(darray > 6):
           rt['mode']= (0 if (darray[6] != 'A') else 2)
-        rt['time']=self.gpsTimeToTime(darray[5])
         rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
         rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
-        self.navdata.addEntry(AVNDataEntry.fromData(rt))
+        self.addToNavData(rt, self.gpsTimeToTime(darray[5]))
         return
       if tag=='VTG':
         mode=darray[2]
@@ -408,7 +462,7 @@ class AVNSerialReader(threading.Thread):
           rt['speed']=float(darray[5] or '0')*NM/3600
         else:
           rt['speed']=float(darray[3]or '0')*NM/3600
-        self.navdata.addEntry(AVNDataEntry.fromData(rt))
+        self.addToNavData(rt, None)
         return
     except Exception:
         warn(self.getName()+" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
@@ -420,7 +474,11 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer):
     self.basedir=basedir
     self.pathmappings=pathMappings
     self.navurl=navurl
+    self.overwrite_map=({
+                              '.png': 'image/png'
+                              })
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
+   
 
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def __init__(self,request,client_address,server):
@@ -458,7 +516,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 break
         else:
             return self.list_directory(path)
-    ctype = self.guess_type(path)
+    base, ext = posixpath.splitext(path)
+    if ext in self.server.overwrite_map:
+      ctype=self.server.overwrite_map[ext]
+    else:
+      ctype = self.guess_type(path)
     try:
         # Always read in binary mode. Opening files in text mode may cause
         # newline translations, making the actual size of the content
@@ -545,7 +607,7 @@ def main(args):
   allThreads=[]
   if not cfg.readConfig(cfgname):
     err("unable to parse config file "+cfgname)
-  navData=AVNNavData()
+  navData=AVNNavData(float(cfg.parameters['expiryTime']))
   loglevel=int(cfg.parameters.get('debug') or '0')
   logging.basicConfig(level=logging.DEBUG if loglevel==2 else 
       (logging.ERROR if loglevel==0 else logging.INFO))
