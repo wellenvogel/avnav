@@ -79,7 +79,7 @@ button.avn_buttonInactive{
 }
 
 #btnLockPos .ui-icon {
-	background-image: url(Images/Sail-Boat-40.png);
+	background-image: url(images/Sail-Boat-40.png);
 	background-position: 0px 0px;
 	width: 40px;
 	height: 40px;
@@ -91,7 +91,7 @@ button.avn_buttonInactive{
 }
 
 #btnLockMarker .ui-icon{
-	background-image: url(Images/Marker1.png);
+	background-image: url(images/Marker1.png);
 	background-position: 0px 0px;
 	width: 40px;
 	height: 40px;
@@ -103,7 +103,7 @@ button.avn_buttonInactive{
 }
 
 #btnLayerSwitch .ui-icon{
-	background-image: url(Images/Layer40.png);
+	background-image: url(images/Layer40.png);
 	background-position: 0px 0px;
 	width: 40px;
 	height: 40px;
