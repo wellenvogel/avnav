@@ -41,6 +41,7 @@ import SimpleHTTPServer
 import posixpath
 import urllib
 import itertools
+import optparse
 
 hasSerial=False
 loggingInitialized=False
@@ -103,7 +104,13 @@ class AVNConfig(sax.handler.ContentHandler):
   serialParam={
                'port':None,
                'name':None,
-               'timeout': 2
+               'timeout': 2,
+               'baud': 4800,
+               'bytesize': 8,
+               'parity': 'N',
+               'stopbits': 1,
+               'xonxoff': 0,
+               'rtscts': 0
                }
   def __init__(self):
     self.parameters={
@@ -343,6 +350,12 @@ class AVNSerialReader(threading.Thread):
       pnum=int(self.param['port'])
     except:
       pnum=self.param['port']
+    baud=int(self.param['baud'])
+    bytesize=int(self.param['bytesize'])
+    parity=self.param['parity']
+    stopbits=int(self.param['stopbits'])
+    xonxoff=int(self.param['xonxoff'])
+    rtscts=int(self.param['rtscts'])
     portname=self.param['port']
     timeout=float(self.param['timeout'])
     porttimeout=timeout*10
@@ -351,7 +364,7 @@ class AVNSerialReader(threading.Thread):
     while True:
       lastTime=time.time()
       try:
-        f=serial.Serial(pnum,timeout=2)
+        f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
       except Exception:
         try:
           tf=traceback.format_exc(3).decode(errors='ignore')
@@ -359,15 +372,27 @@ class AVNSerialReader(threading.Thread):
           tf="unable to decode exception"
         log(name+"Exception on opening "+portname+" : "+tf)
         if f is not None:
-          f.close()
+          try:
+            f.close()
+          except:
+            pass
         time.sleep(porttimeout/2)
         continue
       log(name+"Port "+f.name+" opened")
       while True:
-        bytes=f.readline()
+        bytes=0
+        try:
+          bytes=f.readline()
+        except:
+          log(name+"Exception in serial read, close and reopen "+portname)
+          try:
+            f.close()
+          except:
+            pass
+          break
         if len(bytes)> 0:
           self.status=True
-          self.parseData(bytes)
+          self.parseData(bytes.decode('ascii',errors='ignore'))
           lastTime=time.time()
         if (time.time() - lastTime) > porttimeout:
           f.close()
@@ -596,22 +621,40 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         
 
-def main(args):
+def main(argv):
   global loggingInitialized
   cfgname=None
-  if len(args) < 2:
-    cfgname=os.path.join(os.path.dirname(args[0]),"avnav_server.xml")
+  usage="usage: %s <options> outdir indir|infile..." % (argv[0])
+  parser = optparse.OptionParser(
+        usage = usage,
+        version="1.0",
+        description='av navserver')
+  parser.add_option("-q", "--quiet", action="store_const", 
+        const=0, default=1, dest="verbose")
+  parser.add_option("-d", "--debug", action="store_const", 
+        const=2, dest="verbose")
+  parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
+  (options, args) = parser.parse_args(argv[1:])
+  if len(args) < 1:
+    cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
   else:
-    cfgname=args[1]
+    cfgname=args[0]
   cfg=AVNConfig()
   allThreads=[]
   if not cfg.readConfig(cfgname):
     err("unable to parse config file "+cfgname)
   navData=AVNNavData(float(cfg.parameters['expiryTime']))
   loglevel=int(cfg.parameters.get('debug') or '0')
+  if options.verbose is not None:
+    loglevel=options.verbose
   logging.basicConfig(level=logging.DEBUG if loglevel==2 else 
       (logging.ERROR if loglevel==0 else logging.INFO))
   loggingInitialized=True
+  if options.pidfile is not None:
+    f=open(options.pidfile,"w")
+    if f is not None:
+      f.write(str(os.getpid())+"\n")
+      f.close()
   if len(cfg.serialreader.keys()) > 0:
     if not hasSerial:
       warn("serial readers configured but serial module not available, ignore them")
