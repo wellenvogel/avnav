@@ -42,6 +42,7 @@ import posixpath
 import urllib
 import itertools
 import optparse
+import copy
 
 hasSerial=False
 loggingInitialized=False
@@ -98,75 +99,68 @@ class AVNUtil():
     return cls.datetimeToTsUTC(datetime.datetime.utcnow())
 
 class AVNConfig(sax.handler.ContentHandler):
-  #serial port: on windows a device (0...n - mapping to com1...com[n+1])
-  #             on linux/osx - a device name
-  #if a parameter has a None value it must be set
-  serialParam={
-               'port':None,
-               'name':None,
-               'timeout': 2,
-               'baud': 4800,
-               'bytesize': 8,
-               'parity': 'N',
-               'stopbits': 1,
-               'xonxoff': 0,
-               'rtscts': 0
-               }
-  def __init__(self):
+  def __init__(self,handlerList):
+    self.handlerList=handlerList
+    #global parameters
     self.parameters={
-                     "basedir":".",
-                     "navurl":"avnav_navi.php",
-                     "httpPort":"8080",
-                     "numThreads":"5",
                      "debug":0,
                      "expiryTime":20, #time after which an entry is considered to be expired
                      }
-    self.serialreader={}
-    self.gpsdreader={}
-    self.httppathmappings={}
+    self.currentHandlerClass=None
+    self.currentHandlerData=None
+    self.handlerInstances=None
     sax.handler.ContentHandler.__init__(self)
     pass
   
-  def readConfig(self,filename):
+  def readConfigAndCreateHandlers(self,filename):
     log("reading config "+filename)
     if not os.path.exists(filename):
       warn("unable to read config file "+filename)
       return False
     try:
+      self.currentHandlerData=None
+      self.currentHandlerClass=None
+      self.handlerInstances=[]
       parser=sax.parse(filename,self)
     except:
       warn("error parsing cfg file "+filename+": "+traceback.format_exc())
-      return False
-    return True
+      return None
+    return self.handlerInstances
     
   def startElement(self, name, attrs):
-    if name == "AVNServer":
-      for key in self.parameters.keys():
-        val=attrs.get(key)
-        if val is not None:
-          log("read attribute "+key+"="+val)
-          #TODO: param checks
-          self.parameters[key]=val
-    if name == "AVNSerialReader":
-      sparam={}
-      for k in self.serialParam.keys():
-        dv=self.serialParam[k]
-        v=attrs.get(k)
-        if dv is None and v is None:
-          raise SAXParseException("missing mandatory parameter "+k)
-        if v is None:
-          sparam[k]=dv
-        else:
-          sparam[k]=v
-      self.serialreader[sparam['name']]=sparam
-    if name == "AVNHttpServerDirectory":
-      if attrs.get('urlpath') is None:
-        raise SAXParseException("missing mandatory parameter urlpath for "+name)
-      if attrs.get('path') is None:
-        raise SAXParseException("missing mandatory parameter path for "+name)
-      self.httppathmappings[attrs['urlpath']]=attrs['path']
+    if not self.currentHandlerClass is None:
+      #we are at a child element
+      #currently we ignore any deeper nesting
+      childParamDefaults=self.currentHandlerClass.getConfigParam(name)
+      if childParamDefaults is None:
+        return
+      childParam=AVNWorker.parseConfig(attrs,childParamDefaults)
+      if self.currentHandlerData.get(name) is None:
+        self.currentHandlerData[name]=[]
+      self.currentHandlerData[name].append(childParam)
+      ld("added sub to handlerdata",name,childParam)
+      return
+    for handler in self.handlerList:
+      if name==handler.getConfigName():
+        self.currentHandlerClass=handler
+        self.currentHandlerData=AVNWorker.parseConfig(attrs, handler.getConfigParam(None))
+        ld("handler config started for ",name,self.currentHandlerData)
+        return
+    warn("unknown XML element "+name+" - ignoring")
     pass
-  def endElement(self, name):   
+  def endElement(self, name):
+    if self.currentHandlerClass is None:
+      return
+    if not self.currentHandlerClass.getConfigName() == name:
+      return #only create the handler when we are back at the handler level
+    log("creating instance for "+name+" with param "+pprint.pformat(self.currentHandlerData))
+    nextInstance=self.currentHandlerClass.createInstance(self.currentHandlerData)
+    if not nextInstance is None:
+      self.handlerInstances.append(nextInstance)
+    else:
+      warn("unable to create instance for handler "+name)
+    self.currentHandlerClass=None
+    self.currentHandlerData=None   
     pass
   def characters(self, content): 
     pass
@@ -328,17 +322,89 @@ class AVNNavData():
     self.listLock.release()  
     return rt
   
-class AVNSerialReader(threading.Thread):
-  def __init__(self,param,navdata):
-    self.param=param
-    self.navdata=navdata
+#a base class for all workers
+#this provides some config functions and a common interfcace for handling them
+class AVNWorker(threading.Thread):
+  def __init__(self,cfgparam):
+    self.param=cfgparam
     self.status=False
-    for p in ('port','name','timeout'):
-      if param.get(p) is None:
-        raise Exception("missing "+p+" parameter for serial reader")
     threading.Thread.__init__(self)
     self.setDaemon(True)
     self.setName(self.getName())
+  #should be overridden
+  def getName(self):
+    return "BaseWorker"
+  
+  #get the XML tag in the config file that describes this worker
+  @classmethod
+  def getConfigName(cls):
+    raise Exception("getConfigClass must be overridden by derived class")
+  #return the default cfg values
+  #if the parameter child is set, the parameter for a child node
+  #must be returned, child nodes are added to the parameter dict
+  #as an entry with childnodeName=[] - the child node configs being in the list
+  @classmethod
+  def getConfigParam(cls,child=None):
+    raise Exception("getConfigParam must be overwritten")
+  
+  @classmethod
+  def createInstance(cls,cfgparam):
+    raise Exception("createInstance must be overwritten")
+  #parse an config entry
+  @classmethod
+  def parseConfig(cls,attrs,default):
+    sparam=copy.deepcopy(default)
+    for k in sparam.keys():
+      dv=sparam[k]
+      v=attrs.get(k)
+      if dv is None and v is None:
+        raise SAXParseException(cls.getConfigName()+": missing mandatory parameter "+k)
+      if v is None:
+        sparam[k]=dv
+      else:
+        sparam[k]=v
+    return sparam
+  
+  def startInstance(self,navdata):
+    self.navdata=navdata
+    self.start()
+
+
+class AVNSerialReader(AVNWorker):
+  
+  @classmethod
+  def getConfigName(cls):
+    return "AVNSerialReader"
+  
+  @classmethod
+  def getConfigParam(cls,child):
+    if not child is None:
+      return None
+    cfg={
+               'port':None,
+               'name':None,
+               'timeout': 2,
+               'baud': 4800,
+               'bytesize': 8,
+               'parity': 'N',
+               'stopbits': 1,
+               'xonxoff': 0,
+               'rtscts': 0
+               }
+    return cfg
+  @classmethod
+  def createInstance(cls, cfgparam):
+    if not hasSerial:
+      warn("serial readers configured but serial module not available, ignore them")
+      return None
+    rt=AVNSerialReader(cfgparam)
+    return rt
+    
+  def __init__(self,param):
+    for p in ('port','name','timeout'):
+      if param.get(p) is None:
+        raise Exception("missing "+p+" parameter for serial reader")
+    AVNWorker.__init__(self, param)
   
   def getName(self):
     return "SerialReader "+self.param['name']
@@ -493,22 +559,69 @@ class AVNSerialReader(threading.Thread):
         warn(self.getName()+" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
 
 #a HTTP server with threads for each request
-class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer):
-  def __init__(self,navdata,basedir,server_address,RequestHandlerClass,navurl,pathMappings=None):
-    self.navdata=navdata
-    self.basedir=basedir
-    self.pathmappings=pathMappings
-    self.navurl=navurl
+class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWorker):
+  instances=0
+  
+  @classmethod
+  def getConfigName(cls):
+    return "AVNHttpServer"
+  @classmethod
+  def createInstance(cls, cfgparam):
+    if cls.instances > 0:
+      raise Exception("only one AVNHttpServer is allowed")
+    cls.instances+=1
+    return AVNHTTPServer(cfgparam,AVNHTTPHandler)
+  @classmethod
+  def getConfigParam(cls,child):
+    if child == "AVNHttpServerDirectory":
+      return {
+              "urlpath":None,
+              "path":None
+              }
+    if not child is None:
+      return None
+    rt={
+                     "basedir":".",
+                     "navurl":"avnav_navi.php",
+                     "httpPort":"8080",
+                     "numThreads":"5",
+                     "httpHost":""
+        }
+    return rt
+  
+  def __init__(self,cfgparam,RequestHandlerClass):
+    self.basedir=cfgparam['basedir']
+    if self.basedir==".":
+      self.basedir=os.getcwd()
+    pathmappings=None
+    marray=cfgparam.get("AVNHttpServerDirectory")
+    if marray is not None:
+      pathmappings={}
+      for mapping in marray:
+        pathmappings[mapping['urlpath']]=mapping['path']
+    self.pathmappings=pathmappings
+    self.navurl=cfgparam['navurl']
     self.overwrite_map=({
                               '.png': 'image/png'
                               })
+    server_address=(cfgparam['httpHost'],int(cfgparam['httpPort']))
+    AVNWorker.__init__(self, cfgparam)
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
+  def getName(self):
+    return "HTTPServer"
+  
+  def run(self):
+    log("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
+    self.serve_forever()
    
 
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def __init__(self,request,client_address,server):
     ld("receiver thread started",client_address)
     SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
+    
+  def log_message(self, format, *args):
+    log("[%s]%s" % (threading.current_thread().name,format%args))
   
   #overwrite this from SimpleHTTPRequestHandler
   def send_head(self):
@@ -639,10 +752,11 @@ def main(argv):
     cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
   else:
     cfgname=args[0]
-  cfg=AVNConfig()
-  allThreads=[]
-  if not cfg.readConfig(cfgname):
+  cfg=AVNConfig([AVNSerialReader,AVNHTTPServer])
+  allHandlers=cfg.readConfigAndCreateHandlers(cfgname)
+  if allHandlers is None:
     err("unable to parse config file "+cfgname)
+    sys.exit(1)
   navData=AVNNavData(float(cfg.parameters['expiryTime']))
   loglevel=int(cfg.parameters.get('debug') or '0')
   if options.verbose is not None:
@@ -655,34 +769,12 @@ def main(argv):
     if f is not None:
       f.write(str(os.getpid())+"\n")
       f.close()
-  if len(cfg.serialreader.keys()) > 0:
-    if not hasSerial:
-      warn("serial readers configured but serial module not available, ignore them")
-    else:
-      for sk in cfg.serialreader.keys():
-        serialcfg=cfg.serialreader[sk]
-        try:
-          sthread=AVNSerialReader(serialcfg,navData)
-          sthread.start()
-          allThreads.append(sthread)
-        except Exception:
-          warn("unable to start serial reader: "+traceback.format_exc())
-  serverbasedir=cfg.parameters['basedir'];
-  if serverbasedir==".":
-    serverbasedir=os.getcwd()
-  port=cfg.parameters['httpPort']
-  host=cfg.parameters.get('httpHost')
-  if host is None:
-    host=""
-  log("HTTP server host="+host+", port="+port+", base="+serverbasedir)
-  httpd=AVNHTTPServer(navData, serverbasedir, (host,int(port)), AVNHTTPHandler,cfg.parameters.get('navurl'),cfg.httppathmappings)
-  # Start a thread with the server -- that thread will then start one
-  # more thread for each request
-  server_thread = threading.Thread(target=httpd.serve_forever)
-  # Exit the server thread when the main thread terminates
-  server_thread.daemon = True
-  server_thread.start()
-  log("HTTP loop running in thread:"+server_thread.name)
+  for handler in allHandlers:
+    try:
+      handler.startInstance(navData)
+    except Exception:
+      warn("unable to start handler : "+traceback.format_exc())
+  log("All Handlers started")
   while True:
     time.sleep(3)
     log(str(navData))

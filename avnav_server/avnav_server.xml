@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<AVNServer debug="1" navurl="/viewer/avnav_navi.php">
+<AVNServer debug="1" >
 <Readers>
 <AVNSerialReader name="com4reader" port="3"/>
+<AVNSerialReader name="com8reader" port="7"/>
 </Readers>
-<AVNHttpServerDirectories>
+<AVNHttpServer navurl="/viewer/avnav_navi.php">
 	<AVNHttpServerDirectory urlpath="maps" path="D:\Users\Andreas\Documents\chart-tiler-test\tiles"></AVNHttpServerDirectory>
 	<AVNHttpServerDirectory urlpath="viewer" path="D:\Users\Andreas\Documents\projekte\avnav\avnav_viewer"></AVNHttpServerDirectory>
 	<AVNHttpServerDirectory urlpath="libraries" path="D:\Users\Andreas\Documents\projekte-nosync"></AVNHttpServerDirectory>
-</AVNHttpServerDirectories>
+</AVNHttpServer>
 </AVNServer>
