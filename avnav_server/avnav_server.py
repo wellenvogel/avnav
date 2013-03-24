@@ -90,10 +90,11 @@ class AVNLog():
       if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % level)
     formatter=logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    if not cls.consoleHandler is None:
+    if not cls.consoleHandler is None and numeric_level >= logging.INFO:
       cls.logger.removeHandler(cls.consoleHandler)
     fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
     fhandler.setFormatter(formatter)
+    fhandler.setLevel(logging.INFO)
     cls.logger.addHandler(fhandler)
     cls.logger.setLevel(numeric_level)
   
@@ -484,7 +485,7 @@ class AVNSerialReader(AVNWorker):
     timeout=float(self.param['timeout'])
     porttimeout=timeout*10
     name=self.getName()
-    AVNLog.info("%s: serial reader started for %s",name,portname)
+    AVNLog.info("%s: serial reader started for port %s, baudrate=%d, timeout=%f",name,portname,baud,timeout)
     isOpen=False
     while True:
       lastTime=time.time()
@@ -845,7 +846,7 @@ def main(argv):
   if not os.path.exists(os.path.dirname(filename)):
     os.makedirs(os.path.dirname(filename), 0777)
   AVNLog.initLoggingSecond(level, filename) 
-  AVNLog.info("####start processing ####")
+  AVNLog.info("#### avnserver pid=%d start processing ####",os.getpid())
   if options.pidfile is not None:
     f=open(options.pidfile,"w")
     if f is not None:
@@ -858,10 +859,21 @@ def main(argv):
     except Exception:
       AVNLog.warn("unable to start handler : "+traceback.format_exc())
   AVNLog.info("All Handlers started")
+  hasFix=False
   while True:
     time.sleep(3)
+    curTPV=navData.getMergedEntries("TPV", [])
+    if ( not curTPV.data.get('lat') is None) and (not curTPV.data.get('lon') is None):
+      #we have some position
+      if not hasFix:
+        AVNLog.info("new GPS fix lat=%f lon=%f",curTPV.data.get('lat'),curTPV.data.get('lon'))
+        hasFix=True
+    else:
+      if hasFix:
+        AVNLog.warn("lost GPS fix")
+      hasFix=False
     AVNLog.debug(str(navData))
-    AVNLog.debug("entries for TPV: "+str(navData.getMergedEntries("TPV", [])))  
+    AVNLog.debug("entries for TPV: "+str(curTPV))  
  
 if __name__ == "__main__":
     main(sys.argv)
