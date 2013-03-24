@@ -25,6 +25,7 @@
 import sys
 import os
 import logging
+import logging.handlers
 import xml.sax as sax
 import json
 import time
@@ -58,27 +59,63 @@ except:
 
 NM=1852 #meters for a nautical mile
 
-def ld(*parms):
-  if not loggingInitialized:
-    return
-  logging.debug(' '.join(itertools.imap(repr,parms)))
 
-def warn(txt):
-  if not loggingInitialized:
-    print "WARNING:"+time.strftime("%Y/%m/%d-%H:%M:%S ",time.localtime())+txt
-    return
-  logging.warning(time.strftime("%Y/%m/%d-%H:%M:%S ",time.localtime())+txt)
-def log(txt):
-  if not loggingInitialized:
-    print "INFO:"+time.strftime("%Y/%m/%d-%H:%M:%S ",time.localtime())+txt
-    return
-  logging.info(time.strftime("%Y/%m/%d-%H:%M:%S ",time.localtime())+txt)
-def err(txt):
-  if not loggingInitialized:
-    print "ERROR:"+time.strftime("%Y/%m/%d-%H:%M:%S ",time.localtime())+txt
-    return
-  print "ERROR: "+txt
-  exit(1)
+class AVNLog():
+  logger=logging.getLogger('avn')
+  consoleHandler=None
+  
+  #1st step init of logging - create a console handler
+  #will be removed after parsing the cfg file
+  @classmethod
+  def initLoggingInitial(cls,level):
+    try:
+      numeric_level=level+0
+    except:
+      numeric_level = getattr(logging, level.upper(), None)
+      if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % level)
+    formatter=logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    cls.consoleHandler=logging.StreamHandler()
+    cls.consoleHandler.setFormatter(formatter)
+    cls.logger.propagate=False
+    cls.logger.addHandler(cls.consoleHandler)
+    cls.logger.setLevel(numeric_level)
+    
+  @classmethod
+  def initLoggingSecond(cls,level,filename):
+    try:
+      numeric_level=level+0
+    except:
+      numeric_level = getattr(logging, level.upper(), None)
+      if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % level)
+    formatter=logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    if not cls.consoleHandler is None:
+      cls.logger.removeHandler(cls.consoleHandler)
+    fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
+    fhandler.setFormatter(formatter)
+    cls.logger.addHandler(fhandler)
+    cls.logger.setLevel(numeric_level)
+  
+  @classmethod
+  def debug(cls,str,*args,**kwargs):
+    cls.logger.debug(str,*args,**kwargs)
+  @classmethod
+  def warn(cls,str,*args,**kwargs):
+    cls.logger.warn(str,*args,**kwargs)
+  @classmethod
+  def info(cls,str,*args,**kwargs):
+    cls.logger.info(str,*args,**kwargs)
+  @classmethod
+  def error(cls,str,*args,**kwargs):
+    cls.logger.error(str,*args,**kwargs)
+  @classmethod
+  def ld(cls,*parms):
+    cls.logger.debug(' '.join(itertools.imap(repr,parms)))
+  
+    
+    
+    
   
 
 
@@ -113,9 +150,9 @@ class AVNConfig(sax.handler.ContentHandler):
     pass
   
   def readConfigAndCreateHandlers(self,filename):
-    log("reading config "+filename)
+    AVNLog.info("reading config %s",filename)
     if not os.path.exists(filename):
-      warn("unable to read config file "+filename)
+      AVNLog.warn("unable to read config file %s",filename)
       return False
     try:
       self.currentHandlerData=None
@@ -123,7 +160,7 @@ class AVNConfig(sax.handler.ContentHandler):
       self.handlerInstances=[]
       parser=sax.parse(filename,self)
     except:
-      warn("error parsing cfg file "+filename+": "+traceback.format_exc())
+      AVNLog.warn("error parsing cfg file %s : %s",filename,traceback.format_exc())
       return None
     return self.handlerInstances
     
@@ -138,27 +175,27 @@ class AVNConfig(sax.handler.ContentHandler):
       if self.currentHandlerData.get(name) is None:
         self.currentHandlerData[name]=[]
       self.currentHandlerData[name].append(childParam)
-      ld("added sub to handlerdata",name,childParam)
+      AVNLog.ld("added sub to handlerdata",name,childParam)
       return
     for handler in self.handlerList:
       if name==handler.getConfigName():
         self.currentHandlerClass=handler
         self.currentHandlerData=AVNWorker.parseConfig(attrs, handler.getConfigParam(None))
-        ld("handler config started for ",name,self.currentHandlerData)
+        AVNLog.ld("handler config started for ",name,self.currentHandlerData)
         return
-    warn("unknown XML element "+name+" - ignoring")
+    AVNLog.warn("unknown XML element %s - ignoring",name)
     pass
   def endElement(self, name):
     if self.currentHandlerClass is None:
       return
     if not self.currentHandlerClass.getConfigName() == name:
       return #only create the handler when we are back at the handler level
-    log("creating instance for "+name+" with param "+pprint.pformat(self.currentHandlerData))
+    AVNLog.info("creating instance for %s with param %s",name,pprint.pformat(self.currentHandlerData))
     nextInstance=self.currentHandlerClass.createInstance(self.currentHandlerData)
     if not nextInstance is None:
       self.handlerInstances.append(nextInstance)
     else:
-      warn("unable to create instance for handler "+name)
+      AVNLog.warn("unable to create instance for handler %s",name)
     self.currentHandlerClass=None
     self.currentHandlerData=None   
     pass
@@ -186,20 +223,20 @@ class AVNDataEntry():
   def fromData(cls,data):
     dcls=data.get('class');
     if dcls is None:
-      log("data "+str(data)+" does not contain a class - ignore")
+      AVNLog.debug("data %s does not contain a class - ignore",str(data))
       return None
     if not dcls in cls.knownClasses:
-      log("unknown class in "+str(data)+" - ignore")
+      AVNLog.debug("unknown class in %s - ignore",str(data))
       return None
     if dcls == 'TPV':
       tag=data.get('tag')
       if tag is None:
-        log("no tag for TPV in "+str(data)+" - ignore")
+        AVNLog.debug("no tag for TPV in %s - ignore",str(data))
         return None
       rt=AVNDataEntry()
       rt.key=cls.createKey(dcls, tag)
       rt.data=data
-      ld("data item created",rt)
+      AVNLog.ld("data item created",rt)
       return rt
     #we should not arrive here...
     return None
@@ -211,7 +248,7 @@ class AVNDataEntry():
     try:
       data=json.loads(jsondata)
     except:
-      log("unable to parse json data "+jsondata+": "+traceback.format_exc())
+      AVNLog.debug("unable to parse json data %s : %s",jsondata,traceback.format_exc())
       return None
     return cls.fromData(data)
   
@@ -234,15 +271,15 @@ class AVNNavData():
   def addEntry(self,navEntry):
     if navEntry.timestamp is None:
       navEntry.timestamp=AVNUtil.utcnow()
-    ld("AVNNavData add entry",navEntry)
+    AVNLog.ld("AVNNavData add entry",navEntry)
     self.listLock.acquire()
     if navEntry.key in self.list:
       if self.list[navEntry.key].timestamp > navEntry.timestamp:
-        log("not adding entry, older ts"+str(navEntry))
+        AVNLog.debug("not adding entry, older ts %s",str(navEntry))
         self.listLock.release()
         return
     self.list[navEntry.key]=navEntry
-    log("adding entry"+str(navEntry))
+    AVNLog.debug("adding entry %s",str(navEntry))
     self.listLock.release()
   #check for an entry being expired
   #the list must already being locked!
@@ -250,7 +287,7 @@ class AVNNavData():
   def __checkExpired__(self,entry,key):
     et=AVNUtil.utcnow()-self.expiryTime
     if entry.timestamp < et:
-      log("remove expired entry "+str(entry)+", et="+str(et))
+      AVNLog.debug("remove expired entry %s, et=%s ",str(entry),str(et))
       del self.list[key]
       return None
     return entry
@@ -303,12 +340,12 @@ class AVNNavData():
       if not k in rt.data or rt.data[k] == rt.EMPTY_CLASS:
         rt.data[k]=e.data[k]
       if e.data[k] != rt.data[k] and rt.data[k] != rt.EMPTY_CLASS:
-        warn("mixing different classes in merge, ignore"+str(e))
+        AVNLog.debug("mixing different classes in merge, ignore %s",str(e))
         continue
       for k in e.data.keys():
         if not (k in rt.data) or newer or rt.data.get(k) is None:
           rt.data[k] = e.data[k]
-    ld("getMergedEntries",prefix,suffixlist,rt)
+    AVNLog.ld("getMergedEntries",prefix,suffixlist,rt)
     return rt    
               
         
@@ -369,6 +406,27 @@ class AVNWorker(threading.Thread):
     self.navdata=navdata
     self.start()
 
+#a dummy worker class to read some basic configurations
+class AVNBaseConfig(AVNWorker):
+  def __init__(self,param):
+    self.param=param
+  @classmethod
+  def getConfigName(cls):
+    return "AVNConfig"
+  @classmethod
+  def getConfigParam(cls, child=None):
+    if child is not None:
+      return None
+    return {
+            'loglevel':logging.INFO,
+            'logfile':"",
+            'expiryTime': 30
+    }
+  @classmethod
+  def createInstance(cls, cfgparam):
+    return AVNBaseConfig(cfgparam)
+  def start(self):
+    pass
 
 class AVNSerialReader(AVNWorker):
   
@@ -426,17 +484,19 @@ class AVNSerialReader(AVNWorker):
     timeout=float(self.param['timeout'])
     porttimeout=timeout*10
     name=self.getName()
-    log(name+": serial reader started for "+portname)
+    AVNLog.info("%s: serial reader started for %s",name,portname)
+    isOpen=False
     while True:
       lastTime=time.time()
       try:
         f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
+        
       except Exception:
         try:
           tf=traceback.format_exc(3).decode(errors='ignore')
         except:
           tf="unable to decode exception"
-        log(name+"Exception on opening "+portname+" : "+tf)
+        AVNLog.debug("%s: Exception on opening %s : %s",name,portname,tf)
         if f is not None:
           try:
             f.close()
@@ -444,25 +504,31 @@ class AVNSerialReader(AVNWorker):
             pass
         time.sleep(porttimeout/2)
         continue
-      log(name+"Port "+f.name+" opened")
+      AVNLog.debug("%s: %s opened",name,f.name)
       while True:
         bytes=0
         try:
           bytes=f.readline()
         except:
-          log(name+"Exception in serial read, close and reopen "+portname)
+          AVNLog.debug("%s: Exception in serial read, close and reopen %s",name,portname)
           try:
             f.close()
+            isOpen=False
           except:
             pass
           break
         if len(bytes)> 0:
+          if not isOpen:
+            AVNLog.info("successfully opened %s",f.name)
+            isOpen=True
           self.status=True
           self.parseData(bytes.decode('ascii',errors='ignore'))
           lastTime=time.time()
         if (time.time() - lastTime) > porttimeout:
           f.close()
-          log(name+ "Reopen port "+portname+" - timeout elapsed")
+          if isOpen:
+            AVNLog.info("%s: reopen port %s - timeout elapsed",name,portname)
+            isOpen=False
           break
   
   #returns an iso 8601 timestring
@@ -470,10 +536,10 @@ class AVNSerialReader(AVNWorker):
   def gpsTimeToTime(cls,gpstime):
     #we take day/month/year from our system and add everything else from the GPS
     gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'))
-    ld("gpstime/gpsts",gpstime,gpsts)
+    AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
     curdt=datetime.datetime.utcnow()
     gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
-    ld("curts/gpsdt before corr",curdt,gpsdt)
+    AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
     #now correct the time if we are just chaning from one day to another
     #this assumes that our system time is not more then one day off...(???)
     if (curdt - gpsdt) > datetime.timedelta(hours=12) and curdt.time().hour < 12:
@@ -483,7 +549,7 @@ class AVNSerialReader(AVNWorker):
     if (gpsdt - curdt) > datetime.timedelta(hours=12) and curdt.time().hour> 12:
       #now we are faster - the gps is still in the evening of the past day - but we assume it at the coming evening
       gpsdt=datetime.datetime.combine(curdt-datetime.timedelta(1),gpsts)
-    ld("curts/gpsdt after corr",curdt,gpsdt)
+    AVNLog.ld("curts/gpsdt after corr",curdt,gpsdt)
     
     return gpsdt
   
@@ -494,7 +560,7 @@ class AVNSerialReader(AVNWorker):
   def nmeaPosToFloat(cls,pos,direction):
     posa=pos.split('.')
     if len(posa) < 2:
-      ld("invalid pos format",pos)
+      AVNLog.ld("invalid pos format",pos)
       return None
     grd=posa[0][-10:-2]
     min=posa[0][-2:]
@@ -502,7 +568,7 @@ class AVNSerialReader(AVNWorker):
     rt=float(grd)+float(min)/60;
     if rt > 0 and (direction == 'S' or direction == 'W'):
       rt=-rt;
-    ld("pos",pos,rt)
+    AVNLog.ld("pos",pos,rt)
     return rt
   
   
@@ -526,7 +592,7 @@ class AVNSerialReader(AVNWorker):
   def parseData(self,data):
     darray=data.split(",")
     if len(darray) < 1 or darray[0][0:1] != "$":
-      warn(self.getName()+": invalid nmea data (len<1) "+data+" - ignore")
+      AVNLog.debug(self.getName()+": invalid nmea data (len<1) "+data+" - ignore")
       return
     tag=darray[0][3:]
     rt={'class':'TPV','tag':tag}
@@ -556,7 +622,7 @@ class AVNSerialReader(AVNWorker):
         self.addToNavData(rt, None)
         return
     except Exception:
-        warn(self.getName()+" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
+        AVNLog.debug(self.getName()+" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
 
 #a HTTP server with threads for each request
 class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWorker):
@@ -611,17 +677,17 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     return "HTTPServer"
   
   def run(self):
-    log("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
+    AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
     self.serve_forever()
    
 
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def __init__(self,request,client_address,server):
-    ld("receiver thread started",client_address)
+    AVNLog.ld("receiver thread started",client_address)
     SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
     
   def log_message(self, format, *args):
-    log("[%s]%s" % (threading.current_thread().name,format%args))
+    AVNLog.debug("[%s]%s",threading.current_thread().name,format%args)
   
   #overwrite this from SimpleHTTPRequestHandler
   def send_head(self):
@@ -699,13 +765,13 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           head, word = os.path.split(word)
           if word in (".",".."): continue
           path = os.path.join(path, word)
-      ld("request path/query",path,query)
+      AVNLog.ld("request path/query",path,query)
       #pathmappings expect to have absolute pathes!
       if not self.server.pathmappings is None:
         for mk in self.server.pathmappings.keys():
           if path.find(mk) == 0:
             path=self.server.pathmappings[mk]+path[len(mk):]
-            ld("remapped path to",path)
+            AVNLog.ld("remapped path to",path)
             return path
       path=os.path.join(self.server.basedir,path)
       return path
@@ -718,7 +784,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       rtv=self.server.navdata.getMergedEntries("TPV",[])
       rt=json.dumps(rtv.data)
     except Exception as e:
-      ld("unable to process request for ",path,query)
+      AVNLog.ld("unable to process request for ",path,query)
       self.send_response(500);
       self.end_headers()
       return
@@ -728,7 +794,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()
     self.wfile.write(rt)
-    ld("request",path,query,rt)
+    AVNLog.ld("request",path,query,rt)
 
       
 
@@ -737,48 +803,65 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 def main(argv):
   global loggingInitialized
   cfgname=None
-  usage="usage: %s <options> outdir indir|infile..." % (argv[0])
+  usage="usage: %s [-q][-d][-p pidfile] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
         usage = usage,
         version="1.0",
         description='av navserver')
   parser.add_option("-q", "--quiet", action="store_const", 
-        const=0, default=1, dest="verbose")
+        const=100, default=logging.INFO, dest="verbose")
   parser.add_option("-d", "--debug", action="store_const", 
-        const=2, dest="verbose")
+        const=logging.DEBUG, dest="verbose")
   parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
   (options, args) = parser.parse_args(argv[1:])
   if len(args) < 1:
     cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
   else:
     cfgname=args[0]
-  cfg=AVNConfig([AVNSerialReader,AVNHTTPServer])
+  AVNLog.initLoggingInitial(options.verbose if not options.verbose is None else logging.INFO)
+  cfg=AVNConfig([AVNBaseConfig,AVNSerialReader,AVNHTTPServer])
   allHandlers=cfg.readConfigAndCreateHandlers(cfgname)
   if allHandlers is None:
-    err("unable to parse config file "+cfgname)
+    AVNLog.error("unable to parse config file %s",cfgname)
     sys.exit(1)
-  navData=AVNNavData(float(cfg.parameters['expiryTime']))
-  loglevel=int(cfg.parameters.get('debug') or '0')
-  if options.verbose is not None:
-    loglevel=options.verbose
-  logging.basicConfig(level=logging.DEBUG if loglevel==2 else 
-      (logging.ERROR if loglevel==0 else logging.INFO))
-  loggingInitialized=True
+  baseConfig=None
+  for handler in allHandlers:
+    if handler.getConfigName() == "AVNBaseConfig":
+      baseConfig=handler
+  if baseConfig is None:
+    #no entry for base config found - using defaults
+    baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())
+  navData=AVNNavData(float(baseConfig.param['expiryTime']))
+  level=logging.INFO
+  filename=os.path.join(os.path.dirname(argv[0]),"log","avnav.log")
+  if not options.verbose is None:
+    level=options.verbose
+  else:    
+    if not baseConfig.param.get("loglevel") is None:
+      level=baseConfig.param.get("loglevel")
+  if not baseConfig.param.get("logfile") == "":
+    filename=baseConfig.param.get("logfile")
+  AVNLog.info("####start processing (logging to %s)####",filename)
+  if not os.path.exists(os.path.dirname(filename)):
+    os.makedirs(os.path.dirname(filename), 0777)
+  AVNLog.initLoggingSecond(level, filename) 
+  AVNLog.info("####start processing ####")
   if options.pidfile is not None:
     f=open(options.pidfile,"w")
     if f is not None:
       f.write(str(os.getpid())+"\n")
       f.close()
+  #really start processing here - we start all handlers that have been configured
   for handler in allHandlers:
     try:
       handler.startInstance(navData)
     except Exception:
-      warn("unable to start handler : "+traceback.format_exc())
-  log("All Handlers started")
+      AVNLog.warn("unable to start handler : "+traceback.format_exc())
+  AVNLog.info("All Handlers started")
   while True:
     time.sleep(3)
-    log(str(navData))
-    log("entries for TPV: "+str(navData.getMergedEntries("TPV", [])))  
+    AVNLog.debug(str(navData))
+    AVNLog.debug("entries for TPV: "+str(navData.getMergedEntries("TPV", [])))  
  
 if __name__ == "__main__":
     main(sys.argv)
