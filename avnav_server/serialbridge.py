@@ -9,7 +9,7 @@ def err(txt):
   print "ERROR: "+txt
   exit(1)
   
-def readSerial(num,numout,baud=4800):
+def readSerial(num,numout,baud=4800,baudout=4800):
   firstTry=True
   f=None
   fout=None
@@ -18,7 +18,7 @@ def readSerial(num,numout,baud=4800):
     lastTime=time.time()
     try:
       f=serial.Serial(num,timeout=2,baudrate=baud)
-      fout=serial.Serial(numout,timeout=2,baudrate=baud)
+      fout=serial.Serial(numout,timeout=2,baudrate=baudout)
     except:
       print "Exception on opening: "+str(sys.exc_info()[0])
       if firstTry:
@@ -52,4 +52,4 @@ def readSerial(num,numout,baud=4800):
   
 
 if __name__ == "__main__":
-  readSerial(int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3]))  
+  readSerial(int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3]),int(sys.argv[4]))  
