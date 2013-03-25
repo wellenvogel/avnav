@@ -24,6 +24,7 @@
 ###############################################################################
 import sys
 import os
+import signal
 import logging
 import logging.handlers
 import xml.sax as sax
@@ -44,13 +45,24 @@ import urllib
 import itertools
 import optparse
 import copy
+import subprocess
 
 hasSerial=False
+hasGpsd=False
 loggingInitialized=False
+allHandlers=[]
+
+
 
 try:
   import serial
   hasSerial=True
+except:
+  pass
+
+try:
+  import gps
+  hasGpsd=True
 except:
   pass
 
@@ -369,6 +381,14 @@ class AVNWorker(threading.Thread):
     threading.Thread.__init__(self)
     self.setDaemon(True)
     self.setName(self.getName())
+    self.info="started"
+  def getInfo(self):
+    return self.info
+  def setInfo(self,info):
+    self.info=info
+  #stop any child process (will be called by signal handler)
+  def stopChildren(self):
+    pass
   #should be overridden
   def getName(self):
     return "BaseWorker"
@@ -429,6 +449,195 @@ class AVNBaseConfig(AVNWorker):
   def start(self):
     pass
 
+#a worker to interface with gpsd
+#as gpsd is not really able to handle dynamically assigned ports correctly, 
+#we monitor first if the device file exists and only start gpsd once it is visible
+#when it becomes visible, gpsd will be started (but not in background)
+#when we receive no data from gpsd until timeout, we will kill it and enter device monitoring again
+class AVNGpsd(AVNWorker):
+  def __init__(self,cfgparam):
+    AVNWorker.__init__(self, cfgparam)
+  #should be overridden
+  def getName(self):
+    return "GPSDReader"
+  
+  #get the XML tag in the config file that describes this worker
+  @classmethod
+  def getConfigName(cls):
+    return 'AVNGpsd'
+  #return the default cfg values
+  #if the parameter child is set, the parameter for a child node
+  #must be returned, child nodes are added to the parameter dict
+  #as an entry with childnodeName=[] - the child node configs being in the list
+  @classmethod
+  def getConfigParam(cls,child=None):
+    if not child is None:
+      return None
+    return {
+            'device':None,
+            'gpsdcommand':'/usr/sbin/gpsd -b -n -N',
+            'timeout': 40, #need this timeout to be able to sync on 38400
+            'port': None
+            }
+  
+  @classmethod
+  def createInstance(cls,cfgparam):
+    if not hasGpsd:
+      AVNLog.warn("gpsd not available, ignore configured reader ")
+      return None
+    return AVNGpsd(cfgparam)
+  
+  def stopChildren(self):
+    if not self.gpsdproc is None:
+      print "stopping gpsd"
+      self.gpsdproc.terminate()
+  
+  def run(self):
+    sys.settrace(debugger)
+    device=self.param['device']
+    port=int(self.param['port'])
+    gpsdcommand="%s -S %d %s" %(self.param['gpsdcommand'],port,device)
+    gpsdcommandli=gpsdcommand.split()
+    timeout=float(self.param['timeout'])
+    name="GPSDReader %s at %d"%(device,port)
+    AVNLog.info("%s: started for %s with command %s, timeout %f",name,device,gpsdcommand,timeout)
+    deviceVisible=False
+    reader=None
+    self.gpsdproc=None
+    while True:
+      if not os.path.exists(device):
+        self.setInfo("device not visible")
+        AVNLog.debug("%s: device %s still not visible, continue waiting",name,device)
+        time.sleep(timeout/2)
+        continue
+      else:
+        if hasSerial:
+          #we first try to open the device by our own to see if this is possible
+          #for bluetooth the device is there but open will fail
+          #so we would avoid starting gpsd...
+          try:
+            AVNLog.debug("%s: try to open device %s",name,device)
+            ts=serial.Serial(device,timeout=timeout)
+            AVNLog.debug("%s: device %s opened, try to read 1 byte",name,device)
+            bytes=ts.read(1)
+            ts.close()
+            if len(bytes)<=0:
+              raise Exception("unable to read data from device")
+          except:
+            AVNLog.debug("%s: open device %s failed: %s",name,device,traceback.format_exc())
+            time.sleep(timeout/2)
+            continue
+        AVNLog.info("device %s became visible, starting gpsd",device)
+        try:
+          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True)
+          reader=GpsdReader(self.navdata, port, "GPSDReader[Reader] %s at %d"%(device,port))
+          reader.start()
+          self.setInfo("gpsd started")
+        except:
+          AVNLog.debug("%s: unable to start gpsd with command %s: %s",name,gpsdcommand,traceback.format_exc())
+          try:
+            self.gpsdproc.wait()
+          except:
+            pass
+          time.sleep(timeout/2)
+          continue
+        AVNLog.debug("%s: started gpsd with pid %d",name,self.gpsdproc.pid)
+        while True:
+          if not reader.status:
+            AVNLog.warn("%s: gpsd reader thread stopped",name)
+            break
+          ctime=time.time()
+          if reader.lasttime < (ctime-timeout):
+            AVNLog.warn("%s: gpsd reader timeout",name)
+            break
+          else:
+            self.setInfo("receiving")
+          #TODO: read out gpsd stdout/stderr
+          time.sleep(2)
+        #if we arrive here, something went wrong...
+        self.setInfo("gpsd stopped")
+        if not self.gpsdproc is None:
+          try:
+            self.gpsdproc.terminate()
+          except: 
+            pass
+          #wait some time for the subproc to finish
+          numwait=20 #2s
+          retcode=None
+          while numwait > 0:
+            self.gpsdproc.poll()
+            if not self.gpsdproc.returncode is None:
+              numwait=0
+              retcode=self.gpsdproc.returncode 
+              break
+            time.sleep(0.1)
+            numwait-=1
+          self.gpsdproc=None
+          if retcode is None:
+            AVNLog.error("%s: unable to properly stop gpsd process, leave it running",name)
+          else:
+            AVNLog.info("%s: gpsd stopped, waiting for reader thread",name)
+            if reader is not None:
+              try:
+                reader.join(10)
+                AVNLog.info("%s: reader thread successfully stopped",name)
+              except:
+                AVNLog.error("%s: unable to stop gpsd reader thread within 10s",name)
+            reader=None  
+        #end of loop - device available
+        time.sleep(timeout/2)
+          
+        
+      
+#a reader thread for the gpsd reader
+class GpsdReader(threading.Thread):
+  def __init__(self, navdata,port,name):
+    self.navdata=navdata
+    threading.Thread.__init__(self)
+    self.setDaemon(True)
+    self.setName(name)
+    #the status shows if the gpsd reader still has data
+    self.lasttime=time.time()
+    self.status=True
+    self.port=port
+  def run(self):
+    sys.settrace(debugger)
+    self.lasttime=time.time()
+    AVNLog.debug("%s: gpsd reader thread started at port %d",self.name,self.port)
+    try:
+      #try for 10s to open the gpsd port
+      timeout=10
+      connected=False
+      time.sleep(1)
+      while timeout > 0 and not connected:
+        timeout-=1
+        try:
+          session=gps.gps(port=self.port)
+          connected=True
+        except:
+          AVNLog.debug("%s: gpsd reader open comm exception %s %s",self.name,traceback.format_exc(),("retrying" if timeout > 1 else ""))
+          time.sleep(1)
+      if not connected:
+        raise Exception("%s: unable to connect to gpsd within 10s",self.name)    
+      session.stream(gps.WATCH_ENABLE)
+      for report in session:
+        AVNLog.debug("%s: received gps data : %s",self.name,pprint.pformat(report))
+        self.lasttime=time.time()
+        entry=AVNDataEntry.fromData(report)
+        if not entry is None:
+          self.navdata.addEntry(entry)
+    except:
+      AVNLog.debug("%s: gpsd reader exception %s",self.name,traceback.format_exc())
+      pass
+    AVNLog.debug("%s: gpsd reader exited",self.name)
+    self.status=False
+ 
+
+#a Worker to directly read from a serial line using pyserial
+#on windows use an int for the port - e.g. use 4 for COM5
+#on linux use the device name for the port
+#if no data is received within timeout *10 the port is closed and reopened
+#this gives the chance to handle dynamically assigned ports with no issues
 class AVNSerialReader(AVNWorker):
   
   @classmethod
@@ -470,6 +679,7 @@ class AVNSerialReader(AVNWorker):
    
   #thread run method - just try forever  
   def run(self):
+    sys.settrace(debugger)
     f=None
     try:
       pnum=int(self.param['port'])
@@ -491,8 +701,9 @@ class AVNSerialReader(AVNWorker):
       lastTime=time.time()
       try:
         f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
-        
+        self.setInfo("port open")
       except Exception:
+        self.setInfo("unable to open port")
         try:
           tf=traceback.format_exc(3).decode(errors='ignore')
         except:
@@ -519,6 +730,7 @@ class AVNSerialReader(AVNWorker):
             pass
           break
         if len(bytes)> 0:
+          self.setInfo("receiving")
           if not isOpen:
             AVNLog.info("successfully opened %s",f.name)
             isOpen=True
@@ -526,6 +738,7 @@ class AVNSerialReader(AVNWorker):
           self.parseData(bytes.decode('ascii',errors='ignore'))
           lastTime=time.time()
         if (time.time() - lastTime) > porttimeout:
+          self.setInfo("timeout")
           f.close()
           if isOpen:
             AVNLog.info("%s: reopen port %s - timeout elapsed",name,portname)
@@ -678,6 +891,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     return "HTTPServer"
   
   def run(self):
+    sys.settrace(debugger)
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
     self.serve_forever()
    
@@ -692,6 +906,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   
   #overwrite this from SimpleHTTPRequestHandler
   def send_head(self):
+    sys.settrace(debugger)
     path=self.translate_path(self.path)
     if path is None:
       return
@@ -798,11 +1013,17 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     AVNLog.ld("request",path,query,rt)
 
       
-
+def sighandler(signal,frame):
+  global allHandlers
+  for handler in allHandlers:
+    handler.stopChildren()
+  sys.exit(1)
         
 
 def main(argv):
-  global loggingInitialized
+  global loggingInitialized,debugger,allHandlers
+  debugger=sys.gettrace()
+  workerlist=[AVNBaseConfig,AVNSerialReader,AVNGpsd,AVNHTTPServer]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
@@ -820,7 +1041,7 @@ def main(argv):
   else:
     cfgname=args[0]
   AVNLog.initLoggingInitial(options.verbose if not options.verbose is None else logging.INFO)
-  cfg=AVNConfig([AVNBaseConfig,AVNSerialReader,AVNHTTPServer])
+  cfg=AVNConfig(workerlist)
   allHandlers=cfg.readConfigAndCreateHandlers(cfgname)
   if allHandlers is None:
     AVNLog.error("unable to parse config file %s",cfgname)
@@ -853,28 +1074,34 @@ def main(argv):
       f.write(str(os.getpid())+"\n")
       f.close()
   #really start processing here - we start all handlers that have been configured
-  for handler in allHandlers:
-    try:
-      handler.startInstance(navData)
-    except Exception:
-      AVNLog.warn("unable to start handler : "+traceback.format_exc())
-  AVNLog.info("All Handlers started")
-  hasFix=False
-  while True:
-    time.sleep(3)
-    curTPV=navData.getMergedEntries("TPV", [])
-    if ( not curTPV.data.get('lat') is None) and (not curTPV.data.get('lon') is None):
-      #we have some position
-      if not hasFix:
-        AVNLog.info("new GPS fix lat=%f lon=%f",curTPV.data.get('lat'),curTPV.data.get('lon'))
-        hasFix=True
-    else:
-      if hasFix:
-        AVNLog.warn("lost GPS fix")
-      hasFix=False
-    AVNLog.debug(str(navData))
-    AVNLog.debug("entries for TPV: "+str(curTPV))  
- 
+  signal.signal(signal.SIGINT, sighandler)
+  signal.signal(signal.SIGTERM, sighandler)
+  signal.signal(signal.SIGABRT, sighandler)
+  try:
+    for handler in allHandlers:
+      try:
+        handler.startInstance(navData)
+      except Exception:
+        AVNLog.warn("unable to start handler : "+traceback.format_exc())
+    AVNLog.info("All Handlers started")
+    hasFix=False
+    while True:
+      time.sleep(3)
+      curTPV=navData.getMergedEntries("TPV", [])
+      if ( not curTPV.data.get('lat') is None) and (not curTPV.data.get('lon') is None):
+        #we have some position
+        if not hasFix:
+          AVNLog.info("new GPS fix lat=%f lon=%f",curTPV.data.get('lat'),curTPV.data.get('lon'))
+          hasFix=True
+      else:
+        if hasFix:
+          AVNLog.warn("lost GPS fix")
+        hasFix=False
+      AVNLog.debug(str(navData))
+      AVNLog.debug("entries for TPV: "+str(curTPV))  
+  except:
+    sighandler(None, None)
+   
 if __name__ == "__main__":
     main(sys.argv)
     
