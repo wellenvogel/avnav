@@ -46,6 +46,7 @@ import itertools
 import optparse
 import copy
 import subprocess
+import urlparse
 
 hasSerial=False
 hasGpsd=False
@@ -993,24 +994,46 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       return path
       
   #handle a navigational query
-  #query could be: filter=TPV&bbox=54.531,13.014,54.799,13.255
+  #request parameters:
+  #request=gps&filter=TPV&bbox=54.531,13.014,54.799,13.255
+  #request: gps,status,...
   #filter is a key of the map in the form prefix-suffix
+  
   def handleNavRequest(self,path,query):
+    requestParam=urlparse.parse_qs(query,True)
+    requestType=requestParam.get('request')
+    if requestType is None:
+      requestType='gps'
+    else:
+      requestType=requestType[0]
     try:
-      rtv=self.server.navdata.getMergedEntries("TPV",[])
-      rt=json.dumps(rtv.data)
+      rtj=None
+      if requestType=='gps':
+        rtv=self.server.navdata.getMergedEntries("TPV",[])
+        rtj=json.dumps(rtv.data)
+      if requestType=='status':
+        rt=[]
+        for handler in allHandlers:
+          entry={'config':handler.getConfigName(),
+                 'name':handler.getName(),
+                 'info':handler.getInfo()}
+          rt.append(entry)       
+        rtj=json.dumps({'handler':rt})
+      if not rtj is None:
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.send_header("Content-Length", len(rtj))
+        self.send_header("Last-Modified", self.date_time_string())
+        self.end_headers()
+        self.wfile.write(rtj)
+        AVNLog.ld("request",path,requestType,query,rtj)
+      else:
+        raise Exception("empty response")
     except Exception as e:
-      AVNLog.ld("unable to process request for ",path,query)
-      self.send_response(500);
-      self.end_headers()
-      return
-    self.send_response(200)
-    self.send_header("Content-type", "application/json")
-    self.send_header("Content-Length", len(rt))
-    self.send_header("Last-Modified", self.date_time_string())
-    self.end_headers()
-    self.wfile.write(rt)
-    AVNLog.ld("request",path,query,rt)
+          AVNLog.ld("unable to process request for ",path,query)
+          self.send_response(500);
+          self.end_headers()
+          return
 
       
 def sighandler(signal,frame):
