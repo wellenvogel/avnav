@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AVNServer >
+<AVNConfig debug="0" logfile="/home/pi/avnav/log/avnav.log" debugToLog="true"/>
+<Readers>
+<!--
+<AVNSerialReader name="rfcomm0Reader" port="/dev/rfcomm0"/>
+<AVNSerialReader name="rfcomm1Reader" port="/dev/rfcomm1"/>
+<AVNSerialReader name="rfcomm2Reader" port="/dev/rfcomm2"/>
+<AVNSerialReader name="rfcomm3Reader" port="/dev/rfcomm3"/>
+<AVNSerialReader name="rfcomm4Reader" port="/dev/rfcomm4"/>
+<AVNSerialReader name="ttyUSB0Reader" port="/dev/ttyUSB0"/>
+<AVNSerialReader name="ttyUSB1Reader" port="/dev/ttyUSB1"/>
+<AVNSerialReader name="ttyUSB2Reader" port="/dev/ttyUSB2"/>
+<AVNSerialReader name="ttyUSB3Reader" port="/dev/ttyUSB3"/>
+<AVNSerialReader name="ttyUSB4Reader" port="/dev/ttyUSB4"/>
+-->
+<AVNGpsd device="/dev/rfcomm0" port="4001"/>
+<AVNGpsd device="/dev/rfcomm1" port="4002"/>
+<AVNGpsd device="/dev/ttyUSB0" port="4010" timeout="40"/>
+<AVNGpsd device="/dev/ttyUSB1" port="4011" timeout="40"/>
+
+</Readers>
+
+<AVNHttpServer navurl="/viewer/avnav_navi.php">
+	<AVNHttpServerDirectory urlpath="maps" path="/home/pi/avnav/tiles"></AVNHttpServerDirectory>
+	<AVNHttpServerDirectory urlpath="viewer" path="/home/pi/avnav/viewer"></AVNHttpServerDirectory>
+	<AVNHttpServerDirectory urlpath="libraries" path="/home/pi/avnav/libraries"></AVNHttpServerDirectory>
+</AVNHttpServer>
+</AVNServer>

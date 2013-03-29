@@ -1,0 +1,29 @@
+raspberry pi installation
+2013/03/16...
+
+1.basic raspberry installation:
+http://www.raspberrypi.org/downloads
+win32 discimager http://sourceforge.net/projects/win32diskimager/
+
+2. gpsd
+http://blog.retep.org/2012/06/18/getting-gps-to-work-on-a-raspberry-pi/
+sudo apt-get install gpsd gpsd-clients python-gps
+--does not immediately work with bluetooth rfcomm0...
+
+3. bluetooth
+DBT-122 (DLINK) - pi restarted on plugin
+http://www.rpiblog.com/2012/08/bluetooth-pairing-of-raspberry-pi-with.html
+apt-get install -y bluetooth [bluez-utils blueman]
+
+1st connect:
+hcitool scan
+rfcomm bind 0 00:0B:0D:89:39:B4
+
+4.pyserial
+copy pyserial to pi (https://pypi.python.org/packages/source/p/pyserial/pyserial-2.6.tar.gz#md5=cde799970b7c1ce1f7d6e9ceebe64c98)
+unpack tar -xvzf ...
+cd into pyserial dir
+python setup.py install
+
+
+
