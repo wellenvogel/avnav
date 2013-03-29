@@ -240,7 +240,6 @@ class AVNConfig(sax.handler.ContentHandler):
 #a data entry
 #data is the decoded string
 class AVNDataEntry():
-  knownClasses=("TPV")
   EMPTY_CLASS="EMPTY"
   def __init__(self):
     self.key=self.createKey(self.EMPTY_CLASS,'')
@@ -260,9 +259,6 @@ class AVNDataEntry():
     if dcls is None:
       AVNLog.debug("data %s does not contain a class - ignore",str(data))
       return None
-    if not dcls in cls.knownClasses:
-      AVNLog.debug("unknown class in %s - ignore",str(data))
-      return None
     if dcls == 'TPV':
       tag=data.get('tag')
       if tag is None:
@@ -273,8 +269,32 @@ class AVNDataEntry():
       rt.data=data
       AVNLog.ld("data item created",rt)
       return rt
+    if dcls == 'AIS':
+      #currently we only store position reports
+      #see http://gpsd.berlios.de/AIVDM.html
+      knownAISTypes=(1,2,3,5,18,19)
+      try:
+        type=int(data.get('type'))
+      except:
+        AVNLog.ld("no type in AIS data",data)
+        return None
+      if not type in knownAISTypes:
+        AVNLog.debug("ignore type %d in AIS data %s",type,str(data))
+        return None
+      mmsi=data.get('mmsi')
+      if mmsi is None:
+        AVNLog.debug("AIS data without mmsi - ignore: %s",str(data))
+        return None
+      rt=AVNDataEntry()
+      rt.key=cls.createKey(dcls, str(mmsi))
+      rt.data=data
+      AVNLog.ld("data item created",rt)
+      return rt
+        
     #we should not arrive here...
+    AVNLog.debug("unknown class in %s - ignore",str(data))
     return None
+    
   
   #decode from json
   @classmethod
@@ -358,7 +378,11 @@ class AVNNavData():
         rt[k]=entry
     return rt
   def getFilteredEntriesAsJson(self,prefix,suffixlist):
-    return json.dumps(self.getFilteredEntries(prefix, suffixlist))
+    rt=[]
+    for e in self.getFilteredEntries(prefix, suffixlist).values():
+      rt.append(e.data)
+    AVNLog.ld("collected entries",rt)
+    return json.dumps(rt)
   
   def getMergedEntries(self,prefix,suffixlist):
     fe=self.getFilteredEntries(prefix, suffixlist)
@@ -506,9 +530,10 @@ class AVNGpsd(AVNWorker):
       return None
     return {
             'device':None,
+            'baud': 4800, #the initial baudrate
             'gpsdcommand':'/usr/sbin/gpsd -b -n -N',
             'timeout': 40, #need this timeout to be able to sync on 38400
-            'port': None
+            'port': None, #port for communication with gpsd
             }
   
   @classmethod
@@ -527,6 +552,7 @@ class AVNGpsd(AVNWorker):
     sys.settrace(debugger)
     device=self.param['device']
     port=int(self.param['port'])
+    baud=int(self.param['baud'])
     gpsdcommand="%s -S %d %s" %(self.param['gpsdcommand'],port,device)
     gpsdcommandli=gpsdcommand.split()
     timeout=float(self.param['timeout'])
@@ -548,7 +574,7 @@ class AVNGpsd(AVNWorker):
           #so we would avoid starting gpsd...
           try:
             AVNLog.debug("%s: try to open device %s",name,device)
-            ts=serial.Serial(device,timeout=timeout)
+            ts=serial.Serial(device,timeout=timeout,baudrate=baud)
             AVNLog.debug("%s: device %s opened, try to read 1 byte",name,device)
             bytes=ts.read(1)
             ts.close()
@@ -654,7 +680,12 @@ class GpsdReader(threading.Thread):
       for report in session:
         AVNLog.debug("%s: received gps data : %s",self.name,pprint.pformat(report))
         self.lasttime=time.time()
-        entry=AVNDataEntry.fromData(report)
+        #gpsd has an extremly broken interface - it has a dictwrapper that not really can act as a dict
+        #so we have to copy over...
+        ddata={}
+        for k in report.keys():
+          ddata[k]=report.get(k)
+        entry=AVNDataEntry.fromData(ddata)
         if not entry is None:
           self.navdata.addEntry(entry)
     except:
@@ -1052,6 +1083,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       if requestType=='gps':
         rtv=self.server.navdata.getMergedEntries("TPV",[])
         rtj=json.dumps(rtv.data)
+      if requestType=='ais':
+        rtj=self.server.navdata.getFilteredEntriesAsJson("AIS",[])
       if requestType=='status':
         rt=[]
         for handler in allHandlers:
@@ -1164,6 +1197,7 @@ def main(argv):
     hasFix=False
     while True:
       time.sleep(3)
+      #query the data to get old entries being removed 
       curTPV=navData.getMergedEntries("TPV", [])
       if ( not curTPV.data.get('lat') is None) and (not curTPV.data.get('lon') is None):
         #we have some position
@@ -1174,8 +1208,9 @@ def main(argv):
         if hasFix:
           AVNLog.warn("lost GPS fix")
         hasFix=False
-      AVNLog.debug(str(navData))
-      AVNLog.debug("entries for TPV: "+str(curTPV))  
+      AVNLog.debug("entries for TPV: "+str(curTPV))
+      curAIS=navData.getMergedEntries("AIS",[])
+      AVNLog.debug("entries for AIS: "+str(curAIS))  
   except:
     sighandler(None, None)
    
