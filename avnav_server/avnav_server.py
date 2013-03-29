@@ -111,9 +111,8 @@ class AVNLog():
   def initLoggingSecond(cls,level,filename,debugToFile=False):
     numeric_level=cls.levelToNumeric(level)
     formatter=logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    if not cls.consoleHandler is None and numeric_level >= logging.INFO:
-      cls.logger.removeHandler(cls.consoleHandler)
-      cls.consoleHandler=None
+    if not cls.consoleHandler is None :
+      cls.consoleHandler.setLevel(logging.ERROR)
     cls.fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
     cls.fhandler.setFormatter(formatter)
     cls.fhandler.setLevel(logging.INFO if not debugToFile else numeric_level)
@@ -125,6 +124,8 @@ class AVNLog():
   def changeLogLevel(cls,level):
     try:
       numeric_level=cls.levelToNumeric(level)
+      if not cls.logger.getEffectiveLevel() == numeric_level:
+        cls.logger.setLevel(numeric_level)
       if not cls.consoleHandler is None:
         cls.consoleHandler.setLevel(numeric_level)
       if cls.debugToFile:
@@ -487,6 +488,42 @@ class AVNWorker(threading.Thread):
       return self.param
     except:
       return {}
+  def getParamValue(self,name,throw=False):
+    rt=self.getParam().get(name)
+    if rt is None:
+      if throw:
+        raise Exception("parameter %s not found in config %"%(name,cls.getConfigName()))
+      else:
+        return None
+    return rt
+  def getIntParam(self,name,throw=False):
+    rt=self.getParamValue(name,throw)
+    if rt is None:
+      return None
+    else:
+      return int(rt)
+  
+  def getBoolParam(self,name,throw=False):
+    rt=self.getParamValue(name,throw)
+    if rt is None:
+      return None
+    else:
+      return rt.upper()=='TRUE'
+    
+  def getStringParam(self,name,throw=False):
+    rt=self.getParamValue(name,throw)
+    if rt is None:
+      return None
+    else:
+      return str(rt)
+  def getFloatParam(self,name,throw=False):
+    rt=self.getParamValue(name,throw)
+    if rt is None:
+      return None
+    else:
+      return float(rt)
+    
+  
   #stop any child process (will be called by signal handler)
   def stopChildren(self):
     pass
@@ -581,6 +618,7 @@ class AVNGpsd(AVNWorker):
             'gpsdcommand':'/usr/sbin/gpsd -b -n -N',
             'timeout': 40, #need this timeout to be able to sync on 38400
             'port': None, #port for communication with gpsd
+            'nocheck': 'false', #do not check the device before
             }
   
   @classmethod
@@ -597,25 +635,30 @@ class AVNGpsd(AVNWorker):
   
   def run(self):
     sys.settrace(debugger)
-    device=self.param['device']
-    port=int(self.param['port'])
-    baud=int(self.param['baud'])
-    gpsdcommand="%s -S %d %s" %(self.param['gpsdcommand'],port,device)
-    gpsdcommandli=gpsdcommand.split()
-    timeout=float(self.param['timeout'])
-    name="GPSDReader %s at %d"%(device,port)
-    AVNLog.info("%s: started for %s with command %s, timeout %f",name,device,gpsdcommand,timeout)
+    
     deviceVisible=False
     reader=None
     self.gpsdproc=None
+    init=True
     while True:
-      if not os.path.exists(device):
+      device=self.getParamValue('device')
+      port=self.getIntParam('port')
+      baud=self.getIntParam('baud')
+      gpsdcommand="%s -S %d %s" %(self.getStringParam('gpsdcommand'),port,device)
+      gpsdcommandli=gpsdcommand.split()
+      timeout=self.getFloatParam('timeout')
+      noCheck=self.getBoolParam('nocheck')
+      name="GPSDReader %s at %d"%(device,port)
+      if init:
+        AVNLog.info("%s: started for %s with command %s, timeout %f",name,device,gpsdcommand,timeout)
+        init=False
+      if not ( os.path.exists(device) or noCheck):
         self.setInfo("device not visible")
         AVNLog.debug("%s: device %s still not visible, continue waiting",name,device)
         time.sleep(timeout/2)
         continue
       else:
-        if hasSerial:
+        if hasSerial and not noCheck:
           #we first try to open the device by our own to see if this is possible
           #for bluetooth the device is there but open will fail
           #so we would avoid starting gpsd...
@@ -790,23 +833,26 @@ class AVNSerialReader(AVNWorker):
   def run(self):
     sys.settrace(debugger)
     f=None
-    try:
-      pnum=int(self.param['port'])
-    except:
-      pnum=self.param['port']
-    baud=int(self.param['baud'])
-    bytesize=int(self.param['bytesize'])
-    parity=self.param['parity']
-    stopbits=int(self.param['stopbits'])
-    xonxoff=int(self.param['xonxoff'])
-    rtscts=int(self.param['rtscts'])
-    portname=self.param['port']
-    timeout=float(self.param['timeout'])
-    porttimeout=timeout*10
-    name=self.getName()
-    AVNLog.info("%s: serial reader started for port %s, baudrate=%d, timeout=%f",name,portname,baud,timeout)
+    init=True
     isOpen=False
     while True:
+      try:
+        pnum=int(self.param['port'])
+      except:
+        pnum=self.param['port']
+      baud=int(self.param['baud'])
+      bytesize=int(self.param['bytesize'])
+      parity=self.param['parity']
+      stopbits=int(self.param['stopbits'])
+      xonxoff=int(self.param['xonxoff'])
+      rtscts=int(self.param['rtscts'])
+      portname=self.param['port']
+      timeout=float(self.param['timeout'])
+      porttimeout=timeout*10
+      name=self.getName()
+      if init:
+        AVNLog.info("%s: serial reader started for port %s, baudrate=%d, timeout=%f",name,portname,baud,timeout)
+        init=False
       lastTime=time.time()
       try:
         f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
