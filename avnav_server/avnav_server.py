@@ -47,6 +47,7 @@ import optparse
 import copy
 import subprocess
 import urlparse
+import math
 
 hasSerial=False
 hasGpsd=False
@@ -155,6 +156,8 @@ class AVNLog():
 
 
 class AVNUtil():
+  
+  NM=1852; #convert nm into m
   #convert a datetime UTC to a timestamp
   @classmethod
   def datetimeToTsUTC(cls,dt):
@@ -169,6 +172,50 @@ class AVNUtil():
   @classmethod
   def utcnow(cls):
     return cls.datetimeToTsUTC(datetime.datetime.utcnow())
+  
+  #check if a given position is within a bounding box
+  #all in WGS84
+  #ll parameters being tuples lat,lon
+  #currently passing 180° is not handled...
+  #lowerleft: smaller lat,lot
+  @classmethod
+  def inBox(cls,pos,lowerleft,upperright):
+    if pos[0] < lowerleft[0]:
+      return False
+    if pos[1] < lowerleft[1]:
+      return False
+    if pos[0] > upperright[1]:
+      return False
+    if pos[1] > upperright[1]:
+      return False
+    return True
+  
+  # Haversine formula example in Python
+  # Author: Wayne Dyck
+  @classmethod
+  def distance(cls,origin, destination):
+    lat1, lon1 = origin
+    lat2, lon2 = destination
+    radius = 6371 # km
+
+    dlat = math.radians(lat2-lat1)
+    dlon = math.radians(lon2-lon1)
+    a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) \
+        * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    d = (radius * c * 1000)/float(cls.NM)
+    return d
+  
+  #convert AIS data (and clone the data)
+  #positions / 600000
+  #speed/10
+  @classmethod
+  def convertAIS(cls,aisdata):
+    rt=aisdata.copy()
+    rt['lat']=float(aisdata['lat'])/600000
+    rt['lon']=float(aisdata['lon'])/600000
+    rt['speed']=float(aisdata['speed'])/10
+    return rt
 
 class AVNConfig(sax.handler.ContentHandler):
   def __init__(self,handlerList):
@@ -1084,7 +1131,32 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtv=self.server.navdata.getMergedEntries("TPV",[])
         rtj=json.dumps(rtv.data)
       if requestType=='ais':
-        rtj=self.server.navdata.getFilteredEntriesAsJson("AIS",[])
+        rt=self.server.navdata.getFilteredEntries("AIS",[])
+        lat=None
+        lon=None
+        dist=None
+        try:
+          lat=float(self.getRequestParam(requestParam, 'lat'))
+          lon=float(self.getRequestParam(requestParam, 'lon'))
+          dist=float(self.getRequestParam(requestParam, 'distance')) #distance in NM
+        except:
+          pass
+        frt=[]
+        if not lat is None and not lon is None and not dist is None:
+          dest=(lat,lon)
+          AVNLog.debug("limiting AIS to lat=%f,lon=%f,dist=%f",lat,lon,dist)
+          for entry in rt.values():
+            fentry=AVNUtil.convertAIS(entry.data)
+            mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
+            if mdist<=dist:
+              fentry['distance']=mdist
+              frt.append(fentry)
+            else:
+              AVNLog.debug("filtering out %s due to distance %f",str(fentry['mmsi']),mdist)
+        else:
+          for entry in rt.values():
+            frt.append(AVNUtil.convertAIS(entry.data))
+        rtj=json.dumps(frt)
       if requestType=='status':
         rt=[]
         for handler in allHandlers:
@@ -1208,9 +1280,9 @@ def main(argv):
         if hasFix:
           AVNLog.warn("lost GPS fix")
         hasFix=False
-      AVNLog.debug("entries for TPV: "+str(curTPV))
+      #AVNLog.debug("entries for TPV: "+str(curTPV))
       curAIS=navData.getMergedEntries("AIS",[])
-      AVNLog.debug("entries for AIS: "+str(curAIS))  
+      #AVNLog.debug("entries for AIS: "+str(curAIS))  
   except:
     sighandler(None, None)
    
