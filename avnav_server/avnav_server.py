@@ -76,6 +76,8 @@ NM=1852 #meters for a nautical mile
 class AVNLog():
   logger=logging.getLogger('avn')
   consoleHandler=None
+  fhandler=None
+  debugToFile=False
   
   #1st step init of logging - create a console handler
   #will be removed after parsing the cfg file
@@ -93,23 +95,42 @@ class AVNLog():
     cls.logger.propagate=False
     cls.logger.addHandler(cls.consoleHandler)
     cls.logger.setLevel(numeric_level)
-    
+  
   @classmethod
-  def initLoggingSecond(cls,level,filename):
+  def levelToNumeric(cls,level):
     try:
-      numeric_level=level+0
+      numeric_level=int(level)+0
     except:
       numeric_level = getattr(logging, level.upper(), None)
       if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % level)
+    return numeric_level
+    
+  @classmethod
+  def initLoggingSecond(cls,level,filename,debugToFile=False):
+    numeric_level=cls.levelToNumeric(level)
     formatter=logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     if not cls.consoleHandler is None and numeric_level >= logging.INFO:
       cls.logger.removeHandler(cls.consoleHandler)
-    fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
-    fhandler.setFormatter(formatter)
-    fhandler.setLevel(logging.INFO)
-    cls.logger.addHandler(fhandler)
+      cls.consoleHandler=None
+    cls.fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
+    cls.fhandler.setFormatter(formatter)
+    cls.fhandler.setLevel(logging.INFO if not debugToFile else numeric_level)
+    cls.logger.addHandler(cls.fhandler)
     cls.logger.setLevel(numeric_level)
+    cls.debugToFile=debugToFile
+  
+  @classmethod
+  def changeLogLevel(cls,level):
+    try:
+      numeric_level=cls.levelToNumeric(level)
+      if not cls.consoleHandler is None:
+        cls.consoleHandler.setLevel(numeric_level)
+      if cls.debugToFile:
+        cls.fhandler.setLevel(numeric_level)
+      return True
+    except:
+      return False
   
   @classmethod
   def debug(cls,str,*args,**kwargs):
@@ -384,9 +405,17 @@ class AVNWorker(threading.Thread):
     self.setName(self.getName())
     self.info="started"
   def getInfo(self):
-    return self.info
+    try:
+      return self.info
+    except:
+      return "no info available"
   def setInfo(self,info):
     self.info=info
+  def getParam(self):
+    try:
+      return self.param
+    except:
+      return {}
   #stop any child process (will be called by signal handler)
   def stopChildren(self):
     pass
@@ -442,7 +471,8 @@ class AVNBaseConfig(AVNWorker):
     return {
             'loglevel':logging.INFO,
             'logfile':"",
-            'expiryTime': 30
+            'expiryTime': 30,
+            'debugToLog': 'false'
     }
   @classmethod
   def createInstance(cls, cfgparam):
@@ -992,6 +1022,16 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return path
       path=os.path.join(self.server.basedir,path)
       return path
+    
+  #return the first element of a request param if set
+  
+  def getRequestParam(self,param,name):
+    pa=param.get(name)
+    if pa is None:
+      return None
+    if len(pa) > 0:
+      return pa[0]
+    return None
       
   #handle a navigational query
   #request parameters:
@@ -1006,6 +1046,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       requestType='gps'
     else:
       requestType=requestType[0]
+    AVNLog.ld('navrequest',requestParam)
     try:
       rtj=None
       if requestType=='gps':
@@ -1014,11 +1055,23 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       if requestType=='status':
         rt=[]
         for handler in allHandlers:
-          entry={'config':handler.getConfigName(),
+          entry={'configname':handler.getConfigName(),
+                 'config': handler.getParam(),
                  'name':handler.getName(),
                  'info':handler.getInfo()}
           rt.append(entry)       
         rtj=json.dumps({'handler':rt})
+      if requestType=='debuglevel':
+        rt={'status':'ERROR','info':'missing parameter'}
+        level=self.getRequestParam(requestParam,'level')
+        if not level is None:
+          crt=AVNLog.changeLogLevel(level)
+          if crt:
+            rt['status']='OK'
+            rt['info']='set loglevel to '+str(level)
+          else:
+            rt['info']="invalid level "+str(level)
+        rtj=json.dumps(rt)
       if not rtj is None:
         self.send_response(200)
         self.send_header("Content-type", "application/json")
@@ -1030,7 +1083,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       else:
         raise Exception("empty response")
     except Exception as e:
-          AVNLog.ld("unable to process request for ",path,query)
+          AVNLog.ld("unable to process request for ",path,query,traceback.format_exc())
           self.send_response(500);
           self.end_headers()
           return
@@ -1071,7 +1124,7 @@ def main(argv):
     sys.exit(1)
   baseConfig=None
   for handler in allHandlers:
-    if handler.getConfigName() == "AVNBaseConfig":
+    if handler.getConfigName() == "AVNConfig":
       baseConfig=handler
   if baseConfig is None:
     #no entry for base config found - using defaults
@@ -1084,12 +1137,13 @@ def main(argv):
   else:    
     if not baseConfig.param.get("loglevel") is None:
       level=baseConfig.param.get("loglevel")
+  AVNLog.ld("baseconfig",baseConfig.param)
   if not baseConfig.param.get("logfile") == "":
     filename=baseConfig.param.get("logfile")
   AVNLog.info("####start processing (logging to %s)####",filename)
   if not os.path.exists(os.path.dirname(filename)):
     os.makedirs(os.path.dirname(filename), 0777)
-  AVNLog.initLoggingSecond(level, filename) 
+  AVNLog.initLoggingSecond(level, filename,baseConfig.getParam()['debugToLog'].upper()=='TRUE') 
   AVNLog.info("#### avnserver pid=%d start processing ####",os.getpid())
   if options.pidfile is not None:
     f=open(options.pidfile,"w")
