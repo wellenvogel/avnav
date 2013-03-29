@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <AVNServer >
+<!-- some basic configuration
+     debugToLog controls whether any debug output will also go to the logfile
+     you can change the loglevel by an HTTP request to the navurl:
+     http://somehost:8080/viewer/avnav_navi.php?request=debuglevel&level=DEBUG
+-->
 <AVNConfig debug="0" logfile="/home/pi/avnav/log/avnav.log" debugToLog="true"/>
-<Readers>
-<!--
+<!-- the workers section -->
+<Workers>
+<!-- reader for 4 usb/serial converters and 4 bluetooth devices
+     currently the internal reader needs a fixed setting (defaults to 4800 baud)
+     and can only handle a limite set of GPS data (no AIS)
 <AVNSerialReader name="rfcomm0Reader" port="/dev/rfcomm0"/>
 <AVNSerialReader name="rfcomm1Reader" port="/dev/rfcomm1"/>
 <AVNSerialReader name="rfcomm2Reader" port="/dev/rfcomm2"/>
@@ -14,13 +22,36 @@
 <AVNSerialReader name="ttyUSB3Reader" port="/dev/ttyUSB3"/>
 <AVNSerialReader name="ttyUSB4Reader" port="/dev/ttyUSB4"/>
 -->
+<!-- gpsd readers
+     4 readers for usb-serial converters, 4 for bluetooth
+     by default they will check if the device is there and will start gpsd 
+     once they have been able to at least receive one byte
+     gpsd seems to have difficulties with autobaud - so you can set the baud here to the correct rate
+     to assist...
+     The timeout is a compromise - just give gpsd enough time to sync
+     but kill it and release the device to allow for USB reconnects
+-->
 <AVNGpsd device="/dev/rfcomm0" port="4001"/>
 <AVNGpsd device="/dev/rfcomm1" port="4002"/>
-<AVNGpsd device="/dev/ttyUSB0" port="4010" timeout="40"/>
-<AVNGpsd device="/dev/ttyUSB1" port="4011" timeout="40"/>
+<AVNGpsd device="/dev/rfcomm2" port="4003"/>
+<AVNGpsd device="/dev/rfcomm3" port="4004"/>
+<AVNGpsd device="/dev/ttyUSB0" port="4010" timeout="40" baud="38400"/>
+<AVNGpsd device="/dev/ttyUSB1" port="4011" timeout="40" baud="38400"/>
+<AVNGpsd device="/dev/ttyUSB2" port="4012" timeout="40" baud="38400"/>
+<AVNGpsd device="/dev/ttyUSB3" port="4013" timeout="40" baud="38400"/>
 
-</Readers>
+<!-- a reader fro real ais data... 
+<AVNGpsd device="tcp://76.103.90.196:9009" port="4012" timeout="40" nocheck="true"/>
+-->
 
+</Workers>
+
+<!-- the Web server
+     the port defaults to 8080, the host to "any"
+     set the translation between URLs and real pathes as you need
+     the navurl is the url that is used to control any nav feature
+     this of course must fit to the java script part...
+-->
 <AVNHttpServer navurl="/viewer/avnav_navi.php">
 	<AVNHttpServerDirectory urlpath="maps" path="/home/pi/avnav/tiles"></AVNHttpServerDirectory>
 	<AVNHttpServerDirectory urlpath="viewer" path="/home/pi/avnav/viewer"></AVNHttpServerDirectory>
