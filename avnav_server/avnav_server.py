@@ -54,6 +54,8 @@ hasSerial=False
 hasGpsd=False
 loggingInitialized=False
 allHandlers=[]
+#should have a better solution then a global...
+trackWriter=None
 
 
 
@@ -503,7 +505,7 @@ class AVNWorker(threading.Thread):
     rt=self.getParam().get(name)
     if rt is None:
       if throw:
-        raise Exception("parameter %s not found in config %"%(name,cls.getConfigName()))
+        raise Exception("parameter %s not found in config %s"%(name,self.getConfigName()))
       else:
         return None
     return rt
@@ -604,6 +606,12 @@ class AVNTrackWriter(AVNWorker):
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.track=[]
+    #param checks
+    throw=True
+    self.getIntParam('cleanup', throw)
+    self.getFloatParam('mindistance', throw)
+    self.getFloatParam('interval', throw)
+    self.tracklock=threading.Lock()
   @classmethod
   def getConfigName(cls):
     return "AVNTrackWriter"
@@ -615,6 +623,7 @@ class AVNTrackWriter(AVNWorker):
             'interval':10, #write every 10 seconds
             'trackdir':"", #defaults to pdir/tracks
             'mindistance': 25, #only write if we at least moved this distance
+            'cleanup': 25, #cleanup in hours
     }
   @classmethod
   def createInstance(cls, cfgparam):
@@ -632,6 +641,41 @@ class AVNTrackWriter(AVNWorker):
   def createFileName(self,dt):
     str=dt.strftime("%Y-%m-%d")+".avt"
     return str
+  def cleanupTrack(self):
+    numremoved=0
+    cleanupTime=datetime.datetime.utcnow()-datetime.timedelta(hours=self.getIntParam('cleanup'))
+    self.tracklock.acquire()
+    while len(self.track) > 0:
+      if self.track[0][0]<=cleanupTime:
+        numremoved+=1
+        self.track.pop(0)
+      else:
+        break
+    self.tracklock.release()
+    if numremoved > 0:
+      AVNLog.debug("%s: removed %d track entries older then %s",self.getName(),numremoved,cleanupTime.isoformat())
+  
+  #get the track as array of dicts
+  #filter by maxnum and interval
+  def getTrackFormatted(self,maxnum,interval):
+    rt=[]
+    curts=None
+    intervaldt=datetime.timedelta(seconds=interval)
+    self.tracklock.acquire()
+    try:
+      for tp in self.track:
+        if curts is None or tp[0] > (curts + intervaldt):
+          entry={
+               'time':tp[0].isoformat(),
+               'lat':tp[1],
+               'lon':tp[2]}
+          rt.append(entry)
+          curts=tp[0]
+    except:
+      pass
+    self.tracklock.release()
+    return rt[-maxnum:]
+    
   def run(self):
     f=None
     fname=None
@@ -641,6 +685,7 @@ class AVNTrackWriter(AVNWorker):
     newFile=False
     while True:
       currentTime=datetime.datetime.utcnow();
+      
       trackdir=self.getStringParam("trackdir")
       if trackdir == "":
         trackdir=os.path.join(os.path.dirname(sys.argv[0]),'tracks')
@@ -648,8 +693,8 @@ class AVNTrackWriter(AVNWorker):
         AVNLog.info("%s started with dir=%s,interval=%d, distance=%d",
                 self.getName(),
                 trackdir,
-                self.getIntParam("interval", True),
-                self.getIntParam("mindistance", True))
+                self.getFloatParam("interval"),
+                self.getFloatParam("mindistance"))
       try:
         if not os.path.isdir(trackdir):
           os.makedirs(trackdir, 0775)
@@ -1318,55 +1363,15 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     try:
       rtj=None
       if requestType=='gps':
-        rtv=self.server.navdata.getMergedEntries("TPV",[])
-        rtj=json.dumps(rtv.data)
+        rtj=self.handleGpsRequest(requestParam)
       if requestType=='ais':
-        rt=self.server.navdata.getFilteredEntries("AIS",[])
-        lat=None
-        lon=None
-        dist=None
-        try:
-          lat=float(self.getRequestParam(requestParam, 'lat'))
-          lon=float(self.getRequestParam(requestParam, 'lon'))
-          dist=float(self.getRequestParam(requestParam, 'distance')) #distance in NM
-        except:
-          pass
-        frt=[]
-        if not lat is None and not lon is None and not dist is None:
-          dest=(lat,lon)
-          AVNLog.debug("limiting AIS to lat=%f,lon=%f,dist=%f",lat,lon,dist)
-          for entry in rt.values():
-            fentry=AVNUtil.convertAIS(entry.data)
-            mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
-            if mdist<=dist:
-              fentry['distance']=mdist
-              frt.append(fentry)
-            else:
-              AVNLog.debug("filtering out %s due to distance %f",str(fentry['mmsi']),mdist)
-        else:
-          for entry in rt.values():
-            frt.append(AVNUtil.convertAIS(entry.data))
-        rtj=json.dumps(frt)
+        rtj=self.handleAISRequest(requestParam)
+      if requestType=='track':
+        rtj=self.handleTrackRequest(requestParam)
       if requestType=='status':
-        rt=[]
-        for handler in allHandlers:
-          entry={'configname':handler.getConfigName(),
-                 'config': handler.getParam(),
-                 'name':handler.getName(),
-                 'info':handler.getInfo()}
-          rt.append(entry)       
-        rtj=json.dumps({'handler':rt})
+        rtj=self.handleStatusRequest(requestParam)
       if requestType=='debuglevel':
-        rt={'status':'ERROR','info':'missing parameter'}
-        level=self.getRequestParam(requestParam,'level')
-        if not level is None:
-          crt=AVNLog.changeLogLevel(level)
-          if crt:
-            rt['status']='OK'
-            rt['info']='set loglevel to '+str(level)
-          else:
-            rt['info']="invalid level "+str(level)
-        rtj=json.dumps(rt)
+        rtj=self.handleDebugLevelRequest(requestParam)
       if not rtj is None:
         self.send_response(200)
         self.send_header("Content-type", "application/json")
@@ -1382,7 +1387,80 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           self.send_response(500);
           self.end_headers()
           return
-
+  #return AIS targets
+  #parameter: lat,lon,distance (in NM) - limit to this distance      
+  def handleAISRequest(self,requestParam):
+    rt=self.server.navdata.getFilteredEntries("AIS",[])
+    lat=None
+    lon=None
+    dist=None
+    try:
+      lat=float(self.getRequestParam(requestParam, 'lat'))
+      lon=float(self.getRequestParam(requestParam, 'lon'))
+      dist=float(self.getRequestParam(requestParam, 'distance')) #distance in NM
+    except:
+      pass
+    frt=[]
+    if not lat is None and not lon is None and not dist is None:
+      dest=(lat,lon)
+      AVNLog.debug("limiting AIS to lat=%f,lon=%f,dist=%f",lat,lon,dist)
+      for entry in rt.values():
+        fentry=AVNUtil.convertAIS(entry.data)
+        mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
+        if mdist<=dist:
+          fentry['distance']=mdist
+          frt.append(fentry)
+        else:
+          AVNLog.debug("filtering out %s due to distance %f",str(fentry['mmsi']),mdist)
+    else:
+      for entry in rt.values():
+        frt.append(AVNUtil.convertAIS(entry.data))
+    return json.dumps(frt)
+  
+  def handleGpsRequest(self,requestParam):
+    rtv=self.server.navdata.getMergedEntries("TPV",[])
+    return json.dumps(rtv.data)
+  #query the current list of trackpoints
+  #currently we only limit by maxnumber and interval (in s)
+  def handleTrackRequest(self,requestParam):
+    lat=None
+    lon=None
+    dist=None
+    maxnum=60 #with default settings this is one hour
+    interval=60
+    try:
+      maxnumstr=self.getRequestParam(requestParam, 'maxnum')
+      if not maxnum is None:
+        maxnum=int(maxnumstr)
+      intervalstr=self.getRequestParam(requestParam, 'interval')
+      if not intervalstr is None:
+        interval=int(intervalstr)
+    except:
+      pass
+    frt=[]
+    if not trackWriter is None:
+      frt=trackWriter.getTrackFormatted(maxnum,interval)
+    return json.dumps(frt)
+  def handleStatusRequest(self,requestParam):
+    rt=[]
+    for handler in allHandlers:
+      entry={'configname':handler.getConfigName(),
+             'config': handler.getParam(),
+             'name':handler.getName(),
+             'info':handler.getInfo()}
+      rt.append(entry)       
+    return json.dumps({'handler':rt})
+  def handleDebugLevelRequest(self,requestParam):
+    rt={'status':'ERROR','info':'missing parameter'}
+    level=self.getRequestParam(requestParam,'level')
+    if not level is None:
+      crt=AVNLog.changeLogLevel(level)
+      if crt:
+        rt['status']='OK'
+        rt['info']='set loglevel to '+str(level)
+      else:
+        rt['info']="invalid level "+str(level)
+    return json.dumps(rt)    
       
 def sighandler(signal,frame):
   global allHandlers
@@ -1392,7 +1470,7 @@ def sighandler(signal,frame):
         
 
 def main(argv):
-  global loggingInitialized,debugger,allHandlers
+  global loggingInitialized,debugger,allHandlers,trackWriter
   debugger=sys.gettrace()
   workerlist=[AVNBaseConfig,AVNSerialReader,AVNGpsd,AVNHTTPServer,AVNTrackWriter]
   cfgname=None
@@ -1421,6 +1499,8 @@ def main(argv):
   for handler in allHandlers:
     if handler.getConfigName() == "AVNConfig":
       baseConfig=handler
+    if handler.getConfigName() == "AVNTrackWriter":
+      trackWriter=handler
   if baseConfig is None:
     #no entry for base config found - using defaults
     baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())
