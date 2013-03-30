@@ -25,5 +25,9 @@ unpack tar -xvzf ...
 cd into pyserial dir
 python setup.py install
 
+5. python bluetooth support
+sudo apt-get install python-bluez
+
+
 
 
