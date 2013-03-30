@@ -53,8 +53,21 @@
      this of course must fit to the java script part...
 -->
 <AVNHttpServer navurl="/viewer/avnav_navi.php">
-	<AVNHttpServerDirectory urlpath="maps" path="/home/pi/avnav/tiles"></AVNHttpServerDirectory>
-	<AVNHttpServerDirectory urlpath="viewer" path="/home/pi/avnav/viewer"></AVNHttpServerDirectory>
-	<AVNHttpServerDirectory urlpath="libraries" path="/home/pi/avnav/libraries"></AVNHttpServerDirectory>
+	<Directory urlpath="maps" path="/home/pi/avnav/tiles"></Directory>
+	<Directory urlpath="viewer" path="/home/pi/avnav/viewer"></Directory>
+	<Directory urlpath="libraries" path="/home/pi/avnav/libraries"></Directory>
+	<Directory urlpath="log" path="/home/pi/avnav/log"></Directory>
+	<Directory urlpath="tracks" path="/home/pi/avnav/tracks"></Directory>
+	<MimeType extension=".avt" type="text/plain"></MimeType>
+	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
+<!-- the writer for track data
+     tracks are written in a simple file
+     each line consists of:
+     timestamp,lat,lon,course,speed
+     timestamp being in ISO8601 format, others in float
+     interval is the minimum interval between writing trackpoints
+     distance is the minimum distance in m before a new trackpoint is written (interval wins)
+      -->
+<AVNTrackWriter interval="10" distance="20" trackdir="/home/pi/avnav/tracks"/>
 </AVNServer>

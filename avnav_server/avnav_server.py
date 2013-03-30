@@ -48,6 +48,7 @@ import copy
 import subprocess
 import urlparse
 import math
+import re
 
 hasSerial=False
 hasGpsd=False
@@ -112,7 +113,7 @@ class AVNLog():
     numeric_level=cls.levelToNumeric(level)
     formatter=logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     if not cls.consoleHandler is None :
-      cls.consoleHandler.setLevel(logging.ERROR)
+      cls.consoleHandler.setLevel(numeric_level)
     cls.fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
     cls.fhandler.setFormatter(formatter)
     cls.fhandler.setLevel(logging.INFO if not debugToFile else numeric_level)
@@ -217,6 +218,16 @@ class AVNUtil():
     rt['lon']=float(aisdata['lon'])/600000
     rt['speed']=float(aisdata['speed'])/10
     return rt
+  
+  #parse an ISO8601 t8ime string
+  #see http://stackoverflow.com/questions/127803/how-to-parse-iso-formatted-date-in-python
+  #a bit limited to what we write into track files
+  @classmethod
+  def gt(cls,dt_str):
+    dt, _, us= dt_str.partition(".")
+    dt= datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")
+    us= int(us.rstrip("Z"), 10)
+    return dt + datetime.timedelta(microseconds=us)
 
 class AVNConfig(sax.handler.ContentHandler):
   def __init__(self,handlerList):
@@ -588,6 +599,136 @@ class AVNBaseConfig(AVNWorker):
   def start(self):
     pass
 
+#a writer for our track
+class AVNTrackWriter(AVNWorker):
+  def __init__(self,param):
+    AVNWorker.__init__(self, param)
+    self.track=[]
+  @classmethod
+  def getConfigName(cls):
+    return "AVNTrackWriter"
+  @classmethod
+  def getConfigParam(cls, child=None):
+    if child is not None:
+      return None
+    return {
+            'interval':10, #write every 10 seconds
+            'trackdir':"", #defaults to pdir/tracks
+            'mindistance': 25, #only write if we at least moved this distance
+    }
+  @classmethod
+  def createInstance(cls, cfgparam):
+    return AVNTrackWriter(cfgparam)
+  
+  #write out the line
+  #timestamp is a datetime object
+  def writeLine(self,filehandle,timestamp,data):
+    ts=timestamp.isoformat();
+    if not ts[-1:]=="Z":
+        ts+="Z"
+    str="%s,%f,%f,%f,%f\n"%(ts,data['lat'],data['lon'],(data.get('track') or 0),(data.get('speed') or 0))
+    filehandle.write(str)
+    filehandle.flush()
+  def createFileName(self,dt):
+    str=dt.strftime("%Y-%m-%d")+".avt"
+    return str
+  def run(self):
+    f=None
+    fname=None
+    initial=True
+    lastLat=None
+    lastLon=None
+    newFile=False
+    while True:
+      currentTime=datetime.datetime.utcnow();
+      trackdir=self.getStringParam("trackdir")
+      if trackdir == "":
+        trackdir=os.path.join(os.path.dirname(sys.argv[0]),'tracks')
+      if initial:
+        AVNLog.info("%s started with dir=%s,interval=%d, distance=%d",
+                self.getName(),
+                trackdir,
+                self.getIntParam("interval", True),
+                self.getIntParam("mindistance", True))
+      try:
+        if not os.path.isdir(trackdir):
+          os.makedirs(trackdir, 0775)
+        curfname=os.path.join(trackdir,self.createFileName(currentTime))
+        if not curfname == fname:
+          fname=curfname
+          if not f is None:
+            f.close()
+          newFile=True         
+          if initial:
+            if os.path.exists(curfname):
+              try:
+                f=open(curfname,"r")
+                self.info="reading"
+                for line in f:
+                  line=re.sub('#.*','',line)
+                  #TODO: parse time
+                  par=line.split(",")
+                  if len(par) < 3:
+                    continue
+                  try:
+                    newLat=float(par[1])
+                    newLon=float(par[2])
+                    if lastLat is None or lastLon is None: 
+                      self.track.append((AVNUtil.gt(par[0]),newLat,newLon))
+                      lastLat=newLat
+                      latLon=newLon
+                    else:
+                      dist=AVNUtil.distance((lastLat,lastLon), (newLat,newLon))*AVNUtil.NM
+                      if dist >= self.getFloatParam('distance'):
+                        self.track.append((AVNUtil.gt(par[0]),lastLat,lastLon))
+                        lastLat=newLat
+                        latLon=newLon
+                  except:
+                    pass
+                f.close()
+              except:
+                if not f is None:
+                  try:
+                    f.close()
+                  except:
+                    pass
+            initial=False
+        if newFile:
+          f=open(curfname,"a")
+          f.write("#anvnav Trackfile started/continued at %s\n"%(currentTime.isoformat()))
+          f.flush()
+          newFile=False
+        self.status=True
+        self.info="writing"
+        gpsdata=self.navdata.getMergedEntries('TPV',[])
+        lat=gpsdata.data.get('lat')
+        lon=gpsdata.data.get('lon')
+        if not lat is None and not lon is None:
+          if lastLat is None or lastLon is None:
+            AVNLog.ld("write track entry",gpsdata.data)
+            self.writeLine(f,currentTime,gpsdata.data)
+            self.track.append((currentTime,lat,lon))
+          else:
+            dist=AVNUtil.distance((lastLat,lastLon), (lat,lon))*AVNUtil.NM
+            if dist >= self.getFloatParam('distance'):
+              AVNLog.ld("write track entry",gpsdata.data)
+              self.writeLine(f,currentTime,gpsdata.data)
+              self.track.append((currentTime,lat,lon))
+          lastLat=lat
+          lastLon=lon
+      except Exception as e:
+        pass
+      #TODO: compute more exact sleeptime
+      time.sleep(self.getFloatParam("interval"))
+      
+  def getTrack(self):
+    return self.track
+        
+          
+          
+    
+    
+
 #a worker to interface with gpsd
 #as gpsd is not really able to handle dynamically assigned ports correctly, 
 #we monitor first if the device file exists and only start gpsd once it is visible
@@ -634,8 +775,6 @@ class AVNGpsd(AVNWorker):
       self.gpsdproc.terminate()
   
   def run(self):
-    sys.settrace(debugger)
-    
     deviceVisible=False
     reader=None
     self.gpsdproc=None
@@ -748,7 +887,6 @@ class GpsdReader(threading.Thread):
     self.status=True
     self.port=port
   def run(self):
-    sys.settrace(debugger)
     self.lasttime=time.time()
     AVNLog.debug("%s: gpsd reader thread started at port %d",self.name,self.port)
     try:
@@ -831,7 +969,6 @@ class AVNSerialReader(AVNWorker):
    
   #thread run method - just try forever  
   def run(self):
-    sys.settrace(debugger)
     f=None
     init=True
     isOpen=False
@@ -1008,10 +1145,15 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     return AVNHTTPServer(cfgparam,AVNHTTPHandler)
   @classmethod
   def getConfigParam(cls,child):
-    if child == "AVNHttpServerDirectory":
+    if child == "Directory":
       return {
               "urlpath":None,
               "path":None
+              }
+    if child == "MimeType":
+      return {
+              'extension':None,
+              'type':None
               }
     if not child is None:
       return None
@@ -1029,7 +1171,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if self.basedir==".":
       self.basedir=os.getcwd()
     pathmappings=None
-    marray=cfgparam.get("AVNHttpServerDirectory")
+    marray=cfgparam.get("Directory")
     if marray is not None:
       pathmappings={}
       for mapping in marray:
@@ -1039,6 +1181,10 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.overwrite_map=({
                               '.png': 'image/png'
                               })
+    mtypes=cfgparam.get('MimeType')
+    if mtypes is not None:
+      for mtype in mtypes:
+        self.overwrite_map[mtype['extension']]=mtype['type']
     server_address=(cfgparam['httpHost'],int(cfgparam['httpPort']))
     AVNWorker.__init__(self, cfgparam)
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
@@ -1046,7 +1192,6 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     return "HTTPServer"
   
   def run(self):
-    sys.settrace(debugger)
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
     self.serve_forever()
    
@@ -1061,7 +1206,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   
   #overwrite this from SimpleHTTPRequestHandler
   def send_head(self):
-    sys.settrace(debugger)
     path=self.translate_path(self.path)
     if path is None:
       return
@@ -1250,7 +1394,7 @@ def sighandler(signal,frame):
 def main(argv):
   global loggingInitialized,debugger,allHandlers
   debugger=sys.gettrace()
-  workerlist=[AVNBaseConfig,AVNSerialReader,AVNGpsd,AVNHTTPServer]
+  workerlist=[AVNBaseConfig,AVNSerialReader,AVNGpsd,AVNHTTPServer,AVNTrackWriter]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
