@@ -30,11 +30,18 @@
      to assist...
      The timeout is a compromise - just give gpsd enough time to sync
      but kill it and release the device to allow for USB reconnects
--->
+     
+     For bluetooth device we now prefer the autodiscovery daemon AVNBlueToothReader
+     It will be default try to connect to any serial bluetooth device and pip its data 
+     through gpsd
+     If this does not work, remove the AVNBlueToothReader and add some lines here
+     They currently do not autoconnect...
+      
 <AVNGpsd device="/dev/rfcomm0" port="4001"/>
 <AVNGpsd device="/dev/rfcomm1" port="4002"/>
 <AVNGpsd device="/dev/rfcomm2" port="4003"/>
 <AVNGpsd device="/dev/rfcomm3" port="4004"/>
+-->
 <AVNGpsd device="/dev/ttyUSB0" port="4010" timeout="40" baud="38400"/>
 <AVNGpsd device="/dev/ttyUSB1" port="4011" timeout="40" baud="38400"/>
 <AVNGpsd device="/dev/ttyUSB2" port="4012" timeout="40" baud="38400"/>
@@ -48,8 +55,10 @@
 	 we have a scanner that is looking for bluetooth devices
 	 if one is found, it will try to connect and feed the data through GPSD
 	 GPSD is running connected to our own TCP socket -->
-<AVNBlueToothReader port="4014" listenerPort="4020" maxDevices="5" useGpsd="true" maxList="100" feederSleep="0.1">
+
+<AVNBlueToothReader port="4014" listenerPort="4020" maxDevices="5" useGpsd="false" maxList="100" feederSleep="0.1">
 </AVNBlueToothReader>
+
 </Workers>
 
 <!-- the Web server
@@ -75,5 +84,5 @@
      interval is the minimum interval between writing trackpoints
      distance is the minimum distance in m before a new trackpoint is written (interval wins)
       -->
-<AVNTrackWriter interval="10" distance="20" trackdir="/home/pi/avnav/tracks"/>
+<AVNTrackWriter interval="10" distance="30" trackdir="/home/pi/avnav/tracks"/>
 </AVNServer>

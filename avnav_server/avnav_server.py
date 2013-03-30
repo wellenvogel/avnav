@@ -237,6 +237,8 @@ class AVNUtil():
     dt= datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")
     us= int(us.rstrip("Z"), 10)
     return dt + datetime.timedelta(microseconds=us)
+  
+  
 
 class AVNConfig(sax.handler.ContentHandler):
   def __init__(self,handlerList):
@@ -584,6 +586,103 @@ class AVNWorker(threading.Thread):
   def startInstance(self,navdata):
     self.navdata=navdata
     self.start()
+    
+  #------------------ some nmea data specific methods -------------------
+  #add a valid dataset to nav data
+  #timedate is a datetime object as returned by gpsTimeToTime
+  #fill this additionally into the time part of data
+  def addToNavData(self,data,timedate):
+    if timedate is not None:
+      t=timedate.isoformat()
+      #seems that isoformat does not well harmonize with OpenLayers.Date
+      #they expect at leas a timezone info
+      #as we are at GMT we should have a "Z" at the end
+      if not t[-1:]=="Z":
+        t+="Z"
+      data['time']=t
+    de=AVNDataEntry.fromData(data)
+    de.timestamp=AVNUtil.datetimeToTsUTC(timedate)
+    self.navdata.addEntry(de)
+    
+  #returns an iso 8601 timestring
+  @classmethod
+  def gpsTimeToTime(cls,gpstime):
+    #we take day/month/year from our system and add everything else from the GPS
+    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'))
+    AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
+    curdt=datetime.datetime.utcnow()
+    gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
+    AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
+    #now correct the time if we are just chaning from one day to another
+    #this assumes that our system time is not more then one day off...(???)
+    if (curdt - gpsdt) > datetime.timedelta(hours=12) and curdt.time().hour < 12:
+      #we are in the evening and the gps is already in the morning... (and we accidently put it to the past morning)
+      #so we have to hurry up to the next day...
+      gpsdt=datetime.datetime.combine(curdt+datetime.timedelta(1),gpsts)
+    if (gpsdt - curdt) > datetime.timedelta(hours=12) and curdt.time().hour> 12:
+      #now we are faster - the gps is still in the evening of the past day - but we assume it at the coming evening
+      gpsdt=datetime.datetime.combine(curdt-datetime.timedelta(1),gpsts)
+    AVNLog.ld("curts/gpsdt after corr",curdt,gpsdt)
+    
+    return gpsdt
+  
+  #parse the nmea psoition fields:
+  #gggmm.dec,N  - 1-3 characters grad, mm 2 didgits minutes
+  #direction N,S,E,W - S,W being negative
+  @classmethod
+  def nmeaPosToFloat(cls,pos,direction):
+    posa=pos.split('.')
+    if len(posa) < 2:
+      AVNLog.ld("invalid pos format",pos)
+      return None
+    grd=posa[0][-10:-2]
+    min=posa[0][-2:]
+    min=min+"."+posa[1]
+    rt=float(grd)+float(min)/60;
+    if rt > 0 and (direction == 'S' or direction == 'W'):
+      rt=-rt;
+    AVNLog.ld("pos",pos,rt)
+    return rt
+   
+  
+ 
+  #parse a line of NMEA data and store it in the navdata array      
+  def parseData(self,data):
+    darray=data.split(",")
+    if len(darray) < 1 or darray[0][0:1] != "$":
+      AVNLog.debug(self.getName()+": invalid nmea data (len<1) "+data+" - ignore")
+      return
+    tag=darray[0][3:]
+    rt={'class':'TPV','tag':tag}
+    try:
+      if tag=='GGA':
+        rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
+        rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
+        rt['mode']=int(darray[6] or '0')
+        self.addToNavData(rt, self.gpsTimeToTime(darray[1]))
+        return
+      if tag=='GLL':
+        rt['mode']=1
+        if len(darray > 6):
+          rt['mode']= (0 if (darray[6] != 'A') else 2)
+        rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
+        rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
+        self.addToNavData(rt, self.gpsTimeToTime(darray[5]))
+        return
+      if tag=='VTG':
+        mode=darray[2]
+        rt['track']=float(darray[1] or '0')
+        if (mode == 'T'):
+          #new mode
+          rt['speed']=float(darray[5] or '0')*NM/3600
+        else:
+          rt['speed']=float(darray[3]or '0')*NM/3600
+        self.addToNavData(rt, None)
+        return
+    except Exception:
+        AVNLog.debug(self.getName()+" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
+
+  
 
 #a dummy worker class to read some basic configurations
 class AVNBaseConfig(AVNWorker):
@@ -996,7 +1095,7 @@ class AVNBlueToothReader(AVNGpsd):
   
   @classmethod
   def createInstance(cls, cfgparam):
-    if not hasGpsd:
+    if not hasGpsd and self.getBoolParam('useGpsd'):
       raise Exception("no gpsd installed, cannot run %s"%(cls.getConfigName()))
     if not hasBluetooth:
       raise Exception("no bluetooth installed, cannot run %s"%(cls.getConfigName()))
@@ -1076,6 +1175,22 @@ class AVNBlueToothReader(AVNGpsd):
       except Exception as e:
         AVNLog.warn("%s: feeder unable to open listener port(%s), retrying",self.getName(),traceback.format_exc())
       time.sleep(10)
+  
+  #a standalone feeder that uses our bultin methods
+  
+  def standaloneFeed(self):
+    AVNLog.info("%s: standalone feeder started",self.getName())
+    while True:
+      try:
+        while True:
+          data=self.popListEntry()
+          if not data is None:
+            self.parseData(data)
+          else:
+            time.sleep(self.getFloatParam('feederSleep'))
+      except Exception as e:
+        AVNLog.warn("%s: feeder exception - retrying %s",self.getName(),traceback.format_exc())
+    
     
   #a thread to open a bluetooth socket and read from it until
   #disconnected
@@ -1108,31 +1223,36 @@ class AVNBlueToothReader(AVNGpsd):
   
   #this is the main thread - this executes the bluetooth polling
   def run(self):
-    feeder=threading.Thread(target=self.feed)
+    feeder=None
+    if self.getBoolParam('useGpsd'):
+      feeder=threading.Thread(target=self.feed)
+    else:
+      feeder=threading.Thread(target=self.standaloneFeed)
     feeder.daemon=True
     feeder.start()
     time.sleep(2) # give a chance to have the socket open...   
     while True:
-      port=self.getIntParam('port')
-      device="tcp://localhost:%d"%(self.getIntParam('listenerPort'))
-      gpsdcommand="%s -S %d %s" %(self.getStringParam('gpsdcommand'),port,device)
-      gpsdcommandli=gpsdcommand.split()
-      try:
-        AVNLog.debug("%s: starting gpsd with command %s, starting reader",self.getName(),gpsdcommand)
-        self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True)
-        
-        reader=GpsdReader(self.navdata, port, "BTGPSDReader[Reader] %s at %d"%(device,port))
-        reader.start()
-        self.setInfo("gpsd started")
-      except:
-        AVNLog.debug("%s: unable to start gpsd with command %s: %s",self.getName(),gpsdcommand,traceback.format_exc())
+      if self.getBoolParam('useGpsd'):
+        port=self.getIntParam('port')
+        device="tcp://localhost:%d"%(self.getIntParam('listenerPort'))
+        gpsdcommand="%s -S %d %s" %(self.getStringParam('gpsdcommand'),port,device)
+        gpsdcommandli=gpsdcommand.split()
         try:
-          self.gpsdproc.wait()
+          AVNLog.debug("%s: starting gpsd with command %s, starting reader",self.getName(),gpsdcommand)
+          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True)
+          
+          reader=GpsdReader(self.navdata, port, "BTGPSDReader[Reader] %s at %d"%(device,port))
+          reader.start()
+          self.setInfo("gpsd started")
         except:
-          pass
-        time.sleep(timeout/2)
-        continue
-      AVNLog.info("%s: started gpsd with pid %d",self.getName(),self.gpsdproc.pid)
+          AVNLog.debug("%s: unable to start gpsd with command %s: %s",self.getName(),gpsdcommand,traceback.format_exc())
+          try:
+            self.gpsdproc.wait()
+          except:
+            pass
+          time.sleep(timeout/2)
+          continue
+        AVNLog.info("%s: started gpsd with pid %d",self.getName(),self.gpsdproc.pid)
       #now start an endless loop with BT discovery...
       while True:
         service_matches=[]
@@ -1274,99 +1394,8 @@ class AVNSerialReader(AVNWorker):
             isOpen=False
           break
   
-  #returns an iso 8601 timestring
-  @classmethod
-  def gpsTimeToTime(cls,gpstime):
-    #we take day/month/year from our system and add everything else from the GPS
-    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'))
-    AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
-    curdt=datetime.datetime.utcnow()
-    gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
-    AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
-    #now correct the time if we are just chaning from one day to another
-    #this assumes that our system time is not more then one day off...(???)
-    if (curdt - gpsdt) > datetime.timedelta(hours=12) and curdt.time().hour < 12:
-      #we are in the evening and the gps is already in the morning... (and we accidently put it to the past morning)
-      #so we have to hurry up to the next day...
-      gpsdt=datetime.datetime.combine(curdt+datetime.timedelta(1),gpsts)
-    if (gpsdt - curdt) > datetime.timedelta(hours=12) and curdt.time().hour> 12:
-      #now we are faster - the gps is still in the evening of the past day - but we assume it at the coming evening
-      gpsdt=datetime.datetime.combine(curdt-datetime.timedelta(1),gpsts)
-    AVNLog.ld("curts/gpsdt after corr",curdt,gpsdt)
-    
-    return gpsdt
   
-  #parse the nmea psoition fields:
-  #gggmm.dec,N  - 1-3 characters grad, mm 2 didgits minutes
-  #direction N,S,E,W - S,W being negative
-  @classmethod
-  def nmeaPosToFloat(cls,pos,direction):
-    posa=pos.split('.')
-    if len(posa) < 2:
-      AVNLog.ld("invalid pos format",pos)
-      return None
-    grd=posa[0][-10:-2]
-    min=posa[0][-2:]
-    min=min+"."+posa[1]
-    rt=float(grd)+float(min)/60;
-    if rt > 0 and (direction == 'S' or direction == 'W'):
-      rt=-rt;
-    AVNLog.ld("pos",pos,rt)
-    return rt
-  
-  
-  
-  #add a valid dataset to nav data
-  #timedate is a datetime object as returned by gpsTimeToTime
-  #fill this additionally into the time part of data
-  def addToNavData(self,data,timedate):
-    if timedate is not None:
-      t=timedate.isoformat()
-      #seems that isoformat does not well harmonize with OpenLayers.Date
-      #they expect at leas a timezone info
-      #as we are at GMT we should have a "Z" at the end
-      if not t[-1:]=="Z":
-        t+="Z"
-      data['time']=t
-    de=AVNDataEntry.fromData(data)
-    de.timestamp=AVNUtil.datetimeToTsUTC(timedate)
-    self.navdata.addEntry(de)
-  #parse a line of NMEA data and store it in the navdata array      
-  def parseData(self,data):
-    darray=data.split(",")
-    if len(darray) < 1 or darray[0][0:1] != "$":
-      AVNLog.debug(self.getName()+": invalid nmea data (len<1) "+data+" - ignore")
-      return
-    tag=darray[0][3:]
-    rt={'class':'TPV','tag':tag}
-    try:
-      if tag=='GGA':
-        rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
-        rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
-        rt['mode']=int(darray[6] or '0')
-        self.addToNavData(rt, self.gpsTimeToTime(darray[1]))
-        return
-      if tag=='GLL':
-        rt['mode']=1
-        if len(darray > 6):
-          rt['mode']= (0 if (darray[6] != 'A') else 2)
-        rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
-        rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
-        self.addToNavData(rt, self.gpsTimeToTime(darray[5]))
-        return
-      if tag=='VTG':
-        mode=darray[2]
-        rt['track']=float(darray[1] or '0')
-        if (mode == 'T'):
-          #new mode
-          rt['speed']=float(darray[5] or '0')*NM/3600
-        else:
-          rt['speed']=float(darray[3]or '0')*NM/3600
-        self.addToNavData(rt, None)
-        return
-    except Exception:
-        AVNLog.debug(self.getName()+" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
-
+ 
 #a HTTP server with threads for each request
 class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWorker):
   instances=0
