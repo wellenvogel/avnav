@@ -52,6 +52,7 @@ import re
 
 hasSerial=False
 hasGpsd=False
+hasBluetooth=False
 loggingInitialized=False
 allHandlers=[]
 #should have a better solution then a global...
@@ -68,6 +69,12 @@ except:
 try:
   import gps
   hasGpsd=True
+except:
+  pass
+
+try:
+  import bluetooth
+  hasBluetooth=True
 except:
   pass
 
@@ -276,7 +283,7 @@ class AVNConfig(sax.handler.ContentHandler):
     for handler in self.handlerList:
       if name==handler.getConfigName():
         self.currentHandlerClass=handler
-        self.currentHandlerData=AVNWorker.parseConfig(attrs, handler.getConfigParam(None))
+        self.currentHandlerData=handler.parseConfig(attrs, handler.getConfigParam(None))
         AVNLog.ld("handler config started for ",name,self.currentHandlerData)
         return
     AVNLog.warn("unknown XML element %s - ignoring",name)
@@ -547,7 +554,7 @@ class AVNWorker(threading.Thread):
   #get the XML tag in the config file that describes this worker
   @classmethod
   def getConfigName(cls):
-    raise Exception("getConfigClass must be overridden by derived class")
+    raise Exception("getConfigName must be overridden by derived class")
   #return the default cfg values
   #if the parameter child is set, the parameter for a child node
   #must be returned, child nodes are added to the parameter dict
@@ -967,6 +974,191 @@ class GpsdReader(threading.Thread):
     AVNLog.debug("%s: gpsd reader exited",self.name)
     self.status=False
  
+#a Worker for reading bluetooth devices
+#it uses (if enabled) gpsd as a decoder by opening a local listener
+#and piping data trough gpsd
+class AVNBlueToothReader(AVNGpsd):
+  @classmethod
+  def getConfigName(cls):
+    return "AVNBlueToothReader"
+  
+  @classmethod
+  def getConfigParam(cls, child=None):
+    rt=super(AVNBlueToothReader, cls).getConfigParam(child=child).copy()
+    rt['baud']=0 # we do not use this
+    rt['device']='' #automatically set
+    rt['listenerPort']=None
+    rt['maxDevices']=5
+    rt['useGpsd']='true'
+    rt['maxList']=100,
+    rt['feederSleep']=0.1
+    return rt
+  
+  @classmethod
+  def createInstance(cls, cfgparam):
+    if not hasGpsd:
+      raise Exception("no gpsd installed, cannot run %s"%(cls.getConfigName()))
+    if not hasBluetooth:
+      raise Exception("no bluetooth installed, cannot run %s"%(cls.getConfigName()))
+    return AVNBlueToothReader(cfgparam)
+  
+  def __init__(self,cfgparam):
+    AVNGpsd.__init__(self, cfgparam)
+    self.listlock=threading.Lock()
+    self.maplock=threading.Lock()
+    self.list=[]
+    self.addrmap={}
+    self.maxlist=self.getIntParam('maxList', True)
+    self.gpsdproc=None
+    
+  def getName(self):
+    return "AVNBlueToothReader"
+  
+  def addListEntry(self,entry):
+    rt=False
+    self.listlock.acquire()
+    if len(self.list) < self.maxlist:
+      self.list.append(entry)
+      rt=True
+    self.listlock.release()
+    return rt
+  
+  def popListEntry(self):
+    rt=None
+    self.listlock.acquire()
+    if len(self.list)>0:
+      rt=self.list.pop(0)
+    self.listlock.release()
+    return rt
+  
+  #return True if added
+  def checkAndAddAddr(self,addr):
+    rt=False
+    maxd=self.getIntParam('maxDevices')
+    self.maplock.acquire()
+    if len(self.addrmap) < maxd:
+      if not addr in self.addrmap:
+        self.addrmap[addr]=1
+        rt=True
+    self.maplock.release()
+    return rt
+  
+  def removeAddr(self,addr):
+    self.maplock.acquire()
+    try:
+      self.addrmap.pop(addr)
+    except:
+      pass
+    self.maplock.release()
+      
+    
+  #a thread to feed the gpsd socket
+  def feed(self):
+    while True:
+      try:
+        listener=socket.socket()
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener.bind(('localhost',self.getIntParam('listenerPort')))
+        listener.listen(1)
+        AVNLog.info("%s: feeder listening at port address %s",self.getName(),str(listener.getsockname()))
+        while True:
+          outsock,addr=listener.accept()
+          AVNLog.info("%s: feeder - gpsd connected from %s",self.getName(),str(addr))
+          try:
+            while True:
+              data=self.popListEntry()
+              if not data is None:
+                outsock.sendall(data)
+              else:
+                time.sleep(self.getFloatParam('feederSleep'))
+          except Exception as e:
+            AVNLog.warn("%s: feeder exception - retrying %s",self.getName(),traceback.format_exc())
+      except Exception as e:
+        AVNLog.warn("%s: feeder unable to open listener port(%s), retrying",self.getName(),traceback.format_exc())
+      time.sleep(10)
+    
+  #a thread to open a bluetooth socket and read from it until
+  #disconnected
+  def readBT(self,host,port):
+    AVNLog.debug("%s: started bluetooth reader thread for %s:%s",self.getName(),str(host),str(port))
+    try:
+      sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+      sock.connect((host, port))
+      buffer=""
+      AVNLog.info("%s: bluetooth connection to %s established",self.getName(),host)
+      while True:
+        data = sock.recv(1024)
+        if len(data) == 0:
+          AVNLog.info("%s connection to "+host+" lost")
+          break
+        buffer=buffer+data.decode(errors='ignore')
+        lines=re.findall('([^\n]*\n)',buffer)
+        buffer=re.sub('([^\n]*\n)','',buffer)
+        for l in lines:
+          print "received: ", l
+          self.addListEntry(l)
+          #currently the error handling is very "relaxed" - simply ignore any error here...
+      sock.close()
+    except Exception as e:
+      AVNLog.debug("%s: exception fro bluetooth device %s: %s",self.getName(),host,traceback.format_exc())
+      pass
+    AVNLog.info("%s: disconnected from bluetooth device %s",self.getName(),host)
+    self.removeAddr(host)
+              
+  
+  #this is the main thread - this executes the bluetooth polling
+  def run(self):
+    feeder=threading.Thread(target=self.feed)
+    feeder.daemon=True
+    feeder.start()
+    time.sleep(2) # give a chance to have the socket open...   
+    while True:
+      port=self.getIntParam('port')
+      device="tcp://localhost:%d"%(self.getIntParam('listenerPort'))
+      gpsdcommand="%s -S %d %s" %(self.getStringParam('gpsdcommand'),port,device)
+      gpsdcommandli=gpsdcommand.split()
+      try:
+        AVNLog.debug("%s: starting gpsd with command %s, starting reader",self.getName(),gpsdcommand)
+        self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True)
+        
+        reader=GpsdReader(self.navdata, port, "BTGPSDReader[Reader] %s at %d"%(device,port))
+        reader.start()
+        self.setInfo("gpsd started")
+      except:
+        AVNLog.debug("%s: unable to start gpsd with command %s: %s",self.getName(),gpsdcommand,traceback.format_exc())
+        try:
+          self.gpsdproc.wait()
+        except:
+          pass
+        time.sleep(timeout/2)
+        continue
+      AVNLog.info("%s: started gpsd with pid %d",self.getName(),self.gpsdproc.pid)
+      #now start an endless loop with BT discovery...
+      while True:
+        service_matches=[]
+        try:
+          AVNLog.debug("%s: starting BT discovery",self.getName())
+          service_matches = bluetooth.find_service(uuid = bluetooth.SERIAL_PORT_CLASS)
+        except Exception as e:
+          AVNLog.debug("%s: exception when querying BT services %s",self.getName(),traceback.format_exc())
+        if len(service_matches) == 0:
+          time.sleep(10)
+          continue
+        AVNLog.ld("found bluetooth devices",service_matches)
+        for match in service_matches:
+          port = match["port"]
+          name = match["name"]
+          host = match["host"]
+          if self.checkAndAddAddr(host):
+            try:
+              AVNLog.info("%s: found new bluetooth device %s",self.getName(),host)
+              handler=threading.Thread(target=self.readBT,args=(host,port))
+              handler.daemon=True
+              handler.start()
+              #TDOD: what about join???
+            except Exception as e:
+              AVNLog.warn("%s: unable to start BT handler %s",self.getName(),traceback.format_exc())
+        time.sleep(10)
 
 #a Worker to directly read from a serial line using pyserial
 #on windows use an int for the port - e.g. use 4 for COM5
@@ -1465,14 +1657,17 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 def sighandler(signal,frame):
   global allHandlers
   for handler in allHandlers:
-    handler.stopChildren()
+    try:
+      handler.stopChildren()
+    except:
+      pass
   sys.exit(1)
         
 
 def main(argv):
   global loggingInitialized,debugger,allHandlers,trackWriter
   debugger=sys.gettrace()
-  workerlist=[AVNBaseConfig,AVNSerialReader,AVNGpsd,AVNHTTPServer,AVNTrackWriter]
+  workerlist=[AVNBaseConfig,AVNSerialReader,AVNGpsd,AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [configfile] " % (argv[0])
   parser = optparse.OptionParser(

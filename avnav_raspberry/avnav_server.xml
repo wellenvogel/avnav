@@ -44,6 +44,12 @@
 <AVNGpsd device="tcp://76.103.90.196:9009" port="4012" timeout="40" nocheck="true"/>
 -->
 
+<!-- bluetooth support
+	 we have a scanner that is looking for bluetooth devices
+	 if one is found, it will try to connect and feed the data through GPSD
+	 GPSD is running connected to our own TCP socket -->
+<AVNBlueToothReader port="4014" listenerPort="4020" maxDevices="5" useGpsd="true" maxList="100" feederSleep="0.1">
+</AVNBlueToothReader>
 </Workers>
 
 <!-- the Web server
