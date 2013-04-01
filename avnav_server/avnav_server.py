@@ -239,6 +239,24 @@ class AVNUtil():
     return dt + datetime.timedelta(microseconds=us)
   
   
+  #find a feeder
+  @classmethod
+  def findFeeder(cls,feedername):
+    if not feedername is None and feedername == '':
+      feedername=None
+    feeder=None
+    for handler in allHandlers:
+      if handler.getConfigName() == AVNGpsdFeeder.getConfigName():
+        if not feedername is None:
+          if handler.getName()==feedername:
+            feeder=handler
+            break
+        else:
+          feeder=handler
+          break
+    return feeder
+    
+  
 
 class AVNConfig(sax.handler.ContentHandler):
   def __init__(self,handlerList):
@@ -487,7 +505,236 @@ class AVNNavData():
       rt+="   (%03d:%s)%s=%s\n" % (idx,time.strftime("%Y/%m/%d-%H:%M:%S ",time.gmtime(self.list[k].timestamp)),self.list[k].key,self.list[k].data)
     self.listLock.release()  
     return rt
+
+
+#a reader class to read from a serial port using pyserial
+#on windows use an int for the port - e.g. use 4 for COM5
+#on linux use the device name for the port
+#if no data is received within timeout *10 the port is closed and reopened
+#this gives the chance to handle dynamically assigned ports with no issues
+#this class is not directly a worker that can be instantiated from the config
+#instead it is used by worker classes to handle serial input
+#it also contains our internal converting routines
+
+class SerialReader():
   
+  @classmethod
+  def getConfigParam(cls):
+    cfg={
+               'port':None,
+               'name':None,
+               'timeout': 2,
+               'baud': 4800,
+               'minbaud':0, #if this is set to anything else, try autobauding between baud and minbaud
+               'bytesize': 8,
+               'parity': 'N',
+               'stopbits': 1,
+               'xonxoff': 0,
+               'rtscts': 0
+               }
+    return cfg
+    
+  #parameters:
+  #param - the config dict
+  #navdata - a nav data object (can be none if this reader doesn not directly write)
+  #a write data method used to write a received line
+  def __init__(self,param,navdata,writeData,infoHandler):
+    for p in ('port','name','timeout'):
+      if param.get(p) is None:
+        raise Exception("missing "+p+" parameter for serial reader")
+    self.param=param
+    self.navdata=navdata
+    self.writeData=writeData
+    self.infoHandler=infoHandler
+    if self.navdata is None and self.writeData is None:
+      raise Exception("either navdata or writeData has to be set")
+  
+  def getName(self):
+    return "SerialReader "+self.param['name']
+   
+  #the run method - just try forever  
+  def run(self):
+    f=None
+    init=True
+    isOpen=False
+    while True:
+      try:
+        pnum=int(self.param['port'])
+      except:
+        pnum=self.param['port']
+      baud=int(self.param['baud'])
+      bytesize=int(self.param['bytesize'])
+      parity=self.param['parity']
+      stopbits=int(self.param['stopbits'])
+      xonxoff=int(self.param['xonxoff'])
+      rtscts=int(self.param['rtscts'])
+      portname=self.param['port']
+      timeout=float(self.param['timeout'])
+      porttimeout=timeout*10
+      name=self.getName()
+      if init:
+        AVNLog.info("%s: serial reader started for port %s, baudrate=%d, timeout=%f",name,portname,baud,timeout)
+        init=False
+      lastTime=time.time()
+      try:
+        f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
+        self.setInfo("port open")
+      except Exception:
+        self.setInfo("unable to open port")
+        try:
+          tf=traceback.format_exc(3).decode(errors='ignore')
+        except:
+          tf="unable to decode exception"
+        AVNLog.debug("%s: Exception on opening %s : %s",name,portname,tf)
+        if f is not None:
+          try:
+            f.close()
+          except:
+            pass
+        time.sleep(porttimeout/2)
+        continue
+      AVNLog.debug("%s: %s opened",name,f.name)
+      while True:
+        bytes=0
+        try:
+          bytes=f.readline()
+        except:
+          AVNLog.debug("%s: Exception in serial read, close and reopen %s",name,portname)
+          try:
+            f.close()
+            isOpen=False
+          except:
+            pass
+          break
+        if len(bytes)> 0:
+          self.setInfo("receiving")
+          if not isOpen:
+            AVNLog.info("successfully opened %s",f.name)
+            isOpen=True
+          self.status=True
+          data=bytes.decode('ascii',errors='ignore')
+          if len(data) < 5:
+            AVNLog.debug("%s: ignore short data %s",name,data)
+          else:
+            if not self.writeData is None:
+              self.writeData(data)
+            else:
+              self.parseData(data,self.navdata)
+            lastTime=time.time()
+        if (time.time() - lastTime) > porttimeout:
+          self.setInfo("timeout")
+          f.close()
+          if isOpen:
+            AVNLog.info("%s: reopen port %s - timeout elapsed",name,portname)
+            isOpen=False
+          else:
+            AVNLog.debug("%s: reopen port %s - timeout elapsed",name,portname)
+          break
+  def setInfo(self,txt):
+    if not self.infoHandler is None:
+      self.infoHandler.setInfo(txt)
+        
+  #------------------ some nmea data specific methods -------------------
+  #add a valid dataset to nav data
+  #timedate is a datetime object as returned by gpsTimeToTime
+  #fill this additionally into the time part of data
+  @classmethod
+  def addToNavData(cls,data,timedate,navdata):
+    if timedate is not None:
+      t=timedate.isoformat()
+      #seems that isoformat does not well harmonize with OpenLayers.Date
+      #they expect at leas a timezone info
+      #as we are at GMT we should have a "Z" at the end
+      if not t[-1:]=="Z":
+        t+="Z"
+      data['time']=t
+    de=AVNDataEntry.fromData(data)
+    de.timestamp=AVNUtil.datetimeToTsUTC(timedate)
+    navdata.addEntry(de)
+    
+  #returns an iso 8601 timestring
+  @classmethod
+  def gpsTimeToTime(cls,gpstime):
+    #we take day/month/year from our system and add everything else from the GPS
+    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'))
+    AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
+    curdt=datetime.datetime.utcnow()
+    gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
+    AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
+    #now correct the time if we are just chaning from one day to another
+    #this assumes that our system time is not more then one day off...(???)
+    if (curdt - gpsdt) > datetime.timedelta(hours=12) and curdt.time().hour < 12:
+      #we are in the evening and the gps is already in the morning... (and we accidently put it to the past morning)
+      #so we have to hurry up to the next day...
+      gpsdt=datetime.datetime.combine(curdt+datetime.timedelta(1),gpsts)
+    if (gpsdt - curdt) > datetime.timedelta(hours=12) and curdt.time().hour> 12:
+      #now we are faster - the gps is still in the evening of the past day - but we assume it at the coming evening
+      gpsdt=datetime.datetime.combine(curdt-datetime.timedelta(1),gpsts)
+    AVNLog.ld("curts/gpsdt after corr",curdt,gpsdt)
+    
+    return gpsdt
+  
+  #parse the nmea psoition fields:
+  #gggmm.dec,N  - 1-3 characters grad, mm 2 didgits minutes
+  #direction N,S,E,W - S,W being negative
+  @classmethod
+  def nmeaPosToFloat(cls,pos,direction):
+    posa=pos.split('.')
+    if len(posa) < 2:
+      AVNLog.ld("invalid pos format",pos)
+      return None
+    grd=posa[0][-10:-2]
+    min=posa[0][-2:]
+    min=min+"."+posa[1]
+    rt=float(grd)+float(min)/60;
+    if rt > 0 and (direction == 'S' or direction == 'W'):
+      rt=-rt;
+    AVNLog.ld("pos",pos,rt)
+    return rt
+   
+  
+ 
+  #parse a line of NMEA data and store it in the navdata array
+  @classmethod      
+  def parseData(cls,data,navdata):
+    darray=data.split(",")
+    if len(darray) < 1 or darray[0][0:1] != "$":
+      AVNLog.debug("invalid nmea data (len<1) "+data+" - ignore")
+      return
+    tag=darray[0][3:]
+    rt={'class':'TPV','tag':tag}
+    try:
+      if tag=='GGA':
+        rt['lat']=cls.nmeaPosToFloat(darray[2],darray[3])
+        rt['lon']=cls.nmeaPosToFloat(darray[4],darray[5])
+        rt['mode']=int(darray[6] or '0')
+        cls.addToNavData(rt, cls.gpsTimeToTime(darray[1]),navdata)
+        return
+      if tag=='GLL':
+        rt['mode']=1
+        if len(darray > 6):
+          rt['mode']= (0 if (darray[6] != 'A') else 2)
+        rt['lat']=cls.nmeaPosToFloat(darray[1],darray[2])
+        rt['lon']=cls.nmeaPosToFloat(darray[3],darray[4])
+        self.addToNavData(rt, cls.gpsTimeToTime(darray[5]),navdata)
+        return
+      if tag=='VTG':
+        mode=darray[2]
+        rt['track']=float(darray[1] or '0')
+        if (mode == 'T'):
+          #new mode
+          rt['speed']=float(darray[5] or '0')*NM/3600
+        else:
+          rt['speed']=float(darray[3]or '0')*NM/3600
+        cls.addToNavData(rt, None,navdata)
+        return
+    except Exception:
+        AVNLog.debug(" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
+
+
+
+  
+    
 #a base class for all workers
 #this provides some config functions and a common interfcace for handling them
 class AVNWorker(threading.Thread):
@@ -587,101 +834,13 @@ class AVNWorker(threading.Thread):
     self.navdata=navdata
     self.start()
     
-  #------------------ some nmea data specific methods -------------------
-  #add a valid dataset to nav data
-  #timedate is a datetime object as returned by gpsTimeToTime
-  #fill this additionally into the time part of data
-  def addToNavData(self,data,timedate):
-    if timedate is not None:
-      t=timedate.isoformat()
-      #seems that isoformat does not well harmonize with OpenLayers.Date
-      #they expect at leas a timezone info
-      #as we are at GMT we should have a "Z" at the end
-      if not t[-1:]=="Z":
-        t+="Z"
-      data['time']=t
-    de=AVNDataEntry.fromData(data)
-    de.timestamp=AVNUtil.datetimeToTsUTC(timedate)
-    self.navdata.addEntry(de)
-    
-  #returns an iso 8601 timestring
+  #we have 2 startup groups - one for the feeders and 2 for the rest
+  #by default we start in groupd 2
   @classmethod
-  def gpsTimeToTime(cls,gpstime):
-    #we take day/month/year from our system and add everything else from the GPS
-    gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'))
-    AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
-    curdt=datetime.datetime.utcnow()
-    gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
-    AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
-    #now correct the time if we are just chaning from one day to another
-    #this assumes that our system time is not more then one day off...(???)
-    if (curdt - gpsdt) > datetime.timedelta(hours=12) and curdt.time().hour < 12:
-      #we are in the evening and the gps is already in the morning... (and we accidently put it to the past morning)
-      #so we have to hurry up to the next day...
-      gpsdt=datetime.datetime.combine(curdt+datetime.timedelta(1),gpsts)
-    if (gpsdt - curdt) > datetime.timedelta(hours=12) and curdt.time().hour> 12:
-      #now we are faster - the gps is still in the evening of the past day - but we assume it at the coming evening
-      gpsdt=datetime.datetime.combine(curdt-datetime.timedelta(1),gpsts)
-    AVNLog.ld("curts/gpsdt after corr",curdt,gpsdt)
+  def getStartupGroup(cls):
+    return 2
     
-    return gpsdt
-  
-  #parse the nmea psoition fields:
-  #gggmm.dec,N  - 1-3 characters grad, mm 2 didgits minutes
-  #direction N,S,E,W - S,W being negative
-  @classmethod
-  def nmeaPosToFloat(cls,pos,direction):
-    posa=pos.split('.')
-    if len(posa) < 2:
-      AVNLog.ld("invalid pos format",pos)
-      return None
-    grd=posa[0][-10:-2]
-    min=posa[0][-2:]
-    min=min+"."+posa[1]
-    rt=float(grd)+float(min)/60;
-    if rt > 0 and (direction == 'S' or direction == 'W'):
-      rt=-rt;
-    AVNLog.ld("pos",pos,rt)
-    return rt
-   
-  
  
-  #parse a line of NMEA data and store it in the navdata array      
-  def parseData(self,data):
-    darray=data.split(",")
-    if len(darray) < 1 or darray[0][0:1] != "$":
-      AVNLog.debug(self.getName()+": invalid nmea data (len<1) "+data+" - ignore")
-      return
-    tag=darray[0][3:]
-    rt={'class':'TPV','tag':tag}
-    try:
-      if tag=='GGA':
-        rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
-        rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
-        rt['mode']=int(darray[6] or '0')
-        self.addToNavData(rt, self.gpsTimeToTime(darray[1]))
-        return
-      if tag=='GLL':
-        rt['mode']=1
-        if len(darray > 6):
-          rt['mode']= (0 if (darray[6] != 'A') else 2)
-        rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
-        rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
-        self.addToNavData(rt, self.gpsTimeToTime(darray[5]))
-        return
-      if tag=='VTG':
-        mode=darray[2]
-        rt['track']=float(darray[1] or '0')
-        if (mode == 'T'):
-          #new mode
-          rt['speed']=float(darray[5] or '0')*NM/3600
-        else:
-          rt['speed']=float(darray[3]or '0')*NM/3600
-        self.addToNavData(rt, None)
-        return
-    except Exception:
-        AVNLog.debug(self.getName()+" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
-
   
 
 #a dummy worker class to read some basic configurations
@@ -885,6 +1044,9 @@ class AVNTrackWriter(AVNWorker):
 #we monitor first if the device file exists and only start gpsd once it is visible
 #when it becomes visible, gpsd will be started (but not in background)
 #when we receive no data from gpsd until timeout, we will kill it and enter device monitoring again
+#this reader should only be used if we really have some very special devices that directly need 
+#to communicate with gpsd
+#data fetched here will not be available at any outgoing NMEA interface!
 class AVNGpsd(AVNWorker):
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
@@ -1072,56 +1234,78 @@ class GpsdReader(threading.Thread):
       pass
     AVNLog.debug("%s: gpsd reader exited",self.name)
     self.status=False
- 
-#a Worker for reading bluetooth devices
+
+#a Worker for feeding data trough gpsd (or directly to the navdata)
 #it uses (if enabled) gpsd as a decoder by opening a local listener
 #and piping data trough gpsd
-class AVNBlueToothReader(AVNGpsd):
+#as an input there is the mehod addNMEALine that will add a line of NMEA data
+class AVNGpsdFeeder(AVNGpsd):
   @classmethod
   def getConfigName(cls):
-    return "AVNBlueToothReader"
+    return "AVNGpsdFeeder"
   
   @classmethod
   def getConfigParam(cls, child=None):
-    rt=super(AVNBlueToothReader, cls).getConfigParam(child=child).copy()
-    rt['baud']=0 # we do not use this
-    rt['device']='' #automatically set
-    rt['listenerPort']=None
-    rt['maxDevices']=5
-    rt['useGpsd']='true'
-    rt['maxList']=100,
-    rt['feederSleep']=0.1
-    return rt
+    return {'listenerPort':None, #our port that GPSD connects to
+            'port':None,         #the GPSD port
+            'maxList': 300,      #len of the input list
+            'useGpsd': 'true',   #if set to false, we only have very limited support, listenerPort and port are ignored
+            'feederSleep': 0.1,  #time in s the feeder will sleep if there is no data
+            'gpsdcommand':'/usr/sbin/gpsd -b -n -N',
+            'timeout': 40,       #??? do we still need this?
+            'name': ''           #if there should be more then one reader we must set the name
+            }
+    
   
   @classmethod
   def createInstance(cls, cfgparam):
-    if not hasGpsd and self.getBoolParam('useGpsd'):
-      raise Exception("no gpsd installed, cannot run %s"%(cls.getConfigName()))
-    if not hasBluetooth:
-      raise Exception("no bluetooth installed, cannot run %s"%(cls.getConfigName()))
-    return AVNBlueToothReader(cfgparam)
+    
+    return AVNGpsdFeeder(cfgparam)
+  
+  @classmethod
+  def getStartupGroup(cls):
+    return 1
   
   def __init__(self,cfgparam):
     AVNGpsd.__init__(self, cfgparam)
     self.listlock=threading.Lock()
-    self.maplock=threading.Lock()
     self.list=[]
-    self.addrmap={}
+    self.history=[]
+    self.sequence=0
     self.maxlist=self.getIntParam('maxList', True)
     self.gpsdproc=None
+    name=self.getStringParam('name')
+    if not name is None:
+      self.setName(name)
+    if not hasGpsd and self.getBoolParam('useGpsd'):
+      raise Exception("no gpsd installed, cannot run %s"%(cls.getConfigName()))
     
   def getName(self):
-    return "AVNBlueToothReader"
+    return self.name
   
-  def addListEntry(self,entry):
+  def addNMEA(self,entry):
     rt=False
+    ll=0
+    hl=0
+    if len(entry) < 5:
+      AVNlog.debug("addNMEA: ignoring short data %s",entry)
+      return False
     self.listlock.acquire()
-    if len(self.list) < self.maxlist:
-      self.list.append(entry)
-      rt=True
+    self.sequence+=1
+    if len(self.list) >=self.maxlist:
+      self.list.pop(0) #TODO: priorities?
+    if len(self.history) >= self.maxlist:
+      self.history.pop(0)
+    self.list.append(entry)
+    ll=len(self.list)
+    self.history.append(entry)
+    hl=len(self.history)
+    rt=True
     self.listlock.release()
+    AVNLog.debug("addNMEA listlen=%d history=%d data=%s",ll,hl,entry)
     return rt
   
+  #fetch an entry from the feeder list
   def popListEntry(self):
     rt=None
     self.listlock.acquire()
@@ -1129,27 +1313,24 @@ class AVNBlueToothReader(AVNGpsd):
       rt=self.list.pop(0)
     self.listlock.release()
     return rt
+  #fetch entries from the history
+  #only return entries with higher sequence
+  #return a tuple (lastSequence,[listOfEntries])
+  def fetchFromHistory(self,sequence,maxEntries=10):
+    seq=0
+    list=[]
+    if maxEntries< 0:
+      maxEntries=0
+    self.listlock.acquire()
+    seq=self.sequence
+    if seq > sequence:
+      if (seq-sequence) > maxEntries:
+        seq=sequence+maxEntries
+      start=seq-sequence
+      list=self.history[-start:]
+    self.listlock.release()
+    return (seq,list)
   
-  #return True if added
-  def checkAndAddAddr(self,addr):
-    rt=False
-    maxd=self.getIntParam('maxDevices')
-    self.maplock.acquire()
-    if len(self.addrmap) < maxd:
-      if not addr in self.addrmap:
-        self.addrmap[addr]=1
-        rt=True
-    self.maplock.release()
-    return rt
-  
-  def removeAddr(self,addr):
-    self.maplock.acquire()
-    try:
-      self.addrmap.pop(addr)
-    except:
-      pass
-    self.maplock.release()
-      
     
   #a thread to feed the gpsd socket
   def feed(self):
@@ -1185,11 +1366,116 @@ class AVNBlueToothReader(AVNGpsd):
         while True:
           data=self.popListEntry()
           if not data is None:
-            self.parseData(data)
+            SerialReader.parseData(data,self.navdata)
           else:
             time.sleep(self.getFloatParam('feederSleep'))
       except Exception as e:
         AVNLog.warn("%s: feeder exception - retrying %s",self.getName(),traceback.format_exc())
+    
+    
+  #this is the main thread - this executes the bluetooth polling
+  def run(self):
+    feeder=None
+    if self.getBoolParam('useGpsd'):
+      feeder=threading.Thread(target=self.feed)
+    else:
+      feeder=threading.Thread(target=self.standaloneFeed)
+    feeder.daemon=True
+    feeder.start()
+    time.sleep(2) # give a chance to have the socket open...   
+    while True:
+      if self.getBoolParam('useGpsd'):
+        port=self.getIntParam('port')
+        device="tcp://localhost:%d"%(self.getIntParam('listenerPort'))
+        gpsdcommand="%s -S %d %s" %(self.getStringParam('gpsdcommand'),port,device)
+        gpsdcommandli=gpsdcommand.split()
+        try:
+          AVNLog.debug("%s: starting gpsd with command %s, starting reader",self.getName(),gpsdcommand)
+          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True)
+          
+          reader=GpsdReader(self.navdata, port, "AVNGpsdFeeder[Reader] %s at %d"%(device,port))
+          reader.start()
+          self.setInfo("gpsd started")
+        except:
+          AVNLog.debug("%s: unable to start gpsd with command %s: %s",self.getName(),gpsdcommand,traceback.format_exc())
+          try:
+            self.gpsdproc.wait()
+          except:
+            pass
+          time.sleep(timeout/2)
+          continue
+        AVNLog.info("%s: started gpsd with pid %d",self.getName(),self.gpsdproc.pid)
+      while True:
+        time.sleep(5)
+        if not self.gpsdproc is None:
+          self.gpsdproc.poll()
+          if not self.gpsdproc.returncode is None:
+            AVNLog.warn("%s: gpsd terminated unexpectedly, retrying",self.getName())
+            break
+
+
+
+ 
+#a Worker for reading bluetooth devices
+#it uses a feeder to handle the received data
+class AVNBlueToothReader(AVNWorker):
+  @classmethod
+  def getConfigName(cls):
+    return "AVNBlueToothReader"
+  
+  @classmethod
+  def getConfigParam(cls, child=None):
+    rt={
+        'maxDevices':5,
+        'deviceList':'',  #is set (, separated) only connect to those devices
+        'feederName':'',  #if set, use this feeder
+    }
+    return rt
+  
+  @classmethod
+  def createInstance(cls, cfgparam):
+    if not hasBluetooth:
+      raise Exception("no bluetooth installed, cannot run %s"%(cls.getConfigName()))
+    return AVNBlueToothReader(cfgparam)
+  
+  def __init__(self,cfgparam):
+    AVNWorker.__init__(self, cfgparam)
+    self.maplock=threading.Lock()
+    self.addrmap={}
+    self.writeData=None
+    
+  def getName(self):
+    return "AVNBlueToothReader"
+  
+  #make some checks when we have to start
+  #we cannot do this on init as we potentiall have tp find the feeder...
+  def start(self):
+    feeder=AVNUtil.findFeeder(self.getStringParam('feederName'))
+    if feeder is None:
+      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
+    self.writeData=feeder.addNMEA
+    AVNWorker.start(self) 
+   
+  #return True if added
+  def checkAndAddAddr(self,addr):
+    rt=False
+    maxd=self.getIntParam('maxDevices')
+    self.maplock.acquire()
+    if len(self.addrmap) < maxd:
+      if not addr in self.addrmap:
+        self.addrmap[addr]=1
+        rt=True
+    self.maplock.release()
+    return rt
+  
+  def removeAddr(self,addr):
+    self.maplock.acquire()
+    try:
+      self.addrmap.pop(addr)
+    except:
+      pass
+    self.maplock.release()
+      
     
     
   #a thread to open a bluetooth socket and read from it until
@@ -1211,8 +1497,11 @@ class AVNBlueToothReader(AVNGpsd):
         buffer=re.sub('([^\n]*\n)','',buffer)
         for l in lines:
           print "received: ", l
-          self.addListEntry(l)
+          self.writeData(l)
           #currently the error handling is very "relaxed" - simply ignore any error here...
+        if len(buffer) > 4096:
+          AVNLog.debug("BT reader %s: no line feed in long data, stopping",str(host))
+          break
       sock.close()
     except Exception as e:
       AVNLog.debug("%s: exception fro bluetooth device %s: %s",self.getName(),host,traceback.format_exc())
@@ -1223,68 +1512,54 @@ class AVNBlueToothReader(AVNGpsd):
   
   #this is the main thread - this executes the bluetooth polling
   def run(self):
-    feeder=None
-    if self.getBoolParam('useGpsd'):
-      feeder=threading.Thread(target=self.feed)
-    else:
-      feeder=threading.Thread(target=self.standaloneFeed)
-    feeder.daemon=True
-    feeder.start()
     time.sleep(2) # give a chance to have the socket open...   
+    #now start an endless loop with BT discovery...
     while True:
-      if self.getBoolParam('useGpsd'):
-        port=self.getIntParam('port')
-        device="tcp://localhost:%d"%(self.getIntParam('listenerPort'))
-        gpsdcommand="%s -S %d %s" %(self.getStringParam('gpsdcommand'),port,device)
-        gpsdcommandli=gpsdcommand.split()
-        try:
-          AVNLog.debug("%s: starting gpsd with command %s, starting reader",self.getName(),gpsdcommand)
-          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True)
-          
-          reader=GpsdReader(self.navdata, port, "BTGPSDReader[Reader] %s at %d"%(device,port))
-          reader.start()
-          self.setInfo("gpsd started")
-        except:
-          AVNLog.debug("%s: unable to start gpsd with command %s: %s",self.getName(),gpsdcommand,traceback.format_exc())
-          try:
-            self.gpsdproc.wait()
-          except:
-            pass
-          time.sleep(timeout/2)
-          continue
-        AVNLog.info("%s: started gpsd with pid %d",self.getName(),self.gpsdproc.pid)
-      #now start an endless loop with BT discovery...
-      while True:
-        service_matches=[]
-        try:
-          AVNLog.debug("%s: starting BT discovery",self.getName())
-          service_matches = bluetooth.find_service(uuid = bluetooth.SERIAL_PORT_CLASS)
-        except Exception as e:
-          AVNLog.debug("%s: exception when querying BT services %s",self.getName(),traceback.format_exc())
-        if len(service_matches) == 0:
-          time.sleep(10)
-          continue
-        AVNLog.ld("found bluetooth devices",service_matches)
-        for match in service_matches:
-          port = match["port"]
-          name = match["name"]
-          host = match["host"]
-          if self.checkAndAddAddr(host):
-            try:
-              AVNLog.info("%s: found new bluetooth device %s",self.getName(),host)
-              handler=threading.Thread(target=self.readBT,args=(host,port))
-              handler.daemon=True
-              handler.start()
-              #TDOD: what about join???
-            except Exception as e:
-              AVNLog.warn("%s: unable to start BT handler %s",self.getName(),traceback.format_exc())
+      service_matches=[]
+      try:
+        AVNLog.debug("%s: starting BT discovery",self.getName())
+        service_matches = bluetooth.find_service(uuid = bluetooth.SERIAL_PORT_CLASS)
+      except Exception as e:
+        AVNLog.debug("%s: exception when querying BT services %s",self.getName(),traceback.format_exc())
+      if len(service_matches) == 0:
         time.sleep(10)
+        continue
+      AVNLog.ld("found bluetooth devices",service_matches)
+      filter=[]
+      filterstr=self.getStringParam('devicelist')
+      if not filterstr is None and not filterstr=='':
+        filter=filterstr.split(',') 
+      for match in service_matches:
+        port = match["port"]
+        name = match["name"]
+        host = match["host"]
+        found=False
+        if len(filter) > 0:
+          if host in filter:
+            found=True
+          else:
+            AVNLog.debug("%s: ignoring device %s as it is not in the list #%s#",self.getName(),host,filterstr)
+        else:
+          found=True
+        if found and self.checkAndAddAddr(host):
+          try:
+            AVNLog.info("%s: found new bluetooth device %s",self.getName(),host)
+            handler=threading.Thread(target=self.readBT,args=(host,port))
+            handler.daemon=True
+            handler.start()
+            #TDOD: what about join???
+          except Exception as e:
+            AVNLog.warn("%s: unable to start BT handler %s",self.getName(),traceback.format_exc())
+            self.removeAddr(host)
+      time.sleep(10)
 
 #a Worker to directly read from a serial line using pyserial
 #on windows use an int for the port - e.g. use 4 for COM5
 #on linux use the device name for the port
 #if no data is received within timeout *10 the port is closed and reopened
 #this gives the chance to handle dynamically assigned ports with no issues
+#if useFeeder is set, pipe the received data through our feeder
+#this gives the chance to output them at NMEA output interfaces
 class AVNSerialReader(AVNWorker):
   
   @classmethod
@@ -1295,18 +1570,13 @@ class AVNSerialReader(AVNWorker):
   def getConfigParam(cls,child):
     if not child is None:
       return None
-    cfg={
-               'port':None,
-               'name':None,
-               'timeout': 2,
-               'baud': 4800,
-               'bytesize': 8,
-               'parity': 'N',
-               'stopbits': 1,
-               'xonxoff': 0,
-               'rtscts': 0
-               }
-    return cfg
+    cfg=SerialReader.getConfigParam()
+    rt=cfg.copy()
+    rt.update({
+               'useFeeder':'false', #if set to true, pipe the data trough a feeder instead handling by its own
+               'feederName':''      #if this one is set, we do not use the defaul feeder by this one
+    })
+    return rt
   @classmethod
   def createInstance(cls, cfgparam):
     if not hasSerial:
@@ -1319,81 +1589,27 @@ class AVNSerialReader(AVNWorker):
     for p in ('port','name','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial reader")
+    self.writeData=None
     AVNWorker.__init__(self, param)
+    
   
   def getName(self):
     return "SerialReader "+self.param['name']
-   
+  #make some checks when we have to start
+  #we cannot do this on init as we potentiall have tp find the feeder...
+  def start(self):
+    if self.getBoolParam('useFeeder'):
+      feedername=self.getStringParam('feederName')
+      feeder=AVNUtil.findFeeder(feedername)
+      if feeder is None:
+        raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
+      self.writeData=feeder.addNMEA
+    AVNWorker.start(self) 
+     
   #thread run method - just try forever  
   def run(self):
-    f=None
-    init=True
-    isOpen=False
-    while True:
-      try:
-        pnum=int(self.param['port'])
-      except:
-        pnum=self.param['port']
-      baud=int(self.param['baud'])
-      bytesize=int(self.param['bytesize'])
-      parity=self.param['parity']
-      stopbits=int(self.param['stopbits'])
-      xonxoff=int(self.param['xonxoff'])
-      rtscts=int(self.param['rtscts'])
-      portname=self.param['port']
-      timeout=float(self.param['timeout'])
-      porttimeout=timeout*10
-      name=self.getName()
-      if init:
-        AVNLog.info("%s: serial reader started for port %s, baudrate=%d, timeout=%f",name,portname,baud,timeout)
-        init=False
-      lastTime=time.time()
-      try:
-        f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
-        self.setInfo("port open")
-      except Exception:
-        self.setInfo("unable to open port")
-        try:
-          tf=traceback.format_exc(3).decode(errors='ignore')
-        except:
-          tf="unable to decode exception"
-        AVNLog.debug("%s: Exception on opening %s : %s",name,portname,tf)
-        if f is not None:
-          try:
-            f.close()
-          except:
-            pass
-        time.sleep(porttimeout/2)
-        continue
-      AVNLog.debug("%s: %s opened",name,f.name)
-      while True:
-        bytes=0
-        try:
-          bytes=f.readline()
-        except:
-          AVNLog.debug("%s: Exception in serial read, close and reopen %s",name,portname)
-          try:
-            f.close()
-            isOpen=False
-          except:
-            pass
-          break
-        if len(bytes)> 0:
-          self.setInfo("receiving")
-          if not isOpen:
-            AVNLog.info("successfully opened %s",f.name)
-            isOpen=True
-          self.status=True
-          self.parseData(bytes.decode('ascii',errors='ignore'))
-          lastTime=time.time()
-        if (time.time() - lastTime) > porttimeout:
-          self.setInfo("timeout")
-          f.close()
-          if isOpen:
-            AVNLog.info("%s: reopen port %s - timeout elapsed",name,portname)
-            isOpen=False
-          break
-  
+    reader=SerialReader(self.param, self.navdata if self.writeData is None else None, self.writeData,self) 
+    reader.run()
   
  
 #a HTTP server with threads for each request
@@ -1696,7 +1912,7 @@ def sighandler(signal,frame):
 def main(argv):
   global loggingInitialized,debugger,allHandlers,trackWriter
   debugger=sys.gettrace()
-  workerlist=[AVNBaseConfig,AVNSerialReader,AVNGpsd,AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader]
+  workerlist=[AVNBaseConfig,AVNGpsdFeeder,AVNSerialReader,AVNGpsd,AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
@@ -1754,11 +1970,13 @@ def main(argv):
   signal.signal(signal.SIGTERM, sighandler)
   signal.signal(signal.SIGABRT, sighandler)
   try:
-    for handler in allHandlers:
-      try:
-        handler.startInstance(navData)
-      except Exception:
-        AVNLog.warn("unable to start handler : "+traceback.format_exc())
+    for group in (1,2):
+      for handler in allHandlers:
+        try:
+          if handler.getStartupGroup() == group:
+            handler.startInstance(navData)
+        except Exception:
+          AVNLog.warn("unable to start handler : "+traceback.format_exc())
     AVNLog.info("All Handlers started")
     hasFix=False
     while True:

@@ -22,7 +22,7 @@
 <AVNSerialReader name="ttyUSB3Reader" port="/dev/ttyUSB3"/>
 <AVNSerialReader name="ttyUSB4Reader" port="/dev/ttyUSB4"/>
 -->
-<!-- gpsd readers
+<!-- gpsd readers (legacy - or for very special devices)
      4 readers for usb-serial converters, 4 for bluetooth
      by default they will check if the device is there and will start gpsd 
      once they have been able to at least receive one byte
@@ -41,23 +41,41 @@
 <AVNGpsd device="/dev/rfcomm1" port="4002"/>
 <AVNGpsd device="/dev/rfcomm2" port="4003"/>
 <AVNGpsd device="/dev/rfcomm3" port="4004"/>
--->
 <AVNGpsd device="/dev/ttyUSB0" port="4010" timeout="40" baud="38400"/>
 <AVNGpsd device="/dev/ttyUSB1" port="4011" timeout="40" baud="38400"/>
 <AVNGpsd device="/dev/ttyUSB2" port="4012" timeout="40" baud="38400"/>
 <AVNGpsd device="/dev/ttyUSB3" port="4013" timeout="40" baud="38400"/>
 
-<!-- a reader fro real ais data... 
+-->
+<!-- the universal feeder with gpsd
+	 there is a couple of readers that are able to feed its data into this
+	 feeder. As it has an input history there also could be NMEA output workers attached
+	 gpsd will connect to our listener port and get all data fro there, will decode the data
+	 and give it back to us via its python API 
+	 By setting port to the default gpsd port there is alos a chance for other devices to connect 
+	 to gpsd-->
+<AVNGpsdFeeder useGpsd="true" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
+
+
+<!-- a reader for real ais data... 
 <AVNGpsd device="tcp://76.103.90.196:9009" port="4012" timeout="40" nocheck="true"/>
 -->
 
 <!-- bluetooth support
 	 we have a scanner that is looking for bluetooth devices
-	 if one is found, it will try to connect and feed the data through GPSD
-	 GPSD is running connected to our own TCP socket -->
-
-<AVNBlueToothReader port="4014" listenerPort="4020" maxDevices="5" useGpsd="true" maxList="100" feederSleep="0.1">
+	 if one is found, it will try to connect and feed the data through the gpsd feeder
+	  -->
+ 
+<AVNBlueToothReader maxDevices="5" >
 </AVNBlueToothReader>
+
+<!--  serial reader for USB attached serial devices
+      the feed their data also through GPSD
+       -->
+<!-- <AVNSerialReader useFeeder="true" name="ttyUSB0Reader" port="/dev/ttyUSB0"/> 
+<AVNSerialReader useFeeder="true" name="ttyUSB1Reader" port="/dev/ttyUSB1"/>
+<AVNSerialReader useFeeder="true" name="ttyUSB2Reader" port="/dev/ttyUSB2"/>-->
+<AVNSerialReader useFeeder="true" name="ttyUSB3Reader" port="/dev/ttyUSB3"/>
 
 </Workers>
 

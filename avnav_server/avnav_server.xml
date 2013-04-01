@@ -2,7 +2,8 @@
 <AVNServer>
 <AVNConfig loglevel="DEBUG"/>
 <Readers>
-<AVNSerialReader name="com4reader" port="3"/>
+<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />
+<AVNSerialReader name="com4reader" port="3" useFeeder="true"/>
 <AVNSerialReader name="com8reader" port="7"/>
 </Readers>
 <AVNTrackWriter interval="10" distance="100"/>
@@ -13,6 +14,8 @@
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
+<!-- 
 <AVNBlueToothReader port="4014" listenerPort="4020" maxDevices="5" useGpsd="true" maxList="100" feederSleep="0.1">
 </AVNBlueToothReader>
+-->
 </AVNServer>
