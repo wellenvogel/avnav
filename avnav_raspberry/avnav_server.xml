@@ -56,7 +56,7 @@
 	 if one is found, it will try to connect and feed the data through GPSD
 	 GPSD is running connected to our own TCP socket -->
 
-<AVNBlueToothReader port="4014" listenerPort="4020" maxDevices="5" useGpsd="false" maxList="100" feederSleep="0.1">
+<AVNBlueToothReader port="4014" listenerPort="4020" maxDevices="5" useGpsd="true" maxList="100" feederSleep="0.1">
 </AVNBlueToothReader>
 
 </Workers>
