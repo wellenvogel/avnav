@@ -65,17 +65,37 @@
 	 we have a scanner that is looking for bluetooth devices
 	 if one is found, it will try to connect and feed the data through the gpsd feeder
 	  -->
-
+<!-- 
 <AVNBlueToothReader maxDevices="5" >
 </AVNBlueToothReader>
+ -->
+
+<!-- udev based detection of serial devices
+	 we can have an autodetection here but can also add defined devices
+	 to e.g. limit to some USB ports (or later for output)
+	 identification of devices is based on the USB bus id
+	 this heavily depends on the topology of the connected devices
+	 for my setup with an USB 4 port HUB at the upper USB port
+	 a device at the hubs first port will look like: 1-1.2.1:1.0 ,
+	 at the second 1-1.2.2:1.0 - potentially you must check the logs
+	 The below config uses a predefined device with this ID and 
+	 room for 4 additional autodetect devices
+	 The serial parameters are the same like for all serial readers
+	 We use autobaud between 4800 and 38400 here
+	 The data is feed through the gpsd feeder
+	 -->
+<AVNUsbSerialReader maxDevices="5" allowUnknown="false" baud="38400" minbaud="4800">
+	<UsbDevice usbid="1-1.2.1:1.0" baud="38400" minbaud="4800"/>
+</AVNUsbSerialReader>
 
 <!--  serial reader for USB attached serial devices
       the feed their data also through GPSD
       we have autobauding from 4800 to 38400 baud
       after 20 lines without NMEA data we count the device as being dead and reopen
        -->
-<AVNSerialReader useFeeder="true" name="ttyUSB0Reader" port="/dev/ttyUSB0" baud="38400" minbaud="4800" numerrors="20"/> 
 <!-- 
+<AVNSerialReader useFeeder="true" name="ttyUSB0Reader" port="/dev/ttyUSB0" baud="38400" minbaud="4800" numerrors="20"/> 
+
 <AVNSerialReader useFeeder="true" name="ttyUSB1Reader" port="/dev/ttyUSB1" baud="38400" minbaud="4800" numerrors="20"/>
 <AVNSerialReader useFeeder="true" name="ttyUSB2Reader" port="/dev/ttyUSB2" baud="38400" minbaud="4800" numerrors="20"/>
 <AVNSerialReader useFeeder="true" name="ttyUSB3Reader" port="/dev/ttyUSB3" baud="38400" minbaud="4800" numerrors="20"/>
