@@ -65,18 +65,21 @@
 	 we have a scanner that is looking for bluetooth devices
 	 if one is found, it will try to connect and feed the data through the gpsd feeder
 	  -->
- 
+
 <AVNBlueToothReader maxDevices="5" >
 </AVNBlueToothReader>
 
 <!--  serial reader for USB attached serial devices
       the feed their data also through GPSD
+      we have autobauding from 4800 to 38400 baud
+      after 20 lines without NMEA data we count the device as being dead and reopen
        -->
-<!-- <AVNSerialReader useFeeder="true" name="ttyUSB0Reader" port="/dev/ttyUSB0"/> 
-<AVNSerialReader useFeeder="true" name="ttyUSB1Reader" port="/dev/ttyUSB1"/>
-<AVNSerialReader useFeeder="true" name="ttyUSB2Reader" port="/dev/ttyUSB2"/>-->
-<AVNSerialReader useFeeder="true" name="ttyUSB3Reader" port="/dev/ttyUSB3"/>
-
+<AVNSerialReader useFeeder="true" name="ttyUSB0Reader" port="/dev/ttyUSB0" baud="38400" minbaud="4800" numerrors="20"/> 
+<!-- 
+<AVNSerialReader useFeeder="true" name="ttyUSB1Reader" port="/dev/ttyUSB1" baud="38400" minbaud="4800" numerrors="20"/>
+<AVNSerialReader useFeeder="true" name="ttyUSB2Reader" port="/dev/ttyUSB2" baud="38400" minbaud="4800" numerrors="20"/>
+<AVNSerialReader useFeeder="true" name="ttyUSB3Reader" port="/dev/ttyUSB3" baud="38400" minbaud="4800" numerrors="20"/>
+-->
 </Workers>
 
 <!-- the Web server

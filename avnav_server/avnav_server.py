@@ -523,14 +523,16 @@ class SerialReader():
     cfg={
                'port':None,
                'name':None,
-               'timeout': 2,
+               'timeout': 1,
                'baud': 4800,
                'minbaud':0, #if this is set to anything else, try autobauding between baud and minbaud
                'bytesize': 8,
                'parity': 'N',
                'stopbits': 1,
                'xonxoff': 0,
-               'rtscts': 0
+               'rtscts': 0,
+               'numerrors': 20, #set this to 0 to avoid any check for NMEA data
+               'autobaudtime': 5 #use that many seconds to read data for autobauding if no newline is found
                }
     return cfg
     
@@ -548,9 +550,85 @@ class SerialReader():
     self.infoHandler=infoHandler
     if self.navdata is None and self.writeData is None:
       raise Exception("either navdata or writeData has to be set")
+    self.startpattern=re.compile("[!$][A-Z][A-Z][A-Z][A-Z]")
   
   def getName(self):
     return "SerialReader "+self.param['name']
+   
+ 
+   
+  # a simple approach for autobauding
+  # we try to read some data (~3 lines) and find a 0x0a in it
+  # once we found this, we expect $ or ! and five capital letters afterwards
+  # if not found we try the next lower baudrate
+  
+  def openDevice(self,baud,autobaud,init=False):
+    f=None
+    try:
+      pnum=int(self.param['port'])
+    except:
+      pnum=self.param['port']
+    bytesize=int(self.param['bytesize'])
+    parity=self.param['parity']
+    stopbits=int(self.param['stopbits'])
+    xonxoff=int(self.param['xonxoff'])
+    rtscts=int(self.param['rtscts'])
+    portname=self.param['port']
+    timeout=float(self.param['timeout'])
+    autobaudtime=float(self.param['autobaudtime'])
+    name=self.getName()
+    if init:
+      AVNLog.info("%s: serial reader openDevice for port %s, baudrate=%d, timeout=%f, autobaud=%s",
+                  name,portname,baud,timeout,"true" if autobaud else "false")
+      init=False
+    else:
+      AVNLog.debug("%s: serial reader openDevice for port %s, baudrate=%d, timeout=%f , autobaud=%s",name,portname,baud,timeout,
+                   "true" if autobaud else "false")
+    lastTime=time.time()
+    try:
+      f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
+      self.setInfo("port open")
+      if autobaud:
+        starttime=time.time()
+        while time.time() <= (starttime + autobaudtime):
+          bytes=f.read(300)
+          if len(bytes)==0:
+            #if there is no data at all we simply take all the time we have...
+            AVNLog.debug("%s: unable to read data, retrying at %d",f.name,baud)
+            continue
+          data=bytes.decode('ascii',errors='ignore')
+          curoffset=0
+          while curoffset < (len(data)-5):
+            pos=data.find('\n',curoffset)
+            curoffset+=1
+            if pos < 0:
+              AVNLog.debug("%s: no newline at baud %d in %s",f.name,baud,data)
+              break
+            curoffset=pos+1
+            match=self.startpattern.search(data,curoffset)
+            if not match:
+              continue
+            AVNLog.debug("%s: assumed startpattern %s at baud %d in %s",f.name,match.group(0),baud,data)
+            AVNLog.info("%s: autobaud successfully finished at baud %d",f.name,baud)
+            return f
+        f.close()
+        return None
+      #hmm - seems that we have not been able to autobaud - return anyway
+      return f
+    except Exception:
+      self.setInfo("unable to open port")
+      try:
+        tf=traceback.format_exc(3).decode(errors='ignore')
+      except:
+        tf="unable to decode exception"
+      AVNLog.debug("%s: Exception on opening %s : %s",name,portname,tf)
+      if f is not None:
+        try:
+          f.close()
+        except:
+          pass
+        f=None
+    return f  
    
   #the run method - just try forever  
   def run(self):
@@ -558,46 +636,48 @@ class SerialReader():
     init=True
     isOpen=False
     while True:
-      try:
-        pnum=int(self.param['port'])
-      except:
-        pnum=self.param['port']
-      baud=int(self.param['baud'])
-      bytesize=int(self.param['bytesize'])
-      parity=self.param['parity']
-      stopbits=int(self.param['stopbits'])
-      xonxoff=int(self.param['xonxoff'])
-      rtscts=int(self.param['rtscts'])
-      portname=self.param['port']
-      timeout=float(self.param['timeout'])
-      porttimeout=timeout*10
       name=self.getName()
-      if init:
-        AVNLog.info("%s: serial reader started for port %s, baudrate=%d, timeout=%f",name,portname,baud,timeout)
+      timeout=float(self.param['timeout'])
+      portname=self.param['port']
+      porttimeout=timeout*10
+      baud=int(self.param['baud'])
+      maxerrors=int(self.param['numerrors'])
+      minbaud=baud
+      if not self.param.get('minbaud') is None or self.param.get('minbaud') == "0":
+        minbaud=int(self.param['minbaud'])
+      rates=(38400,19200,9600,4800)
+      autobaud=False
+      if minbaud != baud and minbaud != 0:
+        autobaud=True
+        if not baud in rates or not minbaud in rates:
+          AVNLog.debug("%s minbaud/baud not in allowed rates %s",self.getName(),"".join(str(f) for f in rates))
+          autobaud=False
+        if minbaud >= baud:
+          AVNLog.debug("%s: minbaud >= baud",self.getName())
+          autobaud=False
+      if autobaud:
+        baudidx=0
+        while rates[baudidx] > baud:
+          baudidx+=1
+        while baudidx < len(rates) and rates[baudidx] >= minbaud :
+          f=self.openDevice(rates[baudidx],True,init)
+          init=False
+          baudidx+=1
+          if not f is None:
+            break
+      else:
+        f=self.openDevice(baud,False,init)
         init=False
-      lastTime=time.time()
-      try:
-        f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
-        self.setInfo("port open")
-      except Exception:
-        self.setInfo("unable to open port")
-        try:
-          tf=traceback.format_exc(3).decode(errors='ignore')
-        except:
-          tf="unable to decode exception"
-        AVNLog.debug("%s: Exception on opening %s : %s",name,portname,tf)
-        if f is not None:
-          try:
-            f.close()
-          except:
-            pass
+      if f is None:  
         time.sleep(porttimeout/2)
         continue
       AVNLog.debug("%s: %s opened",name,f.name)
+      lastTime=time.time()
+      numerrors=0
       while True:
         bytes=0
         try:
-          bytes=f.readline()
+          bytes=f.readline(300)
         except:
           AVNLog.debug("%s: Exception in serial read, close and reopen %s",name,portname)
           try:
@@ -613,6 +693,20 @@ class SerialReader():
             isOpen=True
           self.status=True
           data=bytes.decode('ascii',errors='ignore')
+          if maxerrors > 0:
+            if not self.startpattern.match(data):
+              numerrors+=1
+              if numerrors > maxerrors:
+                #hmm - seems that we do not see any NMEA data
+                AVNLog.debug("%s: did not see any NMEA data for %d lines - close and reopen",name,maxerrors)
+                try:
+                  f.close()
+                except:
+                  pass
+                break;
+              continue
+            else:
+              numerrors=0
           if len(data) < 5:
             AVNLog.debug("%s: ignore short data %s",name,data)
           else:
@@ -630,6 +724,7 @@ class SerialReader():
           else:
             AVNLog.debug("%s: reopen port %s - timeout elapsed",name,portname)
           break
+        
   def setInfo(self,txt):
     if not self.infoHandler is None:
       self.infoHandler.setInfo(txt)
@@ -698,8 +793,11 @@ class SerialReader():
   @classmethod      
   def parseData(cls,data,navdata):
     darray=data.split(",")
-    if len(darray) < 1 or darray[0][0:1] != "$":
+    if len(darray) < 1 or (darray[0][0:1] != "$" and darray[0][0:1] != '!') :
       AVNLog.debug("invalid nmea data (len<1) "+data+" - ignore")
+      return
+    if darray[0][0:6] == '!AIVDM':
+      AVNLog.debug("cannot handle AIS data - ignore %s",data)
       return
     tag=darray[0][3:]
     rt={'class':'TPV','tag':tag}
@@ -1275,8 +1373,10 @@ class AVNGpsdFeeder(AVNGpsd):
     self.maxlist=self.getIntParam('maxList', True)
     self.gpsdproc=None
     name=self.getStringParam('name')
-    if not name is None:
+    if not name is None and not name == "":
       self.setName(name)
+    else:
+      self.setName(self.getConfigName()+"-default")
     if not hasGpsd and self.getBoolParam('useGpsd'):
       raise Exception("no gpsd installed, cannot run %s"%(cls.getConfigName()))
     
@@ -1475,8 +1575,12 @@ class AVNBlueToothReader(AVNWorker):
     except:
       pass
     self.maplock.release()
-      
-    
+        
+  def writeMatchLine(self,match):
+    if match is None:
+      return ''
+    self.writeData(match.group())
+    return ''
     
   #a thread to open a bluetooth socket and read from it until
   #disconnected
@@ -1493,12 +1597,17 @@ class AVNBlueToothReader(AVNWorker):
           AVNLog.info("%s connection to "+host+" lost")
           break
         buffer=buffer+data.decode(errors='ignore')
-        lines=re.findall('([^\n]*\n)',buffer)
-        buffer=re.sub('([^\n]*\n)','',buffer)
-        for l in lines:
-          print "received: ", l
-          self.writeData(l)
-          #currently the error handling is very "relaxed" - simply ignore any error here...
+        lines=buffer.splitlines(True)
+        if lines[-1][-1]=='\n':
+          #last one ends with nl
+          for l in lines:
+            self.writeData(l)
+          buffer=''
+        else:
+          for i in range(len(lines)-1):
+            self.writeData(lines[i])
+          if len(lines) > 0:
+            buffer=lines[-1]
         if len(buffer) > 4096:
           AVNLog.debug("BT reader %s: no line feed in long data, stopping",str(host))
           break
