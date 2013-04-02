@@ -50,6 +50,7 @@ import urlparse
 import math
 import re
 import ctypes
+import select
 
 hasSerial=False
 hasGpsd=False
@@ -172,6 +173,7 @@ class AVNLog():
   #basically the constant to search for was
   #__NR_gettid - __NR_SYSCALL_BASE+224
   #taken from http://blog.devork.be/2010/09/finding-linux-thread-id-from-within.html
+  #this definitely only works on the raspberry - but on other systems the info is not that important...
   @classmethod
   def getThreadId(cls):
     try:
@@ -584,6 +586,7 @@ class SerialReader():
   # if not found we try the next lower baudrate
   
   def openDevice(self,baud,autobaud,init=False):
+    self.buffer=''
     f=None
     try:
       pnum=int(self.param['port'])
@@ -653,6 +656,45 @@ class SerialReader():
           pass
         f=None
     return f  
+  
+  def readLine(self,serialDevice,timeout):
+    #if not os.name=='posix':
+    return serialDevice.readline(300)
+    #some better readline for posix 
+    #basically this needs more testing
+    #at a first rough look this is not better then the single byte reading of pyserial itself
+    #so we leave it out for now
+    endtime=time.time()+timeout
+    maxline=1024
+    limit=4096
+    while time.time() <= endtime:
+      rt,sep,rest=self.buffer.partition('\n')
+      if sep == '\n':
+        #there is a line in the buffer
+        self.buffer=rest
+        return rt+'\n'
+      ready,_,_ = select.select([serialDevice.fileno()],[],[], endtime-time.time())
+      # If select was used with a timeout, and the timeout occurs, it
+      # returns with empty lists -> thus abort read operation.
+      # For timeout == 0 (non-blocking operation) also abort when there
+      # is nothing to read.
+      if not ready:
+          break   # timeout
+      buf = os.read(serialDevice.fileno(), maxline)
+      # read should always return some data as select reported it was
+      # ready to read when we get to this point.
+      if not buf:
+        # Disconnected devices, at least on Linux, show the
+        # behavior that they are always ready to read immediately
+        # but reading returns nothing.
+        raise SerialException('device reports readiness to read but returned no data (device disconnected?)')
+      self.buffer+=buf
+      if len(self.buffer) > limit:
+        self.buffer=''
+        raise SerialException('no newline in buffer of %d bytes'%(limit))
+    return None
+      
+
    
   #the run method - just try forever  
   def run(self):
@@ -704,16 +746,16 @@ class SerialReader():
       while True and not self.doStop:
         bytes=0
         try:
-          bytes=f.readline(300)
-        except:
-          AVNLog.debug("Exception in serial read, close and reopen %s",portname)
+          bytes=self.readLine(f,timeout)
+        except Exception as e:
+          AVNLog.debug("Exception %s in serial read, close and reopen %s",traceback.format_exc(),portname)
           try:
             f.close()
             isOpen=False
           except:
             pass
           break
-        if len(bytes)> 0:
+        if not bytes is None and len(bytes)> 0:
           self.setInfo("receiving")
           if not isOpen:
             AVNLog.info("successfully opened %s",f.name)
@@ -784,7 +826,7 @@ class SerialReader():
     curdt=datetime.datetime.utcnow()
     gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
     AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
-    #now correct the time if we are just chaning from one day to another
+    #now correct the time if we are just changing from one day to another
     #this assumes that our system time is not more then one day off...(???)
     if (curdt - gpsdt) > datetime.timedelta(hours=12) and curdt.time().hour < 12:
       #we are in the evening and the gps is already in the morning... (and we accidently put it to the past morning)
