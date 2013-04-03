@@ -277,6 +277,11 @@ class AVNUtil():
           feeder=handler
           break
     return feeder
+  
+  #return a regex to be used to check for NMEA data
+  @classmethod
+  def getNMEACheck(cls):
+    return re.compile("[!$][A-Z][A-Z][A-Z][A-Z]")
     
   
 
@@ -572,7 +577,7 @@ class SerialReader():
     self.infoHandler=infoHandler
     if self.navdata is None and self.writeData is None:
       raise Exception("either navdata or writeData has to be set")
-    self.startpattern=re.compile("[!$][A-Z][A-Z][A-Z][A-Z]")
+    self.startpattern=AVNUtil.getNMEACheck()
     self.doStop=False  
   def getName(self):
     return "SerialReader-"+self.param['name']
@@ -1654,6 +1659,7 @@ class AVNBlueToothReader(AVNWorker):
   #disconnected
   def readBT(self,host,port):
     threading.current_thread().setName("[%s]%s[Reader %s]"%(AVNLog.getThreadId(),self.getName(),host))
+    pattern=AVNUtil.getNMEACheck()
     AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
     try:
       sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
@@ -1674,7 +1680,10 @@ class AVNBlueToothReader(AVNWorker):
           buffer=''
         else:
           for i in range(len(lines)-1):
-            self.writeData(lines[i])
+            if pattern.match(lines[i]):
+              self.writeData(lines[i])
+            else:
+              AVNLog.debug("ignoring unknown data %s",lines[i])
           if len(lines) > 0:
             buffer=lines[-1]
         if len(buffer) > 4096:
