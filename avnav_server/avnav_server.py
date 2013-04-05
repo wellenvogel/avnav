@@ -52,6 +52,8 @@ import re
 import ctypes
 import select
 
+VERSION="0.6.0"
+
 hasSerial=False
 hasGpsd=False
 hasBluetooth=False
@@ -1562,13 +1564,20 @@ class AVNGpsdFeeder(AVNGpsd):
   #fetch entries from the history
   #only return entries with higher sequence
   #return a tuple (lastSequence,[listOfEntries])
+  #when sequence == None or 0 - just fetch the topmost entries (maxEntries)
   def fetchFromHistory(self,sequence,maxEntries=10):
     seq=0
     list=[]
     if maxEntries< 0:
       maxEntries=0
+    if sequence is None:
+      sequence=0
     self.listlock.acquire()
     seq=self.sequence
+    if sequence==0:
+      sequence=seq-maxEntries
+    if sequence < 0:
+      sequence=0
     if seq > sequence:
       if (seq-sequence) > maxEntries:
         seq=sequence+maxEntries
@@ -2028,6 +2037,157 @@ class AVNUsbSerialReader(AVNWorker):
         context=None
       time.sleep(10)
 
+#a worker to output data via a socket
+
+class AVNSocketWriter(AVNWorker):
+  @classmethod
+  def getConfigName(cls):
+    return "AVNSocketWriter"
+  
+  @classmethod
+  def getConfigParam(cls, child=None):
+    if child is None:
+      
+      rt={
+          'port': None,      #local listener port
+          'name':'',
+          'maxDevices':5,   #max external connections
+          'feederName':'',  #if set, use this feeder
+          'filter': '',      #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
+          'address':''      #the local bind address
+          };
+      return rt
+    return None
+  
+  @classmethod
+  def createInstance(cls, cfgparam):
+    return AVNSocketWriter(cfgparam)
+  
+  def __init__(self,cfgparam):
+    AVNWorker.__init__(self, cfgparam)
+    self.setName(self.getName())
+    
+  def getName(self):
+    return "AVNSocketWriter-%d"%(self.getIntParam('port'))
+  
+  #make some checks when we have to start
+  #we cannot do this on init as we potentiall have tp find the feeder...
+  def start(self):
+    feeder=AVNUtil.findFeeder(self.getStringParam('feederName'))
+    if feeder is None:
+      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
+    self.feeder=feeder
+    self.maplock=threading.Lock()
+    self.addrmap={}
+    AVNWorker.start(self) 
+   
+  #return True if added
+  def checkAndAddHandler(self,addr,handler):
+    rt=False
+    maxd=self.getIntParam('maxDevices')
+    self.maplock.acquire()
+    if len(self.addrmap) < maxd:
+      if not addr in self.addrmap:
+        self.addrmap[addr]=handler
+        rt=True
+    self.maplock.release()
+    return rt
+  
+  def removeHandler(self,addr):
+    rt=None
+    self.maplock.acquire()
+    try:
+      rt=self.addrmap.pop(addr)
+    except:
+      pass
+    self.maplock.release()
+    if rt is None:
+      return None
+    return rt
+  
+  #check if the line matches a provided filter
+  def checkFilter(self,line,filter):
+    try:
+      if filter is None:
+        return True
+      for f in filter:
+        if f[0:1]=='$':
+          if line[0:1]!='$':
+            return False
+          if f[1:4]==line[3:6]:
+            return True
+          return False
+        if line.startswith(f):
+          return True
+    except:
+      pass
+    return False
+  #the writer for a connected client
+  def client(self,socket,addr):
+    self.setName("[%s]%s-Writer %s"%(AVNLog.getThreadId(),self.getName(),str(addr)))
+    filterstr=self.getStringParam('filter')
+    filter=None
+    if filterstr != "":
+      filter=filterstr.split(',')
+    try:
+      seq=0
+      socket.sendall("avnav_server %s\r\n"%(VERSION))
+      while True:
+        seq,data=self.feeder.fetchFromHistory(seq,10)
+        if len(data)>0:
+          for line in data:
+            if self.checkFilter(line, filter):
+              socket.sendall(line)
+        else:
+          time.sleep(0.1)
+        pass
+    except Exception as e:
+      AVNLog.info("exception in client connection %s",traceback.format_exc())
+    AVNLog.info("client disconnected")
+    socket.close()
+    self.removeHandler(addr)        
+        
+  #this is the main thread - this executes the bluetooth polling
+  def run(self):
+    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    time.sleep(2) # give a chance to have the feeder socket open...   
+    #now start an endless loop with udev discovery...
+    #any removal will be detected by the monitor (to be fast)
+    #but we have an audit here anyway
+    #the removal will be robust enough to deal with 2 parallel tries
+    init=True
+    listener=None
+    while True:
+      try:
+        listener=socket.socket()
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener.bind((self.getStringParam('address'),self.getIntParam('port')))
+        listener.listen(1)
+        AVNLog.info("listening at port address %s",str(listener.getsockname()))
+        while True:
+          outsock,addr=listener.accept()
+          AVNLog.info("connect from %s",str(addr))
+          allowAccept=self.checkAndAddHandler(addr,outsock)
+          if allowAccept:
+            clientHandler=threading.Thread(target=self.client,args=(outsock, addr))
+            clientHandler.daemon=True
+            clientHandler.start()
+          else:
+            try:
+              outsock.close()
+            except:
+              pass
+      except Exception as e:
+        AVNLog.warn("exception on listener, retrying %s",traceback.format_exc())
+        try:
+          listener.close()
+        except:
+          pass
+        break
+          
+  
+
+
 #a Worker to directly read from a serial line using pyserial
 #on windows use an int for the port - e.g. use 4 for COM5
 #on linux use the device name for the port
@@ -2087,7 +2247,7 @@ class AVNSerialReader(AVNWorker):
     reader=SerialReader(self.param, self.navdata if self.writeData is None else None, self.writeData,self) 
     reader.run()
   
- 
+
 #a HTTP server with threads for each request
 class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWorker):
   instances=0
@@ -2393,7 +2553,9 @@ def sighandler(signal,frame):
 def main(argv):
   global loggingInitialized,debugger,allHandlers,trackWriter
   debugger=sys.gettrace()
-  workerlist=[AVNBaseConfig,AVNGpsdFeeder,AVNSerialReader,AVNGpsd,AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader,AVNUsbSerialReader]
+  workerlist=[AVNBaseConfig,AVNGpsdFeeder,AVNSerialReader,AVNGpsd,
+              AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader,AVNUsbSerialReader,
+              AVNSocketWriter]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [configfile] " % (argv[0])
   parser = optparse.OptionParser(

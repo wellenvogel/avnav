@@ -23,7 +23,7 @@
 	 feeder. As it has an input history there also could be NMEA output workers attached
 	 gpsd will connect to our listener port and get all data from there, will decode the data
 	 and give it back to us via its python API 
-	 By setting port to the default gpsd port there is also a chance for other devices to connect 
+	 By setting port to the default gpsd port (2947) there is also a chance for other devices to connect 
 	 to gpsd
 	 The gpsd -G parameter set gpsd to bind to any - so also external connections are allowed
 	 If you set useGpsd to false, you can use this feeder on system where you don't have gpsd
@@ -140,4 +140,13 @@
      distance is the minimum distance in m before a new trackpoint is written (interval wins)
       -->
 <AVNTrackWriter interval="10" distance="30" trackdir="/home/pi/avnav/tracks"/>
+<!-- an TCP writer that will provide data from the feeder input to other systems
+	 port - the listener port
+	 filter can be either $XXX,... - the NMEA setence, in this case the first 2 characters are ignored or
+	        any other value like !AIVDM. If not set or empty any data will be sent out
+	 address - if set, only bind to this address, otherwise allow connections from any port
+ -->
+<AVNSocketWriter port="34567" maxDevices="5" filter=""/>
+
+
 </AVNServer>
