@@ -1,0 +1,150 @@
+#! /bin/bash
+# -*- coding: utf-8 -*-
+# vim: ts=2 sw=2 et ai
+
+###############################################################################
+# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+###############################################################################
+### BEGIN INIT INFO
+# Provides:          avnav
+# Required-Start:    $remote_fs $syslog $network
+# Should-Start:      bluetooth dbus udev
+# Required-Stop:     $remote_fs $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: AV nav server
+# Description:       monitor NMEA data at serial and bluetooth devices and
+#                    provide an access to navigation data as a web server
+### END INIT INFO
+
+# Author: Andreas Vogel <andreas@wellenvogel.net>
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+#set -x
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+NAME=`basename $0`
+
+case "$1" in
+  start)
+        log_daemon_msg "Starting background $NAME"
+        $0 workersilent &
+        log_end_msg 0
+        exit 0
+        ;;
+  workersilent)
+  		nostdout=1
+  		;;
+  worker)
+        ;;
+  *)
+        log_daemon_msg "we only have an action on start"
+        log_end_msg 0
+        exit 0
+        ;;
+esac
+
+
+
+#check the partitioning of the PI
+#we expect the image to have 2 partitions - one for boot and one for the system
+#we create a data partition that fills the rest of the SD card
+#code was inspired by http://sirlagz.net/category/raspberry-pi/
+DEVICE=/dev/mmcblk0
+PARTED=/sbin/parted
+PARTITION=${DEVICE}p3
+MOUNTPOINT=/data
+ROOTDIR=$MOUNTPOINT/avnav
+
+err(){
+  [ "$nostdout" != "1" ] && echo "ERROR: $*"
+  logger -t avnav "ERROR: $*"
+  exit 1
+}
+wlog(){
+  [ "$nostdout" != "1" ] &&  echo "INFO: $*"
+  logger -t avnav "INFO: $*"
+}
+
+wlog "avnav partition check started"
+[ -x $PARTED ] || err $PARTED not found
+
+quiteflag=""
+[ "$nostdout" = "1" ] && quiteflag="-q"
+#1.check if the partition is already there
+check=`$PARTED -m $DEVICE unit B print | grep '^3:'`
+if [ "$check" != "" ] ; then
+  wlog "$DEVICE already has 3 partitions"
+else
+  #2. determine free space
+  wlog "going to create 3rd partition on $DEVICE"
+  partstart=`$PARTED -m $DEVICE unit B print | grep '^2:'| awk -F: ' { x=substr($3,0,length($3)); print x } '`
+  partend=`$PARTED -m $DEVICE unit B print | grep "^$DEVICE"| awk -F: ' { x=substr($2,0,length($2)); print x; } '`
+  [ "$partstart" = "" -o "$partend" = "" ] && err "cannot determine start and end for new partition"
+  partstart=` echo "$partstart + 1" | bc`
+  partend=` echo "$partend - 1" | bc`
+  wlog "going to create a partition from $partstart to $partend"
+  $PARTED -m -a optimal $DEVICE unit B mkpart primary $partstart $partend < /dev/null|| err "creating partition failed"
+  wlog "creating filesystem on $PARTITION"
+  mke2fs $quiteflag $PARTITION < /dev/null|| err "creating FS on $PARTITION failed"
+fi
+#3. check if necessary directories are there
+if [ ! -d $MOUNTPOINT ] ; then
+  wlog "creating $MOUNTPOINT"
+  mkdir -p $MOUNTPOINT || err "unable to create mountpoint"
+fi
+check=`mount | grep $PARTITION`
+if [ "$check" != "" ] ; then
+  wlog "$PARTITION already mounted"
+else
+  mount $PARTITION $MOUNTPOINT || err "unable to mount $PARTITION to $MOUNTPOINT"
+fi
+if [ ! -d $ROOTDIR ]; then
+  mkdir -p $ROOTDIR || err "unable to create $ROOTDIR"
+fi
+chown pi:pi $ROOTDIR
+chmod 755 $ROOTDIR
+for d in log tracks charts
+do
+  if [ ! -d $ROOTDIR/$d ] ; then
+    wlog "creating $ROOTDIR/$d"
+    mkdir -p $ROOTDIR/$d || err "unable to create $ROOTDIR/$d"
+    chown pi:pi $ROOTDIR/$d
+    chmod 755 $ROOTDIR/$d
+    ln -s $ROOTDIR/$d /home/pi/avnav/$d
+  fi
+done
+
+#4. check fstab
+check=`grep "^ *$PARTITION" /etc/fstab`
+if [ "$check" != "" ] ; then
+  wlog "mountpoint for $PARTITION already found in fstab"
+else
+  wlog "creating mountpoint for $PARTITION to $MOUNTPOINT in fstab"
+  echo "$PARTITION  $MOUNTPOINT           ext4    defaults,noatime  0       1" >> /etc/fstab
+fi
+
+wlog "avnav partition setup finished"
