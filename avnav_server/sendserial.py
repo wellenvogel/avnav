@@ -19,7 +19,7 @@ def sendSerial(file,numout,sleeptime,baudout=4800):
     fout=serial.Serial(numout,timeout=2,baudrate=baudout)
   except:
     print "Exception on opening: "+str(sys.exc_info()[0])
-    err("unable to open port "+str(num))
+    err("unable to open port "+str(numout))
     
   print "Port "+fout.name+" opened"
   while True:
