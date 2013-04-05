@@ -1,0 +1,27 @@
+Installation on Windows7 64Bit
+Python 2.7.3 from http://www.python.org/ftp/python/2.7.3/python-2.7.3.amd64.msi
+PIL http://www.lfd.uci.edu/~gohlke/pythonlibs/
+GDAL form http://www.gisinternals.com/sdk/ - http://www.gisinternals.com/sdk/PackageList.aspx?file=release-1600-x64-gdal-1-9-2-mapserver-6-2-0.zip,
+          http://www.gisinternals.com/sdk/Download.aspx?file=release-1600-x64-gdal-1-9-2-mapserver-6-2-0\gdal-19-1600-x64-core.msi
+          http://www.gisinternals.com/sdk/Download.aspx?file=release-1600-x64-gdal-1-9-2-mapserver-6-2-0\GDAL-1.9.2.win-amd64-py2.7.msi
+add gdal to path - control panel, search for environment, add PATH : %PATH%;c:\Program Files\GDAL
+add GDAL_DATA to env GDAL_DATA=c:\Program Files\GDAL\gdal-data
+
+optional GUI:
+wxPython http://downloads.sourceforge.net/wxpython/wxPython2.8-win64-unicode-2.8.12.1-py27.exe
+
+optional Dev (not used):
+Visual Studio Express 2010 C++ - microsoft
+Visual Studio Integrated shell http://www.microsoft.com/en-us/download/details.aspx?id=115
+python tools http://pytools.codeplex.com/downloads/get/523959
+
+for serial communication (testing gps):
+Install pyserial from http://pyserial.sourceforge.net/:
+	download https://pypi.python.org/packages/source/p/pyserial/pyserial-2.6.tar.gz#md5=cde799970b7c1ce1f7d6e9ceebe64c98,
+	unpackt to c:\Program Files\python273\Lib\site-packages as subdir pyserial
+	in cmd (as admin) 
+		cd c:\Program Files\python273\Lib\site-packages\pyserial
+		c:\Program Files\python273\python.exe setup.py install
+
+
+
