@@ -38,5 +38,118 @@ we have sysfs ids for the location at the USB bus:
 .../1-1.3.2:1.0/ttyUSB1/tty/ttyUSB1 - hub at lower usb port (4 ports) - second device
 .../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - hub at lower usb port (4 ports) - first device
 
+8. Wifi
+everything as root (sudo -i)
+adapter here:
+Apr  4 17:04:22 raspberrypi kernel: [160175.254169] usb 1-1.2.4: New USB device found, idVendor=0bda, idProduct=8176
+Apr  4 17:04:22 raspberrypi kernel: [160175.254201] usb 1-1.2.4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Apr  4 17:04:22 raspberrypi kernel: [160175.254243] usb 1-1.2.4: Product: 802.11n WLAN Adapter
+Apr  4 17:04:22 raspberrypi kernel: [160175.254261] usb 1-1.2.4: Manufacturer: Realtek
+Apr  4 17:04:22 raspberrypi kernel: [160175.254275] usb 1-1.2.4: SerialNumber: 00e04c000001
+Apr  4 17:04:22 raspberrypi kernel: [160175.694841] usbcore: registered new interface driver rtl8192cu
+
+hotspot - see http://elinux.org/RPI-Wireless-Hotspot
+* sudo apt-get install hostapd dnsmasqd
+we use 192.168.20.00 for our wireless setup
+20...254 - dhcp raspi
+10       - raspi itself
+
+* etc/hosts
+192.168.20.10 avnav
+
+* /etc/dnsmasqd.conf
+interface=wlan0
+domain=avnav
+dhcp-range=192.168.20.20,192.168.20.254,255.255.255.0,12h
+dhcp-option=42,0.0.0.0
+
+* natting
+/etc/sysctl.conf: net.ipv4.ip_forward=1
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+iptables-save > /etc/iptables.ipv4.nat
 
 
+*  /etc/network/interfaces
+This gives us an additional address at eth0 - 192.168.20.11 to connect to via fixed line
+################# //snip
+auto lo
+
+iface lo inet loopback
+iface eth0 inet dhcp
+
+allow-hotplug wlan0
+
+iface wlan0 inet static
+  address 192.168.20.10
+  netmask 255.255.255.0
+  up iptables-restore < /etc/iptables.ipv4.nat
+
+iface eth0:1 inet static
+  address 192.168.20.11
+  netmask 255.255.255.0
+
+
+
+################### //snip
+
+*  /etc/hostapd/hostapd.conf
+################### snip
+interface=wlan0
+driver=rtl8192cu
+ssid=avnav
+hw_mode=g
+channel=6
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=avnav-secret
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+#################### //snip - this driver stuff needs some work...
+
+*  /etc/default/hostapd
+DAEMON_CONF="/etc/hostapd/hostapd.conf"
+
+-- does not work - invalid driver, so get a new hostapd from http://dl.dropbox.com/u/1663660/hostapd/hostapd.zip
+   see http://blog.sip2serve.com/post/38010690418/raspberry-pi-access-point-using-rtl8192cu
+   cd /usr/sbin
+   mv hostapd hostapd.ori
+   unzip download here...
+   chown root hostapd
+   chmod 755 hostapd
+-- for testing sudo apt-get install iw
+   - separate power to HUB->OK (maybe reboot solved the issue)
+   
+ 9. set up ntp sync
+ see http://catb.org/gpsd/gpsd.html
+ -- does not work out of the box
+    as gpsd is running non root, we have to enable other SHM segments!
+ * /etc/ntp.conf:
+ server 127.127.28.0
+fudge 127.127.28.0 time1 0.420 refid GPS
+server 127.127.28.1 prefer
+fudge 127.127.28.1 refid GPS1
+server 127.127.28.2
+fudge 127.127.28.2 time1 0.420 refid GPS2
+server 127.127.28.3 prefer
+fudge 127.127.28.3 refid GPS3
+
+ntpq -p gives:
+     remote           refid      st t when poll reach   delay   offset  jitter
+==============================================================================
+ SHM(0)          .GPS.            0 l    -   64    0    0.000    0.000   0.000
+ SHM(1)          .GPS1.           0 l    -   64    0    0.000    0.000   0.000
+-SHM(2)          .GPS2.           0 l   29   64    3    0.000    1.740  20.409
+ SHM(3)          .GPS3.           0 l    -   64    0    0.000    0.000   0.000
++batman.till-wie 129.69.1.153     2 u   22   64    3  321.884  142.512  36.881
++mail.ziegenberg 131.188.3.220    2 u   24   64    3  338.131  147.767  39.671
+*mail.buh.bz     160.45.10.8      2 u   21   64    3  324.912  141.625  49.656
++TAMARA.HZ.DE.AR 143.93.117.16    2 u   21   64    3  338.490  148.679  54.099
+
+-- finally we use our own settime - setuid' to root and let avnav handle the time update
+   we do an update if gpsd reports a valid timestamp to us
+   

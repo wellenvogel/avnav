@@ -62,6 +62,8 @@ do_start()
 		log_daemon_msg "avnav $DAEMON already running with pid $xp"
 		return 1
 	fi
+	#sometimes gpsd seems to grab our port...
+	killall gpsd 2> /dev/null
 	su -c "$DAEMON $CONFIG" pi >/dev/null 2>&1 &
 }
 

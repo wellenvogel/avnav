@@ -90,7 +90,8 @@ except:
 
 #### constants ######################
 
-NM=1852 #meters for a nautical mile
+NM=1852             #meters for a nautical mile
+
 
 
 class AVNLog():
@@ -252,12 +253,18 @@ class AVNUtil():
   
   #parse an ISO8601 t8ime string
   #see http://stackoverflow.com/questions/127803/how-to-parse-iso-formatted-date-in-python
-  #a bit limited to what we write into track files
+  #a bit limited to what we write into track files or what GPSD sends us
+  #returns a datetime object
   @classmethod
   def gt(cls,dt_str):
-    dt, _, us= dt_str.partition(".")
+    dt, delim, us= dt_str.partition(".")
+    if delim is None or delim == '':
+      dt=dt.rstrip("Z")
     dt= datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")
-    us= int(us.rstrip("Z"), 10)
+    if not us is None and us != "":
+      us= int(us.rstrip("Z"), 10)
+    else:
+      us=0
     return dt + datetime.timedelta(microseconds=us)
   
   
@@ -282,6 +289,22 @@ class AVNUtil():
   @classmethod
   def getNMEACheck(cls):
     return re.compile("[!$][A-Z][A-Z][A-Z][A-Z]")
+  
+  #run an external command and and log the output
+  #param - the command as to be given to subprocess.Popen
+  @classmethod
+  def runCommand(cls,param,threadName=None):
+    if not threadName is None:
+      threading.current_thread().setName("[%s]%s"%(AVNLog.getThreadId(),threadName))
+    cmd=subprocess.Popen(param,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,close_fds=True)
+    while True:
+      line=cmd.stdout.readline()
+      if not line:
+        break
+      AVNLog.debug("[cmd]%s",line.strip())
+    cmd.poll()
+    return cmd.returncode
+    
     
   
 
@@ -438,6 +461,9 @@ class AVNNavData():
   
   #add an entry to the list
   #do not add if there is already such an entry with newer timestamp
+  #timestamps always relate to our system time - never directly to the GPS time!
+  #this avoids confusion when we have to change the system time...
+  #this is always done by the main thread!
   def addEntry(self,navEntry):
     if navEntry.timestamp is None:
       navEntry.timestamp=AVNUtil.utcnow()
@@ -520,8 +546,13 @@ class AVNNavData():
         if not (k in rt.data) or newer or rt.data.get(k) is None:
           rt.data[k] = e.data[k]
     AVNLog.ld("getMergedEntries",prefix,suffixlist,rt)
-    return rt    
-              
+    return rt   
+  
+  #delete all entries from the list (e.g. when we have to set the time)
+  def reset(self): 
+    self.listLock.acquire()
+    self.list.clear()
+    self.listLock.release()
         
   
   def __str__(self):
@@ -707,6 +738,7 @@ class SerialReader():
     f=None
     init=True
     isOpen=False
+    AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in self.param.keys()))
     while True and not self.doStop:
       name=self.getName()
       timeout=float(self.param['timeout'])
@@ -714,9 +746,7 @@ class SerialReader():
       porttimeout=timeout*10
       baud=int(self.param['baud'])
       maxerrors=int(self.param['numerrors'])
-      minbaud=baud
-      if not self.param.get('minbaud') is None or self.param.get('minbaud') == "0":
-        minbaud=int(self.param['minbaud'])
+      minbaud=int(self.param.get('minbaud') or baud)
       rates=(38400,19200,9600,4800)
       autobaud=False
       if minbaud != baud and minbaud != 0:
@@ -819,29 +849,43 @@ class SerialReader():
         t+="Z"
       data['time']=t
     de=AVNDataEntry.fromData(data)
-    de.timestamp=AVNUtil.datetimeToTsUTC(timedate)
     navdata.addEntry(de)
     
-  #returns an iso 8601 timestring
+  #returns an datetime object containing the current gps time
   @classmethod
-  def gpsTimeToTime(cls,gpstime):
+  def gpsTimeToTime(cls,gpstime,gpsdate=None):
     #we take day/month/year from our system and add everything else from the GPS
     gpsts=datetime.time(int(gpstime[0:2] or '0'),int(gpstime[2:4] or '0'),int(gpstime[4:6] or '0'),1000*int(gpstime[7:10] or '0'))
     AVNLog.ld("gpstime/gpsts",gpstime,gpsts)
-    curdt=datetime.datetime.utcnow()
-    gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
-    AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
-    #now correct the time if we are just changing from one day to another
-    #this assumes that our system time is not more then one day off...(???)
-    if (curdt - gpsdt) > datetime.timedelta(hours=12) and curdt.time().hour < 12:
-      #we are in the evening and the gps is already in the morning... (and we accidently put it to the past morning)
-      #so we have to hurry up to the next day...
-      gpsdt=datetime.datetime.combine(curdt+datetime.timedelta(1),gpsts)
-    if (gpsdt - curdt) > datetime.timedelta(hours=12) and curdt.time().hour> 12:
-      #now we are faster - the gps is still in the evening of the past day - but we assume it at the coming evening
-      gpsdt=datetime.datetime.combine(curdt-datetime.timedelta(1),gpsts)
-    AVNLog.ld("curts/gpsdt after corr",curdt,gpsdt)
-    
+    if gpsdate is None:
+      curdt=datetime.datetime.utcnow()
+      gpsdt=datetime.datetime.combine(curdt.date(),gpsts)
+      AVNLog.ld("curts/gpsdt before corr",curdt,gpsdt)
+      #now correct the time if we are just changing from one day to another
+      #this assumes that our system time is not more then one day off...(???)
+      if (curdt - gpsdt) > datetime.timedelta(hours=12) and curdt.time().hour < 12:
+        #we are in the evening and the gps is already in the morning... (and we accidently put it to the past morning)
+        #so we have to hurry up to the next day...
+        gpsdt=datetime.datetime.combine(curdt+datetime.timedelta(1),gpsts)
+      if (gpsdt - curdt) > datetime.timedelta(hours=12) and curdt.time().hour> 12:
+        #now we are faster - the gps is still in the evening of the past day - but we assume it at the coming evening
+        gpsdt=datetime.datetime.combine(curdt-datetime.timedelta(1),gpsts)
+      AVNLog.ld("curts/gpsdt after corr",curdt,gpsdt)
+    else:
+      #gpsdate is in the form ddmmyy
+      #within GPSdate we do not have the century, so make some best guess:
+      #if the 2 digits are below 80, assume that we are in 2000++, otherwise in 1900++
+      if len(gpsdate) != 6:
+        raise Exception("invalid gpsdate %s"%(gpsdate))
+      year=gpsdate[4:6]
+      completeyear=0
+      if int(year) < 80:
+        completeyear=2000+int(year)
+      else:
+        completeyear=1900+int(year)
+      date=datetime.date(completeyear,int(gpsdate[2:4]),int(gpsdate[0:2]))
+      gpsdt=datetime.datetime.combine(date,gpsts)
+      AVNLog.ld("gpsts computed",gpsdt)
     return gpsdt
   
   #parse the nmea psoition fields:
@@ -876,12 +920,14 @@ class SerialReader():
       return
     tag=darray[0][3:]
     rt={'class':'TPV','tag':tag}
+    #currently we only take the time from RMC
+    #as only with this one we have really a valid complete timestamp
     try:
       if tag=='GGA':
         rt['lat']=cls.nmeaPosToFloat(darray[2],darray[3])
         rt['lon']=cls.nmeaPosToFloat(darray[4],darray[5])
         rt['mode']=int(darray[6] or '0')
-        cls.addToNavData(rt, cls.gpsTimeToTime(darray[1]),navdata)
+        cls.addToNavData(rt, None,navdata)
         return
       if tag=='GLL':
         rt['mode']=1
@@ -889,7 +935,7 @@ class SerialReader():
           rt['mode']= (0 if (darray[6] != 'A') else 2)
         rt['lat']=cls.nmeaPosToFloat(darray[1],darray[2])
         rt['lon']=cls.nmeaPosToFloat(darray[3],darray[4])
-        self.addToNavData(rt, cls.gpsTimeToTime(darray[5]),navdata)
+        self.addToNavData(rt, None,navdata)
         return
       if tag=='VTG':
         mode=darray[2]
@@ -901,6 +947,19 @@ class SerialReader():
           rt['speed']=float(darray[3]or '0')*NM/3600
         cls.addToNavData(rt, None,navdata)
         return
+      if tag=='RMC':
+        #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
+        #this includes current date
+        rt['mode']=( 0 if darray[2] != 'A' else 1)
+        gpstime=darray[1]
+        rt['lat']=cls.nmeaPosToFloat(darray[3],darray[4])
+        rt['lon']=cls.nmeaPosToFloat(darray[5],darray[6])
+        rt['speed']=float(darray[7] or '0')*NM/3600
+        rt['track']=float(darray[8] or '0')
+        gpsdate=darray[9]
+        cls.addToNavData(rt, cls.gpsTimeToTime(gpstime, gpsdate), navdata)
+        return
+        
     except Exception:
         AVNLog.debug(" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
 
@@ -940,30 +999,37 @@ class AVNWorker(threading.Thread):
     return rt
   def getIntParam(self,name,throw=False):
     rt=self.getParamValue(name,throw)
-    if rt is None:
-      return None
-    else:
-      return int(rt)
+    try:
+      return int(rt or 0)
+    except Exception as e:
+      if not throw:
+        return 0
+      else:
+        raise e
+      
   
   def getBoolParam(self,name,throw=False):
     rt=self.getParamValue(name,throw)
     if rt is None:
-      return None
+      return False
     else:
       return rt.upper()=='TRUE'
     
   def getStringParam(self,name,throw=False):
     rt=self.getParamValue(name,throw)
     if rt is None:
-      return None
+      return ""
     else:
       return str(rt)
   def getFloatParam(self,name,throw=False):
     rt=self.getParamValue(name,throw)
-    if rt is None:
-      return None
-    else:
-      return float(rt)
+    try:
+      return float(rt or 0)
+    except Exception as e:
+      if not throw:
+        return 0
+      else:
+        raise e
     
   
   #stop any child process (will be called by signal handler)
@@ -1031,7 +1097,11 @@ class AVNBaseConfig(AVNWorker):
             'loglevel':logging.INFO,
             'logfile':"",
             'expiryTime': 30,
-            'debugToLog': 'false'
+            'debugToLog': 'false',
+            'maxtimeback':5,      #how many seconds we allow time to go back before we reset
+            'settimecmd': '',     #if set, use this to set the system time
+            'systimediff':5,      #how many seconds do we allow the system time to be away from us
+            'settimeperiod': 3600 #how often do we set the system time
     }
   @classmethod
   def createInstance(cls, cfgparam):
@@ -1301,7 +1371,7 @@ class AVNGpsd(AVNWorker):
             continue
         AVNLog.info("device %s became visible, starting gpsd",device)
         try:
-          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True)
+          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True,close_fds=True)
           reader=GpsdReader(self.navdata, port, "GPSDReader[Reader] %s at %d"%(device,port))
           reader.start()
           self.setInfo("gpsd started")
@@ -1570,7 +1640,7 @@ class AVNGpsdFeeder(AVNGpsd):
         gpsdcommandli=gpsdcommand.split()
         try:
           AVNLog.debug("starting gpsd with command %s, starting reader",gpsdcommand)
-          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True)
+          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True,close_fds=True)
           
           reader=GpsdReader(self.navdata, port, "AVNGpsdFeeder[Reader] %s at %d"%(device,port))
           reader.start()
@@ -1878,7 +1948,7 @@ class AVNUsbSerialReader(AVNWorker):
           if not self.getBoolParam('allowUnknown'):
             AVNLog.debug("unknown devices not allowed, skip start of %s at %s",usbid,devicelist[usbid])
             continue
-          param=self.setParameterForSerial(self.getSerialParam(),usbid,devicelist[usbid])
+          param=self.setParameterForSerial(self.getParam(),usbid,devicelist[usbid])
         else:
           type="known"
           param=self.setParameterForSerial(param, usbid, devicelist[usbid])
@@ -2390,15 +2460,64 @@ def main(argv):
           AVNLog.warn("unable to start handler : "+traceback.format_exc())
     AVNLog.info("All Handlers started")
     hasFix=False
+    lastsettime=0
+    lastutc=datetime.datetime.utcnow();
     while True:
       time.sleep(3)
       #query the data to get old entries being removed 
+      curutc=datetime.datetime.utcnow();
+      delta=curutc-lastutc;
+      allowedBackTime=baseConfig.getIntParam('maxtimeback')
+      if delta.total_seconds() < -allowedBackTime and allowedBackTime != 0:
+        AVNLog.warn("time shift backward (%d seconds) detected, deleting all entries ",delta.total_seconds())
+        navData.reset()
+        hasFix=False
+      lastutc=curutc
       curTPV=navData.getMergedEntries("TPV", [])
       if ( not curTPV.data.get('lat') is None) and (not curTPV.data.get('lon') is None):
         #we have some position
         if not hasFix:
           AVNLog.info("new GPS fix lat=%f lon=%f",curTPV.data.get('lat'),curTPV.data.get('lon'))
           hasFix=True
+        #settime handling
+        curTPVtime=curTPV.data.get('time')
+        if not curTPVtime is None:
+          try:
+            AVNLog.debug("checking time diffs - new gpsts=%s",curTPVtime)
+            curts=AVNUtil.gt(curTPVtime)
+            AVNLog.debug("time diff check system utc %s - gps utc %s",curutc.isoformat(),curts.isoformat())
+            allowedDiff=baseConfig.getIntParam('systimediff')
+            settimecmd=baseConfig.getStringParam('settimecmd')
+            settimeperiod=baseConfig.getIntParam('settimeperiod')
+            if allowedDiff != 0 and settimecmd != "" and settimeperiod != 0:
+            #check if the time is too far away and the period is reached
+              if abs((curts-curutc).total_seconds()) > allowedDiff:
+                AVNLog.debug("UTC time diff detected system=%s, gps=%s",curutc.isoformat(),curts.isoformat())
+                if lastsettime == 0 or (curutc-lastsettime).total_seconds() > settimeperiod:
+                  AVNLog.warn("detected UTC time diff between system time %s and gps time %s, setting system time",
+                              curutc.isoformat(),curts.isoformat())
+                  #[MMDDhhmm[[CC]YY][.ss]]
+                  newtime="%02d%02d%02d%02d%04d.%02d"%(curts.month,curts.day,curts.hour,curts.minute,curts.year,curts.second)
+                  cmd=[settimecmd,newtime]
+                  AVNLog.info("starting command %s"," ".join(cmd))
+                  cmdThread=threading.Thread(target=AVNUtil.runCommand,args=(cmd,"setTime"))
+                  cmdThread.start()
+                  cmdThread.join(20)
+                  if cmdThread.isAlive():
+                    #AVNLog.error("unable to finish setting the system time within 40s")
+                    pass
+                  else:
+                    pass
+                  curutc=datetime.datetime.utcnow()
+                  if abs((curts-curutc).total_seconds()) > allowedDiff:
+                    AVNLog.error("unable to set system time, still above difference")
+                  else:
+                    AVNLog.info("setting system time succeeded")
+                    lastsettime=curutc
+            else:
+              AVNLog.debug("no time check - disabled by parameter")
+          except Exception as e:
+              AVNLog.warn("exception when checking time diff %s",traceback.format_exc())          
       else:
         if hasFix:
           AVNLog.warn("lost GPS fix")
@@ -2406,7 +2525,8 @@ def main(argv):
       #AVNLog.debug("entries for TPV: "+str(curTPV))
       curAIS=navData.getMergedEntries("AIS",[])
       #AVNLog.debug("entries for AIS: "+str(curAIS))  
-  except:
+  except Exception as e:
+    AVNLog.error("Exception in main %s",traceback.format_exc())
     sighandler(None, None)
    
 if __name__ == "__main__":

@@ -4,8 +4,18 @@
      debugToLog controls whether any debug output will also go to the logfile
      you can change the loglevel by an HTTP request to the navurl:
      http://somehost:8080/viewer/avnav_navi.php?request=debuglevel&level=DEBUG
+     maxtimeback: maximal time in seconds that we allow the system clock to go back before we delete all data
+     settimecmd: command to set the systemtime (must accept time in format like date - utc - and must be able to run as pi)
+     systimediff: timediff in seconds between gps timestamp and system time that we allow before we set gps time
+     settimeperiod: time in seconds befor we retry setting the systemtime
 -->
-<AVNConfig debug="0" logfile="/home/pi/avnav/log/avnav.log" debugToLog="true"/>
+<AVNConfig debug="0" 
+	logfile="/home/pi/avnav/log/avnav.log" 
+	debugToLog="true"
+	maxtimeback="5"
+	settimecmd="/home/pi/avnav/raspberry/settime"
+    systimediff="5"
+    settimeperiod="3600"/>
 <!-- the workers section -->
 <Workers>
 <!-- the universal feeder with gpsd
