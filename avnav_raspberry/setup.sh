@@ -6,6 +6,8 @@ err(){
 }
 i=`id -u`
 [ "$i" != "0" ] && err "this must be run as root"
+echo "trying to stop avnav if it is running"
+service avnav stop
 pdir=`dirname $0`
 pdir=`readlink -f $pdir`
 for serv in check_parts avnav
