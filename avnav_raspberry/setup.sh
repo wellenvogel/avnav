@@ -31,6 +31,8 @@ do
     mv $d $d.old || err "unable to remove $d"
   fi
 done
+chown root:root $pdir/settime
+chmod u+s $pdir/settime 
 
 echo "starting partitioning check"
 /etc/init.d/check_parts worker
