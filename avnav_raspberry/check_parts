@@ -131,8 +131,10 @@ do
     mkdir -p $ROOTDIR/$d || err "unable to create $ROOTDIR/$d"
     chown pi:pi $ROOTDIR/$d
     chmod 755 $ROOTDIR/$d
-    rm -rf /home/pi/avnav/$d
-    ln -s $ROOTDIR/$d /home/pi/avnav/$d
+  fi
+  if [ ! -h /home/pi/avnav/$d ] ; then
+  	rm -rf /home/pi/avnav/$d
+  	ln -s $ROOTDIR/$d /home/pi/avnav/$d
   fi
 done
 

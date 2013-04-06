@@ -21,7 +21,7 @@ do
 	
 done
 
-for d in ../tracks ../logs ../charts
+for d in ../tracks ../log ../charts
 do
   d=$pdir/$d
   if [ -d $d -o -f $d ] ; then
