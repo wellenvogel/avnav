@@ -123,7 +123,7 @@
      this of course must fit to the java script part...
 -->
 <AVNHttpServer navurl="/viewer/avnav_navi.php">
-	<Directory urlpath="maps" path="/home/pi/avnav/tiles"></Directory>
+	<Directory urlpath="maps" path="/home/pi/avnav/charts"></Directory>
 	<Directory urlpath="viewer" path="/home/pi/avnav/viewer"></Directory>
 	<Directory urlpath="libraries" path="/home/pi/avnav/libraries"></Directory>
 	<Directory urlpath="log" path="/home/pi/avnav/log"></Directory>

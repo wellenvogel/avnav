@@ -1,6 +1,16 @@
-#! /bin/bash
-# -*- coding: utf-8 -*-
-# vim: ts=2 sw=2 et ai
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          check_parts
+# Required-Start:    $remote_fs $syslog $network
+# Should-Start:      bluetooth dbus udev
+# Required-Stop:     $remote_fs $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: AV nav server partition enabling
+# Description:       creates data partition and mounts
+### END INIT INFO
+
+# Author: Andreas Vogel <andreas@wellenvogel.net>
 
 ###############################################################################
 # Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
@@ -23,19 +33,6 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
-### BEGIN INIT INFO
-# Provides:          avnav
-# Required-Start:    $remote_fs $syslog $network
-# Should-Start:      bluetooth dbus udev
-# Required-Stop:     $remote_fs $syslog $network
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: AV nav server
-# Description:       monitor NMEA data at serial and bluetooth devices and
-#                    provide an access to navigation data as a web server
-### END INIT INFO
-
-# Author: Andreas Vogel <andreas@wellenvogel.net>
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 #set -x
 
@@ -134,6 +131,7 @@ do
     mkdir -p $ROOTDIR/$d || err "unable to create $ROOTDIR/$d"
     chown pi:pi $ROOTDIR/$d
     chmod 755 $ROOTDIR/$d
+    rm -rf /home/pi/avnav/$d
     ln -s $ROOTDIR/$d /home/pi/avnav/$d
   fi
 done
@@ -148,3 +146,12 @@ else
 fi
 
 wlog "avnav partition setup finished"
+wlog "enabling avnav service"
+update-rc.d avnav enable
+service avnav start
+
+wlog "disable myself"
+update-rc.d check_parts disable
+
+
+

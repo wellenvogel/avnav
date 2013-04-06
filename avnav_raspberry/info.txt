@@ -153,3 +153,17 @@ ntpq -p gives:
 -- finally we use our own settime - setuid' to root and let avnav handle the time update
    we do an update if gpsd reports a valid timestamp to us
    
+10. final disk layout
+To prepare for easy updates we will create a system partition and additionally a data partition
+Sizes:
+system 	/dev/mmcblk0p2  tbd - 1...2GB
+data - 	/dev/mmcblk0p3  rest of the free space
+mount data partition to data
+layout:
+/home/pi/avnav/server - avnav_server.py, avnav_server.xml,settime
+/home/pi/avnav/viewer - *html,*js,*css, images...
+                        /data/avnav/viewer links here ?
+/data/avnav/log
+/data/avnav/tracks
+/data/avnav/charts    - subdir for each chart set, containing an avnav.xml
+			
