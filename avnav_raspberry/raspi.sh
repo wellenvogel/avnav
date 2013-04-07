@@ -177,20 +177,24 @@ case $mode in
   copy)
     [ "$1" = "" -o "$2" = "" ] && usage 1 
     [ ! -e $1 ] && err "file $1 not found"
+    #copy is somehow tricky - we must read the old data first, because after copy 
+    #perted will refuse to work and we have to recreate the table from scratch!
+    partstart1=`getPartStart $1 1`
+    partstart=`getPartStart $1 2`
+    partend1=`getPartEnd $1 1`
     partend=`getPartEnd $1 2`
-    [ "$partend" != "" ] || err "unable to determine end of partition2 for $1"
+    [ "$partend" != ""  -a "$partend1" != "" -a "$partstart" != "" -a "$partstart1" != "" ] || err "unable to determine partitions for $1"
     wlog "reading from $1 to $2"
     blks=`echo "$partend / (4096 * 1024) + 1"| bc`
-    rmparts=`getParts $1 1`
-    wlog "must remove parts: $rmparts"
     wlog "reading $blks 4M blocks (from $partend bytes)"
     dd if=$1 of=$2 bs=4M count=$blks || err "unable to copy $blks from $1 to $2"
+    #now we must rebuild the partition table at the image
+    wlog "reconstruct partition table on $2"
+    $PARTED -s $2 mklabel msdos || err "unable to create new partition table in $2"
+    $PARTED -s $2 unit B mkpart primary $partstart1 $partend1 || err "unable to create partition1"
+    $PARTED -s $2 unit B mkpart primary $partstart $partend || err "unable to create partition2"
+    wlog "partition table on $2 reconstructed for 2 partitions"
     if [ "$doShrink" = "1" ] ; then
-      for p in $rmparts
-      do
-        wlog "remove partition $p"
-        $PARTED $2 rm $p || err "unable to remove partition $p"
-      done
       shrinkSecond $2 
     fi
     truncateTo $2 2

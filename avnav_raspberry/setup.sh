@@ -23,27 +23,54 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
-
+updateurl="http://www.wellenvogel.de/segeln/technik/avnav/avnav-current.tar"
 basedir=/
+dist=0
+keepStopped=0
 err(){
   echo "ERROR: $*"
   exit 1
 }
+
+restoreSuid(){
+  chown root:root $basedir/$pdir/program/raspberry/settime
+  chmod u+s $basedir/$pdir/program/raspberry/settime 
+}
 i=`id -u`
 [ "$i" != "0" ] && err "this must be run as root"
-[ "$1" = "" ] && err "usage: $0 part|nopart|dist"
+
 scriptdir=`dirname $0`
 scriptdir=`readlink -f $scriptdir`
 
-if [ "$1" != "dist" ] ; then
+while getopts sd: opt ; do
+  case $opt in
+    d)
+    dist=1
+    basedir=$OPTARG
+    ;;
+    s)
+    keepStopped=1
+    ;;
+    *)
+    err "invalid option $opt"
+    ;;
+  esac
+done
+
+shift `expr $OPTIND - 1`
+[ "$1" = "" ] && err "usage: $0 [-d ] [-s] part|nopart|update"
+[ $dist = 1 -a "$1" = "part" ] && err "mode part not with -d"
+[ $keepStopped = 1 -a "$1" = "part" ] && err "-s not possible with mode part"
+
+if [ $dist = 0 ] ; then
   echo "trying to stop avnav if it is running"
   service avnav stop
   pdir=$scriptdir
 else
-  [ "$2" = "" ] && err "missing mandatory parameter basedir"
-  basedir=$2
-  pdir=/home/pi/avnav/raspberry
+  #dir within image...
+  pdir=/home/pi/avnav
 fi
+
 
 
 for serv in check_parts avnav
@@ -51,7 +78,7 @@ do
   if [ ! -h $basedir/etc/init.d/$serv ] ; then
     rm -f $basedir/etc/init.d/$serv
     echo "creating $basedir/etc/init.d/$serv"
-    ln -s $pdir/$serv $basedir/etc/init.d/$serv
+    ln -s $pdir/program/$serv $basedir/etc/init.d/$serv
     chmod 755 $scriptdir/$serv
   else
     echo "/etc/init.d/$serv is already linked"
@@ -59,21 +86,62 @@ do
 	
 done
 
-chown root:root $scriptdir/settime
-chmod u+s $scriptdir/settime 
+
 
 if [ "$1" = "part" ] ; then
+  restoreSuid
   echo "starting partitioning check"
   /etc/init.d/check_parts worker
   exit 0
 fi
-if [ "$1" = "nopart" ] ; then
+if [ "$1" = "nopart" -a $dist = 0 ] ; then
+  restoreSuid
   echo "enabling service avnav"
   update-rc.d avnav enable
-  service avnav start
+  [ $keepStopped = 0 ] && service avnav start
   exit 0
 fi
+if [ "$1" = "update" ] ; then
+  savename=`date +"%Y%m%d%H%M"`
+  savename="$basedir/$pdir/program-$savename"
+  if [ "$2" = "" ] ; then
+    upd=$updateurl
+  else
+    upd=$2
+  fi
+  x=`echo "$up" | grep '^http'`
+  doDelete=0
+  if [ "$x" != "" ] ; then
+    echo "download update from $upd"
+    tmpfile=/tmp/avnav-delivery.tar
+    rm -f $tmpfile
+    wget -O $tmpfile $upd || err "downloading update failed"
+    [ -s $tmpfile ] || err "file $tmpfile does not exist after download"
+    upd=$tmpfile
+    doDelete=1
+  else
+    [ -f $upd ] || err "update $upd does not exist"
+  fi
+  if [ -e $basedir/$pdir/program ] ; then
+  	echo "saving current version to $savename"
+  	[ -d $savename ] && err "$savename already exists, wait one minute and retry"
+  	mv $basedir/$pdir/program $savename || err "unable to rename $basedir/$pdir/program to $savename"
+  fi
+  cat $upd | ( cd $basedir/$pdir/.. && tar -xvf - ) || err "error while unpacking $updateurl, you must restore $savename..."
+  if [ $doDelete = 1 ] ; then
+    echo "removing $upd"
+    rm -f $upd
+  fi
+  restoreSuid
+fi
 #dist only
+if [ $dist = 0 ] ; then
+  if [ $keepStopped = 0 ] ; then
+    echo "starting avnav" 
+    service avnav start 
+  fi
+  exit 0
+fi
 if [ ! -h $basedir/etc/rc2.d/S99check_parts ] ; then
   echo "creating link for check_parts"
   ln -s /etc/init.d/check_parts $basedir/etc/rc2.d/S99check_parts

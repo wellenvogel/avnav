@@ -107,7 +107,7 @@ else
   wlog "going to create a partition from $partstart to $partend"
   $PARTED -m -a optimal $DEVICE unit B mkpart primary $partstart $partend < /dev/null|| err "creating partition failed"
   wlog "creating filesystem on $PARTITION"
-  mke2fs $quiteflag $PARTITION < /dev/null|| err "creating FS on $PARTITION failed"
+  mke2fs -t ext4  $quiteflag $PARTITION < /dev/null|| err "creating FS on $PARTITION failed"
 fi
 #3. check if necessary directories are there
 if [ ! -d $MOUNTPOINT ] ; then
@@ -125,6 +125,12 @@ if [ ! -d $ROOTDIR ]; then
 fi
 chown pi:pi $ROOTDIR
 chmod 755 $ROOTDIR
+if [ ! -d $BASE/data ] ; then
+  wlog "creating $BASE/data"
+  mkdir -p $BASE/data
+  chown pi:pi $BASE/data
+  chmod 755 $BASE/data
+fi
 for d in log tracks charts
 do
   if [ ! -d $ROOTDIR/$d ] ; then
@@ -133,15 +139,15 @@ do
     chown pi:pi $ROOTDIR/$d
     chmod 755 $ROOTDIR/$d
   fi
-  if [ ! -h $BASE/$d ] ; then
-    if [ -d $BASE/$d ] ; then
+  if [ ! -h $BASE/data/$d ] ; then
+    if [ -d $BASE/data/$d ] ; then
       wlog copying files from $BASE/$d to $ROOTDIR/$d
-      cp -r -p $BASE/$d/* $ROOTDIR/$d || err "copy data from $BASE/$d to $ROOTDIR/$d failed"
-      rm -rf $BASE/$d
+      cp -r -p $BASE/data/$d/* $ROOTDIR/$d || err "copy data from $BASE/data/$d to $ROOTDIR/$d failed"
+      rm -rf $BASE/data/$d
     else
-  	  rm -f $BASE/$d
+  	  [ -e $BASE/data/$d ] && rm -f $BASE/data/$d
   	fi
-  	ln -s $ROOTDIR/$d $BASE/$d
+  	ln -s $ROOTDIR/$d $BASE/data/$d
   fi
 done
 

@@ -10,10 +10,10 @@
      settimeperiod: time in seconds befor we retry setting the systemtime
 -->
 <AVNConfig debug="0" 
-	logfile="/home/pi/avnav/log/avnav.log" 
+	logfile="/home/pi/avnav/data/log/avnav.log" 
 	debugToLog="true"
 	maxtimeback="5"
-	settimecmd="/home/pi/avnav/raspberry/settime"
+	settimecmd="/home/pi/avnav/program/raspberry/settime"
     systimediff="5"
     settimeperiod="3600"/>
 <!-- the workers section -->
@@ -123,11 +123,11 @@
      this of course must fit to the java script part...
 -->
 <AVNHttpServer navurl="/viewer/avnav_navi.php">
-	<Directory urlpath="maps" path="/home/pi/avnav/charts"></Directory>
-	<Directory urlpath="viewer" path="/home/pi/avnav/viewer"></Directory>
-	<Directory urlpath="libraries" path="/home/pi/avnav/libraries"></Directory>
-	<Directory urlpath="log" path="/home/pi/avnav/log"></Directory>
-	<Directory urlpath="tracks" path="/home/pi/avnav/tracks"></Directory>
+	<Directory urlpath="maps" path="/home/pi/avnav/data/charts"></Directory>
+	<Directory urlpath="viewer" path="/home/pi/avnav/program/viewer"></Directory>
+	<Directory urlpath="libraries" path="/home/pi/avnav/program/libraries"></Directory>
+	<Directory urlpath="log" path="/home/pi/avnav/data/log"></Directory>
+	<Directory urlpath="tracks" path="/home/pi/avnav/data/tracks"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
@@ -139,7 +139,7 @@
      interval is the minimum interval between writing trackpoints
      distance is the minimum distance in m before a new trackpoint is written (interval wins)
       -->
-<AVNTrackWriter interval="10" distance="30" trackdir="/home/pi/avnav/tracks"/>
+<AVNTrackWriter interval="10" distance="30" trackdir="/home/pi/avnav/data/tracks"/>
 <!-- an TCP writer that will provide data from the feeder input to other systems
 	 port - the listener port
 	 filter can be either $XXX,... - the NMEA setence, in this case the first 2 characters are ignored or

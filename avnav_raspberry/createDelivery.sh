@@ -23,7 +23,7 @@
 ###############################################################################
 
 # create our tarball
-baseurl="svn://10.222.10.12/src1/avnav"
+host=10.222.10.12
 TMPDIR=/tmp/ctb$$
 SVNBASE=svn/avnav
 keepTemp=0
@@ -46,7 +46,7 @@ cleanup(){
 while getopts b:k opt ; do
   case $opt in
     b)
-      baseurl="$OPTARG"
+      host="$OPTARG"
       ;;
     k)
       keepTemp=1
@@ -59,13 +59,16 @@ done
 
 shift `expr $OPTIND - 1`
 
-[ "$1" = "" ] && err "usage: $0 [-b baseurl] tarfile"
+[ "$1" = "" ] && err "usage: $0 [-b host] tarfile"
+
+baseurl=svn://$host/src1/avnav
+libbase=http://$host/libraries
 
 trap cleanup 0 1 2 3 4 5 6 7 8 15
 mkdir -p $TMPDIR || err "unable to create $TMPDIR"
 chown 1000:1000 $TMPDIR || err "unable to chown $TMPDIR"
 
-for d in avnav avnav/server avnav/viewer avnav/raspberry svn
+for d in avnav avnav/program avnav/program/server avnav/program/viewer avnav/program/raspberry avnav/program/libraries svn
 do
   mkdir -p $TMPDIR/$d || err "unable to create $TMPDIR/$d"
   chown 1000:1000 $TMPDIR/$d
@@ -73,23 +76,46 @@ done
 
 wlog "starting download from $baseurl"
 ( cd $TMPDIR/svn && svn co $baseurl avnav) || err "svn co failed"
-( cd $TMPDIR/avnav/viewer && cp -r -p $TMPDIR/$SVNBASE/avnav_viewer/* . ) || err "cp viewer failed"
-chown -R 1000:1000 $TMPDIR/avnav/viewer || err "chown viewer failed"
+find $TMPDIR/svn -type d -name '.svn' -exec rm -rf {} \;
+TDIR=$TMPDIR/avnav/program/viewer
+wlog "writing files for $TDIR"
+( cd $TDIR && cp -r -p $TMPDIR/$SVNBASE/avnav_viewer/* . ) || err "cp viewer failed"
+chown -R 1000:1000 $TDIR || err "chown viewer failed"
+
+TDIR=$TMPDIR/avnav/program/viewer
+wlog "writing files for $TDIR"
 for f in avnav_server.py
 do
-  ( cd $TMPDIR/avnav/server && cp -p $TMPDIR/$SVNBASE/avnav_server/$f . ) || err "cp $f failed"
-  chown 1000:1000 $TMPDIR/avnav/server/$f || err "chown $f failed"
-  chmod a+rx $TMPDIR/avnav/server/$f || err "chmod $f failed"
+  ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/avnav_server/$f . ) || err "cp $f failed"
+  chown 1000:1000 $TDIR/$f || err "chown $f failed"
+  chmod a+rx $TDIR/$f || err "chmod $f failed"
 done
+TDIR=$TMPDIR/avnav/program/raspberry
+wlog "writing files for $TDIR"
 for f in settime settime.c avnav_server.xml avnav check_parts setup.sh
 do
-  ( cd $TMPDIR/avnav/raspberry && cp -p $TMPDIR/$SVNBASE/avnav_raspberry/$f . ) || err "cp $f failed"
-  chown 1000:1000 $TMPDIR/avnav/raspberry/$f || err "chown $f failed"
-  chmod a+rx $TMPDIR/avnav/raspberry/$f || err "chmod $f failed"
+  ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/avnav_raspberry/$f . ) || err "cp $f failed"
+  chown 1000:1000 $TDIR/$f || err "chown $f failed"
+  chmod a+rx $TDIR/$f || err "chmod $f failed"
 done
-chown 0:0 $TMPDIR/avnav/raspberry/settime || err "chown settime failed"
-chmod 755 $TMPDIR/avnav/raspberry/settime || err "chmod settime failed"
-chmod u+s $TMPDIR/avnav/raspberry/settime || err "chmod settime failed"
+chown 0:0 $TDIR/settime || err "chown settime failed"
+chmod 755 $TDIR/settime || err "chmod settime failed"
+chmod u+s $TDIR/settime || err "chmod settime failed"
+
+TDIR=$TMPDIR/avnav/program/libraries
+wlog "writing files for $TDIR"
+for lib in OpenLayers-2.12/OpenLayers.js jquery/jquery-1.9.1.min.js jquery/jquery-ui.js jquery/jquery.nicescroll.min.js jquery/jquery.ui.touch-punch.min.js
+do
+  tdir=`dirname $TDIR/$lib`
+  if [ ! -d $tdir ] ; then
+    mkdir -p $tdir || err "unable to create $tdir"
+  fi
+  ( cd $TDIR && wget -O $lib $libbase/$lib  ) || err "download $libbase/$lib failed"
+done
+chown -R 1000:1000 $TDIR
+chmod -R a+r $TDIR
+
+mv $TMPDIR/avnav/program/raspberry/setup.sh $TMPDIR/avnav
 
 wlog "creating tar file $1"
 (cd $TMPDIR  && rm -rf svn && tar -cf - .) | cat > $1 || err "unable to create tar file $1"

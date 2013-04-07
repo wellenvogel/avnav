@@ -19,10 +19,10 @@
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="AV nav server"
-NAME=avnav_server.py
+NAME=avnav
 BASEDIR=/home/pi/avnav
-DAEMON=$BASEDIR/server/avnav_server.py
-CONFIG=$BASEDIR/raspberry/avnav_server.xml
+DAEMON=$BASEDIR/program/server/avnav_server.py
+CONFIG=$BASEDIR/program/raspberry/avnav_server.xml
 
 #set -x
 
