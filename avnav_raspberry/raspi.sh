@@ -87,6 +87,27 @@ getParts(){
   fi
 }
 
+#correct the fstab in part 2
+#to only contain partition 1 and 2 to avoid errors on fsck
+correctFstab(){
+  wlog "removing partitions from fstab"
+  partstart=`getPartStart $1 2`
+  [ "$partstart" != "" ] || err "unable to determine start of partition 2"
+  loopback=`losetup -f --show -o $partstart $1` || err "losetup failed"
+  [ "$loopback" != "" ] || err "no loopback device created"
+  TMPDIR=/tmp/mnt$$
+  mkdir -p $TMPDIR || err "unable to creat temp mountpoint $TMPDIR"
+  mount $loopback $TMPDIR || err "unable to mount partition to $TMPDIR"
+  grep -v '^ */dev/mmcblk0p[^12]' $TMPDIR/etc/fstab > $TMPDIR/etc/fstab.tmp || err "unable to edit /etc/fstab"
+  rm -f $TMPDIR/etc/fstab
+  mv $TMPDIR/etc/fstab.tmp $TMPDIR/etc/fstab || err "unable to create /etc/fstab"
+  wlog "successfully cleanup up /etc/fstab"
+  umount $TMPDIR
+  rmdir $TMPDIR
+  losetup -d $loopback
+  loopback=""
+}
+
 #truncate an image file to the end of partition 2
 #p1 - the image
 #p2 - if set, otherwise to the last used partition
@@ -192,8 +213,10 @@ case $mode in
     wlog "reconstruct partition table on $2"
     $PARTED -s $2 mklabel msdos || err "unable to create new partition table in $2"
     $PARTED -s $2 unit B mkpart primary $partstart1 $partend1 || err "unable to create partition1"
+    $PARTED -s $2 unit B set 1 lba on || err "unable to set lba flag on partition 1"
     $PARTED -s $2 unit B mkpart primary $partstart $partend || err "unable to create partition2"
     wlog "partition table on $2 reconstructed for 2 partitions"
+    correctFstab $2
     if [ "$doShrink" = "1" ] ; then
       shrinkSecond $2 
     fi
@@ -250,6 +273,7 @@ case $mode in
     [ "$1" != "" ] || usage 1 
     [ "$2" = "" ] || err "cannot provide 2 parameters for shrink"
     removeParts $1
+    correctFstab $1
     shrinkSecond $1
     truncateTo $1 2
     wlog "successfully shrinked $1"

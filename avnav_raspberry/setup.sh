@@ -75,14 +75,10 @@ fi
 
 for serv in check_parts avnav
 do
-  if [ ! -h $basedir/etc/init.d/$serv ] ; then
-    rm -f $basedir/etc/init.d/$serv
-    echo "creating $basedir/etc/init.d/$serv"
-    ln -s $pdir/program/$serv $basedir/etc/init.d/$serv
-    chmod 755 $scriptdir/$serv
-  else
-    echo "/etc/init.d/$serv is already linked"
-  fi
+  rm -f $basedir/etc/init.d/$serv
+  echo "creating $basedir/etc/init.d/$serv"
+  ln -s $pdir/program/raspberry/$serv $basedir/etc/init.d/$serv
+  chmod 755 $basedir/$pdir/program/raspberry/$serv
 	
 done
 
@@ -96,6 +92,7 @@ if [ "$1" = "part" ] ; then
 fi
 if [ "$1" = "nopart" -a $dist = 0 ] ; then
   restoreSuid
+  rm -f $basedir/etc/init.d/check_parts
   echo "enabling service avnav"
   update-rc.d avnav enable
   [ $keepStopped = 0 ] && service avnav start
@@ -144,7 +141,7 @@ if [ $dist = 0 ] ; then
 fi
 if [ ! -h $basedir/etc/rc2.d/S99check_parts ] ; then
   echo "creating link for check_parts"
-  ln -s /etc/init.d/check_parts $basedir/etc/rc2.d/S99check_parts
+  ln -s /etc/init.d/check_parts $basedir/etc/rc2.d/S04check_parts
 fi
 
 

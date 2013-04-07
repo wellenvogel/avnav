@@ -139,7 +139,7 @@
      interval is the minimum interval between writing trackpoints
      distance is the minimum distance in m before a new trackpoint is written (interval wins)
       -->
-<AVNTrackWriter interval="10" distance="30" trackdir="/home/pi/avnav/data/tracks"/>
+<AVNTrackWriter interval="10" distance="50" trackdir="/home/pi/avnav/data/tracks"/>
 <!-- an TCP writer that will provide data from the feeder input to other systems
 	 port - the listener port
 	 filter can be either $XXX,... - the NMEA setence, in this case the first 2 characters are ignored or

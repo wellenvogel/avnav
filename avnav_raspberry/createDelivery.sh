@@ -82,7 +82,7 @@ wlog "writing files for $TDIR"
 ( cd $TDIR && cp -r -p $TMPDIR/$SVNBASE/avnav_viewer/* . ) || err "cp viewer failed"
 chown -R 1000:1000 $TDIR || err "chown viewer failed"
 
-TDIR=$TMPDIR/avnav/program/viewer
+TDIR=$TMPDIR/avnav/program/server
 wlog "writing files for $TDIR"
 for f in avnav_server.py
 do
