@@ -72,6 +72,7 @@ esac
 #code was inspired by http://sirlagz.net/category/raspberry-pi/
 DEVICE=/dev/mmcblk0
 PARTED=/sbin/parted
+BASE=/home/pi/avnav
 PARTITION=${DEVICE}p3
 MOUNTPOINT=/data
 ROOTDIR=$MOUNTPOINT/avnav
@@ -132,9 +133,15 @@ do
     chown pi:pi $ROOTDIR/$d
     chmod 755 $ROOTDIR/$d
   fi
-  if [ ! -h /home/pi/avnav/$d ] ; then
-  	rm -rf /home/pi/avnav/$d
-  	ln -s $ROOTDIR/$d /home/pi/avnav/$d
+  if [ ! -h $BASE/$d ] ; then
+    if [ -d $BASE/$d ] ; then
+      wlog copying files from $BASE/$d to $ROOTDIR/$d
+      cp -r -p $BASE/$d/* $ROOTDIR/$d || err "copy data from $BASE/$d to $ROOTDIR/$d failed"
+      rm -rf $BASE/$d
+    else
+  	  rm -f $BASE/$d
+  	fi
+  	ln -s $ROOTDIR/$d $BASE/$d
   fi
 done
 
