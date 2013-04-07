@@ -94,7 +94,7 @@ if [ "$1" = "nopart" -a $dist = 0 ] ; then
   restoreSuid
   rm -f $basedir/etc/init.d/check_parts
   echo "enabling service avnav"
-  update-rc.d avnav enable
+  update-rc.d avnav defaults
   [ $keepStopped = 0 ] && service avnav start
   exit 0
 fi

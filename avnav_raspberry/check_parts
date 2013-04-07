@@ -162,11 +162,11 @@ fi
 
 wlog "avnav partition setup finished"
 wlog "enabling avnav service"
-update-rc.d avnav enable
+update-rc.d avnav defaults
 service avnav start
 
 wlog "disable myself"
-update-rc.d check_parts disable
+update-rc.d check_parts remove
 
 
 
