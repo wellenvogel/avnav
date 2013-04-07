@@ -74,8 +74,10 @@ if [ "$1" = "nopart" ] ; then
   exit 0
 fi
 #dist only
-echo "creating link for check_parts"
-ln -s /etc/init.d/check_parts $basedir/etc/rc2.d/S99check_parts
+if [ ! -h $basedir/etc/rc2.d/S99check_parts ] ; then
+  echo "creating link for check_parts"
+  ln -s /etc/init.d/check_parts $basedir/etc/rc2.d/S99check_parts
+fi
 
 
 
