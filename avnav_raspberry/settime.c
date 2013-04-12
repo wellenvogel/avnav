@@ -8,9 +8,11 @@ int main(int argc, char **argv){
 	}
 	setuid(0);
 	char buffer[200];
-	snprintf(buffer,200,"date %s",argv[1]);
+	snprintf(buffer,200,"date -u %s",argv[1]);
 	int rt=system(buffer);
 	snprintf(buffer,200,"service ntp restart");
+	system(buffer);
+	snprintf(buffer,200,"service fake-hwclock restart");
 	system(buffer);
 	exit(rt);
 }

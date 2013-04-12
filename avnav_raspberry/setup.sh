@@ -139,10 +139,7 @@ if [ $dist = 0 ] ; then
   fi
   exit 0
 fi
-if [ ! -h $basedir/etc/rc2.d/S99check_parts ] ; then
-  echo "creating link for check_parts"
-  ln -s /etc/init.d/check_parts $basedir/etc/rc2.d/S04check_parts
-fi
+echo "check if update-rc.d has been run..."
 
 
 
