@@ -8,7 +8,7 @@
 ###############################################################################
 # Copyright (c) 2012, Andreas Vogel andreas@wellenvogel.net
 # parts of the software are taken from tiler_tools
-# http://code.google.com/p/tilers-tools/
+# http:// code.google.com/p/tilers-tools/
 # the license below applies also to this complete software
 #
 ###############################################################################
@@ -38,12 +38,8 @@
      <meta name="viewport" content="user-scalable=no">
      <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <!--<script src='http://openlayers.org/api/2.12/OpenLayers.js'></script>-->
-	<script src='/libraries/OpenLayers-2.12/OpenLayers.js'></script>
-    <!--<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-    <script src="http://code.jquery.com/ui/1.10.1/jquery-ui.js"></script>
-    <link rel="stylesheet" tyte="text/css" href="http://code.jquery.com/ui/1.10.1/themes/base/jquery-ui.css"></link>
-    -->
+
+	<script src='/libraries/OpenLayers-2.12/OpenLayers.js'></script>    
     <script src="/libraries/jquery/jquery-1.9.1.min.js"></script>
     <script src="/libraries/jquery/jquery-ui.js"></script>
     <script src="/libraries/jquery/jquery.nicescroll.min.js"></script>
@@ -52,11 +48,12 @@
     
 	<link rel="stylesheet" type="text/css" href="avnav_styles.css"></link>
 	
-	<script  src="mapviewer_base.js"></script>
+	<script  src="avnav_viewer.js"></script>
+	<title>AVNav</title>
 
 	</head>
 
-	<body onload="initialize_openlayers()">
+	<body>
 		<div id='leftPanel' class='avn_panel avn_leftPanel'>
 		<div id='leftTop' class='avn_panel avn_leftTop'>
 		<div id='leftTopInner' class='avn_inner'>
@@ -71,9 +68,30 @@
 		<div id='boatLocalTime' class='avn_display avn_position avn_top_content'>00:00:00</div>
 		</div>
 		</div>
-	    <div id='map' class='avn_panel avn_map'></div>
-	    <div id='leftBottom' class='avn_panel avn_leftBottom'>
-	    <div id='leftBottomInner' class='avn_inner'>
+		<div id='mainPanel' class="avn_panel avn_main avn_mainpage">
+		<div id='main_content_inner' class="avn_panel">
+		  <div id="vertical_aligner">
+			<div id='allSelections' class='avn_items'>
+					<a class="avnav_select_item avnav_hidden" href="javascript:handleNavPage('/charts')">
+						<img src="images/dummy60.png"/>
+						Test PC</a>
+					<a class="avnav_select_item avnav_hidden" href="javascript:handleNavPage('/maps/nv-satz4-2012')">
+						<img src="images/dummy60.png"/>
+						Test Raspi</a>
+			</div>
+		  </div>
+		</div> <!--mainContentInner-->
+		</div>
+	    <div id='map' class='avn_panel avn_map avn_hidden avn_main avn_navpage'></div>
+	    <div id='leftBottom' class='avn_panel avn_leftBottom '>
+	    <div id='leftBottomInnerMainpage' class='avn_inner avn_mainpage'>
+		<p class="avn_label">
+			AVNav server Version 0.0.1 <a
+				href="http://www.wellenvogel.de/segeln/technik/avnav">www.wellenvogel.de/segeln/technik/avnav</a>
+		</p>
+		</div>
+		<div id='leftBottomNavPage' class='avn_hidden avn_navpage'> 
+	    <div id='leftBottomInner' class='avn_inner '>
 	    <div id='markerPositionLabel' class='avn_label avn_text avn_bottom_content'>Marker</div>
 	    <div id='markerPosition' class='avn_display avn_position avn_bottom_content'>0E,0N</div>
 	    <div id='bearingLabel' class='avn_label avn_text avn_bottom_content'>HdG</div>
@@ -82,6 +100,7 @@
 	    <div id='distance' class='avn_display avn_position avn_bottom_content'>000,0</div>
 	    <div id='etaLabel' class='avn_label avn_text avn_bottom_content'>ETA</div>
 	    <div id='eta' class='avn_display avn_position avn_bottom_content'>00:00:00</div>
+	    </div>
 	    </div>
 	    </div>
 	    </div>
