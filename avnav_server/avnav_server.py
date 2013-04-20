@@ -95,6 +95,13 @@ except:
 NM=1852             #meters for a nautical mile
 
 
+class Enum(set):
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+
 
 class AVNLog():
   logger=logging.getLogger('avn')
@@ -611,7 +618,8 @@ class SerialReader():
     if self.navdata is None and self.writeData is None:
       raise Exception("either navdata or writeData has to be set")
     self.startpattern=AVNUtil.getNMEACheck()
-    self.doStop=False  
+    self.doStop=False 
+    self.setInfo("created",AVNWorker.Status.INACTIVE) 
   def getName(self):
     return "SerialReader-"+self.param['name']
    
@@ -648,8 +656,9 @@ class SerialReader():
                    "true" if autobaud else "false")
     lastTime=time.time()
     try:
+      self.setInfo("opening %s at %d baud"%(portname,baud),AVNWorker.Status.STARTED)
       f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
-      self.setInfo("port open")
+      self.setInfo("port open",AVNWorker.Status.STARTED)
       if autobaud:
         starttime=time.time()
         while time.time() <= (starttime + autobaudtime):
@@ -675,13 +684,14 @@ class SerialReader():
               continue
             AVNLog.debug("assumed startpattern %s at baud %d in %s",match.group(0),baud,data)
             AVNLog.info("autobaud successfully finished at baud %d",baud)
+            self.setInfo("NMEA data at %d baud"%(baud),AVNWorker.Status.STARTED)
             return f
         f.close()
         return None
       #hmm - seems that we have not been able to autobaud - return anyway
       return f
     except Exception:
-      self.setInfo("unable to open port")
+      self.setInfo("unable to open port",AVNWorker.Status.ERROR)
       try:
         tf=traceback.format_exc(3).decode(errors='ignore')
       except:
@@ -741,6 +751,7 @@ class SerialReader():
     init=True
     isOpen=False
     AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in self.param.keys()))
+    self.setInfo("created",AVNWorker.Status.STARTED)
     while True and not self.doStop:
       name=self.getName()
       timeout=float(self.param['timeout'])
@@ -774,12 +785,19 @@ class SerialReader():
         init=False
       if self.doStop:
         AVNLog.info("handler stopped, leaving")
+        self.setInfo("stopped",AVNWorker.Status.INACTIVE)
+        try:
+          f.close()
+        except:
+          pass
+        return
       if f is None:  
         time.sleep(porttimeout/2)
         continue
       AVNLog.debug("%s opened, start receiving data",f.name)
       lastTime=time.time()
       numerrors=0
+      hasNMEA=False
       while True and not self.doStop:
         bytes=0
         try:
@@ -793,25 +811,29 @@ class SerialReader():
             pass
           break
         if not bytes is None and len(bytes)> 0:
-          self.setInfo("receiving")
+          if not hasNMEA:
+            self.setInfo("receiving",AVNWorker.Status.STARTED)
           if not isOpen:
             AVNLog.info("successfully opened %s",f.name)
             isOpen=True
           self.status=True
           data=bytes.decode('ascii',errors='ignore')
-          if maxerrors > 0:
+          if maxerrors > 0 or not hasNMEA:
             if not self.startpattern.match(data):
-              numerrors+=1
-              if numerrors > maxerrors:
-                #hmm - seems that we do not see any NMEA data
-                AVNLog.debug("did not see any NMEA data for %d lines - close and reopen",maxerrors)
-                try:
-                  f.close()
-                except:
-                  pass
-                break;
-              continue
+              if maxerrors>0:
+                numerrors+=1
+                if numerrors > maxerrors:
+                  #hmm - seems that we do not see any NMEA data
+                  AVNLog.debug("did not see any NMEA data for %d lines - close and reopen",maxerrors)
+                  try:
+                    f.close()
+                  except:
+                    pass
+                  break;
+                continue
             else:
+              self.setInfo("receiving",AVNWorker.Status.NMEA)
+              hasNMEA=True
               numerrors=0
           if len(data) < 5:
             AVNLog.debug("ignore short data %s",data)
@@ -831,10 +853,11 @@ class SerialReader():
             AVNLog.debug("reopen port %s - timeout elapsed",portname)
           break
     AVNLog.info("stopping handler")
+    self.setInfo("receiving",AVNWorker.Status.INACTIVE)
         
-  def setInfo(self,txt):
+  def setInfo(self,txt,status):
     if not self.infoHandler is None:
-      self.infoHandler.setInfo(txt)
+      self.infoHandler.setInfo(self.getName(),txt,status)
         
   #------------------ some nmea data specific methods -------------------
   #add a valid dataset to nav data
@@ -972,20 +995,35 @@ class SerialReader():
 #a base class for all workers
 #this provides some config functions and a common interfcace for handling them
 class AVNWorker(threading.Thread):
+  Status=Enum(['INACTIVE','STARTED','RUNNING','NMEA','ERROR'])
   def __init__(self,cfgparam):
     self.param=cfgparam
     self.status=False
     threading.Thread.__init__(self)
     self.setDaemon(True)
     self.setName(self.getName())
-    self.info="started"
+    self.info={'main':"started"}
+    self.status={'main':self.Status.STARTED}
   def getInfo(self):
     try:
-      return self.info
+      rt=self.info.copy();
+      st=self.status.copy()
+      rta=[]
+      for k in rt.keys():
+        try:
+          elem={}
+          elem['name']=k
+          elem['info']=rt[k]
+          elem['status']=st[k]
+          rta.append(elem)
+        except:
+          pass
+      return {'name':self.getName(),'items':rta}
     except:
-      return "no info available"
-  def setInfo(self,info):
-    self.info=info
+      return {'name':self.getName(),'items':[],'error':"no info available"}
+  def setInfo(self,name,info,status):
+    self.info[name]=info
+    self.status[name]=status
   def getParam(self):
     try:
       return self.param
@@ -1218,7 +1256,7 @@ class AVNTrackWriter(AVNWorker):
             if os.path.exists(curfname):
               try:
                 f=open(curfname,"r")
-                self.info="reading"
+                self.setInfo('main', "reading old track data", AVNWorker.Status.STARTED)
                 for line in f:
                   line=re.sub('#.*','',line)
                   #TODO: parse time
@@ -1253,8 +1291,8 @@ class AVNTrackWriter(AVNWorker):
           f.write("#anvnav Trackfile started/continued at %s\n"%(currentTime.isoformat()))
           f.flush()
           newFile=False
+          self.setInfo('main', "writing to %s"%(curfname), AVNWorker.Status.NMEA)
         self.status=True
-        self.info="writing"
         gpsdata=self.navdata.getMergedEntries('TPV',[])
         lat=gpsdata.data.get('lat')
         lon=gpsdata.data.get('lon')
@@ -1348,6 +1386,7 @@ class AVNGpsd(AVNWorker):
       self.setName("[%s]%s-dev:%s-port:%d"%(AVNLog.getThreadId(),self.getName(),device,port))
       if init:
         AVNLog.info("started for %s with command %s, timeout %f",device,gpsdcommand,timeout)
+        self.setInfo('main', "waiting for device %s"%(str(device)), AVNWorker.Status.STARTED)
         init=False
       if not ( os.path.exists(device) or noCheck):
         self.setInfo("device not visible")
@@ -1372,17 +1411,20 @@ class AVNGpsd(AVNWorker):
             time.sleep(timeout/2)
             continue
         AVNLog.info("device %s became visible, starting gpsd",device)
+        self.setInfo('main', "starting gpsd with command"%(gpsdcommand), AVNWorker.Status.STARTED)
         try:
           self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True,close_fds=True)
-          reader=GpsdReader(self.navdata, port, "GPSDReader[Reader] %s at %d"%(device,port))
+          reader=GpsdReader(self.navdata, port, "GPSDReader[Reader] %s at %d"%(device,port),self)
           reader.start()
           self.setInfo("gpsd started")
+          self.setInfo('main', "gpsd running with command"%(gpsdcommand), AVNWorker.Status.STARTED)
         except:
           AVNLog.debug("unable to start gpsd with command %s: %s",gpsdcommand,traceback.format_exc())
           try:
             self.gpsdproc.wait()
           except:
             pass
+          self.setInfo('main', "unable to start gpsd with command"%(gpsdcommand), AVNWorker.Status.STARTED)
           time.sleep(timeout/2)
           continue
         AVNLog.debug("started gpsd with pid %d",self.gpsdproc.pid)
@@ -1399,7 +1441,7 @@ class AVNGpsd(AVNWorker):
           #TODO: read out gpsd stdout/stderr
           time.sleep(2)
         #if we arrive here, something went wrong...
-        self.setInfo("gpsd stopped")
+        self.setInfo('main',"gpsd stopped",AVNWorker.Status.ERROR)
         if not self.gpsdproc is None:
           try:
             self.gpsdproc.terminate()
@@ -1435,7 +1477,7 @@ class AVNGpsd(AVNWorker):
       
 #a reader thread for the gpsd reader
 class GpsdReader(threading.Thread):
-  def __init__(self, navdata,port,name):
+  def __init__(self, navdata,port,name,infoHandler):
     self.navdata=navdata
     threading.Thread.__init__(self)
     self.setDaemon(True)
@@ -1444,10 +1486,13 @@ class GpsdReader(threading.Thread):
     self.lasttime=time.time()
     self.status=True
     self.port=port
+    self.infoHandler=infoHandler
   def run(self):
+    infoName=self.name
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.name))
     self.lasttime=time.time()
     AVNLog.debug("gpsd reader thread started at port %d",self.port)
+    self.infoHandler.setInfo(infoName,"started at port %d"%(port),AVNWorker.Status.STARTED)
     try:
       #try for 10s to open the gpsd port
       timeout=10
@@ -1464,6 +1509,8 @@ class GpsdReader(threading.Thread):
       if not connected:
         raise Exception("unable to connect to gpsd within 10s")    
       session.stream(gps.WATCH_ENABLE)
+      hasNMEA=False
+      self.infoHandler.setInfo(infoName,"start receiving",AVNWorker.Status.STARTED)
       for report in session:
         AVNLog.debug("received gps data : %s",pprint.pformat(report))
         self.lasttime=time.time()
@@ -1475,11 +1522,15 @@ class GpsdReader(threading.Thread):
         entry=AVNDataEntry.fromData(ddata)
         if not entry is None:
           self.navdata.addEntry(entry)
+          if not hasNMEA:
+            self.infoHandler.setInfo(infoName,"receiving NMEA",AVNWorker.Status.NMEA)
+            hasNMEA=True
     except:
       AVNLog.debug("gpsd reader exception %s",traceback.format_exc())
       pass
     AVNLog.debug("gpsd reader exited")
     self.status=False
+    self.infoHandler.setInfo(infoName,"exited",AVNWorker.Status.INACTIVE)
 
 #a Worker for feeding data trough gpsd (or directly to the navdata)
 #it uses (if enabled) gpsd as a decoder by opening a local listener
@@ -1590,15 +1641,19 @@ class AVNGpsdFeeder(AVNGpsd):
   #a thread to feed the gpsd socket
   def feed(self):
     threading.current_thread().setName("[%s]%s[gpsd feeder]"%(AVNLog.getThreadId(),self.getName()))
+    infoName="gpsdFeeder"
     while True:
       try:
         listener=socket.socket()
         listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        listener.bind(('localhost',self.getIntParam('listenerPort')))
+        lport=self.getIntParam('listenerPort')
+        listener.bind(('localhost',lport))
+        self.setInfo(infoName, "listening at port %d"%(lport), AVNWorker.Status.STARTED)
         listener.listen(1)
         AVNLog.info("feeder listening at port address %s",str(listener.getsockname()))
         while True:
           outsock,addr=listener.accept()
+          self.setInfo(infoName, "gpsd connected from %s"%(str(addr)), AVNWorker.Status.RUNNING)
           AVNLog.info("feeder - gpsd connected from %s",str(addr))
           try:
             while True:
@@ -1616,8 +1671,10 @@ class AVNGpsdFeeder(AVNGpsd):
   #a standalone feeder that uses our bultin methods
   
   def standaloneFeed(self):
+    infoName="standaloneFeeder"
     threading.current_thread().setName("[%s]%s[standalone feed]"%(AVNLog.getThreadId(),self.getName()))
     AVNLog.info("standalone feeder started")
+    self.setInfo(infoName, "running", AVNWorker.Status.RUNNING)
     while True:
       try:
         while True:
@@ -1630,7 +1687,7 @@ class AVNGpsdFeeder(AVNGpsd):
         AVNLog.warn("feeder exception - retrying %s",traceback.format_exc())
     
     
-  #this is the main thread - this executes the bluetooth polling
+  #this is the main thread 
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
     feeder=None
@@ -1648,13 +1705,15 @@ class AVNGpsdFeeder(AVNGpsd):
         gpsdcommand="%s -S %d %s" %(self.getStringParam('gpsdcommand'),port,device)
         gpsdcommandli=gpsdcommand.split()
         try:
+          self.setInfo('main', "starting gpsd with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
           AVNLog.debug("starting gpsd with command %s, starting reader",gpsdcommand)
           self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True,close_fds=True)
           
-          reader=GpsdReader(self.navdata, port, "AVNGpsdFeeder[Reader] %s at %d"%(device,port))
+          reader=GpsdReader(self.navdata, port, "AVNGpsdFeeder[Reader] %s at %d"%(device,port),self)
           reader.start()
-          self.setInfo("gpsd started")
+          self.setInfo('main', "gpsd running with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
         except:
+          self.setInfo('main', "unable to start gpsd with command %s"%(gpsdcommand), AVNWorker.Status.ERROR)
           AVNLog.debug("unable to start gpsd with command %s: %s",gpsdcommand,traceback.format_exc())
           try:
             self.gpsdproc.wait()
@@ -1663,6 +1722,7 @@ class AVNGpsdFeeder(AVNGpsd):
           time.sleep(timeout/2)
           continue
         AVNLog.info("started gpsd with pid %d",self.gpsdproc.pid)
+        self.setInfo('main', "gpsd running with command %s"%(gpsdcommand), AVNWorker.Status.RUNNING)
       while True:
         time.sleep(5)
         if not self.gpsdproc is None:
@@ -1737,14 +1797,18 @@ class AVNBlueToothReader(AVNWorker):
   #a thread to open a bluetooth socket and read from it until
   #disconnected
   def readBT(self,host,port):
+    infoName="BTReader-%s"%(host)
     threading.current_thread().setName("[%s]%s[Reader %s]"%(AVNLog.getThreadId(),self.getName(),host))
     pattern=AVNUtil.getNMEACheck()
     AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
+    self.setInfo(infoName, "connecting", AVNWorker.Status.STARTED)
     try:
       sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
       sock.connect((host, port))
       buffer=""
       AVNLog.info("bluetooth connection to %s established",host)
+      self.setInfo(infoName, "socket connected", AVNWorker.Status.RUNNING)
+      hasNMEA=False
       while True:
         data = sock.recv(1024)
         if len(data) == 0:
@@ -1755,12 +1819,21 @@ class AVNBlueToothReader(AVNWorker):
         if lines[-1][-1]=='\n':
           #last one ends with nl
           for l in lines:
-            self.writeData(l)
+            if pattern.match(l):
+              self.writeData(l)
+              if not hasNMEA:
+                self.setInfo(infoName, "receiving", AVNWorker.Status.NMEA)
+                hasNMEA=True
+            else:
+              AVNLog.debug("ignoring unknown data %s",l)
           buffer=''
         else:
           for i in range(len(lines)-1):
             if pattern.match(lines[i]):
               self.writeData(lines[i])
+              if not hasNMEA:
+                self.setInfo(infoName, "receiving", AVNWorker.Status.NMEA)
+                hasNMEA=True
             else:
               AVNLog.debug("ignoring unknown data %s",lines[i])
           if len(lines) > 0:
@@ -1773,6 +1846,7 @@ class AVNBlueToothReader(AVNWorker):
       AVNLog.debug("exception fro bluetooth device: %s",traceback.format_exc())
       pass
     AVNLog.info("disconnected from bluetooth device ")
+    self.setInfo(infoName, "dicsonnected", AVNWorker.Status.INACTIVE)
     self.removeAddr(host)
               
   
@@ -1781,6 +1855,7 @@ class AVNBlueToothReader(AVNWorker):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
     time.sleep(2) # give a chance to have the socket open...   
     #now start an endless loop with BT discovery...
+    self.setInfo('main', "discovering", AVNWorker.Status.RUNNING)
     while True:
       service_matches=[]
       try:
@@ -1961,7 +2036,7 @@ class AVNUsbSerialReader(AVNWorker):
         else:
           type="known"
           param=self.setParameterForSerial(param, usbid, devicelist[usbid])
-        reader=SerialReader(param, None, self.writeData, None)
+        reader=SerialReader(param, None, self.writeData, self)
         res=self.checkAndAddHandler(usbid, reader,devicelist[usbid])
         if not res:
             AVNLog.debug("max number of readers already reached, skip start of %s at %s",usbid,devicelist[usbid])
@@ -1990,6 +2065,7 @@ class AVNUsbSerialReader(AVNWorker):
   #start monitoring in separate thread
   #method will never return...
   def monitorDevices(self,context):
+    self.setInfo('monitor', "running", AVNWorker.Status.RUNNING)
     threading.current_thread().setName("[%s]%s[monitor]"%(AVNLog.getThreadId(),self.getName()))
     AVNLog.info("start device monitoring")
     monitor = pyudev.Monitor.from_netlink(context)
@@ -2005,6 +2081,7 @@ class AVNUsbSerialReader(AVNWorker):
         
   #this is the main thread - this executes the bluetooth polling
   def run(self):
+    self.setInfo('main', "discovering", AVNWorker.Status.RUNNING)
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
     time.sleep(2) # give a chance to have the feeder socket open...   
     #now start an endless loop with udev discovery...
@@ -2124,7 +2201,9 @@ class AVNSocketWriter(AVNWorker):
     return False
   #the writer for a connected client
   def client(self,socket,addr):
+    infoName="SocketWriter-%s"%(str(addr),)
     self.setName("[%s]%s-Writer %s"%(AVNLog.getThreadId(),self.getName(),str(addr)))
+    self.setInfo(infoName,"sending data",AVNWorker.Status.RUNNING)
     filterstr=self.getStringParam('filter')
     filter=None
     if filterstr != "":
@@ -2164,6 +2243,7 @@ class AVNSocketWriter(AVNWorker):
         listener.bind((self.getStringParam('address'),self.getIntParam('port')))
         listener.listen(1)
         AVNLog.info("listening at port address %s",str(listener.getsockname()))
+        self.setInfo('main', "listening at %s"%(str(listener.getsockname()),), AVNWorker.Status.RUNNING)
         while True:
           outsock,addr=listener.accept()
           AVNLog.info("connect from %s",str(addr))
@@ -2312,6 +2392,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),"HTTPServer"))
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
+    self.setInfo('main',"serving at port %s"%(str(self.server_port)),AVNWorker.Status.RUNNING)
     self.serve_forever()
    
 
@@ -2621,9 +2702,14 @@ def main(argv):
         except Exception:
           AVNLog.warn("unable to start handler : "+traceback.format_exc())
     AVNLog.info("All Handlers started")
+    
+    #---------------------------- main loop --------------------------------
+    #check if we have a position and handle time updates
     hasFix=False
     lastsettime=0
     lastutc=datetime.datetime.utcnow();
+    timeFalse=False
+    
     while True:
       time.sleep(3)
       #query the data to get old entries being removed 
@@ -2654,6 +2740,7 @@ def main(argv):
             if allowedDiff != 0 and settimecmd != "" and settimeperiod != 0:
             #check if the time is too far away and the period is reached
               if abs((curts-curutc).total_seconds()) > allowedDiff:
+                timeFalse=True
                 AVNLog.debug("UTC time diff detected system=%s, gps=%s",curutc.isoformat(),curts.isoformat())
                 if lastsettime == 0 or (curutc-lastsettime).total_seconds() > settimeperiod:
                   AVNLog.warn("detected UTC time diff between system time %s and gps time %s, setting system time",
@@ -2676,6 +2763,12 @@ def main(argv):
                   else:
                     AVNLog.info("setting system time succeeded")
                     lastsettime=curutc
+                    timeFalse=False
+              else:
+                #time is OK now
+                if timeFalse:
+                  AVNLog.info("UTC system time is correct now")
+                  timeFalse=False
             else:
               AVNLog.debug("no time check - disabled by parameter")
           except Exception as e:
