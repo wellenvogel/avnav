@@ -1492,7 +1492,7 @@ class GpsdReader(threading.Thread):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.name))
     self.lasttime=time.time()
     AVNLog.debug("gpsd reader thread started at port %d",self.port)
-    self.infoHandler.setInfo(infoName,"started at port %d"%(port),AVNWorker.Status.STARTED)
+    self.infoHandler.setInfo(infoName,"started at port %d"%(self.port),AVNWorker.Status.STARTED)
     try:
       #try for 10s to open the gpsd port
       timeout=10
