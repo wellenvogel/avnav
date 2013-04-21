@@ -2357,7 +2357,8 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       return None
     rt={
                      "basedir":".",
-                     "navurl":"avnav_navi.php",
+                     "navurl":"/viewer/avnav_navi.php", #those must be absolute with /
+                     "index":"/viewer/avnav_viewer.html",
                      "chartbase": "maps", #this is the URL without leading /!
                      "httpPort":"8080",
                      "numThreads":"5",
@@ -2476,6 +2477,12 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       path = posixpath.normpath(urllib.unquote(path))
       if path==self.server.navurl:
         self.handleNavRequest(path,query)
+        return None
+      if path=="" or path=="/":
+        path=self.server.getStringParam('index')
+        self.send_response(301)
+        self.send_header("Location", path)
+        self.end_headers()
         return None
       words = path.split('/')
       words = filter(None, words)
