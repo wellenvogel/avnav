@@ -396,13 +396,6 @@ function formatTime(curDate){
 	return datestr;
 }
 
-var tile_list=['tilemap.xml'];
-var tiler_overlays=[];
-
-var urlpar=OpenLayers.Util.getParameters();
-if (urlpar.charts!= null){
-	tile_list=[].concat(urlpar.charts);
-}
 
 OpenLayers.Util.extend( OpenLayers.INCHES_PER_UNIT, {
     "NM": OpenLayers.INCHES_PER_UNIT["nmi"],
@@ -696,6 +689,9 @@ function btnLockPos(){
 	}
 	handleToggleButton('#btnLockPos',map.boatFeature.attributes.isLocked,(map.boatFeature.attributes.validPosition?'avn_buttonActive':'avn_buttonActiveError'));
 }
+function btnNavCancel(){
+	handleMainPage();
+}
 
 //event handlers
 
@@ -737,7 +733,7 @@ function moveEndEvent(){
  */
 function initMap(mapdescr,url) {
 	init();
-	
+	var tiler_overlays=[];
 	var minRes=99999999; //strange default...
 	var maxRes=0;
 	
@@ -916,6 +912,13 @@ function initMap(mapdescr,url) {
 		text: false,
 	  	label: 'Position'
 	   	});
+	$('.avn_btNavCancel').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+		text: false,
+	  	label: 'Main'
+	   	});
 	$('#markerPosition').text(formatLonLats(tmap.mapPosToLonLat(tmap.getCenter())));
 	
 	$('.avn_toggleButton').addClass("avn_buttonInactive");
@@ -957,6 +960,35 @@ function handleMainPage(){
 	showPage('main');
 	handleGpsStatus(false, true);
 	queryPosition();
+	var url=properties.navUrl+"?request=listCharts";
+	$.ajax({
+		url: url,
+		dataType: 'json',
+		cache: false,
+		error: function(ev){
+			alert("unable to read chart list: "+ev.responseText);
+		},
+		success: function(data){
+			if (data.status != 'OK'){
+				alert("reading chartlist failed: "+data.info);
+				return;
+			}
+			var entryTemplate=$('.avn_mainpage #defaultChartEntry:first').clone();
+			$('.avn_mainpage #allSelections a').remove();
+			for (e in data.data){
+				var chartEntry=data.data[e];
+				var domEntry=entryTemplate.clone();
+				domEntry.attr('href',"javascript:handleNavPage('"+chartEntry.url+"')");
+				var ehtml='<img src="';
+				if (chartEntry.icon) ehmtl+=chartEntry.icon;
+				else ehtml+=entryTemplate.find('img').attr('src');
+				ehtml+='"/>'+chartEntry.name;
+				domEntry.html(ehtml);
+				$('.avn_mainpage #allSelections').append(domEntry);
+			}
+		}
+		
+	});
 }
 
 /**

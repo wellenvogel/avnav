@@ -114,6 +114,18 @@ button.avn_buttonInactive{
 	background-size: 24px 24px;
 }
 
+#btnNavCancel .ui-icon{
+	background-image: url(images/Cancel40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
+
 .avn_selectList	.ui-selecting { background: #1E6CCF;}
 .avn_selectList	.ui-selected { background: #1E6CCF; color: white;}
 .avn_selectList { list-style-type: none; margin: 0; padding: 0; }

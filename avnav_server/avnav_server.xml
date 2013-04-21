@@ -8,8 +8,8 @@
 </Readers>
 <AVNSocketWriter port="34567" maxDevices="5" filter=""/>
 <AVNTrackWriter interval="10" distance="100"/>
-<AVNHttpServer navurl="/viewer/avnav_navi.php">
-	<Directory urlpath="maps" path="D:\Users\Andreas\Documents\chart-tiler-test\tiles"></Directory>
+<AVNHttpServer navurl="/viewer/avnav_navi.php" chartbase="maps">
+	<Directory urlpath="maps" path="D:\Users\Andreas\Documents\chart-tiler-test"></Directory>
 	<Directory urlpath="viewer" path="D:\Users\Andreas\Documents\projekte\avnav\avnav_viewer"></Directory>
 	<Directory urlpath="libraries" path="D:\Users\Andreas\Documents\projekte-nosync"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>

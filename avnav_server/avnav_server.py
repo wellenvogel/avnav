@@ -2358,6 +2358,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     rt={
                      "basedir":".",
                      "navurl":"avnav_navi.php",
+                     "chartbase": "maps", #this is the URL without leading /!
                      "httpPort":"8080",
                      "numThreads":"5",
                      "httpHost":""
@@ -2486,15 +2487,19 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           path = os.path.join(path, word)
       AVNLog.ld("request path/query",path,query)
       #pathmappings expect to have absolute pathes!
-      if not self.server.pathmappings is None:
-        for mk in self.server.pathmappings.keys():
-          if path.find(mk) == 0:
-            path=self.server.pathmappings[mk]+path[len(mk):]
-            AVNLog.ld("remapped path to",path)
-            return path
+      return self.handlePathmapping(path)
+  
+  def handlePathmapping(self,path):
+    if not self.server.pathmappings is None:
+      for mk in self.server.pathmappings.keys():
+        if path.find(mk) == 0:
+          path=self.server.pathmappings[mk]+path[len(mk):]
+          AVNLog.ld("remapped path to",path)
+          return path
       path=os.path.join(self.server.basedir,path)
       return path
-    
+    else:
+      return path
   #return the first element of a request param if set
   
   def getRequestParam(self,param,name):
@@ -2531,9 +2536,15 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleStatusRequest(requestParam)
       if requestType=='debuglevel':
         rtj=self.handleDebugLevelRequest(requestParam)
+      if requestType=='listCharts':
+        rtj=self.handleListChartRequest(requestParam)
       if not rtj is None:
         self.send_response(200)
-        self.send_header("Content-type", "application/json")
+        if not requestParam.get('callback') is None:
+          rtj="%s(%s);"%(requestParam.get('callback'),rtj)
+          self.send_header("Content-type", "text/javascript")
+        else:
+          self.send_header("Content-type", "application/json")
         self.send_header("Content-Length", len(rtj))
         self.send_header("Last-Modified", self.date_time_string())
         self.end_headers()
@@ -2619,7 +2630,55 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rt['info']='set loglevel to '+str(level)
       else:
         rt['info']="invalid level "+str(level)
-    return json.dumps(rt)    
+    return json.dumps(rt) 
+  
+  def handleListChartRequest(self,requestParam):
+    chartbaseUrl=self.server.getStringParam('chartbase')
+    rt={
+        'status': 'ERROR',
+        'info':'chart directory not found'}
+    if chartbaseUrl is None:
+      return json.dumps(rt)
+    chartbaseDir=self.handlePathmapping(chartbaseUrl)
+    if not os.path.isdir(chartbaseDir):
+      rt['info']="chart directory %s not found"%(chartbaseDir)
+      return json.dumps(rt)
+    try:
+      list = os.listdir(chartbaseDir)
+    except os.error:
+      rt['info']="unable to read chart directory %s"%(chartbaseDir)
+      return json.dumps(rt)
+    rt['status']='OK'
+    rt['data']=[]
+    list.sort(key=lambda a: a.lower())
+    navxml="avnav.xml"
+    icon="avnav.jpg"
+    AVNLog.debug("reading chartDir %s",chartbaseDir)
+    for de in list:
+      if de==".":
+        continue
+      if de=="..":
+        continue
+      dpath=os.path.join(chartbaseDir,de)
+      if not os.path.isdir(dpath):
+        continue
+      if not os.path.isfile(os.path.join(dpath,navxml)):
+        continue
+      #TDOD: read title from avnav
+      entry={
+             'name':de,
+             'url':"/"+chartbaseUrl+"/"+de
+             }
+      if os.path.exists(os.path.join(dpath,icon)):
+        entry['icon']="/"+chartbaseUrl+"/"+icon
+      AVNLog.ld("chartentry",entry)
+      rt['data'].append(entry)
+    num=len(rt['data'])
+    rt['info']="read %d entries from %s"%(num,chartbaseDir)
+    return json.dumps(rt)
+      
+    
+    
       
 def sighandler(signal,frame):
   global allHandlers

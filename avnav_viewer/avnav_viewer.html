@@ -33,13 +33,13 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 -->
-    <title>tiles-openlayers</title>
+
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
      <meta name="viewport" content="user-scalable=no">
      <meta name="apple-mobile-web-app-capable" content="yes">
 
 
-	<script src='/libraries/OpenLayers-2.12/OpenLayers.js'></script>    
+	<script src='/libraries/OpenLayers-2.12/OpenLayers.debug.js'></script>    
     <script src="/libraries/jquery/jquery-1.9.1.min.js"></script>
     <script src="/libraries/jquery/jquery-ui.js"></script>
     <script src="/libraries/jquery/jquery.nicescroll.min.js"></script>
@@ -72,12 +72,9 @@
 		<div id='main_content_inner' class="avn_panel">
 		  <div id="vertical_aligner">
 			<div id='allSelections' class='avn_items'>
-					<a class="avnav_select_item avnav_hidden" href="javascript:handleNavPage('/charts')">
-						<img src="images/dummy60.png"/>
-						Test PC</a>
-					<a class="avnav_select_item avnav_hidden" href="javascript:handleNavPage('/maps/nv-satz4-2012')">
-						<img src="images/dummy60.png"/>
-						Test Raspi</a>
+					<a id="defaultChartEntry" class="avnav_select_item avnav_hidden" href="javascript:handleNavPage('/charts')">
+						<img src="images/Chart60.png"/>
+						Template</a>
 			</div>
 		  </div>
 		</div> <!--mainContentInner-->
@@ -105,6 +102,7 @@
 	    </div>
 	    </div>
 	    <div id='rightPanel' class='avn_panel avn_rightPanel'>
+	    <div id='navPageButtonContainer' class='avn_navpage avn_hidden'>
 	    <div id='controlButtons' class='avn_butonpanel'>
 	    <button type="button" onclick="btnZoomIn();" class="avn_button avn_btZoomIn">+</button>
 	    <button type="button" onclick="btnZoomOut();" class="avn_button avn_btZoomOut">-</button>
@@ -112,6 +110,10 @@
 	    <button id="btnLayerSwitch" type="button" onclick="btnLayerSwitch();" class="avn_button avn_btLayerSwitch">-</button>
 	    <button id="btnLockPos" type="button" onclick="btnLockPos();" class="avn_toggleButton avn_btLockPos">T</button>
 	    <button id="btnLockMarker" type="button" onclick="btnLockMarker();" class="avn_toggleButton avn_btLockMarker">T</button>
+	    <button id="btnNavCancel" type="button" onclick="btnNavCancel();" class="avn_button avn_btNavCancel">T</button>
+	    </div>
+	    </div><!-- navPageButtonContainer -->
+	    <div id='mainPageButtonContainer' class='avn_mainpage avn_hidden'>
 	    </div>
 	</body>
 </html>
