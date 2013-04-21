@@ -1,0 +1,17 @@
+<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <defs>
+  <linearGradient id="svg_5">
+   <stop offset="0" stop-color="#493b3b"/>
+   <stop offset="1" stop-color="#b6c4c4"/>
+  </linearGradient>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <rect id="svg_3" height="60" width="60" y="0" x="0.25" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="2" stroke="#493b3b" fill="#ffff56"/>
+  <rect id="svg_4" height="0.25" width="0" y="20.625" x="96.5" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="2" stroke="#493b3b" fill="none"/>
+  <circle id="svg_7" r="13.200379" cy="30" cx="30" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="2" stroke="#493b3b" fill="#4494ea"/>
+  <line stroke="#493b3b" id="svg_8" y2="59.125" x2="60" y1="38.125001" x1="40.75" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="2" fill="none"/>
+  <line id="svg_9" y2="20.625" x2="19.5" y1="0.625" x1="0.5" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="2" stroke="#493b3b" fill="none"/>
+ </g>
+</svg>
