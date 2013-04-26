@@ -39,9 +39,14 @@ var properties={
 		bearingColor: "#DDA01F",
 		navUrl: "avnav_navi.php",
 		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
+		cookieName: "avnav",
 		statusErrorImage: "images/RedBubble40.png",
 		statusOkImage: "images/GreenBubble40.png",
 		pages: ["main","nav"]
+};
+
+var userData={
+		
 };
 var zoomOffset=0;
 var maxZoom=0;
@@ -51,6 +56,10 @@ var currentAngle=0;
 var NM=1852;
 var gpsErrors=0;
 var validPosition=false;
+
+$.cookie.json = true;
+
+
 /**
  * (re) initialize
  * if a map is already there - just destroy it (this will also destroy all layers and features)
@@ -253,26 +262,7 @@ function error(msg) {
 
 
 
-//read the TMS spec for a layer
-function read_xml(url) {
-    var request = new XMLHttpRequest();
-    request.open('GET', url, false);
-    request.overrideMimeType("text/xml");
-    try {
-        request.send(null);
-        if (request.status != 0) {
-            log(request.status);
-          log(request.responseText);
-        }
-    } catch (e) {
-        log(e);
-        if (e.code == 101) {
-            alert('Google Chrome requires to run with "--allow-file-access-from-files" switch to load XML from local files');
-        }
-    }
-    //log(request);
-    return request.responseXML;
-}
+
 
 function e2f(elem,attr_idx) {
     return parseFloat($(elem).attr(attr_idx));
@@ -676,6 +666,8 @@ function btnLockMarker(){
 	map.headingFeature.layer.drawFeature(map.headingFeature);
 	handleToggleButton('#btnLockMarker',map.markerFeature.attributes.isLocked);
 	updateCourseDisplay();
+	userData.markerLocked=map.markerFeature.attributes.isLocked;
+	$.cookie(properties.cookieName,userData);
 }
 function btnLockPos(){
 	if (! map.boatFeature.layer.getVisibility() ){
@@ -700,31 +692,62 @@ function mouseEvent(e){
 }
 
 function moveEvent(){
-	if (! map.markerFeature.attributes.isLocked){
-		map.markerFeature.move(map.getCenter());
-		map.markerFeature.geometry.calculateBounds();
-		logMapPos("move-marker",map.markerFeature.geometry);
-		logMapPos("move-map",map.getCenter());
-		updateCourseDisplay();
-	}
-	else {
-		;
-	}
+	moveMarkerFeature(map.getCenter());
+	
 }
 function moveEndEvent(){
-	if (! map.markerFeature.attributes.isLocked){
-		map.markerFeature.move(map.getCenter());
-		map.markerFeature.geometry.calculateBounds();
-		logMapPos("marker",map.markerFeature.geometry.bounds.getCenterLonLat());
-		logMapPos("map",map.getCenter());
-	}
-	else {
-		map.markerFeature.geometry.calculateBounds();
-	}
-	updateCourseDisplay();
+	moveMarkerFeature(map.getCenter(),true);
+	userData.mapPosition=map.getCenter();
+	userData.mapZoom=map.zoom;
+	$.cookie(properties.cookieName,userData);
 	
 }
 
+function moveMarkerFeature(pos,force,noCookie){
+	if (! map.markerFeature.attributes.isLocked){
+		map.markerFeature.move(pos);
+		map.markerFeature.geometry.calculateBounds();
+		logMapPos("marker",map.markerFeature.geometry.bounds.getCenterLonLat());
+		logMapPos("map",pos);
+		updateCourseDisplay();
+	}
+	else {
+		if (force){
+			map.markerFeature.geometry.calculateBounds();
+			updateCourseDisplay();
+			
+		}
+	}
+	if (force && ! noCookie){
+		userData.markerLocked=map.markerFeature.attributes.isLocked;
+		userData.markerPos=map.markerFeature.geometry.bounds.getCenterLonLat();
+		$.cookie(properties.cookieName,userData);
+	}
+}
+
+/*
+ * try to read the user data from the cookie and set parameters accordingly
+ */
+function readUserData(){
+	var ndata=$.cookie(properties.cookieName);
+	if (ndata){
+		userData=ndata;
+	}
+	if (userData.markerPos){
+		//TODO: should prevent writing back cookie...
+		if (userData.markerPos.lat && userData.markerPos.lon){
+			moveMarkerFeature(new OpenLayers.LonLat(userData.markerPos.lon,userData.markerPos.lat), true,true);
+		}
+	}
+	if (userData.markerLocked){
+		map.markerFeature.attributes.isLocked=true;
+	}
+	if (userData.mapPosition && userData.mapPosition.lon && userData.mapPosition.lat && userData.mapZoom){
+		map.moveTo(new OpenLayers.LonLat(userData.mapPosition.lon,userData.mapPosition.lat),userData.mapZoom);
+	}
+	handleToggleButton('#btnLockMarker',map.markerFeature.attributes.isLocked);
+	updateCourseDisplay();
+}
 
 
 /*
@@ -920,19 +943,21 @@ function initMap(mapdescr,url) {
 	  	label: 'Main'
 	   	});
 	$('#markerPosition').text(formatLonLats(tmap.mapPosToLonLat(tmap.getCenter())));
-	
+	map=tmap;
 	$('.avn_toggleButton').addClass("avn_buttonInactive");
 	
 	$('#leftBottom').click(function(e){
-		if (tmap.markerFeature.attributes.isLocked && ! tmap.boatFeature.attributes.isLocked){
-			tmap.moveMapToFeature(tmap.markerFeature,true);
+		if (map.markerFeature.attributes.isLocked && ! map.boatFeature.attributes.isLocked){
+			map.moveMapToFeature(map.markerFeature,true);
 		}
 	});
 	$('#leftTop').click(function(e){
-		tmap.moveMapToFeature(tmap.boatFeature,true);
+		map.moveMapToFeature(map.boatFeature,true);
 	});
 	
-	map=tmap;
+	
+    readUserData();
+
 	
 
 }
@@ -958,8 +983,8 @@ function showPage(name){
 function handleMainPage(){
 	//TODO: fill mainpage
 	showPage('main');
+	validPosition=false;
 	handleGpsStatus(false, true);
-	queryPosition();
 	var url=properties.navUrl+"?request=listCharts";
 	$.ajax({
 		url: url,
@@ -996,6 +1021,7 @@ function handleMainPage(){
  * read the description via ajax and init the map
  */
 function handleNavPage(list){
+	validPosition=false;
 	if (! list.match(/^http:/)){
 		if (list.match(/^\//)){
 			list=window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/,'$1')+list;
@@ -1013,7 +1039,6 @@ function handleNavPage(list){
 			showPage('nav');
 			initMap(data,list);
 			handleGpsStatus(false, true);
-			queryPosition();
 		},
 		error: function(ev){
 			alert("unable to load charts "+ev.responseText);
@@ -1034,4 +1059,5 @@ $(document).ready(function(){
 	else {
 		handleNavPage(entry_list[0]);
 	}
+	queryPosition();
 });
