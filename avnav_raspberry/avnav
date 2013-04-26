@@ -67,7 +67,10 @@ do_start()
 	killall gpsd 2> /dev/null
 	if [ "$FORWARD" != "" ]; then
 	  log_daemon_msg switching on port forward to port $FORWARD
-	  iptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports $FORWARD
+	  for addr in `ip addr list | sed -n 's/.*inet *\([^/]*\).*/\1/p'` 
+	  do
+	  	iptables -A PREROUTING -t nat -p tcp -d $addr --dport 80 -j REDIRECT --to-ports $FORWARD
+	  done
 	fi
 	su -c "$DAEMON $CONFIG" pi >/dev/null 2>&1 &
 }
