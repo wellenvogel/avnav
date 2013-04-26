@@ -93,6 +93,8 @@ iface eth0:1 inet static
 
 
 ################### //snip
+* with this config often the WLAN does not get it's IP...
+
 
 *  /etc/hostapd/hostapd.conf
 ################### snip
@@ -166,4 +168,6 @@ layout:
 /data/avnav/log
 /data/avnav/tracks
 /data/avnav/charts    - subdir for each chart set, containing an avnav.xml
+
+
 			

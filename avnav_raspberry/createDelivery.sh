@@ -104,7 +104,7 @@ chmod u+s $TDIR/settime || err "chmod settime failed"
 
 TDIR=$TMPDIR/avnav/program/libraries
 wlog "writing files for $TDIR"
-for lib in OpenLayers-2.12/OpenLayers.js OpenLayers-2.12/theme/default/style.css jquery/jquery-1.9.1.min.js jquery/jquery-ui.js jquery/jquery.nicescroll.min.js jquery/jquery.ui.touch-punch.min.js jquery/jquery-ui.css
+for lib in OpenLayers-2.12/OpenLayers.js OpenLayers-2.12/theme/default/style.css jquery/jquery-1.9.1.min.js jquery/jquery-ui.js jquery/jquery.nicescroll.min.js jquery/jquery.ui.touch-punch.min.js jquery/jquery-ui.css jquery/jquery.cookie.js
 do
   tdir=`dirname $TDIR/$lib`
   if [ ! -d $tdir ] ; then

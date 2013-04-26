@@ -122,7 +122,7 @@
      the navurl is the url that is used to control any nav feature
      this of course must fit to the java script part...
 -->
-<AVNHttpServer navurl="/viewer/avnav_navi.php">
+<AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080">
 	<Directory urlpath="maps" path="/home/pi/avnav/data/charts"></Directory>
 	<Directory urlpath="viewer" path="/home/pi/avnav/program/viewer"></Directory>
 	<Directory urlpath="libraries" path="/home/pi/avnav/program/libraries"></Directory>
