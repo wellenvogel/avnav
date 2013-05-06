@@ -844,7 +844,7 @@ class SerialReader():
               self.parseData(data,self.navdata)
             lastTime=time.time()
         if (time.time() - lastTime) > porttimeout:
-          self.setInfo("timeout")
+          self.setInfo("timeout",AVNWorker.Status.ERROR)
           f.close()
           if isOpen:
             AVNLog.info("reopen port %s - timeout elapsed",portname)
@@ -2019,6 +2019,15 @@ class AVNUsbSerialReader(AVNWorker):
                'port':device
                })
     return rt
+
+  #a thread method to run a serial reader
+  def serialRun(self,reader,addr):
+    try:
+      reader.run()
+    except:
+      pass
+    AVNLog.debug("serial reader for %s finished",addr)
+    self.removeHandler(addr)
   
   #param: a dict key being the usb id, value the device node
   def checkDevices(self,devicelist):
@@ -2041,7 +2050,7 @@ class AVNUsbSerialReader(AVNWorker):
         if not res:
             AVNLog.debug("max number of readers already reached, skip start of %s at %s",usbid,devicelist[usbid])
             continue
-        readerThread=threading.Thread(target=reader.run)
+        readerThread=threading.Thread(target=self.serialRun,args=(reader,usbid))
         readerThread.daemon=True
         readerThread.start()
         AVNLog.info("started reader for %s device  %s at %s",type,usbid,devicelist[usbid])
