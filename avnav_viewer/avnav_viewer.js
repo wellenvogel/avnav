@@ -36,7 +36,13 @@ var properties={
 		rightPanelWidth: 60, //currently not used
 		loggingEnabled: true,
 		positionQueryTimeout: 1000, //1000ms
+		trackQueryTimeout: 10000, //10s
 		bearingColor: "#DDA01F",
+		bearingWidth: 3,
+		trackColor: "#D71038",
+		trackWidth: 3,
+		trackInterval: 30, //seconds
+		initialTrackLength: 24*120, //multiplies with trackInterval - so this gives 24h
 		navUrl: "avnav_navi.php",
 		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
 		cookieName: "avnav",
@@ -52,10 +58,12 @@ var zoomOffset=0;
 var maxZoom=0;
 var map=null;
 var timer=null;
+var trackTimer=null;
 var currentAngle=0;
 var NM=1852;
 var gpsErrors=0;
 var validPosition=false;
+var lastTrackQuery=0;
 
 $.cookie.json = true;
 
@@ -81,7 +89,65 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 		this.maerkerFeature=null;
 		this.headingFeature=null;
 		this.handleBoat=true;
+		this.track_layer=null;
+		this.track_points=[];
+		this.track_string;
+		this.track_line=null;
 	},
+	
+	//------------------ drawing of the track data ---------
+	//input is a list of track points we get (ts,time,lon,lat)
+	//we check which of them we have and afterwards add the new points to the line string
+	//the index is the ts (microseconds) (we rely of the time being sorted)
+	addTrackData:function(darray,redraw){
+		var doRedraw=false;
+		if (redraw && this.track_layer.features){
+			this.track_layer.removeFeatures(this.track_layer.features);
+			this.track_points=[];
+			this.track_line=null;
+			doRedraw=true;
+		}
+		//only add points with greater timestamp
+		var startIdx=0;
+		if (this.track_points.length > 0){
+			var lts=this.track_points[this.track_points.length - 1].ts;
+			for (;startIdx<darray.length;startIdx++){
+				if (darray[startIdx].ts>lts) break;
+			}
+		}
+		if ((this.track_points.length+(darray.length-startIdx))<2) {
+			if (doRedraw) this.track_layer.redraw();
+			return;
+		}
+		if (! this.track_line){
+			var points=[];
+			//seems that we create a new line string right now
+			for (;startIdx<darray.length;startIdx++){
+				this.track_points.push(darray[startIdx]);
+			}
+			for (var i=0;i<this.track_points.length;i++){
+				points.push(this.lonLatToPoint(this.track_points[i].lon,this.track_points[i].lat));
+			}
+			this.track_line=new OpenLayers.Geometry.LineString(points);
+			this.track_layer.addFeatures([new OpenLayers.Feature.Vector(this.track_line, null, this.style_track)]);
+			this.track_layer.redraw();
+		}
+		else {
+			for (;startIdx<darray.length;startIdx++){
+				doRedraw=true;
+				this.track_line.addPoint(this.lonLatToPoint(darray[startIdx].lon, darray[startIdx].lat));
+				this.track_points.push(darray[startIdx]);
+			}
+			if (doRedraw) this.track_layer.redraw();
+		}
+	},
+	
+	//------------------ convert a pos in lon/lat to an openLayers point in map projection -----
+	lonLatToPoint:function(lon,lat){
+		var ll=new OpenLayers.LonLat(lon,lat).transform( this.displayProjection,this.getProjectionObject());
+		return new OpenLayers.Geometry.Point(ll.lon,ll.lat);
+	},
+	
 	  
 	//------------------ boat position ----------------------
 	//lonlat in wgs84,course in degree,speed in m/s, time as date object
@@ -142,7 +208,7 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 			return new OpenLayers.LonLat(po.x,po.y);
 		},
 
-		lonLatToMap:function(lonlat){
+	lonLatToMap:function(lonlat){
 			return lonlat.clone().transform( this.displayProjection,this.getProjectionObject());
 	},
 	CLASS_NAME: "OpenLayers.AvNavMap"
@@ -555,6 +621,62 @@ function updateCourseDisplay(){
 	
 }
 
+//------------------ track data requests -------------------
+
+function queryTrackData(){
+	if (! map){
+		window.clearTimeout(trackTimer);
+		trackTimer=window.setTimeout(queryTrackData,properties.trackQueryTimeout);
+		return;
+	}
+	var url=properties.navUrl+"?request=track";
+	var urlparam=OpenLayers.Util.getParameters();
+	if (urlparam.demo != null){
+		url+="&demo="+urlparam.demo;
+	}
+	var maxItems=0;
+	var now=new Date().getTime();
+	if ((now - lastTrackQuery) > (properties.trackQueryTimeout *10)){
+		//seems that we missed a lot of queries - reinitialize track
+		if (map && map.track_line){
+			//reset the trackData
+			map.addTrackData([],true);
+		}
+	}
+	if (!map.track_line){
+		// initialize the track
+		maxItems=properties.initialTrackLength;
+	}
+	else{
+		var tdiff=now-lastTrackQuery+2*properties.trackQueryTimeout;
+		tdiff=tdiff/1000; //tdiff in seconds
+		maxItems=tdiff/properties.trackInterval;
+		if (maxItems < 10) maxItems=10;
+	}
+	if (maxItems == 0) maxItems=1;
+	url+="&maxnum="+maxItems+"&interval="+properties.trackInterval;
+	$.ajax({
+		url: url,
+		dataType: 'json',
+		cache:	false,
+		success: function(data,status){
+			lastTrackQuery=new Date().getTime();
+			if (map) map.addTrackData(data);
+			window.clearTimeout(trackTimer);
+			trackTimer=window.setTimeout(queryTrackData,properties.trackQueryTimeout);
+		},
+		error: function(status,data,error){
+			log("query track error");
+			window.clearTimeout(trackTimer);
+			trackTimer=window.setTimeout(queryTrackData,properties.trackQueryTimeout);
+		},
+		timeout: 10000
+	});
+}
+
+
+
+
 
 //button functions
 function btnZoomIn(){
@@ -847,6 +969,8 @@ function initMap(mapdescr,url) {
     var markerLayer=new OpenLayers.Layer.Vector("Marker");
     var boatLayer=new OpenLayers.Layer.Vector("Boat");
     var headingLayer=new OpenLayers.Layer.Vector("Heading");
+    //the track layer is a member of the map as we can only draw the feature as soon as we hav at least 2 points...
+    tmap.track_layer=new OpenLayers.Layer.Vector("Track");
     
     var style_mark = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
     style_mark.graphicWidth = 40;
@@ -876,9 +1000,14 @@ function initMap(mapdescr,url) {
     style_bearing.fillOpacity=1;
     style_bearing.display="none";
     style_bearing.strokeColor=properties.bearingColor;
+    style_bearing.strokeWidth=properties.bearingWidth;
     
+    tmap.style_track = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
+    tmap.style_track.fillOpacity=1;
+    tmap.style_track.strokeColor=properties.trackColor;
+    tmap.style_track.strokeWidth=properties.trackWidth;
     
-    tmap.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer,headingLayer]));
+    tmap.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer,headingLayer,tmap.track_layer]));
     //map.maxZoomLevel=osm.getZoomForResolution(minRes);
     tmap.zoomToExtent(firstLayer.layer_extent,true);
     var initialZoom=tmap.getZoomForResolution(maxRes)+1;
@@ -1063,4 +1192,5 @@ $(document).ready(function(){
 		handleNavPage(entry_list[0]);
 	}
 	queryPosition();
+	queryTrackData();
 });
