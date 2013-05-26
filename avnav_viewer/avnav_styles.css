@@ -127,7 +127,9 @@ button.avn_buttonInactive{
 }
 
 .avn_selectList	.ui-selecting { background: #1E6CCF;}
-.avn_selectList	.ui-selected { background: #1E6CCF; color: white;}
+.avn_selectList	.ui-selected:not(.ui-disabled) { background: #1E6CCF; color: white;}
+.avn_selectList	.ui-selected.ui-disabled { background: #9BB2D0; color: grey;}
+.avn_selectList	.ui-disabled { color: grey;}
 .avn_selectList { list-style-type: none; margin: 0; padding: 0; }
 .avn_selectList ul {margin-top: 2px; margin-bottom: 2px;}
 .avn_selectList { 
@@ -136,7 +138,7 @@ button.avn_buttonInactive{
 	margin-right: 25px; /*for scrolling on tablet*/
 	padding: 0.4em; 
 	padding-left: 10px;
-	font-size: 16px; 
+	font-size: 24px; 
 	}
 
 .avn_disabled {

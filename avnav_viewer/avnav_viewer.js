@@ -691,9 +691,15 @@ function showLayerDialog(){
 	var layers=map.layers;
 	for (var i in layers){
 		var layer=layers[i];
+		if (layer.isBaseLayer) continue;
 		dhtml+='<ul id="'+layer.name+'" ';
-		if (layer.getVisibility() && layer.calculateInRange()) dhtml+='class="ui-selected" ';
-		if (! layer.calculateInRange()) dhtml+='class="avn_disabled ui-disabled"';
+		if (!layer.calculateInRange()){
+			if (layer.getVisibility()) dhtml+='class="ui-selected ui-disabled" ';
+			else dhtml+='class="ui-disabled"';
+		}
+		else {
+			if ( layer.getVisibility()) dhtml+='class="ui-selected"';
+		}
 		dhtml+='>'+layer.name+'</ul>';
 	}
 	dhtml+="</ol></div>";
@@ -718,7 +724,7 @@ function showLayerDialog(){
 				text: "Ok",
 				click: function(){
 					$( "ul", this ).each(function(idx,el){
-						  if ($(el).hasClass('avn_disabled')) return;
+						  
 				          if ($(el).hasClass('ui-selected')){
 				        	  map.layers[idx].setVisibility(true);
 				          }
@@ -745,10 +751,14 @@ function showLayerDialog(){
 			
 	});
 	$(dialog).dialog('open');
-	//allow for toggle behavior
-	$('#selectLayerList').bind( "mousedown", function ( e ) {
-	    e.metaKey = true;
-	} ).selectable({filter: ':not(.avn_disabled)'});
+	$('#selectLayerList ul').bind( "mousedown", function ( e ) {
+	    if ($(this).hasClass('ui-selected')){
+	    	$(this).removeClass('ui-selected');
+	    }
+	    else{
+	    	$(this).addClass('ui-selected');
+	    }
+	} );
 	$('.ui-dialog-content').niceScroll();
 }
 
