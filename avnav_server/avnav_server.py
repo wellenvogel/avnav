@@ -1732,83 +1732,23 @@ class AVNGpsdFeeder(AVNGpsd):
             break
 
 
-
- 
-#a Worker for reading bluetooth devices
-#it uses a feeder to handle the received data
-class AVNBlueToothReader(AVNWorker):
-  @classmethod
-  def getConfigName(cls):
-    return "AVNBlueToothReader"
-  
-  @classmethod
-  def getConfigParam(cls, child=None):
-    rt={
-        'maxDevices':5,
-        'deviceList':'',  #is set (, separated) only connect to those devices
-        'feederName':'',  #if set, use this feeder
-    }
-    return rt
-  
-  @classmethod
-  def createInstance(cls, cfgparam):
-    if not hasBluetooth:
-      raise Exception("no bluetooth installed, cannot run %s"%(cls.getConfigName()))
-    return AVNBlueToothReader(cfgparam)
-  
-  def __init__(self,cfgparam):
-    AVNWorker.__init__(self, cfgparam)
-    self.maplock=threading.Lock()
-    self.addrmap={}
-    self.writeData=None
-    
-  def getName(self):
-    return "AVNBlueToothReader"
-  
-  #make some checks when we have to start
-  #we cannot do this on init as we potentiall have tp find the feeder...
-  def start(self):
-    feeder=AVNUtil.findFeeder(self.getStringParam('feederName'))
-    if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
-    self.writeData=feeder.addNMEA
-    AVNWorker.start(self) 
-   
-  #return True if added
-  def checkAndAddAddr(self,addr):
-    rt=False
-    maxd=self.getIntParam('maxDevices')
-    self.maplock.acquire()
-    if len(self.addrmap) < maxd:
-      if not addr in self.addrmap:
-        self.addrmap[addr]=1
-        rt=True
-    self.maplock.release()
-    return rt
-  
-  def removeAddr(self,addr):
-    self.maplock.acquire()
+#a base class for socket readers
+#this should not directly be instantiated, instead classes doing socket reading
+#should derive from this
+#the derived class must have the setInfo,writeData methods
+class SocketReader():
+  def readSocket(self,sock,infoName,timeout=None):
+    pattern=AVNUtil.getNMEACheck()
+    peer="unknown"
     try:
-      self.addrmap.pop(addr)
+      peer=sock.getpeername()
     except:
       pass
-    self.maplock.release()
- 
-  #a thread to open a bluetooth socket and read from it until
-  #disconnected
-  def readBT(self,host,port):
-    infoName="BTReader-%s"%(host)
-    threading.current_thread().setName("[%s]%s[Reader %s]"%(AVNLog.getThreadId(),self.getName(),host))
-    pattern=AVNUtil.getNMEACheck()
-    AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
-    self.setInfo(infoName, "connecting", AVNWorker.Status.STARTED)
+    AVNLog.info("connection to %s established, start reading",peer)
+    self.setInfo(infoName, "socket connected", AVNWorker.Status.RUNNING)
+    buffer=""
+    hasNMEA=False
     try:
-      sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
-      sock.connect((host, port))
-      buffer=""
-      AVNLog.info("bluetooth connection to %s established",host)
-      self.setInfo(infoName, "socket connected", AVNWorker.Status.RUNNING)
-      hasNMEA=False
       while True:
         data = sock.recv(1024)
         if len(data) == 0:
@@ -1843,8 +1783,95 @@ class AVNBlueToothReader(AVNWorker):
           break
       sock.close()
     except Exception as e:
-      AVNLog.debug("exception fro bluetooth device: %s",traceback.format_exc())
+      AVNLog.debug("exception while reading from socket: %s",traceback.format_exc())
       pass
+    try:
+      sock.close()
+    except:
+      pass
+    AVNLog.info("disconnected from socket %s",peer)
+    self.setInfo(infoName, "socket to %s disconnected"%(peer), AVNWorker.Status.ERROR)
+
+ 
+#a Worker for reading bluetooth devices
+#it uses a feeder to handle the received data
+class AVNBlueToothReader(AVNWorker,SocketReader):
+  @classmethod
+  def getConfigName(cls):
+    return "AVNBlueToothReader"
+  
+  @classmethod
+  def getConfigParam(cls, child=None):
+    rt={
+        'maxDevices':5,
+        'deviceList':'',  #is set (, separated) only connect to those devices
+        'feederName':'',  #if set, use this feeder
+    }
+    return rt
+  
+  @classmethod
+  def createInstance(cls, cfgparam):
+    if not hasBluetooth:
+      raise Exception("no bluetooth installed, cannot run %s"%(cls.getConfigName()))
+    return AVNBlueToothReader(cfgparam)
+  
+  def __init__(self,cfgparam):
+    AVNWorker.__init__(self, cfgparam)
+    self.maplock=threading.Lock()
+    self.addrmap={}
+    self.writeData=None
+    
+  def getName(self):
+    return "AVNBlueToothReader"
+  
+  #make some checks when we have to start
+  #we cannot do this on init as we potentiall have tp find the feeder...
+  def start(self):
+    feeder=AVNUtil.findFeeder(self.getStringParam('feederName'))
+    if feeder is None:
+      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam('feederName'))
+    self.writeData=feeder.addNMEA
+    AVNWorker.start(self) 
+   
+  #return True if added
+  def checkAndAddAddr(self,addr):
+    rt=False
+    maxd=self.getIntParam('maxDevices')
+    self.maplock.acquire()
+    if len(self.addrmap) < maxd:
+      if not addr in self.addrmap:
+        self.addrmap[addr]=1
+        rt=True
+    self.maplock.release()
+    return rt
+  
+  def removeAddr(self,addr):
+    self.maplock.acquire()
+    try:
+      self.addrmap.pop(addr)
+    except:
+      pass
+    self.maplock.release()
+ 
+  #a thread to open a bluetooth socket and read from it until
+  #disconnected
+  def readBT(self,host,port):
+    infoName="BTReader-%s"%(host)
+    threading.current_thread().setName("[%s]%s[Reader %s]"%(AVNLog.getThreadId(),self.getName(),host))
+    AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
+    self.setInfo(infoName, "connecting", AVNWorker.Status.STARTED)
+    try:
+      sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+      sock.connect((host, port))
+      AVNLog.info("bluetooth connection to %s established",host)
+      self.readSocket(sock,infoName)
+      sock.close()
+    except Exception as e:
+      AVNLog.debug("exception fro bluetooth device: %s",traceback.format_exc())
+      try:
+        sock.close()
+      except:
+        pass
     AVNLog.info("disconnected from bluetooth device ")
     self.setInfo(infoName, "dicsonnected", AVNWorker.Status.INACTIVE)
     self.removeAddr(host)
@@ -2335,6 +2362,83 @@ class AVNSerialReader(AVNWorker):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
     reader=SerialReader(self.param, self.navdata if self.writeData is None else None, self.writeData,self) 
     reader.run()
+
+
+#a Worker to read from a remote NMEA source via a socket
+#can be used to chain avnav servers...
+class AVNSocketReader(AVNWorker,SocketReader):
+  
+  @classmethod
+  def getConfigName(cls):
+    return "AVNSocketReader"
+  
+  @classmethod
+  def getConfigParam(cls,child):
+    if not child is None:
+      return None
+    rt={
+               'feederName':'',      #if this one is set, we do not use the defaul feeder by this one
+               'host':None,
+               'port':None,
+               'timeout': 10,      #timeout for connect and waiting for data
+               'minTime':0,        #if tthis is set, wait this time before reading new data (ms)
+    }
+    return rt
+  @classmethod
+  def createInstance(cls, cfgparam):
+    if cfgparam.get('name') is None:
+      cfgparam['name']="SocketReader"
+    rt=AVNSocketReader(cfgparam)
+    return rt
+    
+  def __init__(self,param):
+    for p in ('port','host'):
+      if param.get(p) is None:
+        raise Exception("missing "+p+" parameter for socket reader")
+    self.feederWrite=None
+    AVNWorker.__init__(self, param)
+    if param.get('name') is None:
+      self.param['name']="SocketReader-%s-%d"%(self.param['host'],int(self.param['port']))
+    
+  
+  def getName(self):
+    return "SocketReader "+self.param['name']
+  #make some checks when we have to start
+  #we cannot do this on init as we potentiall have tp find the feeder...
+  def start(self):
+    feedername=self.getStringParam('feederName')
+    feeder=AVNUtil.findFeeder(feedername)
+    if feeder is None:
+      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
+    self.feederWrite=feeder.addNMEA
+    AVNWorker.start(self)
+    
+  def writeData(self,data):
+    self.feederWrite(data)
+    if (self.getIntParam('minTime')):
+      time.sleep(float(self.getIntParam('minTime'))/1000) 
+     
+  #thread run method - just try forever  
+  def run(self):
+    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    infoName="SocketReader-%s:%d"%(self.getStringParam('host'),self.getIntParam('port'))
+    while True:
+      try:
+        sock=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getIntParam('timeout'))
+      except:
+        AVNLog.info("exception while trying to connect to %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
+        time.sleep(2)
+        continue
+      AVNLog.info("successfully connected to %s:%d",self.getStringParam('host'),self.getIntParam('port'))
+      try:
+        self.readSocket(sock,infoName)
+      except:
+        AVNLog.info("exception while reading from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
+      
+        
+        
+                                        
+  
   
 
 #a HTTP server with threads for each request
@@ -2711,7 +2815,7 @@ def main(argv):
   debugger=sys.gettrace()
   workerlist=[AVNBaseConfig,AVNGpsdFeeder,AVNSerialReader,AVNGpsd,
               AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader,AVNUsbSerialReader,
-              AVNSocketWriter]
+              AVNSocketWriter,AVNSocketReader]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
