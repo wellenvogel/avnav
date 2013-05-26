@@ -1214,6 +1214,7 @@ class AVNTrackWriter(AVNWorker):
       for tp in self.track:
         if curts is None or tp[0] > (curts + intervaldt):
           entry={
+               'ts':AVNUtil.datetimeToTsUTC(tp[0]),
                'time':tp[0].isoformat(),
                'lat':tp[1],
                'lon':tp[2]}
@@ -1741,7 +1742,7 @@ class SocketReader():
     pattern=AVNUtil.getNMEACheck()
     peer="unknown"
     try:
-      peer=sock.getpeername()
+      peer="%s:%d"%sock.getpeername()
     except:
       pass
     AVNLog.info("connection to %s established, start reading",peer)
@@ -2720,7 +2721,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     interval=60
     try:
       maxnumstr=self.getRequestParam(requestParam, 'maxnum')
-      if not maxnum is None:
+      if not maxnumstr is None:
         maxnum=int(maxnumstr)
       intervalstr=self.getRequestParam(requestParam, 'interval')
       if not intervalstr is None:
