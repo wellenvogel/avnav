@@ -437,7 +437,7 @@ function queryPosition(){
 				if (map) map.setBoatPosition(data.lon, data.lat, data.track, data.speed, rtime);
 				var course=data.course;
 				if (course === undefined) course=data.track;
-        var speed=data.speed*3600/NM;
+				var speed=data.speed*3600/NM;
 				$('#boatPosition').text(formatLonLats(data));
 				$('#boatCourse').text(formatDecimal(course||0,3,0));
 				$('#boatSpeed').text(formatDecimal(speed||0,2,1));
@@ -604,7 +604,7 @@ function showLayerDialog(){
 				        	  map.layers[idx].setVisibility(false);
 				          }
 				          if (map.layers[idx]==map.boatFeature.layer){
-				        	  if (map.boatFeature.attributes.isLocked) map.moveMapToFeature(boatFeature);
+				        	  if (map.boatFeature.attributes.isLocked) map.moveMapToFeature(map.boatFeature);
 				        	  handleToggleButton('#btnLockPos',map.boatFeature.attributes.isLocked
 				        			  && map.layers[idx].getVisibility());
 				        	  updateCourseDisplay();
