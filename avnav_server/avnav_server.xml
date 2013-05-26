@@ -8,6 +8,7 @@
 </Readers>
 <AVNSocketWriter port="34567" maxDevices="5" filter=""/>
 <AVNTrackWriter interval="10" distance="100"/>
+<AVNSocketReader host="10.222.10.45" port="34568"/>
 <AVNHttpServer navurl="/viewer/avnav_navi.php" chartbase="maps">
 	<Directory urlpath="maps" path="D:\Users\Andreas\Documents\chart-tiler-test"></Directory>
 	<Directory urlpath="viewer" path="D:\Users\Andreas\Documents\projekte\avnav\avnav_viewer"></Directory>
