@@ -43,12 +43,14 @@ var properties={
 		trackWidth: 3,
 		trackInterval: 30, //seconds
 		initialTrackLength: 24*120, //multiplies with trackInterval - so this gives 24h
+		aisQueryTimeout: 10000,
+		maxAisErrors: 3, //after that many errors AIS display will be switched off
 		navUrl: "avnav_navi.php",
 		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
 		cookieName: "avnav",
 		statusErrorImage: "images/RedBubble40.png",
 		statusOkImage: "images/GreenBubble40.png",
-		pages: ["main","nav"]
+		pages: ["main","nav","ais"]
 };
 
 var userData={
@@ -59,11 +61,15 @@ var maxZoom=0;
 var map=null;
 var timer=null;
 var trackTimer=null;
+var aisTimer=null;
 var currentAngle=0;
 var NM=1852;
 var gpsErrors=0;
 var validPosition=false;
 var lastTrackQuery=0;
+var mapsequence=1; //will be incremented each time a new map is created
+var aisList=[];
+var aisErrors=0;
 
 $.cookie.json = true;
 
@@ -91,6 +97,8 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 		this.handleBoat=true;
 		this.track_layer=null;
 		this.track_points=[];
+		this.ais_layer=null;
+		this.ais_features=[]; //the list fo AIS features, sorted by MMSI
 		this.track_string;
 		this.track_line=null;
 	},
@@ -655,13 +663,22 @@ function queryTrackData(){
 	}
 	if (maxItems == 0) maxItems=1;
 	url+="&maxnum="+maxItems+"&interval="+properties.trackInterval;
+	var ctxdata={};
+	ctxdata.mapsequence=mapsequence;
 	$.ajax({
 		url: url,
 		dataType: 'json',
 		cache:	false,
+		context: ctxdata,
 		success: function(data,status){
-			lastTrackQuery=new Date().getTime();
-			if (map) map.addTrackData(data);
+			if (this.mapsequence != mapsequence)
+				//the map has been changed while the ajax request was running
+				//recreate the track data on next query
+				lastTrackQuery=0;
+			else{
+				lastTrackQuery=new Date().getTime();
+				if (map) map.addTrackData(data);
+			}
 			window.clearTimeout(trackTimer);
 			trackTimer=window.setTimeout(queryTrackData,properties.trackQueryTimeout);
 		},
@@ -674,7 +691,138 @@ function queryTrackData(){
 	});
 }
 
+function queryAISData(){
+	if (! map){
+		window.clearTimeout(aisTimer);
+		aisTimer=window.setTimeout(queryAISData,properties.aisQueryTimeout);
+		return;
+	}
+	var url=properties.navUrl+"?request=ais";
+	var urlparam=OpenLayers.Util.getParameters();
+	if (urlparam.demo != null){
+		url+="&demo="+urlparam.demo;
+	}
+	var ctxdata={};
+	ctxdata.mapsequence=mapsequence;
+	$.ajax({
+		url: url,
+		dataType: 'json',
+		cache:	false,
+		context: ctxdata,
+		success: function(data,status){
+			aisErrors=0;
+			aisList=data;
+			handleAISData();
+			window.clearTimeout(aisTimer);
+			aisTimer=window.setTimeout(queryAISData,properties.aisQueryTimeout);
+		},
+		error: function(status,data,error){
+			log("query ais error");
+			aisErrors+=1;
+			if (aisErrors >= properties.maxAisErrors){
+				aisList=[];
+				handleAISData();
+			}
+			window.clearTimeout(aisTimer);
+			aisTimer=window.setTimeout(queryAISData,properties.aisQueryTimeout);
+		},
+		timeout: 10000
+	});
+}
 
+function aisSort(a,b){
+	try{
+		if (a.distance == b.distance) return 0;
+		if (a.distance<b.distance) return -1;
+		return 1;
+	} catch (err){
+		return 0;
+	}
+}
+
+/*
+ * handle the received AIS data
+ * 1. compute distances, cpa, tcpa
+ * 2. update the aisInfoPanel
+ * 3. update the map
+ * 4. update the AIS page if currently shown
+ * aisList must already be sorted by distance
+ */
+
+function handleAISData(){
+	if (map && map.boatFeature.attributes.validPosition){
+		var boatPos=new OpenLayers.LonLat(map.boatFeature.attributes.lon,map.boatFeature.attributes.lat);
+		for (aisidx in aisList){
+			var ais=aisList[aisidx];
+			var dst=computeDistances(boatPos,new OpenLayers.LonLat(ais.lon,ais.lat));
+			ais.distance=dst.dtsnm;
+			ais.headingTo=dst.heading;
+			//TODO: compute cpa,tcpa
+		}
+	}
+	aisList.sort(aisSort);
+	updateAISInfoPanel();
+	if (map){
+		//TODO: update map AIS data
+	}
+	updateAISPage();
+	
+}
+
+
+function updateAISInfoPanel(){
+	if (! isPageVisible('nav')){
+			hideAISPanel();
+			return;
+	}
+	if (map && map.ais_layer.getVisibility()){
+		if (aisList.length){
+			showAISPanel();
+			var ais=aisList[0];
+			$('#aisDst').text(formatDecimal(ais.distance||0,3,1));
+			$('#aisSog').text(formatDecimal(parseInt(ais.speed||0),3,1));
+			$('#aisCog').text(formatDecimal(parseInt(ais.course||0),3,0));
+			$('#aisCpa').text(formatDecimal(parseInt(ais.cpa||0),3,1));
+			$('#aisTcpa').text("00:00"); //TODO
+			$('#aisMmsi').text(ais.mmsi);
+		}
+		else{
+			hideAISPanel();
+		}
+	}
+	else {
+		hideAISPanel();
+	}
+}
+
+function aisSelection(mmsi){
+	alert("selected "+mmsi);
+}
+
+function updateAISPage(){
+	var aisparam=['distance','speed','course','mmsi','cpa','tcpa'];
+	if (isPageVisible('ais')){
+		var html='<div class="avn_ais_infotable">';
+		html+='<div class="avn_ais avn_ais_headline">';
+		for (var p in aisparam){
+			html+='<div class="avn_aisparam">'+aisparam[p]+'</div>';
+		}
+		html+='</div>';
+		for( var aisidx in aisList){
+			var ais=aisList[aisidx];
+			html+='<div class="avn_ais" onclick="aisSelection(\''+ais['mmsi']+'\')">';
+			for (var p in aisparam){
+				html+='<div class="avn_aisparam">'+(ais[aisparam[p]]||'')+'</div>';
+			}
+			html+='</div>';
+		}
+		html+='</div>';
+		$('#aisPageContent').html(html);
+	}
+	else{
+		$('#aisPageContent').empty();
+	}
+}
 
 
 
@@ -691,7 +839,7 @@ function showLayerDialog(){
 	var layers=map.layers;
 	for (var i in layers){
 		var layer=layers[i];
-		if (layer.isBaseLayer) continue;
+		if (i == 0) continue;
 		dhtml+='<ul id="'+layer.name+'" ';
 		if (!layer.calculateInRange()){
 			if (layer.getVisibility()) dhtml+='class="ui-selected ui-disabled" ';
@@ -726,18 +874,19 @@ function showLayerDialog(){
 					$( "ul", this ).each(function(idx,el){
 						  
 				          if ($(el).hasClass('ui-selected')){
-				        	  map.layers[idx].setVisibility(true);
+				        	  map.layers[idx+1].setVisibility(true);
 				          }
 				          else {
-				        	  map.layers[idx].setVisibility(false);
+				        	  map.layers[idx+1].setVisibility(false);
 				          }
-				          if (map.layers[idx]==map.boatFeature.layer){
+				          if (map.layers[idx+1]==map.boatFeature.layer){
 				        	  if (map.boatFeature.attributes.isLocked) map.moveMapToFeature(map.boatFeature);
 				        	  handleToggleButton('#btnLockPos',map.boatFeature.attributes.isLocked
-				        			  && map.layers[idx].getVisibility());
+				        			  && map.layers[idx+1].getVisibility());
 				        	  updateCourseDisplay();
 				          }
 				        });
+					updateAISInfoPanel();
 					$(this).dialog("close");
 					
 				}
@@ -818,6 +967,46 @@ function btnLockPos(){
 }
 function btnNavCancel(){
 	handleMainPage();
+}
+
+function btnNavAIS(){
+	var aisinfo='#aisInfo';
+	if ($(aisinfo).is(':visible')){
+		hideAISPanel();
+	}
+	else {
+		showAISPanel();
+	}
+}
+
+function btnAISCancel(){
+	showPage('nav');
+	updateAISInfoPanel();
+}
+
+function hideAISPanel(){
+	var aisinfo='#aisInfo';
+	if (!$(aisinfo).is(':visible')){
+		return;
+	}
+	else {
+		showHideAdditionalPanel(aisinfo,'bottom',false);
+	}
+}
+
+function showAISPanel(){
+	var aisinfo='#aisInfo';
+	if ($(aisinfo).is(':visible')){
+		return;
+	}
+	else {
+		showHideAdditionalPanel(aisinfo,'bottom',true);
+		$(aisinfo).click(function(e){
+			hideAISPanel();
+			showPage('ais');
+			updateAISPage();
+		});
+	}
 }
 
 //event handlers
@@ -981,6 +1170,7 @@ function initMap(mapdescr,url) {
     var headingLayer=new OpenLayers.Layer.Vector("Heading");
     //the track layer is a member of the map as we can only draw the feature as soon as we hav at least 2 points...
     tmap.track_layer=new OpenLayers.Layer.Vector("Track");
+    tmap.ais_layer=new OpenLayers.Layer.Vector("AIS");
     
     var style_mark = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
     style_mark.graphicWidth = 40;
@@ -1017,7 +1207,21 @@ function initMap(mapdescr,url) {
     tmap.style_track.strokeColor=properties.trackColor;
     tmap.style_track.strokeWidth=properties.trackWidth;
     
-    tmap.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer,headingLayer,tmap.track_layer]));
+    tmap.style_ais = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
+    //must fit to the dimensions of the boat: 100x400, offset 50,241
+    tmap.style_ais.graphicWidth = 20;
+    tmap.style_ais.graphicHeight = 80;
+    tmap.style_ais.graphicXOffset=-10;
+    tmap.style_ais.graphicYOffset=-48;
+    
+    tmap.style_ais.externalGraphic = "images/ais-default.png";
+    // title only works in Firefox and Internet Explorer
+    tmap.style_ais.title = "AIS";
+    tmap.style_ais.rotation=20;
+    tmap.style_ais.fillOpacity=1;
+    tmap.style_ais.display="none"; //only show the boat once we have valid gps data
+    
+    tmap.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer,headingLayer,tmap.track_layer,tmap.ais_layer]));
     //map.maxZoomLevel=osm.getZoomForResolution(minRes);
     tmap.zoomToExtent(firstLayer.layer_extent,true);
     var initialZoom=tmap.getZoomForResolution(maxRes)+1;
@@ -1084,8 +1288,20 @@ function initMap(mapdescr,url) {
 		text: false,
 	  	label: 'Main'
 	   	});
+	$('.avn_btAISCancel').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+		text: false,
+	  	label: 'Nav'
+	   	});
+	$('.avn_btNavAIS').button({
+		text: 'AIS',
+	  	label: 'AIS'
+	   	});
 	$('#markerPosition').text(formatLonLats(tmap.mapPosToLonLat(tmap.getCenter())));
 	map=tmap;
+	mapsequence+=1;
 	$('.avn_toggleButton').addClass("avn_buttonInactive");
 	
 	$('#leftBottom').click(function(e){
@@ -1104,16 +1320,50 @@ function initMap(mapdescr,url) {
 
 }
 
+function showHideAdditionalPanel(id,mainLocation,show){
+	var npos=null;
+	var mainid='.avn_main';
+	var oval=parseInt($(mainid).css(mainLocation).replace(/px/,''));
+	
+	if (show){
+		if ($(id).is(':visible')) return;
+		$(id).show();
+		elheight=$(id).height();
+		elwidth=$(id).width();
+		if (mainLocation == 'bottom' || mainLocation=='top') npos=oval+elheight;
+		if (mainLocation == 'left' || mainLocation=='right') npos=oval+elwidth;
+	}
+	else {
+		if (!$(id).is(':visible')) return;
+		elheight=$(id).height();
+		elwidth=$(id).width();
+		$(id).hide();
+		if (mainLocation == 'bottom' || mainLocation=='top') npos=oval-elheight;
+		if (mainLocation == 'left' || mainLocation=='right') npos=oval-elwidth;
+	}
+	if (npos != null){
+		$(mainid).css(mainLocation,npos+"px");
+	}
+}
+
 function showPage(name){
+	//first hide all pages, afterwards show the selected one
+	for (p in properties.pages){
+		var pname=properties.pages[p];
+		if (pname != name){
+			$('.avn_'+pname+'page').hide();
+		}
+	}
 	for (p in properties.pages){
 		var pname=properties.pages[p];
 		if (pname == name){
 			$('.avn_'+pname+'page').show();
 		}
-		else{
-			$('.avn_'+pname+'page').hide();
-		}
 	}
+}
+
+function isPageVisible(name){
+	return $('.avn_'+name+'page_main').is(':visible');
 }
 
 /*----------------------------------------------------------------------------------------------------
@@ -1203,4 +1453,5 @@ $(document).ready(function(){
 	}
 	queryPosition();
 	queryTrackData();
+	queryAISData();
 });

@@ -125,6 +125,18 @@ button.avn_buttonInactive{
 	margin-left: 0px;
 	background-size: 24px 24px;
 }
+#btnAISCancel .ui-icon{
+	background-image: url(images/Cancel40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
+
 
 .avn_selectList	.ui-selecting { background: #1E6CCF;}
 .avn_selectList	.ui-selected:not(.ui-disabled) { background: #1E6CCF; color: white;}
@@ -156,6 +168,29 @@ button.avn_buttonInactive{
 
 .avn_hidden{
 	display:none;
+}
+
+.avn_ais_infotable{
+	display: table;
+	margin-left: 3px;
+	margin-right: 3px;
+	line-height: 20px;
+	font-size: 14px;
+}
+.avn_ais{
+	display: table-row;
+		
+}
+.avn_aisparam{
+	display: table-cell;
+	padding-left: 10px;
+	padding-right: 10px;
+	padding-bottom: 3px;
+	padding-top: 2px;
+	border-bottom: 1px solid black;
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+	
 }
 /*-------------------------------------------------------------------------------
     main page
@@ -194,6 +229,14 @@ button.avn_buttonInactive{
 	display: inline-block;
 }
 
+#aisPageContent{
+	overflow: auto;
+	top:0;
+	bottom:0;
+	left:0;
+	right: 0;
+	
+}
 
 /*------------------------------------------------------------------------------- 
 	element positioning
@@ -237,8 +280,24 @@ button.avn_buttonInactive{
     
 
 /*
-	4. bottom line (20 px height) - see .avn_leftBottom
+	4. bottom line  - see .avn_leftBottom
 */
+
+/* 
+    if AIS is visible - add a second bottom line above the bottom line
+    visibility and changing avn_main bottom will be handled by java script 
+*/
+#aisInfo{
+	bottom: 30px;
+	height: 34px;
+	left:	0px;
+	right:	0px;
+	background-color: #EBEB55;
+	text-align: center;
+}
+#aisInfoInner{
+	margin-top: 2px;
+}
    
 #leftBottom{
 	
