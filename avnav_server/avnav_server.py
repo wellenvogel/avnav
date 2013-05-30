@@ -21,6 +21,9 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
+#
+#  parts from this software (AIS decoding) are taken from the gpsd project
+#  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import sys
 import os
@@ -59,6 +62,7 @@ hasGpsd=False
 hasBluetooth=False
 hasUdev=False
 loggingInitialized=False
+hasAisDecoder=False
 allHandlers=[]
 #should have a better solution then a global...
 trackWriter=None
@@ -86,6 +90,12 @@ except:
 try:
   import pyudev
   hasUdev=True
+except:
+  pass
+
+try:
+  import ais
+  hasAisDecoder=True
 except:
   pass
 
@@ -613,6 +623,7 @@ class SerialReader():
         raise Exception("missing "+p+" parameter for serial reader")
     self.param=param
     self.navdata=navdata
+    self.nmeaParser=NMEAParser(navdata)
     self.writeData=writeData
     self.infoHandler=infoHandler
     if self.navdata is None and self.writeData is None:
@@ -841,7 +852,7 @@ class SerialReader():
             if not self.writeData is None:
               self.writeData(data)
             else:
-              self.parseData(data,self.navdata)
+              self.nmeaParser.parseData(data)
             lastTime=time.time()
         if (time.time() - lastTime) > porttimeout:
           self.setInfo("timeout",AVNWorker.Status.ERROR)
@@ -859,12 +870,24 @@ class SerialReader():
     if not self.infoHandler is None:
       self.infoHandler.setInfo(self.getName(),txt,status)
         
+ 
+
+#an NMEA parser
+#parses some simple NMEA setences and uses ais from the gpsd project to parse AIS setences
+#adds parsed data to a navdata struct
+
+class NMEAParser():
+  #AIS field translations
+  aisFieldTranslations={'msgtype':'type'}
+  
+  def __init__(self,navdata):
+    self.payloads = {'A':'', 'B':''}    #AIS paylod data
+    self.navdata=navdata
   #------------------ some nmea data specific methods -------------------
   #add a valid dataset to nav data
   #timedate is a datetime object as returned by gpsTimeToTime
   #fill this additionally into the time part of data
-  @classmethod
-  def addToNavData(cls,data,timedate,navdata):
+  def addToNavData(self,data,timedate):
     if timedate is not None:
       t=timedate.isoformat()
       #seems that isoformat does not well harmonize with OpenLayers.Date
@@ -874,7 +897,7 @@ class SerialReader():
         t+="Z"
       data['time']=t
     de=AVNDataEntry.fromData(data)
-    navdata.addEntry(de)
+    self.navdata.addEntry(de)
     
   #returns an datetime object containing the current gps time
   @classmethod
@@ -933,15 +956,15 @@ class SerialReader():
    
   
  
-  #parse a line of NMEA data and store it in the navdata array
-  @classmethod      
-  def parseData(cls,data,navdata):
+  #parse a line of NMEA data and store it in the navdata array      
+  def parseData(self,data):
     darray=data.split(",")
     if len(darray) < 1 or (darray[0][0:1] != "$" and darray[0][0:1] != '!') :
       AVNLog.debug("invalid nmea data (len<1) "+data+" - ignore")
       return
-    if darray[0][0:6] == '!AIVDM':
-      AVNLog.debug("cannot handle AIS data - ignore %s",data)
+    if darray[0][0] == '!':
+      AVNLog.debug("parse AIS data %s",data)
+      self.ais_packet_scanner(data)
       return
     tag=darray[0][3:]
     rt={'class':'TPV','tag':tag}
@@ -949,18 +972,18 @@ class SerialReader():
     #as only with this one we have really a valid complete timestamp
     try:
       if tag=='GGA':
-        rt['lat']=cls.nmeaPosToFloat(darray[2],darray[3])
-        rt['lon']=cls.nmeaPosToFloat(darray[4],darray[5])
+        rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
+        rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
         rt['mode']=int(darray[6] or '0')
-        cls.addToNavData(rt, None,navdata)
+        self.addToNavData(rt, None)
         return
       if tag=='GLL':
         rt['mode']=1
         if len(darray > 6):
           rt['mode']= (0 if (darray[6] != 'A') else 2)
-        rt['lat']=cls.nmeaPosToFloat(darray[1],darray[2])
-        rt['lon']=cls.nmeaPosToFloat(darray[3],darray[4])
-        self.addToNavData(rt, None,navdata)
+        rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
+        rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
+        self.addToNavData(rt, None)
         return
       if tag=='VTG':
         mode=darray[2]
@@ -970,27 +993,132 @@ class SerialReader():
           rt['speed']=float(darray[5] or '0')*NM/3600
         else:
           rt['speed']=float(darray[3]or '0')*NM/3600
-        cls.addToNavData(rt, None,navdata)
+        self.addToNavData(rt, None)
         return
       if tag=='RMC':
         #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
         #this includes current date
         rt['mode']=( 0 if darray[2] != 'A' else 1)
         gpstime=darray[1]
-        rt['lat']=cls.nmeaPosToFloat(darray[3],darray[4])
-        rt['lon']=cls.nmeaPosToFloat(darray[5],darray[6])
+        rt['lat']=self.nmeaPosToFloat(darray[3],darray[4])
+        rt['lon']=self.nmeaPosToFloat(darray[5],darray[6])
         rt['speed']=float(darray[7] or '0')*NM/3600
         rt['track']=float(darray[8] or '0')
         gpsdate=darray[9]
-        cls.addToNavData(rt, cls.gpsTimeToTime(gpstime, gpsdate), navdata)
+        self.addToNavData(rt, self.gpsTimeToTime(gpstime, gpsdate))
         return
         
     except Exception:
         AVNLog.debug(" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
-
-
-
   
+  #parse one line of AIS data 
+  #taken from ais.py and adapted to our input handling     
+  def ais_packet_scanner(self,line):
+    "Get a span of AIVDM packets with contiguous fragment numbers."
+    if not line.startswith("!"):
+      AVNLog.debug("ignore unknown AIS data %s",line)
+      return
+    line = line.strip()
+    # Strip off USCG metadata 
+    line = re.sub(r"(?<=\*[0-9A-F][0-9A-F]),.*", "", line)
+    # Compute CRC-16 checksum
+    packet = line[1:-3]  # Strip leading !, trailing * and CRC
+    csum = 0
+    for c in packet:
+        csum ^= ord(c)
+    csum = "%02X" % csum
+    # Ignore comments
+    # Assemble fragments from single- and multi-line payloads
+    fields = line.split(",")
+    try:
+        expect = fields[1]
+        fragment = fields[2]
+        channel = fields[4]
+        if fragment == '1':
+            self.payloads[channel] = ''
+        self.payloads[channel] += fields[5]
+        try:
+            # This works because a mangled pad literal means
+            # a malformed packet that will be caught by the CRC check. 
+            pad = int(fields[6].split('*')[0])
+        except ValueError:
+            pad = 0
+        crc = fields[6].split('*')[1].strip()
+    except IndexError:
+        AVNLog.debug("malformed line: %s\n",line.strip())
+        return
+    if csum != crc:
+        AVNLog.debug("bad checksum %s, expecting %s: %s\n",crc, csum, line.strip())
+        return
+    if fragment < expect:
+        AVNLog.debug("waiting for more fragments: %s",line.strip())
+        return
+    # Render assembled payload to packed bytes
+    bits = ais.BitVector()
+    bits.from_sixbit(self.payloads[channel], pad)
+    self.parse_ais_messages(self.payloads[channel], bits)
+
+
+  #basically taken from ais.py but changed to decode one message at a time
+  def parse_ais_messages(self,raw,bits):
+      "Generator code - read forever from source stream, parsing AIS messages."
+      values = {}
+      values['length'] = bits.bitlen
+      # Without the following magic, we'd have a subtle problem near
+      # certain variable-length messages: DSV reports would
+      # sometimes have fewer fields than expected, because the
+      # unpacker would never generate cooked tuples for the omitted
+      # part of the message.  Presently a known issue for types 15
+      # and 16 only.  (Would never affect variable-length messages in
+      # which the last field type is 'string' or 'raw').
+      bits.extend_to(168)
+      # Magic recursive unpacking operation
+      try:
+          cooked = ais.aivdm_unpack(0, bits, 0, values, ais.aivdm_decode)
+          # We now have a list of tuples containing unpacked fields
+          # Collect some field groups into ISO8601 format
+          for (offset, template, label, legend, formatter) in ais.field_groups:
+              segment = cooked[offset:offset+len(template)]
+              if map(lambda x: x[0], segment) == template:
+                  group = ais.formatter(*map(lambda x: x[1], segment))
+                  group = (label, group, 'string', legend, None)
+                  cooked = cooked[:offset]+[group]+cooked[offset+len(template):]
+          # Apply the postprocessor stage
+          cooked = ais.postprocess(cooked)
+          expected = ais.lengths.get(values['msgtype'], None)
+          # Check length; has to be done after so we have the type field 
+          bogon = False
+          if expected is not None:
+              if type(expected) == type(0):
+                  expected_range = (expected, expected)
+              else:
+                  expected_range = expected
+              actual = values['length']
+              if not (actual >= expected_range[0] and actual <= expected_range[1]):
+                  raise AISUnpackingException(0, "length", actual)
+          # We're done, hand back a decoding
+          #AVNLog.ld('decoded AIS data',cooked)
+          self.storeAISdata(cooked)
+      except:
+          (exc_type, exc_value, exc_traceback) = sys.exc_info()
+          AVNLog.debug("exception %s while decoding AIS data %s",exc_value,raw.strip())
+  
+  def storeAISdata(self,bitfield):
+    rt={'class':'AIS'}
+    storeData=False
+    for bfe in bitfield:
+      try:
+        name=bfe[0].name
+        tname=self.aisFieldTranslations.get(name)
+        if tname is not None:
+          name=tname
+        val=str(bfe[1])
+        rt[name]=val
+      except:
+        pass
+    de=AVNDataEntry.fromData(rt)
+    if de is not None:
+      self.navdata.addEntry(de)
     
 #a base class for all workers
 #this provides some config functions and a common interfcace for handling them
@@ -1675,13 +1803,14 @@ class AVNGpsdFeeder(AVNGpsd):
     infoName="standaloneFeeder"
     threading.current_thread().setName("[%s]%s[standalone feed]"%(AVNLog.getThreadId(),self.getName()))
     AVNLog.info("standalone feeder started")
+    nmeaParser=NMEAParser(self.navdata)
     self.setInfo(infoName, "running", AVNWorker.Status.RUNNING)
     while True:
       try:
         while True:
           data=self.popListEntry()
           if not data is None:
-            SerialReader.parseData(data,self.navdata)
+            nmeaParser.parseData(data)
           else:
             time.sleep(self.getFloatParam('feederSleep'))
       except Exception as e:
