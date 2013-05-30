@@ -84,7 +84,7 @@ chown -R 1000:1000 $TDIR || err "chown viewer failed"
 
 TDIR=$TMPDIR/avnav/program/server
 wlog "writing files for $TDIR"
-for f in avnav_server.py
+for f in avnav_server.py ais.py
 do
   ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/avnav_server/$f . ) || err "cp $f failed"
   chown 1000:1000 $TDIR/$f || err "chown $f failed"
