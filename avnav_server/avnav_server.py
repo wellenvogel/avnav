@@ -262,12 +262,14 @@ class AVNUtil():
   #convert AIS data (and clone the data)
   #positions / 600000
   #speed/10
+  #course/10
   @classmethod
   def convertAIS(cls,aisdata):
     rt=aisdata.copy()
     rt['lat']=float(aisdata['lat'])/600000
     rt['lon']=float(aisdata['lon'])/600000
-    rt['speed']=float(aisdata['speed'])/10
+    rt['speed']=float(aisdata['speed'])/10  
+    rt['course']=float(aisdata['course'])/10  
     return rt
   
   #parse an ISO8601 t8ime string
@@ -501,6 +503,9 @@ class AVNNavData():
   #returns the entry or None
   def __checkExpired__(self,entry,key):
     et=AVNUtil.utcnow()-self.expiryTime
+    if entry.data['class']=='AIS':
+      #take 5*expiry time for AIS data
+      et=et-4*self.expiryTime
     if entry.timestamp < et:
       AVNLog.debug("remove expired entry %s, et=%s ",str(entry),str(et))
       del self.list[key]
@@ -2834,7 +2839,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           AVNLog.debug("filtering out %s due to distance %f",str(fentry['mmsi']),mdist)
     else:
       for entry in rt.values():
-        frt.append(AVNUtil.convertAIS(entry.data))
+        try:
+          frt.append(AVNUtil.convertAIS(entry.data))
+        except Exception as e:
+          AVNLog.debug("unable to convert ais data: %s",traceback.format_exc())
     return json.dumps(frt)
   
   def handleGpsRequest(self,requestParam):
