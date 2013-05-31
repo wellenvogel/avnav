@@ -170,6 +170,10 @@ button.avn_buttonInactive{
 	display:none;
 }
 
+.avn_dialog .ui-dialog-content{
+	overflow: auto !important;
+}
+
 .avn_ais_infotable{
 	display: table;
 	margin-left: 3px;
