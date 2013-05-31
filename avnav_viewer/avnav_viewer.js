@@ -44,6 +44,7 @@ var properties={
 		trackInterval: 30, //seconds
 		initialTrackLength: 24*120, //multiplies with trackInterval - so this gives 24h
 		aisQueryTimeout: 10000,
+		aisDistance: 20, //distance for AIS query in nm
 		maxAisErrors: 3, //after that many errors AIS display will be switched off
 		navUrl: "avnav_navi.php",
 		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
@@ -51,6 +52,33 @@ var properties={
 		statusErrorImage: "images/RedBubble40.png",
 		statusOkImage: "images/GreenBubble40.png",
 		pages: ["main","nav","ais"]
+};
+
+var aisparam={
+		distance:{
+			headline: 'dist(nm)',
+			format: function(v){ return formatDecimal(parseFloat(v||0),3,1);}
+		},
+		speed: {
+			headline: 'speed(kn)',
+			format: function(v){ return formatDecimal(parseFloat(v||0),3,1);}
+		},
+		course:	{
+			headline: 'course',
+			format: function(v){ return formatDecimal(parseFloat(v||0),3,0);}
+		},
+		mmsi: {
+			headline: 'mmsi',
+			format: function(v){ return v;}
+		},
+		cpa:{
+			headline: 'cpa',
+			format: function(v){ return formatDecimal(parseFloat(v||0),3,1);}
+		},
+		tcpa:{
+			headline: 'tcpa',
+			format: function(v){ return v;}
+		}
 };
 
 var userData={
@@ -702,6 +730,10 @@ function queryAISData(){
 	if (urlparam.demo != null){
 		url+="&demo="+urlparam.demo;
 	}
+	var center=map.mapPosToLonLat(map.getCenter());
+	url+="&lon="+formatDecimal(center.lon,3,5);
+	url+="&lat="+formatDecimal(center.lat,3,5);
+	url+="&distance="+formatDecimal(properties.aisDistance||10,4,1);
 	var ctxdata={};
 	ctxdata.mapsequence=mapsequence;
 	$.ajax({
@@ -779,12 +811,12 @@ function updateAISInfoPanel(){
 		if (aisList.length){
 			showAISPanel();
 			var ais=aisList[0];
-			$('#aisDst').text(formatDecimal(ais.distance||0,3,1));
-			$('#aisSog').text(formatDecimal(parseInt(ais.speed||0),3,1));
-			$('#aisCog').text(formatDecimal(parseInt(ais.course||0),3,0));
-			$('#aisCpa').text(formatDecimal(parseInt(ais.cpa||0),3,1));
-			$('#aisTcpa').text("00:00"); //TODO
-			$('#aisMmsi').text(ais.mmsi);
+			$('#aisDst').text(aisparam['distance'].format(ais.distance));
+			$('#aisSog').text(aisparam['speed'].format(ais.speed));
+			$('#aisCog').text(aisparam['course'].format(ais.course0));
+			$('#aisCpa').text(aisparam['cpa'].format(ais.cpa));
+			$('#aisTcpa').text(aisparam['tcpa'].format(ais.tcpa)); //TODO
+			$('#aisMmsi').text(aisparam['mmsi'].format(ais.mmsi));
 		}
 		else{
 			hideAISPanel();
@@ -800,19 +832,19 @@ function aisSelection(mmsi){
 }
 
 function updateAISPage(){
-	var aisparam=['distance','speed','course','mmsi','cpa','tcpa'];
+	
 	if (isPageVisible('ais')){
 		var html='<div class="avn_ais_infotable">';
 		html+='<div class="avn_ais avn_ais_headline">';
 		for (var p in aisparam){
-			html+='<div class="avn_aisparam">'+aisparam[p]+'</div>';
+			html+='<div class="avn_aisparam">'+aisparam[p].headline+'</div>';
 		}
 		html+='</div>';
 		for( var aisidx in aisList){
 			var ais=aisList[aisidx];
 			html+='<div class="avn_ais" onclick="aisSelection(\''+ais['mmsi']+'\')">';
 			for (var p in aisparam){
-				html+='<div class="avn_aisparam">'+(ais[aisparam[p]]||'')+'</div>';
+				html+='<div class="avn_aisparam">'+aisparam[p].format(ais[p]||'')+'</div>';
 			}
 			html+='</div>';
 		}
