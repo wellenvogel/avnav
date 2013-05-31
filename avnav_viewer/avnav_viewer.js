@@ -1293,10 +1293,10 @@ function initMap(mapdescr,url) {
     
     var style_boat = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
     //must fit to the dimensions of the boat: 100x400, offset 50,241
-    style_boat.graphicWidth = 20;
-    style_boat.graphicHeight = 80;
-    style_boat.graphicXOffset=-10;
-    style_boat.graphicYOffset=-48;
+    style_boat.graphicWidth = 30;
+    style_boat.graphicHeight = 120;
+    style_boat.graphicXOffset=-15;
+    style_boat.graphicYOffset=-72;
     
     style_boat.externalGraphic = "images/Boat2.png";
     // title only works in Firefox and Internet Explorer
@@ -1331,6 +1331,7 @@ function initMap(mapdescr,url) {
     tmap.style_ais.fillOpacity=1;
     tmap.style_ais.labelOutlineWidth=3;
     tmap.style_ais.labelYOffset=15;
+    tmap.style_ais.fontSize="14px";
    
     
     tmap.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer,headingLayer,tmap.track_layer,tmap.ais_layer]));
