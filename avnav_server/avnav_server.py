@@ -1366,7 +1366,9 @@ class AVNTrackWriter(AVNWorker):
     lastLat=None
     lastLon=None
     newFile=False
+    loopCount=0
     while True:
+      loopCount+=1
       currentTime=datetime.datetime.utcnow();
       
       trackdir=self.getStringParam("trackdir")
@@ -1427,6 +1429,9 @@ class AVNTrackWriter(AVNWorker):
           newFile=False
           self.setInfo('main', "writing to %s"%(curfname), AVNWorker.Status.NMEA)
         self.status=True
+        if loopcount >= 10:
+          self.cleanupTrack()
+          loopcount=0
         gpsdata=self.navdata.getMergedEntries('TPV',[])
         lat=gpsdata.data.get('lat')
         lon=gpsdata.data.get('lon')
@@ -2830,13 +2835,16 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       dest=(lat,lon)
       AVNLog.debug("limiting AIS to lat=%f,lon=%f,dist=%f",lat,lon,dist)
       for entry in rt.values():
-        fentry=AVNUtil.convertAIS(entry.data)
-        mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
-        if mdist<=dist:
-          fentry['distance']=mdist
-          frt.append(fentry)
-        else:
-          AVNLog.debug("filtering out %s due to distance %f",str(fentry['mmsi']),mdist)
+        try:
+          fentry=AVNUtil.convertAIS(entry.data)        
+          mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
+          if mdist<=dist:
+            fentry['distance']=mdist
+            frt.append(fentry)
+          else:
+            AVNLog.debug("filtering out %s due to distance %f",str(fentry['mmsi']),mdist)
+        except:
+          AVNLog.debug("unable to convert ais data: %s",traceback.format_exc())
     else:
       for entry in rt.values():
         try:
