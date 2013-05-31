@@ -99,6 +99,7 @@ var lastTrackQuery=0;
 var mapsequence=1; //will be incremented each time a new map is created
 var aisList=[];
 var aisErrors=0;
+var trackedAIStarget=null;
 
 $.cookie.json = true;
 
@@ -882,7 +883,27 @@ function updateAISInfoPanel(){
 	if (map && map.ais_layer.getVisibility()){
 		if (aisList.length){
 			showAISPanel();
-			var ais=aisList[0];
+			var ais;
+			var displayClass="avn_ais_info_first";
+			var isFirst=true;
+			if (!trackedAIStarget)ais=aisList[0];
+			else {
+				for(var idx in aisList){
+					if (aisList[idx].mmsi == trackedAIStarget){
+						ais=aisList[idx];
+						if (idx != 0) isFirst=false;
+						break;
+					}
+				}
+			}
+			if (! ais){
+				//maybe our target disappeared...
+				trackedAIStarget=null;
+				ais=aisList[0];
+				isFirst=true;
+			}
+			if (isFirst) $('#aisInfo').addClass(displayClass);
+			else $('#aisInfo').removeClass(displayClass);
 			$('#aisDst').text(aisparam['distance'].format(ais.distance));
 			$('#aisSog').text(aisparam['speed'].format(ais.speed));
 			$('#aisCog').text(aisparam['course'].format(ais.course0));
@@ -899,15 +920,27 @@ function updateAISInfoPanel(){
 	}
 }
 
+//called from the AIS page, when an AIS target is selected
 function aisSelection(mmsi){
 	if (! map) return;
 	if (! mmsi) return;
+	trackedAIStarget=mmsi;
 	map.boatFeature.attributes.isLocked=false;
 	handleToggleButton('#btnLockPos',false);
 	showPage('nav');
+	updateAISInfoPanel();
 	map.centerToAIStarget(mmsi);
 }
 
+//called from the MAP when an AIS target is selected
+function selectAIStarget(feature){
+	var mmsi=feature.attributes.mmsi;
+	if (!mmsi) return;
+	trackedAIStarget=mmsi;
+	hideAISPanel();
+	showPage('ais');
+	updateAISPage();
+}
 function updateAISPage(){
 	
 	if (isPageVisible('ais')){
@@ -919,7 +952,9 @@ function updateAISPage(){
 		html+='</div>';
 		for( var aisidx in aisList){
 			var ais=aisList[aisidx];
-			html+='<div class="avn_ais" onclick="aisSelection(\''+ais['mmsi']+'\')">';
+			var addClass='';
+			if ((trackedAIStarget && ais.mmsi == trackedAIStarget)|| (! trackedAIStarget && aisidx==0)) addClass='avn_ais_selected';
+			html+='<div class="avn_ais '+addClass+'" onclick="aisSelection(\''+ais['mmsi']+'\')">';
 			for (var p in aisparam){
 				html+='<div class="avn_aisparam">'+aisparam[p].format(ais[p]||'')+'</div>';
 			}
@@ -1090,6 +1125,12 @@ function btnNavAIS(){
 
 function btnAISCancel(){
 	showPage('nav');
+	updateAISInfoPanel();
+}
+function btnAISFirst(){
+	trackedAIStarget=null;
+	showPage('nav');
+	if (aisList.length) map.centerToAIStarget(aisList[0].mmsi);
 	updateAISInfoPanel();
 }
 
@@ -1352,6 +1393,16 @@ function initMap(mapdescr,url) {
     
     tmap.addControl(new OpenLayers.Control.Graticule({layerName: 'Grid', id: 'grid',intervals: [0.16666666666666666666666666666667,0.083333333333333333333333333333333],
     		autoActivate: false}));
+    var aisSelectFeature = new OpenLayers.Control.SelectFeature(
+    	    tmap.ais_layer,
+    	    {
+    	        onSelect: function(feature){
+    	        	selectAIStarget(feature);
+    	        },
+    	        autoActivate: true
+    	    }
+    	);
+    tmap.addControl(aisSelectFeature);
     tmap.events.register("zoomend",tmap,function(e){
     	if ((tmap.zoom +zoomOffset) < properties.minGridLedvel) tmap.getControl('grid').deactivate();
     	else tmap.getControl('grid').activate();
@@ -1408,10 +1459,18 @@ function initMap(mapdescr,url) {
 		text: false,
 	  	label: 'Nav'
 	   	});
+	$('.avn_btAISFirst').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+		text: false,
+	  	label: 'Track first'
+	   	});
 	$('.avn_btNavAIS').button({
 		text: 'AIS',
 	  	label: 'AIS'
 	   	});
+	
 	$('#markerPosition').text(formatLonLats(tmap.mapPosToLonLat(tmap.getCenter())));
 	map=tmap;
 	mapsequence+=1;

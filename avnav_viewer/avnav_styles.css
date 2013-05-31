@@ -136,7 +136,17 @@ button.avn_buttonInactive{
 	margin-left: 0px;
 	background-size: 24px 24px;
 }
-
+#btnAISFirst .ui-icon{
+	background-image: url(images/Ais-Up-40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
 
 .avn_selectList	.ui-selecting { background: #1E6CCF;}
 .avn_selectList	.ui-selected:not(.ui-disabled) { background: #1E6CCF; color: white;}
@@ -195,6 +205,12 @@ button.avn_buttonInactive{
 	border-left: 1px solid black;
 	border-right: 1px solid black;
 	
+}
+.avn_ais_info_first{
+	background-color: #2AB42A !important;
+}
+.avn_ais_selected{
+	background-color: grey;
 }
 /*-------------------------------------------------------------------------------
     main page
