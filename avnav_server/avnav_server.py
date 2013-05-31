@@ -1429,9 +1429,9 @@ class AVNTrackWriter(AVNWorker):
           newFile=False
           self.setInfo('main', "writing to %s"%(curfname), AVNWorker.Status.NMEA)
         self.status=True
-        if loopcount >= 10:
+        if loopCount >= 10:
           self.cleanupTrack()
-          loopcount=0
+          loopCount=0
         gpsdata=self.navdata.getMergedEntries('TPV',[])
         lat=gpsdata.data.get('lat')
         lon=gpsdata.data.get('lon')
