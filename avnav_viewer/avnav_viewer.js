@@ -46,6 +46,7 @@ var properties={
 		aisQueryTimeout: 10000,
 		aisDistance: 20, //distance for AIS query in nm
 		maxAisErrors: 3, //after that many errors AIS display will be switched off
+		aisNearestImage: 'images/ais-nearest.png',
 		navUrl: "avnav_navi.php",
 		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
 		cookieName: "avnav",
@@ -176,6 +177,77 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 			}
 			if (doRedraw) this.track_layer.redraw();
 		}
+	},
+	//------------------ drawing of AIS data ---------------------------------------------------
+	//the input list ius an array of AIS data sorted by distance
+	//we check if we need to add/remove features and update the position and direction
+	//if a target cpa is below the alarm cpa, we draw this one separately
+	//the nearest one will be drawn in green
+	updateAIS: function(aisdata){
+		var addlist=[];
+		var removelist=[];
+		var now=new Date().getTime(); //for checking if we hit all features
+		for (var aisidx in aisdata){
+			var ais=aisdata[aisidx];
+			var mmsi=ais.mmsi;
+			if (! mmsi) continue;
+			if (! this.ais_features[mmsi]){
+				//we must add this target
+				//we make a copy of the style so that each ais target has its own style
+				var aisTargetPoint=this.lonLatToPoint(ais.lon, ais.lat);
+			    var nAisFeature=new OpenLayers.Feature.Vector(aisTargetPoint,
+			    		{isLocked:false,angle:0,mmsi:ais.mmsi},
+			    		 OpenLayers.Util.extend({label:ais.mmsi},this.style_ais));
+				addlist.push(nAisFeature);
+				this.ais_features[mmsi]=nAisFeature;
+			}
+			this.ais_features[mmsi].attributes.updatets=now;
+		}
+		for (var o in this.ais_features){
+			if (this.ais_features[o] && this.ais_features[o].attributes.updatets != now){
+				removelist.push(this.ais_features[o]);
+				delete this.ais_features[o];
+			}
+		}
+		this.ais_layer.removeFeatures(removelist);
+		this.ais_layer.addFeatures(addlist);
+		var isFirst=true;
+		for (var aisidx in aisdata){
+			var ais=aisdata[aisidx];
+			var mmsi=ais.mmsi;
+			if (! mmsi) continue;
+			var aisfeature=this.ais_features[mmsi];
+			if (! aisfeature) continue;
+			this.updateAIStarget(ais,aisfeature,isFirst);
+			isFirst=false;
+		}
+		this.ais_layer.redraw();
+	},
+	
+	
+	//update a single AIS target
+	updateAIStarget: function(aisdata,aisfeature,isFirst){
+		aisfeature.geometry.calculateBounds();
+		var mlonlat=this.lonLatToMap(new OpenLayers.LonLat(aisdata.lon,aisdata.lat));
+		aisfeature.style.rotation=aisdata.course;
+		aisfeature.move(mlonlat);
+		if (isFirst){
+			aisfeature.style.externalGraphic=properties.aisNearestImage;
+		}
+		else{
+			aisfeature.style.externalGraphic=this.style_ais.externalGraphic;
+		}
+		//TODO: change color, draw lines for minimal,...
+		
+	},
+	
+	//center the map to an AIS target
+	//return true when found
+	centerToAIStarget: function(mmsi){
+		var targetFeature=this.ais_features[mmsi];
+		if (! targetFeature) return false;
+		this.moveMapToFeature(targetFeature, false);
+		return true;
 	},
 	
 	//------------------ convert a pos in lon/lat to an openLayers point in map projection -----
@@ -795,7 +867,7 @@ function handleAISData(){
 	aisList.sort(aisSort);
 	updateAISInfoPanel();
 	if (map){
-		//TODO: update map AIS data
+		map.updateAIS(aisList);
 	}
 	updateAISPage();
 	
@@ -828,7 +900,12 @@ function updateAISInfoPanel(){
 }
 
 function aisSelection(mmsi){
-	alert("selected "+mmsi);
+	if (! map) return;
+	if (! mmsi) return;
+	map.boatFeature.attributes.isLocked=false;
+	handleToggleButton('#btnLockPos',false);
+	showPage('nav');
+	map.centerToAIStarget(mmsi);
 }
 
 function updateAISPage(){
@@ -1240,18 +1317,21 @@ function initMap(mapdescr,url) {
     tmap.style_track.strokeWidth=properties.trackWidth;
     
     tmap.style_ais = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
-    //must fit to the dimensions of the boat: 100x400, offset 50,241
-    tmap.style_ais.graphicWidth = 20;
-    tmap.style_ais.graphicHeight = 80;
-    tmap.style_ais.graphicXOffset=-10;
-    tmap.style_ais.graphicYOffset=-48;
+    //must fit to the dimensions of the ais target: 100x300, offset 50,200
+    tmap.style_ais.graphicWidth = 30;
+    tmap.style_ais.graphicHeight = 90;
+    tmap.style_ais.graphicXOffset=-15;
+    tmap.style_ais.graphicYOffset=-60;
+    
     
     tmap.style_ais.externalGraphic = "images/ais-default.png";
     // title only works in Firefox and Internet Explorer
     tmap.style_ais.title = "AIS";
     tmap.style_ais.rotation=20;
     tmap.style_ais.fillOpacity=1;
-    tmap.style_ais.display="none"; //only show the boat once we have valid gps data
+    tmap.style_ais.labelOutlineWidth=3;
+    tmap.style_ais.labelYOffset=15;
+   
     
     tmap.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer,headingLayer,tmap.track_layer,tmap.ais_layer]));
     //map.maxZoomLevel=osm.getZoomForResolution(minRes);
