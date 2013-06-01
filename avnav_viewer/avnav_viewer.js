@@ -989,9 +989,9 @@ function selectAIStarget(feature){
 	trackedAIStarget=mmsi;
 	hideAISPanel();
 	showPage('ais');
-	updateAISPage();
+	updateAISPage(true);
 }
-function updateAISPage(){
+function updateAISPage(initial){
 	
 	if (isPageVisible('ais')){
 		var html='<div class="avn_ais_infotable">';
@@ -1012,6 +1012,9 @@ function updateAISPage(){
 		}
 		html+='</div>';
 		$('#aisPageContent').html(html);
+		if (initial){
+			$('#aisPageContent').scrollTop($('.avn_ais_selected').offset().top);
+		}
 	}
 	else{
 		$('#aisPageContent').empty();
@@ -1205,7 +1208,7 @@ function showAISPanel(){
 		$(aisinfo).click(function(e){
 			hideAISPanel();
 			showPage('ais');
-			updateAISPage();
+			updateAISPage(true);
 		});
 	}
 }
