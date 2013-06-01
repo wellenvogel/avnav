@@ -965,8 +965,8 @@ function aisSelection(mmsi,idx){
 	if (! map) return;
 	var now=new Date().getTime();
 	//we have some bug in boat browser that seems to fire a mouse event when we active this page
-	//so prevent any action here for 500ms
-	if (pageActivationTimes['ais'] && pageActivationTimes['ais'] > (now -500)) return;
+	//so prevent any action here for 600ms
+	if (pageActivationTimes['ais'] && pageActivationTimes['ais'] > (now -600)) return;
 	if (idx != 0){
 		if (! mmsi) return;
 		trackedAIStarget=mmsi;
@@ -1429,7 +1429,8 @@ function initMap(mapdescr,url) {
     tmap.style_ais.fontSize="14px";
    
     
-    tmap.addLayers([osm].concat(tiler_overlays).concat([markerLayer,boatLayer,headingLayer,tmap.track_layer,tmap.ais_layer]));
+    tmap.addLayers([osm].concat(tiler_overlays).concat([markerLayer,headingLayer,tmap.track_layer,tmap.ais_layer,boatLayer]));
+    boatLayer.setZIndex(1001);
     //map.maxZoomLevel=osm.getZoomForResolution(minRes);
     tmap.zoomToExtent(firstLayer.layer_extent,true);
     var initialZoom=tmap.getZoomForResolution(maxRes)+1;
