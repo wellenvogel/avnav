@@ -429,15 +429,12 @@ class AVNDataEntry():
       AVNLog.ld("data item created",rt)
       return rt
     if dcls == 'AIS':
-      #currently we only store position reports
-      #see http://gpsd.berlios.de/AIVDM.html
-      knownAISTypes=(1,2,3,5,18,19)
       try:
         type=int(data.get('type'))
       except:
         AVNLog.ld("no type in AIS data",data)
         return None
-      if not type in knownAISTypes:
+      if not type in NMEAParser.knownAISTypes:
         AVNLog.debug("ignore type %d in AIS data %s",type,str(data))
         return None
       mmsi=data.get('mmsi')
@@ -475,10 +472,12 @@ class AVNDataEntry():
 
 #the main List of navigational items received
 class AVNNavData():
-  def __init__(self,expiryTime):
+  def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
     self.list={}
     self.listLock=threading.Lock()
     self.expiryTime=expiryTime
+    self.aisExpiryTime=aisExpiryTime
+    self.ownMMSI=ownMMSI
   
   #add an entry to the list
   #do not add if there is already such an entry with newer timestamp
@@ -489,13 +488,39 @@ class AVNNavData():
     if navEntry.timestamp is None:
       navEntry.timestamp=AVNUtil.utcnow()
     AVNLog.ld("AVNNavData add entry",navEntry)
+    if navEntry.data['class'] == 'AIS':
+      if self.ownMMSI != '' and self.ownMMSI == navEntry.data['mmsi']:
+          AVNLog.debug("omitting own AIS message mmsi %s",self.ownMMSI)
+          return
     self.listLock.acquire()
     if navEntry.key in self.list:
-      if self.list[navEntry.key].timestamp > navEntry.timestamp:
-        AVNLog.debug("not adding entry, older ts %s",str(navEntry))
+      #for AIS type 5/24 messages we merge them with an existing message
+      #for others we merge back...
+      if navEntry.data['class'] == 'AIS':
+        if navEntry.data.get('type')=='5' or navEntry.data.get('type')=='24':
+          AVNLog.debug("merging AIS type 5/24 with existing message")
+          for k in NMEAParser.ais5mergeFields:
+            v=navEntry.data.get(k)
+            if v is not None:
+              self.list[navEntry.key].data[k]=v
+        else:
+          AVNLog.debug("merging AIS with existing message")
+          for k in NMEAParser.ais5mergeFields:
+            v=self.list[navEntry.key].data.get(k)
+            if v is not None:
+              navEntry.data[k]=v
+          self.list[navEntry.key]=navEntry
+        #always replace here and merge back
         self.listLock.release()
+        x=navEntry.key
         return
+      else:
+        if self.list[navEntry.key].timestamp > navEntry.timestamp:
+          AVNLog.debug("not adding entry, older ts %s",str(navEntry))
+          self.listLock.release()
+          return
     self.list[navEntry.key]=navEntry
+    
     AVNLog.debug("adding entry %s",str(navEntry))
     self.listLock.release()
   #check for an entry being expired
@@ -504,8 +529,7 @@ class AVNNavData():
   def __checkExpired__(self,entry,key):
     et=AVNUtil.utcnow()-self.expiryTime
     if entry.data['class']=='AIS':
-      #take 5*expiry time for AIS data
-      et=et-4*self.expiryTime
+      et=AVNUtil.utcnow()-self.aisExpiryTime
     if entry.timestamp < et:
       AVNLog.debug("remove expired entry %s, et=%s ",str(entry),str(et))
       del self.list[key]
@@ -884,6 +908,10 @@ class SerialReader():
 class NMEAParser():
   #AIS field translations
   aisFieldTranslations={'msgtype':'type'}
+  #AIS fields merged from message type 5 into others
+  ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
+  #AIS messages we store
+  knownAISTypes=(1,2,3,5,18,19,24)
   
   def __init__(self,navdata):
     self.payloads = {'A':'', 'B':''}    #AIS paylod data
@@ -968,6 +996,9 @@ class NMEAParser():
       AVNLog.debug("invalid nmea data (len<1) "+data+" - ignore")
       return
     if darray[0][0] == '!':
+      if not hasAisDecoder:
+        AVNLog.debug("cannot parse AIS data (no ais.py found)  %s",data)
+        return
       AVNLog.debug("parse AIS data %s",data)
       self.ais_packet_scanner(data)
       return
@@ -1270,6 +1301,8 @@ class AVNBaseConfig(AVNWorker):
             'loglevel':logging.INFO,
             'logfile':"",
             'expiryTime': 30,
+            'aisExpiryTime': 300,
+            'ownMMSI':'',        #i set - do not store AIS messages with this MMSI
             'debugToLog': 'false',
             'maxtimeback':5,      #how many seconds we allow time to go back before we reset
             'settimecmd': '',     #if set, use this to set the system time
@@ -2993,7 +3026,7 @@ def main(argv):
   if baseConfig is None:
     #no entry for base config found - using defaults
     baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())
-  navData=AVNNavData(float(baseConfig.param['expiryTime']))
+  navData=AVNNavData(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
   level=logging.INFO
   filename=os.path.join(os.path.dirname(argv[0]),"log","avnav.log")
   if not options.verbose is None:
