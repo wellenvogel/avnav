@@ -168,12 +168,16 @@ button.avn_buttonInactive{
 }
 
 .avn_label{
-	padding-left: 5px;
-	padding-right: 5px;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+#leftBottomInnerMainpage .avn_label{
+	-webkit-margin-before: 0.5em;
 }
 .avn_position{
-	padding-left: 10px;
-	padding-right: 10px;
+	padding-left: 5px;
+	padding-right: 5px;
 }
 
 .avn_hidden{
@@ -212,6 +216,14 @@ button.avn_buttonInactive{
 .avn_ais_selected{
 	background-color: grey;
 }
+
+.avn_ais_warning{
+	background-color: red;
+}
+.avn_ais_info_warning{
+	background-color: red !important;
+}
+
 /*-------------------------------------------------------------------------------
     main page
   -------------------------------------------------------------------------------
@@ -278,11 +290,11 @@ button.avn_buttonInactive{
 	left: 0px;
 	top: 0px;
 	right: 0px;
-	height: 30px;
+	height: 24px;
 }
 .avn_top_content{
 	float: left;
-	line-height: 28px;
+	line-height: 22px;
 }
 
 
@@ -291,8 +303,8 @@ button.avn_buttonInactive{
 */
 
 .avn_main{
-	top: 31px;
-	bottom: 31px;
+	top: 24px;
+	bottom: 24px;
 	left: 0px;
 	right: 0px;
 	
@@ -308,8 +320,8 @@ button.avn_buttonInactive{
     visibility and changing avn_main bottom will be handled by java script 
 */
 #aisInfo{
-	bottom: 30px;
-	height: 34px;
+	bottom: 24px;
+	height: 28px;
 	left:	0px;
 	right:	0px;
 	background-color: #EBEB55;
@@ -322,14 +334,14 @@ button.avn_buttonInactive{
 #leftBottom{
 	
    	bottom: 0px;
-	height: 30px;
+	height: 24px;
 	left: 0px;
 	right: 0px;
 }
 
 .avn_bottom_content{
 	float: left;
-	line-height: 28px; /*has 1 px border */
+	line-height: 22px; /*has 1 px border */
 }
 
 /*
@@ -344,8 +356,8 @@ button.avn_buttonInactive{
 }
 
 .avn_status_image{
-	width: 30px;
-	height: 30px;
+	width: 24px;
+	height: 24px;
 }
 
 /*------------------------------------------------------------------------------- 
