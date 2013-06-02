@@ -169,5 +169,13 @@ layout:
 /data/avnav/tracks
 /data/avnav/charts    - subdir for each chart set, containing an avnav.xml
 
-
+11. prevent pi from interacting on boot due to corrupted FS
+see http://www.raspberrypi.org/phpBB3/viewtopic.php?f=28&t=15870
+sudo vi /etc/default/rcS
+change #FSCKFIX=no
+to FSCKFIX=yes
 			
+12. sometimes wlan0 seems not to come up
+an additional service check_wlan has been set up to ensure that wlan0 is up.
+if not, try to restart it and restart hostapd
+

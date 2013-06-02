@@ -92,7 +92,7 @@ do
 done
 TDIR=$TMPDIR/avnav/program/raspberry
 wlog "writing files for $TDIR"
-for f in settime settime.c avnav_server.xml avnav check_parts setup.sh
+for f in settime settime.c avnav_server.xml avnav check_parts setup.sh check_wlan
 do
   ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/avnav_raspberry/$f . ) || err "cp $f failed"
   chown 1000:1000 $TDIR/$f || err "chown $f failed"
@@ -104,7 +104,7 @@ chmod u+s $TDIR/settime || err "chmod settime failed"
 
 TDIR=$TMPDIR/avnav/program/libraries
 wlog "writing files for $TDIR"
-for lib in OpenLayers-2.12/OpenLayers.js OpenLayers-2.12/theme/default/style.css jquery/jquery-1.9.1.min.js jquery/jquery-ui.js jquery/jquery.nicescroll.min.js jquery/jquery.ui.touch-punch.min.js jquery/jquery-ui.css jquery/jquery.cookie.js
+for lib in OpenLayers-2.12/OpenLayers.js OpenLayers-2.12/theme/default/style.css jquery/jquery-1.9.1.min.js jquery/jquery-ui.js jquery/jquery.ui.touch-punch.min.js jquery/jquery-ui.css jquery/jquery.cookie.js movable-type/geo.js movable-type/latlon.js
 do
   tdir=`dirname $TDIR/$lib`
   if [ ! -d $tdir ] ; then

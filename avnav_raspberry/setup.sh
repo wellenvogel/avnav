@@ -73,7 +73,7 @@ fi
 
 
 
-for serv in check_parts avnav
+for serv in check_parts avnav check_wlan
 do
   rm -f $basedir/etc/init.d/$serv
   echo "creating $basedir/etc/init.d/$serv"
@@ -125,6 +125,7 @@ if [ "$1" = "update" ] ; then
   	mv $basedir/$pdir/program $savename || err "unable to rename $basedir/$pdir/program to $savename"
   fi
   cat $upd | ( cd $basedir/$pdir/.. && tar -xvf - ) || err "error while unpacking $updateurl, you must restore $savename..."
+  ( cd $basedir/$pdir; [ ! -f data/avnav_server.xml ] && cp program/raspberry/avnav_server.xml data)
   if [ $doDelete = 1 ] ; then
     echo "removing $upd"
     rm -f $upd

@@ -44,9 +44,13 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 . /lib/lsb/init-functions
 
 NAME=`basename $0`
+CONFIG=/etc/default/$NAME
 
 case "$1" in
   start)
+  		if [ -f $CONFIG ]; then
+  			log_daemon_msg "$CONFIG already exists, do not run again"
+  		fi
         log_daemon_msg "Starting background $NAME"
         /etc/init.d/check_parts workersilent &
         log_end_msg 0
@@ -166,7 +170,8 @@ update-rc.d avnav defaults
 service avnav start
 
 wlog "disable myself"
-update-rc.d check_parts remove
+echo "#run already finished" > $CONFIG
+
 
 
 
