@@ -1301,8 +1301,8 @@ class AVNBaseConfig(AVNWorker):
             'loglevel':logging.INFO,
             'logfile':"",
             'expiryTime': 30,
-            'aisExpiryTime': 300,
-            'ownMMSI':'',        #i set - do not store AIS messages with this MMSI
+            'aisExpiryTime': 600,
+            'ownMMSI':'',        #if set - do not store AIS messages with this MMSI
             'debugToLog': 'false',
             'maxtimeback':5,      #how many seconds we allow time to go back before we reset
             'settimecmd': '',     #if set, use this to set the system time
