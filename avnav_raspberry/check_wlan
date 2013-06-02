@@ -1,0 +1,105 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          check_wlan
+# Required-Start:    $syslog $network
+# Should-Start:      
+# Required-Stop:     $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: wlan availability check
+# Description:       check if wlan interface(s) have an ip, execute ifdown/ifup if not and restarte hostapd
+### END INIT INFO
+
+# Author: Andreas Vogel <andreas@wellenvogel.net>
+
+###############################################################################
+# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+###############################################################################
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+#set -x
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+NAME=`basename $0`
+INTERFACES="wlan0"
+
+case "$1" in
+  start)
+        log_daemon_msg "Starting background $NAME"
+        /etc/init.d/$NAME workersilent &
+        log_end_msg 0
+        exit 0
+        ;;
+  workersilent)
+  		nostdout=1
+  		;;
+  worker)
+        ;;
+  stop)
+  		killall $NAME
+  		;;
+  *)
+        log_daemon_msg "we only have an action on start"
+        log_end_msg 0
+        exit 0
+        ;;
+esac
+
+
+#for some strange reasons sometimes the WLAN if seems to disappear
+#so we check if it is there, if not - try to restart and restart hostapd
+
+err(){
+  [ "$nostdout" != "1" ] && echo "ERROR: $*"
+  logger -t avwlan "ERROR: $*"
+  exit 1
+}
+wlog(){
+  [ "$nostdout" != "1" ] &&  echo "INFO: $*"
+  logger -t avwlan "INFO: $*"
+}
+
+wlog "avnav wlan check started with pid $$"
+while [ 1 = 1 ] 
+do
+	for if in `echo $INTERFACES`
+	do
+		addr=`ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
+		if [ "$addr" = "" ] ; then
+			err "interface $if has no address, trying to restart"
+			ifdown $if
+			ifup $if
+			addr2=`ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
+			if [ "$addr2" != "" ] ; then
+				log "interface $if now up with address $addr2, restart hostapd"
+				service hostapd restart
+			else
+				err "unable to restart interface $if"
+			fi 
+		fi
+	done
+	sleep 10
+done
