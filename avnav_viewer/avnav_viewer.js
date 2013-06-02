@@ -39,19 +39,22 @@ var properties={
 		rightPanelWidth: 60, //currently not used
 		loggingEnabled: true,
 		positionQueryTimeout: 1000, //1000ms
-		trackQueryTimeout: 10000, //10s
+		trackQueryTimeout: 5000, //10s
 		bearingColor: "#DDA01F",
 		bearingWidth: 3,
 		trackColor: "#D71038",
 		trackWidth: 3,
 		trackInterval: 30, //seconds
 		initialTrackLength: 24*120, //multiplies with trackInterval - so this gives 24h
-		aisQueryTimeout: 10000,
+		aisQueryTimeout: 5000, //ms
 		aisDistance: 20, //distance for AIS query in nm
 		maxAisErrors: 3, //after that many errors AIS display will be switched off
 		minAISspeed: 0.2, //minimal speed in kn that we consider when computing cpa/tcpa
 		maxAisTPA: 3,    //max. computed AIS TPA time in h (otherwise we do not consider this)
+		aisWarningCpa: 0.274, //nm for AIS warning (500m)
+		aisWarningTpa: 900, //in s - max time for tpa warning (15min)
 		aisNearestImage: 'images/ais-nearest.png',
+		aisWarningImage: 'images/ais-warning.png',
 		navUrl: "avnav_navi.php",
 		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
 		cookieName: "avnav",
@@ -99,6 +102,36 @@ var aisparam={
 			headline: 'call',
 			format: function(v){ return v.callsign;}
 		},
+		shiptype:{
+			headline: 'type',
+			format: function(v){
+				var t=0;
+				try{
+					t=parseInt(v.shiptype||0);
+				}catch (e){}
+				if (t>=20 && t<=29) return "WIG";
+				if (t==30) return "Fishing";
+				if (t==31 || t==32) return "Towing";
+				if (t==33) return "Dredging";
+				if (t==34) return "Diving";
+				if (t==35) return "Military";
+				if (t ==36)return "Sail";
+				if (t==37) return "Pleasure";
+				if (t>=40 && t<=49) return "HighSp";
+				if (t==50) return "Pilot";
+				if (t==51) return "SAR";
+				if (t==52) return "Tug";
+				if (t==53) return "PortT";
+				if (t==54) return "AntiPol";
+				if (t==55) return "Law";
+				if (t==58) return "Medical";
+				if (t>=60 && t<=69) return "Passenger";
+				if (t>=70 && t<=79) return "Cargo";
+				if (t>=80 && t<=89) return "Tanker";
+				if (t>=91 && t<=94) return "Hazard";
+				return "Other";
+			}
+		},
 		position:{
 			headline: 'position',
 			format: function(v){return formatLonLats({lon:v.lon,lat:v.lat});}
@@ -124,6 +157,7 @@ var mapsequence=1; //will be incremented each time a new map is created
 var aisList=[];
 var aisErrors=0;
 var trackedAIStarget=null;
+var aisWarningTarget=null;
 var pageActivationTimes=[];
 
 $.cookie.json = true;
@@ -244,7 +278,7 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 			if (! mmsi) continue;
 			var aisfeature=this.ais_features[mmsi];
 			if (! aisfeature) continue;
-			this.updateAIStarget(ais,aisfeature,isFirst);
+			this.updateAIStarget(ais,aisfeature,isFirst,(aisWarningTarget && mmsi == aisWarningTarget));
 			isFirst=false;
 		}
 		this.ais_layer.redraw();
@@ -252,7 +286,7 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 	
 	
 	//update a single AIS target
-	updateAIStarget: function(aisdata,aisfeature,isFirst){
+	updateAIStarget: function(aisdata,aisfeature,isFirst,isWarning){
 		aisfeature.geometry.calculateBounds();
 		var mlonlat=this.lonLatToMap(new OpenLayers.LonLat(aisdata.lon,aisdata.lat));
 		aisfeature.style.rotation=aisdata.course;
@@ -260,13 +294,18 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 		if (aisdata.shipname){
 			aisfeature.style.label=aisdata.mmsi+"\n"+aisdata.shipname;
 		}
-		if (isFirst){
-			aisfeature.style.externalGraphic=properties.aisNearestImage;
+		if (isWarning){
+			aisfeature.style.externalGraphic=properties.aisWarningImage
 		}
-		else{
-			aisfeature.style.externalGraphic=this.style_ais.externalGraphic;
+		else {
+			if (isFirst){
+				aisfeature.style.externalGraphic=properties.aisNearestImage;
+			}
+			else{
+				aisfeature.style.externalGraphic=this.style_ais.externalGraphic;
+			}
 		}
-		//TODO: change color, draw lines for minimal,...
+		
 		
 	},
 	
@@ -965,6 +1004,8 @@ function aisSort(a,b){
 /*
  * handle the received AIS data
  * 1. compute distances, cpa, tcpa
+ * 1a. check if the tracked target is still there, otherwise set this to "closest"
+ * 1b. check if we have target nearer the cpa warning level, in this case track the one with the smallest tcpa
  * 2. update the aisInfoPanel
  * 3. update the map
  * 4. update the AIS page if currently shown
@@ -974,6 +1015,8 @@ function aisSort(a,b){
 function handleAISData(){
 	if (map && map.boatFeature.attributes.validPosition){
 		var boatPos=new OpenLayers.LonLat(map.boatFeature.attributes.lon,map.boatFeature.attributes.lat);
+		var foundTrackedTarget=false;
+		var aisWarningAis=null;
 		for (aisidx in aisList){
 			var ais=aisList[aisidx];
 			var dst=computeDistances(boatPos,new OpenLayers.LonLat(ais.lon,ais.lat));
@@ -996,7 +1039,23 @@ function handleAISData(){
 				ais.cpa=cpadata.cpanm;
 				ais.tcpa=cpadata.tcpa;
 			}
+			else {
+				ais.cpa=0;
+				ais.tcpa=0;
+			}
+			if (! ais.shipname) ais.shipname="unknown";
+			if (! ais.callsign) ais.callsign="????";
+			if (ais.cpa && ais.cpa < properties.aisWarningCpa && ais.tcpa && ais.tcpa < properties.aisWarningTpa){
+				if (aisWarningAis){
+					if (aisWarningAis.tcpa > ais.tcpa) aisWarningAis=ais;
+				}
+				else aisWarningAis=ais;
+			}
+			if (ais.mmsi == trackedAIStarget) foundTrackedTarget=true;
 		}
+		if (! foundTrackedTarget) trackedAIStarget=null;
+		if (! aisWarningAis) aisWarningTarget=null;
+		else aisWarningTarget=aisWarningAis.mmsi;
 	}
 	aisList.sort(aisSort);
 	updateAISInfoPanel();
@@ -1018,10 +1077,17 @@ function updateAISInfoPanel(){
 			showAISPanel();
 			var ais;
 			var displayClass="avn_ais_info_first";
+			var warningClass="avn_ais_info_warning";
 			var isFirst=true;
-			if (!trackedAIStarget)ais=aisList[0];
+			if (!trackedAIStarget && ! aisWarningTarget )ais=aisList[0];
 			else {
 				for(var idx in aisList){
+					if ( aisWarningTarget){
+						if (aisList[idx].mmsi != aisWarningTarget) continue;
+						isFirst=false;
+						ais=aisList[idx];
+						break;
+					}
 					if (aisList[idx].mmsi == trackedAIStarget){
 						ais=aisList[idx];
 						if (idx != 0) isFirst=false;
@@ -1035,8 +1101,12 @@ function updateAISInfoPanel(){
 				ais=aisList[0];
 				isFirst=true;
 			}
+			if (!aisWarningTarget) $('#aisInfo').removeClass(warningClass);
 			if (isFirst) $('#aisInfo').addClass(displayClass);
-			else $('#aisInfo').removeClass(displayClass);
+			else {
+				$('#aisInfo').removeClass(displayClass);
+				if (aisWarningTarget) $('#aisInfo').addClass(warningClass);
+			}
 			$('#aisDst').text(aisparam['distance'].format(ais));
 			$('#aisSog').text(aisparam['speed'].format(ais));
 			$('#aisCog').text(aisparam['course'].format(ais));
@@ -1097,7 +1167,12 @@ function updateAISPage(initial){
 		for( var aisidx in aisList){
 			var ais=aisList[aisidx];
 			var addClass='';
-			if ((trackedAIStarget && ais.mmsi == trackedAIStarget)|| (! trackedAIStarget && aisidx==0)) addClass='avn_ais_selected';
+			if (aisWarningTarget){
+				if (ais.mmsi == aisWarningTarget) addClass='avn_ais_warning';
+			}
+			else {
+				if ((trackedAIStarget && ais.mmsi == trackedAIStarget)|| (! trackedAIStarget && aisidx==0)) addClass='avn_ais_selected';
+			}
 			html+='<div class="avn_ais '+addClass+'" onclick="aisSelection(\''+ais['mmsi']+'\','+aisidx+')">';
 			for (var p in aisparam){
 				html+='<div class="avn_aisparam">'+aisparam[p].format(ais)+'</div>';
@@ -1107,7 +1182,11 @@ function updateAISPage(initial){
 		html+='</div>';
 		$('#aisPageContent').html(html);
 		if (initial){
-			$('#aisPageContent').scrollTop($('.avn_ais_selected').offset().top);
+			var topElement=$('#aisPageContent .avn_ais_selected').position();
+			if (! topElement)topElement=$('#aisPageContent .avn_ais_warning').position();
+			if (topElement){
+				$('#aisPageContent').scrollTop(topElement.top);
+			}
 		}
 	}
 	else{
