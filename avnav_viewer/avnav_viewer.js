@@ -431,10 +431,14 @@ OpenLayers.Layer.AvNavXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
     {
        x = ((x % limit) + limit) % limit;
     }
-    
-    if (this.profile == 'global-mercator')
-        y= -y - 1;
-
+    //we use global mercator as a marker for "old style" OSM like tiles
+    //with y starting at 0 lower left
+    y= -y - 1;
+    if (this.profile != 'global-mercator'){
+    	//For OSM/google/MOBAC y starts at 0 upper left...
+    	y=limit-y-1;
+    }
+        
     return {'x': x, 'y': y, 'z': z};
   },
   //handle our list of bounding boxes - return null if the tile is not within
@@ -457,11 +461,13 @@ OpenLayers.Layer.AvNavXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
           var s = '' + xyz.x + xyz.y + xyz.z;
           url = this.selectUrl(s, url);
       }
-      
+      var lonlat=this.map.mapPosToLonLat(new OpenLayers.Geometry.Point(bounds.left,bounds.top));
+      log("url:lon="+lonlat.lon+", lat="+lonlat.lat+", x="+xyz.x+", y="+xyz.y+", z="+xyz.z);
       return OpenLayers.String.format(url, xyz);
   },
   
-            // openlayers 2.11 and below do not take into account TileOrigin
+  // openlayers now uses the layer extend as reference for rounding to chart bounds
+  // as our layers have restricted extends, we insetad use the origin...
   getTileBounds: function(viewPortPx) { 
     var origin = this.getTileOrigin();
     var resolution = this.getResolution();
@@ -542,6 +548,8 @@ function e2f(elem,attr_idx) {
  */
 function read_layer_list(description) {    
 	var ll=[];
+	var llprojection=new OpenLayers.Projection("EPSG:4326");
+	var mapprojection=new OpenLayers.Projection("EPSG:900913");
 	
 	$(description).find('TileMap').each(function(ln,tm){
 		var rt={};
@@ -561,12 +569,16 @@ function read_layer_list(description) {
 	    rt.minZoom=parseInt($(tm).attr('minzoom'));
 	    rt.maxZoom=parseInt($(tm).attr('maxzoom'));
 	    $(tm).find(">BoundingBox").each(function(nr,bb){
-	    	rt.layer_extent = new OpenLayers.Bounds(e2f(bb,'minx'),e2f(bb,'miny'),e2f(bb,'maxx'),e2f(bb,'maxy'));
+	    	rt.layer_extent = new OpenLayers.Bounds(e2f(bb,'minlon'),e2f(bb,'minlat'),
+	    			e2f(bb,'maxlon'),e2f(bb,'maxlat')).transform(llprojection,mapprojection);
 	    });
 	    
 	    $(tm).find(">Origin").each(function(nr,or){
 	    	rt.tile_origin = new OpenLayers.LonLat(e2f(or,'x'),e2f(or,'y'));
 	    });
+	    if (! rt.tile_origin){
+	    	rt.tile_origin=new OpenLayers.LonLat(-20037508.343,-20037508.343);
+	    }
 	    
 	    $(tm).find(">TileFormat").each(function(nr,tf){
 	    	rt.tile_size= new OpenLayers.Size(
@@ -578,7 +590,8 @@ function read_layer_list(description) {
 	    if (!rt.tile_ext)rt.tile_ext="png";
 	    var boundings=[];
 	    $(tm).find(">LayerBoundings >BoundingBox").each(function(nr,bb){
-	    	var bounds=new OpenLayers.Bounds(e2f(bb,'minx'),e2f(bb,'miny'),e2f(bb,'maxx'),e2f(bb,'maxy'));
+	    	var bounds=new OpenLayers.Bounds(e2f(bb,'minlon'),e2f(bb,'minlat'),
+	    			e2f(bb,'maxlon'),e2f(bb,'maxlat')).transform(llprojection,mapprojection);
 	    	boundings.push(bounds);
 	    });
 	    rt.boundings=boundings;
@@ -1278,7 +1291,7 @@ function showLayerDialog(){
 	    	$(this).addClass('ui-selected');
 	    }
 	} );
-	$('.ui-dialog-content').niceScroll();
+	//$('.ui-dialog-content').niceScroll();
 }
 
 function btnLayerSwitch(){
@@ -1508,7 +1521,7 @@ function initMap(mapdescr,url) {
     		if (osm == null) isBaseLayer=true;
     	}
     	var baseurl="";
-    	if (! layer.url){
+    	if (layer.url === undefined){
     		error("missing href in layer");
     	}
     	if (! layer.url.match(/^http:/)){
