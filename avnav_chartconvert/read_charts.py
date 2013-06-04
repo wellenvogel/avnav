@@ -113,7 +113,7 @@ overview_tilemap_xml='''
     <TileMap 
        title="%(title)s" 
        srs="OSGEO:41001" 
-       profile="global-mercator" 
+       profile="%(profile)s" 
        href="%(url)s" 
        minzoom="%(minZoom)d"
        maxzoom="%(maxZoom)d">
@@ -227,7 +227,10 @@ def findTilerTools(ttdir=None):
   if ttdir is None:
     ttdir=os.environ.get("TILERTOOLS")
   if ttdir is None:
-    ttdir=os.path[0]
+    try:
+      ttdir=os.path[0]
+    except:
+      pass
   if ttdir is not None:
     if os.path.exists(os.path.join(ttdir,"gdal_tiler.py")):
       log("using tiler tools from "+ttdir)
@@ -753,7 +756,11 @@ def corner_tiles(zoom,bounds):
 
 def getTilePath(tile):
   z,x,y=tile
-  return '%i/%i/%i.%s' % (z,x,y,"png")
+  if options.google == 1:
+    maxy=math.pow(2, z)
+    return '%i/%i/%i.%s' % (z,x,maxy-y-1,"png")
+  else:
+    return '%i/%i/%i.%s' % (z,x,y,"png")
 
 
 #-------------------------------------
@@ -1252,6 +1259,7 @@ def mergeAllTiles(outdir,onlyOverview=False):
       boundings+=createBoundingsXml(ce.bounds, ce.title)
     boundstr=boundings_xml % {"boundings": boundings}
     tilemaps+=overview_tilemap_xml % {
+              "profile": "global-mercator" if not options.google==1 else "zxy-mercator",
               "title":layername,
               "url":layername,
               "minZoom":layerminmax[layer][0],
@@ -1295,6 +1303,7 @@ def main(argv):
   parser.add_option("-t", "--threads", dest="threads", help="number of worker threads, default 4")
   parser.add_option("-a", "--add", dest="ttdir", help="directory where to search for tiler tools (if not set use environment TILERTOOLS or current dir)")
   parser.add_option("-u", "--update", action="store_const", const=1, dest="update", help="update existing charts (if not set, existing ones are regenerated")
+  parser.add_option("-g", "--google", action="store_const", const=1, dest="google", help="use the google/slippy map tile numbering (y starting 0 upper left)")
   (options, args) = parser.parse_args(argv[1:])
   logging.basicConfig(level=logging.DEBUG if options.verbose==2 else 
       (logging.ERROR if options.verbose==0 else logging.INFO))
