@@ -34,6 +34,7 @@
 
 var properties={
 		maxUpscale:3, //3 levels upscale (otherwise we need too much mem)
+		maxZoom: 21,  //only allow upscaling up to this zom level
 		minGridLedvel: 10,
 		showOSM: true,
 		rightPanelWidth: 60, //currently not used
@@ -1500,6 +1501,11 @@ function initMap(mapdescr,url) {
     	var tp=tile_parameters[l];
     	if (tp.minZoom < minZoom) minZoom=tp.minZoom;
     	if (tp.maxZoom > maxZoom) maxZoom=tp.maxZoom;
+    }
+    //allow some upscaling also for tha max zoom layer (but only if we are below some limit...)
+    if (maxZoom < properties.maxZoom){
+    	maxZoom+=properties.maxUpscale;
+    	if (maxZoom > properties.maxZoom) maxZoom=properties.maxZoom;
     }
     //tricky handling of min and max zoom layers...
     //old:
