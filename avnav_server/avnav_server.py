@@ -3034,7 +3034,7 @@ class AVNChartHandler(AVNWorker):
             args=["","-i",chartdir]
             rt=create_overview.main(args)
             if rt == 0:
-              AVNLog.info("created/updated %s in %s",navxml,chardir)
+              AVNLog.info("created/updated %s in %s",navxml,chartdir)
             if rt == 1:
               AVNLog.error("error creating/updating %s in %s",navxml,chartdir)
       except:
