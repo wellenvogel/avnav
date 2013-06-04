@@ -1413,7 +1413,7 @@ function moveEvent(){
 function moveEndEvent(){
 	moveMarkerFeature(map.getCenter(),true);
 	userData.mapPosition=map.getCenter();
-	userData.mapZoom=map.zoom;
+	userData.mapZoom=map.zoom+zoomOffset;
 	$.cookie(properties.cookieName,userData);
 	
 }
@@ -1458,7 +1458,7 @@ function readUserData(){
 		map.markerFeature.attributes.isLocked=true;
 	}
 	if (userData.mapPosition && userData.mapPosition.lon && userData.mapPosition.lat && userData.mapZoom){
-		map.moveTo(new OpenLayers.LonLat(userData.mapPosition.lon,userData.mapPosition.lat),userData.mapZoom);
+		map.moveTo(new OpenLayers.LonLat(userData.mapPosition.lon,userData.mapPosition.lat),userData.mapZoom-zoomOffset);
 	}
 	handleToggleButton('#btnLockMarker',map.markerFeature.attributes.isLocked);
 	updateCourseDisplay();
@@ -1536,7 +1536,7 @@ function initMap(mapdescr,url) {
     	else baseurl=layer.url;
     	
     	var layermaxzoom=maxZoom+zoomOffset;
-    	if ((layer.maxZoom+properties.maxUpscale) < maxZoom) layermaxzoom=layer.maxZoom+properties.maxUpscale;
+    	if ((layer.maxZoom+properties.maxUpscale) < layermaxzoom) layermaxzoom=layer.maxZoom+properties.maxUpscale;
     	var serverResolutions=[];
     	for (var i=layer.minZoom;i<=layer.maxZoom;i++){
     		serverResolutions.push(getResolutionForZoom(i));
