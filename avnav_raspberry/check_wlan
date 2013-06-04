@@ -73,10 +73,14 @@ esac
 #so we check if it is there, if not - try to restart and restart hostapd
 
 err(){
-  [ "$nostdout" != "1" ] && echo "ERROR: $*"
-  logger -t avwlan "ERROR: $*"
+  errlog "$*"
   exit 1
 }
+errlog(){
+  [ "$nostdout" != "1" ] && echo "ERROR: $*"
+  logger -t avwlan "ERROR: $*"
+}
+
 wlog(){
   [ "$nostdout" != "1" ] &&  echo "INFO: $*"
   logger -t avwlan "INFO: $*"
@@ -89,13 +93,14 @@ do
 	do
 		addr=`ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
 		if [ "$addr" = "" ] ; then
-			err "interface $if has no address, trying to restart"
+			errlog "interface $if has no address, trying to restart"
 			ifdown $if
 			ifup $if
 			addr2=`ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
 			if [ "$addr2" != "" ] ; then
-				log "interface $if now up with address $addr2, restart hostapd"
+				wlog "interface $if now up with address $addr2, restart hostapd"
 				service hostapd restart
+				wlog "restart hostapd finished"
 			else
 				err "unable to restart interface $if"
 			fi 
