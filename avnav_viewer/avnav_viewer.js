@@ -56,12 +56,20 @@ var properties={
 		aisWarningTpa: 900, //in s - max time for tpa warning (15min)
 		aisNearestImage: 'images/ais-nearest.png',
 		aisWarningImage: 'images/ais-warning.png',
+		statusQueryTimeout: 3000, //ms
 		navUrl: "avnav_navi.php",
 		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
 		cookieName: "avnav",
 		statusErrorImage: "images/RedBubble40.png",
 		statusOkImage: "images/GreenBubble40.png",
-		pages: ["main","nav","ais"]
+		pages: ["main","nav","ais","status"],
+		statusIcons: {
+			INACTIVE: "images/GreyBubble40.png",
+			STARTED:  "images/YellowBubble40.png",
+			RUNNING:  "images/YellowBubble40.png",
+			NMEA:	  "images/GreenBubble40.png",
+			ERROR:	  "images/RedBubble40.png"
+		}
 };
 
 var aisparam={
@@ -160,6 +168,8 @@ var aisErrors=0;
 var trackedAIStarget=null;
 var aisWarningTarget=null;
 var pageActivationTimes=[];
+var statusQuery;
+var statusTimer;
 
 $.cookie.json = true;
 
@@ -1400,6 +1410,84 @@ function showAISPanel(){
 	}
 }
 
+function btnShowStatus(){
+	showPage('status');
+	updateStatus(true);
+}
+function btnStatusCancel(){
+	showPage('main');
+	stopStatus();
+}
+function btnStatusUpdate(){
+	updateStatus(true);
+}
+
+function updateStatus(auto){
+	if (auto){
+		if (! statusQuery) statusQuery=1;
+		else statusQuery++;
+	}
+	if (! statusQuery) return;
+	var url=properties.navUrl+"?request=status";
+	$.ajax({
+		url: url,
+		dataType: 'json',
+		cache:	false,
+		context: {sequence:statusQuery},
+		success: function(data,status){
+			if (this.sequence != statusQuery) return;
+			showStatusData(data);
+			statusTimer=window.setTimeout(updateStatus,properties.statusQueryTimeout);
+		},
+		error: function(status,data,error){
+			log("status position error");
+			if (this.sequence != statusQuery) return;
+			statusTimer=window.setTimeout(updateStatus,properties.statusQueryTimeout);
+		},
+		timeout: 10000
+	});
+}
+
+function stopStatus(){
+	statusQuery=0;
+	if (statusTimer) window.clearTimeout(statusTimer);
+}
+
+function statusTextToImageUrl(text){
+	var rt=properties.statusIcons[text];
+	if (! rt) rt=properties.statusIcons.INACTIVE;
+	return rt;
+}
+function formatChildStatus(item){
+	var ehtml='<img src="';
+	ehtml+=statusTextToImageUrl(item.status);
+	ehtml+='"/><span class="avn_status_name">'+item.name+'</span><span class="avn_status_info">'+item.info+'</span><br>';
+	return ehtml;
+}
+
+function showStatusData(data){
+	if (!isPageVisible('status')) return;
+	var statusTemplate=$('.avn_statuspage #statusTemplate:first').clone();
+	var childStatusTemplate=$('.avn_statuspage #childStatusTemplate:first').clone();
+	$('.avn_statuspage #statusData .avn_status').remove();
+	$('.avn_statuspage  #statusData .avn_child_status').remove();
+	for (var e in data.handler){
+		var worker=data.handler[e];
+		var domEntry=statusTemplate.clone();
+		domEntry.html('<span class="avn_status_name">'+worker.name+'</span><br>');
+		$('.avn_statuspage #statusData').append(domEntry);
+		if (worker.info.items) for (var c in worker.info.items){
+			var child=worker.info.items[c];
+			var cdomEntry=childStatusTemplate.clone();
+			cdomEntry.html(formatChildStatus(child));
+			$('.avn_statuspage #statusData').append(cdomEntry);
+		}
+	}
+	$('.avn_statuspage #statusData .avn_status').show();
+	$('.avn_statuspage #statusData .avn_child_status').show();
+	
+}
+
 //event handlers
 
 function mouseEvent(e){
@@ -1652,67 +1740,7 @@ function initMap(mapdescr,url) {
     tmap.events.register("mousemove", tmap, mouseEvent);
     tmap.events.register("moveend", tmap, moveEndEvent);
     tmap.events.register("move", tmap, moveEvent);
-    $('.avn_btZoomIn').button({
-    	icons: {
-      		 primary: "ui-icon-plus"
-      	 },
-      	 text: false,
-      	 label: 'Zoom In'
-    });
-	$('.avn_btZoomOut').button({
-	icons: {
-  		 primary: "ui-icon-minus"
-  	 },
-  	 text: false,
-  	 label: 'Zoom Out'
-   	});
-	$('.avn_btLayerSwitch').button({
-		icons: {
-	  		 primary: "ui-icon-grip-solid-horizontal"
-	  	 },
-	  	 text: false,
-	  	label: 'Layer'
-	   	});
-	$('.avn_btLockMarker').button({
-		icons: {
-	  		 primary: "ui-icon-unlocked"
-	  	 },
-	  	 text: false,
-	  	label: 'Marker'
-	   	});
-	$('.avn_btLockPos').button({
-		icons: {
-	  		 primary: "ui-icon-unlocked"
-	  	 },
-		text: false,
-	  	label: 'Position'
-	   	});
-	$('.avn_btNavCancel').button({
-		icons: {
-	  		 primary: "ui-icon-unlocked"
-	  	 },
-		text: false,
-	  	label: 'Main'
-	   	});
-	$('.avn_btAISCancel').button({
-		icons: {
-	  		 primary: "ui-icon-unlocked"
-	  	 },
-		text: false,
-	  	label: 'Nav'
-	   	});
-	$('.avn_btAISFirst').button({
-		icons: {
-	  		 primary: "ui-icon-unlocked"
-	  	 },
-		text: false,
-	  	label: 'Track first'
-	   	});
-	$('.avn_btNavAIS').button({
-		text: 'AIS',
-	  	label: 'AIS'
-	   	});
-	
+
 	$('#markerPosition').text(formatLonLats(tmap.mapPosToLonLat(tmap.getCenter())));
 	map=tmap;
 	mapsequence+=1;
@@ -1856,12 +1884,100 @@ function handleNavPage(list){
 	return false;
 }
 
+function showButtons(){
+    $('.avn_btZoomIn').button({
+    	icons: {
+      		 primary: "ui-icon-plus"
+      	 },
+      	 text: false,
+      	 label: 'Zoom In'
+    });
+	$('.avn_btZoomOut').button({
+	icons: {
+  		 primary: "ui-icon-minus"
+  	 },
+  	 text: false,
+  	 label: 'Zoom Out'
+   	});
+	$('.avn_btLayerSwitch').button({
+		icons: {
+	  		 primary: "ui-icon-grip-solid-horizontal"
+	  	 },
+	  	 text: false,
+	  	label: 'Layer'
+	   	});
+	$('.avn_btLockMarker').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+	  	 text: false,
+	  	label: 'Marker'
+	   	});
+	$('.avn_btLockPos').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+		text: false,
+	  	label: 'Position'
+	   	});
+	$('.avn_btNavCancel').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+		text: false,
+	  	label: 'Main'
+	   	});
+	$('.avn_btAISCancel').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+		text: false,
+	  	label: 'Nav'
+	   	});
+	$('.avn_btAISFirst').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+		text: false,
+	  	label: 'Track first'
+	   	});
+	$('.avn_btNavAIS').button({
+		text: 'AIS',
+	  	label: 'AIS'
+	   	});
+	
+	$('.avn_btStatusCancel').button({
+		icons: {
+	  		 primary: "ui-icon-unlocked"
+	  	 },
+		text: false,
+	  	label: 'Main'
+	   	});
+	$('.avn_btStatusUpdate').button({
+		icons: {
+	  		 primary: "ui-icon-arrowrefresh-1-w"
+	  	 },
+		text: false,
+	  	label: 'Update'
+	   	});
+	$('.avn_btShowStatus').button({
+		icons: {
+	  		 primary: "ui-icon-signal"
+	  	 },
+		text: false,
+	  	label: 'Status'
+	   	});
+	
+	 
+}
+
 $(document).ready(function(){
 	var urlpar=OpenLayers.Util.getParameters();
 	var entry_list=null;
 	if (urlpar.charts!= null){
 		entry_list=[].concat(urlpar.charts);
 	}
+	showButtons();
 	if (! entry_list){
 		handleMainPage();
 	}	

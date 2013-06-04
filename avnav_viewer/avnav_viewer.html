@@ -88,6 +88,18 @@
 	    <h1>AIS</h1>
 	    </div>
 	    </div> <!-- aisPagePanel -->
+	    <div id='statusPagePanel' class="avn_panel avn_main avn_statuspage avn_statuspage_main avn_hidden">
+		<div id='status_content_inner' class="avn_panel">
+		  <h1>Server Status</h1>
+		  
+		  <div id='statusTemplate' class='avn_status avn_hidden'>
+		  </div>
+		  <div id='childStatusTemplate' class='avn_child_status avn_hidden'>
+		  </div>
+		  <div id="statusData">
+		  </div>
+		</div> <!--statusContentInner-->
+		</div>
 	    <div id='aisInfo' class='avn_panel avn_hidden'>
 	    <div id='aisInfoInner' class='avn_inner'>
 	    <div id='aisDstLabel' class='avn_label avn_text avn_bottom_content'>Dst</div>
@@ -140,11 +152,17 @@
 	    <button id="btnNavCancel" type="button" onclick="btnNavCancel();" class="avn_button avn_btNavCancel">T</button>
 	    </div><!-- navPageButtonContainer -->
 	    
-	    <div id='mainPageButtonContainer' class='avn_mainpage avn_hidden'>
+	    <div id='mainPageButtonContainer' class='avn_mainpage'>
+	    <button id="btnShowStatus" type="button" onclick="btnShowStatus();" class="avn_button avn_btShowStatus"></button>
+	    <button id="btnShowHelp" type="button" onclick="btnShowHelp('main');" class="avn_button avn_btShowHelp">?</button>
 	    </div>
 	    <div id='aisPageButtonContainer' class='avn_aispage avn_hidden'>
 	    <button id="btnAISFirst" type="button" onclick="btnAISFirst();" class="avn_button avn_btAISFirst">T</button>
 	    <button id="btnAISCancel" type="button" onclick="btnAISCancel();" class="avn_button avn_btAISCancel">T</button>
+	    </div>
+	    <div id='statusPageButtonContainer' class='avn_statuspage avn_hidden'>
+	    <button id="btnStatusUpdate" type="button" onclick="btnStatusUpdate();" class="avn_button avn_btStatusUpdate">U</button>
+	    <button id="btnStatusCancel" type="button" onclick="btnStatusCancel();" class="avn_button avn_btStatusCancel">T</button>
 	    </div>
 	    </div>
 	</body>

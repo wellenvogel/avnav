@@ -1,0 +1,17 @@
+<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <defs>
+  <radialGradient id="svg_13" spreadMethod="reflect" cx="0.5" cy="0.5" r="0.456925">
+   <stop stop-color="#e5e5e5" stop-opacity="0.984375" offset="0"/>
+   <stop stop-color="#7a7c7a" stop-opacity="0.980469" offset="1"/>
+  </radialGradient>
+  <radialGradient id="svg_2" spreadMethod="reflect" cx="0.5" cy="0.5" r="0.456925">
+   <stop stop-color="#e5e5e5" stop-opacity="0.984375" offset="0"/>
+   <stop stop-color="#f9f904" stop-opacity="0.996094" offset="1"/>
+  </radialGradient>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <circle fill="url(#svg_2)" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" cx="20" cy="20" r="12" id="svg_1" stroke="#9fa09f"/>
+ </g>
+</svg>

@@ -148,6 +148,18 @@ button.avn_buttonInactive{
 	background-size: 24px 24px;
 }
 
+#btnStatusCancel .ui-icon{
+	background-image: url(images/Cancel40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
+
 .avn_selectList	.ui-selecting { background: #1E6CCF;}
 .avn_selectList	.ui-selected:not(.ui-disabled) { background: #1E6CCF; color: white;}
 .avn_selectList	.ui-selected.ui-disabled { background: #9BB2D0; color: grey;}
@@ -224,6 +236,37 @@ button.avn_buttonInactive{
 	background-color: red !important;
 }
 
+.avn_status{
+	border-top: 1px solid #000;
+	margin-left: 10px;
+	margin-top: 5px;
+	line-height: 20px;
+}
+.avn_child_status{
+	margin-left: 20px;
+	margin-top: 3px;
+}
+.avn_child_status img{
+	width: 20px;
+	height: 20px;
+}
+.avn_status_name{
+	padding-left: 3px;
+}
+.avn_status_info{
+	padding-left: 3px;
+}
+#status_content_inner h1{
+	margin-left: 10px;
+}
+
+#status_content_inner{
+	overflow: auto;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
 /*-------------------------------------------------------------------------------
     main page
   -------------------------------------------------------------------------------

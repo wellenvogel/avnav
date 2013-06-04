@@ -2581,7 +2581,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
     
   
   def getName(self):
-    return "SocketReader "+self.param['name']
+    return self.param['name']
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have tp find the feeder...
   def start(self):
@@ -2599,18 +2599,21 @@ class AVNSocketReader(AVNWorker,SocketReader):
      
   #thread run method - just try forever  
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    infoName="SocketReader-%s:%d"%(self.getStringParam('host'),self.getIntParam('port'))
+    self.setName("[%s]%s-%s:%d"%(AVNLog.getThreadId(),self.getName(),self.getStringParam('host'),self.getIntParam('port')))
+    info="%s:%d"%(self.getStringParam('host'),self.getIntParam('port'))
     while True:
       try:
+        self.setInfo('main',"trying to connect to %s"%(info,),AVNWorker.Status.INACTIVE)
         sock=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getIntParam('timeout'))
+        self.setInfo('main',"connected to %s"%(info,),AVNWorker.Status.RUNNING)
       except:
         AVNLog.info("exception while trying to connect to %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
+        self.setInfo('main',"unable to connect to %s"%(info,),AVNWorker.Status.ERROR)
         time.sleep(2)
         continue
       AVNLog.info("successfully connected to %s:%d",self.getStringParam('host'),self.getIntParam('port'))
       try:
-        self.readSocket(sock,infoName)
+        self.readSocket(sock,'main')
       except:
         AVNLog.info("exception while reading from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
       
