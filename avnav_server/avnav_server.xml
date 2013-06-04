@@ -16,6 +16,8 @@
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
+<!-- create chart overview files -->
+<AVNChartHandler></AVNChartHandler>
 <!-- 
 <AVNBlueToothReader port="4014" listenerPort="4020" maxDevices="5" useGpsd="true" maxList="100" feederSleep="0.1">
 </AVNBlueToothReader>

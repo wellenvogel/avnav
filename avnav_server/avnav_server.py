@@ -54,6 +54,10 @@ import math
 import re
 import ctypes
 import select
+try:
+  import create_overview
+except:
+  pass
 
 VERSION="0.6.0"
 
@@ -66,6 +70,7 @@ hasAisDecoder=False
 allHandlers=[]
 #should have a better solution then a global...
 trackWriter=None
+navxml="avnav.xml"
 
 
 
@@ -2683,6 +2688,18 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(str(self.server_port)),AVNWorker.Status.RUNNING)
     self.serve_forever()
+    
+  def handlePathmapping(self,path):
+    if not self.pathmappings is None:
+      for mk in self.pathmappings.keys():
+        if path.find(mk) == 0:
+          path=self.pathmappings[mk]+path[len(mk):]
+          AVNLog.ld("remapped path to",path)
+          return path
+      path=os.path.join(self.basedir,path)
+      return path
+    else:
+      return path
    
 
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -2696,6 +2713,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.id=AVNLog.getThreadId()
       threading.current_thread().setName("[%s]HTTPHandler"%(self.id))
     AVNLog.debug(format,*args)
+  def handlePathmapping(self,path):
+    return self.server.handlePathmapping(path)
   
   #overwrite this from SimpleHTTPRequestHandler
   def send_head(self):
@@ -2783,17 +2802,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       #pathmappings expect to have absolute pathes!
       return self.handlePathmapping(path)
   
-  def handlePathmapping(self,path):
-    if not self.server.pathmappings is None:
-      for mk in self.server.pathmappings.keys():
-        if path.find(mk) == 0:
-          path=self.server.pathmappings[mk]+path[len(mk):]
-          AVNLog.ld("remapped path to",path)
-          return path
-      path=os.path.join(self.server.basedir,path)
-      return path
-    else:
-      return path
+  
   #return the first element of a request param if set
   
   def getRequestParam(self,param,name):
@@ -2951,7 +2960,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     rt['status']='OK'
     rt['data']=[]
     list.sort(key=lambda a: a.lower())
-    navxml="avnav.xml"
     icon="avnav.jpg"
     AVNLog.debug("reading chartDir %s",chartbaseDir)
     for de in list:
@@ -2976,8 +2984,59 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     num=len(rt['data'])
     rt['info']="read %d entries from %s"%(num,chartbaseDir)
     return json.dumps(rt)
-      
-    
+
+#a worker to check the chart dirs
+#and create avnav.xml...
+class AVNChartHandler(AVNWorker):
+  def __init__(self,param):
+    self.param=param
+    AVNWorker.__init__(self, param)
+  @classmethod
+  def getConfigName(cls):
+    return "AVNChartHandler"
+  @classmethod
+  def getConfigParam(cls, child=None):
+    if child is not None:
+      return None
+    return {
+            'period': 30 #how long to sleep between 2 checks
+    }
+  @classmethod
+  def createInstance(cls, cfgparam):
+    return AVNChartHandler(cfgparam)
+  def getName(self):
+    return "AVNChartHandler"
+  def run(self):
+    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    server=None
+    for h in allHandlers:
+      if h.getConfigName()==AVNHTTPServer.getConfigName():
+        server=h
+        break
+    if server is None:
+      AVNLog.error("unable to find AVNHTTPServer")
+      return
+    AVNLog.info("charthandler started")
+    while True:
+      try:
+        chartbase=server.getStringParam('chartbase')
+        osdir=server.handlePathmapping(chartbase)
+        if osdir is None or not os.path.isdir(osdir):
+          AVNLog.error("unable to find a valid chart directory")
+        else:
+          for cd in os.listdir(osdir):
+            chartdir=os.path.join(osdir,cd)
+            if not os.path.isdir(chartdir):
+              continue
+            args=["","-i",chartdir]
+            rt=create_overview.main(args)
+            if rt == 0:
+              AVNLog.info("created/updated %s in %s",navxml,chardir)
+            if rt == 1:
+              AVNLog.error("error creating/updating %s in %s",navxml,chartdir)
+      except:
+        AVNLog.error("error while trying to update charts %s",traceback.format_exc())
+      time.sleep(self.getIntParam('period') or 10)   
     
       
 def sighandler(signal,frame):
@@ -2995,7 +3054,7 @@ def main(argv):
   debugger=sys.gettrace()
   workerlist=[AVNBaseConfig,AVNGpsdFeeder,AVNSerialReader,AVNGpsd,
               AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader,AVNUsbSerialReader,
-              AVNSocketWriter,AVNSocketReader]
+              AVNSocketWriter,AVNSocketReader,AVNChartHandler]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
