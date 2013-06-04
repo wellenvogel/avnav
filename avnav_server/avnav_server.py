@@ -270,6 +270,7 @@ class AVNUtil():
     rt['lon']=float(aisdata['lon'])/600000
     rt['speed']=float(aisdata['speed'])/10  
     rt['course']=float(aisdata['course'])/10  
+    rt['mmsi']=str(aisdata['mmsi'])
     return rt
   
   #parse an ISO8601 t8ime string
