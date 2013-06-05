@@ -154,8 +154,7 @@ boundings_xml='''
 </LayerBoundings>
 '''
 
-#a list of file extensions that we will convert first with tiler tools to give better results
-convert_extensions=(".kap",".map",".geo")  
+
 
 #the number of pixels the lowest scale layer should fit on its min zoomlevel
 MINZOOMPIXEL=600
@@ -208,6 +207,7 @@ import threading
 import time
 import site
 import subprocess
+import re
 
 TilerTools=None
 
@@ -228,7 +228,7 @@ def findTilerTools(ttdir=None):
     ttdir=os.environ.get("TILERTOOLS")
   if ttdir is None:
     try:
-      ttdir=os.path[0]
+      ttdir=os.path.dirname(os.path.realpath(__file__))
     except:
       pass
   if ttdir is not None:
@@ -865,9 +865,105 @@ def readDir(dir):
   return rt
 
 #------------------------------------------------
+#nv converter
+def nvConvert(chart,outdir,outname):
+  exename="opencpn.exe"
+  if os.name != 'nt':
+    warn("converting NV %s only possible on windows"%(chart,))
+    return
+  dn = os.path.dirname(os.path.realpath(__file__))
+  callprog=os.path.join(dn,exename)
+  if not os.path.isfile(callprog):
+    warn ("unable to find converter %s for %s"%(callprog,chart))
+    return
+  opencpn=options.opencpn
+  if opencpn is None:
+    opencpn=os.environ.get("OPENCPN")
+  my_env = os.environ
+  if opencpn is None:
+    warn("no path to opencpn is set (either environment OPENCPN or via -n, unable to convert %s"%(chart,))
+    return
+  my_env["PATH"] = my_env["PATH"]+";%s;%s\plugins"%(opencpn,opencpn)
+  #will write <basename>.tif and <basename>_header.kap
+  args=[callprog,'-o',outdir,os.path.join(opencpn,'plugins'),chart]
+  ld("calling ",args,my_env['PATH'])
+  rt=subprocess.call(args,env=my_env)
+  base,ext=os.path.splitext(os.path.basename(chart))
+  if rt != 0:
+    warn("converting %s failed"%(chart,))
+    return
+  kapname=os.path.join(outdir,base+'_header.kap')
+  if not os.path.exists(kapname):
+    warn("header %s not found after conversion"%(kapname,))
+    return
+  tifname=os.path.join(outdir,base+".tif")
+  if not os.path.exists(tifname):
+    warn("tif file %s does not exist after conversion"%(tifname,))
+    return
+  log("file %s successfully decoded"%(chart,))
+  #now run tiler tools on the header to create the vrt...
+  ttConvert(chart,outdir,outname)
+  if not os.path.exists(outname):
+    warn("VRT %s file not generated with tiler_tools"%(outname,))
+    return
+  tifvrt=os.path.join(outdir,base+"_tif.vrt")
+  #we now create a dummy vrt for the tiff to easily merge this with the one from the header
+  try:
+    srcds=gdal.Open(tifname)
+    if srcds is None:
+      warn("unable to read %s with gdal"%(tifname,))
+      return
+    drv=gdal.GetDriverByName("vrt");
+    if drv is None:
+      warn("unable to find gdal driver for vrt")
+      return
+    dstds = drv.CreateCopy( tifvrt, srcds, 0 )
+    if dstds is None:
+      warn("unable to create %s with gdal"%(tifvrt,))
+      return
+    srcds=None
+    dstds=None
+  except:
+    warn("error in hdal convert handling")
+    return
+  if not os.path.exists(tifvrt):
+    warn("temp vrt file %s not created"%(tifvrt,))
+    return
+  #now merge the 2 vrt files
+  origvrtdata=None
+  with open(outname,"r") as f:
+    origvrtdata=f.read()
+  if origvrtdata is None:
+    warn("unable to read %s"%(outname,))
+    return
+  tmpvrtdata=None
+  with open(tifvrt,"r") as f:
+    tmpvrtdata=f.read()
+  if tmpvrtdata is None:
+    warn("unable to read %s"%(tifvrt,))
+    return
+  origvrtdata=re.sub('[<]VRTRasterBand.*','',origvrtdata,flags=re.S)
+  doAdd=False
+  for mline in tmpvrtdata.splitlines(True):
+    if doAdd:
+      origvrtdata+=mline
+      continue
+    else:
+      if re.search('[<]VRTRasterBand',mline) is None:
+        continue
+      mline=re.sub('.*[<]VRTRasterBand','<VRTRasterBand',mline)
+      doAdd=True
+      origvrtdata+=mline
+  os.unlink(outname)
+  with open(outname,"w") as f:
+    f.write(origvrtdata)
+  log("successfully created merged vrt %s"%(chart,))  
+
+
+#------------------------------------------------
 #tiler tools map2gdal
 
-def convertChart(chart,outdir):
+def ttConvert(chart,outdir,outname):
   args=[sys.executable,os.path.join(TilerTools,"map2gdal.py"),"-t",outdir]
   if options.verbose == 2:
     args.append("-d")
@@ -876,6 +972,12 @@ def convertChart(chart,outdir):
   
   
 
+#a list of file extensions that we will convert first with tiler tools to give better results
+converters={
+            ".kap":ttConvert,
+            ".map":ttConvert,
+            ".geo":ttConvert,
+            ".eap":nvConvert}  
 #-------------------------------------
 #create a chartlist.xml file by reading all charts
 def createChartList(args,outdir):
@@ -895,7 +997,7 @@ def createChartList(args,outdir):
   charts=ChartList()
   for chart in chartlist:
     log("handling "+chart)
-    for xt in convert_extensions:
+    for xt in converters.keys():
       if chart.upper().endswith(xt.upper()):
         oname=chart
         (base,ext)=os.path.splitext(os.path.basename(chart))
@@ -909,8 +1011,13 @@ def createChartList(args,outdir):
               log(chart +" newer as "+oname+" no need to recreate")
               doSkip=True
         if not doSkip:
-          log("converting "+chart+" with tiler_tools")
-          convertChart(oname, os.path.join(outdir,BASETILES))
+          log("converting "+chart+" with")
+          if os.path.exists(chart):
+            try:
+              os.unlink(chart)
+            except:
+              pass
+          converters[xt](oname, os.path.join(outdir,BASETILES),chart)
           if not os.path.exists(chart):
             warn("converting "+oname+" to "+chart+" failed - trying to use native")
             chart=oname
@@ -1075,7 +1182,7 @@ def generateBaseTiles(chartEntry,outdir):
   log("running "+" ".join(args))
   ld("gdal_tiler args:",args)
   if subprocess.call(args) != 0:
-    raise "unable to convert chart "+chartEntry.filename
+    raise Exception("unable to convert chart "+chartEntry.filename)
 
 #-------------------------------------
 #create the base tiles from the chartlist
@@ -1302,6 +1409,7 @@ def main(argv):
   parser.add_option("-o", "--overlap", dest="overlap", help="max overlap of zoomlevels between layers (default: %f)" % MAXOVERLAP)
   parser.add_option("-t", "--threads", dest="threads", help="number of worker threads, default 4")
   parser.add_option("-a", "--add", dest="ttdir", help="directory where to search for tiler tools (if not set use environment TILERTOOLS or current dir)")
+  parser.add_option("-n", "--opencpn", dest="opencpn", help="directory where opencpn is installed (if used for conversion) (if not set use environment OPENCPN)")
   parser.add_option("-u", "--update", action="store_const", const=1, dest="update", help="update existing charts (if not set, existing ones are regenerated")
   parser.add_option("-g", "--google", action="store_const", const=1, dest="google", help="use the google/slippy map tile numbering (y starting 0 upper left)")
   (options, args) = parser.parse_args(argv[1:])
