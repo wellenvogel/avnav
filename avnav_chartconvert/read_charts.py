@@ -209,6 +209,13 @@ import site
 import subprocess
 import re
 
+hasNvConvert=False
+try:
+  import convert_nv
+  hasNvConvert=True
+except:
+  pass
+
 TilerTools=None
 
 
@@ -867,98 +874,13 @@ def readDir(dir):
 #------------------------------------------------
 #nv converter
 def nvConvert(chart,outdir,outname):
-  exename="opencpn.exe"
-  if os.name != 'nt':
-    warn("converting NV %s only possible on windows"%(chart,))
-    return
-  dn = os.path.dirname(os.path.realpath(__file__))
-  callprog=os.path.join(dn,exename)
-  if not os.path.isfile(callprog):
-    warn ("unable to find converter %s for %s"%(callprog,chart))
-    return
   opencpn=options.opencpn
   if opencpn is None:
     opencpn=os.environ.get("OPENCPN")
-  my_env = os.environ
-  if opencpn is None:
-    warn("no path to opencpn is set (either environment OPENCPN or via -n, unable to convert %s"%(chart,))
-    return
-  my_env["PATH"] = my_env["PATH"]+";%s;%s\plugins"%(opencpn,opencpn)
-  #will write <basename>.tif and <basename>_header.kap
-  args=[callprog,'-o',outdir,os.path.join(opencpn,'plugins'),chart]
-  ld("calling ",args,my_env['PATH'])
-  rt=subprocess.call(args,env=my_env)
-  base,ext=os.path.splitext(os.path.basename(chart))
-  if rt != 0:
-    warn("converting %s failed"%(chart,))
-    return
-  kapname=os.path.join(outdir,base+'_header.kap')
-  if not os.path.exists(kapname):
-    warn("header %s not found after conversion"%(kapname,))
-    return
-  tifname=os.path.join(outdir,base+".tif")
-  if not os.path.exists(tifname):
-    warn("tif file %s does not exist after conversion"%(tifname,))
-    return
-  log("file %s successfully decoded"%(chart,))
-  #now run tiler tools on the header to create the vrt...
-  ttConvert(chart,outdir,outname)
-  if not os.path.exists(outname):
-    warn("VRT %s file not generated with tiler_tools"%(outname,))
-    return
-  tifvrt=os.path.join(outdir,base+"_tif.vrt")
-  #we now create a dummy vrt for the tiff to easily merge this with the one from the header
-  try:
-    srcds=gdal.Open(tifname)
-    if srcds is None:
-      warn("unable to read %s with gdal"%(tifname,))
-      return
-    drv=gdal.GetDriverByName("vrt");
-    if drv is None:
-      warn("unable to find gdal driver for vrt")
-      return
-    dstds = drv.CreateCopy( tifvrt, srcds, 0 )
-    if dstds is None:
-      warn("unable to create %s with gdal"%(tifvrt,))
-      return
-    srcds=None
-    dstds=None
-  except:
-    warn("error in hdal convert handling")
-    return
-  if not os.path.exists(tifvrt):
-    warn("temp vrt file %s not created"%(tifvrt,))
-    return
-  #now merge the 2 vrt files
-  origvrtdata=None
-  with open(outname,"r") as f:
-    origvrtdata=f.read()
-  if origvrtdata is None:
-    warn("unable to read %s"%(outname,))
-    return
-  tmpvrtdata=None
-  with open(tifvrt,"r") as f:
-    tmpvrtdata=f.read()
-  if tmpvrtdata is None:
-    warn("unable to read %s"%(tifvrt,))
-    return
-  origvrtdata=re.sub('[<]VRTRasterBand.*','',origvrtdata,flags=re.S)
-  doAdd=False
-  for mline in tmpvrtdata.splitlines(True):
-    if doAdd:
-      origvrtdata+=mline
-      continue
-    else:
-      if re.search('[<]VRTRasterBand',mline) is None:
-        continue
-      mline=re.sub('.*[<]VRTRasterBand','<VRTRasterBand',mline)
-      doAdd=True
-      origvrtdata+=mline
-  os.unlink(outname)
-  with open(outname,"w") as f:
-    f.write(origvrtdata)
-  log("successfully created merged vrt %s"%(chart,))  
-
+  if hasNvConvert:
+    convert_nv.nvConvert(chart,outdir,outname,opencpn,TilerTools,log,warn)
+  else:
+    warn("no converted installed, unable to handle char %s"%(chart,))
 
 #------------------------------------------------
 #tiler tools map2gdal
