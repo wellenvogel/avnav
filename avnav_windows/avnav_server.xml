@@ -16,12 +16,16 @@
 <AVNTrackWriter interval="10" distance="100" trackdir="..\data_windows\tracks"/>
 <!-- for testing purposes: connect to a socket for reading NMEA data -->
 <AVNSocketReader host="localhost" port="34568"/>
-<AVNHttpServer navurl="/viewer/avnav_navi.php" chartbase="maps">
-	<Directory urlpath="maps" path="..\..\..\chart-tiler-test"></Directory>
+<AVNHttpServer navurl="/viewer/avnav_navi.php" chartbase="maps" >
+<!-- chartbaseurl="http://$host/Karten/anav"> -->
+	<!-- <Directory urlpath="maps" path="..\..\..\chart-tiler-test"></Directory>-->
+	<Directory urlpath="maps" path="D:\Users\Andreas\Documents\Karten\anav"></Directory>
 	<Directory urlpath="viewer" path="..\avnav_viewer"></Directory>
 	<Directory urlpath="libraries" path="..\library"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
+<!-- create chart overview files -->
+<AVNChartHandler></AVNChartHandler>
 
 </AVNServer>

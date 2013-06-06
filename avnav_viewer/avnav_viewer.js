@@ -1839,7 +1839,7 @@ function handleMainPage(){
 			for (e in data.data){
 				var chartEntry=data.data[e];
 				var domEntry=entryTemplate.clone();
-				domEntry.attr('href',"javascript:handleNavPage('"+chartEntry.url+"')");
+				domEntry.attr('href',"javascript:handleNavPage('"+chartEntry.url+"','"+chartEntry.charturl+"')");
 				var ehtml='<img src="';
 				if (chartEntry.icon) ehmtl+=chartEntry.icon;
 				else ehtml+=entryTemplate.find('img').attr('src');
@@ -1856,7 +1856,10 @@ function handleMainPage(){
  * nav page
  * read the description via ajax and init the map
  */
-function handleNavPage(list){
+function handleNavPage(list,chartbase){
+	if (! chartbase){
+		chartbase=list;
+	}
 	validPosition=false;
 	if (! list.match(/^http:/)){
 		if (list.match(/^\//)){
@@ -1873,7 +1876,7 @@ function handleNavPage(list){
 		cache: false,
 		success: function(data){
 			showPage('nav');
-			initMap(data,list);
+			initMap(data,chartbase);
 			handleGpsStatus(false, true);
 			updateAISInfoPanel();
 		},

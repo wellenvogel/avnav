@@ -899,12 +899,16 @@ class SerialReader():
             AVNLog.debug("reopen port %s - timeout elapsed",portname)
           break
     AVNLog.info("stopping handler")
-    self.setInfo("receiving",AVNWorker.Status.INACTIVE)
+    self.setInfo("stopped",AVNWorker.Status.INACTIVE)
+    self.deleteInfo()
+    
         
   def setInfo(self,txt,status):
     if not self.infoHandler is None:
       self.infoHandler.setInfo(self.getName(),txt,status)
-        
+  def deleteInfo(self):
+    if not self.infoHandler is None:
+      self.infoHandler.deleteInfo(self.getName())
  
 
 #an NMEA parser
@@ -1000,14 +1004,14 @@ class NMEAParser():
     darray=data.split(",")
     if len(darray) < 1 or (darray[0][0:1] != "$" and darray[0][0:1] != '!') :
       AVNLog.debug("invalid nmea data (len<1) "+data+" - ignore")
-      return
+      return False
     if darray[0][0] == '!':
       if not hasAisDecoder:
         AVNLog.debug("cannot parse AIS data (no ais.py found)  %s",data)
-        return
+        return False
       AVNLog.debug("parse AIS data %s",data)
-      self.ais_packet_scanner(data)
-      return
+      return self.ais_packet_scanner(data)
+      
     tag=darray[0][3:]
     rt={'class':'TPV','tag':tag}
     #currently we only take the time from RMC
@@ -1018,7 +1022,7 @@ class NMEAParser():
         rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
         rt['mode']=int(darray[6] or '0')
         self.addToNavData(rt, None)
-        return
+        return True
       if tag=='GLL':
         rt['mode']=1
         if len(darray > 6):
@@ -1026,7 +1030,7 @@ class NMEAParser():
         rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
         rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
         self.addToNavData(rt, None)
-        return
+        return True
       if tag=='VTG':
         mode=darray[2]
         rt['track']=float(darray[1] or '0')
@@ -1036,7 +1040,7 @@ class NMEAParser():
         else:
           rt['speed']=float(darray[3]or '0')*NM/3600
         self.addToNavData(rt, None)
-        return
+        return True
       if tag=='RMC':
         #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
         #this includes current date
@@ -1048,7 +1052,7 @@ class NMEAParser():
         rt['track']=float(darray[8] or '0')
         gpsdate=darray[9]
         self.addToNavData(rt, self.gpsTimeToTime(gpstime, gpsdate))
-        return
+        return True
         
     except Exception:
         AVNLog.debug(" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
@@ -1059,7 +1063,7 @@ class NMEAParser():
     "Get a span of AIVDM packets with contiguous fragment numbers."
     if not line.startswith("!"):
       AVNLog.debug("ignore unknown AIS data %s",line)
-      return
+      return False
     line = line.strip()
     # Strip off USCG metadata 
     line = re.sub(r"(?<=\*[0-9A-F][0-9A-F]),.*", "", line)
@@ -1088,17 +1092,17 @@ class NMEAParser():
         crc = fields[6].split('*')[1].strip()
     except IndexError:
         AVNLog.debug("malformed line: %s\n",line.strip())
-        return
+        return False
     if csum != crc:
         AVNLog.debug("bad checksum %s, expecting %s: %s\n",crc, csum, line.strip())
-        return
+        return False
     if fragment < expect:
         AVNLog.debug("waiting for more fragments: %s",line.strip())
-        return
+        return True
     # Render assembled payload to packed bytes
     bits = ais.BitVector()
     bits.from_sixbit(self.payloads[channel], pad)
-    self.parse_ais_messages(self.payloads[channel], bits)
+    return self.parse_ais_messages(self.payloads[channel], bits)
 
 
   #basically taken from ais.py but changed to decode one message at a time
@@ -1141,9 +1145,11 @@ class NMEAParser():
           # We're done, hand back a decoding
           #AVNLog.ld('decoded AIS data',cooked)
           self.storeAISdata(cooked)
+          return True
       except:
           (exc_type, exc_value, exc_traceback) = sys.exc_info()
           AVNLog.debug("exception %s while decoding AIS data %s",exc_value,raw.strip())
+          return False
   
   def storeAISdata(self,bitfield):
     rt={'class':'AIS'}
@@ -1194,6 +1200,9 @@ class AVNWorker(threading.Thread):
   def setInfo(self,name,info,status):
     self.info[name]=info
     self.status[name]=status
+  def deleteInfo(self,name):
+    del self.info[name]
+    del self.status[name]
   def getParam(self):
     try:
       return self.param
@@ -1854,12 +1863,15 @@ class AVNGpsdFeeder(AVNGpsd):
     AVNLog.info("standalone feeder started")
     nmeaParser=NMEAParser(self.navdata)
     self.setInfo(infoName, "running", AVNWorker.Status.RUNNING)
+    hasNmea=False
     while True:
       try:
         while True:
           data=self.popListEntry()
           if not data is None:
-            nmeaParser.parseData(data)
+            if nmeaParser.parseData(data):
+              if not hasNmea:
+                self.setInfo(infoName,"feeding NMEA",AVNWorker.Status.NMEA)
           else:
             time.sleep(self.getFloatParam('feederSleep'))
       except Exception as e:
@@ -1924,7 +1936,7 @@ class SocketReader():
     except:
       pass
     AVNLog.info("connection to %s established, start reading",peer)
-    self.setInfo(infoName, "socket connected", AVNWorker.Status.RUNNING)
+    self.setInfo(infoName, "socket to %s connected"%(peer,), AVNWorker.Status.RUNNING)
     buffer=""
     hasNMEA=False
     try:
@@ -2054,6 +2066,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
     AVNLog.info("disconnected from bluetooth device ")
     self.setInfo(infoName, "dicsonnected", AVNWorker.Status.INACTIVE)
     self.removeAddr(host)
+    self.deleteInfo(infoName)
               
   
   #this is the main thread - this executes the bluetooth polling
@@ -2234,6 +2247,7 @@ class AVNUsbSerialReader(AVNWorker):
       pass
     AVNLog.debug("serial reader for %s finished",addr)
     self.removeHandler(addr)
+    self.deleteInfo(reader.getName())
   
   #param: a dict key being the usb id, value the device node
   def checkDevices(self,devicelist):
@@ -2439,7 +2453,8 @@ class AVNSocketWriter(AVNWorker):
       AVNLog.info("exception in client connection %s",traceback.format_exc())
     AVNLog.info("client disconnected")
     socket.close()
-    self.removeHandler(addr)        
+    self.removeHandler(addr)
+    self.deleteInfo(infoName)        
         
   #this is the main thread - this executes the bluetooth polling
   def run(self):
@@ -2655,6 +2670,8 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
                      "navurl":"/viewer/avnav_navi.php", #those must be absolute with /
                      "index":"/viewer/avnav_viewer.html",
                      "chartbase": "maps", #this is the URL without leading /!
+                     "chartbaseurl":"",   #if this is set to a non empty value, this will be prepended to the
+                                          #chart urls, set e.g. to http://$host/charts
                      "httpPort":"8080",
                      "numThreads":"5",
                      "httpHost":""
@@ -2962,6 +2979,12 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       return json.dumps(rt)
     rt['status']='OK'
     rt['data']=[]
+    urlbase=self.server.getStringParam('chartbaseurl')
+    if urlbase == '':
+      urlbase=None
+    if urlbase is not None:
+      host,port=self.request.getsockname()
+      urlbase=re.sub('\$host',host,urlbase)
     list.sort(key=lambda a: a.lower())
     icon="avnav.jpg"
     AVNLog.debug("reading chartDir %s",chartbaseDir)
@@ -2975,10 +2998,15 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         continue
       if not os.path.isfile(os.path.join(dpath,navxml)):
         continue
+      url="/"+chartbaseUrl+"/"+de
+      charturl=url
+      if urlbase is not None:
+        charturl=urlbase+"/"+de
       #TDOD: read title from avnav
       entry={
              'name':de,
-             'url':"/"+chartbaseUrl+"/"+de
+             'url':url,
+             'charturl':charturl,
              }
       if os.path.exists(os.path.join(dpath,icon)):
         entry['icon']="/"+chartbaseUrl+"/"+icon
