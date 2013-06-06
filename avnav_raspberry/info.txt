@@ -179,3 +179,13 @@ to FSCKFIX=yes
 an additional service check_wlan has been set up to ensure that wlan0 is up.
 if not, try to restart it and restart hostapd
 
+13. try with lighthttpd for faster chart delivery
+apt-get update
+apt-get install lighttpd
+first shot: configure to port 81 (so that our redirect from 80 to 8080 can remain...):
+/etc/lighttpd/lighttpd.conf:
+server.port                 = 81
+alias.url = ( "/charts" => "/data/avnav/charts/" )
+and in /home/pi/avnav/data/avnav_server.xml:
+<AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080" chartbaseurl="http://$host:81/charts/">
+ 
