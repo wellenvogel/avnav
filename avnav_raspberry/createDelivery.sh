@@ -84,9 +84,17 @@ chown -R 1000:1000 $TDIR || err "chown viewer failed"
 
 TDIR=$TMPDIR/avnav/program/server
 wlog "writing files for $TDIR"
-for f in avnav_server.py ais.py
+for f in avnav_server.py ais.py create_overview.py
 do
   ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/avnav_server/$f . ) || err "cp $f failed"
+  chown 1000:1000 $TDIR/$f || err "chown $f failed"
+  chmod a+rx $TDIR/$f || err "chmod $f failed"
+done
+TDIR=$TMPDIR/avnav/program/convert
+wlog "writing files for $TDIR"
+for f in read_charts.py
+do
+  ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/avnav_chartconvert/$f . ) || err "cp $f failed"
   chown 1000:1000 $TDIR/$f || err "chown $f failed"
   chmod a+rx $TDIR/$f || err "chmod $f failed"
 done
@@ -104,7 +112,7 @@ chmod u+s $TDIR/settime || err "chmod settime failed"
 
 TDIR=$TMPDIR/avnav/program/libraries
 wlog "writing files for $TDIR"
-for lib in OpenLayers-2.12/OpenLayers.js OpenLayers-2.12/theme/default/style.css jquery/jquery-1.9.1.min.js jquery/jquery-ui.js jquery/jquery.ui.touch-punch.min.js jquery/jquery-ui.css jquery/jquery.cookie.js movable-type/geo.js movable-type/latlon.js
+for lib in OpenLayers-2.12/OpenLayers.js OpenLayers-2.12/theme/default/style.css jquery/images/*.png jquery/images/*.gif jquery/jquery-1.9.1.min.js jquery/jquery-ui.js jquery/jquery.ui.touch-punch.min.js jquery/jquery-ui.css jquery/jquery.cookie.js movable-type/geo.js movable-type/latlon.js
 do
   tdir=`dirname $TDIR/$lib`
   if [ ! -d $tdir ] ; then

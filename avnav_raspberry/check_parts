@@ -111,7 +111,7 @@ else
   wlog "going to create a partition from $partstart to $partend"
   $PARTED -m -a optimal $DEVICE unit B mkpart primary $partstart $partend < /dev/null|| err "creating partition failed"
   wlog "creating filesystem on $PARTITION"
-  mke2fs -t ext4  $quiteflag $PARTITION < /dev/null|| err "creating FS on $PARTITION failed"
+  mke2fs -t ext4  -i 4096 -b 2048 $quiteflag $PARTITION < /dev/null|| err "creating FS on $PARTITION failed"
 fi
 #3. check if necessary directories are there
 if [ ! -d $MOUNTPOINT ] ; then
@@ -161,7 +161,7 @@ if [ "$check" != "" ] ; then
   wlog "mountpoint for $PARTITION already found in fstab"
 else
   wlog "creating mountpoint for $PARTITION to $MOUNTPOINT in fstab"
-  echo "$PARTITION  $MOUNTPOINT           ext4    defaults,noatime  0       1" >> /etc/fstab
+  echo "$PARTITION  $MOUNTPOINT           ext4    defaults,noatime,nodiratime  0       1" >> /etc/fstab
 fi
 
 wlog "avnav partition setup finished"

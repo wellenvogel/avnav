@@ -147,6 +147,7 @@
 	 address - if set, only bind to this address, otherwise allow connections from any port
  -->
 <AVNSocketWriter port="34567" maxDevices="5" filter=""/>
-
+<!-- create chart overview files -->
+<AVNChartHandler></AVNChartHandler>
 
 </AVNServer>
