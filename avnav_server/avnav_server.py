@@ -1364,7 +1364,7 @@ class AVNTrackWriter(AVNWorker):
     ts=timestamp.isoformat();
     if not ts[-1:]=="Z":
         ts+="Z"
-    str="%s,%f,%f,%f,%f\n"%(ts,data['lat'],data['lon'],(data.get('track') or 0),(data.get('speed') or 0))
+    str="%s,%f,%f,%f,%f,%f\n"%(ts,data['lat'],data['lon'],(data.get('track') or 0),(data.get('speed') or 0),(data.get('distance') or 0))
     filehandle.write(str)
     filehandle.flush()
   def createFileName(self,dt):
@@ -1490,7 +1490,8 @@ class AVNTrackWriter(AVNWorker):
             self.track.append((currentTime,lat,lon))
           else:
             dist=AVNUtil.distance((lastLat,lastLon), (lat,lon))*AVNUtil.NM
-            if dist >= self.getFloatParam('distance'):
+            if dist >= self.getFloatParam('mindistance'):
+	      gpsdata.data['distance']=dist
               AVNLog.ld("write track entry",gpsdata.data)
               self.writeLine(f,currentTime,gpsdata.data)
               self.track.append((currentTime,lat,lon))
@@ -1664,7 +1665,7 @@ class AVNGpsd(AVNWorker):
       
 #a reader thread for the gpsd reader
 class GpsdReader(threading.Thread):
-  def __init__(self, navdata,port,name,infoHandler):
+  def __init__(self, navdata,port,name,infoHandler,errorHandler=None):
     self.navdata=navdata
     threading.Thread.__init__(self)
     self.setDaemon(True)
@@ -1674,6 +1675,7 @@ class GpsdReader(threading.Thread):
     self.status=True
     self.port=port
     self.infoHandler=infoHandler
+    self.errorHandler=errorHandler
   def run(self):
     infoName=self.name
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.name))
@@ -1718,6 +1720,8 @@ class GpsdReader(threading.Thread):
     AVNLog.debug("gpsd reader exited")
     self.status=False
     self.infoHandler.setInfo(infoName,"exited",AVNWorker.Status.INACTIVE)
+    if self.errorHandler is not None:
+      self.errorHandler()
 
 #a Worker for feeding data trough gpsd (or directly to the navdata)
 #it uses (if enabled) gpsd as a decoder by opening a local listener
@@ -1758,6 +1762,7 @@ class AVNGpsdFeeder(AVNGpsd):
     self.sequence=0
     self.maxlist=self.getIntParam('maxList', True)
     self.gpsdproc=None
+    self.gpsdsocket=None
     name=self.getStringParam('name')
     if not name is None and not name == "":
       self.setName(name)
@@ -1839,14 +1844,15 @@ class AVNGpsdFeeder(AVNGpsd):
         listener.listen(1)
         AVNLog.info("feeder listening at port address %s",str(listener.getsockname()))
         while True:
-          outsock,addr=listener.accept()
+          self.gpsdsocket=None
+          self.gpsdsocket,addr=listener.accept()
           self.setInfo(infoName, "gpsd connected from %s"%(str(addr)), AVNWorker.Status.RUNNING)
           AVNLog.info("feeder - gpsd connected from %s",str(addr))
           try:
             while True:
               data=self.popListEntry()
               if not data is None:
-                outsock.sendall(data)
+                self.gpsdsocket.sendall(data)
               else:
                 time.sleep(self.getFloatParam('feederSleep'))
           except Exception as e:
@@ -1854,6 +1860,20 @@ class AVNGpsdFeeder(AVNGpsd):
       except Exception as e:
         AVNLog.warn("feeder unable to open listener port(%s), retrying",traceback.format_exc())
       time.sleep(10)
+  
+  #handler any errors in the gpsd chain and try to restart it
+  def gpsdError(self):
+    AVNLog.info("gspd error handler")
+    try:
+      if self.gpsdsocket is not None:
+        self.gpsdsocket.close()
+    except:
+      pass
+    try:
+      if self.gpsdproc is not None:
+        self.gpsdproc.kill()
+    except:
+      pass
   
   #a standalone feeder that uses our bultin methods
   
@@ -1900,7 +1920,7 @@ class AVNGpsdFeeder(AVNGpsd):
           AVNLog.debug("starting gpsd with command %s, starting reader",gpsdcommand)
           self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True,close_fds=True)
           
-          reader=GpsdReader(self.navdata, port, "AVNGpsdFeeder[Reader] %s at %d"%(device,port),self)
+          reader=GpsdReader(self.navdata, port, "AVNGpsdFeeder[Reader] %s at %d"%(device,port),self,self.gpsdError)
           reader.start()
           self.setInfo('main', "gpsd running with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
         except:
@@ -3097,6 +3117,7 @@ def main(argv):
   parser.add_option("-d", "--debug", action="store_const", 
         const=logging.DEBUG, dest="verbose")
   parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
+  parser.add_option("-c", "--chartbase", dest="chartbase", help="if set, overwrite the chart base dir from the HTTPServer")
   (options, args) = parser.parse_args(argv[1:])
   if len(args) < 1:
     cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
@@ -3109,14 +3130,21 @@ def main(argv):
     AVNLog.error("unable to parse config file %s",cfgname)
     sys.exit(1)
   baseConfig=None
+  httpServer=None
   for handler in allHandlers:
     if handler.getConfigName() == "AVNConfig":
       baseConfig=handler
     if handler.getConfigName() == "AVNTrackWriter":
       trackWriter=handler
+    if handler.getConfigName() == AVNHTTPServer.getConfigName():
+      httpServer=handler
   if baseConfig is None:
     #no entry for base config found - using defaults
     baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())
+  if httpServer is not None and options.chartbase is not None:
+    mapurl=httpServer.getStringParam('chartbase')
+    if mapurl is not None and mapurl != '':
+      httpServer.pathmappings[mapurl]=options.chartbase
   navData=AVNNavData(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
   level=logging.INFO
   filename=os.path.join(os.path.dirname(argv[0]),"log","avnav.log")

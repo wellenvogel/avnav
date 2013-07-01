@@ -51,7 +51,7 @@ border-color: black;
 border-style: solid;
 border-width: 1px;
 background-color: white;
-font-size: 15px;
+font-size: 22px;
 }
 
 button.avn_button{
@@ -204,8 +204,8 @@ button.avn_buttonInactive{
 	display: table;
 	margin-left: 3px;
 	margin-right: 3px;
-	line-height: 20px;
-	font-size: 14px;
+	line-height: 22px;
+	font-size: 20px;
 }
 .avn_ais{
 	display: table-row;
