@@ -1358,6 +1358,8 @@ class AVNTrackWriter(AVNWorker):
   def createInstance(cls, cfgparam):
     return AVNTrackWriter(cfgparam)
   
+  def getName(self):
+    return "TrackWriter"
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,timestamp,data):
