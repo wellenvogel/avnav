@@ -1427,6 +1427,7 @@ class AVNTrackWriter(AVNWorker):
                 trackdir,
                 self.getFloatParam("interval"),
                 self.getFloatParam("mindistance"))
+        initial=False
       try:
         if not os.path.isdir(trackdir):
           os.makedirs(trackdir, 0775)
@@ -1435,7 +1436,8 @@ class AVNTrackWriter(AVNWorker):
           fname=curfname
           if not f is None:
             f.close()
-          newFile=True         
+          newFile=True
+          AVNLog.info("new trackfile %s",curfname)         
           if initial:
             if os.path.exists(curfname):
               try:
@@ -1475,8 +1477,9 @@ class AVNTrackWriter(AVNWorker):
           f.write("#anvnav Trackfile started/continued at %s\n"%(currentTime.isoformat()))
           f.flush()
           newFile=False
-          self.setInfo('main', "writing to %s"%(curfname), AVNWorker.Status.NMEA)
-        self.status=True
+          lastlat=None
+          lastlon=None
+          self.setInfo('main', "writing to %s"%(curfname,), AVNWorker.Status.NMEA)
         if loopCount >= 10:
           self.cleanupTrack()
           loopCount=0
@@ -1488,15 +1491,17 @@ class AVNTrackWriter(AVNWorker):
             AVNLog.ld("write track entry",gpsdata.data)
             self.writeLine(f,currentTime,gpsdata.data)
             self.track.append((currentTime,lat,lon))
+            lastLat=lat
+            lastLon=lon
           else:
             dist=AVNUtil.distance((lastLat,lastLon), (lat,lon))*AVNUtil.NM
             if dist >= self.getFloatParam('mindistance'):
-	      gpsdata.data['distance']=dist
+              gpsdata.data['distance']=dist
               AVNLog.ld("write track entry",gpsdata.data)
               self.writeLine(f,currentTime,gpsdata.data)
               self.track.append((currentTime,lat,lon))
-          lastLat=lat
-          lastLon=lon
+              lastLat=lat
+              lastLon=lon
       except Exception as e:
         pass
       #TODO: compute more exact sleeptime
@@ -1577,7 +1582,7 @@ class AVNGpsd(AVNWorker):
         self.setInfo('main', "waiting for device %s"%(str(device)), AVNWorker.Status.STARTED)
         init=False
       if not ( os.path.exists(device) or noCheck):
-        self.setInfo("device not visible")
+        self.setInfo('main',"device not visible",AVNWorker.Status.INACTIVE)
         AVNLog.debug("device %s still not visible, continue waiting",device)
         time.sleep(timeout/2)
         continue
@@ -1604,7 +1609,6 @@ class AVNGpsd(AVNWorker):
           self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True,close_fds=True)
           reader=GpsdReader(self.navdata, port, "GPSDReader[Reader] %s at %d"%(device,port),self)
           reader.start()
-          self.setInfo("gpsd started")
           self.setInfo('main', "gpsd running with command"%(gpsdcommand), AVNWorker.Status.STARTED)
         except:
           AVNLog.debug("unable to start gpsd with command %s: %s",gpsdcommand,traceback.format_exc())
@@ -1625,7 +1629,7 @@ class AVNGpsd(AVNWorker):
             AVNLog.warn("gpsd reader timeout")
             break
           else:
-            self.setInfo("receiving")
+            self.setInfo('main',"receiving",AVNWorker.Status.RUNNING)
           #TODO: read out gpsd stdout/stderr
           time.sleep(2)
         #if we arrive here, something went wrong...
