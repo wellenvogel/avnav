@@ -103,6 +103,7 @@ do_stop()
 		kill -0 $xp > /dev/null 2>&1 
 		[ $? != 0 ] && wt=0
 		wt=`expr $wt - 1`
+		sleep 1
 	done
 	kill -0 $xp > /dev/null 2>&1
 	if [ $? = 0 ]  ; then
