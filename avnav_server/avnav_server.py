@@ -1979,7 +1979,7 @@ class SocketReader():
             if pattern.match(l):
               self.writeData(l)
               if not hasNMEA:
-                self.setInfo(infoName, "receiving", AVNWorker.Status.NMEA)
+                self.setInfo(infoName, "receiving from %s"%(peer,), AVNWorker.Status.NMEA)
                 hasNMEA=True
             else:
               AVNLog.debug("ignoring unknown data %s",l)
