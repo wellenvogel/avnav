@@ -33,7 +33,8 @@
 */
 
 var properties={
-		maxUpscale:3, //3 levels upscale (otherwise we need too much mem)
+		maxUpscale:2, //2 levels upscale (otherwise we need too much mem)
+		hideLower: true, //if set, hide smaller zoom layers when completely covered
 		maxZoom: 21,  //only allow upscaling up to this zom level
 		minGridLedvel: 10,
 		showOSM: true,
@@ -408,6 +409,7 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 OpenLayers.Layer.AvNavXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
   initialize: function(options){
     OpenLayers.Layer.XYZ.prototype.initialize.apply(this,arguments);
+    //this.nextLayer=options.nextLayer;
   },
   getServerResolution: function(resolution) {
       var distance = Number.POSITIVE_INFINITY;
@@ -465,6 +467,16 @@ OpenLayers.Layer.AvNavXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
 	  }
 	  if (! fits){
 		  return null;
+	  }
+	  if (properties.hideLower && this.nextLayer && this.nextLayer.getVisibility() && this.nextLayer.calculateInRange()){
+		  //don't show the tile if the next layer covers this completely
+		  for (var i in this.nextLayer.boundings){
+			  var nlbound=this.nextLayer.boundings[i];
+			  if (bounds.top <= nlbound.top && bounds.bottom >= nlbound.bottom 
+					  && bounds.left >= nlbound.left && bounds.right <= nlbound.right){
+				  return null;
+			  }
+		  }
 	  }
       var xyz = this.getXYZ(bounds);
       var url = this.url;
@@ -1506,6 +1518,22 @@ function moveEndEvent(){
 	
 }
 
+function zoomEndEvent(){
+	if (! map) return;
+	for (var i in map.layers){
+		var layer=map.layers[i];
+		if (layer.nextLayer !== undefined){
+			//as we have potentially hidden a couple of tiles
+			//we must now redraw the layer if the next layer becomes invisible
+			var nlir=layer.nextLayer.calculateInRange();
+			if (layer.lastNextLayerInRange != nlir){
+				layer.redraw();
+				layer.lastNextLayerInRange = nlir;
+			}
+		}
+	}
+}
+
 function moveMarkerFeature(pos,force,noCookie){
 	if (! map.markerFeature.attributes.isLocked){
 		map.markerFeature.move(pos);
@@ -1607,6 +1635,7 @@ function initMap(mapdescr,url) {
     		maxResolution: getResolutionForZoom(zoomOffset),
     		zoomOffset: zoomOffset
     		});
+    
     for (var layeridx =tile_parameters.length-1 ; layeridx>= 0;layeridx--){
     	var layer=tile_parameters[layeridx];
     	var isBaseLayer=false;
@@ -1646,7 +1675,12 @@ function initMap(mapdescr,url) {
 
         });
     	tiler_overlays.push(tiler_overlay);
-    }  
+    
+    }
+    for (var i=tiler_overlays.length-2;i>=0;i--){
+    	tiler_overlays[i].nextLayer=tiler_overlays[i+1];
+    }
+    
     
     //the vector layers
     var markerLayer=new OpenLayers.Layer.Vector("Marker");
@@ -1740,6 +1774,7 @@ function initMap(mapdescr,url) {
     tmap.events.register("mousemove", tmap, mouseEvent);
     tmap.events.register("moveend", tmap, moveEndEvent);
     tmap.events.register("move", tmap, moveEvent);
+    tmap.events.register("zoomend",tmap,zoomEndEvent);
 
 	$('#markerPosition').text(formatLonLats(tmap.mapPosToLonLat(tmap.getCenter())));
 	map=tmap;
@@ -1786,6 +1821,7 @@ function showHideAdditionalPanel(id,mainLocation,show){
 	if (npos != null){
 		$(mainid).css(mainLocation,npos+"px");
 	}
+	if (map) map.updateSize();
 }
 
 function showPage(name){
