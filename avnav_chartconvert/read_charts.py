@@ -878,7 +878,7 @@ def nvConvert(chart,outdir,outname):
   if opencpn is None:
     opencpn=os.environ.get("OPENCPN")
   if hasNvConvert:
-    convert_nv.nvConvert(chart,outdir,outname,opencpn,TilerTools,log,warn)
+    convert_nv.nvConvert(chart,outdir,outname,opencpn,TilerTools,log,warn,options.update==1)
   else:
     warn("no converted installed, unable to handle char %s"%(chart,))
 
@@ -933,7 +933,7 @@ def createChartList(args,outdir):
               log(chart +" newer as "+oname+" no need to recreate")
               doSkip=True
         if not doSkip:
-          log("converting "+chart+" with")
+          log("converting "+chart)
           if os.path.exists(chart):
             try:
               os.unlink(chart)
