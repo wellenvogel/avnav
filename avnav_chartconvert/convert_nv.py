@@ -46,11 +46,24 @@ def ttConvert(chart,outdir,outname,tilertools):
   subprocess.call(args)
   
   
+def slog(txt):
+  print "LOG %s"%(txt,)
+
+def swarn(txt):
+  print "WARNING %s"%(txt,)
 
 
 #------------------------------------------------
 #nv converter
-def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn):
+def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn,updateOnly=False):
+  if updateOnly and os.path.exists(outname):
+    ostat=os.stat(oouname)
+    cstat=os.stat(chart)
+    if (ostat.st_mtime >= cstat.st_mtime):
+      log(outname +" newer as "+chart+" no need to recreate")
+      return
+    else:
+      log(chart +" newer then "+outname+", recreate")
   exename="opencpn.exe"
   if os.name != 'nt':
     warn("converting NV %s only possible on windows"%(chart,))
@@ -60,14 +73,14 @@ def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn):
   if not os.path.isfile(callprog):
     warn ("unable to find converter %s for %s"%(callprog,chart))
     return
-  my_env = os.environ
+  my_env = os.environ.copy()
   if opencpn is None:
     warn("no path to opencpn is set (either environment OPENCPN or via -n, unable to convert %s"%(chart,))
     return
   my_env["PATH"] = my_env["PATH"]+";%s;%s\plugins"%(opencpn,opencpn)
   #will write <basename>.tif and <basename>_header.kap
   args=[callprog,'-o',outdir,os.path.join(opencpn,'plugins'),chart]
-  logf("calling %s,%s"%("".join(args),my_env['PATH']))
+  logf("calling %s,%s"%(",".join(args),my_env['PATH']))
   rt=subprocess.call(args,env=my_env)
   base,ext=os.path.splitext(os.path.basename(chart))
   if rt != 0:
@@ -139,3 +152,10 @@ def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn):
   with open(outname,"w") as f:
     f.write(origvrtdata)
   logf("successfully created merged vrt %s"%(chart,))  
+  
+if __name__ == '__main__':
+  if len(sys.argv) != 5:
+    print "usage: %s chartname outdir opencpn dir tilertoolsdir"%(sys.argv[0],)
+    sys.exit(1)
+  nvConvert(sys.argv[1], sys.argv[2], os.path.join(sys.argv[2],os.path.basename(sys.argv[1])+".vrt"), 
+            sys.argv[3], sys.argv[4], slog, swarn, False)
