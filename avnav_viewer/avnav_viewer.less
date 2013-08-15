@@ -2,6 +2,7 @@
 @bottomPanelHeight:50px;
 @aisPanelWidth:90px;
 @buttonSize: 60px;
+@centerDisplayHeight: 30px;
 
 
 /*-------------------------------------------------------------
@@ -165,6 +166,18 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 
 
+/*-------------------------------------------------------------
+   measure display (center)
+-------------------------------------------------------------*/
+
+.avn_center {
+	padding-left: 3px;
+	font-size: ( @centerDisplayHeight * 0.6 );
+}
+
+#centerInner {
+	text-align: center;
+}
 
 /*-------------------------------------------------------------
    buttons
@@ -493,23 +506,10 @@ button.avn_buttonInactive{
 	
 }
     
-
+  
 /*
 	4. bottom line  - see .avn_leftBottom
 */
-
-/* 
-    if AIS is visible - add a second bottom line above the bottom line
-    visibility and changing avn_main bottom will be handled by java script 
-*/
-#aisInfo{
-	bottom: @bottomPanelHeight;
-	top: 0px;
-	left:	0px;
-	width:	@aisPanelWidth;
-	background-color: #EBEB55;
-}
-   
 #leftBottom{
 	
    	bottom: 0px;
@@ -518,6 +518,28 @@ button.avn_buttonInactive{
 	right: 0px;
 }
 
+/*
+        5. additional panels
+	   correcting the .avn_main position is done by javascript
+*/
+
+#aisInfo{
+	bottom: @bottomPanelHeight;
+	top: 0px;
+	left:	0px;
+	width:	@aisPanelWidth;
+	background-color: #EBEB55;
+}
+
+#centerDisplay{
+	bottom: @bottomPanelHeight;
+	height: @centerDisplayHeight;
+	left:	0;
+	right:	0;
+	background-color: rgb(228, 228, 180);
+}
+
+ 
 .avn_float_left{
 	float: left;
 }

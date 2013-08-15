@@ -58,6 +58,7 @@ var properties={
 		aisNearestImage: 'images/ais-nearest.png',
 		aisWarningImage: 'images/ais-warning.png',
 		statusQueryTimeout: 3000, //ms
+                centerDisplayTimeout: 45000, //ms - auto hide measure display (0 - no auto hide)
 		navUrl: "avnav_navi.php",
 		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
 		cookieName: "avnav",
@@ -170,6 +171,8 @@ var map=null;
 var timer=null;
 var trackTimer=null;
 var aisTimer=null;
+var centerTimer=null;
+var disableCenter=false;
 var currentAngle=0;
 var NM=1852;
 var gpsErrors=0;
@@ -940,7 +943,7 @@ function updateCourseDisplay(){
 		etastr=formatTime(targetDate);
 	}
 	$('#eta').text(etastr);
-	
+	updateCenterDisplay();
 }
 
 //------------------ track data requests -------------------
@@ -1370,6 +1373,7 @@ function btnLockMarker(){
 		logMapPos("unlock-map",map.getCenter());
 		map.markerFeature.attributes.isLocked=false;
 		map.headingFeature.style.display="none";
+                hideCenterFeature();
 		
 	}else {		
 		map.markerFeature.attributes.isLocked=true;
@@ -1393,11 +1397,11 @@ function btnLockPos(){
 	map.boatFeature.attributes.isLocked=!map.boatFeature.attributes.isLocked;
 	if (map.boatFeature.attributes.isLocked && map.boatFeature.attributes.validPosition){
 		map.moveMapToFeature(map.boatFeature);
+        hideCenterFeature();
 	}
 	handleToggleButton('#btnLockPos',map.boatFeature.attributes.isLocked,(map.boatFeature.attributes.validPosition?'avn_buttonActive':'avn_buttonActiveError'));
 }
 function btnNavCancel(){
-	hideAISPanel();
 	handleMainPage();
 }
 
@@ -1429,6 +1433,7 @@ function hideAISPanel(){
 	}
 	else {
 		showHideAdditionalPanel(aisinfo,false);
+        updateMapSize();
 	}
 }
 
@@ -1440,10 +1445,10 @@ function showAISPanel(){
 	else {
 		showHideAdditionalPanel(aisinfo,true);
 		$(aisinfo).click(function(e){
-			hideAISPanel();
 			showPage('ais');
 			updateAISPage(true);
 		});
+        updateMapSize();
 	}
 }
 
@@ -1532,12 +1537,16 @@ function mouseEvent(e){
 }
 
 function moveEvent(){
-	moveMarkerFeature(map.getCenter());
+        var pos=map.getCenter();
+	moveMarkerFeature(pos);
+        if (! disableCenter) moveCenterFeature(pos);
 	
 }
 function moveEndEvent(){
-	moveMarkerFeature(map.getCenter(),true);
-	userData.mapPosition=map.getCenter();
+        var pos=map.getCenter();
+	moveMarkerFeature(pos,true);
+        if (! disableCenter) moveCenterFeature(pos,true);
+	userData.mapPosition=pos;
 	userData.mapZoom=map.zoom+zoomOffset;
 	$.cookie(properties.cookieName,userData);
 	
@@ -1579,6 +1588,60 @@ function moveMarkerFeature(pos,force,noCookie){
 		userData.markerPos=map.markerFeature.geometry.bounds.getCenterLonLat();
 		$.cookie(properties.cookieName,userData);
 	}
+}
+
+function moveCenterFeature(pos,moveEnd){
+  if (! map) return;
+  if (! map.markerFeature.attributes.isLocked || map.boatFeature.attributes.isLocked|| ! map.centerFeature.layer.getVisibility()){
+    hideCenterFeature();
+    return;
+  }
+  map.centerFeature.move(pos);
+  if (map.centerFeature.style.display == "none"){
+    map.centerFeature.style.display=null;
+    map.centerFeature.layer.redraw();
+  }
+  if (! ($('#centerDisplay').is(':visible'))){
+    showHideAdditionalPanel('#centerDisplay',true);
+    updateMapSize();
+    $('#centerDisplay').click(function(e){
+      hideCenterFeature();
+    });
+  }
+  updateCenterDisplay();
+  if (centerTimer) window.clearTimeout(centerTimer);
+  if (moveEnd && properties.centerDisplayTimeout){
+    centerTimer=window.setTimeout(hideCenterFeature,properties.centerDisplayTimeout);
+  }
+}
+
+function updateCenterDisplay(){
+  if (! ($('#centerDisplay').is(':visible')))return;
+  var markerDist=computeDistances(map.markerFeature.geometry,map.centerFeature.geometry,true);
+  var boatDist=computeDistances(map.boatFeature.geometry,map.centerFeature.geometry,true);
+  $('#centerBoatDistance').text(formatDecimal(boatDist.dtsnm,3,1));
+  $('#centerMarkerDistance').text(formatDecimal(markerDist.dtsnm,3,1));
+  $('#centerBoatCourse').text(formatDecimal(boatDist.course,3,0));
+  $('#centerMarkerCourse').text(formatDecimal(markerDist.course,3,0));
+	$('#centerPosition').text(formatLonLats(map.mapPosToLonLat(map.centerFeature.geometry)));
+}
+
+function hideCenterFeature(){
+  if (! map) return;
+  if (map.centerFeature.style.display == "none") return;
+  map.centerFeature.style.display="none";
+  map.centerFeature.layer.redraw();
+  if ($('#centerDisplay').is(':visible')){
+    showHideAdditionalPanel('#centerDisplay',false);
+    updateMapSize();
+  }
+  if (centerTimer) window.clearTimeout(centerTimer);
+}
+//update the map size while preventing showing the center display
+function updateMapSize(){
+  disableCenter=true;
+  if (map) map.updateSize();
+  disableCenter=false;
 }
 
 /*
@@ -1708,6 +1771,7 @@ function initMap(mapdescr,url) {
     
     
     //the vector layers
+    var centerLayer=new OpenLayers.Layer.Vector("Center");
     var markerLayer=new OpenLayers.Layer.Vector("Marker");
     var boatLayer=new OpenLayers.Layer.Vector("Boat");
     var headingLayer=new OpenLayers.Layer.Vector("Heading");
@@ -1724,6 +1788,15 @@ function initMap(mapdescr,url) {
     style_mark.title = "Marker";
     style_mark.rotation=0;
     style_mark.fillOpacity=1;
+    
+    var style_center_mark = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
+    style_center_mark.graphicWidth = 40;
+    style_center_mark.graphicHeight = 40;
+    
+    style_center_mark.externalGraphic = "images/Marker2.png";
+    style_center_mark.title = "Center";
+    style_center_mark.rotation=0;
+    style_center_mark.fillOpacity=1;
     
     var style_boat = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
     //must fit to the dimensions of the boat: 100x400, offset 50,241
@@ -1768,7 +1841,7 @@ function initMap(mapdescr,url) {
     tmap.style_ais.fontSize="14px";
    
     
-    tmap.addLayers([osm].concat(tiler_overlays).concat([markerLayer,headingLayer,tmap.track_layer,tmap.ais_layer,boatLayer]));
+    tmap.addLayers([osm].concat(tiler_overlays).concat([centerLayer,markerLayer,headingLayer,tmap.track_layer,tmap.ais_layer,boatLayer]));
     //boatLayer.setZIndex(1001);
     //map.maxZoomLevel=osm.getZoomForResolution(minRes);
     tmap.zoomToExtent(firstLayer.layer_extent,true);
@@ -1778,9 +1851,12 @@ function initMap(mapdescr,url) {
     var center=tmap.getCenter();
     var point=new OpenLayers.Geometry.Point(center.lon,center.lat);
     tmap.markerFeature=new OpenLayers.Feature.Vector(point,{isLocked:false},style_mark);
+    var centerPoint=new OpenLayers.Geometry.Point(center.lon,center.lat);
+    tmap.centerFeature=new OpenLayers.Feature.Vector(centerPoint,{isLocked:false},style_center_mark);
     var boatPoint=new OpenLayers.Geometry.Point(1509813.9046919 ,7220215.0083809); //put the boat at a nice pos
     tmap.boatFeature=new OpenLayers.Feature.Vector(boatPoint,{isLocked:false,angle:0,validPosition:false, oldPosition:false},style_boat);
     tmap.headingFeature=new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString([boatPoint,point]),{},style_bearing);
+    centerLayer.addFeatures([tmap.centerFeature]);
     markerLayer.addFeatures([tmap.markerFeature]);
     boatLayer.addFeatures([tmap.boatFeature]);
     headingLayer.addFeatures([tmap.headingFeature]);
@@ -1851,10 +1927,17 @@ function showHideAdditionalPanel(id,show){
 		$(mainid).css(mainLocation,npos+"px");
 	}
 	if (map) map.updateSize();
+        //additional top/bottom panels should only fill the same width as main
+        $('.avn_top:visible').css('left',$(mainid).css('left'));
+        $('.avn_bottom:visible').css('left',$(mainid).css('left'));
+        $('.avn_top:visible').css('right',$(mainid).css('right'));
+        $('.avn_bottom:visible').css('right',$(mainid).css('right'));
 }
 
 function showPage(name){
-	//set the page activation time to e.g. prvent some strange errors on boat browser
+  hideCenterFeature();
+  hideAISPanel();
+	//set the page activation time to e.g. prevent some strange errors on boat browser
 	pageActivationTimes[name]=new Date().getTime();
 	//first hide all pages, afterwards show the selected one
 	for (p in properties.pages){
