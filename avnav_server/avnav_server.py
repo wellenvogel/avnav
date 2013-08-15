@@ -158,7 +158,12 @@ class AVNLog():
     formatter=logging.Formatter("%(asctime)s-%(process)d-%(threadName)s-%(levelname)s-%(message)s")
     if not cls.consoleHandler is None :
       cls.consoleHandler.setLevel(numeric_level)
-    if os.name != 'posix':
+    version="2.7"
+    try:
+      version=sys.version.split(" ")[0][0:3]
+    except:
+      pass
+    if version != '2.6':
       cls.fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
       cls.fhandler.setFormatter(formatter)
       cls.fhandler.setLevel(logging.INFO if not debugToFile else numeric_level)
@@ -1325,7 +1330,7 @@ class AVNBaseConfig(AVNWorker):
             'loglevel':logging.INFO,
             'logfile':"",
             'expiryTime': 30,
-            'aisExpiryTime': 600,
+            'aisExpiryTime': 1200,
             'ownMMSI':'',        #if set - do not store AIS messages with this MMSI
             'debugToLog': 'false',
             'maxtimeback':5,      #how many seconds we allow time to go back before we reset
@@ -1495,6 +1500,7 @@ class AVNTrackWriter(AVNWorker):
   #will convert all found track files to gpx if the gpx file does not exist or is older
   def converter(self):
     infoName="TrackWriter:converter"
+    AVNLog.info("%s thread %s started",infoName,AVNLog.getThreadId())
     while True:
       currentTracks=glob.glob(os.path.join(self.trackdir,"*.avt"))
       for track in currentTracks:
@@ -1515,7 +1521,7 @@ class AVNTrackWriter(AVNWorker):
       time.sleep(60)
     
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
     f=None
     fname=None
     initial=True
@@ -1532,9 +1538,9 @@ class AVNTrackWriter(AVNWorker):
         trackdir=os.path.join(os.path.dirname(sys.argv[0]),'tracks')
       self.trackdir=trackdir
       if initial:
-        converter=threading.Thread(target=self.converter)
-        converter.daemon=True
-        converter.start()
+        theConverter=threading.Thread(target=self.converter)
+        theConverter.daemon=True
+        theConverter.start()
         AVNLog.info("started with dir=%s,interval=%d, distance=%d",
                 trackdir,
                 self.getFloatParam("interval"),
@@ -1555,7 +1561,7 @@ class AVNTrackWriter(AVNWorker):
               self.setInfo('main', "reading old track data", AVNWorker.Status.STARTED)
               data=self.readTrackFile(curfname)
               for trkpoint in data:
-                self.track.append(trkpoint[0],trkpoint[1],trkpoint[2])
+                self.track.append((trkpoint[0],trkpoint[1],trkpoint[2]))
             initial=False
         if newFile:
           f=open(curfname,"a")
@@ -1588,7 +1594,9 @@ class AVNTrackWriter(AVNWorker):
               lastLat=lat
               lastLon=lon
       except Exception as e:
+        AVNLog.error("exception in Trackwriter: %s",traceback.format_exc());
         pass
+      initial=False
       #TODO: compute more exact sleeptime
       time.sleep(self.getFloatParam("interval"))
       
