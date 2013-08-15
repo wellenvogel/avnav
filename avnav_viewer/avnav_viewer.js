@@ -1781,12 +1781,12 @@ function initMap(mapdescr,url) {
 	mapsequence+=1;
 	$('.avn_toggleButton').addClass("avn_buttonInactive");
 	
-	$('#leftBottom').click(function(e){
+	$('.avn_markerPosition').click(function(e){
 		if (map.markerFeature.attributes.isLocked && ! map.boatFeature.attributes.isLocked){
 			map.moveMapToFeature(map.markerFeature,true);
 		}
 	});
-	$('#leftTop').click(function(e){
+	$('.avn_boatPosition').click(function(e){
 		map.moveMapToFeature(map.boatFeature,true);
 	});
 	
