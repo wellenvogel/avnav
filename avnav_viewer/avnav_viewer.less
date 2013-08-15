@@ -1,6 +1,7 @@
 @topPanelHeight:00px;
 @bottomPanelHeight:50px;
 @aisPanelWidth:90px;
+@buttonSize: 60px;
 
 
 /*-------------------------------------------------------------
@@ -115,7 +116,7 @@ font-size: ( @bottomPanelHeight - 2 );
 	margin-top: ( @bottomSmallFont / 4 );
 }
 #leftBottomMarker #leftBottomMarkerBearing{
-	width: ( @bottomBigFont * 5.5 );
+	width: ( @bottomBigFont * 5.6 );
 }
 #leftBottomMarker #markerPosition{
 	font-size: @bottomSmallFont;
@@ -169,14 +170,14 @@ font-size: ( @bottomPanelHeight - 2 );
    buttons
 -------------------------------------------------------------*/
 button.avn_button{
-	width: 50px;
-	height: 50px;
+	width: @buttonSize;
+	height: @buttonSize;
 	margin: 3px 3px 3px 3px;
 }
 
 button.avn_toggleButton{
-	width: 50px;
-	height: 50px;
+	width: @buttonSize;
+	height: @buttonSize;
 	margin: 3px 3px 3px 3px;
 }
 
@@ -195,83 +196,84 @@ button.avn_buttonInactive{
 #btnLockPos .ui-icon {
 	background-image: url(images/Sail-Boat-40.png);
 	background-position: 0px 0px;
-	width: 40px;
-	height: 40px;
-	left: 10px;
-	top: 10px;
+	/* left: ( size - 2*border ) /2 - width/2 */ 
+	left:( ( @buttonSize - 8 ) / 2 - 10  );
+	top:( ( @buttonSize - 8 ) / 2 - 10  );
 	margin-top: 0px;
 	margin-left: 0px;
 	background-size: 20px 20px;
+	width: 20px;
+	height: 20px;
 }
 
 #btnLockMarker .ui-icon{
 	background-image: url(images/Marker1.png);
 	background-position: 0px 0px;
-	width: 40px;
-	height: 40px;
-	left: 10px;
-	top: 10px;
+	left:( ( @buttonSize - 8 ) / 2 - 10  );
+	top:( ( @buttonSize - 8 ) / 2 - 10  );
 	margin-top: 0px;
 	margin-left: 0px;
 	background-size: 20px 20px;
+	width: 20px;
+	height: 20px;
 }
 
 #btnLayerSwitch .ui-icon{
 	background-image: url(images/Layer40.png);
 	background-position: 0px 0px;
-	width: 40px;
-	height: 40px;
-	left: 12px;
-	top: 12px;
+	left:( ( @buttonSize  ) / 2 - 12  );
+	top:( ( @buttonSize  ) / 2 - 12  );
 	margin-top: 0px;
 	margin-left: 0px;
 	background-size: 24px 24px;
+	width: 24px;
+	height: 24px;
 }
 
 #btnNavCancel .ui-icon{
 	background-image: url(images/Cancel40.png);
 	background-position: 0px 0px;
-	width: 40px;
-	height: 40px;
-	left: 12px;
-	top: 12px;
+	left:( ( @buttonSize  ) / 2 - 12  );
+	top:( ( @buttonSize  ) / 2 - 12  );
 	margin-top: 0px;
 	margin-left: 0px;
 	background-size: 24px 24px;
+	width: 24px;
+	height: 24px;
 }
 #btnAISCancel .ui-icon{
 	background-image: url(images/Cancel40.png);
 	background-position: 0px 0px;
-	width: 40px;
-	height: 40px;
-	left: 12px;
-	top: 12px;
+	left:( ( @buttonSize  ) / 2 - 12  );
+	top:( ( @buttonSize  ) / 2 - 12  );
 	margin-top: 0px;
 	margin-left: 0px;
 	background-size: 24px 24px;
+	width: 24px;
+	height: 24px;
 }
 #btnAISFirst .ui-icon{
 	background-image: url(images/Ais-Up-40.png);
 	background-position: 0px 0px;
-	width: 40px;
-	height: 40px;
-	left: 12px;
-	top: 12px;
+	left:( ( @buttonSize  ) / 2 - 12  );
+	top:( ( @buttonSize  ) / 2 - 12  );
 	margin-top: 0px;
 	margin-left: 0px;
 	background-size: 24px 24px;
+	width: 24px;
+	height: 24px;
 }
 
 #btnStatusCancel .ui-icon{
 	background-image: url(images/Cancel40.png);
 	background-position: 0px 0px;
-	width: 40px;
-	height: 40px;
-	left: 12px;
-	top: 12px;
+	left:( ( @buttonSize  ) / 2 - 12  );
+	top:( ( @buttonSize  ) / 2 - 12  );
 	margin-top: 0px;
 	margin-left: 0px;
 	background-size: 24px 24px;
+	width: 24px;
+	height: 24px;
 }
 
 /*-------------------------------------------------------------
@@ -351,12 +353,16 @@ button.avn_buttonInactive{
 /* AIS info box */
 #aisInfoInner{
 	margin-top: 2px;
+	position: absolute;
+	left: 0;
+	right: 0;
 }
 
 .avn_ais_base(@factor: 5) {
 	font-size: ( @aisPanelWidth / @factor );
 	margin-bottom: 5px;
 	border-bottom: 1px solid black;
+	padding-left: 3px;
 }
 
 .avn_ais_data {
@@ -370,6 +376,7 @@ button.avn_buttonInactive{
 }
 #aisInfoHeadline{
 	font-size: ( @aisPanelWidth / 3 );
+	padding-left: 3px;
 }
 
 /*-------------------------------------------------------------
@@ -451,7 +458,7 @@ button.avn_buttonInactive{
 	left: 0px;
 	top: 0px;
 	bottom: 0px;
-	right: 60px;      
+	right: (@buttonSize + 10 );      
 	overflow: hidden;
 }
   
@@ -523,7 +530,7 @@ button.avn_buttonInactive{
 	top: 0px;
 	bottom: 0px;
 	right: 0px;
-	width: 60px;
+	width: ( @buttonSize + 10 );
 }
 
 .avn_status_image{

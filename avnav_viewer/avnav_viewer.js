@@ -145,7 +145,11 @@ var aisparam={
 		position:{
 			headline: 'position',
 			format: function(v){return formatLonLats({lon:v.lon,lat:v.lat});}
-		}
+		},
+    destination: {
+      headline: 'destination',
+      format: function(v){ var d=v.destination; if (d) return d; return "unknown";}
+    }
 		
 };
 
@@ -303,9 +307,12 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 		var mlonlat=this.lonLatToMap(new OpenLayers.LonLat(aisdata.lon,aisdata.lat));
 		aisfeature.style.rotation=aisdata.course;
 		aisfeature.move(mlonlat);
-		if (aisdata.shipname){
-			aisfeature.style.label=aisdata.mmsi+"\n"+aisdata.shipname;
+		if (aisdata.shipname && aisdata.shipname != "unknown" ){
+			aisfeature.style.label=aisdata.shipname;
 		}
+    else {
+			aisfeature.style.label=aisdata.mmsi;
+    }
 		if (isWarning){
 			aisfeature.style.externalGraphic=properties.aisWarningImage
 		}
@@ -1150,6 +1157,7 @@ function updateAISInfoPanel(){
 			$('#aisTcpa').text(aisparam['tcpa'].format(ais)); //TODO
 			$('#aisMmsi').text(aisparam['mmsi'].format(ais));
 			$('#aisName').text(aisparam['shipname'].format(ais));
+			$('#aisDestination').text(aisparam['destination'].format(ais));
 		}
 		else{
 			hideAISPanel();
