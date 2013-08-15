@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.4.1  (Unix)">
 	<META NAME="CREATED" CONTENT="20130720;22180300">
-	<META NAME="CHANGED" CONTENT="20130722;21421100">
+	<META NAME="CHANGED" CONTENT="20130727;22280400">
 	<STYLE TYPE="text/css">
 	<!--
 		H2.ctl { font-family: "Arial Unicode MS" }
@@ -17,15 +17,16 @@
 <H1>Raspberry Pi als Bordcomputer / Navigation im Browser</H1>
 <H2 CLASS="western">Motivation</H2>
 <P>Nachdem ich schon eine ganze Weile mit Rasterkarten unterwegs
-navigiere (erst unter Windows mit Seaclear, dann unter Windows und
-OSX mit OpenCPN und OziExplorer) hatte ich schon eine ganze Weile
-nach Möglichkeiten gesucht, das zu erweitern und noch besser
-tauglich für unterwegs zu machen.</P>
+navigiere (erst unter Windows mit Seaclear, dann unter Windows,
+WindowsCE und OSX mit OpenCPN und OziExplorer) hatte ich schon eine
+ganze Weile nach Möglichkeiten gesucht, das zu erweitern und noch
+besser tauglich für unterwegs zu machen.</P>
 <P>Meine Wunschliste dabei war:</P>
 <UL>
 	<LI><P>Navigation auf  kleinen Geräten (Laptop ist immer ein wenig
 	unhandlich) – 7 oder 10 Zoll Tablet wäre Ideal</P>
 	<LI><P>Navigation auch im Cockpit</P>
+	<LI><P>Trackaufzeichnung</P>
 	<LI><P>Verknüpfung mit der „on board“ Navigation (seit einiger
 	Zeit habe ich ein RO4800 als Funke, das auch einen AIS Decoder hat –
 	und ja auch schon GPS Daten bekommt)</P>
@@ -113,7 +114,7 @@ unten) und meine Software.
 </P>
 <P>Der Hauptbestandteil der Sofware auf dem raspberry pi ist ein in
 python geschriebener Server.</P>
-<P><IMG SRC="software.png" NAME="Grafik2" ALIGN=LEFT WIDTH=1218 HEIGHT=624 BORDER=0><BR CLEAR=LEFT><BR><BR>
+<P><IMG SRC="software.png" NAME="Grafik2" ALIGN=LEFT WIDTH=970 HEIGHT=495 BORDER=0><BR CLEAR=LEFT><BR><BR>
 </P>
 <P>Dieser Server versucht alle am raspberry angeschlossenen seriellen
 Geräte zu erkennen und deren NMEA Daten zu lesen. Typisch werden die
@@ -122,16 +123,17 @@ PL2303). Man muss ein wenig aufpassen, dass man einen Wandler hat,
 der vom Raspberry auch sauber unterstützt wird (…). Da das
 Verwalten der seriellen Schnittstellen unter Linux etwas magisch ist,
 scant der Server (per Dbus) die angeschlossenen Geräte auf eine
-entsprechende serielle Klasse. Anschliessend versucht er ein auto
-bauding zwischen 4800 und 34000 Baud und bemüht sich, NMEA Daten zu
-erkennen. Falls keine Daten empfangen werden, wird die Schnittstelle
-geschlossen und das Spiel beginnt von vorn. Damit „überlebt“ er
-auch das anschliessen/abstecken von Wandlern im Betrieb oder das An-
-bzw. Abschalten von Geräten. Bei mir hängt ein RO4800 mit AIS
-Decoder dran, die GPS Daten werden durchgereicht. Alternativ versucht
-er auch Kontakt zu seriellen Bluetooth Geräten aufzunehmen, falls er
-per discovery welche findet und versucht ebenfalls NMEA Daten zu
-Lesen. Getestet bei mir mit einer Holux GPS SlimXXX. In diesem Sinne
+entsprechende serielle Klasse und ermittelt deren Schnittstelle
+(device). Anschliessend versucht er ein auto bauding zwischen 4800
+und 34000 Baud und bemüht sich, NMEA Daten zu erkennen. Falls keine
+Daten empfangen werden, wird die Schnittstelle geschlossen und das
+Spiel beginnt von vorn. Damit „überlebt“ er auch das
+anschliessen/abstecken von Wandlern im Betrieb oder das An- bzw.
+Abschalten von Geräten. Bei mir hängt ein RO4800 mit AIS Decoder
+dran, die GPS Daten werden durchgereicht. Alternativ versucht er auch
+Kontakt zu seriellen Bluetooth Geräten aufzunehmen, falls er per
+discovery welche findet und versucht ebenfalls NMEA Daten zu Lesen.
+Getestet bei mir mit einer Holux GPS SlimXXX. In diesem Sinne
 arbeitet er auch als NMEA Multiplexer.</P>
 <P>Alle GPS-Daten werden in eine Input queue gestellt. Aus dieser
 werden verbundene TCP Empfänger (z.B. OpenCPN) versorgt – jeder
@@ -143,7 +145,7 @@ verwenden, um direkt die seriellen Schnittstellen zu lesen, daher
 macht der avnnav_server einen Socket auf, an den sich der gpsd
 connected und von dem er die Daten liest. Das Starten des gpsd
 übernimmt ebenfalls der anav server. Am „anderen Ende“ werden
-über die gpsd python Schnittstelle die Dekodierten Daten ausgelesen
+über die gpsd python Schnittstelle die dekodierten Daten ausgelesen
 (gps Daten und AIS Daten) und im Server abgelegt für den Zugriff per
 HTTP aus der WebApp. Der gpsd wird überwacht und bei Fehlern neu
 gestartet. Zusätzlich werden die dekodierten Daten auch benutzt um
@@ -151,7 +153,7 @@ Track Dateien zu schreiben.</P>
 <P>Über den integrierten WebServer kann der Zugriff auf diese
 dekodierten Daten erfolgen (per HTTP GET, Antwort als json).</P>
 <P>Falls gültige GPS Zeitinformationen empfangen werden, wird die
-Systemzeit des raspberry entsprchend eingestellt.</P>
+Systemzeit des raspberry entsprechend eingestellt.</P>
 <P>Auf dem raspberry gibt es noch einen service, der den avnav_server
 beim Systemstart automatisch startet und es auch ermöglicht, ihn
 geordnet zu beenden.</P>
@@ -181,7 +183,7 @@ Verzeichnisstruktur installiert:</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD WIDTH=28%>
-			<PRE>/data/</PRE>
+			<P>/data/</P>
 		</TD>
 		<TD WIDTH=72%>
 			<P>Eine separate data partition. Diese wird automatisch beim
@@ -314,7 +316,7 @@ versehen:</P>
 <P>Bei meinem Image kommt dazu noch eine separate /data partition mit
 dem Rest der SD-Karte. Das empfiehlt sich in jedem Fall, da für die
 Speicherung der Karten sehr viele kleine Dateien erzeugt werden und
-die standar-Partitionen darauf nicht gut vorbereitet sind.</P>
+die standard-Partitionen darauf nicht gut vorbereitet sind.</P>
 <P>Die Installation der Software hängt stark davon ab, ob mein Image
 verwendet wird, oder ob von einem „stock“ Image ausgegangen wird.
 Beide Varianten beschreibe ich kurz.</P>
@@ -435,36 +437,35 @@ in der Projektion verwendet werden und ob die Erde als Kugel oder
 Ellipsoid mit verschiedenen Parametern modelliert wird, beschreiben
 die verschiedenen Projektionen. Die WebApp benutzt die sogenannte
 Google-Mercator Projektion (die Erde wird dabei als Kugel betrachtet)
- - mit dem sogenannten EPSG code 900913. Die Einheiten auf dem Papier
-sind dabei Meter (die man natürlich in die entsprechenden
-Koordinaten umrechnen kann). Karten in einem anderen Format (z.B.
-WGS84 – Erde als Ellipsoid, immer in Grad) müssen daher ggf.
-reprojeziert werden. 
+ - mit dem EPSG code 900913. Die Einheiten auf dem Papier sind dabei
+Meter (die man natürlich in die entsprechenden Koordinaten umrechnen
+kann). Karten in einem anderen Format (z.B. WGS84 – Erde als
+Ellipsoid, immer in Grad) müssen daher ggf. reprojeziert werden. 
 </P>
 <P>Die gesamte Projektionsfläche wird bei der google Projektion in
-Kacheln unterteilt. Der sogenannte Zoom level gibt an, in wieviele
-Kacheln die Fläche unterteil wird. Zoom level 0 bedeuted: Die
-gesamte Erde (von -85° bis +85° Breite – darüber ist die
-Projektion nicht definiert) auf einer Kachel von 256x256 Pixel. Mit
-jedem weiteren ZoomLevel wird feiner unterteilt: Zoom level 1: 2x2
-Kacheln, 2: 4x4 Kacheln usw. Für uns reichen die interessanten Zoom
-Level von ca. 7 bis 18..19. Das bedeutet (level 19) 2^19x2^19
-Kacheln.</P>
+Kacheln unterteilt. Der Zoom level gibt an, in wieviele Kacheln die
+Fläche unterteil wird. Zoom level 0 bedeuted: Die gesamte Erde (von
+-85° bis +85° Breite – darüber ist die Projektion nicht
+definiert) auf einer Kachel von 256x256 Pixel. Mit jedem weiteren
+ZoomLevel wird feiner unterteilt: Zoom level 1: 2x2 Kacheln, 2: 4x4
+Kacheln usw. Für uns reichen die interessanten Zoom Level von ca. 7
+bis 18..19. Das bedeutet (level 19) 2^19x2^19 Kacheln.</P>
 <P>Zur Darstellung wird die library <A HREF="http://www.openlayers.org/">openlayers</A>
 verwendet. Diese lädt die entsprchenden Kartenkacheln je nach zoom
-level vom Server und zeigt sie an. OpenStreetMaps verwendet
+level vom raspberry und zeigt sie an. OpenStreetMaps verwendet
 typischerweise diese Library.</P>
-<P>Man kann sich leicht vorstellen, das da schnell große Datenmengen
-zusammenkommen. Daher müssen wir für unsere Kartenkacheln ähnlich
-vorgehen, wie es auch bei den Papierkarten ist: Für Übersichten ein
-kleinerer Zoom Level, Detailkarten größer und z.B. Hafenpläne dann
-mit level 18 oder 19 (60cm/pixel bzw. 30cm/pixel). Um damit dann
-arbeiten zu können, werden die verschiedenen Detailgrade dann in
-Layern übereinandergelegt. Wenn es für ein Gebiet einen Layer mit
-besserem (grösserem) zoomlevel gibt, wird dieser angezeigt, wenn
-nicht der mit der geringeren Auflösung (ggf. noch vergrössert). Um
-unsere Anzeigegeräte nicht zu überlasten, kann man typisch mit 3-5
-Kartenlayern arbeiten (je nach Gerät...).</P>
+<P>Man kann sich leicht vorstellen, das bei hohen zoomleveln schnell
+große Datenmengen zusammenkommen. Daher müssen wir für unsere
+Kartenkacheln ähnlich vorgehen, wie es auch bei den Papierkarten
+ist: Für Übersichten ein kleinerer Zoom Level, Detailkarten größer
+und z.B. Hafenpläne dann mit level 18 oder 19 (60cm/pixel bzw.
+30cm/pixel). Um damit arbeiten zu können, werden die verschiedenen
+Detailgrade dann in Layern (Schichten)  übereinandergelegt. Wenn es
+für ein Gebiet einen Layer mit besserem (grösserem) zoomlevel gibt,
+wird dieser angezeigt, wenn nicht, der mit der geringeren Auflösung
+(ggf. noch vergrössert). Um unsere Anzeigegeräte nicht zu
+überlasten, kann man typisch mit 3-5 Kartenlayern arbeiten (je nach
+Gerät...).</P>
 <P>Damit besteht für die Kartenkonvertierung die Aufgabe darin,
 vorhandene Karten in solche Layer einzusortieren, sie ggf zu
 reprojezieren und dann die Kartenkacheln (sowie eine
@@ -521,7 +522,7 @@ Kacheln neu erzeugt werden.
 	<LI><P>Sortierung der Karten in layer (und ggf. soweit nötig
 	Konvertierung der karten). 
 	</P>
-	<LI><P>Erzeugung der tiles</P>
+	<LI><P>Erzeugung der Kacheln</P>
 </UL>
 <P>Der erste Schritt geht relativ schnell. Alle Kartendateien werden
 gelesen und Auflösung und Abdeckung wird ermittelt (falls nötig
@@ -571,7 +572,7 @@ jeweils als gewünschte Zoomlevel die zum Layer gehörigen anklicken
 (links oben), danach alle Teilbereiche jeweils markieren und unter
 einem beliebigen Namen dem Atlas hinzufügen. Das jeweils für die
 anderen Layer wiederholen (dabei sinnvolle Auswahlen treffen).
-Anschliessend die Atlas-Konfiguration unter einem sinnvollen namen
+Anschliessend die Atlas-Konfiguration unter einem beliebigen Namen
 speichern. Als output Format OSMTracker wählen und die
 Atlas-Erzeugung starten. Im output Verzeichnis entsteht ein
 Verzeichnis für jeden Zoom level. Diese Verzeichnisse wieder auf den
@@ -579,6 +580,222 @@ pi unter /data/avnav/charts/Satzx kopieren. Dazu aus dem
 Programmverzeichnis von MOBAC die gespeicherte Atlas-Datei in das
 gleiche Verzeichnis kopieren (der server wird automatisch eine
 avnav.xml erzeugen).</P>
+<P><BR><BR>
+</P>
+<H2 CLASS="western">Die WebApp</H2>
+<P>Um die auf dem raspberry pi installierten Karten nutzen zu können,
+gibt es eine in HTML/Java Script geschriebene WebApp. Dazu noch ein
+Hinweis vorweg:</P>
+<P>I<I><B>ch kann keine Garantie für die Funktion der App
+übernehmen, insbesondere die Nutzung zu Navigationszwecken geschieht
+auf eigenes Risiko. In jedem Falle empfehle ich einen intensiven Test
+der Genauigkeit der Darstellung und des verwendeten Kartenmaterials.</B></I></P>
+<P>Die App kommuniziert mit dem webserver des avnav_server.py auf dem
+pi. Die Einstiegsseite ist unter der url
+<A HREF="http://avnav/viewer/avnav_viewer.html">http://avnav/viewer/avnav_viewer.html</A>
+erreichbar. Es is eine sogenannte „single page app“, d.h. Die
+weitere Kommunikation mit dem server geschieht per Ajax durch den
+JavaScript Anteil. Vom Layout ist sie optimiert für die Darstellung
+auf einem 7 Zoll Tablet (bei mir momentan im Einsatz: Nexus 7 am
+Navitisch, Blackberry Playbook draussen), sie läuft aber natürlich
+auch auf größeren Tablets (Ipad) oder auf einem Laptop/Desktop.
+Eine sinnvolle Nutzung ist ab etwa 900x540 Pixel möglich.</P>
+<P>Diese App befindet sich noch in einem recht frühen
+Entwicklungsstadium, ich habe sie allerdings selbst schon intensiv in
+Benutzung. Ihre wesentlichen Fähigkeiten:</P>
+<UL>
+	<LI><P>Darstellung der Kartendaten (blattschnittfrei je Satz),  mit
+	den enstprechenden Funktionen (Zoom, move,...)</P>
+	<LI><P>Dartstellung der aktuellen Schiffsposition mit Kurs,
+	Geschwindigkeit (mit Lock der Karte auf Schiffsposition)</P>
+	<LI><P>Darstellung des aktuellen Tracks</P>
+	<LI><P>Setzen eines Wegepunktes, Anzeige von Richtung,Entfernung,ETA</P>
+	<LI><P>AIS Anzeige mit Darstellung in der Karte, AIS Target am
+	nächsten zum Schiff, Warnung bei CPA &lt; 500m, CPA,TCPA, AIS Infos</P>
+</UL>
+<P>Im Folgenden beschreibe ich kurz die Bedienung der aktuellen
+Version, danach einige technische Details.</P>
+<H3 CLASS="western">Die Bedienung</H3>
+<P>Nach dem Aufruf der Start-Url landet man auf der Einstigesseite.</P>
+<P><IMG SRC="navi-start.png" NAME="Grafik3" ALIGN=LEFT WIDTH=972 HEIGHT=510 BORDER=0><BR CLEAR=LEFT><BR><BR>
+</P>
+<P>Im Hauptbereich der Seite befindet sich die Liste der vom Server
+gefundenen Kartensätze (Verzeichnisse unter /data/avnav/charts mit
+einer avnav.xml Datei). Durch Anklicken gelang man zur
+Navigationsseite mit dem enstprechenden Kartensatz.</P>
+<P>Wie auf allen Seiten befindet sich am rechten Rand eine
+Button-Leiste. Von hier aus erreich man eine Status-Seite des Servers
+und die Hilfe.</P>
+<P>Die Navigationsseite</P>
+<P><IMG SRC="navi-1.png" NAME="Grafik4" ALIGN=LEFT WIDTH=972 HEIGHT=481 BORDER=0><BR CLEAR=LEFT><BR><BR>
+</P>
+<P>Dies ist die Hauptansicht. In der Mitte befindet sich die
+Kartenansicht mit der Schiffsposition (roter Pfeil). Die gelben und
+grünen Dreiecke mit Pfeilspitzen sind empfangene AIS Ziele in der
+Nähe (10nm) mit ihrem aktuellen Kurs sowie Name und MMSI. Die
+organgefarbene Linie zeigt zum aktiven Wegepunkt. Die Karte kann mit
+den normalen Gesten verschoben oder gezoomt werden, zum zoomen können
+auch die Buttons +/- auf der rechten Leiste benutzt werden. 
+</P>
+<P>Links befindet sich die Darstellung des nächsten AIS Zieles
+(geringste momentane Entfernung). Dieses färbt sich rot, wenn eine
+CPA von 500m unterschritten wird. Gelb bedeuted, dass nicht das
+nächste Ziel sondern ein separat ausgewähltes Ziel (siehe unten 
+AIS) angezeigt wird. Ein Klick auf diese Fläche oder ein AIS Ziel
+auf der Karte führt auf die AIS Info Liste (s.u.).</P>
+<P>Im unteren Bereich befindet sich die Anzeige der wichtigsten
+Navigationsdaten. Links die Daten des aktuellen Wegepunktes (Marker):</P>
+<UL>
+	<LI><P>Position</P>
+	<LI><P>ETA</P>
+	<LI><P>Kurs</P>
+	<LI><P>Distanz (nm)</P>
+</UL>
+<P>Danach folgen die Schiffsdaten:</P>
+<UL>
+	<LI><P>Kurs</P>
+	<LI><P>Geschwindigkeit (kn)</P>
+	<LI><P>Position</P>
+	<LI><P>aktuelle (lokale) Zeit vom GPS</P>
+	<LI><P>GPS Indikator: grün – GPS Daten vorhanden, rot: keine
+	Daten 
+	</P>
+</UL>
+<P>Ein Klick auf die linke bzw. rechte Seite der Leiste zentriert die
+Karte jeweils auf den Wegepunkt bzw. die Bootsposition.</P>
+<P>Auf der rechten Seite befindet sich eine Button-Leiste:</P>
+<TABLE WIDTH=760 BORDER=1 CELLPADDING=4 CELLSPACING=4>
+	<COL WIDTH=89>
+	<COL WIDTH=641>
+	<TR VALIGN=TOP>
+		<TH WIDTH=89>
+			<P ALIGN=CENTER>Button 
+			</P>
+		</TH>
+		<TH WIDTH=641>
+			<P>Funktion 
+			</P>
+		</TH>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P ALIGN=CENTER>+</P>
+		</TD>
+		<TD WIDTH=641>
+			<P>Zoom in</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P ALIGN=CENTER>-</P>
+		</TD>
+		<TD WIDTH=641>
+			<P>Zoom out</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P ALIGN=CENTER><IMG SRC="../avnav_viewer/images/Layer40.png" NAME="Grafik5" ALIGN=LEFT WIDTH=40 HEIGHT=40 BORDER=0><BR CLEAR=LEFT><BR>
+			</P>
+		</TD>
+		<TD WIDTH=641>
+			<P>Anzeige eines Layermenüs. Hiermit können einzelne
+			Karten-Layer oder auch Funktionen wie z.B. die AIS oder die
+			Wegepunkt-Darstellung ein- oder ausgeschaltet werden.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P ALIGN=CENTER><IMG SRC="../avnav_viewer/images/Sail-Boat-40.png" NAME="Grafik7" ALIGN=LEFT WIDTH=62 HEIGHT=62 BORDER=0><BR CLEAR=LEFT><BR>
+			</P>
+		</TD>
+		<TD WIDTH=641>
+			<P>Boat „lock“. Wenn dieser Lock eingeschaltet ist (grüner
+			Rand) wird die Karte immer auf die Bootsposition zentriert.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P ALIGN=CENTER><IMG SRC="../avnav_viewer/images/Marker1.png" NAME="Grafik6" ALIGN=LEFT WIDTH=66 HEIGHT=66 BORDER=0><BR CLEAR=LEFT><BR>
+			</P>
+		</TD>
+		<TD WIDTH=641>
+			<P>Marker „lock“. Wenn der Lock ausgeschaltet ist, springt der
+			Marker in die Mitte der angezeigten Karte. In diesem Zustand kann
+			man die Karte verschieben bis sich der Marker an der gewünschten
+			Stelle (=Wegepunkt) befindet. Mit Klick auf den Marker button
+			erscheint ein grüner Rand und die Kurslinie zum Marker wird
+			angezeigt. Der Marker bleibt auf dieser Position.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P ALIGN=CENTER><IMG SRC="../avnav_viewer/images/Cancel40.png" NAME="Grafik8" ALIGN=LEFT WIDTH=40 HEIGHT=40 BORDER=0><BR CLEAR=LEFT><BR>
+			</P>
+		</TD>
+		<TD WIDTH=641>
+			<P>Zurück zur Einstiegsseite. Die aktuelle Kartenposition, die
+			Marker-Position und der aktuelle zoom bleiben erhalten wenn auf
+			einen anderen Kartensatz gewechselt wird.</P>
+		</TD>
+	</TR>
+</TABLE>
+<P> 
+</P>
+<P>Eine typische Bedienfolge:</P>
+<P>Waypoint setzen:</P>
+<P>unlock Boot-&gt;unlock Marker-&gt;Karte verschieben bis Marker auf
+gewünschter Pos (Zoom nutzen)-&gt;lock Marker-&gt;lock Boot 
+</P>
+<P><IMG SRC="navi-2.png" NAME="Grafik9" ALIGN=LEFT WIDTH=972 HEIGHT=519 BORDER=0><BR CLEAR=LEFT>Dieses
+Bild zeigt einen gesetzten Marker (locked) – das Boot ist
+allaerdings noch nicht auf Kurs (daher noch keine ETA).</P>
+<P>Mit einem Klick auf die AIS Info gelangt man zur AIS Übersicht:</P>
+<P><IMG SRC="navi-ais.png" NAME="Grafik10" ALIGN=LEFT WIDTH=972 HEIGHT=521 BORDER=0><BR CLEAR=LEFT>Auf
+dieser Seite sieht man alle empfangenen AIS Ziele im Umkreis von ca.
+10nm zur Bootsposition (sortiert nach CPA). Mit Klick auf eine Zeile
+springt man zurück zur Karten-Anzeige mit dem gewählten AIS Ziel im
+Zentrum. Das gewählte Ziel erscheint auch im AIS Info Fenster
+(dieses färbt sich gelb). Ein Klick auf den grünen Pfeil schaltet
+wieder in den „Normalmodus“ - d.h. Anzeige des nächsten AIS
+Zieles.</P>
+<P>Mit dem zurück Button geht es unverändert zur Karten-Anzeige
+zurück.</P>
+<P>Von der Startseite kann man noch eine Status-Seite erreichen –
+hier werden interne Status-Infos des Servers angezeigt.</P>
+<P><IMG SRC="navi-status.png" NAME="Grafik11" ALIGN=LEFT WIDTH=972 HEIGHT=545 BORDER=0><BR CLEAR=LEFT>Wichtig
+ist hier insbesondere der Status der „Serial reader“ - dieser
+zeigt, ob sie NMEA Daten empfangen.</P>
+<P><BR><BR>
+</P>
+<H3 CLASS="western">Technische Infos</H3>
+<P>Die WebApp kommuniziert mit dem server (Stand heute) „read only“
+- d.h. sie liest nur Daten, verändert aber keine Daten auf dem
+Server. Das Setzen des Markers ist somit eine rein lokale Sache, wenn
+man auf einem Display-Gerät den Marker setzt, beeinflusst das nicht
+die Anzeige auf den anderen Geräten. Das wird sich in zukünftigen
+Versionen ändern.</P>
+<P>Sie besteht aus einem HTML Gerüst (avnav_viewer.html) sowie den
+eingebundenen JavaScript Bibliotheken und einem JavaScript Anteil
+(avnav_viewer.js). Die Darstellung ist weitgehend von der
+eigentlichen Funktion entkoppelt und wird per css (unter Nutzung von
+less) gesteuert. Man kann die Darstellung in der HTMl Datei und in
+avnav_viewer.less weitgehend anpassen.</P>
+<P>Die Kommunikation erfolgt durch einfache GET requests zur url
+<A HREF="http://avnav/viewer/avnav_navi.php">http://avnav/viewer/avnav_navi.php</A>,
+dann folgen Parameter, die den request beschreiben. Die Antworten vom
+server sind json kodiert.</P>
+<P>Die wichtigsten requests sind:</P>
+<UL>
+	<LI><P>gps: Abfrage der Positionsdaten 
+	</P>
+	<LI><P>ais: Abfrage der AIS Daten 
+	</P>
+	<LI><P>track: Abfrage des aktuellen Tracks</P>
+</UL>
+<P>Diese Requests werden periodisch wiederholt (polling).</P>
+<P>Viele Parameter lassen sich in der Variable properties am Anfang
+der Java Script Datei einstellen.</P>
 <P><BR><BR>
 </P>
 <P><BR><BR>
