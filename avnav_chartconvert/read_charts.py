@@ -197,7 +197,7 @@ import shutil
 import itertools
 from optparse import OptionParser
 import xml.sax as sax 
-import Image
+from PIL import Image
 import operator
 import math
 import shutil
