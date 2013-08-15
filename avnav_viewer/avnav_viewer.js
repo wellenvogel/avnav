@@ -172,7 +172,6 @@ var timer=null;
 var trackTimer=null;
 var aisTimer=null;
 var centerTimer=null;
-var disableCenter=false;
 var currentAngle=0;
 var NM=1852;
 var gpsErrors=0;
@@ -1537,15 +1536,15 @@ function mouseEvent(e){
 }
 
 function moveEvent(){
-        var pos=map.getCenter();
-	moveMarkerFeature(pos);
-        if (! disableCenter) moveCenterFeature(pos);
+  var pos=map.getCenter();
+  moveMarkerFeature(pos);
+  moveCenterFeature(pos);
 	
 }
 function moveEndEvent(){
-        var pos=map.getCenter();
+  var pos=map.getCenter();
 	moveMarkerFeature(pos,true);
-        if (! disableCenter) moveCenterFeature(pos,true);
+  moveCenterFeature(pos,true);
 	userData.mapPosition=pos;
 	userData.mapZoom=map.zoom+zoomOffset;
 	$.cookie(properties.cookieName,userData);
@@ -1602,8 +1601,7 @@ function moveCenterFeature(pos,moveEnd){
     map.centerFeature.layer.redraw();
   }
   if (! ($('#centerDisplay').is(':visible'))){
-    showHideAdditionalPanel('#centerDisplay',true);
-    updateMapSize();
+    $('#centerDisplay').show();
     $('#centerDisplay').click(function(e){
       hideCenterFeature();
     });
@@ -1632,16 +1630,13 @@ function hideCenterFeature(){
   map.centerFeature.style.display="none";
   map.centerFeature.layer.redraw();
   if ($('#centerDisplay').is(':visible')){
-    showHideAdditionalPanel('#centerDisplay',false);
-    updateMapSize();
+    $('#centerDisplay').hide();
   }
   if (centerTimer) window.clearTimeout(centerTimer);
 }
 //update the map size while preventing showing the center display
 function updateMapSize(){
-  disableCenter=true;
   if (map) map.updateSize();
-  disableCenter=false;
 }
 
 /*
