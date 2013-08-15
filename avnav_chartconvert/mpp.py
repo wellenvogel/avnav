@@ -3,7 +3,7 @@
 # vim: ts=2 sw=2 et
 #
 import sys
-from wx.py.crust import Display
+#from wx.py.crust import Display
 
 inchpm=39.3700
 dpi=100
