@@ -1,0 +1,589 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.4.1  (Unix)">
+	<META NAME="CREATED" CONTENT="20130720;22180300">
+	<META NAME="CHANGED" CONTENT="20130722;21421100">
+	<STYLE TYPE="text/css">
+	<!--
+		H2.ctl { font-family: "Arial Unicode MS" }
+		H3.ctl { font-family: "Arial Unicode MS" }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="de-DE" DIR="LTR">
+<H1>Raspberry Pi als Bordcomputer / Navigation im Browser</H1>
+<H2 CLASS="western">Motivation</H2>
+<P>Nachdem ich schon eine ganze Weile mit Rasterkarten unterwegs
+navigiere (erst unter Windows mit Seaclear, dann unter Windows und
+OSX mit OpenCPN und OziExplorer) hatte ich schon eine ganze Weile
+nach Möglichkeiten gesucht, das zu erweitern und noch besser
+tauglich für unterwegs zu machen.</P>
+<P>Meine Wunschliste dabei war:</P>
+<UL>
+	<LI><P>Navigation auf  kleinen Geräten (Laptop ist immer ein wenig
+	unhandlich) – 7 oder 10 Zoll Tablet wäre Ideal</P>
+	<LI><P>Navigation auch im Cockpit</P>
+	<LI><P>Verknüpfung mit der „on board“ Navigation (seit einiger
+	Zeit habe ich ein RO4800 als Funke, das auch einen AIS Decoder hat –
+	und ja auch schon GPS Daten bekommt)</P>
+	<LI><P>Nutzung der Rasterkarten (BSB, NV, alles was sich per
+	Download über mobile atlas creator bekommen lässt...)</P>
+	<LI><P>Minimaler Installationsaufwand</P>
+	<LI><P>Klein, wenig Stromverbrauch (sollte möglichst immer laufen
+	können)</P>
+	<LI><P>Wenig „Bastelarbeit“ - also möglichst keine eigenen
+	Schaltungen löten</P>
+</UL>
+<P>Irgendwann habe ich mal den raspberry pi entdeckt und nachdem er
+zu Hause jetzt schon eine Weile als media center arbeitet, dachte
+ich, dass der eine gute Basis für einen Bordcomputer abgeben könnte.
+</P>
+<P>Allerdings musste ich nach einiger Recherche feststellen, dass es
+noch keine fertige Software gab, die meinen Anforderungen genügen
+würde. Insbesondere die Einbettung der seriellen Schnittstellen
+(typisch seriell-usb-Wandler) macht immer wieder Mühe, da Linux hier
+immer etwas kreativ ist... 
+</P>
+<P>Also habe ich beschlossen mich selbst daran zu machen. Im
+Folgenden will ich meine Lösung beschreiben, da es ja vielleicht
+Interessierte gibt, die es Nachnutzen möchten. Die gesamte Software
+steht zum download unter einer open source Lizenz bereit. 
+</P>
+<P><BR><BR>
+</P>
+<H2 CLASS="western">Überblick 
+</H2>
+<P><IMG SRC="overview.png" NAME="Grafik1" ALIGN=LEFT WIDTH=897 HEIGHT=784 BORDER=0><BR CLEAR=LEFT>Wie
+im Bild zu sehen, besteht die gesamte Lösung aus mehreren Teilen:</P>
+<UL>
+	<LI><P>Einem Raspberry Pi mit einer server software
+	(avnav_server.py), die die angeschlossenen Geräte (NMEA über
+	Seriell-USB Wandler – z.B. PL 2303), Bluetooth GPS,... abfragt,
+	die Daten aufbereitet und per WLAN zur Verfügung stellt</P>
+	<LI><P>Einer Software für Windows/OSx/Linux, die zum Vorbereiten
+	und Konvertieren der Karten dient</P>
+</UL>
+<P>Über ein WLAN, das der raspberry pi als access point
+bereitstellt, können verschiedene Geräte auf die Daten zugreifen.
+Dabei gibt es mehrere Varianten:</P>
+<UL>
+	<LI><P>Auf den Geräten (z.B. Ipad oder Laptop) kann eine
+	Navigationssoftware laufen (getestet: InavX,OpenCPN), diese greifen
+	über TCP auf die NMEA Daten zu. Navigationssoftware und Karten
+	müssen natürlich auf den Geräten installiert sein.</P>
+	<LI><P>Auf den Geräten läuft nur ein Browser, die Navigation
+	erfolgt per Java Script app, die vom raspberry bereitgestellt wird.
+	Dazu muss nur die entsprechende URL aufgerufen werden. In diesem
+	Falle ist auf den Geräten keine Software installiert, nur ein
+	aktueller Browser muss vorhanden sein (getestet: Chrome unter
+	Windows, OSX, Safari, Android ab 4.x – Chrom/Stock/Boat Browser,
+	IOS, Blackberry stockBrowser, WebBrowser mini).</P>
+</UL>
+<P>Die server software auf dem raspberry ist in python geschrieben
+und über ein xml file konfigurierbar (was im Normalfall aber nicht
+notwendig sein sollte). Ich stelle neben dieser Software auch ein
+fertiges Image für den raspberry zur Verfügung, dass nur noch auf
+eine SD-Karte installiert werden muss (Empfehlung: mindestens 8GB,
+mehr ist besser...).</P>
+<P>Die Web Applikation bietet eine (bisher recht simple) Navigation
+mit Rasterkarten inklusive AIS Darstellung. Falls die Web-Applikation
+verwendet werden soll, müssen die Karten dafür auch auf dem
+raspberry installiert werden. Diese müssen dazu vorher auf dem PC
+(Windows, Osx, Linux) konvertiert werden. Im Wesentlichen können die
+folgenden Kartenquellen verarbeitet werden:</P>
+<UL>
+	<LI><P>Alle Kartentypen, die die GDAL software lesen kann (also
+	insbesondere BSB Karten)</P>
+	<LI><P>Mit Mobile Atlas Creator heruntergeladene Karten</P>
+	<LI><P>Zur Nutzung von NV digital Karten bitte ich um
+	Kontaktaufnahme, hier ist die Einhaltung der Lizenzbedingungen ein
+	Thema.</P>
+</UL>
+<P>In den folgenden Abschnitten gehe ich auf die Funktion der
+einzelnen Teile ein wenig genauer ein.</P>
+<P><BR><BR>
+</P>
+<H2 CLASS="western">Die Server Software (avnav_server.py)</H2>
+<P>Auf dem raspberry pi ist zunächst ein ganz normales Debian image
+installiert (ca. 2GB). Dazu kommen einige Zusatzpakete (liste siehe
+unten) und meine Software. 
+</P>
+<P>Der Hauptbestandteil der Sofware auf dem raspberry pi ist ein in
+python geschriebener Server.</P>
+<P><IMG SRC="software.png" NAME="Grafik2" ALIGN=LEFT WIDTH=1218 HEIGHT=624 BORDER=0><BR CLEAR=LEFT><BR><BR>
+</P>
+<P>Dieser Server versucht alle am raspberry angeschlossenen seriellen
+Geräte zu erkennen und deren NMEA Daten zu lesen. Typisch werden die
+Geräte über seriell-usb Wandler angeschlossen (bei mir z.B.
+PL2303). Man muss ein wenig aufpassen, dass man einen Wandler hat,
+der vom Raspberry auch sauber unterstützt wird (…). Da das
+Verwalten der seriellen Schnittstellen unter Linux etwas magisch ist,
+scant der Server (per Dbus) die angeschlossenen Geräte auf eine
+entsprechende serielle Klasse. Anschliessend versucht er ein auto
+bauding zwischen 4800 und 34000 Baud und bemüht sich, NMEA Daten zu
+erkennen. Falls keine Daten empfangen werden, wird die Schnittstelle
+geschlossen und das Spiel beginnt von vorn. Damit „überlebt“ er
+auch das anschliessen/abstecken von Wandlern im Betrieb oder das An-
+bzw. Abschalten von Geräten. Bei mir hängt ein RO4800 mit AIS
+Decoder dran, die GPS Daten werden durchgereicht. Alternativ versucht
+er auch Kontakt zu seriellen Bluetooth Geräten aufzunehmen, falls er
+per discovery welche findet und versucht ebenfalls NMEA Daten zu
+Lesen. Getestet bei mir mit einer Holux GPS SlimXXX. In diesem Sinne
+arbeitet er auch als NMEA Multiplexer.</P>
+<P>Alle GPS-Daten werden in eine Input queue gestellt. Aus dieser
+werden verbundene TCP Empfänger (z.B. OpenCPN) versorgt – jeder
+empfangene Datensatz wird einfach an diese weitergereicht. Per
+Default lauscht der SocketWriter auf Port 34567.</P>
+<P>Anschliessend werden die NMEA Daten an den Decoder weitergereicht.
+Auf dem raspberry benutze ich dazu gpsd. Leider liess der sich nicht
+verwenden, um direkt die seriellen Schnittstellen zu lesen, daher
+macht der avnnav_server einen Socket auf, an den sich der gpsd
+connected und von dem er die Daten liest. Das Starten des gpsd
+übernimmt ebenfalls der anav server. Am „anderen Ende“ werden
+über die gpsd python Schnittstelle die Dekodierten Daten ausgelesen
+(gps Daten und AIS Daten) und im Server abgelegt für den Zugriff per
+HTTP aus der WebApp. Der gpsd wird überwacht und bei Fehlern neu
+gestartet. Zusätzlich werden die dekodierten Daten auch benutzt um
+Track Dateien zu schreiben.</P>
+<P>Über den integrierten WebServer kann der Zugriff auf diese
+dekodierten Daten erfolgen (per HTTP GET, Antwort als json).</P>
+<P>Falls gültige GPS Zeitinformationen empfangen werden, wird die
+Systemzeit des raspberry entsprchend eingestellt.</P>
+<P>Auf dem raspberry gibt es noch einen service, der den avnav_server
+beim Systemstart automatisch startet und es auch ermöglicht, ihn
+geordnet zu beenden.</P>
+<P>Da der gesamte server in python geschrieben ist, kann er auch (vor
+allem zu Testzwecken) unter Windows oder Osx, Linux laufen. Dazu muss
+python ab 2.6 installiert sein,  falls reale serielle Daten gelesen
+werden sollen noch pyserial. In diesem Falle steht gpsd als Dekoder
+ja nicht zur Verfügung, es wird dann ein interner Dekoder genutzt,
+der die wichtigsten NMEA Sequenzen dekodiert und ein AIS Dekoder in
+python, der ebenfalls durch das gpsd Projekt bereitgestellt wird.</P>
+<P>Der Server kann in weiten Grenzen durch ein xml File konfiguriert
+werden, für die verschiedenen Nutzungsfälle liefere ich
+dokumentierte Beispiele mit.</P>
+<H2 CLASS="western">Software auf dem raspberry</H2>
+<P>Auf dem raspberry ist die Software in der folgenden
+Verzeichnisstruktur installiert:</P>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=4 CELLSPACING=4>
+	<COL WIDTH=73*>
+	<COL WIDTH=183*>
+	<TR VALIGN=TOP>
+		<TH WIDTH=28%>
+			<P>Verzeichnis</P>
+		</TH>
+		<TH WIDTH=72%>
+			<P>Inhalt</P>
+		</TH>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<PRE>/data/</PRE>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Eine separate data partition. Diese wird automatisch beim
+			ersten Hochfahren angelegt und umfasst die gesamte Speicherkarte
+			(- ca. 2GB für die boot partition und die root partition). Das
+			Filesystem ist so angelegt, dass es gut mit sehr vielen kleinen
+			Dateien umgehen kann (für die Karten).</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/data/avnav/charts</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Verzeichnis für die Kartendateien. Jeder verwendete Kartensatz
+			muss in einem separaten Unterverzeichnis liegen. Dort hinein
+			müssen jeweils die avnav.xml und die erzeugten
+			Kartenverzeichnisse kopiert werden (siehe Karten konvertieren).</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/dava/avnav/log</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>logfiles</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/data/avnav/tracks</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Die trackfiles. Sie werden in einem File pro Tag gespeichert.
+			Momentan ist das ein simples csv Format, eine Konvertierung nach
+			gpx steht schon auf der todo Liste.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/home/pi/avnav/data</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Links zu /data/avnav/charts, /data/avnav/tracks,
+			/data/avnav/log. Ausserdem die config Datei avnav_server.xml. Beim
+			ersten Start wird sie dorthin kopiert, danach aber nicht wieder
+			überschrieben. Etwaige Anpassungen also hier.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/home/pi/avnav/setup.sh</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Kann als root aufgerufen werden, um ein update der Software zu
+			machen (bei Internet-Verbindung):<BR>setup.sh update &lt;url&gt;</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/home/pi/avnav/program</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Das Program-Verzeichnis.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/home/pi/avnav/program/server</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Der eigentliche server: avnav_server.py, <BR>Der ais Dekoder
+			(aus dem gpsd Projekt): ais.py, <BR>Konvertierung von MOBAC atlas
+			files zu avnav.xml: create_overview.py</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/home/pi/avnav/program/raspberry</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Raspberry spezifische software Anteile (u.a. der service zum
+			Starten von avnav_server)</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/home/pi/avnav/program/libraries</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Die verwendeten JS libraries für die WebApp.<BR>Das sind:<BR>*
+			OpenLayers<BR>* jQuery<BR>* less<BR>* movable-type (java script
+			functions von movable type)</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/home/pi/avnav/program/viewer</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Die WebApp.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=28%>
+			<P>/etc/init.d/</P>
+		</TD>
+		<TD WIDTH=72%>
+			<P>Die services, die zum Starten benutzt werden (links zu
+			/home/pi/avnav/program/raspberry):<BR>* avnav – der server<BR>*
+			check_parts – service, der prüft, ob die data partition schon
+			da ist und sie im Zweifel anlegt<BR>* check_wlan – prüft, ob
+			das interface wlan0 eine IP adresse hat und macht im Zweifel ein
+			ifdown/ifup – damit funktioniert das Wlan deutlich stabiler</P>
+		</TD>
+	</TR>
+</TABLE>
+<P><BR><BR>
+</P>
+<P>Bis auf die init scripte läuft die gesamte Software unter dem
+Nutzer pi. Die Installation muss allerdings als root erfolgen. 
+</P>
+<P>Standardmässig wird die SD Karte für den pi mit 2 Partitionen
+versehen:</P>
+<UL>
+	<LI><P>eine FAT32 formatierte boot Partition (ca. 60MB), gemounted
+	nach /boot</P>
+	<LI><P>eine root partition, ca. 2GB</P>
+</UL>
+<P>Bei meinem Image kommt dazu noch eine separate /data partition mit
+dem Rest der SD-Karte. Das empfiehlt sich in jedem Fall, da für die
+Speicherung der Karten sehr viele kleine Dateien erzeugt werden und
+die standar-Partitionen darauf nicht gut vorbereitet sind.</P>
+<P>Die Installation der Software hängt stark davon ab, ob mein Image
+verwendet wird, oder ob von einem „stock“ Image ausgegangen wird.
+Beide Varianten beschreibe ich kurz.</P>
+<H3 CLASS="western">Installation mit avnav image</H3>
+<P>Für diese Variante einfach unter Windows/Linux/OSx das image von
+XXX herunterladen und wie unter XXX beschrieben auf eine SD Karte
+spielen. Danach muss man sich einmal auf dem pi einloggen und ggf.
+ein paar Anpassungen vornehmen. Am einfachsten geht das, wenn man den
+pi im LAN anschließt und einen router/dhcp-server (z.B. Fritz Box)
+aktiv hat. Dann holt er sich per DHCP eine IP Adresse. Diese kann man
+auf dem Router sehen bzw. unter Linux z.B. per ping -b
+&lt;brodcast-address&gt; herausfinden.</P>
+<P>Die Paßworte sind auf Standardwerte gesetzt – also login pi,
+Paßwort raspberry. Per sudo -i wechselt man in eine root shell. Man
+sollte kontrollieren, ob die /data partition existier und gemounted
+ist (df -h, mount). Anschliessend sollte man noch das Paßwort für
+den user pi ändern (passwd). Per XXX sollte ein Übertakten auf 1GHz
+eingestellt werden.</P>
+<P>Am schwierigsten kann sich das Aufsetzen des WLAN gestalten. Das
+hängt vom verwendeten Adapter ab. Ich habe einen  rtl8192cu
+verwendet (XXX). Dazu musste ich den hostapd (/usr/sbin/hostapd)
+austauschen gegen den von
+<A HREF="http://dl.dropbox.com/u/1663660/hostapd/hostapd.zip">http://dl.dropbox.com/u/1663660/hostapd/hostapd.zip</A>.
+Der originale ist noch als hostapd.ori vorhanden – also ggf. wieder
+umbennen. Anpassungen zur Konfiguration muss man in
+/etc/hostapd/hostapd.conf vornehmen. In jedem Falle sollte hier der
+WPA-Key getauscht werden (standard: SSID avnav, pw: avnav-secret).
+Ggf. muss man den driver ändern. Danach service hostapd restart und
+die WLAN-Verbindung testen. Eine gute Anleitung findet sich unter
+<A HREF="http://elinux.org/RPI-Wireless-Hotspot">http://elinux.org/RPI-Wireless-Hotspot</A>.</P>
+<P>Das WLAN hat den Adressbereich 192.168.20.0/24. Der pi selbst ist
+auf 192.168.20.10 erreichbar (ggf. als url im Browser benutzen, wenn
+die Namensauflösung nicht funktioniert). Auf dem pi läuft ein DHCP
+server und ein DNS server (dnsmasqd). Die Konfiguration kann
+angepasst werden in  /etc/dnsmasqd.conf. Wenn der pi im LAN
+angeschlossen ist, versucht er per DHCP eine Adresse zu bekommen, das
+WLAN wird per NAT an das LAN interface weitergereicht. 
+</P>
+<P>Für die Auslieferung der Karten ist der lighthttpd installiert.
+Dieser kann gff. Auch für weitere Funktionen genutzt werden. Er ist
+jedoch per default auf port 81 aufgesetzt. Port 80 ist direkt zum Web
+server von avnav weitergeleitet (dieser lauscht auf port 8080).</P>
+<P>Wenn alles richtig aufgesetzt ist, sollte sich unter der url
+<A HREF="http://avnav/">http://avnav</A> die Einstiegsseite der
+WebApp öffnen.</P>
+<P>Mit sudo service avnav status kann man den Status des servers
+prüfen, mit sudo service avnav start bzw. sudo service avnav stop
+kann man ihn starten und stoppen.</P>
+<H3 CLASS="western">Installation mit „stock image“</H3>
+<P>Hierbei zunächst das image von
+<A HREF="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</A>
+installieren (Anleitung siehe dort). Danach muss man eine Reihe
+weitere Pakete installieren, die Konfigurationen vornehmen und zum
+Schluss die avnav software installieren. Nach dem ersten reboot
+Übertakten auf 1GHz einstellen.<BR>Hier eine kurze Dokumentation der
+Schritte (ohne ganz detaillierte Beschreibung):</P>
+<UL>
+	<LI><P>gpsd<BR><A HREF="http://blog.retep.org/2012/06/18/getting-gps-to-work-on-a-raspberry-pi/">http://blog.retep.org/2012/06/18/getting-gps-to-work-on-a-raspberry-pi/</A><BR>sudo
+	apt-get install gpsd gpsd-clients python-gps</P>
+	<LI><P>bluetooth<BR><A HREF="http://www.rpiblog.com/2012/08/bluetooth-pairing-of-raspberry-pi-with.html">http://www.rpiblog.com/2012/08/bluetooth-pairing-of-raspberry-pi-with.html</A><BR>apt-get
+	install -y bluetooth [bluez-utils blueman]</P>
+	<LI><P>pyserial<BR>copy pyserial to pi
+	(<A HREF="https://pypi.python.org/packages/source/p/pyserial/pyserial-2.6.tar.gz#md5=cde799970b7c1ce1f7d6e9ceebe64c98">https://pypi.python.org/packages/source/p/pyserial/pyserial-2.6.tar.gz#md5=cde799970b7c1ce1f7d6e9ceebe64c98</A>)<BR>unpack
+	tar -xvzf …<BR>cd into pyserial dir<BR>python setup.py install</P>
+	<LI><P> python bluetooth support<BR>sudo apt-get install
+	python-bluez</P>
+	<LI><P>python udev support<BR>sudo apt-get install python-pyudev</P>
+	<LI><P>hotspot - see <A HREF="http://elinux.org/RPI-Wireless-Hotspot">http://elinux.org/RPI-Wireless-Hotspot</A><BR>sudo
+	apt-get install hostapd dnsmasqd<BR>we use 192.168.20.00 for our
+	wireless setup<BR>20...254 - dhcp raspi<BR>10       - raspi itself</P>
+	<LI><P>etc/hosts<BR>192.168.20.10 avnav</P>
+	<LI><P>/etc/dnsmasqd.conf<BR>interface=wlan0<BR>domain=avnav<BR>dhcp-range=192.168.20.20,192.168.20.254,255.255.255.0,12h<BR>dhcp-option=42,0.0.0.0</P>
+	<LI><P>natting<BR>/etc/sysctl.conf: net.ipv4.ip_forward=1<BR>iptables
+	-t nat -A POSTROUTING -o eth0 -j MASQUERADE<BR>iptables -A FORWARD
+	-i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j
+	ACCEPT<BR>iptables -A FORWARD -i wlan0 -o eth0 -j
+	ACCEPT<BR>iptables-save &gt; /etc/iptables.ipv4.nat</P>
+	<LI><P>/etc/network/interfaces<BR>auto lo<BR>iface lo inet
+	loopback<BR>iface eth0 inet dhcp<BR>allow-hotplug wlan0<BR>iface
+	wlan0 inet static<BR>address 192.168.20.10<BR>netmask
+	255.255.255.0<BR>up iptables-restore &lt; /etc/iptables.ipv4.nat</P>
+	<LI><P>/etc/hostapd/hostapd.conf<BR>interface=wlan0<BR>driver=rtl8192cu<BR>ssid=avnav<BR>hw_mode=g<BR>channel=6<BR>macaddr_acl=0<BR>auth_algs=1<BR>ignore_broadcast_ssid=0<BR>wpa=2<BR>wpa_passphrase=avnav-secret<BR>wpa_key_mgmt=WPA-PSK<BR>wpa_pairwise=TKIP<BR>rsn_pairwise=CCMP</P>
+	<LI><P>/etc/default/hostapd<BR>DAEMON_CONF=&quot;/etc/hostapd/hostapd.conf&quot;</P>
+	<LI><P>check hostapd (see avnav image)</P>
+	<LI><P>set up ntp sync<BR>see <A HREF="http://catb.org/gpsd/gpsd.html">http://catb.org/gpsd/gpsd.html</A><BR>
+	-- does not work out of the box<BR>as gpsd is running non root, we
+	have to enable other SHM segments!<BR>/etc/ntp.conf:<BR>server
+	127.127.28.0<BR>fudge 127.127.28.0 time1 0.420 refid GPS<BR>server
+	127.127.28.1 prefer<BR>fudge 127.127.28.1 refid GPS1<BR>server
+	127.127.28.2<BR>fudge 127.127.28.2 time1 0.420 refid GPS2<BR>server
+	127.127.28.3 prefer<BR>fudge 127.127.28.3 refid GPS3</P>
+	<LI><P>prevent pi from interacting on boot due to corrupted FS<BR>see
+	<A HREF="http://www.raspberrypi.org/phpBB3/viewtopic.php?f=28&amp;t=15870">http://www.raspberrypi.org/phpBB3/viewtopic.php?f=28&amp;t=15870</A><BR>sudo
+	vi /etc/default/rcS<BR>change #FSCKFIX=no<BR>to FSCKFIX=yes</P>
+	<LI><P>lighthttpd for faster chart delivery<BR>apt-get
+	update<BR>apt-get install lighttpd<BR>first shot: configure to port
+	81 (so that our redirect from 80 to 8080 can
+	remain...):<BR>/etc/lighttpd/lighttpd.conf:<BR>server.port          
+	      = 81<BR>alias.url = ( &quot;/charts&quot; =&gt;
+	&quot;/data/avnav/charts/&quot; )</P>
+	<LI><P>install avnav<BR>Herunterladen der aktuellen Software von
+	XXX. Auspacken des archives als pi im Verzeichnis /home/pi/avnav.
+	Danach Aufruf (als root) ./setup.sh part</P>
+	<LI><P>checken service avnav status.</P>
+</UL>
+<P><BR><BR>
+</P>
+<H2 CLASS="western">Konvertieren der Karten</H2>
+<P>Damit Karten in der WebApp verwendet werden können, müssen sie
+in einem „Kachelformat“ vorliegen. Das ist das Format, das durch
+Dienste wie OpenStreetMaps oder GoogleMaps benutzt wird. Eine
+Kartenkachel ist 256x256 Pixel gross. Die Welt wird dabei auf eine
+ebene Fläche projeziert (kann man sich wie einen Papierzylinder
+vorstellen, der senkrecht steht und am Äquator um die Erde gewickelt
+wird). Jeder Punkt mit seinen Koordinaten (Länge/Breite) wird dann
+auf diesen Zylinder projeziert. Wie man das macht, welche Einheiten
+in der Projektion verwendet werden und ob die Erde als Kugel oder
+Ellipsoid mit verschiedenen Parametern modelliert wird, beschreiben
+die verschiedenen Projektionen. Die WebApp benutzt die sogenannte
+Google-Mercator Projektion (die Erde wird dabei als Kugel betrachtet)
+ - mit dem sogenannten EPSG code 900913. Die Einheiten auf dem Papier
+sind dabei Meter (die man natürlich in die entsprechenden
+Koordinaten umrechnen kann). Karten in einem anderen Format (z.B.
+WGS84 – Erde als Ellipsoid, immer in Grad) müssen daher ggf.
+reprojeziert werden. 
+</P>
+<P>Die gesamte Projektionsfläche wird bei der google Projektion in
+Kacheln unterteilt. Der sogenannte Zoom level gibt an, in wieviele
+Kacheln die Fläche unterteil wird. Zoom level 0 bedeuted: Die
+gesamte Erde (von -85° bis +85° Breite – darüber ist die
+Projektion nicht definiert) auf einer Kachel von 256x256 Pixel. Mit
+jedem weiteren ZoomLevel wird feiner unterteilt: Zoom level 1: 2x2
+Kacheln, 2: 4x4 Kacheln usw. Für uns reichen die interessanten Zoom
+Level von ca. 7 bis 18..19. Das bedeutet (level 19) 2^19x2^19
+Kacheln.</P>
+<P>Zur Darstellung wird die library <A HREF="http://www.openlayers.org/">openlayers</A>
+verwendet. Diese lädt die entsprchenden Kartenkacheln je nach zoom
+level vom Server und zeigt sie an. OpenStreetMaps verwendet
+typischerweise diese Library.</P>
+<P>Man kann sich leicht vorstellen, das da schnell große Datenmengen
+zusammenkommen. Daher müssen wir für unsere Kartenkacheln ähnlich
+vorgehen, wie es auch bei den Papierkarten ist: Für Übersichten ein
+kleinerer Zoom Level, Detailkarten größer und z.B. Hafenpläne dann
+mit level 18 oder 19 (60cm/pixel bzw. 30cm/pixel). Um damit dann
+arbeiten zu können, werden die verschiedenen Detailgrade dann in
+Layern übereinandergelegt. Wenn es für ein Gebiet einen Layer mit
+besserem (grösserem) zoomlevel gibt, wird dieser angezeigt, wenn
+nicht der mit der geringeren Auflösung (ggf. noch vergrössert). Um
+unsere Anzeigegeräte nicht zu überlasten, kann man typisch mit 3-5
+Kartenlayern arbeiten (je nach Gerät...).</P>
+<P>Damit besteht für die Kartenkonvertierung die Aufgabe darin,
+vorhandene Karten in solche Layer einzusortieren, sie ggf zu
+reprojezieren und dann die Kartenkacheln (sowie eine
+Beschreibungsdatei) zu erzeugen. Das erfordert meist eine ganze Menge
+Rechenleistung (und ggf. Zeit), daher ist das etwas, dass auf einem
+PC oder Laptop laufen sollte (der pi ist dafür zu schwach). Das ist
+aber nicht schlimm – man muss das ja nur einmal machen. Belohnt
+wird man dafür mit einer sogenannten „blattschnittfreien“
+Darstellung.</P>
+<P>Das Verfahren dazu hängt von der Quelle ab. Im Moment habe ich
+support für 2 „Wege“ der Kartenerstellung eingebaut:</P>
+<UL>
+	<LI><P>Konvertierung von Karten mittels <A HREF="http://www.gdal.org/">GDAL</A>
+	(z.B. BSB) – hier kann alles gelesen werden, was gdal kann</P>
+	<LI><P>Nutzung von downloads mit dem Mobile Atlas CreatorXXX</P>
+</UL>
+<H3 CLASS="western">Konvertierung von Karten mit GDAL</H3>
+<P>Für diese Konvertierung müssen einige Tools installiert werden.
+Das ist zwar leider ein wenig Aufwand, muss aber nur einmalig
+erledigt werden. 
+</P>
+<P>Zunächst wird python (ab 2.6) benötigt. Für Windows (64 Bit)
+z.B. von
+<A HREF="http://www.python.org/ftp/python/2.7.3/python-2.7.3.amd64.msi">http://www.python.org/ftp/python/2.7.3/python-2.7.3.amd64.msi</A>
+. 
+</P>
+<P>Danach GDAL und GDAL python bindings
+(http://www.gisinternals.com/sdk/ -
+<A HREF="http://www.gisinternals.com/sdk/PackageList.aspx?file=release-1600-x64-gdal-1-9-2-mapserver-6-2-0.zip">http://www.gisinternals.com/sdk/PackageList.aspx?file=release-1600-x64-gdal-1-9-2-mapserver-6-2-0.zip</A>,
+<A HREF="http://www.gisinternals.com/sdk/Download.aspx?file=release-1600-x64-gdal-1-9-2-mapserver-6-2-0">http://www.gisinternals.com/sdk/Download.aspx?file=release-1600-x64-gdal-1-9-2-mapserver-6-2-0</A>\gdal-19-1600-x64-core.msi,
+<A HREF="http://www.gisinternals.com/sdk/Download.aspx?file=release-1600-x64-gdal-1-9-2-mapserver-6-2-0">http://www.gisinternals.com/sdk/Download.aspx?file=release-1600-x64-gdal-1-9-2-mapserver-6-2-0</A>\GDAL-1.9.2.win-amd64-py2.7.msi
+). Anschliessend GDAL_DATA im environment setzen und GDAL in den Pfad
+aufnehmen. 
+</P>
+<P>Dazu noch PIL für python (
+<A HREF="http://www.lfd.uci.edu/~gohlke/pythonlibs/">http://www.lfd.uci.edu/~gohlke/pythonlibs/</A>).</P>
+<P>Der Hauptteil der Konvertierung wird durch tiler_tools
+durchgeführt, diese ebenfalls herunterladen
+(<A HREF="https://code.google.com/p/tilers-tools/">https://code.google.com/p/tilers-tools/</A>)
+und in einem Verzeichnis entpacken. 
+</P>
+<P>Im gleichen Verzeichnis sollte sich das python script
+read_charts.py befinden. 
+</P>
+<P>Nach der Installation kann die Konvertierung starten. Für jeden
+Kartensatz sollte ein output Verzeichnis vorgesehen werden, in dieses
+werden Zwischendateien geschrieben und final unter tiles auch die
+erzeugten Kacheln. Wenn dieses output Verzeichnis nicht gelöscht
+wird, können später in einem update Modus nur die geänderten
+Kacheln neu erzeugt werden. 
+</P>
+<P>Die Konvertierung verläuft in 2 Schritten:</P>
+<UL>
+	<LI><P>Sortierung der Karten in layer (und ggf. soweit nötig
+	Konvertierung der karten). 
+	</P>
+	<LI><P>Erzeugung der tiles</P>
+</UL>
+<P>Der erste Schritt geht relativ schnell. Alle Kartendateien werden
+gelesen und Auflösung und Abdeckung wird ermittelt (falls nötig
+wird konvertiert). Im Ergebnis entsteht im output Verzeichnis eine
+Datei chartlist.xml. Der Aufruf dazu lautet:</P>
+<PRE>read_charts.py outdir inputdir [inptdir...]
+</PRE><P>
+Anschliessend sollte die chartlist.xml noch einmal mit einem
+Texteditor überprüft werden, manchmal macht es Sinn, Kartendateien
+noch einem anderen Layer zuzuordnen. Das kann einfach durch
+Verschieben des entsprechenden XML Elements erfolgen.</P>
+<P>Der zweite Schritt ist etwas langwieriger, hier erfolgt die
+eigentliche Erzeugung der Kartenkacheln. Der Aufruf:</P>
+<PRE>read_charts.py outdir
+</PRE><P>
+Unter outdir muss bereits eine chartlist.xml existieren. Die
+Erzeugung läuft multi-threaded, auf einem Dual Core 2x2Ghz ca. 20
+min für einen Kartensatz mit ca. 20 Karten. 
+</P>
+<P>Man kann auch beide Schritte kombinieren – dazu einfach -m all
+noch vor den anderen Parametern bei Schritt 1 angeben:</P>
+<PRE>read_charts.py -m all outdir inputdir
+</PRE><P>
+Falls sich einige Karten geändert haben (z.B. Chart Updates), kann
+man Schritt 2 einfach wiederholen mit dem Parameter -u:</P>
+<PRE>read_charts.py -u outdir
+</PRE><P>
+Als Ergebnis erhält man unter outdir/tiles eine Datei avnav.xml
+sowie ein Verzeichnis für jeden layer (mit weiteren
+Unterverzeichnissen). Der Inhalt dieses Verzeichnisses muss dann auf
+den raspberry kopiert werden – in ein Verzeichnis unter
+/data/avnav/charts. Dazu kann man unter Windows sinnvoll winscp
+benutzen. Am Ende muss z.B. im Verzeichnis /data/avnav/charts/Satz1
+eine Datei avnav.xml vorhanden sein, darunter dann die
+Layer-Verzeichnisse.</P>
+<H3 CLASS="western">Nutzung von Karten mit dem Mobile Atlas Creator</H3>
+<P>Für die Nutzung  des Mobile Atlas Creators ist keine weitere
+Software auf dem PC/Laptop nötig. Man muss beim Download der Karten
+allerdings ein gewisses Schema einhalten, damit die Karten in das
+oben beschriebene Layer-Konzept passen und die Datenmengen
+überschaubar bleiben. 
+</P>
+<P>Dazu sollte man (je nach Kartenquelle) z.B. 3 Layer vorsehen:
+Übersicht( Zoom Level 7-10) Navigation (level 10-15), Details (Level
+16-18). Anschliessend sollte man im MOBAC layerweise vorgehen. Dazu
+jeweils als gewünschte Zoomlevel die zum Layer gehörigen anklicken
+(links oben), danach alle Teilbereiche jeweils markieren und unter
+einem beliebigen Namen dem Atlas hinzufügen. Das jeweils für die
+anderen Layer wiederholen (dabei sinnvolle Auswahlen treffen).
+Anschliessend die Atlas-Konfiguration unter einem sinnvollen namen
+speichern. Als output Format OSMTracker wählen und die
+Atlas-Erzeugung starten. Im output Verzeichnis entsteht ein
+Verzeichnis für jeden Zoom level. Diese Verzeichnisse wieder auf den
+pi unter /data/avnav/charts/Satzx kopieren. Dazu aus dem
+Programmverzeichnis von MOBAC die gespeicherte Atlas-Datei in das
+gleiche Verzeichnis kopieren (der server wird automatisch eine
+avnav.xml erzeugen).</P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>
