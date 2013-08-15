@@ -5,16 +5,19 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.4.1  (Unix)">
 	<META NAME="CREATED" CONTENT="20130720;22180300">
-	<META NAME="CHANGED" CONTENT="20130727;22280400">
+	<META NAME="CHANGED" CONTENT="20130729;17353700">
 	<STYLE TYPE="text/css">
 	<!--
 		H2.ctl { font-family: "Arial Unicode MS" }
 		H3.ctl { font-family: "Arial Unicode MS" }
+		H4.ctl { font-family: "Arial Unicode MS" }
 	-->
 	</STYLE>
 </HEAD>
 <BODY LANG="de-DE" DIR="LTR">
 <H1>Raspberry Pi als Bordcomputer / Navigation im Browser</H1>
+<P><BR><BR>
+</P>
 <H2 CLASS="western">Motivation</H2>
 <P>Nachdem ich schon eine ganze Weile mit Rasterkarten unterwegs
 navigiere (erst unter Windows mit Seaclear, dann unter Windows,
@@ -617,7 +620,7 @@ Benutzung. Ihre wesentlichen Fähigkeiten:</P>
 Version, danach einige technische Details.</P>
 <H3 CLASS="western">Die Bedienung</H3>
 <P>Nach dem Aufruf der Start-Url landet man auf der Einstigesseite.</P>
-<P><IMG SRC="navi-start.png" NAME="Grafik3" ALIGN=LEFT WIDTH=972 HEIGHT=510 BORDER=0><BR CLEAR=LEFT><BR><BR>
+<P><IMG SRC="navi-start.png" NAME="Grafik3" ALIGN=RIGHT WIDTH=794 HEIGHT=452 BORDER=0><BR CLEAR=RIGHT><BR><BR>
 </P>
 <P>Im Hauptbereich der Seite befindet sich die Liste der vom Server
 gefundenen Kartensätze (Verzeichnisse unter /data/avnav/charts mit
@@ -626,8 +629,8 @@ Navigationsseite mit dem enstprechenden Kartensatz.</P>
 <P>Wie auf allen Seiten befindet sich am rechten Rand eine
 Button-Leiste. Von hier aus erreich man eine Status-Seite des Servers
 und die Hilfe.</P>
-<P>Die Navigationsseite</P>
-<P><IMG SRC="navi-1.png" NAME="Grafik4" ALIGN=LEFT WIDTH=972 HEIGHT=481 BORDER=0><BR CLEAR=LEFT><BR><BR>
+<H4 CLASS="western">Die Navigationsseite</H4>
+<P><IMG SRC="navi-1.png" NAME="Grafik4" ALIGN=RIGHT WIDTH=791 HEIGHT=420 BORDER=0><BR CLEAR=RIGHT><BR><BR>
 </P>
 <P>Dies ist die Hauptansicht. In der Mitte befindet sich die
 Kartenansicht mit der Schiffsposition (roter Pfeil). Die gelben und
@@ -747,11 +750,11 @@ Karte jeweils auf den Wegepunkt bzw. die Bootsposition.</P>
 <P>unlock Boot-&gt;unlock Marker-&gt;Karte verschieben bis Marker auf
 gewünschter Pos (Zoom nutzen)-&gt;lock Marker-&gt;lock Boot 
 </P>
-<P><IMG SRC="navi-2.png" NAME="Grafik9" ALIGN=LEFT WIDTH=972 HEIGHT=519 BORDER=0><BR CLEAR=LEFT>Dieses
+<P><IMG SRC="navi-2.png" NAME="Grafik9" ALIGN=RIGHT WIDTH=792 HEIGHT=475 BORDER=0><BR CLEAR=RIGHT>Dieses
 Bild zeigt einen gesetzten Marker (locked) – das Boot ist
 allaerdings noch nicht auf Kurs (daher noch keine ETA).</P>
 <P>Mit einem Klick auf die AIS Info gelangt man zur AIS Übersicht:</P>
-<P><IMG SRC="navi-ais.png" NAME="Grafik10" ALIGN=LEFT WIDTH=972 HEIGHT=521 BORDER=0><BR CLEAR=LEFT>Auf
+<P><IMG SRC="navi-ais.png" NAME="Grafik10" ALIGN=RIGHT WIDTH=786 HEIGHT=445 BORDER=0><BR CLEAR=RIGHT>Auf
 dieser Seite sieht man alle empfangenen AIS Ziele im Umkreis von ca.
 10nm zur Bootsposition (sortiert nach CPA). Mit Klick auf eine Zeile
 springt man zurück zur Karten-Anzeige mit dem gewählten AIS Ziel im
@@ -763,9 +766,122 @@ Zieles.</P>
 zurück.</P>
 <P>Von der Startseite kann man noch eine Status-Seite erreichen –
 hier werden interne Status-Infos des Servers angezeigt.</P>
-<P><IMG SRC="navi-status.png" NAME="Grafik11" ALIGN=LEFT WIDTH=972 HEIGHT=545 BORDER=0><BR CLEAR=LEFT>Wichtig
+<P><IMG SRC="navi-status.png" NAME="Grafik11" ALIGN=RIGHT WIDTH=782 HEIGHT=474 BORDER=0><BR CLEAR=RIGHT>Wichtig
 ist hier insbesondere der Status der „Serial reader“ - dieser
 zeigt, ob sie NMEA Daten empfangen.</P>
+<H2 CLASS="western">Lizenzen und verwendete Libraries</H2>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=4 CELLSPACING=4>
+	<COL WIDTH=85*>
+	<COL WIDTH=85*>
+	<COL WIDTH=85*>
+	<TR VALIGN=TOP>
+		<TH WIDTH=33%>
+			<P>Library</P>
+		</TH>
+		<TH WIDTH=33%>
+			<P>Link</P>
+		</TH>
+		<TH WIDTH=33%>
+			<P>Lizenz</P>
+		</TH>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=33%>
+			<P>OpenLayers (2.12)</P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://www.openlayers.org/">http://www.openlayers.org/</A></P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://openlayers-licence.txt/">2-clause BSD licence</A></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=33%>
+			<P>Jquery 1.9.1.</P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://jquery.com/">http://jquery.com/</A></P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://LICENSE-MIT.txt/">MIT licence</A></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=33%>
+			<P>Iquery UI</P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://jqueryui.com/">http://jqueryui.com/</A></P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://LICENSE-MIT.txt/">MIT licence</A></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=33%>
+			<P>Tiler tools</P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="https://code.google.com/p/tilers-tools/">https://code.google.com/p/tilers-tools/</A></P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://LICENSE-MIT.txt/">MIT licence</A></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=33%>
+			<P>Movable type</P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://www.movable-type.co.uk/scripts/latlong.html">http://www.movable-type.co.uk/scripts/latlong.html</A></P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://attribution-licence.pdf/">Simple attribution
+			licence</A></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=33%>
+			<P>gpsd</P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://www.catb.org/gpsd/">http://www.catb.org/gpsd/</A></P>
+		</TD>
+		<TD WIDTH=33%>
+			<P><A HREF="http://ModifiedBSDLicence.html/">Modified BSD License</A></P>
+		</TD>
+	</TR>
+</TABLE>
+<P><BR><BR>
+</P>
+<P>Diese Software: MIT Licence</P>
+<DIV ID="block-system-main" DIR="LTR">
+	<DIV ID="node-66" DIR="LTR">
+		<H4 CLASS="western">The MIT License (MIT)</H4>
+		<P>Copyright (c) 2013 Andreas Vogel http://www.wellenvogel.de</P>
+		<P>Permission is hereby granted, free of charge, to any person
+		obtaining a copy<BR>of this software and associated documentation
+		files (the &quot;Software&quot;), to deal<BR>in the Software
+		without restriction, including without limitation the rights<BR>to
+		use, copy, modify, merge, publish, distribute, sublicense, and/or
+		sell<BR>copies of the Software, and to permit persons to whom the
+		Software is<BR>furnished to do so, subject to the following
+		conditions:</P>
+		<P>The above copyright notice and this permission notice shall be
+		included in<BR>all copies or substantial portions of the Software.</P>
+		<P>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF
+		ANY KIND, EXPRESS OR<BR>IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+		WARRANTIES OF MERCHANTABILITY,<BR>FITNESS FOR A PARTICULAR PURPOSE
+		AND NONINFRINGEMENT. IN NO EVENT SHALL THE<BR>AUTHORS OR COPYRIGHT
+		HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER<BR>LIABILITY,
+		WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+		FROM,<BR>OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+		OTHER DEALINGS IN<BR>THE SOFTWARE.</P>
+	</DIV>
+</DIV>
+<P><BR><BR>
+</P>
 <P><BR><BR>
 </P>
 <H3 CLASS="western">Technische Infos</H3>
@@ -796,11 +912,5 @@ server sind json kodiert.</P>
 <P>Diese Requests werden periodisch wiederholt (polling).</P>
 <P>Viele Parameter lassen sich in der Variable properties am Anfang
 der Java Script Datei einstellen.</P>
-<P><BR><BR>
-</P>
-<P><BR><BR>
-</P>
-<P><BR><BR>
-</P>
 </BODY>
 </HTML>
