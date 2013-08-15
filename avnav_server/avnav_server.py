@@ -523,6 +523,8 @@ class AVNNavData():
             v=navEntry.data.get(k)
             if v is not None:
               self.list[navEntry.key].data[k]=v
+          if self.list[navEntry.key].timestamp < navEntry.timestamp:
+            self.list[navEntry.key].timestamp = navEntry.timestamp
         else:
           AVNLog.debug("merging AIS with existing message")
           for k in NMEAParser.ais5mergeFields:
