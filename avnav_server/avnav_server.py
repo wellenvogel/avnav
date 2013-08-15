@@ -58,8 +58,9 @@ try:
   import create_overview
 except:
   pass
+import glob
 
-VERSION="0.6.0"
+VERSION="0.8.0"
 
 hasSerial=False
 hasGpsd=False
@@ -1415,6 +1416,103 @@ class AVNTrackWriter(AVNWorker):
       pass
     self.tracklock.release()
     return rt[-maxnum:]
+  #read in a track file (our csv syntax)
+  #return an array of track data
+  def readTrackFile(self,filename):
+    rt=[]
+    if not os.path.exists(filename):
+      AVNLog.debug("unable to read track file %s",filename)
+      return rt
+    f=open(filename,"r")
+    if f is None:
+      AVNLog.debug("unable to open track file %s",filename)
+      return rt
+    AVNLog.debug("reading track file %s",filename)
+    try:
+      for line in f:
+        line=re.sub('#.*','',line)
+        par=line.split(",")
+        if len(par) < 3:
+          continue
+        try:
+          newLat=float(par[1])
+          newLon=float(par[2])
+          track=float(par[3])
+          speed=float(par[4])
+          rt.append((AVNUtil.gt(par[0]),newLat,newLon,track,speed))
+        except:
+          AVNLog.warn("exception while reding track file %s: %s",filename,traceback.format_exc())
+    except:
+      pass
+    f.close()
+    AVNLog.debug("read %d entries from %s",len(rt),filename)
+    return rt
+
+  #write track data to gpx file
+  #input: current track data
+  def writeGpx(self,filename,data):
+    header='''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+           <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="avnav" 
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+            xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"> 
+            <trk>
+            <name>avnav-track-%s</name>
+            <trkseg>
+            '''
+    footer='''
+            </trkseg>
+            </trk>
+            </gpx>
+            '''
+    trkpstr="""
+             <trkpt lat="%2.9f" lon="%2.9f" ><time>%s</time><course>%3.1f</course><speed>%3.2f</speed></trkpt>
+             """
+    if os.path.exists(filename):
+      os.unlink(filename)
+    f=None
+    try:
+      f=open(filename,"w")
+    except:
+      pass
+    if f is None:
+      AVNlog.warn("unable to write to gpx file %s",filename)
+      return
+    AVNLog.debug("writing gpx file %s",filename)
+    title,e=os.path.splitext(os.path.basename(filename))
+    try:
+      f.write(header%(title,))
+      for trackpoint in data:
+        ts=trackpoint[0].isoformat();
+        if not ts[-1:]=="Z":
+          ts+="Z"
+        f.write(trkpstr%(trackpoint[1],trackpoint[2],ts,trackpoint[3],trackpoint[4]))
+      f.write(footer);
+    except:
+      AVNLog.warn("Exception while writing gpx file %s: %s",filename,traceback.format_exc());
+    f.close()
+
+  #a converter running in a separate thread
+  #will convert all found track files to gpx if the gpx file does not exist or is older
+  def converter(self):
+    infoName="TrackWriter:converter"
+    while True:
+      currentTracks=glob.glob(os.path.join(self.trackdir,"*.avt"))
+      for track in currentTracks:
+        try:
+          gpx=re.sub(r"avt$","gpx",track)
+          doCreate=True
+          if os.path.exists(gpx):
+            trackstat=os.stat(track)
+            gpxstat=os.stat(gpx)
+            if trackstat.st_mtime <= gpxstat.st_mtime:
+              doCreate=False
+          if doCreate:
+            AVNLog.debug("creating gpx file %s",gpx)
+            data=self.readTrackFile(track)
+            self.writeGpx(gpx,data)
+        except:
+          pass
+      time.sleep(60)
     
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
@@ -1432,7 +1530,11 @@ class AVNTrackWriter(AVNWorker):
       trackdir=self.getStringParam("trackdir")
       if trackdir == "":
         trackdir=os.path.join(os.path.dirname(sys.argv[0]),'tracks')
+      self.trackdir=trackdir
       if initial:
+        converter=threading.Thread(target=self.converter)
+        converter.daemon=True
+        converter.start()
         AVNLog.info("started with dir=%s,interval=%d, distance=%d",
                 trackdir,
                 self.getFloatParam("interval"),
@@ -1450,37 +1552,10 @@ class AVNTrackWriter(AVNWorker):
           AVNLog.info("new trackfile %s",curfname)         
           if initial:
             if os.path.exists(curfname):
-              try:
-                f=open(curfname,"r")
-                self.setInfo('main', "reading old track data", AVNWorker.Status.STARTED)
-                for line in f:
-                  line=re.sub('#.*','',line)
-                  #TODO: parse time
-                  par=line.split(",")
-                  if len(par) < 3:
-                    continue
-                  try:
-                    newLat=float(par[1])
-                    newLon=float(par[2])
-                    if lastLat is None or lastLon is None: 
-                      self.track.append((AVNUtil.gt(par[0]),newLat,newLon))
-                      lastLat=newLat
-                      latLon=newLon
-                    else:
-                      dist=AVNUtil.distance((lastLat,lastLon), (newLat,newLon))*AVNUtil.NM
-                      if dist >= self.getFloatParam('distance'):
-                        self.track.append((AVNUtil.gt(par[0]),lastLat,lastLon))
-                        lastLat=newLat
-                        latLon=newLon
-                  except:
-                    pass
-                f.close()
-              except:
-                if not f is None:
-                  try:
-                    f.close()
-                  except:
-                    pass
+              self.setInfo('main', "reading old track data", AVNWorker.Status.STARTED)
+              data=self.readTrackFile(curfname)
+              for trkpoint in data:
+                self.track.append(trkpoint[0],trkpoint[1],trkpoint[2])
             initial=False
         if newFile:
           f=open(curfname,"a")
