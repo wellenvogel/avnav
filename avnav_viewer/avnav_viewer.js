@@ -86,10 +86,6 @@ var aisparam={
 			headline: 'course',
 			format: function(v){ return formatDecimal(parseFloat(v.course||0),3,0);}
 		},
-		mmsi: {
-			headline: 'mmsi',
-			format: function(v){ return v.mmsi;}
-		},
 		cpa:{
 			headline: 'cpa',
 			format: function(v){ return formatDecimal(parseFloat(v.cpa||0),3,2);}
@@ -104,6 +100,14 @@ var aisparam={
 				return formatDecimal(h,2,0)+':'+formatDecimal(m,2,0)+':'+formatDecimal(s,2,0);
 				}
 		},
+    passFront:{
+      headline: 'pass',
+      format: function(v){
+        if (! v.cpa) return "-";
+        if (v.passFront) return "Front";
+        return "Back";
+      }
+    },
 		shipname:{
 			headline: 'name',
 			format: function(v){ return v.shipname;}
@@ -111,6 +115,10 @@ var aisparam={
 		callsign:{
 			headline: 'call',
 			format: function(v){ return v.callsign;}
+		},
+		mmsi: {
+			headline: 'mmsi',
+			format: function(v){ return v.mmsi;}
 		},
 		shiptype:{
 			headline: 'type',
@@ -255,7 +263,7 @@ OpenLayers.AvNavMap=OpenLayers.Class(OpenLayers.Map,{
 		}
 	},
 	//------------------ drawing of AIS data ---------------------------------------------------
-	//the input list ius an array of AIS data sorted by distance
+	//the input list is an array of AIS data sorted by distance
 	//we check if we need to add/remove features and update the position and direction
 	//if a target cpa is below the alarm cpa, we draw this one separately
 	//the nearest one will be drawn in green
@@ -858,7 +866,7 @@ function computeTPA(a,da,db,va,vb){
 }
 
 //compute the CPA point 
-//returns srclon,srclat,dstlon,dstlat,cpa(m),cpanm(nm),tcpa(s)
+//returns srclon,srclat,dstlon,dstlat,cpa(m),cpanm(nm),tcpa(s),front (true if src reaches intersect point first)
 //each of the objects must have: lon,lat,course,speed
 //lon/lat in decimal degrees, speed in kn
 function computeCPAdata(src,dst){
@@ -866,7 +874,8 @@ function computeCPAdata(src,dst){
 			lat:0,
 			lon:0,
 			cpa:0,
-			tcpa:0
+			tcpa:0,
+      front: false
 	};
 	if (dst.speed < properties.minAISspeed){
 		return rt;
@@ -875,8 +884,13 @@ function computeCPAdata(src,dst){
 	var lldst=new LatLon(dst.lat,dst.lon);
 	var intersect=LatLon.intersection(llsrc,src.course,lldst,dst.course);
 	if (! intersect) return rt;
-	var da=llsrc.distanceTo(intersect,5)*1000;
-	var db=lldst.distanceTo(intersect,5)*1000;
+	var da=llsrc.distanceTo(intersect,5)*1000; //m
+  var timeIntersectSrc=0;
+  if (src.speed) timeIntersectSrc=da/src.speed; //strange unit: m/nm*h -> does not matter as we only compare
+	var db=lldst.distanceTo(intersect,5)*1000; //m
+  var timeIntersectDest=0;
+  if (dst.speed) timeIntersectDest=db/dst.speed; //strange unit: m/nm*h -> does not matter as we only compare
+  if (timeIntersectSrc < timeIntersectDest) rt.front=true;
 	var a=(src.course-dst.course)*Math.PI/180;
 	var va=src.speed*NM; //m/h
 	var vb=dst.speed*NM;
@@ -1086,6 +1100,7 @@ function handleAISData(){
 				ais.cpa=0;
 				ais.tcpa=0;
 			}
+      ais.passFront=cpadata.front;
 			if (! ais.shipname) ais.shipname="unknown";
 			if (! ais.callsign) ais.callsign="????";
 			if (ais.cpa && ais.cpa < properties.aisWarningCpa && ais.tcpa && ais.tcpa < properties.aisWarningTpa){
@@ -1158,6 +1173,8 @@ function updateAISInfoPanel(){
 			$('#aisMmsi').text(aisparam['mmsi'].format(ais));
 			$('#aisName').text(aisparam['shipname'].format(ais));
 			$('#aisDestination').text(aisparam['destination'].format(ais));
+			$('#aisFront').text(aisparam['passFront'].format(ais));
+			$('#aisShiptype').text(aisparam['shiptype'].format(ais));
 		}
 		else{
 			hideAISPanel();
