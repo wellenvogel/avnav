@@ -1,0 +1,590 @@
+@topPanelHeight:00px;
+@bottomPanelHeight:50px;
+@aisPanelWidth:90px;
+
+
+/*-------------------------------------------------------------
+   general settings
+-------------------------------------------------------------*/
+
+
+html,body {
+	
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	font-family: Verdana,Arial,sans-serif;
+	font-size: 0.8em;
+}
+
+.avn_panel{
+	position: absolute;
+	overflow: hidden;
+}
+
+#leftTop{
+	
+	background-color: #1602FC;
+	text-align: center;
+}
+
+#leftTop .avn_label {
+	color: white;
+}
+.avn_leftBottom{
+	
+	background-color: rgb(222, 226, 207);
+	text-align: center;
+}
+
+.avn_map{
+	border: 1px solid black;
+	
+}
+
+.avn_rightPanel{
+	
+	background-color: #6D6D6D;
+}
+
+.avn_inner{
+	display: inline-block;
+}
+.avn_label{
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+#leftBottomInnerMainpage .avn_label{
+	-webkit-margin-before: 0.5em;
+}
+.avn_position{
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.avn_hidden{
+	display:none;
+}
+
+
+.avn_position{
+
+border-color: black;
+border-style: solid;
+border-width: 1px;
+background-color: white;
+font-size: ( @topPanelHeight - 2 );
+}
+
+.avn_leftBottom .avn_position{
+font-size: ( @bottomPanelHeight - 2 );
+}
+
+/*-------------------------------------------------------------
+   bottom display
+-------------------------------------------------------------*/
+@bottomSmallFont: (( @bottomPanelHeight / 2 ) - 10 );
+@bottomBigFont: ( @bottomPanelHeight  - 8 );
+
+.bottomMargins {
+	margin-left: ( @bottomPanelHeight / 12 );
+	margin-right: ( @bottomPanelHeight / 12 );
+}
+.bottomInnerMargins{
+	margin-left: ( @bottomPanelHeight / 12 );
+}
+#leftBottomInner{
+	left:0;
+	right: 0;
+}
+#leftBottomMarker {
+	//width: 50%;
+}
+#leftBottomMarker #leftBottomMarkerPos{
+	width: ( @bottomSmallFont * 7 );
+	.bottomMargins;
+	margin-top: ( @bottomSmallFont / 4 );
+	@media (max-width: 910px) {
+		display: none;
+	};
+}
+#leftBottomMarker #leftBottomMarkerEta{
+	width: ( @bottomSmallFont * 5 );
+	margin-top: ( @bottomSmallFont / 4 );
+}
+#leftBottomMarker #leftBottomMarkerBearing{
+	width: ( @bottomBigFont * 5.5 );
+}
+#leftBottomMarker #markerPosition{
+	font-size: @bottomSmallFont;
+}
+#leftBottomMarker #eta{
+	font-size: @bottomSmallFont;
+}
+#leftBottomMarker #bearing{
+	font-size: @bottomBigFont;
+	.bottomInnerMargins;
+}
+#leftBottomMarker #distance{
+	font-size: @bottomBigFont;
+	.bottomInnerMargins;
+}
+#leftBottomPosition {
+	width: ( @bottomPanelHeight * 8.2 );
+}
+#leftBottomPosition #leftBottomPositionPos{
+	width: ( @bottomSmallFont * 7 );
+	margin-top: ( @bottomSmallFont / 4 );
+}
+#leftBottomPosition #leftBottomPositionStatus{
+	width: ( @bottomSmallFont * 6 );
+	margin-top: ( @bottomSmallFont / 4 );
+}
+#leftBottomPosition #leftBottomPositionCourse{
+	width: ( @bottomBigFont * 5 );
+}
+#leftBottomPosition #boatPosition{
+	font-size: @bottomSmallFont;
+}
+#leftBottomPosition #boatLocalTime{
+	font-size: @bottomSmallFont;
+	@media (max-width: 760px) {
+		display: none;
+	};
+}
+#leftBottomPosition #boatCourse{
+	font-size: @bottomBigFont;
+	.bottomInnerMargins;
+}
+#leftBottomPosition #boatSpeed{
+	font-size: @bottomBigFont;
+	.bottomInnerMargins;
+}
+
+
+
+/*-------------------------------------------------------------
+   buttons
+-------------------------------------------------------------*/
+button.avn_button{
+	width: 50px;
+	height: 50px;
+	margin: 3px 3px 3px 3px;
+}
+
+button.avn_toggleButton{
+	width: 50px;
+	height: 50px;
+	margin: 3px 3px 3px 3px;
+}
+
+button.avn_buttonActive{
+	border: 4px solid #1DB81D;
+}
+
+button.avn_buttonActiveError{
+	border: 4px solid #EC420C;
+}
+
+button.avn_buttonInactive{
+	border: 4px solid #E6E6E6;
+}
+
+#btnLockPos .ui-icon {
+	background-image: url(images/Sail-Boat-40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 10px;
+	top: 10px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 20px 20px;
+}
+
+#btnLockMarker .ui-icon{
+	background-image: url(images/Marker1.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 10px;
+	top: 10px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 20px 20px;
+}
+
+#btnLayerSwitch .ui-icon{
+	background-image: url(images/Layer40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
+
+#btnNavCancel .ui-icon{
+	background-image: url(images/Cancel40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
+#btnAISCancel .ui-icon{
+	background-image: url(images/Cancel40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
+#btnAISFirst .ui-icon{
+	background-image: url(images/Ais-Up-40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
+
+#btnStatusCancel .ui-icon{
+	background-image: url(images/Cancel40.png);
+	background-position: 0px 0px;
+	width: 40px;
+	height: 40px;
+	left: 12px;
+	top: 12px;
+	margin-top: 0px;
+	margin-left: 0px;
+	background-size: 24px 24px;
+}
+
+/*-------------------------------------------------------------
+   pop up menu 
+-------------------------------------------------------------*/
+.avn_selectList	.ui-selecting { background: #1E6CCF;}
+.avn_selectList	.ui-selected:not(.ui-disabled) { background: #1E6CCF; color: white;}
+.avn_selectList	.ui-selected.ui-disabled { background: #9BB2D0; color: grey;}
+.avn_selectList	.ui-disabled { color: grey;}
+.avn_selectList { list-style-type: none; margin: 0; padding: 0; }
+.avn_selectList ul {margin-top: 2px; margin-bottom: 2px;}
+.avn_selectList { 
+	margin-top: 3px;
+	margin-bottom: 3px;
+	margin-right: 25px; /*for scrolling on tablet*/
+	padding: 0.4em; 
+	padding-left: 10px;
+	font-size: 24px; 
+	}
+
+.avn_disabled {
+	color: grey;
+}
+
+.avn_dialog .ui-dialog-content{
+	overflow: auto !important;
+}
+
+/*-------------------------------------------------------------
+   AIS display
+-------------------------------------------------------------*/
+.avn_ais_infotable{
+	display: table;
+	margin-left: 3px;
+	margin-right: 3px;
+	line-height: 22px;
+	font-size: 20px;
+}
+.avn_ais{
+	display: table-row;
+		
+}
+.avn_aisparam{
+	display: table-cell;
+	padding-left: 10px;
+	padding-right: 10px;
+	padding-bottom: 3px;
+	padding-top: 2px;
+	border-bottom: 1px solid black;
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+	
+}
+.avn_ais_info_first{
+	background-color: rgb(112, 243, 175) !important;
+}
+.avn_ais_selected{
+	background-color: rgb(202, 213, 190);
+}
+
+.avn_ais_warning{
+	background-color: rgb(250, 88, 74);
+}
+.avn_ais_info_warning{
+	background-color: rgb(250, 88, 74) !important;
+}
+
+#aisPageContent{
+	overflow: auto;
+	top:0;
+	bottom:0;
+	left:0;
+	right: 0;
+	
+}
+
+/* AIS info box */
+#aisInfoInner{
+	margin-top: 2px;
+}
+
+.avn_ais_base(@factor: 5) {
+	font-size: ( @aisPanelWidth / @factor );
+	margin-bottom: 5px;
+	border-bottom: 1px solid black;
+}
+
+.avn_ais_data {
+	.avn_ais_base(5);
+}
+.avn_ais_name {
+	.avn_ais_base(8);
+}
+.avn_ais_mmsi {
+	.avn_ais_base(7);
+}
+#aisInfoHeadline{
+	font-size: ( @aisPanelWidth / 3 );
+}
+
+/*-------------------------------------------------------------
+   status page
+-------------------------------------------------------------*/
+.avn_status{
+	border-top: 1px solid #000;
+	margin-left: 10px;
+	margin-top: 5px;
+	line-height: 20px;
+}
+.avn_child_status{
+	margin-left: 20px;
+	margin-top: 3px;
+}
+.avn_child_status img{
+	width: 20px;
+	height: 20px;
+}
+.avn_status_name{
+	padding-left: 3px;
+}
+.avn_status_info{
+	padding-left: 3px;
+}
+#status_content_inner h1{
+	margin-left: 10px;
+}
+
+#status_content_inner{
+	overflow: auto;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+/*-------------------------------------------------------------------------------
+    main page
+  -------------------------------------------------------------------------------
+*/
+
+.avnav_select_item{
+	float: left;
+	margin: 20px 20px 20px 20px;
+	padding: 10px 10px 10px 10px;
+	background-color: grey;
+	color: white;
+	width: 60px;
+	text-align: center;
+	border-radius: 8px;
+}
+.avnav_select_item img{
+	margin-bottom: 10px;
+	border-radius: 8px;
+}
+
+#main_content{
+	overflow: auto;
+}
+#main_content_inner{
+	display: table;
+	width: 100%;
+	height: 100%;
+}
+#vertical_aligner{
+	display: table-cell;
+	vertical-align: middle;
+	text-align: center;
+}
+#allSelections{
+	display: inline-block;
+}
+
+/*------------------------------------------------------------------------------- 
+	element positioning
+  -------------------------------------------------------------------------------
+	1. left panel */
+#leftPanel{
+	left: 0px;
+	top: 0px;
+	bottom: 0px;
+	right: 60px;      
+	overflow: hidden;
+}
+  
+/*
+    2. left top
+*/
+
+#leftTop{
+	left: 0px;
+	top: 0px;
+	right: 0px;
+	height: @topPanelHeight;
+}
+.avn_top_content{
+	float: left;
+	line-height: ( @topPanelHeight - 2 );
+}
+
+
+/*
+	3. map
+*/
+
+.avn_main{
+	top: @topPanelHeight;
+	bottom: @bottomPanelHeight;
+	left: 0px;
+	right: 0px;
+	
+}
+    
+
+/*
+	4. bottom line  - see .avn_leftBottom
+*/
+
+/* 
+    if AIS is visible - add a second bottom line above the bottom line
+    visibility and changing avn_main bottom will be handled by java script 
+*/
+#aisInfo{
+	bottom: @bottomPanelHeight;
+	top: 0px;
+	left:	0px;
+	width:	@aisPanelWidth;
+	background-color: #EBEB55;
+}
+   
+#leftBottom{
+	
+   	bottom: 0px;
+	height: @bottomPanelHeight;
+	left: 0px;
+	right: 0px;
+}
+
+.avn_float_left{
+	float: left;
+}
+.avn_float_right{
+	float: right;
+}
+
+/*
+	5. right panel
+*/
+
+#rightPanel{
+	top: 0px;
+	bottom: 0px;
+	right: 0px;
+	width: 60px;
+}
+
+.avn_status_image{
+	width: 24px;
+	height: 24px;
+}
+
+/*------------------------------------------------------------------------------- 
+	end element positioning
+  -------------------------------------------------------------------------------*/
+/* overwriting some jquery ui defaults */
+
+.ui-dialog-title {
+	/*font-size: 0.8em;*/
+}
+.ui-button-text {
+	/*font-size: 0.8em;*/
+}
+
+.olControlButtonItemActive {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: red;
+    width: 22px;
+    height: 22px;
+}
+
+/*
+.clickbar {
+	top: 30px;
+	right: 20px;
+	border: 1px solid black;
+	border-radius: 3px;
+	background: white;
+	padding-left: 4px;
+	padding-right: 4px;
+	font: 10px monospace;
+	cursor: pointer;
+}
+
+.olControlMousePosition {
+	position: absolute;
+	right: 10px;
+	top: 0px;
+	height: 15px;
+	font-size: 8pt;
+	background-color: white
+}
+
+#utm_mouse {
+	top: 15px;
+}
+*/
+
+
+
+.olImageLoadError {
+	background-color: transparent !important;
+}
+
+.ui-dialog{
+	z-index:9999;
+}
