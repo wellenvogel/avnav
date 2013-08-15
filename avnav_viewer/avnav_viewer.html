@@ -35,7 +35,8 @@
 -->
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-     <meta name="viewport" content="user-scalable=no">
+     <meta name="viewport" id="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0">
+     <!--<meta name="viewport" id="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, target-densityDpi=device-dpi">-->
      <meta name="apple-mobile-web-app-capable" content="yes">
 
 
@@ -46,6 +47,15 @@
     <script src="/libraries/jquery/jquery.cookie.js"></script>
     <script src="/libraries/movable-type/geo.js"></script>
     <script src="/libraries/movable-type/latlon.js"></script>
+    <script type="text/javascript">
+      try{
+      var viewPortRatio=window.devicePixelRatio;
+      if (viewPortRatio && (navigator.userAgent.toLowerCase().indexOf('android') > -1)){
+        var viewPortScale=1/viewPortRatio;
+        $('#viewport').attr('content','user-scalable=no, width=device-width, initial-scale='+viewPortScale);
+      }
+      } catch (e){}
+    </script>
     <link rel="stylesheet" type="text/css" href="/libraries/jquery/jquery-ui.css"></link>
     
 	<link rel="stylesheet/less" type="text/css" href="avnav_viewer.less"></link>
