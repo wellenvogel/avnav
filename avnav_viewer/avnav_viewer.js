@@ -1403,7 +1403,7 @@ function hideAISPanel(){
 		return;
 	}
 	else {
-		showHideAdditionalPanel(aisinfo,'bottom',false);
+		showHideAdditionalPanel(aisinfo,false);
 	}
 }
 
@@ -1413,7 +1413,7 @@ function showAISPanel(){
 		return;
 	}
 	else {
-		showHideAdditionalPanel(aisinfo,'bottom',true);
+		showHideAdditionalPanel(aisinfo,true);
 		$(aisinfo).click(function(e){
 			hideAISPanel();
 			showPage('ais');
@@ -1797,7 +1797,11 @@ function initMap(mapdescr,url) {
 
 }
 
-function showHideAdditionalPanel(id,mainLocation,show){
+function showHideAdditionalPanel(id,show){
+  var mainLocation='bottom';
+  if ($(id).hasClass('avn_left')) mainLocation='left';
+  if ($(id).hasClass('avn_right')) mainLocation='right';
+  if ($(id).hasClass('avn_top')) mainLocation='top';
 	var npos=null;
 	var mainid='.avn_main';
 	var oval=parseInt($(mainid).css(mainLocation).replace(/px/,''));
