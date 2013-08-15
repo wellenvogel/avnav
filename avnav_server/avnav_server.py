@@ -157,10 +157,11 @@ class AVNLog():
     formatter=logging.Formatter("%(asctime)s-%(process)d-%(threadName)s-%(levelname)s-%(message)s")
     if not cls.consoleHandler is None :
       cls.consoleHandler.setLevel(numeric_level)
-    cls.fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
-    cls.fhandler.setFormatter(formatter)
-    cls.fhandler.setLevel(logging.INFO if not debugToFile else numeric_level)
-    cls.logger.addHandler(cls.fhandler)
+    if os.name != 'posix':
+      cls.fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
+      cls.fhandler.setFormatter(formatter)
+      cls.fhandler.setLevel(logging.INFO if not debugToFile else numeric_level)
+      cls.logger.addHandler(cls.fhandler)
     cls.logger.setLevel(numeric_level)
     cls.debugToFile=debugToFile
   
@@ -173,7 +174,9 @@ class AVNLog():
       if not cls.consoleHandler is None:
         cls.consoleHandler.setLevel(numeric_level)
       if cls.debugToFile:
-        cls.fhandler.setLevel(numeric_level)
+        if cls.fhandler is not None:
+          cls.fhandler.setLevel(numeric_level)
+        pass
       return True
     except:
       return False
@@ -225,6 +228,11 @@ class AVNUtil():
     td = (dt - datetime.datetime(1970,1,1, tzinfo=None))
     ts=((td.days*24*3600+td.seconds)*10**6 + td.microseconds)/1e6
     return ts
+
+  #timedelta total_seconds that is not available in 2.6
+  @classmethod
+  def total_seconds(cls,td):
+    return (td.microseconds + (td.seconds+td.days*24*3600)*10**6)/10**6
   
   #now timestamp in utc
   @classmethod
@@ -716,7 +724,7 @@ class SerialReader():
             #if there is no data at all we simply take all the time we have...
             AVNLog.debug("unable to read data, retrying at %d",baud)
             continue
-          data=bytes.decode('ascii',errors='ignore')
+          data=bytes.decode('ascii','ignore')
           curoffset=0
           while curoffset < (len(data)-5):
             pos=data.find('\n',curoffset)
@@ -739,7 +747,7 @@ class SerialReader():
     except Exception:
       self.setInfo("unable to open port",AVNWorker.Status.ERROR)
       try:
-        tf=traceback.format_exc(3).decode(errors='ignore')
+        tf=traceback.format_exc(3).decode('ascii','ignore')
       except:
         tf="unable to decode exception"
       AVNLog.debug("Exception on opening %s : %s",portname,tf)
@@ -863,7 +871,7 @@ class SerialReader():
             AVNLog.info("successfully opened %s",f.name)
             isOpen=True
           self.status=True
-          data=bytes.decode('ascii',errors='ignore')
+          data=bytes.decode('ascii','ignore')
           if maxerrors > 0 or not hasNMEA:
             if not self.startpattern.match(data):
               if maxerrors>0:
@@ -1971,7 +1979,7 @@ class SocketReader():
         if len(data) == 0:
           AVNLog.info("connection lost")
           break
-        buffer=buffer+data.decode(errors='ignore')
+        buffer=buffer+data.decode('ascii','ignore')
         lines=buffer.splitlines(True)
         if lines[-1][-1]=='\n':
           #last one ends with nl
@@ -2551,7 +2559,7 @@ class AVNSerialReader(AVNWorker):
   @classmethod
   def createInstance(cls, cfgparam):
     if not hasSerial:
-      warn("serial readers configured but serial module not available, ignore them")
+      AVNLog.warn("serial readers configured but serial module not available, ignore them")
       return None
     rt=AVNSerialReader(cfgparam)
     return rt
@@ -3199,8 +3207,8 @@ def main(argv):
       curutc=datetime.datetime.utcnow();
       delta=curutc-lastutc;
       allowedBackTime=baseConfig.getIntParam('maxtimeback')
-      if delta.total_seconds() < -allowedBackTime and allowedBackTime != 0:
-        AVNLog.warn("time shift backward (%d seconds) detected, deleting all entries ",delta.total_seconds())
+      if AVNUtil.total_seconds(delta) < -allowedBackTime and allowedBackTime != 0:
+        AVNLog.warn("time shift backward (%d seconds) detected, deleting all entries ",AVNUtil.total_seconds(delta))
         navData.reset()
         hasFix=False
       lastutc=curutc
@@ -3222,10 +3230,10 @@ def main(argv):
             settimeperiod=baseConfig.getIntParam('settimeperiod')
             if allowedDiff != 0 and settimecmd != "" and settimeperiod != 0:
             #check if the time is too far away and the period is reached
-              if abs((curts-curutc).total_seconds()) > allowedDiff:
+              if abs(AVNUtil.total_seconds(curts-curutc)) > allowedDiff:
                 timeFalse=True
                 AVNLog.debug("UTC time diff detected system=%s, gps=%s",curutc.isoformat(),curts.isoformat())
-                if lastsettime == 0 or (curutc-lastsettime).total_seconds() > settimeperiod:
+                if lastsettime == 0 or AVNUtil.total_seconds(curutc-lastsettime) > settimeperiod:
                   AVNLog.warn("detected UTC time diff between system time %s and gps time %s, setting system time",
                               curutc.isoformat(),curts.isoformat())
                   #[MMDDhhmm[[CC]YY][.ss]]
@@ -3241,7 +3249,7 @@ def main(argv):
                   else:
                     pass
                   curutc=datetime.datetime.utcnow()
-                  if abs((curts-curutc).total_seconds()) > allowedDiff:
+                  if abs(AVNUtil.total_seconds(curts-curutc)) > allowedDiff:
                     AVNLog.error("unable to set system time, still above difference")
                   else:
                     AVNLog.info("setting system time succeeded")
