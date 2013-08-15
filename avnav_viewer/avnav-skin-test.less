@@ -1,9 +1,11 @@
-@topPanelHeight:40px;
-@bottomPanelHeight:24px;
+@topPanelHeight:00px;
+@bottomPanelHeight:50px;
 @aisPanelHeight:24px;
 
 
-
+/*-------------------------------------------------------------
+   general settings
+-------------------------------------------------------------*/
 
 
 html,body {
@@ -21,21 +23,18 @@ html,body {
 	overflow: hidden;
 }
 
-.avn_leftPanel{
-
-}
-.avn_leftTop{
+#leftTop{
 	
 	background-color: #1602FC;
 	text-align: center;
 }
 
-.avn_leftTop .avn_label {
+#leftTop .avn_label {
 	color: white;
 }
 .avn_leftBottom{
 	
-	background-color: #AAADB8;
+	background-color: rgb(222, 226, 207);
 	text-align: center;
 }
 
@@ -52,6 +51,23 @@ html,body {
 .avn_inner{
 	display: inline-block;
 }
+.avn_label{
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+#leftBottomInnerMainpage .avn_label{
+	-webkit-margin-before: 0.5em;
+}
+.avn_position{
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.avn_hidden{
+	display:none;
+}
+
 
 .avn_position{
 
@@ -69,7 +85,86 @@ font-size: ( @bottomPanelHeight - 2 );
 #aisInfo .avn_position{
 font-size: ( @aisPanelHeight - 2 );
 }
+/*-------------------------------------------------------------
+   bottom display
+-------------------------------------------------------------*/
+@bottomSmallFont: (( @bottomPanelHeight / 2 ) - 10 );
+@bottomBigFont: ( @bottomPanelHeight  - 8 );
 
+.bottomMargins {
+	margin-left: ( @bottomPanelHeight / 12 );
+	margin-right: ( @bottomPanelHeight / 12 );
+}
+.bottomInnerMargins{
+	margin-left: ( @bottomPanelHeight / 12 );
+}
+#leftBottomInner{
+	left:0;
+	right: 0;
+}
+#leftBottomMarker {
+	width: 50%;
+}
+#leftBottomMarker #leftBottomMarkerPos{
+	width: ( @bottomSmallFont * 7 );
+	.bottomMargins;
+	margin-top: ( @bottomSmallFont / 4 );
+}
+#leftBottomMarker #leftBottomMarkerEta{
+	width: ( @bottomSmallFont * 5 );
+	margin-top: ( @bottomSmallFont / 4 );
+}
+#leftBottomMarker #leftBottomMarkerBearing{
+	width: ( @bottomBigFont * 5.6 );
+}
+#leftBottomMarker #markerPosition{
+	font-size: @bottomSmallFont;
+}
+#leftBottomMarker #eta{
+	font-size: @bottomSmallFont;
+}
+#leftBottomMarker #bearing{
+	font-size: @bottomBigFont;
+	.bottomInnerMargins;
+}
+#leftBottomMarker #distance{
+	font-size: @bottomBigFont;
+	.bottomInnerMargins;
+}
+#leftBottomPosition {
+	width: 50%;
+}
+#leftBottomPosition #leftBottomPositionPos{
+	width: ( @bottomSmallFont * 7 );
+	margin-top: ( @bottomSmallFont / 4 );
+}
+#leftBottomPosition #leftBottomPositionStatus{
+	width: ( @bottomSmallFont * 6 );
+	margin-top: ( @bottomSmallFont / 4 );
+}
+#leftBottomPosition #leftBottomPositionCourse{
+	width: ( @bottomBigFont * 5 );
+}
+#leftBottomPosition #boatPosition{
+	font-size: @bottomSmallFont;
+}
+#leftBottomPosition #boatLocalTime{
+	font-size: @bottomSmallFont;
+}
+#leftBottomPosition #boatCourse{
+	font-size: @bottomBigFont;
+	.bottomInnerMargins;
+}
+#leftBottomPosition #boatSpeed{
+	font-size: @bottomBigFont;
+	.bottomInnerMargins;
+}
+
+
+
+/*-------------------------------------------------------------
+   buttons
+-------------------------------------------------------------*/
 button.avn_button{
 	width: 50px;
 	height: 50px;
@@ -176,6 +271,9 @@ button.avn_buttonInactive{
 	background-size: 24px 24px;
 }
 
+/*-------------------------------------------------------------
+   pop up menu 
+-------------------------------------------------------------*/
 .avn_selectList	.ui-selecting { background: #1E6CCF;}
 .avn_selectList	.ui-selected:not(.ui-disabled) { background: #1E6CCF; color: white;}
 .avn_selectList	.ui-selected.ui-disabled { background: #9BB2D0; color: grey;}
@@ -195,27 +293,13 @@ button.avn_buttonInactive{
 	color: grey;
 }
 
-.avn_label{
-	padding-left: 3px;
-	padding-right: 3px;
-}
-
-#leftBottomInnerMainpage .avn_label{
-	-webkit-margin-before: 0.5em;
-}
-.avn_position{
-	padding-left: 5px;
-	padding-right: 5px;
-}
-
-.avn_hidden{
-	display:none;
-}
-
 .avn_dialog .ui-dialog-content{
 	overflow: auto !important;
 }
 
+/*-------------------------------------------------------------
+   AIS display
+-------------------------------------------------------------*/
 .avn_ais_infotable{
 	display: table;
 	margin-left: 3px;
@@ -252,6 +336,22 @@ button.avn_buttonInactive{
 	background-color: red !important;
 }
 
+#aisPageContent{
+	overflow: auto;
+	top:0;
+	bottom:0;
+	left:0;
+	right: 0;
+	
+}
+#aisInfoInner{
+	margin-top: 2px;
+	line-height: ( @aisPanelHeight - 2 );
+}
+
+/*-------------------------------------------------------------
+   status page
+-------------------------------------------------------------*/
 .avn_status{
 	border-top: 1px solid #000;
 	margin-left: 10px;
@@ -320,15 +420,6 @@ button.avn_buttonInactive{
 	display: inline-block;
 }
 
-#aisPageContent{
-	overflow: auto;
-	top:0;
-	bottom:0;
-	left:0;
-	right: 0;
-	
-}
-
 /*------------------------------------------------------------------------------- 
 	element positioning
   -------------------------------------------------------------------------------
@@ -386,9 +477,6 @@ button.avn_buttonInactive{
 	background-color: #EBEB55;
 	text-align: center;
 }
-#aisInfoInner{
-	margin-top: 2px;
-}
    
 #leftBottom{
 	
@@ -398,9 +486,8 @@ button.avn_buttonInactive{
 	right: 0px;
 }
 
-.avn_bottom_content{
+.avn_float_left{
 	float: left;
-	line-height: ( @bottomPanelHeight - 2 ); /*has 1 px border */
 }
 
 /*

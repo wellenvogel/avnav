@@ -57,20 +57,12 @@
 	</head>
 
 	<body>
-		<div id='leftPanel' class='avn_panel avn_leftPanel'>
-		<div id='leftTop' class='avn_panel avn_leftTop'>
+		<div id='leftPanel' class='avn_panel'>
+		<div id='leftTop' class='avn_panel avn_mainpage'>
 		<div id='leftTopInner' class='avn_inner'>
-		<img id='boatPositionStatus' class='avn_status_image avn_top_content' src='images/GreyBubble40.png'></img>
-		<div id='boatPositionLabel' class='avn_label avn_text avn_top_content'>Pos</div>
-		<div id='boatPosition' class='avn_display avn_position avn_top_content'>-------------</div>
-		<div id='boatCourseLabel' class='avn_label avn_text avn_top_content'>CoG</div>
-		<div id='boatCourse' class='avn_display avn_position avn_top_content'>000</div>
-		<div id='boatSpeedLabel' class='avn_label avn_text avn_top_content'>SoG</div>
-		<div id='boatSpeed' class='avn_display avn_position avn_top_content'>000</div>
-		<div id='boatTimeLabel' class='avn_label avn_text avn_top_content'>LoT</div>
-		<div id='boatLocalTime' class='avn_display avn_position avn_top_content'>00:00:00</div>
 		</div>
 		</div>
+    <!-- mainPage -->
 		<div id='mainPanel' class="avn_panel avn_main avn_mainpage avn_mainpage_main">
 		<div id='main_content_inner' class="avn_panel">
 		  <div id="vertical_aligner">
@@ -83,12 +75,18 @@
 		  </div>
 		</div> <!--mainContentInner-->
 		</div>
+    <!-- end mainPage -->
+    <!-- navPage -->
 	    <div id='map' class='avn_panel avn_map avn_hidden avn_main avn_navpage avn_navpage_main'></div>
+    <!-- end navPage-->
+    <!-- aisPage -->
 	    <div id='aisPagePanel' class='avn_panel avn_main avn_aispage avn_hidden avn_aispage_main'>
 	    <div id='aisPageContent' class='avn_panel'>
 	    <h1>AIS</h1>
 	    </div>
-	    </div> <!-- aisPagePanel -->
+	    </div> 
+    <!-- end aisPage -->
+    <!-- statusPage -->
 	    <div id='statusPagePanel' class="avn_panel avn_main avn_statuspage avn_statuspage_main avn_hidden">
 		<div id='status_content_inner' class="avn_panel">
 		  <h1>Server Status</h1>
@@ -101,24 +99,27 @@
 		  </div>
 		</div> <!--statusContentInner-->
 		</div>
+   <!-- end StatusPage -->
+   <!-- AIS panel -->
 	    <div id='aisInfo' class='avn_panel avn_hidden'>
 	    <div id='aisInfoInner' class='avn_inner'>
-	    <div id='aisDstLabel' class='avn_label avn_text avn_bottom_content'>Dst</div>
-	    <div id='aisDst' class='avn_display avn_position avn_bottom_content'>000.0</div>
-	    <div id='aisSogLabel' class='avn_label avn_text avn_bottom_content'>Sog</div>
-	    <div id='aisSog' class='avn_display avn_position avn_bottom_content'>000.0</div>
-	    <div id='aisCogLabel' class='avn_label avn_text avn_bottom_content'>Cog</div>
-	    <div id='aisCog' class='avn_display avn_position avn_bottom_content'>000.0</div>
-	    <div id='aisCpaLabel' class='avn_label avn_text avn_bottom_content'>CPA</div>
-	    <div id='aisCpa' class='avn_display avn_position avn_bottom_content'>000.0</div>
-	    <div id='aisTcpaLabel' class='avn_label avn_text avn_bottom_content'>TCPA</div>
-	    <div id='aisTcpa' class='avn_display avn_position avn_bottom_content'>00:00</div>
-	    <div id='aisMmsiLabel' class='avn_label avn_text avn_bottom_content'>MMSI</div>
-	    <div id='aisMmsi' class='avn_display avn_position avn_bottom_content'>000000</div>
-	    <div id='aisNameLabel' class='avn_label avn_text avn_bottom_content'>name</div>
-	    <div id='aisName' class='avn_display avn_position avn_bottom_content'>-------</div>
+	    <div id='aisDstLabel' class='avn_label avn_float_left'>Dst</div>
+	    <div id='aisDst' class='avn_display avn_position avn_float_left'>000.0</div>
+	    <div id='aisSogLabel' class='avn_label avn_float_left'>Sog</div>
+	    <div id='aisSog' class='avn_display avn_position avn_float_left'>000.0</div>
+	    <div id='aisCogLabel' class='avn_label avn_float_left'>Cog</div>
+	    <div id='aisCog' class='avn_display avn_position avn_float_left'>000.0</div>
+	    <div id='aisCpaLabel' class='avn_label avn_float_left'>CPA</div>
+	    <div id='aisCpa' class='avn_display avn_position avn_float_left'>000.0</div>
+	    <div id='aisTcpaLabel' class='avn_label avn_float_left'>TCPA</div>
+	    <div id='aisTcpa' class='avn_display avn_position avn_float_left'>00:00</div>
+	    <div id='aisMmsiLabel' class='avn_label avn_float_left'>MMSI</div>
+	    <div id='aisMmsi' class='avn_display avn_position avn_float_left'>000000</div>
+	    <div id='aisNameLabel' class='avn_label avn_float_left'>name</div>
+	    <div id='aisName' class='avn_display avn_position avn_float_left'>-------</div>
 	    </div>
-	    </div> <!-- aisInfo -->
+	    </div>
+     <!-- end AIS panel-->
 	    <div id='leftBottom' class='avn_panel avn_leftBottom '>
 	    <div id='leftBottomInnerMainpage' class='avn_inner avn_mainpage'>
 		<p class="avn_label">
@@ -127,15 +128,37 @@
 		</p>
 		</div>
 		<div id='leftBottomNavPage' class='avn_hidden avn_navpage avn_aispage'> 
-	    <div id='leftBottomInner' class='avn_inner '>
-	    <div id='markerPositionLabel' class='avn_label avn_text avn_bottom_content'>Marker</div>
-	    <div id='markerPosition' class='avn_display avn_position avn_bottom_content'>0E,0N</div>
-	    <div id='bearingLabel' class='avn_label avn_text avn_bottom_content'>HdG</div>
-	    <div id='bearing' class='avn_display avn_position avn_bottom_content'>000</div>
-	    <div id='distanceLabel' class='avn_label avn_text avn_bottom_content'>DsT</div>
-	    <div id='distance' class='avn_display avn_position avn_bottom_content'>000,0</div>
-	    <div id='etaLabel' class='avn_label avn_text avn_bottom_content'>ETA</div>
-	    <div id='eta' class='avn_display avn_position avn_bottom_content'>00:00:00</div>
+	    <div id='leftBottomInner' class='avn_inner avn_panel'>
+      <div id='leftBottomMarker' class='avn_float_left avn_markerPosition'>
+        <div id='leftBottomMarkerPos' class='avn_float_left'>
+          <div id='markerPosition' class='avn_float_left'>0E,0N</div>
+        </div> <!-- marker pos-->
+        <div id='leftBottomMarkerEta' class='avn_float_left'>
+          <div id='eta' >00:00:00</div>
+          <div id='markerLabel' class='avn_label'>Marker</div>
+        </div> <!-- marker eta-->
+        <div id='leftBottomMarkerBearing' class='avn_float_left'>
+          <div id='bearing' class='avn_float_left'>000</div>
+          <div class='avn_float_left'>°</div>
+          <div id='distance' class='avn_float_left'>000,0</div>
+          <div class='avn_float_left'>nm</div>
+        </div> <!-- marker eta-->
+      </div> <!-- end marker -->
+      <div id='leftBottomPosition' class='avn_float_left avn_boatPosition'>
+        <div id='leftBottomPositionCourse' class='avn_float_left'>
+          <div id='boatCourse' class='avn_float_left'>000</div>
+          <div class='avn_float_left'>°</div>
+          <div id='boatSpeed' class='avn_float_left'>00.0</div>
+          <div class='avn_float_left'>kn</div>
+        </div>
+        <div id='leftBottomPositionPos' class='avn_float_left'>
+        <div id='boatPosition' class='avn_float_left'>-------------</div>
+        </div> <!-- leftBottomPositionPos -->
+        <div id='leftBottomPositionStatus' class='avn_float_left'>
+        <div id='boatLocalTime' class='avn_float_left'>00:00:00</div>
+        <img id='boatPositionStatus' class='avn_status_image' src='images/GreyBubble40.png'></img>
+        </div>
+      </div> <!-- end position-->
 	    </div>
 	    </div>
 	    </div>
