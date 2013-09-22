@@ -15,8 +15,9 @@
 	</STYLE>
 </HEAD>
 <BODY LANG="de-DE" DIR="LTR">
-<H1>Raspberry Pi als Bordcomputer / Navigation im Browser</H1>
-<P><BR><BR>
+<H1>Raspberry Pi als Bordcomputer / Navigation im Browser	</H1>
+<P>22.09.2013</P>
+<P><BR>
 </P>
 <H2 CLASS="western">Motivation</H2>
 <P>Nachdem ich schon eine ganze Weile mit Rasterkarten unterwegs
@@ -111,19 +112,17 @@ einzelnen Teile ein wenig genauer ein.</P>
 <P><BR><BR>
 </P>
 <H2 CLASS="western">Die Server Software (avnav_server.py)</H2>
-<P>Auf dem raspberry pi ist zunächst ein ganz normales Debian image
-installiert (ca. 2GB). Dazu kommen einige Zusatzpakete (liste siehe
-unten) und meine Software. 
-</P>
+<P>Auf dem raspberry pi ist zunächst ein<a href="http://www.raspberrypi.org/downloads"> ganz normales Debian image</a> installiert (ca. 2GB). Dazu kommen einige Zusatzpakete (liste siehe
+unten) und meine Software. </P>
 <P>Der Hauptbestandteil der Sofware auf dem raspberry pi ist ein in
-python geschriebener Server.</P>
+python geschriebener Server. Im Folgenden beschreibe ich in groben Zügen, was dieser Server intern tut.</P>
 <P><IMG SRC="software.png" NAME="Grafik2" ALIGN=LEFT WIDTH=970 HEIGHT=495 BORDER=0><BR CLEAR=LEFT><BR><BR>
 </P>
 <P>Dieser Server versucht alle am raspberry angeschlossenen seriellen
 Geräte zu erkennen und deren NMEA Daten zu lesen. Typisch werden die
 Geräte über seriell-usb Wandler angeschlossen (bei mir z.B.
 PL2303). Man muss ein wenig aufpassen, dass man einen Wandler hat,
-der vom Raspberry auch sauber unterstützt wird (…). Da das
+der vom Raspberry auch sauber unterstützt wird - siehe z.B. <a href="http://elinux.org/RPi_VerifiedPeripherals#USB_UART_and_USB_to_Serial_.28RS-232.29_adapters">hier</a>. Da das
 Verwalten der seriellen Schnittstellen unter Linux etwas magisch ist,
 scant der Server (per Dbus) die angeschlossenen Geräte auf eine
 entsprechende serielle Klasse und ermittelt deren Schnittstelle
@@ -136,20 +135,19 @@ Abschalten von Geräten. Bei mir hängt ein RO4800 mit AIS Decoder
 dran, die GPS Daten werden durchgereicht. Alternativ versucht er auch
 Kontakt zu seriellen Bluetooth Geräten aufzunehmen, falls er per
 discovery welche findet und versucht ebenfalls NMEA Daten zu Lesen.
-Getestet bei mir mit einer Holux GPS SlimXXX. In diesem Sinne
+Getestet bei mir mit einer Holux GPS Slim236. In diesem Sinne
 arbeitet er auch als NMEA Multiplexer.</P>
-<P>Alle GPS-Daten werden in eine Input queue gestellt. Aus dieser
-werden verbundene TCP Empfänger (z.B. OpenCPN) versorgt – jeder
-empfangene Datensatz wird einfach an diese weitergereicht. Per
-Default lauscht der SocketWriter auf Port 34567.</P>
+<P>Alle GPS-Daten werden intern in eine Liste eingefügt und per TCP bereitgestellt. Verbundene TCP Empfänger (z.B. OpenCPN) bekommen so jeden 
+empfangenen Datensatz  weitergereicht. Per
+Default &quot;lauscht&quot; der server (intern:SocketWriter) auf Port 34567.</P>
 <P>Anschliessend werden die NMEA Daten an den Decoder weitergereicht.
-Auf dem raspberry benutze ich dazu gpsd. Leider liess der sich nicht
+Auf dem raspberry benutze ich dazu <a href="http://catb.org/gpsd/">gpsd</a>. Leider liess der sich nicht
 verwenden, um direkt die seriellen Schnittstellen zu lesen, daher
 macht der avnnav_server einen Socket auf, an den sich der gpsd
 connected und von dem er die Daten liest. Das Starten des gpsd
 übernimmt ebenfalls der anav server. Am „anderen Ende“ werden
 über die gpsd python Schnittstelle die dekodierten Daten ausgelesen
-(gps Daten und AIS Daten) und im Server abgelegt für den Zugriff per
+(gps Daten und AIS Daten) und im Server abgelegt (&quot;NMEA decoded data&quot;) für den Zugriff per
 HTTP aus der WebApp. Der gpsd wird überwacht und bei Fehlern neu
 gestartet. Zusätzlich werden die dekodierten Daten auch benutzt um
 Track Dateien zu schreiben.</P>
@@ -161,9 +159,9 @@ Systemzeit des raspberry entsprechend eingestellt.</P>
 beim Systemstart automatisch startet und es auch ermöglicht, ihn
 geordnet zu beenden.</P>
 <P>Da der gesamte server in python geschrieben ist, kann er auch (vor
-allem zu Testzwecken) unter Windows oder Osx, Linux laufen. Dazu muss
+allem zu Testzwecken) unter Windows oder Osx (Mac), Linux laufen. Dazu muss
 python ab 2.6 installiert sein,  falls reale serielle Daten gelesen
-werden sollen noch pyserial. In diesem Falle steht gpsd als Dekoder
+werden sollen noch <a href="http://pyserial.sourceforge.net/">pyserial</a>. In diesem Falle steht gpsd als Dekoder
 ja nicht zur Verfügung, es wird dann ein interner Dekoder genutzt,
 der die wichtigsten NMEA Sequenzen dekodiert und ein AIS Dekoder in
 python, der ebenfalls durch das gpsd Projekt bereitgestellt wird.</P>
@@ -204,7 +202,7 @@ Verzeichnisstruktur installiert:</P>
 			<P>Verzeichnis für die Kartendateien. Jeder verwendete Kartensatz
 			muss in einem separaten Unterverzeichnis liegen. Dort hinein
 			müssen jeweils die avnav.xml und die erzeugten
-			Kartenverzeichnisse kopiert werden (siehe Karten konvertieren).</P>
+			Kartenverzeichnisse kopiert werden (siehe<a href="#Chartconvert"> Karten konvertieren</a>).</P>
 		</TD>
 	</TR>
 	<TR VALIGN=TOP>
@@ -278,7 +276,7 @@ Verzeichnisstruktur installiert:</P>
 		</TD>
 		<TD WIDTH=72%>
 			<P>Die verwendeten JS libraries für die WebApp.<BR>Das sind:<BR>*
-			OpenLayers<BR>* jQuery<BR>* less<BR>* movable-type (java script
+			  <a href="http://www.openlayers.org/">OpenLayers</a><BR>* <a href="http://jquery.com/">jQuery</a><BR>* <a href="http://lesscss.org/">less</a><BR>* <a href="http://www.movable-type.co.uk/scripts/latlong.html">movable-type</a> (java script
 			functions von movable type)</P>
 		</TD>
 	</TR>
@@ -304,11 +302,9 @@ Verzeichnisstruktur installiert:</P>
 		</TD>
 	</TR>
 </TABLE>
-<P><BR><BR>
-</P>
+<P>&nbsp;</P>
 <P>Bis auf die init scripte läuft die gesamte Software unter dem
-Nutzer pi. Die Installation muss allerdings als root erfolgen. 
-</P>
+  Nutzer pi. Die Installation muss allerdings als root erfolgen.</P>
 <P>Standardmässig wird die SD Karte für den pi mit 2 Partitionen
 versehen:</P>
 <UL>
@@ -317,7 +313,7 @@ versehen:</P>
 	<LI><P>eine root partition, ca. 2GB</P>
 </UL>
 <P>Bei meinem Image kommt dazu noch eine separate /data partition mit
-dem Rest der SD-Karte. Das empfiehlt sich in jedem Fall, da für die
+dem Rest der SD-Karte (wird beim ersten Start automatisch erzeugt). Das empfiehlt sich in jedem Fall, da für die
 Speicherung der Karten sehr viele kleine Dateien erzeugt werden und
 die standard-Partitionen darauf nicht gut vorbereitet sind.</P>
 <P>Die Installation der Software hängt stark davon ab, ob mein Image
@@ -325,22 +321,22 @@ verwendet wird, oder ob von einem „stock“ Image ausgegangen wird.
 Beide Varianten beschreibe ich kurz.</P>
 <H3 CLASS="western">Installation mit avnav image</H3>
 <P>Für diese Variante einfach unter Windows/Linux/OSx das image von
-XXX herunterladen und wie unter XXX beschrieben auf eine SD Karte
+  <a href="http://www.wellenvogel.de/software/avnav/download">wellenvogel.de</a> herunterladen und wie unter <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a> (raw images)  beschrieben auf eine SD Karte
 spielen. Danach muss man sich einmal auf dem pi einloggen und ggf.
 ein paar Anpassungen vornehmen. Am einfachsten geht das, wenn man den
 pi im LAN anschließt und einen router/dhcp-server (z.B. Fritz Box)
 aktiv hat. Dann holt er sich per DHCP eine IP Adresse. Diese kann man
 auf dem Router sehen bzw. unter Linux z.B. per ping -b
-&lt;brodcast-address&gt; herausfinden.</P>
+&lt;brodcast-address&gt; herausfinden. Alternativ kann man auch Tastatur + Bildschirm an den Pi direkt anschliessen.</P>
 <P>Die Paßworte sind auf Standardwerte gesetzt – also login pi,
 Paßwort raspberry. Per sudo -i wechselt man in eine root shell. Man
 sollte kontrollieren, ob die /data partition existier und gemounted
 ist (df -h, mount). Anschliessend sollte man noch das Paßwort für
-den user pi ändern (passwd). Per XXX sollte ein Übertakten auf 1GHz
+den user pi ändern (passwd). Per sudo raspi-config (siehe u.a. <a href="http://www.raspberrypi.org/phpBB3/viewtopic.php?f=91&t=4751">hier</a>) sollte ein Übertakten auf 1GHz
 eingestellt werden.</P>
 <P>Am schwierigsten kann sich das Aufsetzen des WLAN gestalten. Das
 hängt vom verwendeten Adapter ab. Ich habe einen  rtl8192cu
-verwendet (XXX). Dazu musste ich den hostapd (/usr/sbin/hostapd)
+verwendet (TP-Link TL-WN725N). Dazu musste ich den hostapd (/usr/sbin/hostapd)
 austauschen gegen den von
 <A HREF="http://dl.dropbox.com/u/1663660/hostapd/hostapd.zip">http://dl.dropbox.com/u/1663660/hostapd/hostapd.zip</A>.
 Der originale ist noch als hostapd.ori vorhanden – also ggf. wieder
@@ -356,7 +352,7 @@ die Namensauflösung nicht funktioniert). Auf dem pi läuft ein DHCP
 server und ein DNS server (dnsmasqd). Die Konfiguration kann
 angepasst werden in  /etc/dnsmasqd.conf. Wenn der pi im LAN
 angeschlossen ist, versucht er per DHCP eine Adresse zu bekommen, das
-WLAN wird per NAT an das LAN interface weitergereicht. 
+WLAN wird per NAT an das LAN interface weitergereicht (damit kann man den pi ins Internet bringen - z.B. zum Installieren von Software- und auch per Wlan verbundene Geräte haben dann Internet-Zugriff).
 </P>
 <P>Für die Auslieferung der Karten ist der lighthttpd installiert.
 Dieser kann gff. Auch für weitere Funktionen genutzt werden. Er ist
@@ -365,14 +361,13 @@ server von avnav weitergeleitet (dieser lauscht auf port 8080).</P>
 <P>Wenn alles richtig aufgesetzt ist, sollte sich unter der url
 <A HREF="http://avnav/">http://avnav</A> die Einstiegsseite der
 WebApp öffnen.</P>
-<P>Mit sudo service avnav status kann man den Status des servers
-prüfen, mit sudo service avnav start bzw. sudo service avnav stop
-kann man ihn starten und stoppen.</P>
+<P>Mit <em>sudo service avnav status</em> kann man den Status des servers
+prüfen, mit <em>sudo service avnav start</em> bzw. <em>sudo service avnav stop</em> kann man ihn starten und stoppen.</P>
 <H3 CLASS="western">Installation mit „stock image“</H3>
-<P>Hierbei zunächst das image von
+<P>Hierbei zunächst das debian wheezy image von
 <A HREF="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</A>
 installieren (Anleitung siehe dort). Danach muss man eine Reihe
-weitere Pakete installieren, die Konfigurationen vornehmen und zum
+weiterer Pakete installieren, die Konfigurationen vornehmen und zum
 Schluss die avnav software installieren. Nach dem ersten reboot
 Übertakten auf 1GHz einstellen.<BR>Hier eine kurze Dokumentation der
 Schritte (ohne ganz detaillierte Beschreibung):</P>
@@ -421,18 +416,18 @@ Schritte (ohne ganz detaillierte Beschreibung):</P>
 	      = 81<BR>alias.url = ( &quot;/charts&quot; =&gt;
 	&quot;/data/avnav/charts/&quot; )</P>
 	<LI><P>install avnav<BR>Herunterladen der aktuellen Software von
-	XXX. Auspacken des archives als pi im Verzeichnis /home/pi/avnav.
+	    <a href="http://www.wellenvogel.de/software/avnav/download">wellenvogel.de</a>. Auspacken des archives als pi im Verzeichnis /home/pi/avnav.
 	Danach Aufruf (als root) ./setup.sh part</P>
 	<LI><P>checken service avnav status.</P>
 </UL>
 <P><BR><BR>
 </P>
-<H2 CLASS="western">Konvertieren der Karten</H2>
+<H2 CLASS="western"><a name="Chartconvert">Konvertieren der Karten</a></H2>
 <P>Damit Karten in der WebApp verwendet werden können, müssen sie
 in einem „Kachelformat“ vorliegen. Das ist das Format, das durch
 Dienste wie OpenStreetMaps oder GoogleMaps benutzt wird. Eine
 Kartenkachel ist 256x256 Pixel gross. Die Welt wird dabei auf eine
-ebene Fläche projeziert (kann man sich wie einen Papierzylinder
+ebene Fläche projeziert (kann man sich das wie einen Papierzylinder
 vorstellen, der senkrecht steht und am Äquator um die Erde gewickelt
 wird). Jeder Punkt mit seinen Koordinaten (Länge/Breite) wird dann
 auf diesen Zylinder projeziert. Wie man das macht, welche Einheiten
@@ -457,7 +452,7 @@ bis 18..19. Das bedeutet (level 19) 2^19x2^19 Kacheln.</P>
 verwendet. Diese lädt die entsprchenden Kartenkacheln je nach zoom
 level vom raspberry und zeigt sie an. OpenStreetMaps verwendet
 typischerweise diese Library.</P>
-<P>Man kann sich leicht vorstellen, das bei hohen zoomleveln schnell
+<P>Man kann sich leicht vorstellen, das bei hohen Zoomleveln schnell
 große Datenmengen zusammenkommen. Daher müssen wir für unsere
 Kartenkacheln ähnlich vorgehen, wie es auch bei den Papierkarten
 ist: Für Übersichten ein kleinerer Zoom Level, Detailkarten größer
@@ -483,7 +478,8 @@ support für 2 „Wege“ der Kartenerstellung eingebaut:</P>
 <UL>
 	<LI><P>Konvertierung von Karten mittels <A HREF="http://www.gdal.org/">GDAL</A>
 	(z.B. BSB) – hier kann alles gelesen werden, was gdal kann</P>
-	<LI><P>Nutzung von downloads mit dem Mobile Atlas CreatorXXX</P>
+	<LI>
+	  <P>Nutzung von downloads mit dem <a href="http://mobac.sourceforge.net/">Mobile Atlas Creator</a>.</P>
 </UL>
 <H3 CLASS="western">Konvertierung von Karten mit GDAL</H3>
 <P>Für diese Konvertierung müssen einige Tools installiert werden.
@@ -511,15 +507,13 @@ durchgeführt, diese ebenfalls herunterladen
 und in einem Verzeichnis entpacken. 
 </P>
 <P>Im gleichen Verzeichnis sollte sich das python script
-read_charts.py befinden. 
-</P>
+read_charts.py befinden (aus dem download von <a href="http://www.wellenvogel.de/software/avnav/download">wellenvogel.de</a>)</P>
 <P>Nach der Installation kann die Konvertierung starten. Für jeden
 Kartensatz sollte ein output Verzeichnis vorgesehen werden, in dieses
-werden Zwischendateien geschrieben und final unter tiles auch die
+werden Zwischendateien geschrieben und final unter <strong>tiles</strong> auch die
 erzeugten Kacheln. Wenn dieses output Verzeichnis nicht gelöscht
 wird, können später in einem update Modus nur die geänderten
-Kacheln neu erzeugt werden. 
-</P>
+Kacheln neu erzeugt werden. Leider gibt es für den Konverter keine grafische Oberfläche, man muss also die Kommandozeile bemühen (cmd unter windows, Terminal auf dem Mac...). </P>
 <P>Die Konvertierung verläuft in 2 Schritten:</P>
 <UL>
 	<LI><P>Sortierung der Karten in layer (und ggf. soweit nötig
@@ -531,12 +525,13 @@ Kacheln neu erzeugt werden.
 gelesen und Auflösung und Abdeckung wird ermittelt (falls nötig
 wird konvertiert). Im Ergebnis entsteht im output Verzeichnis eine
 Datei chartlist.xml. Der Aufruf dazu lautet:</P>
-<PRE>read_charts.py outdir inputdir [inptdir...]
-</PRE><P>
+<PRE>read_charts.py outdir inputdir [inputdir...]
+</PRE>
+<P>
 Anschliessend sollte die chartlist.xml noch einmal mit einem
 Texteditor überprüft werden, manchmal macht es Sinn, Kartendateien
 noch einem anderen Layer zuzuordnen. Das kann einfach durch
-Verschieben des entsprechenden XML Elements erfolgen.</P>
+Verschieben des entsprechenden XML Elements erfolgen. Man kann sich dazu an den Namen der Karten orientieren - meist mach es Sinn Karten vergleichbaren Detailgrades in einen Layer zu verschieben.</P>
 <P>Der zweite Schritt ist etwas langwieriger, hier erfolgt die
 eigentliche Erzeugung der Kartenkacheln. Der Aufruf:</P>
 <PRE>read_charts.py outdir
@@ -552,11 +547,12 @@ noch vor den anderen Parametern bei Schritt 1 angeben:</P>
 Falls sich einige Karten geändert haben (z.B. Chart Updates), kann
 man Schritt 2 einfach wiederholen mit dem Parameter -u:</P>
 <PRE>read_charts.py -u outdir
-</PRE><P>
+</PRE>
+<P>
 Als Ergebnis erhält man unter outdir/tiles eine Datei avnav.xml
 sowie ein Verzeichnis für jeden layer (mit weiteren
-Unterverzeichnissen). Der Inhalt dieses Verzeichnisses muss dann auf
-den raspberry kopiert werden – in ein Verzeichnis unter
+Unterverzeichnissen). Der Inhalt dieses tiles Verzeichnisses muss dann auf
+den raspberry kopiert werden – in ein separates Verzeichnis unter
 /data/avnav/charts. Dazu kann man unter Windows sinnvoll winscp
 benutzen. Am Ende muss z.B. im Verzeichnis /data/avnav/charts/Satz1
 eine Datei avnav.xml vorhanden sein, darunter dann die
@@ -583,8 +579,7 @@ pi unter /data/avnav/charts/Satzx kopieren. Dazu aus dem
 Programmverzeichnis von MOBAC die gespeicherte Atlas-Datei in das
 gleiche Verzeichnis kopieren (der server wird automatisch eine
 avnav.xml erzeugen).</P>
-<P><BR><BR>
-</P>
+<P>&nbsp;</P>
 <H2 CLASS="western">Die WebApp</H2>
 <P>Um die auf dem raspberry pi installierten Karten nutzen zu können,
 gibt es eine in HTML/Java Script geschriebene WebApp. Dazu noch ein
@@ -620,7 +615,7 @@ Benutzung. Ihre wesentlichen Fähigkeiten:</P>
 Version, danach einige technische Details.</P>
 <H3 CLASS="western">Die Bedienung</H3>
 <P>Nach dem Aufruf der Start-Url landet man auf der Einstigesseite.</P>
-<P><IMG SRC="navi-start.png" NAME="Grafik3" ALIGN=RIGHT WIDTH=794 HEIGHT=452 BORDER=0><BR CLEAR=RIGHT><BR><BR>
+<P><IMG SRC="navi-start.png" NAME="Grafik3"  WIDTH=794 HEIGHT=452 BORDER=0>
 </P>
 <P>Im Hauptbereich der Seite befindet sich die Liste der vom Server
 gefundenen Kartensätze (Verzeichnisse unter /data/avnav/charts mit
@@ -630,12 +625,12 @@ Navigationsseite mit dem enstprechenden Kartensatz.</P>
 Button-Leiste. Von hier aus erreich man eine Status-Seite des Servers
 und die Hilfe.</P>
 <H4 CLASS="western">Die Navigationsseite</H4>
-<P><IMG SRC="navi-1.png" NAME="Grafik4" ALIGN=RIGHT WIDTH=791 HEIGHT=420 BORDER=0><BR CLEAR=RIGHT><BR><BR>
+<P><IMG SRC="navi-1.png" NAME="Grafik4" WIDTH=791 HEIGHT=420 BORDER=0>
 </P>
 <P>Dies ist die Hauptansicht. In der Mitte befindet sich die
 Kartenansicht mit der Schiffsposition (roter Pfeil). Die gelben und
 grünen Dreiecke mit Pfeilspitzen sind empfangene AIS Ziele in der
-Nähe (10nm) mit ihrem aktuellen Kurs sowie Name und MMSI. Die
+Nähe (10nm) mit ihrem aktuellen Kurs sowie Name oder MMSI. Die
 organgefarbene Linie zeigt zum aktiven Wegepunkt. Die Karte kann mit
 den normalen Gesten verschoben oder gezoomt werden, zum zoomen können
 auch die Buttons +/- auf der rechten Leiste benutzt werden. 
@@ -698,7 +693,7 @@ Karte jeweils auf den Wegepunkt bzw. die Bootsposition.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD WIDTH=89>
-			<P ALIGN=CENTER><IMG SRC="../avnav_viewer/images/Layer40.png" NAME="Grafik5" ALIGN=LEFT WIDTH=40 HEIGHT=40 BORDER=0><BR CLEAR=LEFT><BR>
+			<P ALIGN=CENTER><IMG SRC="../viewer/images/Layer40.png" NAME="Grafik5" ALIGN=LEFT WIDTH=60 HEIGHT=52 BORDER=0><BR CLEAR=LEFT><BR>
 			</P>
 		</TD>
 		<TD WIDTH=641>
@@ -709,7 +704,7 @@ Karte jeweils auf den Wegepunkt bzw. die Bootsposition.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD WIDTH=89>
-			<P ALIGN=CENTER><IMG SRC="../avnav_viewer/images/Sail-Boat-40.png" NAME="Grafik7" ALIGN=LEFT WIDTH=62 HEIGHT=62 BORDER=0><BR CLEAR=LEFT><BR>
+			<P ALIGN=CENTER><IMG SRC="../viewer/images/Sail-Boat-40.png" NAME="Grafik7" ALIGN=LEFT WIDTH=59 HEIGHT=59 BORDER=0><BR CLEAR=LEFT><BR>
 			</P>
 		</TD>
 		<TD WIDTH=641>
@@ -719,7 +714,7 @@ Karte jeweils auf den Wegepunkt bzw. die Bootsposition.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD WIDTH=89>
-			<P ALIGN=CENTER><IMG SRC="../avnav_viewer/images/Marker1.png" NAME="Grafik6" ALIGN=LEFT WIDTH=66 HEIGHT=66 BORDER=0><BR CLEAR=LEFT><BR>
+			<P ALIGN=CENTER><IMG SRC="../viewer/images/Marker1.png" NAME="Grafik6" ALIGN=LEFT WIDTH=71 HEIGHT=71 BORDER=0><BR CLEAR=LEFT><BR>
 			</P>
 		</TD>
 		<TD WIDTH=641>
@@ -733,7 +728,7 @@ Karte jeweils auf den Wegepunkt bzw. die Bootsposition.</P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD WIDTH=89>
-			<P ALIGN=CENTER><IMG SRC="../avnav_viewer/images/Cancel40.png" NAME="Grafik8" ALIGN=LEFT WIDTH=40 HEIGHT=40 BORDER=0><BR CLEAR=LEFT><BR>
+			<P ALIGN=CENTER><IMG SRC="../viewer/images/Cancel40.png" NAME="Grafik8" ALIGN=LEFT WIDTH=66 HEIGHT=55 BORDER=0><BR CLEAR=LEFT><BR>
 			</P>
 		</TD>
 		<TD WIDTH=641>
@@ -750,11 +745,11 @@ Karte jeweils auf den Wegepunkt bzw. die Bootsposition.</P>
 <P>unlock Boot-&gt;unlock Marker-&gt;Karte verschieben bis Marker auf
 gewünschter Pos (Zoom nutzen)-&gt;lock Marker-&gt;lock Boot 
 </P>
-<P><IMG SRC="navi-2.png" NAME="Grafik9" ALIGN=RIGHT WIDTH=792 HEIGHT=475 BORDER=0><BR CLEAR=RIGHT>Dieses
+<P><IMG SRC="navi-2.png" NAME="Grafik9" WIDTH=792 HEIGHT=475 BORDER=0 ALIGN=middle><BR CLEAR=RIGHT>Dieses
 Bild zeigt einen gesetzten Marker (locked) – das Boot ist
 allaerdings noch nicht auf Kurs (daher noch keine ETA).</P>
 <P>Mit einem Klick auf die AIS Info gelangt man zur AIS Übersicht:</P>
-<P><IMG SRC="navi-ais.png" NAME="Grafik10" ALIGN=RIGHT WIDTH=786 HEIGHT=445 BORDER=0><BR CLEAR=RIGHT>Auf
+<P><IMG SRC="navi-ais.png" NAME="Grafik10" WIDTH=786 HEIGHT=445 BORDER=0><BR CLEAR=RIGHT>Auf
 dieser Seite sieht man alle empfangenen AIS Ziele im Umkreis von ca.
 10nm zur Bootsposition (sortiert nach CPA). Mit Klick auf eine Zeile
 springt man zurück zur Karten-Anzeige mit dem gewählten AIS Ziel im
@@ -766,7 +761,7 @@ Zieles.</P>
 zurück.</P>
 <P>Von der Startseite kann man noch eine Status-Seite erreichen –
 hier werden interne Status-Infos des Servers angezeigt.</P>
-<P><IMG SRC="navi-status.png" NAME="Grafik11" ALIGN=RIGHT WIDTH=782 HEIGHT=474 BORDER=0><BR CLEAR=RIGHT>Wichtig
+<P><IMG SRC="navi-status.png" NAME="Grafik11" WIDTH=782 HEIGHT=474 BORDER=0><BR CLEAR=RIGHT>Wichtig
 ist hier insbesondere der Status der „Serial reader“ - dieser
 zeigt, ob sie NMEA Daten empfangen.</P>
 <H2 CLASS="western">Lizenzen und verwendete Libraries</H2>
