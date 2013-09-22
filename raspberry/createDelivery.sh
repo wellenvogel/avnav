@@ -97,14 +97,14 @@ wlog "starting download from $baseurl"
 find $TMPDIR/svn -type d -name '.svn' -exec rm -rf {} \;
 TDIR=$TMPDIR/avnav/program/viewer
 wlog "writing files for $TDIR"
-( cd $TDIR && cp -r -p $TMPDIR/$SVNBASE/avnav_viewer/* . ) || err "cp viewer failed"
+( cd $TDIR && cp -r -p $TMPDIR/$SVNBASE/viewer/* . ) || err "cp viewer failed"
 chown -R 1000:1000 $TDIR || err "chown viewer failed"
 
 TDIR=$TMPDIR/avnav/program/server
 wlog "writing files for $TDIR"
 for f in avnav_server.py ais.py create_overview.py
 do
-  ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/avnav_server/$f . ) || err "cp $f failed"
+  ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/server/$f . ) || err "cp $f failed"
   chown 1000:1000 $TDIR/$f || err "chown $f failed"
   chmod a+rx $TDIR/$f || err "chmod $f failed"
 done
@@ -112,7 +112,7 @@ TDIR=$TMPDIR/avnav/program/convert
 wlog "writing files for $TDIR"
 for f in read_charts.py
 do
-  ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/avnav_chartconvert/$f . ) || err "cp $f failed"
+  ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/chartconvert/$f . ) || err "cp $f failed"
   chown 1000:1000 $TDIR/$f || err "chown $f failed"
   chmod a+rx $TDIR/$f || err "chmod $f failed"
 done
@@ -120,7 +120,7 @@ TDIR=$TMPDIR/avnav/program/raspberry
 wlog "writing files for $TDIR"
 for f in settime settime.c avnav_server.xml avnav check_parts setup.sh check_wlan
 do
-  ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/avnav_raspberry/$f . ) || err "cp $f failed"
+  ( cd $TDIR && cp -p $TMPDIR/$SVNBASE/raspberry/$f . ) || err "cp $f failed"
   chown 1000:1000 $TDIR/$f || err "chown $f failed"
   chmod a+rx $TDIR/$f || err "chmod $f failed"
 done
@@ -130,7 +130,7 @@ chmod u+s $TDIR/settime || err "chmod settime failed"
 
 TDIR=$TMPDIR/avnav/program/libraries
 wlog "writing files for $TDIR"
-for lib in OpenLayers-2.12/OpenLayers.js OpenLayers-2.12/theme/default/style.css jquery/jquery-1.9.1.min.js jquery/jquery-ui.js jquery/jquery.ui.touch-punch.min.js jquery/jquery-ui.css jquery/jquery.cookie.js movable-type/geo.js movable-type/latlon.js `echo $jqueryImages | tr ' ' '\012' | sed 's?.*?jquery/images/&?'`
+for lib in less/less-1.4.1.min.js OpenLayers-2.12/OpenLayers.js OpenLayers-2.12/theme/default/style.css jquery/jquery-1.9.1.min.js jquery/jquery-ui.js jquery/jquery.ui.touch-punch.min.js jquery/jquery-ui.css jquery/jquery.cookie.js movable-type/geo.js movable-type/latlon.js `echo $jqueryImages | tr ' ' '\012' | sed 's?.*?jquery/images/&?'`
 do
   tdir=`dirname $TDIR/$lib`
   if [ ! -d $tdir ] ; then
