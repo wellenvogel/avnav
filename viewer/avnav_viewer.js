@@ -474,13 +474,16 @@ OpenLayers.Layer.AvNavXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
   //handle our list of bounding boxes - return null if the tile is not within
   getURL: function (bounds) {
 	  var fits=false;
-	  if (this.boundings != null){
+	  if (this.boundings != null && this.boundings.length != 0){
 		  for (var i in this.boundings){
 			  if (this.boundings[i].intersectsBounds(bounds)){
 				  fits=true;
 				  break;
 			  }
 		  }
+	  }
+	  else {
+		  fits=true;
 	  }
 	  if (! fits){
 		  return null;
@@ -1031,7 +1034,8 @@ function queryAISData(){
 		context: ctxdata,
 		success: function(data,status){
 			aisErrors=0;
-			aisList=data;
+			if (data.class && data.class == "error") aisList=[];
+			else aisList=data;
 			handleAISData();
 			window.clearTimeout(aisTimer);
 			aisTimer=window.setTimeout(queryAISData,properties.aisQueryTimeout);
@@ -1117,7 +1121,7 @@ function handleAISData(){
 		if (! aisWarningAis) aisWarningTarget=null;
 		else aisWarningTarget=aisWarningAis.mmsi;
 	}
-	aisList.sort(aisSort);
+	if (aisList) aisList.sort(aisSort);
 	updateAISInfoPanel();
 	if (map){
 		map.updateAIS(aisList);
