@@ -101,6 +101,16 @@ if (isset($_REQUEST['demo'])){
 		}
 	}
 }
+$rq='gps';
+if (isset($_REQUEST['request'])){
+	$rq=$_REQUEST['request'];
+}
+if ($rq == 'listCharts'){
+		$rt['status']='OK';
+		$de=array('name'=>'demo','url'=>'.','charturl'=>'.');
+		$rt['data']=array($de);
+	}
+
 
 header('Content-type: application/json');
 echo json_encode($rt);
