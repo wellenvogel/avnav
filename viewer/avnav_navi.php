@@ -21,98 +21,81 @@
 #  DEALINGS IN THE SOFTWARE.
 ################################################################################
 
-#simple gpx parsing for demo mode
+# demo for avnav
+# we have files for each type of request, that contain the json data collected over a time (should be > 1h)
+# typically the demo runs with increased speed...
+# with the current time we compute an offset into the files and directly fetch the json data from there
 
-$trkpnt=null;
-$currentTs=null;
-$idx=0;
-$ptcounter=-1;
-function startElement($parser, $name, $attrs){
-	global $trkpnt,$currentTs,$ptcounter,$idx;
-	if (strtolower($name) == "trkpt"){
-		$ptcounter++;
-		if ($ptcounter == $idx) {
-			$trkpnt=$attrs;
-		}		
-	}
-	if (strtolower($name) == "time" && $ptcounter == $idx){
-		$currentTs=" ";
-	}
-}
+# a description of testdata files
+# they are build of fixed len records
+# each record consist of a timestamp, a space and the json data (padded with spaces)
 
-function endElement($parser,$name){
-	global $currentTs,$trkpnt;
-	if ($currentTs != null && $currentTs != " "){
-		if ($trkpnt != null){
-			$trkpnt['time']=preg_replace("/^ */",'',$currentTs);
-		}
-		$currentTs=null;
+$tstdata=array(
+	'gps'=>array('name'=>'json-gps.tst.fxl'),
+	'ais'=>array('name'=>'json-ais.tst.fxl'),
+	'track'=>array('name'=>'json-trk.tst.fxl'),
+);
+#for finding the entry in the file we use a fairly simple algorithm:
+#read the first line, determine recordlength and starttime
+#read the last line (eof-recordlength), determine endtime
+#compute timeoffset as offset of current minute/second in the file
+#compute fileoffset as timeoffset/(end-start) * filesize - round to n*recordlen
+function readFileEntry($rqtype){
+	global $tstdata;
+	$fdata=$tstdata[$rqtype];
+	if (! isset($fdata)) return "{'status':'no fdata'}";
+	$fname=$fdata['name'];
+	if (! file_exists($fname)){
+		return "{'status':'file $fname does not exist'}";
 	}
-}
-
-function characterHandler($parser,$data){
-	//echo "character handler $data\n";
-	global $currentTs;
-	if ($currentTs != null){
-		$currentTs=$data;
-	}
-}
-
-$rt=array('class'=>'error');
-if (isset($_REQUEST['demo'])){
-	$fname=$_REQUEST['demo'];
-	$fname=preg_replace('?/*?','',$fname); #minimal security...
-	$fname=dirname(__FILE__).DIRECTORY_SEPARATOR."..".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR.$fname;
-	$idxname=$fname.".idx";
-	if (file_exists($fname)){
-		$f=fopen($fname,"r");
-		if (! $f) die("unable to open demo file $fname");
-		$idx=-1;
-		if (file_exists($idxname)){
-			$if=fopen($idxname,"r");
-			$idx=preg_replace('/\n/','',fgets($if));
-			fclose($if);
-		}
-		$idx++;
-		$xml_parser=xml_parser_create();
-		xml_set_element_handler($xml_parser, "startElement", "endElement");
-		xml_set_character_data_handler($xml_parser,"characterHandler");
-		while ($data = fread($f, 4096)) {
-			if (!xml_parse($xml_parser, $data, feof($f))) {
-				die("parser error");
-			}
-		}
-		fclose($f);
-		if ($trkpnt == null){
-			$idx=-1;
-		}
-		$if=fopen($idxname,"w");
-		if ($if){
-			fputs($if,"".$idx."\n");
-			fclose($if);
-		}
-		if ($trkpnt != null) {
-			$rt['class']="TPV";
-			$rt['tag']="GGA";
-			$rt['mode']=2;
-			$rt['lat']=$trkpnt['LAT'];
-			$rt['lon']=$trkpnt['LON'];
-			$rt['time']=$trkpnt['time'];
-		}
-	}
+	$h=fopen($fname,"rb");
+	if (! $h) return "";
+	$first=preg_replace('/\n/','',fgets($h));
+	$rlen=strlen($first)+1;
+	//echo "rlen=$rlen, first=$first\n";
+	fseek($h,-$rlen,SEEK_END);
+	$last=preg_replace('/\n/','',fgets($h));
+	//echo "last=$last\n";
+	$farr=preg_split('/ +/',$first,3);
+	$larr=preg_split('/ +/',$last,3);
+	$tdiff=$larr[0]-$farr[0];
+	//echo "first=".$farr[0].", delta=$tdiff\n";
+	$flen=ftell($h);
+	$cur=localtime();
+	$ftime=localtime($farr[0]);
+	$offsettime=mktime($ftime[2],$cur[1],$cur[0],$ftime[4]+1,$ftime[3],$ftime[5]+1900);
+	//only add/sub 1h if we are within a tolerance we have for all different files
+	if ($offsettime > ($larr[0]+100)) $offsettime-=3600;
+	if ($offsettime < ($farr[0]-100)) $offsettime+=3600;
+	if ($offsettime < $farr[0]) $offsettime=$farr[0];
+	if ($offsettime > $larr[0]) $offsettime=$larr[0];
+	//echo "offset ".date("r",$offsettime)."\n";
+	$offset=($offsettime-$farr[0])/$tdiff;
+	$obytes=$offset*$flen;
+	$obytes=floor($obytes/$rlen)*$rlen;
+	//echo "otime=$offsettime, offset=$offset,bytes=$obytes\n";
+	fseek($h,$obytes,SEEK_SET);
+	$entry=preg_replace('/\s*\n$/','',fgets($h));
+	//echo "data=$entry\n";
+	$edata=preg_split('/\s+/',$entry,2);
+	return $edata[1];
 }
 $rq='gps';
 if (isset($_REQUEST['request'])){
 	$rq=$_REQUEST['request'];
 }
+$isEncoded=1;
 if ($rq == 'listCharts'){
 		$rt['status']='OK';
 		$de=array('name'=>'demo','url'=>'.','charturl'=>'.');
 		$rt['data']=array($de);
-	}
-
-
+		$isEncoded=0;
+}
+else {
+	$rt=readFileEntry($rq);
+}
 header('Content-type: application/json');
-echo json_encode($rt);
+if (! $isEncoded) echo json_encode($rt);
+else echo $rt;
 
 ?>
