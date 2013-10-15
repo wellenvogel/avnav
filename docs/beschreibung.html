@@ -16,7 +16,7 @@
 </HEAD>
 <BODY LANG="de-DE" DIR="LTR">
 <H1>Raspberry Pi als Bordcomputer / Navigation im Browser	</H1>
-<P>22.09.2013</P>
+<P>15.10.2013</P>
 <P><BR>
 </P>
 <H2 CLASS="western">Motivation</H2>
@@ -168,6 +168,7 @@ python, der ebenfalls durch das gpsd Projekt bereitgestellt wird.</P>
 <P>Der Server kann in weiten Grenzen durch ein xml File konfiguriert
 werden, für die verschiedenen Nutzungsfälle liefere ich
 dokumentierte Beispiele mit.</P>
+<P>In der Auslieferung für den pi ist die Software so konfiguriert, dass sie alle per USB angebundenen seriellen Schnittstellen öffnet, dort versucht NMEA DAten zu erkennen (per auto-bauding von 4800 B/s bis 38400 B/s) und diese dann verarbeitet. Wenn eine gültige Uhrzeit erkannt wird, wird die Systemzeit gesetzt. Ausserdem wird (falls ein Bluetooth adapter erkannt wurde) versucht, mit allen seriellen Bluetooth Geräten Verbindung aufzunehmen und auch von dort NMEA Daten zu empfangen. Damit sollte im Normalfall keine weitere Konfiguration nötig sein und NMEA Daten sofort erkannt werden (kann man im Status display prüfen - s.u.).</P>
 <H2 CLASS="western">Software auf dem raspberry</H2>
 <P>Auf dem raspberry ist die Software in der folgenden
 Verzeichnisstruktur installiert:</P>
@@ -527,11 +528,12 @@ wird konvertiert). Im Ergebnis entsteht im output Verzeichnis eine
 Datei chartlist.xml. Der Aufruf dazu lautet:</P>
 <PRE>read_charts.py outdir inputdir [inputdir...]
 </PRE>
-<P>
-Anschliessend sollte die chartlist.xml noch einmal mit einem
-Texteditor überprüft werden, manchmal macht es Sinn, Kartendateien
-noch einem anderen Layer zuzuordnen. Das kann einfach durch
-Verschieben des entsprechenden XML Elements erfolgen. Man kann sich dazu an den Namen der Karten orientieren - meist mach es Sinn Karten vergleichbaren Detailgrades in einen Layer zu verschieben.</P>
+<P>Falls die tiler_tools sich nicht im gleichen Verzeichnis befinden, kann man das mit der Option -a angeben:</P>
+<pre>read_charts.py -a \User\SomeUSer\SomeDir\tiler_tools outdir inputdir [inputdir...] </pre>
+<P>Anschliessend sollte die chartlist.xml noch einmal mit einem
+  Texteditor überprüft werden, manchmal macht es Sinn, Kartendateien
+  noch einem anderen Layer zuzuordnen. Das kann einfach durch
+  Verschieben des entsprechenden XML Elements erfolgen. Man kann sich dazu an den Namen der Karten orientieren - meist mach es Sinn Karten vergleichbaren Detailgrades in einen Layer zu verschieben.</P>
 <P>Der zweite Schritt ist etwas langwieriger, hier erfolgt die
 eigentliche Erzeugung der Kartenkacheln. Der Aufruf:</P>
 <PRE>read_charts.py outdir
@@ -759,6 +761,9 @@ wieder in den „Normalmodus“ - d.h. Anzeige des nächsten AIS
 Zieles.</P>
 <P>Mit dem zurück Button geht es unverändert zur Karten-Anzeige
 zurück.</P>
+<P>Wenn man einen Wegepunkt aktiv hat (Marker Button grün) und die Karte nicht auf das Schiff &quot;gelockt&quot; ist (Schiffsbutton nicht grün), wird beim Bewegen der Karte ein Kreuz im Zentrum gezeigt und unten erscheint eine Anzeig des aktuellen Abstandes vom Marker bzw. Schiff zum Kartenmittelpunkt. Damit kann man einfache Peilungen machen - Mittelpunkt auf Peilziel verschieben und Peilung ablesen.</P>
+<P><img src="center-measure.PNG" width="785" height="482" alt="center"></P>
+<P>Die Anzeige verschwindet nach 45s automatisch, wenn die Karte nicht bewegt wird, laternativ durch Klick auf die Daten.</P>
 <P>Von der Startseite kann man noch eine Status-Seite erreichen –
 hier werden interne Status-Infos des Servers angezeigt.</P>
 <P><IMG SRC="navi-status.png" NAME="Grafik11" WIDTH=782 HEIGHT=474 BORDER=0><BR CLEAR=RIGHT>Wichtig
