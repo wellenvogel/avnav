@@ -106,7 +106,7 @@ if [ "$1" = "update" ] ; then
   else
     upd=$2
   fi
-  x=`echo "$up" | grep '^http'`
+  x=`echo "$upd" | grep '^http'`
   doDelete=0
   if [ "$x" != "" ] ; then
     echo "download update from $upd"
