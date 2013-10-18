@@ -95,6 +95,7 @@ done
 wlog "starting download from $baseurl"
 ( cd $TMPDIR/svn && svn co $baseurl avnav) || err "svn co failed"
 find $TMPDIR/svn -type d -name '.svn' -exec rm -rf {} \;
+find $TMPDIR/svn  -name '.??*' -exec rm -rf {} \;
 TDIR=$TMPDIR/avnav/program/viewer
 wlog "writing files for $TDIR"
 ( cd $TDIR && cp -r -p $TMPDIR/$SVNBASE/viewer/* . ) || err "cp viewer failed"
@@ -144,8 +145,12 @@ chmod -R a+r $TDIR
 mv $TMPDIR/avnav/program/raspberry/setup.sh $TMPDIR/avnav
 
 wlog "creating tar file $1"
-(cd $TMPDIR  && rm -rf svn && tar -cf - .) | cat > $1 || err "unable to create tar file $1"
-
+(cd $TMPDIR  && tar -cf - --exclude=svn .) | cat > $1 || err "unable to create tar file $1"
+zipname=`echo $1 | sed s/\.[^.]*$//`-host.zip
+wlog "creating $zipname"
+( cd $TMPDIR/svn/avnav && rm -f library && mv ../../avnav/program/libraries library && zip -r --exclude=\*readme-nv.txt --exclude=\*convert_nv.py ../../host.zip * ) || err "unable to create $TMPDIR/host.zip"
+rm -f $zipname 2> /dev/null
+mv $TMPDIR/host.zip $zipname
 
 
 
