@@ -130,7 +130,7 @@ shrinkSecond(){
     [ "$partstart" != "" ] || err "unable to read start of partition 2 from $1 for shrink"
     loopback=`losetup -f --show -o $partstart $1` || err "losetup failed"
     wlog "running e2fsck on $loopback"
-    e2fsck -f $loopback
+    fsck.ext4 -f -y $loopback
     fsminsize=`resize2fs -P $loopback | awk -F': ' ' { print $2 } '` || err "unable to get minsize"
     [ "$fsminsize" != "" ] || err "unable to query minsize of partition 2 from $1"
     newminsize=`echo "a=$minsize*1024*1024/4096;b=$fsminsize+1000;if (a<b) c=b else c=a;c" | bc` || err "failed computing new size"
@@ -141,6 +141,7 @@ shrinkSecond(){
       resize2fs -p $loopback $newminsize || err "shrink failed"
       sleep 1
     fi
+    fsck.ext4 -f -y $loopback
     losetup -d $loopback
     [ "$2" != "" ] && return
     partnewsize=`echo "$newminsize * 4096" | bc` 
