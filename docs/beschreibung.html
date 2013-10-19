@@ -14,7 +14,7 @@
 	-->
 	</STYLE>
 </HEAD>
-<BODY LANG="de-DE" DIR="LTR">
+<BODY LANG="de-DE" DIR="LTR" style="max-width: 650px">
 <H1>Raspberry Pi als Bordcomputer / Navigation im Browser	</H1>
 <P>15.10.2013</P>
 <P><BR>
@@ -61,7 +61,7 @@ steht zum download unter einer open source Lizenz bereit.
 </P>
 <H2 CLASS="western">Überblick 
 </H2>
-<P><IMG SRC="overview.png" NAME="Grafik1" ALIGN=LEFT WIDTH=897 HEIGHT=784 BORDER=0><BR CLEAR=LEFT>Wie
+<P><IMG SRC="overview.png" NAME="Grafik1" ALIGN=LEFT WIDTH="600" BORDER=0><BR CLEAR=LEFT>Wie
 im Bild zu sehen, besteht die gesamte Lösung aus mehreren Teilen:</P>
 <UL>
 	<LI><P>Einem Raspberry Pi mit einer server software
@@ -116,7 +116,7 @@ einzelnen Teile ein wenig genauer ein.</P>
 unten) und meine Software. </P>
 <P>Der Hauptbestandteil der Sofware auf dem raspberry pi ist ein in
 python geschriebener Server. Im Folgenden beschreibe ich in groben Zügen, was dieser Server intern tut.</P>
-<P><IMG SRC="software.png" NAME="Grafik2" ALIGN=LEFT WIDTH=970 HEIGHT=495 BORDER=0><BR CLEAR=LEFT><BR><BR>
+<P><IMG SRC="software.png" NAME="Grafik2" ALIGN=LEFT WIDTH=600  BORDER=0><BR CLEAR=LEFT><BR><BR>
 </P>
 <P>Dieser Server versucht alle am raspberry angeschlossenen seriellen
 Geräte zu erkennen und deren NMEA Daten zu lesen. Typisch werden die
@@ -617,7 +617,7 @@ Benutzung. Ihre wesentlichen Fähigkeiten:</P>
 Version, danach einige technische Details.</P>
 <H3 CLASS="western">Die Bedienung</H3>
 <P>Nach dem Aufruf der Start-Url landet man auf der Einstigesseite.</P>
-<P><IMG SRC="navi-start.png" NAME="Grafik3"  WIDTH=794 HEIGHT=452 BORDER=0>
+<P><IMG SRC="navi-start.png" NAME="Grafik3"  WIDTH=600 BORDER=0>
 </P>
 <P>Im Hauptbereich der Seite befindet sich die Liste der vom Server
 gefundenen Kartensätze (Verzeichnisse unter /data/avnav/charts mit
@@ -627,7 +627,7 @@ Navigationsseite mit dem enstprechenden Kartensatz.</P>
 Button-Leiste. Von hier aus erreich man eine Status-Seite des Servers
 und die Hilfe.</P>
 <H4 CLASS="western">Die Navigationsseite</H4>
-<P><IMG SRC="navi-1.png" NAME="Grafik4" WIDTH=791 HEIGHT=420 BORDER=0>
+<P><IMG SRC="navi-1.png" NAME="Grafik4" WIDTH=600  BORDER=0>
 </P>
 <P>Dies ist die Hauptansicht. In der Mitte befindet sich die
 Kartenansicht mit der Schiffsposition (roter Pfeil). Die gelben und
@@ -664,7 +664,7 @@ Navigationsdaten. Links die Daten des aktuellen Wegepunktes (Marker):</P>
 <P>Ein Klick auf die linke bzw. rechte Seite der Leiste zentriert die
 Karte jeweils auf den Wegepunkt bzw. die Bootsposition.</P>
 <P>Auf der rechten Seite befindet sich eine Button-Leiste:</P>
-<TABLE WIDTH=760 BORDER=1 CELLPADDING=4 CELLSPACING=4>
+<TABLE WIDTH=90% BORDER=1 CELLPADDING=4 CELLSPACING=4>
 	<COL WIDTH=89>
 	<COL WIDTH=641>
 	<TR VALIGN=TOP>
@@ -747,11 +747,11 @@ Karte jeweils auf den Wegepunkt bzw. die Bootsposition.</P>
 <P>unlock Boot-&gt;unlock Marker-&gt;Karte verschieben bis Marker auf
 gewünschter Pos (Zoom nutzen)-&gt;lock Marker-&gt;lock Boot 
 </P>
-<P><IMG SRC="navi-2.png" NAME="Grafik9" WIDTH=792 HEIGHT=475 BORDER=0 ALIGN=middle><BR CLEAR=RIGHT>Dieses
+<P><IMG SRC="navi-2.png" NAME="Grafik9" WIDTH=600  BORDER=0 ALIGN=middle><BR CLEAR=RIGHT>Dieses
 Bild zeigt einen gesetzten Marker (locked) – das Boot ist
 allaerdings noch nicht auf Kurs (daher noch keine ETA).</P>
 <P>Mit einem Klick auf die AIS Info gelangt man zur AIS Übersicht:</P>
-<P><IMG SRC="navi-ais.png" NAME="Grafik10" WIDTH=786 HEIGHT=445 BORDER=0><BR CLEAR=RIGHT>Auf
+<P><IMG SRC="navi-ais.png" NAME="Grafik10" WIDTH=600  BORDER=0><BR CLEAR=RIGHT>Auf
 dieser Seite sieht man alle empfangenen AIS Ziele im Umkreis von ca.
 10nm zur Bootsposition (sortiert nach CPA). Mit Klick auf eine Zeile
 springt man zurück zur Karten-Anzeige mit dem gewählten AIS Ziel im
@@ -762,15 +762,15 @@ Zieles.</P>
 <P>Mit dem zurück Button geht es unverändert zur Karten-Anzeige
 zurück.</P>
 <P>Wenn man einen Wegepunkt aktiv hat (Marker Button grün) und die Karte nicht auf das Schiff &quot;gelockt&quot; ist (Schiffsbutton nicht grün), wird beim Bewegen der Karte ein Kreuz im Zentrum gezeigt und unten erscheint eine Anzeig des aktuellen Abstandes vom Marker bzw. Schiff zum Kartenmittelpunkt. Damit kann man einfache Peilungen machen - Mittelpunkt auf Peilziel verschieben und Peilung ablesen.</P>
-<P><img src="center-measure.PNG" width="785" height="482" alt="center"></P>
+<P><img src="center-measure.PNG" width="600" alt="center"></P>
 <P>Die Anzeige verschwindet nach 45s automatisch, wenn die Karte nicht bewegt wird, laternativ durch Klick auf die Daten.</P>
 <P>Von der Startseite kann man noch eine Status-Seite erreichen –
 hier werden interne Status-Infos des Servers angezeigt.</P>
-<P><IMG SRC="navi-status.png" NAME="Grafik11" WIDTH=782 HEIGHT=474 BORDER=0><BR CLEAR=RIGHT>Wichtig
+<P><IMG SRC="navi-status.png" NAME="Grafik11" WIDTH=600  BORDER=0><BR CLEAR=RIGHT>Wichtig
 ist hier insbesondere der Status der „Serial reader“ - dieser
 zeigt, ob sie NMEA Daten empfangen.</P>
 <H2 CLASS="western">Lizenzen und verwendete Libraries</H2>
-<TABLE WIDTH=100% BORDER=1 CELLPADDING=4 CELLSPACING=4>
+<TABLE WIDTH=90% BORDER=1 CELLPADDING=4 CELLSPACING=4>
 	<COL WIDTH=85*>
 	<COL WIDTH=85*>
 	<COL WIDTH=85*>
