@@ -49,7 +49,7 @@ Apr  4 17:04:22 raspberrypi kernel: [160175.254275] usb 1-1.2.4: SerialNumber: 0
 Apr  4 17:04:22 raspberrypi kernel: [160175.694841] usbcore: registered new interface driver rtl8192cu
 
 hotspot - see http://elinux.org/RPI-Wireless-Hotspot
-* sudo apt-get install hostapd dnsmasqd
+* sudo apt-get install hostapd dnsmasq
 we use 192.168.20.00 for our wireless setup
 20...254 - dhcp raspi
 10       - raspi itself
@@ -57,7 +57,7 @@ we use 192.168.20.00 for our wireless setup
 * etc/hosts
 192.168.20.10 avnav
 
-* /etc/dnsmasqd.conf
+* /etc/dnsmasq.conf
 interface=wlan0
 domain=avnav
 dhcp-range=192.168.20.20,192.168.20.254,255.255.255.0,12h
@@ -188,4 +188,50 @@ server.port                 = 81
 alias.url = ( "/charts" => "/data/avnav/charts/" )
 and in /home/pi/avnav/data/avnav_server.xml:
 <AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080" chartbaseurl="http://$host:81/charts/">
+* --  vi /etc/default/avnav
+FORWARD=8080
+
+
+
+14. update firmware and debian (2013/10/20):
+1. downloaded new firmware from https://github.com/raspberrypi/firmware/tree/master/boot
+   maybe could have been done by raspi-upgrade..
+2. update debian
+   as root:
+   apt-get update
+   apt-get upgrade
+   -- get error:  	files list file for package 'xserver-xorg-video-fbdev' is missing final newline
+					E: Sub-process /usr/bin/dpkg returned an error code (2)
+					fix by rm /var/lib/dpkg/info/xserver-xorg-video-fbdev.list
+   try apt-get remove x-window-system-core xserver-xorg 
+   apt-get remove xserver-xorg
+   apt-get autoremove
+   apt-get remove --purge xserver-xorg-video-fbdev
+   apt-get autoremove
+   apt-get remove xserver-xorg-core
+   apt-get autoremove
+   apt-get upgrade
+   ... out of disk space in between...
+   apt-get clean
+   apt-get remove task-desktop - see e.g. http://raspberrypi.stackexchange.com/questions/5258/how-can-i-remove-the-gui-from-raspbian-debian
+   hmm - was already removed
+   - corrupted fs...
+   
+ 15. new setup with /2013-09-25-wheezy-raspbian.img
+ 	german keyboard, overclock 1Ghz
+ 	apt-get update
+ 	apt-get install gpsd gpsd-clients python-gps bluetooth python-bluez python-pyudev hostapd dnsmasq python-serial lighttpd
+ 	do above changes....
+ 	bluetooth crashes on start
+ 	apt-get dist-upgrade
+ 	hmm - we must continue without bluetoothd - can do this by hand - see http://www.spinics.net/lists/linux-bluetooth/msg01905.html
+ 	after hciconfig hci0 up it works for us..
+ 		- add HCIDEVICES="hci0 hci1 hci2 hci3 hci4" to /etc/default/avnav
+ 	add FORWARD=1 to /etc/default/avnav
+ 	
+ 	
+ 	
+   
+   
+   
  
