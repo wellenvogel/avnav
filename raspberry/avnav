@@ -73,6 +73,13 @@ do_start()
 	  	iptables -A PREROUTING -t nat -p tcp -d $addr --dport 80 -j REDIRECT --to-ports $FORWARD
 	  done
 	fi
+	if [ "$HCIDEVICES" != "" ] ; then
+		for d in `echo $HCIDEVICES`
+		do
+		  	log_daemon_msg trying to enable bluetooth device $d
+			hciconfig $d up
+		done
+	fi
 	if [ ! -f $CONFIG ] ; then
 		log "trying to intialize $CONFIG"
 		cp $BASECONFIG $CONFIG 
