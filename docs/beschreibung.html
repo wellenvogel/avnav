@@ -397,7 +397,10 @@ Schritte (ohne ganz detaillierte Beschreibung):</P>
 	loopback<BR>iface eth0 inet dhcp<BR>allow-hotplug wlan0<BR>iface
 	wlan0 inet static<BR>address 192.168.20.10<BR>netmask
 	255.255.255.0<BR>up iptables-restore &lt; /etc/iptables.ipv4.nat</P>
-	<LI><P>/etc/hostapd/hostapd.conf<BR>interface=wlan0<BR>driver=rtl8192cu<BR>ssid=avnav<BR>hw_mode=g<BR>channel=6<BR>macaddr_acl=0<BR>auth_algs=1<BR>ignore_broadcast_ssid=0<BR>wpa=2<BR>wpa_passphrase=avnav-secret<BR>wpa_key_mgmt=WPA-PSK<BR>wpa_pairwise=TKIP<BR>rsn_pairwise=CCMP</P>
+	<LI><P>/etc/hostapd/hostapd.conf<BR>interface=wlan0<br>
+	#driver=nl80211 #original value
+	<BR>
+	driver=rtl8192cu<BR>ssid=avnav<BR>hw_mode=g<BR>channel=6<BR>macaddr_acl=0<BR>auth_algs=1<BR>ignore_broadcast_ssid=0<BR>wpa=2<BR>wpa_passphrase=avnav-secret<BR>wpa_key_mgmt=WPA-PSK<BR>wpa_pairwise=TKIP<BR>rsn_pairwise=CCMP</P>
 	<LI><P>/etc/default/hostapd<BR>DAEMON_CONF=&quot;/etc/hostapd/hostapd.conf&quot;</P>
 	<LI><P>check hostapd (see avnav image)</P>
 	<LI><P>set up ntp sync<BR>see <A HREF="http://catb.org/gpsd/gpsd.html">http://catb.org/gpsd/gpsd.html</A><BR>
@@ -415,11 +418,19 @@ Schritte (ohne ganz detaillierte Beschreibung):</P>
 	81 (so that our redirect from 80 to 8080 can
 	remain...):<BR>/etc/lighttpd/lighttpd.conf:<BR>server.port          
 	      = 81<BR>alias.url = ( &quot;/charts&quot; =&gt;
-	&quot;/data/avnav/charts/&quot; )</P>
-	<LI><P>install avnav<BR>Herunterladen der aktuellen Software von
+	&quot;/data/avnav/charts/&quot; )</P>    
+	<LI>enable port forwarding of port 80 to 8080 <br>
+	  in /etc/defaults/avnav:<br>
+	  FORWARD=8080
+    <LI>bluetooth workaround<br>
+      bluetoothd crashes on btd-122<br>
+      in /etc/default/avnav:<br>
+      HCIDEVICES=&quot;hci0 hci1 hci2 hci3 hci4&quot;<br>
+      started diese devices wenn avnav started<br>        
+  <LI>nstall avnav<BR>Herunterladen der aktuellen Software von
 	    <a href="http://www.wellenvogel.de/software/avnav/download">wellenvogel.de</a>. Auspacken des archives als pi im Verzeichnis /home/pi/avnav.
-	Danach Aufruf (als root) ./setup.sh part</P>
-	<LI><P>checken service avnav status.</P>
+	Danach Aufruf (als root) ./setup.sh part
+<LI>checken service avnav status.
 </UL>
 <P><BR><BR>
 </P>
