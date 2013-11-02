@@ -710,7 +710,7 @@ function formatTime(curDate){
 
 OpenLayers.Util.extend( OpenLayers.INCHES_PER_UNIT, {
     "NM": OpenLayers.INCHES_PER_UNIT["nmi"],
-    "cbl": OpenLayers.INCHES_PER_UNIT["nmi"]/10,
+    "cbl": OpenLayers.INCHES_PER_UNIT["nmi"]/10
 });
 
 //a bit a hack to determine the best zoom for a resolution
@@ -1982,11 +1982,12 @@ function handleMainPage(){
 				return;
 			}
 			var entryTemplate=$('.avn_mainpage #defaultChartEntry:first').clone();
-			$('.avn_mainpage #allSelections a').remove();
+			$('.avn_mainpage #allSelections div').remove();
 			for (e in data.data){
 				var chartEntry=data.data[e];
 				var domEntry=entryTemplate.clone();
-				domEntry.attr('href',"javascript:handleNavPage('"+chartEntry.url+"','"+chartEntry.charturl+"')");
+				//domEntry.attr('href',"javascript:handleNavPage('"+chartEntry.url+"','"+chartEntry.charturl+"')");
+				domEntry.attr('onclick',"handleNavPage('"+chartEntry.url+"','"+chartEntry.charturl+"')");
 				var ehtml='<img src="';
 				if (chartEntry.icon) ehmtl+=chartEntry.icon;
 				else ehtml+=entryTemplate.find('img').attr('src');
