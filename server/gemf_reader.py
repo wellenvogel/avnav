@@ -36,6 +36,7 @@ class GemfFile():
     self.handles=[]
     self.sources=[]
     self.ranges=[]
+    self.lengthes=[]
     self.isOpen=False
     self.numsources=0
     self.rangenum=0
@@ -90,7 +91,17 @@ class GemfFile():
       self.ranges.append(rdata)
     self.handles.append(handle)
     self.isOpen=True
-    #todo: open other files...
+    for i in range(1,100):
+      aname=self.filename+"-"+str(i)
+      if os.path.isfile(aname):
+        h=open(aname,"rb")
+        self.handles.append(h)
+      else:
+        break
+    for h in self.handles:
+      st=os.fstat(h.fileno())
+      self.lengthes.append(st.st_size)
+
 
   #find a range for a tile
   #a tile is a tuple zxy
@@ -146,17 +157,27 @@ class GemfFile():
     except:
       self.lock.release()
       raise
-      
+ 
+  #find the file and offset to fetch data
+  def getFileAndOffset(self,offset):
+    for i in range(len(self.lengthes)):
+      if offset < self.lengthes[i]:
+        return (self.handles[i],offset)
+      offset-=self.lengthes[i]
+    return (None,None)
 
   def getTileData(self,tile,source):
     offset,flen=self.getTileOffsetLen(tile,source)
     if offset is None or flen is None:
       return None
     try:
-      #todo: handle multiple files
+      #todo: handle multiple locks
+      fhandle,foffset=self.getFileAndOffset(offset)
+      if fhandle is None or foffset is None:
+        return None
       self.lock.acquire()
-      self.handles[0].seek(offset)
-      buf=self.handles[0].read(flen)
+      fhandle.seek(foffset)
+      buf=fhandle.read(flen)
       self.lock.release()
       return buf
     except:
@@ -186,8 +207,10 @@ class GemfFile():
   def close(self):
     if not self.isOpen:
       return
-    self.handles[0].close()
+    for h in self.handles:
+      h.close()
     self.handles=[]
+    self.lengthes=[]
     self.ranges=[]
     self.sources=[]
     self.rangenum=0
@@ -199,7 +222,10 @@ class GemfFile():
     for s in self.sources:
       rt+="%(num)d,%(idx)d,%(name)s;" % s
     rt+=")"
-    rt+=" %d ranges" % self.rangenum
+    rt+=", %d ranges" % self.rangenum
+    rt+=", %d files: " % len(self.handles)
+    for l in self.lengthes:
+      rt+=" %d," % l
     return rt
 
 
