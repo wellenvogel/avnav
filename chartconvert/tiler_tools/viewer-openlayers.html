@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="EN">
+    <head>
+<!--
+###############################################################################
+# Copyright (c) 2011, Vadim Shlyakhov
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+###############################################################################
+-->
+        <title>tiles-openlayers</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+        <!-- 
+	    <script src='http://openlayers.org/api/OpenLayers.js'></script>
+        <script src='http://maps.google.com/maps?file=api&amp;v=2'></script>
+        <script src='http://proj4js.org/lib/proj4js-combined.js'></script> 
+        <script src='http://proj4js.org/lib/proj4js-compressed.js'></script>
+        -->
+
+        <script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
+	    <script src='http://openlayers.org/api/2.11-rc2/OpenLayers.js'></script>
+
+
+	    <style>
+            .olLayerGoogleCopyright{visibility: hidden;right:3px;bottom:2px;left:auto;}
+
+		    html,body {
+			    height: 99%;
+			    width: 99%;
+		    }
+		    #map {
+			    width: 100%;
+			    height: 100%;
+			    border: 1px solid black;
+		    }	
+		    .clickbar {
+                top: 8px;
+                right: 6px;
+		        border: 1px solid black;
+		        border-radius: 3px; 
+		        background: white; 
+                padding-left: 4px; 
+                padding-right: 4px;
+                font: 10px monospace;
+		        cursor: pointer;
+		    }	
+	    </style>
+
+	    <script  type="text/javascript">
+
+            OpenLayers.Control.ClickBar = OpenLayers.Class(OpenLayers.Control, {
+
+                clickBarDiv: null,
+                divEvents: null,
+                title : 'Click to set opacity of the overlay',
+                
+                /**
+                 * Constructor: OpenLayers.Control.ClickBar
+                 *
+                 * Parameters:
+                 * options - {Object}
+                 */
+                initialize: function(options) {
+                    OpenLayers.Control.prototype.initialize.apply(this, arguments);
+                },
+
+                /**
+                 * APIMethod: destroy
+                 */
+                destroy: function() {
+
+                    this._removeClickBar();
+                    OpenLayers.Control.prototype.destroy.apply(this, arguments);
+                },
+
+                /** 
+                 * Method: redraw
+                 * clear the div and start over.
+                 */
+                redraw: function() {
+                    if (this.div != null) {
+                        this._removeClickBar();
+                    }  
+                    this.draw();
+                },
+                
+                /**
+                * Method: draw 
+                *
+                * Parameters:
+                * px - {<OpenLayers.Pixel>} 
+                */
+                draw: function(px) {
+                    // initialize our internal div
+                    OpenLayers.Control.prototype.draw.apply(this, arguments);
+
+                    this._addClickBar();
+                    return this.div;
+                },
+
+                /** 
+                * Method: _addClickBar
+                * 
+                * Parameters:
+                * location - {<OpenLayers.Pixel>} where ClickBar drawing is to start.
+                */
+                _addClickBar:function() {
+                    var id = this.id + "_" + this.map.id;
+                    var div = OpenLayers.Util.createDiv(
+                                id,//'OpenLayers_Control_ClickBar' + this.map.id,
+                                null,//location,
+                                null,
+                                null,
+                                "relative");
+
+                    this.clickBarDiv = div;
+                    this.divEvents = new OpenLayers.Events(this, div, null, true, 
+                                                            {includeXY: true});
+                    this.divEvents.on({
+                        "click": this.click
+                    });
+                    
+                    this.div.appendChild(div);
+
+                    this.ratioDisplay();                
+                    return this.div; 
+                },
+                
+                /**
+                 * Method: _removeClickBar
+                 */
+                _removeClickBar: function() {
+                    this.divEvents.un({
+                        "click": this.click
+                    });
+                    this.divEvents.destroy();
+                    
+                    this.div.removeChild(this.clickBarDiv);
+                    this.clickBarDiv = null;
+                },
+
+                click: function (event) {
+                    this.clickToRatio(event);
+                },
+                
+                ratio: 0.5,
+                
+                clickMargin: 7,
+                
+                clickToRatio: function(event) {
+                    var rect=this.clickBarDiv.getBoundingClientRect();
+                    var w=rect.width-this.clickMargin*2;
+                    var offx=Math.round(event.layerX-this.clickMargin);
+
+                    var ratio=offx/w;
+                    if (ratio < 0) ratio=0;
+                    if (ratio > 1) ratio=1;
+                    this.ratio=ratio;
+                    this.ratioDisplay();                
+                    },
+
+                reportRatio: null, // function(ratio){log(ratio)},
+                
+                ratioDisplay: function (){
+                    var s = OpenLayers.Number.format(this.ratio,1);
+                    this.clickBarDiv.innerHTML = '<- ' + s + ' ->'
+                    this.reportRatio(this.ratio);    
+                    },
+
+                CLASS_NAME: "OpenLayers.Control.ClickBar"
+            });
+        // OpenLayers.Control.ClickBar
+	    </script>
+
+		<script type="text/javascript">
+
+        function log(msg) {
+            try { console.log.apply(console,arguments) } 
+            catch (e) {
+                setTimeout(function() {
+                    throw new Error(msg);
+                }, 0);
+            }
+        }
+
+        function error(msg) {
+            throw new Error(msg);
+        }
+
+        /*
+           Provide the XMLHttpRequest constructor for Internet Explorer 5.x-6.x:
+           Other browsers (including Internet Explorer 7.x-9.x) do not redefine
+           XMLHttpRequest if it already exists.
+         
+           This example is based on findings at:
+           http://blogs.msdn.com/xmlteam/archive/2006/10/23/using-the-right-version-of-msxml-in-internet-explorer.aspx
+        */
+        if (typeof XMLHttpRequest == "undefined")
+          XMLHttpRequest = function () {
+            try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
+              catch (e) {}
+            try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); }
+              catch (e) {}
+            try { return new ActiveXObject("Microsoft.XMLHTTP"); }
+              catch (e) {}
+            //Microsoft.XMLHTTP points to Msxml2.XMLHTTP and is redundant
+            throw new Error("This browser does not support XMLHttpRequest.");
+          };
+
+        function read_xml(url) {
+            var request = new XMLHttpRequest();
+            request.open('GET', url, false);
+            request.overrideMimeType("text/xml");
+            try {
+                request.send(null);
+                if (request.status != 0) {
+                    log(request.status);
+	                log(request.responseText);
+                }
+            } catch (e) {
+                log(e)
+                if (e.code == 101) {
+                    alert('Google Chrome requires to run with "--allow-file-access-from-files" switch to load XML from local files')
+                }
+            }
+            //log(request);
+            return request.responseXML;
+        }
+        
+        function e2f(elem,attr_idx) {
+            return parseFloat(elem.getAttribute(attr_idx));
+        }
+
+        function read_map_parameters() {    
+            var tilemap=read_xml("tilemap.xml");
+            if (tilemap == null) {
+	            error('Cannot read tilemap.xml');
+                return null;
+            }
+            layer_profile=tilemap.getElementsByTagName("TileSets")[0].getAttribute('profile');
+            if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator') {
+	            error('unsupported profile in tilemap.xml '+layer_profile);
+                return null;
+            }
+            layer_srs = tilemap.getElementsByTagName("SRS")[0].textContent;
+            if (layer_srs != 'OSGEO:41001') {
+	            error('tilemap.xml: unsupported SRS');
+                return null;
+            }
+            title = tilemap.getElementsByTagName("Title")[0].textContent;
+            document.title = title;
+
+            var box_el = tilemap.getElementsByTagName("BoundingBox")[0];
+            layer_extent = new OpenLayers.Bounds(e2f(box_el,'minx'),e2f(box_el,'miny'),e2f(box_el,'maxx'),e2f(box_el,'maxy'));
+
+            var origin_el = tilemap.getElementsByTagName("Origin")[0];
+            tile_origin = new OpenLayers.LonLat(e2f(origin_el,'x'),e2f(origin_el,'y'));
+            //log(tile_origin);
+            
+            var tile_format_el=tilemap.getElementsByTagName("TileFormat")[0];
+            tile_size= new OpenLayers.Size(
+                parseInt(tile_format_el.getAttribute('width')),
+                parseInt(tile_format_el.getAttribute('height')));
+            tile_ext=tile_format_el.getAttribute('extension');
+
+            var tileset_el_lst=tilemap.getElementsByTagName("TileSet");
+            layer_resolutions=[];
+            min_res = Number.MAX_VALUE;
+            max_res = 0;
+            for (i=0; i<tileset_el_lst.length; i++) {
+                var zoom = parseInt(tileset_el_lst[i].getAttribute('order'));
+                var res = parseFloat(tileset_el_lst[i].getAttribute('units-per-pixel'));
+                layer_resolutions[i]=res;
+                min_res=Math.min(min_res,res);
+                max_res=Math.max(max_res,res);
+                tileset_lst[zoom] = {
+                    prefix: tileset_el_lst[i].getAttribute('href'),
+                    units_per_pixel: res,
+                };
+            }
+            return true;
+        }
+
+		OpenLayers.Util.extend( OpenLayers.INCHES_PER_UNIT, {
+		    "NM": OpenLayers.INCHES_PER_UNIT["nmi"],
+		    "cbl": OpenLayers.INCHES_PER_UNIT["nmi"]/10,
+		});
+
+//        Proj4js.defs["EPSG:3857"]="+title=GoogleMercator +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"; 
+
+//        var mapProjection = "EPSG:3857";
+        var layer_srs = 'OSGEO:41001';
+        var layer_extent = new OpenLayers.Bounds(-20037508.342789, -20037508.342789, 20037508.342789, 20037508.342789);
+        var tile_origin = new OpenLayers.LonLat(-20037508.342789,-20037508.342789);
+        var tile_size = new OpenLayers.Size(256,256);
+        var tile_ext = "png";
+        var layer_profile = 'google-mercator';
+        var title = document.title;
+        var transparent_url='http://openlayers.org/api/img/blank.gif';
+        var tileset_lst=[];
+        var min_res=null;
+        var max_res=null;
+        var layer_resolutions=[];
+                
+        log('OpenLayers.VERSION_NUMBER',OpenLayers.VERSION_NUMBER);
+
+        function initialize_openlayers() {
+            var map = new OpenLayers.Map('map', {
+//	                projection: new OpenLayers.Projection("EPSG:900913"), //mapProjection,
+//	                displayProjection: new OpenLayers.Projection("EPSG:4326"),
+	                units: "m",
+	                maxResolution: 156543.0339,
+	                maxExtent: new OpenLayers.Bounds(-20037508.342789, -20037508.342789, 20037508.342789, 20037508.342789),
+                    controls: [
+                        new OpenLayers.Control.Navigation(),
+                        new OpenLayers.Control.PanZoomBar(),
+                        //new OpenLayers.Control.MousePosition(),
+                        new OpenLayers.Control.KeyboardDefaults(),
+                        new OpenLayers.Control.LayerSwitcher({
+                            'ascending':false
+                        }),
+                        new OpenLayers.Control.ScaleLine({
+                            maxWidth: 50,
+                            bottomOutUnits: 'NM',
+                            bottomInUnits: 'cbl'                            
+                        }),
+                    ]
+            });
+
+            read_map_parameters();
+
+            var osm = new OpenLayers.Layer.OSM(
+                "Open Street Map",'http://tile.openstreetmap.org/${z}/${x}/${y}.png',
+                {
+                    displayOutsideMaxExtent: false,
+                });
+
+            var tiler_overlay = new OpenLayers.Layer.XYZ( title, "${z}/${x}/${y}."+tile_ext,
+                {
+                    sphericalMecator: true,
+                    wrapDateLine: true,
+                    maxExtent: layer_extent,
+                    tileOrigin: tile_origin,
+                    tileSize: tile_size,
+                    resolutions: layer_resolutions,
+                    isBaseLayer: false,
+                    profile: layer_profile,
+                    displayOutsideMaxExtent: false,
+
+                    // openlayers 2.11 and below do not take into account TileOrigin
+                    getXYZ: function(bounds) {
+                        var origin = this.getTileOrigin();
+                        var res = this.map.getResolution();
+                        var x = Math.round((bounds.left - origin.lon) /
+                            (res * this.tileSize.w));
+                        var y = Math.round((origin.lat - bounds.top) /
+                            (res * this.tileSize.h));
+                        var z = this.serverResolutions != null ?
+                            OpenLayers.Util.indexOf(this.serverResolutions, res) :
+                            this.map.getZoom() + this.zoomOffset;
+                        var limit = Math.pow(2, z);
+                        if (this.wrapDateLine)
+                        {
+                           x = ((x % limit) + limit) % limit;
+                        }
+                        
+                        if (this.profile == 'global-mercator')
+                            y= -y - 1;
+
+                        //log(bounds.left,bounds.top,z,x,y);
+                        return {'x': x, 'y': y, 'z': z};
+                    },
+                    // openlayers 2.11 and below do not take into account TileOrigin
+                    getTileBounds: function(viewPortPx) { 
+                        var origin = this.getTileOrigin();
+                        var resolution = this.getResolution();
+                        var tileMapWidth = resolution * this.tileSize.w;
+                        var tileMapHeight = resolution * this.tileSize.h;
+                        var mapLocation = this.getLonLatFromViewPortPx(viewPortPx);
+                        var tileLeft = origin.lon + 
+                            (tileMapWidth * Math.floor((mapLocation.lon - origin.lon) / tileMapWidth));
+                        var tileBottom = origin.lat + 
+                            (tileMapHeight * Math.floor((mapLocation.lat - origin.lat) / tileMapHeight));
+                            
+                        //log(tileLeft,tileBottom);
+                        return new OpenLayers.Bounds(tileLeft, tileBottom,
+                                                     tileLeft + tileMapWidth,
+                                                     tileBottom + tileMapHeight);
+                    },
+                });
+                
+                //log(tiler_overlay);
+
+                map.addControl(
+                    new OpenLayers.Control.ClickBar({
+                        displayClass: "clickbar",
+                        ratio: 0.8,
+                        reportRatio: function(ratio){
+                            log(ratio);
+		                    if (OpenLayers.Util.alphaHack() == false) 
+		                        tiler_overlay.setOpacity(ratio);
+                        },
+                    })
+                );
+
+            map.addLayers([osm,tiler_overlay]);
+			map.zoomToExtent(layer_extent,true);
+
+            // Google layers
+            var gphy = new OpenLayers.Layer.Google(
+                "Google Physical",
+                {type: google.maps.MapTypeId.TERRAIN}
+            );
+            var gmap = new OpenLayers.Layer.Google(
+                "Google Streets", // the default
+                {numZoomLevels: 20}
+            );
+            var ghyb = new OpenLayers.Layer.Google(
+                "Google Hybrid",
+                {type: google.maps.MapTypeId.HYBRID, numZoomLevels: 20}
+            );
+            var gsat = new OpenLayers.Layer.Google(
+                "Google Satellite",
+                {type: google.maps.MapTypeId.SATELLITE, numZoomLevels: 22}
+            );
+
+            map.addLayers([gphy, gmap, ghyb, gsat]);
+		}
+		</script>
+
+	</head>
+
+	<body onload="initialize_openlayers()">
+	    <div id='map'></div>
+	</body>
+</html>

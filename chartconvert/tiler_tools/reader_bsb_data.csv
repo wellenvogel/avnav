@@ -1,0 +1,38 @@
+# datum_map
+datum,WGS84,                "+datum=WGS84",
+datum,NAD83,                "+datum=NAD83",
+datum,POTSDAM,              "+datum=potsdam",
+#http://earth-info.nga.mil/GandG/coordsys/onlinedatum/CountryEuropeTable.html
+datum,EUROPEAN 1950,        "+towgs84=-87,-98,-121 +ellps=intl",
+datum,EUROPEAN DATUM 1950,  "+towgs84=-87,-98,-121 +ellps=intl",
+datum,EUROPEAN 1950 (NORWAY FINLAND), "+towgs84=-85,-95,-120 +ellps=intl",
+datum,ROMA DATUM 1940,      "+towgs84=-104.1,-49.1,-9.9,0.971,-2.917,0.714,-11.68 +ellps=intl",
+datum,ROMA 1940,            "+towgs84=-104.1,-49.1,-9.9,0.971,-2.917,0.714,-11.68 +ellps=intl",
+datum,HERMANSKOGEL DATUM,   "+datum=hermannskogel",
+datum,OSGB36,               "+towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894 +ellps=airy",
+# http://sv.wikipedia.org/wiki/RT_90
+datum,RT90 (SWEDEN),        "+towgs84=414.0978567149,41.3381489658,603.0627177516,-0.8550434314,2.1413465185,-7.0227209516,0 +ellps=bessel",
+# ???
+datum,SYSTEM KÜSTE,         "+datum=potsdam",
+
+# guess the datum by a comment/copyright string pattern
+datum_guess, "Croatia",            "+ellps=bessel +towgs84=550.499,164.116,475.142,5.80967,2.07902,-11.62386,0.99999445824",
+# http://spatial-analyst.net/wiki/index.php?title=MGI_/_Balkans_coordinate_systems
+#"+datum=hermannskogel", http://earth-info.nga.mil/GandG/coordsys/onlinedatum/DatumTable.html
+#"+ellps=bessel +towgs84=682,-203,480",
+
+# KNP/ projection parameters
+proj_knp,MERCATOR,                       PROJ4:+proj=merc,PP:lat_ts,
+proj_knp,TRANSVERSE MERCATOR,            PROJ4:+proj=tmerc,PP:lon_0,P1:lat_0,P2:k,P3:y_0,P4:x_0,
+proj_knp,UNIVERSAL TRANSVERSE MERCATOR,  "PROJ4:+proj=tmerc +k=0.9996",PP:lon_0,
+proj_knp,GNOMONIC,                       PROJ4:+proj=gnom,PP:lon_0,P1:lat_0,
+proj_knp,LAMBERT CONFORMAL CONIC,        PROJ4:+proj=lcc,PP:lon_0,
+proj_knp,POLYCONIC,                      PROJ4:+proj=poly,PP:lon_0,
+proj_knp,SWEDISH GRID,                   "PROJ4:+proj=tmerc +lon_0=15.808277777778 +x_0=1500000 +y_0=0",
+
+# KNQ/ extra projection parameters for BSB v. 3.xx
+proj_knq,TRANSVERSE MERCATOR,            P1:lon_0,P2:k,P3:lat_0,
+# P3 - guess
+proj_knq,LAMBERT CONFORMAL CONIC,        P1:lon_0,P2:lat_1,P3:lat_2,
+proj_knq,POLYCONIC,                      P1:lon_0,P2:lat_0,
+# P2 - guess

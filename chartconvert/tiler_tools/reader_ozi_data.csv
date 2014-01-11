@@ -1,0 +1,183 @@
+#header,Name,Ozi ID,Ellipsoid,Delta X,Delta Y,Delta Z,PROJ4 definition,"comment"
+datum,Auto Shift .....,,WGS 84,0,0,0,,
+datum,Adindan,1,Clarke 1880,-162,-12,206,,
+datum,Afgooye,2,Krassovsky 1940,-43,-163,45,,
+datum,Ain el Abd 1970,3,International 1924,-150,-251,-2,,
+datum,Anna 1 Astro 1965,4,Australian National,-491,-22,435,,
+datum,Arc 1950,5,Clarke 1880,-143,-90,-294,,
+datum,Arc 1960,6,Clarke 1880,-160,-8,-300,,
+datum,Ascension Island 1958,7,International 1924,-207,107,52,,
+datum,Astro B4 Sorol Atoll,9,International 1924,114,-116,-333,,
+datum,Astro Beacon 1945,,International 1924,145,75,-272,,
+datum,Astro DOS 71I4,10,International 1924,-320,550,-494,,
+datum,Astronomic Stn 1952,11,International 1924,124,-234,-25,,
+datum,Australian Geodetic 1966,12,Australian National,-133,-48,148,,
+datum,Australian Geodetic 1984,13,Australian National,-134,-48,149,,
+datum,Australian Geocentric 1994 (GDA94),201,GRS 80,0,0,0,,
+datum,Austrian,202,Bessel 1841,594,84,471,,
+datum,Bellevue (IGN),14,International 1924,-127,-769,472,,
+datum,Bermuda 1957,15,Clarke 1866,-73,213,296,,
+datum,Bogota Observatory,16,International 1924,307,304,-318,,
+datum,Campo Inchauspe,17,International 1924,-148,136,90,,
+datum,Canton Astro 1966,18,International 1924,298,-304,-375,,
+datum,Cape,19,Clarke 1880,-136,-108,-292,,
+datum,Cape Canaveral,20,Clarke 1866,-2,150,181,,
+datum,Carthage,21,Clarke 1880,-263,6,431,"+datum=carthage",
+datum,CH-1903,203,Bessel 1841,674,15,405,,
+datum,Chatham 1971,22,International 1924,175,-38,113,,
+datum,Chua Astro,23,International 1924,-134,229,-29,,
+datum,Corrego Alegre,24,International 1924,-206,172,-6,,
+datum,Djakarta (Batavia),,Bessel 1841,-377,681,-50,,
+datum,DOS 1968,26,International 1924,230,-199,-752,,
+datum,Easter Island 1967,27,International 1924,211,147,111,,
+datum,Egypt,204,International 1924,-130,-117,-151,,
+datum,European 1950,28,International 1924,-87,-98,-121,,
+datum,European 1950 (Mean France),205,Hayford 1909,-87,-96,-120,,
+datum,European 1950 (Spain and Portugal),206,International 1924,-84,-107,-120,,
+datum,European 1979,29,International 1924,-86,-98,-119,,
+datum,Finland Hayford,207,International 1924,-78,-231,-97,,
+datum,Gandajika Base,30,International 1924,-133,-321,50,,
+datum,Geodetic Datum 1949,31,International 1924,84,-22,209,,
+datum,Guam 1963,34,Clarke 1866,-100,-248,259,,
+datum,GUX 1 Astro,35,International 1924,252,-209,-751,,
+datum,Hartebeeshoek94,104,WGS 84,0,0,0,,
+datum,Hermannskogel,208,Bessel 1841,653,-212,449,"+datum=hermannskogel",
+datum,Hjorsey 1955,37,International 1924,-73,46,-86,,
+datum,Hong Kong 1963,38,International 1924,-156,-271,-189,,
+datum,Hu-Tzu-Shan,39,International 1924,-634,-549,-201,,
+datum,Indian Bangladesh,41,Everest (India 1830),289,734,257,,
+datum,Indian Thailand,40,Everest (India 1830),214,836,303,,
+datum,Israeli,209,Clarke 1880 Palestine,-235,-85,264,,
+datum,Ireland 1965,42,Modified Airy,506,-122,611,"+datum=ire65",
+datum,ISTS 073 Astro 1969,43,International 1924,208,-435,-229,,
+datum,Johnston Island,44,International 1924,191,-77,-204,,
+datum,Kandawala,45,Everest (India 1830),-97,787,86,,
+datum,Kerguelen Island,46,International 1924,145,-187,103,,
+datum,Kertau 1948,47,Everest (1948),-11,851,5,,
+datum,L.C. 5 Astro,48,Clarke 1866,42,124,147,,
+datum,Liberia 1964,49,Clarke 1880,-90,40,88,,
+datum,Luzon Mindanao,51,Clarke 1866,-133,-79,-72,,
+datum,Luzon Philippines,50,Clarke 1866,-133,-77,-51,,
+datum,Mahe 1971,52,Clarke 1880,41,-220,-134,,
+datum,Marco Astro,53,International 1924,-289,-124,60,,
+datum,Massawa,54,Bessel 1841,639,405,60,,
+datum,Merchich,55,Clarke 1880,31,146,47,,
+datum,Midway Astro 1961,56,International 1924,912,-58,1227,,
+datum,Minna,57,Clarke 1880,-92,-93,122,,
+datum,NAD27 Alaska,63,Clarke 1866,-5,135,172,,
+datum,NAD27 Bahamas,64,Clarke 1866,-4,154,178,,
+datum,NAD27 Canada,66,Clarke 1866,-10,158,187,,
+datum,NAD27 Canal Zone,67,Clarke 1866,0,125,201,,
+datum,NAD27 Caribbean,68,Clarke 1866,-7,152,178,,
+datum,NAD27 Central,69,Clarke 1866,0,125,194,,
+datum,NAD27 CONUS,62,Clarke 1866,-8,160,176,,
+datum,NAD27 Cuba,70,Clarke 1866,-9,152,178,,
+datum,NAD27 Greenland,71,Clarke 1866,11,114,195,,
+datum,NAD27 Mexico,72,Clarke 1866,-12,130,190,,
+datum,NAD27 San Salvador,,Clarke 1866,1,140,165,,
+datum,NAD83,74,GRS 80,0,0,0,"+datum=NAD83",
+datum,Nahrwn Masirah Ilnd,,Clarke 1880,-247,-148,369,,
+datum,Nahrwn Saudi Arbia,,Clarke 1880,-231,-196,482,,
+datum,Nahrwn United Arab,,Clarke 1880,-249,-156,381,,
+datum,Naparima BWI,,International 1924,-2,374,172,,
+datum,NGO1948,210,Bessel 1841 (Norway),315,-217,528,,
+datum,NTF France,107,Clarke 1880 IGN,-168,-60,320,,
+datum,Norsk,211,Bessel 1841 (Norway),278,93,474,,
+datum,NZGD1949,31,International 1924,84,-22,209,"+datum=nzgd49",
+datum,NZGD2000,104,WGS 84,0,0,0,,
+datum,Observatorio 1966,75,International 1924,-425,-169,81,,
+datum,Old Egyptian,76,Helmert 1906,-130,110,-13,,
+datum,Old Hawaiian,77,Clarke 1866,61,-285,-181,,
+datum,Oman,78,Clarke 1880,-346,-1,224,,
+datum,Ord Srvy Grt Britn,79,Airy 1830,375,-111,431,"+datum=OSGB36",
+datum,Pico De Las Nieves,80,International 1924,-307,-92,127,,
+datum,Pitcairn Astro 1967,81,International 1924,185,165,42,,
+datum,Potsdam Rauenberg DHDN,1000,Bessel 1841,606,23,413,"+datum=potsdam",
+datum,Prov So Amrican 1956,36,International 1924,-288,175,-376,,
+datum,Prov So Chilean 1963,82,International 1924,16,196,93,,
+datum,Puerto Rico,83,Clarke 1866,11,72,-101,,
+datum,Pulkovo 1942 (1),1001,Krassovsky 1940,28,-130,-95,,
+datum,Pulkovo 1942 (2),,Krassovsky 1940,28,-130,-95,,
+datum,Qatar National,84,International 1924,-128,-283,22,,
+datum,Qornoq,85,International 1924,164,138,-189,,
+datum,Reunion,86,International 1924,94,-948,-1262,,
+datum,Rijksdriehoeksmeting,212,Bessel 1841,593,26,478,,
+datum,Rome 1940,87,International 1924,-225,-65,9,,
+datum,RT 90,112,Bessel 1841,498,-36,568,"+towgs84=414.0978567149,41.3381489658,603.0627177516,-0.8550434314,2.1413465185,-7.0227209516,0 +ellps=bessel"
+datum,S42,213,Krassovsky 1940,28,-121,-77,,
+datum,Santo (DOS),88,International 1924,170,42,84,,
+datum,Sao Braz,89,International 1924,-203,141,53,,
+datum,Sapper Hill 1943,90,International 1924,-355,16,74,,
+datum,Schwarzeck,91,Bessel 1841 (Namibia),616,97,-251,,
+datum,South American 1969,92,South American 1969,-57,1,-41,,
+datum,South Asia,93,Modified Fischer 1960,7,-10,-26,,
+datum,Southeast Base,94,International 1924,-499,-249,314,,
+datum,Southwest Base,95,International 1924,-104,167,-38,,
+datum,Timbalai 1948,96,Everest (India 1830),-689,691,-46,,
+datum,Tokyo,97,Bessel 1841,-128,481,664,,
+datum,Tristan Astro 1968,98,International 1924,-632,438,-609,,
+datum,Viti Levu 1916,99,Clarke 1880,51,391,-36,,
+datum,Wake-Eniwetok 1960,100,Hough 1960,101,52,-39,,
+datum,WGS 72,103,WGS 72,0,0,5,,
+datum,WGS 84,104,WGS 84,0,0,0,"+datum=WGS84",
+datum,Yacare,105,International 1924,-155,171,37,,
+datum,Zanderij,106,International 1924,-265,120,-358,,
+
+#header,Ellipsoid,Radius (a),1/f (rf),PROJ4 ellps,"comment"
+ellps,Airy 1830,6377563.396,299.3249646,"+ellps=airy"
+ellps,Australian National,6378160,298.25,"+ellps=aust_SA"
+ellps,Bessel 1841,6377397.155,299.1528128,"+ellps=bessel"
+ellps,Bessel 1841 (Namibia),6377483.865,299.1528128,"+ellps=bess_nam"
+ellps,Bessel 1841 (Norway),6377492.0176,299.1528,
+ellps,Clarke 1866,6378206.4,294.9786982,"+ellps=clrk66"
+ellps,Clarke 1880,6378249.145,293.465,"+ellps=clrk80"
+ellps,Clarke 1880 IGN,6378249.2,293.466021,
+ellps,Clarke 1880 Palestine,6378300.789,293.466,
+ellps,Everest (1948),6377304.063,300.8017,"+ellps=evrst48"
+ellps,Everest (India 1830),6377276.345,300.8017,"+ellps=evrst30"
+ellps,GRS 80,6378137,298.2572221,"+ellps=GRS80"
+ellps,Hayford 1909,6378388,296.959263,
+ellps,Helmert 1906,6378200,298.3,"+ellps=helmert"
+ellps,Hough 1960,6378270,297,"+ellps=hough"
+ellps,International 1924,6378388,297,"+ellps=intl"
+ellps,Krassovsky 1940,6378245,298.3,"+ellps=krass"
+ellps,Modified Airy,6377340.189,299.3249646,"+ellps=mod_airy"
+ellps,Modified Fischer 1960,6378155,298.3,"+ellps=fschr60m"
+ellps,South American 1969,6378160,298.25,"+ellps=aust_SA"
+ellps,WGS 72,6378135,298.26,"+ellps=WGS72"
+ellps,WGS 84,6378137,298.25722356,"+ellps=WGS84"
+
+#header,Projection,PROJ4 definition,comment
+proj,Latitude/Longitude,"+proj=latlong",
+proj,Mercator,"+proj=merc",
+proj,Transverse Mercator,"+proj=tmerc",
+proj,Lambert Conformal Conic,"+proj=lcc",
+proj,(A)Lambert Azimuthual Equal Area,"+proj=laea",       # not tested
+proj,(EQC) Equidistant Conic,"+proj=eqdc",
+proj,Sinusoidal,"+proj=sinu",       # not tested
+proj,Polyconic (American),"+proj=poly",
+proj,Albers Equal Area,"+proj=aea",        # not tested
+proj,Van Der Grinten,"+proj=vandg",      # not tested
+proj,Vertical Near-Sided Perspective,"+proj=nsper",      # not tested
+proj,(WIV) Wagner IV,"+proj=wag4",       # not tested
+proj,Bonne,"+proj=bonne",      # not tested
+proj,(MT0) Montana State Plane Zone 2500,"+init=esri:102300",# not tested
+proj,(VICGRID) Victoria Australia,"+init=epsg:3110",  # not tested
+proj,(VG94) VICGRID94 Victoria Australia,"+init=epsg:3111",  # not tested
+proj,(UTM) Universal Transverse Mercator,"+proj=tmerc +k=0.9996",
+proj,(BNG) British National Grid,"+init=epsg:27700",
+proj,(IG) Irish Grid,"+init=epsg:29902", # not tested
+#proj,(NZG) New Zealand Grid,"+init=epsg:27200", # not tested
+# http://osgeo-org.1803224.n2.nabble.com/New-Zealand-grid-tp2062137p2062142.html
+proj,(NZG) New Zealand Grid,"+proj=nzmg +lat_0=-41.0000000000 +lon_0=173.0000000000 +x_0=2510000.0000000000 +y_0=6023150.0000000000 +a=6378388 +rf=297 +nadgrids=nzgd2kgrid0005.gsb +wktext +no_defs", # not tested
+proj,(NZTM2) New Zealand TM 2000,"+init=epsg:2193", # not tested
+# http://en.wikipedia.org/wiki/Swedish_grid
+proj,(SG) Swedish Grid,"+proj=tmerc +lon_0=15.808277777778 +x_0=1500000 +y_0=0", 
+proj,(SUI) Swiss Grid,"+init=epsg:21781", # not tested
+proj,(I) France Zone I,"+init=epsg:27571", # not tested
+proj,(II) France Zone II,"+init=epsg:27572", # not tested
+proj,(III) France Zone III,"+init=epsg:27573", # not tested
+proj,(IV) France Zone IV,"+init=epsg:27574", # not tested
+proj,(ITA1) Italy Grid Zone 1,"+init=epsg:26591 +towgs84=-85.88,-28.85,+49.67,-1.003,-2.383,-1.808,-27.82", # http://mpa.itc.it/markus/shortcourse/notes2.html # not tested
+proj,(ITA2) Italy Grid Zone 2,"+init=epsg:26592 +towgs84=-85.88,-28.85,+49.67,-1.003,-2.383,-1.808,-27.82", # not tested
+proj,(VICMAP-TM) Victoria Aust.(pseudo AMG),"+proj=tmerc +lat_0=145 +x_0=500000 +y_0=10000000",# http://www.gpsoz.com.au/VicRoadsInfo.htm # not tested
