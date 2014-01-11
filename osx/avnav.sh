@@ -1,3 +1,3 @@
 #! /bin/sh
-
-../avnav_server/avnav_server.py $* avnav_server.xml
+cd `dirname $0`
+../server/avnav_server.py $* avnav_server.xml
