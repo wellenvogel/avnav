@@ -356,7 +356,9 @@ def MakeGEMFFile(mapdir, output_file, options):
         if (file_size + this_file_size) > file_size_limit:
             fhHeader.close()
             index += 1
-            fhHeader = open(output_file + "-%d" % index, 'wb')
+            fname = output_file + "-%d" % index
+            fhHeader = open(fname, 'wb')
+            print "Skipping to new file %s after %d bytes" %(fname,file_size)
             file_size = 0L
 
         if os.path.exists(fn):
@@ -373,6 +375,7 @@ def MakeGEMFFile(mapdir, output_file, options):
         file_size += this_file_size
 
     fhHeader.close()
+    print "Written %d bytes" % (file_size)
 
 if __name__ == "__main__":
     main()
