@@ -114,7 +114,6 @@ overview_tilemap_xml='''
        minzoom="%(minZoom)d"
        maxzoom="%(maxZoom)d">
        %(bounding)s
-       <Origin x="%(origin_x).11G" y="%(origin_y).11G" />
        <TileFormat width="%(tile_width)d" height="%(tile_height)d" mime-type="%(tile_mime)s" extension="%(tile_ext)s" />
        %(layerboundings)s
     </TileMap>
@@ -223,7 +222,7 @@ def findTilerTools(ttdir=None):
 
 
 #create a bounding box xml from a bounds tuple
-#bounds: ulx,uly,lrx,lry
+#bounds: ullon,ullat,lrlon,lrlat
 
 def createBoundingsXml(bounds,title):
   return boundingbox_xml % {"title": title,
@@ -717,10 +716,10 @@ class Mercator:
     return (lat_deg, lon_deg)
   
   #get the list of corner tiles for a given bounding box
-  #bounds is ul_lat,ul_lon,lr_lat,lr_lon
+  #bounds is ul_lon,ul_lat,lr_lon,lr_lat
   def corner_tiles(self,zoom,bounds):
-    t_ul=self.latlonToTile((bounds[0],bounds[1]),zoom)
-    t_lr=self.latlonToTile((bounds[2],bounds[3]),zoom)
+    t_ul=self.latlonToTile((bounds[1],bounds[0]),zoom)
+    t_lr=self.latlonToTile((bounds[3],bounds[2]),zoom)
     ld("corner_tiles for zoom=",zoom,", bounds=",bounds,": ul=",t_ul,", lr=",t_lr)
     return t_ul,t_lr
   #---------------------------
@@ -808,6 +807,7 @@ def createChartEntry(fname,dataset,mercator):
   ul_c=(geotr[0], geotr[3])
   lr_c=gdal.ApplyGeoTransform(geotr,t_ds.RasterXSize,t_ds.RasterYSize)
   wh=(lr_c[0]-ul_c[0],lr_c[1]-ul_c[1])
+  #point is alsway lon,lat
   ul_ll=mercator.transform_point((ul_c[0],ul_c[1]),True)
   lr_ll=mercator.transform_point((lr_c[0],lr_c[1]),True)
   ld('ul_c,lr_c,wh',ul_c,lr_c,wh)
@@ -1106,8 +1106,8 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
     layerminzoom=1
   layercharts=chartlist.filterByLayer(layer)
   layerulx,layeruly,layerlrx,layerlry=layercharts.getChartsBoundingBox()
-  ulc_x,ulc_y=layercharts.mercator.transform_point(layerulx,layeruly)
-  lrc_x,lrc_y=layercharts.mercator.transform_point(layerlrx,layerlry)
+  ulc_x,ulc_y=layercharts.mercator.transform_point((layerulx,layeruly))
+  lrc_x,lrc_y=layercharts.mercator.transform_point((layerlrx,layerlry))
   if layer == (len(layer_zoom_levels)-1):
     #for the layer with the lowest resolution select a minzoom
     #to fit app. into 600px
@@ -1153,7 +1153,7 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
     #TODO: skip if we have no charts at all
     #collect the tiles for the max zoom level
     tilespyramid=[]
-    layermaxzoomtiles=layercharts.getTilesSet(layermaxzoom,chartlist.mercator)
+    layermaxzoomtiles=layercharts.getTilesSet(layermaxzoom)
     #compute the upper level tiles
     layerztiles=layermaxzoomtiles
     idx=0
@@ -1212,16 +1212,16 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
   for zoom in range(layerminzoom,layermaxzoom+1):
     tilesets=tilesets+(layer_tileset_xml % {
                  "href":str(zoom),
-                 "units_per_pixel":zoom_mpp[zoom],
+                 "units_per_pixel":chartlist.mercator.mppForZoom(zoom),
                  "order":order   
                                         })
     order+=1
   outstr=layer_xml % {"title":layername,
                       "description":layername,
-                      "minx":layerulx,
-                      "miny":layerlry,
-                      "maxx":layerlrx,
-                      "maxy":layeruly,
+                      "minlon":layerulx,
+                      "minlat":layerlry,
+                      "maxlon":layerlrx,
+                      "maxlat":layeruly,
                       "tile_width":TILESIZE,
                       "tile_height":TILESIZE,
                       "tile_ext":"png",
@@ -1338,7 +1338,7 @@ def main(argv):
     mode="chartlist"
   if options.mode is not None:
     mode=options.mode
-    assert (mode == "chartlist" or mode == "generate" or mode == "all" or mode == "merge" or mode == "overview"), "invalid mode "+mode+", allowed: chartlist,generate,merge,all,overview"
+    assert (mode == "chartlist" or mode == "generate" or mode == "all" or mode == "merge" or mode == "overview" or mode == "base"), "invalid mode "+mode+", allowed: chartlist,generate,merge,all,overview,base"
   log("running in mode "+mode)
   if mode == "chartlist" or mode == "all":
     log("layers:"+str(layer_zoom_levels))
@@ -1347,7 +1347,7 @@ def main(argv):
     if not os.path.isdir(basetiles):
       os.makedirs(basetiles, 0777)
     createChartList(args,outdir,mercator)
-  if mode == "generate" or mode == "all":
+  if mode == "generate" or mode == "all" or mode == "base":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
     generateAllBaseTiles(outdir,mercator)
   if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview":
