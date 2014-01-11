@@ -561,11 +561,12 @@ class TileStore:
 #contains at level 0 one tile of the min zoom level
 #and on the higher levels all tiles belonging to the layer up to the max zoom level
 class BuildPyramid:    
-  def __init__(self,layercharts,layername,outdir):
+  def __init__(self,layercharts,layername,outdir,writer=None):
     self.layercharts=layercharts
     self.layername=layername
     self.outdir=outdir
     self.pyramid=[]
+    self.writer=writer
   def addZoomLevelTiles(self,tiles):
     self.pyramid.append(tiles)
   def getNumZoom(self):
@@ -596,7 +597,10 @@ class BuildPyramid:
     while currentLevel >= 0 :
       ld("saving level ",currentLevel,"num ",len(buildts))
       for ts in buildts:
-        ts.write(layerdir)
+        if self.writer is None:
+          ts.write(layerdir)
+        else:
+          self.writer.writeTile(self.layername,ts)
       if currentLevel <= 0:
         break
       nextbuildts=[]
@@ -1095,14 +1099,9 @@ def generateAllBaseTiles(outdir,mercator):
     log("creating base tiles for "+chartEntry.filename+" finished")
 
 
-#-------------------------------------
-#merge the tiles for a layer
-#first build the pyramid of tile ids for all zoom layers
-#then for each top level tile (lowest zoom) build all tiles below in one run
-#all of them are first loaded into memory and afterwards both saved and merged
-def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
-  maxfiletime=None
-  layername=layer_zoom_levels[layer][1]
+#get the min and maxzoom for a layer - considering some handling to fill 600px...
+#return minzoom,maxzoom,layercharts
+def getLayerMinMaxZoom(chartlist,layer):
   layerminzoom=layer_zoom_levels[layer][0]
   #layers are now sorted reverse...??
   if layer < (len(layer_zoom_levels) -1):
@@ -1128,6 +1127,36 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
         break
       layerminzoom-=1
   layermaxzoom=layer_zoom_levels[layer][0]
+  ld("min/max zoom for layer",layer,layerminzoom,layermaxzoom)
+  return (layerminzoom,layermaxzoom,layercharts)
+
+#get all the tiles we will create for a layer
+#we return a list of tile sets starting at maxzoom and going to minzoom
+def getLayerTilesPyramid(layercharts,layerminzoom,layermaxzoom):
+  #collect the tiles for the max zoom level
+  tilespyramid=[]
+  layermaxzoomtiles=layercharts.getTilesSet(layermaxzoom)
+  #compute the upper level tiles
+  layerztiles=layermaxzoomtiles
+  idx=0
+  tilespyramid.append(layerztiles)
+  for currentZoom in range(layermaxzoom-1,layerminzoom-1,-1):
+    idx+=1
+    layerztiles=getLowerLevelTiles(layerztiles)
+    tilespyramid.append(layerztiles)
+  return tilespyramid
+
+
+
+#-------------------------------------
+#merge the tiles for a layer
+#first build the pyramid of tile ids for all zoom layers
+#then for each top level tile (lowest zoom) build all tiles below in one run
+#all of them are first loaded into memory and afterwards both saved and merged
+def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
+  maxfiletime=None
+  layername=layer_zoom_levels[layer][1]
+  layerminzoom,layermaxzoom,layercharts=getLayerMinMaxZoom(chartlist,layer)
   log("collecting base tiles for layer "+str(layer)+" ("+layername+") minzoom="+str(layerminzoom)+", maxzoom="+str(layermaxzoom))
   layerxmlfile=os.path.join(outdir,OUTTILES,layername,LAYERFILE)
   layerboundingsfile=os.path.join(outdir,OUTTILES,layername,LAYERBOUNDING)
@@ -1158,38 +1187,26 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
       log("layer "+layername+" has no tiles")
       return (layerminzoom,layermaxzoom)
     #TODO: skip if we have no charts at all
-    #collect the tiles for the max zoom level
-    tilespyramid=[]
-    layermaxzoomtiles=layercharts.getTilesSet(layermaxzoom)
-    #compute the upper level tiles
-    layerztiles=layermaxzoomtiles
-    idx=0
-    tilespyramid.append(layerztiles)
-    numalltiles=len(layerztiles)
     requestQueue=Queue.Queue(0)
     for x in range(int(options.threads)):
       t=PyramidHandler(requestQueue)
       t.setDaemon(True)
       t.start()
-    for currentZoom in range(layermaxzoom-1,layerminzoom-1,-1):
-      idx+=1
-      layerztiles=getLowerLevelTiles(layerztiles)
-      numalltiles+=len(layerztiles)
-      tilespyramid.append(layerztiles)
-    #in tlespyramid we now have all tiles for the layer min. zoom at index idx, maxZoom at index 0
+    tilespyramid=getLayerTilesPyramid(layercharts,layerminzoom,layermaxzoom)
+    idx=len(tilespyramid)-1
+    #in tilespyramid we now have all tiles for the layer min. zoom at index idx, maxZoom at index 0
     #now go top down
-    #always take one tile of the highest layer and completely compute all tiles for this one
+    #always take one tile of the min zoom layer and completely compute all tiles for this one
     numminzoom=len(tilespyramid[idx])
     numdone=0
     percent=-1
     numjobs=0
-    log("handling "+str(numminzoom)+" pyramids on min zoom "+str(layerminzoom)+" (having: "+str(numalltiles)+" tiles)")
+    numtiles=len(tilespyramid[idx])
     for topleveltile in tilespyramid[idx]:
       ld("handling toplevel tile ",topleveltile)
       
       buildpyramid=BuildPyramid(layercharts,layername,outdir)
       buildpyramid.addZoomLevelTiles(set([topleveltile]))
-      numtiles=1
       for buildidx in range(1,idx+1):
         nextlevel=set()
         for tile in buildpyramid.getZoomLevelTiles(buildidx-1):
@@ -1200,6 +1217,7 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
       requestQueue.put(buildpyramid)
       numjobs+=1
       
+    log("handling "+str(numminzoom)+" pyramids on min zoom "+str(layerminzoom)+" (having: "+str(numtiles)+" tiles)")
     log("waiting for generators with "+str(options.threads)+" threads")
     while not requestQueue.empty():
       npercent=int(requestQueue.qsize()*100/numjobs)
@@ -1223,6 +1241,7 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
                  "order":order   
                                         })
     order+=1
+  layerulx,layeruly,layerlrx,layerlry=layercharts.getChartsBoundingBox()
   outstr=layer_xml % {"title":layername,
                       "description":layername,
                       "minlon":layerulx,
@@ -1290,8 +1309,9 @@ def mergeAllTiles(outdir,mercator,onlyOverview=False):
 def main(argv):
   
   global LISTFILE,layer_zoom_levels,options,MAXUPSCALE,TilerTools,MAXOVERLAP
+  usage = "%prog [options] [chartdir or file...]"
   parser = OptionParser(
-        usage = "%prog [options] [chartdir or file...]",
+        usage = usage,
         version="1.0",
         description=pinfo)
   parser.add_option("-q", "--quiet", action="store_const", 
@@ -1311,7 +1331,7 @@ def main(argv):
   parser.add_option("-f", "--force", action="store_const", const=0, dest="update", help="force update of existing charts (if not set, only necessary charts are generated")
   basedir=DEFAULT_OUTDIR
   (options, args) = parser.parse_args(argv[1:])
-  if options.update is None or options.update == 0:
+  if options.update is None :
     options.update=1
   logging.basicConfig(level=logging.DEBUG if options.verbose==2 else 
       (logging.ERROR if options.verbose==0 else logging.INFO))
@@ -1408,6 +1428,7 @@ def main(argv):
       log("starting creation of GEMF file %s"%(gemfname))
       generate_efficient_map_file.MakeGEMFFile(mapdir,gemfname,gemfoptions)
     log("gemf file %s successfully created" % (gemfname))
+  log("***chart generation finished***")
 
 
 
