@@ -2809,7 +2809,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if marray is not None:
       pathmappings={}
       for mapping in marray:
-        pathmappings[mapping['urlpath']]=mapping['path']
+        pathmappings[mapping['urlpath']]=os.path.expanduser(mapping['path'])
     self.pathmappings=pathmappings
     self.navurl=cfgparam['navurl']
     self.overwrite_map=({
