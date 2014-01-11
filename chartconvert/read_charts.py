@@ -94,7 +94,7 @@ MAXZOOM=32
 
 #max upscale of a chart when creating base tiles
 #this is only used when sorting into layers
-MAXUPSCALE=2
+MAXUPSCALE=4
 
 #how many levels do we overlap (i.e. produce downscaled tiles) between layers
 MAXOVERLAP=1
@@ -226,7 +226,8 @@ def ld(*parms):
 def warn(txt):
   logging.warning(txt)
 def log(txt):
-  logging.info(time.strftime("%Y/%m/%d-%H:%M:%S ",time.localtime())+txt)
+  logstr=time.strftime("%Y/%m/%d-%H:%M:%S ",time.localtime())+txt
+  logging.info(logstr.decode("utf-8","replace"))
   
 #---------------------------
 #tiler tools stuff
@@ -296,7 +297,7 @@ class ChartEntry():
 
   def toXML(self):
     rt="""<chart filename="%(filename)s" title="%(title)s" mpp="%(mpp)f">""" % self.getParam()
-    rt+=createBoundingsXml(self.bounds, self.bounds)
+    rt+=createBoundingsXml(self.bounds, self.title)
     rt+="</chart>"
     return rt
   def updateCornerTiles(self,zoom):

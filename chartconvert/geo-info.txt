@@ -58,7 +58,7 @@ print lr_c
 Bounds
 ======
 For bounds we always use upper left(lower x, higher y) and lower right(higher x, lower y).
-Remark: tiles will count like x and y - has to be considered...
+Remark: tiles will count like x and y - has to be considered... - for TMS but we use slippy maps - so upper left is lower x, lower y!
 
 Upper Tiles
 ===========
