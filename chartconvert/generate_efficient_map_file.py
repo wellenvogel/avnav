@@ -171,7 +171,7 @@ def MakeGEMFFile(mapdir, output_file, options):
                         elif xv in xset and last_valid is None:
                             last_valid = xv
 
-            pprint.pprint(split_xsets)
+            #pprint.pprint(split_xsets)
 
             # Find missing Y rows in each unique_set chunk, create full_sets records for each complete chunk
 
