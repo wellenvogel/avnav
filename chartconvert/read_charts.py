@@ -57,6 +57,8 @@ import site
 import subprocess
 import re
 import generate_efficient_map_file
+import create_gemf
+import StringIO
 
 hasNvConvert=False
 try:
@@ -248,8 +250,7 @@ class ChartEntry():
     self.mpp=mpp
     self.bounds=bounds
     self.layer=layer
-    self.ultile=None
-    self.lrtile=None
+    self.basetiles=None
 
   def getBaseZoomLevel(self):
     z,name=layer_zoom_levels[self.layer]
@@ -267,37 +268,41 @@ class ChartEntry():
     rt+=createBoundingsXml(self.bounds, self.title)
     rt+="</chart>"
     return rt
-  def updateCornerTiles(self,zoom,mercator):
-    self.ultile,self.lrtile=mercator.corner_tiles(zoom,self.bounds)
-    ld("updateCornerTiles for",self.title,self.ultile,self.lrtile)
   #tile is a tuple z,x,y
-  def hasTile(self,tile):
-    #ul always has lowest x,y
-    if self.ultile is None or self.lrtile is None:
-      return False
-    if self.ultile[0] != tile[0]:
-      return False
-    if self.lrtile[0] != tile[0]:
-      return False
-    if self.ultile[1] > tile[1]:
-      return False
-    if self.ultile[2] > tile[2]:
-      return False
-    if self.lrtile[1] < tile[1]:
-      return False
-    if self.lrtile[2] < tile[2]:
-      return False
-    return True
+  def hasBaseTile(self,tile):
+    if tile in self.basetiles:
+      return True
+    return False
 
-  def getTilesSet(self,zoom,mercator):
-    self.updateCornerTiles(zoom,mercator)
-    if self.ultile is None or self.lrtile is None:
-      return set()
-    rt=set()
-    for ty in range(self.ultile[2],self.lrtile[2]+1):
-      rt|=set(map(lambda x: (zoom,x,ty),range(self.ultile[1],self.lrtile[1]+1)))
-    ld("getTilesSet for ",self.title,"zoom",zoom,rt)
+  def getBaseTilesSet(self):
+    rt=set(self.basetiles)
+    ld("getBaseTilesSet for ",self.title,rt)
     return rt
+  #as finally tiler tools have an own idea which tiles they create,
+  #we will rely on them and simply see, which tiles they have been creating
+  def readBaseTiles(self,workdir):
+    self.basetiles=[]
+    indir=getTilesDir(self,workdir,False)
+    ld("collecting basetiles for ",self.title,"from",indir)
+    zs=os.listdir(indir)
+    for z in zs:
+      zpath=os.path.join(indir,z)
+      if os.path.isdir(zpath):
+        xs=os.listdir(zpath)
+        for x in xs:
+          xpath=os.path.join(zpath,x)
+          if os.path.isdir(xpath):
+            ys=os.listdir(xpath)
+            for y in ys:
+              if y.endswith(".png"):
+                yval=y.replace(".png","")
+                try:
+                  self.basetiles.append((int(z),int(x),int(yval)))
+                except:
+                  warn("exception adding tile %s/%s: %s"%(xpath,y,traceback.format_exc()))
+    ld("basetiles finished, read",len(self.basetiles))
+                  
+    
 
 
 class ChartList():
@@ -376,16 +381,16 @@ class ChartList():
 
   #create a copy of the list containing entries that
   #have a particular tile
-  def filterByTile(self,tile):
+  def filterByBaseTile(self,tile):
     rt=ChartList(self.mercator)
     for ce in self.tlist:
-      if ce.hasTile(tile):
+      if ce.hasBaseTile(tile):
         rt.tlist.append(ce)
     return rt
-  def getTilesSet(self,zoom):
+  def getBaseTilesSet(self):
     rt=set()
     for ce in self.tlist:
-      rt=rt| ce.getTilesSet(zoom,self.mercator)
+      rt=rt| ce.getBaseTilesSet()
     return rt
   #-------------------------------------
   #get the bounding box for the list of charts
@@ -420,11 +425,11 @@ class ChartList():
     ld("getMinMaxLayer",minlayer,maxlayer)
     return (minlayer,maxlayer)
 
-  #update the corner tiles for a zoom level
-  def updateCornerTiles(self,zoom):
+  #read all the basetiles that have been created by tiler tools
+  def readBaseTiles(self,workdir):
     for ce in self.tlist:
-      ce.updateCornerTiles(zoom,self.mercator)
- 
+      ce.readBaseTiles(workdir)
+
 
 #----------------------------
 #sax reader for chartlist
@@ -531,6 +536,15 @@ class TileStore:
       return
     fh=os.open(fname,"w")
     os.write(fh, self.data)
+  #get the image data as buffer
+  def getData(self):
+    if self.mode == TileStore.NONE:
+      return ""
+    if self.mode==TileStore.RAW:
+      return self.data
+    buf=StringIO.StringIO()
+    self.data.save(buf,format="PNG")
+    return buf.getvalue()
     
   def copyin(self,tlist):
     if isinstance(tlist, TileStore):
@@ -590,7 +604,7 @@ class BuildPyramid:
     buildts=[];
     currentLevel=self.getNumZoom()-1;
     for curtile in buildtiles:
-      celist=self.layercharts.filterByTile(curtile)
+      celist=self.layercharts.filterByBaseTile(curtile)
       buildts.append(mergeChartTiles(self.outdir,self.layername,curtile,celist))
     #now we have all the basetiles for this top level tile
     #go up the self now and store the tiles as they are created
@@ -632,7 +646,10 @@ class PyramidHandler(threading.Thread):
     threading.Thread.__init__(self)
   def run(self):
     while True:
-      pyramid=self.queue.get();
+      try:
+        pyramid=self.queue.get(True,60);
+      except Queue.Empty:
+        break
       pyramid.handlePyramid()
       ld("handler thread pyramid ready")
       self.queue.task_done()
@@ -1135,8 +1152,8 @@ def getLayerMinMaxZoom(chartlist,layer):
 def getLayerTilesPyramid(layercharts,layerminzoom,layermaxzoom):
   #collect the tiles for the max zoom level
   tilespyramid=[]
-  layermaxzoomtiles=layercharts.getTilesSet(layermaxzoom)
-  #compute the upper level tiles
+  layermaxzoomtiles=layercharts.getBaseTilesSet()
+  #compute the tiles for the smaller zoomlevel (upper in pyramid)
   layerztiles=layermaxzoomtiles
   idx=0
   tilespyramid.append(layerztiles)
@@ -1147,23 +1164,48 @@ def getLayerTilesPyramid(layercharts,layerminzoom,layermaxzoom):
   return tilespyramid
 
 
+#-------------------------------------
+#build the tilelists for all layers
+#returns a set key: layerindex, value: tilespyramid
+def createTileLists(chartlist):
+  minlayer,maxlayer=chartlist.getMinMaxLayer()
+  rt={}
+  for layer in range(minlayer,maxlayer+1):
+    layername=layer_zoom_levels[layer][1]
+    layerminzoom,layermaxzoom,layercharts=getLayerMinMaxZoom(chartlist,layer)
+    ld("creating pyramid for layer %s, minzoom=%d,maxzoom=%d",layername,layerminzoom,layermaxzoom)
+    tilespyramid=getLayerTilesPyramid(layercharts,layerminzoom,layermaxzoom)
+    rt[layer]=tilespyramid
+  return rt
+
+#-------------------------------------
+#a class used to write to a gemf file
+class WriterGemf():
+  def __init__(self,gemfname):
+    self.gemf=create_gemf.GemfWriter(gemfname,self)
+    self.name=gemfname
+  def log(self,txt):
+    log("GEMF %s:%s"%(self.name,txt))
+  def writeTile(self,layername,tilestore):
+    self.gemf.addTile(layername,tilestore.tile,tilestore.getData())
+    
 
 #-------------------------------------
 #merge the tiles for a layer
 #first build the pyramid of tile ids for all zoom layers
 #then for each top level tile (lowest zoom) build all tiles below in one run
 #all of them are first loaded into memory and afterwards both saved and merged
-def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
+def mergeLayerTiles(chartlist,outdir,layerindex,tilespyramid,gemf,onlyOverview=False):
   maxfiletime=None
-  layername=layer_zoom_levels[layer][1]
-  layerminzoom,layermaxzoom,layercharts=getLayerMinMaxZoom(chartlist,layer)
-  log("collecting base tiles for layer "+str(layer)+" ("+layername+") minzoom="+str(layerminzoom)+", maxzoom="+str(layermaxzoom))
+  layername=layer_zoom_levels[layerindex][1]
+  layerminzoom,layermaxzoom,layercharts=getLayerMinMaxZoom(chartlist,layerindex)
+  log("collecting base tiles for layer "+str(layerindex)+" ("+layername+") minzoom="+str(layerminzoom)+", maxzoom="+str(layermaxzoom))
   layerxmlfile=os.path.join(outdir,OUTTILES,layername,LAYERFILE)
   layerboundingsfile=os.path.join(outdir,OUTTILES,layername,LAYERBOUNDING)
   
   layerdir=os.path.join(outdir,OUTTILES,layername)
   if not onlyOverview:
-    if options.update == 1:
+    if options.update == 1 and gemf is None:
       for lc in layercharts.tlist:
         if os.path.exists(lc.filename):
           st=os.stat(lc.filename)
@@ -1192,11 +1234,11 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
       t=PyramidHandler(requestQueue)
       t.setDaemon(True)
       t.start()
-    tilespyramid=getLayerTilesPyramid(layercharts,layerminzoom,layermaxzoom)
     idx=len(tilespyramid)-1
     #in tilespyramid we now have all tiles for the layer min. zoom at index idx, maxZoom at index 0
     #now go top down
     #always take one tile of the min zoom layer and completely compute all tiles for this one
+    log("creating build jobs")
     numminzoom=len(tilespyramid[idx])
     numdone=0
     percent=-1
@@ -1205,7 +1247,7 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
     for topleveltile in tilespyramid[idx]:
       ld("handling toplevel tile ",topleveltile)
       
-      buildpyramid=BuildPyramid(layercharts,layername,outdir)
+      buildpyramid=BuildPyramid(layercharts,layername,outdir,gemf)
       buildpyramid.addZoomLevelTiles(set([topleveltile]))
       for buildidx in range(1,idx+1):
         nextlevel=set()
@@ -1261,19 +1303,33 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
   
 #merge the already created base tiles
 #-------------------------------------
-def mergeAllTiles(outdir,mercator,onlyOverview=False):
+def mergeAllTiles(outdir,mercator,gemf=None,onlyOverview=False):
   chartlist=readChartList(outdir,mercator)
   ld("chartlist read:",str(chartlist))
-  log("layers:"+str(layer_zoom_levels))
+  log("mergeAllTiles: layers: %s, start collecting created basetiles"%(str(layer_zoom_levels)))
+  chartlist.readBaseTiles(outdir)
+  log("mergeAllTiles: creating build pyramids")
+  tilelists=createTileLists(chartlist)
   #find the bounding box
   minlayer,maxlayer=chartlist.getMinMaxLayer()
-  minzoom=layer_zoom_levels[minlayer][0]
-  maxzoom=layer_zoom_levels[maxlayer][0]
-  ld("minzoom",minzoom,"maxzoom",maxzoom)
   layerminmax={}
+  if gemf is not None:
+    log("preparing gemf output file")
+    for layer in range(minlayer,maxlayer+1):
+      layername=layer_zoom_levels[layer][1]
+      layertiles=tilelists[layer]
+      tileset=set()
+      for i in range(len(layertiles)):
+        tileset|=set(layertiles[i])
+      log("adding tileset for layer %s with %d tiles to gemf" %(layername,len(tileset)))
+      gemf.gemf.addTileSet(layername,tileset)
+    gemf.gemf.finishHeader()
   for layer in range(minlayer,maxlayer+1):
-    layerminmax[layer]=mergeLayerTiles(chartlist, outdir, layer,onlyOverview)   
-    log("tile merge completely finished")
+    tiles=tilelists[layer]
+    layerminmax[layer]=mergeLayerTiles(chartlist, outdir, layer,tiles,gemf,onlyOverview)   
+    log("tile merge completely finished for layer %s" %(layer_zoom_levels[layer][1]))
+  if gemf is not None:
+    gemf.gemf.closeFile()
   overviewfname=os.path.join(outdir,OUTTILES,OVERVIEW)
   tilemaps=""
   for layer in range(minlayer,maxlayer+1):
@@ -1329,6 +1385,7 @@ def main(argv):
   parser.add_option("-a", "--add", dest="ttdir", help="directory where to search for tiler tools (if not set use environment TILERTOOLS or current dir)")
   parser.add_option("-n", "--opencpn", dest="opencpn", help="directory where opencpn is installed (if used for conversion) (if not set use environment OPENCPN)")
   parser.add_option("-f", "--force", action="store_const", const=0, dest="update", help="force update of existing charts (if not set, only necessary charts are generated")
+  parser.add_option("-g", "--newgemf", action="store_const", const=1, dest="newgemf", help="use new gemf writer (do not write merged tiles separately)")
   basedir=DEFAULT_OUTDIR
   (options, args) = parser.parse_args(argv[1:])
   if options.update is None :
@@ -1402,29 +1459,33 @@ def main(argv):
   if mode == "generate" or mode == "all" or mode == "base":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
     generateAllBaseTiles(outdir,mercator)
-  if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview":
+  if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview" or mode == "gemf":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
-    mergeAllTiles(outdir,mercator,(mode == "overview"))
-  if mode == "gemf" or mode == "all" :
-    assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
-    gemfoptions={}
-    if options.update == 1:
-      gemfoptions['update']=True
     mapdir=os.path.join(outdir,OUTTILES)
     gemfdir=os.path.join(basedir,OUT)
     if not os.path.isdir(gemfdir):
       os.makedirs(gemfdir,0777)
     gemfname=os.path.join(basedir,OUT,outname+".gemf")
+  if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview":
+    if options.newgemf:
+      gemfwriter=WriterGemf(gemfname)
+      ld("using new gemfwriting")
+    else:
+      gemfwriter=None
+    mergeAllTiles(outdir,mercator,gemfwriter,(mode == "overview"))
+  if ( mode == "gemf" or mode == "all" ) and not options.newgemf:
+    assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
+    gemfoptions={}
     marker=os.path.join(mapdir,"avnav.xml")
-    doGenerate=True
+    doGenerateGemf=True
     if options.update == 1:
       if os.path.exists(marker) and os.path.exists(gemfname):
         ostat=os.stat(gemfname)
         cstat=os.stat(marker)
         if (cstat.st_mtime <= ostat.st_mtime):
           log("file %s is newer then %s, no need to generate" %(gemfname,marker))
-          doGenerate=False
-    if doGenerate:
+          doGenerateGemf=False
+    if doGenerateGemf:
       log("starting creation of GEMF file %s"%(gemfname))
       generate_efficient_map_file.MakeGEMFFile(mapdir,gemfname,gemfoptions)
     log("gemf file %s successfully created" % (gemfname))

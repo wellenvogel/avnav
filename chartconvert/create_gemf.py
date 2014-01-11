@@ -52,6 +52,8 @@ class GemfWriter():
     self.lastFileStart=0 #bytes written at last start of a file
     self.firstoffset=0 #offset to be substracted from file offset for offsetbuffer
     self.numextrafiles=0
+    self.numtilesheader=0
+    self.numtileswritten=0
     self.lock=threading.Lock()
 
   def log(self,txt):
@@ -165,6 +167,8 @@ class GemfWriter():
           numranges+=1
       self.log("finishHeader: created %d ranges for source %s" %(numranges,source['name']))
     self.log("finishHeader: created %d ranges, %d sources, %d tiles" %(len(self.ranges),len(self.sources),numtiles))
+    self.numtilesheader=numtiles
+    self.numtileswritten=0
     self.log("finishHeader: start writing header data")
 
     #OK - we have now all ranges being filled - start writing the header
@@ -178,7 +182,7 @@ class GemfWriter():
       sourcelist+=struct.pack("!l",source['index'])
       l=len(source['name'])
       sourcelist+=struct.pack("!l",l)
-      sourcelist+=struct.pack("!%ds" % (l),source['name'])
+      sourcelist+=struct.pack("!%ds" % (l),str(source['name']))
     hdr=""
     hdr+=struct.pack("!3l",4,256,len(self.sources)) #GEMF version, tilesize,srclen
     hdr+=sourcelist
@@ -216,7 +220,7 @@ class GemfWriter():
     if self.firsthandle.fileno() != self.filehandle.fileno():
       self.filehandle.close()
     self.firsthandle.close()
-    self.log("closeFile: file successfully closed after %d bytes" % (self.bytesWritten))
+    self.log("closeFile: file successfully closed after %d bytes, %d tiles (%d tiles defined in header)" % (self.bytesWritten,self.numtileswritten,self.numtilesheader))
 
   #helper functions for adding tiles
   #find a range for a tile
@@ -288,6 +292,7 @@ class GemfWriter():
       self.filehandle.write(tiledata)
       self.bytesWritten+=dlen
       self.lock.release()
+      self.numtileswritten+=1
     except:
       self.lock.release()
       raise
