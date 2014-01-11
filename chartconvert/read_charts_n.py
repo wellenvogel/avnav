@@ -251,9 +251,9 @@ class ChartEntry():
 
   #return a dictinary with the parameters
   def getParam(self):
-    return { "filename":self.filename,"title":self.title,"mpp":self.mpp,"b1":self.bounds[0],"b2":self.bounds[1],"b3":self.bounds[2],"b4":self.bounds[3]}
+    return { "filename":self.filename,"title":self.title,"mpp":self.mpp,"b1":self.bounds[0],"b2":self.bounds[1],"b3":self.bounds[2],"b4":self.bounds[3],"layer":self.layer}
   def __str__(self):
-    rt="Chart: file=%(filename)s, title=%(title)s, mpp=%(mpp)f, boundsll=(%(b1)f,%(b2)f,%(b3)f,%(b4)f)" % self.getParam()
+    rt="Chart: file=%(filename)s, title=%(title)s, layer=%(layer)d, mpp=%(mpp)f, boundsll=(%(b1)f,%(b2)f,%(b3)f,%(b4)f)" % self.getParam()
     return rt
 
   def toXML(self):
@@ -283,8 +283,8 @@ class ChartEntry():
       return False
     return True
 
-  def getTilesSet(self,zoom):
-    self.updateCornerTiles(zoom)
+  def getTilesSet(self,zoom,mercator):
+    self.updateCornerTiles(zoom,mercator)
     if self.ultile is None or self.lrtile is None:
       return set()
     rt=set()
@@ -329,7 +329,7 @@ class ChartList():
         if lastlayer != -1:
           rt+="</layer>\n"
         layerzoom=layer_zoom_levels[layer]
-        rt+="""<layer zoom="%d" name="%s" mpp="%f">\n""" % (layerzoom[0],layerzoom[1],zoom_mpp[layerzoom[0]])
+        rt+="""<layer zoom="%d" name="%s" mpp="%f">\n""" % (layerzoom[0],layerzoom[1],self.mercator.mppForZoom(layerzoom[0]))
         lastlayer=layer
       rt+=le.toXML()+"\n";
     if lastlayer != -1 :
@@ -350,19 +350,19 @@ class ChartList():
     log("chartlist saved to "+fname)
     h.close()
 
-  def createFromXml(filename):
+  def createFromXml(filename,mercator):
     global layer_zoom_levels
     layer_zoom_levels=[]
     if not os.path.isfile(filename):
       warn("unable to find file "+filename)
       return None
-    chartlist=ChartList()
+    chartlist=ChartList(mercator)
     parser=sax.parse(filename,ChartListHandler(chartlist,layer_zoom_levels))
     return chartlist
   createFromXml=staticmethod(createFromXml)
 
   def filterByLayer(self,layer):
-    rt=ChartList()
+    rt=ChartList(self.mercator)
     for ce in self.tlist:
       if ce.layer == layer:
         rt.tlist.append(ce)
@@ -371,7 +371,7 @@ class ChartList():
   #create a copy of the list containing entries that
   #have a particular tile
   def filterByTile(self,tile):
-    rt=ChartList()
+    rt=ChartList(self.mercator)
     for ce in self.tlist:
       if ce.hasTile(tile):
         rt.tlist.append(ce)
@@ -379,10 +379,11 @@ class ChartList():
   def getTilesSet(self,zoom):
     rt=set()
     for ce in self.tlist:
-      rt=rt| ce.getTilesSet(zoom)
+      rt=rt| ce.getTilesSet(zoom,self.mercator)
     return rt
   #-------------------------------------
   #get the bounding box for the list of charts
+  #in lat/lon - ul has min lon(x),max lat(y)
   def getChartsBoundingBox(self):
     ulx=None
     lrx=None
@@ -392,11 +393,11 @@ class ChartList():
       bulx,buly,blrx,blry=ce.bounds
       if ulx is None or ulx > bulx:
         ulx=bulx
-      if uly is None or uly > buly:
+      if uly is None or uly < buly:
         uly=buly
       if lrx is None or lrx < blrx:
         lrx=blrx
-      if lry is None or lry < blry:
+      if lry is None or lry > blry:
         lry=blry
     ld("getChartsBoundingBox",ulx,uly,lrx,lry)
     return (ulx,uly,lrx,lry)
@@ -729,6 +730,12 @@ class Mercator:
       if mpp < self.zoom_mpp[i]:
         return i
     return self.MAXZOOM
+
+  #get the units per pixel (mpp) for a given zoomlevel
+  def mppForZoom(self,zoom):
+    if zoom < 0 or zoom > self.MAXZOOM :
+      return 0
+    return self.zoom_mpp[zoom]
   #-------------------------------------
   #make a best guess for the layer a chart should goto
   #currently we first find the zoom level with the next lower mpp
@@ -769,9 +776,9 @@ class Mercator:
 #we would have to do this for all charts to get a common reference, so we currently prevent such charts
 #in the future we could split such charts into 2 parts...
 def checkCross180(dataset,mercator):
-  transformer=gdal.transformer(dataset,None,["DST_SRS=%s" % (mercator.getLongLatWkt()),])
+  transformer=gdal.Transformer(dataset,None,["DST_SRS=%s" % (mercator.getLongLatWkt()),])
   ld("transformer",transformer)
-  transformed,ok=self.TransformPoints(inv,[ (0,0), (dataset.RasterXSize,dataset.RasterYSize)])
+  transformed,ok=transformer.TransformPoints(False,[ (0,0), (dataset.RasterXSize,dataset.RasterYSize)])
   assert ok
   ld('checkCross180',transformed)
   if transformed[0][0] <= 180 and transformed[1][0] >=-180 and transformed[0][0] < transformed[1][0]:
@@ -788,13 +795,13 @@ def getTilePath(tile):
 #all our boundings are in lat/lon (EPSG:4326)
 def createChartEntry(fname,dataset,mercator):
   title=dataset.GetMetadataItem('DESCRIPTION')
-  if checkCross180(dataset):
+  if checkCross180(dataset,mercator):
     warn("the chart "+fname+" crosses 180 - we currently cannot handle this")
     return None
   if title is None:
       title=os.path.basename(fname)
   ld("title",title)
-  t_ds=gdal.AutoCreateWarpedVRT(dataset,None,TARGET_SRS)
+  t_ds=gdal.AutoCreateWarpedVRT(dataset,None,mercator.getTargetWkt())
   ld("Raster X",t_ds.RasterXSize,"Y",t_ds.RasterYSize)
   geotr=t_ds.GetGeoTransform()
   ld("geotr",geotr)
@@ -920,11 +927,11 @@ def createChartList(args,outdir,mercator):
   charts.save(LISTFILE,outdir)
 #-------------------------------------
 #read the chartlist from the xml file
-def readChartList(outdir):
+def readChartList(outdir,mercator):
   fname=LISTFILE
   if outdir is not None:
     fname=os.path.join(outdir,LISTFILE)
-  chartlist=ChartList.createFromXml(fname)
+  chartlist=ChartList.createFromXml(fname,mercator)
   assert chartlist is not None,"unable to read chartlist from "+fname
   return chartlist
 #-------------------------------------
@@ -936,7 +943,7 @@ def getTilesDir(chartEntry,outdir,inp):
   out=os.path.join(outdir,BASETILES);
   if not inp:
     b,e=os.path.splitext(os.path.basename(chartEntry.filename))
-    out=os.path.join(out,b+".tms")
+    out=os.path.join(out,b+".zxy")
   return out
 
 
@@ -1071,8 +1078,8 @@ def generateBaseTiles(chartEntry,outdir):
 
 #-------------------------------------
 #create the base tiles from the chartlist
-def generateAllBaseTiles(outdir):
-  chartlist=readChartList(outdir)
+def generateAllBaseTiles(outdir,mercator):
+  chartlist=readChartList(outdir,mercator)
   ld("chartlist read:",str(chartlist))
   log("layers:"+str(layer_zoom_levels))
   for chartEntry in chartlist.tlist:
@@ -1099,13 +1106,15 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
     layerminzoom=1
   layercharts=chartlist.filterByLayer(layer)
   layerulx,layeruly,layerlrx,layerlry=layercharts.getChartsBoundingBox()
+  ulc_x,ulc_y=layercharts.mercator.transform_point(layerulx,layeruly)
+  lrc_x,lrc_y=layercharts.mercator.transform_point(layerlrx,layerlry)
   if layer == (len(layer_zoom_levels)-1):
     #for the layer with the lowest resolution select a minzoom
     #to fit app. into 600px
-    xw=layerlrx-layerulx
-    yw=layeruly-layerlry
+    xw=lrc_x-ulc_x
+    yw=ulc_y-lrc_y
     while layerminzoom > 0:
-      mpp=zoom_mpp[layerminzoom]
+      mpp=layercharts.mercator.mppForZoom(layerminzoom)
       xpix=xw/mpp
       ypix=yw/mpp
       if xpix < MINZOOMPIXEL or ypix < MINZOOMPIXEL:
@@ -1144,7 +1153,7 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
     #TODO: skip if we have no charts at all
     #collect the tiles for the max zoom level
     tilespyramid=[]
-    layermaxzoomtiles=layercharts.getTilesSet(layermaxzoom)
+    layermaxzoomtiles=layercharts.getTilesSet(layermaxzoom,chartlist.mercator)
     #compute the upper level tiles
     layerztiles=layermaxzoomtiles
     idx=0
@@ -1217,8 +1226,6 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
                       "tile_height":TILESIZE,
                       "tile_ext":"png",
                       "tile_mime":"x-png",
-                      "origin_x":pixelOrigins[0],
-                      "origin_y":pixelOrigins[1],
                       "tilesets":tilesets}
   
   with open(layerxmlfile,"w") as f:
@@ -1228,8 +1235,8 @@ def mergeLayerTiles(chartlist,outdir,layer,onlyOverview=False):
   
 #merge the already created base tiles
 #-------------------------------------
-def mergeAllTiles(outdir,onlyOverview=False):
-  chartlist=readChartList(outdir)
+def mergeAllTiles(outdir,mercator,onlyOverview=False):
+  chartlist=readChartList(outdir,mercator)
   ld("chartlist read:",str(chartlist))
   log("layers:"+str(layer_zoom_levels))
   #find the bounding box
@@ -1251,7 +1258,7 @@ def mergeAllTiles(outdir,onlyOverview=False):
       boundings+=createBoundingsXml(ce.bounds, ce.title)
     boundstr=boundings_xml % {"boundings": boundings}
     tilemaps+=overview_tilemap_xml % {
-              "profile": "global-mercator" if not options.google==1 else "zxy-mercator",
+              "profile": "zxy-mercator",
               "title":layername,
               "url":layername,
               "minZoom":layerminmax[layer][0],
@@ -1262,8 +1269,6 @@ def mergeAllTiles(outdir,onlyOverview=False):
               "tile_height":TILESIZE,
               "tile_ext":"png",
               "tile_mime":"x-png",
-              "origin_x":pixelOrigins[0],
-              "origin_y":pixelOrigins[1],
               }
   overviewstr=overview_xml % {
               "tilemaps":tilemaps,
@@ -1296,7 +1301,6 @@ def main(argv):
   parser.add_option("-a", "--add", dest="ttdir", help="directory where to search for tiler tools (if not set use environment TILERTOOLS or current dir)")
   parser.add_option("-n", "--opencpn", dest="opencpn", help="directory where opencpn is installed (if used for conversion) (if not set use environment OPENCPN)")
   parser.add_option("-u", "--update", action="store_const", const=1, dest="update", help="update existing charts (if not set, existing ones are regenerated")
-  parser.add_option("-g", "--google", action="store_const", const=1, dest="google", help="use the google/slippy map tile numbering (y starting 0 upper left)")
   (options, args) = parser.parse_args(argv[1:])
   logging.basicConfig(level=logging.DEBUG if options.verbose==2 else 
       (logging.ERROR if options.verbose==0 else logging.INFO))
@@ -1326,7 +1330,7 @@ def main(argv):
     print usage
     sys.exit(1)
   TilerTools=findTilerTools(options.ttdir)
-  init_srs()
+  mercator=Mercator()
   outdir=args.pop(0)
   ld("outdir",outdir)
   mode="generate"
@@ -1342,13 +1346,13 @@ def main(argv):
     basetiles=os.path.join(outdir,BASETILES)
     if not os.path.isdir(basetiles):
       os.makedirs(basetiles, 0777)
-    createChartList(args,outdir)
+    createChartList(args,outdir,mercator)
   if mode == "generate" or mode == "all":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
-    generateAllBaseTiles(outdir)
+    generateAllBaseTiles(outdir,mercator)
   if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
-    mergeAllTiles(outdir,(mode == "overview"))
+    mergeAllTiles(outdir,mercator,(mode == "overview"))
 
 
 
