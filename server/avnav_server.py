@@ -54,6 +54,7 @@ import math
 import re
 import ctypes
 import select
+import gemf_reader
 try:
   import create_overview
 except:
@@ -2802,6 +2803,8 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if self.basedir==".":
       self.basedir=os.getcwd()
     pathmappings=None
+    #a list of gemf files (key is the url below charts)
+    self.gemflist={}
     marray=cfgparam.get("Directory")
     if marray is not None:
       pathmappings={}
@@ -2826,6 +2829,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.setName("[%s]%s"%(AVNLog.getThreadId(),"HTTPServer"))
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(str(self.server_port)),AVNWorker.Status.RUNNING)
+    self.handleGemfFiles()
     self.serve_forever()
     
   def handlePathmapping(self,path):
@@ -2839,7 +2843,71 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       return path
     else:
       return path
-   
+  #check the list of open gemf files
+  def handleGemfFiles(self):
+    chartbaseurl=self.getStringParam('chartbase')
+    if chartbaseurl is None:
+      AVNLog.debug("no chartbase defined - no gemf handling")
+      return
+    chartbaseDir=self.handlePathmapping(chartbaseurl)
+    if not os.path.isdir(chartbaseDir):
+      AVNLog.debug("chartbase is no directory - no gemf handling")
+      return
+    files=os.listdir(chartbaseDir)
+    currentlist=[]
+    for f in files:
+      if not f.endswith(".gemf"):
+        continue
+      if not os.path.isfile(os.path.join(chartbaseDir,f)):
+        continue
+      AVNLog.debug("found gemf file %s",f)
+      currentlist.append(f)
+    for old in self.gemflist:
+      if not old in currentlist:
+        AVNLog.info("closing gemf file %s",old)
+        self.gemflist[old].close()
+        del self.gemlist[old]
+    for newgmf in currentlist:
+      if not newgmf in self.gemflist:
+        fname=os.path.join(chartbaseDir,newgmf)
+        AVNLog.info("trying to add gemf file %s",fname)
+        gemf=gemf_reader.GemfFile(fname)
+        try:
+          gemf.open()
+          avnav=self.getGemfInfo(gemf)
+          gemfdata={'name':newgmf.replace(".gemf",""),'gemf':gemf,'avnav':avnav}
+          self.gemflist[newgmf]=gemfdata
+          AVNLog.info("successfully added gemf file %s",fname)
+        except:
+          AVNLog.error("error while trying to open gemf file %s  %s",fname,traceback.format_exc())
+
+  #get the avnav info from a gemf file
+  #we can nicely reuse here the stuff we have for MOBAC atlas files
+  def getGemfInfo(self,gemf):
+    layerlist=[]
+    try:
+      data=gemf.getSources()
+      for src in data:
+        tilegroup=create_overview.Tilegroup(src['name'])
+        for rdata in src['ranges']:
+          tileset=create_overview.Tileset("gemfrange",rdata['zoom'],rdata['xmin'],rdata['ymin'],rdata['xmax'],rdata['ymax'])
+          tilegroup.addElement(tileset)
+        layer=create_overview.Layer(src['name'],tilegroup.minzoom,tilegroup.maxzoom,src['name'])
+        layer.addEntry(tilegroup)
+        AVNLog.debug("GEMF overview %f, created layer %s",gemf.filename,layer)
+        layerlist.append(layer)
+      #sort layerlist (srclist) by maxzoom
+      layerlist.sort(key=lambda x: x.maxzoom,reverse=True)
+      rt=create_overview.createOverview(layerlist)
+      AVNLog.info("created GEMF overview for %s: %s",gemf.filename,rt)
+      return rt
+
+    except:
+      AVNLog.error("error while trying to get the overview data for %s  %s",gemf.filename,traceback.format_exc())
+      
+    return "<Dummy/>"
+
+
 
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def __init__(self,request,client_address,server):
@@ -2923,6 +2991,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       if path==self.server.navurl:
         self.handleNavRequest(path,query)
         return None
+      if path.startswith("/gemf"):
+        self.handleGemfRequest(path,query)
+        return None
       if path=="" or path=="/":
         path=self.server.getStringParam('index')
         self.send_response(301)
@@ -2951,7 +3022,51 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     if len(pa) > 0:
       return pa[0]
     return None
+
+  #handle the request to an gemf file
+  def handleGemfRequest(self,path,query):
+    try:
+      path=path.replace("/gemf/","",1)
+      parr=path.split("/")
+      gemfname=parr[0]
+      for g in self.server.gemflist.values():
+        if g['name']==gemfname:
+          AVNLog.debug("gemf file %s, request %s, lend=%d",gemfname,path,len(parr))
+          #found file
+          #basically e can today handle 2 types of requests:
+          #get the overview /gemf/<name>/avnav.xml
+          #get a tile /gemf/<name>/<srcname>/z/x/y.png
+          if parr[1] == navxml:
+            AVNLog.debug("avnav request for GEMF %s",gemfname)
+            data=g['avnav']
+            self.send_response(200)
+            self.send_header("Content-type", "text/xml")
+            self.send_header("Content-Length", len(data))
+            self.send_header("Last-Modified", self.date_time_string())
+            self.end_headers()
+            self.wfile.write(data)
+            return None
+          if len(parr) != 5:
+            raise Exception("invalid request to GEMF file %s: %s" %(gemfname,path))
+          data=g['gemf'].getTileData((int(parr[2]),int(parr[3]),int(parr[4].replace(".png",""))),parr[1])
+          if data is None:
+            self.send_error(404,"File %s not found"%(path))
+            return None
+          self.send_response(200)
+          self.send_header("Content-type", "image/png")
+          self.send_header("Content-Length", len(data))
+          self.send_header("Last-Modified", self.date_time_string())
+          self.end_headers()
+          self.wfile.write(data)
+          return None
+      raise Exception("gemf file %s not found" %(gemfname))
+    except:
+      self.send_error(500,"Error: %s"%(traceback.format_exc()))
+      return
       
+        
+
+
   #handle a navigational query
   #request parameters:
   #request=gps&filter=TPV&bbox=54.531,13.014,54.799,13.255
@@ -3091,13 +3206,21 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     if not os.path.isdir(chartbaseDir):
       rt['info']="chart directory %s not found"%(chartbaseDir)
       return json.dumps(rt)
+    self.server.handleGemfFiles()
+    rt['status']='OK'
+    rt['data']=[]
+    for gemfdata in self.server.gemflist.values():
+      entry={
+             'name':gemfdata['name'],
+             'url':"/gemf/"+gemfdata['name'],
+             'charturl':"/gemf/"+gemfdata['name']
+      }
+      rt['data'].append(entry)
     try:
       list = os.listdir(chartbaseDir)
     except os.error:
       rt['info']="unable to read chart directory %s"%(chartbaseDir)
       return json.dumps(rt)
-    rt['status']='OK'
-    rt['data']=[]
     urlbase=self.server.getStringParam('chartbaseurl')
     if urlbase == '':
       urlbase=None
@@ -3206,7 +3329,7 @@ def main(argv):
               AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader,AVNUsbSerialReader,
               AVNSocketWriter,AVNSocketReader,AVNChartHandler]
   cfgname=None
-  usage="usage: %s [-q][-d][-p pidfile] [configfile] " % (argv[0])
+  usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
         usage = usage,
         version="1.0",

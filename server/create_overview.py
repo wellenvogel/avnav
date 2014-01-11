@@ -144,11 +144,12 @@ class Tilegroup():
       
 
 class Layer():
-  def __init__(self,name,minzoom,maxzoom):
+  def __init__(self,name,minzoom,maxzoom,baseurl=""):
     self.tlist=[]
     self.minzoom=minzoom
     self.maxzoom=maxzoom
     self.name=name
+    self.baseurl=baseurl
   #add ad group if their minzoom/maxzoom fits
   #return true/false  
   def addEntry(self,tilegroup):
@@ -238,7 +239,7 @@ def createBoundingsXml(tileset):
   return boundingbox_xml % tileset.getBoundings()
   
 
-def writeOverview(overviewfname,layerlist):
+def createOverview(layerlist):
   tilemaps=""
   for layer in layerlist:
     boundings=""
@@ -248,7 +249,7 @@ def writeOverview(overviewfname,layerlist):
     tilemaps+=overview_tilemap_xml % {
               "profile": "zxy-mercator",
               "title":layer.name,
-              "url":'',
+              "url":layer.baseurl,
               "minZoom":layer.minzoom,
               "maxZoom":layer.maxzoom,
               "bounding":createBoundingsXml(layer.getBoundingElement()),
@@ -257,6 +258,9 @@ def writeOverview(overviewfname,layerlist):
   overviewstr=overview_xml % {
               "tilemaps":tilemaps,
                               }
+  return overviewstr
+def writeOverview(overviewfname,layerlist):
+  overviewstr=createOverview(layerlist)
   with open(overviewfname,"w") as f:
     f.write(overviewstr)
   log(overviewfname+" written, successfully finished")

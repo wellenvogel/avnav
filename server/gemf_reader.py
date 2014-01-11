@@ -129,12 +129,12 @@ class GemfFile():
     ynum=rdata['ymax']-rdata['ymin']+1;
     idxy=y-rdata['ymin']
     idxx=x-rdata['xmin']
-    idxr=idxx*ynum+idxx;
+    idxr=idxx*ynum+idxy;
     #each range entry has 12 bytes (offset 8 , len 4)
     offset=12*idxr+rdata['offset']
     try:
       self.lock.acquire()
-      self.handles[0].fseek(offset)
+      self.handles[0].seek(offset)
       buf=self.handles[0].read(12)
       self.lock.release()
       offset,flen=struct.unpack_from("!ql",buf,0)
@@ -151,7 +151,7 @@ class GemfFile():
     try:
       #todo: handle multiple files
       self.lock.acquire()
-      self.handles[0].fseek(offset)
+      self.handles[0].seek(offset)
       buf=self.handles[0].read(flen)
       self.lock.release()
       return buf
