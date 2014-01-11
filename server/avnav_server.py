@@ -2829,7 +2829,9 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.setName("[%s]%s"%(AVNLog.getThreadId(),"HTTPServer"))
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(str(self.server_port)),AVNWorker.Status.RUNNING)
-    self.handleGemfFiles()
+    self.gemfhandler=threading.Thread(target=self.handleGemfFiles)
+    self.gemfhandler.daemon=True
+    self.gemfhandler.start()
     self.serve_forever()
     
   def handlePathmapping(self,path):
@@ -2845,66 +2847,62 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       return path
   #check the list of open gemf files
   def handleGemfFiles(self):
-    chartbaseurl=self.getStringParam('chartbase')
-    if chartbaseurl is None:
-      AVNLog.debug("no chartbase defined - no gemf handling")
-      return
-    chartbaseDir=self.handlePathmapping(chartbaseurl)
-    if not os.path.isdir(chartbaseDir):
-      AVNLog.debug("chartbase is no directory - no gemf handling")
-      return
-    files=os.listdir(chartbaseDir)
-    currentlist=[]
-    for f in files:
-      if not f.endswith(".gemf"):
-        continue
-      if not os.path.isfile(os.path.join(chartbaseDir,f)):
-        continue
-      AVNLog.debug("found gemf file %s",f)
-      currentlist.append(f)
-    for old in self.gemflist:
-      if not old in currentlist:
-        AVNLog.info("closing gemf file %s",old)
-        self.gemflist[old].close()
-        del self.gemlist[old]
-    for newgmf in currentlist:
-      if not newgmf in self.gemflist:
-        fname=os.path.join(chartbaseDir,newgmf)
-        AVNLog.info("trying to add gemf file %s",fname)
-        gemf=gemf_reader.GemfFile(fname)
-        try:
-          gemf.open()
-          avnav=self.getGemfInfo(gemf)
-          gemfdata={'name':newgmf.replace(".gemf",""),'gemf':gemf,'avnav':avnav}
-          self.gemflist[newgmf]=gemfdata
-          AVNLog.info("successfully added gemf file %s",fname)
-        except:
-          AVNLog.error("error while trying to open gemf file %s  %s",fname,traceback.format_exc())
+    while True:
+      try:
+        chartbaseurl=self.getStringParam('chartbase')
+        if chartbaseurl is None:
+          AVNLog.debug("no chartbase defined - no gemf handling")
+          time.sleep(5)
+          continue
+        chartbaseDir=self.handlePathmapping(chartbaseurl)
+        if not os.path.isdir(chartbaseDir):
+          AVNLog.debug("chartbase is no directory - no gemf handling")
+          time.sleep(5)
+          continue
+        files=os.listdir(chartbaseDir)
+        oldlist=self.gemflist.keys()
+        currentlist=[]
+        for f in files:
+          if not f.endswith(".gemf"):
+            continue
+          if not os.path.isfile(os.path.join(chartbaseDir,f)):
+            continue
+          AVNLog.debug("found gemf file %s",f)
+          currentlist.append(f)
+        for old in oldlist:
+          if not old in currentlist:
+            AVNLog.info("closing gemf file %s",old)
+            oldfile=self.gemflist[old]
+            oldfile['gemf'].close()
+            del self.gemflist[old]
+        for newgmf in currentlist:
+          if not newgmf in oldlist:
+            fname=os.path.join(chartbaseDir,newgmf)
+            AVNLog.info("trying to add gemf file %s",fname)
+            gemf=gemf_reader.GemfFile(fname)
+            try:
+              gemf.open()
+              avnav=self.getGemfInfo(gemf)
+              gemfdata={'name':newgmf.replace(".gemf",""),'gemf':gemf,'avnav':avnav}
+              self.gemflist[newgmf]=gemfdata
+              AVNLog.info("successfully added gemf file %s %s",newgmf,fname)
+            except:
+              AVNLog.error("error while trying to open gemf file %s  %s",fname,traceback.format_exc())
+      except:
+        pass
+      time.sleep(5)
 
   #get the avnav info from a gemf file
   #we can nicely reuse here the stuff we have for MOBAC atlas files
   def getGemfInfo(self,gemf):
-    layerlist=[]
     try:
       data=gemf.getSources()
-      for src in data:
-        tilegroup=create_overview.Tilegroup(src['name'])
-        for rdata in src['ranges']:
-          tileset=create_overview.Tileset("gemfrange",rdata['zoom'],rdata['xmin'],rdata['ymin'],rdata['xmax'],rdata['ymax'])
-          tilegroup.addElement(tileset)
-        layer=create_overview.Layer(src['name'],tilegroup.minzoom,tilegroup.maxzoom,src['name'])
-        layer.addEntry(tilegroup)
-        AVNLog.debug("GEMF overview %f, created layer %s",gemf.filename,layer)
-        layerlist.append(layer)
-      #sort layerlist (srclist) by maxzoom
-      layerlist.sort(key=lambda x: x.maxzoom,reverse=True)
-      rt=create_overview.createOverview(layerlist)
+      rt=create_overview.getGemfInfo(data)
       AVNLog.info("created GEMF overview for %s: %s",gemf.filename,rt)
       return rt
 
     except:
       AVNLog.error("error while trying to get the overview data for %s  %s",gemf.filename,traceback.format_exc())
-      
     return "<Dummy/>"
 
 
@@ -3206,7 +3204,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     if not os.path.isdir(chartbaseDir):
       rt['info']="chart directory %s not found"%(chartbaseDir)
       return json.dumps(rt)
-    self.server.handleGemfFiles()
     rt['status']='OK'
     rt['data']=[]
     for gemfdata in self.server.gemflist.values():

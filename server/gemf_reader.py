@@ -97,6 +97,8 @@ class GemfFile():
   #source - the name of the source
   #return the range data
   def findRangeForTile(self,tile,source):
+    if not self.isOpen:
+      return None
     idx=-1
     for s in self.sources:
       if s['name'] == source:
@@ -108,6 +110,8 @@ class GemfFile():
 
   #find a range for a tile given the source idx
   def findRangeForTileByIdx(self,tile,idx):
+    if not self.isOpen:
+      return None
     z,x,y=tile
     for rdata in self.ranges:
       if idx != rdata['idx']:

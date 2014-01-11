@@ -265,6 +265,28 @@ def writeOverview(overviewfname,layerlist):
     f.write(overviewstr)
   log(overviewfname+" written, successfully finished")
 
+#create an avnav.xml string from a GEMF file
+#we assume that our GEMF file is somehow complete - i.e. if there is a range 
+#contained in a higher zoomlevel, we assume that it is also there in lower ones
+#so we compute the enclosing ranges only from the highest level for each source
+#the data is expected in the format of getSources from GemfFile (an array of sources each containing an array of ranges)
+
+def getGemfInfo(data):
+  layerlist=[]
+  for src in data:
+    tilegroup=Tilegroup(src['name'])
+    for rdata in src['ranges']:
+      tileset=Tileset("gemfrange",rdata['zoom'],rdata['xmin'],rdata['ymin'],rdata['xmax'],rdata['ymax'])
+      tilegroup.addElement(tileset)
+    layer=Layer(src['name'],tilegroup.minzoom,tilegroup.maxzoom,src['name'])
+    layer.addEntry(tilegroup)
+    layerlist.append(layer)
+  #sort layerlist (srclist) by maxzoom
+  layerlist.sort(key=lambda x: x.maxzoom,reverse=True)
+  rt=createOverview(layerlist)
+  return rt
+
+
 def parseAndWrite(xmlfile,ovfile):
   log("parsing xml file %s"%(xmlfile,))
   layerlist=[]
