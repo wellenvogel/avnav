@@ -2875,21 +2875,29 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
             oldfile=self.gemflist[old]
             oldfile['gemf'].close()
             del self.gemflist[old]
-        for newgmf in currentlist:
-          if not newgmf in oldlist:
-            fname=os.path.join(chartbaseDir,newgmf)
+        for newgemf in currentlist:
+          fname=os.path.join(chartbaseDir,newgemf)
+          gstat=os.stat(fname)
+          oldgemfFile=self.gemflist.get(newgemf)
+          if oldgemfFile is not None:
+            if gstat.st_mtime != oldgemfFile['mtime']:
+              AVNLog.info("closing gemf file %s due to changed timestamp",newgemf)
+              oldgemfFile['gemf'].close()
+              del self.gemflist[newgemf]
+              oldgemfFile=None
+          if oldgemfFile is None:
             AVNLog.info("trying to add gemf file %s",fname)
             gemf=gemf_reader.GemfFile(fname)
             try:
               gemf.open()
               avnav=self.getGemfInfo(gemf)
-              gemfdata={'name':newgmf.replace(".gemf",""),'gemf':gemf,'avnav':avnav}
-              self.gemflist[newgmf]=gemfdata
-              AVNLog.info("successfully added gemf file %s %s",newgmf,fname)
+              gemfdata={'name':newgemf.replace(".gemf",""),'gemf':gemf,'avnav':avnav,'mtime':gstat.st_mtime}
+              self.gemflist[newgemf]=gemfdata
+              AVNLog.info("successfully added gemf file %s %s",newgemf,fname)
             except:
               AVNLog.error("error while trying to open gemf file %s  %s",fname,traceback.format_exc())
       except:
-        pass
+        AVNLog.error("Exception in gemf handler %s, ignore",traceback.format_exc())
       time.sleep(5)
 
   #get the avnav info from a gemf file
