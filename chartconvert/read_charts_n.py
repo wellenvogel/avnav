@@ -35,7 +35,38 @@ from compiler.pyassem import CONV
 #projection Mercator
 
 # read_charts.py:
-info="""
+import gdal
+import osr
+from gdalconst import *
+import os
+import sys
+import logging
+import shutil
+import itertools
+from optparse import OptionParser
+import xml.sax as sax 
+from PIL import Image
+import operator
+import math
+import shutil
+from stat import *
+import Queue
+import threading
+import time
+import site
+import subprocess
+import re
+import generate_efficient_map_file
+
+hasNvConvert=False
+try:
+  import convert_nv
+  hasNvConvert=True
+except:
+  pass
+
+pinfo="""
+ read_charts.py <options> indir|infile...
  read a list of charts and prepare them for the creation of slippy map (OSM) compatible tiles using GDAL and tiler_tools
  the workflow consists of 3 steps:
  1. creating an tilelist.xml file that contains
@@ -57,26 +88,23 @@ info="""
  You can control the behavior of the script using the -m mode (chartlist,generate,merge,all).
  Additionally the program assumes a suitable mode when you omit the -m mode depending on the parameters given.
  The basic call syntax is:
-   read_charts.py outdir [infiles(s)]
- When you provide both outdir and infiles, the mode chartlist is assumed, the file chartlist.xml is created at outdir.
+   read_charts.py [-m mode] [-o outname] [infiles(s)]
+ You must at least either provide an outname with -o or a list of input dirs/files.
+ The output is created at the basedir (see option --basedir),
  For infile(s) you can provide a list of files and/or directories that are recursively scanned for charts that can be
  opened with GDAL.
- When you only provide the outdir parameter (or use one of the modes generate or merge) the file chartlist.xml is read
- from the output directory and the tiles are generated at outdir/basetiles and outdir/tiles.
-
+ When you only provide the outname parameter (or use one of the modes generate or merge) the file chartlist.xml is read
+ from the output directory and the tiles are generated at outdir/basetiles and outdir/tiles. The GEMF file is created directly
+ at the output basedir
  directory structure of the output:
- <outdir>/tilelist.xml
- <outdir>/temp/xxx.vrt
+ <basedir>/work/<outname>/tilelist.xml
+ <basedir>/work/<outname>/temp/xxx.vrt
               /xxx.[png,jpg,...] - converted charts if necessary
- <outdir>/basetiles/...   - the generated tiles for the base zoom level
- <outdir>/tiles/<layername>/...   - the generated tiles 
+ <basedir>/work/<outname>/basetiles/...   - the generated tiles for the base zoom level
+ <basedir>/work/<outname>/tiles/<layername>/...   - the generated tiles 
+ <basedir>/out/<outname>.gemf - generated gemf file
 
- Paremeters:
-   -d           enable debug
-   -m mode      run mode all|chartlist|generate|merge
-   -c chartlist filename of the chartlist to be handled
-   -l layers    a list of zoomLevel:name separated by , to define the layers to be used (only for chartlist)
-   """
+"""
 
 LISTFILE="chartlist.xml"
 LAYERFILE="layer.xml"
@@ -84,6 +112,14 @@ LAYERBOUNDING="boundings.xml"
 OVERVIEW="avnav.xml"
 BASETILES="basetiles"
 OUTTILES="tiles"
+WORKDIR="work"
+OUT="out"
+DEFAULT_GEMF="avnav.gemf"
+userdir=os.path.expanduser("~")
+DEFAULT_OUTDIR=None
+if not userdir == "~":
+  DEFAULT_OUTDIR=os.path.join(userdir,"AvNavCharts")
+
 
 #max upscale of a chart when creating base tiles
 #this is only used when sorting into layers
@@ -161,35 +197,6 @@ layer_zoom_levels=[(6,"Base"),(10,"World"),(13,"Overview"),(15,"Nav"),(17,"Detai
 options=None
 
 
-import gdal
-import osr
-from gdalconst import *
-import os
-import sys
-import logging
-import shutil
-import itertools
-from optparse import OptionParser
-import xml.sax as sax 
-from PIL import Image
-import operator
-import math
-import shutil
-from stat import *
-import Queue
-import threading
-import time
-import site
-import subprocess
-import re
-
-hasNvConvert=False
-try:
-  import convert_nv
-  hasNvConvert=True
-except:
-  pass
-
 TilerTools=None
 
 
@@ -210,7 +217,7 @@ def findTilerTools(ttdir=None):
     ttdir=os.environ.get("TILERTOOLS")
   if ttdir is None:
     try:
-      ttdir=os.path.dirname(os.path.realpath(__file__))
+      ttdir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"tiler_tools")
     except:
       pass
   if ttdir is not None:
@@ -1283,11 +1290,10 @@ def mergeAllTiles(outdir,mercator,onlyOverview=False):
 def main(argv):
   
   global LISTFILE,layer_zoom_levels,options,MAXUPSCALE,TilerTools,MAXOVERLAP
-  usage="usage: %prog <options> outdir indir|infile..."
   parser = OptionParser(
-        usage = usage,
+        usage = "%prog [options] [chartdir or file...]",
         version="1.0",
-        description='read gdal compatible raster maps for tile creation')
+        description=pinfo)
   parser.add_option("-q", "--quiet", action="store_const", 
         const=0, default=1, dest="verbose")
   parser.add_option("-d", "--debug", action="store_const", 
@@ -1296,12 +1302,17 @@ def main(argv):
   parser.add_option("-m", "--mode", dest="mode", help="runmode, one of chartlist|generate|merge, default depends on parameters")
   parser.add_option("-l", "--layers", dest="layers", help="list of layers layer:title,layer:title,..., default=%s" % ",".join(["%d:%s" % (lz[0],lz[1]) for lz in layer_zoom_levels]))
   parser.add_option("-s", "--scale", dest="upscale", help="max upscaling when sorting a chart into the layers (default: %f)" % MAXUPSCALE)
-  parser.add_option("-o", "--overlap", dest="overlap", help="max overlap of zoomlevels between layers (default: %f)" % MAXOVERLAP)
+  parser.add_option("-p", "--overlap", dest="overlap", help="max overlap of zoomlevels between layers (default: %f)" % MAXOVERLAP)
+  parser.add_option("-o", "--outname", dest="outname", help="the name of the output gemf file (without gemf), when omitted and indir is given - use last dir of indir")
+  parser.add_option("-b", "--basedir", dest="basedir", help="the output and work directory, defaults to %s" % (DEFAULT_OUTDIR))
   parser.add_option("-t", "--threads", dest="threads", help="number of worker threads, default 4")
   parser.add_option("-a", "--add", dest="ttdir", help="directory where to search for tiler tools (if not set use environment TILERTOOLS or current dir)")
   parser.add_option("-n", "--opencpn", dest="opencpn", help="directory where opencpn is installed (if used for conversion) (if not set use environment OPENCPN)")
-  parser.add_option("-u", "--update", action="store_const", const=1, dest="update", help="update existing charts (if not set, existing ones are regenerated")
+  parser.add_option("-f", "--force", action="store_const", const=0, dest="update", help="force update of existing charts (if not set, only necessary charts are generated")
+  basedir=DEFAULT_OUTDIR
   (options, args) = parser.parse_args(argv[1:])
+  if options.update is None or options.update == 0:
+    options.update=1
   logging.basicConfig(level=logging.DEBUG if options.verbose==2 else 
       (logging.ERROR if options.verbose==0 else logging.INFO))
   if options.threads is None:
@@ -1323,27 +1334,48 @@ def main(argv):
   if options.overlap is not None:
     MAXOVERLAP=int(options.overlap)
     ld("upscale ",MAXOVERLAP)
-
+  if options.basedir is not None:
+    basedir=options.basedir
+  if basedir is None:
+    raise Exception("no basedir provided as option and default basedir could not be set from environment")
+  ld("basedir",basedir)
+  if not os.path.isdir(basedir):
+    os.makedirs(basedir,0777)
   ld(os.name)
   ld(options)
   if (len(args) < 1):
     print usage
     sys.exit(1)
+  if options.outname is not None:
+    outname=options.outname
+  else:
+    if not os.path.exists(args[0]):
+      print "path %s does not exist" % (args[0])
+      sys.exit(1)
+    dummy,outname=os.path.split(args[0])
+    if outname is None or outname == "":
+      #try again as we could have a / at the end
+      dummy,outname=os.path.split(dummy)
+    outname=re.compile('\.[^.]*$').sub("",outname)
+  if outname is None or outname == "":
+    print "cannot use empty name as outname"
+    sys.exit(1)
+  ld("outname",outname)
+  log("using outname %s" %(outname))
   TilerTools=findTilerTools(options.ttdir)
   mercator=Mercator()
-  outdir=args.pop(0)
-  ld("outdir",outdir)
-  mode="generate"
-  if len(args) > 0 :
-    mode="chartlist"
+  mode="all"
   if options.mode is not None:
     mode=options.mode
-    assert (mode == "chartlist" or mode == "generate" or mode == "all" or mode == "merge" or mode == "overview" or mode == "base"), "invalid mode "+mode+", allowed: chartlist,generate,merge,all,overview,base"
+    allowedModes=["chartlist","generate","all","merge","overview", "base","gemf"]
+    if not mode in allowedModes:
+      assert False, "invalid mode "+mode+", allowed: "+",".join(allowedModes)
   log("running in mode "+mode)
   if mode == "chartlist" or mode == "all":
     log("layers:"+str(layer_zoom_levels))
+  basetiles=os.path.join(basedir,WORKDIR,outname,BASETILES)
+  outdir=os.path.join(basedir,WORKDIR,outname)
   if mode == "chartlist"  or mode == "all":
-    basetiles=os.path.join(outdir,BASETILES)
     if not os.path.isdir(basetiles):
       os.makedirs(basetiles, 0777)
     createChartList(args,outdir,mercator)
@@ -1353,6 +1385,30 @@ def main(argv):
   if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
     mergeAllTiles(outdir,mercator,(mode == "overview"))
+  if mode == "gemf" or mode == "all" :
+    assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
+    gemfoptions={}
+    if options.update == 1:
+      gemfoptions['update']=True
+    mapdir=os.path.join(outdir,OUTTILES)
+    gemfdir=os.path.join(basedir,OUT)
+    if not os.path.isdir(gemfdir):
+      os.makedirs(gemfdir,0777)
+    gemfname=os.path.join(basedir,OUT,outname+".gemf")
+    marker=os.path.join(mapdir,"avnav.xml")
+    doGenerate=True
+    if options.update == 1:
+      if os.path.exists(marker) and os.path.exists(gemfname):
+        ostat=os.stat(gemfname)
+        cstat=os.stat(marker)
+        if (cstat.st_mtime <= ostat.st_mtime):
+          log("file %s is newer then %s, no need to generate" %(gemfname,marker))
+          doGenerate=False
+    if doGenerate:
+      log("starting creation of GEMF file %s"%(gemfname))
+      generate_efficient_map_file.MakeGEMFFile(mapdir,gemfname,gemfoptions)
+    log("gemf file %s successfully created" % (gemfname))
+
 
 
 
