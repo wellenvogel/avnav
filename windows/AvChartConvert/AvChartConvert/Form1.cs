@@ -8,63 +8,12 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Management;
+using System.IO;
 
 
 namespace AvChartConvert
 {
-    //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp
-    class ProcessUtilities
-    {
-        public static void KillProcessTree(Process root)
-        {
-            if (root != null)
-            {
-                var list = new List<Process>();
-                GetProcessAndChildren(Process.GetProcesses(), root, list, 1);
-
-                foreach (Process p in list)
-                {
-                    try
-                    {
-                        p.Kill();
-                    }
-                    catch (Exception ex)
-                    {
-                        //Log error?
-                    }
-                }
-            }
-        }
-
-        private static int GetParentProcessId(Process p)
-        {
-            int parentId = 0;
-            try
-            {
-                ManagementObject mo = new ManagementObject("win32_process.handle='" + p.Id + "'");
-                mo.Get();
-                parentId = Convert.ToInt32(mo["ParentProcessId"]);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                parentId = 0;
-            }
-            return parentId;
-        }
-
-        private static void GetProcessAndChildren(Process[] plist, Process parent, List<Process> output, int indent)
-        {
-            foreach (Process p in plist)
-            {
-                if (GetParentProcessId(p) == parent.Id)
-                {
-                    GetProcessAndChildren(plist, p, output, indent + 1);
-                }
-            }
-            output.Add(parent);
-        }
-    }
+   
     public partial class Form1 : Form
     {
         const String BASE = "AvNavCharts";
@@ -145,7 +94,22 @@ namespace AvChartConvert
                 {
                     String myPath = System.IO.Path.GetDirectoryName(
           System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");
-                    String cmd = myPath + "\\..\\..\\..\\..\\AvChartConvert.cmd";
+                    String cmd1 = myPath + "\\..\\..\\..\\..\\AvChartConvert.cmd";
+                    String cmd2 = myPath + "\\AvChartConvert.cmd";
+                    String cmd=null;
+                    if (File.Exists(cmd1))
+                    {
+                        cmd = cmd1;
+                    }
+                    if (File.Exists(cmd2))
+                    {
+                        cmd = cmd2;
+                    }
+                    if (cmd == null)
+                    {
+                        MessageBox.Show("command not found at " + cmd1 + " and at " + cmd2 + " - unable to execute");
+                        return;
+                    }
                     //MessageBox.Show("CMD:" + cmd);
                     ProcessStartInfo info = new ProcessStartInfo("cmd.exe");
                     String args = "/K " + cmd;
@@ -217,6 +181,59 @@ namespace AvChartConvert
         private void buttonEmpty_Click(object sender, EventArgs e)
         {
             this.textIn.Clear();
+        }
+    }
+    //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp
+    class ProcessUtilities
+    {
+        public static void KillProcessTree(Process root)
+        {
+            if (root != null)
+            {
+                var list = new List<Process>();
+                GetProcessAndChildren(Process.GetProcesses(), root, list, 1);
+
+                foreach (Process p in list)
+                {
+                    try
+                    {
+                        p.Kill();
+                    }
+                    catch (Exception ex)
+                    {
+                        //Log error?
+                    }
+                }
+            }
+        }
+
+        private static int GetParentProcessId(Process p)
+        {
+            int parentId = 0;
+            try
+            {
+                ManagementObject mo = new ManagementObject("win32_process.handle='" + p.Id + "'");
+                mo.Get();
+                parentId = Convert.ToInt32(mo["ParentProcessId"]);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                parentId = 0;
+            }
+            return parentId;
+        }
+
+        private static void GetProcessAndChildren(Process[] plist, Process parent, List<Process> output, int indent)
+        {
+            foreach (Process p in plist)
+            {
+                if (GetParentProcessId(p) == parent.Id)
+                {
+                    GetProcessAndChildren(plist, p, output, indent + 1);
+                }
+            }
+            output.Add(parent);
         }
     }
 }
