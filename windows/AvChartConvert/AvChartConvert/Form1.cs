@@ -9,13 +9,17 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.Management;
 using System.IO;
+using System.Runtime.InteropServices;
 
 
 namespace AvChartConvert
 {
+     
    
     public partial class Form1 : Form
     {
+        [DllImport("user32.dll")]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
         const String BASE = "AvNavCharts";
         String defaultOut = null;
         Process converter = null;
@@ -24,6 +28,7 @@ namespace AvChartConvert
             InitializeComponent();
             defaultOut= Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)+"\\"+BASE;
             this.textOutdir.Text = defaultOut;
+            this.textIn.Clear();
             string[] args = Environment.GetCommandLineArgs();
             if (args.Length > 1){
                 for (int i = 1; i < args.Length;i++ )
@@ -90,6 +95,12 @@ namespace AvChartConvert
                 }
             }
             Process p = new Process();
+            String[] infiles = this.textIn.Text.Split('\n');
+            if (infiles.Length < 1 || (infiles.Length == 1 && infiles[0] == ""))
+            {
+                MessageBox.Show("No input files");
+                return;
+            }
             try
                 {
                     String myPath = System.IO.Path.GetDirectoryName(
@@ -115,7 +126,7 @@ namespace AvChartConvert
                     String args = "/K " + cmd;
                     if (!this.checkBoxUpdate.Checked) args += " -f";
                     args += " -b " + "\"" + this.textOutdir.Text + "\"";
-                    foreach (String inf in this.textIn.Text.Split('\n'))
+                    foreach (String inf in infiles)
                     {
                         args += " \"" + inf + "\"";
                     }
@@ -125,6 +136,9 @@ namespace AvChartConvert
                     info.UseShellExecute = true;
                     p.StartInfo = info;
                     p.Start();
+                    this.labelProcess.Text = "Converter started with pid " + p.Id;
+                    this.buttonFocus.Visible = true;
+                    this.buttonStop.Visible = true;
                     converter = p;
                 }
                 catch (Exception exc)
@@ -156,7 +170,13 @@ namespace AvChartConvert
                 
             }
             this.buttonOK.Enabled = (converter == null);
-            this.buttonStop.Enabled = (converter != null);
+            this.buttonStop.Visible = (converter != null);
+            this.buttonFocus.Visible = (converter != null);
+            if (converter == null)
+            {
+                this.labelProcess.Text = "";
+                
+            }
         }
 
         private void buttonStop_Click(object sender, EventArgs e)
@@ -181,6 +201,14 @@ namespace AvChartConvert
         private void buttonEmpty_Click(object sender, EventArgs e)
         {
             this.textIn.Clear();
+        }
+
+        private void buttonFocus_Click(object sender, EventArgs e)
+        {
+            if (converter != null)
+            {
+                SetForegroundWindow(converter.MainWindowHandle);
+            }
         }
     }
     //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp

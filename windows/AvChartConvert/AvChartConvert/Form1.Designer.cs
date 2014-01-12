@@ -46,6 +46,8 @@
             this.buttonStop = new System.Windows.Forms.Button();
             this.buttonEmpty = new System.Windows.Forms.Button();
             this.buttonDefaultOut = new System.Windows.Forms.Button();
+            this.buttonFocus = new System.Windows.Forms.Button();
+            this.labelProcess = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // textIn
@@ -81,7 +83,7 @@
             // 
             // buttonOK
             // 
-            this.buttonOK.Location = new System.Drawing.Point(364, 550);
+            this.buttonOK.Location = new System.Drawing.Point(333, 550);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(75, 23);
             this.buttonOK.TabIndex = 3;
@@ -91,7 +93,7 @@
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(171, 550);
+            this.buttonCancel.Location = new System.Drawing.Point(239, 550);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 4;
@@ -155,13 +157,13 @@
             // 
             // buttonStop
             // 
-            this.buttonStop.Enabled = false;
-            this.buttonStop.Location = new System.Drawing.Point(270, 550);
+            this.buttonStop.Location = new System.Drawing.Point(448, 505);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 10;
             this.buttonStop.Text = "Stop";
             this.buttonStop.UseVisualStyleBackColor = true;
+            this.buttonStop.Visible = false;
             this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
             // 
             // buttonEmpty
@@ -184,11 +186,31 @@
             this.buttonDefaultOut.UseVisualStyleBackColor = true;
             this.buttonDefaultOut.Click += new System.EventHandler(this.buttonDefaultOut_Click);
             // 
+            // buttonFocus
+            // 
+            this.buttonFocus.Location = new System.Drawing.Point(529, 505);
+            this.buttonFocus.Name = "buttonFocus";
+            this.buttonFocus.Size = new System.Drawing.Size(75, 23);
+            this.buttonFocus.TabIndex = 13;
+            this.buttonFocus.Text = "Focus";
+            this.buttonFocus.UseVisualStyleBackColor = true;
+            this.buttonFocus.Visible = false;
+            this.buttonFocus.Click += new System.EventHandler(this.buttonFocus_Click);
+            // 
+            // labelProcess
+            // 
+            this.labelProcess.Location = new System.Drawing.Point(9, 505);
+            this.labelProcess.Name = "labelProcess";
+            this.labelProcess.Size = new System.Drawing.Size(430, 21);
+            this.labelProcess.TabIndex = 14;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(635, 607);
+            this.Controls.Add(this.labelProcess);
+            this.Controls.Add(this.buttonFocus);
             this.Controls.Add(this.buttonDefaultOut);
             this.Controls.Add(this.buttonEmpty);
             this.Controls.Add(this.buttonStop);
@@ -228,6 +250,8 @@
         private System.Windows.Forms.Button buttonStop;
         private System.Windows.Forms.Button buttonEmpty;
         private System.Windows.Forms.Button buttonDefaultOut;
+        private System.Windows.Forms.Button buttonFocus;
+        private System.Windows.Forms.Label labelProcess;
     }
 }
 
