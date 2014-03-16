@@ -2877,10 +2877,18 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
             del self.gemflist[old]
         for newgemf in currentlist:
           fname=os.path.join(chartbaseDir,newgemf)
+          govname=fname.replace(".gemf",".xml")
           gstat=os.stat(fname)
+          ovstat=None
+          if (os.path.isfile(govname)):
+            ovstat=os.stat(govname)
           oldgemfFile=self.gemflist.get(newgemf)
           if oldgemfFile is not None:
-            if gstat.st_mtime != oldgemfFile['mtime']:
+            mtime=gstat.st_mtime
+            if ovstat is not None:
+              if ovstat.st_mtime > mtime:
+                mtime=ovstat.st_mtime
+            if mtime != oldgemfFile['mtime']:
               AVNLog.info("closing gemf file %s due to changed timestamp",newgemf)
               oldgemfFile['gemf'].close()
               del self.gemflist[newgemf]
@@ -2890,7 +2898,17 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
             gemf=gemf_reader.GemfFile(fname)
             try:
               gemf.open()
-              avnav=self.getGemfInfo(gemf)
+              avnav=None
+              if ovstat is not None:
+                #currently this is some hack - if there is an overview
+                #xml file we assume the gemnf to have one source...
+                baseurl=gemf.sources[0].get('name')
+                AVNLog.info("using %s to create the GEMF overview, baseurl=%s"%(govname,baseurl))
+                avnav=create_overview.parseXml(govname,baseurl)
+                if avnav is None:
+                  AVNLog.error("unable to parse GEMF overview %s"%(govname,))
+              if avnav is None:
+                avnav=self.getGemfInfo(gemf)
               gemfdata={'name':newgemf.replace(".gemf",""),'gemf':gemf,'avnav':avnav,'mtime':gstat.st_mtime}
               self.gemflist[newgemf]=gemfdata
               AVNLog.info("successfully added gemf file %s %s",newgemf,fname)
@@ -3039,7 +3057,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if g['name']==gemfname:
           AVNLog.debug("gemf file %s, request %s, lend=%d",gemfname,path,len(parr))
           #found file
-          #basically e can today handle 2 types of requests:
+          #basically we can today handle 2 types of requests:
           #get the overview /gemf/<name>/avnav.xml
           #get a tile /gemf/<name>/<srcname>/z/x/y.png
           if parr[1] == navxml:

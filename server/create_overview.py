@@ -286,6 +286,21 @@ def getGemfInfo(data):
   rt=createOverview(layerlist)
   return rt
 
+#parse an overview file and return the overview as string
+def parseXml(xmlfile,baseurl=""):
+  log("parsing xml file %s"%(xmlfile,))
+  layerlist=[]
+  parser=sax.parse(xmlfile,ListHandler(layerlist))
+  if len(layerlist) > 0:
+    if baseurl != "":
+      for layer in layerlist:
+        layer.baseurl=baseurl
+    log("created %d layers from %s"%(len(layerlist),xmlfile))
+    layerlist.sort(key=lambda x: x.maxzoom,reverse=True)
+    return createOverview(layerlist)
+  else:
+    log("empty layerlist for %s"%(xmlfile,))
+    return None
 
 def parseAndWrite(xmlfile,ovfile):
   log("parsing xml file %s"%(xmlfile,))

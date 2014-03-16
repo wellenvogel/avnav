@@ -225,8 +225,13 @@ class GemfFile():
     rt+=", %d ranges" % self.rangenum
     rt+=", %d files: " % len(self.handles)
     for l in self.lengthes:
-      rt+=" %d," % l
+      rt+=" flen=%d," % l
     return rt
 
+
+if __name__ == "__main__":
+  f=GemfFile(sys.argv[1])
+  f.open()
+  print "read file %s" %(f,)
 
 
