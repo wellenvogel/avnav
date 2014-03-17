@@ -1,6 +1,6 @@
 (C) Andreas Vogel andreas@wellenvogel.net
 This project contains the code to use the raspberry pi as a nav computer on a sail boat.
-A lot of detailed explanations togetrher with ready to go images can be found at http://www.wellenvogel.net/software/avnav/index.php.
+A lot of detailed explanations together with ready to go images can be found at http://www.wellenvogel.net/software/avnav/index.php.
 The core of the documentation is available in the docs directory.
 
 	
