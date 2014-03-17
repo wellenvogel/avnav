@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.textIn = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.openInputDialog = new System.Windows.Forms.OpenFileDialog();
@@ -48,6 +49,14 @@
             this.buttonDefaultOut = new System.Windows.Forms.Button();
             this.buttonFocus = new System.Windows.Forms.Button();
             this.labelProcess = new System.Windows.Forms.Label();
+            this.textOpenCPN = new System.Windows.Forms.TextBox();
+            this.labelOpenCPN = new System.Windows.Forms.Label();
+            this.buttonOpenCPN = new System.Windows.Forms.Button();
+            this.checkStartServer = new System.Windows.Forms.CheckBox();
+            this.btnStopServer = new System.Windows.Forms.Button();
+            this.btnStartServer = new System.Windows.Forms.Button();
+            this.lbServerRunning = new System.Windows.Forms.Label();
+            this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // textIn
@@ -106,7 +115,7 @@
             this.checkBoxUpdate.AutoSize = true;
             this.checkBoxUpdate.Checked = true;
             this.checkBoxUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxUpdate.Location = new System.Drawing.Point(12, 431);
+            this.checkBoxUpdate.Location = new System.Drawing.Point(15, 474);
             this.checkBoxUpdate.Name = "checkBoxUpdate";
             this.checkBoxUpdate.Size = new System.Drawing.Size(86, 17);
             this.checkBoxUpdate.TabIndex = 5;
@@ -119,6 +128,7 @@
             this.textOutdir.Name = "textOutdir";
             this.textOutdir.Size = new System.Drawing.Size(493, 20);
             this.textOutdir.TabIndex = 6;
+            this.textOutdir.TextChanged += new System.EventHandler(this.textOutdir_TextChanged);
             // 
             // label2
             // 
@@ -157,7 +167,7 @@
             // 
             // buttonStop
             // 
-            this.buttonStop.Location = new System.Drawing.Point(448, 505);
+            this.buttonStop.Location = new System.Drawing.Point(452, 470);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 10;
@@ -188,7 +198,7 @@
             // 
             // buttonFocus
             // 
-            this.buttonFocus.Location = new System.Drawing.Point(529, 505);
+            this.buttonFocus.Location = new System.Drawing.Point(548, 470);
             this.buttonFocus.Name = "buttonFocus";
             this.buttonFocus.Size = new System.Drawing.Size(75, 23);
             this.buttonFocus.TabIndex = 13;
@@ -199,16 +209,98 @@
             // 
             // labelProcess
             // 
-            this.labelProcess.Location = new System.Drawing.Point(9, 505);
+            this.labelProcess.Location = new System.Drawing.Point(209, 475);
             this.labelProcess.Name = "labelProcess";
-            this.labelProcess.Size = new System.Drawing.Size(430, 21);
+            this.labelProcess.Size = new System.Drawing.Size(103, 21);
             this.labelProcess.TabIndex = 14;
+            // 
+            // textOpenCPN
+            // 
+            this.textOpenCPN.Location = new System.Drawing.Point(12, 432);
+            this.textOpenCPN.Name = "textOpenCPN";
+            this.textOpenCPN.Size = new System.Drawing.Size(493, 20);
+            this.textOpenCPN.TabIndex = 15;
+            // 
+            // labelOpenCPN
+            // 
+            this.labelOpenCPN.AutoSize = true;
+            this.labelOpenCPN.Location = new System.Drawing.Point(12, 416);
+            this.labelOpenCPN.Name = "labelOpenCPN";
+            this.labelOpenCPN.Size = new System.Drawing.Size(96, 13);
+            this.labelOpenCPN.TabIndex = 16;
+            this.labelOpenCPN.Text = "OpenCPNLocation";
+            // 
+            // buttonOpenCPN
+            // 
+            this.buttonOpenCPN.Location = new System.Drawing.Point(511, 430);
+            this.buttonOpenCPN.Name = "buttonOpenCPN";
+            this.buttonOpenCPN.Size = new System.Drawing.Size(54, 23);
+            this.buttonOpenCPN.TabIndex = 17;
+            this.buttonOpenCPN.Text = "Change";
+            this.buttonOpenCPN.UseVisualStyleBackColor = true;
+            this.buttonOpenCPN.Click += new System.EventHandler(this.buttonOpenCPN_Click);
+            // 
+            // checkStartServer
+            // 
+            this.checkStartServer.AutoSize = true;
+            this.checkStartServer.Checked = true;
+            this.checkStartServer.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkStartServer.Location = new System.Drawing.Point(15, 508);
+            this.checkStartServer.Name = "checkStartServer";
+            this.checkStartServer.Size = new System.Drawing.Size(100, 17);
+            this.checkStartServer.TabIndex = 18;
+            this.checkStartServer.Text = "autoStartServer";
+            this.checkStartServer.UseVisualStyleBackColor = true;
+            // 
+            // btnStopServer
+            // 
+            this.btnStopServer.Location = new System.Drawing.Point(452, 504);
+            this.btnStopServer.Name = "btnStopServer";
+            this.btnStopServer.Size = new System.Drawing.Size(75, 23);
+            this.btnStopServer.TabIndex = 19;
+            this.btnStopServer.Text = "StopServer";
+            this.btnStopServer.UseVisualStyleBackColor = true;
+            this.btnStopServer.Visible = false;
+            this.btnStopServer.Click += new System.EventHandler(this.btnStopServer_Click);
+            // 
+            // btnStartServer
+            // 
+            this.btnStartServer.Location = new System.Drawing.Point(548, 505);
+            this.btnStartServer.Name = "btnStartServer";
+            this.btnStartServer.Size = new System.Drawing.Size(75, 23);
+            this.btnStartServer.TabIndex = 20;
+            this.btnStartServer.Text = "StartServer";
+            this.btnStartServer.UseVisualStyleBackColor = true;
+            this.btnStartServer.Click += new System.EventHandler(this.btnStartServer_Click);
+            // 
+            // lbServerRunning
+            // 
+            this.lbServerRunning.AutoSize = true;
+            this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.lbServerRunning.Location = new System.Drawing.Point(209, 509);
+            this.lbServerRunning.Name = "lbServerRunning";
+            this.lbServerRunning.Size = new System.Drawing.Size(79, 13);
+            this.lbServerRunning.TabIndex = 21;
+            this.lbServerRunning.Text = "Server stopped";
+            // 
+            // timer2
+            // 
+            this.timer2.Enabled = true;
+            this.timer2.Interval = 500;
+            this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(635, 607);
+            this.Controls.Add(this.lbServerRunning);
+            this.Controls.Add(this.btnStartServer);
+            this.Controls.Add(this.btnStopServer);
+            this.Controls.Add(this.checkStartServer);
+            this.Controls.Add(this.buttonOpenCPN);
+            this.Controls.Add(this.labelOpenCPN);
+            this.Controls.Add(this.textOpenCPN);
             this.Controls.Add(this.labelProcess);
             this.Controls.Add(this.buttonFocus);
             this.Controls.Add(this.buttonDefaultOut);
@@ -224,6 +316,7 @@
             this.Controls.Add(this.buttonAddFile);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textIn);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "AvChartConvert";
             this.ResumeLayout(false);
@@ -252,6 +345,14 @@
         private System.Windows.Forms.Button buttonDefaultOut;
         private System.Windows.Forms.Button buttonFocus;
         private System.Windows.Forms.Label labelProcess;
+        private System.Windows.Forms.TextBox textOpenCPN;
+        private System.Windows.Forms.Label labelOpenCPN;
+        private System.Windows.Forms.Button buttonOpenCPN;
+        private System.Windows.Forms.CheckBox checkStartServer;
+        private System.Windows.Forms.Button btnStopServer;
+        private System.Windows.Forms.Button btnStartServer;
+        private System.Windows.Forms.Label lbServerRunning;
+        private System.Windows.Forms.Timer timer2;
     }
 }
 

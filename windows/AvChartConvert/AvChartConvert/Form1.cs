@@ -1,4 +1,28 @@
-﻿using System;
+﻿/*##############################################################################
+# Copyright (c) 2012,2013,2014 Andreas Vogel andreas@wellenvogel.net
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+###############################################################################*/
+
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -21,15 +45,25 @@ namespace AvChartConvert
         [DllImport("user32.dll")]
         static extern bool SetForegroundWindow(IntPtr hWnd);
         const String BASE = "AvNavCharts";
-        String defaultOut = null;
+        string defaultOut = null;
         Process converter = null;
+        string lastdir = (string)Properties.Settings.Default["InputDir"];
+        String myPath = System.IO.Path.GetDirectoryName(
+          System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");
+        Process serverProcess = null;
+        bool enableDoneAction = false;
         public Form1()
         {
             InitializeComponent();
             defaultOut= Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)+"\\"+BASE;
-            this.textOutdir.Text = defaultOut;
+            string outdir = (string)Properties.Settings.Default["OutDir"];
+            if (outdir == null || outdir == "") outdir = defaultOut;
+            this.textOutdir.Text = outdir;
             this.textIn.Clear();
+            this.textOpenCPN.Text=locateOpenCpn((string)Properties.Settings.Default["OpenCPN"]);
             string[] args = Environment.GetCommandLineArgs();
+            bool hasOpenCpnConvert = File.Exists(Path.Combine(new[] { myPath, "..\\chartconvert\\convert_nv.py" }));
+            showOpenCPN(hasOpenCpnConvert);
             if (args.Length > 1){
                 for (int i = 1; i < args.Length;i++ )
                 {
@@ -39,8 +73,36 @@ namespace AvChartConvert
             }
         }
 
+        private void showOpenCPN(bool show)
+        {
+            this.textOpenCPN.Visible = show;
+            this.labelOpenCPN.Visible = show;
+            this.buttonOpenCPN.Visible = show;
+        }
+
+        //get the directory where opencpn is found
+        private string locateOpenCpn(string currdir)
+        {
+            string ename = "opencpn.exe";
+            if (currdir != null && currdir != "")
+            {
+                string completeName = Path.Combine(currdir, ename);
+                if (File.Exists(completeName)) return currdir;
+            }
+            //either not found or empty...
+            foreach (Environment.SpecialFolder f 
+                in new []{Environment.SpecialFolder.ProgramFiles, Environment.SpecialFolder.ProgramFilesX86})
+            {
+                string dir=Path.Combine(Environment.GetFolderPath(f),"OpenCPN");
+                string completeName = Path.Combine(dir,ename);
+                if (File.Exists(completeName)) return dir;
+            }
+            return null;
+        }
+
         private void buttonAddFile_Click(object sender, EventArgs e)
         {
+            this.openInputDialog.Reset();
             this.openInputDialog.Title = "Select Files or Directories";
             this.openInputDialog.Multiselect = true;
             this.openInputDialog.FileName = "Folder Selection";
@@ -48,11 +110,15 @@ namespace AvChartConvert
             this.openInputDialog.CheckFileExists = false;
             this.openInputDialog.CheckPathExists = false;
             this.openInputDialog.Filter = string.Empty;
+            if (lastdir!=null)this.openInputDialog.InitialDirectory = lastdir;
             if (this.openInputDialog.ShowDialog() == DialogResult.OK)
             {
                 foreach (String fn in this.openInputDialog.FileNames){
+                    lastdir = Path.GetDirectoryName(fn);
                     this.textIn.AppendText(fn + "\n");
                 }
+                Properties.Settings.Default["InputDir"] = lastdir;
+                Properties.Settings.Default.Save();
             }
             
 
@@ -103,8 +169,7 @@ namespace AvChartConvert
             }
             try
                 {
-                    String myPath = System.IO.Path.GetDirectoryName(
-          System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");
+                    
                     String cmd1 = myPath + "\\..\\..\\..\\..\\AvChartConvert.cmd";
                     String cmd2 = myPath + "\\AvChartConvert.cmd";
                     String cmd=null;
@@ -126,6 +191,10 @@ namespace AvChartConvert
                     String args = "/K " + cmd;
                     if (!this.checkBoxUpdate.Checked) args += " -f";
                     args += " -b " + "\"" + this.textOutdir.Text + "\"";
+                    if (this.textOpenCPN.Visible && this.textOpenCPN.Text != "")
+                    {
+                        args += " -n \"" + this.textOpenCPN.Text + "\" ";
+                    }
                     foreach (String inf in infiles)
                     {
                         args += " \"" + inf + "\"";
@@ -135,6 +204,7 @@ namespace AvChartConvert
                     info.RedirectStandardOutput = false;
                     info.UseShellExecute = true;
                     p.StartInfo = info;
+                    enableDoneAction = true;
                     p.Start();
                     this.labelProcess.Text = "Converter started with pid " + p.Id;
                     this.buttonFocus.Visible = true;
@@ -149,6 +219,11 @@ namespace AvChartConvert
                 // process output
             
         }
+        private void converterDone()
+        {
+            if (!enableDoneAction) return;
+            if (this.checkStartServer.Checked) startServer();
+        }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
@@ -161,6 +236,7 @@ namespace AvChartConvert
                     {
                         converter.Refresh();
                         converter = null;
+                        converterDone();
                     }
                     
                 }
@@ -181,6 +257,8 @@ namespace AvChartConvert
 
         private void buttonStop_Click(object sender, EventArgs e)
         {
+            enableDoneAction = false;
+
             if (converter != null)
             {
                 try
@@ -209,6 +287,111 @@ namespace AvChartConvert
             {
                 SetForegroundWindow(converter.MainWindowHandle);
             }
+        }
+
+        private void textOutdir_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["OutDir"] = textOutdir.Text;
+            Properties.Settings.Default.Save();
+
+        }
+
+        private void buttonOpenCPN_Click(object sender, EventArgs e)
+        {
+            this.openInputDialog.Reset();
+            this.openInputDialog.Title = "Select OpenCPN Location";
+            this.openInputDialog.Multiselect = false;
+            this.openInputDialog.FileName = "opencpn.exe";
+            this.openInputDialog.ValidateNames = true;
+            this.openInputDialog.CheckFileExists = true;
+            this.openInputDialog.CheckPathExists = true;
+            this.openInputDialog.Filter = "opencpn|opencpn.exe";
+            this.openInputDialog.InitialDirectory = this.textOpenCPN.Text;
+            
+            if (this.openInputDialog.ShowDialog() == DialogResult.OK)
+            {
+            
+                foreach (String fn in this.openInputDialog.FileNames)
+                {
+                    string newdir = locateOpenCpn(Path.GetDirectoryName(fn));
+                    if (newdir != null)
+                    {
+                        this.textOpenCPN.Text = newdir;
+                        Properties.Settings.Default["OpenCPN"] = newdir;
+                        Properties.Settings.Default.Save();
+                    }
+                }
+            }
+        }
+        private bool isServerRunning()
+        {
+            try
+            {
+                if (serverProcess == null) return false;
+                serverProcess.Refresh();
+                if (serverProcess.HasExited)
+                {
+                    serverProcess = null;
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ) { }
+            return false;
+        }
+
+        private void startServer()
+        {
+            if (isServerRunning()) return;
+            ProcessStartInfo info = new ProcessStartInfo("cmd.exe");
+            string cmd = Path.Combine(myPath, "anav.cmd");
+            if (!File.Exists(cmd))
+            {
+                MessageBox.Show("server command " + cmd + " not found");
+                return;
+            }
+            String args = "/K " + cmd;
+            args += " -c \"" + Path.Combine(textOutdir.Text,"out") + "\" "; 
+            info.Arguments = args;
+            info.RedirectStandardInput = false;
+            info.RedirectStandardOutput = false;
+            info.UseShellExecute = true;
+            serverProcess=new Process();
+            serverProcess.StartInfo = info;
+            serverProcess.Start();
+            this.lbServerRunning.Text = "Server running with pid " + serverProcess.Id;
+            this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(0, 192, 0);
+            this.btnStopServer.Visible = true;
+        }
+
+        private void stopServer()
+        {
+            if (!isServerRunning()) return;
+            try
+            {
+                ProcessUtilities.KillProcessTree(serverProcess);
+            }
+            catch (Exception) { }
+        }
+
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+            if (!isServerRunning() && this.btnStopServer.Visible)
+            {
+                this.btnStopServer.Visible = false;
+                this.lbServerRunning.Text = "Server stopped";
+                this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(192, 0, 0);
+            }
+        }
+
+        private void btnStartServer_Click(object sender, EventArgs e)
+        {
+            startServer();
+        }
+
+        private void btnStopServer_Click(object sender, EventArgs e)
+        {
+            stopServer();
         }
     }
     //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp
@@ -263,5 +446,7 @@ namespace AvChartConvert
             }
             output.Add(parent);
         }
+
+       
     }
 }
