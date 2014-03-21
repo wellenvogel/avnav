@@ -16,7 +16,7 @@
 </HEAD>
 <BODY LANG="de-DE" DIR="LTR" style="max-width: 650px">
 <H1>Raspberry Pi als Bordcomputer / Navigation im Browser	</H1>
-<P>15.10.2013</P>
+<P>21.03.2014</P>
 <P><BR>
 </P>
 <H2 CLASS="western">Motivation</H2>
@@ -490,9 +490,10 @@ support für 2 „Wege“ der Kartenerstellung eingebaut:</P>
 <UL>
 	<LI><P>Konvertierung von Karten mittels <A HREF="http://www.gdal.org/">GDAL</A>
 	(z.B. BSB) – hier kann alles gelesen werden, was gdal kann</P>
-	<LI>
-	  <P>Nutzung von downloads mit dem <a href="http://mobac.sourceforge.net/">Mobile Atlas Creator</a>.</P>
+  <LI>	  Nutzung von downloads mit dem <a href="http://mobac.sourceforge.net/">Mobile Atlas Creator</a>.    
 </UL>
+<p>Ab der Version 2014-03-21 können die Karten in das <a href="http://www.cgtk.co.uk/gemf">GEMF</a> Format konvertiert werden - das ist ein kompaktes Format - anstelle von sehr vielen einzelnen Files sind diese in einem großen File zusammengefaßt. </p>
+<p>Achtung: die folgende Beschreibung bezieht sich auf diese Version - ältere Server-Versionen können mit der GEMF Datei nichts anfangen.</p>
 <H3 CLASS="western">Konvertierung von Karten mit GDAL</H3>
 <P>Für diese Konvertierung müssen einige Tools installiert werden.
 Das ist zwar leider ein wenig Aufwand, muss aber nur einmalig
@@ -514,18 +515,17 @@ aufnehmen.
 <P>Dazu noch PIL für python (
 <A HREF="http://www.lfd.uci.edu/~gohlke/pythonlibs/">http://www.lfd.uci.edu/~gohlke/pythonlibs/</A>).</P>
 <P>Der Hauptteil der Konvertierung wird durch tiler_tools
-durchgeführt, diese ebenfalls herunterladen
+durchgeführt
 (<A HREF="https://code.google.com/p/tilers-tools/">https://code.google.com/p/tilers-tools/</A>)
-und in einem Verzeichnis entpacken. 
+diese sind Bestandteil der Software und müssen nicht extra heruntergeladen werden.. 
 </P>
-<P>Im gleichen Verzeichnis sollte sich das python script
-read_charts.py befinden (aus dem download von <a href="http://www.wellenvogel.de/software/avnav/download">wellenvogel.de</a>)</P>
-<P>Nach der Installation kann die Konvertierung starten. Für jeden
-Kartensatz sollte ein output Verzeichnis vorgesehen werden, in dieses
-werden Zwischendateien geschrieben und final unter <strong>tiles</strong> auch die
-erzeugten Kacheln. Wenn dieses output Verzeichnis nicht gelöscht
-wird, können später in einem update Modus nur die geänderten
-Kacheln neu erzeugt werden. Leider gibt es für den Konverter keine grafische Oberfläche, man muss also die Kommandozeile bemühen (cmd unter windows, Terminal auf dem Mac...). </P>
+<P>Von der <a href="http://www.wellenvogel.net/software/avnav/downloads/index.php">download Seite</a> sollte die xxx-host.zip Datei heruntergeladen und in einem beliebigen Verzeichnis entpackt werden.</P>
+<P>Für OSX und Windows (getestet unter Windows 7) sind jeweils minimale GUIs vorhanden, die es erlauben die Konvertierung zu starten sowie zum Test der erzeugten Karten die Server-Software.</P>
+<P>Die Karten werden per default im Verzeichnis &lt;UserHome&gt;/AvNavCharts/out erzeugt (also z.B. c:\Users\Andreas\AvNavCharts\out). Zumindest in der Windows GUI kann das Verzeichnis gewählt werden. Standarmäßig ensteht für jeden Konverter-Lauf eine xxx.gemf Datei, xxx ist dabei der Dateiname der ersten Datei oder der Name des ersten gewählten Verzeichnisses.</P>
+<P><img src="gui-windows2.PNG" width="653" height="642"></P>
+<P>Im Bild ist die Windows GUI zu sehen - start im windows-Verzeichnis - AvChartConvert. Oben können die zu konvertierenden Karten gewählt werden, unten das Ausgabe-Verzeichnis. Mit den gezeigten Einstellungen wird eine einzelne Karten umgewandelt, nach der Umwandlung wird der Server gestartet (port 8080). Den kann man dann im Browser mit <a href="http://127.0.0.1:8080">http://127.0.0.1:8080</a> erreichen.</P>
+<P>Unter OSX lann der Konverter durch Klick auf AvChartConvert im osx Verzeichnis gestartet werden (ggf. ins Dock legen für drag &amp; drop), der Server durch Klick auf avnav.command.</P>
+<P>Im AvNavCharts Verzeichnis gibt es auch noch ein work-Verzeichnis, dieses sollte nicht gelöscht werden, da dann bei einem Update (z.B. Berichtigungen eingepflegt) nur die geänderten Karten neu erzeugt werden müssen.</P>
 <P>Die Konvertierung verläuft in 2 Schritten:</P>
 <UL>
 	<LI><P>Sortierung der Karten in layer (und ggf. soweit nötig
@@ -533,43 +533,37 @@ Kacheln neu erzeugt werden. Leider gibt es für den Konverter keine grafische Ob
 	</P>
 	<LI><P>Erzeugung der Kacheln</P>
 </UL>
-<P>Der erste Schritt geht relativ schnell. Alle Kartendateien werden
-gelesen und Auflösung und Abdeckung wird ermittelt (falls nötig
-wird konvertiert). Im Ergebnis entsteht im output Verzeichnis eine
-Datei chartlist.xml. Der Aufruf dazu lautet:</P>
-<PRE>read_charts.py outdir inputdir [inputdir...]
+<P>Wenn die Datei xxx.gemf rezeugt wurde, diese auf den raspberry nach /data/avnav/charts kopieren (darauf achten, dass sie für den Nutzer pi lesbar ist). Der Server sollte sie automatisch erkennen...</P>
+<P>Im Folgenden werden die Konvertierungsschritte beschrieben - normalerweise muss man sich darum nicht kümmern - nur wenn die default-Einstellungne der GUI nicht gut genug sind...</P>
+<blockquote>
+<div style="font-size:small">
+  <p>Der erste Schritt geht relativ schnell. Alle Kartendateien werden
+    gelesen und Auflösung und Abdeckung wird ermittelt (falls nötig
+    wird konvertiert). Im Ergebnis entsteht im workdir/&lt;name&gt; Verzeichnis eine
+    Datei chartlist.xml. Der Aufruf dazu lautet:</p>
+  <PRE>read_charts.py -o name -m chartlist inputdir [inputdir...]
 </PRE>
-<P>Falls die tiler_tools sich nicht im gleichen Verzeichnis befinden, kann man das mit der Option -a angeben:</P>
-<pre>read_charts.py -a \User\SomeUSer\SomeDir\tiler_tools outdir inputdir [inputdir...] </pre>
-<P>Anschliessend sollte die chartlist.xml noch einmal mit einem
-  Texteditor überprüft werden, manchmal macht es Sinn, Kartendateien
-  noch einem anderen Layer zuzuordnen. Das kann einfach durch
-  Verschieben des entsprechenden XML Elements erfolgen. Man kann sich dazu an den Namen der Karten orientieren - meist mach es Sinn Karten vergleichbaren Detailgrades in einen Layer zu verschieben.</P>
-<P>Der zweite Schritt ist etwas langwieriger, hier erfolgt die
-eigentliche Erzeugung der Kartenkacheln. Der Aufruf:</P>
-<PRE>read_charts.py outdir
-</PRE><P>
-Unter outdir muss bereits eine chartlist.xml existieren. Die
-Erzeugung läuft multi-threaded, auf einem Dual Core 2x2Ghz ca. 20
-min für einen Kartensatz mit ca. 20 Karten. 
-</P>
-<P>Man kann auch beide Schritte kombinieren – dazu einfach -m all
-noch vor den anderen Parametern bei Schritt 1 angeben:</P>
-<PRE>read_charts.py -m all outdir inputdir
-</PRE><P>
-Falls sich einige Karten geändert haben (z.B. Chart Updates), kann
-man Schritt 2 einfach wiederholen mit dem Parameter -u:</P>
-<PRE>read_charts.py -u outdir
+  <p>Anschliessend sollte die chartlist.xml noch einmal mit einem
+    Texteditor überprüft werden, manchmal macht es Sinn, Kartendateien
+    noch einem anderen Layer zuzuordnen. Das kann einfach durch
+    Verschieben des entsprechenden XML Elements erfolgen. Man kann sich dazu an den Namen der Karten orientieren - meist mach es Sinn Karten vergleichbaren Detailgrades in einen Layer zu verschieben.</p>
+  <p>Der zweite Schritt ist etwas langwieriger, hier erfolgt die
+    eigentliche Erzeugung der Kartenkacheln. Der Aufruf:</p>
+  <PRE>read_charts.py -o name -m generate 
 </PRE>
-<P>
-Als Ergebnis erhält man unter outdir/tiles eine Datei avnav.xml
-sowie ein Verzeichnis für jeden layer (mit weiteren
-Unterverzeichnissen). Der Inhalt dieses tiles Verzeichnisses muss dann auf
-den raspberry kopiert werden – in ein separates Verzeichnis unter
-/data/avnav/charts. Dazu kann man unter Windows sinnvoll winscp
-benutzen. Am Ende muss z.B. im Verzeichnis /data/avnav/charts/Satz1
-eine Datei avnav.xml vorhanden sein, darunter dann die
-Layer-Verzeichnisse.</P>
+  <p>
+    Unter workdir/&lt;name&gt; muss bereits eine chartlist.xml existieren. Die
+    Erzeugung läuft multi-threaded, auf einem Dual Core 2x2Ghz ca. 20
+    min für einen Kartensatz mit ca. 20 Karten. 
+  </p>
+  <p>Man kann auch beide Schritte kombinieren – dazu einfach -m all
+    noch vor den anderen Parametern bei Schritt 1 angeben:</p>
+  <blockquote>
+    <PRE>read_charts.py -m all [-o name] inputdir
+</PRE>
+  </blockquote>
+</div>
+</blockquote>
 <H3 CLASS="western">Nutzung von Karten mit dem Mobile Atlas Creator</H3>
 <P>Für die Nutzung  des Mobile Atlas Creators ist keine weitere
 Software auf dem PC/Laptop nötig. Man muss beim Download der Karten
@@ -585,13 +579,10 @@ jeweils als gewünschte Zoomlevel die zum Layer gehörigen anklicken
 einem beliebigen Namen dem Atlas hinzufügen. Das jeweils für die
 anderen Layer wiederholen (dabei sinnvolle Auswahlen treffen).
 Anschliessend die Atlas-Konfiguration unter einem beliebigen Namen
-speichern. Als output Format OSMTracker wählen und die
-Atlas-Erzeugung starten. Im output Verzeichnis entsteht ein
-Verzeichnis für jeden Zoom level. Diese Verzeichnisse wieder auf den
-pi unter /data/avnav/charts/Satzx kopieren. Den Atlas speichern (Profil speichern). Diese Datei (liegt im Programmverzeichnis von MOBAC)  in das
-gleiche Verzeichnis kopieren (der server wird automatisch eine
-avnav.xml erzeugen). Dazu darauf achten, dass man Karten als Nutzer pi auf den raspberry kopiert - zumindest das Wurzelverzeichnis muss für pi schreibbar sein, sonst kann die avnav.xml nicht erzeugt werden.</P>
-<P>&nbsp;</P>
+speichern. Als output Format OsmDroid GEMF (File-&gt;convertAtlasFormat) wählen und die
+Atlas-Erzeugung starten. Im output Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den raspberry unter /data/avnav/charts kopieren. Den Atlas speichern (Profil speichern). Diese Datei (liegt im Programmverzeichnis von MOBAC)  in das
+gleiche Verzeichnis kopieren und zu xxx.xml umbenennen (wichtig!).</P>
+<P>Auf der <a href="http://www.wellenvogel.net/software/avnav/downloads/index.php">download Seite</a> sammle ich chart sources für den mobac, die für uns nützlich sein lönnten. </P>
 <H2 CLASS="western">Die WebApp</H2>
 <P>Um die auf dem raspberry pi installierten Karten nutzen zu können,
 gibt es eine in HTML/Java Script geschriebene WebApp. Dazu noch ein
