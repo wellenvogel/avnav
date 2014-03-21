@@ -52,6 +52,8 @@ namespace AvChartConvert
           System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");
         Process serverProcess = null;
         bool enableDoneAction = false;
+        bool serverStartedWithCmd = false;
+        bool converterStartedWithCmd = false;
         public Form1()
         {
             InitializeComponent();
@@ -169,26 +171,38 @@ namespace AvChartConvert
             }
             try
                 {
+                    ProcessStartInfo info = null;
+                    String args = null;
                     
-                    String cmd1 = myPath + "\\..\\..\\..\\..\\AvChartConvert.cmd";
-                    String cmd2 = myPath + "\\AvChartConvert.cmd";
-                    String cmd=null;
-                    if (File.Exists(cmd1))
+                    if (checkUseCmd.Checked)
                     {
-                        cmd = cmd1;
+                        
+                        String cmd = Path.Combine(myPath ,"AvChartConvert.cmd");
+                        
+                        if (!File.Exists(cmd))
+                        {
+                            MessageBox.Show("command not found at " + cmd  + " - unable to execute");
+                            return;
+                        }
+                        info = new ProcessStartInfo("cmd.exe");
+                        args = "/K " + cmd;
+                        converterStartedWithCmd = true;
                     }
-                    if (File.Exists(cmd2))
+                    else
                     {
-                        cmd = cmd2;
-                    }
-                    if (cmd == null)
-                    {
-                        MessageBox.Show("command not found at " + cmd1 + " and at " + cmd2 + " - unable to execute");
-                        return;
+                        String cmd = Path.Combine(myPath, "..", "chartconvert", "read_charts.py");
+                        if (!File.Exists(cmd))
+                        {
+                            MessageBox.Show("command not found at " + cmd  + " - unable to execute");
+                            return;
+                        }
+                        info = new ProcessStartInfo(cmd);
+                        args = " ";
+                        converterStartedWithCmd = false;
+
                     }
                     //MessageBox.Show("CMD:" + cmd);
-                    ProcessStartInfo info = new ProcessStartInfo("cmd.exe");
-                    String args = "/K " + cmd;
+                    
                     if (!this.checkBoxUpdate.Checked) args += " -f";
                     args += " -b " + "\"" + this.textOutdir.Text + "\"";
                     if (this.textOpenCPN.Visible && this.textOpenCPN.Text != "")
@@ -263,7 +277,9 @@ namespace AvChartConvert
             {
                 try
                 {
-                    ProcessUtilities.KillProcessTree(converter);
+                   
+                        ProcessUtilities.KillProcessTree(converter);
+                        
                 }
                 catch (Exception exc) {
                     String txt = exc.Message;
@@ -343,15 +359,38 @@ namespace AvChartConvert
         private void startServer()
         {
             if (isServerRunning()) return;
-            ProcessStartInfo info = new ProcessStartInfo("cmd.exe");
-            string cmd = Path.Combine(myPath, "anav.cmd");
-            if (!File.Exists(cmd))
+            ProcessStartInfo info = null;
+            string cmd=null;
+            string args = null;
+            
+            if (this.checkUseCmd.Checked)
             {
-                MessageBox.Show("server command " + cmd + " not found");
-                return;
+                cmd = "cmd.exe";
+                string scmd = Path.Combine(myPath, "anav.cmd");
+                if (!File.Exists(scmd))
+                {
+                    MessageBox.Show("server command " + scmd + " not found");
+                    return;
+                }
+                args = cmd+ " /K " + scmd;
+
+                serverStartedWithCmd = true;
             }
-            String args = "/K " + cmd;
-            args += " -c \"" + Path.Combine(textOutdir.Text,"out") + "\" "; 
+            else
+            {
+                cmd=Path.Combine(myPath,"..","server","avnav_server.py");
+                if (!File.Exists(cmd))
+                {
+                    MessageBox.Show("server command " + cmd + " not found");
+                    return;
+                }
+                args="";
+                serverStartedWithCmd = false;
+            }
+            
+            info = new ProcessStartInfo(cmd);
+            args += " -c \"" + Path.Combine(textOutdir.Text,"out") + "\" ";
+            args += " \"" + Path.Combine(myPath, "avnav_server.xml")+"\""; 
             info.Arguments = args;
             info.RedirectStandardInput = false;
             info.RedirectStandardOutput = false;
@@ -369,7 +408,14 @@ namespace AvChartConvert
             if (!isServerRunning()) return;
             try
             {
-                ProcessUtilities.KillProcessTree(serverProcess);
+                if (serverStartedWithCmd)
+                {
+                    ProcessUtilities.KillProcessTree(serverProcess);
+                }
+                else
+                {
+                    serverProcess.Kill();
+                }
             }
             catch (Exception) { }
         }
@@ -392,6 +438,12 @@ namespace AvChartConvert
         private void btnStopServer_Click(object sender, EventArgs e)
         {
             stopServer();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            stopServer();
+            buttonStop_Click(null, null);
         }
     }
     //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp

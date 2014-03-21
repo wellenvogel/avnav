@@ -57,14 +57,18 @@
             this.btnStartServer = new System.Windows.Forms.Button();
             this.lbServerRunning = new System.Windows.Forms.Label();
             this.timer2 = new System.Windows.Forms.Timer(this.components);
+            this.checkUseCmd = new System.Windows.Forms.CheckBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // textIn
             // 
-            this.textIn.Location = new System.Drawing.Point(12, 36);
+            this.textIn.Location = new System.Drawing.Point(14, 36);
             this.textIn.Multiline = true;
             this.textIn.Name = "textIn";
-            this.textIn.Size = new System.Drawing.Size(493, 321);
+            this.textIn.Size = new System.Drawing.Size(491, 321);
             this.textIn.TabIndex = 0;
             // 
             // label1
@@ -92,7 +96,7 @@
             // 
             // buttonOK
             // 
-            this.buttonOK.Location = new System.Drawing.Point(333, 550);
+            this.buttonOK.Location = new System.Drawing.Point(547, 501);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(75, 23);
             this.buttonOK.TabIndex = 3;
@@ -102,7 +106,7 @@
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(239, 550);
+            this.buttonCancel.Location = new System.Drawing.Point(548, 576);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 4;
@@ -115,7 +119,7 @@
             this.checkBoxUpdate.AutoSize = true;
             this.checkBoxUpdate.Checked = true;
             this.checkBoxUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxUpdate.Location = new System.Drawing.Point(15, 474);
+            this.checkBoxUpdate.Location = new System.Drawing.Point(14, 505);
             this.checkBoxUpdate.Name = "checkBoxUpdate";
             this.checkBoxUpdate.Size = new System.Drawing.Size(86, 17);
             this.checkBoxUpdate.TabIndex = 5;
@@ -124,9 +128,9 @@
             // 
             // textOutdir
             // 
-            this.textOutdir.Location = new System.Drawing.Point(12, 389);
+            this.textOutdir.Location = new System.Drawing.Point(14, 389);
             this.textOutdir.Name = "textOutdir";
-            this.textOutdir.Size = new System.Drawing.Size(493, 20);
+            this.textOutdir.Size = new System.Drawing.Size(491, 20);
             this.textOutdir.TabIndex = 6;
             this.textOutdir.TextChanged += new System.EventHandler(this.textOutdir_TextChanged);
             // 
@@ -167,7 +171,7 @@
             // 
             // buttonStop
             // 
-            this.buttonStop.Location = new System.Drawing.Point(452, 470);
+            this.buttonStop.Location = new System.Drawing.Point(451, 501);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 10;
@@ -198,7 +202,7 @@
             // 
             // buttonFocus
             // 
-            this.buttonFocus.Location = new System.Drawing.Point(548, 470);
+            this.buttonFocus.Location = new System.Drawing.Point(355, 501);
             this.buttonFocus.Name = "buttonFocus";
             this.buttonFocus.Size = new System.Drawing.Size(75, 23);
             this.buttonFocus.TabIndex = 13;
@@ -209,16 +213,16 @@
             // 
             // labelProcess
             // 
-            this.labelProcess.Location = new System.Drawing.Point(209, 475);
+            this.labelProcess.Location = new System.Drawing.Point(132, 506);
             this.labelProcess.Name = "labelProcess";
-            this.labelProcess.Size = new System.Drawing.Size(103, 21);
+            this.labelProcess.Size = new System.Drawing.Size(204, 21);
             this.labelProcess.TabIndex = 14;
             // 
             // textOpenCPN
             // 
-            this.textOpenCPN.Location = new System.Drawing.Point(12, 432);
+            this.textOpenCPN.Location = new System.Drawing.Point(14, 432);
             this.textOpenCPN.Name = "textOpenCPN";
-            this.textOpenCPN.Size = new System.Drawing.Size(493, 20);
+            this.textOpenCPN.Size = new System.Drawing.Size(491, 20);
             this.textOpenCPN.TabIndex = 15;
             // 
             // labelOpenCPN
@@ -245,7 +249,7 @@
             this.checkStartServer.AutoSize = true;
             this.checkStartServer.Checked = true;
             this.checkStartServer.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkStartServer.Location = new System.Drawing.Point(15, 508);
+            this.checkStartServer.Location = new System.Drawing.Point(9, 10);
             this.checkStartServer.Name = "checkStartServer";
             this.checkStartServer.Size = new System.Drawing.Size(100, 17);
             this.checkStartServer.TabIndex = 18;
@@ -254,7 +258,7 @@
             // 
             // btnStopServer
             // 
-            this.btnStopServer.Location = new System.Drawing.Point(452, 504);
+            this.btnStopServer.Location = new System.Drawing.Point(446, 6);
             this.btnStopServer.Name = "btnStopServer";
             this.btnStopServer.Size = new System.Drawing.Size(75, 23);
             this.btnStopServer.TabIndex = 19;
@@ -265,7 +269,7 @@
             // 
             // btnStartServer
             // 
-            this.btnStartServer.Location = new System.Drawing.Point(548, 505);
+            this.btnStartServer.Location = new System.Drawing.Point(542, 6);
             this.btnStartServer.Name = "btnStartServer";
             this.btnStartServer.Size = new System.Drawing.Size(75, 23);
             this.btnStartServer.TabIndex = 20;
@@ -277,7 +281,7 @@
             // 
             this.lbServerRunning.AutoSize = true;
             this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lbServerRunning.Location = new System.Drawing.Point(209, 509);
+            this.lbServerRunning.Location = new System.Drawing.Point(203, 11);
             this.lbServerRunning.Name = "lbServerRunning";
             this.lbServerRunning.Size = new System.Drawing.Size(79, 13);
             this.lbServerRunning.TabIndex = 21;
@@ -289,15 +293,46 @@
             this.timer2.Interval = 500;
             this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
             // 
+            // checkUseCmd
+            // 
+            this.checkUseCmd.AutoSize = true;
+            this.checkUseCmd.Location = new System.Drawing.Point(14, 468);
+            this.checkUseCmd.Name = "checkUseCmd";
+            this.checkUseCmd.Size = new System.Drawing.Size(80, 17);
+            this.checkUseCmd.TabIndex = 22;
+            this.checkUseCmd.Text = "useCmdFile";
+            this.checkUseCmd.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(109, 468);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(252, 13);
+            this.label3.TabIndex = 23;
+            this.label3.Text = "check this if python is not found and adapt cmd files";
+            // 
+            // panel1
+            // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel1.Controls.Add(this.lbServerRunning);
+            this.panel1.Controls.Add(this.btnStartServer);
+            this.panel1.Controls.Add(this.btnStopServer);
+            this.panel1.Controls.Add(this.checkStartServer);
+            this.panel1.Location = new System.Drawing.Point(4, 530);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(629, 40);
+            this.panel1.TabIndex = 24;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(635, 607);
-            this.Controls.Add(this.lbServerRunning);
-            this.Controls.Add(this.btnStartServer);
-            this.Controls.Add(this.btnStopServer);
-            this.Controls.Add(this.checkStartServer);
+            this.ClientSize = new System.Drawing.Size(637, 606);
+            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.checkUseCmd);
             this.Controls.Add(this.buttonOpenCPN);
             this.Controls.Add(this.labelOpenCPN);
             this.Controls.Add(this.textOpenCPN);
@@ -319,6 +354,9 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "AvChartConvert";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -353,6 +391,9 @@
         private System.Windows.Forms.Button btnStartServer;
         private System.Windows.Forms.Label lbServerRunning;
         private System.Windows.Forms.Timer timer2;
+        private System.Windows.Forms.CheckBox checkUseCmd;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Panel panel1;
     }
 }
 

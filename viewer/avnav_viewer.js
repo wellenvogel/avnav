@@ -557,6 +557,7 @@ OpenLayers.Control.AISselectorControl = OpenLayers.Class(OpenLayers.Control, {
 
 
 function log(msg) {
+	return;
 	if (! properties.loggingEnabled) return;
   try { console.log.apply(console,arguments); } 
   catch (e) {
