@@ -1,0 +1,100 @@
+<project default="all" name="Compile and build java classes plus jar archives">
+
+	<property name="jar.name" value="Mobile_Atlas_Creator.jar" />
+	<property name="zip.name" value="Mobile Atlas Creator ${mobac.version}.zip" />
+	<property name="zip_src.name" value="Mobile Atlas Creator ${mobac.version} src.zip" />
+	<property name="src.dir" value="src" />
+
+	<tstamp>
+		<format property="build.date" pattern="yyyy-MM-dd HH:mm:ss" />
+	</tstamp>
+
+	<property name="je-version" value="3.3.93" />
+
+	<path id="maincp">
+		<fileset dir="lib" includes="Mobile_Atlas_Creator.jar" />
+	</path>
+
+	<!-- All additional jar files from the lib directory will be added to classpath while compiling -->
+	<fileset id="mappack-libs-fs" dir="lib" excludes="ant-contrib-for.jar" includes="*.jar"/>
+	
+	<path id="mappack-libs">
+		<fileset refid="mappack-libs-fs"/>
+	</path>
+	
+	<target name="all" depends="clean_build,build_mapsources,include_libs" />
+
+	<target name="clean_workspace" description="Deletes the work directories ozi, atlases, atlasestared">
+		<delete includeemptydirs="true" failonerror="false">
+			<fileset dir="atlases" includes="**/*" />
+			<fileset dir="build" includes="**/*" />
+			<fileset dir="tilestore" includes="**/*" />
+		</delete>
+	</target>
+
+	<target name="clean_build">
+		<delete includeEmptyDirs="true" failonerror="false">
+			<fileset dir="build" includes="**/*" />
+		</delete>
+	</target>
+
+	<target name="build_mapsources" depends="clean_build" description="Build all map packs">
+		<property name="mappack.srcbasedir" value="${src.dir}/mobac/mapsources/mappacks" />
+
+		<taskdef name="for" classname="net.sf.antcontrib.logic.ForTask">
+			<classpath>
+				<pathelement location="lib/ant-contrib-for.jar" />
+			</classpath>
+		</taskdef>
+		<delete dir="mapsources" includes="mp-*.jar" />
+		<dirset id="mappacks" dir="${mappack.srcbasedir}/" includes="*" />
+		<pathconvert pathsep=";" property="mappacklist" refid="mappacks">
+			<mapper type="flatten" />
+		</pathconvert>
+		<mkdir dir="mapsources" />
+		<for list="${mappacklist}" param="mappack" delimiter=";">
+			<sequential>
+				<property file="${mappack.srcbasedir}/@{mappack}/mappack.properties" prefix="@{mappack}" />
+				<echo message="@{mappack} revision ${@{mappack}.mappack.revision}" />
+				<mkdir dir="build/mp-@{mappack}" />
+				<javac srcdir="${src.dir}" destdir="build/mp-@{mappack}" defaultexcludes="true" debug="true" includeantruntime="false">
+					<include name="mobac/mapsources/mappacks/@{mappack}/**.java" />
+					<classpath refid="maincp" />
+					<classpath refid="mappack-libs" />
+				</javac>
+				<delete file="mapsources/mp-@{mappack}.jar" failonerror="false" />
+				<fileset dir="build/mp-@{mappack}" defaultexcludes="true" id="fileset-@{mappack}">
+					<include name="mobac/mapsources/mappacks/@{mappack}/**.class" />
+				</fileset>
+
+				<jar destfile="mapsources/mp-@{mappack}.jar">
+					<manifest>
+						<attribute name="MapPackVersion" value="${mobac.mappackversion}" />
+						<attribute name="MapPackName" value="@{mappack}" />
+						<attribute name="MapPackBuild-Date" value="${build.date}" />
+						<attribute name="MapPackRevision" value="${@{mappack}.mappack.revision}" />
+					</manifest>
+					<fileset refid="fileset-@{mappack}" />
+					<!-- Include all resources, and the source files -->
+					<fileset dir="${src.dir}" includes="mobac/mapsources/mappacks/@{mappack}/**" />
+					<zipfileset dir="${mappack.srcbasedir}/@{mappack}/" includes="mapsources.list" fullpath="META-INF/services/mobac.program.interfaces.MapSource" />
+				</jar>
+			</sequential>
+		</for>
+	</target>
+
+	<target name="include_libs" description="optional task, allows to include additional jar libraries into mappacks">
+
+		<!-- Include all additional jars in lib directory into mappack "mymappack"-->
+		<zip destfile="mapsources/mp-mymappack.jar" update="true">
+			<zipfileset refid="mappack-libs-fs" />
+		</zip>
+		
+		<!--
+		<zip destfile="mapsources/mp-mymappack.jar" update="true">
+			<zipfileset src="lib/jcommon-1.0.16.jar" />
+			<zipfileset src="lib/jfreechart-1.0.13.jar" />
+		</zip>
+		-->
+	</target>
+</project>

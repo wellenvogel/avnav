@@ -1,0 +1,3 @@
+# Place all class names implementing the MapSource interface 
+# (directly and indirectly) in this file 
+mobac.mapsources.mappacks.mymappack.ExtendedXmlMapSource
