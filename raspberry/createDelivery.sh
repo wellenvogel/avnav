@@ -102,7 +102,7 @@ chown -R 1000:1000 $TDIR || err "chown viewer failed"
 
 TDIR=$TMPDIR/avnav/program/server
 wlog "writing files for $TDIR"
-for f in avnav_server.py ais.py create_overview.py
+for f in avnav_server.py ais.py create_overview.py gemf_reader.py
 do
   ( cd $TDIR && cp -p $TMPDIR/$gitsub/server/$f . ) || err "cp $f failed"
   chown 1000:1000 $TDIR/$f || err "chown $f failed"
@@ -132,7 +132,7 @@ wlog "creating tar file $2"
 (cd $TMPDIR  && tar -cf - --exclude=$gitsub .) | cat > $2 || err "unable to create tar file $2"
 wlog "tar file $2 created"
 wlog "creating $zipname"
-( cd $TMPDIR/$gitsub && zip -r --exclude=\*readme-nv.txt --exclude=\*convert_nv.py ../host.zip * ) || err "unable to create $TMPDIR/host.zip"
+( cd $TMPDIR/$gitsub && zip -r --exclude=\*readme-nv.txt --exclude=\*convert_nv.py --exclude=\*/AvChartConvert/\* ../host.zip * ) || err "unable to create $TMPDIR/host.zip"
 rm -f $zipname 2> /dev/null
 mv $TMPDIR/host.zip $zipname
 
