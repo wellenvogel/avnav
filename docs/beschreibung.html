@@ -366,7 +366,7 @@ WebApp öffnen.</P>
 <P>Mit <em>sudo service avnav status</em> kann man den Status des servers
 prüfen, mit <em>sudo service avnav start</em> bzw. <em>sudo service avnav stop</em> kann man ihn starten und stoppen.</P>
 <H3 CLASS="western">Installation mit „stock image“</H3>
-<P>Hierbei zunächst das debian wheezy image von
+<P>(Danke an Christian für ein paar Hilfestellungen) Hierbei zunächst das debian wheezy image von
 <A HREF="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</A>
 installieren (Anleitung siehe dort). Danach muss man eine Reihe
 weiterer Pakete installieren, die Konfigurationen vornehmen und zum
@@ -388,7 +388,9 @@ Schritte (ohne ganz detaillierte Beschreibung):</P>
 	apt-get install hostapd dnsmasqd<BR>we use 192.168.20.00 for our
 	wireless setup<BR>20...254 - dhcp raspi<BR>10       - raspi itself</P>
 	<LI><P>etc/hosts<BR>192.168.20.10 avnav</P>
-	<LI><P>/etc/dnsmasqd.conf<BR>interface=wlan0<BR>domain=avnav<BR>dhcp-range=192.168.20.20,192.168.20.254,255.255.255.0,12h<BR>dhcp-option=42,0.0.0.0</P>
+	<LI><P>/etc/dnsmasqd.conf<BR>interface=wlan0<BR>domain=avnav<BR>dhcp-range=192.168.20.20,192.168.20.254,255.255.255.0,12h<BR>dhcp-option=42,0.0.0.0<br>
+	    expand-hosts<br>
+	dhcp-option=6,192.168.20.10</P>
 	<LI><P>natting<BR>/etc/sysctl.conf: net.ipv4.ip_forward=1<BR>iptables
 	-t nat -A POSTROUTING -o eth0 -j MASQUERADE<BR>iptables -A FORWARD
 	-i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j
