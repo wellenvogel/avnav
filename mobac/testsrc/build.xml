@@ -86,7 +86,7 @@
 	<target name="include_libs" description="optional task, allows to include additional jar libraries into mappacks">
 
 		<!-- Include all additional jars in lib directory into mappack "mymappack"-->
-		<zip destfile="mapsources/mp-mymappack.jar" update="true">
+		<zip destfile="mapsources/mp-avnavbase.jar" update="true">
 			<zipfileset refid="mappack-libs-fs" />
 		</zip>
 		

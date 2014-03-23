@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<exCustomMultiLayerMapSource>
+<name>BSH OpenSeaMap 2014 Extended</name>
+<tileType>png</tileType>
+<backgroundColor>#ffffff</backgroundColor>
+<layers>
+<exCustomWmsMapSource>
+<name>OWS</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<layers>OSM-WMS</layers>
+<url>http://ows.terrestris.de/osm/service?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
+<exCustomWmsMapSource>
+<name>BSHSkinOfTheEarth</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<retries>3</retries>
+<!-- with land areas <layers>18,19,24,25,30,31</layers> -->
+<layers>19,25,31</layers>
+<url>http://gdisrv.bsh.de/arcgis/services/Nauthis/SkinOfTheEarth/MapServer/WMSServer?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
+<exCustomWmsMapSource>
+<name>BSHNavigationalAids</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<retries>3</retries>
+<layerMappings>
+	<layerMapping>
+		<zoom>1,2,3,4,5,6,7,8,9,10,11,</zoom>
+		<layers>12,30,31,49,67,68,86,104,105,123,141,160,178,215</layers>
+	</layerMapping>
+	<layerMapping>
+		<zoom>12</zoom>
+		<layers>11,13,14,15,20,34,35,36,41,53,55,56,57,76,77,78,83</layers>
+	</layerMapping>
+</layerMappings>
+<layers>11,13,14,15,20,34,35,36,41,53,55,56,57,74,76,77,78,83,97,98,99,116,118,119,120</layers>
+<url>http://gdisrv.bsh.de/arcgis/services/Nauthis/NavigationalAids/MapServer/WMSServer?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
+<exCustomWmsMapSource>
+<name>BSHHydrography</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<retries>3</retries>
+<layerMappings>
+	<layerMapping>
+		<zoom>1,2,3,4,5,6,7,8,9,10,11,</zoom>
+		<layers>12,30,31,49,67,68,86,104,105,123,141,160,178,215</layers>
+	</layerMapping>
+	<layerMapping>
+		<zoom>12</zoom>
+		<layers>12,30,31,49,67,68,86,104,105,123,141,160,178,197,215</layers>
+	</layerMapping>
+	<layerMapping>
+		<zoom>13</zoom>
+		<layers>12,30,31,49,67,68,86,104,105,123,141,142,160,178,197,215</layers>
+	</layerMapping>
+	<layerMapping>
+		<zoom>14,15,16,17,18,19,20,21,22</zoom>
+		<layers>12,30,31,49,67,68,86,104,105,123,141,142,160,178,179,197,215,216</layers>
+	</layerMapping>
+</layerMappings>
+<!--<layers>30,31,67,68,123,141,142,178,179,215,216</layers>-->
+<layers>12,30,31,49,67,68,86,104,105,123,141,142,160,178,179,197,215,216</layers>
+<url>http://gdisrv.bsh.de/arcgis/services/Nauthis/Hydrography/MapServer/WMSServer?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
+<!--
+<exCustomMapSource>
+<retries>1</retries>
+<name>OpenSeamap</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<url>http://t1.openseamap.org/seamark/{$z}/{$x}/{$y}.png</url>
+<ignoreErrors>true</ignoreErrors>
+<backgroundColor>#00000000</backgroundColor>
+</exCustomMapSource>
+-->
+
+</layers>
+</exCustomMultiLayerMapSource>
