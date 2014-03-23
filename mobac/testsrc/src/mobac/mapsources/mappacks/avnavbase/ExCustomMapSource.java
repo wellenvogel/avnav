@@ -108,6 +108,9 @@ public class ExCustomMapSource implements HttpMapSource {
 			cvmap.put(c.in, c.out);
 			initConverter(cvmap);
 		}
+		if (tileType == null){
+			throw new RuntimeException("invalid tileType - null");
+		}
 		
 	}
 
@@ -185,7 +188,7 @@ public class ExCustomMapSource implements HttpMapSource {
 		else
 			try {
 				return TileDownLoader.getImage(x, y, zoom, this);
-			} catch (Exception e) {
+			} catch (RuntimeException e) {
 				return null;
 			}
 
