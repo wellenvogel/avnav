@@ -18,11 +18,15 @@
 	<!-- All additional jar files from the lib directory will be added to classpath while compiling -->
 	<fileset id="mappack-libs-fs" dir="lib" excludes="ant-contrib-for.jar" includes="*.jar"/>
 	
+	<!-- combined zip file -->
+	<fileset id="mappack-combined" dir="mapsources"  includes="*.jar"/>
+	<fileset id="mappack-exml" dir="." includes="*.exml,README.txt"/>
+	
 	<path id="mappack-libs">
 		<fileset refid="mappack-libs-fs"/>
 	</path>
 	
-	<target name="all" depends="clean_build,build_mapsources,include_libs" />
+	<target name="all" depends="clean_build,build_mapsources,include_libs,combined-zip" />
 
 	<target name="clean_workspace" description="Deletes the work directories ozi, atlases, atlasestared">
 		<delete includeemptydirs="true" failonerror="false">
@@ -96,5 +100,11 @@
 			<zipfileset src="lib/jfreechart-1.0.13.jar" />
 		</zip>
 		-->
+	</target>
+	<target name="combined-zip" description="create a zip archive with all files">
+	<zip destfile="mapsources/avnav-mapsources.zip" update="false">
+				<zipfileset refid="mappack-combined" />
+				<zipfileset refid="mappack-exml" />
+			</zip>
 	</target>
 </project>

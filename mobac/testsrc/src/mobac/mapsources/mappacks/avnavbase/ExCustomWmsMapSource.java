@@ -1,6 +1,5 @@
 package mobac.mapsources.mappacks.avnavbase;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -8,13 +7,9 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlList;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import mobac.mapsources.MapSourceTools;
-import mobac.mapsources.custom.CustomMapSource;
-import mobac.program.jaxb.ColorAdapter;
 
 /**
  * extend the CustomWmsMapSource by some features...
@@ -74,6 +69,8 @@ public class ExCustomWmsMapSource extends ExCustomMapSource {
 				}catch (NumberFormatException e){}
 			}
 		}
+		
+		super.afterUnmarshal(u, parent);
 		
 	}
 
