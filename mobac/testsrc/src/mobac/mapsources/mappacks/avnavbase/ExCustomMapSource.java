@@ -59,6 +59,12 @@ public class ExCustomMapSource implements HttpMapSource {
 	@XmlElement(required = false, defaultValue="1")
 	protected int retries = 1;
 	
+	/*
+	 * an option to use zoomed tiles from lower levels
+	 */
+	@XmlElement(required = false, defaultValue="0")
+	protected int numLowerLevels = 0;
+	
 	@XmlElement(nillable = false, defaultValue = "Custom")
 	private String name = "Custom";
 
@@ -158,9 +164,9 @@ public class ExCustomMapSource implements HttpMapSource {
 			return MapSourceTools.formatMapUrl(url, serverPart, zoom, tilex, tiley);
 		}
 	}
-
+	
 	public byte[] getTileData(int zoom, int x, int y, LoadMethod loadMethod) throws IOException,
-			UnrecoverableDownloadException, InterruptedException {
+	UnrecoverableDownloadException, InterruptedException {
 		if (invertYCoordinate)
 			y = ((1 << zoom) - y - 1);
 
@@ -182,7 +188,11 @@ public class ExCustomMapSource implements HttpMapSource {
 			} catch (Exception e) {
 				return null;
 			}
+
 	}
+
+	
+		
 
 	
 	@Override
@@ -246,18 +256,37 @@ public class ExCustomMapSource implements HttpMapSource {
 	
 	public BufferedImage getTileImage(int zoom, int x, int y, LoadMethod loadMethod)
 			throws IOException, UnrecoverableDownloadException, InterruptedException {
-		for (int ntry = 0; ntry < retries; ntry++) {
-			byte[] data = getTileData(zoom, x, y, loadMethod);
-			if (data == null || data.length == 0) {
-				if (loadMethod == LoadMethod.CACHE)
-					return null;
-				continue;
+		int currentZoom=zoom;
+		int currSize=256;
+		int orix=x;
+		int oriy=y;
+		for (int nz = 0; nz <= numLowerLevels && currentZoom >= getMinZoom(); nz++) {
+			for (int ntry = 0; ntry < retries; ntry++) {
+				byte[] data = getTileData(currentZoom, x, y, loadMethod);
+				if (data == null || data.length == 0) {
+					if (loadMethod == LoadMethod.CACHE)
+						return null;
+					continue;
+				}
+				BufferedImage i = ImageIO.read(new ByteArrayInputStream(data));
+				if (currentZoom != zoom){
+					//we must zoom the image and pick the right part from it...		
+					int xoffset=(orix%(2*(zoom-currentZoom)))*128;
+					int yoffset=(oriy%(2*(zoom-currentZoom)))*128;
+					BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
+					Graphics g = (Graphics) image.getGraphics();
+					g.drawImage(i, 0, 0, 256, 256, xoffset, yoffset, xoffset+currSize, yoffset+currSize, null);
+					i=image;			
+				}
+				replaceColors(i);
+				return i;
 			}
-			BufferedImage i=ImageIO.read(new ByteArrayInputStream(data));;
-			replaceColors(i);
-			return i;
-			
-				
+			//try to load from a lower zoom level
+			currentZoom-=1;
+			//TODO: handle invert y
+			x=x/2;
+			y=y/2;
+			currSize/=2;
 		}
 		if (!ignoreErrors)
 			return null;
