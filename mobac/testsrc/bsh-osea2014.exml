@@ -57,7 +57,7 @@
 <layerMappings>
 	<layerMapping>
 		<zoom>1,2,3,4,5,6,7,8,9,10,11,</zoom>
-		<layers>12,30,31,49,67,68,86,104,105,123,141,160,178,215</layers>
+		<layers>11,13,14,15,20,34,35,36,41,53,55,56,57</layers>
 	</layerMapping>
 	<layerMapping>
 		<zoom>12</zoom>
@@ -78,19 +78,15 @@
 <layerMappings>
 	<layerMapping>
 		<zoom>1,2,3,4,5,6,7,8,9,10,11,</zoom>
-		<layers>12,30,31,49,67,68,86,104,105,123,141,160,178,215</layers>
+		<layers>12,30,31,49,67,68,86,104,105,123,160,197</layers>
 	</layerMapping>
 	<layerMapping>
 		<zoom>12</zoom>
 		<layers>12,30,31,49,67,68,86,104,105,123,141,160,178,197,215</layers>
 	</layerMapping>
 	<layerMapping>
-		<zoom>13</zoom>
-		<layers>12,30,31,49,67,68,86,104,105,123,141,142,160,178,197,215</layers>
-	</layerMapping>
-	<layerMapping>
 		<zoom>14,15,16,17,18,19,20,21,22</zoom>
-		<layers>12,30,31,49,67,68,86,104,105,123,141,142,160,178,179,197,215,216</layers>
+		<layers>12,49,86,123,141,142,160,178,179,197,215,216</layers>
 	</layerMapping>
 </layerMappings>
 <!--<layers>30,31,67,68,123,141,142,178,179,215,216</layers>-->
