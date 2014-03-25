@@ -53,6 +53,7 @@ public class ExCustomMultiLayerMapSource extends AbstractMultiLayerMapSource {
 	public ExCustomMultiLayerMapSource() {
 		super();
 		mapSources = new MapSource[0];
+		tileType = TileImageType.PNG;
 	}
 
 	public TileImageType getTileType() {
@@ -67,6 +68,10 @@ public class ExCustomMultiLayerMapSource extends AbstractMultiLayerMapSource {
 		mapSources = new MapSource[layers.size()];
 		layers.toArray(mapSources);
 		initializeValues();
+		if (tileType == null){
+			this.log.warn("tile nupe is null, setting to png");
+			tileType=TileImageType.PNG;
+		}
 	}
 
 	@XmlElement(name = "name")

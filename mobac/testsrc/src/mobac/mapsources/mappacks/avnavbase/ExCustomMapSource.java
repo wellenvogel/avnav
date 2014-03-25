@@ -189,8 +189,6 @@ public class ExCustomMapSource implements HttpMapSource {
 			for (int ntry = 0; ntry < retries; ntry++) {
 				byte[] data = fetchTileData(currentZoom, x, y, loadMethod);
 				if (data == null || data.length == 0) {
-					if (loadMethod == LoadMethod.CACHE)
-						return null;
 					continue;
 				}
 				if (zoom == currentZoom)
@@ -258,7 +256,11 @@ public class ExCustomMapSource implements HttpMapSource {
 		else
 			try {
 				return TileDownLoader.getImage(x, y, zoom, this);
-			} catch (RuntimeException e) {
+			} 
+			catch (RuntimeException e) {
+				return null;
+			}
+			catch(Exception e){
 				return null;
 			}
 
@@ -331,7 +333,6 @@ public class ExCustomMapSource implements HttpMapSource {
 			throws IOException, UnrecoverableDownloadException, InterruptedException {
 		byte[] data = getTileData(zoom, x, y, loadMethod);
 		if (data == null || data.length == 0) {
-			if (loadMethod == LoadMethod.CACHE)	return null;
 			if (!ignoreErrors)return null;
 		}
 		else {
