@@ -218,7 +218,7 @@ public class ExCustomMapSource implements HttpMapSource {
 		}
 		if (!ignoreErrors)
 			return null;
-		log.trace("creating empty tile "+getName()+": z="+zoom+", x="+x+", y="+y);
+		log.warn("creating empty tile "+getName()+": z="+zoom+", x="+x+", y="+y);
 		BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
 		Graphics g = (Graphics) image.getGraphics();
 		try {
@@ -339,7 +339,8 @@ public class ExCustomMapSource implements HttpMapSource {
 			BufferedImage i=ImageIO.read(new ByteArrayInputStream(data));
 			replaceColors(i);
 			return i;
-		}		
+		}
+		log.warn("creating empty tile "+getName()+": z="+zoom+", x="+x+", y="+y);
 		BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
 		Graphics g = (Graphics) image.getGraphics();
 		try {
