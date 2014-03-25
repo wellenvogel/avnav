@@ -85,7 +85,7 @@
 		<layers>12,30,31,49,67,68,86,104,105,123,141,160,178,197,215</layers>
 	</layerMapping>
 	<layerMapping>
-		<zoom>14,15,16,17,18,19,20,21,22</zoom>
+		<zoom>13,14,15,16,17,18,19,20,21,22</zoom>
 		<layers>12,49,86,123,141,142,160,178,179,197,215,216</layers>
 	</layerMapping>
 </layerMappings>
