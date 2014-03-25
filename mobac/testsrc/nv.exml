@@ -6,6 +6,7 @@
  <backgroundColor>#FF000000</backgroundColor>
   <invertYCoordinate>false</invertYCoordinate>
 <numLowerLevels>3</numLowerLevels>
+<mergeLevels>true</mergeLevels>
 <ignoreErrors>true</ignoreErrors>
     <url>http://app.nv-data.de/navipack.php?tiles=2014,296,{$z},{$y},{$x}</url>
 </exCustomMapSource>

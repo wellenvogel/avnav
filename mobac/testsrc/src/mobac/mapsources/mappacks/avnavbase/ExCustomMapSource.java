@@ -69,6 +69,13 @@ public class ExCustomMapSource implements HttpMapSource {
 	@XmlElement(required = false, defaultValue="0")
 	protected int numLowerLevels = 0;
 	
+	/**
+	 * merge in lower levels if my current tile has transparent areas
+	 * only considered in numLowerLevels > 0
+	 */
+	@XmlElement(required=false,defaultValue="false")
+	protected boolean mergeLevels=false;
+	
 	@XmlElement(nillable = false, defaultValue = "Custom")
 	private String name = "Custom";
 
@@ -105,6 +112,8 @@ public class ExCustomMapSource implements HttpMapSource {
 	@XmlElementWrapper(name="colorMappings")
 	@XmlElements({ @XmlElement(name = "colorMapping", type = ColorMapping.class)})
 	private ArrayList<ColorMapping>colormappings=new ArrayList<ColorMapping>();
+	
+	
 	
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
 		HashMap<Color, Color> cvmap=new HashMap<Color, Color>();
@@ -232,17 +241,29 @@ public class ExCustomMapSource implements HttpMapSource {
 		this.loaderInfo = loaderInfo;
 	}
 	
-	void replaceColors(BufferedImage image){
-		if (converterMap.size() == 0)return;
+	/**
+	 * replace Colors and check for alpha==0
+	 * @param image
+	 */
+	protected boolean replaceColors(BufferedImage image){
+		boolean doConversions=converterMap.size() != 0;
+		if (!doConversions && ! (mergeLevels && (numLowerLevels>0)))return false;
+		if (!doConversions && ! image.getColorModel().hasAlpha()) return false;
 		int width = image.getWidth();
         int height = image.getHeight();
         int lastin=0;
         int lastout=0;
-
+        boolean hasAlpha0=false;
         for (int xx = 0; xx < width; xx++) {
             for (int yy = 0; yy < height; yy++) {
             	int pix=image.getRGB(xx, yy);
-            	if ((pix & 0xff000000) == 0) continue;
+            	if (! doConversions){
+            		if ((pix & 0xff000000) == 0) return true;
+            	}
+            	if ((pix & 0xff000000) == 0) {
+            		hasAlpha0=true;
+            		continue;
+            	}
             	int val=pix&0xffffff;
             	if (val == lastin){
             		if (val == lastout) continue;
@@ -261,6 +282,7 @@ public class ExCustomMapSource implements HttpMapSource {
             	image.setRGB(xx, yy, pix&0xff000000|val);
             }
         }
+        return hasAlpha0;
 	}
 
 	/**
@@ -274,6 +296,7 @@ public class ExCustomMapSource implements HttpMapSource {
 		int currentFactor=1;
 		int orix=x;
 		int oriy=y;
+		ArrayList<BufferedImage> stack=new ArrayList<BufferedImage>(numLowerLevels+1);
 		for (int nz = 0; nz <= numLowerLevels && currentZoom >= getMinZoom(); nz++) {
 			for (int ntry = 0; ntry < retries; ntry++) {
 				byte[] data = getTileData(currentZoom, x, y, loadMethod);
@@ -281,20 +304,33 @@ public class ExCustomMapSource implements HttpMapSource {
 					continue;
 				}
 				BufferedImage i = ImageIO.read(new ByteArrayInputStream(data));
-				if (zoom == currentZoom){
-					replaceColors(i);
+				boolean hasAlpha0=replaceColors(i);
+				if (zoom == currentZoom && ! (hasAlpha0 && mergeLevels)){
 					return i;
 				}
-				// we must zoom the image and pick the right part from it...
-				int xoffset = (orix % currentFactor) * (256/currentFactor);
-				int yoffset = (oriy % currentFactor) * (256/currentFactor);
-				log.trace("zooming up for tile "+getName()+": z="+zoom+", nz="+currentZoom+", x="+orix+", y="+oriy+", xofs="+xoffset+", yoffs="+yoffset+", fac="+currentFactor);
-				BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
-				Graphics g = (Graphics) image.getGraphics();
-				g.drawImage(i, 0, 0, 256, 256, xoffset, yoffset, xoffset + currSize, yoffset
-						+ currSize, null);
-				g.dispose();
-				return image;
+				BufferedImage image=null;
+				if (zoom != currentZoom) {
+					// we must zoom the image and pick the right part from it...
+					int xoffset = (orix % currentFactor) * (256 / currentFactor);
+					int yoffset = (oriy % currentFactor) * (256 / currentFactor);
+					log.trace("zooming up for tile " + getName() + ": z=" + zoom + ", nz="
+							+ currentZoom + ", x=" + orix + ", y=" + oriy + ", xofs=" + xoffset
+							+ ", yoffs=" + yoffset + ", fac=" + currentFactor);
+					image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
+					Graphics g = (Graphics) image.getGraphics();
+					g.drawImage(i, 0, 0, 256, 256, xoffset, yoffset, xoffset + currSize, yoffset
+							+ currSize, null);
+					g.dispose();
+				}
+				else{
+					image=i;
+				}
+				stack.add(image);
+				if (hasAlpha0){
+					continue;
+				}
+				//here we are if the image has no alpha but is already a lower zoom level
+				break;
 			}
 			//try to load from a lower zoom level
 			currentZoom-=1;
@@ -303,6 +339,20 @@ public class ExCustomMapSource implements HttpMapSource {
 			y=y/2;
 			currSize/=2;
 			currentFactor*=2;
+		}
+		if (stack.size() == 1){
+			return stack.get(0);
+		}
+		if (stack.size()>0){
+			log.trace("creating merged tile ("+stack.size()+" elements) "+getName()+" z="+zoom+", x="+x+",y= "+y);
+			//we must now merge the images in the stack (top down...)
+			BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
+			Graphics g = (Graphics) image.getGraphics();
+			for (int i=stack.size()-1;i>=0;i--){
+				g.drawImage(stack.get(i), 0, 0,256, 256, 0, 0, 256, 256, null);
+			}
+			g.dispose();
+			return image;
 		}
 		if (! ignoreErrors)
 			return null;
