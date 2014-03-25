@@ -173,70 +173,11 @@ public class ExCustomMapSource implements HttpMapSource {
 		}
 	}
 	
-	/*
-	 * unfortunately the API always expects a byte array here - so when upscaling we must convert back...
-	 * (non-Javadoc)
-	 * @see mobac.program.interfaces.MapSource#getTileData(int, int, int, mobac.program.interfaces.MapSource.LoadMethod)
-	 */
+	
+				
+	
+	
 	public byte[] getTileData(int zoom, int x, int y, LoadMethod loadMethod) throws IOException,
-	UnrecoverableDownloadException, InterruptedException {
-		int currentZoom=zoom;
-		int currSize=256;
-		int currentFactor=1;
-		int orix=x;
-		int oriy=y;
-		for (int nz = 0; nz <= numLowerLevels && currentZoom >= getMinZoom(); nz++) {
-			for (int ntry = 0; ntry < retries; ntry++) {
-				byte[] data = fetchTileData(currentZoom, x, y, loadMethod);
-				if (data == null || data.length == 0) {
-					continue;
-				}
-				if (zoom == currentZoom)
-					return data;
-				
-				BufferedImage i = ImageIO.read(new ByteArrayInputStream(data));
-				// we must zoom the image and pick the right part from it...
-				int xoffset = (orix % currentFactor) * (256/currentFactor);
-				int yoffset = (oriy % currentFactor) * (256/currentFactor);
-				log.trace("zooming up for tile "+getName()+": z="+zoom+", nz="+currentZoom+", x="+orix+", y="+oriy+", xofs="+xoffset+", yoffs="+yoffset+", fac="+currentFactor);
-				BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
-				Graphics g = (Graphics) image.getGraphics();
-				g.drawImage(i, 0, 0, 256, 256, xoffset, yoffset, xoffset + currSize, yoffset
-						+ currSize, null);
-				ByteArrayOutputStream os = new ByteArrayOutputStream();
-				ImageIO.write(image, "png", os);
-				g.dispose();
-				return os.toByteArray();
-			}
-			//try to load from a lower zoom level
-			currentZoom-=1;
-			//TODO: handle invert y
-			x=x/2;
-			y=y/2;
-			currSize/=2;
-			currentFactor*=2;
-		}
-		if (!ignoreErrors)
-			return null;
-		log.warn("creating empty tile "+getName()+": z="+zoom+", x="+x+", y="+y);
-		BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
-		Graphics g = (Graphics) image.getGraphics();
-		try {
-			// transparent background
-			g.setColor(new Color(0, 0, 0, 0));
-			g.fillRect(0, 0, 256, 256);
-		} finally {
-			g.dispose();
-		}
-		ByteArrayOutputStream os=new ByteArrayOutputStream();
-		ImageIO.write(image,"png",os);
-		return os.toByteArray();
-	}
-		
-				
-	
-	
-	private byte[] fetchTileData(int zoom, int x, int y, LoadMethod loadMethod) throws IOException,
 				UnrecoverableDownloadException, InterruptedException {
 		if (invertYCoordinate)
 			y = ((1 << zoom) - y - 1);
@@ -265,10 +206,7 @@ public class ExCustomMapSource implements HttpMapSource {
 			}
 
 	}
-
-	
 		
-
 	
 	@Override
 	public String toString() {
@@ -331,15 +269,43 @@ public class ExCustomMapSource implements HttpMapSource {
 	
 	public BufferedImage getTileImage(int zoom, int x, int y, LoadMethod loadMethod)
 			throws IOException, UnrecoverableDownloadException, InterruptedException {
-		byte[] data = getTileData(zoom, x, y, loadMethod);
-		if (data == null || data.length == 0) {
-			if (!ignoreErrors)return null;
+		int currentZoom=zoom;
+		int currSize=256;
+		int currentFactor=1;
+		int orix=x;
+		int oriy=y;
+		for (int nz = 0; nz <= numLowerLevels && currentZoom >= getMinZoom(); nz++) {
+			for (int ntry = 0; ntry < retries; ntry++) {
+				byte[] data = getTileData(currentZoom, x, y, loadMethod);
+				if (data == null || data.length == 0) {
+					continue;
+				}
+				BufferedImage i = ImageIO.read(new ByteArrayInputStream(data));
+				if (zoom == currentZoom){
+					replaceColors(i);
+					return i;
+				}
+				// we must zoom the image and pick the right part from it...
+				int xoffset = (orix % currentFactor) * (256/currentFactor);
+				int yoffset = (oriy % currentFactor) * (256/currentFactor);
+				log.trace("zooming up for tile "+getName()+": z="+zoom+", nz="+currentZoom+", x="+orix+", y="+oriy+", xofs="+xoffset+", yoffs="+yoffset+", fac="+currentFactor);
+				BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
+				Graphics g = (Graphics) image.getGraphics();
+				g.drawImage(i, 0, 0, 256, 256, xoffset, yoffset, xoffset + currSize, yoffset
+						+ currSize, null);
+				g.dispose();
+				return image;
+			}
+			//try to load from a lower zoom level
+			currentZoom-=1;
+			//TODO: handle invert y
+			x=x/2;
+			y=y/2;
+			currSize/=2;
+			currentFactor*=2;
 		}
-		else {
-			BufferedImage i=ImageIO.read(new ByteArrayInputStream(data));
-			replaceColors(i);
-			return i;
-		}
+		if (! ignoreErrors)
+			return null;
 		log.warn("creating empty tile "+getName()+": z="+zoom+", x="+x+", y="+y);
 		BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
 		Graphics g = (Graphics) image.getGraphics();
@@ -350,6 +316,7 @@ public class ExCustomMapSource implements HttpMapSource {
 		} finally {
 			g.dispose();
 		}
+		replaceColors(image);
 		return image;
 	}
 	
