@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<atlas version="1" name="NVPedia" outputFormat="OSMTracker">
+    <Layer name="Overview-Wismar-Swinemuende">
+        <Map maxTileCoordinate="71167/42495" minTileCoordinate="69632/41472" mapSource="NVPedia" zoom="9" name="Overview-Wismar-Swinemuende 09"/>
+        <Map maxTileCoordinate="142079/84735" minTileCoordinate="139264/82944" mapSource="NVPedia" zoom="10" name="Overview-Wismar-Swinemuende 10"/>
+    </Layer>
+    <Layer name="Bodden-Ost">
+        <Map maxTileCoordinate="282623/168447" minTileCoordinate="281856/167168" mapSource="NVPedia" zoom="11" name="Bodden-Ost 11"/>
+        <Map maxTileCoordinate="565247/336639" minTileCoordinate="563712/334592" mapSource="NVPedia" zoom="12" name="Bodden-Ost 12"/>
+        <Map maxTileCoordinate="1130239/673279" minTileCoordinate="1127680/669440" mapSource="NVPedia" zoom="13" name="Bodden-Ost 13"/>
+        <Map maxTileCoordinate="2260223/1346559" minTileCoordinate="2255360/1339136" mapSource="NVPedia" zoom="14" name="Bodden-Ost 14"/>
+        <Map maxTileCoordinate="4520447/2692863" minTileCoordinate="4510976/2678272" mapSource="NVPedia" zoom="15" name="Bodden-Ost 15"/>
+    </Layer>
+    <Layer name="Greifswald">
+        <Map maxTileCoordinate="9016063/5379583" minTileCoordinate="9012224/5378816" mapSource="NVPedia" zoom="16" name="Greifswald 16"/>
+        <Map maxTileCoordinate="18031871/10759167" minTileCoordinate="18024448/10757632" mapSource="NVPedia" zoom="17" name="Greifswald 17"/>
+    </Layer>
+</atlas>

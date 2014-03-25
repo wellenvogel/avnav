@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<atlas version="1" name="BSH Extended" outputFormat="OsmdroidGEMF">
+    <Layer name="Overview-Wismar-Swinemuende">
+        <Map maxTileCoordinate="71167/42495" minTileCoordinate="69632/41472" mapSource="BSH OpenSeaMap 2014 Extended" zoom="9" name="Overview-Wismar-Swinemuende 09"/>
+        <Map maxTileCoordinate="142079/84735" minTileCoordinate="139264/82944" mapSource="BSH OpenSeaMap 2014 Extended" zoom="10" name="Overview-Wismar-Swinemuende 10"/>
+    </Layer>
+    <Layer name="Bodden-West">
+        <Map maxTileCoordinate="282111/168191" minTileCoordinate="281344/167424" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Bodden-West 11"/>
+        <Map maxTileCoordinate="564223/336383" minTileCoordinate="562944/334848" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Bodden-West 12"/>
+        <Map maxTileCoordinate="1128191/672767" minTileCoordinate="1126144/669696" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Bodden-West 13"/>
+        <Map maxTileCoordinate="2256383/1345535" minTileCoordinate="2252288/1339648" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Bodden-West 14"/>
+        <Map maxTileCoordinate="4512511/2691071" minTileCoordinate="4504576/2679296" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Bodden-West 15"/>
+    </Layer>
+    <Layer name="Bodden-Ost">
+        <Map maxTileCoordinate="282623/168447" minTileCoordinate="281856/167168" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Bodden-Ost 11"/>
+        <Map maxTileCoordinate="565247/336639" minTileCoordinate="563712/334592" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Bodden-Ost 12"/>
+        <Map maxTileCoordinate="1130239/673279" minTileCoordinate="1127680/669440" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Bodden-Ost 13"/>
+        <Map maxTileCoordinate="2260223/1346559" minTileCoordinate="2255360/1339136" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Bodden-Ost 14"/>
+        <Map maxTileCoordinate="4520447/2692863" minTileCoordinate="4510976/2678272" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Bodden-Ost 15"/>
+    </Layer>
+    <Layer name="Peene-Achterwasser-Haff">
+        <Map maxTileCoordinate="283903/169471" minTileCoordinate="281856/167680" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Peene-Achterwasser-Haff 11"/>
+        <Map maxTileCoordinate="567551/338687" minTileCoordinate="563968/335616" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Peene-Achterwasser-Haff 12"/>
+        <Map maxTileCoordinate="1134847/677119" minTileCoordinate="1128192/671488" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Peene-Achterwasser-Haff 13"/>
+        <Map maxTileCoordinate="2269695/1353983" minTileCoordinate="2256384/1342976" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Peene-Achterwasser-Haff 14"/>
+        <Map maxTileCoordinate="4539391/2707711" minTileCoordinate="4512768/2686208" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Peene-Achterwasser-Haff 15"/>
+    </Layer>
+    <Layer name="Stralsund">
+        <Map maxTileCoordinate="281855/167935" minTileCoordinate="280832/166912" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Stralsund 11"/>
+        <Map maxTileCoordinate="563455/335871" minTileCoordinate="561664/334080" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Stralsund 12"/>
+        <Map maxTileCoordinate="1126655/671487" minTileCoordinate="1123584/668416" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Stralsund 13"/>
+        <Map maxTileCoordinate="2253055/1342975" minTileCoordinate="2247424/1336832" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Stralsund 14"/>
+        <Map maxTileCoordinate="4505855/2685695" minTileCoordinate="4495104/2673920" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Stralsund 15"/>
+    </Layer>
+    <Layer name="Hiddensee">
+        <Map maxTileCoordinate="281599/167423" minTileCoordinate="280832/166400" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Hiddensee 11"/>
+        <Map maxTileCoordinate="563199/334591" minTileCoordinate="561920/333056" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Hiddensee 12"/>
+        <Map maxTileCoordinate="1126399/669183" minTileCoordinate="1124096/666112" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Hiddensee 13"/>
+        <Map maxTileCoordinate="2252543/1338367" minTileCoordinate="2248192/1332480" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Hiddensee 14"/>
+        <Map maxTileCoordinate="4505087/2676735" minTileCoordinate="4496384/2665216" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Hiddensee 15"/>
+    </Layer>
+    <Layer name="Ruegen-Nord">
+        <Map maxTileCoordinate="282367/167423" minTileCoordinate="281088/166400" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Ruegen-Nord 11"/>
+        <Map maxTileCoordinate="564479/334591" minTileCoordinate="562432/332800" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Ruegen-Nord 12"/>
+        <Map maxTileCoordinate="1128959/668927" minTileCoordinate="1124864/665856" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Ruegen-Nord 13"/>
+        <Map maxTileCoordinate="2257919/1337855" minTileCoordinate="2249984/1331712" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Ruegen-Nord 14"/>
+        <Map maxTileCoordinate="4515839/2675455" minTileCoordinate="4500224/2663680" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Ruegen-Nord 15"/>
+    </Layer>
+    <Layer name="Ruegen-Ost">
+        <Map maxTileCoordinate="282623/167679" minTileCoordinate="281600/166400" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Ruegen-Ost 11"/>
+        <Map maxTileCoordinate="565247/335103" minTileCoordinate="563456/333056" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Ruegen-Ost 12"/>
+        <Map maxTileCoordinate="1130239/669951" minTileCoordinate="1127168/666368" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Ruegen-Ost 13"/>
+        <Map maxTileCoordinate="2260479/1339647" minTileCoordinate="2254592/1332992" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Ruegen-Ost 14"/>
+        <Map maxTileCoordinate="4520959/2679039" minTileCoordinate="4509440/2665984" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Ruegen-Ost 15"/>
+    </Layer>
+    <Layer name="Darss">
+        <Map maxTileCoordinate="281343/167423" minTileCoordinate="280064/166656" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Darss 11"/>
+        <Map maxTileCoordinate="562431/334847" minTileCoordinate="560128/333312" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Darss 12"/>
+        <Map maxTileCoordinate="1124863/669439" minTileCoordinate="1120512/666624" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Darss 13"/>
+        <Map maxTileCoordinate="2249471/1338623" minTileCoordinate="2241280/1333248" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Darss 14"/>
+        <Map maxTileCoordinate="4498687/2677247" minTileCoordinate="4482560/2666752" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Darss 15"/>
+    </Layer>
+    <Layer name="Zingst-Warnemuende">
+        <Map maxTileCoordinate="280575/168191" minTileCoordinate="279552/166912" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Zingst-Warnemuende 11"/>
+        <Map maxTileCoordinate="561151/336383" minTileCoordinate="559104/334080" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Zingst-Warnemuende 12"/>
+        <Map maxTileCoordinate="1122303/672767" minTileCoordinate="1118208/668416" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Zingst-Warnemuende 13"/>
+        <Map maxTileCoordinate="2244607/1345279" minTileCoordinate="2236672/1336832" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Zingst-Warnemuende 14"/>
+        <Map maxTileCoordinate="4489215/2690559" minTileCoordinate="4473344/2673664" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Zingst-Warnemuende 15"/>
+    </Layer>
+    <Layer name="Warnemuende-Rerik">
+        <Map maxTileCoordinate="280063/168447" minTileCoordinate="278784/167424" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Warnemuende-Rerik 11"/>
+        <Map maxTileCoordinate="560127/336639" minTileCoordinate="557824/334848" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Warnemuende-Rerik 12"/>
+        <Map maxTileCoordinate="1120255/673023" minTileCoordinate="1115904/669952" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Warnemuende-Rerik 13"/>
+        <Map maxTileCoordinate="2240255/1345791" minTileCoordinate="2231808/1339904" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Warnemuende-Rerik 14"/>
+        <Map maxTileCoordinate="4480255/2691583" minTileCoordinate="4463872/2680064" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Warnemuende-Rerik 15"/>
+    </Layer>
+    <Layer name="Wismar">
+        <Map maxTileCoordinate="279551/168703" minTileCoordinate="278272/167680" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Wismar 11"/>
+        <Map maxTileCoordinate="558847/337407" minTileCoordinate="556800/335616" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Wismar 12"/>
+        <Map maxTileCoordinate="1117695/674815" minTileCoordinate="1113600/671232" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Wismar 13"/>
+        <Map maxTileCoordinate="2235135/1349375" minTileCoordinate="2227200/1342464" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Wismar 14"/>
+        <Map maxTileCoordinate="4470271/2698751" minTileCoordinate="4454400/2684928" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Wismar 15"/>
+    </Layer>
+    <Layer name="Luebeck">
+        <Map maxTileCoordinate="278783/168703" minTileCoordinate="277504/167680" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Luebeck 11"/>
+        <Map maxTileCoordinate="557311/337407" minTileCoordinate="555264/335616" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Luebeck 12"/>
+        <Map maxTileCoordinate="1114367/674815" minTileCoordinate="1110784/671488" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Luebeck 13"/>
+        <Map maxTileCoordinate="2228479/1349631" minTileCoordinate="2221824/1343232" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Luebeck 14"/>
+        <Map maxTileCoordinate="4456703/2699007" minTileCoordinate="4443648/2686720" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Luebeck 15"/>
+    </Layer>
+    <Layer name="Fehmarn">
+        <Map maxTileCoordinate="278783/168191" minTileCoordinate="277760/166656" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Fehmarn 11"/>
+        <Map maxTileCoordinate="557567/336127" minTileCoordinate="555776/333568" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Fehmarn 12"/>
+        <Map maxTileCoordinate="1115135/672255" minTileCoordinate="1111552/667136" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Fehmarn 13"/>
+        <Map maxTileCoordinate="2230271/1344255" minTileCoordinate="2223104/1334528" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Fehmarn 14"/>
+        <Map maxTileCoordinate="4460543/2688255" minTileCoordinate="4446208/2669056" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Fehmarn 15"/>
+    </Layer>
+    <Layer name="Todendorf">
+        <Map maxTileCoordinate="278527/167679" minTileCoordinate="277248/166656" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Todendorf 11"/>
+        <Map maxTileCoordinate="556799/335359" minTileCoordinate="554496/333312" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Todendorf 12"/>
+        <Map maxTileCoordinate="1113343/670719" minTileCoordinate="1108992/666880" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Todendorf 13"/>
+        <Map maxTileCoordinate="2226687/1341439" minTileCoordinate="2218240/1334016" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Todendorf 14"/>
+        <Map maxTileCoordinate="4453375/2682879" minTileCoordinate="4436736/2668032" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Todendorf 15"/>
+    </Layer>
+    <Layer name="Kiel">
+        <Map maxTileCoordinate="277503/167679" minTileCoordinate="276736/166400" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Kiel 11"/>
+        <Map maxTileCoordinate="555007/335359" minTileCoordinate="553472/332800" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Kiel 12"/>
+        <Map maxTileCoordinate="1110015/670719" minTileCoordinate="1107200/665856" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Kiel 13"/>
+        <Map maxTileCoordinate="2220031/1341183" minTileCoordinate="2214400/1331712" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Kiel 14"/>
+        <Map maxTileCoordinate="4439807/2682111" minTileCoordinate="4428800/2663424" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Kiel 15"/>
+    </Layer>
+    <Layer name="Eckernfoerde">
+        <Map maxTileCoordinate="276991/167423" minTileCoordinate="276224/166144" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Eckernfoerde 11"/>
+        <Map maxTileCoordinate="553983/334591" minTileCoordinate="552704/332288" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Eckernfoerde 12"/>
+        <Map maxTileCoordinate="1107711/669183" minTileCoordinate="1105664/664832" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Eckernfoerde 13"/>
+        <Map maxTileCoordinate="2215423/1338367" minTileCoordinate="2211584/1329664" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Eckernfoerde 14"/>
+        <Map maxTileCoordinate="4430847/2676479" minTileCoordinate="4423168/2659328" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Eckernfoerde 15"/>
+    </Layer>
+    <Layer name="Schleswig">
+        <Map maxTileCoordinate="276735/167423" minTileCoordinate="275968/166656" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Schleswig 11"/>
+        <Map maxTileCoordinate="553215/334591" minTileCoordinate="551936/333568" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Schleswig 12"/>
+        <Map maxTileCoordinate="1106431/668927" minTileCoordinate="1103872/667136" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Schleswig 13"/>
+        <Map maxTileCoordinate="2212607/1337599" minTileCoordinate="2207744/1334528" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Schleswig 14"/>
+        <Map maxTileCoordinate="4424959/2674943" minTileCoordinate="4415488/2669312" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Schleswig 15"/>
+    </Layer>
+    <Layer name="Flensburg">
+        <Map maxTileCoordinate="276735/166655" minTileCoordinate="275712/165888" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="Flensburg 11"/>
+        <Map maxTileCoordinate="553215/333055" minTileCoordinate="551424/332032" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="Flensburg 12"/>
+        <Map maxTileCoordinate="1106175/666111" minTileCoordinate="1103104/664064" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="Flensburg 13"/>
+        <Map maxTileCoordinate="2212095/1332223" minTileCoordinate="2206464/1328384" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="Flensburg 14"/>
+        <Map maxTileCoordinate="4423935/2664447" minTileCoordinate="4412928/2656768" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="Flensburg 15"/>
+    </Layer>
+    <Layer name="BarterBodden">
+        <Map maxTileCoordinate="281087/167679" minTileCoordinate="280576/167168" mapSource="BSH OpenSeaMap 2014 Extended" zoom="11" name="BarterBodden 11"/>
+        <Map maxTileCoordinate="561919/335103" minTileCoordinate="561152/334592" mapSource="BSH OpenSeaMap 2014 Extended" zoom="12" name="BarterBodden 12"/>
+        <Map maxTileCoordinate="1123839/670207" minTileCoordinate="1122560/669440" mapSource="BSH OpenSeaMap 2014 Extended" zoom="13" name="BarterBodden 13"/>
+        <Map maxTileCoordinate="2247423/1340415" minTileCoordinate="2245120/1338880" mapSource="BSH OpenSeaMap 2014 Extended" zoom="14" name="BarterBodden 14"/>
+        <Map maxTileCoordinate="4494847/2680575" minTileCoordinate="4490240/2677760" mapSource="BSH OpenSeaMap 2014 Extended" zoom="15" name="BarterBodden 15"/>
+    </Layer>
+    <Layer name="Kloster">
+        <Map maxTileCoordinate="9000191/5340415" minTileCoordinate="8999424/5339904" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Kolster 16"/>
+        <Map maxTileCoordinate="18000127/10680831" minTileCoordinate="17999104/10680064" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Kolster 17"/>
+    </Layer>
+    <Layer name="Vitte">
+        <Map maxTileCoordinate="8999935/5341695" minTileCoordinate="8999424/5340928" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Vitte 16"/>
+        <Map maxTileCoordinate="17999871/10683391" minTileCoordinate="17998848/10682112" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Vitte 17"/>
+    </Layer>
+    <Layer name="Neuendorf">
+        <Map maxTileCoordinate="8998911/5345279" minTileCoordinate="8998656/5344768" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Neuendorf 16"/>
+        <Map maxTileCoordinate="17997823/10690303" minTileCoordinate="17997312/10689792" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Neuendorf 17"/>
+    </Layer>
+    <Layer name="Barhoeft">
+        <Map maxTileCoordinate="8996095/5352447" minTileCoordinate="8995840/5351936" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Barhoeft 16"/>
+        <Map maxTileCoordinate="17992191/10704895" minTileCoordinate="17991680/10704128" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Barhoeft 17"/>
+    </Layer>
+    <Layer name="Zingst">
+        <Map maxTileCoordinate="8980735/5352959" minTileCoordinate="8979456/5352192" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Zingst 16"/>
+        <Map maxTileCoordinate="17961215/10705663" minTileCoordinate="17959168/10704640" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Zingst 17"/>
+    </Layer>
+    <Layer name="Warnemuende">
+        <Map maxTileCoordinate="8952831/5373183" minTileCoordinate="8951808/5371648" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Warnemuende 16"/>
+        <Map maxTileCoordinate="17905407/10746367" minTileCoordinate="17903616/10743552" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Warnemuende 17"/>
+    </Layer>
+    <Layer name="Schmarl">
+        <Map maxTileCoordinate="8952575/5376255" minTileCoordinate="8951808/5372928" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Schmarl 16"/>
+        <Map maxTileCoordinate="17904895/10752255" minTileCoordinate="17903616/10746112" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Schmarl 17"/>
+    </Layer>
+    <Layer name="Kuehlungsborn">
+        <Map maxTileCoordinate="8937471/5374975" minTileCoordinate="8936960/5374464" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Kuehlungsborn 16"/>
+        <Map maxTileCoordinate="17874687/10749695" minTileCoordinate="17873920/10748928" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Kuehlungsborn 17"/>
+    </Layer>
+    <Layer name="Timmendorf">
+        <Map maxTileCoordinate="8919039/5387775" minTileCoordinate="8918528/5387264" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Timmendorf 16"/>
+        <Map maxTileCoordinate="17837823/10775295" minTileCoordinate="17837056/10774784" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Timmendorf 17"/>
+    </Layer>
+    <Layer name="Kirchdorf">
+        <Map maxTileCoordinate="8922111/5387519" minTileCoordinate="8921600/5387008" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Kirchdorf 16"/>
+        <Map maxTileCoordinate="17844223/10774783" minTileCoordinate="17843200/10774272" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Kirchdorf 17"/>
+    </Layer>
+    <Layer name="Wismar_1">
+        <Map maxTileCoordinate="8923135/5395199" minTileCoordinate="8921088/5393664" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Wismar_1 16"/>
+        <Map maxTileCoordinate="17846015/10790399" minTileCoordinate="17842432/10787328" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Wismar_1 17"/>
+    </Layer>
+    <Layer name="Wieschendorf">
+        <Map maxTileCoordinate="8917759/5391103" minTileCoordinate="8917248/5390848" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Wieschendorf 16"/>
+        <Map maxTileCoordinate="17835519/10782207" minTileCoordinate="17834496/10781696" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Wieschendorf 17"/>
+    </Layer>
+    <Layer name="Boltenhagen">
+        <Map maxTileCoordinate="8913151/5389311" minTileCoordinate="8912640/5388800" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Boltenhagen 16"/>
+        <Map maxTileCoordinate="17826303/10778623" minTileCoordinate="17825280/10777600" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Boltenhagen 17"/>
+    </Layer>
+    <Layer name="Travemuende-1">
+        <Map maxTileCoordinate="8895999/5390591" minTileCoordinate="8895232/5389824" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Travemuende-1 16"/>
+        <Map maxTileCoordinate="17791743/10780927" minTileCoordinate="17790464/10779904" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Travemuende-1 17"/>
+    </Layer>
+    <Layer name="Travemuende-2">
+        <Map maxTileCoordinate="8895231/5390847" minTileCoordinate="8894464/5390336" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Travemuende-2 16"/>
+        <Map maxTileCoordinate="17790463/10781695" minTileCoordinate="17788928/10780672" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Travemuende-2 17"/>
+    </Layer>
+    <Layer name="Luebeck-1">
+        <Map maxTileCoordinate="8892927/5395967" minTileCoordinate="8889856/5394176" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Luebeck-1 16"/>
+        <Map maxTileCoordinate="17785855/10791935" minTileCoordinate="17779968/10788352" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Luebeck-1 17"/>
+    </Layer>
+    <Layer name="Luebeck-2">
+        <Map maxTileCoordinate="8888063/5394943" minTileCoordinate="8886784/5393664" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Luebeck-2 16"/>
+        <Map maxTileCoordinate="17776127/10789887" minTileCoordinate="17773568/10787328" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Luebeck-2 17"/>
+    </Layer>
+    <Layer name="Niendorf">
+        <Map maxTileCoordinate="8892671/5387519" minTileCoordinate="8892160/5387008" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Niendorf 16"/>
+        <Map maxTileCoordinate="17785343/10775039" minTileCoordinate="17784576/10774272" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Niendorf 17"/>
+    </Layer>
+    <Layer name="Neustadt-1">
+        <Map maxTileCoordinate="8892927/5379839" minTileCoordinate="8891648/5378816" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Neustadt-1 16"/>
+        <Map maxTileCoordinate="17785599/10759423" minTileCoordinate="17783552/10757888" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Neustadt-1 17"/>
+    </Layer>
+    <Layer name="Neustadt-2">
+        <Map maxTileCoordinate="8892671/5379071" minTileCoordinate="8892416/5378560" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Neustadt-2 16"/>
+        <Map maxTileCoordinate="17785343/10757887" minTileCoordinate="17784832/10757120" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Neustadt-2 17"/>
+    </Layer>
+    <Layer name="Groemitz">
+        <Map maxTileCoordinate="8899071/5376511" minTileCoordinate="8898560/5375744" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Groemitz 16"/>
+        <Map maxTileCoordinate="17798143/10752767" minTileCoordinate="17797120/10751744" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Groemitz 17"/>
+    </Layer>
+    <Layer name="Burgstaaken">
+        <Map maxTileCoordinate="8911359/5354495" minTileCoordinate="8909824/5353216" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Burgstaaken 16"/>
+        <Map maxTileCoordinate="17822463/10708991" minTileCoordinate="17819904/10706432" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Burgstaaken 17"/>
+    </Layer>
+    <Layer name="Grossenbrode">
+        <Map maxTileCoordinate="8905215/5359615" minTileCoordinate="8903936/5358080" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Grossenbrode 16"/>
+        <Map maxTileCoordinate="17810175/10719231" minTileCoordinate="17807872/10716416" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Grossenbrode 17"/>
+    </Layer>
+    <Layer name="Grossenbrode-2">
+        <Map maxTileCoordinate="8907007/5355775" minTileCoordinate="8906496/5355264" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Grossenbrode-2 16"/>
+        <Map maxTileCoordinate="17813759/10711295" minTileCoordinate="17813248/10710528" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Grossenbrode-2 17"/>
+    </Layer>
+    <Layer name="Fehmarn_1">
+        <Map maxTileCoordinate="8907007/5355007" minTileCoordinate="8906496/5354496" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Fehmarn_1 16"/>
+        <Map maxTileCoordinate="17813759/10709759" minTileCoordinate="17813248/10709248" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Fehmarn_1 17"/>
+    </Layer>
+    <Layer name="Lemkenhafen">
+        <Map maxTileCoordinate="8905727/5351423" minTileCoordinate="8905216/5351168" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Lemkenhafen 16"/>
+        <Map maxTileCoordinate="17811199/10702847" minTileCoordinate="17810432/10702592" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Lemkenhafen 17"/>
+    </Layer>
+    <Layer name="Orth">
+        <Map maxTileCoordinate="8903679/5351679" minTileCoordinate="8903424/5350912" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Orth 16"/>
+        <Map maxTileCoordinate="17807359/10703359" minTileCoordinate="17806848/10702080" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Orth 17"/>
+    </Layer>
+    <Layer name="Heiligenhafen">
+        <Map maxTileCoordinate="8902143/5357567" minTileCoordinate="8900096/5356544" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Heiligenhafen 16"/>
+        <Map maxTileCoordinate="17804287/10715135" minTileCoordinate="17800448/10713088" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Heiligenhafen 17"/>
+    </Layer>
+    <Layer name="Lippe">
+        <Map maxTileCoordinate="8884991/5360383" minTileCoordinate="8884480/5359872" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Lippe 16"/>
+        <Map maxTileCoordinate="17769983/10720511" minTileCoordinate="17769216/10720000" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Lippe 17"/>
+    </Layer>
+    <Layer name="Wendtorf">
+        <Map maxTileCoordinate="8868351/5353727" minTileCoordinate="8867328/5352960" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Wendtorf 16"/>
+        <Map maxTileCoordinate="17736447/10707199" minTileCoordinate="17734656/10706176" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Wendtorf 17"/>
+    </Layer>
+    <Layer name="Laboe">
+        <Map maxTileCoordinate="8865023/5355263" minTileCoordinate="8864256/5354496" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Laboe 16"/>
+        <Map maxTileCoordinate="17729791/10710271" minTileCoordinate="17728768/10709248" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Laboe 17"/>
+    </Layer>
+    <Layer name="Heikendorf">
+        <Map maxTileCoordinate="8863999/5357311" minTileCoordinate="8863488/5356800" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Heikendorf 16"/>
+        <Map maxTileCoordinate="17727743/10714367" minTileCoordinate="17727232/10713600" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Heikendorf 17"/>
+    </Layer>
+    <Layer name="Stickenhoern">
+        <Map maxTileCoordinate="8863487/5356799" minTileCoordinate="8861952/5355776" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Stickenhoern 16"/>
+        <Map maxTileCoordinate="17726975/10713599" minTileCoordinate="17723904/10711552" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Stickenhoern 17"/>
+    </Layer>
+    <Layer name="Holtenau">
+        <Map maxTileCoordinate="8861951/5359103" minTileCoordinate="8860160/5357312" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Holtenau 16"/>
+        <Map maxTileCoordinate="17723647/10718207" minTileCoordinate="17720320/10714624" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Holtenau 17"/>
+    </Layer>
+    <Layer name="Moenkeberg">
+        <Map maxTileCoordinate="8862975/5359103" minTileCoordinate="8862720/5358592" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Moenkeberg 16"/>
+        <Map maxTileCoordinate="17725951/10717951" minTileCoordinate="17725440/10717184" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Moenkeberg 17"/>
+    </Layer>
+    <Layer name="Kiel_1">
+        <Map maxTileCoordinate="8862207/5360639" minTileCoordinate="8861440/5359104" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Kiel_1 16"/>
+        <Map maxTileCoordinate="17724159/10721279" minTileCoordinate="17723136/10718208" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Kiel_1 17"/>
+    </Layer>
+    <Layer name="Kiel-2">
+        <Map maxTileCoordinate="8861951/5361663" minTileCoordinate="8861184/5360640" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Kiel-2 16"/>
+        <Map maxTileCoordinate="17723903/10723327" minTileCoordinate="17722624/10721280" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Kiel-2 17"/>
+    </Layer>
+    <Layer name="Kiel-3">
+        <Map maxTileCoordinate="8861439/5362175" minTileCoordinate="8860672/5361152" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Kiel-3 16"/>
+        <Map maxTileCoordinate="17722879/10724351" minTileCoordinate="17721344/10722560" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Kiel-3 17"/>
+    </Layer>
+    <Layer name="Strande">
+        <Map maxTileCoordinate="8862975/5352959" minTileCoordinate="8862208/5351936" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Strande 16"/>
+        <Map maxTileCoordinate="17725695/10705663" minTileCoordinate="17724672/10703872" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Strande 17"/>
+    </Layer>
+    <Layer name="Buelk">
+        <Map maxTileCoordinate="8863999/5350655" minTileCoordinate="8863744/5350400" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Buelk 16"/>
+        <Map maxTileCoordinate="17727999/10701311" minTileCoordinate="17727744/10700800" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Buelk 17"/>
+    </Layer>
+    <Layer name="Eckernfoerde_1">
+        <Map maxTileCoordinate="8848895/5349631" minTileCoordinate="8846592/5348608" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Eckernfoerde_1 16"/>
+        <Map maxTileCoordinate="17697535/10699007" minTileCoordinate="17693440/10697472" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Eckernfoerde_1 17"/>
+    </Layer>
+    <Layer name="Damp">
+        <Map maxTileCoordinate="8856063/5340671" minTileCoordinate="8855552/5340160" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Damp 16"/>
+        <Map maxTileCoordinate="17712127/10681087" minTileCoordinate="17711360/10680320" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Damp 17"/>
+    </Layer>
+    <Layer name="Maasholm">
+        <Map maxTileCoordinate="8854527/5332735" minTileCoordinate="8853760/5331968" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Maasholm 16"/>
+        <Map maxTileCoordinate="17709055/10665215" minTileCoordinate="17707776/10663936" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Maasholm 17"/>
+    </Layer>
+    <Layer name="Kappeln">
+        <Map maxTileCoordinate="8852479/5335295" minTileCoordinate="8851200/5332992" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Kappeln 16"/>
+        <Map maxTileCoordinate="17704703/10670591" minTileCoordinate="17702656/10666240" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Kappeln 17"/>
+    </Layer>
+    <Layer name="Arnis">
+        <Map maxTileCoordinate="8852223/5336831" minTileCoordinate="8851200/5335808" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Arnis 16"/>
+        <Map maxTileCoordinate="17704191/10673663" minTileCoordinate="17702400/10671616" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Arnis 17"/>
+    </Layer>
+    <Layer name="Lindau">
+        <Map maxTileCoordinate="8846591/5340415" minTileCoordinate="8846080/5339904" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Lindau 16"/>
+        <Map maxTileCoordinate="17693183/10680831" minTileCoordinate="17692160/10679808" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Lindau 17"/>
+    </Layer>
+    <Layer name="Missunde">
+        <Map maxTileCoordinate="8841727/5345535" minTileCoordinate="8841216/5344512" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Missunde 16"/>
+        <Map maxTileCoordinate="17683199/10691071" minTileCoordinate="17682432/10689024" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Missunde 17"/>
+    </Layer>
+    <Layer name="Schleswig_1">
+        <Map maxTileCoordinate="8835583/5347071" minTileCoordinate="8833280/5345792" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Schleswig_1 16"/>
+        <Map maxTileCoordinate="17671167/10693887" minTileCoordinate="17666560/10691840" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Schleswig_1 17"/>
+    </Layer>
+    <Layer name="Breege">
+        <Map maxTileCoordinate="9011199/5338111" minTileCoordinate="9010944/5337856" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Breege 16"/>
+        <Map maxTileCoordinate="18022399/10676223" minTileCoordinate="18021888/10675712" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Breege 17"/>
+    </Layer>
+    <Layer name="Schaprode">
+        <Map maxTileCoordinate="9002495/5346303" minTileCoordinate="9001728/5345792" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Schaprode 16"/>
+        <Map maxTileCoordinate="18004735/10692351" minTileCoordinate="18003712/10691584" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Schaprode 17"/>
+    </Layer>
+    <Layer name="Altefaehr">
+        <Map maxTileCoordinate="9000447/5360895" minTileCoordinate="8999936/5360384" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Altefaehr 16"/>
+        <Map maxTileCoordinate="18000639/10721535" minTileCoordinate="18000128/10721024" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Altefaehr 17"/>
+    </Layer>
+    <Layer name="Stralsund_1">
+        <Map maxTileCoordinate="8999935/5362431" minTileCoordinate="8998656/5361408" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Stralsund_1 16"/>
+        <Map maxTileCoordinate="17999615/10724863" minTileCoordinate="17997568/10722816" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Stralsund_1 17"/>
+    </Layer>
+    <Layer name="Daenholm">
+        <Map maxTileCoordinate="9000447/5362943" minTileCoordinate="8999936/5362432" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Daenholm 16"/>
+        <Map maxTileCoordinate="18000895/10725631" minTileCoordinate="17999872/10724864" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Daenholm 17"/>
+    </Layer>
+    <Layer name="Neuhof">
+        <Map maxTileCoordinate="9003007/5366015" minTileCoordinate="9002752/5365504" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Neuhof 16"/>
+        <Map maxTileCoordinate="18006015/10731775" minTileCoordinate="18005504/10731264" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Neuhof 17"/>
+    </Layer>
+    <Layer name="Gustow">
+        <Map maxTileCoordinate="9003775/5363711" minTileCoordinate="9003264/5363200" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Gustow 16"/>
+        <Map maxTileCoordinate="18007295/10727167" minTileCoordinate="18006528/10726400" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Gustow 17"/>
+    </Layer>
+    <Layer name="Stahlbrode">
+        <Map maxTileCoordinate="9008127/5368575" minTileCoordinate="9007616/5368064" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Stahlbrode 16"/>
+        <Map maxTileCoordinate="18016255/10736895" minTileCoordinate="18015488/10736128" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Stahlbrode 17"/>
+    </Layer>
+    <Layer name="Glewitz">
+        <Map maxTileCoordinate="9009407/5367807" minTileCoordinate="9008896/5367552" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Glewitz 16"/>
+        <Map maxTileCoordinate="18018559/10735615" minTileCoordinate="18018048/10735104" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Glewitz 17"/>
+    </Layer>
+    <Layer name="Lauterbach">
+        <Map maxTileCoordinate="9018111/5359871" minTileCoordinate="9017600/5359360" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Lauterbach 16"/>
+        <Map maxTileCoordinate="18036223/10719743" minTileCoordinate="18035456/10718976" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Lauterbach 17"/>
+    </Layer>
+    <Layer name="Seedorf">
+        <Map maxTileCoordinate="9025023/5359359" minTileCoordinate="9024512/5358336" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Seedorf 16"/>
+        <Map maxTileCoordinate="18049791/10718719" minTileCoordinate="18049280/10716928" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Seedorf 17"/>
+    </Layer>
+    <Layer name="Baabe">
+        <Map maxTileCoordinate="9026559/5359103" minTileCoordinate="9026048/5358592" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Baabe 16"/>
+        <Map maxTileCoordinate="18053119/10718207" minTileCoordinate="18052352/10717440" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Baabe 17"/>
+    </Layer>
+    <Layer name="Gaager">
+        <Map maxTileCoordinate="9026559/5362431" minTileCoordinate="9026048/5361664" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Gaager 16"/>
+        <Map maxTileCoordinate="18053119/10724607" minTileCoordinate="18052096/10723584" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Gaager 17"/>
+    </Layer>
+    <Layer name="Thiessow">
+        <Map maxTileCoordinate="9027583/5364735" minTileCoordinate="9026560/5363712" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Thiessow 16"/>
+        <Map maxTileCoordinate="18055167/10729471" minTileCoordinate="18053120/10727424" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Thiessow 17"/>
+    </Layer>
+    <Layer name="Gw-Oie">
+        <Map maxTileCoordinate="9037055/5367807" minTileCoordinate="9036544/5367296" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Gw-Oie 16"/>
+        <Map maxTileCoordinate="18073855/10735359" minTileCoordinate="18073088/10734592" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Gw-Oie 17"/>
+    </Layer>
+    <Layer name="Ruden">
+        <Map maxTileCoordinate="9030655/5370879" minTileCoordinate="9030400/5370368" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Ruden 16"/>
+        <Map maxTileCoordinate="18061311/10741759" minTileCoordinate="18060800/10740992" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Ruden 17"/>
+    </Layer>
+    <Layer name="Freest">
+        <Map maxTileCoordinate="9028863/5376255" minTileCoordinate="9028352/5375744" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Freest 16"/>
+        <Map maxTileCoordinate="18057471/10752255" minTileCoordinate="18056704/10751488" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Freest 17"/>
+    </Layer>
+    <Layer name="Peenemuende">
+        <Map maxTileCoordinate="9030655/5376511" minTileCoordinate="9029888/5375744" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Peenemuende 16"/>
+        <Map maxTileCoordinate="18061055/10752767" minTileCoordinate="18059776/10751744" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Peenemuende 17"/>
+    </Layer>
+    <Layer name="Kroeslin">
+        <Map maxTileCoordinate="9030143/5377535" minTileCoordinate="9029376/5376768" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Kroeslin 16"/>
+        <Map maxTileCoordinate="18060031/10755071" minTileCoordinate="18059008/10753536" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Kroeslin 17"/>
+    </Layer>
+    <Layer name="Karlshagen">
+        <Map maxTileCoordinate="9032447/5378559" minTileCoordinate="9031936/5378048" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Karlshagen 16"/>
+        <Map maxTileCoordinate="18064895/10756863" minTileCoordinate="18063872/10756352" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Karlshagen 17"/>
+    </Layer>
+    <Layer name="Zecherin">
+        <Map maxTileCoordinate="9032191/5381119" minTileCoordinate="9031424/5380352" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Zecherin 16"/>
+        <Map maxTileCoordinate="18064127/10761983" minTileCoordinate="18063104/10760960" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Zecherin 17"/>
+    </Layer>
+    <Layer name="Wolgast">
+        <Map maxTileCoordinate="9031423/5382911" minTileCoordinate="9030400/5381632" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Wolgast 16"/>
+        <Map maxTileCoordinate="18062591/10765823" minTileCoordinate="18061056/10763520" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Wolgast 17"/>
+    </Layer>
+    <Layer name="Ziemitz">
+        <Map maxTileCoordinate="9030911/5385727" minTileCoordinate="9030400/5385216" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Ziemitz 16"/>
+        <Map maxTileCoordinate="18061823/10771455" minTileCoordinate="18061056/10770432" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Ziemitz 17"/>
+    </Layer>
+    <Layer name="Krummin">
+        <Map maxTileCoordinate="9034239/5383679" minTileCoordinate="9033728/5382912" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Krummin 16"/>
+        <Map maxTileCoordinate="18068479/10767103" minTileCoordinate="18067456/10766080" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Krummin 17"/>
+    </Layer>
+    <Layer name="Zinnowitz">
+        <Map maxTileCoordinate="9037567/5382143" minTileCoordinate="9037056/5381632" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Zinnowitz 16"/>
+        <Map maxTileCoordinate="18074879/10764031" minTileCoordinate="18074112/10763264" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Zinnowitz 17"/>
+    </Layer>
+    <Layer name="Netzelkow">
+        <Map maxTileCoordinate="9037311/5384959" minTileCoordinate="9036544/5384704" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Netzelkow 16"/>
+        <Map maxTileCoordinate="18074367/10769919" minTileCoordinate="18073344/10769408" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Netzelkow 17"/>
+    </Layer>
+    <Layer name="Rankwitz">
+        <Map maxTileCoordinate="9038079/5392127" minTileCoordinate="9037568/5391872" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Rankwitz 16"/>
+        <Map maxTileCoordinate="18076159/10784255" minTileCoordinate="18075392/10783744" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Rankwitz 17"/>
+    </Layer>
+    <Layer name="Karnin">
+        <Map maxTileCoordinate="9035007/5399807" minTileCoordinate="9033984/5399040" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Karnin 16"/>
+        <Map maxTileCoordinate="18070015/10799615" minTileCoordinate="18067968/10798080" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Karnin 17"/>
+    </Layer>
+    <Layer name="Moenkebude">
+        <Map maxTileCoordinate="9039871/5404927" minTileCoordinate="9039360/5404416" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Moenkebude 16"/>
+        <Map maxTileCoordinate="18079743/10809855" minTileCoordinate="18078976/10809088" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Moenkebude 17"/>
+    </Layer>
+    <Layer name="Ueckermuende-1">
+        <Map maxTileCoordinate="9044479/5406975" minTileCoordinate="9043968/5406464" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Ueckermuende-1 16"/>
+        <Map maxTileCoordinate="18088959/10813951" minTileCoordinate="18087936/10812928" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Ueckermuende-1 17"/>
+    </Layer>
+    <Layer name="Ueckermuende-2">
+        <Map maxTileCoordinate="9043967/5408255" minTileCoordinate="9043200/5406976" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Ueckermuende-2 16"/>
+        <Map maxTileCoordinate="18087679/10816255" minTileCoordinate="18086400/10814208" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Ueckermuende-2 17"/>
+    </Layer>
+    <Layer name="Altwarp">
+        <Map maxTileCoordinate="9053951/5407743" minTileCoordinate="9053440/5407232" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Altwarp 16"/>
+        <Map maxTileCoordinate="18107903/10815487" minTileCoordinate="18107136/10814464" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Altwarp 17"/>
+    </Layer>
+    <Layer name="NoweWarpo">
+        <Map maxTileCoordinate="9054719/5408767" minTileCoordinate="9053952/5408256" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="NoweWarpo 16"/>
+        <Map maxTileCoordinate="18109183/10817279" minTileCoordinate="18108160/10816768" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="NoweWarpo 17"/>
+    </Layer>
+    <Layer name="Swinoujscie-1">
+        <Map maxTileCoordinate="9054463/5394431" minTileCoordinate="9053440/5392384" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Swinoujscie-1 16"/>
+        <Map maxTileCoordinate="18108927/10788607" minTileCoordinate="18107136/10785024" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Swinoujscie-1 17"/>
+    </Layer>
+    <Layer name="Swinoujscie-2">
+        <Map maxTileCoordinate="9053951/5395711" minTileCoordinate="9052416/5393920" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Swinoujscie-2 16"/>
+        <Map maxTileCoordinate="18107647/10791167" minTileCoordinate="18104832/10788096" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Swinoujscie-2 17"/>
+    </Layer>
+    <Layer name="Overview-W">
+        <Map maxTileCoordinate="17407/10751" minTileCoordinate="16896/10240" mapSource="BSH OpenSeaMap 2014 Extended" zoom="7" name="Overview-W 07"/>
+        <Map maxTileCoordinate="34815/21247" minTileCoordinate="34048/20480" mapSource="BSH OpenSeaMap 2014 Extended" zoom="8" name="Overview-W 08"/>
+        <Map maxTileCoordinate="69631/42495" minTileCoordinate="68096/41216" mapSource="BSH OpenSeaMap 2014 Extended" zoom="9" name="Overview-W 09"/>
+        <Map maxTileCoordinate="139263/84735" minTileCoordinate="136192/82432" mapSource="BSH OpenSeaMap 2014 Extended" zoom="10" name="Overview-W 10"/>
+    </Layer>
+    <Layer name="Overview-N">
+        <Map maxTileCoordinate="17407/10495" minTileCoordinate="16896/9984" mapSource="BSH OpenSeaMap 2014 Extended" zoom="7" name="Overview-N 07"/>
+        <Map maxTileCoordinate="34815/20735" minTileCoordinate="34048/19968" mapSource="BSH OpenSeaMap 2014 Extended" zoom="8" name="Overview-N 08"/>
+        <Map maxTileCoordinate="69631/41471" minTileCoordinate="68096/39936" mapSource="BSH OpenSeaMap 2014 Extended" zoom="9" name="Overview-N 09"/>
+        <Map maxTileCoordinate="139263/82687" minTileCoordinate="136192/79872" mapSource="BSH OpenSeaMap 2014 Extended" zoom="10" name="Overview-N 10"/>
+    </Layer>
+    <Layer name="Greifswald">
+        <Map maxTileCoordinate="9016063/5379583" minTileCoordinate="9012224/5378816" mapSource="BSH OpenSeaMap 2014 Extended" zoom="16" name="Greifswald 16"/>
+        <Map maxTileCoordinate="18031871/10759167" minTileCoordinate="18024448/10757632" mapSource="BSH OpenSeaMap 2014 Extended" zoom="17" name="Greifswald 17"/>
+    </Layer>
+</atlas>

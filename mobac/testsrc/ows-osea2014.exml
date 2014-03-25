@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<exCustomMultiLayerMapSource>
+<name>OWS OpenSeaMap 2014 Extended</name>
+<tileType>png</tileType>
+<backgroundColor>#ffffff</backgroundColor>
+<layers>
+<exCustomWmsMapSource>
+<name>OWS</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<layers>OSM-WMS</layers>
+<url>http://ows.terrestris.de/osm/service?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
+<exCustomMapSource>
+<retries>1</retries>
+<name>OpenSeamap</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<url>http://t1.openseamap.org/seamark/{$z}/{$x}/{$y}.png</url>
+<ignoreErrors>true</ignoreErrors>
+<backgroundColor>#00000000</backgroundColor>
+</exCustomMapSource>
+
+</layers>
+</exCustomMultiLayerMapSource>

@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<atlas version="1" name="Eniro-Swe-Sued" outputFormat="OSMTracker">
+    <Layer name="Swe-Sued1">
+        <Map maxTileCoordinate="18175/10495" minTileCoordinate="16896/9984" mapSource="Eniro Nautical" zoom="7" name="Swe-Sued1 07"/>
+        <Map maxTileCoordinate="36095/20991" minTileCoordinate="34048/20224" mapSource="Eniro Nautical" zoom="8" name="Swe-Sued1 08"/>
+        <Map maxTileCoordinate="72191/41983" minTileCoordinate="68096/40704" mapSource="Eniro Nautical" zoom="9" name="Swe-Sued1 09"/>
+        <Map maxTileCoordinate="144127/83711" minTileCoordinate="136448/81408" mapSource="Eniro Nautical" zoom="10" name="Swe-Sued1 10"/>
+    </Layer>
+    <Layer name="Swe-Sued2-Dnm">
+        <Map maxTileCoordinate="17919/10239" minTileCoordinate="16640/9472" mapSource="Eniro Nautical" zoom="7" name="Swe-Sued2-Dnm 07"/>
+        <Map maxTileCoordinate="35583/20479" minTileCoordinate="33536/18944" mapSource="Eniro Nautical" zoom="8" name="Swe-Sued2-Dnm 08"/>
+        <Map maxTileCoordinate="71167/40703" minTileCoordinate="67072/37888" mapSource="Eniro Nautical" zoom="9" name="Swe-Sued2-Dnm 09"/>
+        <Map maxTileCoordinate="142335/81407" minTileCoordinate="134144/75776" mapSource="Eniro Nautical" zoom="10" name="Swe-Sued2-Dnm 10"/>
+    </Layer>
+    <Layer name="Swe-SO">
+        <Map maxTileCoordinate="18431/10239" minTileCoordinate="17664/9216" mapSource="Eniro Nautical" zoom="7" name="Swe-SO 07"/>
+        <Map maxTileCoordinate="36607/20479" minTileCoordinate="35328/18432" mapSource="Eniro Nautical" zoom="8" name="Swe-SO 08"/>
+        <Map maxTileCoordinate="73215/40959" minTileCoordinate="70912/37120" mapSource="Eniro Nautical" zoom="9" name="Swe-SO 09"/>
+        <Map maxTileCoordinate="146175/81663" minTileCoordinate="142080/74496" mapSource="Eniro Nautical" zoom="10" name="Swe-SO 10"/>
+    </Layer>
+    <Layer name="Swe-O-2">
+        <Map maxTileCoordinate="18687/9471" minTileCoordinate="17920/8192" mapSource="Eniro Nautical" zoom="7" name="Swe-O-2 07"/>
+        <Map maxTileCoordinate="37375/18687" minTileCoordinate="35840/16384" mapSource="Eniro Nautical" zoom="8" name="Swe-O-2 08"/>
+        <Map maxTileCoordinate="74495/37375" minTileCoordinate="71680/33024" mapSource="Eniro Nautical" zoom="9" name="Swe-O-2 09"/>
+        <Map maxTileCoordinate="148991/74751" minTileCoordinate="143360/66304" mapSource="Eniro Nautical" zoom="10" name="Swe-O-2 10"/>
+    </Layer>
+    <Layer name="Swe-W-2">
+        <Map maxTileCoordinate="18175/8959" minTileCoordinate="16896/7680" mapSource="Eniro Nautical" zoom="7" name="Swe-W-2 07"/>
+        <Map maxTileCoordinate="36095/17919" minTileCoordinate="34048/15360" mapSource="Eniro Nautical" zoom="8" name="Swe-W-2 08"/>
+        <Map maxTileCoordinate="72191/35839" minTileCoordinate="68352/30976" mapSource="Eniro Nautical" zoom="9" name="Swe-W-2 09"/>
+        <Map maxTileCoordinate="144127/71679" minTileCoordinate="136960/61952" mapSource="Eniro Nautical" zoom="10" name="Swe-W-2 10"/>
+    </Layer>
+    <Layer name="Swe-N">
+        <Map maxTileCoordinate="19455/7935" minTileCoordinate="17408/6912" mapSource="Eniro Nautical" zoom="7" name="Swe-N 07"/>
+        <Map maxTileCoordinate="38911/15615" minTileCoordinate="34816/13824" mapSource="Eniro Nautical" zoom="8" name="Swe-N 08"/>
+        <Map maxTileCoordinate="77567/31231" minTileCoordinate="69888/27648" mapSource="Eniro Nautical" zoom="9" name="Swe-N 09"/>
+        <Map maxTileCoordinate="155135/62207" minTileCoordinate="140032/55552" mapSource="Eniro Nautical" zoom="10" name="Swe-N 10"/>
+    </Layer>
+    <Layer name="Bornholm-W">
+        <Map maxTileCoordinate="283903/165887" minTileCoordinate="283392/164864" mapSource="Eniro Nautical" zoom="11" name="Bornholm-O 11"/>
+        <Map maxTileCoordinate="567551/331519" minTileCoordinate="566784/329984" mapSource="Eniro Nautical" zoom="12" name="Bornholm-O 12"/>
+        <Map maxTileCoordinate="1134847/663039" minTileCoordinate="1133568/659968" mapSource="Eniro Nautical" zoom="13" name="Bornholm-O 13"/>
+        <Map maxTileCoordinate="2269695/1325823" minTileCoordinate="2267392/1320192" mapSource="Eniro Nautical" zoom="14" name="Bornholm-O 14"/>
+        <Map maxTileCoordinate="4539135/2651647" minTileCoordinate="4534784/2640640" mapSource="Eniro Nautical" zoom="15" name="Bornholm-O 15"/>
+    </Layer>
+    <Layer name="Bornholm-S">
+        <Map maxTileCoordinate="284415/166143" minTileCoordinate="283648/165632" mapSource="Eniro Nautical" zoom="11" name="Bornholm-S 11"/>
+        <Map maxTileCoordinate="568575/332031" minTileCoordinate="567296/331264" mapSource="Eniro Nautical" zoom="12" name="Bornholm-S 12"/>
+        <Map maxTileCoordinate="1137151/663807" minTileCoordinate="1134592/662528" mapSource="Eniro Nautical" zoom="13" name="Bornholm-S 13"/>
+        <Map maxTileCoordinate="2274303/1327359" minTileCoordinate="2269184/1325312" mapSource="Eniro Nautical" zoom="14" name="Bornholm-S 14"/>
+        <Map maxTileCoordinate="4548351/2654719" minTileCoordinate="4538624/2650624" mapSource="Eniro Nautical" zoom="15" name="Bornholm-S 15"/>
+    </Layer>
+    <Layer name="Bornholm-O">
+        <Map maxTileCoordinate="284415/165887" minTileCoordinate="283648/165120" mapSource="Eniro Nautical" zoom="11" name="Bornholm-O_1 11"/>
+        <Map maxTileCoordinate="568575/331519" minTileCoordinate="567552/330240" mapSource="Eniro Nautical" zoom="12" name="Bornholm-O_1 12"/>
+        <Map maxTileCoordinate="1137151/662783" minTileCoordinate="1135360/660736" mapSource="Eniro Nautical" zoom="13" name="Bornholm-O_1 13"/>
+        <Map maxTileCoordinate="2274047/1325311" minTileCoordinate="2270976/1321728" mapSource="Eniro Nautical" zoom="14" name="Bornholm-O_1 14"/>
+        <Map maxTileCoordinate="4547839/2650623" minTileCoordinate="4542208/2643456" mapSource="Eniro Nautical" zoom="15" name="Bornholm-O_1 15"/>
+    </Layer>
+    <Layer name="Bornholm-N">
+        <Map maxTileCoordinate="284159/165375" minTileCoordinate="283392/164864" mapSource="Eniro Nautical" zoom="11" name="Bornholm-N 11"/>
+        <Map maxTileCoordinate="568063/330751" minTileCoordinate="567040/329984" mapSource="Eniro Nautical" zoom="12" name="Bornholm-N 12"/>
+        <Map maxTileCoordinate="1135871/661503" minTileCoordinate="1134336/659968" mapSource="Eniro Nautical" zoom="13" name="Bornholm-N 13"/>
+        <Map maxTileCoordinate="2271487/1322751" minTileCoordinate="2268928/1320192" mapSource="Eniro Nautical" zoom="14" name="Bornholm-N 14"/>
+        <Map maxTileCoordinate="4542975/2645503" minTileCoordinate="4538112/2640640" mapSource="Eniro Nautical" zoom="15" name="Bornholm-N 15"/>
+    </Layer>
+    <Layer name="Ystad-O">
+        <Map maxTileCoordinate="283135/165119" minTileCoordinate="282112/164608" mapSource="Eniro Nautical" zoom="11" name="Ystad-O 11"/>
+        <Map maxTileCoordinate="566015/329983" minTileCoordinate="564480/329216" mapSource="Eniro Nautical" zoom="12" name="Ystad-O 12"/>
+        <Map maxTileCoordinate="1131775/659967" minTileCoordinate="1128960/658688" mapSource="Eniro Nautical" zoom="13" name="Ystad-O 13"/>
+        <Map maxTileCoordinate="2263551/1319935" minTileCoordinate="2257920/1317632" mapSource="Eniro Nautical" zoom="14" name="Ystad-O 14"/>
+        <Map maxTileCoordinate="4526847/2639615" minTileCoordinate="4516096/2635520" mapSource="Eniro Nautical" zoom="15" name="Ystad-O 15"/>
+    </Layer>
+    <Layer name="Ystad-W">
+        <Map maxTileCoordinate="282367/165119" minTileCoordinate="281344/164608" mapSource="Eniro Nautical" zoom="11" name="Ystad-W 11"/>
+        <Map maxTileCoordinate="564735/330239" minTileCoordinate="562944/329216" mapSource="Eniro Nautical" zoom="12" name="Ystad-W 12"/>
+        <Map maxTileCoordinate="1129215/660479" minTileCoordinate="1125888/658688" mapSource="Eniro Nautical" zoom="13" name="Ystad-W 13"/>
+        <Map maxTileCoordinate="2258175/1320959" minTileCoordinate="2251776/1317632" mapSource="Eniro Nautical" zoom="14" name="Ystad-W 14"/>
+        <Map maxTileCoordinate="4516095/2641663" minTileCoordinate="4503552/2635520" mapSource="Eniro Nautical" zoom="15" name="Ystad-W 15"/>
+    </Layer>
+    <Layer name="Trelleborg">
+        <Map maxTileCoordinate="281599/165119" minTileCoordinate="280832/164608" mapSource="Eniro Nautical" zoom="11" name="Trelleborg 11"/>
+        <Map maxTileCoordinate="562943/330239" minTileCoordinate="561920/329472" mapSource="Eniro Nautical" zoom="12" name="Trelleborg 12"/>
+        <Map maxTileCoordinate="1125887/660479" minTileCoordinate="1123840/658944" mapSource="Eniro Nautical" zoom="13" name="Trelleborg 13"/>
+        <Map maxTileCoordinate="2251775/1320959" minTileCoordinate="2247936/1318144" mapSource="Eniro Nautical" zoom="14" name="Trelleborg 14"/>
+        <Map maxTileCoordinate="4503551/2641919" minTileCoordinate="4496128/2636544" mapSource="Eniro Nautical" zoom="15" name="Trelleborg 15"/>
+    </Layer>
+    <Layer name="Falsterbo-S">
+        <Map maxTileCoordinate="281087/165375" minTileCoordinate="280320/164608" mapSource="Eniro Nautical" zoom="11" name="Falsterbo-S 11"/>
+        <Map maxTileCoordinate="562175/330495" minTileCoordinate="560896/329216" mapSource="Eniro Nautical" zoom="12" name="Falsterbo-S 12"/>
+        <Map maxTileCoordinate="1124095/660991" minTileCoordinate="1122048/658688" mapSource="Eniro Nautical" zoom="13" name="Falsterbo-S 13"/>
+        <Map maxTileCoordinate="2248191/1321983" minTileCoordinate="2244352/1317632" mapSource="Eniro Nautical" zoom="14" name="Falsterbo-S 14"/>
+        <Map maxTileCoordinate="4496127/2643967" minTileCoordinate="4488704/2635264" mapSource="Eniro Nautical" zoom="15" name="Falsterbo-S 15"/>
+    </Layer>
+    <Layer name="Limhamn">
+        <Map maxTileCoordinate="281343/164863" minTileCoordinate="280576/164096" mapSource="Eniro Nautical" zoom="11" name="Limhamn 11"/>
+        <Map maxTileCoordinate="562431/329471" minTileCoordinate="561408/328192" mapSource="Eniro Nautical" zoom="12" name="Limhamn 12"/>
+        <Map maxTileCoordinate="1124607/658943" minTileCoordinate="1123072/656640" mapSource="Eniro Nautical" zoom="13" name="Limhamn 13"/>
+        <Map maxTileCoordinate="2249215/1317631" minTileCoordinate="2246400/1313536" mapSource="Eniro Nautical" zoom="14" name="Limhamn 14"/>
+        <Map maxTileCoordinate="4498175/2635263" minTileCoordinate="4492800/2627072" mapSource="Eniro Nautical" zoom="15" name="Limhamn 15"/>
+    </Layer>
+    <Layer name="Lomma">
+        <Map maxTileCoordinate="281343/164351" minTileCoordinate="280576/163584" mapSource="Eniro Nautical" zoom="11" name="Lomma 11"/>
+        <Map maxTileCoordinate="562431/328447" minTileCoordinate="561408/327168" mapSource="Eniro Nautical" zoom="12" name="Lomma 12"/>
+        <Map maxTileCoordinate="1124863/656895" minTileCoordinate="1123072/654336" mapSource="Eniro Nautical" zoom="13" name="Lomma 13"/>
+        <Map maxTileCoordinate="2249471/1313535" minTileCoordinate="2246400/1308928" mapSource="Eniro Nautical" zoom="14" name="Lomma 14"/>
+        <Map maxTileCoordinate="4498943/2627071" minTileCoordinate="4492800/2618112" mapSource="Eniro Nautical" zoom="15" name="Lomma 15"/>
+    </Layer>
+    <Layer name="Helsingborg">
+        <Map maxTileCoordinate="281087/163839" minTileCoordinate="280320/162816" mapSource="Eniro Nautical" zoom="11" name="Helsingborg 11"/>
+        <Map maxTileCoordinate="561919/327423" minTileCoordinate="560640/325888" mapSource="Eniro Nautical" zoom="12" name="Helsingborg 12"/>
+        <Map maxTileCoordinate="1123839/654591" minTileCoordinate="1121280/652032" mapSource="Eniro Nautical" zoom="13" name="Helsingborg 13"/>
+        <Map maxTileCoordinate="2247423/1309183" minTileCoordinate="2242816/1304320" mapSource="Eniro Nautical" zoom="14" name="Helsingborg 14"/>
+        <Map maxTileCoordinate="4494591/2618367" minTileCoordinate="4485632/2608640" mapSource="Eniro Nautical" zoom="15" name="Helsingborg 15"/>
+    </Layer>
+    <Layer name="Sund-N">
+        <Map maxTileCoordinate="280831/163071" minTileCoordinate="280064/162304" mapSource="Eniro Nautical" zoom="11" name="Sund-N 11"/>
+        <Map maxTileCoordinate="561407/326143" minTileCoordinate="560128/324864" mapSource="Eniro Nautical" zoom="12" name="Sund-N 12"/>
+        <Map maxTileCoordinate="1122815/652287" minTileCoordinate="1120512/649728" mapSource="Eniro Nautical" zoom="13" name="Sund-N 13"/>
+        <Map maxTileCoordinate="2245375/1304319" minTileCoordinate="2241280/1299456" mapSource="Eniro Nautical" zoom="14" name="Sund-N 14"/>
+        <Map maxTileCoordinate="4490495/2608639" minTileCoordinate="4482816/2598912" mapSource="Eniro Nautical" zoom="15" name="Sund-N 15"/>
+    </Layer>
+    <Layer name="Gilbjerg">
+        <Map maxTileCoordinate="280319/163071" minTileCoordinate="279552/162560" mapSource="Eniro Nautical" zoom="11" name="Gilbjerg 11"/>
+        <Map maxTileCoordinate="560383/326143" minTileCoordinate="559104/325376" mapSource="Eniro Nautical" zoom="12" name="Gilbjerg 12"/>
+        <Map maxTileCoordinate="1120767/652031" minTileCoordinate="1118464/651008" mapSource="Eniro Nautical" zoom="13" name="Gilbjerg 13"/>
+        <Map maxTileCoordinate="2241535/1304063" minTileCoordinate="2237184/1302016" mapSource="Eniro Nautical" zoom="14" name="Gilbjerg 14"/>
+        <Map maxTileCoordinate="4483071/2608127" minTileCoordinate="4474624/2604032" mapSource="Eniro Nautical" zoom="15" name="Gilbjerg 15"/>
+    </Layer>
+    <Layer name="Lynaes">
+        <Map maxTileCoordinate="280063/163583" minTileCoordinate="279296/162816" mapSource="Eniro Nautical" zoom="11" name="Lynaes 11"/>
+        <Map maxTileCoordinate="559871/326911" minTileCoordinate="558592/325888" mapSource="Eniro Nautical" zoom="12" name="Lynaes 12"/>
+        <Map maxTileCoordinate="1119487/653823" minTileCoordinate="1117184/652032" mapSource="Eniro Nautical" zoom="13" name="Lynaes 13"/>
+        <Map maxTileCoordinate="2238975/1307391" minTileCoordinate="2234624/1304064" mapSource="Eniro Nautical" zoom="14" name="Lynaes 14"/>
+        <Map maxTileCoordinate="4477695/2614783" minTileCoordinate="4469504/2608128" mapSource="Eniro Nautical" zoom="15" name="Lynaes 15"/>
+    </Layer>
+    <Layer name="Sjaeland-N">
+        <Map maxTileCoordinate="279551/163583" minTileCoordinate="278528/163072" mapSource="Eniro Nautical" zoom="11" name="Sjaeland-N 11"/>
+        <Map maxTileCoordinate="558847/326911" minTileCoordinate="557056/326400" mapSource="Eniro Nautical" zoom="12" name="Sjaeland-N 12"/>
+        <Map maxTileCoordinate="1117439/653823" minTileCoordinate="1114112/652800" mapSource="Eniro Nautical" zoom="13" name="Sjaeland-N 13"/>
+        <Map maxTileCoordinate="2234879/1307647" minTileCoordinate="2228480/1305600" mapSource="Eniro Nautical" zoom="14" name="Sjaeland-N 14"/>
+        <Map maxTileCoordinate="4469503/2615295" minTileCoordinate="4456960/2611456" mapSource="Eniro Nautical" zoom="15" name="Sjaeland-N 15"/>
+    </Layer>
+    <Layer name="Kobenhavn">
+        <Map maxTileCoordinate="281087/164607" minTileCoordinate="280320/163584" mapSource="Eniro Nautical" zoom="11" name="Kobenhavn 11"/>
+        <Map maxTileCoordinate="561919/329215" minTileCoordinate="560640/327168" mapSource="Eniro Nautical" zoom="12" name="Kobenhavn 12"/>
+        <Map maxTileCoordinate="1123583/658431" minTileCoordinate="1121280/654592" mapSource="Eniro Nautical" zoom="13" name="Kobenhavn 13"/>
+        <Map maxTileCoordinate="2247167/1316863" minTileCoordinate="2242816/1309184" mapSource="Eniro Nautical" zoom="14" name="Kobenhavn 14"/>
+        <Map maxTileCoordinate="4494079/2633727" minTileCoordinate="4485632/2618368" mapSource="Eniro Nautical" zoom="15" name="Kobenhavn 15"/>
+    </Layer>
+    <Layer name="Koege">
+        <Map maxTileCoordinate="280575/165119" minTileCoordinate="279808/164096" mapSource="Eniro Nautical" zoom="11" name="Koege 11"/>
+        <Map maxTileCoordinate="560895/329983" minTileCoordinate="559616/328448" mapSource="Eniro Nautical" zoom="12" name="Koege 12"/>
+        <Map maxTileCoordinate="1121535/659967" minTileCoordinate="1119488/656896" mapSource="Eniro Nautical" zoom="13" name="Koege 13"/>
+        <Map maxTileCoordinate="2243071/1319679" minTileCoordinate="2238976/1313792" mapSource="Eniro Nautical" zoom="14" name="Koege 14"/>
+        <Map maxTileCoordinate="4485887/2639359" minTileCoordinate="4477952/2627584" mapSource="Eniro Nautical" zoom="15" name="Koege 15"/>
+    </Layer>
+    <Layer name="Roedvig">
+        <Map maxTileCoordinate="280575/165375" minTileCoordinate="280064/164608" mapSource="Eniro Nautical" zoom="11" name="Roedvig 11"/>
+        <Map maxTileCoordinate="561151/330751" minTileCoordinate="560128/329216" mapSource="Eniro Nautical" zoom="12" name="Roedvig 12"/>
+        <Map maxTileCoordinate="1122303/661503" minTileCoordinate="1120256/658688" mapSource="Eniro Nautical" zoom="13" name="Roedvig 13"/>
+        <Map maxTileCoordinate="2244351/1323007" minTileCoordinate="2240512/1317632" mapSource="Eniro Nautical" zoom="14" name="Roedvig 14"/>
+        <Map maxTileCoordinate="4488703/2645759" minTileCoordinate="4481280/2635264" mapSource="Eniro Nautical" zoom="15" name="Roedvig 15"/>
+    </Layer>
+    <Layer name="Fakse">
+        <Map maxTileCoordinate="280319/166399" minTileCoordinate="279552/165120" mapSource="Eniro Nautical" zoom="11" name="Fakse 11"/>
+        <Map maxTileCoordinate="560383/332543" minTileCoordinate="559104/330240" mapSource="Eniro Nautical" zoom="12" name="Fakse 12"/>
+        <Map maxTileCoordinate="1120511/664831" minTileCoordinate="1118208/660736" mapSource="Eniro Nautical" zoom="13" name="Fakse 13"/>
+        <Map maxTileCoordinate="2240767/1329407" minTileCoordinate="2236672/1321472" mapSource="Eniro Nautical" zoom="14" name="Fakse 14"/>
+        <Map maxTileCoordinate="4481535/2658559" minTileCoordinate="4473600/2643200" mapSource="Eniro Nautical" zoom="15" name="Fakse 15"/>
+    </Layer>
+    <Layer name="Klintholm">
+        <Map maxTileCoordinate="280831/166143" minTileCoordinate="280064/165120" mapSource="Eniro Nautical" zoom="11" name="Klintholm 11"/>
+        <Map maxTileCoordinate="561407/332287" minTileCoordinate="560128/330496" mapSource="Eniro Nautical" zoom="12" name="Klintholm 12"/>
+        <Map maxTileCoordinate="1122559/664575" minTileCoordinate="1120256/661248" mapSource="Eniro Nautical" zoom="13" name="Klintholm 13"/>
+        <Map maxTileCoordinate="2245119/1328895" minTileCoordinate="2240512/1322752" mapSource="Eniro Nautical" zoom="14" name="Klintholm 14"/>
+        <Map maxTileCoordinate="4489983/2657791" minTileCoordinate="4481280/2645760" mapSource="Eniro Nautical" zoom="15" name="Klintholm 15"/>
+    </Layer>
+    <Layer name="Astrup">
+        <Map maxTileCoordinate="280575/166655" minTileCoordinate="279552/165888" mapSource="Eniro Nautical" zoom="11" name="Astrup 11"/>
+        <Map maxTileCoordinate="561151/333311" minTileCoordinate="559104/332032" mapSource="Eniro Nautical" zoom="12" name="Astrup 12"/>
+        <Map maxTileCoordinate="1122303/666367" minTileCoordinate="1118208/664320" mapSource="Eniro Nautical" zoom="13" name="Astrup 13"/>
+        <Map maxTileCoordinate="2244351/1332735" minTileCoordinate="2236672/1328640" mapSource="Eniro Nautical" zoom="14" name="Astrup 14"/>
+        <Map maxTileCoordinate="4488447/2665215" minTileCoordinate="4473600/2657536" mapSource="Eniro Nautical" zoom="15" name="Astrup 15"/>
+    </Layer>
+    <Layer name="Nykobing-S">
+        <Map maxTileCoordinate="279551/166911" minTileCoordinate="279296/166400" mapSource="Eniro Nautical" zoom="11" name="Nykobing-S 11"/>
+        <Map maxTileCoordinate="559103/333823" minTileCoordinate="558592/332800" mapSource="Eniro Nautical" zoom="12" name="Nykobing-S 12"/>
+        <Map maxTileCoordinate="1118207/667391" minTileCoordinate="1117184/665856" mapSource="Eniro Nautical" zoom="13" name="Nykobing-S 13"/>
+        <Map maxTileCoordinate="2236159/1334527" minTileCoordinate="2234624/1331968" mapSource="Eniro Nautical" zoom="14" name="Nykobing-S 14"/>
+        <Map maxTileCoordinate="4472063/2668799" minTileCoordinate="4469248/2663936" mapSource="Eniro Nautical" zoom="15" name="Nykobing-S 15"/>
+    </Layer>
+    <Layer name="Guldborg-1">
+        <Map maxTileCoordinate="279551/166655" minTileCoordinate="279296/166144" mapSource="Eniro Nautical" zoom="11" name="Guldborg-1 11"/>
+        <Map maxTileCoordinate="559103/333055" minTileCoordinate="558592/332288" mapSource="Eniro Nautical" zoom="12" name="Guldborg-1 12"/>
+        <Map maxTileCoordinate="1117951/666111" minTileCoordinate="1117184/664832" mapSource="Eniro Nautical" zoom="13" name="Guldborg-1 13"/>
+        <Map maxTileCoordinate="2235903/1331967" minTileCoordinate="2234368/1329920" mapSource="Eniro Nautical" zoom="14" name="Guldborg-1 14"/>
+        <Map maxTileCoordinate="4471807/2663935" minTileCoordinate="4468736/2659840" mapSource="Eniro Nautical" zoom="15" name="Guldborg-1 15"/>
+    </Layer>
+    <Layer name="Guldborg-2">
+        <Map maxTileCoordinate="279551/166399" minTileCoordinate="279040/165888" mapSource="Eniro Nautical" zoom="11" name="Guldborg-2 11"/>
+        <Map maxTileCoordinate="558847/332543" minTileCoordinate="558080/332032" mapSource="Eniro Nautical" zoom="12" name="Guldborg-2 12"/>
+        <Map maxTileCoordinate="1117439/665087" minTileCoordinate="1116160/664064" mapSource="Eniro Nautical" zoom="13" name="Guldborg-2 13"/>
+        <Map maxTileCoordinate="2234623/1330175" minTileCoordinate="2232576/1328384" mapSource="Eniro Nautical" zoom="14" name="Guldborg-2 14"/>
+        <Map maxTileCoordinate="4468991/2660095" minTileCoordinate="4465152/2656768" mapSource="Eniro Nautical" zoom="15" name="Guldborg-2 15"/>
+    </Layer>
+    <Layer name="Avernakke">
+        <Map maxTileCoordinate="279295/166399" minTileCoordinate="278528/165888" mapSource="Eniro Nautical" zoom="11" name="Avernakke 11"/>
+        <Map maxTileCoordinate="558335/332799" minTileCoordinate="557312/331776" mapSource="Eniro Nautical" zoom="12" name="Avernakke 12"/>
+        <Map maxTileCoordinate="1116415/665343" minTileCoordinate="1114624/663808" mapSource="Eniro Nautical" zoom="13" name="Avernakke 13"/>
+        <Map maxTileCoordinate="2232575/1330431" minTileCoordinate="2229248/1327872" mapSource="Eniro Nautical" zoom="14" name="Avernakke 14"/>
+        <Map maxTileCoordinate="4465151/2660607" minTileCoordinate="4458752/2656000" mapSource="Eniro Nautical" zoom="15" name="Avernakke 15"/>
+    </Layer>
+    <Layer name="Orehoved">
+        <Map maxTileCoordinate="279807/166143" minTileCoordinate="278528/165632" mapSource="Eniro Nautical" zoom="11" name="Orehoved 11"/>
+        <Map maxTileCoordinate="559359/332287" minTileCoordinate="557056/331264" mapSource="Eniro Nautical" zoom="12" name="Orehoved 12"/>
+        <Map maxTileCoordinate="1118719/664319" minTileCoordinate="1114368/662784" mapSource="Eniro Nautical" zoom="13" name="Orehoved 13"/>
+        <Map maxTileCoordinate="2237183/1328383" minTileCoordinate="2228992/1325568" mapSource="Eniro Nautical" zoom="14" name="Orehoved 14"/>
+        <Map maxTileCoordinate="4474367/2656767" minTileCoordinate="4458240/2651392" mapSource="Eniro Nautical" zoom="15" name="Orehoved 15"/>
+    </Layer>
+    <Layer name="Boestrup">
+        <Map maxTileCoordinate="278783/166143" minTileCoordinate="277760/165120" mapSource="Eniro Nautical" zoom="11" name="Boestrup 11"/>
+        <Map maxTileCoordinate="557311/332031" minTileCoordinate="555776/330496" mapSource="Eniro Nautical" zoom="12" name="Boestrup 12"/>
+        <Map maxTileCoordinate="1114623/664063" minTileCoordinate="1111552/661248" mapSource="Eniro Nautical" zoom="13" name="Boestrup 13"/>
+        <Map maxTileCoordinate="2228991/1328127" minTileCoordinate="2223104/1322752" mapSource="Eniro Nautical" zoom="14" name="Boestrup 14"/>
+        <Map maxTileCoordinate="4457983/2655999" minTileCoordinate="4446208/2645760" mapSource="Eniro Nautical" zoom="15" name="Boestrup 15"/>
+    </Layer>
+    <Layer name="Spodsberg">
+        <Map maxTileCoordinate="278271/166911" minTileCoordinate="277504/165888" mapSource="Eniro Nautical" zoom="11" name="Spodsberg 11"/>
+        <Map maxTileCoordinate="556543/333823" minTileCoordinate="555008/331776" mapSource="Eniro Nautical" zoom="12" name="Spodsberg 12"/>
+        <Map maxTileCoordinate="1113087/667391" minTileCoordinate="1110016/663808" mapSource="Eniro Nautical" zoom="13" name="Spodsberg 13"/>
+        <Map maxTileCoordinate="2226175/1334783" minTileCoordinate="2220288/1327872" mapSource="Eniro Nautical" zoom="14" name="Spodsberg 14"/>
+        <Map maxTileCoordinate="4452351/2669311" minTileCoordinate="4440832/2656000" mapSource="Eniro Nautical" zoom="15" name="Spodsberg 15"/>
+    </Layer>
+    <Layer name="Roedbyhavn-1">
+        <Map maxTileCoordinate="279039/167167" minTileCoordinate="278016/166400" mapSource="Eniro Nautical" zoom="11" name="Roedbyhavn-1 11"/>
+        <Map maxTileCoordinate="557823/334079" minTileCoordinate="556288/332800" mapSource="Eniro Nautical" zoom="12" name="Roedbyhavn-1 12"/>
+        <Map maxTileCoordinate="1115647/668159" minTileCoordinate="1112832/665856" mapSource="Eniro Nautical" zoom="13" name="Roedbyhavn-1 13"/>
+        <Map maxTileCoordinate="2231295/1336319" minTileCoordinate="2225920/1331712" mapSource="Eniro Nautical" zoom="14" name="Roedbyhavn-1 14"/>
+        <Map maxTileCoordinate="4462335/2672639" minTileCoordinate="4452096/2663424" mapSource="Eniro Nautical" zoom="15" name="Roedbyhavn-1 15"/>
+    </Layer>
+    <Layer name="Roedbyhavn-2">
+        <Map maxTileCoordinate="279807/167423" minTileCoordinate="278784/166656" mapSource="Eniro Nautical" zoom="11" name="Roedbyhavn-2 11"/>
+        <Map maxTileCoordinate="559359/334591" minTileCoordinate="557568/333312" mapSource="Eniro Nautical" zoom="12" name="Roedbyhavn-2 12"/>
+        <Map maxTileCoordinate="1118719/668927" minTileCoordinate="1115392/666624" mapSource="Eniro Nautical" zoom="13" name="Roedbyhavn-2 13"/>
+        <Map maxTileCoordinate="2237183/1337599" minTileCoordinate="2230784/1333248" mapSource="Eniro Nautical" zoom="14" name="Roedbyhavn-2 14"/>
+        <Map maxTileCoordinate="4474367/2675199" minTileCoordinate="4461568/2666496" mapSource="Eniro Nautical" zoom="15" name="Roedbyhavn-2 15"/>
+    </Layer>
+    <Layer name="Gedser">
+        <Map maxTileCoordinate="280319/167423" minTileCoordinate="279552/166400" mapSource="Eniro Nautical" zoom="11" name="Gedser 11"/>
+        <Map maxTileCoordinate="560383/334847" minTileCoordinate="559104/333056" mapSource="Eniro Nautical" zoom="12" name="Gedser 12"/>
+        <Map maxTileCoordinate="1120511/669695" minTileCoordinate="1118208/666368" mapSource="Eniro Nautical" zoom="13" name="Gedser 13"/>
+        <Map maxTileCoordinate="2240767/1339135" minTileCoordinate="2236416/1332992" mapSource="Eniro Nautical" zoom="14" name="Gedser 14"/>
+        <Map maxTileCoordinate="4481279/2678015" minTileCoordinate="4472832/2666240" mapSource="Eniro Nautical" zoom="15" name="Gedser 15"/>
+    </Layer>
+    <Layer name="Simrishamn">
+        <Map maxTileCoordinate="283135/164863" minTileCoordinate="282880/163840" mapSource="Eniro Nautical" zoom="11" name="Simrishamn 11"/>
+        <Map maxTileCoordinate="566271/329471" minTileCoordinate="565760/327936" mapSource="Eniro Nautical" zoom="12" name="Simrishamn 12"/>
+        <Map maxTileCoordinate="1132543/658943" minTileCoordinate="1131520/656128" mapSource="Eniro Nautical" zoom="13" name="Simrishamn 13"/>
+        <Map maxTileCoordinate="2265087/1317887" minTileCoordinate="2263296/1312512" mapSource="Eniro Nautical" zoom="14" name="Simrishamn 14"/>
+        <Map maxTileCoordinate="4529919/2635775" minTileCoordinate="4526592/2625280" mapSource="Eniro Nautical" zoom="15" name="Simrishamn 15"/>
+    </Layer>
+    <Layer name="Ahus">
+        <Map maxTileCoordinate="283391/164095" minTileCoordinate="282624/163328" mapSource="Eniro Nautical" zoom="11" name="Ahus 11"/>
+        <Map maxTileCoordinate="566783/328191" minTileCoordinate="565504/326656" mapSource="Eniro Nautical" zoom="12" name="Ahus 12"/>
+        <Map maxTileCoordinate="1133311/656383" minTileCoordinate="1131008/653568" mapSource="Eniro Nautical" zoom="13" name="Ahus 13"/>
+        <Map maxTileCoordinate="2266623/1312767" minTileCoordinate="2262272/1307392" mapSource="Eniro Nautical" zoom="14" name="Ahus 14"/>
+        <Map maxTileCoordinate="4532991/2625279" minTileCoordinate="4524800/2615040" mapSource="Eniro Nautical" zoom="15" name="Ahus 15"/>
+    </Layer>
+    <Layer name="Solesborg-Hanoe">
+        <Map maxTileCoordinate="284159/163583" minTileCoordinate="282880/163072" mapSource="Eniro Nautical" zoom="11" name="Solesborg-Hanoe 11"/>
+        <Map maxTileCoordinate="568063/327167" minTileCoordinate="565760/326144" mapSource="Eniro Nautical" zoom="12" name="Solesborg-Hanoe 12"/>
+        <Map maxTileCoordinate="1136127/654079" minTileCoordinate="1131776/652288" mapSource="Eniro Nautical" zoom="13" name="Solesborg-Hanoe 13"/>
+        <Map maxTileCoordinate="2272255/1308159" minTileCoordinate="2263808/1304576" mapSource="Eniro Nautical" zoom="14" name="Solesborg-Hanoe 14"/>
+        <Map maxTileCoordinate="4544511/2616319" minTileCoordinate="4527872/2609152" mapSource="Eniro Nautical" zoom="15" name="Solesborg-Hanoe 15"/>
+    </Layer>
+    <Layer name="Karlshamn">
+        <Map maxTileCoordinate="284159/163327" minTileCoordinate="283392/162560" mapSource="Eniro Nautical" zoom="11" name="Karlshamn 11"/>
+        <Map maxTileCoordinate="568063/326655" minTileCoordinate="566784/325376" mapSource="Eniro Nautical" zoom="12" name="Karlshamn 12"/>
+        <Map maxTileCoordinate="1136127/653055" minTileCoordinate="1133824/651008" mapSource="Eniro Nautical" zoom="13" name="Karlshamn 13"/>
+        <Map maxTileCoordinate="2272255/1306111" minTileCoordinate="2267904/1302272" mapSource="Eniro Nautical" zoom="14" name="Karlshamn 14"/>
+        <Map maxTileCoordinate="4544511/2612223" minTileCoordinate="4535808/2604800" mapSource="Eniro Nautical" zoom="15" name="Karlshamn 15"/>
+    </Layer>
+    <Layer name="Ronneby">
+        <Map maxTileCoordinate="284927/163327" minTileCoordinate="283904/162560" mapSource="Eniro Nautical" zoom="11" name="Ronneby 11"/>
+        <Map maxTileCoordinate="569599/326399" minTileCoordinate="567808/325376" mapSource="Eniro Nautical" zoom="12" name="Ronneby 12"/>
+        <Map maxTileCoordinate="1138943/652543" minTileCoordinate="1135872/650752" mapSource="Eniro Nautical" zoom="13" name="Ronneby 13"/>
+        <Map maxTileCoordinate="2277887/1305087" minTileCoordinate="2272000/1301760" mapSource="Eniro Nautical" zoom="14" name="Ronneby 14"/>
+        <Map maxTileCoordinate="4555775/2610175" minTileCoordinate="4544000/2603776" mapSource="Eniro Nautical" zoom="15" name="Ronneby 15"/>
+    </Layer>
+    <Layer name="Karlskrona">
+        <Map maxTileCoordinate="285439/163583" minTileCoordinate="284672/162560" mapSource="Eniro Nautical" zoom="11" name="Karlskrona 11"/>
+        <Map maxTileCoordinate="570879/327167" minTileCoordinate="569344/325376" mapSource="Eniro Nautical" zoom="12" name="Karlskrona 12"/>
+        <Map maxTileCoordinate="1141503/654079" minTileCoordinate="1138688/650752" mapSource="Eniro Nautical" zoom="13" name="Karlskrona 13"/>
+        <Map maxTileCoordinate="2283007/1308159" minTileCoordinate="2277632/1301504" mapSource="Eniro Nautical" zoom="14" name="Karlskrona 14"/>
+        <Map maxTileCoordinate="4566015/2616063" minTileCoordinate="4555264/2603264" mapSource="Eniro Nautical" zoom="15" name="Karlskrona 15"/>
+    </Layer>
+    <Layer name="Kristianopel">
+        <Map maxTileCoordinate="285695/163071" minTileCoordinate="285184/162304" mapSource="Eniro Nautical" zoom="11" name="Kristianopel 11"/>
+        <Map maxTileCoordinate="571391/325887" minTileCoordinate="570624/324608" mapSource="Eniro Nautical" zoom="12" name="Kristianopel 12"/>
+        <Map maxTileCoordinate="1142783/651775" minTileCoordinate="1141248/649472" mapSource="Eniro Nautical" zoom="13" name="Kristianopel 13"/>
+        <Map maxTileCoordinate="2285567/1303551" minTileCoordinate="2282752/1299200" mapSource="Eniro Nautical" zoom="14" name="Kristianopel 14"/>
+        <Map maxTileCoordinate="4571135/2607103" minTileCoordinate="4565760/2598656" mapSource="Eniro Nautical" zoom="15" name="Kristianopel 15"/>
+    </Layer>
+    <Layer name="Oland-Sudde">
+        <Map maxTileCoordinate="286207/162815" minTileCoordinate="285696/162048" mapSource="Eniro Nautical" zoom="11" name="Oland-Sudde 11"/>
+        <Map maxTileCoordinate="572159/325631" minTileCoordinate="571392/324352" mapSource="Eniro Nautical" zoom="12" name="Oland-Sudde 12"/>
+        <Map maxTileCoordinate="1144319/651263" minTileCoordinate="1142784/648960" mapSource="Eniro Nautical" zoom="13" name="Oland-Sudde 13"/>
+        <Map maxTileCoordinate="2288383/1302271" minTileCoordinate="2285568/1297920" mapSource="Eniro Nautical" zoom="14" name="Oland-Sudde 14"/>
+        <Map maxTileCoordinate="4576767/2604287" minTileCoordinate="4571136/2596096" mapSource="Eniro Nautical" zoom="15" name="Oland-Sudde 15"/>
+    </Layer>
+    <Layer name="Berkvara">
+        <Map maxTileCoordinate="286207/162559" minTileCoordinate="285440/162048" mapSource="Eniro Nautical" zoom="11" name="Berkvara 11"/>
+        <Map maxTileCoordinate="572159/324863" minTileCoordinate="570880/324096" mapSource="Eniro Nautical" zoom="12" name="Berkvara 12"/>
+        <Map maxTileCoordinate="1144319/649727" minTileCoordinate="1142016/648448" mapSource="Eniro Nautical" zoom="13" name="Berkvara 13"/>
+        <Map maxTileCoordinate="2288639/1299455" minTileCoordinate="2284032/1297152" mapSource="Eniro Nautical" zoom="14" name="Berkvara 14"/>
+        <Map maxTileCoordinate="4577023/2598655" minTileCoordinate="4568320/2594560" mapSource="Eniro Nautical" zoom="15" name="Berkvara 15"/>
+    </Layer>
+    <Layer name="Morbylaenga">
+        <Map maxTileCoordinate="286207/162303" minTileCoordinate="285440/161536" mapSource="Eniro Nautical" zoom="11" name="Morbylaenga 11"/>
+        <Map maxTileCoordinate="572159/324351" minTileCoordinate="571136/323328" mapSource="Eniro Nautical" zoom="12" name="Morbylaenga 12"/>
+        <Map maxTileCoordinate="1144319/648703" minTileCoordinate="1142272/646912" mapSource="Eniro Nautical" zoom="13" name="Morbylaenga 13"/>
+        <Map maxTileCoordinate="2288383/1297407" minTileCoordinate="2284800/1294080" mapSource="Eniro Nautical" zoom="14" name="Morbylaenga 14"/>
+        <Map maxTileCoordinate="4576767/2594559" minTileCoordinate="4569600/2588416" mapSource="Eniro Nautical" zoom="15" name="Morbylaenga 15"/>
+    </Layer>
+    <Layer name="Kalmar-S">
+        <Map maxTileCoordinate="286207/161791" minTileCoordinate="285696/161280" mapSource="Eniro Nautical" zoom="11" name="Kalmar-S 11"/>
+        <Map maxTileCoordinate="572415/323583" minTileCoordinate="571392/322816" mapSource="Eniro Nautical" zoom="12" name="Kalmar-S 12"/>
+        <Map maxTileCoordinate="1144831/647167" minTileCoordinate="1143040/645632" mapSource="Eniro Nautical" zoom="13" name="Kalmar-S 13"/>
+        <Map maxTileCoordinate="2289407/1294335" minTileCoordinate="2286080/1291264" mapSource="Eniro Nautical" zoom="14" name="Kalmar-S 14"/>
+        <Map maxTileCoordinate="4578815/2588415" minTileCoordinate="4572160/2582528" mapSource="Eniro Nautical" zoom="15" name="Kalmar-S 15"/>
+    </Layer>
+    <Layer name="Kalmar-N">
+        <Map maxTileCoordinate="286463/161535" minTileCoordinate="285952/160768" mapSource="Eniro Nautical" zoom="11" name="Kalmar-N 11"/>
+        <Map maxTileCoordinate="572927/322815" minTileCoordinate="571904/321792" mapSource="Eniro Nautical" zoom="12" name="Kalmar-N 12"/>
+        <Map maxTileCoordinate="1145599/645631" minTileCoordinate="1143808/643584" mapSource="Eniro Nautical" zoom="13" name="Kalmar-N 13"/>
+        <Map maxTileCoordinate="2290943/1291263" minTileCoordinate="2287616/1287424" mapSource="Eniro Nautical" zoom="14" name="Kalmar-N 14"/>
+        <Map maxTileCoordinate="4581887/2582527" minTileCoordinate="4575232/2575104" mapSource="Eniro Nautical" zoom="15" name="Kalmar-N 15"/>
+    </Layer>
+    <Layer name="Sandvik-Oland">
+        <Map maxTileCoordinate="286719/161023" minTileCoordinate="285952/160256" mapSource="Eniro Nautical" zoom="11" name="Sandvik-Oland 11"/>
+        <Map maxTileCoordinate="573439/322047" minTileCoordinate="571904/320512" mapSource="Eniro Nautical" zoom="12" name="Sandvik-Oland 12"/>
+        <Map maxTileCoordinate="1146879/643839" minTileCoordinate="1144064/641024" mapSource="Eniro Nautical" zoom="13" name="Sandvik-Oland 13"/>
+        <Map maxTileCoordinate="2293759/1287679" minTileCoordinate="2288384/1282304" mapSource="Eniro Nautical" zoom="14" name="Sandvik-Oland 14"/>
+        <Map maxTileCoordinate="4587519/2575359" minTileCoordinate="4577024/2564608" mapSource="Eniro Nautical" zoom="15" name="Sandvik-Oland 15"/>
+    </Layer>
+    <Layer name="Oeland-W-1">
+        <Map maxTileCoordinate="286975/161023" minTileCoordinate="286720/160256" mapSource="Eniro Nautical" zoom="11" name="Oeland-W-1 11"/>
+        <Map maxTileCoordinate="573951/321791" minTileCoordinate="573440/320512" mapSource="Eniro Nautical" zoom="12" name="Oeland-W-1 12"/>
+        <Map maxTileCoordinate="1147903/643583" minTileCoordinate="1146880/641024" mapSource="Eniro Nautical" zoom="13" name="Oeland-W-1 13"/>
+        <Map maxTileCoordinate="2295807/1287167" minTileCoordinate="2293760/1282304" mapSource="Eniro Nautical" zoom="14" name="Oeland-W-1 14"/>
+        <Map maxTileCoordinate="4591615/2574079" minTileCoordinate="4587520/2564608" mapSource="Eniro Nautical" zoom="15" name="Oeland-W-1 15"/>
+    </Layer>
+    <Layer name="Oeland-N">
+        <Map maxTileCoordinate="287231/160511" minTileCoordinate="285952/159488" mapSource="Eniro Nautical" zoom="11" name="Oeland-N 11"/>
+        <Map maxTileCoordinate="574463/320767" minTileCoordinate="572160/318976" mapSource="Eniro Nautical" zoom="12" name="Oeland-N 12"/>
+        <Map maxTileCoordinate="1148927/641279" minTileCoordinate="1144320/638208" mapSource="Eniro Nautical" zoom="13" name="Oeland-N 13"/>
+        <Map maxTileCoordinate="2297855/1282303" minTileCoordinate="2288640/1276416" mapSource="Eniro Nautical" zoom="14" name="Oeland-N 14"/>
+        <Map maxTileCoordinate="4595711/2564607" minTileCoordinate="4577536/2552832" mapSource="Eniro Nautical" zoom="15" name="Oeland-N 15"/>
+    </Layer>
+    <Layer name="Klintemala">
+        <Map maxTileCoordinate="286975/159743" minTileCoordinate="286208/158976" mapSource="Eniro Nautical" zoom="11" name="Klintemala 11"/>
+        <Map maxTileCoordinate="573695/319231" minTileCoordinate="572672/317952" mapSource="Eniro Nautical" zoom="12" name="Klintemala 12"/>
+        <Map maxTileCoordinate="1147135/638207" minTileCoordinate="1145344/636160" mapSource="Eniro Nautical" zoom="13" name="Klintemala 13"/>
+        <Map maxTileCoordinate="2294271/1276415" minTileCoordinate="2290688/1272576" mapSource="Eniro Nautical" zoom="14" name="Klintemala 14"/>
+        <Map maxTileCoordinate="4588543/2552831" minTileCoordinate="4581376/2545408" mapSource="Eniro Nautical" zoom="15" name="Klintemala 15"/>
+    </Layer>
+    <Layer name="Gasfjaerden">
+        <Map maxTileCoordinate="286463/159231" minTileCoordinate="286208/158720" mapSource="Eniro Nautical" zoom="11" name="Gasfjaerden 11"/>
+        <Map maxTileCoordinate="572927/318463" minTileCoordinate="572416/317696" mapSource="Eniro Nautical" zoom="12" name="Gasfjaerden 12"/>
+        <Map maxTileCoordinate="1145599/636671" minTileCoordinate="1144832/635648" mapSource="Eniro Nautical" zoom="13" name="Gasfjaerden 13"/>
+        <Map maxTileCoordinate="2290943/1273087" minTileCoordinate="2289664/1271296" mapSource="Eniro Nautical" zoom="14" name="Gasfjaerden 14"/>
+        <Map maxTileCoordinate="4581887/2545919" minTileCoordinate="4579328/2542592" mapSource="Eniro Nautical" zoom="15" name="Gasfjaerden 15"/>
+    </Layer>
+    <Layer name="Hultoe">
+        <Map maxTileCoordinate="286975/159231" minTileCoordinate="286208/158720" mapSource="Eniro Nautical" zoom="11" name="Hultoe 11"/>
+        <Map maxTileCoordinate="573951/318207" minTileCoordinate="572416/317440" mapSource="Eniro Nautical" zoom="12" name="Hultoe 12"/>
+        <Map maxTileCoordinate="1147903/636415" minTileCoordinate="1145088/635136" mapSource="Eniro Nautical" zoom="13" name="Hultoe 13"/>
+        <Map maxTileCoordinate="2295551/1272831" minTileCoordinate="2290176/1270528" mapSource="Eniro Nautical" zoom="14" name="Hultoe 14"/>
+        <Map maxTileCoordinate="4590847/2545407" minTileCoordinate="4580608/2541056" mapSource="Eniro Nautical" zoom="15" name="Hultoe 15"/>
+    </Layer>
+    <Layer name="Vaestervik">
+        <Map maxTileCoordinate="286975/158975" minTileCoordinate="285952/157952" mapSource="Eniro Nautical" zoom="11" name="Vaestervik 11"/>
+        <Map maxTileCoordinate="573951/317695" minTileCoordinate="571904/315904" mapSource="Eniro Nautical" zoom="12" name="Vaestervik 12"/>
+        <Map maxTileCoordinate="1147903/635391" minTileCoordinate="1143808/632064" mapSource="Eniro Nautical" zoom="13" name="Vaestervik 13"/>
+        <Map maxTileCoordinate="2295551/1270527" minTileCoordinate="2287872/1264128" mapSource="Eniro Nautical" zoom="14" name="Vaestervik 14"/>
+        <Map maxTileCoordinate="4591103/2541055" minTileCoordinate="4576000/2528512" mapSource="Eniro Nautical" zoom="15" name="Vaestervik 15"/>
+    </Layer>
+    <Layer name="Haelgenaes">
+        <Map maxTileCoordinate="286463/158207" minTileCoordinate="285952/157696" mapSource="Eniro Nautical" zoom="11" name="Haelgenaes 11"/>
+        <Map maxTileCoordinate="572671/316159" minTileCoordinate="572160/315648" mapSource="Eniro Nautical" zoom="12" name="Haelgenaes 12"/>
+        <Map maxTileCoordinate="1145343/632319" minTileCoordinate="1144320/631296" mapSource="Eniro Nautical" zoom="13" name="Haelgenaes 13"/>
+        <Map maxTileCoordinate="2290687/1264383" minTileCoordinate="2288896/1262848" mapSource="Eniro Nautical" zoom="14" name="Haelgenaes 14"/>
+        <Map maxTileCoordinate="4581119/2528511" minTileCoordinate="4577792/2525952" mapSource="Eniro Nautical" zoom="15" name="Haelgenaes 15"/>
+    </Layer>
+    <Layer name="Edsviken">
+        <Map maxTileCoordinate="287231/158207" minTileCoordinate="286208/157696" mapSource="Eniro Nautical" zoom="11" name="Edsviken 11"/>
+        <Map maxTileCoordinate="574207/316159" minTileCoordinate="572416/315392" mapSource="Eniro Nautical" zoom="12" name="Edsviken 12"/>
+        <Map maxTileCoordinate="1148159/632319" minTileCoordinate="1145088/631040" mapSource="Eniro Nautical" zoom="13" name="Edsviken 13"/>
+        <Map maxTileCoordinate="2296063/1264383" minTileCoordinate="2290432/1262080" mapSource="Eniro Nautical" zoom="14" name="Edsviken 14"/>
+        <Map maxTileCoordinate="4591871/2528511" minTileCoordinate="4581120/2524160" mapSource="Eniro Nautical" zoom="15" name="Edsviken 15"/>
+    </Layer>
+    <Layer name="Sandoe">
+        <Map maxTileCoordinate="287231/157951" minTileCoordinate="286464/157184" mapSource="Eniro Nautical" zoom="11" name="Sandoe 11"/>
+        <Map maxTileCoordinate="574463/315647" minTileCoordinate="572928/314624" mapSource="Eniro Nautical" zoom="12" name="Sandoe 12"/>
+        <Map maxTileCoordinate="1148927/631039" minTileCoordinate="1146112/629504" mapSource="Eniro Nautical" zoom="13" name="Sandoe 13"/>
+        <Map maxTileCoordinate="2297599/1262079" minTileCoordinate="2292224/1259264" mapSource="Eniro Nautical" zoom="14" name="Sandoe 14"/>
+        <Map maxTileCoordinate="4594943/2524159" minTileCoordinate="4584704/2518528" mapSource="Eniro Nautical" zoom="15" name="Sandoe 15"/>
+    </Layer>
+    <Layer name="Valdemarsvik">
+        <Map maxTileCoordinate="286719/157695" minTileCoordinate="286208/157184" mapSource="Eniro Nautical" zoom="11" name="Valdemarsvik 11"/>
+        <Map maxTileCoordinate="573183/315391" minTileCoordinate="572416/314624" mapSource="Eniro Nautical" zoom="12" name="Valdemarsvik 12"/>
+        <Map maxTileCoordinate="1146367/630783" minTileCoordinate="1145088/629248" mapSource="Eniro Nautical" zoom="13" name="Valdemarsvik 13"/>
+        <Map maxTileCoordinate="2292479/1261311" minTileCoordinate="2290432/1258752" mapSource="Eniro Nautical" zoom="14" name="Valdemarsvik 14"/>
+        <Map maxTileCoordinate="4584703/2522367" minTileCoordinate="4581120/2517504" mapSource="Eniro Nautical" zoom="15" name="Valdemarsvik 15"/>
+    </Layer>
+    <Layer name="Haesseloe">
+        <Map maxTileCoordinate="287487/157439" minTileCoordinate="286464/156928" mapSource="Eniro Nautical" zoom="11" name="Haesseloe 11"/>
+        <Map maxTileCoordinate="574719/314879" minTileCoordinate="572928/314112" mapSource="Eniro Nautical" zoom="12" name="Haesseloe 12"/>
+        <Map maxTileCoordinate="1149183/629759" minTileCoordinate="1145856/628480" mapSource="Eniro Nautical" zoom="13" name="Haesseloe 13"/>
+        <Map maxTileCoordinate="2298367/1259263" minTileCoordinate="2291712/1256960" mapSource="Eniro Nautical" zoom="14" name="Haesseloe 14"/>
+        <Map maxTileCoordinate="4596479/2518527" minTileCoordinate="4583424/2514176" mapSource="Eniro Nautical" zoom="15" name="Haesseloe 15"/>
+    </Layer>
+    <Layer name="Hamna">
+        <Map maxTileCoordinate="287743/157183" minTileCoordinate="286208/156672" mapSource="Eniro Nautical" zoom="11" name="Hamna 11"/>
+        <Map maxTileCoordinate="575231/314367" minTileCoordinate="572672/313600" mapSource="Eniro Nautical" zoom="12" name="Hamna 12"/>
+        <Map maxTileCoordinate="1150207/628735" minTileCoordinate="1145344/627456" mapSource="Eniro Nautical" zoom="13" name="Hamna 13"/>
+        <Map maxTileCoordinate="2300159/1257215" minTileCoordinate="2290688/1255168" mapSource="Eniro Nautical" zoom="14" name="Hamna 14"/>
+        <Map maxTileCoordinate="4600063/2514175" minTileCoordinate="4581632/2510592" mapSource="Eniro Nautical" zoom="15" name="Hamna 15"/>
+    </Layer>
+    <Layer name="Faellbaedar">
+        <Map maxTileCoordinate="287743/156927" minTileCoordinate="286208/156672" mapSource="Eniro Nautical" zoom="11" name="Faellbaedar 11"/>
+        <Map maxTileCoordinate="575231/313855" minTileCoordinate="572672/313344" mapSource="Eniro Nautical" zoom="12" name="Faellbaedar 12"/>
+        <Map maxTileCoordinate="1150463/627711" minTileCoordinate="1145344/626688" mapSource="Eniro Nautical" zoom="13" name="Faellbaedar 13"/>
+        <Map maxTileCoordinate="2300671/1255423" minTileCoordinate="2290688/1253376" mapSource="Eniro Nautical" zoom="14" name="Faellbaedar 14"/>
+        <Map maxTileCoordinate="4601343/2510591" minTileCoordinate="4581376/2506752" mapSource="Eniro Nautical" zoom="15" name="Faellbaedar 15"/>
+    </Layer>
+    <Layer name="Slaetbaken">
+        <Map maxTileCoordinate="286463/156927" minTileCoordinate="285952/156416" mapSource="Eniro Nautical" zoom="11" name="Slaetbaken 11"/>
+        <Map maxTileCoordinate="572927/313599" minTileCoordinate="571904/313088" mapSource="Eniro Nautical" zoom="12" name="Slaetbaken 12"/>
+        <Map maxTileCoordinate="1145599/626943" minTileCoordinate="1144064/626176" mapSource="Eniro Nautical" zoom="13" name="Slaetbaken 13"/>
+        <Map maxTileCoordinate="2290943/1253887" minTileCoordinate="2288128/1252352" mapSource="Eniro Nautical" zoom="14" name="Slaetbaken 14"/>
+        <Map maxTileCoordinate="4581887/2507775" minTileCoordinate="4576512/2504960" mapSource="Eniro Nautical" zoom="15" name="Slaetbaken 15"/>
+    </Layer>
+    <Layer name="Havringe-Oevre">
+        <Map maxTileCoordinate="287743/156671" minTileCoordinate="286464/155904" mapSource="Eniro Nautical" zoom="11" name="Havringe-Oevre 11"/>
+        <Map maxTileCoordinate="575231/313343" minTileCoordinate="573184/312064" mapSource="Eniro Nautical" zoom="12" name="Havringe-Oevre 12"/>
+        <Map maxTileCoordinate="1150463/626687" minTileCoordinate="1146368/624384" mapSource="Eniro Nautical" zoom="13" name="Havringe-Oevre 13"/>
+        <Map maxTileCoordinate="2300671/1253375" minTileCoordinate="2292992/1249024" mapSource="Eniro Nautical" zoom="14" name="Havringe-Oevre 14"/>
+        <Map maxTileCoordinate="4601343/2506751" minTileCoordinate="4586240/2498304" mapSource="Eniro Nautical" zoom="15" name="Havringe-Oevre 15"/>
+    </Layer>
+    <Layer name="Braviken">
+        <Map maxTileCoordinate="286719/156415" minTileCoordinate="285440/155904" mapSource="Eniro Nautical" zoom="11" name="Braviken 11"/>
+        <Map maxTileCoordinate="573439/312831" minTileCoordinate="571136/312064" mapSource="Eniro Nautical" zoom="12" name="Braviken 12"/>
+        <Map maxTileCoordinate="1146623/625663" minTileCoordinate="1142528/624128" mapSource="Eniro Nautical" zoom="13" name="Braviken 13"/>
+        <Map maxTileCoordinate="2293247/1251071" minTileCoordinate="2285056/1248256" mapSource="Eniro Nautical" zoom="14" name="Braviken 14"/>
+        <Map maxTileCoordinate="4586239/2501887" minTileCoordinate="4570112/2496512" mapSource="Eniro Nautical" zoom="15" name="Braviken 15"/>
+    </Layer>
+    <Layer name="Utklippan">
+        <Map maxTileCoordinate="9121279/5229055" minTileCoordinate="9119744/5227520" mapSource="Eniro Nautical" zoom="16" name="Utklippan 16"/>
+        <Map maxTileCoordinate="18242559/10458111" minTileCoordinate="18239744/10455296" mapSource="Eniro Nautical" zoom="17" name="Utklippan 17"/>
+    </Layer>
+    <Layer name="Ungskaer">
+        <Map maxTileCoordinate="9126655/5222143" minTileCoordinate="9122816/5220096" mapSource="Eniro Nautical" zoom="16" name="Ungskaer 16"/>
+        <Map maxTileCoordinate="18253055/10444031" minTileCoordinate="18245632/10440448" mapSource="Eniro Nautical" zoom="17" name="Ungskaer 17"/>
+    </Layer>
+    <Layer name="Torhamn">
+        <Map maxTileCoordinate="9128703/5220351" minTileCoordinate="9124864/5215488" mapSource="Eniro Nautical" zoom="16" name="Torhamn 16"/>
+        <Map maxTileCoordinate="18257151/10440447" minTileCoordinate="18249984/10430976" mapSource="Eniro Nautical" zoom="17" name="Torhamn 17"/>
+    </Layer>
+    <Layer name="Torhamn-W">
+        <Map maxTileCoordinate="9125119/5220351" minTileCoordinate="9119232/5214464" mapSource="Eniro Nautical" zoom="16" name="Torhamn-W 16"/>
+        <Map maxTileCoordinate="18249983/10440447" minTileCoordinate="18238720/10428928" mapSource="Eniro Nautical" zoom="17" name="Torhamn-W 17"/>
+    </Layer>
+    <Layer name="Moeckloesund-O">
+        <Map maxTileCoordinate="9125119/5214719" minTileCoordinate="9122048/5212160" mapSource="Eniro Nautical" zoom="16" name="Moeckloesund-O 16"/>
+        <Map maxTileCoordinate="18250239/10429183" minTileCoordinate="18244352/10424576" mapSource="Eniro Nautical" zoom="17" name="Moeckloesund-O 17"/>
+    </Layer>
+    <Layer name="Moeckloesund-W">
+        <Map maxTileCoordinate="9122303/5214463" minTileCoordinate="9118208/5212160" mapSource="Eniro Nautical" zoom="16" name="Moeckloesund-W 16"/>
+        <Map maxTileCoordinate="18244351/10428927" minTileCoordinate="18236672/10424576" mapSource="Eniro Nautical" zoom="17" name="Moeckloesund-W 17"/>
+    </Layer>
+    <Layer name="Karlskrona-1">
+        <Map maxTileCoordinate="9118463/5212671" minTileCoordinate="9112832/5209600" mapSource="Eniro Nautical" zoom="16" name="Karlskrona-1 16"/>
+        <Map maxTileCoordinate="18236671/10425343" minTileCoordinate="18225664/10419200" mapSource="Eniro Nautical" zoom="17" name="Karlskrona-1 17"/>
+    </Layer>
+    <Layer name="Drottningskaer">
+        <Map maxTileCoordinate="9118463/5216511" minTileCoordinate="9112832/5212672" mapSource="Eniro Nautical" zoom="16" name="Drottningskaer 16"/>
+        <Map maxTileCoordinate="18236927/10432767" minTileCoordinate="18225664/10425344" mapSource="Eniro Nautical" zoom="17" name="Drottningskaer 17"/>
+    </Layer>
+    <Layer name="Hassloe">
+        <Map maxTileCoordinate="9111551/5218559" minTileCoordinate="9108736/5213184" mapSource="Eniro Nautical" zoom="16" name="Hassloe 16"/>
+        <Map maxTileCoordinate="18222847/10437119" minTileCoordinate="18217472/10426368" mapSource="Eniro Nautical" zoom="17" name="Hassloe 17"/>
+    </Layer>
+    <Layer name="Ekenaes">
+        <Map maxTileCoordinate="9102079/5211135" minTileCoordinate="9099264/5209856" mapSource="Eniro Nautical" zoom="16" name="Ekenaes 16"/>
+        <Map maxTileCoordinate="18203903/10422015" minTileCoordinate="18198528/10419712" mapSource="Eniro Nautical" zoom="17" name="Ekenaes 17"/>
+    </Layer>
+    <Layer name="Tjaero">
+        <Map maxTileCoordinate="9091327/5211135" minTileCoordinate="9089280/5208576" mapSource="Eniro Nautical" zoom="16" name="Tjaero 16"/>
+        <Map maxTileCoordinate="18182655/10422015" minTileCoordinate="18178816/10417408" mapSource="Eniro Nautical" zoom="17" name="Tjaero 17"/>
+    </Layer>
+    <Layer name="Taernoe">
+        <Map maxTileCoordinate="9087231/5214463" minTileCoordinate="9085440/5213184" mapSource="Eniro Nautical" zoom="16" name="Taernoe 16"/>
+        <Map maxTileCoordinate="18174463/10428671" minTileCoordinate="18170880/10426368" mapSource="Eniro Nautical" zoom="17" name="Taernoe 17"/>
+    </Layer>
+    <Layer name="Hanoe">
+        <Map maxTileCoordinate="9080063/5223679" minTileCoordinate="9079808/5223168" mapSource="Eniro Nautical" zoom="16" name="Hanoe 16"/>
+        <Map maxTileCoordinate="18160127/10447359" minTileCoordinate="18159616/10446592" mapSource="Eniro Nautical" zoom="17" name="Hanoe 17"/>
+    </Layer>
+</atlas>
