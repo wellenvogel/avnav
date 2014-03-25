@@ -78,7 +78,7 @@ public class ExCustomMultiLayerMapSource extends AbstractMultiLayerMapSource {
 		layers.toArray(mapSources);
 		initializeValues();
 		if (tileType == null){
-			this.log.warn("tile nupe is null, setting to png");
+			this.log.warn("tile type is null, setting to png");
 			tileType=TileImageType.PNG;
 		}
 	}
