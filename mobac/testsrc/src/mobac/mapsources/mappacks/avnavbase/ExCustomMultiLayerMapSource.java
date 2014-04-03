@@ -118,8 +118,7 @@ public class ExCustomMultiLayerMapSource extends AbstractMultiLayerMapSource {
 				MapSource layerMapSource = mapSources[i];
 				BufferedImage layerImage = layerMapSource.getTileImage(zoom, x, y, loadMethod);
 				if (layerImage != null) {
-					log.debug("Multi layer loading: " + layerMapSource + " " + x + " " + y + " "
-							+ zoom);
+					log.debug("Multi layer loading: " + layerMapSource + " z=" +zoom+", x="+ x + ",y= " + y );
 					g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
 							getLayerAlpha(i)));
 					g2.drawImage(layerImage, 0, 0, null);
