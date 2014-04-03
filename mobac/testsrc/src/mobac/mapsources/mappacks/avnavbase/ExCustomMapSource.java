@@ -133,6 +133,9 @@ public class ExCustomMapSource implements HttpMapSource {
 		if (tileType == null){
 			throw new RuntimeException("invalid tileType - null");
 		}
+		if (tileUpdate == null){
+			tileUpdate=TileUpdate.None;
+		}
 		
 	}
 
@@ -326,7 +329,7 @@ public class ExCustomMapSource implements HttpMapSource {
 				if (data == null || data.length == 0) {
 					continue;
 				}
-				if (zoom == currentZoom && ! mergeLevels){
+				if (zoom == currentZoom && ! mergeLevels && converterMap.size() == 0){
 					return data;
 				}
 				BufferedImage i = ImageIO.read(new ByteArrayInputStream(data));
