@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.log4j.Logger;
 
+import mobac.exceptions.DownloadFailedException;
 import mobac.exceptions.UnrecoverableDownloadException;
 import mobac.mapsources.MapSourceTools;
 import mobac.mapsources.mappacks.avnavbase.ExCustomWmsMapSource.LayerMapping;
@@ -87,6 +88,8 @@ public class ExCustomMapSource implements HttpMapSource {
 
 	@XmlElement(defaultValue = "PNG")
 	protected TileImageType tileType = TileImageType.PNG;
+	@XmlElement(defaultValue = "PNG")
+	protected String intermediateTileFormat="PNG";
 
 	@XmlElement(defaultValue = "NONE")
 	protected HttpMapSource.TileUpdate tileUpdate;
@@ -103,7 +106,12 @@ public class ExCustomMapSource implements HttpMapSource {
 
 	@XmlElement(required = false, defaultValue = "false")
 	protected boolean ignoreErrors = false;
-
+	
+	/**
+	 * set a list of HTTP error codes that will lead to 
+	 * storing an empty tile in the cache - thus avoiding repeated downloads
+	 */
+	
 	@XmlElement(required = false, defaultValue = "")
 	@XmlList
 	private String[] serverParts = null;
@@ -183,10 +191,18 @@ public class ExCustomMapSource implements HttpMapSource {
 	}
 	
 	
-				
+	private byte[] imageToBytes(BufferedImage image){
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		try {
+			ImageIO.write(image, intermediateTileFormat, os);
+			return os.toByteArray();
+		} catch (IOException e) {
+			return null;
+		}
+	}
 	
 	
-	public byte[] getTileData(int zoom, int x, int y, LoadMethod loadMethod) throws IOException,
+	private byte[] fetchTileData(int zoom, int x, int y, LoadMethod loadMethod) throws IOException,
 				UnrecoverableDownloadException, InterruptedException {
 		if (invertYCoordinate)
 			y = ((1 << zoom) - y - 1);
@@ -207,10 +223,8 @@ public class ExCustomMapSource implements HttpMapSource {
 			try {
 				return TileDownLoader.getImage(x, y, zoom, this);
 			} 
-			catch (RuntimeException e) {
-				return null;
-			}
-			catch(Exception e){
+			
+			catch (Throwable e) {
 				return null;
 			}
 
@@ -288,8 +302,17 @@ public class ExCustomMapSource implements HttpMapSource {
 	/**
 	 * get image with extended error handling and retries
 	 */
-	
 	public BufferedImage getTileImage(int zoom, int x, int y, LoadMethod loadMethod)
+			throws IOException, UnrecoverableDownloadException, InterruptedException {
+		byte [] data=getTileData(zoom, x, y, loadMethod);
+		if (data == null || data.length==0) return null;
+		BufferedImage i = ImageIO.read(new ByteArrayInputStream(data));
+		return i;
+	}
+	/*
+	 * we have to do all conversion already when loading into the cache
+	 */
+	public byte[] getTileData(int zoom, int x, int y, LoadMethod loadMethod)
 			throws IOException, UnrecoverableDownloadException, InterruptedException {
 		int currentZoom=zoom;
 		int currSize=256;
@@ -299,14 +322,18 @@ public class ExCustomMapSource implements HttpMapSource {
 		ArrayList<BufferedImage> stack=new ArrayList<BufferedImage>(numLowerLevels+1);
 		for (int nz = 0; nz <= numLowerLevels && currentZoom >= getMinZoom(); nz++) {
 			for (int ntry = 0; ntry < retries; ntry++) {
-				byte[] data = getTileData(currentZoom, x, y, loadMethod);
+				byte[] data = fetchTileData(currentZoom, x, y, loadMethod);
 				if (data == null || data.length == 0) {
 					continue;
 				}
+				if (zoom == currentZoom && ! mergeLevels){
+					return data;
+				}
 				BufferedImage i = ImageIO.read(new ByteArrayInputStream(data));
 				boolean hasAlpha0=replaceColors(i);
-				if (zoom == currentZoom && ! (hasAlpha0 && mergeLevels)){
-					return i;
+				//if there is no alpha in the image and we are at the right level - and no conversions...
+				if (!hasAlpha0 && (zoom ==currentZoom) && converterMap.size() == 0){
+					return data;
 				}
 				BufferedImage image=null;
 				if (zoom != currentZoom) {
@@ -341,7 +368,7 @@ public class ExCustomMapSource implements HttpMapSource {
 			currentFactor*=2;
 		}
 		if (stack.size() == 1){
-			return stack.get(0);
+			return imageToBytes(stack.get(0));
 		}
 		if (stack.size()>0){
 			log.trace("creating merged tile ("+stack.size()+" elements) "+getName()+" z="+zoom+", x="+x+",y= "+y);
@@ -352,7 +379,7 @@ public class ExCustomMapSource implements HttpMapSource {
 				g.drawImage(stack.get(i), 0, 0,256, 256, 0, 0, 256, 256, null);
 			}
 			g.dispose();
-			return image;
+			return imageToBytes(image);
 		}
 		if (! ignoreErrors)
 			return null;
@@ -367,7 +394,7 @@ public class ExCustomMapSource implements HttpMapSource {
 			g.dispose();
 		}
 		replaceColors(image);
-		return image;
+		return imageToBytes(image);
 	}
 	
 
