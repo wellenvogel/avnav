@@ -456,6 +456,9 @@ OpenLayers.Layer.AvNavXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
     var y = Math.round((origin.lat - bounds.top) /
         (res * this.tileSize.h));
     var z = this.map.getZoomForResolution(res,true) + this.zoomOffset;
+    if (this.zOffset){
+    	z-=this.zOffset;
+    }
     var limit = Math.pow(2, z);
     if (this.wrapDateLine)
     {
@@ -468,6 +471,7 @@ OpenLayers.Layer.AvNavXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
     	//For OSM/google/MOBAC y starts at 0 upper left...
     	y=limit-y-1;
     }
+    
         
     return {'x': x, 'y': y, 'z': z};
   },
@@ -488,7 +492,8 @@ OpenLayers.Layer.AvNavXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
 	  if (! fits){
 		  return null;
 	  }
-	  if (properties.hideLower && this.nextLayer && this.nextLayer.getVisibility() && this.nextLayer.calculateInRange()){
+	  if (properties.hideLower && this.nextLayer && this.nextLayer.getVisibility() && 
+			  this.nextLayer.calculateInRange() && this.nextLayer.boundings){
 		  //don't show the tile if the next layer covers this completely
 		  for (var i in this.nextLayer.boundings){
 			  var nlbound=this.nextLayer.boundings[i];
@@ -499,6 +504,29 @@ OpenLayers.Layer.AvNavXYZ=OpenLayers.Class(OpenLayers.Layer.XYZ,{
 		  }
 	  }
       var xyz = this.getXYZ(bounds);
+      //check the new style...
+      if (this.zoomBoundings){
+    	  var curx=xyz.x;
+    	  var cury=xyz.y;
+    	  var found=false;
+    	  for (var curz=xyz.z;curz>=this.minZoom && ! found;curz--){
+    		  if (this.zoomBoundings[curz]){
+    			  for(var bindex in this.zoomBoundings[curz]){
+    				  var zbounds=this.zoomBoundings[curz][bindex];
+    				  if (zbounds.minx<=curx && zbounds.maxx>=curx && zbounds.miny<=cury && zbounds.maxy>=cury){
+    					  found=true;
+    					  break;
+    				  }
+    			  }
+    			  if (! found){
+    				  //found matching entries for bb - but does not match
+    				  return null;
+    			  }
+    		  }
+    		  curx=curx/2;
+    		  cury=cury/2;
+    	  }
+      }
       var url = this.url;
       if (OpenLayers.Util.isArray(url)) {
           var s = '' + xyz.x + xyz.y + xyz.z;
@@ -629,6 +657,7 @@ function read_layer_list(description) {
 	    	        parseInt($(tf).attr('width')),
 	    	        parseInt($(tf).attr('height')));
 	    	rt.tile_ext=$(tf).attr('extension');
+	    	rt.zOffset=parseInt($(tf).attr('zOffset'));
 	    });
 	    if (!rt.tile_size) rt.tile_size=new OpenLayers.Size(256,256);
 	    if (!rt.tile_ext)rt.tile_ext="png";
@@ -639,6 +668,26 @@ function read_layer_list(description) {
 	    	boundings.push(bounds);
 	    });
 	    rt.boundings=boundings;
+	    var zoomLayerBoundings=[];
+	    $(tm).find(">LayerZoomBoundings >ZoomBoundings").each(function(nr,zb){
+	    	var zoom=parseInt($(zb).attr('zoom'));
+	    	var zoomBoundings=[];
+	    	$(zb).find(">BoundingBox").each(function(nr,bb){
+	    		var bounds={
+	    				minx:parseInt($(bb).attr('minx')),
+	    				miny:parseInt($(bb).attr('miny')),
+	    				maxx:parseInt($(bb).attr('maxx')),
+	    				maxy:parseInt($(bb).attr('maxy'))
+	    		};
+	    		zoomBoundings.push(bounds);
+	    	});
+	    	if (zoomBoundings.length){
+	    		zoomLayerBoundings[zoom]=zoomBoundings;
+	    	}
+	    });
+	    if (zoomLayerBoundings.length){
+	    	rt.zoomLayerBoundings=zoomLayerBoundings;
+	    }
 	    ll.push(rt);
 	});
     return ll;
@@ -1759,7 +1808,10 @@ function initMap(mapdescr,url) {
             profile: layer.layer_profile,
             displayOutsideMaxExtent: false,
             boundings: layer.boundings,
-            zoomOffset: zoomOffset
+            zoomOffset: zoomOffset,
+            minZoom:layer.minZoom,
+            zoomBoundings:layer.zoomLayerBoundings,
+            zOffset:layer.zOffset
 
         });
     	tiler_overlays.push(tiler_overlay);
