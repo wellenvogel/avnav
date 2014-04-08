@@ -99,7 +99,7 @@ zoom_boundings='''
 '''
 
 options=None
-upzoom=2
+upzoom=1 #how many additional layers to be created for a single source gemf file
 
 def log(s):
   print "LOG: %s"%(s,)
@@ -158,6 +158,12 @@ class Tilegroup():
       if el.zoom==self.maxzoom:
         rt.append(el)
     return rt
+  def getZoomElements(self,zoom):
+    rt=[]
+    for el in self.elements:
+      if el.zoom==zoom:
+        rt.append(el)
+    return rt
       
 
 class Layer():
@@ -181,23 +187,49 @@ class Layer():
     for tg in self.tlist:
       rt+=tg.getMaxZoomElements()
     return rt
+  def getZoomElements(self,zoom):
+    rt=[]
+    for tg in self.tlist:
+      rt+=tg.getZoomElements(zoom)
+    return rt
   #return a pseudo tileset to the complete layer
-  def getBoundingElement(self):
-    mz=self.getMaxZoomElements()
+  #depending on the use case we either take the max zoom level (typically: multi source)
+  #or compute the max of all zoomlevels
+  def getBoundingElement(self,useMax=True):
+    startzoom=None
+    if useMax:
+      startzoom=self.maxzoom
+    else:
+      startzoom=self.minzoom
+    zoom=startzoom
     minx=-1
     miny=-1
     maxx=0
     maxy=0
-    for el in mz:
-      if miny==-1 or el.miny < miny:
-        miny=el.miny
-      if minx==-1 or el.minx < minx:
-        minx=el.minx
-      if el.maxx > maxx:
-        maxx=el.maxx
-      if el.maxy > maxy:
-        maxy=el.maxy
-    nel=Tileset("layer",self.maxzoom,minx,miny,maxx,maxy)
+    found=(zoom,minx,miny,maxx,maxy)
+    for zoom in range(startzoom,self.maxzoom+1):
+      hasChanged=False
+      mz=self.getZoomElements(zoom)
+      for el in mz:
+        if miny==-1 or el.miny < miny:
+          miny=el.miny
+          hasChanged=True
+        if minx==-1 or el.minx < minx:
+          minx=el.minx
+          hasChanged=True
+        if el.maxx > maxx:
+          maxx=el.maxx
+          hasChanged=True
+        if el.maxy > maxy:
+          maxy=el.maxy
+          hasChanged=True
+      if hasChanged:
+        found=(zoom,minx,miny,maxx,maxy)
+      minx*=2
+      miny*=2
+      maxx*=2
+      maxy*=2
+    nel=Tileset("layer",found[0],found[1],found[2],found[3],found[4])
     return nel
     
 
@@ -281,12 +313,15 @@ def createOverview(layerlist):
 
 #we create n pseudo-layers
 #with each having an increased tile size...
-def createOverviewSingleLayer(layer,zoomBoundings):
+def createOverviewSingleLayer(layer,zoomBoundings,options):
   tilemaps=""
   boundings=""
   zOffset=0
   tileSize=256
   layerBoundings=""
+  numupzoom=upzoom
+  if options.get('upzoom') is not None:
+    numupzoom=options['upzoom']
   for z in zoomBoundings.keys():
     zoomBoundingsString=""
     for e in zoomBoundings[z]:
@@ -295,14 +330,14 @@ def createOverviewSingleLayer(layer,zoomBoundings):
                                      'boundings':zoomBoundingsString
                                      }
   
-  for idx in range(upzoom+1):
+  for idx in range(numupzoom+1):
     tilemaps+=overview_tilemap_xml % {
               "profile": "zxy-mercator",
-              "title":layer.name,
+              "title":layer.name if idx == 0 else "%s-%d"%(layer.name,idx),
               "url":layer.baseurl,
               "minZoom":layer.minzoom,
               "maxZoom":layer.maxzoom,
-              "bounding":createBoundingsXml(layer.getBoundingElement()),
+              "bounding":createBoundingsXml(layer.getBoundingElement(False)),
               "layerboundings":zoom_boundings%{'boundings':layerBoundings},
               "tileSize":tileSize,
               "zoomOffset":'zOffset="%d"'%(zOffset,)
@@ -333,9 +368,10 @@ def writeOverview(overviewfname,layerlist):
 #                and we directly map the ranges to layerZoomBoundings
 #                for all the pseudo-layers they are the same... 
 
-def getGemfInfo(data):
+def getGemfInfo(data,options):
   layerlist=[]
   if len(data) > 1:
+    log("creating multi source gemf overview (%d sources)"%(len(data),))
     for src in data:
       tilegroup=Tilegroup(src['name'])
       for rdata in src['ranges']:
@@ -350,6 +386,7 @@ def getGemfInfo(data):
     return rt
   else:
     #single layer
+    log("creating single source gemf overview")
     src=data[0]
     zoomBoundings={}
     tilegroup=Tilegroup(src['name'])
@@ -366,7 +403,7 @@ def getGemfInfo(data):
       tilegroup.addElement(tileset)
     layer=Layer(src['name'],tilegroup.minzoom,tilegroup.maxzoom,src['name'])
     layer.addEntry(tilegroup)
-    rt=createOverviewSingleLayer(layer,zoomBoundings)
+    rt=createOverviewSingleLayer(layer,zoomBoundings,options)
     return rt
     
 

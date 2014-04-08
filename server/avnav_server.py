@@ -2794,7 +2794,9 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
                                           #chart urls, set e.g. to http://$host/charts
                      "httpPort":"8080",
                      "numThreads":"5",
-                     "httpHost":""
+                     "httpHost":"",
+                     "upzoom":"2",         #number of "pseudo" layers created for gemf files
+                     "empty":"../viewer/transparent256x256.png" #empty tile (OS path)
         }
     return rt
   
@@ -2831,6 +2833,13 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.setInfo('main',"serving at port %s"%(str(self.server_port)),AVNWorker.Status.RUNNING)
     self.gemfhandler=threading.Thread(target=self.handleGemfFiles)
     self.gemfhandler.daemon=True
+    emptyname=self.getParamValue("empty", False)
+    self.emptytile=None
+    if emptyname is not None:
+      fname=os.path.join(self.basedir,emptyname)
+      if os.path.isfile(fname):
+        with open(fname,"rb") as f:
+          self.emptytile=f.read()
     self.gemfhandler.start()
     self.serve_forever()
     
@@ -2923,8 +2932,11 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
   def getGemfInfo(self,gemf):
     try:
       data=gemf.getSources()
-      rt=create_overview.getGemfInfo(data)
-      AVNLog.info("created GEMF overview for %s: %s",gemf.filename,rt)
+      options={}
+      options['upzoom']=self.getIntParam('upzoom')
+      rt=create_overview.getGemfInfo(data,options)
+      AVNLog.info("created GEMF overview for %s",gemf.filename)
+      AVNLog.debug("overview for %s:%s",gemf.filename,rt)
       return rt
 
     except:
@@ -3073,6 +3085,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           if len(parr) != 5:
             raise Exception("invalid request to GEMF file %s: %s" %(gemfname,path))
           data=g['gemf'].getTileData((int(parr[2]),int(parr[3]),int(parr[4].replace(".png",""))),parr[1])
+          if data is None:
+            empty=self.server.emptytile
+            if empty is not None:
+              data=empty
           if data is None:
             self.send_error(404,"File %s not found"%(path))
             return None
