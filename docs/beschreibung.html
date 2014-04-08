@@ -16,7 +16,7 @@
 </HEAD>
 <BODY LANG="de-DE" DIR="LTR" style="max-width: 650px">
 <H1>Raspberry Pi als Bordcomputer / Navigation im Browser	</H1>
-<P>21.03.2014</P>
+<P>08.04.2014</P>
 <P><BR>
 </P>
 <H2 CLASS="western">Motivation</H2>
@@ -315,9 +315,7 @@ versehen:</P>
 	<LI><P>eine root partition, ca. 2GB</P>
 </UL>
 <P>Bei meinem Image kommt dazu noch eine separate /data partition mit
-dem Rest der SD-Karte (wird beim ersten Start automatisch erzeugt). Das empfiehlt sich in jedem Fall, da für die
-Speicherung der Karten sehr viele kleine Dateien erzeugt werden und
-die standard-Partitionen darauf nicht gut vorbereitet sind.</P>
+dem Rest der SD-Karte (wird beim ersten Start automatisch erzeugt). </P>
 <P>Die Installation der Software hängt stark davon ab, ob mein Image
 verwendet wird, oder ob von einem „stock“ Image ausgegangen wird.
 Beide Varianten beschreibe ich kurz.</P>
@@ -356,7 +354,7 @@ angepasst werden in  /etc/dnsmasqd.conf. Wenn der pi im LAN
 angeschlossen ist, versucht er per DHCP eine Adresse zu bekommen, das
 WLAN wird per NAT an das LAN interface weitergereicht (damit kann man den pi ins Internet bringen - z.B. zum Installieren von Software- und auch per Wlan verbundene Geräte haben dann Internet-Zugriff).
 </P>
-<P>Für die Auslieferung der Karten ist der lighthttpd installiert.
+<P>Für die Auslieferung einiger Karten ist der lighthttpd installiert.
 Dieser kann gff. Auch für weitere Funktionen genutzt werden. Er ist
 jedoch per default auf port 81 aufgesetzt. Port 80 ist direkt zum Web
 server von avnav weitergeleitet (dieser lauscht auf port 8080).</P>
@@ -581,10 +579,11 @@ jeweils als gewünschte Zoomlevel die zum Layer gehörigen anklicken
 (links oben), danach alle Teilbereiche jeweils markieren und unter
 einem beliebigen Namen dem Atlas hinzufügen. Das jeweils für die
 anderen Layer wiederholen (dabei sinnvolle Auswahlen treffen).
-Anschliessend die Atlas-Konfiguration unter einem beliebigen Namen
-speichern. Als output Format OsmDroid GEMF (File-&gt;convertAtlasFormat) wählen und die
-Atlas-Erzeugung starten. Im output Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den raspberry unter /data/avnav/charts kopieren. Den Atlas speichern (Profil speichern). Diese Datei (liegt im Programmverzeichnis von MOBAC)  in das
-gleiche Verzeichnis kopieren und zu xxx.xml umbenennen (wichtig!).</P>
+Anschliessend sollte man die Atlas-Konfiguration unter einem beliebigen Namen
+speichern - die kann man ggf. nochg für weitere Versuche brauchen. Als output Format OsmDroid GEMF (File-&gt;convertAtlasFormat) wählen und die
+Atlas-Erzeugung starten. Im output Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den raspberry unter /data/avnav/charts kopieren. Ab der Version avnav-2014-04-08 ist das ausreichend, bei älteren Versionen muss man noch Folgendes tun:<br>
+Den Atlas speichern (Profil speichern). Diese Datei (liegt im Programmverzeichnis von MOBAC)  in das
+  gleiche Verzeichnis kopieren und zu xxx.xml umbenennen (wichtig!).</P>
 <P>Auf der <a href="http://www.wellenvogel.net/software/avnav/downloads/index.php">download Seite</a> sammle ich chart sources für den mobac, die für uns nützlich sein lönnten. </P>
 <H2 CLASS="western">Die WebApp</H2>
 <P>Um die auf dem raspberry pi installierten Karten nutzen zu können,
