@@ -2837,7 +2837,9 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.emptytile=None
     if emptyname is not None:
       fname=os.path.join(self.basedir,emptyname)
+      AVNLog.info("HTTP server trying empty tile %s"%(fname))
       if os.path.isfile(fname):
+        AVNLog.info("HTTP server reading empty tile %s"%(fname))
         with open(fname,"rb") as f:
           self.emptytile=f.read()
     self.gemfhandler.start()
