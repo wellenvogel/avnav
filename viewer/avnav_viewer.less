@@ -25,16 +25,12 @@ html,body {
 	overflow: hidden;
 }
 
-#leftTop{
-	
-	background-color: #1602FC;
-	text-align: center;
-}
+
 
 #leftTop .avn_label {
 	color: white;
 }
-.avn_leftBottom{
+.avn_left_bottom {
 	
 	background-color: rgb(222, 226, 207);
 	text-align: center;
@@ -45,10 +41,7 @@ html,body {
 	
 }
 
-.avn_rightPanel{
-	
-	background-color: #6D6D6D;
-}
+
 
 .avn_inner{
 	display: inline-block;
@@ -58,7 +51,7 @@ html,body {
 	padding-right: 3px;
 }
 
-#leftBottomInnerMainpage .avn_label{
+.avi_mainpage_leftbottominner .avn_label{
 	-webkit-margin-before: 0.5em;
 }
 .avn_position{
@@ -80,7 +73,7 @@ background-color: white;
 font-size: ( @topPanelHeight - 2 );
 }
 
-.avn_leftBottom .avn_position{
+.avn_left_bottom .avn_position{
 font-size: ( @bottomPanelHeight - 2 );
 }
 
@@ -182,16 +175,32 @@ font-size: ( @bottomPanelHeight - 2 );
 /*-------------------------------------------------------------
    buttons
 -------------------------------------------------------------*/
+
+.avn_button_base{
+  width: @buttonSize;
+  height: @buttonSize;
+  margin: 3px 3px 3px 3px;
+  border-top-right-radius: 4px;
+  border-top-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border: 1px solid #D3D3D3;
+  background: #E6E6E6;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+
+}
 button.avn_button{
-	width: @buttonSize;
-	height: @buttonSize;
-	margin: 3px 3px 3px 3px;
+  .avn_button_base;
+}
+
+.avn_button:active{
+  border: 2px solid #6B6B6B;
 }
 
 button.avn_toggleButton{
-	width: @buttonSize;
-	height: @buttonSize;
-	margin: 3px 3px 3px 3px;
+	.avn_button_base;
 }
 
 button.avn_buttonActive{
@@ -205,6 +214,26 @@ button.avn_buttonActiveError{
 button.avn_buttonInactive{
 	border: 4px solid #E6E6E6;
 }
+
+.avn_button_icon_base(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
+  background-image: url(@icon);
+  background-position: 0px 0px;
+  background-size: @innerWidth @innerWidth;
+  width: @innerWidth;
+  height: @innerWidth;
+  top: (( @buttonSize - @innerWidth ) / 2 );
+  left: (( @buttonSize - @innerWidth ) / 2 );
+  position: absolute;
+  text-decoration: none;
+}
+
+button#avb_ShowStatus .avn_button_icon{
+  .avn_button_icon_base('images/bargraph32.png');
+}
+button#avb_ShowHelp .avn_button_icon{
+  .avn_button_icon_base('images/Question.png');
+}
+
 
 #btnLockPos .ui-icon {
 	background-image: url(images/Sail-Boat-40.png);
@@ -434,7 +463,7 @@ button.avn_buttonInactive{
   -------------------------------------------------------------------------------
 */
 
-.avnav_select_item{
+.avn_mainpage_select_item {
 	cursor: pointer;
 	float: left;
 	margin: 20px 20px 20px 20px;
@@ -445,25 +474,23 @@ button.avn_buttonInactive{
 	text-align: center;
 	border-radius: 8px;
 }
-.avnav_select_item img{
+.avn_mainpage_select_item img{
 	margin-bottom: 10px;
 	border-radius: 8px;
 }
 
-#main_content{
-	overflow: auto;
-}
-#main_content_inner{
+
+#avi_mainpage_inner_content {
 	display: table;
 	width: 100%;
 	height: 100%;
 }
-#vertical_aligner{
+.avn_vertical_aligner{
 	display: table-cell;
 	vertical-align: middle;
 	text-align: center;
 }
-#allSelections{
+#avi_mainpage_selections {
 	display: inline-block;
 }
 
@@ -471,7 +498,7 @@ button.avn_buttonInactive{
 	element positioning
   -------------------------------------------------------------------------------
 	1. left panel */
-#leftPanel{
+.avn_left_panel{
 	left: 0px;
 	top: 0px;
 	bottom: 0px;
@@ -483,11 +510,13 @@ button.avn_buttonInactive{
     2. left top
 */
 
-#leftTop{
+.avn_left_top{
 	left: 0px;
 	top: 0px;
 	right: 0px;
 	height: @topPanelHeight;
+    background-color: #1602FC;
+    text-align: center;
 }
 .avn_top_content{
 	float: left;
@@ -511,7 +540,7 @@ button.avn_buttonInactive{
 /*
 	4. bottom line  - see .avn_leftBottom
 */
-#leftBottom{
+.avn_left_bottom{
 	
    	bottom: 0px;
 	height: @bottomPanelHeight;
@@ -552,11 +581,12 @@ button.avn_buttonInactive{
 	5. right panel
 */
 
-#rightPanel{
+.avn_right_panel{
 	top: 0px;
 	bottom: 0px;
 	right: 0px;
 	width: ( @buttonSize + 10 );
+    background-color: #6D6D6D;
 }
 
 .avn_status_image{
