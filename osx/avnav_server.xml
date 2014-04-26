@@ -19,7 +19,6 @@
 <!--<AVNSocketReader host="localhost" port="34568"/>-->
 <AVNHttpServer navurl="/viewer/avnav_navi.php" httpPort="8081"  chartbase="maps" >
 <!-- chartbaseurl="http://$host/Karten/anav"> -->
-	<!-- <Directory urlpath="maps" path="..\..\..\chart-tiler-test"></Directory>-->
 	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
 	<Directory urlpath="viewer" path="../viewer"></Directory>
 	<Directory urlpath="libraries" path="../libraries"></Directory>
