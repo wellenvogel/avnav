@@ -27,6 +27,7 @@
 
 icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-minimal-icons/
 */
+goog.require('ol.Map');
 
 var properties={
 		maxUpscale:2, //2 levels upscale (otherwise we need too much mem)
@@ -169,12 +170,13 @@ function log(txt){
     }catch(e){}
 }
 
+goog.provide('avnav.main');
 
 /**
  * main function called during loading
  *
  */
-function avnav_main() {
+avnav.main=function() {
     $(document).ready(function () {
         $('.avn_button').each(function(i,e){
             $(e).html('<span class="avn_button_icon"></span>');
@@ -188,5 +190,9 @@ function avnav_main() {
             }
         });
         log("avnav loaded");
+        var map=new ol.Map({
+
+        });
     });
 }
+goog.exportSymbol('avnav.main',avnav.main);
