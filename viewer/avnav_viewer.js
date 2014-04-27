@@ -28,6 +28,8 @@
 icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-minimal-icons/
 */
 goog.require('ol.Map');
+goog.require('avnav.Gui');
+goog.require('avnav.gui.Statuspage');
 
 var properties={
 		maxUpscale:2, //2 levels upscale (otherwise we need too much mem)
@@ -173,26 +175,18 @@ function log(txt){
 goog.provide('avnav.main');
 
 /**
- * main function called during loading
+ * main function called when dom is loaded
  *
  */
 avnav.main=function() {
-    $(document).ready(function () {
-        $('.avn_button').each(function(i,e){
-            $(e).html('<span class="avn_button_icon"></span>');
-            var id=$(e).attr('id');
-            if (id) {
-                id=id.replace(/^avb_/,'');
-                $(e).click(function (b) {
-                    log("clicked " +id+ "at "+ b);
-                    return false;
-                });
-            }
-        });
-        log("avnav loaded");
-        var map=new ol.Map({
+    var gui=new avnav.Gui(properties);
+    gui.initButtons();
+    log("avnav loaded");
+    var map = new ol.Map({
 
-        });
+    });
+    $(document).on(avnav.Gui.PAGE_EVENT,function(e,data){
+        log("got page event from "+ data.oldpage+" to "+ data.newpage);
     });
 }
 goog.exportSymbol('avnav.main',avnav.main);
