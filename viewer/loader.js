@@ -57,11 +57,13 @@
         '../libraries/less/less-1.4.1.min.js'];
     //scripts used in debug mode
     var debug_scripts = [
+        '../libraries/ol3b4/ol-whitespace.js',
         '../libraries/closure-library/closure/goog/base.js',
         'deps.js',
         'avnav_viewer.js'];
     //scripts in runmode
     var run_scripts = [
+        '../libraries/ol3b4/ol.js',
         'avnav_min.js'
     ];
     var mode="";
@@ -74,7 +76,7 @@
     else {
         scripts=scripts.concat(run_scripts);
     }
-    for (var i in scripts) {
+    for (i in scripts) {
         var scriptname = scripts[i];
         document.write('<scr' + 'ipt type="text/javascript" src="' + scriptname + '"></scr' + 'ipt>');
     }

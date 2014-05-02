@@ -28,8 +28,7 @@
 icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-minimal-icons/
 */
 goog.require('ol.Map');
-goog.require('avnav.Gui');
-goog.require('avnav.gui.Statuspage');
+goog.require('avnav.gui.Handler');
 
 var properties={
 		maxUpscale:2, //2 levels upscale (otherwise we need too much mem)
@@ -179,14 +178,12 @@ goog.provide('avnav.main');
  *
  */
 avnav.main=function() {
-    var gui=new avnav.Gui(properties);
-    gui.initButtons();
+    var navobject=new Object();
+    var gui=new avnav.gui.Handler(properties,navobject);
+    gui.showPage("mainpage");
     log("avnav loaded");
     var map = new ol.Map({
 
     });
-    $(document).on(avnav.Gui.PAGE_EVENT,function(e,data){
-        log("got page event from "+ data.oldpage+" to "+ data.newpage);
-    });
-}
+};
 goog.exportSymbol('avnav.main',avnav.main);
