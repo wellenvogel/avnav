@@ -27,8 +27,14 @@
 
 icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-minimal-icons/
 */
-goog.require('ol.Map');
+
 goog.require('avnav.gui.Handler');
+/**
+ * currently we must require all pages somewhere
+ */
+goog.require('avnav.gui.Mainpage');
+goog.require('avnav.gui.Statuspage');
+
 
 var properties={
 		maxUpscale:2, //2 levels upscale (otherwise we need too much mem)

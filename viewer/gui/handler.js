@@ -4,12 +4,6 @@
 
 goog.provide('avnav.gui.Handler');
 
-/**
- * currently we must require all pages somewhere
- */
-goog.require('avnav.gui.Mainpage');
-goog.require('avnav.gui.Statuspage');
-
 
 /**
  *
