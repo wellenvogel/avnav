@@ -239,31 +239,15 @@ button#avb_StatusCancel .avn_button_icon{
 button#avb_StatusUpdate .avn_button_icon{
   .avn_button_icon_base('images/Question.png');
 }
-#btnLockPos .ui-icon {
-	background-image: url(images/Sail-Boat-40.png);
-	background-position: 0px 0px;
-	/* left: ( size - 2*border ) /2 - width/2 */ 
-	left:( ( @buttonSize - 8 ) / 2 - 10  );
-	top:( ( @buttonSize - 8 ) / 2 - 10  );
-	margin-top: 0px;
-	margin-left: 0px;
-	background-size: 20px 20px;
-	width: 20px;
-	height: 20px;
+button#avb_LockPos .avn_button_icon {
+	.avn_button_icon_base('images/Sail-Boat-40.png');
 }
 
-#btnLockMarker .ui-icon{
-	background-image: url(images/Marker1.png);
-	background-position: 0px 0px;
-	left:( ( @buttonSize - 8 ) / 2 - 10  );
-	top:( ( @buttonSize - 8 ) / 2 - 10  );
-	margin-top: 0px;
-	margin-left: 0px;
-	background-size: 20px 20px;
-	width: 20px;
-	height: 20px;
+button#avb_LockMarker .avn_button_icon {
+  .avn_button_icon_base('images/Marker1.png');
 }
 
+/* old!
 #btnLayerSwitch .ui-icon{
 	background-image: url(images/Layer40.png);
 	background-position: 0px 0px;
@@ -275,18 +259,14 @@ button#avb_StatusUpdate .avn_button_icon{
 	width: 24px;
 	height: 24px;
 }
+*/
 
-#btnNavCancel .ui-icon{
-	background-image: url(images/Cancel40.png);
-	background-position: 0px 0px;
-	left:( ( @buttonSize  ) / 2 - 12  );
-	top:( ( @buttonSize  ) / 2 - 12  );
-	margin-top: 0px;
-	margin-left: 0px;
-	background-size: 24px 24px;
-	width: 24px;
-	height: 24px;
+button#avb_CancelNav .avn_button_icon {
+  .avn_button_icon_base('images/Cancel40.png');
+
 }
+
+
 #btnAISCancel .ui-icon{
 	background-image: url(images/Cancel40.png);
 	background-position: 0px 0px;

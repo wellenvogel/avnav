@@ -34,6 +34,7 @@ goog.require('avnav.gui.Handler');
  */
 goog.require('avnav.gui.Mainpage');
 goog.require('avnav.gui.Statuspage');
+goog.require('avnav.gui.Navpage');
 
 
 var properties={

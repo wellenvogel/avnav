@@ -14,10 +14,17 @@ goog.provide('avnav.gui.Handler');
 avnav.gui.Handler=function(properties,navobject){
     this.properties=properties;
     this.navobject=navobject;
+    this.map=null;
 };
 
+/**
+ * show a certain page
+ * @param {String} name
+ * @param {Object} options options to be send as options with the event
+ * @returns {boolean}
+ */
 
-avnav.gui.Handler.prototype.showPage=function(name){
+avnav.gui.Handler.prototype.showPage=function(name,options){
     if (! name) return false;
     if (name == this.page) return false;
     $('.avn_page').hide();
@@ -29,7 +36,8 @@ avnav.gui.Handler.prototype.showPage=function(name){
         gui:this,
         navobject:this.navobject,
         oldpage:oldname,
-        newpage:name
+        newpage:name,
+        options:options
     });
 };
 
