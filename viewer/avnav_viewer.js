@@ -30,6 +30,7 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
 
 goog.require('avnav.gui.Handler');
 goog.require('avnav.map.MapHolder');
+goog.require('avnav.util.PropertyHandler');
 /**
  * currently we must require all pages somewhere
  */
@@ -170,8 +171,6 @@ var aisparam={
 		
 };
 
-var userData={
-};
 
 $.cookie.json = true;
 
@@ -188,9 +187,11 @@ goog.provide('avnav.main');
  *
  */
 avnav.main=function() {
+    var propertyHandler=new avnav.util.PropertyHandler(properties);
+    propertyHandler.loadUserData();
     var navobject=new Object();
-    var mapholder=new avnav.map.MapHolder(properties,navobject);
-    var gui=new avnav.gui.Handler(properties,navobject,mapholder);
+    var mapholder=new avnav.map.MapHolder(propertyHandler,navobject);
+    var gui=new avnav.gui.Handler(propertyHandler,navobject,mapholder);
     gui.showPage("mainpage");
     log("avnav loaded");
     var map = new ol.Map({

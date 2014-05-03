@@ -19,7 +19,7 @@ goog.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 avnav.gui.Mainpage.prototype.showPage=function(options){
     if (!this.gui) return;
     var page=this;
-    var url=this.gui.properties.navUrl+"?request=listCharts";
+    var url=this.gui.properties.getProperties().navUrl+"?request=listCharts";
     $.ajax({
         url: url,
         dataType: 'json',

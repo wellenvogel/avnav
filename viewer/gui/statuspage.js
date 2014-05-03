@@ -27,7 +27,7 @@ avnav.gui.Statuspage.prototype.doQuery=function(){
     if (! this.statusQuery) return;
     this.statusQuery++;
     var self=this;
-    var url=this.gui.properties.navUrl+"?request=status";
+    var url=this.gui.properties.getProperties().navUrl+"?request=status";
     $.ajax({
         url: url,
         dataType: 'json',
@@ -37,15 +37,15 @@ avnav.gui.Statuspage.prototype.doQuery=function(){
             if (this.sequence != this.self.statusQuery) return;
             this.self.showStatusData(data);
             var self=this.self;
-            self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.statusQueryTimeout);
+            self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
         },
         error: function(status,data,error){
             log("status query error");
             if (this.sequence != this.self.statusQuery) return;
             var self=this.self;
-            self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.statusQueryTimeout);
+            self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
         },
-        timeout: self.gui.properties.statusQueryTimeout*0.9
+        timeout: self.gui.properties.getProperties().statusQueryTimeout*0.9
     });
 
 };
@@ -84,8 +84,8 @@ avnav.gui.Statuspage.prototype.formatChildStatus=function(item){
 };
 
 avnav.gui.Statuspage.prototype.statusTextToImageUrl=function(text){
-    var rt=this.gui.properties.statusIcons[text];
-    if (! rt) rt=this.gui.properties.statusIcons.INACTIVE;
+    var rt=this.gui.properties.getProperties().statusIcons[text];
+    if (! rt) rt=this.gui.properties.getProperties().statusIcons.INACTIVE;
     return rt;
 };
 
