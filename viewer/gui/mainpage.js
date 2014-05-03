@@ -4,6 +4,7 @@
 goog.provide('avnav.gui.Mainpage');
 goog.require('avnav.gui.Handler');
 goog.require('avnav.gui.Page');
+goog.require('goog.object');
 
 /**
  *
@@ -15,7 +16,7 @@ avnav.gui.Mainpage=function(){
 goog.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 
 
-avnav.gui.Mainpage.prototype.showPage=function(){
+avnav.gui.Mainpage.prototype.showPage=function(options){
     if (!this.gui) return;
     var page=this;
     var url=this.gui.properties.navUrl+"?request=listCharts";
@@ -41,11 +42,12 @@ avnav.gui.Mainpage.prototype.showPage=function(){
                 //domEntry.attr('href',"javascript:handleNavPage('"+chartEntry.url+"','"+chartEntry.charturl+"')");
                 domEntry.on('click',
                     {
-                        url: chartEntry.url,
-                        charturl: chartEntry.charturl,
+                        entry: goog.object.clone(chartEntry),
                         page:page
                     },
-                    page.showNavpage);
+                    function(ev){
+                        page.showNavpage(ev.data.entry);
+                    });
                 var ehtml='<img src="';
                 if (chartEntry.icon) ehmtl+=chartEntry.icon;
                 else ehtml+=entryTemplate.find('img').attr('src');
@@ -61,12 +63,11 @@ avnav.gui.Mainpage.prototype.showPage=function(){
 
 /**
  * the click handler for the charts
- * @param evt - the event object
- * !!does not have the this pointer set when called
+ * @param entry - the chart entry
  */
-avnav.gui.Mainpage.prototype.showNavpage=function(evt){
-    log("activating navpage with url "+evt.data.url);
-    evt.data.page.gui.showPage('navpage',{url:evt.data.url,charturl:evt.data.charturl});
+avnav.gui.Mainpage.prototype.showNavpage=function(entry){
+    log("activating navpage with url "+entry.url);
+    this.gui.showPage('navpage',{url:entry.url,charturl:entry.charturl});
 
 };
 avnav.gui.Mainpage.prototype.hidePage=function(){
