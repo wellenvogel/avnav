@@ -11,10 +11,10 @@ goog.provide('avnav.gui.Handler');
  * @param navobject
  * @constructor
  */
-avnav.gui.Handler=function(properties,navobject){
+avnav.gui.Handler=function(properties,navobject,map){
     this.properties=properties;
     this.navobject=navobject;
-    this.map=null;
+    this.map=map;
 };
 
 /**

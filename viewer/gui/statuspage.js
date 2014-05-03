@@ -17,7 +17,7 @@ goog.inherits(avnav.gui.Statuspage,avnav.gui.Page);
 
 
 
-avnav.gui.Statuspage.prototype.showPage=function(){
+avnav.gui.Statuspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.statusQuery=1;
     this.doQuery();

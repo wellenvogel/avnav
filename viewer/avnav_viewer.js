@@ -29,6 +29,7 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
 */
 
 goog.require('avnav.gui.Handler');
+goog.require('avnav.map.MapHolder');
 /**
  * currently we must require all pages somewhere
  */
@@ -186,7 +187,8 @@ goog.provide('avnav.main');
  */
 avnav.main=function() {
     var navobject=new Object();
-    var gui=new avnav.gui.Handler(properties,navobject);
+    var mapholder=new avnav.map.MapHolder(navobject);
+    var gui=new avnav.gui.Handler(properties,navobject,mapholder);
     gui.showPage("mainpage");
     log("avnav loaded");
     var map = new ol.Map({

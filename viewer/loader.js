@@ -63,7 +63,7 @@
         'avnav_viewer.js'];
     //scripts in runmode
     var run_scripts = [
-        '../libraries/ol3b4/ol.js',
+        '../libraries/ol3b4/ol-simple.js', //TODO: replace by minified version
         'avnav_min.js'
     ];
     var mode="";

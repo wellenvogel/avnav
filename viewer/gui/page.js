@@ -56,7 +56,7 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         //visibility changed
         this.visible=this.isVisible();
         if (this.visible){
-            this.showPage();
+            this.showPage(evdata.options);
         }
         else {
             this.hidePage();
