@@ -39,6 +39,8 @@ goog.require('avnav.gui.Navpage');
 
 
 var properties={
+        slideTime: 300, //time in ms for upzoom
+        slideLevels: 3, //start with that many lower zoom levels
 		maxUpscale:2, //2 levels upscale (otherwise we need too much mem)
 		hideLower: true, //if set, hide smaller zoom layers when completely covered
 		maxZoom: 21,  //only allow upscaling up to this zom level
@@ -187,7 +189,7 @@ goog.provide('avnav.main');
  */
 avnav.main=function() {
     var navobject=new Object();
-    var mapholder=new avnav.map.MapHolder(navobject);
+    var mapholder=new avnav.map.MapHolder(properties,navobject);
     var gui=new avnav.gui.Handler(properties,navobject,mapholder);
     gui.showPage("mainpage");
     log("avnav loaded");

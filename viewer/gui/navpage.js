@@ -75,12 +75,12 @@ avnav.gui.Navpage.prototype.hidePage=function(){
 
 avnav.gui.Navpage.prototype.btnZoomIn=function (button,ev){
     log("ZoomIn clicked");
-    this.getMap().zoom(1);
+    this.getMap().changeZoom(1);
 };
 
 avnav.gui.Navpage.prototype.btnZoomOut=function (button,ev){
     log("ZoomOut clicked");
-    this.getMap().zoom(-1);
+    this.getMap().changeZoom(-1);
 };
 avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
     log("LockPos clicked");
