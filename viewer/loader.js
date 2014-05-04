@@ -59,6 +59,7 @@
     var debug_scripts = [
         '../libraries/ol3b4/ol-whitespace.js',
         '../libraries/closure-library/closure/goog/base.js',
+        '../libraries/closure-library/closure/goog/deps.js',
         'deps.js',
         'avnav_viewer.js'];
     //scripts in runmode

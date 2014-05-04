@@ -31,6 +31,7 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
 goog.require('avnav.gui.Handler');
 goog.require('avnav.map.MapHolder');
 goog.require('avnav.util.PropertyHandler');
+goog.require('avnav.nav.NavObject');
 /**
  * currently we must require all pages somewhere
  */
@@ -40,6 +41,7 @@ goog.require('avnav.gui.Navpage');
 
 
 var properties={
+        NM:1852, //one mile
         slideTime: 300, //time in ms for upzoom
         slideLevels: 3, //start with that many lower zoom levels
 		maxUpscale:2, //2 levels upscale (otherwise we need too much mem)
@@ -189,13 +191,10 @@ goog.provide('avnav.main');
 avnav.main=function() {
     var propertyHandler=new avnav.util.PropertyHandler(properties);
     propertyHandler.loadUserData();
-    var navobject=new Object();
+    var navobject=new avnav.nav.NavObject(propertyHandler);
     var mapholder=new avnav.map.MapHolder(propertyHandler,navobject);
     var gui=new avnav.gui.Handler(propertyHandler,navobject,mapholder);
     gui.showPage("mainpage");
     log("avnav loaded");
-    var map = new ol.Map({
-
-    });
 };
 goog.exportSymbol('avnav.main',avnav.main);

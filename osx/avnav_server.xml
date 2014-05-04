@@ -15,8 +15,8 @@
 <AVNSocketWriter port="34567" maxDevices="5" filter=""/>
 <AVNTrackWriter interval="10" distance="100" trackdir="../data_osx/tracks"/>
 <!-- for testing purposes: connect to a socket for reading NMEA data -->
- <AVNSocketReader host="avnav" port="34567"/>
-<!--<AVNSocketReader host="localhost" port="34568"/>-->
+<!-- <AVNSocketReader host="avnav" port="34567"/> -->
+<AVNSocketReader host="localhost" port="34568"/>
 <AVNHttpServer navurl="/viewer/avnav_navi.php" httpPort="8081" upzoom="0"
                chartbase="maps" empty="nonexistent">
 <!-- chartbaseurl="http://$host/Karten/anav"> -->

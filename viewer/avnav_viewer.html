@@ -26,6 +26,11 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
+
+Value displays:
+all classes avd_ correspond to some data that will be displayed
+Buttons:
+all buttons with ids avb_... will call corresponding js functions
 -->
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -188,16 +193,16 @@
                       </div> <!-- end marker -->
                       <div id='leftBottomPosition' class='avn_float_left avn_boatPosition'>
                           <div id='leftBottomPositionCourse' class='avn_float_left'>
-                              <div id='boatCourse' class='avn_float_left'>000</div>
+                              <div id='boatCourse' class='avd_gpsCourse avn_float_left'>000</div>
                               <div class='avn_float_left'>&#176</div>
-                              <div id='boatSpeed' class='avn_float_left'>00.0</div>
+                              <div id='boatSpeed' class='avd_gpsSpeed avn_float_left'>00.0</div>
                               <div class='avn_float_left'>kn</div>
                           </div>
                           <div id='leftBottomPositionPos' class='avn_float_left'>
-                              <div id='boatPosition' class='avn_float_left'>-------------</div>
+                              <div id='boatPosition' class='avd_gpsPosition avn_float_left'>-------------</div>
                           </div> <!-- leftBottomPositionPos -->
                           <div id='leftBottomPositionStatus' class='avn_float_left'>
-                              <div id='boatLocalTime' class='avn_float_left'>00:00:00</div>
+                              <div id='boatLocalTime' class='avd_gpsTime avn_float_left'>00:00:00</div>
                               <img id='boatPositionStatus' class='avn_status_image' src='images/GreyBubble40.png'></img>
                           </div>
                       </div> <!-- end position-->

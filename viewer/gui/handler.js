@@ -12,8 +12,11 @@ goog.provide('avnav.gui.Handler');
  * @constructor
  */
 avnav.gui.Handler=function(properties,navobject,map){
+    /** {avnav.util.PropertyHandler} */
     this.properties=properties;
+    /** {avnav.nav.NavObject} */
     this.navobject=navobject;
+    /** {avnav.map.MapHolder} */
     this.map=map;
 };
 

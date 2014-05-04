@@ -2796,7 +2796,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
                      "numThreads":"5",
                      "httpHost":"",
                      "upzoom":"2",         #number of "pseudo" layers created for gemf files
-                     "empty":"../viewer/transparent256x256.png" #empty tile (OS path)
+                     "empty":"none"        #empty tile (OS path) - special name "none" to indicate no empty...
         }
     return rt
   
@@ -2835,7 +2835,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.gemfhandler.daemon=True
     emptyname=self.getParamValue("empty", False)
     self.emptytile=None
-    if emptyname is not None:
+    if emptyname is not None and emptyname != "none":
       fname=os.path.join(self.basedir,emptyname)
       AVNLog.info("HTTP server trying empty tile %s"%(fname))
       if os.path.isfile(fname):

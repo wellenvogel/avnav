@@ -11,7 +11,9 @@ goog.require('avnav.gui.Handler');
  */
 avnav.gui.Page=function(name){
     this.isInitialized=false;
+    /** {avnav.gui.Handler} */
     this.gui=null;
+    /** {avnav.nav.NavObject} */
     this.navobject=null;
     this.name=name;
     this.visible=false;
