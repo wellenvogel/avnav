@@ -2912,7 +2912,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
               avnav=None
               if ovstat is not None:
                 #currently this is some hack - if there is an overview
-                #xml file we assume the gemnf to have one source...
+                #xml file we assume the gemf to have one source...
                 baseurl=gemf.sources[0].get('name')
                 AVNLog.info("using %s to create the GEMF overview, baseurl=%s"%(govname,baseurl))
                 avnav=create_overview.parseXml(govname,baseurl)
@@ -2922,7 +2922,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
                 avnav=self.getGemfInfo(gemf)
               gemfdata={'name':newgemf.replace(".gemf",""),'gemf':gemf,'avnav':avnav,'mtime':gstat.st_mtime}
               self.gemflist[newgemf]=gemfdata
-              AVNLog.info("successfully added gemf file %s %s",newgemf,fname)
+              AVNLog.info("successfully added gemf file %s %s",newgemf,str(gemf))
             except:
               AVNLog.error("error while trying to open gemf file %s  %s",fname,traceback.format_exc())
       except:
@@ -2952,10 +2952,12 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     self.id=None
     AVNLog.ld("receiver thread started",client_address)
     SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
-    
+   
   def log_message(self, format, *args):
     if self.id is None:
       self.id=AVNLog.getThreadId()
+      if self.id is None:
+        self.id="?"
       threading.current_thread().setName("[%s]HTTPHandler"%(self.id))
     AVNLog.debug(format,*args)
   def handlePathmapping(self,path):

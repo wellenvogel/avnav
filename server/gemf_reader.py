@@ -35,6 +35,9 @@ class GemfFile():
     self.filename=filename
     self.handles=[]
     self.sources=[]
+    # a dict of ranges sorted by sources
+    # each entry is a dict of zoom levels, containing the range entries, each being a tuple of xmin,xmax,ymin,ymax,offset
+    self.sourceranges={}
     self.ranges=[]
     self.lengthes=[]
     self.isOpen=False
@@ -80,15 +83,23 @@ class GemfFile():
       zoom,xmin,xmax,ymin,ymax,srcidx,offset=struct.unpack_from("!6lq",buf,0)
       #checks???
       idx=-1
+      sname=None
       for i in range(len(self.sources)):
         s=self.sources[i]
         if s['idx'] == srcidx:
           idx=i
+          sname=s['name']
           break
       if idx < 0:
         raise Exception("file %s, range %d - source idx %d not found"%(self.filename,ra,srcidx))
       rdata={'zoom':zoom,'xmin':xmin,'xmax':xmax,'ymin':ymin,'ymax':ymax,'idx':idx,'offset':offset}
+      rangeAsTuple=(xmin,xmax,ymin,ymax,offset)
       self.ranges.append(rdata)
+      if self.sourceranges.get(sname) is None:
+        self.sourceranges[sname]={}
+      if self.sourceranges[sname].get(zoom) is None:
+        self.sourceranges[sname][zoom]=[]
+      self.sourceranges[sname][zoom].append(rangeAsTuple)
     self.handles.append(handle)
     self.isOpen=True
     for i in range(1,100):
@@ -106,47 +117,32 @@ class GemfFile():
   #find a range for a tile
   #a tile is a tuple zxy
   #source - the name of the source
-  #return the range data
+  #return the range data (xmin,xmax,ymin,ymax,offset)
   def findRangeForTile(self,tile,source):
     if not self.isOpen:
       return None
+    try:
+      z,x,y=tile
+      rangelist=self.sourceranges[source][z]
+      for range in rangelist:
+        if x < range[0] or x > range[1] or y < range[2] or y > range[3]:
+          continue
+        return range
+    except:
+      return None
     idx=-1
-    for s in self.sources:
-      if s['name'] == source:
-        idx=s['num']
-        break
-    if idx < 0:
-      return None
-    return self.findRangeForTileByIdx(tile,idx)
-
-  #find a range for a tile given the source idx
-  def findRangeForTileByIdx(self,tile,idx):
-    if not self.isOpen:
-      return None
-    z,x,y=tile
-    for rdata in self.ranges:
-      if idx != rdata['idx']:
-        continue
-      if z != rdata['zoom']:
-        continue
-      if x > rdata['xmax'] or x < rdata['xmin']:
-        continue
-      if y > rdata['ymax'] or y < rdata['ymin']:
-        continue
-      return rdata
-    return None
-
+    
   def getTileOffsetLen(self,tile,source):
     rdata=self.findRangeForTile(tile,source)
     if rdata is None:
       return (None,None)
     z,x,y=tile
-    ynum=rdata['ymax']-rdata['ymin']+1;
-    idxy=y-rdata['ymin']
-    idxx=x-rdata['xmin']
+    ynum=rdata[3]-rdata[2]+1;
+    idxy=y-rdata[2]
+    idxx=x-rdata[0]
     idxr=idxx*ynum+idxy;
     #each range entry has 12 bytes (offset 8 , len 4)
-    offset=12*idxr+rdata['offset']
+    offset=12*idxr+rdata[4]
     try:
       self.lock.acquire()
       self.handles[0].seek(offset)
