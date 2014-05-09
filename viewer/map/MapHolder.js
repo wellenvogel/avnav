@@ -217,8 +217,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
             boundings.push(bounds);
         });
         rt.boundings=boundings;
-        //also the zoom boundings are currently not used...
-        /*
+
         var zoomLayerBoundings=[];
         $(tm).find(">LayerZoomBoundings >ZoomBoundings").each(function(nr,zb){
             var zoom=parseInt($(zb).attr('zoom'));
@@ -239,7 +238,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         if (zoomLayerBoundings.length){
             rt.zoomLayerBoundings=zoomLayerBoundings;
         }
-        */
+
         //now we have all our options - just create the layer from them
         var layerurl="";
         if (rt.url === undefined){
@@ -251,7 +250,32 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         }
         else layerurl=rt.url;
         var source=new ol.source.XYZ({
+            tileUrlFunction: function(coord){
+                var zxy=coord.getZXY();
+                var z=zxy[0];
+                var x=zxy[1];
+                var y=zxy[2];
+                /*
+                if (rt.zoomLayerBoundings){
+                    var found=false;
+                    if (! rt.zoomLayerBoundings[z]) return undefined;
+                    for (var bindex in rt.zoomLayerBoundings[z]){
+                        var zbounds=rt.zoomLayerBoundings[z][bindex];
+                        if (zbounds.minx<=x && zbounds.maxx>=x && zbounds.miny<=y && zbounds.maxy>=y){
+                            found=true;
+                            break;
+                        }
+                    }
+                    if (! found){
+                        return undefined;
+                    }
+                }
+                */
+                return layerurl+'/'+zxy[0]+'/'+zxy[1]+'/'+zxy[2]+".png";
+            }
+            /*
             url:layerurl+'/{z}/{x}/{y}.png'
+            */
         });
         source.setExtent(ol.extent.transform(rt.layerExtent,self.transformToMap));
 

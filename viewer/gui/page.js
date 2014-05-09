@@ -4,6 +4,7 @@
 
 goog.provide('avnav.gui.Page');
 goog.require('avnav.gui.Handler');
+goog.require('goog.asserts');
 
 /**
  * a base class for all GUI pages
@@ -18,12 +19,14 @@ avnav.gui.Page=function(name){
     this.name=name;
     this.visible=false;
     var myself=this;
-    $(document).on(avnav.gui.Handler.PAGE_EVENT, function(ev,evdata){
+    $(document).on(avnav.gui.PageEvent.EVENT_TYPE, function(ev,evdata){
+        goog.asserts.assert(evdata instanceof avnav.gui.PageEvent,"invalid event parameter");
         if (evdata.oldpage != myself.name && evdata.newpage != myself.name){
             return;
         }
         myself.handlePage(evdata);
     });
+
 };
 
 /**
@@ -44,7 +47,7 @@ avnav.gui.Page.prototype.isVisible=function(){
 
 /**
  * event handler that is called by the page event
- * @param evdata
+ * @param {avnav.gui.PageEvent} evdata
  * @private
  */
 avnav.gui.Page.prototype.handlePage=function(evdata){
@@ -53,6 +56,7 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         this.navobject=evdata.navobject;
         this.isInitialized=true;
         this.initButtons();
+        this.localInit();
     }
     if (this.visible != this.isVisible()){
         //visibility changed
@@ -64,6 +68,14 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
             this.hidePage();
         }
     }
+};
+
+/**
+ * init function called after receiving the first event
+ * intended to be overloaded by subclasses
+ */
+avnav.gui.Page.prototype.localInit=function(){
+
 };
 
 /**
