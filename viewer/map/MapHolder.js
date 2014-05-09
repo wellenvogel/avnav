@@ -250,16 +250,22 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         }
         else layerurl=rt.url;
         rt.extent=ol.extent.transform(rt.layerExtent,self.transformToMap);
+        //we use a bit a dirty hack here:
+        //ol3 nicely shows a lower zoom if the tile cannot be loaded (i.e. has an error)
+        //to avoid server round trips, we use a local image url
+        //the more forward way would be to return undefined - but in this case
+        //ol will NOT show the lower zoom tiles...
+        var invalidUrl='data:image/png;base64,i';
         var source=new ol.source.XYZ({
             tileUrlFunction: function(coord){
                 var zxy=coord.getZXY();
                 var z=zxy[0];
                 var x=zxy[1];
                 var y=zxy[2];
-                /*
+
                 if (rt.zoomLayerBoundings){
                     var found=false;
-                    if (! rt.zoomLayerBoundings[z]) return undefined;
+                    if (! rt.zoomLayerBoundings[z]) return invalidUrl;
                     for (var bindex in rt.zoomLayerBoundings[z]){
                         var zbounds=rt.zoomLayerBoundings[z][bindex];
                         if (zbounds.minx<=x && zbounds.maxx>=x && zbounds.miny<=y && zbounds.maxy>=y){
@@ -268,10 +274,10 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                         }
                     }
                     if (! found){
-                        return undefined;
+                        return invalidUrl;
                     }
                 }
-                */
+
                 return layerurl+'/'+zxy[0]+'/'+zxy[1]+'/'+zxy[2]+".png";
             },
             extent:rt.extent
