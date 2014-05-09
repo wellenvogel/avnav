@@ -249,6 +249,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
             layerurl=baseurl+"/"+rt.url;
         }
         else layerurl=rt.url;
+        rt.extent=ol.extent.transform(rt.layerExtent,self.transformToMap);
         var source=new ol.source.XYZ({
             tileUrlFunction: function(coord){
                 var zxy=coord.getZXY();
@@ -272,12 +273,12 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 }
                 */
                 return layerurl+'/'+zxy[0]+'/'+zxy[1]+'/'+zxy[2]+".png";
-            }
+            },
+            extent:rt.extent
             /*
             url:layerurl+'/{z}/{x}/{y}.png'
             */
         });
-        source.setExtent(ol.extent.transform(rt.layerExtent,self.transformToMap));
 
         var layer=new ol.layer.Tile({
             source: source
