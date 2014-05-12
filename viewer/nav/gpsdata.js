@@ -33,7 +33,7 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
     };
     /** @private */
     this.formattedData= {
-        gpsPosition:"<none>",
+        gpsPosition:"NO FIX",
         gpsCourse:"0",
         gpsSpeed:"0",
         gpsTime:"---"
@@ -46,6 +46,9 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
     this.gpsErrors=0;
     this.NM=this.propertyHandler.getProperties().NM;
     this.startQuery();
+    for (var k in this.formattedData){
+        this.navobject.registerValueProvider(k,this,this.getFormattedGpsValue);
+    }
 };
 
 /**
@@ -131,11 +134,13 @@ avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
         this.gpsErrors=0;
         this.validPosition=true;
     }
-    $(document).trigger(avnav.nav.NavObject.GPS_EVENT, {
-        gpsdata: this,
-        navobject: this.navobject,
-        validPosition: this.validPosition
-    });
+    //should go to the navobject
+    $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,new avnav.nav.NavEvent (
+        avnav.nav.NavEventType.GPS,
+        this.getValueNames(),
+        avnav.nav.NavEventSource.NAV,
+        this.navobject
+    ));
 };
 
 /**

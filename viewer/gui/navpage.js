@@ -8,14 +8,15 @@ goog.require('avnav.gui.Page');
 /**
  *
  * @constructor
+ * @extends avnav.gui.Page
  */
 avnav.gui.Navpage=function(){
     goog.base(this,'navpage');
     /** @private */
     this.options_=null;
     var self=this;
-    $(document).on(avnav.nav.NavObject.GPS_EVENT, function(ev,evdata){
-       self.gpsEvent(evdata);
+    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+       self.navEvent(evdata);
     });
 };
 goog.inherits(avnav.gui.Navpage,avnav.gui.Page);
@@ -76,14 +77,17 @@ avnav.gui.Navpage.prototype.hidePage=function(){
 
 };
 
-avnav.gui.Navpage.prototype.fillDisplayFromGps=function(){
+/**
+ * @private
+ * @param {Array.<string>} opt_names
+ */
+avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
     if (! this.navobject) return;
-    var gps=this.navobject.getGps();
-    var names=gps.getValueNames();
+    var names=opt_names||this.navobject.getValueNames();
     for (var i=0;i< names.length;i++){
-        this.getDiv().find('.avd_'+names[i]).text(gps.getFormattedGpsValue(names[i]));
+        this.getDiv().find('.avd_'+names[i]).text(this.navobject.getValue(names[i]));
     }
-    if (gps.getGpsData().valid){
+    if (this.navobject.getRawData(avnav.nav.NavEventType.GPS).valid){
         $('#boatPositionStatus').attr('src',this.gui.properties.getProperties().statusOkImage);
     }
     else {
@@ -91,9 +95,13 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(){
     }
 };
 
-avnav.gui.Navpage.prototype.gpsEvent=function(evdata){
+/**
+ *
+ * @param {avnav.nav.NavEvent} evdata
+ */
+avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
-    this.fillDisplayFromGps();
+    this.fillDisplayFromGps(evdata.changedNames);
 };
 
 //-------------------------- Buttons ----------------------------------------

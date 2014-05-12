@@ -8,6 +8,6 @@ goog.addDependency('../../../../viewer/gui/page.js', ['avnav.gui.Page'], ['avnav
 goog.addDependency('../../../../viewer/gui/statuspage.js', ['avnav.gui.Statuspage'], ['avnav.gui.Handler', 'avnav.gui.Page']);
 goog.addDependency('../../../../viewer/map/MapHolder.js', ['avnav.map.MapHolder'], []);
 goog.addDependency('../../../../viewer/nav/gpsdata.js', ['avnav.nav.GpsData'], ['avnav.util.Formatter', 'avnav.util.PropertyHandler', 'goog.date.Date', 'goog.date.DateTime']);
-goog.addDependency('../../../../viewer/nav/navobject.js', ['avnav.nav.NavObject'], ['avnav.nav.GpsData']);
+goog.addDependency('../../../../viewer/nav/navobject.js', ['avnav.nav.NavEvent', 'avnav.nav.NavObject'], ['avnav.nav.GpsData']);
 goog.addDependency('../../../../viewer/util/formatter.js', ['avnav.util.Formatter'], []);
 goog.addDependency('../../../../viewer/util/propertyhandler.js', ['avnav.util.PropertyHandler'], ['goog.object']);
