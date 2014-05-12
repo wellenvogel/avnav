@@ -15,7 +15,9 @@ avnav.map.MapHolder=function(properties,navobject){
      * {ol.Map}
      * */
     this.olmap=null;
-    /** @private */
+    /** @private
+     * @type {avnav.nav.NavObject}
+     * */
     this.navobject=navobject;
     /** @private */
     this.properties=properties;
@@ -325,6 +327,7 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     this.properties.setUserData({
         currentView:{center:this.center,zoom:this.zoom}
     });
+    this.navobject.setMapCenter(this.center[0],this.center[1]);
     log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
 };
 /**

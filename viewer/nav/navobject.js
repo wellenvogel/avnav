@@ -74,28 +74,81 @@ avnav.nav.NavObject=function(propertyHandler){
      * @private
      */
     this.gpsdata=new avnav.nav.GpsData(propertyHandler,this);
-
-};
-
-/**
- * register the provider ofg a display value
- * @param {string} name
- * @param {} providerContext
- * @param {function} provider
- */
-avnav.nav.NavObject.prototype.registerValueProvider=function(name,providerContext,provider){
-    this.valueMap[name]={provider:provider,context:providerContext};
-};
-
-/**
- * get a list of known display names
- */
-avnav.nav.NavObject.prototype.getValueNames=function(){
-  var rt=[];
-    for (var k in this.valueMap){
-        rt.push(k);
+    /**
+     * @private
+     * @type {{lat: number, lon: number}}
+     */
+    this.maplatlon={
+        lat:0,
+        lon:0
+    };
+    /**
+     * @private
+     * @type {{lat: number, lon: number}}
+     */
+    this.markerlatlon={
+        lat:0,
+        lon:0
+    };
+    /**
+     * the lock state of the marker
+     * @private
+     * @type {boolean}
+     */
+    this.markerLock=true;
+    /**
+     * our computed data...
+     * @type {{centerCourse: number, centerDistance: number, markerCourse: number, markerDistance: number}}
+     */
+    this.data={
+        centerCourse:0,
+        centerDistance:0,
+        centerMarkerCourse:0,
+        centerMarkerDistance:0,
+        markerCourse:0,
+        markerDistance:0,
+        markerEta:0
+    };
+    this.formattedValues={
+        markerEta:"none",
+        markerCourse:"--",
+        markerDistance:"--",
+        markerPosition:"none",
+        centerCourse:"--",
+        centerDistance:"--",
+        centerMarkerCourse:"--",
+        centerMarkerDistance:"--",
+        centerPosition:"--"
+    };
+    for (var k in this.formattedValues){
+        this.registerValueProvider(k,this,this.getFormattedNavValue);
     }
-  return rt;
+};
+
+/**
+ * compute the raw and formtted valued
+ * @private
+ */
+avnav.nav.NavObject.prototype.computeValues=function(){
+  //TODO
+};
+
+/**
+ * @private
+ * @param name
+ * @returns {*}
+ */
+avnav.nav.NavObject.prototype.getFormattedNavValue=function(name){
+    return this.formattedValues[name];
+};
+
+/**
+ * get the raw data of the underlying object
+ * @param {avnav.nav.NavEvent.EVENT_TYPE} type
+ */
+avnav.nav.NavObject.prototype.getRawData=function(type){
+    if (type == avnav.nav.NavEventType.GPS) return this.gpsdata.getGpsData();
+    return undefined;
 };
 /**
  * get the value of a display item
@@ -108,11 +161,42 @@ avnav.nav.NavObject.prototype.getValue=function(name){
     return "<undef>";
 };
 /**
- * get the raw data of the underlying object
- * @param {avnav.nav.NavEvent.EVENT_TYPE} type
+ * get a list of known display names
  */
-avnav.nav.NavObject.prototype.getRawData=function(type){
-    if (type == avnav.nav.NavEventType.GPS) return this.gpsdata.getGpsData();
-    return undefined;
+avnav.nav.NavObject.prototype.getValueNames=function(){
+    var rt=[];
+    for (var k in this.valueMap){
+        rt.push(k);
+    }
+    return rt;
 };
+/**
+ * register the provider of a display value
+ * @param {string} name
+ * @param {} providerContext
+ * @param {function} provider
+ */
+avnav.nav.NavObject.prototype.registerValueProvider=function(name,providerContext,provider){
+    this.valueMap[name]={provider:provider,context:providerContext};
+};
+
+/**
+ * set the current map center position
+ * @param lat
+ * @param lon
+ */
+avnav.nav.NavObject.prototype.setMapCenter=function(lon,lat){
+    this.maplatlon.lat=lat;
+    this.maplatlon.lon=lon;
+    if (this.markerLock){
+        this.markerlatlon.lat=lat;
+        this.markerlatlon.lon=lon;
+    }
+    this.computeValues();
+    $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,
+        new avnav.nav.NavEvent(avnav.nav.NavEventType.GPS,[],avnav.nav.NavEventSource.MAP,this)
+    );
+};
+
+
 
