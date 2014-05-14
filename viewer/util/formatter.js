@@ -2,6 +2,7 @@
  * Created by andreas on 04.05.14.
  */
 goog.provide('avnav.util.Formatter');
+goog.require('avnav.util.geo.Point');
 
 /**
  *
@@ -11,7 +12,7 @@ avnav.util.Formatter=function(){};
 
 /**
  *
- * @param {Float} coordinate
+ * @param {number} coordinate
  * @param axis
  * @returns {string}
  */
@@ -45,12 +46,12 @@ avnav.util.Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
 
 /**
  *
- * @param lonlat - position array 0 lon, 1 lat
+ * @param {avnav.util.geo.Point} lonlat
  * @returns {string}
  */
 avnav.util.Formatter.prototype.formatLonLats=function(lonlat){
-    var ns=this.formatLonLatsDecimal(lonlat[1], 'lat');
-    var ew=this.formatLonLatsDecimal(lonlat[0], 'lon');
+    var ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
+    var ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
     return ns + ', ' + ew;
 };
 

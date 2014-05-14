@@ -6,8 +6,10 @@ goog.addDependency('../../../../viewer/gui/mainpage.js', ['avnav.gui.Mainpage'],
 goog.addDependency('../../../../viewer/gui/navpage.js', ['avnav.gui.Navpage'], ['avnav.gui.Handler', 'avnav.gui.Page']);
 goog.addDependency('../../../../viewer/gui/page.js', ['avnav.gui.Page'], ['avnav.gui.Handler', 'goog.asserts']);
 goog.addDependency('../../../../viewer/gui/statuspage.js', ['avnav.gui.Statuspage'], ['avnav.gui.Handler', 'avnav.gui.Page']);
-goog.addDependency('../../../../viewer/map/MapHolder.js', ['avnav.map.MapHolder'], []);
-goog.addDependency('../../../../viewer/nav/gpsdata.js', ['avnav.nav.GpsData'], ['avnav.util.Formatter', 'avnav.util.PropertyHandler', 'goog.date.Date', 'goog.date.DateTime']);
-goog.addDependency('../../../../viewer/nav/navobject.js', ['avnav.nav.NavEvent', 'avnav.nav.NavObject'], ['avnav.nav.GpsData']);
-goog.addDependency('../../../../viewer/util/formatter.js', ['avnav.util.Formatter'], []);
+goog.addDependency('../../../../viewer/map/mapholder.js', ['avnav.map.MapHolder'], []);
+goog.addDependency('../../../../viewer/nav/gpsdata.js', ['avnav.nav.GpsData'], ['avnav.util.Formatter', 'avnav.util.PropertyHandler', 'avnav.util.geo.GpsInfo', 'goog.date.Date', 'goog.date.DateTime']);
+goog.addDependency('../../../../viewer/nav/navobject.js', ['avnav.nav.NavEvent', 'avnav.nav.NavObject'], ['avnav.nav.GpsData', 'avnav.util.GeoCompute', 'avnav.util.geo.Distance', 'avnav.util.geo.GpsInfo', 'avnav.util.geo.Point']);
+goog.addDependency('../../../../viewer/util/formatter.js', ['avnav.util.Formatter'], ['avnav.util.geo.Point']);
+goog.addDependency('../../../../viewer/util/geo.js', ['avnav.util.geo.Cpa', 'avnav.util.geo.Distance', 'avnav.util.geo.GpsInfo', 'avnav.util.geo.Point'], []);
+goog.addDependency('../../../../viewer/util/geocompute.js', ['avnav.util.GeoCompute'], ['avnav.util.geo.Cpa', 'avnav.util.geo.Distance', 'avnav.util.geo.GpsInfo', 'avnav.util.geo.Point']);
 goog.addDependency('../../../../viewer/util/propertyhandler.js', ['avnav.util.PropertyHandler'], ['goog.object']);

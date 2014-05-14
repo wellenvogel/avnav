@@ -6,6 +6,7 @@ goog.require('avnav.util.PropertyHandler');
 goog.require('avnav.util.Formatter');
 goog.require('goog.date.Date');
 goog.require('goog.date.DateTime');
+goog.require('avnav.util.geo.GpsInfo');
 /**
  * the handler for the gps data
  * query the server...
@@ -19,18 +20,7 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
     /** @private */
     this.navobject=navobject;
     /** @private */
-    this.gpsdata={
-        /** {goog.date.DateTime} */
-        rtime:null,
-        /** {String} */
-        date:"<none>",
-        /** {Float} */
-        course:0,
-        speed:0,
-        lon:0,
-        lat:0,
-        valid:false
-    };
+    this.gpsdata=new avnav.util.geo.GpsInfo();
     /** @private */
     this.formattedData= {
         gpsPosition:"NO FIX",
@@ -57,7 +47,7 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
  * @private
  */
 avnav.nav.GpsData.prototype.convertResponse=function(data){
-    var gpsdata={};
+    var gpsdata=new avnav.util.geo.GpsInfo();
     gpsdata.rtime=null;
     if (data.time != null) gpsdata.rtime=goog.date.fromIsoString(data.time);
     gpsdata.lon=data.lon;
@@ -68,7 +58,7 @@ avnav.nav.GpsData.prototype.convertResponse=function(data){
     gpsdata.valid=true;
     this.gpsdata=gpsdata;
     var formattedData={};
-    formattedData.gpsPosition=this.formatter.formatLonLats([gpsdata.lon,gpsdata.lat]);
+    formattedData.gpsPosition=this.formatter.formatLonLats(gpsdata);
     formattedData.gpsCourse=this.formatter.formatDecimal(gpsdata.course||0,3,0);
     formattedData.gpsSpeed=this.formatter.formatDecimal(gpsdata.speed||0,2,1);
     formattedData.gpsTime=this.formatter.formatTime(gpsdata.rtime||new goog.date.DateTime());
@@ -145,7 +135,7 @@ avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
 
 /**
  * return the current gpsdata
- * @returns {{rtime: null, date: string, course: number, speed: number, lon: number, lat: number, valid: boolean}|*}
+ * @returns {avnav.util.geo.GpsInfo}
  */
 avnav.nav.GpsData.prototype.getGpsData=function(){
     return this.gpsdata;
@@ -167,7 +157,7 @@ avnav.nav.GpsData.prototype.getFormattedGpsValue=function(name){
  */
 avnav.nav.GpsData.prototype.getValueNames=function(){
     var rt=new Array();
-    for (k in this.formattedData){
+    for (var k in this.formattedData){
         rt.push(k);
     }
     return rt;

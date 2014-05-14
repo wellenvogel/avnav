@@ -4,6 +4,10 @@
 goog.provide('avnav.nav.NavObject');
 goog.provide('avnav.nav.NavEvent');
 goog.require('avnav.nav.GpsData');
+goog.require('avnav.util.GeoCompute');
+goog.require('avnav.util.geo.Point');
+goog.require('avnav.util.geo.Distance');
+goog.require('avnav.util.geo.GpsInfo');
 
 /**
  * the navevent type
@@ -64,6 +68,12 @@ avnav.nav.NavEvent.EVENT_TYPE="navevent";
 avnav.nav.NavObject=function(propertyHandler){
     /** @private */
     this.propertyHandler=propertyHandler;
+
+    /**
+     * @private
+     * @type {avnav.util.Formatter}
+     */
+    this.formatter=new avnav.util.Formatter();
     /**
      * a map from the display names to the function that provides the data
      * @type {{}}
@@ -76,20 +86,14 @@ avnav.nav.NavObject=function(propertyHandler){
     this.gpsdata=new avnav.nav.GpsData(propertyHandler,this);
     /**
      * @private
-     * @type {{lat: number, lon: number}}
+     * @type {avnav.util.geo.Point}
      */
-    this.maplatlon={
-        lat:0,
-        lon:0
-    };
+    this.maplatlon=new avnav.util.geo.Point(0,0);
     /**
      * @private
-     * @type {{lat: number, lon: number}}
+     * @type {avnav.util.geo.Point}
      */
-    this.markerlatlon={
-        lat:0,
-        lon:0
-    };
+    this.markerlatlon=new avnav.util.geo.Point(0,0);
     /**
      * the lock state of the marker
      * @private
@@ -107,7 +111,10 @@ avnav.nav.NavObject=function(propertyHandler){
         centerMarkerDistance:0,
         markerCourse:0,
         markerDistance:0,
-        markerEta:0
+        /**
+         * @type {goog.date.DateTime}
+         */
+        markerEta:null
     };
     this.formattedValues={
         markerEta:"none",
@@ -130,7 +137,65 @@ avnav.nav.NavObject=function(propertyHandler){
  * @private
  */
 avnav.nav.NavObject.prototype.computeValues=function(){
-  //TODO
+    var gps=this.gpsdata.getGpsData();
+    if (gps.valid){
+        var markerdst=avnav.util.GeoCompute.computeDistance(gps,this.markerlatlon);
+        this.data.markerCourse=markerdst.course;
+        this.data.markerDistance=markerdst.dtsnm;
+        if (gps.rtime && (Math.abs(markerdst.course-gps.course) <= 85)){
+            //TODO: is this really correct for VMG?
+            var vmgapp=gps.speed*Math.cos(Math.PI/180*(gps.course-markerdst.course));
+            //vmgapp is in kn
+            var targettime=gps.rtime.getTime();
+            targettime+=markerdst.dts/(vmgapp*NM/3600)*1000; //time in ms
+            var targetDate=new goog.date.DateTime(targettime);
+            this.data.markerEta=targetDate;
+        }
+        else  this.data.markerEta=null;
+        var centerdst=avnav.util.GeoCompute.computeDistance(gps,this.maplatlon);
+        this.data.centerCourse=centerdst.course;
+        this.data.centerDistance=centerdst.dtsnm;
+    }
+    else{
+        this.data.centerCourse=0;
+        this.data.centerDistance=0;
+        this.data.markerCourse=0;
+        this.data.markerDistance=0;
+        this.data.markerEta=null;
+    }
+
+    //distance between marker and center
+    var mcdst=avnav.util.GeoCompute.computeDistance(this.markerlatlon,this.maplatlon);
+    this.centerMarkerCourse=mcdst.course;
+    this.centerMarkerDistance=mcdst.dtsnm;
+    //now create text values
+    this.formattedValues.markerEta=(this.data.markerEta>0)?
+        this.formatter.formatTime(this.data.markerEta):"--:--:--";
+    this.formattedValues.markerCourse=this.formatter.formatDecimal(
+        this.data.markerCourse,3,0
+    );
+    this.formattedValues.markerDistance=this.formatter.formatDecimal(
+        this.data.markerDistance,3,1
+    );
+    this.formattedValues.markerPosition=this.formatter.formatLonLats(
+        this.markerlatlon
+    );
+    this.formattedValues.centerCourse=this.formatter.formatDecimal(
+        this.data.centerCourse,3,0
+    );
+    this.formattedValues.centerDistance=this.formatter.formatDecimal(
+        this.data.centerDistance,3,1
+    );
+    this.formattedValues.centerMarkerCourse=this.formatter.formatDecimal(
+        this.data.centerMarkerCourse,3,0
+    );
+    this.formattedValues.centerMarkerDistance=this.formatter.formatDecimal(
+        this.data.centerMarkerDistance,3,1
+    );
+    this.formattedValues.centerPosition=this.formatter.formatLonLats(
+        this.maplatlon
+    );
+
 };
 
 /**
@@ -144,7 +209,7 @@ avnav.nav.NavObject.prototype.getFormattedNavValue=function(name){
 
 /**
  * get the raw data of the underlying object
- * @param {avnav.nav.NavEvent.EVENT_TYPE} type
+ * @param {avnav.nav.NavEventType} type
  */
 avnav.nav.NavObject.prototype.getRawData=function(type){
     if (type == avnav.nav.NavEventType.GPS) return this.gpsdata.getGpsData();
@@ -158,7 +223,7 @@ avnav.nav.NavObject.prototype.getRawData=function(type){
 avnav.nav.NavObject.prototype.getValue=function(name){
     var handler=this.valueMap[name];
     if(handler) return handler.provider.call(handler.context,name);
-    return "<undef>";
+    return "undef";
 };
 /**
  * get a list of known display names
@@ -173,7 +238,7 @@ avnav.nav.NavObject.prototype.getValueNames=function(){
 /**
  * register the provider of a display value
  * @param {string} name
- * @param {} providerContext
+ * @param {object} providerContext
  * @param {function} provider
  */
 avnav.nav.NavObject.prototype.registerValueProvider=function(name,providerContext,provider){
@@ -182,21 +247,21 @@ avnav.nav.NavObject.prototype.registerValueProvider=function(name,providerContex
 
 /**
  * set the current map center position
- * @param lat
- * @param lon
+ * @param {Array.<number>} lonlat
  */
-avnav.nav.NavObject.prototype.setMapCenter=function(lon,lat){
-    this.maplatlon.lat=lat;
-    this.maplatlon.lon=lon;
+avnav.nav.NavObject.prototype.setMapCenter=function(lonlat){
+    var p=new avnav.util.geo.Point();
+    p.fromCoord(lonlat);
+    p.assign(this.maplatlon);
     if (this.markerLock){
-        this.markerlatlon.lat=lat;
-        this.markerlatlon.lon=lon;
+        p.assign(this.markerlatlon);
     }
     this.computeValues();
     $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,
-        new avnav.nav.NavEvent(avnav.nav.NavEventType.GPS,[],avnav.nav.NavEventSource.MAP,this)
+        new avnav.nav.NavEvent(avnav.nav.NavEventType.GPS,this.getValueNames(),avnav.nav.NavEventSource.MAP,this)
     );
 };
+
 
 
 

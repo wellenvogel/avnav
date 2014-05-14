@@ -36,7 +36,7 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
             var entryTemplate=div.find('#avi_mainpage_default_entry:first').clone();
             div.find('#avi_mainpage_selections div').remove();
 
-            for (e in data.data){
+            for (var e in data.data){
                 var chartEntry=data.data[e];
                 var domEntry=entryTemplate.clone();
                 //domEntry.attr('href',"javascript:handleNavPage('"+chartEntry.url+"','"+chartEntry.charturl+"')");
@@ -49,7 +49,7 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
                         page.showNavpage(ev.data.entry);
                     });
                 var ehtml='<img src="';
-                if (chartEntry.icon) ehmtl+=chartEntry.icon;
+                if (chartEntry.icon) ehtml+=chartEntry.icon;
                 else ehtml+=entryTemplate.find('img').attr('src');
                 ehtml+='"/>'+chartEntry.name;
                 domEntry.html(ehtml);

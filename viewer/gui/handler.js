@@ -7,11 +7,10 @@ goog.provide('avnav.gui.PageEvent');
 /**
  * the page change event
  * @param {avnav.gui.Handler} gui
- * @param {avnav.nav.Navobject} navobject
+ * @param {avnav.nav.NavObject} navobject
  * @param {string} oldpage
  * @param {string} newpage
  * @param {object} opt_options
- * @param target
  * @constructor
  * @extends {goog.events.Event}
  */
@@ -32,8 +31,9 @@ avnav.gui.PageEvent.EVENT_TYPE='cangepage';
 
 /**
  *
- * @param properties
- * @param navobject
+ * @param {avnav.util.PropertyHandler} properties
+ * @param {avnav.nav.NavObject} navobject
+ * @param {ol.Map} map
  * @constructor
  */
 avnav.gui.Handler=function(properties,navobject,map){
