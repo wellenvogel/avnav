@@ -4,10 +4,10 @@
 goog.provide('avnav.nav.NavObject');
 goog.provide('avnav.nav.NavEvent');
 goog.require('avnav.nav.GpsData');
-goog.require('avnav.util.GeoCompute');
-goog.require('avnav.util.geo.Point');
-goog.require('avnav.util.geo.Distance');
-goog.require('avnav.util.geo.GpsInfo');
+goog.require('avnav.nav.NavCompute');
+goog.require('avnav.nav.navdata.Point');
+goog.require('avnav.nav.navdata.Distance');
+goog.require('avnav.nav.navdata.GpsInfo');
 
 /**
  * the navevent type
@@ -86,14 +86,14 @@ avnav.nav.NavObject=function(propertyHandler){
     this.gpsdata=new avnav.nav.GpsData(propertyHandler,this);
     /**
      * @private
-     * @type {avnav.util.geo.Point}
+     * @type {avnav.nav.navdata.Point}
      */
-    this.maplatlon=new avnav.util.geo.Point(0,0);
+    this.maplatlon=new avnav.nav.navdata.Point(0,0);
     /**
      * @private
-     * @type {avnav.util.geo.Point}
+     * @type {avnav.nav.navdata.Point}
      */
-    this.markerlatlon=new avnav.util.geo.Point(0,0);
+    this.markerlatlon=new avnav.nav.navdata.Point(0,0);
     /**
      * the lock state of the marker
      * @private
@@ -140,7 +140,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     var NM=1852;
     var gps=this.gpsdata.getGpsData();
     if (gps.valid){
-        var markerdst=avnav.util.GeoCompute.computeDistance(gps,this.markerlatlon);
+        var markerdst=avnav.nav.NavCompute.computeDistance(gps,this.markerlatlon);
         this.data.markerCourse=markerdst.course;
         this.data.markerDistance=markerdst.dtsnm;
         if (gps.rtime && (Math.abs(markerdst.course-gps.course) <= 85)) {
@@ -160,7 +160,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
 
         }
         else  this.data.markerEta=null;
-        var centerdst=avnav.util.GeoCompute.computeDistance(gps,this.maplatlon);
+        var centerdst=avnav.nav.NavCompute.computeDistance(gps,this.maplatlon);
         this.data.centerCourse=centerdst.course;
         this.data.centerDistance=centerdst.dtsnm;
     }
@@ -173,7 +173,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     }
 
     //distance between marker and center
-    var mcdst=avnav.util.GeoCompute.computeDistance(this.markerlatlon,this.maplatlon);
+    var mcdst=avnav.nav.NavCompute.computeDistance(this.markerlatlon,this.maplatlon);
     this.data.centerMarkerCourse=mcdst.course;
     this.data.centerMarkerDistance=mcdst.dtsnm;
     //now create text values
@@ -254,7 +254,8 @@ avnav.nav.NavObject.prototype.gpsEvent=function(){
         avnav.nav.NavEventSource.NAV,
         this
     ));
-}
+};
+
 /**
  * register the provider of a display value
  * @param {string} name
@@ -270,7 +271,7 @@ avnav.nav.NavObject.prototype.registerValueProvider=function(name,providerContex
  * @param {Array.<number>} lonlat
  */
 avnav.nav.NavObject.prototype.setMapCenter=function(lonlat){
-    var p=new avnav.util.geo.Point();
+    var p=new avnav.nav.navdata.Point();
     p.fromCoord(lonlat);
     p.assign(this.maplatlon);
     if (this.markerLock){

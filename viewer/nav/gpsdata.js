@@ -6,7 +6,7 @@ goog.require('avnav.util.PropertyHandler');
 goog.require('avnav.util.Formatter');
 goog.require('goog.date.Date');
 goog.require('goog.date.DateTime');
-goog.require('avnav.util.geo.GpsInfo');
+goog.require('avnav.nav.navdata.GpsInfo');
 /**
  * the handler for the gps data
  * query the server...
@@ -20,7 +20,7 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
     /** @private */
     this.navobject=navobject;
     /** @private */
-    this.gpsdata=new avnav.util.geo.GpsInfo();
+    this.gpsdata=new avnav.nav.navdata.GpsInfo();
     /** @private */
     this.formattedData= {
         gpsPosition:"NO FIX",
@@ -47,7 +47,7 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
  * @private
  */
 avnav.nav.GpsData.prototype.convertResponse=function(data){
-    var gpsdata=new avnav.util.geo.GpsInfo();
+    var gpsdata=new avnav.nav.navdata.GpsInfo();
     gpsdata.rtime=null;
     if (data.time != null) gpsdata.rtime=goog.date.fromIsoString(data.time);
     gpsdata.lon=data.lon;
@@ -129,7 +129,7 @@ avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
 
 /**
  * return the current gpsdata
- * @returns {avnav.util.geo.GpsInfo}
+ * @returns {avnav.nav.navdata.GpsInfo}
  */
 avnav.nav.GpsData.prototype.getGpsData=function(){
     return this.gpsdata;

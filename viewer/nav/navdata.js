@@ -1,10 +1,10 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-goog.provide('avnav.util.geo.Distance');
-goog.provide('avnav.util.geo.Point');
-goog.provide('avnav.util.geo.Cpa');
-goog.provide('avnav.util.geo.GpsInfo');
+goog.provide('avnav.nav.navdata.Distance');
+goog.provide('avnav.nav.navdata.Point');
+goog.provide('avnav.nav.navdata.Cpa');
+goog.provide('avnav.nav.navdata.GpsInfo');
 
 /**
  * a point lon,lat
@@ -12,16 +12,16 @@ goog.provide('avnav.util.geo.GpsInfo');
  * @param lat
  * @constructor
  */
-avnav.util.geo.Point=function(lon,lat){
+avnav.nav.navdata.Point=function(lon,lat){
     this.lon=lon;
     this.lat=lat;
 };
 /**
  * convert ol3 coordinates to a point
  * @param coord
- * @returns {avnav.util.geo.Point}
+ * @returns {avnav.nav.navdata.Point}
  */
-avnav.util.geo.Point.prototype.fromCoord=function(coord){
+avnav.nav.navdata.Point.prototype.fromCoord=function(coord){
     this.lon=coord[0];
     this.lat=coord[1];
     return this;
@@ -31,7 +31,7 @@ avnav.util.geo.Point.prototype.fromCoord=function(coord){
  * @param point
  * @returns {*}
  */
-avnav.util.geo.Point.prototype.assign=function(point){
+avnav.nav.navdata.Point.prototype.assign=function(point){
     point.lon=this.lon;
     point.lat=this.lat;
     return point;
@@ -41,7 +41,7 @@ avnav.util.geo.Point.prototype.assign=function(point){
  * convert to ol3 coordinates
  * @returns {*[]}
  */
-avnav.util.geo.Point.prototype.toCoord=function(){
+avnav.nav.navdata.Point.prototype.toCoord=function(){
     var rt=[this.lon,this.lat];
     return rt;
 };
@@ -51,7 +51,7 @@ avnav.util.geo.Point.prototype.toCoord=function(){
  * @constructor
  */
 
-avnav.util.geo.Distance=function(){
+avnav.nav.navdata.Distance=function(){
     /**
      * the distance in meters
      * @type {number}
@@ -72,10 +72,10 @@ avnav.util.geo.Distance=function(){
 /**
  *
  * @constructor
- * @extends {avnav.util.geo.Point}
+ * @extends {avnav.nav.navdata.Point}
  */
-avnav.util.geo.GpsInfo=function(){
-    avnav.util.geo.Point.call(this,0,0);
+avnav.nav.navdata.GpsInfo=function(){
+    avnav.nav.navdata.Point.call(this,0,0);
     /**
      * speed in NM/H (kn)
      * @type {number}
@@ -97,25 +97,25 @@ avnav.util.geo.GpsInfo=function(){
      */
     this.rtime=null;
 };
-goog.inherits(avnav.util.geo.GpsInfo,avnav.util.geo.Point);
+goog.inherits(avnav.nav.navdata.GpsInfo,avnav.nav.navdata.Point);
 
 /**
  * a CPA point for AIS data, contains the point + the time and the info whether we pass front or back
  * @constructor
  *
  */
-avnav.util.geo.Cpa=function(){
+avnav.nav.navdata.Cpa=function(){
 
     /**
      * the source position at CPA
-     * @type {avnav.util.geo.Point}
+     * @type {avnav.nav.navdata.Point}
      */
-    this.src=new avnav.util.geo.Point(0,0);
+    this.src=new avnav.nav.navdata.Point(0,0);
     /**
      * the destination position at CPA
-     * @type {avnav.util.geo.Point}
+     * @type {avnav.nav.navdata.Point}
      */
-    this.dst=new avnav.util.geo.Point(0,0);
+    this.dst=new avnav.nav.navdata.Point(0,0);
     /**
      * distance in m
      * @type {number}

@@ -2,7 +2,7 @@
  * Created by andreas on 04.05.14.
  */
 goog.provide('avnav.util.Formatter');
-goog.require('avnav.util.geo.Point');
+goog.require('avnav.nav.navdata.Point');
 
 /**
  *
@@ -46,7 +46,7 @@ avnav.util.Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
 
 /**
  *
- * @param {avnav.util.geo.Point} lonlat
+ * @param {avnav.nav.navdata.Point} lonlat
  * @returns {string}
  */
 avnav.util.Formatter.prototype.formatLonLats=function(lonlat){

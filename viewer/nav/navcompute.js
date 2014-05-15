@@ -1,26 +1,26 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-goog.provide('avnav.util.GeoCompute');
-goog.require('avnav.util.geo.Distance');
-goog.require('avnav.util.geo.Point');
-goog.require('avnav.util.geo.Cpa');
-goog.require('avnav.util.geo.GpsInfo');
+goog.provide('avnav.nav.NavCompute');
+goog.require('avnav.nav.navdata.Distance');
+goog.require('avnav.nav.navdata.Point');
+goog.require('avnav.nav.navdata.Cpa');
+goog.require('avnav.nav.navdata.GpsInfo');
 
-avnav.util.GeoCompute=function(){
+avnav.nav.NavCompute=function(){
 };
 
 
 /**
  * compute the distances between 2 points
- * @param {avnav.util.geo.Point} src
- * @param {avnav.util.geo.Point} dst
- * @returns {avnav.util.geo.Distance}
+ * @param {avnav.nav.navdata.Point} src
+ * @param {avnav.nav.navdata.Point} dst
+ * @returns {avnav.nav.navdata.Distance}
  */
-avnav.util.GeoCompute.computeDistance=function(src,dst){
+avnav.nav.NavCompute.computeDistance=function(src,dst){
     var srcll=src;
     var dstll=dst;
-    var rt=new avnav.util.geo.Distance();
+    var rt=new avnav.nav.navdata.Distance();
     //use the movable type stuff for computations
     var llsrc=new LatLon(srcll.lat,srcll.lon);
     var lldst=new LatLon(dstll.lat,dstll.lon);
@@ -37,11 +37,11 @@ avnav.util.GeoCompute.computeDistance=function(src,dst){
  * we still have to check if the computed tm is bigger then our configured one
  * @param src
  * @param dst
- * @returns {avnav.util.geo.Cpa}
+ * @returns {avnav.nav.navdata.Cpa}
  */
-avnav.util.GeoCompute.computeCpa=function(src,dst){
+avnav.nav.NavCompute.computeCpa=function(src,dst){
     var NM=1852;
-    var rt = new avnav.util.geo.Cpa();
+    var rt = new avnav.nav.navdata.Cpa();
     if (dst.speed < properties.minAISspeed) {
         return rt;
     }
@@ -59,7 +59,7 @@ avnav.util.GeoCompute.computeCpa=function(src,dst){
     var a = (src.course - dst.course) * Math.PI / 180;
     var va = src.speed * NM; //m/h
     var vb = dst.speed * NM;
-    var tm = avnav.util.GeoCompute.computeTPA(a, da, db, va, vb); //tm in h
+    var tm = avnav.nav.NavCompute.computeTPA(a, da, db, va, vb); //tm in h
     if (tm < 0) return rt;
     var cpasrc = llsrc.destinationPoint(src.course, src.speed * NM / 1000 * tm);
     var cpadst = lldst.destinationPoint(dst.course, dst.speed * NM / 1000 * tm);
@@ -97,7 +97,7 @@ avnav.util.GeoCompute.computeCpa=function(src,dst){
  we return -1 if no meaningfull tpa
  @private
  */
-avnav.util.GeoCompute.computeTPA=function(a,da,db,va,vb){
+avnav.nav.NavCompute.computeTPA=function(a,da,db,va,vb){
     var n=va*va+vb*vb-2*va*vb*Math.cos(a);
     if (n < 1e-6 && n > -1e-6) return -1;
     var tm=((va*da+vb*db)-Math.cos(a)*(va*db+vb*da))/n;
