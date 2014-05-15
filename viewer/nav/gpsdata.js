@@ -124,13 +124,7 @@ avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
         this.gpsErrors=0;
         this.validPosition=true;
     }
-    //should go to the navobject
-    $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,new avnav.nav.NavEvent (
-        avnav.nav.NavEventType.GPS,
-        this.getValueNames(),
-        avnav.nav.NavEventSource.NAV,
-        this.navobject
-    ));
+    this.navobject.gpsEvent();
 };
 
 /**

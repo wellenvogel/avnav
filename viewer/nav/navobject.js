@@ -137,19 +137,27 @@ avnav.nav.NavObject=function(propertyHandler){
  * @private
  */
 avnav.nav.NavObject.prototype.computeValues=function(){
+    var NM=1852;
     var gps=this.gpsdata.getGpsData();
     if (gps.valid){
         var markerdst=avnav.util.GeoCompute.computeDistance(gps,this.markerlatlon);
         this.data.markerCourse=markerdst.course;
         this.data.markerDistance=markerdst.dtsnm;
-        if (gps.rtime && (Math.abs(markerdst.course-gps.course) <= 85)){
+        if (gps.rtime && (Math.abs(markerdst.course-gps.course) <= 85)) {
             //TODO: is this really correct for VMG?
-            var vmgapp=gps.speed*Math.cos(Math.PI/180*(gps.course-markerdst.course));
+            var vmgapp = gps.speed * Math.cos(Math.PI / 180 * (gps.course - markerdst.course));
             //vmgapp is in kn
-            var targettime=gps.rtime.getTime();
-            targettime+=markerdst.dts/(vmgapp*NM/3600)*1000; //time in ms
-            var targetDate=new goog.date.DateTime(targettime);
-            this.data.markerEta=targetDate;
+            var targettime = gps.rtime.getTime();
+            if (vmgapp > 0) {
+            targettime += this.data.markerDistance / vmgapp * 3600 * 1000; //time in ms
+            var targetDate = new goog.date.DateTime();
+            targetDate.setTime(Math.round(targettime));
+            this.data.markerEta = targetDate;
+            }
+            else {
+                this.data.markerEta=null;
+            }
+
         }
         else  this.data.markerEta=null;
         var centerdst=avnav.util.GeoCompute.computeDistance(gps,this.maplatlon);
@@ -166,10 +174,10 @@ avnav.nav.NavObject.prototype.computeValues=function(){
 
     //distance between marker and center
     var mcdst=avnav.util.GeoCompute.computeDistance(this.markerlatlon,this.maplatlon);
-    this.centerMarkerCourse=mcdst.course;
-    this.centerMarkerDistance=mcdst.dtsnm;
+    this.data.centerMarkerCourse=mcdst.course;
+    this.data.centerMarkerDistance=mcdst.dtsnm;
     //now create text values
-    this.formattedValues.markerEta=(this.data.markerEta>0)?
+    this.formattedValues.markerEta=(this.data.markerEta)?
         this.formatter.formatTime(this.data.markerEta):"--:--:--";
     this.formattedValues.markerCourse=this.formatter.formatDecimal(
         this.data.markerCourse,3,0
@@ -235,6 +243,18 @@ avnav.nav.NavObject.prototype.getValueNames=function(){
     }
     return rt;
 };
+/**
+ * called back from gpshandler
+ */
+avnav.nav.NavObject.prototype.gpsEvent=function(){
+    this.computeValues();
+    $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,new avnav.nav.NavEvent (
+        avnav.nav.NavEventType.GPS,
+        this.getValueNames(),
+        avnav.nav.NavEventSource.NAV,
+        this
+    ));
+}
 /**
  * register the provider of a display value
  * @param {string} name
