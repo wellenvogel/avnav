@@ -12,9 +12,9 @@ goog.require('goog.asserts');
  */
 avnav.gui.Page=function(name){
     this.isInitialized=false;
-    /** {avnav.gui.Handler} */
+    /** @type{avnav.gui.Handler} */
     this.gui=null;
-    /** {avnav.nav.NavObject} */
+    /** @type{avnav.nav.NavObject} */
     this.navobject=null;
     this.name=name;
     this.visible=false;
@@ -118,4 +118,25 @@ avnav.gui.Page.prototype.showPage=function(){
  */
 avnav.gui.Page.prototype.hidePage=function(){
 
+};
+
+/**
+ * handle the status display of a toggle button
+ * @param id
+ * @param onoff
+ * @param onClass
+ */
+avnav.gui.Page.prototype.handleToggleButton=function(id,onoff,onClass){
+    var oc=onClass || "avn_buttonActive";
+    if (onoff){
+        $(id).removeClass("avn_buttonActive");
+        $(id).removeClass("avn_buttonActiveError");
+        $(id).addClass(oc);
+        $(id).removeClass("avn_buttonInactive");
+    }
+    else {
+        $(id).removeClass("avn_buttonActive");
+        $(id).removeClass("avn_buttonActiveError");
+        $(id).addClass("avn_buttonInactive");
+    }
 };

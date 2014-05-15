@@ -322,6 +322,14 @@ avnav.map.MapHolder.prototype.pointFromMap=function(point){
 };
 
 /**
+ * set the map center
+ * @param {avnav.nav.navdata.Point} point
+ */
+avnav.map.MapHolder.prototype.setCenter=function(point){
+    this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
+};
+
+/**
  * event handler for move/zoom
  * stores the center and zoom
  * @param evt

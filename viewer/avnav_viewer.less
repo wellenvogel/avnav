@@ -231,6 +231,12 @@ button.avn_buttonInactive{
   text-decoration: none;
 }
 
+.avn_button_icon_base_toggle(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
+    .avn_button_icon_base(@icon,@innerWidth);
+    margin-left: -4px;
+    margin-top: -4px;
+}
+
 button#avb_ShowStatus .avn_button_icon{
   .avn_button_icon_base('images/bargraph32.png');
 }
@@ -244,11 +250,11 @@ button#avb_StatusUpdate .avn_button_icon{
   .avn_button_icon_base('images/Question.png');
 }
 button#avb_LockPos .avn_button_icon {
-	.avn_button_icon_base('images/Sail-Boat-40.png');
+	.avn_button_icon_base_toggle('images/Sail-Boat-40.png');
 }
 
 button#avb_LockMarker .avn_button_icon {
-  .avn_button_icon_base('images/Marker1.png');
+  .avn_button_icon_base_toggle('images/Marker1.png');
 }
 
 /* old!

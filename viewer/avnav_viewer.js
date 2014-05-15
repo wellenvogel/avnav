@@ -42,6 +42,7 @@ goog.require('avnav.gui.Navpage');
 
 var properties={
         NM:1852, //one mile
+        buttonUpdateTime: 500, //timer for button updates
         slideTime: 300, //time in ms for upzoom
         slideLevels: 3, //start with that many lower zoom levels
 		maxUpscale:2, //2 levels upscale (otherwise we need too much mem)

@@ -8,12 +8,17 @@ goog.require('avnav.gui.Page');
 /**
  *
  * @constructor
- * @extends avnav.gui.Page
+ * @extends {avnav.gui.Page}
  */
 avnav.gui.Navpage=function(){
     goog.base(this,'navpage');
     /** @private */
     this.options_=null;
+    /**
+     * @private
+     * @type {number}
+     */
+    this.timer=0;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
        self.navEvent(evdata);
@@ -70,11 +75,37 @@ avnav.gui.Navpage.prototype.showPage=function(options){
             alert("unable to load charts "+ev.responseText);
         }
     });
+    this.timer=window.setTimeout(function(){
+        self.buttonUpdate(true),
+            self.properties.getProperties().buttonUpdateTime
+    });
 };
 
+avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
+    //TODO: make this more generic
+    var markerLock=this.navobject.isMarkerLocked();
+    this.handleToggleButton('#avb_LockMarker',markerLock);
+    this.timer=window.setTimeout(function(){
+        self.buttonUpdate(true),
+            self.properties.getProperties().buttonUpdateTime
+    });
+};
 
 avnav.gui.Navpage.prototype.hidePage=function(){
-
+    if (this.timer) window.clearTimeout(this.timer);
+};
+/**
+ *
+ */
+avnav.gui.Navpage.prototype.localInit=function(){
+    $('#leftBottomMarker').click({page:this},function(ev){
+        var marker=ev.data.page.navobject.getRawData(avnav.nav.NavEventType.NAV).markerLatlon;
+        ev.data.page.gui.map.setCenter(marker);
+    });
+    $('#leftBottomPosition').click({page:this},function(ev){
+        var gps=ev.data.page.navobject.getRawData(avnav.nav.NavEventType.GPS);
+        if (gps.valid) ev.data.page.gui.map.setCenter(gps);
+    });
 };
 
 /**
@@ -119,6 +150,9 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
     log("LockPos clicked");
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
+    var nLock=! this.navobject.isMarkerLocked();
+    this.navobject.lockMarker(nLock);
+    this.handleToggleButton(button,nLock);
     log("LockMarker clicked");
 };
 avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
