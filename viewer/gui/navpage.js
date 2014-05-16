@@ -77,7 +77,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     });
     this.timer=window.setTimeout(function(){
         self.buttonUpdate(true),
-            self.properties.getProperties().buttonUpdateTime
+            self.gui.properties.getProperties().buttonUpdateTime
     });
 };
 
@@ -90,7 +90,7 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
     var self=this;
     if (startTimer) this.timer=window.setTimeout(function(){
         self.buttonUpdate(true),
-            self.properties.getProperties().buttonUpdateTime
+            self.gui.properties.getProperties().buttonUpdateTime
     });
 };
 
