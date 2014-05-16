@@ -85,7 +85,10 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
     //TODO: make this more generic
     var markerLock=this.gui.map.getMarkerLock();
     this.handleToggleButton('#avb_LockMarker',markerLock);
-    this.timer=window.setTimeout(function(){
+    var gpsLock=this.gui.map.getGpsLock();
+    this.handleToggleButton('#avb_LockPos',gpsLock);
+    var self=this;
+    if (startTimer) this.timer=window.setTimeout(function(){
         self.buttonUpdate(true),
             self.properties.getProperties().buttonUpdateTime
     });
@@ -147,6 +150,9 @@ avnav.gui.Navpage.prototype.btnZoomOut=function (button,ev){
     this.getMap().changeZoom(-1);
 };
 avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
+    var nLock=! this.gui.map.getGpsLock();
+    this.gui.map.setGpsLock(nLock);
+    this.handleToggleButton(button,nLock);
     log("LockPos clicked");
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){

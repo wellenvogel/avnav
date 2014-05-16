@@ -33,6 +33,13 @@ avnav.map.MapHolder=function(properties,navobject){
      */
     this.markerPosition=null;
 
+    /**
+     * locked to GPS
+     * @type {boolean}
+     * @private
+     */
+    this.gpsLocked=false;
+
     this.transformFromMap=ol.proj.getTransform("EPSG:3857","EPSG:4326");
     this.transformToMap=ol.proj.getTransform("EPSG:4326","EPSG:3857");
 
@@ -54,6 +61,10 @@ avnav.map.MapHolder=function(properties,navobject){
         this.setMarkerPosition(this.center);
     }
     this.slideIn=0; //when set we step by step zoom in
+    var self=this;
+    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+        self.navEvent(evdata);
+    });
 };
 
 /**
@@ -179,6 +190,14 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
 avnav.map.MapHolder.prototype.e2f=function(elem,attr){
     return parseFloat($(elem).attr(attr));
 };
+
+/**
+ * map locked to GPS
+ * @returns {boolean}
+ */
+avnav.map.MapHolder.prototype.getGpsLock=function(){
+    return this.gpsLocked;
+};
 /**
  * get the current marker lock state
  * @returns {boolean|userData.markerLocked|*}
@@ -186,6 +205,21 @@ avnav.map.MapHolder.prototype.e2f=function(elem,attr){
 avnav.map.MapHolder.prototype.getMarkerLock=function(){
     return this.markerLocked;
 };
+
+/**
+ * called with updates from nav
+ * @param {avnav.nav.NavEvent} evdata
+ * @constructor
+ */
+avnav.map.MapHolder.prototype.navEvent=function(evdata){
+    if (evdata.type == avnav.nav.NavEventType.GPS){
+        if (! this.gpsLocked) return;
+        var gps=this.navobject.getRawData(evdata.type);
+        if (! gps.valid) return;
+        this.setCenter(gps);
+    }
+};
+
 /**
  * parse the layerdata and return a list of layers
  * @param {Object} layerdata
@@ -355,6 +389,17 @@ avnav.map.MapHolder.prototype.setCenter=function(point){
     this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
 };
 
+avnav.map.MapHolder.prototype.setGpsLock=function(lock){
+    if (lock == this.gpsLocked) return;
+    var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    if (! gps.valid && lock) return;
+    this.gpsLocked=lock;
+    this.setMapCenter(gps.toCoord());
+};
+/**
+ * set the marker lock state
+ * @param lock
+ */
 avnav.map.MapHolder.prototype.setMarkerLock=function(lock){
     if (this.markerLocked == lock) return;
     this.markerLocked=lock;
