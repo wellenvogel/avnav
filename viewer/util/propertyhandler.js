@@ -68,7 +68,8 @@ avnav.util.PropertyHandler.prototype.filterUserData=function(data){
  * @type {{currentView: null}}
  */
 avnav.util.PropertyHandler.prototype.allowedUserData={
-    currentView:null
+    currentView:null,
+    marker:null
 };
 
 

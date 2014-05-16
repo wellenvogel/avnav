@@ -83,7 +83,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
 
 avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
     //TODO: make this more generic
-    var markerLock=this.navobject.isMarkerLocked();
+    var markerLock=this.gui.map.getMarkerLock();
     this.handleToggleButton('#avb_LockMarker',markerLock);
     this.timer=window.setTimeout(function(){
         self.buttonUpdate(true),
@@ -150,8 +150,8 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
     log("LockPos clicked");
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
-    var nLock=! this.navobject.isMarkerLocked();
-    this.navobject.lockMarker(nLock);
+    var nLock=! this.gui.map.getMarkerLock();
+    this.gui.map.setMarkerLock(nLock);
     this.handleToggleButton(button,nLock);
     log("LockMarker clicked");
 };

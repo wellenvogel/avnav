@@ -21,6 +21,17 @@ avnav.map.MapHolder=function(properties,navobject){
     this.navobject=navobject;
     /** @private */
     this.properties=properties;
+    /**
+     * @private
+     * @type {boolean}
+     */
+    this.markerLocked=true;
+    /**
+     * the marker position
+     * @private
+     * @type {avnav.nav.navdata.Point}
+     */
+    this.markerPosition=null;
 
     this.transformFromMap=ol.proj.getTransform("EPSG:3857","EPSG:4326");
     this.transformToMap=ol.proj.getTransform("EPSG:4326","EPSG:3857");
@@ -33,6 +44,14 @@ avnav.map.MapHolder=function(properties,navobject){
     if (currentView){
         this.center=currentView.center;
         this.zoom=currentView.zoom;
+    }
+    var marker=this.properties.getProperties().marker;
+    if (marker){
+        this.markerLocked=marker.markerLocked;
+        this.markerPosition=marker.markerPosition;
+    }
+    if (! this.markerLocked){
+        this.setMarkerPosition(this.center);
     }
     this.slideIn=0; //when set we step by step zoom in
 };
@@ -159,6 +178,13 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
  */
 avnav.map.MapHolder.prototype.e2f=function(elem,attr){
     return parseFloat($(elem).attr(attr));
+};
+/**
+ * get the current marker lock state
+ * @returns {boolean|userData.markerLocked|*}
+ */
+avnav.map.MapHolder.prototype.getMarkerLock=function(){
+    return this.markerLocked;
 };
 /**
  * parse the layerdata and return a list of layers
@@ -329,6 +355,38 @@ avnav.map.MapHolder.prototype.setCenter=function(point){
     this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
 };
 
+avnav.map.MapHolder.prototype.setMarkerLock=function(lock){
+    if (this.markerLocked == lock) return;
+    this.markerLocked=lock;
+    if (!lock){
+        this.setMarkerPosition(this.center);
+    }
+    else{
+        this.setMarkerPosition(this.markerPosition,true);
+    }
+
+};
+
+/**
+ * set the marker position
+ * @param {ol.Coordinate} coord
+ * @param {boolean} forceWriting to cookie
+ * @private
+ */
+avnav.map.MapHolder.prototype.setMarkerPosition=function(coord,forceWrite){
+    if (! coord) return;
+    var notchanged=(this.markerPosition && this.markerPosition[0]==coord[0] && this.markerPosition[1]==coord[1]);
+    this.markerPosition=coord.slice(0);
+    this.navobject.setMarkerPos(this.markerPosition);
+    if (! notchanged || forceWrite){
+        this.properties.setUserData({
+           marker:{
+               markerLocked:this.markerLocked,
+               markerPosition:this.markerPosition
+           }
+        });
+    }
+};
 /**
  * event handler for move/zoom
  * stores the center and zoom
@@ -336,12 +394,18 @@ avnav.map.MapHolder.prototype.setCenter=function(point){
  * @private
  */
 avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
-    this.center = this.pointFromMap(this.getView().getCenter());
+    var newCenter= this.pointFromMap(this.getView().getCenter());
+    if (this.center && newCenter && this.center[0]==newCenter[0] && this.center[1] == newCenter[1] &&
+        this.zoom == this.getView().getZoom()) return;
+    this.center=newCenter;
     this.zoom=this.getView().getZoom();
     this.properties.setUserData({
         currentView:{center:this.center,zoom:this.zoom}
     });
     this.navobject.setMapCenter(this.center);
+    if (!this.markerLocked){
+        this.setMarkerPosition(newCenter);
+    }
     log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
 };
 /**

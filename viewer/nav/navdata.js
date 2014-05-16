@@ -37,6 +37,12 @@ avnav.nav.navdata.Point.prototype.assign=function(point){
     return point;
 };
 
+avnav.nav.navdata.Point.prototype.compare=function(point){
+    if (! point) return false;
+    if (point.lon == this.lon && point.lat == this.lat)return true;
+    return false;
+};
+
 /**
  * convert to ol3 coordinates
  * @returns {*[]}

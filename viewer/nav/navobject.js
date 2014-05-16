@@ -90,13 +90,12 @@ avnav.nav.NavObject=function(propertyHandler){
      * @type {avnav.nav.navdata.Point}
      */
     this.maplatlon=new avnav.nav.navdata.Point(0,0);
-
     /**
-     * the lock state of the marker
      * @private
-     * @type {boolean}
+     * @type {avnav.nav.navdata.Point}
      */
-    this.markerLock=true;
+    this.markerlatlon=new avnav.nav.navdata.Point(0,0);
+
     /**
      * our computed data...
      * @type {{centerCourse: number, centerDistance: number, markerCourse: number, markerDistance: number}}
@@ -137,6 +136,8 @@ avnav.nav.NavObject=function(propertyHandler){
 avnav.nav.NavObject.prototype.computeValues=function(){
     var NM=1852;
     var gps=this.gpsdata.getGpsData();
+    //copy the marker to data to make it available extern
+    this.data.markerLatlon=this.markerlatlon;
     if (gps.valid){
         var markerdst=avnav.nav.NavCompute.computeDistance(gps,this.data.markerLatlon);
         this.data.markerCourse=markerdst.course;
@@ -263,18 +264,6 @@ avnav.nav.NavObject.prototype.isMarkerLocked=function(){
 };
 
 /**
- *
- * @param {boolean} lock
- */
-avnav.nav.NavObject.prototype.lockMarker=function(lock){
-    this.markerLock=lock;
-    //if the marker gets unlocked we should force an update...
-    this.maplatlon.assign(this.data.markerLatlon);
-    this.computeValues();
-    this.triggerUpdateEvent(avnav.nav.NavEventSource.GUI);
-};
-
-/**
  * register the provider of a display value
  * @param {string} name
  * @param {object} providerContext
@@ -291,13 +280,24 @@ avnav.nav.NavObject.prototype.registerValueProvider=function(name,providerContex
 avnav.nav.NavObject.prototype.setMapCenter=function(lonlat){
     var p=new avnav.nav.navdata.Point();
     p.fromCoord(lonlat);
+    if (p.compare(this.maplatlon)) return;
     p.assign(this.maplatlon);
-    if (!this.markerLock){
-        p.assign(this.data.markerLatlon);
-    }
     this.computeValues();
     this.triggerUpdateEvent(avnav.nav.NavEventSource.MAP);
 };
+/**
+ * set the marker position
+ * @param {Array.<number>} lonlat
+ */
+avnav.nav.NavObject.prototype.setMarkerPos=function(lonlat) {
+    var p = new avnav.nav.navdata.Point();
+    p.fromCoord(lonlat);
+    if (p.compare(this.markerlatlon)) return;
+    this.markerlatlon = p;
+    this.computeValues();
+    this.triggerUpdateEvent(avnav.nav.NavEventSource.MAP);
+};
+
 /**
  * send out an update event
  * @param {avnav.nav.NavEventSource} source
