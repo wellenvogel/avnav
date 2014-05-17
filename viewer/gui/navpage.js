@@ -80,7 +80,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
 
 avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
     //TODO: make this more generic
-    var markerLock=this.navobject.isMarkerLocked();
+    var markerLock=this.gui.map.getMarkerLock();
     this.handleToggleButton('#avb_LockMarker',markerLock);
     var gpsLock=this.gui.map.getGpsLock();
     this.handleToggleButton('#avb_LockPos',gpsLock);
