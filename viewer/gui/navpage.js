@@ -75,15 +75,12 @@ avnav.gui.Navpage.prototype.showPage=function(options){
             alert("unable to load charts "+ev.responseText);
         }
     });
-    this.timer=window.setTimeout(function(){
-        self.buttonUpdate(true),
-            self.gui.properties.getProperties().buttonUpdateTime
-    });
+    this.buttonUpdate(true);
 };
 
 avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
     //TODO: make this more generic
-    var markerLock=this.gui.map.getMarkerLock();
+    var markerLock=this.navobject.isMarkerLocked();
     this.handleToggleButton('#avb_LockMarker',markerLock);
     var gpsLock=this.gui.map.getGpsLock();
     this.handleToggleButton('#avb_LockPos',gpsLock);
