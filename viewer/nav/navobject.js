@@ -255,13 +255,7 @@ avnav.nav.NavObject.prototype.gpsEvent=function(){
         this
     ));
 };
-/**
- * is the marker locked?
- * @returns {boolean}
- */
-avnav.nav.NavObject.prototype.isMarkerLocked=function(){
-    return this.markerLock;
-};
+
 
 /**
  * register the provider of a display value

@@ -2,6 +2,17 @@
  * Created by andreas on 03.05.14.
  */
 goog.provide('avnav.map.MapHolder');
+goog.provide('avnav.map.LayerTypes');
+goog.require('avnav.map.NavLayer');
+
+/**
+ * the types of the layers
+ * @type {{TCHART: number, TNAV: number}}
+ */
+avnav.map.LayerTypes={
+    TCHART:0,
+    TNAV:1
+};
 
 /**
  * the holder for our olmap
@@ -43,6 +54,7 @@ avnav.map.MapHolder=function(properties,navobject){
     this.transformFromMap=ol.proj.getTransform("EPSG:3857","EPSG:4326");
     this.transformToMap=ol.proj.getTransform("EPSG:4326","EPSG:3857");
 
+    this.navlayer=new avnav.map.NavLayer(this,this.navobject);
     this.minzoom=32;
     this.maxzoom=0;
     this.center=null; //keep the center for consecutive open
@@ -98,6 +110,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             this.maxzoom=layers[i].avnavOptions.maxZoom;
         }
     }
+    layersreverse.push(this.navlayer.getMapLayer());
 
     if (this.olmap){
         var oldlayers=this.olmap.getLayers();
@@ -106,9 +119,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             //make a copy of the layerlist
             //as the original array is modified when deleting...
             var olarray_in=oldlayers.getArray();
-            for (var i=0;i<olarray_in.length;i++){
-                olarray.push(olarray_in[i]);
-            }
+            olarray=olarray_in.slice(0);
             for(var i=0;i<olarray.length;i++){
                 this.olmap.removeLayer(olarray[i]);
             }
@@ -125,6 +136,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
                 center: ol.proj.transform([ 13.8, 54.1], 'EPSG:4326', 'EPSG:3857'),
                 zoom: 9
             })
+
         });
         this.olmap.on('moveend',function(evt){
            self.onMoveEnd(evt);
@@ -213,10 +225,12 @@ avnav.map.MapHolder.prototype.getMarkerLock=function(){
  */
 avnav.map.MapHolder.prototype.navEvent=function(evdata){
     if (evdata.type == avnav.nav.NavEventType.GPS){
-        if (! this.gpsLocked) return;
         var gps=this.navobject.getRawData(evdata.type);
         if (! gps.valid) return;
+        this.navlayer.setBoatPosition(gps.toCoord(),gps.course);
+        if (! this.gpsLocked) return;
         this.setCenter(gps);
+
     }
 };
 
@@ -231,7 +245,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
     var ll=[];
     $(layerdata).find('TileMap').each(function(ln,tm){
         var rt={};
-        rt.type="chartlayer";
+        rt.type=avnav.map.LayerTypes.TCHART;
         //complete tile map entry here
         rt.inversy=false;
         var layer_profile=$(tm).attr('profile');

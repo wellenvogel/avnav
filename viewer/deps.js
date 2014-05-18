@@ -6,7 +6,8 @@ goog.addDependency('../../../../viewer/gui/mainpage.js', ['avnav.gui.Mainpage'],
 goog.addDependency('../../../../viewer/gui/navpage.js', ['avnav.gui.Navpage'], ['avnav.gui.Handler', 'avnav.gui.Page']);
 goog.addDependency('../../../../viewer/gui/page.js', ['avnav.gui.Page'], ['avnav.gui.Handler', 'goog.asserts']);
 goog.addDependency('../../../../viewer/gui/statuspage.js', ['avnav.gui.Statuspage'], ['avnav.gui.Handler', 'avnav.gui.Page']);
-goog.addDependency('../../../../viewer/map/mapholder.js', ['avnav.map.MapHolder'], []);
+goog.addDependency('../../../../viewer/map/mapholder.js', ['avnav.map.LayerTypes', 'avnav.map.MapHolder'], ['avnav.map.NavLayer']);
+goog.addDependency('../../../../viewer/map/navlayer.js', ['avnav.map.NavLayer'], ['avnav.map.MapHolder', 'avnav.nav.GpsData', 'avnav.nav.NavObject']);
 goog.addDependency('../../../../viewer/nav/gpsdata.js', ['avnav.nav.GpsData'], ['avnav.nav.navdata.GpsInfo', 'avnav.util.Formatter', 'avnav.util.PropertyHandler', 'goog.date.Date', 'goog.date.DateTime']);
 goog.addDependency('../../../../viewer/nav/navcompute.js', ['avnav.nav.NavCompute'], ['avnav.nav.navdata.Cpa', 'avnav.nav.navdata.Distance', 'avnav.nav.navdata.GpsInfo', 'avnav.nav.navdata.Point']);
 goog.addDependency('../../../../viewer/nav/navdata.js', ['avnav.nav.navdata.Cpa', 'avnav.nav.navdata.Distance', 'avnav.nav.navdata.GpsInfo', 'avnav.nav.navdata.Point'], []);

@@ -86,9 +86,10 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
     this.handleToggleButton('#avb_LockPos',gpsLock);
     var self=this;
     if (startTimer) this.timer=window.setTimeout(function(){
-        self.buttonUpdate(true),
-            self.gui.properties.getProperties().buttonUpdateTime
-    });
+        self.buttonUpdate(true);
+        },
+        self.gui.properties.getProperties().buttonUpdateTime
+    );
 };
 
 avnav.gui.Navpage.prototype.hidePage=function(){
