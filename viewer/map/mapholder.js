@@ -408,7 +408,7 @@ avnav.map.MapHolder.prototype.setGpsLock=function(lock){
     var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
     if (! gps.valid && lock) return;
     this.gpsLocked=lock;
-    this.setMapCenter(gps.toCoord());
+    if (lock) this.setCenter(gps);
 };
 /**
  * set the marker lock state
@@ -444,6 +444,7 @@ avnav.map.MapHolder.prototype.setMarkerPosition=function(coord,forceWrite){
                markerPosition:this.markerPosition
            }
         });
+        this.navlayer.setMarkerPosition(coord);
     }
 };
 /**
@@ -464,6 +465,14 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     this.navobject.setMapCenter(this.center);
     if (!this.markerLocked){
         this.setMarkerPosition(newCenter);
+    }
+    else {
+        //TODO: show unlocked marker correctly during moving map
+        this.setMarkerPosition(this.markerPosition);
+    }
+    if (! this.gpsLocked){
+        //var gps=this.navobject.getRawData(evdata.type);
+        //this.navlayer.setBoatPosition(gps.toCoord(),gps.course);
     }
     log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
 };
