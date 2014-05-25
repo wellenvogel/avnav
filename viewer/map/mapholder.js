@@ -38,11 +38,11 @@ avnav.map.MapHolder=function(properties,navobject){
      */
     this.markerLocked=true;
     /**
-     * the marker position
+     * the marker position in lat/lot
      * @private
-     * @type {avnav.nav.navdata.Point}
+     * @type {Array.<number>}
      */
-    this.markerPosition=null;
+    this.markerPosition=[0,0];
 
     /**
      * locked to GPS
@@ -57,7 +57,7 @@ avnav.map.MapHolder=function(properties,navobject){
     this.navlayer=new avnav.map.NavLayer(this,this.navobject);
     this.minzoom=32;
     this.maxzoom=0;
-    this.center=null; //keep the center for consecutive open
+    this.center=[0,0];
     this.zoom=-1;
     var currentView=this.properties.getProperties().currentView;
     if (currentView){
@@ -69,8 +69,12 @@ avnav.map.MapHolder=function(properties,navobject){
         this.markerLocked=marker.markerLocked;
         this.markerPosition=marker.markerPosition;
     }
+    //call our set markerPosition as this will update the navlayer and navobject
     if (! this.markerLocked){
-        this.setMarkerPosition(this.center);
+        this.setMarkerPosition(this.center,true);
+    }
+    else {
+        this.setMarkerPosition(this.markerPosition,true);
     }
     this.slideIn=0; //when set we step by step zoom in
     var self=this;
@@ -142,7 +146,11 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
            self.onMoveEnd(evt);
         });
         this.olmap.on('postrender',function(evt){
+            //more or less similar top ol2 move
             self.onMoveEnd(evt);
+        });
+        this.olmap.on('postcompose',function(evt){
+            self.onPostCompose(evt);
         });
     }
     if (this.center && this.zoom >0){
@@ -224,6 +232,7 @@ avnav.map.MapHolder.prototype.getMarkerLock=function(){
  * @constructor
  */
 avnav.map.MapHolder.prototype.navEvent=function(evdata){
+    if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
     if (evdata.type == avnav.nav.NavEventType.GPS){
         var gps=this.navobject.getRawData(evdata.type);
         if (! gps.valid) return;
@@ -419,16 +428,18 @@ avnav.map.MapHolder.prototype.setMarkerLock=function(lock){
     this.markerLocked=lock;
     if (!lock){
         this.setMarkerPosition(this.center);
+        this.olmap.render(); //is this exported?
     }
     else{
         this.setMarkerPosition(this.markerPosition,true);
+        this.olmap.render();
     }
 
 };
 
 /**
  * set the marker position
- * @param {ol.Coordinate} coord
+ * @param {ol.Coordinate} coord (lon/lat)
  * @param {boolean} forceWriting to cookie
  * @private
  */
@@ -445,6 +456,7 @@ avnav.map.MapHolder.prototype.setMarkerPosition=function(coord,forceWrite){
            }
         });
         this.navlayer.setMarkerPosition(coord);
+
     }
 };
 /**
@@ -467,7 +479,6 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
         this.setMarkerPosition(newCenter);
     }
     else {
-        //TODO: show unlocked marker correctly during moving map
         this.setMarkerPosition(this.markerPosition);
     }
     if (! this.gpsLocked){
@@ -476,6 +487,15 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     }
     log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
 };
+
+/**
+ *
+ * @param {oli.render.Event} evt
+ */
+avnav.map.MapHolder.prototype.onPostCompose=function(evt){
+    this.navlayer.onPostCompose(evt);
+}
+
 /**
  * this function is some "dirty workaround"
  * ol3 nicely zoomes up lower res tiles if there are no tiles

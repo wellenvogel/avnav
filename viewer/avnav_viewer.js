@@ -179,7 +179,7 @@ $.cookie.json = true;
 
 function log(txt){
     try{
-        console.log(txt);
+        //console.log(txt);
     }catch(e){}
 }
 

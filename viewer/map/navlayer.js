@@ -3,7 +3,6 @@
  */
 
 goog.provide('avnav.map.NavLayer');
-goog.require('avnav.map.MapHolder');
 goog.require('avnav.nav.GpsData');
 goog.require('avnav.nav.NavObject');
 
@@ -61,7 +60,10 @@ avnav.map.NavLayer=function(mapholder,navobject){
     this.setMarkerStyle();
 
     /**
-     * our features: 0-boat,1-marker,2-line between boat and marker
+     * our features: 0-boat
+     * we only use normal features for the boat
+     * for the course line and the marker we draw them by our own in postCompose
+     * as otherwise we cannot have them during dragging...
      * @private
      * @type {Array.<ol.Feature>}
      */
@@ -70,15 +72,26 @@ avnav.map.NavLayer=function(mapholder,navobject){
     this.features.push(new ol.Feature({
         'geometry': new ol.geom.Point([0,0])
     }));
-    /* marker */
-    this.features.push(new ol.Feature({
-        'geometry': new ol.geom.Point([0,0])
-    }));
+
+    /**
+     * the boat position in map coordinates
+     * @type {ol.Coordinate}
+     */
+    this.boatPosition=[0,0];
 
 
+
+    /**
+     * the marker position when locked - we rely on the mapholder to set this...
+     * in map coordinates
+     * @private
+     * @type {ol.Coordinate}
+     */
+    this.markerPosition=[0,0];
 
     this.maplayer.getSource().addFeatures(this.features);
     this.maplayer.avnavOptions.type=avnav.map.LayerTypes.TNAV;
+
 
 };
 /**
@@ -86,8 +99,7 @@ avnav.map.NavLayer=function(mapholder,navobject){
  * @type {number}
  */
 avnav.map.NavLayer.IDXBOAT=0;
-avnav.map.NavLayer.IDXMARKER=1;
-avnav.map.NavLayer.IDXCOURSE=2;
+
 
 /**
  * get the new boat style (as we have to change this for the rotation...)
@@ -124,26 +136,29 @@ avnav.map.NavLayer.prototype.setBoatStyle=function(rotation){
  * @private
  */
 avnav.map.NavLayer.prototype.setCourseStyle=function(){
-    this.courseStyle=new ol.style.Style({
-       fill: new ol.style.Fill({
+    this.courseStyle=new ol.style.Stroke({
            color:this.mapholder.properties.getProperties().bearingColor,
            width:this.mapholder.properties.getProperties().bearingWidth
-       })
+
     });
 };
 
 avnav.map.NavLayer.prototype.setMarkerStyle=function(){
-    this.markerStyle=new ol.style.Style({
-
-        image: new ol.style.Icon(({
+    this.markerStyle=
+        /*new ol.style.Circle({
+            radius: 10,
+            fill: new ol.style.Fill({color: 'red'})
+        });
+        */
+        new ol.style.Icon({
             anchor: [20, 20],
             size: [40, 40],
             anchorXUnits: 'pixels',
             anchorYUnits: 'pixels',
             opacity: 1,
             src: 'images/Marker1.png'
-        }))
-    });
+        });
+    this.markerStyle.load();
 };
 
 
@@ -155,7 +170,33 @@ avnav.map.NavLayer.prototype.getMapLayer=function(){
     return this.maplayer;
 };
 
-
+/**
+ * draw the marker and course
+ * we rely on the move end to really set the marker pos to the cookie and to the navobject
+ * @param {oli.render.Event} evt
+ */
+avnav.map.NavLayer.prototype.onPostCompose=function(evt){
+    //return;
+    var vectorContext = evt.vectorContext;
+    var marker=new ol.geom.Point(null);
+    if (!this.mapholder.getMarkerLock()) {
+        marker.setCoordinates(evt.frameState.view2DState.center);
+        log("draw marker without lock");
+    }
+    else {
+        marker.setCoordinates(this.markerPosition);
+        log("draw marker with lock");
+    }
+    vectorContext.setImageStyle(this.markerStyle);
+    vectorContext.drawPointGeometry(marker);
+    if (this.mapholder.getMarkerLock()){
+        //draw the course to the marker
+        var line=new ol.geom.LineString([this.boatPosition,this.markerPosition]);
+        vectorContext.setFillStrokeStyle(null,this.courseStyle);
+        vectorContext.drawLineStringGeometry(line);
+    }
+    //vectorContext.drawFeature(marker, this.boatStyle);
+};
 
 /**
  * set the boat position
@@ -164,17 +205,16 @@ avnav.map.NavLayer.prototype.getMapLayer=function(){
  */
 avnav.map.NavLayer.prototype.setBoatPosition=function(pos,course){
     this.setBoatStyle(course);
-    this.features[avnav.map.NavLayer.IDXBOAT].setGeometry(new ol.geom.Point(this.mapholder.transformToMap(pos)));
-    //TODO: compute...
+    this.boatPosition=this.mapholder.transformToMap(pos);
+    this.features[avnav.map.NavLayer.IDXBOAT].setGeometry(new ol.geom.Point(this.boatPosition));
 };
 
 /**
  * set the marker position
- * @param {ol.Coordinate} pos
+ * @param {ol.Coordinate} pos (lon/lat)
  */
 avnav.map.NavLayer.prototype.setMarkerPosition=function(pos){
-    this.features[avnav.map.NavLayer.IDXMARKER].setGeometry(new ol.geom.Point(this.mapholder.transformToMap(pos)));
-    //TODO: compute...
+    this.markerPosition=this.mapholder.transformToMap(pos);
 };
 
 
@@ -188,11 +228,8 @@ avnav.map.NavLayer.prototype.styleFunction=function(feature,resolution){
     if (feature == this.features[avnav.map.NavLayer.IDXBOAT]){
         return [this.boatStyle];
     }
-    if (feature == this.features[avnav.map.NavLayer.IDXMARKER]){
+    if (feature == this.markerFeature){
         return [this.markerStyle];
-    }
-    if (feature == this.features[avnav.map.NavLayer.IDXCOURSE]){
-        return [this.courseStyle];
     }
     return undefined;
 };
