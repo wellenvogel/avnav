@@ -467,13 +467,27 @@ avnav.map.MapHolder.prototype.setMarkerPosition=function(coord,forceWrite){
  */
 avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     var newCenter= this.pointFromMap(this.getView().getCenter());
+    this.setCenterFromMove(newCenter);
+    this.properties.setUserData({
+        currentView:{center:this.center,zoom:this.zoom}
+    });
+
+
+    log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
+};
+
+/**
+ * set the new center during moves
+ * write to the navobject for updating computations
+ * but still do not write to the cookie
+ * @private
+ * @param newCenter
+ */
+avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter){
     if (this.center && newCenter && this.center[0]==newCenter[0] && this.center[1] == newCenter[1] &&
         this.zoom == this.getView().getZoom()) return;
     this.center=newCenter;
     this.zoom=this.getView().getZoom();
-    this.properties.setUserData({
-        currentView:{center:this.center,zoom:this.zoom}
-    });
     this.navobject.setMapCenter(this.center);
     if (!this.markerLocked){
         this.setMarkerPosition(newCenter);
@@ -481,11 +495,6 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     else {
         this.setMarkerPosition(this.markerPosition);
     }
-    if (! this.gpsLocked){
-        //var gps=this.navobject.getRawData(evdata.type);
-        //this.navlayer.setBoatPosition(gps.toCoord(),gps.course);
-    }
-    log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
 };
 
 /**
@@ -493,8 +502,10 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
  * @param {oli.render.Event} evt
  */
 avnav.map.MapHolder.prototype.onPostCompose=function(evt){
+    var newCenter=this.pointFromMap(evt.frameState.view2DState.center);
+    this.setCenterFromMove(newCenter);
     this.navlayer.onPostCompose(evt);
-}
+};
 
 /**
  * this function is some "dirty workaround"

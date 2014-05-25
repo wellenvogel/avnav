@@ -49,15 +49,48 @@ avnav.map.NavLayer=function(mapholder,navobject){
      * @private
      * @type {ol.style.Style}
      */
-    this.courseStyle={};
-    this.setCourseStyle();
+    this.courseStyle=new ol.style.Stroke({
+            color:this.mapholder.properties.getProperties().bearingColor,
+            width:this.mapholder.properties.getProperties().bearingWidth
+
+        });
 
     /**
      * @private
      * @type {ol.style.style}
      */
-    this.markerStyle={};
-    this.setMarkerStyle();
+    this.markerStyle=
+            /*new ol.style.Circle({
+             radius: 10,
+             fill: new ol.style.Fill({color: 'red'})
+             });
+             */
+            new ol.style.Icon({
+                anchor: [20, 20],
+                size: [40, 40],
+                anchorXUnits: 'pixels',
+                anchorYUnits: 'pixels',
+                opacity: 1,
+                src: 'images/Marker1.png'
+            });
+    //we must explicitely load our icon...
+    this.markerStyle.load();
+
+    /**
+     * @private
+     * @type {ol.style.style}
+     */
+    this.centerStyle =
+        new ol.style.Icon({
+            anchor: [20, 20],
+            size: [40, 40],
+            anchorXUnits: 'pixels',
+            anchorYUnits: 'pixels',
+            opacity: 1,
+            src: 'images/Marker2.png'
+        });
+    //we must explicitely load our icon...
+    this.centerStyle.load();
 
     /**
      * our features: 0-boat
@@ -131,35 +164,8 @@ avnav.map.NavLayer.prototype.setBoatStyle=function(rotation){
     return this.boatStyle;
 };
 
-/**
- * set the course style
- * @private
- */
-avnav.map.NavLayer.prototype.setCourseStyle=function(){
-    this.courseStyle=new ol.style.Stroke({
-           color:this.mapholder.properties.getProperties().bearingColor,
-           width:this.mapholder.properties.getProperties().bearingWidth
 
-    });
-};
 
-avnav.map.NavLayer.prototype.setMarkerStyle=function(){
-    this.markerStyle=
-        /*new ol.style.Circle({
-            radius: 10,
-            fill: new ol.style.Fill({color: 'red'})
-        });
-        */
-        new ol.style.Icon({
-            anchor: [20, 20],
-            size: [40, 40],
-            anchorXUnits: 'pixels',
-            anchorYUnits: 'pixels',
-            opacity: 1,
-            src: 'images/Marker1.png'
-        });
-    this.markerStyle.load();
-};
 
 
 /**
@@ -179,17 +185,22 @@ avnav.map.NavLayer.prototype.onPostCompose=function(evt){
     //return;
     var vectorContext = evt.vectorContext;
     var marker=new ol.geom.Point(null);
+    var center=new ol.geom.Point(null);
     if (!this.mapholder.getMarkerLock()) {
         marker.setCoordinates(evt.frameState.view2DState.center);
         log("draw marker without lock");
     }
     else {
         marker.setCoordinates(this.markerPosition);
+        center.setCoordinates(evt.frameState.view2DState.center);
         log("draw marker with lock");
     }
     vectorContext.setImageStyle(this.markerStyle);
     vectorContext.drawPointGeometry(marker);
     if (this.mapholder.getMarkerLock()){
+        //draw the center marker
+        vectorContext.setImageStyle(this.centerStyle);
+        vectorContext.drawPointGeometry(center);
         //draw the course to the marker
         var line=new ol.geom.LineString([this.boatPosition,this.markerPosition]);
         vectorContext.setFillStrokeStyle(null,this.courseStyle);
@@ -227,9 +238,6 @@ avnav.map.NavLayer.prototype.setMarkerPosition=function(pos){
 avnav.map.NavLayer.prototype.styleFunction=function(feature,resolution){
     if (feature == this.features[avnav.map.NavLayer.IDXBOAT]){
         return [this.boatStyle];
-    }
-    if (feature == this.markerFeature){
-        return [this.markerStyle];
     }
     return undefined;
 };
