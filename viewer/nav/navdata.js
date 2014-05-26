@@ -3,6 +3,7 @@
  */
 goog.provide('avnav.nav.navdata.Distance');
 goog.provide('avnav.nav.navdata.Point');
+goog.provide('avnav.nav.navdata.TrackPoint');
 goog.provide('avnav.nav.navdata.Cpa');
 goog.provide('avnav.nav.navdata.GpsInfo');
 
@@ -51,6 +52,23 @@ avnav.nav.navdata.Point.prototype.toCoord=function(){
     var rt=[this.lon,this.lat];
     return rt;
 };
+/**
+ * a track point
+ * @param {number} lon
+ * @param {number} lat
+ * @param {number} ts timestamp in seconds (float)
+ * @param opt_speed
+ * @param opt_course
+ * @constructor
+ */
+avnav.nav.navdata.TrackPoint=function(lon,lat,ts,opt_speed,opt_course){
+    avnav.nav.navdata.Point.call(this,lon,lat);
+    this.ts=ts;
+    this.speed=opt_speed||0;
+    this.opt_course=opt_course||0;
+};
+goog.inherits(avnav.nav.navdata.TrackPoint,avnav.nav.navdata.Point);
+
 
 /**
  * a distance between 2 points (distance+course)

@@ -53,7 +53,7 @@ var properties={
 		rightPanelWidth: 60, //currently not used
 		loggingEnabled: true,
 		positionQueryTimeout: 1000, //1000ms
-		trackQueryTimeout: 5000, //10s
+		trackQueryTimeout: 5000, //5s in ms
 		bearingColor: "#DDA01F",
 		bearingWidth: 3,
 		trackColor: "#D71038",

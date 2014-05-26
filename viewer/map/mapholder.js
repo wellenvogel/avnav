@@ -4,6 +4,7 @@
 goog.provide('avnav.map.MapHolder');
 goog.provide('avnav.map.LayerTypes');
 goog.require('avnav.map.NavLayer');
+goog.require('avnav.map.TrackLayer');
 
 /**
  * the types of the layers
@@ -55,6 +56,7 @@ avnav.map.MapHolder=function(properties,navobject){
     this.transformToMap=ol.proj.getTransform("EPSG:4326","EPSG:3857");
 
     this.navlayer=new avnav.map.NavLayer(this,this.navobject);
+    this.tracklayer=new avnav.map.TrackLayer(this,this.navobject);
     this.minzoom=32;
     this.maxzoom=0;
     this.center=[0,0];
@@ -115,6 +117,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         }
     }
     layersreverse.push(this.navlayer.getMapLayer());
+    layersreverse.push(this.tracklayer.getMapLayer());
 
     if (this.olmap){
         var oldlayers=this.olmap.getLayers();

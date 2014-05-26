@@ -151,7 +151,8 @@ avnav.map.NavLayer.prototype.setBoatStyle=function(rotation){
             anchorYUnits: 'pixels',
             opacity: 1,
             src: 'images/Boat2.png',
-            rotation: rotation/180*Math.PI
+            rotation: rotation/180*Math.PI,
+            rotateWithView: true
         }))
     /*
         image: new ol.style.Circle({

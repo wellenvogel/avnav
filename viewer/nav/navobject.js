@@ -4,6 +4,7 @@
 goog.provide('avnav.nav.NavObject');
 goog.provide('avnav.nav.NavEvent');
 goog.require('avnav.nav.GpsData');
+goog.require('avnav.nav.TrackData');
 goog.require('avnav.nav.NavCompute');
 goog.require('avnav.nav.navdata.Point');
 goog.require('avnav.nav.navdata.Distance');
@@ -85,6 +86,11 @@ avnav.nav.NavObject=function(propertyHandler){
      * @private
      */
     this.gpsdata=new avnav.nav.GpsData(propertyHandler,this);
+    /**
+     * @private
+     * @type {avnav.nav.TrackData}
+     */
+    this.trackHandler=new avnav.nav.TrackData(propertyHandler,this);
     /**
      * @private
      * @type {avnav.nav.navdata.Point}
@@ -221,6 +227,7 @@ avnav.nav.NavObject.prototype.getFormattedNavValue=function(name){
 avnav.nav.NavObject.prototype.getRawData=function(type){
     if (type == avnav.nav.NavEventType.GPS) return this.gpsdata.getGpsData();
     if (type == avnav.nav.NavEventType.NAV) return this.data;
+    if (type == avnav.nav.NavEventType.TRACK) return this.trackHandler.getTrackData();
     return undefined;
 };
 /**
@@ -256,6 +263,17 @@ avnav.nav.NavObject.prototype.gpsEvent=function(){
     ));
 };
 
+/**
+ * called back from trackhandler
+ */
+avnav.nav.NavObject.prototype.trackEvent=function(){
+    $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,new avnav.nav.NavEvent (
+        avnav.nav.NavEventType.TRACK,
+        [],
+        avnav.nav.NavEventSource.NAV,
+        this
+    ));
+};
 
 /**
  * register the provider of a display value
