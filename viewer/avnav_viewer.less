@@ -4,6 +4,14 @@
 @buttonSize: 60px;
 @centerDisplayHeight: 30px;
 
+//hide some content
+
+.hidemedia(@min:0px,@max:9999px){
+  @media (min-width:@min) and (max-width: @max){
+    display:none;
+  }
+}
+
 
 /*-------------------------------------------------------------
    general settings
@@ -86,6 +94,12 @@ font-size: ( @bottomPanelHeight - 2 );
 -------------------------------------------------------------*/
 @bottomSmallFont: (( @bottomPanelHeight / 2 ) - 10 );
 @bottomBigFont: ( @bottomPanelHeight  - 8 );
+.bottomhideverysmall{
+  .hidemedia(0px,@bottomPanelHeight*14.5);
+}
+.bottomhidesmall{
+  .hidemedia(0px,@bottomPanelHeight*19);
+}
 
 .bottomMargins {
 	margin-left: ( @bottomPanelHeight / 12 );
@@ -97,24 +111,30 @@ font-size: ( @bottomPanelHeight - 2 );
 #leftBottomInner{
 	left:0;
 	right: 0;
+
 }
-#leftBottomMarker {
-	//width: 50%;
+#leftBottomInnerCenter{
+  display:  inline-block; //this sets the text align center as inherited
+  width: 100%;
+}
+
+#leftBottomMarker{
+  width: 50%;
 }
 #leftBottomMarker #leftBottomMarkerPos{
 	width: ( @bottomSmallFont * 7 );
 	.bottomMargins;
 	margin-top: ( @bottomSmallFont / 4 );
-	@media ( max-width: 913px ) {
-		display: none;
-	};
+	.bottomhidesmall();
+
 }
 #leftBottomMarker #leftBottomMarkerEta{
 	width: ( @bottomSmallFont * 5.5 );
 	margin-top: ( @bottomSmallFont / 4 );
+    .bottomhideverysmall();
 }
 #leftBottomMarker #leftBottomMarkerBearing{
-	width: ( @bottomBigFont * 5.8 );
+	//width: ( @bottomBigFont * 5.8 );
 }
 #leftBottomMarker #markerPosition{
 	font-size: @bottomSmallFont;
@@ -130,28 +150,33 @@ font-size: ( @bottomPanelHeight - 2 );
 	font-size: @bottomBigFont;
 	.bottomInnerMargins;
 }
-#leftBottomPosition {
-	width: ( @bottomPanelHeight * 8.2 );
+
+#leftBottomPosition{
+  width: 50%;
 }
+
 #leftBottomPosition #leftBottomPositionPos{
 	width: ( @bottomSmallFont * 7 );
 	margin-top: ( @bottomSmallFont / 4 );
+    .bottomhidesmall();
 }
 #leftBottomPosition #leftBottomPositionStatus{
 	width: ( @bottomSmallFont * 6 );
 	margin-top: ( @bottomSmallFont / 4 );
+    .bottomhideverysmall();
 }
 #leftBottomPosition #leftBottomPositionCourse{
-	width: ( @bottomBigFont * 5 );
+	//width: ( @bottomBigFont * 5 );
+  padding-left: 5px;
+  padding-right: 5px;
 }
 #leftBottomPosition #boatPosition{
 	font-size: @bottomSmallFont;
+
 }
 #leftBottomPosition #boatLocalTime{
 	font-size: @bottomSmallFont;
-	@media (max-width: 760px) {
-		display: none;
-	};
+
 }
 #leftBottomPosition #boatCourse{
 	font-size: @bottomBigFont;
@@ -264,19 +289,7 @@ button#avb_LockMarker .avn_button_icon {
   .avn_button_icon_base_toggle('images/Marker1.png');
 }
 
-/* old!
-#btnLayerSwitch .ui-icon{
-	background-image: url(images/Layer40.png);
-	background-position: 0px 0px;
-	left:( ( @buttonSize  ) / 2 - 12  );
-	top:( ( @buttonSize  ) / 2 - 12  );
-	margin-top: 0px;
-	margin-left: 0px;
-	background-size: 24px 24px;
-	width: 24px;
-	height: 24px;
-}
-*/
+
 
 button#avb_CancelNav .avn_button_icon {
   .avn_button_icon_base('images/Cancel40.png');
@@ -472,6 +485,7 @@ button#avb_CancelNav .avn_button_icon {
 	background-color: grey;
 	color: white;
 	width: 60px;
+    height: 100px;
 	text-align: center;
 	border-radius: 8px;
 }
@@ -595,60 +609,3 @@ button#avb_CancelNav .avn_button_icon {
 	height: 24px;
 }
 
-/*------------------------------------------------------------------------------- 
-	end element positioning
-  -------------------------------------------------------------------------------*/
-/* overwriting some jquery ui defaults */
-
-.ui-dialog-title {
-	/*font-size: 0.8em;*/
-}
-.ui-button-text {
-	/*font-size: 0.8em;*/
-}
-
-.olControlButtonItemActive {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: red;
-    width: 22px;
-    height: 22px;
-}
-
-/*
-.clickbar {
-	top: 30px;
-	right: 20px;
-	border: 1px solid black;
-	border-radius: 3px;
-	background: white;
-	padding-left: 4px;
-	padding-right: 4px;
-	font: 10px monospace;
-	cursor: pointer;
-}
-
-.olControlMousePosition {
-	position: absolute;
-	right: 10px;
-	top: 0px;
-	height: 15px;
-	font-size: 8pt;
-	background-color: white
-}
-
-#utm_mouse {
-	top: 15px;
-}
-*/
-
-
-
-.olImageLoadError {
-	background-color: transparent !important;
-}
-
-.ui-dialog{
-	z-index:9999;
-}

@@ -158,40 +158,48 @@ all buttons with ids avb_... will call corresponding js functions
           <!-- measure to map center -->
           <div id='centerDisplay' class='avn_panel avn_hidden'>
               <div id='centerInner'>
-                  Center:
-                  <span id='centerPosition' class='avn_center avd_centerPosition'>-----------------------</span>
-                  &nbsp;fromMarker:
-                  <span id='centerMarkerDistance' class='avn_center avd_centerMarkerDistance'>000.0</span>
-                  nm,&nbsp;
+                  fromMarker:
                   <span id='centerMarkerCourse' class='avn_center avd_centerMarkerCourse'>000</span>
-                  &#176
+                  &#176 &nbsp;
+                  <span id='centerMarkerDistance' class='avn_center avd_centerMarkerDistance'>000.0</span>
+                  nm &nbsp;
+                  +
+                  <span id='centerPosition' class='avn_center avd_centerPosition'>-----------------------</span>
+                  +
                   &nbsp;fromBoat:
-                  <span id='centerBoatDistance' class='avn_center avd_centerDistance'>000.0</span>
-                  nm,&nbsp;
-                      <span id='centerBoatCourse' class='avn_center avd_centerCourse'>
+                  <span id='centerBoatCourse' class='avn_center avd_centerCourse'>
                       </span>
-                  &#176
+                  &#176&nbsp;
+                  <span id='centerBoatDistance' class='avn_center avd_centerDistance'>000.0</span>
+                  nm &nbsp;
+
               </div>
           </div>
           <!-- the display at the bottom of the nav page -->
           <div id='leftBottomNavPage' class='avn_panel avn_left_bottom'>
               <div id='leftBottomInner' class='avn_inner avn_panel'>
-                  <div id='leftBottomCenter' class='avn_inner'>
+                  <!-- the following additional div is needed for the text align...-->
+                  <div id='leftBottomInnerCenter'>
+
                       <div id='leftBottomMarker' class='avn_float_left avn_markerPosition'>
                           <div id='leftBottomMarkerBearing' class='avn_float_right'>
                               <div id='bearing' class='avn_float_left avd_markerCourse'>000</div>
                               <div class='avn_float_left'>&#176</div>
                               <div id='distance' class='avn_float_left avd_markerDistance'>000,0</div>
                               <div class='avn_float_left'>nm</div>
-                          </div> <!-- marker bearing-->
+                          </div>
+                          <!-- marker bearing-->
                           <div id='leftBottomMarkerEta' class='avn_float_right'>
                               <div id='eta' class="avd_markerEta">00:00:00</div>
                               <div id='markerLabel' class='avn_label'>Marker</div>
-                          </div> <!-- marker eta-->
+                          </div>
+                          <!-- marker eta-->
                           <div id='leftBottomMarkerPos' class='avn_float_right'>
                               <div id='markerPosition' class='avn_float_left avd_markerPosition'>0E,0N</div>
-                          </div> <!-- marker pos-->
-                      </div> <!-- end marker -->
+                          </div>
+                          <!-- marker pos-->
+                      </div>
+                      <!-- end marker -->
                       <div id='leftBottomPosition' class='avn_float_left avn_boatPosition'>
                           <div id='leftBottomPositionCourse' class='avn_float_left'>
                               <div id='boatCourse' class='avd_gpsCourse avn_float_left'>000</div>
@@ -199,15 +207,19 @@ all buttons with ids avb_... will call corresponding js functions
                               <div id='boatSpeed' class='avd_gpsSpeed avn_float_left'>00.0</div>
                               <div class='avn_float_left'>kn</div>
                           </div>
-                          <div id='leftBottomPositionPos' class='avn_float_left'>
-                              <div id='boatPosition' class='avd_gpsPosition avn_float_left'>-------------</div>
-                          </div> <!-- leftBottomPositionPos -->
+                          <!-- leftBottomPositionPos -->
                           <div id='leftBottomPositionStatus' class='avn_float_left'>
                               <div id='boatLocalTime' class='avd_gpsTime avn_float_left'>00:00:00</div>
                               <img id='boatPositionStatus' class='avn_status_image' src='images/GreyBubble40.png'></img>
                           </div>
-                      </div> <!-- end position-->
+                          <div id='leftBottomPositionPos' class='avn_float_left'>
+                              <div id='boatPosition' class='avd_gpsPosition avn_float_left'>-------------</div>
+                          </div>
+                      </div>
+
                   </div>
+                  <!-- end position-->
+
               </div>
           </div>
       </div>
