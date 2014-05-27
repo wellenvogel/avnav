@@ -3,6 +3,7 @@
  */
 goog.provide('avnav.map.MapHolder');
 goog.provide('avnav.map.LayerTypes');
+goog.provide('avnav.map.MapEvent');
 goog.require('avnav.map.NavLayer');
 goog.require('avnav.map.TrackLayer');
 
@@ -12,8 +13,34 @@ goog.require('avnav.map.TrackLayer');
  */
 avnav.map.LayerTypes={
     TCHART:0,
-    TNAV:1
+    TNAV:1,
+    TTRACK:2
 };
+
+avnav.map.EventType={
+    MOVE:0,
+    SELECT:1
+};
+
+/**
+ *
+ * @param {avnav.map.EventTypes} type
+ * @param opt_parameter
+ * @constructor
+ */
+avnav.map.MapEvent=function(type,opt_parameter){
+    /**
+     *
+     * @type {avnav.map.EventTypes}
+     */
+    this.type=type;
+    /**
+     *
+     * @type {*|{}}
+     */
+    this.parameter=opt_parameter||{};
+};
+avnav.map.MapEvent.EVENT_TYPE="mapevent";
 
 /**
  * the holder for our olmap
@@ -477,6 +504,7 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
 
 
     log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
+
 };
 
 /**
@@ -497,6 +525,12 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter){
     }
     else {
         this.setMarkerPosition(this.markerPosition);
+    }
+    //only fire move events if we are not bound to GPS
+    if (! this.gpsLocked) {
+        $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
+            new avnav.map.MapEvent(avnav.map.EventType.MOVE, {})
+        );
     }
 };
 

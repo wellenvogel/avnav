@@ -19,9 +19,22 @@ avnav.gui.Navpage=function(){
      * @type {number}
      */
     this.timer=0;
+    /**
+     * the current visible overlay (jQuery object)
+     * @type {null}
+     */
+    this.overlay=null;
+    /**
+     * the time (in ms) when the current overlay should be hidden
+     * @type {number}
+     */
+    this.hidetime=0;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
        self.navEvent(evdata);
+    });
+    $(document).on(avnav.map.MapEvent.EVENT_TYPE, function(ev,evdata){
+        self.mapEvent(evdata);
     });
 };
 goog.inherits(avnav.gui.Navpage,avnav.gui.Page);
@@ -77,7 +90,11 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     });
     this.buttonUpdate(true);
 };
-
+/**
+ * the periodic timer call
+ * update buttons and handle hiding of overlay
+ * @param startTimer
+ */
 avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
     //TODO: make this more generic
     var markerLock=this.gui.map.getMarkerLock();
@@ -85,6 +102,10 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
     var gpsLock=this.gui.map.getGpsLock();
     this.handleToggleButton('#avb_LockPos',gpsLock);
     var self=this;
+    if (this.hidetime >0 && this.hidetime <= new Date().getTime()|| gpsLock){
+        this.hideOverlay();
+        this.hidetime=0;
+    }
     if (startTimer) this.timer=window.setTimeout(function(){
         self.buttonUpdate(true);
         },
@@ -94,6 +115,8 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
 
 avnav.gui.Navpage.prototype.hidePage=function(){
     if (this.timer) window.clearTimeout(this.timer);
+    this.hideOverlay();
+    this.hidetime=0;
 };
 /**
  *
@@ -106,6 +129,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $('#leftBottomPosition').click({page:this},function(ev){
         var gps=ev.data.page.navobject.getRawData(avnav.nav.NavEventType.GPS);
         if (gps.valid) ev.data.page.gui.map.setCenter(gps);
+    });
+    $('#centerDisplay').click({page:this},function(ev){
+       ev.data.page.hideOverlay();
     });
 };
 
@@ -135,7 +161,30 @@ avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
     this.fillDisplayFromGps(evdata.changedNames);
 };
+/**
+ *
+ * @param {avnav.map.MapEvent} evdata
+ */
+avnav.gui.Navpage.prototype.mapEvent=function(evdata){
+    if (! this.visible) return;
+    if (evdata.type != avnav.map.EventType.MOVE) return;
+    //show the center display if not visible
+    if (this.overlay != null){
+        this.hidetime=new Date().getTime()+this.gui.properties.getProperties().centerDisplayTimeout;
+        return;
+    }
+    this.overlay=this.getDiv().find('#centerDisplay');
+    this.hidetime=new Date().getTime()+this.gui.properties.getProperties().centerDisplayTimeout;
+    this.overlay.show();
+};
 
+avnav.gui.Navpage.prototype.hideOverlay=function(){
+    if (this.overlay != null){
+        this.overlay.hide();
+        this.overlay=null;
+        this.hidetime=0;
+    }
+};
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Navpage.prototype.btnZoomIn=function (button,ev){
@@ -151,6 +200,7 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
     var nLock=! this.gui.map.getGpsLock();
     this.gui.map.setGpsLock(nLock);
     this.handleToggleButton(button,nLock);
+    if (nLock) this.hideOverlay();
     log("LockPos clicked");
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
