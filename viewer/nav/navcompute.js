@@ -39,8 +39,8 @@ avnav.nav.NavCompute.computeDistance=function(src,dst){
  * @param dst
  * @returns {avnav.nav.navdata.Cpa}
  */
-avnav.nav.NavCompute.computeCpa=function(src,dst){
-    var NM=1852;
+avnav.nav.NavCompute.computeCpa=function(src,dst,properties){
+    var NM=properties.NM;
     var rt = new avnav.nav.navdata.Cpa();
     if (dst.speed < properties.minAISspeed) {
         return rt;

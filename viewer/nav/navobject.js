@@ -5,6 +5,7 @@ goog.provide('avnav.nav.NavObject');
 goog.provide('avnav.nav.NavEvent');
 goog.require('avnav.nav.GpsData');
 goog.require('avnav.nav.TrackData');
+goog.require('avnav.nav.AisData');
 goog.require('avnav.nav.NavCompute');
 goog.require('avnav.nav.navdata.Point');
 goog.require('avnav.nav.navdata.Distance');
@@ -91,6 +92,8 @@ avnav.nav.NavObject=function(propertyHandler){
      * @type {avnav.nav.TrackData}
      */
     this.trackHandler=new avnav.nav.TrackData(propertyHandler,this);
+
+    this.aisHandler=new avnav.nav.AisData(propertyHandler,this);
     /**
      * @private
      * @type {avnav.nav.navdata.Point}
@@ -140,7 +143,6 @@ avnav.nav.NavObject=function(propertyHandler){
  * @private
  */
 avnav.nav.NavObject.prototype.computeValues=function(){
-    var NM=1852;
     var gps=this.gpsdata.getGpsData();
     //copy the marker to data to make it available extern
     this.data.markerLatlon=this.markerlatlon;
@@ -212,6 +214,13 @@ avnav.nav.NavObject.prototype.computeValues=function(){
 };
 
 /**
+ * get the current map center (lon/lat)
+ * @returns {avnav.nav.navdata.Point}
+ */
+avnav.nav.NavObject.prototype.getMapCenter=function(){
+    return this.maplatlon;
+};
+/**
  * @private
  * @param name
  * @returns {*}
@@ -219,6 +228,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
 avnav.nav.NavObject.prototype.getFormattedNavValue=function(name){
     return this.formattedValues[name];
 };
+
 
 /**
  * get the raw data of the underlying object
@@ -228,6 +238,7 @@ avnav.nav.NavObject.prototype.getRawData=function(type){
     if (type == avnav.nav.NavEventType.GPS) return this.gpsdata.getGpsData();
     if (type == avnav.nav.NavEventType.NAV) return this.data;
     if (type == avnav.nav.NavEventType.TRACK) return this.trackHandler.getTrackData();
+    if (type == avnav.nav.NavEventType.AIS) return this.aisHandler.getAisData();
     return undefined;
 };
 /**
@@ -275,6 +286,17 @@ avnav.nav.NavObject.prototype.trackEvent=function(){
     ));
 };
 
+/**
+ * called back from aishandler
+ */
+avnav.nav.NavObject.prototype.aisEvent=function(){
+    $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,new avnav.nav.NavEvent (
+        avnav.nav.NavEventType.AIS,
+        [],
+        avnav.nav.NavEventSource.NAV,
+        this
+    ));
+};
 /**
  * register the provider of a display value
  * @param {string} name

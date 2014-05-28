@@ -6,6 +6,7 @@ goog.provide('avnav.map.LayerTypes');
 goog.provide('avnav.map.MapEvent');
 goog.require('avnav.map.NavLayer');
 goog.require('avnav.map.TrackLayer');
+goog.require('avnav.map.AisLayer');
 
 /**
  * the types of the layers
@@ -14,7 +15,8 @@ goog.require('avnav.map.TrackLayer');
 avnav.map.LayerTypes={
     TCHART:0,
     TNAV:1,
-    TTRACK:2
+    TTRACK:2,
+    TAIS:3
 };
 
 avnav.map.EventType={
@@ -45,7 +47,7 @@ avnav.map.MapEvent.EVENT_TYPE="mapevent";
 /**
  * the holder for our olmap
  * the holer remains alive all the time whereas the map could be recreated on demand
- * @param {Object} properties
+ * @param {avnav.properties.PropertyHandler} properties
  * @param navobject
  * @constructor
  */
@@ -58,7 +60,9 @@ avnav.map.MapHolder=function(properties,navobject){
      * @type {avnav.nav.NavObject}
      * */
     this.navobject=navobject;
-    /** @private */
+    /** @private
+     *  @type {avnav.properties.PropertyHandler}
+     *  */
     this.properties=properties;
     /**
      * @private
@@ -82,6 +86,7 @@ avnav.map.MapHolder=function(properties,navobject){
     this.transformFromMap=ol.proj.getTransform("EPSG:3857","EPSG:4326");
     this.transformToMap=ol.proj.getTransform("EPSG:4326","EPSG:3857");
 
+    this.aislayer=new avnav.map.AisLayer(this,this.navobject);
     this.navlayer=new avnav.map.NavLayer(this,this.navobject);
     this.tracklayer=new avnav.map.TrackLayer(this,this.navobject);
     this.minzoom=32;
@@ -111,6 +116,15 @@ avnav.map.MapHolder=function(properties,navobject){
         self.navEvent(evdata);
     });
 };
+
+/**
+ * get the property handler
+ * @returns {avnav.properties.PropertyHandler}
+ */
+avnav.map.MapHolder.prototype.getProperties=function(){
+    return this.properties;
+};
+
 
 /**
  * get the 2Dv view
@@ -143,6 +157,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             this.maxzoom=layers[i].avnavOptions.maxZoom;
         }
     }
+    layersreverse.push(this.aislayer.getMapLayer());
     layersreverse.push(this.navlayer.getMapLayer());
     layersreverse.push(this.tracklayer.getMapLayer());
 
@@ -211,6 +226,8 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     this.properties.setUserData({
         currentView:{center:this.center,zoom:this.zoom}
     });
+    var newCenter= this.pointFromMap(this.getView().getCenter());
+    this.setCenterFromMove(newCenter,true);
 };
 
 /**
@@ -513,10 +530,11 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
  * but still do not write to the cookie
  * @private
  * @param newCenter
+ * @param {boolean}force
  */
-avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter){
+avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
     if (this.center && newCenter && this.center[0]==newCenter[0] && this.center[1] == newCenter[1] &&
-        this.zoom == this.getView().getZoom()) return;
+        this.zoom == this.getView().getZoom() && ! force) return;
     this.center=newCenter;
     this.zoom=this.getView().getZoom();
     this.navobject.setMapCenter(this.center);

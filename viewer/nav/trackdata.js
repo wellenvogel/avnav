@@ -20,7 +20,7 @@ avnav.nav.TrackData=function(propertyHandler,navobject){
     /** @private */
     this.navobject=navobject;
     /** @private
-     * @type {<Array>.avnav.nav.navdata.TrackPoint}
+     * @type {Array.<avnav.nav.navdata.TrackPoint>}
      * */
     this.currentTrack=[];
     /**
@@ -84,7 +84,6 @@ avnav.nav.TrackData.prototype.startQuery=function() {
     var timeout = this.propertyHandler.getProperties().trackQueryTimeout; //in ms!
     var interval=this.propertyHandler.getProperties().trackInterval; //in seconds
     var self = this;
-    var maxItems = 0;
     var now = new Date().getTime();
     var maxItems = 0;
     if (this.currentTrack.length == 0){
@@ -151,7 +150,7 @@ avnav.nav.TrackData.prototype.handleTrackStatus=function(success){
 
 /**
  * return the current trackData
- * @returns {<Array>.avnav.nav.navdata.TrackPoint}
+ * @returns {Array.<avnav.nav.navdata.TrackPoint>}
  */
 avnav.nav.TrackData.prototype.getTrackData=function(){
     return this.currentTrack;

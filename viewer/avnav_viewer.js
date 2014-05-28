@@ -67,10 +67,11 @@ var properties={
 		maxAisTPA: 3,    //max. computed AIS TPA time in h (otherwise we do not consider this)
 		aisWarningCpa: 0.274, //nm for AIS warning (500m)
 		aisWarningTpa: 900, //in s - max time for tpa warning (15min)
+        aisNormalImage: 'images/ais-default.png',
 		aisNearestImage: 'images/ais-nearest.png',
 		aisWarningImage: 'images/ais-warning.png',
 		statusQueryTimeout: 3000, //ms
-                centerDisplayTimeout: 45000, //ms - auto hide measure display (0 - no auto hide)
+        centerDisplayTimeout: 45000, //ms - auto hide measure display (0 - no auto hide)
 		navUrl: "avnav_navi.php",
 		maxGpsErrors: 3, //after that much invalid responses/timeouts the GPS is dead
 		cookieName: "avnav",
@@ -84,94 +85,6 @@ var properties={
 			NMEA:	  "images/GreenBubble40.png",
 			ERROR:	  "images/RedBubble40.png"
 		}
-};
-
-var aisparam={
-		distance:{
-			headline: 'dist(nm)',
-			format: function(v){ return formatDecimal(parseFloat(v.distance||0),3,2);}
-		},
-		speed: {
-			headline: 'speed(kn)',
-			format: function(v){ return formatDecimal(parseFloat(v.speed||0),3,1);}
-		},
-		course:	{
-			headline: 'course',
-			format: function(v){ return formatDecimal(parseFloat(v.course||0),3,0);}
-		},
-		cpa:{
-			headline: 'cpa',
-			format: function(v){ return formatDecimal(parseFloat(v.cpa||0),3,2);}
-		},
-		tcpa:{
-			headline: 'tcpa',
-			format: function(v){
-				var tval=parseFloat(v.tcpa||0);
-				var h=Math.floor(tval/3600);
-				var m=Math.floor((tval-h*3600)/60);
-				var s=tval-3600*h-60*m;
-				return formatDecimal(h,2,0)+':'+formatDecimal(m,2,0)+':'+formatDecimal(s,2,0);
-				}
-		},
-    passFront:{
-      headline: 'pass',
-      format: function(v){
-        if (! v.cpa) return "-";
-        if (v.passFront) return "Front";
-        return "Back";
-      }
-    },
-		shipname:{
-			headline: 'name',
-			format: function(v){ return v.shipname;}
-		},
-		callsign:{
-			headline: 'call',
-			format: function(v){ return v.callsign;}
-		},
-		mmsi: {
-			headline: 'mmsi',
-			format: function(v){ return v.mmsi;}
-		},
-		shiptype:{
-			headline: 'type',
-			format: function(v){
-				var t=0;
-				try{
-					t=parseInt(v.shiptype||0);
-				}catch (e){}
-				if (t>=20 && t<=29) return "WIG";
-				if (t==30) return "Fishing";
-				if (t==31 || t==32) return "Towing";
-				if (t==33) return "Dredging";
-				if (t==34) return "Diving";
-				if (t==35) return "Military";
-				if (t ==36)return "Sail";
-				if (t==37) return "Pleasure";
-				if (t>=40 && t<=49) return "HighSp";
-				if (t==50) return "Pilot";
-				if (t==51) return "SAR";
-				if (t==52) return "Tug";
-				if (t==53) return "PortT";
-				if (t==54) return "AntiPol";
-				if (t==55) return "Law";
-				if (t==58) return "Medical";
-				if (t>=60 && t<=69) return "Passenger";
-				if (t>=70 && t<=79) return "Cargo";
-				if (t>=80 && t<=89) return "Tanker";
-				if (t>=91 && t<=94) return "Hazard";
-				return "Other";
-			}
-		},
-		position:{
-			headline: 'position',
-			format: function(v){return formatLonLats({lon:v.lon,lat:v.lat});}
-		},
-    destination: {
-      headline: 'destination',
-      format: function(v){ var d=v.destination; if (d) return d; return "unknown";}
-    }
-		
 };
 
 

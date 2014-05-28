@@ -161,3 +161,7 @@ avnav.nav.navdata.Cpa=function(){
      */
     this.front=false;
 };
+
+avnav.nav.navdata.Ais=function(){
+
+};

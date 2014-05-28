@@ -1,0 +1,301 @@
+/**
+ * Created by andreas on 04.05.14.
+ */
+goog.provide('avnav.nav.AisData');
+goog.require('avnav.util.PropertyHandler');
+goog.require('avnav.util.Formatter');
+goog.require('goog.date.Date');
+goog.require('goog.date.DateTime');
+
+/**
+ * the handler for the ais data
+ * query the server...
+ * @param {avnav.util.PropertyHandler} propertyHandler
+ * @param {avnav.nav.NavObject} navobject
+ * @constructor
+ */
+avnav.nav.AisData=function(propertyHandler,navobject){
+    /** @private */
+    this.propertyHandler=propertyHandler;
+    /** @private */
+    this.navobject=navobject;
+    /** @private
+     * @type {Array.<avnav.nav.navdata.Ais>}
+     * */
+    this.currentAis=[];
+
+    /**
+     * the last successfull query
+     * @type {number}
+     */
+    this.lastAisQuery=new Date().getTime();
+    /**
+     * @private
+     * @type {null}
+     */
+    this.timer=null;
+    /**
+     * @private
+     * @type {number}
+     */
+    this.aisErrors=0;
+    /**
+     * the mmsi of the tracked target
+     * @type {number}
+     */
+    this.trackedAIStarget=null;
+    /**
+     * the mmsi of the target that we should warn
+     * @type {number}
+     */
+    this.aisWarningTarget=null;
+    /**
+     * @private
+     * @type {properties.NM}
+     */
+    this.NM=this.propertyHandler.getProperties().NM;
+
+    /**
+     * the formatter for AIS data
+     * @private
+     * @type {{distance: {headline: string, format: format}, speed: {headline: string, format: format}, course: {headline: string, format: format}, cpa: {headline: string, format: format}, tcpa: {headline: string, format: format}, passFront: {headline: string, format: format}, shipname: {headline: string, format: format}, callsign: {headline: string, format: format}, mmsi: {headline: string, format: format}, shiptype: {headline: string, format: format}, position: {headline: string, format: format}, destination: {headline: string, format: format}}}
+     */
+    this.aisparam={
+        distance:{
+            headline: 'dist(nm)',
+            format: function(v){ return formatDecimal(parseFloat(v.distance||0),3,2);}
+        },
+        speed: {
+            headline: 'speed(kn)',
+            format: function(v){ return formatDecimal(parseFloat(v.speed||0),3,1);}
+        },
+        course:	{
+            headline: 'course',
+            format: function(v){ return formatDecimal(parseFloat(v.course||0),3,0);}
+        },
+        cpa:{
+            headline: 'cpa',
+            format: function(v){ return formatDecimal(parseFloat(v.cpa||0),3,2);}
+        },
+        tcpa:{
+            headline: 'tcpa',
+            format: function(v){
+                var tval=parseFloat(v.tcpa||0);
+                var h=Math.floor(tval/3600);
+                var m=Math.floor((tval-h*3600)/60);
+                var s=tval-3600*h-60*m;
+                return formatDecimal(h,2,0)+':'+formatDecimal(m,2,0)+':'+formatDecimal(s,2,0);
+            }
+        },
+        passFront:{
+            headline: 'pass',
+            format: function(v){
+                if (! v.cpa) return "-";
+                if (v.passFront) return "Front";
+                return "Back";
+            }
+        },
+        shipname:{
+            headline: 'name',
+            format: function(v){ return v.shipname;}
+        },
+        callsign:{
+            headline: 'call',
+            format: function(v){ return v.callsign;}
+        },
+        mmsi: {
+            headline: 'mmsi',
+            format: function(v){ return v.mmsi;}
+        },
+        shiptype:{
+            headline: 'type',
+            format: function(v){
+                var t=0;
+                try{
+                    t=parseInt(v.shiptype||0);
+                }catch (e){}
+                if (t>=20 && t<=29) return "WIG";
+                if (t==30) return "Fishing";
+                if (t==31 || t==32) return "Towing";
+                if (t==33) return "Dredging";
+                if (t==34) return "Diving";
+                if (t==35) return "Military";
+                if (t ==36)return "Sail";
+                if (t==37) return "Pleasure";
+                if (t>=40 && t<=49) return "HighSp";
+                if (t==50) return "Pilot";
+                if (t==51) return "SAR";
+                if (t==52) return "Tug";
+                if (t==53) return "PortT";
+                if (t==54) return "AntiPol";
+                if (t==55) return "Law";
+                if (t==58) return "Medical";
+                if (t>=60 && t<=69) return "Passenger";
+                if (t>=70 && t<=79) return "Cargo";
+                if (t>=80 && t<=89) return "Tanker";
+                if (t>=91 && t<=94) return "Hazard";
+                return "Other";
+            }
+        },
+        position:{
+            headline: 'position',
+            format: function(v){return formatLonLats({lon:v.lon,lat:v.lat});}
+        },
+        destination: {
+            headline: 'destination',
+            format: function(v){ var d=v.destination; if (d) return d; return "unknown";}
+        }
+
+    };
+
+    /**
+     * @private
+     * @type {avnav.util.Formatter}
+     */
+    this.formatter=new avnav.util.Formatter();
+    this.startQuery();
+};
+
+/**
+ * compute all the cpa data...
+ * @private
+ */
+avnav.nav.AisData.prototype.handleAisData=function() {
+    /** @type {avnav.nav.navdata.GpsInfo}*/
+    var boatPos = this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var properties=this.propertyHandler.getProperties();
+    if (boatPos.valid) {
+        var foundTrackedTarget = false;
+        var aisWarningAis = null;
+        for (var aisidx in this.currentAis) {
+            var ais = this.currentAis[aisidx];
+            ais.warning=false;
+            ais.tracking=false;
+            ais.nearest=false;
+            var dst = avnav.nav.NavCompute.computeDistance(boatPos, new avnav.nav.navdata.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
+            var cpadata = avnav.nav.NavCompute.computeCpa({
+                    lon: boatPos.lon,
+                    lat: boatPos.lat,
+                    course: boatPos.course || 0,
+                    speed: boatPos.speed || 0
+                },
+                {
+                    lon: parseFloat(ais.lon || 0),
+                    lat: parseFloat(ais.lat || 0),
+                    course: parseFloat(ais.course || 0),
+                    speed: parseFloat(ais.speed || 0)
+                },
+                properties
+            );
+            ais.distance = dst.dtsnm;
+            ais.headingTo = dst.heading;
+            if (cpadata.tcpa) {
+                ais.cpa = cpadata.cpanm;
+                ais.tcpa = cpadata.tcpa;
+            }
+            else {
+                ais.cpa = 0;
+                ais.tcpa = 0;
+            }
+            ais.passFront = cpadata.front;
+            if (!ais.shipname) ais.shipname = "unknown";
+            if (!ais.callsign) ais.callsign = "????";
+            if (ais.cpa && ais.cpa < properties.aisWarningCpa && ais.tcpa && ais.tcpa < properties.aisWarningTpa) {
+                if (aisWarningAis) {
+                    if (aisWarningAis.tcpa > ais.tcpa) aisWarningAis = ais;
+                }
+                else aisWarningAis = ais;
+            }
+            if (ais.mmsi == this.trackedAIStarget) foundTrackedTarget = true;
+        }
+        if (!foundTrackedTarget) this.trackedAIStarget = null;
+        if (!aisWarningAis) this.aisWarningTarget = null;
+        else this.aisWarningTarget = aisWarningAis.mmsi;
+    }
+    this.currentAis.sort(this.aisSort);
+    if (this.currentAis.length){
+        this.currentAis[0].nearest=true;
+    }
+    if (this.trackedAIStarget) this.currentAis[this.trackedAIStarget].tracking=true;
+    if (this.aisWarningTarget) this.currentAis[this.aisWarningTarget].warning=true;
+    this.navobject.aisEvent();
+};
+/**
+ * sorter for the AIS data - sort by distance
+ * @param a
+ * @param b
+ * @returns {number}
+ */
+avnav.nav.AisData.prototype.aisSort=function(a,b) {
+    try {
+        if (a.distance == b.distance) return 0;
+        if (a.distance < b.distance) return -1;
+        return 1;
+    } catch (err) {
+        return 0;
+    }
+};
+/**
+ * get the formatter for AIS data
+ * @returns {{distance: {headline: string, format: format}, speed: {headline: string, format: format}, course: {headline: string, format: format}, cpa: {headline: string, format: format}, tcpa: {headline: string, format: format}, passFront: {headline: string, format: format}, shipname: {headline: string, format: format}, callsign: {headline: string, format: format}, mmsi: {headline: string, format: format}, shiptype: {headline: string, format: format}, position: {headline: string, format: format}, destination: {headline: string, format: format}}}
+ */
+avnav.nav.AisData.prototype.getAisFormatter=function(){
+    return this.aisparam;
+};
+
+/**
+ * @private
+ */
+avnav.nav.AisData.prototype.startQuery=function() {
+    var url = this.propertyHandler.getProperties().navUrl+"?request=ais";
+    var timeout = this.propertyHandler.getProperties().aisQueryTimeout; //in ms
+    var center=this.navobject.getMapCenter();
+    var self=this;
+    if (! center){
+        window.clearTimeout(this.timer);
+        this.timer=window.setTimeout(function(){
+            self.startQuery();
+        },timeout);
+        return;
+    }
+    url+="&lon="+this.formatter.formatDecimal(center.lon,3,5);
+    url+="&lat="+this.formatter.formatDecimal(center.lat,3,5);
+    url+="&distance="+this.formatter.formatDecimal(this.propertyHandler.getProperties().aisDistance||10,4,1);
+    $.ajax({
+        url: url,
+        dataType: 'json',
+        cache:	false,
+        success: function(data,status){
+            self.aisErrors=0;
+            self.lastAisQuery=new Date().getTime();
+            var aisList=[];
+            if (data.class && data.class == "error") aisList=[];
+            else aisList=data;
+            self.currentAis=aisList;
+            self.handleAisData();
+            window.clearTimeout(self.timer);
+            self.timer=window.setTimeout(function(){self.startQuery();},timeout);
+        },
+        error: function(status,data,error){
+            log("query ais error");
+            self.aisErrors+=1;
+            if (self.aisErrors >= self.propertyHandler.getProperties().maxAisErrors){
+                self.currentAis=[];
+                handleAISData();
+            }
+            window.clearTimeout(self.timer);
+            self.timer=window.setTimeout(function(){self.startQuery();},timeout);
+        },
+        timeout: timeout
+    });
+};
+
+
+/**
+ * return the current aisData
+ * @returns {Array.<avnav.nav.navdata.Ais>}
+ */
+avnav.nav.AisData.prototype.getAisData=function(){
+    return this.currentAis;
+};
+
