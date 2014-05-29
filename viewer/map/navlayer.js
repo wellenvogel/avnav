@@ -199,9 +199,11 @@ avnav.map.NavLayer.prototype.onPostCompose=function(evt){
     vectorContext.setImageStyle(this.markerStyle);
     vectorContext.drawPointGeometry(marker);
     if (this.mapholder.getMarkerLock()){
-        //draw the center marker
-        vectorContext.setImageStyle(this.centerStyle);
-        vectorContext.drawPointGeometry(center);
+        if (! this.mapholder.getGpsLock()) {
+            //draw the center marker
+            vectorContext.setImageStyle(this.centerStyle);
+            vectorContext.drawPointGeometry(center);
+        }
         //draw the course to the marker
         var line=new ol.geom.LineString([this.boatPosition,this.markerPosition]);
         vectorContext.setFillStrokeStyle(null,this.courseStyle);
