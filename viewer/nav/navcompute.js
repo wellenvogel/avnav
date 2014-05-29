@@ -42,13 +42,26 @@ avnav.nav.NavCompute.computeDistance=function(src,dst){
 avnav.nav.NavCompute.computeCpa=function(src,dst,properties){
     var NM=properties.NM;
     var rt = new avnav.nav.navdata.Cpa();
-    if (dst.speed < properties.minAISspeed) {
-        return rt;
-    }
     var llsrc = new LatLon(src.lat, src.lon);
     var lldst = new LatLon(dst.lat, dst.lon);
+    var curdistance=llsrc.distanceTo(lldst,5)*1000; //m
+    if (curdistance < 0.1){
+        var x=curdistance;
+    }
+    //default to our current distance
+    rt.tcpa=0;
+    rt.cpa=curdistance;
+    rt.cpanm=rt.cpa/NM;
+    if (dst.speed < properties.minAISspeed) {
+        //TODO: compute cpa correctly if the target does not move
+        //for now assume current distance
+        return rt;
+    }
     var intersect = LatLon.intersection(llsrc, src.course, lldst, dst.course);
-    if (!intersect) return rt;
+    if (!intersect) {
+
+        return rt;
+    }
     var da = llsrc.distanceTo(intersect, 5) * 1000; //m
     var timeIntersectSrc = 0;
     if (src.speed) timeIntersectSrc = da / src.speed; //strange unit: m/nm*h -> does not matter as we only compare
@@ -65,6 +78,10 @@ avnav.nav.NavCompute.computeCpa=function(src,dst,properties){
     var cpadst = lldst.destinationPoint(dst.course, dst.speed * NM / 1000 * tm);
     rt.tcpa = tm * 3600;
     rt.cpa = cpasrc.distanceTo(cpadst, 5) * 1000;
+    if (rt.cpa > curdistance) {
+        rt.cpa=curdistance;
+        rt.tcpa=0;
+    }
     rt.cpanm = rt.cpa / NM;
     rt.src.lon = cpasrc._lon;
     rt.src.lat = cpasrc._lat;
