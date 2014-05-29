@@ -42,6 +42,7 @@ avnav.gui.Navpage=function(){
     $(document).on(avnav.map.MapEvent.EVENT_TYPE, function(ev,evdata){
         self.mapEvent(evdata);
     });
+
 };
 goog.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
@@ -95,6 +96,8 @@ avnav.gui.Navpage.prototype.showPage=function(options){
         }
     });
     this.buttonUpdate(true);
+    this.updateAisPanel();
+    this.fillDisplayFromGps();
 };
 /**
  * the periodic timer call
@@ -139,6 +142,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $('#centerDisplay').click({page:this},function(ev){
        ev.data.page.hideOverlay();
     });
+    $('#aisInfo').click({page:this},function(ev){
+        ev.data.page.gui.showPage('aispage');
+    });
 };
 
 /**
@@ -160,36 +166,43 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
 };
 
 /**
+ * update the AIS panel
+ */
+avnav.gui.Navpage.prototype.updateAisPanel=function() {
+    var aisPanel = this.getDiv().find('.avn_aisInfo');
+    if (aisPanel) {
+        var nearestTarget = this.navobject.getAisData().getNearestAisTarget();
+        if (nearestTarget.mmsi) {
+            //should show the AIS panel
+            if (this.showHideAdditionalPanel('#aisInfo', true, '#' + this.mapdom))
+                this.gui.map.updateSize();
+            var displayClass = "avn_ais_info_first";
+            var warningClass = "avn_ais_info_warning";
+            if (!nearestTarget.warning) {
+                $('#aisInfo').removeClass(warningClass);
+                if (nearestTarget.nearest) $('#aisInfo').addClass(displayClass);
+                else $('#aisInfo').removeClass(displayClass);
+            }
+            else {
+                $('#aisInfo').addClass(warningClass);
+                $('#aisInfo').removeClass(displayClass);
+            }
+        }
+        else {
+            if (this.showHideAdditionalPanel('#aisInfo', false, '#' + this.mapdom))
+                this.gui.map.updateSize();
+        }
+    }
+};
+
+/**
  *
  * @param {avnav.nav.NavEvent} evdata
  */
 avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
     if (evdata.type == avnav.nav.NavEventType.AIS){
-        var aisPanel=this.getDiv().find('.avn_aisInfo');
-        if (aisPanel) {
-            var nearestTarget = this.navobject.getAisData().getNearestAisTarget();
-            if (nearestTarget.mmsi) {
-                //should show the AIS panel
-                if (this.showHideAdditionalPanel('#aisInfo',true,'#'+this.mapdom))
-                    this.gui.map.updateSize();
-                var displayClass="avn_ais_info_first";
-                var warningClass="avn_ais_info_warning";
-                if (! nearestTarget.warning) {
-                    $('#aisInfo').removeClass(warningClass);
-                    if (nearestTarget.nearest) $('#aisInfo').addClass(displayClass);
-                    else $('#aisInfo').removeClass(displayClass);
-                }
-                else {
-                    $('#aisInfo').addClass(warningClass);
-                    $('#aisInfo').removeClass(displayClass);
-                }
-            }
-            else{
-                if (this.showHideAdditionalPanel('#aisInfo',false,'#'+this.mapdom))
-                    this.gui.map.updateSize();
-            }
-        }
+        this.updateAisPanel();
     }
     this.fillDisplayFromGps(evdata.changedNames);
 };

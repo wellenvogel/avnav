@@ -359,6 +359,29 @@ avnav.nav.AisData.prototype.startQuery=function() {
 avnav.nav.AisData.prototype.getAisData=function(){
     return this.currentAis;
 };
+
+/**
+ * get an ais target by mmsi, return undefined if not found
+ * @param mmsi
+ * @returns {*}
+ */
+avnav.nav.AisData.prototype.getAisByMmsi=function(mmsi){
+    for (var i in this.currentAis){
+        if (this.currentAis[i].mmsi == mmsi) return this.currentAis[i];
+    }
+    return undefined;
+};
+/**
+ * get the position of an AIS target
+ * @param mmsi
+ * @returns {*}
+ */
+avnav.nav.AisData.prototype.getAisPositionByMmsi=function(mmsi){
+    var ais=this.getAisByMmsi(mmsi);
+    if (! ais) return undefined;
+    return new avnav.nav.navdata.Point(parseFloat(ais.lon||0),parseFloat(ais.lat||0));
+};
+
 /**
  * get the raw data for the currently tracked target
  * @returns {avnav.nav.navdata.Ais}
@@ -366,10 +389,20 @@ avnav.nav.AisData.prototype.getAisData=function(){
 avnav.nav.AisData.prototype.getNearestAisTarget=function(){
     return this.nearestAisTarget;
 };
+
+/**
+ * return the mmsi of the tracked target or 0
+ * @returns {number}
+ */
+avnav.nav.AisData.prototype.getTrackedTarget=function(){
+    return this.trackedAIStarget;
+};
 /**
  * set the target to be tracked, 0 to use nearest
  * @param {number} mmsi
  */
 avnav.nav.AisData.prototype.setTrackedTarget=function(mmsi){
+    if (this.trackedAIStarget == mmsi) return;
     this.trackedAIStarget=mmsi;
+    this.handleAisData();
 };

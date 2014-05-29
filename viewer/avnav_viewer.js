@@ -38,6 +38,7 @@ goog.require('avnav.nav.NavObject');
 goog.require('avnav.gui.Mainpage');
 goog.require('avnav.gui.Statuspage');
 goog.require('avnav.gui.Navpage');
+goog.require('avnav.gui.Aispage');
 
 
 var properties={
