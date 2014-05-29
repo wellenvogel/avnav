@@ -44,16 +44,43 @@ avnav.nav.AisData=function(propertyHandler,navobject){
      * @type {number}
      */
     this.trackedAIStarget=null;
-    /**
-     * the mmsi of the target that we should warn
-     * @type {number}
-     */
-    this.aisWarningTarget=null;
+
     /**
      * @private
      * @type {properties.NM}
      */
     this.NM=this.propertyHandler.getProperties().NM;
+
+    /**
+     * this is a translation between the display names and the aisparam values
+     * @type {{aisDst: string, aisSog: string, aisCog: string, aisCpa: string, aisTcpa: string, aisMmsi: string, aisName: string, aisDestination: string, aisFront: string, aisShiptype: string}}
+     */
+    this.formattedDataDescription={
+        aisDst:'distance',
+        aisSog:'speed',
+        aisCog:'course',
+        aisCpa:'cpa',
+        aisTcpa:'tcpa',
+        aisMmsi:'mmsi',
+        aisName:'shipname',
+        aisDestination:'destination',
+        aisFront:'passFront',
+        aisShiptype:'shiptype'
+    };
+
+    this.formattedData={};
+    for (var i in this.formattedDataDescription){
+        this.formattedData[i]="";
+        this.navobject.registerValueProvider(i,this,this.getFormattedAisValue)
+    }
+
+    /**
+     * the nearest target - being returned when values are queried
+     *
+     * @type {avnav.nav.navdata.Ais}
+     */
+    this.nearestAisTarget={};
+    var self=this;
 
     /**
      * the formatter for AIS data
@@ -63,28 +90,33 @@ avnav.nav.AisData=function(propertyHandler,navobject){
     this.aisparam={
         distance:{
             headline: 'dist(nm)',
-            format: function(v){ return formatDecimal(parseFloat(v.distance||0),3,2);}
+            format: function(v){ return self.formatter.formatDecimal(parseFloat(v.distance||0),3,2);}
         },
         speed: {
             headline: 'speed(kn)',
-            format: function(v){ return formatDecimal(parseFloat(v.speed||0),3,1);}
+            format: function(v){ return self.formatter.formatDecimal(parseFloat(v.speed||0),3,1);}
         },
         course:	{
             headline: 'course',
-            format: function(v){ return formatDecimal(parseFloat(v.course||0),3,0);}
+            format: function(v){ return self.formatter.formatDecimal(parseFloat(v.course||0),3,0);}
         },
         cpa:{
             headline: 'cpa',
-            format: function(v){ return formatDecimal(parseFloat(v.cpa||0),3,2);}
+            format: function(v){
+                var tval=parseFloat(v.tcpa||0);
+                //no cpa if tcpa < 0
+                if (tval < 0) return "-----";
+                return self.formatter.formatDecimal(parseFloat(v.cpa||0),3,2);}
         },
         tcpa:{
             headline: 'tcpa',
             format: function(v){
                 var tval=parseFloat(v.tcpa||0);
+                if (tval < 0) return "--:--:--";
                 var h=Math.floor(tval/3600);
                 var m=Math.floor((tval-h*3600)/60);
                 var s=tval-3600*h-60*m;
-                return formatDecimal(h,2,0)+':'+formatDecimal(m,2,0)+':'+formatDecimal(s,2,0);
+                return self.formatter.formatDecimal(h,2,0)+':'+self.formatter.formatDecimal(m,2,0)+':'+self.formatter.formatDecimal(s,2,0);
             }
         },
         passFront:{
@@ -139,7 +171,7 @@ avnav.nav.AisData=function(propertyHandler,navobject){
         },
         position:{
             headline: 'position',
-            format: function(v){return formatLonLats({lon:v.lon,lat:v.lat});}
+            format: function(v){return self.formatter.formatLonLats({lon:v.lon,lat:v.lat});}
         },
         destination: {
             headline: 'destination',
@@ -164,9 +196,10 @@ avnav.nav.AisData.prototype.handleAisData=function() {
     /** @type {avnav.nav.navdata.GpsInfo}*/
     var boatPos = this.navobject.getRawData(avnav.nav.NavEventType.GPS);
     var properties=this.propertyHandler.getProperties();
+    var trackedTarget=null; //ref to tracked target
+    var aisWarningAis = null;
     if (boatPos.valid) {
         var foundTrackedTarget = false;
-        var aisWarningAis = null;
         for (var aisidx in this.currentAis) {
             var ais = this.currentAis[aisidx];
             ais.warning=false;
@@ -189,7 +222,7 @@ avnav.nav.AisData.prototype.handleAisData=function() {
             );
             ais.distance = dst.dtsnm;
             ais.headingTo = dst.heading;
-            if (cpadata.tcpa) {
+            if (cpadata.tcpa >=0) {
                 ais.cpa = cpadata.cpanm;
                 ais.tcpa = cpadata.tcpa;
             }
@@ -206,18 +239,35 @@ avnav.nav.AisData.prototype.handleAisData=function() {
                 }
                 else aisWarningAis = ais;
             }
-            if (ais.mmsi == this.trackedAIStarget) foundTrackedTarget = true;
+            if (ais.mmsi == this.trackedAIStarget) {
+                foundTrackedTarget = true;
+                ais.tracking=true;
+                trackedTarget=ais;
+            }
         }
         if (!foundTrackedTarget) this.trackedAIStarget = null;
-        if (!aisWarningAis) this.aisWarningTarget = null;
-        else this.aisWarningTarget = aisWarningAis.mmsi;
     }
     this.currentAis.sort(this.aisSort);
     if (this.currentAis.length){
         this.currentAis[0].nearest=true;
     }
-    if (this.trackedAIStarget) this.currentAis[this.trackedAIStarget].tracking=true;
-    if (this.aisWarningTarget) this.currentAis[this.aisWarningTarget].warning=true;
+    if (aisWarningAis) {
+        aisWarningAis.warning=true;
+    }
+    //handling of the nearest target
+    //warning active - this one
+    //no tracked target set - nearest
+    //tracked set - this one
+    if (this.currentAis.length) {
+        if (aisWarningAis) this.nearestAisTarget = aisWarningAis;
+        else {
+            if (trackedTarget) this.nearestAisTarget = trackedTarget;
+            else this.nearestAisTarget = this.currentAis[0];
+        }
+    }
+    else {
+        this.nearestAisTarget={};
+    }
     this.navobject.aisEvent();
 };
 /**
@@ -241,6 +291,17 @@ avnav.nav.AisData.prototype.aisSort=function(a,b) {
  */
 avnav.nav.AisData.prototype.getAisFormatter=function(){
     return this.aisparam;
+};
+/**
+ *
+ * @param dname
+ * @returns {string}
+ */
+avnav.nav.AisData.prototype.getFormattedAisValue=function(dname){
+    var key=this.formattedDataDescription[dname];
+    if (! key) return "";
+    if (this.nearestAisTarget[key] === undefined) return "";
+    return this.aisparam[key].format(this.nearestAisTarget);
 };
 
 /**
@@ -298,4 +359,17 @@ avnav.nav.AisData.prototype.startQuery=function() {
 avnav.nav.AisData.prototype.getAisData=function(){
     return this.currentAis;
 };
-
+/**
+ * get the raw data for the currently tracked target
+ * @returns {avnav.nav.navdata.Ais}
+ */
+avnav.nav.AisData.prototype.getNearestAisTarget=function(){
+    return this.nearestAisTarget;
+};
+/**
+ * set the target to be tracked, 0 to use nearest
+ * @param {number} mmsi
+ */
+avnav.nav.AisData.prototype.setTrackedTarget=function(mmsi){
+    this.trackedAIStarget=mmsi;
+};

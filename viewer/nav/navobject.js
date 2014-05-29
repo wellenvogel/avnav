@@ -262,6 +262,13 @@ avnav.nav.NavObject.prototype.getValueNames=function(){
     return rt;
 };
 /**
+ * get the AIS data handler
+ * @returns {avnav.nav.AisData|*}
+ */
+avnav.nav.NavObject.prototype.getAisData=function(){
+    return this.aisHandler;
+};
+/**
  * called back from gpshandler
  */
 avnav.nav.NavObject.prototype.gpsEvent=function(){

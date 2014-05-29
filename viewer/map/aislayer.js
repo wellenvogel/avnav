@@ -139,6 +139,7 @@ avnav.map.AisLayer.prototype.navEvent=function(evdata){
             }
             else{
                 //TODO: how do we ensure a redraw if only the course is changing?
+                this.features[mmsi].aisparam=item;
                 this.features[mmsi].setGeometry(new ol.geom.Point(this.mapholder.pointToMap([parseFloat(item.lon),parseFloat(item.lat)])));
             }
             this.features[mmsi].aisparam.updatets=now;

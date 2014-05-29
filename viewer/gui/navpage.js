@@ -29,6 +29,12 @@ avnav.gui.Navpage=function(){
      * @type {number}
      */
     this.hidetime=0;
+    /**
+     * the dom id of the map
+     * @private
+     * @type {string}
+     */
+    this.mapdom='avi_map_navpage';
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
        self.navEvent(evdata);
@@ -82,7 +88,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
         dataType: 'xml',
         cache: false,
         success: function(data){
-            self.getMap().initMap('avi_map_navpage',data,chartbase);
+            self.getMap().initMap(self.mapdom,data,chartbase);
         },
         error: function(ev){
             alert("unable to load charts "+ev.responseText);
@@ -159,6 +165,32 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
  */
 avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
+    if (evdata.type == avnav.nav.NavEventType.AIS){
+        var aisPanel=this.getDiv().find('.avn_aisInfo');
+        if (aisPanel) {
+            var nearestTarget = this.navobject.getAisData().getNearestAisTarget();
+            if (nearestTarget.mmsi) {
+                //should show the AIS panel
+                if (this.showHideAdditionalPanel('#aisInfo',true,'#'+this.mapdom))
+                    this.gui.map.updateSize();
+                var displayClass="avn_ais_info_first";
+                var warningClass="avn_ais_info_warning";
+                if (! nearestTarget.warning) {
+                    $('#aisInfo').removeClass(warningClass);
+                    if (nearestTarget.nearest) $('#aisInfo').addClass(displayClass);
+                    else $('#aisInfo').removeClass(displayClass);
+                }
+                else {
+                    $('#aisInfo').addClass(warningClass);
+                    $('#aisInfo').removeClass(displayClass);
+                }
+            }
+            else{
+                if (this.showHideAdditionalPanel('#aisInfo',false,'#'+this.mapdom))
+                    this.gui.map.updateSize();
+            }
+        }
+    }
     this.fillDisplayFromGps(evdata.changedNames);
 };
 /**

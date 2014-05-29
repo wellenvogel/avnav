@@ -140,3 +140,50 @@ avnav.gui.Page.prototype.handleToggleButton=function(id,onoff,onClass){
         $(id).addClass("avn_buttonInactive");
     }
 };
+
+/**
+ * show or hide an panel and resize some related
+ * @param id - #id or .class of the panel
+ * @param show - true for show, fals for hide
+ * @param mainid #id or .class for a panel - if the panel to show has one of the classes
+ *               anv_left|right|top|bottom it is resized...
+ * @returns {boolean} - true when mainid something changed
+ */
+avnav.gui.Page.prototype.showHideAdditionalPanel=function(id,show,mainid){
+    var mainLocation=null;
+    if ($(id).hasClass('avn_bottom')) mainLocation='bottom';
+    if ($(id).hasClass('avn_left')) mainLocation='left';
+    if ($(id).hasClass('avn_right')) mainLocation='right';
+    if ($(id).hasClass('avn_top')) mainLocation='top';
+    var npos=null;
+    var oval=0;
+    if (mainLocation) oval=parseInt($(mainid).css(mainLocation).replace(/px/,''));
+
+    if (show){
+        if ($(id).is(':visible')) return false;
+        $(id).show();
+        if (! mainLocation) return false;
+        var elheight=$(id).height();
+        var elwidth=$(id).width();
+        if (mainLocation == 'bottom' || mainLocation=='top') npos=oval+elheight;
+        if (mainLocation == 'left' || mainLocation=='right') npos=oval+elwidth;
+    }
+    else {
+        if (!$(id).is(':visible')) return false;
+        var elheight=$(id).height();
+        var elwidth=$(id).width();
+        $(id).hide();
+        if (! mainLocation) return false;
+        if (mainLocation == 'bottom' || mainLocation=='top') npos=oval-elheight;
+        if (mainLocation == 'left' || mainLocation=='right') npos=oval-elwidth;
+    }
+    if (npos != null){
+        $(mainid).css(mainLocation,npos+"px");
+    }
+    //additional top/bottom panels should only fill the same width as main
+    $('.avn_top:visible').css('left',$(mainid).css('left'));
+    $('.avn_bottom:visible').css('left',$(mainid).css('left'));
+    $('.avn_top:visible').css('right',$(mainid).css('right'));
+    $('.avn_bottom:visible').css('right',$(mainid).css('right'));
+    return true;
+};

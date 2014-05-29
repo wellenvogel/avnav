@@ -586,5 +586,11 @@ avnav.map.MapHolder.prototype.doSlide=function(start){
         self.doSlide();
     },to);
 };
+/**
+ * tell the map that it's size has changed
+ */
+avnav.map.MapHolder.prototype.updateSize=function(){
+    this.olmap.updateSize();
+};
 
 
