@@ -212,15 +212,24 @@ avnav.gui.Navpage.prototype.navEvent=function(evdata){
  */
 avnav.gui.Navpage.prototype.mapEvent=function(evdata){
     if (! this.visible) return;
-    if (evdata.type != avnav.map.EventType.MOVE) return;
-    //show the center display if not visible
-    if (this.overlay != null){
-        this.hidetime=new Date().getTime()+this.gui.properties.getProperties().centerDisplayTimeout;
-        return;
+    if (evdata.type == avnav.map.EventType.MOVE) {
+        //show the center display if not visible
+        if (this.overlay != null) {
+            this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
+            return;
+        }
+        this.overlay = this.getDiv().find('#centerDisplay');
+        this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
+        this.overlay.show();
     }
-    this.overlay=this.getDiv().find('#centerDisplay');
-    this.hidetime=new Date().getTime()+this.gui.properties.getProperties().centerDisplayTimeout;
-    this.overlay.show();
+    if (evdata.type == avnav.map.EventType.SELECT){
+        var feature=evdata.parameter.feature;
+        if (! feature) return;
+        if (feature.aisparam && feature.aisparam.mmsi){
+            this.navobject.getAisData().setTrackedTarget(feature.aisparam.mmsi);
+            this.gui.showPage('aispage');
+        }
+    }
 };
 
 avnav.gui.Navpage.prototype.hideOverlay=function(){

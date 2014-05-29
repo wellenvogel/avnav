@@ -197,6 +197,9 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         this.olmap.on('postcompose',function(evt){
             self.onPostCompose(evt);
         });
+        this.olmap.on('click', function(evt) {
+            self.onClick(evt);
+        });
     }
     if (this.center && this.zoom >0){
         //if we load a new map - try to restore old center and zoom
@@ -504,6 +507,29 @@ avnav.map.MapHolder.prototype.setMarkerPosition=function(coord,forceWrite){
         });
         this.navlayer.setMarkerPosition(coord);
 
+    }
+};
+/**
+ * click event handler
+ * @param {ol.MapBrowserEvent} evt
+ */
+avnav.map.MapHolder.prototype.onClick=function(evt){
+    //no click actions when gps is locked...
+    if (this.gpsLocked) return;
+    var features=[];
+    this.olmap.forEachFeatureAtPixel(evt.pixel,function(feature,layer){
+        features.push(feature);
+    });
+    //currently only AIS features...
+    for (var idx in features){
+        var feature=features[idx];
+        if (feature.aisparam){
+            //only consider the first one...
+            $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
+                new avnav.map.MapEvent(avnav.map.EventType.SELECT, {feature:feature})
+            );
+            break;
+        }
     }
 };
 /**
