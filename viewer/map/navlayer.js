@@ -6,6 +6,7 @@ goog.provide('avnav.map.NavLayer');
 goog.require('avnav.nav.GpsData');
 goog.require('avnav.nav.NavObject');
 
+
 /**
  * a cover for the layer that contaisn the booat, the current wp and the route between them
  * @param {avnav.map.MapHolder} mapholder
@@ -13,6 +14,9 @@ goog.require('avnav.nav.NavObject');
  * @constructor
  */
 avnav.map.NavLayer=function(mapholder,navobject){
+    //use our own drawing to canvas
+    //due to broken ol3 IconStyle when drawing to vector context
+    this.useOwnDrawing=true;
     /**
      * @private
      * @type {avnav.map.MapHolder}
@@ -56,6 +60,31 @@ avnav.map.NavLayer=function(mapholder,navobject){
         });
 
     /**
+     * our style properties
+     * @private
+     * @type {{anchor: number[], size: number[], anchorXUnits: string, anchorYUnits: string, opacity: number, src: string}}
+     */
+
+    this.markerStyleProperties={
+        anchor: [20, 20],
+            size: [40, 40],
+        anchorXUnits: 'pixels',
+        anchorYUnits: 'pixels',
+        opacity: 1,
+        src: 'images/Marker1.png'
+    };
+
+    /**
+     * the image for the marker
+     * @private
+     * @type {Image}
+     */
+    this.markerImage=new Image();
+    if (this.useOwnDrawing) {
+        this.markerImage.src = this.markerStyleProperties.src;
+    }
+
+    /**
      * @private
      * @type {ol.style.style}
      */
@@ -65,32 +94,44 @@ avnav.map.NavLayer=function(mapholder,navobject){
              fill: new ol.style.Fill({color: 'red'})
              });
              */
-            new ol.style.Icon({
-                anchor: [20, 20],
-                size: [40, 40],
-                anchorXUnits: 'pixels',
-                anchorYUnits: 'pixels',
-                opacity: 1,
-                src: 'images/Marker1.png'
-            });
-    //we must explicitely load our icon...
-    this.markerStyle.load();
+            new ol.style.Icon(this.markerStyleProperties);
+    if (! this.useOwnDrawing) {
+        //we must explicitely load our icon...
+        this.markerStyle.load();
+    }
+
+    /**
+     * the properties for the center marker
+     * @private
+     * @type {{anchor: number[], size: number[], anchorXUnits: string, anchorYUnits: string, opacity: number, src: string}}
+     */
+    this.centerStyleProperties={
+        anchor: [20, 20],
+        size: [40, 40],
+        anchorXUnits: 'pixels',
+        anchorYUnits: 'pixels',
+        opacity: 1,
+        src: 'images/Marker2.png'
+    };
 
     /**
      * @private
      * @type {ol.style.style}
      */
     this.centerStyle =
-        new ol.style.Icon({
-            anchor: [20, 20],
-            size: [40, 40],
-            anchorXUnits: 'pixels',
-            anchorYUnits: 'pixels',
-            opacity: 1,
-            src: 'images/Marker2.png'
-        });
-    //we must explicitely load our icon...
-    this.centerStyle.load();
+        new ol.style.Icon(this.centerStyleProperties);
+    /**
+     * @private
+     * @type {Image}
+     */
+    this.centerImage=new Image();
+    if (! this.useOwnDrawing) {
+        //we must explicitely load our icon...
+        this.centerStyle.load();
+    }
+    else {
+        this.centerImage.src=this.centerStyleProperties.src;
+    }
 
     /**
      * our features: 0-boat
@@ -188,29 +229,47 @@ avnav.map.NavLayer.prototype.onPostCompose=function(evt){
     var marker=new ol.geom.Point(null);
     var center=new ol.geom.Point(null);
     if (!this.mapholder.getMarkerLock()) {
-        marker.setCoordinates(evt.frameState.view2DState.center);
+        if (this.useOwnDrawing) {
+            this.mapholder.drawImageToCanvas(evt, evt.frameState.view2DState.center, this.markerImage, this.markerStyleProperties);
+        }
+        else {
+            marker.setCoordinates(evt.frameState.view2DState.center);
+        }
         log("draw marker without lock");
     }
     else {
-        marker.setCoordinates(this.markerPosition);
-        center.setCoordinates(evt.frameState.view2DState.center);
+        if (this.useOwnDrawing) {
+            this.mapholder.drawImageToCanvas(evt, this.markerPosition, this.markerImage, this.markerStyleProperties);
+        }
+        else {
+            marker.setCoordinates(this.markerPosition);
+            center.setCoordinates(evt.frameState.view2DState.center);
+        }
         log("draw marker with lock");
     }
-    vectorContext.setImageStyle(this.markerStyle);
-    vectorContext.drawPointGeometry(marker);
+    if (!this.useOwnDrawing) {
+        vectorContext.setImageStyle(this.markerStyle);
+        vectorContext.drawPointGeometry(marker);
+    }
     if (this.mapholder.getMarkerLock()){
         if (! this.mapholder.getGpsLock()) {
             //draw the center marker
-            vectorContext.setImageStyle(this.centerStyle);
-            vectorContext.drawPointGeometry(center);
+            if (!this.useOwnDrawing) {
+                vectorContext.setImageStyle(this.centerStyle);
+                vectorContext.drawPointGeometry(center);
+            }
+            else {
+                this.mapholder.drawImageToCanvas(evt, evt.frameState.view2DState.center, this.centerImage, this.centerStyleProperties);
+            }
         }
         //draw the course to the marker
         var line=new ol.geom.LineString([this.boatPosition,this.markerPosition]);
         vectorContext.setFillStrokeStyle(null,this.courseStyle);
         vectorContext.drawLineStringGeometry(line);
     }
-    //vectorContext.drawFeature(marker, this.boatStyle);
+
 };
+
 
 /**
  * set the boat position

@@ -53,7 +53,7 @@ avnav.map.MapEvent.EVENT_TYPE="mapevent";
  */
 avnav.map.MapHolder=function(properties,navobject){
     /** @private
-     * {ol.Map}
+     * @type {ol.Map}
      * */
     this.olmap=null;
     /** @private
@@ -253,6 +253,39 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
     this.properties.setUserData({
         currentView:{center:this.center,zoom:this.zoom}
     });
+};
+/**
+ * a workaround for the current unability of ol3 to draw in image in postcompose...
+ * @param {ol.render.Event} the event context from postcompose
+ * @param {ol.Coordinate} coord the coordinate to draw to in map coordinates
+ * @param {Image} the image to display (must be loaded - no check!)
+ * @param {{}} opt_options handles the same properties like ol.style.Icon
+ *             currently supported:
+ *             anchor[x,y] in pixels
+ *             size[x,y]
+ */
+avnav.map.MapHolder.prototype.drawImageToCanvas=function(evt,coord,image,opt_options){
+    if (image.naturalHeight == 0 || image.naturalWidth == 0) return; //silently ignore error
+    var xy=this.olmap.getPixelFromCoordinate(coord);
+    var devpixratio=evt.frameState.pixelRatio;
+    if (devpixratio){
+        xy[0]=xy[0]*devpixratio;
+        xy[0]=xy[0]*devpixratio;
+    }
+    if (opt_options && opt_options.anchor){
+        xy[0]-=opt_options.anchor[0];
+        xy[1]-=opt_options.anchor[1];
+    }
+    /** @type {CanvasRenderingContext2D} */
+    var context=evt.context;
+    if (opt_options && opt_options.size) {
+        context.drawImage(image, xy[0], xy[1], opt_options.size[0], opt_options.size[1]);
+    }
+    else {
+        context.drawImage(image, xy[0], xy[1]);
+    }
+
+
 };
 
 /**
