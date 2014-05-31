@@ -181,6 +181,10 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         this.olmap = new ol.Map({
             target: div,
             layers: layersreverse,
+            interactions: ol.interaction.defaults({
+                altShiftDragRotate:false,
+                pinchRotate: false
+            }),
             view: new ol.View2D({
                 center: ol.proj.transform([ 13.8, 54.1], 'EPSG:4326', 'EPSG:3857'),
                 zoom: 9
