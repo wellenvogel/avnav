@@ -83,13 +83,36 @@ avnav.util.PropertyHandler.prototype.getDescriptionByName=function(name){
     if (current == this.propertyDescriptions) return undefined;
     return current;
 };
-
+/**
+ * get a property value by its name (separated by .)
+ * @param {string} name
+ * @returns {*}
+ */
 avnav.util.PropertyHandler.prototype.getValueByName=function(name){
     var descr=this.getDescriptionByName(name); //ensure that this is really a property
     if (descr === undefined || !( descr instanceof avnav.util.Property)) return undefined;
     return descr.path[descr.name];
 };
-
+/**
+ * create the html part for displaying the settings input
+ * @param name
+ * @returns {string}
+ */
+avnav.util.PropertyHandler.prototype.createSettingsHtml=function(name){
+    var descr=this.getDescriptionByName(name);
+    if (! descr) return "";
+    var html='<label>'+descr.label+'</label>';
+    if (descr.type == avnav.util.PropertyType.CHECKBOX){
+        html+='<input type="checkbox" class="avn_settings_checkbox" avn_name="'+name+'"></input>';
+    }
+    return html;
+};
+/**
+ * set a property value given the name
+ * @param {string} name
+ * @param value
+ * @returns {boolean}
+ */
 avnav.util.PropertyHandler.prototype.setValueByName=function(name,value){
     var descr=this.getDescriptionByName(name); //ensure that this is really a property
     if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;

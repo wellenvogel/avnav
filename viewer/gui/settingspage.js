@@ -15,6 +15,14 @@ avnav.gui.Settingspage=function(){
 goog.inherits(avnav.gui.Settingspage,avnav.gui.Page);
 
 
+avnav.gui.Settingspage.prototype.localInit=function(){
+    var self=this;
+    $('.avn_setting').each(function(idx,el){
+        var name=$(el).attr('avn_name');
+        var html=self.gui.properties.createSettingsHtml(name);
+        $(el).html(html);
+    });
+};
 
 avnav.gui.Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
