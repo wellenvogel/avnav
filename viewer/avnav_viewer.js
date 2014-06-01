@@ -39,6 +39,7 @@ goog.require('avnav.gui.Mainpage');
 goog.require('avnav.gui.Statuspage');
 goog.require('avnav.gui.Navpage');
 goog.require('avnav.gui.Aispage');
+goog.require('avnav.gui.Settingspage');
 
 
 var properties={
@@ -104,7 +105,7 @@ goog.provide('avnav.main');
  *
  */
 avnav.main=function() {
-    var propertyHandler=new avnav.util.PropertyHandler(properties);
+    var propertyHandler=new avnav.util.PropertyHandler({},properties);
     propertyHandler.loadUserData();
     var navobject=new avnav.nav.NavObject(propertyHandler);
     var mapholder=new avnav.map.MapHolder(propertyHandler,navobject);

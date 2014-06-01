@@ -265,6 +265,9 @@ button.avn_buttonInactive{
 button#avb_ShowStatus .avn_button_icon{
   .avn_button_icon_base('images/bargraph32.png');
 }
+button#avb_ShowSettings .avn_button_icon{
+  .avn_button_icon_base('images/spanner32.png');
+}
 button#avb_ShowHelp .avn_button_icon{
   .avn_button_icon_base('images/Question.png');
 }
@@ -303,31 +306,14 @@ button#avb_AisNearest .avn_button_icon {
   .avn_button_icon_base('images/Ais-Up-40.png');
 }
 
-/*-------------------------------------------------------------
-   pop up menu 
--------------------------------------------------------------*/
-.avn_selectList	.ui-selecting { background: #1E6CCF;}
-.avn_selectList	.ui-selected:not(.ui-disabled) { background: #1E6CCF; color: white;}
-.avn_selectList	.ui-selected.ui-disabled { background: #9BB2D0; color: grey;}
-.avn_selectList	.ui-disabled { color: grey;}
-.avn_selectList { list-style-type: none; margin: 0; padding: 0; }
-.avn_selectList ul {margin-top: 2px; margin-bottom: 2px;}
-.avn_selectList { 
-	margin-top: 3px;
-	margin-bottom: 3px;
-	margin-right: 25px; /*for scrolling on tablet*/
-	padding: 0.4em; 
-	padding-left: 10px;
-	font-size: 24px; 
-	}
 
-.avn_disabled {
-	color: grey;
+button#avb_SettingsCancel .avn_button_icon{
+  .avn_button_icon_base('images/Cancel40.png');
+}
+button#avb_SettingsOK .avn_button_icon{
+  .avn_button_icon_base('images/check32.png');
 }
 
-.avn_dialog .ui-dialog-content{
-	overflow: auto !important;
-}
 
 /*-------------------------------------------------------------
    AIS display
@@ -432,20 +418,26 @@ button#avb_AisNearest .avn_button_icon {
 .avn_status_info{
 	padding-left: 3px;
 }
-#status_content_inner h1{
-	margin-left: 10px;
-}
 
-#status_content_inner{
-	overflow: auto;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
-}
 #avi_status_page_inner{
   padding-left: 8px;
+  overflow: auto;
 }
+
+/*-------------------------------------------------------------------------------
+    settings page
+  -------------------------------------------------------------------------------
+*/
+
+#avi_settings_page_inner{
+  padding-left: 8px;
+  overflow: auto;
+}
+
+.avn_settings_line{
+  float: left;
+}
+
 /*-------------------------------------------------------------------------------
     main page
   -------------------------------------------------------------------------------

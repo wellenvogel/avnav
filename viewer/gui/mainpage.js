@@ -84,6 +84,10 @@ avnav.gui.Mainpage.prototype.btnShowStatus=function (button,ev){
     log("ShowStatus clicked");
     this.gui.showPage('statuspage');
 };
+avnav.gui.Mainpage.prototype.btnShowSettings=function (button,ev){
+    log("ShowSettings clicked");
+    this.gui.showPage('settingspage');
+};
 /**
  * create the page instance
  */
