@@ -3,6 +3,7 @@
 @aisPanelWidth:90px;
 @buttonSize: 60px;
 @centerDisplayHeight: 30px;
+@settingsFontSize: 18px;
 
 //hide some content
 
@@ -51,6 +52,17 @@ html,body {
     left: 0;
     right: 0;
 	
+}
+
+/*
+  for a page that consumes the left side and is scrollable
+  */
+.avn_scrollable_page{
+  overflow: auto;
+  top:0;
+  bottom:0;
+  left:0;
+  right: 0;
 }
 
 
@@ -355,12 +367,7 @@ button#avb_SettingsOK .avn_button_icon{
 }
 
 #avi_ais_page_inner{
-	overflow: auto;
-	top:0;
-	bottom:0;
-	left:0;
-	right: 0;
-	
+
 }
 
 /* AIS info box */
@@ -421,7 +428,6 @@ button#avb_SettingsOK .avn_button_icon{
 
 #avi_status_page_inner{
   padding-left: 8px;
-  overflow: auto;
 }
 
 /*-------------------------------------------------------------------------------
@@ -431,15 +437,34 @@ button#avb_SettingsOK .avn_button_icon{
 
 #avi_settings_page_inner{
   padding-left: 8px;
-  overflow: auto;
 }
 
 .avn_setting{
   float: left;
-  font-size: 16px;
-  padding-left: 8px;
-  padding-right: 8px;
+  font-size: @settingsFontSize;
+  padding-left: ( @settingsFontSize * 10 / 16);
+  padding-right: ( @settingsFontSize * 10 / 16);
   padding-bottom: 6px;
+}
+.avn_settings_group{
+  background-color: #6D6D6D;
+  padding-left: 8px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  margin-bottom: 8px;
+  margin-right: 5px;
+  color: #FFF;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+.avn_clear{
+  clear: both;
+}
+
+.avn_settings_line{
+  margin-bottom: 8px;
 }
 
 /*-------------------------------------------------------------------------------

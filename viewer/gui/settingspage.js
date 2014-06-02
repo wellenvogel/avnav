@@ -19,9 +19,22 @@ avnav.gui.Settingspage.prototype.localInit=function(){
     var self=this;
     $('.avn_setting').each(function(idx,el){
         var name=$(el).attr('avn_name');
-        var html=self.gui.properties.createSettingsHtml(name);
-        $(el).html(html);
+        self.createSettingHtml(self.gui.properties.getDescriptionByName(name),el);
     });
+};
+/**
+ * create the html for a settings item
+ * @private
+ * @param {avnav.util.Property} descr
+ * @param el
+ */
+avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
+    if (!(descr instanceof avnav.util.Property)) return;
+    var html='<label>'+descr.label+'</label>';
+    if (descr.type == avnav.util.PropertyType.CHECKBOX){
+        html+='<input type="checkbox" class="avn_settings_checkbox" avn_name="'+name+'"></input>';
+    }
+    $(el).html(html);
 };
 
 avnav.gui.Settingspage.prototype.showPage=function(options){

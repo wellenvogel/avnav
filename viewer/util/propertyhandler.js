@@ -28,6 +28,7 @@ avnav.util.Property=function(defaultv,opt_label,opt_type,opt_values){
     this.values=(opt_values !== undefined)?opt_values:[0,1000]; //assume range 0...1000
     this.path=undefined; //path to object that holds the value
     this.pname=undefined; //the name in the hierarchy, from the underlying level
+    this.completeName=undefined; //the complete path
 };
 
 /**
@@ -41,7 +42,7 @@ avnav.util.Property=function(defaultv,opt_label,opt_type,opt_values){
 avnav.util.PropertyHandler=function(propertyDescriptions,properties){
     this.propertyDescriptions=propertyDescriptions;
     this.currentProperties={};
-    this.extractProperties(this.currentProperties,this.propertyDescriptions);
+    this.extractProperties(this.currentProperties,"",this.propertyDescriptions);
     goog.object.extend(this.currentProperties,properties);
     this.userData={};
 };
@@ -50,20 +51,23 @@ avnav.util.PropertyHandler=function(propertyDescriptions,properties){
  * to an object structure (starting at base)
  * call itself recursively
  * @param {{}} base
+ * @param {string}path - the path to the object we are extracting (. sep)
  * @param {{}} descriptions
  */
-avnav.util.PropertyHandler.prototype.extractProperties=function(base,descriptions){
+avnav.util.PropertyHandler.prototype.extractProperties=function(base,path,descriptions){
     for (var k in descriptions){
         var d=descriptions[k];
+        var curpath=(path == "")?k:path+"."+k;
         if (d instanceof avnav.util.Property){
             base[k]= d.defaultv;
             d.path=base; //set path to value holding object
             d.pname=k;
+            d.completeName=curpath;
         }
         else {
             if (d instanceof Object){
                 base[k]={};
-                this.extractProperties(base[k],d);
+                this.extractProperties(base[k],curpath,d);
             }
         }
     }
@@ -84,28 +88,56 @@ avnav.util.PropertyHandler.prototype.getDescriptionByName=function(name){
     return current;
 };
 /**
+ * get the current value of a property
+ * @param {avnav.util.Property} descr
+ */
+avnav.util.PropertyHandler.prototype.getValue=function(descr){
+    if (descr === undefined || !( descr instanceof avnav.util.Property)) return undefined;
+    return descr.path[descr.name];
+};
+/**
+ * set a property value (and write it to user data)
+ * @param descr the value
+ * @param {avnav.util.Property} value
+ * @returns {boolean}
+ */
+avnav.util.PropertyHandler.prototype.setValue=function(descr,value){
+    if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;
+    descr.path[descr.name]=value;
+    return this.setUserData(descr,value);
+};
+/**
  * get a property value by its name (separated by .)
  * @param {string} name
  * @returns {*}
  */
 avnav.util.PropertyHandler.prototype.getValueByName=function(name){
     var descr=this.getDescriptionByName(name); //ensure that this is really a property
-    if (descr === undefined || !( descr instanceof avnav.util.Property)) return undefined;
-    return descr.path[descr.name];
+    return this.getValue(descr);
 };
 /**
- * create the html part for displaying the settings input
- * @param name
- * @returns {string}
+ * set a user data value (potentially creating intermediate objects)
+ * @param {avnav.util.Property} descr
+ * @param {string} value
+ * @returns {boolean}
  */
-avnav.util.PropertyHandler.prototype.createSettingsHtml=function(name){
-    var descr=this.getDescriptionByName(name);
-    if (! descr) return "";
-    var html='<label>'+descr.label+'</label>';
-    if (descr.type == avnav.util.PropertyType.CHECKBOX){
-        html+='<input type="checkbox" class="avn_settings_checkbox" avn_name="'+name+'"></input>';
+avnav.util.PropertyHandler.prototype.setUserDataByDescr=function(descr,value){
+    if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;
+    var parr=descr.completeName.split(".");
+    var current=this.userData;
+    try {
+        for (var i = 0; i < (parr.length - 1); i++) {
+            var path = parr[i];
+            if (current[path] === undefined) {
+                current[path] = {}
+            }
+            current = current[path];
+        }
+        current[parr[parr.length-1]]=value;
+    }catch(e){
+        log("Exception when setting user data "+descr.completeName+": "+e);
     }
-    return html;
+    return false;
 };
 /**
  * set a property value given the name
@@ -115,9 +147,7 @@ avnav.util.PropertyHandler.prototype.createSettingsHtml=function(name){
  */
 avnav.util.PropertyHandler.prototype.setValueByName=function(name,value){
     var descr=this.getDescriptionByName(name); //ensure that this is really a property
-    if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;
-    descr.path[descr.name]=value;
-    return true;
+    return this.setValue(descr,value);
 };
 
 
@@ -132,7 +162,8 @@ avnav.util.PropertyHandler.prototype.getProperties=function(){
 /**
  * change some user data
  * the data will be save into the cookie
- * @param data
+ * TODO: should we change this to the description model?
+ * @param data - the complete object tree to be set
  */
 avnav.util.PropertyHandler.prototype.setUserData=function(data){
     var filtered=this.filterUserData(data);

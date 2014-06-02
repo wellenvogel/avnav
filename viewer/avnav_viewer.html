@@ -99,18 +99,16 @@ all buttons with ids avb_... will call corresponding js functions
               <div class='avn_inner'>
               </div>
           </div>
-          <div class="avn_panel avn_main">
-              <div id='avi_status_page_inner' class="avn_panel">
-                  <h1>Server Status</h1>
 
-                  <div id='avi_statusTemplate' class='avn_status avn_hidden'>
-                  </div>
-                  <div id='avi_childStatusTemplate' class='avn_child_status avn_hidden'>
-                  </div>
-                  <div id="avi_statusData">
-                  </div>
+          <div id='avi_status_page_inner' class="avn_panel avn_scrollable_page">
+              <h1>Server Status</h1>
+
+              <div id='avi_statusTemplate' class='avn_status avn_hidden'>
               </div>
-              <!--statusContentInner-->
+              <div id='avi_childStatusTemplate' class='avn_child_status avn_hidden'>
+              </div>
+              <div id="avi_statusData">
+              </div>
           </div>
       </div>
       <div class='avn_panel avn_right_panel'>
@@ -241,7 +239,7 @@ all buttons with ids avb_... will call corresponding js functions
               </div>
           </div>
 
-          <div id='avi_ais_page_inner' class="avn_panel">
+          <div id='avi_ais_page_inner' class="avn_panel avn_scrollable_page">
               <h1>AIS</h1>
           </div>
 
@@ -260,21 +258,28 @@ all buttons with ids avb_... will call corresponding js functions
               </div>
           </div>
 
-          <div id='avi_settings_page_inner' class="avn_panel">
+          <div id='avi_settings_page_inner' class="avn_panel avn_scrollable_page">
               <h1>Settings</h1>
               <div class="avn_settings_group" id="avi_settings_layer">
-                  <hr/>
                   <h2 class="avn_settings_headline">Layer</h2>
                   <div class="avn_settings_line" id="avi_settings_layer1">
                       <div class="avn_setting" avn_name="layers.ais"></div>
                       <div class="avn_setting" avn_name="layers.nav"></div>
                       <div class="avn_setting" avn_name="layers.track"></div>
-                      <br/>
+                      <div class="avn_clear"></div>
                   </div>
                   <div class="avn_settings_line" id="avi_settings_layer2">
+                      <div class="avn_setting" avn_name="layers.track"></div>
+                      <div class="avn_clear"></div>
                   </div>
               </div>
-              <hr/>
+              <div class="avn_settings_group">
+                  <h2 class="avn_settings_headline">Layer2</h2>
+                  <div class="avn_settings_line">
+                      <div class="avn_setting" avn_name="layers.ais"></div>
+                      <div class="avn_clear"></div>
+                  </div>
+              </div>
 
           </div>
 
