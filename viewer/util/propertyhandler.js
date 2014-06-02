@@ -93,7 +93,7 @@ avnav.util.PropertyHandler.prototype.getDescriptionByName=function(name){
  */
 avnav.util.PropertyHandler.prototype.getValue=function(descr){
     if (descr === undefined || !( descr instanceof avnav.util.Property)) return undefined;
-    return descr.path[descr.name];
+    return descr.path[descr.pname];
 };
 /**
  * set a property value (and write it to user data)
@@ -103,7 +103,7 @@ avnav.util.PropertyHandler.prototype.getValue=function(descr){
  */
 avnav.util.PropertyHandler.prototype.setValue=function(descr,value){
     if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;
-    descr.path[descr.name]=value;
+    descr.path[descr.pname]=value;
     return this.setUserData(descr,value);
 };
 /**
