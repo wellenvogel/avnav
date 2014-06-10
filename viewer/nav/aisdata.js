@@ -342,7 +342,7 @@ avnav.nav.AisData.prototype.startQuery=function() {
             self.aisErrors+=1;
             if (self.aisErrors >= self.propertyHandler.getProperties().maxAisErrors){
                 self.currentAis=[];
-                handleAISData();
+                self.handleAISData();
             }
             window.clearTimeout(self.timer);
             self.timer=window.setTimeout(function(){self.startQuery();},timeout);
