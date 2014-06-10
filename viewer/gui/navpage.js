@@ -60,41 +60,47 @@ avnav.gui.Navpage.prototype.getMap=function(){
 avnav.gui.Navpage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.fillDisplayFromGps();
-    if (options) this.options_=options;
+    var newMap=false;
+    if (options) {
+        this.options_=options;
+        newMap=true;
+    }
     else {
         if (! this.options_){
             alert("invalid navpage call - no chart selected");
             return;
         }
     }
-    //chartbase: optional url for charts
-    //list: the base url
-    var chartbase=this.options_.charturl;
-    var list=this.options_.url;
-    if (! chartbase){
-        chartbase=list;
+    if (newMap) {
+        //chartbase: optional url for charts
+        //list: the base url
+        var chartbase = this.options_.charturl;
+        var list = this.options_.url;
+        if (!chartbase) {
+            chartbase = list;
+        }
+        if (!list.match(/^http:/)) {
+            if (list.match(/^\//)) {
+                list = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + list;
+            }
+            else {
+                list = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + list;
+            }
+        }
+        var url = list + "/avnav.xml";
+        var self = this;
+        $.ajax({
+            url: url,
+            dataType: 'xml',
+            cache: false,
+            success: function (data) {
+                self.getMap().initMap(self.mapdom, data, chartbase);
+            },
+            error: function (ev) {
+                alert("unable to load charts " + ev.responseText);
+            }
+        });
     }
-    if (! list.match(/^http:/)){
-        if (list.match(/^\//)){
-            list=window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/,'$1')+list;
-        }
-        else {
-            list=window.location.href.replace(/[?].*/,'').replace(/[^\/]*$/,'')+"/"+list;
-        }
-    }
-    var url=list+"/avnav.xml";
-    var self=this;
-    $.ajax({
-        url:url,
-        dataType: 'xml',
-        cache: false,
-        success: function(data){
-            self.getMap().initMap(self.mapdom,data,chartbase);
-        },
-        error: function(ev){
-            alert("unable to load charts "+ev.responseText);
-        }
-    });
     this.buttonUpdate(true);
     this.updateAisPanel();
     this.fillDisplayFromGps();
