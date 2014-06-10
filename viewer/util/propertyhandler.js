@@ -18,7 +18,7 @@ avnav.util.PropertyType={
  * @param defaultv
  * @param opt_label
  * @param opt_type
- * @param opt_values
+ * @param opt_values either min,max,[step] for range or a list of value:label for list
  * @constructor
  */
 avnav.util.Property=function(defaultv,opt_label,opt_type,opt_values){

@@ -54,7 +54,10 @@
         '../libraries/jquery/jquery.cookie.js',
         '../libraries/movable-type/geo.js',
         '../libraries/movable-type/latlon.js',
-        '../libraries/less/less-1.4.1.min.js'];
+        '../libraries/less/less-1.4.1.min.js',
+        '../libraries/rangeslider/rangeslider.css',
+        '../libraries/rangeslider/rangeslider.js'
+    ];
     //scripts used in debug mode
     var debug_scripts = [
         '../libraries/ol3b4/ol-whitespace.js',
@@ -79,6 +82,11 @@
     }
     for (i in scripts) {
         var scriptname = scripts[i];
-        document.write('<scr' + 'ipt type="text/javascript" src="' + scriptname + '"></scr' + 'ipt>');
+        if (scriptname.match(/\.css/)){
+            document.write('<link rel="stylesheet" type="text/css" href="'+scriptname+'"/>');
+        }
+        else {
+            document.write('<scr' + 'ipt type="text/javascript" src="' + scriptname + '"></scr' + 'ipt>');
+        }
     }
 }());

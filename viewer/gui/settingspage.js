@@ -13,6 +13,12 @@ goog.require('avnav.gui.Page');
 avnav.gui.Settingspage=function(){
     //a collection of all items, key is the name, value a function to get the current value
     this.allItems={};
+    /**
+     * @private
+     * @type {avnav.util.Formatter}
+     */
+    this.formatter=new avnav.util.Formatter();
+
     goog.base(this,'settingspage');
 };
 goog.inherits(avnav.gui.Settingspage,avnav.gui.Page);
@@ -35,6 +41,8 @@ avnav.gui.Settingspage.prototype.localInit=function(){
  */
 avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
     if (!(descr instanceof avnav.util.Property)) return;
+    var self=this;
+    var numdigits=0;
     if (descr.type == avnav.util.PropertyType.CHECKBOX){
         var value=this.gui.properties.getValue(descr);
         var html='<label>'+descr.label;
@@ -50,7 +58,38 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
             }
         };
     }
+    if (descr.type == avnav.util.PropertyType.RANGE){
+        var value=this.gui.properties.getValue(descr);
+        var html='<div class=""><div class="avn_slider_label" >'+descr.label+'</div>';
+        html+='<div class="avn_slider_label avn_out">'+value+'</div>';
+        var range=descr.values;
+        numdigits=Math.ceil(Math.log(range[1])/Math.log(10));
+        html+='<div class="avn_slider" ><input type="range" min="'+range[0]+'" max="'+range[1]+'" avn_name="'+name+'" value="'+value+'"';
+        if (range[3]) {
+            html+=' step="'+range[3]+'"';
+        }
+        html+='/></div>';
+        html+='<div class="avn_clear"/>';
+        html+='</div>';
+        this.allItems[descr.completeName]= {
+            read: function () {
+                return $(el).find('input').val();
+            },
+            write: function (value) {
+                $(el).find('input').val(value).change();
+            }
+        };
+    }
     $(el).html(html);
+    $(el).find('input[type="range"]').rangeslider({
+            polyfill: false,
+            onSlide: function(pos,val){
+                val=self.formatter.formatDecimal(val,numdigits);
+                $(el).find('.avn_out').text(val);
+            },
+            fillClass: 'avn_rangeslider__fill',
+            handleClass: 'avn_rangeslider__handle'
+        });
     //$(el).find('input').on('change',{name:descr.completeName},function(evt){alert("change "+evt.data.name);});
 };
 
