@@ -66,6 +66,7 @@ avnav.util.Formatter.prototype.formatLonLats=function(lonlat){
 
 avnav.util.Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace){
     var sign="";
+    number=parseFloat(number);
     if (addSpace != null && addSpace) sign=" ";
     if (number < 0) {
         number=-number;

@@ -62,24 +62,22 @@ var propertyDefinitions=function(){
         hideLower: new avnav.util.Property( true), //if set, hide smaller zoom layers when completely covered
         maxZoom: new avnav.util.Property( 21),  //only allow upscaling up to this zom level
         minGridLedvel: new avnav.util.Property( 10),
-        showOSM: new avnav.util.Property( true),
-        rightPanelWidth: new avnav.util.Property( 60), //currently not used
         loggingEnabled: new avnav.util.Property( true),
-        positionQueryTimeout: new avnav.util.Property( 1000,"Position",avnav.util.PropertyType.RANGE,[500,5000]), //1000ms
-        trackQueryTimeout: new avnav.util.Property( 5000,"Track",avnav.util.PropertyType.RANGE,[500,10000]), //5s in ms
+        positionQueryTimeout: new avnav.util.Property( 1000,"Position",avnav.util.PropertyType.RANGE,[500,5000,10]), //1000ms
+        trackQueryTimeout: new avnav.util.Property( 5000,"Track",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
         bearingColor: new avnav.util.Property( "#DDA01F"),
         bearingWidth: new avnav.util.Property( 3),
         trackColor: new avnav.util.Property( "#D71038"),
         trackWidth: new avnav.util.Property( 3),
         trackInterval: new avnav.util.Property( 30), //seconds
         initialTrackLength: new avnav.util.Property( 24*120), //multiplies with trackInterval - so this gives 24h
-        aisQueryTimeout: new avnav.util.Property( 5000,"AIS",avnav.util.PropertyType.RANGE,[1000,10000]), //ms
-        aisDistance: new avnav.util.Property( 20,"AIS-Distance(nm)",avnav.util.PropertyType.RANGE,[1,100]), //distance for AIS query in nm
+        aisQueryTimeout: new avnav.util.Property( 5000,"AIS",avnav.util.PropertyType.RANGE,[1000,10000,10]), //ms
+        aisDistance: new avnav.util.Property( 20,"AIS-Range(nm)",avnav.util.PropertyType.RANGE,[1,100]), //distance for AIS query in nm
         maxAisErrors: new avnav.util.Property( 3), //after that many errors AIS display will be switched off
         minAISspeed: new avnav.util.Property( 0.2), //minimal speed in kn that we consider when computing cpa/tcpa
         maxAisTPA: new avnav.util.Property( 3),    //max. computed AIS TPA time in h (otherwise we do not consider this)
-        aisWarningCpa: new avnav.util.Property( 0.274,"AIS Warning(nm)",avnav.util.PropertyType.RANGE,[0.1,10,0.01]), //nm for AIS warning (500m)
-        aisWarningTpa: new avnav.util.Property( 900), //in s - max time for tpa warning (15min)
+        aisWarningCpa: new avnav.util.Property( 500,"AIS Warning(m)",avnav.util.PropertyType.RANGE,[100,5000,10]), //m for AIS warning (500m)
+        aisWarningTpa: new avnav.util.Property( 900,"AIS-Warning-TPA(s)",avnav.util.PropertyType.RANGE,[30,3600,10]), //in s - max time for tpa warning (15min)
         aisNormalImage: new avnav.util.Property( 'images/ais-default.png'),
         aisNearestImage: new avnav.util.Property( 'images/ais-nearest.png'),
         aisWarningImage: new avnav.util.Property( 'images/ais-warning.png'),

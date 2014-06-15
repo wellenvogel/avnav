@@ -43,6 +43,7 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
     if (!(descr instanceof avnav.util.Property)) return;
     var self=this;
     var numdigits=0;
+    var numdecimal=0;
     if (descr.type == avnav.util.PropertyType.CHECKBOX){
         var value=this.gui.properties.getValue(descr);
         var html='<label>'+descr.label;
@@ -65,15 +66,18 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
         var range=descr.values;
         numdigits=Math.ceil(Math.log(range[1])/Math.log(10));
         html+='<div class="avn_slider" ><input type="range" min="'+range[0]+'" max="'+range[1]+'" avn_name="'+name+'" value="'+value+'"';
-        if (range[3]) {
-            html+=' step="'+range[3]+'"';
+        if (range[2]) {
+            html+=' step="'+range[2]+'"';
+        }
+        if (range[3]){
+            numdecimal=range[3];
         }
         html+='/></div>';
         html+='<div class="avn_clear"/>';
         html+='</div>';
         this.allItems[descr.completeName]= {
             read: function () {
-                return $(el).find('input').val();
+                return parseFloat($(el).find('input').val());
             },
             write: function (value) {
                 $(el).find('input').val(value).change();
@@ -84,7 +88,7 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
     $(el).find('input[type="range"]').rangeslider({
             polyfill: false,
             onSlide: function(pos,val){
-                val=self.formatter.formatDecimal(val,numdigits);
+                val=self.formatter.formatDecimal(val,numdigits,numdecimal);
                 $(el).find('.avn_out').text(val);
             },
             fillClass: 'avn_rangeslider__fill',

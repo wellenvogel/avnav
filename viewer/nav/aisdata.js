@@ -233,7 +233,8 @@ avnav.nav.AisData.prototype.handleAisData=function() {
             ais.passFront = cpadata.front;
             if (!ais.shipname) ais.shipname = "unknown";
             if (!ais.callsign) ais.callsign = "????";
-            if (ais.cpa && ais.cpa < properties.aisWarningCpa && ais.tcpa && ais.tcpa < properties.aisWarningTpa) {
+            var warningCpa=properties.aisWarningCpa/this.NM;
+            if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && ais.tcpa < properties.aisWarningTpa) {
                 if (aisWarningAis) {
                     if (aisWarningAis.tcpa > ais.tcpa) aisWarningAis = ais;
                 }
@@ -333,7 +334,11 @@ avnav.nav.AisData.prototype.startQuery=function() {
             if (data.class && data.class == "error") aisList=[];
             else aisList=data;
             self.currentAis=aisList;
-            self.handleAisData();
+            try {
+                self.handleAisData();
+            }catch (e){
+                var x=e;
+            }
             window.clearTimeout(self.timer);
             self.timer=window.setTimeout(function(){self.startQuery();},timeout);
         },
