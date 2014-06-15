@@ -135,10 +135,20 @@ avnav.gui.Settingspage.prototype.btnSettingsOK=function(button,ev){
     log("SettingsOK clicked");
     var txt="";
     for (var idx in this.allItems){
-        txt+=","+idx+":"+this.allItems[idx].read();
+        var val=this.allItems[idx].read();
+        this.gui.properties.setValueByName(idx,val);
     }
-    alert("Result: "+txt);
+    this.gui.properties.setUserData({}); //write changes to cookie
+    $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
     this.gui.showPage('mainpage');
+};
+
+avnav.gui.Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
+    log("SettingsDefaults clicked");
+    for (var idx in this.allItems) {
+        var val = this.gui.properties.getDescriptionByName(idx).defaultv;
+        this.allItems[idx].write(val);
+    }
 };
 
 (function(){

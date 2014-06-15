@@ -4,7 +4,22 @@
 goog.provide('avnav.util.PropertyHandler');
 goog.provide('avnav.util.Property');
 goog.provide('avnav.util.PropertyType');
+goog.provide('avnav.util.PropertyChangeEvent');
 goog.require('goog.object');
+
+/**
+ * an event being fired when properties are changed
+ * @param {avnav.util.PropertyHandler} propertyHandler
+ * @constructor
+ */
+avnav.util.PropertyChangeEvent=function(propertyHandler){
+    /**
+     *
+     * @type {avnav.util.PropertyHandler}
+     */
+    this.propertyHandler=propertyHandler;
+};
+avnav.util.PropertyChangeEvent.EVENT_TYPE="propertyevent";
 
 avnav.util.PropertyType={
     CHECKBOX:0,
@@ -43,8 +58,23 @@ avnav.util.PropertyHandler=function(propertyDescriptions,properties){
     this.propertyDescriptions=propertyDescriptions;
     this.currentProperties={};
     this.extractProperties(this.currentProperties,"",this.propertyDescriptions);
-    goog.object.extend(this.currentProperties,properties);
+    this.extend(this.currentProperties,properties);
     this.userData={};
+};
+
+/**
+ * extend object by extend, preserving any object structure
+ * @param obj
+ * @param extend
+ */
+avnav.util.PropertyHandler.prototype.extend=function(obj,ext){
+    for (var k in ext){
+        if (ext[k] instanceof Object  && ! (ext[k] instanceof Array)){
+            if (obj[k] === undefined) obj[k]={};
+            this.extend(obj[k],ext[k]);
+        }
+        else obj[k]=ext[k];
+    }
 };
 /**
  * extract (recursively) the current values of Property descriptions
@@ -76,6 +106,7 @@ avnav.util.PropertyHandler.prototype.extractProperties=function(base,path,descri
 /**
  * get a property description
  * @param {string} name - path separated by .
+ * @returns avnav.util.Property
  */
 avnav.util.PropertyHandler.prototype.getDescriptionByName=function(name){
     var parr=name.split(".");
@@ -97,14 +128,14 @@ avnav.util.PropertyHandler.prototype.getValue=function(descr){
 };
 /**
  * set a property value (and write it to user data)
- * @param descr the value
- * @param {avnav.util.Property} value
+ * @param value the value
+ * @param {avnav.util.Property} descr
  * @returns {boolean}
  */
 avnav.util.PropertyHandler.prototype.setValue=function(descr,value){
     if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;
     descr.path[descr.pname]=value;
-    return this.setUserData(descr,value);
+    return this.setUserDataByDescr(descr,value);
 };
 /**
  * get a property value by its name (separated by .)
@@ -129,11 +160,19 @@ avnav.util.PropertyHandler.prototype.setUserDataByDescr=function(descr,value){
         for (var i = 0; i < (parr.length - 1); i++) {
             var path = parr[i];
             if (current[path] === undefined) {
+                if (value == descr.defaultv) return true; //don't set user data when default...
                 current[path] = {}
             }
             current = current[path];
         }
-        current[parr[parr.length-1]]=value;
+        var fname=parr[parr.length -1];
+        if (value == descr.defaultv){
+            if (current[fname] !== undefined) delete current[fname];
+        }
+        else {
+            current[parr[parr.length - 1]] = value;
+        }
+        return true;
     }catch(e){
         log("Exception when setting user data "+descr.completeName+": "+e);
     }
@@ -161,14 +200,15 @@ avnav.util.PropertyHandler.prototype.getProperties=function(){
 
 /**
  * change some user data
- * the data will be save into the cookie
+ * the data will be save into the cookie (old style handling with directly providing some objects)
+ * no check against property descriptions (except layer 1 filter)
  * TODO: should we change this to the description model?
  * @param data - the complete object tree to be set
  */
 avnav.util.PropertyHandler.prototype.setUserData=function(data){
     var filtered=this.filterUserData(data);
-    goog.object.extend(this.userData,filtered);
-    goog.object.extend(this.currentProperties,filtered);
+    this.extend(this.userData,filtered);
+    this.extend(this.currentProperties,filtered);
     $.cookie(this.currentProperties.cookieName,this.userData);
 };
 
@@ -180,31 +220,23 @@ avnav.util.PropertyHandler.prototype.loadUserData=function(){
     var ndata= $.cookie(this.currentProperties.cookieName);
     if (ndata){
         this.userData=this.filterUserData(ndata);
-        goog.object.extend(this.currentProperties,this.userData);
+        this.extend(this.currentProperties,this.userData);
     }
 };
 /**
  * filter out only the allowed user data
+ * this filters only one level (for "old style" setUserData)
  * @param data
  * @returns {{}}
  */
 avnav.util.PropertyHandler.prototype.filterUserData=function(data){
     var allowed = {};
-    for (var key in this.allowedUserData) {
+    for (var key in this.propertyDescriptions) {
         if (data[key])allowed[key] = data[key];
     }
     return allowed;
 };
 
-/**
- * contain all allowed user data
- * the values are dont'care
- * only one level...
- * @type {{currentView: null}}
- */
-avnav.util.PropertyHandler.prototype.allowedUserData={
-    currentView:null,
-    marker:null
-};
+
 
 

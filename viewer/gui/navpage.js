@@ -102,6 +102,12 @@ avnav.gui.Navpage.prototype.showPage=function(options){
         });
     }
     this.buttonUpdate(true);
+    if (!this.gui.properties.getProperties().layers.ais){
+        //hide the AIS panel if switched off
+        //showing will be done by the AIS event
+        if (this.showHideAdditionalPanel('#aisInfo', false, '#' + this.mapdom))
+            this.gui.map.updateSize();
+    }
     this.updateAisPanel();
     this.fillDisplayFromGps();
 };
@@ -175,6 +181,7 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
  * update the AIS panel
  */
 avnav.gui.Navpage.prototype.updateAisPanel=function() {
+    if (!this.gui.properties.getProperties().layers.ais) return;
     var aisPanel = this.getDiv().find('.avn_aisInfo');
     if (aisPanel) {
         var nearestTarget = this.navobject.getAisData().getNearestAisTarget();

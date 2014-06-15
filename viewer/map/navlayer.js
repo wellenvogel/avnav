@@ -14,6 +14,7 @@ goog.require('avnav.nav.NavObject');
  * @constructor
  */
 avnav.map.NavLayer=function(mapholder,navobject){
+    var self=this;
     //use our own drawing to canvas
     //due to broken ol3 IconStyle when drawing to vector context
     this.useOwnDrawing=true;
@@ -53,11 +54,8 @@ avnav.map.NavLayer=function(mapholder,navobject){
      * @private
      * @type {ol.style.Style}
      */
-    this.courseStyle=new ol.style.Stroke({
-            color:this.mapholder.properties.getProperties().bearingColor,
-            width:this.mapholder.properties.getProperties().bearingWidth
-
-        });
+    this.courseStyle={};
+    this.setStyle();
 
     /**
      * our style properties
@@ -165,8 +163,10 @@ avnav.map.NavLayer=function(mapholder,navobject){
 
     this.maplayer.getSource().addFeatures(this.features);
     this.maplayer.avnavOptions.type=avnav.map.LayerTypes.TNAV;
-
-
+    this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.boat);
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
+        self.propertyChange(evdata);
+    });
 };
 /**
  * feature index
@@ -174,6 +174,17 @@ avnav.map.NavLayer=function(mapholder,navobject){
  */
 avnav.map.NavLayer.IDXBOAT=0;
 
+/**
+ * set the style(s)
+ * @private
+ */
+avnav.map.NavLayer.prototype.setStyle=function() {
+    this.courseStyle = new ol.style.Stroke({
+        color: this.mapholder.properties.getProperties().bearingColor,
+        width: this.mapholder.properties.getProperties().bearingWidth
+
+    });
+}
 
 /**
  * get the new boat style (as we have to change this for the rotation...)
@@ -262,10 +273,12 @@ avnav.map.NavLayer.prototype.onPostCompose=function(evt){
                 this.mapholder.drawImageToCanvas(evt, evt.frameState.view2DState.center, this.centerImage, this.centerStyleProperties);
             }
         }
-        //draw the course to the marker
-        var line=new ol.geom.LineString([this.boatPosition,this.markerPosition]);
-        vectorContext.setFillStrokeStyle(null,this.courseStyle);
-        vectorContext.drawLineStringGeometry(line);
+        if (this.mapholder.getProperties().getProperties().layers.nav) {
+            //draw the course to the marker
+            var line = new ol.geom.LineString([this.boatPosition, this.markerPosition]);
+            vectorContext.setFillStrokeStyle(null, this.courseStyle);
+            vectorContext.drawLineStringGeometry(line);
+        }
     }
 
 };
@@ -302,4 +315,9 @@ avnav.map.NavLayer.prototype.styleFunction=function(feature,resolution){
         return [this.boatStyle];
     }
     return undefined;
+};
+
+avnav.map.NavLayer.prototype.propertyChange=function(evdata){
+    this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.boat);
+    this.setStyle();
 };

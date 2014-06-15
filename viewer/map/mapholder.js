@@ -235,6 +235,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     });
     var newCenter= this.pointFromMap(this.getView().getCenter());
     this.setCenterFromMove(newCenter,true);
+    if (! this.getProperties().getProperties().layers.boat ) this.gpsLocked=false;
 };
 
 /**
@@ -503,6 +504,8 @@ avnav.map.MapHolder.prototype.setGpsLock=function(lock){
     if (lock == this.gpsLocked) return;
     var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
     if (! gps.valid && lock) return;
+    //we do not lock if the nav layer is not visible
+    if (! this.getProperties().getProperties().layers.boat && lock) return;
     this.gpsLocked=lock;
     if (lock) this.setCenter(gps);
 };

@@ -40,12 +40,8 @@ avnav.map.TrackLayer=function(mapholder,navobject){
      * @private
      * @type {ol.style.Style}
      */
-    this.lineStyle=new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: this.mapholder.properties.getProperties().trackColor,
-            width: this.mapholder.properties.getProperties().trackWidth
-        })
-    });
+    this.lineStyle={};
+    this.setStyle();
 
     /**
      * @private
@@ -65,7 +61,24 @@ avnav.map.TrackLayer=function(mapholder,navobject){
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
+    this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.track);
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
+        self.propertyChange(evdata);
+    });
 
+
+};
+/**
+ * set the style for the track line
+ * @private
+ */
+avnav.map.TrackLayer.prototype.setStyle=function() {
+    this.lineStyle = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: this.mapholder.properties.getProperties().trackColor,
+            width: this.mapholder.properties.getProperties().trackWidth
+        })
+    });
 };
 
 /**
@@ -85,6 +98,10 @@ avnav.map.TrackLayer.prototype.styleFunction=function(feature,resolution){
     return [this.lineStyle];
 };
 
+/**
+ * the handler for new data
+ * @param evdata
+ */
 avnav.map.TrackLayer.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
     if (evdata.type == avnav.nav.NavEventType.TRACK){
@@ -133,4 +150,9 @@ avnav.map.TrackLayer.prototype.navEvent=function(evdata){
             this.maplayer.getSource().addFeature(this.feature);
         }
     }
+};
+
+avnav.map.TrackLayer.prototype.propertyChange=function(evdata) {
+    this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.track);
+    this.setStyle();
 };

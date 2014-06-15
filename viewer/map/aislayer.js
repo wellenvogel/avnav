@@ -70,6 +70,10 @@ avnav.map.AisLayer=function(mapholder,navobject){
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
+    this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.ais);
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
+        self.propertyChange(evdata);
+    });
 
 };
 
@@ -119,6 +123,10 @@ avnav.map.AisLayer.prototype.styleFunction=function(feature,resolution){
     return [rt];
 };
 
+/**
+ * an event fired from the AIS handler
+ * @param evdata
+ */
 avnav.map.AisLayer.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
     if (evdata.type == avnav.nav.NavEventType.AIS){
@@ -153,4 +161,11 @@ avnav.map.AisLayer.prototype.navEvent=function(evdata){
         }
         this.maplayer.getSource().addFeatures(toadd);
     }
+};
+/**
+ * handle changed properties
+ * @param evdata
+ */
+avnav.map.AisLayer.prototype.propertyChange=function(evdata){
+    this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.ais);
 };
