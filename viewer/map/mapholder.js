@@ -271,7 +271,7 @@ avnav.map.MapHolder.prototype.drawImageToCanvas=function(evt,coord,image,opt_opt
     var devpixratio=evt.frameState.pixelRatio;
     if (devpixratio){
         xy[0]=xy[0]*devpixratio;
-        xy[0]=xy[0]*devpixratio;
+        xy[1]=xy[1]*devpixratio;
     }
     if (opt_options && opt_options.anchor){
         xy[0]-=opt_options.anchor[0];
@@ -656,7 +656,7 @@ avnav.map.MapHolder.prototype.doSlide=function(start){
  * tell the map that it's size has changed
  */
 avnav.map.MapHolder.prototype.updateSize=function(){
-    this.olmap.updateSize();
+    if (this.olmap) this.olmap.updateSize();
 };
 
 
