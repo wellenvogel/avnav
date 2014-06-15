@@ -101,6 +101,8 @@ avnav.gui.Navpage.prototype.showPage=function(options){
             }
         });
     }
+    this.updateMainPanelSize('#'+this.mapdom);
+    this.getMap().updateSize();
     this.buttonUpdate(true);
     if (!this.gui.properties.getProperties().layers.ais){
         //hide the AIS panel if switched off

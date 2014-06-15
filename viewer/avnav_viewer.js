@@ -76,7 +76,7 @@ var propertyDefinitions=function(){
         maxAisErrors: new avnav.util.Property( 3), //after that many errors AIS display will be switched off
         minAISspeed: new avnav.util.Property( 0.2), //minimal speed in kn that we consider when computing cpa/tcpa
         maxAisTPA: new avnav.util.Property( 3),    //max. computed AIS TPA time in h (otherwise we do not consider this)
-        aisWarningCpa: new avnav.util.Property( 500,"AIS Warning(m)",avnav.util.PropertyType.RANGE,[100,5000,10]), //m for AIS warning (500m)
+        aisWarningCpa: new avnav.util.Property( 500,"AIS Warning-CPA(m)",avnav.util.PropertyType.RANGE,[100,5000,10]), //m for AIS warning (500m)
         aisWarningTpa: new avnav.util.Property( 900,"AIS-Warning-TPA(s)",avnav.util.PropertyType.RANGE,[30,3600,10]), //in s - max time for tpa warning (15min)
         aisNormalImage: new avnav.util.Property( 'images/ais-default.png'),
         aisNearestImage: new avnav.util.Property( 'images/ais-nearest.png'),
@@ -94,6 +94,13 @@ var propertyDefinitions=function(){
             RUNNING: new avnav.util.Property(  "images/YellowBubble40.png"),
             NMEA: new avnav.util.Property(	  "images/GreenBubble40.png"),
             ERROR: new avnav.util.Property(	  "images/RedBubble40.png")
+        },
+        //all style members map to less variables
+        style:{
+            bottomPanelHeight: new avnav.util.Property( 50,"Bottom Height(px)",avnav.util.PropertyType.RANGE,[20,80]),
+            aisPanelWidth:new avnav.util.Property( 90,"AIS Width(px)",avnav.util.PropertyType.RANGE,[50,300]),
+            buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[40,100]),
+            centerDisplayHeight:new avnav.util.Property( 30,"+ Display Height(px)",avnav.util.PropertyType.RANGE,[20,80])
         },
         currentView:{},
         marker:{}

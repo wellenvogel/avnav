@@ -143,6 +143,7 @@ avnav.gui.Settingspage.prototype.btnSettingsOK=function(button,ev){
         this.gui.properties.setValueByName(idx,val);
     }
     this.gui.properties.setUserData({}); //write changes to cookie
+    this.gui.properties.updateLayout();  //update the layout based on less
     $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
     this.gui.showPage('mainpage');
 };

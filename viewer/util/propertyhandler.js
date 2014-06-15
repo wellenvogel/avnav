@@ -222,6 +222,23 @@ avnav.util.PropertyHandler.prototype.loadUserData=function(){
         this.userData=this.filterUserData(ndata);
         this.extend(this.currentProperties,this.userData);
     }
+    this.updateLayout();
+
+};
+/**
+ * update the layout (recompile less)
+ */
+avnav.util.PropertyHandler.prototype.updateLayout=function(){
+    var vars=this.currentProperties.style;
+    //TODO: we need some handling for units
+    //currently we assume px
+    if (vars){
+        var lessparam={};
+        for (var k in vars){
+            lessparam['@'+k]=""+vars[k]+"px";
+        }
+        less.modifyVars(lessparam);
+    }
 };
 /**
  * filter out only the allowed user data

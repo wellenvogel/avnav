@@ -150,40 +150,52 @@ avnav.gui.Page.prototype.handleToggleButton=function(id,onoff,onClass){
  * @returns {boolean} - true when mainid something changed
  */
 avnav.gui.Page.prototype.showHideAdditionalPanel=function(id,show,mainid){
-    var mainLocation=null;
-    if ($(id).hasClass('avn_bottom')) mainLocation='bottom';
-    if ($(id).hasClass('avn_left')) mainLocation='left';
-    if ($(id).hasClass('avn_right')) mainLocation='right';
-    if ($(id).hasClass('avn_top')) mainLocation='top';
-    var npos=null;
-    var oval=0;
-    if (mainLocation) oval=parseInt($(mainid).css(mainLocation).replace(/px/,''));
-
+    var updateSize=false;
     if (show){
-        if ($(id).is(':visible')) return false;
-        $(id).show();
-        if (! mainLocation) return false;
-        var elheight=$(id).height();
-        var elwidth=$(id).width();
-        if (mainLocation == 'bottom' || mainLocation=='top') npos=oval+elheight;
-        if (mainLocation == 'left' || mainLocation=='right') npos=oval+elwidth;
+        if (!$(id).is(':visible')) {
+            $(id).show();
+            updateSize=true;
+        }
     }
     else {
-        if (!$(id).is(':visible')) return false;
-        var elheight=$(id).height();
-        var elwidth=$(id).width();
-        $(id).hide();
-        if (! mainLocation) return false;
-        if (mainLocation == 'bottom' || mainLocation=='top') npos=oval-elheight;
-        if (mainLocation == 'left' || mainLocation=='right') npos=oval-elwidth;
+        if ($(id).is(':visible')) {
+            $(id).hide();
+            updateSize = true;
+        }
     }
-    if (npos != null){
-        $(mainid).css(mainLocation,npos+"px");
+    if (updateSize) {
+        this.updateMainPanelSize(mainid);
+        //additional top/bottom panels should only fill the same width as main
+        $('.avn_top:visible').css('left', $(mainid).css('left'));
+        $('.avn_bottom:visible').css('left', $(mainid).css('left'));
+        $('.avn_top:visible').css('right', $(mainid).css('right'));
+        $('.avn_bottom:visible').css('right', $(mainid).css('right'));
+        return true;
     }
-    //additional top/bottom panels should only fill the same width as main
-    $('.avn_top:visible').css('left',$(mainid).css('left'));
-    $('.avn_bottom:visible').css('left',$(mainid).css('left'));
-    $('.avn_top:visible').css('right',$(mainid).css('right'));
-    $('.avn_bottom:visible').css('right',$(mainid).css('right'));
-    return true;
+    return false;
+};
+
+avnav.gui.Page.prototype.updateMainPanelSize=function(mainid){
+    var main=$(mainid);
+    if (! main) return;
+    var args=[
+        {cl:'.avn_top',main:'top',el:'height',neg:false},
+        {cl:'.avn_left',main:'left',el:'width',neg:false},
+        {cl:'.avn_bottom',main:'bottom',el:'height',neg:false},
+        {cl:'.avn_right',main:'right',el:'width',neg:false}
+    ];
+    for (var k in args){
+        var arg=args[k];
+        var last=arg.neg?99999:0;
+        main.css(arg.main,0);
+        main.parent().find(arg.cl).each(function(id,el){
+            if ($(el).is(':visible')){
+                var v=parseInt($(el).css(arg.el).replace(/px/,""));
+                if (( arg.neg && v < last) || (! arg.neg && v>last)) {
+                    last=v;
+                    main.css(arg.main, last);
+                }
+            }
+        });
+    }
 };
