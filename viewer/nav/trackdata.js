@@ -66,8 +66,7 @@ avnav.nav.TrackData.prototype.convertResponse=function(data){
         num++;
     }
     //cleanup old track data
-    var maxlen=this.propertyHandler.getProperties().initialTrackLength; //this is in units of interval
-    var maxage=maxlen * this.propertyHandler.getProperties().trackInterval; //in s
+    var maxage=this.propertyHandler.getProperties().initialTrackLength*3600; //len is in h
     var oldest=new Date().getTime()/1000-maxage;
     log("removing track data older then "+oldest);
     while (this.currentTrack.length > 0){
@@ -88,7 +87,7 @@ avnav.nav.TrackData.prototype.startQuery=function() {
     var maxItems = 0;
     if (this.currentTrack.length == 0){
     // initialize the track
-        maxItems = this.propertyHandler.getProperties().initialTrackLength;
+        maxItems = this.propertyHandler.getProperties().initialTrackLength*3600/this.propertyHandler.getProperties().trackInterval;
     }
     else{
         var tdiff=now-this.lastTrackQuery+2*timeout;

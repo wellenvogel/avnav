@@ -44,8 +44,8 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
     var self=this;
     var numdigits=0;
     var numdecimal=0;
+    var value=this.gui.properties.getValue(descr);
     if (descr.type == avnav.util.PropertyType.CHECKBOX){
-        var value=this.gui.properties.getValue(descr);
         var html='<label>'+descr.label;
         html+='<input type="checkbox" class="avn_settings_checkbox" avn_name="'+name+'"';
         if (value) html+="checked";
@@ -60,7 +60,6 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
         };
     }
     if (descr.type == avnav.util.PropertyType.RANGE){
-        var value=this.gui.properties.getValue(descr);
         var html='<div class=""><div class="avn_slider_label" >'+descr.label+'</div>';
         html+='<div class="avn_slider_label avn_out">'+value+'</div>';
         var range=descr.values;
@@ -84,6 +83,21 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
             }
         };
     }
+    if (descr.type == avnav.util.PropertyType.COLOR){
+        var html='<div class=""><div class="avn_color_label" >'+descr.label+'</div>';
+        html+='<div class="avn_color_label avn_out">'+value+'</div>';
+        html+='<input type="color" class="avn_color"/>';
+        html+='<div class="avn_clear"/>';
+        html+='</div>';
+        this.allItems[descr.completeName]= {
+            read: function () {
+                return $(el).find('input').val();
+            },
+            write: function (value) {
+                $(el).find('input').val(value).change();
+            }
+        };
+    }
     $(el).html(html);
     $(el).find('input[type="range"]').rangeslider({
             polyfill: false,
@@ -94,7 +108,23 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
             fillClass: 'avn_rangeslider__fill',
             handleClass: 'avn_rangeslider__handle'
         });
-    //$(el).find('input').on('change',{name:descr.completeName},function(evt){alert("change "+evt.data.name);});
+    $(el).find('input[type="color"]').each(function(idx,elx){
+            if (elx.type === 'text'){
+                //fallback if the browser does not support color input
+                var cp=new jscolor.color(elx,{
+                    hash:true,
+                    pickerClosable:true
+                });
+                cp.fromString(value.replace(/^#/,''));
+                $(elx).css('background-color',value);
+                self.allItems[descr.completeName].write=function(val){
+                    $(el).find('input').val(value).change();
+                    $(elx).css('background-color',val);
+                    cp.fromString(val.replace(/^#/,''));
+                }
+            }
+    });
+
 };
 
 /**

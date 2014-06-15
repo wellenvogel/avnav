@@ -56,7 +56,8 @@
         '../libraries/movable-type/latlon.js',
         '../libraries/less/less-1.4.1.min.js',
         '../libraries/rangeslider/rangeslider.css',
-        '../libraries/rangeslider/rangeslider.js'
+        '../libraries/rangeslider/rangeslider.js',
+        '../libraries/jscolor/jscolor.js'
     ];
     //scripts used in debug mode
     var debug_scripts = [
