@@ -66,6 +66,23 @@ avnav.map.AisLayer=function(mapholder,navobject){
     this.textFill = new ol.style.Fill({
         color: '#000'
     });
+
+    /**
+     * @private
+     * @type {string}
+     */
+    this.nearestImage=undefined;
+    /**
+     * @private
+     * @type {string}
+     */
+    this.warningImage=undefined;
+    /**
+     * @private
+     * @type {string}
+     */
+    this.normalImage=undefined;
+    this.createAllIcons();
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -84,6 +101,62 @@ avnav.map.AisLayer=function(mapholder,navobject){
 avnav.map.AisLayer.prototype.getMapLayer=function(){
     return this.maplayer;
 };
+
+/**
+ * create an AIS icon using a 2d context
+ * @param {string} color - the css color
+ * @returns {*} - an image data uri
+ */
+avnav.map.AisLayer.prototype.createIcon=function(color){
+    var canvas = document.createElement("canvas");
+    if (! canvas) return undefined;
+    canvas.width=100;
+    canvas.height=300;
+    var ctx=canvas.getContext('2d');
+    //drawing code created by http://www.professorcloud.com/svg-to-canvas/
+    //from ais-nearest.svg
+    ctx.strokeStyle = 'rgba(0,0,0,0)';
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 4;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = "#000000";
+    ctx.lineCap = "butt";
+    ctx.lineJoin = "miter";
+    ctx.beginPath();
+    ctx.moveTo(23.5, 297.875);
+    ctx.lineTo(50, 200);
+    ctx.lineTo(76.5, 297.875);
+    ctx.lineTo(23.5, 297.875);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "rgba(0, 0, 0, 0)";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.lineCap = "butt";
+    ctx.lineJoin = "miter";
+    ctx.beginPath();
+    ctx.moveTo(50, 200);
+    ctx.lineTo(50, 3);
+    ctx.fill();
+    ctx.stroke();
+    return canvas.toDataURL();
+};
+
+/**
+ * compute the icons for the AIS display
+ * @private
+ */
+avnav.map.AisLayer.prototype.createAllIcons=function(){
+    var style=this.mapholder.getProperties().getProperties().style;
+    this.nearestImage=this.createIcon(style.aisNearestColor);
+    this.warningImage=this.createIcon(style.aisWarningColor);
+    this.normalImage=this.createIcon(style.aisNormalColor);
+};
+
+
+
 /**
  * get the style for the features
  * currently we do not cache the styles as there is a good chance anyway that e.g the rotation has changed
@@ -92,11 +165,21 @@ avnav.map.AisLayer.prototype.getMapLayer=function(){
  * @returns {*}
  */
 avnav.map.AisLayer.prototype.styleFunction=function(feature,resolution){
-    var icon=this.mapholder.getProperties().getProperties().aisNormalImage;
-    if (feature.aisparam.nearest)
-        icon=this.mapholder.getProperties().getProperties().aisNearestImage;
-    if (feature.aisparam.warning)
-        icon=this.mapholder.getProperties().getProperties().aisWarningImage;
+    var icon=undefined;
+    if (0) {
+        icon=this.mapholder.getProperties().getProperties().aisNormalImage;
+        if (feature.aisparam.nearest)
+            icon = this.mapholder.getProperties().getProperties().aisNearestImage;
+        if (feature.aisparam.warning)
+            icon = this.mapholder.getProperties().getProperties().aisWarningImage;
+    }
+    else {
+        icon = this.normalImage;
+        if (feature.aisparam.nearest)
+            icon = this.nearestImage;
+        if (feature.aisparam.warning)
+            icon = this.warningImage;
+    }
     var rotation=feature.aisparam.course||0;
     var text=feature.aisparam.shipname;
     if (! text || text == "unknown") text=feature.aisparam.mmsi;
@@ -168,4 +251,5 @@ avnav.map.AisLayer.prototype.navEvent=function(evdata){
  */
 avnav.map.AisLayer.prototype.propertyChange=function(evdata){
     this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.ais);
+    this.createAllIcons();
 };

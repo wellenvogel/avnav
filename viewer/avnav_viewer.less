@@ -7,6 +7,10 @@
 @centerDisplayHeight: 30px;
 @settingsFontSize: 16px;
 
+@aisNormalColor: #EBEB55;
+@aisNearestColor: #70F3AF; //rgb(112, 243, 175);
+@aisWarningColor: #FA584A; //rgb(250, 88, 74);
+
 //hide some content
 
 .hidemedia(@min:0px,@max:9999px){
@@ -358,17 +362,17 @@ button#avb_SettingsDefaults .avn_button_icon{
 	
 }
 .avn_ais_info_first{
-	background-color: rgb(112, 243, 175) !important;
+	background-color: @aisNearestColor !important;
 }
 .avn_ais_selected{
 	background-color: rgb(202, 213, 190);
 }
 
 .avn_ais_warning{
-	background-color: rgb(250, 88, 74);
+	background-color: @aisWarningColor;
 }
 .avn_ais_info_warning{
-	background-color: rgb(250, 88, 74) !important;
+	background-color: @aisWarningColor !important;
 }
 
 #avi_ais_page_inner{
@@ -669,7 +673,7 @@ button#avb_SettingsDefaults .avn_button_icon{
 	top: 0px;
 	left:	0px;
 	width:	@aisPanelWidth;
-	background-color: #EBEB55;
+	background-color: @aisNormalColor;
 }
 
 #centerDisplay{

@@ -229,13 +229,18 @@ avnav.util.PropertyHandler.prototype.loadUserData=function(){
  * update the layout (recompile less)
  */
 avnav.util.PropertyHandler.prototype.updateLayout=function(){
-    var vars=this.currentProperties.style;
-    //TODO: we need some handling for units
-    //currently we assume px
+    var vars=this.propertyDescriptions.style;
     if (vars){
         var lessparam={};
+        //we rely on exactly one level below style
         for (var k in vars){
-            lessparam['@'+k]=""+vars[k]+"px";
+            var val=this.getValue(vars[k]);
+            if (vars[k].type == avnav.util.PropertyType.RANGE) {
+                lessparam['@' + k] = "" + val + "px";
+            }
+            if (vars[k].type == avnav.util.PropertyType.COLOR) {
+                lessparam['@' + k] = "" + val;
+            }
         }
         less.modifyVars(lessparam);
     }
