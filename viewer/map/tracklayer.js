@@ -120,7 +120,7 @@ avnav.map.TrackLayer.prototype.navEvent=function(evdata){
         }
         var startts=newTrack[0].ts;
         var mystart=this.currentTrack.length?this.currentTrack[0].ts:0;
-        if ((mystart >0 && (startts-mystart) > 3600)||redraw){
+        if ((mystart >0 && (startts-mystart) > 3600)||redraw||mystart == 0){
             //once per hour we do a redraw...
             this.currentTrack=newTrack.slice(0);
             var rawlineString=[];
@@ -155,4 +155,5 @@ avnav.map.TrackLayer.prototype.navEvent=function(evdata){
 avnav.map.TrackLayer.prototype.propertyChange=function(evdata) {
     this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.track);
     this.setStyle();
+    this.currentTrack=[]; //trigger a complete redraw
 };

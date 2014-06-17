@@ -117,7 +117,7 @@ avnav.nav.NavObject=function(propertyHandler){
         markerCourse:0,
         markerDistance:0,
         /**
-         * @type {goog.date.DateTime}
+         * @type {Date}
          */
         markerEta:null,
         markerLatlon:new avnav.nav.navdata.Point(0,0)
@@ -157,8 +157,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
             var targettime = gps.rtime.getTime();
             if (vmgapp > 0) {
             targettime += this.data.markerDistance / vmgapp * 3600 * 1000; //time in ms
-            var targetDate = new goog.date.DateTime();
-            targetDate.setTime(Math.round(targettime));
+            var targetDate = new Date(Math.round(targettime));
             this.data.markerEta = targetDate;
             }
             else {

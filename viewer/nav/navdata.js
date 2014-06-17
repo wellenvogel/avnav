@@ -117,7 +117,7 @@ avnav.nav.navdata.GpsInfo=function(){
     this.valid=false;
     /**
      *
-     * @type {goog.date.DateTime}
+     * @type {Date}
      */
     this.rtime=null;
 };

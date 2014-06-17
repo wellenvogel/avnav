@@ -4,8 +4,6 @@
 goog.provide('avnav.nav.GpsData');
 goog.require('avnav.util.PropertyHandler');
 goog.require('avnav.util.Formatter');
-goog.require('goog.date.Date');
-goog.require('goog.date.DateTime');
 goog.require('avnav.nav.navdata.GpsInfo');
 /**
  * the handler for the gps data
@@ -49,7 +47,7 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
 avnav.nav.GpsData.prototype.convertResponse=function(data){
     var gpsdata=new avnav.nav.navdata.GpsInfo();
     gpsdata.rtime=null;
-    if (data.time != null) gpsdata.rtime=goog.date.fromIsoString(data.time);
+    if (data.time != null) gpsdata.rtime=new Date(data.time);
     gpsdata.lon=data.lon;
     gpsdata.lat=data.lat;
     gpsdata.course=data.course;
@@ -61,7 +59,7 @@ avnav.nav.GpsData.prototype.convertResponse=function(data){
     formattedData.gpsPosition=this.formatter.formatLonLats(gpsdata);
     formattedData.gpsCourse=this.formatter.formatDecimal(gpsdata.course||0,3,0);
     formattedData.gpsSpeed=this.formatter.formatDecimal(gpsdata.speed||0,2,1);
-    formattedData.gpsTime=this.formatter.formatTime(gpsdata.rtime||new goog.date.DateTime());
+    formattedData.gpsTime=this.formatter.formatTime(gpsdata.rtime||new Date());
     this.formattedData=formattedData;
 };
 

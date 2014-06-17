@@ -4,8 +4,6 @@
 goog.provide('avnav.nav.TrackData');
 goog.require('avnav.util.PropertyHandler');
 goog.require('avnav.util.Formatter');
-goog.require('goog.date.Date');
-goog.require('goog.date.DateTime');
 goog.require('avnav.nav.navdata.GpsInfo');
 /**
  * the handler for the track data
@@ -46,6 +44,10 @@ avnav.nav.TrackData=function(propertyHandler,navobject){
     this.trackErrors=0;
     this.NM=this.propertyHandler.getProperties().NM;
     this.startQuery();
+    var self=this;
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
+        self.propertyChange(evdata);
+    });
 };
 
 /**
@@ -67,7 +69,13 @@ avnav.nav.TrackData.prototype.convertResponse=function(data){
     }
     //cleanup old track data
     var maxage=this.propertyHandler.getProperties().initialTrackLength*3600; //len is in h
-    var oldest=new Date().getTime()/1000-maxage;
+    var curgps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var now=new Date();
+    if (curgps.rtime){
+        //if we have a valid GPS time we take this as our current time for the track...
+        now=curgps.rtime;
+    }
+    var oldest=now.getTime()/1000-maxage;
     log("removing track data older then "+oldest);
     while (this.currentTrack.length > 0){
         if (this.currentTrack[0].ts > oldest) break;
@@ -95,6 +103,7 @@ avnav.nav.TrackData.prototype.startQuery=function() {
         maxItems=tdiff/interval;
         if (maxItems < 10) maxItems=10;
     }
+    maxItems=Math.floor(maxItems);
     if (maxItems == 0) maxItems=1;
     url+="&maxnum="+maxItems+"&interval="+interval;
     var ctxdata={};
@@ -153,5 +162,13 @@ avnav.nav.TrackData.prototype.handleTrackStatus=function(success){
  */
 avnav.nav.TrackData.prototype.getTrackData=function(){
     return this.currentTrack;
+};
+
+/**
+ * delete the current track and re-query
+ * @param evdata
+ */
+avnav.nav.TrackData.prototype.propertyChange=function(evdata) {
+    this.currentTrack=[];
 };
 

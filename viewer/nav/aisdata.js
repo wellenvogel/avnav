@@ -4,8 +4,6 @@
 goog.provide('avnav.nav.AisData');
 goog.require('avnav.util.PropertyHandler');
 goog.require('avnav.util.Formatter');
-goog.require('goog.date.Date');
-goog.require('goog.date.DateTime');
 
 /**
  * the handler for the ais data

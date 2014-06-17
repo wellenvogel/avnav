@@ -87,7 +87,7 @@ avnav.util.Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace)
 
 /**
  *
- * @param {goog.date.DateTime} curDate
+ * @param {Date} curDate
  * @returns {string}
  */
 avnav.util.Formatter.prototype.formatTime=function(curDate){
