@@ -195,7 +195,7 @@ avnav.map.AisLayer.prototype.styleFunction=function(feature,resolution){
             rotateWithView: true
         })),
         text: new ol.style.Text({
-            font: '14px Calibri,sans-serif',
+            font: this.mapholder.getProperties().getProperties().aisTextSize+'px Calibri,sans-serif',
             offsetY: 15,
             text: text,
             fill: this.textFill,

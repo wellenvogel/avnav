@@ -78,6 +78,8 @@ var propertyDefinitions=function(){
         maxAisTPA: new avnav.util.Property( 3),    //max. computed AIS TPA time in h (otherwise we do not consider this)
         aisWarningCpa: new avnav.util.Property( 500,"AIS Warning-CPA(m)",avnav.util.PropertyType.RANGE,[100,5000,10]), //m for AIS warning (500m)
         aisWarningTpa: new avnav.util.Property( 900,"AIS-Warning-TPA(s)",avnav.util.PropertyType.RANGE,[30,3600,10]), //in s - max time for tpa warning (15min)
+        aisTextSize:new avnav.util.Property( 14,"Text Size(px)",avnav.util.PropertyType.RANGE,[8,24]), //in px
+        //images are not used any more, just keeping for fallback
         aisNormalImage: new avnav.util.Property( 'images/ais-default.png'),
         aisNearestImage: new avnav.util.Property( 'images/ais-nearest.png'),
         aisWarningImage: new avnav.util.Property( 'images/ais-warning.png'),
