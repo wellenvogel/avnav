@@ -89,7 +89,7 @@ avnav.gui.Page.prototype.initButtons=function(){
     var page=this;
     var div=this.getDiv();
     div.find('.avn_button').each(function (i, e) {
-        $(e).html('<span class="avn_button_icon"></span>');
+        //$(e).html('<span class="avn_button_icon"></span>');
         var id = $(e).attr('id');
         if (id) {
             id = id.replace(/^avb_/, '');

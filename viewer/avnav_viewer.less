@@ -223,9 +223,9 @@ font-size: ( @bottomPanelHeight - 2 );
    buttons
 -------------------------------------------------------------*/
 
-.avn_button_base{
-  width: @buttonSize;
-  height: @buttonSize;
+.avn_button_base(@bWitdh:@buttonSize,@bSize:@buttonSize){
+  width: @bWitdh;
+  height: @bSize;
   margin: 3px 3px 3px 3px;
   border-top-right-radius: 4px;
   border-top-left-radius: 4px;
@@ -233,7 +233,7 @@ font-size: ( @bottomPanelHeight - 2 );
   border-bottom-left-radius: 4px;
   border: 1px solid #D3D3D3;
   background: #E6E6E6;
-  position: relative;
+  //position: relative;
   cursor: pointer;
   outline: none;
 
@@ -264,75 +264,69 @@ button.avn_buttonInactive{
 
 .avn_button_icon_base(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
   background-image: url(@icon);
-  background-position: 0px 0px;
+  background-position: center center;
   background-size: @innerWidth @innerWidth;
-  width: @innerWidth;
-  height: @innerWidth;
-  top: (( @buttonSize - @innerWidth ) / 2 );
-  left: (( @buttonSize - @innerWidth ) / 2 );
-  position: absolute;
+  background-repeat: no-repeat;
   text-decoration: none;
 }
 
 .avn_button_icon_base_toggle(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
     .avn_button_icon_base(@icon,@innerWidth);
-    margin-left: -4px;
-    margin-top: -4px;
 }
 
-button#avb_ShowStatus .avn_button_icon{
+button#avb_ShowStatus {
   .avn_button_icon_base('images/bargraph32.png');
 }
-button#avb_ShowSettings .avn_button_icon{
+button#avb_ShowSettings {
   .avn_button_icon_base('images/spanner32.png');
 }
-button#avb_ShowHelp .avn_button_icon{
+button#avb_ShowHelp {
   .avn_button_icon_base('images/Question.png');
 }
-button#avb_StatusCancel .avn_button_icon{
+button#avb_StatusCancel {
   .avn_button_icon_base('images/Cancel40.png');
 }
-button#avb_StatusUpdate .avn_button_icon{
+button#avb_StatusUpdate {
   .avn_button_icon_base('images/Question.png');
 }
 
-button#avb_ZoomIn .avn_button_icon{
+button#avb_ZoomIn {
   .avn_button_icon_base('images/Plus40.png');
 }
-button#avb_ZoomOut .avn_button_icon{
+button#avb_ZoomOut {
   .avn_button_icon_base('images/Minus40.png');
 }
-button#avb_LockPos .avn_button_icon {
+button#avb_LockPos  {
 	.avn_button_icon_base_toggle('images/Sail-Boat-40.png');
 }
 
-button#avb_LockMarker .avn_button_icon {
+button#avb_LockMarker {
   .avn_button_icon_base_toggle('images/Marker1.png');
 }
 
 
 
-button#avb_CancelNav .avn_button_icon {
+button#avb_CancelNav {
   .avn_button_icon_base('images/Cancel40.png');
 
 }
 
-button#avb_AisCancel .avn_button_icon{
+button#avb_AisCancel{
   .avn_button_icon_base('images/Cancel40.png');
 }
-button#avb_AisNearest .avn_button_icon {
+button#avb_AisNearest {
   .avn_button_icon_base('images/Ais-Up-40.png');
 }
 
 
-button#avb_SettingsCancel .avn_button_icon{
+button#avb_SettingsCancel{
   .avn_button_icon_base('images/Cancel40.png');
 }
-button#avb_SettingsOK .avn_button_icon{
+button#avb_SettingsOK {
   .avn_button_icon_base('images/check32.png');
 }
 
-button#avb_SettingsDefaults .avn_button_icon{
+button#avb_SettingsDefaults{
   .avn_button_icon_base('images/trash32.png');
 }
 
@@ -473,9 +467,16 @@ button#avb_SettingsDefaults .avn_button_icon{
 }
 
 .avn_settings_line{
+  line-height: ( @settingsFontSize * 3 / 2 );
   margin-bottom: 8px;
 }
 
+.avn_settings_line input[type="checkbox"]{
+  height: ( @settingsFontSize * 2 );
+  width: ( @settingsFontSize * 2 );
+  margin-left: ( @settingsFontSize );
+  margin-right: 5px;
+}
 
 .avn_slider{
   float:left;
@@ -493,6 +494,11 @@ button#avb_SettingsDefaults .avn_button_icon{
   margin-top: 10px;
 }
 
+.avn_slider_out{
+  float:left;
+  width: ( @settingsFontSize * 8 );
+  margin-top: 10px;
+}
 .avn_rangeslider__handle {
   background: white;
   border: 1px solid #ccc;
@@ -569,6 +575,22 @@ button#avb_SettingsDefaults .avn_button_icon{
   float:left;
   width: ( @settingsFontSize * 12 );
   margin-top: 10px;
+}
+.avn_color_out{
+  float:left;
+  width: ( @settingsFontSize * 8 );
+  margin-top: 10px;
+}
+
+.avn_settings_reset{
+  .avn_button_base(30px,30px);
+  .avn_button_icon_base('images/trash32.png',20px);
+  margin-top: 5px;
+  margin-left: 20px;
+  float:left;
+}
+.avn_settings_reset:active{
+  border: 2px solid #6B6B6B;
 }
 
 /*-------------------------------------------------------------------------------

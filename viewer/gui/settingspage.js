@@ -32,6 +32,21 @@ avnav.gui.Settingspage.prototype.localInit=function(){
         var name=$(el).attr('avn_name');
         self.createSettingHtml(self.gui.properties.getDescriptionByName(name),el);
     });
+    //globally activate the reset handlers
+    //they will reset all settings below their parent
+    $(this.getDiv()).find('.avn_settings_reset').on('click',function(evt){
+        var p=$(this).parent();
+        p.find('.avn_setting').each(function(idx,el){
+            var name=$(el).attr('avn_name');
+            if (name){
+                var descr=self.gui.properties.getDescriptionByName(name);
+                if (! descr) return;
+                var val = descr.defaultv;
+                var handler=self.allItems[name];
+                if (handler) handler.write(val);
+            }
+        }) ;
+    });
 };
 /**
  * create the html for a settings item
@@ -47,7 +62,7 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
     var value=this.gui.properties.getValue(descr);
     if (descr.type == avnav.util.PropertyType.CHECKBOX){
         var html='<label>'+descr.label;
-        html+='<input type="checkbox" class="avn_settings_checkbox" avn_name="'+name+'"';
+        html+='<input type="checkbox" class="avn_settings_checkbox avn_setting" avn_name="'+descr.completeName+'"';
         if (value) html+="checked";
         html+='></input></label>';
         this.allItems[descr.completeName]= {
@@ -61,10 +76,10 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
     }
     if (descr.type == avnav.util.PropertyType.RANGE){
         var html='<div class=""><div class="avn_slider_label" >'+descr.label+'</div>';
-        html+='<div class="avn_slider_label avn_out">'+value+'</div>';
+        html+='<div class="avn_slider_out avn_out">'+value+'</div>';
         var range=descr.values;
         numdigits=Math.ceil(Math.log(range[1])/Math.log(10));
-        html+='<div class="avn_slider" ><input type="range" min="'+range[0]+'" max="'+range[1]+'" avn_name="'+name+'" value="'+value+'"';
+        html+='<div class="avn_slider" ><input class="avn_setting" type="range" min="'+range[0]+'" max="'+range[1]+'" avn_name="'+descr.completeName+'" value="'+value+'"';
         if (range[2]) {
             html+=' step="'+range[2]+'"';
         }
@@ -72,6 +87,7 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
             numdecimal=range[3];
         }
         html+='/></div>';
+        html+='<button class="avn_settings_reset"></button>';
         html+='<div class="avn_clear"/>';
         html+='</div>';
         this.allItems[descr.completeName]= {
@@ -85,8 +101,9 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
     }
     if (descr.type == avnav.util.PropertyType.COLOR){
         var html='<div class=""><div class="avn_color_label" >'+descr.label+'</div>';
-        html+='<div class="avn_color_label avn_out">'+value+'</div>';
-        html+='<input type="color" class="avn_color"/>';
+        html+='<div class="avn_color_out avn_out">'+value+'</div>';
+        html+='<input type="color" class="avn_color avn_setting" avn_name="'+descr.completeName+'"/>';
+        html+='<button class="avn_settings_reset"></button>';
         html+='<div class="avn_clear"/>';
         html+='</div>';
         this.allItems[descr.completeName]= {
