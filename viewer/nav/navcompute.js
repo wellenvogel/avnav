@@ -120,7 +120,18 @@ avnav.nav.NavCompute.computeTPA=function(a,da,db,va,vb){
     var tm=((va*da+vb*db)-Math.cos(a)*(va*db+vb*da))/n;
     return tm;
 };
-
+/**
+ * compute a new point (in lon/lat) traveling from a given point
+ * @param {avnav.nav.navdata.Point} src
+ * @param {number} brg in degrees
+ * @param {number} dist in m
+*/
+avnav.nav.NavCompute.computeTarget=function(src,brg,dist){
+    var llsrc = new LatLon(src.lat, src.lon);
+    var llrt=llsrc.destinationPoint(brg,dist/1000);
+    var rt=new avnav.nav.navdata.Point(llrt.lon(),llrt.lat());
+    return rt;
+};
 
 
 

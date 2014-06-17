@@ -15,6 +15,13 @@ goog.require('avnav.nav.NavObject');
  */
 avnav.map.NavLayer=function(mapholder,navobject){
     var self=this;
+
+    /**
+     * the number of circles we can draw
+     * @constant
+     * @type {number}
+     */
+    this.MAXCIRCLES=3;
     //use our own drawing to canvas
     //due to broken ol3 IconStyle when drawing to vector context
     this.useOwnDrawing=true;
@@ -55,6 +62,11 @@ avnav.map.NavLayer=function(mapholder,navobject){
      * @type {ol.style.Style}
      */
     this.courseStyle={};
+    /**
+     * @private
+     * @type {ol.style.Style}
+     */
+    this.circleStyle={};
     this.setStyle();
 
     /**
@@ -144,6 +156,11 @@ avnav.map.NavLayer=function(mapholder,navobject){
     this.features.push(new ol.Feature({
         'geometry': new ol.geom.Point([0,0])
     }));
+    for (var i=0;i< this.MAXCIRCLES;i++) {
+        this.features.push(new ol.Feature({
+            'geometry': new ol.geom.Circle([0, 0], 1)
+        }));
+    }
 
     /**
      * the boat position in map coordinates
@@ -183,6 +200,12 @@ avnav.map.NavLayer.prototype.setStyle=function() {
         color: this.mapholder.properties.getProperties().bearingColor,
         width: this.mapholder.properties.getProperties().bearingWidth
 
+    });
+    this.circleStyle= new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: this.mapholder.properties.getProperties().navCircleColor,
+            width: this.mapholder.properties.getProperties().navCircleWidth
+        })
     });
 }
 
@@ -283,6 +306,25 @@ avnav.map.NavLayer.prototype.onPostCompose=function(evt){
 
 };
 
+/**
+ * compute a distance in map units fropm a given point
+ * for drawing the circles
+ * assumes "flatted" area around the point
+ * @param {ol.Coordinat} pos in lat/lon
+ * @param {number} course in degrees
+ * @param {number} dist in m
+ */
+avnav.map.NavLayer.prototype.computeDistance=function(pos,course,dist){
+    var point=new avnav.nav.navdata.Point();
+    point.fromCoord(pos);
+    var tp=avnav.nav.NavCompute.computeTarget(point,course,dist);
+    var spmap=this.mapholder.transformToMap(pos);
+    var tpmap=this.mapholder.transformToMap(tp.toCoord());
+    var dx=spmap[0]-tpmap[0];
+    var dy=spmap[1]-tpmap[1];
+    var dst=Math.sqrt(dx*dx+dy*dy);
+    return dst;
+};
 
 /**
  * set the boat position
@@ -293,6 +335,13 @@ avnav.map.NavLayer.prototype.setBoatPosition=function(pos,course){
     this.setBoatStyle(course);
     this.boatPosition=this.mapholder.transformToMap(pos);
     this.features[avnav.map.NavLayer.IDXBOAT].setGeometry(new ol.geom.Point(this.boatPosition));
+    //currently 3 fix circles
+    this.features[avnav.map.NavLayer.IDXBOAT+1].setGeometry(new ol.geom.Circle(this.boatPosition,
+        this.computeDistance(pos,course,this.mapholder.properties.getProperties().navCircle1Radius)));
+    this.features[avnav.map.NavLayer.IDXBOAT+2].setGeometry(new ol.geom.Circle(this.boatPosition,
+        this.computeDistance(pos,course,this.mapholder.properties.getProperties().navCircle2Radius)));
+    this.features[avnav.map.NavLayer.IDXBOAT+3].setGeometry(new ol.geom.Circle(this.boatPosition,
+        this.computeDistance(pos,course,this.mapholder.properties.getProperties().navCircle3Radius)));
 };
 
 /**
@@ -313,6 +362,19 @@ avnav.map.NavLayer.prototype.setMarkerPosition=function(pos){
 avnav.map.NavLayer.prototype.styleFunction=function(feature,resolution){
     if (feature == this.features[avnav.map.NavLayer.IDXBOAT]){
         return [this.boatStyle];
+    }
+    var prop=this.mapholder.getProperties().getProperties();
+    if (feature == this.features[avnav.map.NavLayer.IDXBOAT+1]) {
+        if (prop.navCircle1Radius <= 10) return [];
+        return [this.circleStyle];
+    }
+    if (feature == this.features[avnav.map.NavLayer.IDXBOAT+2]) {
+        if (prop.navCircle2Radius <= 10 || prop.navCircle2Radius <= prop.navCircle1Radius ) return [];
+        return [this.circleStyle];
+    }
+    if (feature == this.features[avnav.map.NavLayer.IDXBOAT+3]) {
+        if (prop.navCircle3Radius <= 10 || prop.navCircle3Radius <= prop.navCircle1Radius || prop.navCircle3Radius <= prop.navCircle2Radius ) return [];
+        return [this.circleStyle];
     }
     return undefined;
 };

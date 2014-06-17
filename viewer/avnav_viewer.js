@@ -67,7 +67,12 @@ var propertyDefinitions=function(){
         trackQueryTimeout: new avnav.util.Property( 5000,"Track",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
         bearingColor: new avnav.util.Property( "#DDA01F","Color",avnav.util.PropertyType.COLOR),
         bearingWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),
-        trackColor: new avnav.util.Property( "#D71038","Color",avnav.util.PropertyType.COLOR),
+        navCircleColor: new avnav.util.Property( "#D71038","Circle Color",avnav.util.PropertyType.COLOR),
+        navCircleWidth: new avnav.util.Property( 1,"Circle Width",avnav.util.PropertyType.RANGE,[1,10]),
+        navCircle1Radius: new avnav.util.Property( 300,"Circle 1 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
+        navCircle2Radius: new avnav.util.Property( 1000,"Circle 2 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
+        navCircle3Radius: new avnav.util.Property( 0,"Circle 3 Radius(m)",avnav.util.PropertyType.RANGE,[0,10000,10]),
+        trackColor: new avnav.util.Property( "#942eba","Color",avnav.util.PropertyType.COLOR),
         trackWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         trackInterval: new avnav.util.Property( 30,"Point Dist.(s)",avnav.util.PropertyType.RANGE,[5,300]), //seconds
         initialTrackLength: new avnav.util.Property( 24,"Length(h)",avnav.util.PropertyType.RANGE,[1,48]), //in h
