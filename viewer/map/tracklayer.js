@@ -104,6 +104,7 @@ avnav.map.TrackLayer.prototype.styleFunction=function(feature,resolution){
  */
 avnav.map.TrackLayer.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
+    if (! this.maplayer.getVisible()) return;
     if (evdata.type == avnav.nav.NavEventType.TRACK){
         var newTrack=this.navobject.getRawData(avnav.nav.NavEventType.TRACK);
         if (newTrack.length < 2){

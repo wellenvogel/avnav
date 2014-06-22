@@ -92,7 +92,7 @@ var propertyDefinitions=function(){
         aisWarningImage: new avnav.util.Property( 'images/ais-warning.png'),
         statusQueryTimeout: new avnav.util.Property( 3000), //ms
         centerDisplayTimeout: new avnav.util.Property( 45000), //ms - auto hide measure display (0 - no auto hide)
-        navUrl: new avnav.util.Property( "avnav_navi.php"),
+        navUrl: new avnav.util.Property( "/viewer/avnav_navi.php"),
         maxGpsErrors: new avnav.util.Property( 3), //after that much invalid responses/timeouts the GPS is dead
         cookieName: new avnav.util.Property( "avnav_ol3"),
         statusErrorImage: new avnav.util.Property( "images/RedBubble40.png"),

@@ -212,6 +212,7 @@ avnav.map.AisLayer.prototype.styleFunction=function(feature,resolution){
  */
 avnav.map.AisLayer.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
+    if (! this.maplayer.getVisible()) return;
     if (evdata.type == avnav.nav.NavEventType.AIS){
         var aislist=this.navobject.getRawData(avnav.nav.NavEventType.AIS);
         var toadd=[];

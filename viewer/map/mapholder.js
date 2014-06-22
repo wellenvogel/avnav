@@ -564,7 +564,7 @@ avnav.map.MapHolder.prototype.setCourseUp=function(on){
     else{
         this.courseUp=on;
         this.setMapRotation(0);
-        return on;
+
     }
 };
 

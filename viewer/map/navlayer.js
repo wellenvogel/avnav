@@ -331,11 +331,22 @@ avnav.map.NavLayer.prototype.computeDistance=function(pos,course,dist){
  * @param {ol.Coordinate} pos
  * @param {number} course
  */
-avnav.map.NavLayer.prototype.setBoatPosition=function(pos,course){
-    this.setBoatStyle(course);
-    this.boatPosition=this.mapholder.transformToMap(pos);
+avnav.map.NavLayer.prototype.setBoatPosition=function(pos,course) {
+    this.setBoatStyle(course); //also sets this.lastCourse
+    this.boatPosition = this.mapholder.transformToMap(pos);
+    if (! this.maplayer.getVisible()) return;
+    this.updateDisplay();
+};
+
+/**
+ * update the features
+ * @private
+ */
+avnav.map.NavLayer.prototype.updateDisplay=function(){
     this.features[avnav.map.NavLayer.IDXBOAT].setGeometry(new ol.geom.Point(this.boatPosition));
     //currently 3 fix circles
+    var pos=this.mapholder.transformFromMap(this.boatPosition);
+    var course=this.lastBoatCourse;
     this.features[avnav.map.NavLayer.IDXBOAT+1].setGeometry(new ol.geom.Circle(this.boatPosition,
         this.computeDistance(pos,course,this.mapholder.properties.getProperties().navCircle1Radius)));
     this.features[avnav.map.NavLayer.IDXBOAT+2].setGeometry(new ol.geom.Circle(this.boatPosition,
@@ -382,4 +393,5 @@ avnav.map.NavLayer.prototype.styleFunction=function(feature,resolution){
 avnav.map.NavLayer.prototype.propertyChange=function(evdata){
     this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.boat);
     this.setStyle();
+    if (this.maplayer.getVisible()) this.updateDisplay();
 };
