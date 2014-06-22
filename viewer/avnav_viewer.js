@@ -61,6 +61,8 @@ var propertyDefinitions=function(){
         maxUpscale: new avnav.util.Property(2), //2 levels upscale (otherwise we need too much mem)
         hideLower: new avnav.util.Property( true), //if set, hide smaller zoom layers when completely covered
         maxZoom: new avnav.util.Property( 21),  //only allow upscaling up to this zom level
+        courseAverageFactor: new avnav.util.Property(0.5), //moving average for course up
+        courseAverageTolerance: new avnav.util.Property(15,"Rotation Tolerance",avnav.util.PropertyType.RANGE,[1,30]), //tolerance for slow rotation
         minGridLedvel: new avnav.util.Property( 10),
         loggingEnabled: new avnav.util.Property( true),
         positionQueryTimeout: new avnav.util.Property( 1000,"Position",avnav.util.PropertyType.RANGE,[500,5000,10]), //1000ms

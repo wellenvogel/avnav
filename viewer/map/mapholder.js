@@ -83,6 +83,25 @@ avnav.map.MapHolder=function(properties,navobject){
      */
     this.gpsLocked=false;
 
+    /**
+     * course up display
+     * @type {boolean}
+     */
+    this.courseUp=false;
+
+    /**
+     * average course for course up
+     * in degrees
+     * @type {number}
+     */
+    this.averageCourse=0;
+
+    /**
+     * factor for moving average for the course
+     * @type {number}
+     */
+    this.movingAveragefactor=0.5;
+
     this.transformFromMap=ol.proj.getTransform("EPSG:3857","EPSG:4326");
     this.transformToMap=ol.proj.getTransform("EPSG:4326","EPSG:3857");
 
@@ -300,6 +319,14 @@ avnav.map.MapHolder.prototype.e2f=function(elem,attr){
 };
 
 /**
+ * get the mode of the course up display
+ * @returns {boolean}
+ */
+avnav.map.MapHolder.prototype.getCourseUp=function(){
+    return this.courseUp;
+};
+
+/**
  * map locked to GPS
  * @returns {boolean}
  */
@@ -327,6 +354,14 @@ avnav.map.MapHolder.prototype.navEvent=function(evdata){
         this.navlayer.setBoatPosition(gps.toCoord(),gps.course);
         if (! this.gpsLocked) return;
         this.setCenter(gps);
+        var prop=this.properties.getProperties();
+        if (this.courseUp) {
+            var diff=(gps.course-this.averageCourse);
+            var tol=prop.courseAverageTolerance;
+            if (diff < tol && diff > -tol) diff=diff/30; //slower rotate the map
+            this.averageCourse+=diff*prop.courseAverageFactor;
+            this.setMapRotation(this.averageCourse);
+        }
 
     }
 };
@@ -498,6 +533,39 @@ avnav.map.MapHolder.prototype.pointFromMap=function(point){
  */
 avnav.map.MapHolder.prototype.setCenter=function(point){
     this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
+};
+
+/**
+ * set the map rotation
+ * @param {number} rotation in degrees
+ */
+avnav.map.MapHolder.prototype.setMapRotation=function(rotation){
+    this.getView().setRotation((360-rotation)*Math.PI/180);
+};
+
+/**
+ * set the course up display mode
+ * @param on
+ * @returns {boolean} the newl set value
+ */
+avnav.map.MapHolder.prototype.setCourseUp=function(on){
+    var old=this.courseUp;
+    if (old == on) return on;
+    if (on){
+        //switch on only when locked...
+        if (! this.gpsLocked) return false;
+        var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+        if (! gps.valid) return false;
+        this.averageCourse=gps.course;
+        this.setMapRotation(this.averageCourse);
+        this.courseUp=on;
+        return on;
+    }
+    else{
+        this.courseUp=on;
+        this.setMapRotation(0);
+        return on;
+    }
 };
 
 avnav.map.MapHolder.prototype.setGpsLock=function(lock){

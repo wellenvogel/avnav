@@ -124,6 +124,8 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
     this.handleToggleButton('#avb_LockMarker',markerLock);
     var gpsLock=this.gui.map.getGpsLock();
     this.handleToggleButton('#avb_LockPos',gpsLock);
+    var courseUp=this.gui.map.getCourseUp();
+    this.handleToggleButton('#avb_CourseUp',courseUp);
     var self=this;
     if (this.hidetime >0 && this.hidetime <= new Date().getTime()|| gpsLock){
         this.hideOverlay();
@@ -277,6 +279,12 @@ avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
     this.gui.map.setMarkerLock(nLock);
     this.handleToggleButton(button,nLock);
     log("LockMarker clicked");
+};
+avnav.gui.Navpage.prototype.btnCourseUp=function (button,ev){
+    var nLock=! this.gui.map.getCourseUp();
+    nLock=this.gui.map.setCourseUp(nLock);
+    this.handleToggleButton(button,nLock);
+    log("courseUp clicked");
 };
 avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
     log("CancelNav clicked");
