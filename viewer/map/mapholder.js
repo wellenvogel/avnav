@@ -277,7 +277,7 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
 /**
  * a workaround for the current unability of ol3 to draw in image in postcompose...
  * @param {ol.render.Event} the event context from postcompose
- * @param {ol.Coordinate} coord the coordinate to draw to in map coordinates
+ * @param {ol.Coordinate}coord the coordinate to draw to in map coordinates
  * @param {Image} the image to display (must be loaded - no check!)
  * @param {{}} opt_options handles the same properties like ol.style.Icon
  *             currently supported:
@@ -285,7 +285,7 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
  *             size[x,y]
  */
 avnav.map.MapHolder.prototype.drawImageToCanvas=function(evt,coord,image,opt_options){
-    if (image.naturalHeight == 0 || image.naturalWidth == 0) return; //silently ignore error
+    if (image.naturalHeight == 0 || image.naturalWidth == 0) return; //silently ignore error
     var xy=this.olmap.getPixelFromCoordinate(coord);
     var devpixratio=evt.frameState.pixelRatio;
     if (devpixratio){

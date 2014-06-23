@@ -123,7 +123,7 @@ avnav.util.PropertyHandler.prototype.getDescriptionByName=function(name){
  * @param {avnav.util.Property} descr
  */
 avnav.util.PropertyHandler.prototype.getValue=function(descr){
-    if (descr === undefined || !( descr instanceof avnav.util.Property)) return undefined;
+    if (descr === undefined ||�!( descr instanceof avnav.util.Property)) return undefined;
     return descr.path[descr.pname];
 };
 /**
@@ -133,7 +133,7 @@ avnav.util.PropertyHandler.prototype.getValue=function(descr){
  * @returns {boolean}
  */
 avnav.util.PropertyHandler.prototype.setValue=function(descr,value){
-    if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;
+    if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;
     descr.path[descr.pname]=value;
     return this.setUserDataByDescr(descr,value);
 };
@@ -153,7 +153,7 @@ avnav.util.PropertyHandler.prototype.getValueByName=function(name){
  * @returns {boolean}
  */
 avnav.util.PropertyHandler.prototype.setUserDataByDescr=function(descr,value){
-    if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;
+    if (descr === undefined || !( descr instanceof avnav.util.Property)) return false;
     var parr=descr.completeName.split(".");
     var current=this.userData;
     try {
