@@ -123,7 +123,7 @@ avnav.util.PropertyHandler.prototype.getDescriptionByName=function(name){
  * @param {avnav.util.Property} descr
  */
 avnav.util.PropertyHandler.prototype.getValue=function(descr){
-    if (descr === undefined || !( descr instanceof avnav.util.Property)) return undefined;
+    if (descr === undefined || !( descr instanceof avnav.util.Property)) return undefined;
     return descr.path[descr.pname];
 };
 /**
