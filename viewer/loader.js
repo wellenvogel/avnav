@@ -68,7 +68,8 @@
         'avnav_viewer.js'];
     //scripts in runmode
     var run_scripts = [
-        '../libraries/ol3b4/ol.js', //TODO: replace by minified version
+        '../libraries/ol3b4/ol-whitespace.js', /* TODO: replace by minified version -currently we need to patch
+                                                  ol.render.canvas.ReplayGroup.prototype.replay_ to omit the clip*/
         'avnav_min.js'
     ];
     var mode="";
