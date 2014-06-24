@@ -23792,7 +23792,7 @@ this.name = name;
                 context.lineTo(flatClipCoords[6], flatClipCoords[7]);
                 context.closePath();
 		//avo: omit clip here - does not work on blackberry - webkit 536.2+
-                context.clip();
+                //context.clip();
                 var i, ii, j, jj, replays, replayType, replay, result;
                 for (i = 0, ii = zs.length; i < ii; ++i) {
         replays = this.replaysByZIndex_[zs[i].toString()];
