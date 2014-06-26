@@ -61,14 +61,14 @@
     ];
     //scripts used in debug mode
     var debug_scripts = [
-        '../libraries/ol3b4/ol-whitespace.js',
+        '../libraries/ol3b5/ol-whitespace.js',
         '../libraries/closure-library/closure/goog/base.js',
         '../libraries/closure-library/closure/goog/deps.js',
         'deps.js',
         'avnav_viewer.js'];
     //scripts in runmode
     var run_scripts = [
-        '../libraries/ol3b4/ol-whitespace.js', /* TODO: replace by minified version -currently we need to patch
+        '../libraries/ol3b5/ol.js', /* TODO: replace by minified version -currently we need to patch
                                                   ol.render.canvas.ReplayGroup.prototype.replay_ to omit the clip*/
         'avnav_min.js'
     ];

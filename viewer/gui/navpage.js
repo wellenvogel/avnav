@@ -272,18 +272,21 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
     this.gui.map.setGpsLock(nLock);
     this.handleToggleButton(button,nLock);
     if (nLock) this.hideOverlay();
+    this.gui.map.triggerRender();
     log("LockPos clicked");
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
     var nLock=! this.gui.map.getMarkerLock();
     this.gui.map.setMarkerLock(nLock);
     this.handleToggleButton(button,nLock);
+    this.gui.map.triggerRender();
     log("LockMarker clicked");
 };
 avnav.gui.Navpage.prototype.btnCourseUp=function (button,ev){
     var nLock=! this.gui.map.getCourseUp();
     nLock=this.gui.map.setCourseUp(nLock);
     this.handleToggleButton(button,nLock);
+    this.gui.map.triggerRender();
     log("courseUp clicked");
 };
 avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){

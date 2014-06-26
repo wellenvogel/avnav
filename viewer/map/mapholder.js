@@ -231,6 +231,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
                 altShiftDragRotate:false,
                 pinchRotate: false
             }),
+            controls: [],
             view: new ol.View2D({
                 center: ol.proj.transform([ 13.8, 54.1], 'EPSG:4326', 'EPSG:3857'),
                 zoom: 9
@@ -379,16 +380,18 @@ avnav.map.MapHolder.prototype.navEvent=function(evdata){
         var gps=this.navobject.getRawData(evdata.type);
         if (! gps.valid) return;
         this.navlayer.setBoatPosition(gps.toCoord(),gps.course);
-        if (! this.gpsLocked) return;
-        this.setCenter(gps);
-        var prop=this.properties.getProperties();
-        if (this.courseUp) {
-            var diff=(gps.course-this.averageCourse);
-            var tol=prop.courseAverageTolerance;
-            if (diff < tol && diff > -tol) diff=diff/30; //slower rotate the map
-            this.averageCourse+=diff*prop.courseAverageFactor;
-            this.setMapRotation(this.averageCourse);
+        if (this.gpsLocked) {
+            this.setCenter(gps);
+            var prop = this.properties.getProperties();
+            if (this.courseUp) {
+                var diff = (gps.course - this.averageCourse);
+                var tol = prop.courseAverageTolerance;
+                if (diff < tol && diff > -tol) diff = diff / 30; //slower rotate the map
+                this.averageCourse += diff * prop.courseAverageFactor;
+                this.setMapRotation(this.averageCourse);
+            }
         }
+        if (this.olmap) this.olmap.render();
 
     }
 };
@@ -757,4 +760,10 @@ avnav.map.MapHolder.prototype.updateSize=function(){
     if (this.olmap) this.olmap.updateSize();
 };
 
+/**
+ * trigger an new map rendering
+ */
+avnav.map.MapHolder.prototype.triggerRender=function(){
+    if (this.olmap) this.olmap.render();
+};
 

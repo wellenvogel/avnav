@@ -1,2 +1,3 @@
 rem ..\libraries\closure-library\closure\bin\build\closurebuilder.py --root . --root ..\libraries\closure-library --namespace=avnav.main --output_mode=compiled --compiler_jar=..\libraries\closure-library\compiler.jar --output_file=avnav_min.js -f --compilation_level -f WHITESPACE_ONLY
-..\libraries\closure-library\closure\bin\build\closurebuilder.py --root . --root ..\libraries\closure-library --namespace=avnav.main --output_mode=script --output_file=avnav_min.js
+..\libraries\closure-library\closure\bin\build\closurebuilder.py --root . --root ..\libraries\closure-library --namespace=avnav.main --output_mode=compiled --compiler_jar=..\libraries\closure-library\compiler.jar --output_file=avnav_min.js
+rem ..\libraries\closure-library\closure\bin\build\closurebuilder.py --root . --root ..\libraries\closure-library --namespace=avnav.main --output_mode=script --output_file=avnav_min.js
