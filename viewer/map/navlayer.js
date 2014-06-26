@@ -5,6 +5,7 @@
 goog.provide('avnav.map.NavLayer');
 goog.require('avnav.nav.GpsData');
 goog.require('avnav.nav.NavObject');
+goog.require('avnav.map.Drawing');
 
 
 /**
@@ -256,15 +257,17 @@ avnav.map.NavLayer.prototype.getMapLayer=function(){
  * draw the marker and course
  * we rely on the move end to really set the marker pos to the cookie and to the navobject
  * @param {oli.render.Event} evt
+ * @param {avnav.map.Drawing} drawing
  */
-avnav.map.NavLayer.prototype.onPostCompose=function(evt){
+avnav.map.NavLayer.prototype.onPostCompose=function(evt,drawing){
     //return;
     var vectorContext = evt.vectorContext;
     var marker=new ol.geom.Point(null);
     var center=new ol.geom.Point(null);
     if (!this.mapholder.getMarkerLock()) {
         if (this.useOwnDrawing) {
-            this.mapholder.drawImageToCanvas(evt, evt.frameState.view2DState.center, this.markerImage, this.markerStyleProperties);
+            drawing.drawImageToContext(evt.frameState.view2DState.center,this.markerImage, this.markerStyleProperties);
+            //this.mapholder.drawImageToCanvas(evt, evt.frameState.view2DState.center, this.markerImage, this.markerStyleProperties);
         }
         else {
             marker.setCoordinates(evt.frameState.view2DState.center);
@@ -273,7 +276,8 @@ avnav.map.NavLayer.prototype.onPostCompose=function(evt){
     }
     else {
         if (this.useOwnDrawing) {
-            this.mapholder.drawImageToCanvas(evt, this.markerPosition, this.markerImage, this.markerStyleProperties);
+            drawing.drawImageToContext(this.markerPosition, this.markerImage, this.markerStyleProperties);
+            //this.mapholder.drawImageToCanvas(evt, this.markerPosition, this.markerImage, this.markerStyleProperties);
         }
         else {
             marker.setCoordinates(this.markerPosition);
@@ -293,7 +297,8 @@ avnav.map.NavLayer.prototype.onPostCompose=function(evt){
                 vectorContext.drawPointGeometry(center);
             }
             else {
-                this.mapholder.drawImageToCanvas(evt, evt.frameState.view2DState.center, this.centerImage, this.centerStyleProperties);
+                drawing.drawImageToContext(evt.frameState.view2DState.center, this.centerImage, this.centerStyleProperties);
+                //this.mapholder.drawImageToCanvas(evt, evt.frameState.view2DState.center, this.centerImage, this.centerStyleProperties);
             }
         }
         if (this.mapholder.getProperties().getProperties().layers.nav) {

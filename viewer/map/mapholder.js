@@ -7,6 +7,8 @@ goog.provide('avnav.map.MapEvent');
 goog.require('avnav.map.NavLayer');
 goog.require('avnav.map.TrackLayer');
 goog.require('avnav.map.AisLayer');
+goog.require('avnav.map.DrawingPositionConverter');
+goog.require('avnav.map.Drawing');
 
 /**
  * the types of the layers
@@ -52,6 +54,8 @@ avnav.map.MapEvent.EVENT_TYPE="mapevent";
  * @constructor
  */
 avnav.map.MapHolder=function(properties,navobject){
+
+    avnav.map.Drawing.call(this);
     /** @private
      * @type {ol.Map}
      * */
@@ -130,10 +134,34 @@ avnav.map.MapHolder=function(properties,navobject){
         this.setMarkerPosition(this.markerPosition,true);
     }
     this.slideIn=0; //when set we step by step zoom in
+    /**
+     * @private
+     * @type {avnav.map.Drawing
+     */
+    this.drawing=new avnav.map.Drawing(this);
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
+
+};
+
+goog.inherits(avnav.map.MapHolder,avnav.map.DrawingPositionConverter);
+/**
+ * @inheritDoc
+ * @param {ol.Coordinate} point
+ * @returns {ol.Coordinate}
+ */
+avnav.map.MapHolder.prototype.coordToPixel=function(point){
+    return this.olmap.getPixelFromCoordinate(point);
+};
+/**
+ * @inheritDoc
+ * @param {ol.Coordinate} pixel
+ * @returns {ol.Coordinate}
+ */
+avnav.map.MapHolder.prototype.pixelToLatLon=function(pixel){
+    return this.olmap.getCoordinateFromPixel(pixel);
 };
 
 /**
@@ -693,7 +721,9 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
 avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     var newCenter=this.pointFromMap(evt.frameState.view2DState.center);
     this.setCenterFromMove(newCenter);
-    this.navlayer.onPostCompose(evt);
+    this.drawing.setContext(evt.context);
+    this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
+    this.navlayer.onPostCompose(evt,this.drawing);
 };
 
 /**
