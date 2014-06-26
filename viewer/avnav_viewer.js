@@ -80,6 +80,7 @@ var propertyDefinitions=function(){
         initialTrackLength: new avnav.util.Property( 24,"Length(h)",avnav.util.PropertyType.RANGE,[1,48]), //in h
         aisQueryTimeout: new avnav.util.Property( 5000,"AIS",avnav.util.PropertyType.RANGE,[1000,10000,10]), //ms
         aisDistance: new avnav.util.Property( 20,"AIS-Range(nm)",avnav.util.PropertyType.RANGE,[1,100]), //distance for AIS query in nm
+        aisClickTolerance: new avnav.util.Property( 80,"Click Tolerance",avnav.util.PropertyType.RANGE,[10,100]),
         maxAisErrors: new avnav.util.Property( 3), //after that many errors AIS display will be switched off
         minAISspeed: new avnav.util.Property( 0.2), //minimal speed in kn that we consider when computing cpa/tcpa
         maxAisTPA: new avnav.util.Property( 3),    //max. computed AIS TPA time in h (otherwise we do not consider this)

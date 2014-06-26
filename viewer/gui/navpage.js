@@ -239,11 +239,11 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
         this.overlay.show();
     }
-    if (evdata.type == avnav.map.EventType.SELECT){
-        var feature=evdata.parameter.feature;
-        if (! feature) return;
-        if (feature.aisparam && feature.aisparam.mmsi){
-            this.navobject.getAisData().setTrackedTarget(feature.aisparam.mmsi);
+    if (evdata.type == avnav.map.EventType.SELECTAIS){
+        var aisparam=evdata.parameter.aisparam;
+        if (! aisparam) return;
+        if (aisparam.mmsi){
+            this.navobject.getAisData().setTrackedTarget(aisparam.mmsi);
             this.gui.showPage('aispage');
         }
     }

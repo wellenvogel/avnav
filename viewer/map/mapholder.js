@@ -23,7 +23,7 @@ avnav.map.LayerTypes={
 
 avnav.map.EventType={
     MOVE:0,
-    SELECT:1
+    SELECTAIS:1
 };
 
 /**
@@ -651,20 +651,14 @@ avnav.map.MapHolder.prototype.setMarkerPosition=function(coord,forceWrite){
 avnav.map.MapHolder.prototype.onClick=function(evt){
     //no click actions when gps is locked...
     if (this.gpsLocked) return;
-    var features=[];
-    this.olmap.forEachFeatureAtPixel(evt.pixel,function(feature,layer){
-        features.push(feature);
-    });
+
     //currently only AIS features...
-    for (var idx in features){
-        var feature=features[idx];
-        if (feature.aisparam){
-            //only consider the first one...
-            $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
-                new avnav.map.MapEvent(avnav.map.EventType.SELECT, {feature:feature})
-            );
-            break;
-        }
+    var aisparam=this.aislayer.findTarget(evt.pixel);
+    if (aisparam) {
+        $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
+            new avnav.map.MapEvent(avnav.map.EventType.SELECTAIS, {aisparam: aisparam})
+        );
+
     }
 };
 /**

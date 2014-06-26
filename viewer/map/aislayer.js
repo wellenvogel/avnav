@@ -55,9 +55,10 @@ avnav.map.AisLayer=function(mapholder,navobject){
     this.aisdata=[];
     /**
      * an array of pixel positions of the current ais data
-     * @type {Array}
+     * @type {Array.<{pixel:ol.Coordinate,ais:{}}
      */
     this.pixel=[];
+
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -126,6 +127,36 @@ avnav.map.AisLayer.prototype.createAllIcons=function(){
     this.warningImage.src=this.createIcon(style.aisWarningColor);
     this.normalImage.src=this.createIcon(style.aisNormalColor);
 };
+/**
+ * find the AIS target that has been clicked
+ * @param {ol.Coordinate} pixel the css pixel from the event
+ */
+avnav.map.AisLayer.prototype.findTarget=function(pixel){
+    log("findAisTarget "+pixel[0]+","+pixel[1]);
+    var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
+    var xmin=pixel[0]-tolerance;
+    var xmax=pixel[0]+tolerance;
+    var ymin=pixel[1]-tolerance;
+    var ymax=pixel[1]+tolerance;
+    var i;
+    var rt=[];
+    for (i in this.pixel){
+        var current=this.pixel[i].pixel;
+        if (current[0]>=xmin && current[0] <=xmax && current[1] >=ymin && current[1] <= ymax){
+            rt.push(this.pixel[i]);
+        }
+    }
+    if (rt.length){
+        if (rt.length == 1) return rt[0].ais;
+        rt.sort(function(a,b){
+            var da=Math.sqrt((a.pixel[0]-pixel[0])*(a.pixel[0]-pixel[0])+(a.pixel[1]-pixel[1])*(a.pixel[1]-pixel[1]));
+            var db=Math.sqrt((b.pixel[0]-pixel[0])*(b.pixel[0]-pixel[0])+(b.pixel[1]-pixel[1])*(b.pixel[1]-pixel[1]));
+            return (da - db);
+        });
+        return rt[0].ais; //currently simply the first - could be the nearest...
+    }
+    return undefined;
+};
 
 
 avnav.map.AisLayer.prototype.setStyles=function(){
@@ -185,7 +216,7 @@ avnav.map.AisLayer.prototype.onPostCompose=function(center,drawing){
             icon = this.warningImage;
         this.targetStyle.rotation=rotation*Math.PI/180;
         var curpix=drawing.drawImageToContext(pos,icon,this.targetStyle);
-        pixel.push(curpix);
+        pixel.push({pixel:curpix,ais:current});
         drawing.drawTextToContext(pos,text,this.textStyle);
     }
     this.pixel=pixel;
