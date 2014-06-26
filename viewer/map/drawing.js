@@ -165,6 +165,60 @@ avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
     return rt;
 };
 
+/**
+ *
+ * @param {ol.Coordinate} point
+ * @param {string} text
+ * @param opt_styles - properties
+ *      font: the text font
+ *      color: the text color
+ *      stroke: text stroke - either stroke or color (color will win)
+ *      width: text width
+ *      align: text align
+ *      baseline: text baseline
+ *      rotateWithView: if true show rotated (default: false)
+ *      offsetX
+ *      offsetY
+ */
+avnav.map.Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
+    if (!this.context) return;
+    if (! point) return;
+    var doFill=true;
+    var doStroke=false;
+    var noRotate=true;
+    var rt=this.pointToCssPixel(point);
+    var dp=this.pixelToDevice(rt);
+    var offset=[0,0];
+    if (opt_styles) {
+        if (opt_styles.font) this.context.font = opt_styles.font;
+        if (opt_styles.color) this.context.fillStyle = opt_styles.color;
+        if (opt_styles.stroke) {
+            doStroke = true;
+            this.context.strokeStyle = opt_styles.stroke;
+        }
+        if (opt_styles.width)this.context.lineWidth = opt_styles.width;
+        if (opt_styles.rotateWithView) noRotate=false;
+        if (opt_styles.offsetX) offset[0]=opt_styles.offsetX;
+        if (opt_styles.offsetY) offset[1]=opt_styles.offsetY;
+    }
+    offset=this.pixelToDevice(offset);
+    this.context.textAlign = opt_styles.align || 'center';
+    this.context.textBaseline = opt_styles.baseline || 'middle';
+    if (this.rotation && noRotate){
+        this.context.save();
+        this.context.translate(dp[0],dp[1]);
+        this.context.rotate(0);
+        if (doStroke) this.context.strokeText(text,offset[0],offset[1]);
+        if (doFill) this.context.fillText(text,offset[0],offset[1]);
+        this.context.restore();
+    }
+    else {
+        if (doStroke) this.context.strokeText(text,dp[0]+offset[0],dp[1]+offset[1]);
+        if (doFill) this.context.fillText(text,dp[0]+offset[0],dp[1]+offset[1]);
+    }
+    return rt;
+};
+
 
 /**
  * get the drawing context

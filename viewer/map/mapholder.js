@@ -204,7 +204,6 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             this.maxzoom=layers[i].avnavOptions.maxZoom;
         }
     }
-    layersreverse.push(this.aislayer.getMapLayer());
     if (this.olmap){
         var oldlayers=this.olmap.getLayers();
         if (oldlayers && oldlayers.getArray().length){
@@ -725,6 +724,7 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
     this.drawing.setRotation(evt.frameState.view2DState.rotation);
     this.tracklayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
+    this.aislayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
 };
 

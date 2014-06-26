@@ -3,22 +3,9 @@
  */
 
 goog.provide('avnav.map.AisLayer');
-goog.provide('avnav.map.AisFeature');
 goog.require('avnav.nav.NavObject');
 
-/**
- *
- * @param aisparam
- * @param {ol.Coordinate} coord already in map coordinates
- * @constructor
- */
-avnav.map.AisFeature=function(aisparam,coord){
-    ol.Feature.call(this,{
-        geometry:new ol.geom.Point(coord)
-    });
-    this.aisparam=aisparam;
-};
-goog.inherits(avnav.map.AisFeature,ol.Feature);
+
 /**
  * a cover for the layer with the AIS display
  * @param {avnav.map.MapHolder} mapholder
@@ -37,70 +24,55 @@ avnav.map.AisLayer=function(mapholder,navobject){
      */
     this.navobject=navobject;
     var self=this;
-    this.maplayer=new ol.layer.Vector({
-        source: new ol.source.Vector({
-        }),
-        style: function(feature,resolution){
-            return self.styleFunction(feature,resolution);
-        }
-    });
-    this.maplayer.avnavOptions={};
-    /**
-     * teh current features indexed by mmsi
-     * @type {Array.<{}>}
-     */
-    this.features=[];
-    this.maplayer.avnavOptions.type=avnav.map.LayerTypes.TAIS;
     /**
      * @private
      * @type {ol.style.Stroke}
      */
-    this.textStroke = new ol.style.Stroke({
-        color: '#fff',
-        width: 3
-    });
-    /**
-     * @private
-     * @type {ol.style.Fill}
-     */
-    this.textFill = new ol.style.Fill({
-        color: '#000'
-    });
+    this.textStyle ={};
+    this.setStyles();
 
     /**
      * @private
      * @type {string}
      */
-    this.nearestImage=undefined;
+    this.nearestImage=new Image();
     /**
      * @private
      * @type {string}
      */
-    this.warningImage=undefined;
+    this.warningImage=new Image();
     /**
      * @private
      * @type {string}
      */
-    this.normalImage=undefined;
+    this.normalImage=new Image();
     this.createAllIcons();
+    /**
+     * the ais data - this is a copy of the ais data array (elements are refs) form the aishandler
+     * @private
+     * @type {Array}
+     */
+    this.aisdata=[];
+    /**
+     * an array of pixel positions of the current ais data
+     * @type {Array}
+     */
+    this.pixel=[];
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
-    this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.ais);
+    /**
+     *
+     * @type {boolean}
+     */
+    this.visible=this.mapholder.getProperties().getProperties().layers.ais;
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
         self.propertyChange(evdata);
     });
 
 };
 
-/**
- * get the maplayer
- * @returns {ol.layer.Vector|*}
- */
-avnav.map.AisLayer.prototype.getMapLayer=function(){
-    return this.maplayer;
-};
 
 /**
  * create an AIS icon using a 2d context
@@ -150,61 +122,28 @@ avnav.map.AisLayer.prototype.createIcon=function(color){
  */
 avnav.map.AisLayer.prototype.createAllIcons=function(){
     var style=this.mapholder.getProperties().getProperties().style;
-    this.nearestImage=this.createIcon(style.aisNearestColor);
-    this.warningImage=this.createIcon(style.aisWarningColor);
-    this.normalImage=this.createIcon(style.aisNormalColor);
+    this.nearestImage.src=this.createIcon(style.aisNearestColor);
+    this.warningImage.src=this.createIcon(style.aisWarningColor);
+    this.normalImage.src=this.createIcon(style.aisNormalColor);
 };
 
 
-
-/**
- * get the style for the features
- * currently we do not cache the styles as there is a good chance anyway that e.g the rotation has changed
- * @param {avnav.map.AisFeature} feature
- * @param resolution
- * @returns {*}
- */
-avnav.map.AisLayer.prototype.styleFunction=function(feature,resolution){
-    var icon=undefined;
-    if (0) {
-        icon=this.mapholder.getProperties().getProperties().aisNormalImage;
-        if (feature.aisparam.nearest)
-            icon = this.mapholder.getProperties().getProperties().aisNearestImage;
-        if (feature.aisparam.warning)
-            icon = this.mapholder.getProperties().getProperties().aisWarningImage;
-    }
-    else {
-        icon = this.normalImage;
-        if (feature.aisparam.nearest)
-            icon = this.nearestImage;
-        if (feature.aisparam.warning)
-            icon = this.warningImage;
-    }
-    var rotation=feature.aisparam.course||0;
-    var text=feature.aisparam.shipname;
-    if (! text || text == "unknown") text=feature.aisparam.mmsi;
-    var rt=new ol.style.Style({
-        image: new ol.style.Icon( ({
-            anchor: [15, 60],
-            size: [30,90],
-            anchorXUnits: 'pixels',
-            anchorYUnits: 'pixels',
-            opacity: 1,
-            src: icon,
-            rotation: rotation/180*Math.PI,
-            rotateWithView: true
-        })),
-        text: new ol.style.Text({
-            font: this.mapholder.getProperties().getProperties().aisTextSize+'px Calibri,sans-serif',
-            offsetY: 15,
-            text: text,
-            fill: this.textFill,
-            stroke: this.textStroke
-        })
-
-    });
-    return [rt];
+avnav.map.AisLayer.prototype.setStyles=function(){
+    this.textStyle= {
+        stroke: '#fff',
+        color: '#000',
+        width: 3,
+        font: this.mapholder.getProperties().getProperties().aisTextSize+'px Calibri,sans-serif',
+        offsetY: 15
+    };
+    this.targetStyle={
+        anchor: [15, 60],
+        size: [30,90],
+        rotation: 0,
+        rotateWithView: true
+    };
 };
+
 
 /**
  * an event fired from the AIS handler
@@ -212,45 +151,51 @@ avnav.map.AisLayer.prototype.styleFunction=function(feature,resolution){
  */
 avnav.map.AisLayer.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
-    if (! this.maplayer.getVisible()) return;
+    if (! this.visible) return;
     if (evdata.type == avnav.nav.NavEventType.AIS){
-        var aislist=this.navobject.getRawData(avnav.nav.NavEventType.AIS);
-        var toadd=[];
-        var todelete=[];
-        var now=new Date().getTime();
-        for (var idx in aislist){
-            var item=aislist[idx];
-            var mmsi=item.mmsi;
-            if (! mmsi) continue;
-            if (! this.features[mmsi]){
-                //new target
-                var nTarget=new avnav.map.AisFeature(item,this.mapholder.pointToMap([parseFloat(item.lon),parseFloat(item.lat)]));
-                toadd.push(nTarget);
-                this.features[mmsi]=nTarget;
-                //this.maplayer.getSource().addFeature(nTarget);
-            }
-            else{
-                //TODO: how do we ensure a redraw if only the course is changing?
-                this.features[mmsi].aisparam=item;
-                this.features[mmsi].setGeometry(new ol.geom.Point(this.mapholder.pointToMap([parseFloat(item.lon),parseFloat(item.lat)])));
-            }
-            this.features[mmsi].aisparam.updatets=now;
-        }
-        for (var idx in this.features){
-            var f=this.features[idx];
-            if (f.aisparam.updatets != now){
-                this.maplayer.getSource().removeFeature(f);
-                delete this.features[idx];
-            }
-        }
-        this.maplayer.getSource().addFeatures(toadd);
+        this.aisdata=this.navobject.getRawData(avnav.nav.NavEventType.AIS).slice(0);
+        this.pixel=[];
     }
+    this.mapholder.triggerRender();
+};
+
+/**
+ *
+ * @param {ol.Coordinate} center
+ * @param {avnav.map.Drawing} drawing
+ */
+avnav.map.AisLayer.prototype.onPostCompose=function(center,drawing){
+    if (! this.visible) return;
+    var i;
+    var pixel=[];
+    for (i in this.aisdata){
+        var current=this.aisdata[i];
+        var pos=current.mapPos;
+        if (! pos){
+            pos=this.mapholder.pointToMap((new avnav.nav.navdata.Point(current.lon,current.lat)).toCoord());
+            current.mapPos=pos;
+        }
+        var rotation=current.course||0;
+        var text=current.shipname;
+        if (! text || text == "unknown") text=current.mmsi;
+        var icon = this.normalImage;
+        if (current.nearest)
+            icon = this.nearestImage;
+        if (current.warning)
+            icon = this.warningImage;
+        this.targetStyle.rotation=rotation*Math.PI/180;
+        var curpix=drawing.drawImageToContext(pos,icon,this.targetStyle);
+        pixel.push(curpix);
+        drawing.drawTextToContext(pos,text,this.textStyle);
+    }
+    this.pixel=pixel;
 };
 /**
  * handle changed properties
  * @param evdata
  */
 avnav.map.AisLayer.prototype.propertyChange=function(evdata){
-    this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.ais);
+    this.visible=this.mapholder.getProperties().getProperties().layers.ais;
     this.createAllIcons();
+    this.setStyles();
 };
