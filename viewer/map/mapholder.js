@@ -55,7 +55,7 @@ avnav.map.MapEvent.EVENT_TYPE="mapevent";
  */
 avnav.map.MapHolder=function(properties,navobject){
 
-    avnav.map.Drawing.call(this);
+    avnav.map.DrawingPositionConverter.call(this);
     /** @private
      * @type {ol.Map}
      * */
@@ -205,7 +205,6 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         }
     }
     layersreverse.push(this.aislayer.getMapLayer());
-    layersreverse.push(this.navlayer.getMapLayer());
     layersreverse.push(this.tracklayer.getMapLayer());
 
     if (this.olmap){

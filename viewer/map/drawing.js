@@ -1,6 +1,7 @@
 /**
  * Created by andreas on 26.06.14.
  * 2d context drawing functions
+ * as all the ol3 stuff is hard to use or broken...
  */
 
 goog.provide('avnav.map.Drawing');
@@ -62,6 +63,7 @@ avnav.map.Drawing=function(converter,opt_ratio){
      * @type {CanvasRenderingContext2D}
      */
     this.context=undefined;
+    var self=this;
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
         self.propertyChange(evdata);
     });
@@ -69,7 +71,28 @@ avnav.map.Drawing=function(converter,opt_ratio){
 };
 
 /**
- * a workaround for the current unability of ol3 to draw in image in postcompose...
+ * draw a circle determined by a center point an one other point
+ * @param {ol.Coordinate} center
+ * @param {ol.Coordinate} other
+ * @param opt_styles - see drawLineToContext
+ * @return the center in css pixel
+ */
+avnav.map.Drawing.prototype.drawCircleToContext=function(center,other,opt_styles){
+    if (! this.context) return;
+    this.setLineStyles(opt_styles);
+    var rt=this.pointToCssPixel(center);
+    var cp=this.pixelToDevice(rt);
+    var op=this.pixelToDevice(this.pointToCssPixel(other));
+    var xd=op[0]-cp[0];
+    var yd=op[1]-cp[1];
+    var r=Math.sqrt(xd*xd+yd*yd);
+    this.context.beginPath();
+    this.context.arc(cp[0],cp[1],r,0, 2 * Math.PI);
+    this.context.stroke();
+    return rt;
+};
+
+/**
  * @param {ol.Coordinate} point the position in map coordinates
  * @param {Image} the image to display (must be loaded - no check!)
  * @param {{}} opt_options handles the same properties like ol.style.Icon
@@ -125,12 +148,7 @@ avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
     if (! points || points.length < 2) return;
     if (! this.context) return;
     var rt=[];
-    if (opt_style){
-        if (opt_style.color) this.context.strokeStyle=opt_style.color;
-        if (opt_style.width) this.context.lineWidth=opt_style.width;
-        if (opt_style.cap) this.context.lineCap=opt_style.cap;
-        if (opt_style.join) this.context.lineJoin=opt_style.join;
-    }
+    this.setLineStyles(opt_style);
     this.context.beginPath();
     var p=this.pointToCssPixel(points[0]);
     rt.push(p);
@@ -212,4 +230,13 @@ avnav.map.Drawing.prototype.setContext=function(context){
  */
 avnav.map.Drawing.prototype.setRotation=function(angle){
     this.rotation=angle;
+};
+
+avnav.map.Drawing.prototype.setLineStyles=function(opt_style){
+    if (opt_style){
+        if (opt_style.color) this.context.strokeStyle=opt_style.color;
+        if (opt_style.width) this.context.lineWidth=opt_style.width;
+        if (opt_style.cap) this.context.lineCap=opt_style.cap;
+        if (opt_style.join) this.context.lineJoin=opt_style.join;
+    }
 };
