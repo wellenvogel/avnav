@@ -9,6 +9,7 @@ goog.require('avnav.map.TrackLayer');
 goog.require('avnav.map.AisLayer');
 goog.require('avnav.map.DrawingPositionConverter');
 goog.require('avnav.map.Drawing');
+goog.require('avnav.util.Formatter');
 
 /**
  * the types of the layers
@@ -139,6 +140,11 @@ avnav.map.MapHolder=function(properties,navobject){
      * @type {avnav.map.Drawing
      */
     this.drawing=new avnav.map.Drawing(this);
+    /**
+     * @private
+     * @type {avnav.util.Formatter}
+     */
+    this.formatter=new avnav.util.Formatter();
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -299,37 +305,54 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
         currentView:{center:this.center,zoom:this.zoom}
     });
 };
-/**
- * a workaround for the current unability of ol3 to draw in image in postcompose...
- * @param {ol.render.Event} the event context from postcompose
- * @param {ol.Coordinate}coord the coordinate to draw to in map coordinates
- * @param {Image} the image to display (must be loaded - no check!)
- * @param {{}} opt_options handles the same properties like ol.style.Icon
- *             currently supported:
- *             anchor[x,y] in pixels
- *             size[x,y]
- */
-avnav.map.MapHolder.prototype.drawImageToCanvas=function(evt,coord,image,opt_options){
-    if (image.naturalHeight == 0 || image.naturalWidth == 0) return; //silently ignore error
-    var xy=this.olmap.getPixelFromCoordinate(coord);
-    var devpixratio=evt.frameState.pixelRatio;
-    if (devpixratio){
-        xy[0]=xy[0]*devpixratio;
-        xy[1]=xy[1]*devpixratio;
+avnav.map.MapHolder.prototype.drawGrid=function() {
+    if (!this.properties.getProperties().layers.grid) return;
+    if (!this.olmap) return;
+    var style = {
+        width: 1,
+        color: 'grey'
+    };
+    var ctx = this.drawing.getContext();
+    if (!ctx) return;
+    var pw=ctx.canvas.width;
+    var ph=ctx.canvas.height;
+    //TODO: css pixel?
+    var ul = this.pointFromMap(this.olmap.getCoordinateFromPixel([0, 0]));
+    var ur = this.pointFromMap(this.olmap.getCoordinateFromPixel([pw, 0]));
+    var ll = this.pointFromMap(this.olmap.getCoordinateFromPixel([0, ph]));
+    var lr = this.pointFromMap(this.olmap.getCoordinateFromPixel([pw, ph]));
+    var xrange=[Math.min(ul[0],ur[0],ll[0],lr[0]),Math.max(ul[0],ur[0],ll[0],lr[0])];
+    var yrange=[Math.min(ul[1],ur[1],ll[1],lr[1]),Math.max(ul[1],ur[1],ll[1],lr[1])];
+    var xdiff=xrange[1]-xrange[0];
+    var ydiff=yrange[1]-yrange[0];
+    var raster= 5/60; //we draw in 5' raster
+    if (xdiff/raster > pw/60 ) return; //at most every 50px
+    if (ydiff/raster > ph/60 ) return; //at most every 50px
+    var drawText=this.drawing.getRotation()?false:true;
+    var textStyle={
+        color: 'grey',
+        font: '12px Calibri,sans-serif',
+        offsetY:7, //should compute this from the font...
+        fixY:0
+    };
+    for(var x=Math.floor(xrange[0]);x<=xrange[1];x+=raster){
+        this.drawing.drawLineToContext([this.pointToMap([x,yrange[0]]),this.pointToMap([x,yrange[1]])],style);
+        if (drawText) {
+            var text = this.formatter.formatLonLatsDecimal(x, 'lon');
+            this.drawing.drawTextToContext(this.pointToMap([x, yrange[0]]), text, textStyle);
+        }
     }
-    if (opt_options && opt_options.anchor){
-        xy[0]-=opt_options.anchor[0];
-        xy[1]-=opt_options.anchor[1];
+    textStyle.offsetY=-7;
+    textStyle.offsetX=30; //should compute from font...
+    textStyle.fixY=undefined;
+    textStyle.fixX=0;
+    for (var y=Math.floor(yrange[0]);y <= yrange[1];y+=raster){
+        this.drawing.drawLineToContext([this.pointToMap([xrange[0],y]),this.pointToMap([xrange[1],y])],style);
+        if (drawText) {
+            var text = this.formatter.formatLonLatsDecimal(y, 'lat');
+            this.drawing.drawTextToContext(this.pointToMap([xrange[0], y]), text, textStyle);
+        }
     }
-    /** @type {CanvasRenderingContext2D} */
-    var context=evt.context;
-    if (opt_options && opt_options.size) {
-        context.drawImage(image, xy[0], xy[1], opt_options.size[0], opt_options.size[1]);
-    }
-    else {
-        context.drawImage(image, xy[0], xy[1]);
-    }
-
 
 };
 
@@ -567,7 +590,7 @@ avnav.map.MapHolder.prototype.setCenter=function(point){
  * @param {number} rotation in degrees
  */
 avnav.map.MapHolder.prototype.setMapRotation=function(rotation){
-    this.getView().setRotation((360-rotation)*Math.PI/180);
+    this.getView().setRotation(rotation==0?0:(360-rotation)*Math.PI/180);
 };
 
 /**
@@ -712,6 +735,7 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     this.drawing.setContext(evt.context);
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
     this.drawing.setRotation(evt.frameState.view2DState.rotation);
+    this.drawGrid();
     this.tracklayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.aislayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);

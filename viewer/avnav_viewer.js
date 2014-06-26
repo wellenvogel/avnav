@@ -52,7 +52,8 @@ var propertyDefinitions=function(){
             ais: new avnav.util.Property(true,"AIS",avnav.util.PropertyType.CHECKBOX),
             track: new avnav.util.Property(true,"Track",avnav.util.PropertyType.CHECKBOX),
             nav: new avnav.util.Property(true,"Navigation",avnav.util.PropertyType.CHECKBOX),
-            boat: new avnav.util.Property(true,"Boat",avnav.util.PropertyType.CHECKBOX)
+            boat: new avnav.util.Property(true,"Boat",avnav.util.PropertyType.CHECKBOX),
+            grid: new avnav.util.Property(true,"Grid",avnav.util.PropertyType.CHECKBOX)
         },
         NM: new avnav.util.Property(1852), //one mile
         buttonUpdateTime: new avnav.util.Property( 500), //timer for button updates

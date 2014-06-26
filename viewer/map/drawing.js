@@ -179,6 +179,8 @@ avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
  *      rotateWithView: if true show rotated (default: false)
  *      offsetX
  *      offsetY
+ *      fixX: use this as x position (ignore point[0])
+ *      fixY: use this as y position (ignore point[1])
  */
 avnav.map.Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
     if (!this.context) return;
@@ -198,6 +200,12 @@ avnav.map.Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
         }
         if (opt_styles.width)this.context.lineWidth = opt_styles.width;
         if (opt_styles.rotateWithView) noRotate=false;
+        if (opt_styles.fixX !== undefined) {
+            dp[0]=opt_styles.fixX*this.devPixelRatio;
+        }
+        if (opt_styles.fixY !== undefined) {
+            dp[1]=opt_styles.fixY*this.devPixelRatio;
+        }
         if (opt_styles.offsetX) offset[0]=opt_styles.offsetX;
         if (opt_styles.offsetY) offset[1]=opt_styles.offsetY;
     }
@@ -233,6 +241,14 @@ avnav.map.Drawing.prototype.getContext=function(){
  */
 avnav.map.Drawing.prototype.getDevPixelRatio=function(){
     return this.devPixelRatio;
+};
+
+/**
+ * get the current view rotation
+ * @returns {number}
+ */
+avnav.map.Drawing.prototype.getRotation=function(){
+    return this.rotation;
 };
 /**
  * convert a point in map coordinates into pixel
