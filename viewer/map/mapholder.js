@@ -579,8 +579,6 @@ avnav.map.MapHolder.prototype.setCourseUp=function(on){
     var old=this.courseUp;
     if (old == on) return on;
     if (on){
-        //switch on only when locked...
-        if (! this.gpsLocked) return false;
         var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
         if (! gps.valid) return false;
         this.averageCourse=gps.course;
@@ -649,9 +647,6 @@ avnav.map.MapHolder.prototype.setMarkerPosition=function(coord,forceWrite){
  * @param {ol.MapBrowserEvent} evt
  */
 avnav.map.MapHolder.prototype.onClick=function(evt){
-    //no click actions when gps is locked...
-    if (this.gpsLocked) return;
-
     //currently only AIS features...
     var aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
