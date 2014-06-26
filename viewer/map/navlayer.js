@@ -124,10 +124,10 @@ avnav.map.NavLayer.prototype.setStyle=function() {
 /**
  * draw the marker and course
  * we rely on the move end to really set the marker pos to the cookie and to the navobject
- * @param {oli.render.Event} evt
+ * @param {ol.Coordinate} center in map coordinates
  * @param {avnav.map.Drawing} drawing
  */
-avnav.map.NavLayer.prototype.onPostCompose=function(evt,drawing){
+avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
     var prop=this.mapholder.getProperties().getProperties();
     if (prop.layers.boat) {
         drawing.drawImageToContext(this.boatPosition, this.boatStyle.image, this.boatStyle);
@@ -147,14 +147,14 @@ avnav.map.NavLayer.prototype.onPostCompose=function(evt,drawing){
         }
     }
     if (!this.mapholder.getMarkerLock()) {
-        drawing.drawImageToContext(evt.frameState.view2DState.center,this.markerStyle.image, this.markerStyle);
+        drawing.drawImageToContext(center,this.markerStyle.image, this.markerStyle);
         log("draw marker without lock");
     }
     else {
         drawing.drawImageToContext(this.markerPosition, this.markerStyle.image, this.markerStyle);
         log("draw marker with lock");
         if (! this.mapholder.getGpsLock()) {
-           drawing.drawImageToContext(evt.frameState.view2DState.center, this.centerStyle.image, this.centerStyle);
+           drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
         }
         if (prop.layers.nav && prop.layers.boat) {
             //draw the course to the marker
@@ -201,6 +201,5 @@ avnav.map.NavLayer.prototype.setMarkerPosition=function(pos){
 };
 
 avnav.map.NavLayer.prototype.propertyChange=function(evdata){
-    this.maplayer.setVisible(this.mapholder.getProperties().getProperties().layers.boat);
     this.setStyle();
 };

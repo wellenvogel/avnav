@@ -205,8 +205,6 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         }
     }
     layersreverse.push(this.aislayer.getMapLayer());
-    layersreverse.push(this.tracklayer.getMapLayer());
-
     if (this.olmap){
         var oldlayers=this.olmap.getLayers();
         if (oldlayers && oldlayers.getArray().length){
@@ -726,7 +724,8 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     this.drawing.setContext(evt.context);
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
     this.drawing.setRotation(evt.frameState.view2DState.rotation);
-    this.navlayer.onPostCompose(evt,this.drawing);
+    this.tracklayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
+    this.navlayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
 };
 
 /**
