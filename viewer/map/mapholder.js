@@ -723,6 +723,7 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     this.setCenterFromMove(newCenter);
     this.drawing.setContext(evt.context);
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
+    this.drawing.setRotation(evt.frameState.view2DState.rotation);
     this.navlayer.onPostCompose(evt,this.drawing);
 };
 
