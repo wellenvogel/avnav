@@ -1,19 +1,19 @@
 /**
  * Created by andreas on 02.05.14.
  */
-goog.provide('avnav.gui.Mainpage');
-goog.require('avnav.gui.Handler');
-goog.require('avnav.gui.Page');
-goog.require('goog.object');
+avnav.provide('avnav.gui.Mainpage');
+
+
+
 
 /**
  *
  * @constructor
  */
 avnav.gui.Mainpage=function(){
-    goog.base(this,'mainpage');
+    avnav.gui.Page.call(this,'mainpage');
 };
-goog.inherits(avnav.gui.Mainpage,avnav.gui.Page);
+avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 
 
 avnav.gui.Mainpage.prototype.showPage=function(options){
@@ -42,7 +42,7 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
                 //domEntry.attr('href',"javascript:handleNavPage('"+chartEntry.url+"','"+chartEntry.charturl+"')");
                 domEntry.on('click',
                     {
-                        entry: goog.object.clone(chartEntry),
+                        entry: avnav.clone(chartEntry),
                         page:page
                     },
                     function(ev){

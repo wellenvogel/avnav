@@ -1,11 +1,10 @@
 /**
  * Created by andreas on 03.05.14.
  */
-goog.provide('avnav.util.PropertyHandler');
-goog.provide('avnav.util.Property');
-goog.provide('avnav.util.PropertyType');
-goog.provide('avnav.util.PropertyChangeEvent');
-goog.require('goog.object');
+avnav.provide('avnav.util.PropertyHandler');
+avnav.provide('avnav.util.Property');
+avnav.provide('avnav.util.PropertyType');
+avnav.provide('avnav.util.PropertyChangeEvent');
 
 /**
  * an event being fired when properties are changed

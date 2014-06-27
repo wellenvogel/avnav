@@ -1,10 +1,10 @@
 /**
  * Created by andreas on 04.05.14.
  */
-goog.provide('avnav.nav.GpsData');
-goog.require('avnav.util.PropertyHandler');
-goog.require('avnav.util.Formatter');
-goog.require('avnav.nav.navdata.GpsInfo');
+avnav.provide('avnav.nav.GpsData');
+
+
+
 /**
  * the handler for the gps data
  * query the server...
@@ -75,9 +75,9 @@ avnav.nav.GpsData.prototype.startQuery=function(){
         dataType: 'json',
         cache:	false,
         success: function(data,status){
-            if (data.class != null && data.class == "TPV" &&
+            if (data['class'] != null && data['class'] == "TPV" &&
                 data.tag != null && data.lon != null && data.lat != null &&
-                data.mode != null && data.mode >=1){
+                data['mode'] != null && data['mode'] >=1){
                 self.convertResponse(data);
                 log("gpsdata: "+self.formattedData.gpsPosition);
                 self.handleGpsStatus(true);

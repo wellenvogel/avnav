@@ -1,11 +1,11 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-goog.provide('avnav.nav.NavCompute');
-goog.require('avnav.nav.navdata.Distance');
-goog.require('avnav.nav.navdata.Point');
-goog.require('avnav.nav.navdata.Cpa');
-goog.require('avnav.nav.navdata.GpsInfo');
+avnav.provide('avnav.nav.NavCompute');
+
+
+
+
 
 avnav.nav.NavCompute=function(){
 };

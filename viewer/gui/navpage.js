@@ -1,9 +1,9 @@
 /**
  * Created by andreas on 02.05.14.
  */
-goog.provide('avnav.gui.Navpage');
-goog.require('avnav.gui.Handler');
-goog.require('avnav.gui.Page');
+avnav.provide('avnav.gui.Navpage');
+
+
 
 /**
  *
@@ -11,7 +11,7 @@ goog.require('avnav.gui.Page');
  * @extends {avnav.gui.Page}
  */
 avnav.gui.Navpage=function(){
-    goog.base(this,'navpage');
+    avnav.gui.Page.call(this,'navpage');
     /** @private */
     this.options_=null;
     /**
@@ -44,7 +44,7 @@ avnav.gui.Navpage=function(){
     });
 
 };
-goog.inherits(avnav.gui.Navpage,avnav.gui.Page);
+avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
 /**
  * get the mapholder

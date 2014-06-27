@@ -1,9 +1,9 @@
 /**
  * Created by Andreas on 27.04.2014.
  */
-goog.require('avnav.nav.NavObject');
-goog.provide('avnav.gui.Handler');
-goog.provide('avnav.gui.PageEvent');
+
+avnav.provide('avnav.gui.Handler');
+avnav.provide('avnav.gui.PageEvent');
 /**
  * the page change event
  * @param {avnav.gui.Handler} gui
@@ -12,7 +12,7 @@ goog.provide('avnav.gui.PageEvent');
  * @param {string} newpage
  * @param {object} opt_options
  * @constructor
- * @extends {goog.events.Event}
+ * @extends {
  */
 avnav.gui.PageEvent=function(gui,navobject,oldpage,newpage,opt_options){
     this.gui=gui;

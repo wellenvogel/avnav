@@ -1,10 +1,10 @@
 /**
  * Created by andreas on 04.05.14.
  */
-goog.provide('avnav.nav.TrackData');
-goog.require('avnav.util.PropertyHandler');
-goog.require('avnav.util.Formatter');
-goog.require('avnav.nav.navdata.GpsInfo');
+avnav.provide('avnav.nav.TrackData');
+
+
+
 /**
  * the handler for the track data
  * query the server...

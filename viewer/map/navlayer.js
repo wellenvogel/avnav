@@ -2,10 +2,10 @@
  * Created by andreas on 18.05.14.
  */
 
-goog.provide('avnav.map.NavLayer');
-goog.require('avnav.nav.GpsData');
-goog.require('avnav.nav.NavObject');
-goog.require('avnav.map.Drawing');
+avnav.provide('avnav.map.NavLayer');
+
+
+
 
 
 /**

@@ -1,17 +1,17 @@
 /**
  * Created by andreas on 02.05.14.
  */
-goog.provide('avnav.gui.Aispage');
-goog.require('avnav.gui.Handler');
-goog.require('avnav.gui.Page');
-goog.require('goog.object');
+avnav.provide('avnav.gui.Aispage');
+
+
+
 
 /**
  *
  * @constructor
  */
 avnav.gui.Aispage=function(){
-    goog.base(this,'aispage');
+    avnav.gui.Page.call(this,'aispage');
     /**
      * @private
      * @type {avnav.nav.AisData}
@@ -22,7 +22,7 @@ avnav.gui.Aispage=function(){
         self.navEvent(evdata);
     });
 };
-goog.inherits(avnav.gui.Aispage,avnav.gui.Page);
+avnav.inherits(avnav.gui.Aispage,avnav.gui.Page);
 
 avnav.gui.Aispage.prototype.localInit=function(){
     this.aishandler=this.navobject.getAisData();

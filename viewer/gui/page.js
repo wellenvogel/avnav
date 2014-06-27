@@ -2,9 +2,9 @@
  * Created by andreas on 02.05.14.
  */
 
-goog.provide('avnav.gui.Page');
-goog.require('avnav.gui.Handler');
-goog.require('goog.asserts');
+avnav.provide('avnav.gui.Page');
+
+
 
 /**
  * a base class for all GUI pages
@@ -20,7 +20,7 @@ avnav.gui.Page=function(name){
     this.visible=false;
     var myself=this;
     $(document).on(avnav.gui.PageEvent.EVENT_TYPE, function(ev,evdata){
-        goog.asserts.assert(evdata instanceof avnav.gui.PageEvent,"invalid event parameter");
+
         if (evdata.oldpage != myself.name && evdata.newpage != myself.name){
             return;
         }

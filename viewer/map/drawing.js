@@ -4,9 +4,9 @@
  * as all the ol3 stuff is hard to use or broken...
  */
 
-goog.provide('avnav.map.Drawing');
-goog.provide('avnav.map.DrawingPositionConverter');
-goog.require('avnav.nav.navdata.Point');
+avnav.provide('avnav.map.Drawing');
+avnav.provide('avnav.map.DrawingPositionConverter');
+
 
 /**
  * an interface for converting between lat/lon and css pixel

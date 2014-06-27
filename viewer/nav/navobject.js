@@ -1,15 +1,8 @@
 /**
  * Created by andreas on 04.05.14.
  */
-goog.provide('avnav.nav.NavObject');
-goog.provide('avnav.nav.NavEvent');
-goog.require('avnav.nav.GpsData');
-goog.require('avnav.nav.TrackData');
-goog.require('avnav.nav.AisData');
-goog.require('avnav.nav.NavCompute');
-goog.require('avnav.nav.navdata.Point');
-goog.require('avnav.nav.navdata.Distance');
-goog.require('avnav.nav.navdata.GpsInfo');
+avnav.provide('avnav.nav.NavObject');
+avnav.provide('avnav.nav.NavEvent');
 
 /**
  * the navevent type

@@ -2,8 +2,8 @@
  * Created by andreas on 18.05.14.
  */
 
-goog.provide('avnav.map.TrackLayer');
-goog.require('avnav.nav.NavObject');
+avnav.provide('avnav.map.TrackLayer');
+
 
 /**
  * a cover for the layer that the track

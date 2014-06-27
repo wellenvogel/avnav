@@ -1,9 +1,9 @@
 /**
  * Created by andreas on 04.05.14.
  */
-goog.provide('avnav.nav.AisData');
-goog.require('avnav.util.PropertyHandler');
-goog.require('avnav.util.Formatter');
+avnav.provide('avnav.nav.AisData');
+
+
 
 /**
  * the handler for the ais data
@@ -329,7 +329,7 @@ avnav.nav.AisData.prototype.startQuery=function() {
             self.aisErrors=0;
             self.lastAisQuery=new Date().getTime();
             var aisList=[];
-            if (data.class && data.class == "error") aisList=[];
+            if (data['class'] && data['class'] == "error") aisList=[];
             else aisList=data;
             self.currentAis=aisList;
             try {

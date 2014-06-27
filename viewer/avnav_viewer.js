@@ -29,20 +29,20 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
                   http://ionicons.com/ (MIT license)
 */
 
-goog.provide('avnav.main');
-goog.require('avnav.gui.Handler');
-goog.require('avnav.map.MapHolder');
-goog.require('avnav.util.PropertyHandler');
-goog.require('avnav.util.Property');
-goog.require('avnav.nav.NavObject');
+avnav.provide('avnav.main');
+
+
+
+
+
 /**
  * currently we must require all pages somewhere
  */
-goog.require('avnav.gui.Mainpage');
-goog.require('avnav.gui.Statuspage');
-goog.require('avnav.gui.Navpage');
-goog.require('avnav.gui.Aispage');
-goog.require('avnav.gui.Settingspage');
+
+
+
+
+
 
 
 
@@ -149,4 +149,4 @@ avnav.main=function() {
     gui.showPage("mainpage");
     log("avnav loaded");
 };
-goog.exportSymbol('avnav.main',avnav.main);
+

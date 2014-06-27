@@ -1,8 +1,8 @@
 /**
  * Created by andreas on 04.05.14.
  */
-goog.provide('avnav.util.Formatter');
-goog.require('avnav.nav.navdata.Point');
+avnav.provide('avnav.util.Formatter');
+
 
 /**
  *

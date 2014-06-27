@@ -1,19 +1,19 @@
 /**
  * Created by Andreas on 27.04.2014.
  */
-goog.provide('avnav.gui.Statuspage');
-goog.require('avnav.gui.Handler');
-goog.require('avnav.gui.Page');
+avnav.provide('avnav.gui.Statuspage');
+
+
 
 /**
  *
  * @constructor
  */
 avnav.gui.Statuspage=function(){
-    goog.base(this,'statuspage');
+    avnav.gui.Page.call(this,'statuspage');
     this.statusQuery=0; //sequence counter
 };
-goog.inherits(avnav.gui.Statuspage,avnav.gui.Page);
+avnav.inherits(avnav.gui.Statuspage,avnav.gui.Page);
 
 
 

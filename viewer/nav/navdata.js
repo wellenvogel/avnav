@@ -1,11 +1,11 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-goog.provide('avnav.nav.navdata.Distance');
-goog.provide('avnav.nav.navdata.Point');
-goog.provide('avnav.nav.navdata.TrackPoint');
-goog.provide('avnav.nav.navdata.Cpa');
-goog.provide('avnav.nav.navdata.GpsInfo');
+avnav.provide('avnav.nav.navdata.Distance');
+avnav.provide('avnav.nav.navdata.Point');
+avnav.provide('avnav.nav.navdata.TrackPoint');
+avnav.provide('avnav.nav.navdata.Cpa');
+avnav.provide('avnav.nav.navdata.GpsInfo');
 
 /**
  * a point lon,lat
@@ -67,7 +67,7 @@ avnav.nav.navdata.TrackPoint=function(lon,lat,ts,opt_speed,opt_course){
     this.speed=opt_speed||0;
     this.opt_course=opt_course||0;
 };
-goog.inherits(avnav.nav.navdata.TrackPoint,avnav.nav.navdata.Point);
+avnav.inherits(avnav.nav.navdata.TrackPoint,avnav.nav.navdata.Point);
 
 
 /**
@@ -121,7 +121,7 @@ avnav.nav.navdata.GpsInfo=function(){
      */
     this.rtime=null;
 };
-goog.inherits(avnav.nav.navdata.GpsInfo,avnav.nav.navdata.Point);
+avnav.inherits(avnav.nav.navdata.GpsInfo,avnav.nav.navdata.Point);
 
 /**
  * a CPA point for AIS data, contains the point + the time and the info whether we pass front or back

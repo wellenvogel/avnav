@@ -2,8 +2,8 @@
  * Created by andreas on 18.05.14.
  */
 
-goog.provide('avnav.map.AisLayer');
-goog.require('avnav.nav.NavObject');
+avnav.provide('avnav.map.AisLayer');
+
 
 
 /**

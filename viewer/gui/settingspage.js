@@ -1,9 +1,9 @@
 /**
  * Created by Andreas on 01.06.2014.
  */
-goog.provide('avnav.gui.Settingspage');
-goog.require('avnav.gui.Handler');
-goog.require('avnav.gui.Page');
+avnav.provide('avnav.gui.Settingspage');
+
+
 
 
 /**
@@ -19,9 +19,9 @@ avnav.gui.Settingspage=function(){
      */
     this.formatter=new avnav.util.Formatter();
 
-    goog.base(this,'settingspage');
+    avnav.gui.Page.call(this,'settingspage');
 };
-goog.inherits(avnav.gui.Settingspage,avnav.gui.Page);
+avnav.inherits(avnav.gui.Settingspage,avnav.gui.Page);
 
 /**
  * the local init called from the base class when the page is instantiated

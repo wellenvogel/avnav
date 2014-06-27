@@ -62,14 +62,36 @@
     //scripts used in debug mode
     var debug_scripts = [
         '../libraries/ol3b5/ol-whitespace.js',
-        '../libraries/closure-library/closure/goog/base.js',
-        '../libraries/closure-library/closure/goog/deps.js',
-        'deps.js',
-        'avnav_viewer.js'];
+        //all files have to be collected here (in correct order)
+        //the build script will pick them up between the tags...
+        //STARTFILES
+        'base.js',
+        'util/formatter.js',
+        'util/propertyhandler.js',
+        'nav/navdata.js',
+        'nav/navcompute.js',
+        'nav/navobject.js',
+        'nav/trackdata.js',
+        'nav/gpsdata.js',
+        'nav/aisdata.js',
+        'map/drawing.js',
+        'map/mapholder.js',
+        'map/navlayer.js',
+        'map/aislayer.js',
+        'map/tracklayer.js',
+        'gui/handler.js',
+        'gui/page.js',
+        'gui/mainpage.js',
+        'gui/navpage.js',
+        'gui/aispage.js',
+        'gui/settingspage.js',
+        'gui/statuspage.js',
+        'avnav_viewer.js'
+        //ENDFILES
+    ];
     //scripts in runmode
     var run_scripts = [
-        '../libraries/ol3b5/ol.js', /* TODO: replace by minified version -currently we need to patch
-                                                  ol.render.canvas.ReplayGroup.prototype.replay_ to omit the clip*/
+        '../libraries/ol3b5/ol.js',
         'avnav_min.js'
     ];
     var mode="";

@@ -1,15 +1,15 @@
 /**
  * Created by andreas on 03.05.14.
  */
-goog.provide('avnav.map.MapHolder');
-goog.provide('avnav.map.LayerTypes');
-goog.provide('avnav.map.MapEvent');
-goog.require('avnav.map.NavLayer');
-goog.require('avnav.map.TrackLayer');
-goog.require('avnav.map.AisLayer');
-goog.require('avnav.map.DrawingPositionConverter');
-goog.require('avnav.map.Drawing');
-goog.require('avnav.util.Formatter');
+avnav.provide('avnav.map.MapHolder');
+avnav.provide('avnav.map.LayerTypes');
+avnav.provide('avnav.map.MapEvent');
+
+
+
+
+
+
 
 /**
  * the types of the layers
@@ -152,7 +152,7 @@ avnav.map.MapHolder=function(properties,navobject){
 
 };
 
-goog.inherits(avnav.map.MapHolder,avnav.map.DrawingPositionConverter);
+avnav.inherits(avnav.map.MapHolder,avnav.map.DrawingPositionConverter);
 /**
  * @inheritDoc
  * @param {ol.Coordinate} point
