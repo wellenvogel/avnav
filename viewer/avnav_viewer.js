@@ -124,6 +124,9 @@ var propertyDefinitions=function(){
 
 
 $.cookie.json = true;
+$.cookie.defaults={
+    expires: 365    //set a lifetime of one year - especially to prevent dropping it on ios full screen
+};
 
 function log(txt){
     try{
