@@ -361,8 +361,12 @@ avnav.map.MapHolder.prototype.drawGrid=function() {
     }
 
 };
-
+/**
+ * draw the north marker
+ * @private
+ */
 avnav.map.MapHolder.prototype.drawNorth=function() {
+    if (!this.properties.getProperties().layers.compass) return;
     if (!this.olmap) return;
     this.drawing.drawImageToContext([0,0],this.northImage, {
         fixX: 45, //this.drawing.getContext().canvas.width-120,
