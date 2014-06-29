@@ -101,6 +101,10 @@ avnav.map.Drawing.prototype.drawCircleToContext=function(center,other,opt_styles
  *             size[x,y]
  *             rotation in radian
  *             rotateWithView - if true - add global rotation
+ *             fixX,fixY - set this coordinate to a fix css pixel, ignore pos
+ *             background: a color for an optional background rectangle
+ *             backgroundAlpha: an alpha for the background
+ *             backgroundCircle: a color for an optional background circle
  * @return {ol.Coordinate} the css pixel coordinates of the object
  */
 avnav.map.Drawing.prototype.drawImageToContext=function(point,image,opt_options){
@@ -108,16 +112,18 @@ avnav.map.Drawing.prototype.drawImageToContext=function(point,image,opt_options)
     if (image.naturalHeight == 0 || image.naturalWidth == 0) return; //silently ignore error
     var rt=this.pointToCssPixel(point);
     var xy=this.pixelToDevice(rt);
+    if (opt_options && opt_options.fixX !== undefined) {
+        xy[0]=opt_options.fixX*this.devPixelRatio;
+    }
+    if (opt_options &&  opt_options.fixY !== undefined) {
+        xy[1]=opt_options.fixY*this.devPixelRatio;
+    }
     var devpixratio=this.devPixelRatio;
     var anchor=[0,0];
     if (opt_options && opt_options.anchor){
         anchor[0]+=opt_options.anchor[0]*devpixratio;
         anchor[1]+=opt_options.anchor[1]*devpixratio;
     }
-    /** @type {CanvasRenderingContext2D} */
-    var context=this.context;
-    context.save();
-    context.translate(xy[0],xy[1]);
     var size;
     if (opt_options && opt_options.size) {
         size=opt_options.size;
@@ -125,10 +131,33 @@ avnav.map.Drawing.prototype.drawImageToContext=function(point,image,opt_options)
     else {
         size=[image.naturalWidth,image.naturalHeight];
     }
+    if (size[0]<=0 || size[1] <= 0) return;
+    /** @type {CanvasRenderingContext2D} */
+    var context=this.context;
+    context.save();
+    context.translate(xy[0],xy[1]);
+    var angle=0;
     if (opt_options && opt_options.rotation) {
-        var angle=opt_options.rotation;
-        if (opt_options.rotateWithView) angle+=this.rotation;
-        context.rotate(angle);
+        angle = opt_options.rotation;
+    }
+    if (opt_options.rotateWithView) angle+=this.rotation;
+    if (angle) context.rotate(angle);
+    if (opt_options && (opt_options.background || opt_options.backgroundCircle)){
+        context.beginPath();
+        if (opt_options.background) {
+            context.fillStyle = opt_options.background;
+            context.rect(-anchor[0], -anchor[1], size[0] * devpixratio, size[1] * devpixratio);
+        }
+        else {
+            context.fillStyle = opt_options.backgroundCircle;
+            context.arc(0, 0,Math.max(size[0] * devpixratio, size[1] * devpixratio)/2,0,2*Math.PI);
+        }
+        var alpha=context.globalAlpha;
+        if (opt_options.backgroundAlpha){
+            context.globalAlpha=opt_options.backgroundAlpha;
+        }
+        context.fill();
+        context.globalAlpha=alpha;
     }
     context.drawImage(image,-anchor[0],-anchor[1], size[0]*devpixratio, size[1]*devpixratio);
     context.restore();

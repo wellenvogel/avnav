@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.0.0, SVG Export Plug-In  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+]>
+<svg version="1.1"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 x="0px" y="0px" width="500px" height="500px" viewBox="-6.788 -3.291 500 500" enable-background="new -6.788 -3.291 500 500"
+	 xml:space="preserve">
+<defs>
+</defs>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="246.162" y1="46.978" x2="246.162" y2="89.978"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="147.189" y1="73.498" x2="168.689" y2="110.737"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="74.736" y1="145.95" x2="111.975" y2="167.451"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="48.216" y1="244.923" x2="91.216" y2="244.923"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="74.735" y1="343.896" x2="111.975" y2="322.396"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="147.188" y1="416.349" x2="168.688" y2="379.11"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="246.16" y1="442.87" x2="246.161" y2="399.87"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="345.132" y1="416.351" x2="323.633" y2="379.112"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="417.586" y1="343.899" x2="380.348" y2="322.399"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="444.108" y1="244.927" x2="401.108" y2="244.926"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="417.59" y1="145.954" x2="380.35" y2="167.453"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="345.139" y1="73.5" x2="323.637" y2="110.738"/>
+<polygon stroke="#000000" stroke-width="3" stroke-miterlimit="10" points="245.916,122.797 281.473,244.923 206.846,244.923 "/>
+<polygon fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-miterlimit="10" points="245.916,367.048 281.473,244.923 
+	206.846,244.923 "/>
+<rect x="228.308" y="6.824" fill="none" width="53.165" height="46.154"/>
+<text transform="matrix(1 0 0 1 228.3081 41.1914)" font-family="'ArialMT'" font-size="48">N</text>
+<rect x="231.078" y="453.708" fill="none" width="53.165" height="46.153"/>
+<text transform="matrix(1 0 0 1 231.0776 488.0757)" font-family="'ArialMT'" font-size="48">S</text>
+<rect y="222.939" fill="none" width="53.165" height="46.154"/>
+<text transform="matrix(1 0 0 1 0 257.3062)" font-family="'ArialMT'" font-size="48">W</text>
+<rect x="448.078" y="227.747" fill="none" width="53.165" height="46.154"/>
+<text transform="matrix(1 0 0 1 448.0776 262.1147)" font-family="'ArialMT'" font-size="48">E</text>
+</svg>

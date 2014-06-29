@@ -145,6 +145,8 @@ avnav.map.MapHolder=function(properties,navobject){
      * @type {avnav.util.Formatter}
      */
     this.formatter=new avnav.util.Formatter();
+    this.northImage=new Image();
+    this.northImage.src='images/nadel_mit.png';
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -305,6 +307,10 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
         currentView:{center:this.center,zoom:this.zoom}
     });
 };
+/**
+ * draw the grid
+ * @private
+ */
 avnav.map.MapHolder.prototype.drawGrid=function() {
     if (!this.properties.getProperties().layers.grid) return;
     if (!this.olmap) return;
@@ -354,6 +360,19 @@ avnav.map.MapHolder.prototype.drawGrid=function() {
         }
     }
 
+};
+
+avnav.map.MapHolder.prototype.drawNorth=function() {
+    if (!this.olmap) return;
+    this.drawing.drawImageToContext([0,0],this.northImage, {
+        fixX: 45, //this.drawing.getContext().canvas.width-120,
+        fixY: 45, //this.drawing.getContext().canvas.height-120,
+        rotateWithView: true,
+        size: [80,80],
+        anchor: [40,40],
+        backgroundCircle: '#333333',
+        backgroundAlpha: 0.25
+    });
 };
 
 /**
@@ -736,6 +755,7 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
     this.drawing.setRotation(evt.frameState.view2DState.rotation);
     this.drawGrid();
+    this.drawNorth();
     this.tracklayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.aislayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);

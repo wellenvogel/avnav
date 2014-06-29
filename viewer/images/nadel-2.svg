@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.0.0, SVG Export Plug-In  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+]>
+<svg version="1.1"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 x="0px" y="0px" width="400px" height="400px" viewBox="-4.108 -4.108 400 400" enable-background="new -4.108 -4.108 400 400"
+	 xml:space="preserve">
+<defs>
+</defs>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="197.945" y1="0" x2="197.945" y2="43"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="98.973" y1="26.521" x2="120.473" y2="63.759"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="26.52" y1="98.973" x2="63.759" y2="120.474"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="0" y1="197.945" x2="43" y2="197.945"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="26.519" y1="296.918" x2="63.759" y2="275.418"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="98.972" y1="369.371" x2="120.472" y2="332.132"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="197.943" y1="395.893" x2="197.944" y2="352.893"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="296.917" y1="369.373" x2="275.417" y2="332.134"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="369.37" y1="296.921" x2="332.132" y2="275.421"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="395.892" y1="197.949" x2="352.892" y2="197.948"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="369.375" y1="98.977" x2="332.134" y2="120.476"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="296.923" y1="26.521" x2="275.421" y2="63.761"/>
+<polygon stroke="#000000" stroke-width="3" stroke-miterlimit="10" points="197.7,75.819 233.257,197.945 158.63,197.945 "/>
+<polygon fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-miterlimit="10" points="197.7,320.07 233.257,197.945 
+	158.63,197.945 "/>
+</svg>
