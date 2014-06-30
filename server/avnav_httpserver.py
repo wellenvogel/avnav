@@ -53,6 +53,7 @@ from avnav_worker import *
 #a HTTP server with threads for each request
 class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWorker):
   instances=0
+  navxml="avnav.xml"
   
   @classmethod
   def getConfigName(cls):
@@ -368,7 +369,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           #basically we can today handle 2 types of requests:
           #get the overview /gemf/<name>/avnav.xml
           #get a tile /gemf/<name>/<srcname>/z/x/y.png
-          if parr[1] == navxml:
+          if parr[1] == self.server.navxml:
             AVNLog.debug("avnav request for GEMF %s",gemfname)
             data=g['avnav']
             self.send_response(200)
@@ -573,7 +574,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       dpath=os.path.join(chartbaseDir,de)
       if not os.path.isdir(dpath):
         continue
-      if not os.path.isfile(os.path.join(dpath,navxml)):
+      if not os.path.isfile(os.path.join(dpath,self.server.navxml)):
         continue
       url="/"+chartbaseUrl+"/"+de
       charturl=url

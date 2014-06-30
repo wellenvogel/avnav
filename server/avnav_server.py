@@ -66,12 +66,10 @@ from avnav_socketreaderbase import *
 from avnav_socketreader import *
 from avnav_httpserver import *
 
-VERSION="0.9.1"
 
 loggingInitialized=False
 #should have a better solution then a global...
 trackWriter=None
-navxml="avnav.xml"
 
 
 #a dummy worker class to read some basic configurations
@@ -150,7 +148,7 @@ class AVNChartHandler(AVNWorker):
             args=["","-i",chartdir]
             rt=create_overview.main(args)
             if rt == 0:
-              AVNLog.info("created/updated %s in %s",navxml,chartdir)
+              AVNLog.info("created/updated %s in %s",AVNHttpSserver.navxml,chartdir)
             if rt == 1:
               AVNLog.error("error creating/updating %s in %s",navxml,chartdir)
       except:
@@ -159,8 +157,7 @@ class AVNChartHandler(AVNWorker):
     
       
 def sighandler(signal,frame):
-  global allHandlers
-  for handler in allHandlers:
+  for handler in AVNWorker.allHandlers:
     try:
       handler.stopChildren()
     except:

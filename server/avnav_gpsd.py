@@ -30,6 +30,7 @@ import time
 import subprocess
 import threading
 import os
+import socket
 
 from avnav_util import *
 from avnav_nmea import *

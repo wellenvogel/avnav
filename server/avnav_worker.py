@@ -86,8 +86,10 @@ class AVNWorker(threading.Thread):
     self.info[name]=info
     self.status[name]=status
   def deleteInfo(self,name):
-    del self.info[name]
-    del self.status[name]
+    if self.info.get(name) is not None:
+      del self.info[name]
+    if self.status.get(name) is not None:
+      del self.status[name]
   def getParam(self):
     try:
       return self.param
