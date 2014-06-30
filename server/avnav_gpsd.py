@@ -276,7 +276,7 @@ class GpsdReader(threading.Thread):
 class AVNGpsdFeeder(AVNGpsd):
   @classmethod
   def getConfigName(cls):
-    return AVNWorker.GPSDConfigName
+    return "AVNGpsdFeeder"
   
   @classmethod
   def getConfigParam(cls, child=None):
@@ -302,6 +302,7 @@ class AVNGpsdFeeder(AVNGpsd):
   
   def __init__(self,cfgparam):
     AVNGpsd.__init__(self, cfgparam)
+    self.type=AVNWorker.Type.FEEDER;
     self.listlock=threading.Lock()
     self.list=[]
     self.history=[]

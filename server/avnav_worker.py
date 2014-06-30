@@ -36,9 +36,9 @@ __date__ ="$29.06.2014 21:09:10$"
 #a base class for all workers
 #this provides some config functions and a common interfcace for handling them
 class AVNWorker(threading.Thread):
-  allHandlers=None
+  allHandlers=[]
   Status=Enum(['INACTIVE','STARTED','RUNNING','NMEA','ERROR'])
-  GPSDConfigName="AVNGpsdFeeder"
+  Type=Enum(['DEFAULT','FEEDER','HTTPSERVER'])
   
   #find a feeder
   @classmethod
@@ -47,7 +47,7 @@ class AVNWorker(threading.Thread):
       feedername=None
     feeder=None
     for handler in cls.allHandlers:
-      if handler.getConfigName() == cls.GPSDConfigName:
+      if handler.type == cls.Type.FEEDER:
         if not feedername is None:
           if handler.getName()==feedername:
             feeder=handler
@@ -58,6 +58,7 @@ class AVNWorker(threading.Thread):
     return feeder
   
   def __init__(self,cfgparam):
+    self.allHandlers.append(self) #fill the static list of handlers
     self.param=cfgparam
     self.status=False
     threading.Thread.__init__(self)
@@ -65,6 +66,7 @@ class AVNWorker(threading.Thread):
     self.setName(self.getName())
     self.info={'main':"started"}
     self.status={'main':self.Status.STARTED}
+    self.type=self.Type.DEFAULT;
   def getInfo(self):
     try:
       rt=self.info.copy();

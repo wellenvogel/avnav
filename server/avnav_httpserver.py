@@ -116,6 +116,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
         self.overwrite_map[mtype['extension']]=mtype['type']
     server_address=(cfgparam['httpHost'],int(cfgparam['httpPort']))
     AVNWorker.__init__(self, cfgparam)
+    self.type=AVNWorker.Type.HTTPSERVER;
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
   def getName(self):
     return "HTTPServer"

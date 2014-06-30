@@ -20,10 +20,14 @@
 	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
 	<Directory urlpath="viewer" path="..\viewer"></Directory>
 	<Directory urlpath="libraries" path="..\libraries"></Directory>
+	<Directory urlpath="tracks" path="..\data_windows\tracks"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
+
+<!--  routing handler -->
+<AVNRouter></AVNRouter>
 
 </AVNServer>

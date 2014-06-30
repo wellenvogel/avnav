@@ -65,7 +65,9 @@ from avnav_usb import *
 from avnav_socketreaderbase import *
 from avnav_socketreader import *
 from avnav_httpserver import *
+from avnav_router import *
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 
 loggingInitialized=False
 #should have a better solution then a global...
@@ -170,7 +172,7 @@ def main(argv):
   debugger=sys.gettrace()
   workerlist=[AVNBaseConfig,AVNGpsdFeeder,AVNSerialReader,AVNGpsd,
               AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader,AVNUsbSerialReader,
-              AVNSocketWriter,AVNSocketReader,AVNChartHandler]
+              AVNSocketWriter,AVNSocketReader,AVNChartHandler,AVNRouter]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
@@ -194,7 +196,6 @@ def main(argv):
   if allHandlers is None:
     AVNLog.error("unable to parse config file %s",cfgname)
     sys.exit(1)
-  AVNWorker.allHandlers=allHandlers
   baseConfig=None
   httpServer=None
   for handler in allHandlers:
