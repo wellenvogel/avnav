@@ -128,7 +128,9 @@ class AVNWorker(threading.Thread):
     if rt is None:
       return ""
     else:
-      return str(rt)
+      if (isinstance(rt,unicode)):
+        return rt
+      return unicode(rt,errors='ignore')
   def getFloatParam(self,name,throw=False):
     rt=self.getParamValue(name,throw)
     try:
@@ -168,6 +170,10 @@ class AVNWorker(threading.Thread):
     sparam=copy.deepcopy(default)
     for k in sparam.keys():
       dv=sparam[k]
+      if (isinstance(dv,str)):
+        #potentially we did not declare all defaults as unicode - so convert them
+        dv=unicode(dv,errors='ignore')
+        sparam[k]=dv
       v=attrs.get(k)
       if dv is None and v is None:
         raise Exception(cls.getConfigName()+": missing mandatory parameter "+k)

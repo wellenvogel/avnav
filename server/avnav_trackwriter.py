@@ -76,7 +76,7 @@ class AVNTrackWriter(AVNWorker):
     filehandle.write(str)
     filehandle.flush()
   def createFileName(self,dt):
-    str=dt.strftime("%Y-%m-%d")+".avt"
+    str=unicode(dt.strftime("%Y-%m-%d")+".avt")
     return str
   def cleanupTrack(self):
     numremoved=0
@@ -194,7 +194,7 @@ class AVNTrackWriter(AVNWorker):
     infoName="TrackWriter:converter"
     AVNLog.info("%s thread %s started",infoName,AVNLog.getThreadId())
     while True:
-      currentTracks=glob.glob(os.path.join(self.trackdir,"*.avt"))
+      currentTracks=glob.glob(os.path.join(self.trackdir,u"*.avt"))
       for track in currentTracks:
         try:
           gpx=re.sub(r"avt$","gpx",track)
@@ -227,7 +227,7 @@ class AVNTrackWriter(AVNWorker):
       
       trackdir=self.getStringParam("trackdir")
       if trackdir == "":
-        trackdir=os.path.join(os.path.dirname(sys.argv[0]),'tracks')
+        trackdir=unicode(os.path.join(os.path.dirname(sys.argv[0]),'tracks'))
       self.trackdir=trackdir
       if initial:
         theConverter=threading.Thread(target=self.converter)
