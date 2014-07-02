@@ -57,6 +57,13 @@ class AVNWorker(threading.Thread):
           break
     return feeder
   
+  @classmethod
+  def findHandlerByName(cls,name):
+    for handler in cls.allHandlers:
+      if handler.getConfigName() == name:
+        return handler
+    return None
+  
   def __init__(self,cfgparam):
     self.allHandlers.append(self) #fill the static list of handlers
     self.param=cfgparam

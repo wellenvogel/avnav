@@ -46,6 +46,8 @@ except:
 from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
+from avnav_router import *
+from avnav_trackwriter import *
 
  
   
@@ -117,6 +119,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     server_address=(cfgparam['httpHost'],int(cfgparam['httpPort']))
     AVNWorker.__init__(self, cfgparam)
     self.type=AVNWorker.Type.HTTPSERVER;
+    self.handlers={}
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
   def getName(self):
     return "HTTPServer"
@@ -238,6 +241,14 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     except:
       AVNLog.error("error while trying to get the overview data for %s  %s",gemf.filename,traceback.format_exc())
     return "<Dummy/>"
+  
+  def getHandler(self,name):
+    if self.handlers.get(name) is not None:
+      return self.handlers.get(name)
+    rt=self.findHandlerByName(name)
+    if rt is not None:
+      self.handlers[name]=rt
+    return rt
 
 
 
@@ -256,6 +267,30 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     AVNLog.debug(format,*args)
   def handlePathmapping(self,path):
     return self.server.handlePathmapping(path)
+  
+  def do_POST(self):
+    if not self.path==self.server.navurl:
+      self.send_error("404", "unsupported post url")
+      return
+    (path,sep,query) = self.path.partition('?')
+    try:
+      ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+      if ctype == 'multipart/form-data':
+        postvars = cgi.parse_multipart(self.rfile, pdict)
+      elif ctype == 'application/x-www-form-urlencoded':
+        length = int(self.headers.getheader('content-length'))
+        postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+      else:
+        postvars = {}      
+      requestParam=urlparse.parse_qs(query,True)
+      requestParam.update(postvars)
+      self.handleRoutingRequest(requestParam)
+      self.sendNavResponse(rtj,requestParam)
+    except Exception as e:
+      AVNLog.ld("unable to process request for ",path,query,traceback.format_exc())
+      self.send_response(500);
+      self.end_headers()
+      return
   
   #overwrite this from SimpleHTTPRequestHandler
   def send_head(self):
@@ -348,8 +383,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   
   
   #return the first element of a request param if set
-  
-  def getRequestParam(self,param,name):
+  @classmethod
+  def getRequestParam(cls,param,name):
     pa=param.get(name)
     if pa is None:
       return None
@@ -403,8 +438,22 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       return
       
         
-
-
+  #send a json encoded response
+  def sendNavResponse(self,rtj,requestParam):
+    if not rtj is None:
+      self.send_response(200)
+      if not requestParam.get('callback') is None:
+        rtj="%s(%s);"%(requestParam.get('callback'),rtj)
+        self.send_header("Content-type", "text/javascript")
+      else:
+        self.send_header("Content-type", "application/json")
+      self.send_header("Content-Length", str(len(rtj)))
+      self.send_header("Last-Modified", self.date_time_string())
+      self.end_headers()
+      self.wfile.write(rtj)
+      AVNLog.ld("nav response",rtj)
+    else:
+      raise Exception("empty response")
   #handle a navigational query
   #request parameters:
   #request=gps&filter=TPV&bbox=54.531,13.014,54.799,13.255
@@ -433,23 +482,13 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleDebugLevelRequest(requestParam)
       if requestType=='listCharts':
         rtj=self.handleListChartRequest(requestParam)
-      if not rtj is None:
-        self.send_response(200)
-        if not requestParam.get('callback') is None:
-          rtj="%s(%s);"%(requestParam.get('callback'),rtj)
-          self.send_header("Content-type", "text/javascript")
-        else:
-          self.send_header("Content-type", "application/json")
-        self.send_header("Content-Length", len(rtj))
-        self.send_header("Last-Modified", self.date_time_string())
-        self.end_headers()
-        self.wfile.write(rtj)
-        AVNLog.ld("request",path,requestType,query,rtj)
-      else:
-        raise Exception("empty response")
+      if requestType=='routing':
+        rtj=self.handleRoutingRequest(requestParam)
+      self.sendNavResponse(rtj,requestParam)
     except Exception as e:
-          AVNLog.ld("unable to process request for ",path,query,traceback.format_exc())
-          self.send_response(500);
+          text=traceback.format_exc()
+          AVNLog.ld("unable to process request for ",path,query,text)
+          self.send_response(500,text);
           self.end_headers()
           return
   #return AIS targets
@@ -509,6 +548,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     except:
       pass
     frt=[]
+    trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
     if not trackWriter is None:
       frt=trackWriter.getTrackFormatted(maxnum,interval)
     return json.dumps(frt)
@@ -594,3 +634,12 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     num=len(rt['data'])
     rt['info']="read %d entries from %s"%(num,chartbaseDir)
     return json.dumps(rt)
+
+  def handleRoutingRequest(self,requestParam):
+    rt=self.server.getHandler(AVNRouter.getConfigName())
+    rtj=None
+    if rt is not None:
+      rtj=rt.handleRoutingRequest(requestParam)
+    else:
+      raise Exception("router not configured")
+    return rtj
