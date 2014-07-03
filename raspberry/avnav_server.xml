@@ -122,13 +122,14 @@
      the navurl is the url that is used to control any nav feature
      this of course must fit to the java script part...
 -->
-<AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080" upzoom="2"
-	 empty="/home/pi/avnav/program/viewer/transparent256x256.png">
+<AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080">
 	<Directory urlpath="maps" path="/home/pi/avnav/data/charts"></Directory>
 	<Directory urlpath="viewer" path="/home/pi/avnav/program/viewer"></Directory>
+	<Directory urlpath="viewer_new" path="/home/pi/avnav/program/viewer_new"></Directory>
 	<Directory urlpath="libraries" path="/home/pi/avnav/program/libraries"></Directory>
 	<Directory urlpath="log" path="/home/pi/avnav/data/log"></Directory>
 	<Directory urlpath="tracks" path="/home/pi/avnav/data/tracks"></Directory>
+	<Directory urlpath="routes" path="/home/pi/avnav/data/routes"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
@@ -150,5 +151,8 @@
 <AVNSocketWriter port="34567" maxDevices="5" filter=""/>
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
+<!--  routing handler -->
+<AVNRouter routesdir="/home/pi/avnav/data/routes"></AVNRouter>
+
 
 </AVNServer>

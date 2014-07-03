@@ -28,6 +28,6 @@
 <AVNChartHandler></AVNChartHandler>
 
 <!--  routing handler -->
-<AVNRouter></AVNRouter>
+<AVNRouter routesdir="..\data_windows\routes"></AVNRouter>
 
 </AVNServer>
