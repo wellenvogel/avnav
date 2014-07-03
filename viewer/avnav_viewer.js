@@ -69,6 +69,7 @@ var propertyDefinitions=function(){
         loggingEnabled: new avnav.util.Property( true),
         positionQueryTimeout: new avnav.util.Property( 1000,"Position",avnav.util.PropertyType.RANGE,[500,5000,10]), //1000ms
         trackQueryTimeout: new avnav.util.Property( 5000,"Track",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
+        routeQueryTimeout: new avnav.util.Property( 1000,"Route",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
         bearingColor: new avnav.util.Property( "#DDA01F","Color",avnav.util.PropertyType.COLOR),
         bearingWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         navCircleColor: new avnav.util.Property( "#D71038","Circle Color",avnav.util.PropertyType.COLOR),
