@@ -152,6 +152,11 @@ class AVNRouter(AVNWorker):
   
   def setCurrentLeg(self,leg):
     self.currentLeg=leg;
+    if leg is None:
+      if os.path.exists(self.currentLegFileName):
+        os.unlink(self.currentLegFileName)
+        AVNLog.info("current leg removed")
+      return
     ls=self.leg2Json(leg)
     AVNLog.info("new leg %s",str(leg))
     f=open(self.currentLegFileName,"w")
@@ -215,10 +220,15 @@ class AVNRouter(AVNWorker):
       raise Exception('missing command for routing request')
     if (command == 'getleg'):
       return json.dumps(self.leg2Json(self.currentLeg))
+    if (command == 'unsetleg'):
+      self.setCurrentLeg(None)
+      return json.dumps({'status':'OK'})
     if (command == 'setleg'):
       data=self.getRequestParam(requestparam, 'leg')
       if data is None:
-        raise Exception("missing leg data for setleg")
+        data=self.getRequestParam(requestparam,'_json')
+        if data is None:
+          raise Exception("missing leg data for setleg")
       leg=self.parseLeg(data)
       if leg is None:
         raise Exception("invalid leg data %s"%(data))

@@ -39,6 +39,7 @@ import urlparse
 import re
 import select
 import gemf_reader
+import cgi
 try:
   import create_overview
 except:
@@ -269,26 +270,35 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     return self.server.handlePathmapping(path)
   
   def do_POST(self):
-    if not self.path==self.server.navurl:
-      self.send_error("404", "unsupported post url")
-      return
+    maxlen=500000
     (path,sep,query) = self.path.partition('?')
+    if not path==self.server.navurl:
+      self.send_error(404, "unsupported post url")
+      return
     try:
       ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
       if ctype == 'multipart/form-data':
         postvars = cgi.parse_multipart(self.rfile, pdict)
       elif ctype == 'application/x-www-form-urlencoded':
         length = int(self.headers.getheader('content-length'))
+        if length > maxlen:
+          raise Exception("too much data"+str(length))
         postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+      elif ctype == 'application/json':
+        length = int(self.headers.getheader('content-length'))
+        if length > maxlen:
+          raise Exception("too much data"+str(length))
+        postvars = { '_json':self.rfile.read(length)}
       else:
         postvars = {}      
       requestParam=urlparse.parse_qs(query,True)
       requestParam.update(postvars)
-      self.handleRoutingRequest(requestParam)
+      rtj=self.handleRoutingRequest(requestParam)
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
-      AVNLog.ld("unable to process request for ",path,query,traceback.format_exc())
-      self.send_response(500);
+      txt=traceback.format_exc()
+      AVNLog.ld("unable to process request for ",path,query,txt)
+      self.send_response(500,txt);
       self.end_headers()
       return
   
