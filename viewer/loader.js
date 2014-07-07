@@ -51,7 +51,6 @@
 
     var scripts = [
         '../libraries/jquery/jquery-1.11.0.min.js',
-        '../libraries/jquery/jquery.cookie.js',
         '../libraries/movable-type/geo.js',
         '../libraries/movable-type/latlon.js',
         '../libraries/less/less-1.4.1.min.js',
@@ -74,6 +73,7 @@
         'nav/trackdata.js',
         'nav/gpsdata.js',
         'nav/aisdata.js',
+        'nav/routedata.js',
         'map/drawing.js',
         'map/mapholder.js',
         'map/navlayer.js',

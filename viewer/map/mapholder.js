@@ -117,16 +117,26 @@ avnav.map.MapHolder=function(properties,navobject){
     this.maxzoom=0;
     this.center=[0,0];
     this.zoom=-1;
-    var currentView=this.properties.getProperties().currentView;
-    if (currentView){
-        this.center=currentView.center;
-        this.zoom=currentView.zoom;
-    }
-    var marker=this.properties.getProperties().marker;
-    if (marker){
-        this.markerLocked=marker.markerLocked;
-        this.markerPosition=marker.markerPosition;
-    }
+    try {
+        var currentView = localStorage.getItem(this.properties.getProperties().centerName);
+        if (currentView) {
+            var decoded = JSON.parse(currentView);
+            this.center = decoded.center;
+            this.zoom = decoded.zoom;
+        }
+    }catch (e){}
+    try {
+        var marker = localStorage.getItem(this.properties.getProperties().routingDataName);
+        if (marker) {
+            var decoded = JSON.parse(marker);
+            this.markerLocked = decoded.markerLocked;
+            this.markerPosition = decoded.markerPosition;
+        }
+        else {
+            this.markerLocked=false;
+            this.markerPosition=[0,0];
+        }
+    }catch(e){}
     //call our set markerPosition as this will update the navlayer and navobject
     if (! this.markerLocked){
         this.setMarkerPosition(this.center,true);
@@ -282,9 +292,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
 
         }
     }
-    this.properties.setUserData({
-        currentView:{center:this.center,zoom:this.zoom}
-    });
+    this.saveCenter();
     var newCenter= this.pointFromMap(this.getView().getCenter());
     this.setCenterFromMove(newCenter,true);
     if (! this.getProperties().getProperties().layers.boat ) this.gpsLocked=false;
@@ -303,9 +311,7 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
     }
     this.getView().setZoom(curzoom);
     this.zoom=curzoom;
-    this.properties.setUserData({
-        currentView:{center:this.center,zoom:this.zoom}
-    });
+    this.saveCenter();
 };
 /**
  * draw the grid
@@ -678,12 +684,9 @@ avnav.map.MapHolder.prototype.setMarkerPosition=function(coord,forceWrite){
     this.markerPosition=coord.slice(0);
     this.navobject.setMarkerPos(this.markerPosition);
     if (! notchanged || forceWrite){
-        this.properties.setUserData({
-           marker:{
-               markerLocked:this.markerLocked,
-               markerPosition:this.markerPosition
-           }
-        });
+        //TODO: store marker pos
+        var json=JSON.stringify({markerLocked:this.markerLocked,markerPosition:this.markerPosition})
+        localStorage.setItem(this.properties.getProperties().routingDataName,json);
         this.navlayer.setMarkerPosition(coord);
 
     }
@@ -711,9 +714,7 @@ avnav.map.MapHolder.prototype.onClick=function(evt){
 avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     var newCenter= this.pointFromMap(this.getView().getCenter());
     this.setCenterFromMove(newCenter);
-    this.properties.setUserData({
-        currentView:{center:this.center,zoom:this.zoom}
-    });
+    this.saveCenter();
 
 
     log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
@@ -801,5 +802,19 @@ avnav.map.MapHolder.prototype.updateSize=function(){
  */
 avnav.map.MapHolder.prototype.triggerRender=function(){
     if (this.olmap) this.olmap.render();
+};
+
+/**
+ * save the current center and zoom
+ * @private
+ */
+avnav.map.MapHolder.prototype.saveCenter=function(){
+    var raw=JSON.stringify({center:this.center,zoom:this.zoom});
+    localStorage.setItem(this.properties.getProperties().centerName,raw);
+};
+
+avnav.map.MapHolder.prototype.loadCenter=function(){
+    var raw=JSON.stringify({center:this.center,zoom:this.zoom});
+    localStorage.setItem(this.properties.getProperties().centerName,raw);
 };
 

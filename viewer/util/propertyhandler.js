@@ -198,25 +198,22 @@ avnav.util.PropertyHandler.prototype.getProperties=function(){
 };
 
 /**
- * change some user data
- * the data will be save into the cookie (old style handling with directly providing some objects)
- * no check against property descriptions (except layer 1 filter)
- * TODO: should we change this to the description model?
- * @param data - the complete object tree to be set
+ * save the current settings
  */
-avnav.util.PropertyHandler.prototype.setUserData=function(data){
-    var filtered=this.filterUserData(data);
-    this.extend(this.userData,filtered);
-    this.extend(this.currentProperties,filtered);
-    $.cookie(this.currentProperties.cookieName,this.userData);
+avnav.util.PropertyHandler.prototype.saveUserData=function(){
+    var raw=JSON.stringify(this.userData);
+    localStorage.setItem(this.currentProperties.settingsName,raw);
 };
+
 
 /**
  * load the user data from the cookie
  * this overwrites any current data
  */
 avnav.util.PropertyHandler.prototype.loadUserData=function(){
-    var ndata= $.cookie(this.currentProperties.cookieName);
+    var rawdata=localStorage.getItem(this.currentProperties.settingsName);
+    if (! rawdata) return;
+    var ndata= JSON.parse(rawdata);
     if (ndata){
         this.userData=this.filterUserData(ndata);
         this.extend(this.currentProperties,this.userData);

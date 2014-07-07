@@ -98,7 +98,9 @@ var propertyDefinitions=function(){
         centerDisplayTimeout: new avnav.util.Property( 45000), //ms - auto hide measure display (0 - no auto hide)
         navUrl: new avnav.util.Property( "/viewer/avnav_navi.php"),
         maxGpsErrors: new avnav.util.Property( 3), //after that much invalid responses/timeouts the GPS is dead
-        cookieName: new avnav.util.Property( "avnav_ol3"),
+        settingsName: new avnav.util.Property( "avnav.settings"), //storage name
+        routingDataName: new avnav.util.Property( "avnav.routing"),
+        centerName: new avnav.util.Property( "avnav.center"),
         statusErrorImage: new avnav.util.Property( "images/RedBubble40.png"),
         statusOkImage: new avnav.util.Property( "images/GreenBubble40.png"),
         statusIcons: {
@@ -124,11 +126,6 @@ var propertyDefinitions=function(){
 };
 
 
-
-$.cookie.json = true;
-$.cookie.defaults={
-    expires: 365    //set a lifetime of one year - especially to prevent dropping it on ios full screen
-};
 
 function log(txt){
     try{
