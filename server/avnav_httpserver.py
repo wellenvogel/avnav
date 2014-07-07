@@ -564,7 +564,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     return json.dumps(frt)
   def handleStatusRequest(self,requestParam):
     rt=[]
-    for handler in allHandlers:
+    for handler in AVNWorker.allHandlers:
       entry={'configname':handler.getConfigName(),
              'config': handler.getParam(),
              'name':handler.getName(),
