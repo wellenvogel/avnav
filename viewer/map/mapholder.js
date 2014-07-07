@@ -69,17 +69,6 @@ avnav.map.MapHolder=function(properties,navobject){
      *  @type {avnav.properties.PropertyHandler}
      *  */
     this.properties=properties;
-    /**
-     * @private
-     * @type {boolean}
-     */
-    this.markerLocked=true;
-    /**
-     * the marker position in lat/lot
-     * @private
-     * @type {Array.<number>}
-     */
-    this.markerPosition=[0,0];
 
     /**
      * locked to GPS
@@ -125,25 +114,7 @@ avnav.map.MapHolder=function(properties,navobject){
             this.zoom = decoded.zoom;
         }
     }catch (e){}
-    try {
-        var marker = localStorage.getItem(this.properties.getProperties().routingDataName);
-        if (marker) {
-            var decoded = JSON.parse(marker);
-            this.markerLocked = decoded.markerLocked;
-            this.markerPosition = decoded.markerPosition;
-        }
-        else {
-            this.markerLocked=false;
-            this.markerPosition=[0,0];
-        }
-    }catch(e){}
-    //call our set markerPosition as this will update the navlayer and navobject
-    if (! this.markerLocked){
-        this.setMarkerPosition(this.center,true);
-    }
-    else {
-        this.setMarkerPosition(this.markerPosition,true);
-    }
+
     this.slideIn=0; //when set we step by step zoom in
     /**
      * @private
@@ -410,13 +381,6 @@ avnav.map.MapHolder.prototype.getCourseUp=function(){
 avnav.map.MapHolder.prototype.getGpsLock=function(){
     return this.gpsLocked;
 };
-/**
- * get the current marker lock state
- * @returns {boolean|userData.markerLocked|*}
- */
-avnav.map.MapHolder.prototype.getMarkerLock=function(){
-    return this.markerLocked;
-};
 
 /**
  * called with updates from nav
@@ -654,43 +618,7 @@ avnav.map.MapHolder.prototype.setGpsLock=function(lock){
     this.gpsLocked=lock;
     if (lock) this.setCenter(gps);
 };
-/**
- * set the marker lock state
- * @param lock
- */
-avnav.map.MapHolder.prototype.setMarkerLock=function(lock){
-    if (this.markerLocked == lock) return;
-    this.markerLocked=lock;
-    if (!lock){
-        this.setMarkerPosition(this.center);
-        this.olmap.render(); //is this exported?
-    }
-    else{
-        this.setMarkerPosition(this.markerPosition,true);
-        this.olmap.render();
-    }
 
-};
-
-/**
- * set the marker position
- * @param {ol.Coordinate} coord (lon/lat)
- * @param {boolean} forceWriting to cookie
- * @private
- */
-avnav.map.MapHolder.prototype.setMarkerPosition=function(coord,forceWrite){
-    if (! coord) return;
-    var notchanged=(this.markerPosition && this.markerPosition[0]==coord[0] && this.markerPosition[1]==coord[1]);
-    this.markerPosition=coord.slice(0);
-    this.navobject.setMarkerPos(this.markerPosition);
-    if (! notchanged || forceWrite){
-        //TODO: store marker pos
-        var json=JSON.stringify({markerLocked:this.markerLocked,markerPosition:this.markerPosition})
-        localStorage.setItem(this.properties.getProperties().routingDataName,json);
-        this.navlayer.setMarkerPosition(coord);
-
-    }
-};
 /**
  * click event handler
  * @param {ol.MapBrowserEvent} evt
@@ -735,12 +663,6 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
     this.center=newCenter;
     this.zoom=this.getView().getZoom();
     this.navobject.setMapCenter(this.center);
-    if (!this.markerLocked){
-        this.setMarkerPosition(newCenter);
-    }
-    else {
-        this.setMarkerPosition(this.markerPosition);
-    }
     //only fire move events if we are not bound to GPS
     if (! this.gpsLocked) {
         $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,

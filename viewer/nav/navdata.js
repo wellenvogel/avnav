@@ -3,6 +3,7 @@
  */
 avnav.provide('avnav.nav.navdata.Distance');
 avnav.provide('avnav.nav.navdata.Point');
+avnav.provide('avnav.nav.navdata.WayPoint');
 avnav.provide('avnav.nav.navdata.TrackPoint');
 avnav.provide('avnav.nav.navdata.Cpa');
 avnav.provide('avnav.nav.navdata.GpsInfo');
@@ -51,6 +52,21 @@ avnav.nav.navdata.Point.prototype.compare=function(point){
 avnav.nav.navdata.Point.prototype.toCoord=function(){
     var rt=[this.lon,this.lat];
     return rt;
+};
+/**
+ * a waypoint (to interact with the server)
+ * @param {number} lon
+ * @param {number} lat
+ * @param {string} opt_name
+ * @constructor
+ */
+avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
+    avnav.nav.navdata.Point.call(this,lon,lat);
+    this.name=opt_name;
+};
+avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
+avnav.nav.navdata.WayPoint.fromPlain=function(plain){
+    return new avnav.nav.navdata.WayPoint(plain.lon,plain.lat,plain.name);
 };
 /**
  * a track point

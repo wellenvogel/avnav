@@ -26,6 +26,7 @@ avnav.map.NavLayer=function(mapholder,navobject){
      * @type {avnav.nav.NavObject}
      */
     this.navobject=navobject;
+
     var self=this;
     /**
      * the last boat course
@@ -92,13 +93,7 @@ avnav.map.NavLayer=function(mapholder,navobject){
      */
     this.boatPosition=[0,0];
 
-    /**
-     * the marker position when locked - we rely on the mapholder to set this...
-     * in map coordinates
-     * @private
-     * @type {ol.Coordinate}
-     */
-    this.markerPosition=[0,0];
+
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
         self.propertyChange(evdata);
     });
@@ -146,19 +141,17 @@ avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
             drawing.drawCircleToContext(pos, other, this.circleStyle);
         }
     }
-    if (!this.mapholder.getMarkerLock()) {
-        drawing.drawImageToContext(center,this.markerStyle.image, this.markerStyle);
-        log("draw marker without lock");
+    var currentLeg=this.navobject.getRawData(avnav.nav.NavEventType.ROUTE);
+    var markerPos=this.mapholder.pointToMap(currentLeg.to.toCoord());
+    drawing.drawImageToContext(markerPos,this.markerStyle.image, this.markerStyle);
+
+    if (!this.mapholder.getGpsLock()) {
+        drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
     }
-    else {
-        drawing.drawImageToContext(this.markerPosition, this.markerStyle.image, this.markerStyle);
-        log("draw marker with lock");
-        if (! this.mapholder.getGpsLock()) {
-           drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
-        }
+    if (currentLeg.active) {
         if (prop.layers.nav && prop.layers.boat) {
             //draw the course to the marker
-            drawing.drawLineToContext([this.boatPosition, this.markerPosition],this.courseStyle);
+            drawing.drawLineToContext([this.boatPosition, markerPos],this.courseStyle);
         }
     }
 
@@ -169,7 +162,7 @@ avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
  * compute a target point in map units from a given point
  * for drawing the circles
  * assumes "flatted" area around the point
- * @param {ol.Coordinat} pos in map coordinates
+ * @param {ol.Coordinate} pos in map coordinates
  * @param {number} course in degrees
  * @param {number} dist in m
  */
@@ -192,13 +185,6 @@ avnav.map.NavLayer.prototype.setBoatPosition=function(pos,course) {
     this.boatPosition = this.mapholder.transformToMap(pos);
 };
 
-/**
- * set the marker position
- * @param {ol.Coordinate} pos (lon/lat)
- */
-avnav.map.NavLayer.prototype.setMarkerPosition=function(pos){
-    this.markerPosition=this.mapholder.transformToMap(pos);
-};
 
 avnav.map.NavLayer.prototype.propertyChange=function(evdata){
     this.setStyle();

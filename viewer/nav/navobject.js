@@ -12,7 +12,8 @@ avnav.nav.NavEventType={
     GPS:0,
     AIS:1,
     TRACK:2,
-    NAV:3
+    NAV:3,
+    ROUTE: 4
 };
 
 /**
@@ -87,16 +88,13 @@ avnav.nav.NavObject=function(propertyHandler){
     this.trackHandler=new avnav.nav.TrackData(propertyHandler,this);
 
     this.aisHandler=new avnav.nav.AisData(propertyHandler,this);
+    this.routeHandler=new avnav.nav.RouteData(propertyHandler,this);
     /**
      * @private
      * @type {avnav.nav.navdata.Point}
      */
     this.maplatlon=new avnav.nav.navdata.Point(0,0);
-    /**
-     * @private
-     * @type {avnav.nav.navdata.Point}
-     */
-    this.markerlatlon=new avnav.nav.navdata.Point(0,0);
+
 
     /**
      * our computed data...
@@ -138,7 +136,7 @@ avnav.nav.NavObject=function(propertyHandler){
 avnav.nav.NavObject.prototype.computeValues=function(){
     var gps=this.gpsdata.getGpsData();
     //copy the marker to data to make it available extern
-    this.data.markerLatlon=this.markerlatlon;
+    this.data.markerLatlon=this.routeHandler.getRouteData().to;
     if (gps.valid){
         var markerdst=avnav.nav.NavCompute.computeDistance(gps,this.data.markerLatlon);
         this.data.markerCourse=markerdst.course;
@@ -231,6 +229,7 @@ avnav.nav.NavObject.prototype.getRawData=function(type){
     if (type == avnav.nav.NavEventType.NAV) return this.data;
     if (type == avnav.nav.NavEventType.TRACK) return this.trackHandler.getTrackData();
     if (type == avnav.nav.NavEventType.AIS) return this.aisHandler.getAisData();
+    if (type == avnav.nav.NavEventType.ROUTE) return this.routeHandler.getRouteData();
     return undefined;
 };
 /**
@@ -296,6 +295,20 @@ avnav.nav.NavObject.prototype.aisEvent=function(){
         this
     ));
 };
+
+/**
+ * called back from routeHandler
+ */
+avnav.nav.NavObject.prototype.routeEvent=function(){
+    this.computeValues();
+    $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,new avnav.nav.NavEvent (
+        avnav.nav.NavEventType.ROUTE,
+        [],
+        avnav.nav.NavEventSource.NAV,
+        this
+    ));
+    this.triggerUpdateEvent(avnav.nav.NavEventSource.NAV);
+};
 /**
  * register the provider of a display value
  * @param {string} name
@@ -319,16 +332,38 @@ avnav.nav.NavObject.prototype.setMapCenter=function(lonlat){
     this.triggerUpdateEvent(avnav.nav.NavEventSource.MAP);
 };
 /**
- * set the marker position
+ * lock to current center
  * @param {Array.<number>} lonlat
  */
-avnav.nav.NavObject.prototype.setMarkerPos=function(lonlat) {
-    var p = new avnav.nav.navdata.Point();
-    p.fromCoord(lonlat);
-    if (p.compare(this.markerlatlon)) return;
-    this.markerlatlon = p;
-    this.computeValues();
-    this.triggerUpdateEvent(avnav.nav.NavEventSource.MAP);
+avnav.nav.NavObject.prototype.setLock=function(activate) {
+    if (!activate){
+        this.routeHandler.setLock(activate);
+        return;
+    }
+    var p = new avnav.nav.navdata.WayPoint();
+    this.getMapCenter().assign(p);
+    var pfrom;
+    var gps=this.gpsdata.getGpsData();
+    if (gps.valid){
+        pfrom=new avnav.nav.navdata.Point(gps.lon,gps.lat);
+    }
+    var newLeg={
+        to:p,
+        from:pfrom,
+        active:activate
+    };
+    var changed=this.routeHandler.setLeg(newLeg);
+    if (changed) {
+        this.computeValues();
+        this.triggerUpdateEvent(avnav.nav.NavEventSource.MAP);
+    }
+};
+/**
+ * get the routing handler
+ * @returns {avnav.nav.RouteData|*}
+ */
+avnav.nav.NavObject.prototype.getRoutingData=function(){
+    return this.routeHandler;
 };
 
 /**
