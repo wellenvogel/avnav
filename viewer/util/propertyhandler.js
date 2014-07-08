@@ -250,7 +250,7 @@ avnav.util.PropertyHandler.prototype.updateLayout=function(){
 avnav.util.PropertyHandler.prototype.filterUserData=function(data){
     var allowed = {};
     for (var key in this.propertyDescriptions) {
-        if (data[key])allowed[key] = data[key];
+        if (data[key]!== undefined)allowed[key] = data[key];
     }
     return allowed;
 };

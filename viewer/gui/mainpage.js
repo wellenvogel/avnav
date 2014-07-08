@@ -18,6 +18,8 @@ avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 
 avnav.gui.Mainpage.prototype.showPage=function(options){
     if (!this.gui) return;
+    var ncon=this.gui.properties.getProperties().connectedMode;
+    this.handleToggleButton('#avb_Connected',ncon);
     var page=this;
     var url=this.gui.properties.getProperties().navUrl+"?request=listCharts";
     $.ajax({
@@ -87,6 +89,15 @@ avnav.gui.Mainpage.prototype.btnShowStatus=function (button,ev){
 avnav.gui.Mainpage.prototype.btnShowSettings=function (button,ev){
     log("ShowSettings clicked");
     this.gui.showPage('settingspage');
+};
+avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
+    log("Connected clicked");
+    var ncon=!this.gui.properties.getProperties().connectedMode;
+    this.handleToggleButton('#avb_Connected',ncon);
+    this.gui.properties.setValueByName('connectedMode',ncon);
+    this.gui.properties.saveUserData();
+    $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
+
 };
 /**
  * create the page instance
