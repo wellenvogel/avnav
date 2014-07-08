@@ -45,13 +45,14 @@ from avnav_worker import *
 
 
 class AVNRoutingLeg():
-  def __init__(self,routename,fromWP,toWP):
+  def __init__(self,routename,fromWP,toWP,active):
     self.routename=routename
     self.fromWP=fromWP
     self.toWP=toWP
+    self.active=active
   
   def __str__(self):
-    return "AVNRoutingLeg route=%s,from=%s,to=%s"%(self.routename,str(self.fromWP),str(self.toWP))
+    return "AVNRoutingLeg route=%s,from=%s,to=%s,active=%s"%(self.routename,str(self.fromWP),str(self.toWP),self.active)
     
 #routing handler
 class AVNRouter(AVNWorker):
@@ -138,6 +139,7 @@ class AVNRouter(AVNWorker):
                   dct.get('route'),
                   gpx.GPXWaypoint(**self.convertToGpx(dct.get('from'))),
                   gpx.GPXWaypoint(**self.convertToGpx(dct.get('to'))),
+                  dct.get('active')
                   )
   #convert a leg into json
   def leg2Json(self,leg):
@@ -146,7 +148,8 @@ class AVNRouter(AVNWorker):
     dct={
          'from':self.convertFromGpx(leg.fromWP.__dict__),
          'to':self.convertFromGpx(leg.toWP.__dict__),
-         'route':leg.routename
+         'route':leg.routename,
+         'active':leg.active
          }
     return dct 
   

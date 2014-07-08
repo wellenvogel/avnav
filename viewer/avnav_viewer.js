@@ -56,6 +56,7 @@ var propertyDefinitions=function(){
             grid: new avnav.util.Property(true,"Grid",avnav.util.PropertyType.CHECKBOX),
             compass: new avnav.util.Property(true,"Compass",avnav.util.PropertyType.CHECKBOX)
         },
+        connectedMode:new avnav.util.Property(true,"connected",avnav.util.PropertyType.CHECKBOX),
         NM: new avnav.util.Property(1852), //one mile
         buttonUpdateTime: new avnav.util.Property( 500), //timer for button updates
         slideTime: new avnav.util.Property( 300), //time in ms for upzoom
@@ -119,9 +120,7 @@ var propertyDefinitions=function(){
             aisWarningColor: new avnav.util.Property( "#FA584A","Warning",avnav.util.PropertyType.COLOR),
             aisNormalColor: new avnav.util.Property( "#EBEB55","Normal",avnav.util.PropertyType.COLOR),
             aisNearestColor: new avnav.util.Property( '#70F3AF',"Nearest",avnav.util.PropertyType.COLOR)
-        },
-        currentView:{},
-        marker:{}
+        }
     }
 };
 
