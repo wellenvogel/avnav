@@ -45,6 +45,7 @@ import shutil
 import itertools
 from optparse import OptionParser
 import xml.sax as sax 
+import xml.sax.saxutils
 from PIL import Image
 import operator
 import math
@@ -234,7 +235,7 @@ def findTilerTools(ttdir=None):
 #bounds: ullon,ullat,lrlon,lrlat
 
 def createBoundingsXml(bounds,title):
-  return boundingbox_xml % {"title": title,
+  return boundingbox_xml % {"title": sax.saxutils.escape(title),
                                             "minlon": bounds[0],
                                             "maxlat": bounds[1],
                                             "maxlon": bounds[2],
@@ -259,12 +260,22 @@ class ChartEntry():
   #return a dictinary with the parameters
   def getParam(self):
     return { "filename":self.filename,"title":self.title,"mpp":self.mpp,"b1":self.bounds[0],"b2":self.bounds[1],"b3":self.bounds[2],"b4":self.bounds[3],"layer":self.layer}
+  #return a xml save version of the parameters
+  def getXmlParam(self):
+    rt={}
+    p=self.getParam()
+    for k in p.keys():
+      if type(p[k]) is str:
+        rt[k]=xml.sax.saxutils.escape(p[k])
+      else:
+        rt[k]=p[k]
+    return rt
   def __str__(self):
     rt="Chart: file=%(filename)s, title=%(title)s, layer=%(layer)d, mpp=%(mpp)f, boundsll=(%(b1)f,%(b2)f,%(b3)f,%(b4)f)" % self.getParam()
     return rt
 
   def toXML(self):
-    rt="""<chart filename="%(filename)s" title="%(title)s" mpp="%(mpp)f">""" % self.getParam()
+    rt="""<chart filename="%(filename)s" title="%(title)s" mpp="%(mpp)f">""" % self.getXmlParam()
     rt+=createBoundingsXml(self.bounds, self.title)
     rt+="</chart>"
     return rt
