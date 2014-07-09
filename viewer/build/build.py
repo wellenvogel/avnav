@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 #avnav build script
 #read the list of files from loader.js, concat them and call yui to compress
 import sys
