@@ -68,23 +68,6 @@ trap cleanup 0 1 2 3 4 5 6 7 8 15
 mkdir -p $TMPDIR || err "unable to create $TMPDIR"
 chown 1000:1000 $TMPDIR || err "unable to chown $TMPDIR"
 
-jqueryImages=`cat <<EOF
-animated-overlay.gif
-ui-bg_flat_0_aaaaaa_40x100.png
-ui-bg_flat_75_ffffff_40x100.png
-ui-bg_glass_55_fbf9ee_1x400.png
-ui-bg_glass_65_ffffff_1x400.png
-ui-bg_glass_75_dadada_1x400.png
-ui-bg_glass_75_e6e6e6_1x400.png
-ui-bg_glass_95_fef1ec_1x400.png
-ui-bg_highlight-soft_75_cccccc_1x100.png
-ui-icons_222222_256x240.png
-ui-icons_2e83ff_256x240.png
-ui-icons_454545_256x240.png
-ui-icons_888888_256x240.png
-ui-icons_cd0a0a_256x240.png
-EOF
-`
 for d in avnav avnav/program avnav/program/server avnav/program/viewer avnav/program/raspberry avnav/program/libraries 
 do
   mkdir -p $TMPDIR/$d || err "unable to create $TMPDIR/$d"
@@ -96,13 +79,23 @@ wlog "starting download from $repo"
 ( cd $TMPDIR && git clone $repo $gitsub) || err "git clone failed"
 ( cd $TMPDIR/$gitsub && git checkout tags/$1 ) || err "git co tag $1 failed"
 TDIR=$TMPDIR/avnav/program/viewer
+curdir=`pwd`
+odir=$TMPDIR/$gitsub/viewer
+cd $odir || err "unable to cd to $odir"
+wLog "creating version.js"
+echo "avnav_version=\"$1\";" > version.js
+wLog "running build"
+chmod 755 build/build.py
+build/build.py || err "build js failed"
+rm -rf build
+cd $curdir || err "unable to change to $curdir"
 wlog "writing files for $TDIR"
 ( cd $TDIR && cp -r -p $TMPDIR/$gitsub/viewer/* . ) || err "cp viewer failed"
 chown -R 1000:1000 $TDIR || err "chown viewer failed"
 
 TDIR=$TMPDIR/avnav/program/server
 wlog "writing files for $TDIR"
-for f in avnav_server.py ais.py create_overview.py gemf_reader.py
+for f in *py
 do
   ( cd $TDIR && cp -p $TMPDIR/$gitsub/server/$f . ) || err "cp $f failed"
   chown 1000:1000 $TDIR/$f || err "chown $f failed"
