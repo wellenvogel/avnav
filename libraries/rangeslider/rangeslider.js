@@ -128,10 +128,12 @@
 
         // Attach Events
         var _this = this;
+        /* AVO: disable resize as it sometimes makes rangeslider non functional
         this.$window.on('resize' + '.' + pluginName, debounce(function() {
             // Simulate resizeEnd event.
             delay(function() { _this.update(); }, 300);
         }, 20));
+        */
 
         this.$document.on(this.startEvent, '#' + this.identifier, this.handleDown);
 
