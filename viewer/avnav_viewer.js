@@ -144,6 +144,9 @@ avnav.main=function() {
     var navobject=new avnav.nav.NavObject(propertyHandler);
     var mapholder=new avnav.map.MapHolder(propertyHandler,navobject);
     var gui=new avnav.gui.Handler(propertyHandler,navobject,mapholder);
+    if (avnav_version !== undefined){
+        $('#avi_mainpage_version').text(avnav_version);
+    }
     gui.showPage("mainpage");
     log("avnav loaded");
 };

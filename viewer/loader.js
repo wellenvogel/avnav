@@ -64,6 +64,7 @@
         //all files have to be collected here (in correct order)
         //the build script will pick them up between the tags...
         //STARTFILES
+        'version.js',
         'base.js',
         'util/formatter.js',
         'util/propertyhandler.js',
