@@ -22,7 +22,7 @@
 	<!-- <Directory urlpath="maps" path="..\..\..\chart-tiler-test"></Directory>-->
 	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
 	<Directory urlpath="viewer" path="../viewer"></Directory>
-	<Directory urlpath="libraries" path="/Users/andreas/projekte/nosync/libraries"></Directory>
+	<Directory urlpath="libraries" path="../libraries"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
