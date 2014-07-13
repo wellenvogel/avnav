@@ -158,8 +158,9 @@ avnav.gui.Page.prototype.showHideAdditionalPanel=function(id,show,mainid){
         }
     }
     else {
+        $(id).hide();
         if ($(id).is(':visible')) {
-            $(id).hide();
+
             updateSize = true;
         }
     }

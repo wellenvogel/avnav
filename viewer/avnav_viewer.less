@@ -220,6 +220,19 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 
 /*-------------------------------------------------------------
+  nav page
+  ------------------------------------------------------------*/
+
+#avi_second_buttons_navpage{
+  z-index: 999;
+  top: 0px;
+  bottom: @centerDisplayHeight;
+  right: 0px;
+  width: (@buttonSize + 10);
+  background-color: rgba(109, 109, 109, 0.5);;
+}
+
+/*-------------------------------------------------------------
    buttons
 -------------------------------------------------------------*/
 
@@ -311,12 +324,24 @@ button#avb_LockMarker {
 button#avb_CourseUp {
   .avn_button_icon_base_toggle('images/nadel-2.png',( @buttonSize * 45 /60 ));
 }
+button#avb_ShowRoutePanel {
+  .avn_button_icon_base('images/Question.png');
+}
 
 
 button#avb_CancelNav {
   .avn_button_icon_base('images/Cancel40.png');
 
 }
+
+/*- nav page routing panel --*/
+button#avb_ActivateNav {
+  .avn_button_icon_base('images/check32.png');
+}
+button#avb_CancelSecondNav {
+  .avn_button_icon_base('images/Cancel40.png');
+}
+
 
 button#avb_AisCancel{
   .avn_button_icon_base('images/Cancel40.png');

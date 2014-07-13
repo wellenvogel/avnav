@@ -142,6 +142,7 @@ avnav.gui.Navpage.prototype.hidePage=function(){
     if (this.timer) window.clearTimeout(this.timer);
     this.hideOverlay();
     this.hidetime=0;
+    this.hideRouting();
 };
 /**
  *
@@ -249,6 +250,9 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
     }
 };
 
+/**
+ * hide the center overlay
+ */
 avnav.gui.Navpage.prototype.hideOverlay=function(){
     if (this.overlay != null){
         this.overlay.hide();
@@ -256,6 +260,15 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
         this.hidetime=0;
     }
 };
+
+avnav.gui.Navpage.prototype.showRouting=function() {
+    this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
+};
+
+avnav.gui.Navpage.prototype.hideRouting=function() {
+    this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
+};
+
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Navpage.prototype.btnZoomIn=function (button,ev){
@@ -289,10 +302,25 @@ avnav.gui.Navpage.prototype.btnCourseUp=function (button,ev){
     this.gui.map.triggerRender();
     log("courseUp clicked");
 };
+avnav.gui.Navpage.prototype.btnShowRoutePanel=function (button,ev){
+    log("showRoutePanel clicked");
+    this.showRouting();
+};
 avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
     log("CancelNav clicked");
     this.gui.showPage('mainpage');
 };
+
+avnav.gui.Navpage.prototype.btnCancelSecondNav=function (button,ev){
+    log("CancelSecondNav clicked");
+    this.hideRouting();
+};
+
+avnav.gui.Navpage.prototype.btnActivateNav=function (button,ev){
+    log("ActivateNav clicked");
+    this.hideRouting();
+};
+
 
 /**
  * create the page instance
