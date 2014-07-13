@@ -521,6 +521,21 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 }
             });
             rt.wmsparam=param;
+            var layermap={};
+            $(tm).find(">WMSLayerMapping").each(function(nr,mapping){
+                var zooms=$(mapping).attr('zooms');
+                var layers=$(mapping).attr('layers');
+                var zarr=zooms.split(/,/);
+                var i;
+                for (i in zarr){
+                    try {
+                        var zlevel=parseInt(zarr[i]);
+                        layermap[zlevel]=layers;
+                    }catch (ex){}
+                }
+            });
+            rt.wmslayermap=layermap;
+
         }
         //we use a bit a dirty hack here:
         //ol3 nicely shows a lower zoom if the tile cannot be loaded (i.e. has an error)
@@ -574,8 +589,14 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                     var bbox=converter([minX,minY,maxX,maxY]);
                     var rturl=layerurl+"SERVICE=WMS&REQUEST=GetMap&FORMAT=image/png&WIDTH="+tileSize+"&HEIGHT="+tileSize+"&SRS="+encodeURI(rt.projection);
                     var k;
+                    var layers;
+                    if (rt.wmslayermap[z]) layers=rt.wmslayermap[z];
                     for (k in rt.wmsparam){
-                        rturl+="&"+k+"="+rt.wmsparam[k];
+                        var v=rt.wmsparam[k];
+                        if (layers && (k == "LAYERS"|| k== "layers")) {
+                            v = layers;
+                        }
+                        rturl+="&"+k+"="+v;
                     }
                     rturl+="&BBOX="+bbox[0]+","+bbox[1]+","+bbox[2]+","+bbox[3];
                     return rturl;
