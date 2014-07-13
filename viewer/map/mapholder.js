@@ -423,21 +423,26 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         rt.type=avnav.map.LayerTypes.TCHART;
         //complete tile map entry here
         rt.inversy=false;
+        rt.wms=false;
         var layer_profile=$(tm).attr('profile');
         if (layer_profile) {
-            if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator') {
+            if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator' && layer_profile != 'wms') {
                 alert('unsupported profile in tilemap.xml ' + layer_profile);
                 return null;
             }
-            if (layer_profile == 'global_mercator'){
+            if (layer_profile == 'global-mercator'){
                 //our very old style stuff where we had y=0 at lower left
                 rt.inversy=true;
+            }
+            if (layer_profile == 'wms'){
+                rt.wms=true;
             }
         }
         rt.url=$(tm).attr('href');
         rt.title = $(tm).attr('title');
         rt.minZoom=parseInt($(tm).attr('minzoom'));
         rt.maxZoom=parseInt($(tm).attr('maxzoom'));
+        rt.projection=$(tm).attr('projection'); //currently only for WMS
         //we store the layer region in EPSG:4326
         $(tm).find(">BoundingBox").each(function(nr,bb){
             rt.layerExtent = [self.e2f(bb,'minlon'),self.e2f(bb,'maxlat'),
@@ -501,48 +506,93 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
             alert("missing href in layer");
             return null;
         }
-        if (! rt.url.match(/^http:/)){
+        if (! rt.url.match(/^https*:/)){
             layerurl=baseurl+"/"+rt.url;
         }
         else layerurl=rt.url;
         rt.extent=ol.extent.transform(rt.layerExtent,self.transformToMap);
+        if (rt.wms){
+            var param={};
+            $(tm).find(">WMSParameter").each(function(nr,wp){
+                var n=$(wp).attr('name');
+                var v=$(wp).attr('value');
+                if (n !== undefined && v !== undefined){
+                    param[n]=v;
+                }
+            });
+            rt.wmsparam=param;
+        }
         //we use a bit a dirty hack here:
         //ol3 nicely shows a lower zoom if the tile cannot be loaded (i.e. has an error)
         //to avoid server round trips, we use a local image url
         //the more forward way would be to return undefined - but in this case
         //ol will NOT show the lower zoom tiles...
         var invalidUrl='data:image/png;base64,i';
-        var source=new ol.source.XYZ({
-            tileUrlFunction: function(coord){
-                if (! coord) return undefined;
-                var zxy=coord.getZXY();
-                var z=zxy[0];
-                var x=zxy[1];
-                var y=zxy[2];
+        var source=undefined;
+        //as WMS support is broken in OL3 (as always ol3 tries to be more intelligent than everybody...)
+        //we always use an XYZ layer but directly construct the WMS tiles...
+        source = new ol.source.XYZ({
+            tileUrlFunction: function (coord) {
+                if (!coord) return undefined;
+                var zxy = coord.getZXY();
+                var z = zxy[0];
+                var x = zxy[1];
+                var y = zxy[2];
 
-                if (rt.zoomLayerBoundings){
-                    var found=false;
-                    if (! rt.zoomLayerBoundings[z]) return invalidUrl;
-                    for (var bindex in rt.zoomLayerBoundings[z]){
-                        var zbounds=rt.zoomLayerBoundings[z][bindex];
-                        if (zbounds.minx<=x && zbounds.maxx>=x && zbounds.miny<=y && zbounds.maxy>=y){
-                            found=true;
+                if (rt.zoomLayerBoundings) {
+                    var found = false;
+                    if (!rt.zoomLayerBoundings[z]) return invalidUrl;
+                    for (var bindex in rt.zoomLayerBoundings[z]) {
+                        var zbounds = rt.zoomLayerBoundings[z][bindex];
+                        if (zbounds.minx <= x && zbounds.maxx >= x && zbounds.miny <= y && zbounds.maxy >= y) {
+                            found = true;
                             break;
                         }
                     }
-                    if (! found){
+                    if (!found) {
                         return invalidUrl;
                     }
                 }
+                if (rt.wms){
+                    //construct the WMS url
+                    var grid=rt.source.getTileGrid();
+                    //taken from tilegrid.js:
+                    //var origin = grid.getOrigin(z);
+                    //the xyz source seems to have a very strange origin - x at -... but y at +...
+                    //but we rely on the origin being ll
+                    //not sure if this is correct for all projections...
+                    var origin=[-20037508.342789244,-20037508.342789244]; //unfortunately the ol3 stuff does not export this...
+                    var resolution = grid.getResolution(z);
+                    var tileSize = grid.getTileSize(z);
+                    y = (1 << z) - y - 1
+                    var minX = origin[0] + x * tileSize * resolution;
+                    var minY = origin[1] + y * tileSize * resolution;
+                    var maxX = minX + tileSize * resolution;
+                    var maxY = minY + tileSize * resolution;
+                    //now compute the bounding box
+                    var converter=ol.proj.getTransform("EPSG:3857",rt.projection||"EPSG:4326");
+                    var bbox=converter([minX,minY,maxX,maxY]);
+                    var rturl=layerurl+"SERVICE=WMS&REQUEST=GetMap&FORMAT=image/png&WIDTH="+tileSize+"&HEIGHT="+tileSize+"&SRS="+encodeURI(rt.projection);
+                    var k;
+                    for (k in rt.wmsparam){
+                        rturl+="&"+k+"="+rt.wmsparam[k];
+                    }
+                    rturl+="&BBOX="+bbox[0]+","+bbox[1]+","+bbox[2]+","+bbox[3];
+                    return rturl;
+                }
+                if (rt.inversy) {
+                    y = (1 << z) - y - 1
+                }
 
-                return layerurl+'/'+zxy[0]+'/'+zxy[1]+'/'+zxy[2]+".png";
+                return layerurl + '/' + z + '/' + x + '/' + y + ".png";
             },
-            extent:rt.extent
+            extent: rt.extent
             /*
-            url:layerurl+'/{z}/{x}/{y}.png'
-            */
+             url:layerurl+'/{z}/{x}/{y}.png'
+             */
         });
 
+        rt.source=source;
         var layer=new ol.layer.Tile({
             source: source
         });
