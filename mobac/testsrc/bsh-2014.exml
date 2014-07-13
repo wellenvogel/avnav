@@ -95,21 +95,28 @@
 <layerMappings>
 	<layerMapping>
 		<zoom>1,2,3,4,5,6,7,8,9,10,11,</zoom>
-		<layers>12,30,31,49,67,68,86,104,105,123,160,197</layers>
+		<layers>29,30,65,66,101,102</layers>
 	</layerMapping>
 	<layerMapping>
 		<zoom>12</zoom>
-		<layers>12,30,31,49,67,68,86,104,105,123,141,160,178,197,215</layers>
-	</layerMapping>
-	<layerMapping>
-		<zoom>13,14,15,16,17,18,19,20,21,22</zoom>
-		<layers>12,49,86,123,141,142,160,178,179,197,215,216</layers>
+		<layers>29,30,65,66,101,102,137</layers>
 	</layerMapping>
 </layerMappings>
 <!--<layers>30,31,67,68,123,141,142,178,179,215,216</layers>-->
-<layers>12,30,31,49,67,68,86,104,105,123,141,142,160,178,179,197,215,216</layers>
+<layers>29,30,65,66,101,102,137,138,173,174,209,210</layers>
 <url>https://www.geoseaportal.de/wss/service/NAUTHIS_Hydrography/guest?</url>
 <coordinatesystem>EPSG:4326</coordinatesystem>
 <aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0x777777&TRANSPARENT=TRUE]]></aditionalparameters>
 </exCustomWmsMapSource>
+<exCustomMapSource>
+<retries>1</retries>
+<name>OpenSeamap</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<url>http://t1.openseamap.org/seamark/{$z}/{$x}/{$y}.png</url>
+<ignoreErrors>true</ignoreErrors>
+<backgroundColor>#00000000</backgroundColor>
+</exCustomMapSource>
+
+</layers>
 </exCustomMultiLayerMapSource>
