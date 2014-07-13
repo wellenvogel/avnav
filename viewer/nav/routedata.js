@@ -247,7 +247,7 @@ avnav.nav.RouteData.prototype.legChanged=function(newLeg){
             error: function(errMsg,x) {
                 self.currentLeg=leg;
                 self.querySequence=sequence; //re-enable remote update
-                alert("unable to send waypoint to server:" +errMsg);
+                if (self.propertyHandler.getProperties().routingServerError) alert("unable to send waypoint to server:" +errMsg);
             }
         });
     }

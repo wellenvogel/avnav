@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <TileMapService version="1.0.0" >
+   <Title>avnav tile map service</Title>
+   <!--inverse order of layers!!! -->
+   <TileMaps>
+      <TileMap 
+       title="OpenSeaMap" 
+       href="http://t1.openseamap.org/seamark/"
+       minzoom="6"
+       maxzoom="20"
+       projection="EPSG:4326">
+	   <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
+       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+    </TileMap>
+      <TileMap 
+       title="BSH Hydro" 
+	   profile="wms"
+       href="https://www.geoseaportal.de/wss/service/NAUTHIS_Hydrography/guest?"
+       minzoom="6"
+       maxzoom="20"
+       projection="EPSG:4326">
+	   <WMSParameter name="SERVICE" value="WMS"/>
+	   <WMSParameter name="BGCOLOR" value="0x777777"/>
+	   <WMSParameter name="TRANSPARENT" value="TRUE"/>
+	   <WMSParameter name="LAYERS" value="29,30,65,66,101,102,137,138,173,174,209,210"/>
+	   <WMSParameter name="STYLES" value=""/>
+	   <WMSParameter name="VERSION" value="1.1.0"/>
+       <WMSLayerMapping zooms="1,2,3,4,5,6,7,8,9,10,11" layers="29,30,65,66,101,102"/>
+       <WMSLayerMapping zooms="12" layers="29,30,65,66,101,102,137"/>
+	   <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
+       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+    </TileMap>
+   <!-- 
+   <TileMap 
+       title="BSH Rocks Wrecks" 
+	   profile="wms"
+       href="https://www.geoseaportal.de/wss/service/NAUTHIS_RocksWrecksObstructions/guest?"
+       minzoom="6"
+       maxzoom="20"
+       projection="EPSG:4326">
+	   <WMSParameter name="SERVICE" value="WMS"/>
+	   <WMSParameter name="BGCOLOR" value="0x777777"/>
+	   <WMSParameter name="TRANSPARENT" value="TRUE"/>
+	   <WMSParameter name="LAYERS" value="2,12,22,32,42,9,19,29,39,49,59"/>
+	   <WMSParameter name="STYLES" value=""/>
+	   <WMSParameter name="VERSION" value="1.1.0"/>
+	   <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
+       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+    </TileMap>
+  -->
+   <!--
+  <TileMap 
+       title="AidsAndService" 
+	   profile="wms"
+       href="https://www.geoseaportal.de/wss/service/NAUTHIS_AidsAndServices/guest?"
+       minzoom="6"
+       maxzoom="20"
+       projection="EPSG:4326">
+	   <WMSParameter name="SERVICE" value="WMS"/>
+	   <WMSParameter name="BGCOLOR" value="0xffffff"/>
+	   <WMSParameter name="TRANSPARENT" value="TRUE"/>
+	   <WMSParameter name="LAYERS" value="11,13,14,15,20,34,35,36,41,53,55,56,57,74,76,77,78,83,97,98,99,116,118,119,120"/>
+	   <WMSParameter name="STYLES" value=""/>
+	   <WMSParameter name="VERSION" value="1.1.0"/>
+	   <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
+       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+    </TileMap>
+   -->
+    <TileMap 
+       title="Skin" 
+	   profile="wms"
+       href="https://www.geoseaportal.de/wss/service/NAUTHIS_SkinOfTheEarth/guest?" 
+       minzoom="6"
+       maxzoom="20"
+       projection="EPSG:4326">
+       <WMSParameter name="SERVICE" value="WMS"/>
+       <WMSParameter name="BGCOLOR" value="0xffffff"/>
+       <WMSParameter name="TRANSPARENT" value="TRUE"/>
+       <WMSParameter name="LAYERS" value="2,6,12,18,24,30"/>
+       <WMSParameter name="STYLES" value=""/>
+       <WMSParameter name="VERSION" value="1.1.0"/>
+       <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
+       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+    </TileMap>
+      
+
+   </TileMaps>
+ </TileMapService>
+ 

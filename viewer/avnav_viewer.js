@@ -101,6 +101,7 @@ var propertyDefinitions=function(){
         maxGpsErrors: new avnav.util.Property( 3), //after that much invalid responses/timeouts the GPS is dead
         settingsName: new avnav.util.Property( "avnav.settings"), //storage name
         routingDataName: new avnav.util.Property( "avnav.routing"),
+        routingServerError: new avnav.util.Property(true,"ServerError",avnav.util.PropertyType.CHECKBOX), //notify comm errors to server
         centerName: new avnav.util.Property( "avnav.center"),
         statusErrorImage: new avnav.util.Property( "images/RedBubble40.png"),
         statusOkImage: new avnav.util.Property( "images/GreenBubble40.png"),
@@ -132,7 +133,14 @@ function log(txt){
     }catch(e){}
 }
 
+function getParam(key)
+{
+    // Find the key and everything up to the ampersand delimiter
+    var value=RegExp(""+key+"[^&]+").exec(window.location.search);
 
+    // Return the unescaped value minus everything starting from the equals sign or an empty string
+    return unescape(!!value ? value.toString().replace(/^[^=]+./,"") : "");
+}
 
 /**
  * main function called when dom is loaded
@@ -146,6 +154,11 @@ avnav.main=function() {
     var gui=new avnav.gui.Handler(propertyHandler,navobject,mapholder);
     if (avnav_version !== undefined){
         $('#avi_mainpage_version').text(avnav_version);
+    }
+    var navurl=getParam('navurl');
+    if (navurl){
+        propertyHandler.setValueByName('navUrl',navurl);
+        propertyHandler.setValueByName('routingServerError',false);
     }
     gui.showPage("mainpage");
     log("avnav loaded");
