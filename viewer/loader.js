@@ -80,6 +80,7 @@
         'map/navlayer.js',
         'map/aislayer.js',
         'map/tracklayer.js',
+        'map/routelayer.js',
         'gui/handler.js',
         'gui/page.js',
         'gui/mainpage.js',

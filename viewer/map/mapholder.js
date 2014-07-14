@@ -102,6 +102,7 @@ avnav.map.MapHolder=function(properties,navobject){
     this.aislayer=new avnav.map.AisLayer(this,this.navobject);
     this.navlayer=new avnav.map.NavLayer(this,this.navobject);
     this.tracklayer=new avnav.map.TrackLayer(this,this.navobject);
+    this.routinglayer=new avnav.map.RouteLayer(this,this.navobject);
     this.minzoom=32;
     this.maxzoom=0;
     this.center=[0,0];
@@ -149,7 +150,7 @@ avnav.map.MapHolder.prototype.coordToPixel=function(point){
  * @param {ol.Coordinate} pixel
  * @returns {ol.Coordinate}
  */
-avnav.map.MapHolder.prototype.pixelToLatLon=function(pixel){
+avnav.map.MapHolder.prototype.pixelToCoord=function(pixel){
     return this.olmap.getCoordinateFromPixel(pixel);
 };
 
@@ -756,6 +757,7 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     this.drawNorth();
     this.tracklayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.aislayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
+    this.routinglayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
 };
 

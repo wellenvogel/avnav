@@ -3,7 +3,24 @@
  */
 avnav.provide('avnav.nav.RouteData');
 
-
+/**
+ *
+ * @param {string} name
+ * @param {Array.<avnav.nav.navdata.WayPoint>} opt_points
+ * @constructor
+ */
+avnav.nav.Route=function(name,opt_points){
+    /**
+     * the route name
+     * @type {string}
+     */
+    this.name=name;
+    /**
+     * the route points
+     * @type {Array.<avnav.nav.navdata.WayPoint>|Array}
+     */
+    this.points=opt_points||[];
+};
 
 /**
  * the handler for the routing data
@@ -186,11 +203,21 @@ avnav.nav.RouteData.prototype.handleRouteStatus=function(success,change){
 };
 
 /**
- * return the current trackData
+ * return the current leg
  * @returns {}
  */
 avnav.nav.RouteData.prototype.getRouteData=function(){
     return this.currentLeg;
+};
+
+/**
+ * return the current route
+ * @returns {avnav.nav.Route}
+ */
+avnav.nav.RouteData.prototype.getCurrentRoute=function(){
+    //for now only the current leg
+    return new avnav.nav.Route(this.currentLeg.name,
+    [this.currentLeg.from,this.currentLeg.to]);
 };
 
 /**

@@ -53,6 +53,7 @@ var propertyDefinitions=function(){
             track: new avnav.util.Property(true,"Track",avnav.util.PropertyType.CHECKBOX),
             nav: new avnav.util.Property(true,"Navigation",avnav.util.PropertyType.CHECKBOX),
             boat: new avnav.util.Property(true,"Boat",avnav.util.PropertyType.CHECKBOX),
+            route: new avnav.util.Property(true,"Route",avnav.util.PropertyType.CHECKBOX),
             grid: new avnav.util.Property(true,"Grid",avnav.util.PropertyType.CHECKBOX),
             compass: new avnav.util.Property(true,"Compass",avnav.util.PropertyType.CHECKBOX)
         },
@@ -73,6 +74,8 @@ var propertyDefinitions=function(){
         routeQueryTimeout: new avnav.util.Property( 1000,"Route",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
         bearingColor: new avnav.util.Property( "#DDA01F","Color",avnav.util.PropertyType.COLOR),
         bearingWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),
+        routeColor: new avnav.util.Property( "#27413B","Color",avnav.util.PropertyType.COLOR),
+        routeWidth: new avnav.util.Property( 2,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         navCircleColor: new avnav.util.Property( "#D71038","Circle Color",avnav.util.PropertyType.COLOR),
         navCircleWidth: new avnav.util.Property( 1,"Circle Width",avnav.util.PropertyType.RANGE,[1,10]),
         navCircle1Radius: new avnav.util.Property( 300,"Circle 1 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
