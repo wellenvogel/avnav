@@ -35,10 +35,15 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.visible=this.mapholder.getProperties().getProperties().layers.route;
     var self=this;
     /**
-     * the current route
+     * the current route points
      * @type {Array}
      */
-    this.currentRoute=[];
+    this.currentRoutePoints=[];
+
+    /**
+     * the current route
+     */
+    this.currentRoute={};
 
     /**
      * @private
@@ -74,17 +79,18 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
 avnav.map.RouteLayer.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) {
-        this.currentRoute=[];
+        this.currentRoutePoints=[];
         return;
     }
     if (evdata.type == avnav.nav.NavEventType.ROUTE) {
-        this.currentRoute=[];
+        this.currentRoutePoints=[];
         //for now only the points
         var route=this.routingDate.getCurrentRoute();
+        this.currentRoute=new avnav.nav.Route(route.name,route.points.slice(0));
         var i;
-        for (i in route.points){
-            var p=this.mapholder.pointToMap(route.points[i].toCoord());
-            this.currentRoute.push(p);
+        for (i in this.currentRoute.points){
+            var p=this.mapholder.pointToMap(this.currentRoute.points[i].toCoord());
+            this.currentRoutePoints.push(p);
         }
     }
     this.mapholder.triggerRender();
@@ -97,7 +103,7 @@ avnav.map.RouteLayer.prototype.navEvent=function(evdata){
  */
 avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing){
     if (! this.visible) return;
-    drawing.drawLineToContext(this.currentRoute,this.lineStyle);
+    drawing.drawLineToContext(this.currentRoutePoints,this.lineStyle);
 };
 avnav.map.RouteLayer.prototype.propertyChange=function(evdata) {
     this.visible=this.mapholder.getProperties().getProperties().layers.route;
