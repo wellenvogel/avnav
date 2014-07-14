@@ -53,7 +53,7 @@
         '../libraries/jquery/jquery-1.11.0.min.js',
         '../libraries/movable-type/geo.js',
         '../libraries/movable-type/latlon.js',
-        '../libraries/less/less-1.4.1.min.js',
+        '../libraries/less/less-1.7.3.min.js',
         '../libraries/rangeslider/rangeslider.css',
         '../libraries/rangeslider/rangeslider.js',
         '../libraries/jscolor/jscolor.js'

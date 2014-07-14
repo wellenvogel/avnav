@@ -3,6 +3,7 @@
 @topPanelHeight:00px;
 @bottomPanelHeight:50px;
 @aisPanelWidth:90px;
+@routeInfoPanelWidth:90px; //the real with is the max of this and the AIS panel width
 @buttonSize: 60px;
 @centerDisplayHeight: 30px;
 @settingsFontSize: 16px;
@@ -230,6 +231,15 @@ font-size: ( @bottomPanelHeight - 2 );
   width: (@buttonSize + 10);
   padding-left: 3px;
   background-color: rgba(109, 109, 109, 0.5);
+}
+#avi_route_info_navpage{
+  top: 0px;
+  left:0px;
+  bottom: 0px;
+  width: max( @aisPanelWidth , @routeInfoPanelWidth );
+  padding-left: 3px;
+  background-color: lightgrey;
+  z-index: 90;
 }
 
 /*-------------------------------------------------------------
@@ -736,6 +746,7 @@ button#avb_SettingsDefaults{
 	left:	0;
 	right:	0;
 	background-color: rgb(228, 228, 180);
+    z-index: 100;
 }
 
  

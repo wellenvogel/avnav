@@ -269,11 +269,13 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
 avnav.gui.Navpage.prototype.showRouting=function() {
     if (this.routingVisible) return;
     this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
+    this.showHideAdditionalPanel('#avi_route_info_navpage', true, '#' + this.mapdom);
     this.routingVisible=true;
 };
 
 avnav.gui.Navpage.prototype.hideRouting=function() {
     this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
+    this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom);
     this.routingVisible=false;
 };
 
