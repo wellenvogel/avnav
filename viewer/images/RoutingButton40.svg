@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <title>RouteButton</title>
+ <g>
+  <title>Layer 1</title>
+  <circle stroke="#000000" id="svg_2" r="4" cy="21.4" cx="9.5" stroke-width="2" fill="#ffff56"/>
+  <circle id="svg_4" stroke="#000000" r="4" cy="24.949999" cx="24.099999" stroke-width="2" fill="#ffff56"/>
+  <circle id="svg_5" stroke="#000000" r="4" cy="11.65" cx="28.899999" stroke-width="2" fill="#ffff56"/>
+  <line stroke="#000000" transform="rotate(15 16.24811553955077,23.078905105590824) " stroke-width="2" id="svg_6" y2="23.078904" x2="20.258059" y1="23.078904" x1="12.238169" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" fill="none"/>
+  <line stroke="#000000" id="svg_7" y2="20.999999" x2="25.599999" y1="15.100001" x1="28.300001" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="2" fill="none"/>
+ </g>
+</svg>

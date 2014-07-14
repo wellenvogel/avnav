@@ -36,6 +36,11 @@ avnav.gui.Navpage=function(){
      */
     this.mapdom='avi_map_navpage';
     var self=this;
+    /**
+     * @private
+     * @type {boolean}
+     */
+    this.routingVisible=false;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
        self.navEvent(evdata);
     });
@@ -262,11 +267,14 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
 };
 
 avnav.gui.Navpage.prototype.showRouting=function() {
+    if (this.routingVisible) return;
     this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
+    this.routingVisible=true;
 };
 
 avnav.gui.Navpage.prototype.hideRouting=function() {
     this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
+    this.routingVisible=false;
 };
 
 //-------------------------- Buttons ----------------------------------------
@@ -304,7 +312,8 @@ avnav.gui.Navpage.prototype.btnCourseUp=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnShowRoutePanel=function (button,ev){
     log("showRoutePanel clicked");
-    this.showRouting();
+    if (! this.routingVisible) this.showRouting();
+    else this.hideRouting();
 };
 avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
     log("CancelNav clicked");
