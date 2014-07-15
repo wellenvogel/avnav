@@ -138,6 +138,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing){
 avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance
     var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
+    if (! this.routePixel) return undefined;
     var idx=this.mapholder.findTarget(pixel,this.routePixel,tolerance);
     if (idx >= 0){
         this.navobject.getRoutingData().setActiveWp(idx);
