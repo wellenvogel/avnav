@@ -333,15 +333,21 @@ avnav.nav.NavObject.prototype.setMapCenter=function(lonlat){
 };
 /**
  * lock to current center
- * @param {Array.<number>} lonlat
+ * @param {boolean} lock if true
+ * @param {avnav.nav.navdata.Point} opt_target - if not set, use current map center
  */
-avnav.nav.NavObject.prototype.setLock=function(activate) {
+avnav.nav.NavObject.prototype.setLock=function(activate,opt_target) {
     if (!activate){
         this.routeHandler.setLock(activate);
         return;
     }
     var p = new avnav.nav.navdata.WayPoint();
-    this.getMapCenter().assign(p);
+    if (! opt_target) {
+        this.getMapCenter().assign(p);
+    }
+    else {
+        p=opt_target;
+    }
     var pfrom;
     var gps=this.gpsdata.getGpsData();
     if (gps.valid){

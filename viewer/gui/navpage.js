@@ -271,12 +271,14 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
     this.showHideAdditionalPanel('#avi_route_info_navpage', true, '#' + this.mapdom);
     this.routingVisible=true;
+    this.gui.map.setRoutingActive(true);
 };
 
 avnav.gui.Navpage.prototype.hideRouting=function() {
     this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
     this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom);
     this.routingVisible=false;
+    this.gui.map.setRoutingActive(false);
 };
 
 //-------------------------- Buttons ----------------------------------------
@@ -322,17 +324,40 @@ avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
     this.gui.showPage('mainpage');
 };
 
-avnav.gui.Navpage.prototype.btnCancelSecondNav=function (button,ev){
-    log("CancelSecondNav clicked");
-    this.hideRouting();
+//-------------------------- Route ----------------------------------------
+avnav.gui.Navpage.prototype.btnNavAdd=function (button,ev){
+    log("navAdd clicked");
+    var center=this.gui.map.getCenter();
+    var current=this.navobject.getRoutingData().getActiveWp();
+    if (current) {
+        var dst = this.gui.map.pixelDistance(center, current);
+        //TODO: make this configurable
+        if (dst < 8) return; //avoid multiple wp at the same coordinate
+    }
+    this.navobject.getRoutingData().addWp(
+        -1,center
+    );
 };
 
-avnav.gui.Navpage.prototype.btnActivateNav=function (button,ev){
-    log("ActivateNav clicked");
-    this.hideRouting();
+avnav.gui.Navpage.prototype.btnNavDelete=function (button,ev){
+    log("navDelete clicked");
+    this.navobject.getRoutingData().deleteWp(-1);
 };
-
-
+avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
+    log("navDelete clicked");
+    var center=this.gui.map.getCenter();
+    this.navobject.getRoutingData().changeWp(
+        -1,center
+    );
+};
+avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
+    log("navGoto clicked");
+    this.navobject.setLock(true,this.navobject.getRoutingData().getActiveWp());
+};
+avnav.gui.Navpage.prototype.btnNavDeleteAll=function(button,ev){
+    log("navDeletAll clicked");
+    this.navobject.getRoutingData().deleteRoute();
+};
 /**
  * create the page instance
  */

@@ -2,6 +2,7 @@
  * Created by andreas on 04.05.14.
  */
 avnav.provide('avnav.nav.RouteData');
+avnav.provide('avnav.nav.Route');
 
 /**
  *
@@ -21,6 +22,28 @@ avnav.nav.Route=function(name,opt_points){
      */
     this.points=opt_points||[];
 };
+avnav.nav.Route.prototype.fromJson=function(jsonString){
+    var parsed=JSON.parse(jsonString);
+    this.name=parsed.name;
+    this.points=[];
+    var i;
+    if (parsed.points){
+        for (i in parsed.points){
+            this.points.push(avnav.nav.navdata.WayPoint.fromPlain(parsed.points[i]));
+        }
+    }
+};
+avnav.nav.Route.prototype.toJsonString=function(){
+    var rt={};
+    rt.name=this.name;
+    rt.points=[];
+    var i;
+    for (i in this.points){
+        rt.points.push(this.points[i]);
+    }
+    return JSON.stringify(rt);
+};
+
 
 /**
  * the handler for the routing data
@@ -63,7 +86,23 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
      */
     this.connectMode=this.propertyHandler.getProperties().connectedMode;
 
+    /**
+     * the current route
+     * @private
+     * @type {avnav.nav.Route}
+     */
+    this.currentRoute=new avnav.nav.Route();
+    try{
+        var raw=localStorage.getItem(this.propertyHandler.getProperties().routeName);
+        this.currentRoute.fromJson(raw);
+    }catch(ex){}
 
+    /**
+     * the index of the active waypoint
+     * @private
+     * @type {number}
+     */
+    this.activeWp=0;
     /**
      * @private
      * @type {null}
@@ -215,9 +254,13 @@ avnav.nav.RouteData.prototype.getRouteData=function(){
  * @returns {avnav.nav.Route}
  */
 avnav.nav.RouteData.prototype.getCurrentRoute=function(){
-    //for now only the current leg
-    return new avnav.nav.Route(this.currentLeg.name,
-    [this.currentLeg.from,this.currentLeg.to]);
+    return this.currentRoute;
+};
+
+avnav.nav.RouteData.prototype.saveRoute=function(){
+    var str=this.currentRoute.toJsonString();
+    localStorage.setItem(this.propertyHandler.getProperties().routeName,str);
+    //TODO: send to server
 };
 
 /**
@@ -302,6 +345,102 @@ avnav.nav.RouteData.prototype.setLock=function(active){
  */
 avnav.nav.RouteData.prototype.getLock=function(){
     return this.currentLeg.active;
+};
+/**
+ *
+ * @param {number} id the index in the route
+ */
+avnav.nav.RouteData.prototype.setActiveWp=function(id){
+    this.activeWp=id;
+};
+/**
+ * get the index of the active wp from the current route
+ * @return {number}
+ */
+avnav.nav.RouteData.prototype.getActiveWpIdx=function(){
+    return this.activeWp;
+};
+avnav.nav.RouteData.prototype.getActiveWp=function(){
+    if (this.currentRoute.points) {
+        if (this.activeWp<0 ||this.activeWp>=this.currentRoute.points.length) return undefined;
+        return this.currentRoute.points[this.activeWp];
+    }
+    return undefined;
+};
+/**
+ * delete a point from the current route
+ * @param {number} id - the index, -1 for active
+ */
+avnav.nav.RouteData.prototype.deleteWp=function(id){
+    if (id == -1){
+        id=this.activeWp;
+    }
+    if (id<0)id=0;
+
+    if (this.currentRoute.points){
+        if (id >= this.currentRoute.points.length)id=this.currentRoute.points.length-1;
+        this.currentRoute.points.splice(id,1);
+        if (this.activeWp >= this.currentRoute.points.length)this.activeWp=this.currentRoute.points.length-1;
+    }
+    this.saveRoute();
+    this.navobject.routeEvent();
+};
+/**
+ * change a point in the route
+ * @param {number} id the index, -1 for current
+ * @param {avnav.nav.navdata.Point|avnav.nav.navdata.WayPoint} point
+ */
+avnav.nav.RouteData.prototype.changeWp=function(id,point){
+    if (id == -1){
+        id=this.activeWp;
+    }
+    if (this.currentRoute.points){
+        if (id < 0 || id >= this.currentRoute.points.length) return;
+        if (! point instanceof avnav.nav.navdata.WayPoint){
+            var p=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
+            point=p;
+        }
+        this.currentRoute.points[id]=point;
+    }
+    this.saveRoute();
+    this.navobject.routeEvent();
+};
+/**
+ * add a point to the route
+ * @param {number} id the index, -1 for current - point is added after
+ * @param {avnav.nav.navdata.Point|avnav.nav.navdata.WayPoint} point
+ */
+avnav.nav.RouteData.prototype.addWp=function(id,point){
+    if (id == -1){
+        id=this.activeWp;
+    }
+    if (this.currentRoute.points){
+        if (! (point instanceof avnav.nav.navdata.WayPoint)){
+            var p=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
+            point=p;
+        }
+        if (id >= this.currentRoute.points.length){
+            this.currentRoute.points.push(point);
+            this.activeWp=this.currentRoute.points.length-1;
+
+        }
+        else {
+            if (id < 0) return;
+            this.currentRoute.points.splice(id+1, 0, point);
+            this.activeWp=id+1;
+        }
+    }
+    this.saveRoute();
+    this.navobject.routeEvent();
+};
+/**
+ * delete all points from the route
+ */
+avnav.nav.RouteData.prototype.deleteRoute=function(){
+    this.currentRoute.points=[];
+    this.activeWp=0;
+    this.saveRoute();
+    this.navobject.routeEvent();
 };
 
 /**

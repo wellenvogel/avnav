@@ -193,6 +193,30 @@ avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
     this.context.stroke();
     return rt;
 };
+/**
+ * draw a round bubble
+ * @param point - the center
+ * @param radius - radius in css pixel
+ * @param opt_style - see draw line, additionally background for a fill color
+ */
+avnav.map.Drawing.prototype.drawBubbleToContext=function(point,radius,opt_style){
+    if (! this.context) return;
+    var rt=[];
+    this.setLineStyles(opt_style);
+    var cp=this.pointToCssPixel(point);
+    rt=cp;
+    cp=this.pixelToDevice(cp);
+    var r=radius*this.devPixelRatio;
+    this.context.beginPath();
+    this.context.arc(cp[0],cp[1],r,0, 2 * Math.PI);
+    this.context.stroke();
+    if (opt_style && opt_style.background){
+        this.context.fillStyle=opt_style.background;
+        this.context.fill();
+    }
+    return rt;
+};
+
 
 /**
  *

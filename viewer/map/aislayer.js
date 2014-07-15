@@ -134,27 +134,8 @@ avnav.map.AisLayer.prototype.createAllIcons=function(){
 avnav.map.AisLayer.prototype.findTarget=function(pixel){
     log("findAisTarget "+pixel[0]+","+pixel[1]);
     var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
-    var xmin=pixel[0]-tolerance;
-    var xmax=pixel[0]+tolerance;
-    var ymin=pixel[1]-tolerance;
-    var ymax=pixel[1]+tolerance;
-    var i;
-    var rt=[];
-    for (i in this.pixel){
-        var current=this.pixel[i].pixel;
-        if (current[0]>=xmin && current[0] <=xmax && current[1] >=ymin && current[1] <= ymax){
-            rt.push(this.pixel[i]);
-        }
-    }
-    if (rt.length){
-        if (rt.length == 1) return rt[0].ais;
-        rt.sort(function(a,b){
-            var da=Math.sqrt((a.pixel[0]-pixel[0])*(a.pixel[0]-pixel[0])+(a.pixel[1]-pixel[1])*(a.pixel[1]-pixel[1]));
-            var db=Math.sqrt((b.pixel[0]-pixel[0])*(b.pixel[0]-pixel[0])+(b.pixel[1]-pixel[1])*(b.pixel[1]-pixel[1]));
-            return (da - db);
-        });
-        return rt[0].ais; //currently simply the first - could be the nearest...
-    }
+    var idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
+    if (idx >=0) return this.pixel[idx].ais;
     return undefined;
 };
 

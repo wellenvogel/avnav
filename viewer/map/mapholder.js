@@ -129,6 +129,12 @@ avnav.map.MapHolder=function(properties,navobject){
     this.formatter=new avnav.util.Formatter();
     this.northImage=new Image();
     this.northImage.src='images/nadel_mit.png';
+    /**
+     * is the routing display visible? (no AIS selection...)
+     * @private
+     * @type {boolean}
+     */
+    this.routingActive=false;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -651,6 +657,33 @@ avnav.map.MapHolder.prototype.setCenter=function(point){
 };
 
 /**
+ * get the current center in lat/lon
+ * @returns {avnav.nav.navdata.Point}
+ */
+avnav.map.MapHolder.prototype.getCenter=function(){
+    var rt=new avnav.nav.navdata.Point();
+    rt.fromCoord(this.pointFromMap(this.getView().getCenter()));
+    return rt;
+};
+/**
+ * get the distance in css pixel for 2 points
+ * @param {avnav.nav.navdata.Point}point1
+ * @param {avnav.nav.navdata.Point}point2
+ */
+avnav.map.MapHolder.prototype.pixelDistance=function(point1,point2){
+    if (! this.olmap) return 0;
+    var coord1=this.pointToMap(point1.toCoord());
+    var coord2=this.pointToMap(point2.toCoord());
+    var pixel1=this.coordToPixel(coord1);
+    var pixel2=this.coordToPixel(coord2);
+    var dx=pixel1[0]-pixel2[0];
+    var dy=pixel1[1]-pixel2[1];
+    var dst=Math.sqrt(dy*dy+dx*dx);
+    return dst;
+};
+
+
+/**
  * set the map rotation
  * @param {number} rotation in degrees
  */
@@ -696,7 +729,8 @@ avnav.map.MapHolder.prototype.setGpsLock=function(lock){
  * @param {ol.MapBrowserEvent} evt
  */
 avnav.map.MapHolder.prototype.onClick=function(evt){
-    //currently only AIS features...
+    this.routinglayer.findTarget(evt.pixel);
+    if (this.routingActive) return;
     var aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
         $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
@@ -704,6 +738,41 @@ avnav.map.MapHolder.prototype.onClick=function(evt){
         );
 
     }
+};
+/**
+ * find the nearest matching point from an array
+ * @param pixel
+ * @param  points in pixel coordinates - the entries are either an array of x,y or an object having the
+ *         coordinates in a pixel element
+ * @param {number}
+ * @return {number} the matching index or -1
+ */
+avnav.map.MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
+    log("findTarget "+pixel[0]+","+pixel[1]);
+    var tolerance=opt_tolerance||10;
+    var xmin=pixel[0]-tolerance;
+    var xmax=pixel[0]+tolerance;
+    var ymin=pixel[1]-tolerance;
+    var ymax=pixel[1]+tolerance;
+    var i;
+    var rt=[];
+    for (i=0;i<points.length;i++){
+        var current=points[i];
+        if (!(current instanceof Array)) current=current.pixel;
+        if (current[0]>=xmin && current[0] <=xmax && current[1] >=ymin && current[1] <= ymax){
+            rt.push({idx:i,pixel:current});
+        }
+    }
+    if (rt.length){
+        if (rt.length == 1) return rt[0].idx;
+        rt.sort(function(a,b){
+            var da=(a.pixel[0]-pixel[0])*(a.pixel[0]-pixel[0])+(a.pixel[1]-pixel[1])*(a.pixel[1]-pixel[1]);
+            var db=(b.pixel[0]-pixel[0])*(b.pixel[0]-pixel[0])+(b.pixel[1]-pixel[1])*(b.pixel[1]-pixel[1]);
+            return (da - db);
+        });
+        return rt[0].idx; //currently simply the first - could be the nearest...
+    }
+    return -1;
 };
 /**
  * event handler for move/zoom
@@ -811,5 +880,12 @@ avnav.map.MapHolder.prototype.saveCenter=function(){
 avnav.map.MapHolder.prototype.loadCenter=function(){
     var raw=JSON.stringify({center:this.center,zoom:this.zoom});
     localStorage.setItem(this.properties.getProperties().centerName,raw);
+};
+/**
+ * set the visibility of the routing - this controls if we can select AIS targets
+ * @param on
+ */
+avnav.map.MapHolder.prototype.setRoutingActive=function(on){
+    this.routingActive=on;
 };
 

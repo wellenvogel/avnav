@@ -46,10 +46,19 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.currentRoute={};
 
     /**
+     * the pixel coordinates of the route points from the last draw
+     * @private
+     * @type {Array}
+     */
+    this.routePixel=[];
+
+    /**
      * @private
      * @type {ol.style.Style}
      */
     this.lineStyle={};
+    this.activeWpStyle={};
+    this.normalWpStyle={};
     this.setStyle();
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
@@ -70,6 +79,16 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
             color: this.mapholder.properties.getProperties().routeColor,
             width: this.mapholder.properties.getProperties().routeWidth
         }
+    this.normalWpStyle={
+        color: "yellow",
+        width: 1,
+        background: "yellow"
+    };
+    this.activeWpStyle={
+        color: "red",
+        width: 1,
+        background: "red"
+    };
 };
 
 /**
@@ -102,8 +121,29 @@ avnav.map.RouteLayer.prototype.navEvent=function(evdata){
  * @param {avnav.map.Drawing} drawing
  */
 avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing){
+    this.routePixel=[];
     if (! this.visible) return;
-    drawing.drawLineToContext(this.currentRoutePoints,this.lineStyle);
+    this.routePixel=drawing.drawLineToContext(this.currentRoutePoints,this.lineStyle);
+    var active=this.navobject.getRoutingData().getActiveWpIdx();
+    var i;
+    for (i=0;i<this.currentRoutePoints.length;i++){
+        drawing.drawBubbleToContext(this.currentRoutePoints[i],5,
+            (i==active)?this.activeWpStyle:this.normalWpStyle);
+    }
+};
+/**
+ * find the waypoint that has been clicked and set this as active
+ * @param pixel
+ */
+avnav.map.RouteLayer.prototype.findTarget=function(pixel){
+    //TODO: own tolerance
+    var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
+    var idx=this.mapholder.findTarget(pixel,this.routePixel,tolerance);
+    if (idx >= 0){
+        this.navobject.getRoutingData().setActiveWp(idx);
+    }
+    if (idx <= this.currentRoute.points.length) return this.currentRoute.points[idx];
+    return undefined;
 };
 avnav.map.RouteLayer.prototype.propertyChange=function(evdata) {
     this.visible=this.mapholder.getProperties().getProperties().layers.route;

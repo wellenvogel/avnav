@@ -104,6 +104,7 @@ var propertyDefinitions=function(){
         maxGpsErrors: new avnav.util.Property( 3), //after that much invalid responses/timeouts the GPS is dead
         settingsName: new avnav.util.Property( "avnav.settings"), //storage name
         routingDataName: new avnav.util.Property( "avnav.routing"),
+        routeName: new avnav.util.Property( "avnav.defaultRoute"),
         routingServerError: new avnav.util.Property(true,"ServerError",avnav.util.PropertyType.CHECKBOX), //notify comm errors to server
         centerName: new avnav.util.Property( "avnav.center"),
         statusErrorImage: new avnav.util.Property( "images/RedBubble40.png"),
