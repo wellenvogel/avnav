@@ -61,6 +61,7 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.normalWpStyle={};
     this.setStyle();
     var self=this;
+    this.getRoute();
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
@@ -90,7 +91,21 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
         background: "red"
     };
 };
-
+/**
+ * read the route from the route data
+ * @private
+ */
+avnav.map.RouteLayer.prototype.getRoute=function(){
+    this.currentRoutePoints=[];
+    //for now only the points
+    var route=this.routingDate.getCurrentRoute();
+    this.currentRoute=new avnav.nav.Route(route.name,route.points.slice(0));
+    var i;
+    for (i in this.currentRoute.points){
+        var p=this.mapholder.pointToMap(this.currentRoute.points[i].toCoord());
+        this.currentRoutePoints.push(p);
+    }
+};
 /**
  * the handler for new data
  * @param evdata
@@ -102,15 +117,7 @@ avnav.map.RouteLayer.prototype.navEvent=function(evdata){
         return;
     }
     if (evdata.type == avnav.nav.NavEventType.ROUTE) {
-        this.currentRoutePoints=[];
-        //for now only the points
-        var route=this.routingDate.getCurrentRoute();
-        this.currentRoute=new avnav.nav.Route(route.name,route.points.slice(0));
-        var i;
-        for (i in this.currentRoute.points){
-            var p=this.mapholder.pointToMap(this.currentRoute.points[i].toCoord());
-            this.currentRoutePoints.push(p);
-        }
+        this.getRoute();
     }
     this.mapholder.triggerRender();
 };
