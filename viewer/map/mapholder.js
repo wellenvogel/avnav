@@ -244,6 +244,9 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         this.olmap.on('click', function(evt) {
             self.onClick(evt);
         });
+        this.olmap.on('dblclick', function(evt) {
+            self.onDoubleClick(evt);
+        });
     }
     if (this.center && this.zoom >0){
         //if we load a new map - try to restore old center and zoom
@@ -738,6 +741,14 @@ avnav.map.MapHolder.prototype.onClick=function(evt){
         );
 
     }
+};
+/**
+ * @private
+ * @param evt
+ */
+avnav.map.MapHolder.prototype.onDoubleClick=function(evt){
+    evt.preventDefault();
+    this.getView().setCenter(this.pixelToCoord(evt.pixel));
 };
 /**
  * find the nearest matching point from an array
