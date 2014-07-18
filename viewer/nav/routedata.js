@@ -360,9 +360,10 @@ avnav.nav.RouteData.prototype.legChanged=function(newLeg){
 /**
  * set the route active state
  * @param {avnav.nav.NavRoutingMode} mode
+ * @param {boolean} opt_keep_from if set - do not change from
  * @returns {boolean} true if changed - fires route event
  */
-avnav.nav.RouteData.prototype.routeOn=function(mode){
+avnav.nav.RouteData.prototype.routeOn=function(mode,opt_keep_from){
     var nLeg=avnav.clone(this.currentLeg); //make a copy to prevent the remote update from disturbing us
     nLeg.active=true;
     var pfrom;
@@ -375,7 +376,7 @@ avnav.nav.RouteData.prototype.routeOn=function(mode){
         pfrom=new avnav.nav.navdata.WayPoint();
         center.assign(pfrom);
     }
-    nLeg.from=pfrom;
+    if (! opt_keep_from) nLeg.from=pfrom;
     if (mode == avnav.nav.RoutingMode.CENTER){
         this.currentRoute.active=false;
         this.saveRoute();
@@ -450,7 +451,7 @@ avnav.nav.RouteData.prototype.deleteWp=function(id){
         if (this.activeWp >= this.currentRoute.points.length)this.activeWp=this.currentRoute.points.length-1;
         if (this.currentRoute.currentTarget >= this.currentRoute.points.length)this.currentRoute.currentTarget=this.currentRoute.points.length-1;
     }
-    if (changeTarget) this.routeOn(avnav.nav.RoutingMode.ROUTE);
+    if (changeTarget) this.routeOn(avnav.nav.RoutingMode.ROUTE,true);
     this.saveRoute();
     this.navobject.routeEvent();
 };
@@ -470,6 +471,9 @@ avnav.nav.RouteData.prototype.changeWp=function(id,point){
             point=p;
         }
         this.currentRoute.points[id]=point;
+    }
+    if (this.currentRoute.active && id == this.currentRoute.currentTarget){
+        this.routeOn(avnav.nav.RoutingMode.ROUTE,true);
     }
     this.saveRoute();
     this.navobject.routeEvent();
@@ -507,6 +511,8 @@ avnav.nav.RouteData.prototype.addWp=function(id,point){
  */
 avnav.nav.RouteData.prototype.deleteRoute=function(){
     this.currentRoute.points=[];
+    this.currentRoute.active=false;
+    this.currentRoute.currentTarget=0;
     this.activeWp=0;
     this.saveRoute();
     this.navobject.routeEvent();

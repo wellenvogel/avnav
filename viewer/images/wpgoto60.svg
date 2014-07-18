@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <defs>
+  <marker refY="50" refX="50" markerHeight="5" markerWidth="5" viewBox="0 0 100 100" se_type="rightarrow" orient="auto" markerUnits="strokeWidth" id="se_marker_end_svg_14">
+   <path stroke-width="10" stroke="#000000" fill="#000000" d="m100,50l-100,40l30,-40l-30,-40z"/>
+  </marker>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <circle stroke-width="2" id="svg_1" r="20" cy="30" cx="35" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke="#000000" fill="#ff0000"/>
+  <line marker-end="url(#se_marker_end_svg_14)" id="svg_14" y2="30" x2="22" y1="30" x1="3.52" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="6" stroke="#000000" fill="none"/>
+  <line id="svg_15" y2="30.071429" x2="11.142857" y1="30.142857" x1="11.142857" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="2" stroke="#000000" fill="none"/>
+ </g>
+</svg>

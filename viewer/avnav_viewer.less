@@ -401,22 +401,23 @@ button#avb_CancelNav {
 
 /*- nav page routing panel --*/
 button#avb_NavAdd {
-  .avn_button_icon_base('images/Plus40.png');
+  .avn_button_icon_base('images/wpplus40.png',( @buttonSize * 45 /60 ));
 }
 button#avb_NavDelete {
-  .avn_button_icon_base('images/Minus40.png');
+  .avn_button_icon_base('images/wpminus40.png',( @buttonSize * 45 /60 ));
 }
 button#avb_NavToCenter {
-  .avn_button_icon_base('images/Question.png');
+  .avn_button_icon_base('images/wpcenter60.png',( @buttonSize * 45 /60 ));
 }
 button#avb_NavGoto {
-  .avn_button_icon_base('images/arrowright32.png');
+  .avn_button_icon_base('images/wpgoto60.png',( @buttonSize * 45 /60 ));
 }
 button#avb_NavDeleteAll {
   .avn_button_icon_base('images/trash32.png');
 }
 
 button#avb_NavWp {
+  .avn_hidden();
   .avn_button_icon_base('images/YellowBubble40.png');
 }
 

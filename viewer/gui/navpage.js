@@ -155,8 +155,14 @@ avnav.gui.Navpage.prototype.hidePage=function(){
  */
 avnav.gui.Navpage.prototype.localInit=function(){
     $('#leftBottomMarker').click({page:this},function(ev){
-        var marker=ev.data.page.navobject.getRawData(avnav.nav.NavEventType.NAV).markerLatlon;
+        var navobject=ev.data.page.navobject;
+        var route=navobject.getRoutingData().getCurrentRoute();
+        var marker=navobject.getRawData(avnav.nav.NavEventType.NAV).markerLatlon;
         ev.data.page.gui.map.setCenter(marker);
+        //make the current WP the active again...
+        if (route.active){
+            navobject.getRoutingData().setActiveWp(route.currentTarget);
+        }
     });
     $('#leftBottomPosition').click({page:this},function(ev){
         var gps=ev.data.page.navobject.getRawData(avnav.nav.NavEventType.GPS);

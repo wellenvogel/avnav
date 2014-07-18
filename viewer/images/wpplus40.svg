@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <g>
+  <title>Layer 1</title>
+  <circle stroke-width="2" id="svg_1" r="15" cy="20" cx="20" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke="#000000" fill="#ff0000"/>
+  <line stroke-width="4" id="svg_3" y2="30" x2="20" y1="10" x1="20" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke="#000000" fill="none"/>
+  <line transform="rotate(90 20,20.000000000000004) " stroke="#000000" id="svg_5" stroke-width="4" y2="30" x2="20" y1="10" x1="20" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" fill="none"/>
+ </g>
+</svg>
