@@ -4,6 +4,7 @@
 @bottomPanelHeight:50px;
 @aisPanelWidth:90px;
 @routeInfoPanelWidth:90px; //the real with is the max of this and the AIS panel width
+@routeDisplayWidth: 90px;
 @buttonSize: 60px;
 @centerDisplayHeight: 30px;
 @settingsFontSize: 16px;
@@ -237,10 +238,64 @@ font-size: ( @bottomPanelHeight - 2 );
   left:0px;
   bottom: 0px;
   width: max( @aisPanelWidth , @routeInfoPanelWidth );
-  padding-left: 3px;
   background-color: lightgrey;
   z-index: 90;
+
 }
+#avi_route_info_navpage_inner {
+  margin-left: 3px;
+  margin-right: 3px;
+}
+/*-------------------------------------------------------------
+   route display
+-------------------------------------------------------------*/
+.avn_route_base(@factor: 5){
+    font-size: ( max(@aisPanelWidth,@routeInfoPanelWidth) / @factor );
+    padding-left: 3px;
+}
+.avn_route_label{
+    .avn_route_base(8);
+}
+.avn_routeInfo{
+  .avn_route_base(5);
+  border-bottom: 1px solid black;
+  margin-bottom: 5px;
+}
+#avi_route_info_heading{
+    .avn_route_base(4);
+}
+#avi_route_info_name{
+    .avn_route_base(6);
+    margin-top: 5px;
+
+}
+/*-------------------------------------------------------------
+   route display
+-------------------------------------------------------------*/
+#avi_route_display{
+    left: 0px;
+    bottom: 0px;
+    width: @routeInfoPanelWidth;
+    height: ( @routeInfoPanelWidth / 1.9 );
+    background-color: rgba(222, 226, 207, 0.92);
+    z-index: 90;
+    border-radius: (@routeInfoPanelWidth/11);
+    margin-bottom: 8px;
+    margin-left:  8px;
+    border: 1px solid;
+}
+#avi_route_display_remain{
+  font-size: (@routeInfoPanelWidth / 5.5);
+  float: left;
+  border-bottom: 0;
+  margin-top: 2px;
+}
+#avi_route_display_eta{
+  font-size: (@routeInfoPanelWidth / 5.5);
+  float: left;
+  border-bottom: 0;
+}
+
 
 /*-------------------------------------------------------------
    buttons
@@ -458,6 +513,8 @@ button#avb_SettingsDefaults{
 	font-size: ( @aisPanelWidth / 3 );
 	padding-left: 3px;
 }
+
+
 
 /*-------------------------------------------------------------
    status page

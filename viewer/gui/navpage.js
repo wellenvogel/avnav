@@ -117,6 +117,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     }
     this.updateAisPanel();
     this.fillDisplayFromGps();
+    this.handleRouteDisplay();
 };
 /**
  * the periodic timer call
@@ -227,6 +228,9 @@ avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (evdata.type == avnav.nav.NavEventType.AIS){
         this.updateAisPanel();
     }
+    if (evdata.type == avnav.nav.NavEventType.ROUTE){
+        this.handleRouteDisplay();
+    }
     this.fillDisplayFromGps(evdata.changedNames);
 };
 /**
@@ -244,6 +248,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         this.overlay = this.getDiv().find('#centerDisplay');
         this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
         this.overlay.show();
+        this.handleRouteDisplay();
     }
     if (evdata.type == avnav.map.EventType.SELECTAIS){
         var aisparam=evdata.parameter.aisparam;
@@ -263,6 +268,7 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
         this.overlay.hide();
         this.overlay=null;
         this.hidetime=0;
+        this.handleRouteDisplay();
     }
 };
 
@@ -273,15 +279,38 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.routingVisible=true;
     this.handleToggleButton('#avb_ShowRoutePanel',true);
     this.gui.map.setRoutingActive(true);
+    this.handleRouteDisplay();
 };
 
+/**
+ * @private
+ */
 avnav.gui.Navpage.prototype.hideRouting=function() {
     this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
     this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom);
     this.routingVisible=false;
     this.handleToggleButton('#avb_ShowRoutePanel',false);
     this.gui.map.setRoutingActive(false);
+    this.handleRouteDisplay();
 };
+
+avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
+    var routeActive=this.navobject.getRoutingData().getCurrentRoute().active;
+    if (routeActive && ! this.routingVisible){
+        $('#avi_route_display').show();
+        if (this.overlay){
+            var h=this.overlay.height();
+            $('#avi_route_display').css('bottom',h);
+        }
+        else{
+            $('#avi_route_display').css('bottom',0);
+        }
+    }
+    else {
+        $('#avi_route_display').hide();
+    }
+};
+
 
 //-------------------------- Buttons ----------------------------------------
 

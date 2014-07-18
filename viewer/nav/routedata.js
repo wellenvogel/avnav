@@ -139,6 +139,7 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
     this.routeErrors=0;
     this.serverConnected=false;
     this.querySequence=0; //>=0: handle query response when it has the same number, <0: ignore query response
+
     this.startQuery();
     var self=this;
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
@@ -173,6 +174,26 @@ avnav.nav.RouteData.prototype.compareLegs=function(leg1,leg2){
     }
     if (leg1.name != leg2.name) changed=true;
     return changed;
+};
+
+/**
+ * compute the length of the route from the given startpoint
+ * @param {number} startIdx
+ * @returns {number} distance in nm
+ */
+avnav.nav.RouteData.prototype.computeLength=function(startIdx){
+    var rt=0;
+    if (startIdx == -1) startIdx=this.currentRoute.currentTarget;
+    if (this.currentRoute.points.length < (startIdx+2)) return rt;
+    var last=this.currentRoute.points[startIdx];
+    startIdx++;
+    for (;startIdx<this.currentRoute.points.length;startIdx++){
+        var next=this.currentRoute.points[startIdx];
+        var dst=avnav.nav.NavCompute.computeDistance(last,next);
+        rt+=dst.dtsnm;
+        last=next;
+    }
+    return rt;
 };
 /**
  *

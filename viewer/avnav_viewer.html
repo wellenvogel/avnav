@@ -153,9 +153,26 @@ all buttons with ids avb_... will call corresponding js functions
                   </div>
               </div>
               <div id="avi_route_info_navpage" class="avn_panel avn_hidden">
-                  <div id="route_info_heading">Route</div>
+                  <div id="avi_route_info_navpage_inner">
+                      <div id="avi_route_info_heading">Route</div>
+                      <div id="avi_route_info_name" class="avn_routeInfo avd_routeName"></div>
+                      <div class="avn_route_label">Points:</div>
+                      <div id="avi_route_info_numPoints" class="avn_routeInfo avd_routeNumPoints"></div>
+                      <div class="avn_route_label">Length:</div>
+                      <div id="avi_route_info_length" class="avn_routeInfo avd_routeLen"></div>
+                      <div class="avn_route_label">toGo:</div>
+                      <div id="avi_route_info_remain" class="avn_routeInfo avd_routeRemain"></div>
+                      <div class="avn_route_label">ETA:</div>
+                      <div id="avi_route_info_eta" class="avn_routeInfo avd_routeEta"></div>
+                  </div>
               </div>
-              <div id='avi_map_navpage' class='avn_panel avn_map'></div>
+
+              <div id='avi_map_navpage' class='avn_panel avn_map'>
+                  <div id="avi_route_display" class="avn_panel avn_hidden">
+                      <div id="avi_route_display_remain" class="avn_routeInfo avd_routeRemain"></div>nm
+                      <div id="avi_route_display_eta" class="avn_routeInfo avd_routeEta"></div>
+                  </div>
+              </div>
               <div id="avi_second_buttons_navpage" class="avn_panel avn_hidden">
                   <button id="avb_NavAdd" type="button" class="avn_button"></button>
                   <button id="avb_NavDelete" type="button" class="avn_button"></button>

@@ -112,7 +112,12 @@ avnav.nav.NavObject=function(propertyHandler){
          * @type {Date}
          */
         markerEta:null,
-        markerLatlon:new avnav.nav.navdata.Point(0,0)
+        markerLatlon:new avnav.nav.navdata.Point(0,0),
+        routeName: undefined,
+        routeNumPoints: 0,
+        routeLen: 0,
+        routeRemain: 0,
+        routeEta: null
     };
     this.formattedValues={
         markerEta:"none",
@@ -123,7 +128,12 @@ avnav.nav.NavObject=function(propertyHandler){
         centerDistance:"--",
         centerMarkerCourse:"--",
         centerMarkerDistance:"--",
-        centerPosition:"--"
+        centerPosition:"--",
+        routeName: "default",
+        routeNumPoints: "--",
+        routeLen: "--",
+        routeRemain: "--",
+        routeEta: "--"
     };
     for (var k in this.formattedValues){
         this.registerValueProvider(k,this,this.getFormattedNavValue);
@@ -138,13 +148,14 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     var gps=this.gpsdata.getGpsData();
     //copy the marker to data to make it available extern
     this.data.markerLatlon=this.routeHandler.getRouteData().to;
+    var vmgapp=0;
     if (gps.valid){
         var markerdst=avnav.nav.NavCompute.computeDistance(gps,this.data.markerLatlon);
         this.data.markerCourse=markerdst.course;
         this.data.markerDistance=markerdst.dtsnm;
         if (gps.rtime && (Math.abs(markerdst.course-gps.course) <= 85)) {
             //TODO: is this really correct for VMG?
-            var vmgapp = gps.speed * Math.cos(Math.PI / 180 * (gps.course - markerdst.course));
+            vmgapp = gps.speed * Math.cos(Math.PI / 180 * (gps.course - markerdst.course));
             //vmgapp is in kn
             var targettime = gps.rtime.getTime();
             if (vmgapp > 0) {
@@ -174,6 +185,22 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     var mcdst=avnav.nav.NavCompute.computeDistance(this.data.markerLatlon,this.maplatlon);
     this.data.centerMarkerCourse=mcdst.course;
     this.data.centerMarkerDistance=mcdst.dtsnm;
+    //route data
+    var route=this.routeHandler.getCurrentRoute();
+    this.data.routeName=route.name;
+    this.data.routeNumPoints=route.points.length;
+    this.data.routeLen=this.routeHandler.computeLength(0);
+    this.data.routeRemain=this.routeHandler.computeLength(-1)+this.data.markerDistance;
+    var routetime = gps.rtime.getTime();
+    if (vmgapp > 0) {
+        routetime += this.data.routeRemain / vmgapp * 3600 * 1000; //time in ms
+        var routeDate = new Date(Math.round(routetime));
+        this.data.routeEta = routeDate;
+    }
+    else {
+        this.data.routeEta=undefined;
+    }
+
     //now create text values
     this.formattedValues.markerEta=(this.data.markerEta)?
         this.formatter.formatTime(this.data.markerEta):"--:--:--";
@@ -201,7 +228,11 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.centerPosition=this.formatter.formatLonLats(
         this.maplatlon
     );
-
+    this.formattedValues.routeName=this.data.routeName||"default";
+    this.formattedValues.routeNumPoints=this.formatter.formatDecimal(this.data.routeNumPoints,4,0);
+    this.formattedValues.routeLen=this.formatter.formatDecimal(this.data.routeLen,4,1);
+    this.formattedValues.routeRemain=this.formatter.formatDecimal(this.data.routeRemain,4,1);
+    this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"---";
 };
 
 /**
