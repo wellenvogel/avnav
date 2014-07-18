@@ -271,6 +271,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
     this.showHideAdditionalPanel('#avi_route_info_navpage', true, '#' + this.mapdom);
     this.routingVisible=true;
+    this.handleToggleButton('#avb_ShowRoutePanel',true);
     this.gui.map.setRoutingActive(true);
 };
 
@@ -278,6 +279,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
     this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom);
     this.routingVisible=false;
+    this.handleToggleButton('#avb_ShowRoutePanel',false);
     this.gui.map.setRoutingActive(false);
 };
 
