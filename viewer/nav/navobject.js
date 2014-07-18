@@ -3,6 +3,7 @@
  */
 avnav.provide('avnav.nav.NavObject');
 avnav.provide('avnav.nav.NavEvent');
+avnav.provide('avnav.nav.NavEventSource');
 
 /**
  * the navevent type
@@ -331,39 +332,7 @@ avnav.nav.NavObject.prototype.setMapCenter=function(lonlat){
     this.computeValues();
     this.triggerUpdateEvent(avnav.nav.NavEventSource.MAP);
 };
-/**
- * lock to current center
- * @param {boolean} lock if true
- * @param {avnav.nav.navdata.Point} opt_target - if not set, use current map center
- */
-avnav.nav.NavObject.prototype.setLock=function(activate,opt_target) {
-    if (!activate){
-        this.routeHandler.setLock(activate);
-        return;
-    }
-    var p = new avnav.nav.navdata.WayPoint();
-    if (! opt_target) {
-        this.getMapCenter().assign(p);
-    }
-    else {
-        p=opt_target;
-    }
-    var pfrom;
-    var gps=this.gpsdata.getGpsData();
-    if (gps.valid){
-        pfrom=new avnav.nav.navdata.Point(gps.lon,gps.lat);
-    }
-    var newLeg={
-        to:p,
-        from:pfrom,
-        active:activate
-    };
-    var changed=this.routeHandler.setLeg(newLeg);
-    if (changed) {
-        this.computeValues();
-        this.triggerUpdateEvent(avnav.nav.NavEventSource.MAP);
-    }
-};
+
 /**
  * get the routing handler
  * @returns {avnav.nav.RouteData|*}

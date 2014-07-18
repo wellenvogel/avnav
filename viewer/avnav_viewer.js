@@ -53,7 +53,6 @@ var propertyDefinitions=function(){
             track: new avnav.util.Property(true,"Track",avnav.util.PropertyType.CHECKBOX),
             nav: new avnav.util.Property(true,"Navigation",avnav.util.PropertyType.CHECKBOX),
             boat: new avnav.util.Property(true,"Boat",avnav.util.PropertyType.CHECKBOX),
-            route: new avnav.util.Property(true,"Route",avnav.util.PropertyType.CHECKBOX),
             grid: new avnav.util.Property(true,"Grid",avnav.util.PropertyType.CHECKBOX),
             compass: new avnav.util.Property(true,"Compass",avnav.util.PropertyType.CHECKBOX)
         },

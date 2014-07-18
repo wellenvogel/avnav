@@ -48,11 +48,7 @@ avnav.map.NavLayer=function(mapholder,navobject){
         image: new Image()
     };
     this.boatStyle.image.src=this.boatStyle.src;
-    /**
-     * @private
-     * @type {ol.style.Style}
-     */
-    this.courseStyle={};
+
     /**
      * @private
      * @type {ol.style.Style}
@@ -60,19 +56,6 @@ avnav.map.NavLayer=function(mapholder,navobject){
     this.circleStyle={};
     this.setStyle();
 
-    /**
-     * our style properties
-     * @private
-     * @type {{anchor: number[], size: number[], anchorXUnits: string, anchorYUnits: string, opacity: number, src: string, image: Image}}
-     */
-
-    this.markerStyle={
-        anchor: [20, 20],
-        size: [40, 40],
-        src: 'images/Marker1.png',
-        image:  new Image()
-    };
-    this.markerStyle.image.src=this.markerStyle.src;
 
     /**
      * the properties for the center marker
@@ -104,11 +87,6 @@ avnav.map.NavLayer=function(mapholder,navobject){
  * @private
  */
 avnav.map.NavLayer.prototype.setStyle=function() {
-    this.courseStyle = {
-        color: this.mapholder.properties.getProperties().bearingColor,
-        width: this.mapholder.properties.getProperties().bearingWidth
-
-    };
     this.circleStyle={
             color: this.mapholder.properties.getProperties().navCircleColor,
             width: this.mapholder.properties.getProperties().navCircleWidth
@@ -141,18 +119,8 @@ avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
             drawing.drawCircleToContext(pos, other, this.circleStyle);
         }
     }
-    var currentLeg=this.navobject.getRawData(avnav.nav.NavEventType.ROUTE);
-    var markerPos=this.mapholder.pointToMap(currentLeg.to.toCoord());
-    drawing.drawImageToContext(markerPos,this.markerStyle.image, this.markerStyle);
-
     if (!this.mapholder.getGpsLock()) {
         drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
-    }
-    if (currentLeg.active) {
-        if (prop.layers.nav && prop.layers.boat) {
-            //draw the course to the marker
-            drawing.drawLineToContext([this.boatPosition, markerPos],this.courseStyle);
-        }
     }
 
 

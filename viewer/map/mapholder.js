@@ -897,6 +897,16 @@ avnav.map.MapHolder.prototype.loadCenter=function(){
  * @param on
  */
 avnav.map.MapHolder.prototype.setRoutingActive=function(on){
+    var old=this.routingActive;
     this.routingActive=on;
+    if (old != on) this.triggerRender();
+};
+
+/**
+ * check if the routing display is visible
+ * @return {boolean}
+ */
+avnav.map.MapHolder.prototype.getRoutingActive=function(){
+    return this.routingActive;
 };
 

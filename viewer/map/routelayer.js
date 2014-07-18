@@ -32,7 +32,7 @@ avnav.map.RouteLayer=function(mapholder,navobject){
      * @private
      * @type {boolean}
      */
-    this.visible=this.mapholder.getProperties().getProperties().layers.route;
+    this.visible=this.mapholder.getProperties().getProperties().layers.nav;
     var self=this;
     /**
      * the current route points
@@ -59,6 +59,8 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.lineStyle={};
     this.activeWpStyle={};
     this.normalWpStyle={};
+    this.markerStyle={};
+    this.courseStyle={};
     this.setStyle();
     var self=this;
     this.getRoute();
@@ -72,14 +74,14 @@ avnav.map.RouteLayer=function(mapholder,navobject){
 
 };
 /**
- * set the style for the track line
+ * set the styles
  * @private
  */
 avnav.map.RouteLayer.prototype.setStyle=function() {
     this.lineStyle = {
             color: this.mapholder.properties.getProperties().routeColor,
             width: this.mapholder.properties.getProperties().routeWidth
-        }
+        };
     this.normalWpStyle={
         color: "yellow",
         width: 1,
@@ -90,6 +92,20 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
         width: 1,
         background: "red"
     };
+
+    this.markerStyle={
+        anchor: [20, 20],
+        size: [40, 40],
+        src: 'images/Marker1.png',
+        image:  new Image()
+    };
+    this.markerStyle.image.src=this.markerStyle.src;
+    this.courseStyle = {
+        color: this.mapholder.properties.getProperties().bearingColor,
+        width: this.mapholder.properties.getProperties().bearingWidth
+
+    };
+
 };
 /**
  * read the route from the route data
@@ -100,6 +116,8 @@ avnav.map.RouteLayer.prototype.getRoute=function(){
     //for now only the points
     var route=this.routingDate.getCurrentRoute();
     this.currentRoute=new avnav.nav.Route(route.name,route.points.slice(0));
+    this.currentRoute.active=route.active;
+    this.currentRoute.currentTarget=route.currentTarget;
     var i;
     for (i in this.currentRoute.points){
         var p=this.mapholder.pointToMap(this.currentRoute.points[i].toCoord());
@@ -127,16 +145,39 @@ avnav.map.RouteLayer.prototype.navEvent=function(evdata){
  * @param {ol.Coordinate} center
  * @param {avnav.map.Drawing} drawing
  */
-avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing){
-    this.routePixel=[];
-    if (! this.visible) return;
-    this.routePixel=drawing.drawLineToContext(this.currentRoutePoints,this.lineStyle);
-    var active=this.navobject.getRoutingData().getActiveWpIdx();
-    var i;
-    for (i=0;i<this.currentRoutePoints.length;i++){
-        drawing.drawBubbleToContext(this.currentRoutePoints[i],5,
-            (i==active)?this.activeWpStyle:this.normalWpStyle);
+avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
+    this.routePixel = [];
+    if (!this.visible) return;
+    var leg=this.navobject.getRawData(avnav.nav.NavEventType.ROUTE);
+    var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var to=leg.to?this.mapholder.pointToMap(leg.to.toCoord()):undefined;
+    var prop=this.mapholder.getProperties().getProperties();
+    var drawNav=prop.layers.boat&&prop.layers.nav;
+    if (! drawNav) {
+        this.routePixel=[];
+        return;
     }
+    if (leg.active && gps.valid ){
+        var line=[this.mapholder.pointToMap(gps.toCoord()),to];
+        drawing.drawLineToContext(line,this.courseStyle);
+    }
+    if (this.currentRoute.active || this.mapholder.getRoutingActive()) {
+        this.routePixel = drawing.drawLineToContext(this.currentRoutePoints, this.lineStyle);
+        var active = this.navobject.getRoutingData().getActiveWpIdx();
+        var i;
+        for (i = 0; i < this.currentRoutePoints.length; i++) {
+            drawing.drawBubbleToContext(this.currentRoutePoints[i], 5,
+                (i == active) ? this.activeWpStyle : this.normalWpStyle);
+        }
+    }
+    else {
+        this.routePixel=[];
+
+    }
+    if (to && ! this.currentRoute.active && leg.active){
+        drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
+    }
+
 };
 /**
  * find the waypoint that has been clicked and set this as active
@@ -154,6 +195,6 @@ avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     return undefined;
 };
 avnav.map.RouteLayer.prototype.propertyChange=function(evdata) {
-    this.visible=this.mapholder.getProperties().getProperties().layers.route;
+    this.visible=this.mapholder.getProperties().getProperties().layers.nav;
     this.setStyle();
 };

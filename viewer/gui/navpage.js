@@ -302,7 +302,8 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
     var nLock=! this.navobject.getRoutingData().getLock();
-    this.navobject.setLock(nLock);
+    if (! nLock) this.navobject.getRoutingData().routeOff();
+    else this.navobject.getRoutingData().routeOn(avnav.nav.RoutingMode.CENTER);
     this.handleToggleButton(button,nLock);
     this.gui.map.triggerRender();
     log("LockMarker clicked");
@@ -352,7 +353,8 @@ avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
     log("navGoto clicked");
-    this.navobject.setLock(true,this.navobject.getRoutingData().getActiveWp());
+    this.navobject.getRoutingData().routeOn(avnav.nav.RoutingMode.ROUTE);
+    this.hideRouting();
 };
 avnav.gui.Navpage.prototype.btnNavDeleteAll=function(button,ev){
     log("navDeletAll clicked");
