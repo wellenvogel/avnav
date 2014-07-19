@@ -166,7 +166,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         var active = this.navobject.getRoutingData().getActiveWpIdx();
         var i;
         for (i = 0; i < this.currentRoutePoints.length; i++) {
-            drawing.drawBubbleToContext(this.currentRoutePoints[i], 5,
+            drawing.drawBubbleToContext(this.currentRoutePoints[i], prop.routeWpSize,
                 (i == active) ? this.activeWpStyle : this.normalWpStyle);
         }
     }

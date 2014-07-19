@@ -13,6 +13,8 @@
 @aisNearestColor: #70F3AF; //rgb(112, 243, 175);
 @aisWarningColor: #FA584A; //rgb(250, 88, 74);
 
+@routeApproachingColor: #FA584A;
+
 //hide some content
 
 .hidemedia(@min:0px,@max:9999px){
@@ -247,7 +249,7 @@ font-size: ( @bottomPanelHeight - 2 );
   margin-right: 3px;
 }
 /*-------------------------------------------------------------
-   route display
+   route info
 -------------------------------------------------------------*/
 .avn_route_base(@factor: 5){
     font-size: ( max(@aisPanelWidth,@routeInfoPanelWidth) / @factor );
@@ -294,6 +296,10 @@ font-size: ( @bottomPanelHeight - 2 );
   font-size: (@routeInfoPanelWidth / 5.5);
   float: left;
   border-bottom: 0;
+}
+
+.avn_route_display_approach{
+    background-color: @routeApproachingColor !important;
 }
 
 

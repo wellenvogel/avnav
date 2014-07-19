@@ -192,6 +192,12 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
     else {
         $('#boatPositionStatus').attr('src',this.gui.properties.getProperties().statusErrorImage);
     }
+    if (this.navobject.getRoutingData().getApproaching()){
+        $('#avi_route_display').addClass('avn_route_display_approach');
+    }
+    else {
+        $('#avi_route_display').removeClass('avn_route_display_approach');
+    }
 };
 
 /**

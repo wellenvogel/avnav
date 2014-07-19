@@ -75,6 +75,8 @@ var propertyDefinitions=function(){
         bearingWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         routeColor: new avnav.util.Property( "#27413B","Color",avnav.util.PropertyType.COLOR),
         routeWidth: new avnav.util.Property( 2,"Width",avnav.util.PropertyType.RANGE,[1,10]),
+        routeWpSize:new avnav.util.Property( 7,"WPSize",avnav.util.PropertyType.RANGE,[5,30]),
+        routeApproach: new avnav.util.Property( 100,"Approach(m)",avnav.util.PropertyType.RANGE,[20,2000]),
         navCircleColor: new avnav.util.Property( "#D71038","Circle Color",avnav.util.PropertyType.COLOR),
         navCircleWidth: new avnav.util.Property( 1,"Circle Width",avnav.util.PropertyType.RANGE,[1,10]),
         navCircle1Radius: new avnav.util.Property( 300,"Circle 1 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
@@ -123,7 +125,8 @@ var propertyDefinitions=function(){
             centerDisplayHeight:new avnav.util.Property( 30,"+ Display Height(px)",avnav.util.PropertyType.RANGE,[20,80]),
             aisWarningColor: new avnav.util.Property( "#FA584A","Warning",avnav.util.PropertyType.COLOR),
             aisNormalColor: new avnav.util.Property( "#EBEB55","Normal",avnav.util.PropertyType.COLOR),
-            aisNearestColor: new avnav.util.Property( '#70F3AF',"Nearest",avnav.util.PropertyType.COLOR)
+            aisNearestColor: new avnav.util.Property( '#70F3AF',"Nearest",avnav.util.PropertyType.COLOR),
+            routeApproachingColor: new avnav.util.Property( '#FA584A',"Approach",avnav.util.PropertyType.COLOR)
         }
     }
 };
