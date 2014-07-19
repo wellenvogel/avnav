@@ -470,6 +470,8 @@ avnav.nav.RouteData.prototype.deleteWp=function(id){
     if (this.currentRoute.points){
         if (id >= this.currentRoute.points.length)id=this.currentRoute.points.length-1;
         this.currentRoute.points.splice(id,1);
+        if (id <= this.currentRoute.currentTarget && this.currentRoute.currentTarget > 0) this.currentRoute.currentTarget--;
+        if (id <= this.activeWp && this.activeWp > 0) this.activeWp--;
         if (this.activeWp >= this.currentRoute.points.length)this.activeWp=this.currentRoute.points.length-1;
         if (this.currentRoute.currentTarget >= this.currentRoute.points.length)this.currentRoute.currentTarget=this.currentRoute.points.length-1;
     }
