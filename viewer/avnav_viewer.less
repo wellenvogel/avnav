@@ -252,7 +252,8 @@ font-size: ( @bottomPanelHeight - 2 );
    route info
 -------------------------------------------------------------*/
 .avn_route_base(@factor: 5){
-    font-size: ( max(@aisPanelWidth,@routeInfoPanelWidth) / @factor );
+    @width: max(@aisPanelWidth,@routeInfoPanelWidth);
+    font-size: ( min(@width,80px) / @factor );
     padding-left: 3px;
 }
 .avn_route_label{

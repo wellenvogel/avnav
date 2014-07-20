@@ -286,8 +286,9 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
 
 avnav.gui.Navpage.prototype.showRouting=function() {
     if (this.routingVisible) return;
-    this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
-    this.showHideAdditionalPanel('#avi_route_info_navpage', true, '#' + this.mapdom);
+    var upd=this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
+    if (this.showHideAdditionalPanel('#avi_route_info_navpage', true, '#' + this.mapdom)) upd=true;
+    if (upd)this.gui.map.updateSize();
     this.routingVisible=true;
     this.handleToggleButton('#avb_ShowRoutePanel',true);
     this.gui.map.setRoutingActive(true);
@@ -298,8 +299,9 @@ avnav.gui.Navpage.prototype.showRouting=function() {
  * @private
  */
 avnav.gui.Navpage.prototype.hideRouting=function() {
-    this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
-    this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom);
+    var upd=this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
+    if (this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom)) upd=true;
+    if (upd) this.gui.map.updateSize();
     this.routingVisible=false;
     this.handleToggleButton('#avb_ShowRoutePanel',false);
     this.gui.map.setRoutingActive(false);

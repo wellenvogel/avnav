@@ -124,7 +124,7 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
         this.currentRoute.fromJson(raw);
         this.activeWp=this.currentRoute.currentTarget||0;
     }catch(ex){}
-
+    if (this.activeWp <0) this.activeWp=0;
 
 
     /**
@@ -202,6 +202,7 @@ avnav.nav.RouteData.prototype.compareLegs=function(leg1,leg2){
 avnav.nav.RouteData.prototype.computeLength=function(startIdx){
     var rt=0;
     if (startIdx == -1) startIdx=this.currentRoute.currentTarget;
+    if (startIdx < 0) startIdx=0;
     if (this.currentRoute.points.length < (startIdx+2)) return rt;
     var last=this.currentRoute.points[startIdx];
     startIdx++;
@@ -511,6 +512,7 @@ avnav.nav.RouteData.prototype.addWp=function(id,point){
     if (id == -1){
         id=this.activeWp;
     }
+    if (id <0) id=0;
     if (this.currentRoute.points){
         if (! (point instanceof avnav.nav.navdata.WayPoint)){
             var p=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
