@@ -61,6 +61,7 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.normalWpStyle={};
     this.markerStyle={};
     this.courseStyle={};
+    this.textStyle={};
     this.setStyle();
     var self=this;
     this.getRoute();
@@ -104,6 +105,13 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
         color: this.mapholder.properties.getProperties().bearingColor,
         width: this.mapholder.properties.getProperties().bearingWidth
 
+    };
+    this.textStyle= {
+        stroke: '#fff',
+        color: '#000',
+        width: 3,
+        font: this.mapholder.getProperties().getProperties().routingTextSize+'px Calibri,sans-serif',
+        offsetY: 15
     };
 
 };
@@ -153,6 +161,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     var to=leg.to?this.mapholder.pointToMap(leg.to.toCoord()):undefined;
     var prop=this.mapholder.getProperties().getProperties();
     var drawNav=prop.layers.boat&&prop.layers.nav;
+    var text,wp;
     if (! drawNav) {
         this.routePixel=[];
         return;
@@ -168,6 +177,10 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         for (i = 0; i < this.currentRoutePoints.length; i++) {
             drawing.drawBubbleToContext(this.currentRoutePoints[i], prop.routeWpSize,
                 (i == active) ? this.activeWpStyle : this.normalWpStyle);
+            wp=this.navobject.getRoutingData().getWp(i);
+            if (wp && wp.name) text=wp.name;
+            else text=i+"";
+            drawing.drawTextToContext(this.currentRoutePoints[i],text,this.textStyle);
         }
     }
     else {

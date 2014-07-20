@@ -8,6 +8,7 @@
 @buttonSize: 60px;
 @centerDisplayHeight: 30px;
 @settingsFontSize: 16px;
+@routeInfoFontBase: min(max(@aisPanelWidth,@routeInfoPanelWidth),80px);
 
 @aisNormalColor: #EBEB55;
 @aisNearestColor: #70F3AF; //rgb(112, 243, 175);
@@ -252,8 +253,7 @@ font-size: ( @bottomPanelHeight - 2 );
    route info
 -------------------------------------------------------------*/
 .avn_route_base(@factor: 5){
-    @width: max(@aisPanelWidth,@routeInfoPanelWidth);
-    font-size: ( min(@width,80px) / @factor );
+    font-size: ( @routeInfoFontBase / @factor );
     padding-left: 3px;
 }
 .avn_route_label{
@@ -271,6 +271,26 @@ font-size: ( @bottomPanelHeight - 2 );
     .avn_route_base(6);
     margin-top: 5px;
 
+}
+#avi_route_info_list{
+    @width: max(@aisPanelWidth,@routeInfoPanelWidth);
+    left:0;
+    right:0;
+    bottom: 0;
+    position: absolute;
+    top: (@routeInfoFontBase * 2.5);
+    margin-left: 5px;
+    overflow: auto;
+}
+#avi_route_info_list input{
+    @width: max(@aisPanelWidth,@routeInfoPanelWidth);
+    width: ( @width - 30px);
+}
+.avn_route_info_point{
+    border-bottom: 1px solid black;
+}
+.avn_route_info_active_point{
+    background-color: @routeApproachingColor !important;
 }
 /*-------------------------------------------------------------
    route display

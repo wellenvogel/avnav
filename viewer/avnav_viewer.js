@@ -107,6 +107,7 @@ var propertyDefinitions=function(){
         routingDataName: new avnav.util.Property( "avnav.routing"),
         routeName: new avnav.util.Property( "avnav.defaultRoute"),
         routingServerError: new avnav.util.Property(true,"ServerError",avnav.util.PropertyType.CHECKBOX), //notify comm errors to server
+        routingTextSize:new avnav.util.Property( 14,"Text Size(px)",avnav.util.PropertyType.RANGE,[8,24]), //in px
         centerName: new avnav.util.Property( "avnav.center"),
         statusErrorImage: new avnav.util.Property( "images/RedBubble40.png"),
         statusOkImage: new avnav.util.Property( "images/GreenBubble40.png"),

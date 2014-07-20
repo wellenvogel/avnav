@@ -45,9 +45,11 @@ avnav.nav.Route.prototype.fromJson=function(jsonString){
     this.currentTarget=parsed.currentTarget||0;
     this.points=[];
     var i;
+    var wp;
     if (parsed.points){
         for (i in parsed.points){
-            this.points.push(avnav.nav.navdata.WayPoint.fromPlain(parsed.points[i]));
+            wp=avnav.nav.navdata.WayPoint.fromPlain(parsed.points[i]);
+            this.points.push(wp);
         }
     }
 };
@@ -443,6 +445,7 @@ avnav.nav.RouteData.prototype.getLock=function(){
  */
 avnav.nav.RouteData.prototype.setActiveWp=function(id){
     this.activeWp=id;
+    this.navobject.routeEvent();
 };
 /**
  * get the index of the active wp from the current route
@@ -451,6 +454,10 @@ avnav.nav.RouteData.prototype.setActiveWp=function(id){
 avnav.nav.RouteData.prototype.getActiveWpIdx=function(){
     return this.activeWp;
 };
+/**
+ * get the active wp
+ * @returns {avnav.nav.navdata.WayPoint}
+ */
 avnav.nav.RouteData.prototype.getActiveWp=function(){
     if (this.currentRoute.points) {
         if (this.activeWp<0 ||this.activeWp>=this.currentRoute.points.length) return undefined;
@@ -458,6 +465,17 @@ avnav.nav.RouteData.prototype.getActiveWp=function(){
     }
     return undefined;
 };
+/**
+ *
+ * @param {number} idx
+ * @returns @returns {avnav.nav.navdata.WayPoint}
+ */
+
+avnav.nav.RouteData.prototype.getWp=function(idx){
+    if (idx < 0 || idx >= this.currentRoute.points.length) return undefined;
+    return this.currentRoute.points[idx];
+};
+
 /**
  * delete a point from the current route
  * @param {number} id - the index, -1 for active
