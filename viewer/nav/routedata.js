@@ -444,6 +444,7 @@ avnav.nav.RouteData.prototype.getLock=function(){
  * @param {number} id the index in the route
  */
 avnav.nav.RouteData.prototype.setActiveWp=function(id){
+    if (id <0 || id >= this.currentRoute.points.length) return;
     this.activeWp=id;
     this.navobject.routeEvent();
 };

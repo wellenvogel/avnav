@@ -384,9 +384,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     else {
         //update
     }
-    var popupid=$(this.waypointPopUp).attr('wpid');
-    if (popupid !== undefined) popupid=parseInt(popupid);
-    else popupid=-1;
+    self.updateWpPopUp(active);
     $('#avi_route_info_list').find('.avn_route_info_point').each(function(i,el){
         var txt=route.points[i].name?route.points[i].name:i+"";
         if (i == active) {
@@ -407,13 +405,9 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
         $(el).find('input').val(txt);
         $(el).find('.avn_route_point_ll').html(self.formatter.formatLonLats(route.points[i]));
         var idx=i;
-        if (i == popupid) self.updateWpPopUp(i);
         if (rebuild) {
             if (self.gui.isMobileBrowser()){
                 $(el).find('input').attr('readonly','true');
-                $(el).find('input').on('click',function(ev){
-                    self.showWpPopUp(idx);
-                });
             }
             else {
                 $(el).find('input').on('change', function (ev) {
@@ -425,7 +419,9 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
             $(el).click(function (ev) {
                 self.navobject.getRoutingData().setActiveWp(idx);
                 self.getMap().setCenter(self.navobject.getRoutingData().getActiveWp());
-                self.updateWpPopUp(idx);
+                if (self.gui.isMobileBrowser()){
+                    self.showWpPopUp(idx);
+                }
                 ev.preventDefault();
             });
         }
@@ -505,8 +501,17 @@ avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
     log("CancelNav clicked");
     this.gui.showPage('mainpage');
 };
+//-------------------------- Wp PopUp ------------------------------------
 avnav.gui.Navpage.prototype.btnWpDone=function(button,ev){
     $(this.waypointPopUp).hide();
+};
+avnav.gui.Navpage.prototype.btnWpPrevious=function(button,ev){
+    this.navobject.getRoutingData().setActiveWp(this.navobject.getRoutingData().getActiveWpIdx()-1);
+    this.getMap().setCenter(this.navobject.getRoutingData().getActiveWp());
+};
+avnav.gui.Navpage.prototype.btnWpNext=function(button,ev){
+    this.navobject.getRoutingData().setActiveWp(this.navobject.getRoutingData().getActiveWpIdx()+1);
+    this.getMap().setCenter(this.navobject.getRoutingData().getActiveWp());
 };
 
 //-------------------------- Route ----------------------------------------
