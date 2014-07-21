@@ -120,7 +120,7 @@ avnav.nav.NavObject=function(propertyHandler){
         routeEta: null
     };
     this.formattedValues={
-        markerEta:"none",
+        markerEta:"--:--:--",
         markerCourse:"--",
         markerDistance:"--",
         markerPosition:"none",
@@ -133,7 +133,7 @@ avnav.nav.NavObject=function(propertyHandler){
         routeNumPoints: "--",
         routeLen: "--",
         routeRemain: "--",
-        routeEta: "--"
+        routeEta: "--:--:--"
     };
     for (var k in this.formattedValues){
         this.registerValueProvider(k,this,this.getFormattedNavValue);
@@ -232,7 +232,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.routeNumPoints=this.formatter.formatDecimal(this.data.routeNumPoints,4,0);
     this.formattedValues.routeLen=this.formatter.formatDecimal(this.data.routeLen,4,1);
     this.formattedValues.routeRemain=this.formatter.formatDecimal(this.data.routeRemain,4,1);
-    this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"---";
+    this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"--:--:--";
 };
 
 /**

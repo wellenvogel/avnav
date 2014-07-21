@@ -59,6 +59,7 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.lineStyle={};
     this.activeWpStyle={};
     this.normalWpStyle={};
+    this.routeTargetStyle={};
     this.markerStyle={};
     this.courseStyle={};
     this.textStyle={};
@@ -92,6 +93,11 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
         color: "red",
         width: 1,
         background: "red"
+    };
+    this.routeTargetStyle={
+        color: this.mapholder.properties.getProperties().bearingColor,
+        width: 1,
+        background: this.mapholder.properties.getProperties().bearingColor
     };
 
     this.markerStyle={
@@ -161,6 +167,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     var to=leg.to?this.mapholder.pointToMap(leg.to.toCoord()):undefined;
     var prop=this.mapholder.getProperties().getProperties();
     var drawNav=prop.layers.boat&&prop.layers.nav;
+    var route=this.navobject.getRoutingData().getCurrentRoute();
     var text,wp;
     if (! drawNav) {
         this.routePixel=[];
@@ -173,10 +180,16 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     if (this.currentRoute.active || this.mapholder.getRoutingActive()) {
         this.routePixel = drawing.drawLineToContext(this.currentRoutePoints, this.lineStyle);
         var active = this.navobject.getRoutingData().getActiveWpIdx();
-        var i;
+        var routeTarget=route.active?route.currentTarget:-1;
+        var i,style;
         for (i = 0; i < this.currentRoutePoints.length; i++) {
+            style=this.normalWpStyle;
+            if (i == active) style=this.activeWpStyle;
+            else {
+                if (i == routeTarget) style=this.routeTargetStyle;
+            }
             drawing.drawBubbleToContext(this.currentRoutePoints[i], prop.routeWpSize,
-                (i == active) ? this.activeWpStyle : this.normalWpStyle);
+                style);
             wp=this.navobject.getRoutingData().getWp(i);
             if (wp && wp.name) text=wp.name;
             else text=i+"";
@@ -210,4 +223,5 @@ avnav.map.RouteLayer.prototype.findTarget=function(pixel){
 avnav.map.RouteLayer.prototype.propertyChange=function(evdata) {
     this.visible=this.mapholder.getProperties().getProperties().layers.nav;
     this.setStyle();
+    this.getRoute();
 };

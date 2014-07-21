@@ -447,6 +447,20 @@ avnav.nav.RouteData.prototype.setActiveWp=function(id){
     this.activeWp=id;
     this.navobject.routeEvent();
 };
+
+/**
+ * set the active WP to the one from the route
+ * if the route is active
+ */
+avnav.nav.RouteData.prototype.setActiveWpFromRoute=function(){
+    if (this.currentRoute.active){
+        if (this.activeWp != this.currentRoute.currentTarget){
+            this.activeWp=this.currentRoute.currentTarget;
+            this.navobject.routeEvent();
+        }
+    }
+};
+
 /**
  * get the index of the active wp from the current route
  * @return {number}

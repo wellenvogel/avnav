@@ -122,6 +122,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     }
     this.updateAisPanel();
     this.fillDisplayFromGps();
+    if (!this.gui.properties.getProperties().layers.nav) this.hideRouting();
     this.handleRouteDisplay();
 };
 /**
@@ -203,6 +204,13 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
     else {
         $('#avi_route_display').removeClass('avn_route_display_approach');
     }
+    var route=this.navobject.getRoutingData().getCurrentRoute();
+    var txt="Marker";
+    if (route.active && route.points[route.currentTarget]){
+        txt=route.points[route.currentTarget].name;
+        if (! txt) txt=route.currentTarget+"";
+    }
+    $('#markerLabel').text(txt);
 };
 
 /**
@@ -292,6 +300,7 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
 
 avnav.gui.Navpage.prototype.showRouting=function() {
     if (this.routingVisible) return;
+    if (!this.gui.properties.getProperties().layers.nav) return;
     var upd=this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
     if (this.showHideAdditionalPanel('#avi_route_info_navpage', true, '#' + this.mapdom)) upd=true;
     if (upd)this.gui.map.updateSize();
@@ -312,6 +321,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     this.routingVisible=false;
     this.handleToggleButton('#avb_ShowRoutePanel',false);
     this.gui.map.setRoutingActive(false);
+    this.navobject.getRoutingData().setActiveWpFromRoute();
     this.handleRouteDisplay();
 };
 
@@ -321,7 +331,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
  */
 avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
     var routeActive=this.navobject.getRoutingData().getCurrentRoute().active;
-    if (routeActive && ! this.routingVisible){
+    if (routeActive ){
         $('#avi_route_display').show();
         if (this.overlay){
             var h=this.overlay.height();
@@ -365,12 +375,17 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(){
         var txt=route.points[i].name?route.points[i].name:i+"";
         if (i == active) {
             $(el).addClass('avn_route_info_active_point');
-            //ensure element is visible
-            var eltop=$(el).position().top;
-            var ph=$('#avi_route_info_list').height();
-            var eh=$(el).height();
-            if (eltop < 0 )el.scrollIntoView(true);
-            if ((eltop+eh) > (ph)) el.scrollIntoView(false);
+            if (rebuild){
+                el.scrollIntoView();
+            }
+            else {
+                //ensure element is visible
+                var eltop = $(el).position().top;
+                var ph = $('#avi_route_info_list').height();
+                var eh = $(el).height();
+                if (eltop < 0)el.scrollIntoView(true);
+                if ((eltop + eh) > (ph)) el.scrollIntoView(false);
+            }
         }
         else $(el).removeClass('avn_route_info_active_point');
         $(el).find('input').val(txt);
@@ -414,6 +429,7 @@ avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
     if (! nLock) this.navobject.getRoutingData().routeOff();
     else this.navobject.getRoutingData().routeOn(avnav.nav.RoutingMode.CENTER);
     this.handleToggleButton(button,nLock);
+    if (nLock) this.hideRouting();
     this.gui.map.triggerRender();
     log("LockMarker clicked");
 };
