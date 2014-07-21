@@ -170,6 +170,15 @@ all buttons with ids avb_... will call corresponding js functions
               </div>
 
               <div id='avi_map_navpage' class='avn_panel avn_map'>
+                  <div id="avi_waypoint_popup" class="avn_panel avn_hidden">
+                        <div id="avi_waypoint_popup_left">
+                            <label>Waypoint<input type="text"/></label>
+                            <div class="avn_route_point_ll"></div>
+                        </div>
+                      <div id="avi_waypoint_popup_right">
+                          <button id="avb_WpDone" class="avn_button"></button>
+                      </div>
+                  </div>
                   <div id="avi_route_display" class="avn_panel avn_hidden">
                       <div id="avi_route_display_remain" class="avn_routeInfo avd_routeRemain"></div>nm
                       <div id="avi_route_display_eta" class="avn_routeInfo avd_routeEta"></div>
@@ -338,6 +347,10 @@ all buttons with ids avb_... will call corresponding js functions
                   </div>
                   <div class="avn_settings_line">
                       <div class="avn_setting" avn_name="style.buttonSize"></div>
+                      <div class="avn_clear"></div>
+                  </div>
+                  <div class="avn_settings_line">
+                      <div class="avn_setting" avn_name="forceMobile"></div>
                       <div class="avn_clear"></div>
                   </div>
               </div>

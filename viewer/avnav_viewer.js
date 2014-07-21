@@ -56,6 +56,7 @@ var propertyDefinitions=function(){
             grid: new avnav.util.Property(true,"Grid",avnav.util.PropertyType.CHECKBOX),
             compass: new avnav.util.Property(true,"Compass",avnav.util.PropertyType.CHECKBOX)
         },
+        forceMobile: new avnav.util.Property(false,"forceMobile",avnav.util.PropertyType.CHECKBOX),
         connectedMode:new avnav.util.Property(true,"connected",avnav.util.PropertyType.CHECKBOX),
         NM: new avnav.util.Property(1852), //one mile
         buttonUpdateTime: new avnav.util.Property( 500), //timer for button updates
@@ -107,7 +108,7 @@ var propertyDefinitions=function(){
         routingDataName: new avnav.util.Property( "avnav.routing"),
         routeName: new avnav.util.Property( "avnav.defaultRoute"),
         routingServerError: new avnav.util.Property(true,"ServerError",avnav.util.PropertyType.CHECKBOX), //notify comm errors to server
-        routingTextSize:new avnav.util.Property( 14,"Text Size(px)",avnav.util.PropertyType.RANGE,[8,24]), //in px
+        routingTextSize:new avnav.util.Property( 14,"Text Size(px)",avnav.util.PropertyType.RANGE,[8,36]), //in px
         centerName: new avnav.util.Property( "avnav.center"),
         statusErrorImage: new avnav.util.Property( "images/RedBubble40.png"),
         statusOkImage: new avnav.util.Property( "images/GreenBubble40.png"),

@@ -8,7 +8,7 @@
 @buttonSize: 60px;
 @centerDisplayHeight: 30px;
 @settingsFontSize: 16px;
-@routeInfoFontBase: min(max(@aisPanelWidth,@routeInfoPanelWidth),80px);
+@routeInfoFontBase: min(max(@aisPanelWidth,@routeInfoPanelWidth),120px);
 
 @aisNormalColor: #EBEB55;
 @aisNearestColor: #70F3AF; //rgb(112, 243, 175);
@@ -242,7 +242,7 @@ font-size: ( @bottomPanelHeight - 2 );
   bottom: 0px;
   width: max( @aisPanelWidth , @routeInfoPanelWidth );
   background-color: lightgrey;
-  z-index: 90;
+  z-index: 200;
 
 }
 #avi_route_info_navpage_inner {
@@ -252,7 +252,7 @@ font-size: ( @bottomPanelHeight - 2 );
 /*-------------------------------------------------------------
    route info
 -------------------------------------------------------------*/
-.avn_route_base(@factor: 5){
+.avn_route_base(@factor: 6){
     font-size: ( @routeInfoFontBase / @factor );
     padding-left: 3px;
 }
@@ -260,37 +260,61 @@ font-size: ( @bottomPanelHeight - 2 );
     .avn_route_base(8);
 }
 .avn_routeInfo{
-  .avn_route_base(5);
+  .avn_route_base(6);
   border-bottom: 1px solid black;
   margin-bottom: 5px;
 }
 #avi_route_info_heading{
-    .avn_route_base(4);
+    .avn_route_base(5);
 }
 #avi_route_info_name{
-    .avn_route_base(6);
+    .avn_route_base(7);
     margin-top: 5px;
 
 }
 #avi_route_info_list{
     @width: max(@aisPanelWidth,@routeInfoPanelWidth);
+    font-size: ( @routeInfoFontBase / 8);
     left:0;
     right:0;
     bottom: 0;
     position: absolute;
-    top: (@routeInfoFontBase * 2.5);
+    top: (@routeInfoFontBase * 2.15);
     margin-left: 5px;
     overflow: auto;
 }
 #avi_route_info_list input{
     @width: max(@aisPanelWidth,@routeInfoPanelWidth);
-    width: ( @width - 30px);
+    width: min((@width - 30px),(@routeInfoFontBase * 8 / 8));
+    font-size: ( @routeInfoFontBase / 8);
 }
 .avn_route_info_point{
     border-bottom: 1px solid black;
 }
 .avn_route_info_active_point{
     background-color: @routeApproachingColor !important;
+}
+#avi_waypoint_popup{
+    top: 10px;
+    left: max(100px,(@routeInfoPanelWidth + 30px)); //in case we have the compass
+    z-index: 90;
+    background-color: rgba(222, 226, 207, 0.92);
+    font-size: ( @routeInfoFontBase / 5);
+    border: 1px solid;
+    border-radius: 5px;
+}
+#avi_waypoint_popup input{
+  font-size: ( @routeInfoFontBase / 5);
+  margin-left: 5px;
+}
+#avi_waypoint_popup_left{
+    float: left;
+    padding-top: 10px;
+    padding-left: 5px;
+    padding-right: 10px;
+}
+#avi_waypoint_popup_right{
+    float:left;
 }
 /*-------------------------------------------------------------
    route display
@@ -446,6 +470,10 @@ button#avb_NavDeleteAll {
 button#avb_NavWp {
   .avn_hidden();
   .avn_button_icon_base('images/YellowBubble40.png');
+}
+
+button#avb_WpDone{
+  .avn_button_icon_base('images/check32.png');
 }
 
 button#avb_AisCancel{
