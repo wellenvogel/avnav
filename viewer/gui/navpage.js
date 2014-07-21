@@ -126,6 +126,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     this.fillDisplayFromGps();
     if (!this.gui.properties.getProperties().layers.nav) this.hideRouting();
     this.handleRouteDisplay();
+    this.updateRoutePoints(true);
 };
 /**
  * the periodic timer call
@@ -359,15 +360,15 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
     }
 };
 
-avnav.gui.Navpage.prototype.updateRoutePoints=function(){
+avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     var html="";
     var route=this.navobject.getRoutingData().getCurrentRoute();
     var active=this.navobject.getRoutingData().getActiveWpIdx();
     var i;
     var self=this;
     var curlen=$('#avi_route_info_list').find('.avn_route_info_point').length;
-    var rebuild=false;
-    if (curlen != route.points.length){
+    var rebuild=opt_force||false;
+    if (curlen != route.points.length || rebuild){
         //rebuild
         for (i=0;i<route.points.length;i++){
             html+='<div class="avn_route_info_point ';
