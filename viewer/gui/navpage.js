@@ -324,6 +324,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.gui.map.setRoutingActive(true);
     this.handleRouteDisplay();
     this.updateRoutePoints();
+    if (this.gui.isMobileBrowser()) this.showWpPopUp(this.navobject.getRoutingData().getActiveWpIdx());
 };
 
 /**
