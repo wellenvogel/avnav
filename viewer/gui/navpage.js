@@ -127,6 +127,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (!this.gui.properties.getProperties().layers.nav) this.hideRouting();
     this.handleRouteDisplay();
     this.updateRoutePoints(true);
+    if (! this.routingVisible) this.navobject.getRoutingData().setActiveWpFromRoute();
 };
 /**
  * the periodic timer call
@@ -271,6 +272,11 @@ avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (evdata.type == avnav.nav.NavEventType.ROUTE){
         this.handleRouteDisplay();
         if (this.routingVisible)this.updateRoutePoints();
+        else{
+            //if the route info is not visible
+            //we always set the active wp to the routing target if we have one...
+            this.navobject.getRoutingData().setActiveWpFromRoute();
+        }
     }
     this.fillDisplayFromGps(evdata.changedNames);
 };

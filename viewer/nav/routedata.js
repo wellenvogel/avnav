@@ -458,7 +458,7 @@ avnav.nav.RouteData.prototype.getCurrentRoute=function(){
 avnav.nav.RouteData.prototype.saveRoute=function(){
     var str=this.currentRoute.toJsonString();
     localStorage.setItem(this.propertyHandler.getProperties().routeName,str);
-    if (this.connectMode) this.sendRoute();
+    if (this.connectMode) this.sendRoute(this.currentRoute.toJsonString());
 };
 
 /**
@@ -470,13 +470,17 @@ avnav.nav.RouteData.prototype.saveLeg=function(){
     localStorage.setItem(this.propertyHandler.getProperties().routingDataName,raw);
 };
 
-
+/**
+ * send the route
+ * @param {string} route as json string
+ */
 avnav.nav.RouteData.prototype.sendRoute=function(route){
     //send route to server
+    var self=this;
     $.ajax({
         type: "POST",
         url: this.propertyHandler.getProperties().navUrl + "?request=routing&command=setroute",
-        data: JSON.stringify(route),
+        data: route,
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (data) {
@@ -506,7 +510,7 @@ avnav.nav.RouteData.prototype.legChanged=function(newLeg){
             return true; //do only send activates to the server
         }
         if (newLeg.name !== undefined) {
-            this.sendRoute(self.currentRoute);
+            this.sendRoute(self.currentRoute.toJsonString());
         }
         $.ajax({
             type: "POST",
