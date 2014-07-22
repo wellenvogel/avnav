@@ -165,12 +165,13 @@ avnav.gui.Navpage.prototype.hidePage=function(){
 avnav.gui.Navpage.prototype.localInit=function(){
     $('#leftBottomMarker').click({page:this},function(ev){
         var navobject=ev.data.page.navobject;
-        var route=navobject.getRoutingData().getCurrentRoute();
+        var leg=navobject.getRawData(avnav.nav.NavEventType.ROUTE);
         var marker=navobject.getRawData(avnav.nav.NavEventType.NAV).markerLatlon;
         ev.data.page.gui.map.setCenter(marker);
         //make the current WP the active again...
-        if (route.active){
-            navobject.getRoutingData().setActiveWp(route.currentTarget);
+        var routingTarget=this.navobject.getRoutingData().getCurrentRouteTargetIdx();
+        if (routingTarget >= 0){
+            navobject.getRoutingData().setActiveWp(routingTarget);
         }
     });
     $('#leftBottomPosition').click({page:this},function(ev){
@@ -218,10 +219,11 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
         $('#avi_route_display').removeClass('avn_route_display_approach');
     }
     var route=this.navobject.getRoutingData().getCurrentRoute();
+    var routeTarget=this.navobject.getRoutingData().getCurrentRouteTarget();
     var txt="Marker";
-    if (route.active && route.points[route.currentTarget]){
-        txt=route.points[route.currentTarget].name;
-        if (! txt) txt=route.currentTarget+"";
+    if (routeTarget){
+        txt=routeTarget.name;
+        if (! txt) txt=this.navobject.getRoutingData().getCurrentRouteTargetIdx()+"";
     }
     $('#markerLabel').text(txt);
 };
@@ -344,7 +346,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
  * @private
  */
 avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
-    var routeActive=this.navobject.getRoutingData().getCurrentRoute().active;
+    var routeActive=this.navobject.getRoutingData().getCurrentRouteTargetIdx()>=0;
     if (routeActive ){
         $('#avi_route_display').show();
         if (this.overlay){

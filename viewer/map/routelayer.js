@@ -128,10 +128,7 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
 avnav.map.RouteLayer.prototype.getRoute=function(){
     this.currentRoutePoints=[];
     //for now only the points
-    var route=this.routingDate.getCurrentRoute();
-    this.currentRoute=new avnav.nav.Route(route.name,route.points.slice(0));
-    this.currentRoute.active=route.active;
-    this.currentRoute.currentTarget=route.currentTarget;
+    this.currentRoute=this.routingDate.getCurrentRoute().clone();
     var i;
     for (i in this.currentRoute.points){
         var p=this.mapholder.pointToMap(this.currentRoute.points[i].toCoord());
@@ -177,10 +174,10 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         var line=[this.mapholder.pointToMap(gps.toCoord()),to];
         drawing.drawLineToContext(line,this.courseStyle);
     }
-    if (this.currentRoute.active || this.mapholder.getRoutingActive()) {
+    var routeTarget=this.navobject.getRoutingData().getCurrentRouteTargetIdx();
+    if ((routeTarget >=0) || this.mapholder.getRoutingActive()) {
         this.routePixel = drawing.drawLineToContext(this.currentRoutePoints, this.lineStyle);
         var active = this.navobject.getRoutingData().getActiveWpIdx();
-        var routeTarget=route.active?route.currentTarget:-1;
         var i,style;
         for (i = 0; i < this.currentRoutePoints.length; i++) {
             style=this.normalWpStyle;
@@ -200,7 +197,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         this.routePixel=[];
 
     }
-    if (to && ! this.currentRoute.active && leg.active){
+    if (to && (routeTarget<0) && leg.active){
         drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
     }
 
