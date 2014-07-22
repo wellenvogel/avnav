@@ -458,7 +458,7 @@ avnav.nav.RouteData.prototype.getCurrentRoute=function(){
 avnav.nav.RouteData.prototype.saveRoute=function(){
     var str=this.currentRoute.toJsonString();
     localStorage.setItem(this.propertyHandler.getProperties().routeName,str);
-    if (this.currentLeg.name && this.connectMode) this.sendRoute();
+    if (this.connectMode) this.sendRoute();
 };
 
 /**
