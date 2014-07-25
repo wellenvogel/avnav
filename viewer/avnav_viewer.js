@@ -77,7 +77,7 @@ var propertyDefinitions=function(){
         routeColor: new avnav.util.Property( "#27413B","Color",avnav.util.PropertyType.COLOR),
         routeWidth: new avnav.util.Property( 2,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         routeWpSize:new avnav.util.Property( 7,"WPSize",avnav.util.PropertyType.RANGE,[5,30]),
-        routeApproach: new avnav.util.Property( 100,"Approach(m)",avnav.util.PropertyType.RANGE,[20,2000]),
+        routeApproach: new avnav.util.Property( 200,"Approach(m)",avnav.util.PropertyType.RANGE,[20,2000]),
         navCircleColor: new avnav.util.Property( "#D71038","Circle Color",avnav.util.PropertyType.COLOR),
         navCircleWidth: new avnav.util.Property( 1,"Circle Width",avnav.util.PropertyType.RANGE,[1,10]),
         navCircle1Radius: new avnav.util.Property( 300,"Circle 1 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
