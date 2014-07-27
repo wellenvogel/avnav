@@ -153,9 +153,11 @@ avnav.nav.NavObject.prototype.computeValues=function(){
         var markerdst=avnav.nav.NavCompute.computeDistance(gps,this.data.markerLatlon);
         this.data.markerCourse=markerdst.course;
         this.data.markerDistance=markerdst.dtsnm;
-        if (gps.rtime && (Math.abs(markerdst.course-gps.course) <= 85)) {
+        var coursediff=Math.min(Math.abs(markerdst.course-gps.course),Math.abs(markerdst.course+360-gps.course),
+            Math.abs(markerdst.course-gps.course+360));
+        if (gps.rtime && coursediff <= 85) {
             //TODO: is this really correct for VMG?
-            vmgapp = gps.speed * Math.cos(Math.PI / 180 * (gps.course - markerdst.course));
+            vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
             //vmgapp is in kn
             var targettime = gps.rtime.getTime();
             if (vmgapp > 0) {
