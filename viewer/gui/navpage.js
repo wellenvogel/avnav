@@ -331,6 +331,12 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.handleRouteDisplay();
     this.updateRoutePoints();
     if (this.gui.isMobileBrowser()) this.showWpPopUp(this.navobject.getRoutingData().getActiveWpIdx());
+    var nLock=this.gui.map.getGpsLock();
+    if (nLock) {
+        this.gui.map.setGpsLock(!nLock);
+        this.handleToggleButton(button, !nLock);
+        this.gui.map.triggerRender();
+    }
 };
 
 /**
