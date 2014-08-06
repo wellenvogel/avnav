@@ -154,7 +154,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
         this.data.markerCourse=markerdst.course;
         this.data.markerDistance=markerdst.dtsnm;
         var coursediff=Math.min(Math.abs(markerdst.course-gps.course),Math.abs(markerdst.course+360-gps.course),
-            Math.abs(markerdst.course-gps.course+360));
+            Math.abs(markerdst.course-(gps.course+360)));
         if (gps.rtime && coursediff <= 85) {
             //TODO: is this really correct for VMG?
             vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
