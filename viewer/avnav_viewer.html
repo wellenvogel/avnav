@@ -174,6 +174,7 @@ all buttons with ids avb_... will call corresponding js functions
                         <div id="avi_waypoint_popup_left">
                             <label>Waypoint<input type="text"/></label>
                             <div class="avn_route_point_ll"></div>
+                            <div class="avn_route_point_course"></div>
                         </div>
                       <div id="avi_waypoint_popup_right">
                           <button id="avb_WpPrevious" class="avn_button"></button>
@@ -182,8 +183,11 @@ all buttons with ids avb_... will call corresponding js functions
                       </div>
                   </div>
                   <div id="avi_route_display" class="avn_panel avn_hidden">
-                      <div><span id="avi_route_display_remain" class="avn_routeInfo avd_routeRemain"></span>nm</div>
-                      <div id="avi_route_display_eta" class="avn_routeInfo avd_routeEta"></div>
+                      <div><span id="avi_route_display_remain" class="avd_routeRemain"></span>nm</div>
+                      <div id="avi_route_display_eta" class="avd_routeEta"></div>
+                      <div id="avi_route_display_next" class="avn_hidden">
+                          Next&nbsp;<span id="avi_route_display_next_course" class="avd_routeNextCourse"></span>&#176;
+                      </div>
                   </div>
               </div>
               <div id="avi_second_buttons_navpage" class="avn_panel avn_hidden">
@@ -462,6 +466,10 @@ all buttons with ids avb_... will call corresponding js functions
                   </div>
                   <div class="avn_settings_line">
                       <div class="avn_setting" avn_name="routeApproach"></div>
+                      <div class="avn_clear"></div>
+                  </div>
+                  <div class="avn_settings_line">
+                      <div class="avn_setting" avn_name="routeShowLL"></div>
                       <div class="avn_clear"></div>
                   </div>
 

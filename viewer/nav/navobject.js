@@ -117,7 +117,8 @@ avnav.nav.NavObject=function(propertyHandler){
         routeNumPoints: 0,
         routeLen: 0,
         routeRemain: 0,
-        routeEta: null
+        routeEta: null,
+        routeNextCourse: 0
     };
     this.formattedValues={
         markerEta:"--:--:--",
@@ -133,7 +134,8 @@ avnav.nav.NavObject=function(propertyHandler){
         routeNumPoints: "--",
         routeLen: "--",
         routeRemain: "--",
-        routeEta: "--:--:--"
+        routeEta: "--:--:--",
+        routeNextCourse: "---"
     };
     for (var k in this.formattedValues){
         this.registerValueProvider(k,this,this.getFormattedNavValue);
@@ -202,6 +204,15 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     else {
         this.data.routeEta=undefined;
     }
+    this.data.routeNextCourse=undefined;
+    var curwpidx=this.routeHandler.getCurrentRouteTargetIdx();
+    if (curwpidx >= 0 && gps.valid){
+        var nextwp=this.routeHandler.getWp(curwpidx+1);
+        if (nextwp){
+            var dst=avnav.nav.NavCompute.computeDistance(gps,nextwp);
+            this.data.routeNextCourse=dst.course;
+        }
+    }
 
     //now create text values
     this.formattedValues.markerEta=(this.data.markerEta)?
@@ -235,6 +246,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.routeLen=this.formatter.formatDecimal(this.data.routeLen,4,1);
     this.formattedValues.routeRemain=this.formatter.formatDecimal(this.data.routeRemain,4,1);
     this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"--:--:--";
+    this.formattedValues.routeNextCourse=(this.data.routeNextCourse !== undefined)?this.formatter.formatDecimal(this.data.routeNextCourse,3,0):"---";
 };
 
 /**
