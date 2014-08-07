@@ -41,6 +41,12 @@ avnav.gui.Navpage=function(){
      * @type {boolean}
      */
     this.routingVisible=false;
+    /**
+     * keep the lock mode when showing routing
+     * @private
+     * @type {boolean}
+     */
+    this.lastGpsLock=false;
 
     this.waypointPopUp='#avi_waypoint_popup';
     /**
@@ -332,6 +338,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.updateRoutePoints();
     if (this.gui.isMobileBrowser()) this.showWpPopUp(this.navobject.getRoutingData().getActiveWpIdx());
     var nLock=this.gui.map.getGpsLock();
+    this.lastGpsLock=nLock;
     if (nLock) {
         this.gui.map.setGpsLock(!nLock);
         this.handleToggleButton(button, !nLock);
@@ -352,6 +359,9 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     this.navobject.getRoutingData().setActiveWpFromRoute();
     this.handleRouteDisplay();
     $(this.waypointPopUp).hide();
+    if (this.lastGpsLock) {
+        this.gui.map.setGpsLock(true);
+    }
 };
 
 /**
