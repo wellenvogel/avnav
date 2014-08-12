@@ -158,11 +158,12 @@ avnav.gui.Page.prototype.showHideAdditionalPanel=function(id,show,mainid){
         }
     }
     else {
-        $(id).hide();
         if ($(id).is(':visible')) {
 
             updateSize = true;
         }
+        $(id).hide();
+
     }
     if (updateSize) {
         this.updateMainPanelSize(mainid);
@@ -185,18 +186,20 @@ avnav.gui.Page.prototype.updateMainPanelSize=function(mainid){
         {cl:'.avn_bottom',main:'bottom',el:'height',neg:false},
         {cl:'.avn_right',main:'right',el:'width',neg:false}
     ];
+    var nval, k,arg,last;
     for (var k in args){
-        var arg=args[k];
-        var last=arg.neg?99999:0;
-        main.css(arg.main,0);
+        arg=args[k];
+        last=arg.neg?99999:0;
+        nval=last;
         main.parent().find(arg.cl).each(function(id,el){
             if ($(el).is(':visible')){
                 var v=parseInt($(el).css(arg.el).replace(/px/,""));
                 if (( arg.neg && v < last) || (! arg.neg && v>last)) {
                     last=v;
-                    main.css(arg.main, last);
+                    nval=v;
                 }
             }
         });
+        main.css(arg.main,nval);
     }
 };

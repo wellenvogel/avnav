@@ -59,8 +59,10 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.lineStyle={};
     this.activeWpStyle={};
     this.normalWpStyle={};
+    this.routeTargetStyle={};
     this.markerStyle={};
     this.courseStyle={};
+    this.textStyle={};
     this.setStyle();
     var self=this;
     this.getRoute();
@@ -92,6 +94,11 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
         width: 1,
         background: "red"
     };
+    this.routeTargetStyle={
+        color: this.mapholder.properties.getProperties().bearingColor,
+        width: 1,
+        background: this.mapholder.properties.getProperties().bearingColor
+    };
 
     this.markerStyle={
         anchor: [20, 20],
@@ -105,6 +112,13 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
         width: this.mapholder.properties.getProperties().bearingWidth
 
     };
+    this.textStyle= {
+        stroke: '#fff',
+        color: '#000',
+        width: 3,
+        font: this.mapholder.getProperties().getProperties().routingTextSize+'px Calibri,sans-serif',
+        offsetY: 15
+    };
 
 };
 /**
@@ -114,10 +128,7 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
 avnav.map.RouteLayer.prototype.getRoute=function(){
     this.currentRoutePoints=[];
     //for now only the points
-    var route=this.routingDate.getCurrentRoute();
-    this.currentRoute=new avnav.nav.Route(route.name,route.points.slice(0));
-    this.currentRoute.active=route.active;
-    this.currentRoute.currentTarget=route.currentTarget;
+    this.currentRoute=this.routingDate.getCurrentRoute().clone();
     var i;
     for (i in this.currentRoute.points){
         var p=this.mapholder.pointToMap(this.currentRoute.points[i].toCoord());
@@ -153,6 +164,8 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     var to=leg.to?this.mapholder.pointToMap(leg.to.toCoord()):undefined;
     var prop=this.mapholder.getProperties().getProperties();
     var drawNav=prop.layers.boat&&prop.layers.nav;
+    var route=this.navobject.getRoutingData().getCurrentRoute();
+    var text,wp;
     if (! drawNav) {
         this.routePixel=[];
         return;
@@ -161,20 +174,30 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         var line=[this.mapholder.pointToMap(gps.toCoord()),to];
         drawing.drawLineToContext(line,this.courseStyle);
     }
-    if (this.currentRoute.active || this.mapholder.getRoutingActive()) {
+    var routeTarget=this.navobject.getRoutingData().getCurrentRouteTargetIdx();
+    if ((routeTarget >=0) || this.mapholder.getRoutingActive()) {
         this.routePixel = drawing.drawLineToContext(this.currentRoutePoints, this.lineStyle);
         var active = this.navobject.getRoutingData().getActiveWpIdx();
-        var i;
+        var i,style;
         for (i = 0; i < this.currentRoutePoints.length; i++) {
+            style=this.normalWpStyle;
+            if (i == active) style=this.activeWpStyle;
+            else {
+                if (i == routeTarget) style=this.routeTargetStyle;
+            }
             drawing.drawBubbleToContext(this.currentRoutePoints[i], prop.routeWpSize,
-                (i == active) ? this.activeWpStyle : this.normalWpStyle);
+                style);
+            wp=this.navobject.getRoutingData().getWp(i);
+            if (wp && wp.name) text=wp.name;
+            else text=i+"";
+            drawing.drawTextToContext(this.currentRoutePoints[i],text,this.textStyle);
         }
     }
     else {
         this.routePixel=[];
 
     }
-    if (to && ! this.currentRoute.active && leg.active){
+    if (to && (routeTarget<0) && leg.active){
         drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
     }
 
@@ -197,4 +220,5 @@ avnav.map.RouteLayer.prototype.findTarget=function(pixel){
 avnav.map.RouteLayer.prototype.propertyChange=function(evdata) {
     this.visible=this.mapholder.getProperties().getProperties().layers.nav;
     this.setStyle();
+    this.getRoute();
 };

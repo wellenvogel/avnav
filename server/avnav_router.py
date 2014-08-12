@@ -45,17 +45,21 @@ from avnav_worker import *
 
 
 class AVNRoutingLeg():
-  def __init__(self,routename,fromWP,toWP,active):
-    self.routename=routename
+  def __init__(self,name,fromWP,toWP,active,currentTarget):
+    self.name=name
     self.fromWP=fromWP
     self.toWP=toWP
     self.active=active
+    self.currentTarget=currentTarget
+
   
   def __str__(self):
-    return "AVNRoutingLeg route=%s,from=%s,to=%s,active=%s"%(self.routename,str(self.fromWP),str(self.toWP),self.active)
+    return "AVNRoutingLeg route=%s,from=%s,to=%s,active=%s, target=%d"%(self.name,str(self.fromWP),str(self.toWP),self.active,self.currentTarget)
     
 #routing handler
 class AVNRouter(AVNWorker):
+  gpxFormat='''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+    <gpx version="1.1" creator="avnav">%s</gpx>'''
   currentLegName=u"currentLeg.json"
   #unfortunately the gpx stuff uses some long names
   #but we would like to have the same names as in the gpx file also for our json
@@ -135,11 +139,15 @@ class AVNRouter(AVNWorker):
       return None
     if dct.get('to') is None:
       return None
+    currentTarget=dct.get('currentTarget')
+    if currentTarget is None:
+      currentTarget=-1
     return AVNRoutingLeg(
-                  dct.get('route'),
+                  dct.get('name'),
                   gpx.GPXWaypoint(**self.convertToGpx(dct.get('from'))),
                   gpx.GPXWaypoint(**self.convertToGpx(dct.get('to'))),
-                  dct.get('active')
+                  dct.get('active'),
+                  currentTarget
                   )
   #convert a leg into json
   def leg2Json(self,leg):
@@ -148,8 +156,9 @@ class AVNRouter(AVNWorker):
     dct={
          'from':self.convertFromGpx(leg.fromWP.__dict__),
          'to':self.convertFromGpx(leg.toWP.__dict__),
-         'route':leg.routename,
-         'active':leg.active
+         'name':leg.name,
+         'active':leg.active,
+         'currentTarget':leg.currentTarget
          }
     return dct 
   
@@ -169,6 +178,53 @@ class AVNRouter(AVNWorker):
       f.close()
       raise
     f.close()
+
+  def routeFromJson(self,routeJson):
+    dct=json.loads(routeJson)
+    if dct.get('name') is None:
+      raise Exception("missing name in route")
+    route=gpx.GPXRoute(**self.convertToGpx(dict((x,dct.get(x)) for x in ['name','description'])))
+    points=dct.get('points')
+    if points is not None:
+      for p in points:
+        rp=gpx.GPXRoutePoint(**self.convertToGpx(dict((x,p.get(x)) for x in ['name','lon','lat'])))
+        route.points.append(rp)
+    AVNLog.debug("routeFromJson: %s",str(route))
+    return route
+
+  def routeToJson(self,route):
+    AVNLog.debug("routeToJson: %s",str(route))
+    rt={'name':route.name,
+        'points':[]
+        }
+    for p in route.points:
+      rt['points'].append(self.convertFromGpx(p.__dict__))
+    return json.dumps(rt)
+
+  def getRouteFileName(self,name):
+    return os.path.join(self.routesdir,name+u'.gpx')
+
+  def saveRoute(self,route):
+    filename=self.getRouteFileName(route.name)
+    f=open(filename,"w")
+    try:
+      f.write(self.gpxFormat%(route.to_xml()))
+    except:
+      f.close()
+      raise
+    f.close()
+
+  def loadRoute(self,name):
+    filename=self.getRouteFileName(name)
+    f=open(filename,"r")
+    gpx_xml = f.read()
+    f.close()
+    parser = gpxparser.GPXParser(gpx_xml)
+    gpx = parser.parse()
+    if gpx.routes is None or len(gpx.routes) == 0:
+      raise "no routes in "+name
+    return gpx.routes[0]
+    
         
   #this is the main thread - listener
   def run(self):
@@ -187,10 +243,10 @@ class AVNRouter(AVNWorker):
         strleg=f.read(2000)
         self.currentLeg=self.parseLeg(strleg)
         distance=geo.length([self.currentLeg.fromWP,self.currentLeg.toWP])
-        AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.routename,
+        AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.name,
                                                                   str(self.currentLeg.fromWP),str(self.currentLeg.toWP),distance/AVNUtil.NM))
-        if self.currentLeg.routename is not None:
-          self.activeRouteName=self.currentLeg.routename
+        if self.currentLeg.name is not None:
+          self.activeRouteName=self.currentLeg.name
       except:
         AVNLog.error("error parsing current leg %s: %s"%(self.currentLegFileName,traceback.format_exc()))
       f.close()
@@ -237,6 +293,24 @@ class AVNRouter(AVNWorker):
         raise Exception("invalid leg data %s"%(data))
       self.setCurrentLeg(leg)
       return json.dumps({'status':'OK'})  
+    if (command == 'setroute'):
+      data=self.getRequestParam(requestparam,'_json');
+      if data is None:
+        raise Exception("missing route for setroute")
+      route=self.routeFromJson(data)
+      AVNLog.info("saving route %s with %d points"%(route.name,len(route.points)))
+      self.saveRoute(route)
+      return json.dumps({'status':'OK'})  
+    if (command == 'getroute'):
+      data=self.getRequestParam(requestparam, 'name')
+      if data is None:
+        return json.dumps({'status':'no route name'})
+      if not os.path.exists(self.getRouteFileName(data)):
+        return json.dumps({'status':'route '+data+' not found'})
+      route=self.loadRoute(data)
+      AVNLog.debug("get route %s"%(route.name))
+      return self.routeToJson(route)
+
     raise Exception("invalid command "+command)
       
     

@@ -56,6 +56,7 @@ var propertyDefinitions=function(){
             grid: new avnav.util.Property(true,"Grid",avnav.util.PropertyType.CHECKBOX),
             compass: new avnav.util.Property(true,"Compass",avnav.util.PropertyType.CHECKBOX)
         },
+        forceMobile: new avnav.util.Property(false,"forceMobile",avnav.util.PropertyType.CHECKBOX),
         connectedMode:new avnav.util.Property(true,"connected",avnav.util.PropertyType.CHECKBOX),
         NM: new avnav.util.Property(1852), //one mile
         buttonUpdateTime: new avnav.util.Property( 500), //timer for button updates
@@ -76,7 +77,8 @@ var propertyDefinitions=function(){
         routeColor: new avnav.util.Property( "#27413B","Color",avnav.util.PropertyType.COLOR),
         routeWidth: new avnav.util.Property( 2,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         routeWpSize:new avnav.util.Property( 7,"WPSize",avnav.util.PropertyType.RANGE,[5,30]),
-        routeApproach: new avnav.util.Property( 100,"Approach(m)",avnav.util.PropertyType.RANGE,[20,2000]),
+        routeApproach: new avnav.util.Property( 200,"Approach(m)",avnav.util.PropertyType.RANGE,[20,2000]),
+        routeShowLL: new avnav.util.Property(false,"showLatLon",avnav.util.PropertyType.CHECKBOX), //show latlon or leg course/len
         navCircleColor: new avnav.util.Property( "#D71038","Circle Color",avnav.util.PropertyType.COLOR),
         navCircleWidth: new avnav.util.Property( 1,"Circle Width",avnav.util.PropertyType.RANGE,[1,10]),
         navCircle1Radius: new avnav.util.Property( 300,"Circle 1 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
@@ -107,6 +109,7 @@ var propertyDefinitions=function(){
         routingDataName: new avnav.util.Property( "avnav.routing"),
         routeName: new avnav.util.Property( "avnav.defaultRoute"),
         routingServerError: new avnav.util.Property(true,"ServerError",avnav.util.PropertyType.CHECKBOX), //notify comm errors to server
+        routingTextSize:new avnav.util.Property( 14,"Text Size(px)",avnav.util.PropertyType.RANGE,[8,36]), //in px
         centerName: new avnav.util.Property( "avnav.center"),
         statusErrorImage: new avnav.util.Property( "images/RedBubble40.png"),
         statusOkImage: new avnav.util.Property( "images/GreenBubble40.png"),
@@ -121,6 +124,7 @@ var propertyDefinitions=function(){
         style:{
             bottomPanelHeight: new avnav.util.Property( 50,"Bottom Height(px)",avnav.util.PropertyType.RANGE,[20,80]),
             aisPanelWidth:new avnav.util.Property( 90,"AIS Width(px)",avnav.util.PropertyType.RANGE,[50,300]),
+            routeInfoPanelWidth:new avnav.util.Property( 120,"RoutePanel Width(px)",avnav.util.PropertyType.RANGE,[50,300]),
             buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[40,100]),
             centerDisplayHeight:new avnav.util.Property( 30,"+ Display Height(px)",avnav.util.PropertyType.RANGE,[20,80]),
             aisWarningColor: new avnav.util.Property( "#FA584A","Warning",avnav.util.PropertyType.COLOR),

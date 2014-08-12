@@ -117,10 +117,11 @@ avnav.nav.NavObject=function(propertyHandler){
         routeNumPoints: 0,
         routeLen: 0,
         routeRemain: 0,
-        routeEta: null
+        routeEta: null,
+        routeNextCourse: 0
     };
     this.formattedValues={
-        markerEta:"none",
+        markerEta:"--:--:--",
         markerCourse:"--",
         markerDistance:"--",
         markerPosition:"none",
@@ -133,7 +134,8 @@ avnav.nav.NavObject=function(propertyHandler){
         routeNumPoints: "--",
         routeLen: "--",
         routeRemain: "--",
-        routeEta: "--"
+        routeEta: "--:--:--",
+        routeNextCourse: "---"
     };
     for (var k in this.formattedValues){
         this.registerValueProvider(k,this,this.getFormattedNavValue);
@@ -153,9 +155,11 @@ avnav.nav.NavObject.prototype.computeValues=function(){
         var markerdst=avnav.nav.NavCompute.computeDistance(gps,this.data.markerLatlon);
         this.data.markerCourse=markerdst.course;
         this.data.markerDistance=markerdst.dtsnm;
-        if (gps.rtime && (Math.abs(markerdst.course-gps.course) <= 85)) {
+        var coursediff=Math.min(Math.abs(markerdst.course-gps.course),Math.abs(markerdst.course+360-gps.course),
+            Math.abs(markerdst.course-(gps.course+360)));
+        if (gps.rtime && coursediff <= 85) {
             //TODO: is this really correct for VMG?
-            vmgapp = gps.speed * Math.cos(Math.PI / 180 * (gps.course - markerdst.course));
+            vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
             //vmgapp is in kn
             var targettime = gps.rtime.getTime();
             if (vmgapp > 0) {
@@ -191,15 +195,23 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.data.routeNumPoints=route.points.length;
     this.data.routeLen=this.routeHandler.computeLength(0);
     this.data.routeRemain=this.routeHandler.computeLength(-1)+this.data.markerDistance;
-    var routetime=0;
-    if (gps.rtime) routetime= gps.rtime.getTime();
-    if (vmgapp > 0 && routetime != 0) {
+    var routetime = gps.rtime?gps.rtime.getTime():0 ;
+    if (vmgapp > 0) {
         routetime += this.data.routeRemain / vmgapp * 3600 * 1000; //time in ms
         var routeDate = new Date(Math.round(routetime));
         this.data.routeEta = routeDate;
     }
     else {
         this.data.routeEta=undefined;
+    }
+    this.data.routeNextCourse=undefined;
+    var curwpidx=this.routeHandler.getCurrentRouteTargetIdx();
+    if (curwpidx >= 0 && gps.valid){
+        var nextwp=this.routeHandler.getWp(curwpidx+1);
+        if (nextwp){
+            var dst=avnav.nav.NavCompute.computeDistance(gps,nextwp);
+            this.data.routeNextCourse=dst.course;
+        }
     }
 
     //now create text values
@@ -233,7 +245,8 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.routeNumPoints=this.formatter.formatDecimal(this.data.routeNumPoints,4,0);
     this.formattedValues.routeLen=this.formatter.formatDecimal(this.data.routeLen,4,1);
     this.formattedValues.routeRemain=this.formatter.formatDecimal(this.data.routeRemain,4,1);
-    this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"---";
+    this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"--:--:--";
+    this.formattedValues.routeNextCourse=(this.data.routeNextCourse !== undefined)?this.formatter.formatDecimal(this.data.routeNextCourse,3,0):"---";
 };
 
 /**

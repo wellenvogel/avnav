@@ -66,6 +66,11 @@ avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
 };
 
 avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
+/**
+ * create a waypoint from aplain (json) object
+ * @param plain
+ * @returns {avnav.nav.navdata.WayPoint}
+ */
 avnav.nav.navdata.WayPoint.fromPlain=function(plain){
     return new avnav.nav.navdata.WayPoint(plain.lon,plain.lat,plain.name);
 };

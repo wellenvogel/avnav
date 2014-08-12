@@ -44,7 +44,7 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
  * @param data
  * @private
  */
-avnav.nav.GpsData.prototype.convertResponse=function(data){
+avnav.nav.GpsData.prototype.convertLegResponse=function(data){
     var gpsdata=new avnav.nav.navdata.GpsInfo();
     gpsdata.rtime=null;
     if (data.time != null) gpsdata.rtime=new Date(data.time);
@@ -78,7 +78,7 @@ avnav.nav.GpsData.prototype.startQuery=function(){
             if (data['class'] != null && data['class'] == "TPV" &&
                 data.tag != null && data.lon != null && data.lat != null &&
                 data['mode'] != null && data['mode'] >=1){
-                self.convertResponse(data);
+                self.convertLegResponse(data);
                 log("gpsdata: "+self.formattedData.gpsPosition);
                 self.handleGpsStatus(true);
             }
