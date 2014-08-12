@@ -191,8 +191,9 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.data.routeNumPoints=route.points.length;
     this.data.routeLen=this.routeHandler.computeLength(0);
     this.data.routeRemain=this.routeHandler.computeLength(-1)+this.data.markerDistance;
-    var routetime = gps.rtime.getTime();
-    if (vmgapp > 0) {
+    var routetime=0;
+    if (gps.rtime) routetime= gps.rtime.getTime();
+    if (vmgapp > 0 && routetime != 0) {
         routetime += this.data.routeRemain / vmgapp * 3600 * 1000; //time in ms
         var routeDate = new Date(Math.round(routetime));
         this.data.routeEta = routeDate;
