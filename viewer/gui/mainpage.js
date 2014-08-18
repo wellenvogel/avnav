@@ -90,6 +90,10 @@ avnav.gui.Mainpage.prototype.btnShowSettings=function (button,ev){
     log("ShowSettings clicked");
     this.gui.showPage('settingspage');
 };
+avnav.gui.Mainpage.prototype.btnShowGps=function (button,ev){
+    log("ShowGps clicked");
+    this.gui.showPage('gpspage');
+};
 avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
     log("Connected clicked");
     var ncon=!this.gui.properties.getProperties().connectedMode;

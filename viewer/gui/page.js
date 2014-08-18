@@ -19,6 +19,13 @@ avnav.gui.Page=function(name){
     this.name=name;
     this.visible=false;
     var myself=this;
+    /**
+     * a list of items with class avd_ - key are the names, values the jQuery dom objects
+     * will be filled when page is initially displayed
+     * @private
+     * @type {{}}
+     */
+    this.displayItems={};
     $(document).on(avnav.gui.PageEvent.EVENT_TYPE, function(ev,evdata){
 
         if (evdata.oldpage != myself.name && evdata.newpage != myself.name){
@@ -26,7 +33,9 @@ avnav.gui.Page=function(name){
         }
         myself.handlePage(evdata);
     });
-
+    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+        myself.updateDisplayObjects();
+    });
 };
 
 /**
@@ -57,16 +66,42 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         this.isInitialized=true;
         this.initButtons();
         this.localInit();
+        this.initDisplayObjects();
     }
     if (this.visible != this.isVisible()){
         //visibility changed
         this.visible=this.isVisible();
         if (this.visible){
             this.showPage(evdata.options);
+            this.updateDisplayObjects();
         }
         else {
             this.hidePage();
         }
+    }
+};
+/**
+ * initially fill the list of items that will be update on nav events
+ */
+avnav.gui.Page.prototype.initDisplayObjects=function(){
+    var names=this.navobject.getValueNames();
+    var self=this;
+    for (var i=0;i< names.length;i++){
+        this.getDiv().find('.avd_'+names[i]).each(function(idx,el){
+            self.displayItems[names[i]]=el;
+        });
+    }
+};
+
+/**
+ * update all display items from navobject
+ */
+avnav.gui.Page.prototype.updateDisplayObjects=function(){
+    var name;
+    for (name in this.displayItems){
+        var el=this.displayItems[name];
+        var val=this.navobject.getValue(name);
+        $(el).text(val);
     }
 };
 

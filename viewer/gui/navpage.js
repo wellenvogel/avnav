@@ -209,10 +209,6 @@ avnav.gui.Navpage.prototype.localInit=function(){
  */
 avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
     if (! this.navobject) return;
-    var names=opt_names||this.navobject.getValueNames();
-    for (var i=0;i< names.length;i++){
-        this.getDiv().find('.avd_'+names[i]).text(this.navobject.getValue(names[i]));
-    }
     if (this.navobject.getRawData(avnav.nav.NavEventType.GPS).valid){
         $('#boatPositionStatus').attr('src',this.gui.properties.getProperties().statusOkImage);
     }
@@ -439,7 +435,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
         var courseLen="--- °<br>---- nm";
         if (i>0) {
             var dst=avnav.nav.NavCompute.computeDistance(route.points[i-1],route.points[i]);
-            courseLen=self.formatter.formatDecimal(dst.course,3,0)+" °<br>";
+            courseLen=self.formatter.formatDecimal(dst.course,3,0)+" &#176;<br>";
             courseLen+=self.formatter.formatDecimal(dst.dtsnm,3,1)+" nm";
         }
         $(el).find('.avn_route_point_course').html(courseLen);
