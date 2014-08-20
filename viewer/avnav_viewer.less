@@ -508,6 +508,10 @@ button#avb_SettingsDefaults{
   .avn_button_icon_base('images/trash32.png');
 }
 
+button#avb_GpsCancel{
+  .avn_button_icon_base('images/Cancel40.png');
+}
+
 /*-------------------------------------------------------------
    AIS display
 -------------------------------------------------------------*/
@@ -621,34 +625,92 @@ button#avb_SettingsDefaults{
   right: 0;
   bottom: 0;
   top: 0;
-  margin-left: 10px;
-  margin-bottom: 10px;
-  margin-right: 10px;
-  margin-top: 10px;
+
 }
 #avi_gps_page_left{
+  float:left;
   width: 50%;
+}
+#avi_gps_page_right{
+  float:left;
+  width: 50%;
+}
+
+#avi_gps_page_upper{
+  border: 1px solid;
+  float: left;
+  width: 100%;
+}
+.avn_gpsp_label{
+  padding-left: 8px;
+  border-bottom: 1px solid;
+  border-top: 1px solid;
+  background-color: #E2DFDF;
+}
+.avn_gpsp_right_label{
+  font-size: 3vh;
+  .avn_gpsp_label()
 }
 .avn_gpsp_left_label{
   font-size: 4vh;
-  padding-left: 8px;
-  border-bottom: 1px solid;
-  background-color: #E2DFDF;
+  .avn_gpsp_label()
+}
+.avn_gpsp_bottom_label{
+  font-size: 2vh;
+  .avn_gpsp_label()
 }
 .avn_gpsp_left_value{
   font-size: 30vh;
+}
+.avn_gpsp_right_value{
+  font-size: 20vh;
+}
+.avn_gpsp_bottom_value{
+  font-size: 6vh;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 .avn_gpsp_left_unit{
   font-size: 5vh;
   padding-left: 2vh;
 }
+.avn_gpsp_right_unit{
+  font-size: 4vh;
+  padding-left: 2vh;
+}
+.avn_gpsp_bottom_unit{
+  font-size: 2vh;
+  padding-left: 4px;
+}
 .avn_gpsp_left_field{
+
+}
+.avn_gpsp_right_field{
+  border-left: 1px solid;
+  margin-left: -1px;
+}
+.avn_gpsp_bottom_field{
   border: 1px solid;
+  float: left;
 }
 #avi_gpsp_course_label{
   position: relative;
   top: -18vh;
 }
+#avi_gpsp_eta_value{
+  font-size: 15vh;
+}
+#avi_gpsp_heading_label{
+  position: relative;
+  top: -12vh;
+}
+#avi_gpsp_right_waypoint{
+  font-size: 4.3vh;
+}
+#avi_gps_page_bottom{
+  clear: both;
+}
+
 /*-------------------------------------------------------------------------------
     settings page
   -------------------------------------------------------------------------------
