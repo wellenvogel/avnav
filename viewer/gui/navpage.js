@@ -432,7 +432,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
         else $(el).removeClass('avn_route_info_active_point');
         $(el).find('input').val(txt);
         $(el).find('.avn_route_point_ll').html(self.formatter.formatLonLats(route.points[i]));
-        var courseLen="--- °<br>---- nm";
+        var courseLen="--- &#176;<br>---- nm";
         if (i>0) {
             var dst=avnav.nav.NavCompute.computeDistance(route.points[i-1],route.points[i]);
             courseLen=self.formatter.formatDecimal(dst.course,3,0)+" &#176;<br>";
