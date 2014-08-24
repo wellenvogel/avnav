@@ -48,6 +48,12 @@ avnav.gui.Navpage=function(){
      */
     this.lastGpsLock=false;
 
+    /**
+     * load chart when showing first
+     * @type {boolean}
+     */
+    this.firstShow=true;
+
     this.waypointPopUp='#avi_waypoint_popup';
     /**
      * @private
@@ -79,9 +85,12 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.fillDisplayFromGps();
     var newMap=false;
-    if (options) {
-        this.options_=options;
+    if (options && options.url) {
         newMap=true;
+        if (this.options_){
+            if (this.options_.url == options.url && this.options_.charturl == options.charturl) newMap=false;
+        }
+        this.options_=options;
     }
     else {
         if (! this.options_){
@@ -89,7 +98,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
             return;
         }
     }
-    if (newMap) {
+    if (newMap|| this.firstShow) {
         //chartbase: optional url for charts
         //list: the base url
         var chartbase = this.options_.charturl;
@@ -119,6 +128,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
             }
         });
     }
+    this.firstShow=false;
     this.updateMainPanelSize('#'+this.mapdom);
     this.getMap().updateSize();
     this.buttonUpdate(true);
@@ -170,6 +180,7 @@ avnav.gui.Navpage.prototype.hidePage=function(){
  *
  */
 avnav.gui.Navpage.prototype.localInit=function(){
+    var self=this;
     $('#leftBottomMarker').click({page:this},function(ev){
         var navobject=ev.data.page.navobject;
         var leg=navobject.getRawData(avnav.nav.NavEventType.ROUTE);
@@ -184,6 +195,14 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $('#leftBottomPosition').click({page:this},function(ev){
         var gps=ev.data.page.navobject.getRawData(avnav.nav.NavEventType.GPS);
         if (gps.valid) ev.data.page.gui.map.setCenter(gps);
+    });
+    $('#leftBottomPositionPos').click({page:this},function(ev){
+        ev.data.page.gui.showPage('gpspage',{return:'navpage'});
+        ev.preventDefault();
+    });
+    $('#leftBottomPositionStatus').click({page:this},function(ev){
+        ev.data.page.gui.showPage('gpspage',{return:'navpage'});
+        ev.preventDefault();
     });
     $('#centerDisplay').click({page:this},function(ev){
        ev.data.page.hideOverlay();
@@ -201,7 +220,10 @@ avnav.gui.Navpage.prototype.localInit=function(){
             self.navobject.getRoutingData().changeWp(wpid, point);
         }
     });
+
 };
+
+
 
 /**
  * @private

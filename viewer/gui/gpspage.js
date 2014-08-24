@@ -11,6 +11,11 @@ avnav.provide('avnav.gui.Gpspage');
  */
 avnav.gui.Gpspage=function(){
     avnav.gui.Page.call(this,'gpspage');
+    /**
+     * if set - return to this page on cancel
+     * @type {string}
+     */
+    this.returnpage=undefined;
 
 };
 avnav.inherits(avnav.gui.Gpspage,avnav.gui.Page);
@@ -19,6 +24,12 @@ avnav.inherits(avnav.gui.Gpspage,avnav.gui.Page);
 
 avnav.gui.Gpspage.prototype.showPage=function(options){
     if (!this.gui) return;
+    if (options && options.return){
+        this.returnpage=options.return;
+    }
+    else {
+        this.returnpage=undefined;
+    }
     this.computeLayout();
 };
 avnav.gui.Gpspage.prototype.localInit=function(){
@@ -98,7 +109,7 @@ avnav.gui.Gpspage.prototype.computeLayout=function(){
  */
 avnav.gui.Gpspage.prototype.btnGpsCancel=function(button,ev){
     log("GpsCancel clicked");
-    this.gui.showPage('mainpage');
+    this.gui.showPage(this.returnpage?this.returnpage:'mainpage');
 };
 
 (function(){
