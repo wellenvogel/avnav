@@ -580,7 +580,7 @@ avnav.nav.RouteData.prototype.routeOff=function(){
 
 
 /**
- * get the current lock state
+ * get the current lock state (i.e. are we routing?)
  * @returns {boolean}
  */
 avnav.nav.RouteData.prototype.getLock=function(){
