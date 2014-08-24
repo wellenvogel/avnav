@@ -24,6 +24,13 @@
   }
 }
 
+//have the border inside
+.border-box{
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
 
 /*-------------------------------------------------------------
    general settings
@@ -144,6 +151,19 @@ font-size: ( @bottomPanelHeight - 2 );
 #leftBottomMarker{
   width: 50%;
 }
+#leftBottomMarkerBearing{
+    .border-box();
+    height: @bottomPanelHeight;
+    border: 1px solid;
+    border-radius: 3px;
+    padding-right: 4px;
+}
+#leftBottomPositionCourse{
+  .border-box();
+  border: 1px solid;
+  border-radius: 3px;
+  height: @bottomPanelHeight;
+}
 #leftBottomMarker #leftBottomMarkerPos{
 	width: ( @bottomSmallFont * 7 );
 	.bottomMargins;
@@ -172,6 +192,8 @@ font-size: ( @bottomPanelHeight - 2 );
 #leftBottomMarker #distance{
 	font-size: @bottomBigFont;
 	.bottomInnerMargins;
+    border-left: 1px dotted;
+    padding-left: ( @bottomPanelHeight / 12 );
 }
 
 #leftBottomPosition{
@@ -187,6 +209,7 @@ font-size: ( @bottomPanelHeight - 2 );
 	width: ( @bottomSmallFont * 6 );
 	margin-top: ( @bottomSmallFont / 4 );
     .bottomhideverysmall();
+    padding-left: ( @bottomSmallFont / 4);
 }
 #leftBottomPosition #leftBottomPositionCourse{
 	//width: ( @bottomBigFont * 5 );
@@ -208,6 +231,8 @@ font-size: ( @bottomPanelHeight - 2 );
 #leftBottomPosition #boatSpeed{
 	font-size: @bottomBigFont;
 	.bottomInnerMargins;
+    border-left: 1px dotted;
+    padding-left: ( @bottomPanelHeight / 12 );
 }
 
 
@@ -628,11 +653,12 @@ button#avb_GpsCancel{
 
 }
 #avi_gps_page_left{
+  .border-box();
   float:left;
   width: 50%;
   height: 100%;
   border-right: 1px solid;
-  margin-left: -1px;
+
 }
 #avi_gps_page_right{
   float:left;
@@ -641,6 +667,7 @@ button#avb_GpsCancel{
 }
 
 #avi_gps_page_upper{
+  .border-box();
   border: 1px solid;
   float: left;
   width: 100%;
@@ -660,11 +687,11 @@ button#avb_GpsCancel{
   padding-left: 4px;
 }
 #avi_gpsp_route_dist{
+  .border-box();
   width: 50%;
   height: 100%;
   float: left;
   border-right: 1px solid;
-  margin-left: -1px;
 }
 #avi_gpsp_route_eta{
   width: 50%;
