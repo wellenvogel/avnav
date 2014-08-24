@@ -24,8 +24,8 @@ avnav.inherits(avnav.gui.Gpspage,avnav.gui.Page);
 
 avnav.gui.Gpspage.prototype.showPage=function(options){
     if (!this.gui) return;
-    if (options && options.return){
-        this.returnpage=options.return;
+    if (options && options.returnpage){
+        this.returnpage=options.returnpage;
     }
     else {
         this.returnpage=undefined;
