@@ -37,6 +37,9 @@ avnav.gui.Gpspage.prototype.localInit=function(){
     $(window).on('resize',function(){
        self.computeLayout();
     });
+    $('#avi_gps_page_inner').on('click',function(){
+       self.gui.showPage(self.returnpage?self.returnpage:'mainpage');
+    });
 };
 
 
