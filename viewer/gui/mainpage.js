@@ -15,11 +15,23 @@ avnav.gui.Mainpage=function(){
 };
 avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 
-
+avnav.gui.Mainpage.prototype.changeDim=function(newDim){
+    this.gui.properties.setValueByName('style.nightMode',newDim);
+    this.gui.properties.saveUserData();
+    this.gui.properties.updateLayout();
+    $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
+};
 avnav.gui.Mainpage.prototype.showPage=function(options){
     if (!this.gui) return;
     var ncon=this.gui.properties.getProperties().connectedMode;
     this.handleToggleButton('#avb_Connected',ncon);
+    ncon=this.gui.properties.getProperties().style.nightMode;
+    var nightDim=this.gui.properties.getProperties().nightFade;
+    if (ncon != 100 && ncon != nightDim){
+        //could happen if we return from settings page
+        this.changeDim(nightDim);
+    }
+    this.handleToggleButton('#avb_Night',ncon!=100);
     var page=this;
     var url=this.gui.properties.getProperties().navUrl+"?request=listCharts";
     $.ajax({
@@ -102,6 +114,17 @@ avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
     this.gui.properties.saveUserData();
     $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
 
+};
+
+avnav.gui.Mainpage.prototype.btnNight=function (button,ev){
+    log("Night clicked");
+    var ncon=this.gui.properties.getProperties().style.nightMode;
+    if (ncon == 100){
+        ncon=this.gui.properties.getProperties().nightFade;
+    }
+    else ncon=100;
+    this.handleToggleButton('#avb_Night',ncon!=100);
+    this.changeDim(ncon);
 };
 /**
  * create the page instance

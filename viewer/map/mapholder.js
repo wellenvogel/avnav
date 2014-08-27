@@ -135,6 +135,11 @@ avnav.map.MapHolder=function(properties,navobject){
      * @type {boolean}
      */
     this.routingActive=false;
+    /**
+     * the brightness
+     * @type {number}
+     */
+    this.brightness=0;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -839,6 +844,19 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     this.aislayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.routinglayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
+    if (this.brightness != 0){
+        var addv=this.brightness*255;
+        var imgdata=evt.context.getImageData(0,0,evt.context.canvas.width,evt.context.canvas.height);
+        var i,j;
+        for (i=0;i<imgdata.data.length;i+=4){
+            for (j=0;j<3;j++) {
+                imgdata.data[i+j] += addv;
+                if (imgdata.data[i+j] < 0)imgdata.data[i+j] = 0;
+                if (imgdata.data[i+j] > 255)imgdata.data[i+j] = 255;
+            }
+        }
+        evt.context.putImageData(imgdata,0,0);
+    }
 };
 
 /**
@@ -909,4 +927,9 @@ avnav.map.MapHolder.prototype.setRoutingActive=function(on){
 avnav.map.MapHolder.prototype.getRoutingActive=function(){
     return this.routingActive;
 };
+
+avnav.map.MapHolder.prototype.setBrightness=function(brightness){
+    this.brightness=brightness;
+};
+
 

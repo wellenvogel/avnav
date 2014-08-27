@@ -85,6 +85,10 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.fillDisplayFromGps();
     var newMap=false;
+    var brightness=this.gui.properties.getProperties().style.nightMode;
+    if (brightness==100) brightness=0;
+    else brightness=-(100-brightness*3)/100;
+    if (brightness > 0) brightness=0;
     if (options && options.url) {
         newMap=true;
         if (this.options_){
@@ -122,6 +126,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
             cache: false,
             success: function (data) {
                 self.getMap().initMap(self.mapdom, data, chartbase);
+                self.getMap().setBrightness(brightness);
             },
             error: function (ev) {
                 alert("unable to load charts " + ev.responseText);
@@ -129,6 +134,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
         });
     }
     this.firstShow=false;
+    this.getMap().setBrightness(brightness);
     this.updateMainPanelSize('#'+this.mapdom);
     this.getMap().updateSize();
     this.buttonUpdate(true);

@@ -120,9 +120,11 @@ var propertyDefinitions=function(){
             NMEA: new avnav.util.Property(	  "images/GreenBubble40.png"),
             ERROR: new avnav.util.Property(	  "images/RedBubble40.png")
         },
+        nightFade:new avnav.util.Property( 15,"NightDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in px
         //all style members map to less variables
         style:{
             bottomPanelHeight: new avnav.util.Property( 50,"Bottom Height(px)",avnav.util.PropertyType.RANGE,[20,80]),
+            nightMode: new avnav.util.Property( 100,"NightMode",avnav.util.PropertyType.RANGE,[0,100]),
             aisPanelWidth:new avnav.util.Property( 90,"AIS Width(px)",avnav.util.PropertyType.RANGE,[50,300]),
             routeInfoPanelWidth:new avnav.util.Property( 120,"RoutePanel Width(px)",avnav.util.PropertyType.RANGE,[50,300]),
             buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[40,100]),

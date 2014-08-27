@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <g>
+  <defs>
+   <clipPath id="cut-off-right">
+    <rect x="0" y="0" width="30" height="60" id="svg_3"/>
+   </clipPath>
+  </defs>
+  <title>Layer 1</title>
+  <circle id="svg_1" r="20" cy="30" cx="30" stroke-width="2" stroke="#000000" fill="#000000" clip-path="url(#cut-off-right)"/>
+  <circle id="svg_4" r="20" cy="30" cx="30" stroke-width="2" stroke="#000000" fill="none"/>
+  <line id="svg_2" y2="50" x2="30" y1="10" x1="30" stroke-width="2" stroke="#000000" fill="none"/>
+ </g>
+</svg>
