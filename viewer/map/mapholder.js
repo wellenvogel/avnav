@@ -845,17 +845,20 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     this.routinglayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     if (this.brightness != 0){
-        var addv=this.brightness*255;
-        var imgdata=evt.context.getImageData(0,0,evt.context.canvas.width,evt.context.canvas.height);
-        var i,j;
-        for (i=0;i<imgdata.data.length;i+=4){
-            for (j=0;j<3;j++) {
-                imgdata.data[i+j] += addv;
-                if (imgdata.data[i+j] < 0)imgdata.data[i+j] = 0;
-                if (imgdata.data[i+j] > 255)imgdata.data[i+j] = 255;
+        //potentially we have tainted data...
+        try {
+            var addv = this.brightness * 255;
+            var imgdata = evt.context.getImageData(0, 0, evt.context.canvas.width, evt.context.canvas.height);
+            var i, j;
+            for (i = 0; i < imgdata.data.length; i += 4) {
+                for (j = 0; j < 3; j++) {
+                    imgdata.data[i + j] += addv;
+                    if (imgdata.data[i + j] < 0)imgdata.data[i + j] = 0;
+                    if (imgdata.data[i + j] > 255)imgdata.data[i + j] = 255;
+                }
             }
-        }
-        evt.context.putImageData(imgdata,0,0);
+            evt.context.putImageData(imgdata, 0, 0);
+        }catch(ex){}
     }
 };
 
