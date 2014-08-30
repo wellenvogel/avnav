@@ -139,7 +139,12 @@ avnav.map.MapHolder=function(properties,navobject){
      * the brightness
      * @type {number}
      */
-    this.brightness=0;
+    this.opacity=0;
+    /**
+     * last set opacity
+     * @type {number}
+     */
+    this.lastOpacity=-1;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -835,6 +840,10 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
 avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     var newCenter=this.pointFromMap(evt.frameState.view2DState.center);
     this.setCenterFromMove(newCenter);
+    if (this.opacity != this.lastOpacity){
+        $(evt.context.canvas).css('opacity',this.opacity);
+        this.lastOpacity=this.opacity;
+    }
     this.drawing.setContext(evt.context);
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
     this.drawing.setRotation(evt.frameState.view2DState.rotation);
@@ -844,22 +853,7 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     this.aislayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.routinglayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
-    if (this.brightness != 0){
-        //potentially we have tainted data...
-        try {
-            var addv = this.brightness * 255;
-            var imgdata = evt.context.getImageData(0, 0, evt.context.canvas.width, evt.context.canvas.height);
-            var i, j;
-            for (i = 0; i < imgdata.data.length; i += 4) {
-                for (j = 0; j < 3; j++) {
-                    imgdata.data[i + j] += addv;
-                    if (imgdata.data[i + j] < 0)imgdata.data[i + j] = 0;
-                    if (imgdata.data[i + j] > 255)imgdata.data[i + j] = 255;
-                }
-            }
-            evt.context.putImageData(imgdata, 0, 0);
-        }catch(ex){}
-    }
+
 };
 
 /**
@@ -932,7 +926,7 @@ avnav.map.MapHolder.prototype.getRoutingActive=function(){
 };
 
 avnav.map.MapHolder.prototype.setBrightness=function(brightness){
-    this.brightness=brightness;
+    this.opacity=brightness;
 };
 
 

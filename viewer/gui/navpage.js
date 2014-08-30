@@ -85,10 +85,10 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.fillDisplayFromGps();
     var newMap=false;
-    var brightness=this.gui.properties.getProperties().style.nightMode;
-    if (brightness==100) brightness=0;
-    else brightness=-(100-brightness*3)/100;
-    if (brightness > 0) brightness=0;
+    var brightness=1;
+    if (this.gui.properties.getProperties().style.nightMode < 100) {
+        brightness=this.gui.properties.getProperties().nightChartFade/100;
+    }
     if (options && options.url) {
         newMap=true;
         if (this.options_){

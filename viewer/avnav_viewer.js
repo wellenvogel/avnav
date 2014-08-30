@@ -121,6 +121,7 @@ var propertyDefinitions=function(){
             ERROR: new avnav.util.Property(	  "images/RedBubble40.png")
         },
         nightFade:new avnav.util.Property( 15,"NightDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in px
+        nightChartFade:new avnav.util.Property( 30,"NightChartDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in %
         //all style members map to less variables
         style:{
             bottomPanelHeight: new avnav.util.Property( 50,"Bottom Height(px)",avnav.util.PropertyType.RANGE,[20,80]),
