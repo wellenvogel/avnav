@@ -450,7 +450,7 @@ button.avn_buttonActiveError{
 }
 
 button.avn_buttonInactive{
-	border: 4px solid #E6E6E6;
+	border: 4px solid fade(#E6E6E6,@nightModePercent*2);
 }
 
 .avn_button_icon_base(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
@@ -597,17 +597,17 @@ button#avb_GpsCancel{
 	
 }
 .avn_ais_info_first{
-	background-color: fade(@aisNearestColor,@nightModePercent * 3) !important;
+	background-color: fade(@aisNearestColor,@nightModePercent * 2) !important;
 }
 .avn_ais_selected{
-	background-color: fade(rgb(202, 213, 190),@nightModePercent * 3);
+	background-color: fade(rgb(202, 213, 190),@nightModePercent * 2);
 }
 
 .avn_ais_warning{
-	background-color: fade(@aisWarningColor,@nightModePercent * 3);
+	background-color: fade(@aisWarningColor,@nightModePercent * 2);
 }
 .avn_ais_info_warning{
-	background-color: fade(@aisWarningColor,@nightModePercent * 3) !important;
+	background-color: fade(@aisWarningColor,@nightModePercent * 2) !important;
 }
 
 #avi_ais_page_inner{
