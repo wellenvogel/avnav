@@ -325,6 +325,25 @@ LatLon.prototype.rhumbMidpointTo = function(point) {
   return new LatLon(lat3.toDeg(), lon3.toDeg());
 }
 
+/*----------------------------------------------------------------------------------------------
+  extended by Andreas Vogel - refer to webpage of movable type
+  cross track error
+  δ13 is (angular) distance from start point to third point
+  θ13 is (initial) bearing from start point to third point
+  θ12 is (initial) bearing from start point to end point
+  R is the earth’s radius
+  var dXt = Math.asin(Math.sin(d13/R)*Math.sin(θ13-θ12)) * R;
+ */
+LatLon.prototype.xte=function(endpoint,currentPoint){
+    var d13=this.distanceTo(currentPoint);
+    var f13=this.bearingTo(currentPoint);
+    f13=f13/180*Math.PI;
+    var f12=this.bearingTo(endpoint);
+    f12=f12/180*Math.PI;
+    var R=this._radius;
+    var dxt=Math.asin(Math.sin(d13/R)*Math.sin(f13-f12))*R;
+    return dxt;
+};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 

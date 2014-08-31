@@ -118,7 +118,8 @@ avnav.nav.NavObject=function(propertyHandler){
         routeLen: 0,
         routeRemain: 0,
         routeEta: null,
-        routeNextCourse: 0
+        routeNextCourse: 0,
+        routeXte: 0
     };
     this.formattedValues={
         markerEta:"--:--:--",
@@ -135,7 +136,8 @@ avnav.nav.NavObject=function(propertyHandler){
         routeLen: "--",
         routeRemain: "--",
         routeEta: "--:--:--",
-        routeNextCourse: "---"
+        routeNextCourse: "---",
+        routeXte: "---"
     };
     for (var k in this.formattedValues){
         this.registerValueProvider(k,this,this.getFormattedNavValue);
@@ -174,11 +176,14 @@ avnav.nav.NavObject.prototype.computeValues=function(){
 
             }
             else  this.data.markerEta = null;
+            var rstart=this.routeHandler.getRouteData().from;
+            this.data.routeXte=avnav.nav.NavCompute.computeXte(rstart,this.data.markerLatlon,gps);
         }
         else {
             this.data.markerCourse=undefined;
             this.data.markerDistance=undefined;
             this.data.markerEta=undefined;
+            this.data.routeXte=undefined;
         }
         var centerdst=avnav.nav.NavCompute.computeDistance(gps,this.maplatlon);
         this.data.centerCourse=centerdst.course;
@@ -190,6 +195,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
         this.data.markerCourse=0;
         this.data.markerDistance=0;
         this.data.markerEta=null;
+        this.data.routeXte=undefined;
     }
 
     //distance between marker and center
@@ -262,6 +268,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.routeRemain=this.formatter.formatDecimal(this.data.routeRemain,4,1);
     this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"--:--:--";
     this.formattedValues.routeNextCourse=(this.data.routeNextCourse !== undefined)?this.formatter.formatDecimal(this.data.routeNextCourse,3,0):"---";
+    this.formattedValues.routeXte=(this.data.routeXte !== undefined)?this.formatter.formatDecimal(this.data.routeXte,2,2):"---";
 };
 
 /**

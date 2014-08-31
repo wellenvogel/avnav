@@ -84,6 +84,7 @@ var propertyDefinitions=function(){
         navCircle1Radius: new avnav.util.Property( 300,"Circle 1 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
         navCircle2Radius: new avnav.util.Property( 1000,"Circle 2 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
         navCircle3Radius: new avnav.util.Property( 0,"Circle 3 Radius(m)",avnav.util.PropertyType.RANGE,[0,10000,10]),
+        gpsXteMax:new avnav.util.Property( 1,"XTE(nm)",avnav.util.PropertyType.RANGE,[0.1,5,0.1,1]),
         trackColor: new avnav.util.Property( "#942eba","Color",avnav.util.PropertyType.COLOR),
         trackWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         trackInterval: new avnav.util.Property( 30,"Point Dist.(s)",avnav.util.PropertyType.RANGE,[5,300]), //seconds

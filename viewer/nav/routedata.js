@@ -441,7 +441,7 @@ avnav.nav.RouteData.prototype.handleLegStatus=function(success,change){
 
 /**
  * return the current leg
- * @returns {}
+ * @returns {avnav.nav.Leg}
  */
 avnav.nav.RouteData.prototype.getRouteData=function(){
     return this.currentLeg;

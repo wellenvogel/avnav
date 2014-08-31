@@ -29,6 +29,16 @@ avnav.nav.NavCompute.computeDistance=function(src,dst){
     rt.course=llsrc.bearingTo(lldst);
     return rt;
 };
+
+avnav.nav.NavCompute.computeXte=function(start,destination,current){
+    //use the movable type stuff for computations
+    var llsrc=new LatLon(start.lat,start.lon);
+    var lldst=new LatLon(destination.lat,destination.lon);
+    var llcur=new LatLon(current.lat,current.lon);
+    var xte=llsrc.xte(lldst,llcur)*1000/1852;
+    return xte;
+};
+
 /**
  * compute the CPA point
  * returns src.lon,src.lat,dst.lon,dst.lat,cpa(m),cpanm(nm),tcpa(s),front (true if src reaches intersect point first)

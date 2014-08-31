@@ -162,6 +162,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     var leg=this.navobject.getRawData(avnav.nav.NavEventType.ROUTE);
     var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
     var to=leg.to?this.mapholder.pointToMap(leg.to.toCoord()):undefined;
+    var from=leg.from?this.mapholder.pointToMap(leg.from.toCoord()):undefined;
     var prop=this.mapholder.getProperties().getProperties();
     var drawNav=prop.layers.boat&&prop.layers.nav;
     var route=this.navobject.getRoutingData().getCurrentRoute();
@@ -173,6 +174,12 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     if (leg.active && gps.valid ){
         var line=[this.mapholder.pointToMap(gps.toCoord()),to];
         drawing.drawLineToContext(line,this.courseStyle);
+        /*
+        if (from){
+            line=[from,to];
+            drawing.drawLineToContext(line,this.lineStyle);
+        }
+        */
     }
     var routeTarget=this.navobject.getRoutingData().getCurrentRouteTargetIdx();
     if ((routeTarget >=0) || this.mapholder.getRoutingActive()) {
