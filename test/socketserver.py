@@ -20,12 +20,25 @@ def sendSock(file,sock,sleeptime):
     
   print "start sending %s"%(file)
   while True:
+    lbytes=[]
     try:
-      lbytes=f.readline()
-      lbytes=re.sub('[\n\r]','',lbytes)
-      if len(lbytes)> 0:
-        print lbytes
-        sock.sendall(lbytes+"\r\n")
+      try:
+      	lbytes=f.readline()
+      	lbytes=re.sub('[\n\r]','',lbytes)
+      except:
+        print "Exception on r: "+str(sys.exc_info()[0])
+      doSend=False
+      try:
+        if lbytes is not None and len(lbytes)> 0:
+	  doSend=True
+      except:
+        pass
+      if doSend:
+        try:
+            print lbytes
+            sock.sendall(lbytes+"\r\n")
+        except:
+            print "Exception on send: "+str(sys.exc_info()[0])
         time.sleep(sleeptime)
       else:
         raise "EOF on "+file
