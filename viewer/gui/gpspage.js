@@ -179,6 +179,25 @@ avnav.gui.Gpspage.prototype.drawXte=function(context){
 avnav.gui.Gpspage.prototype.navEvent=function(evt){
     var canvas=$('#avi_gpsp_xte')[0];
     this.drawXte(canvas.getContext("2d"));
+    if (this.gui.properties.getProperties().layers.ais){
+        var nearestTarget = this.navobject.getAisData().getNearestAisTarget();
+        var txt="CPA: "+this.navobject.getValue('aisCpa')+"nm, TCPA: "+this.navobject.getValue('aisTcpa');
+        $('#avi_gpsp_ais').text(txt);
+        if (nearestTarget.warning){
+            $('#avi_gpsp_ais').removeClass('avn_ais_info_first');
+            $('#avi_gpsp_ais').addClass('avn_ais_info_warning');
+        }
+        else {
+            $('#avi_gpsp_ais').addClass('avn_ais_info_first');
+            $('#avi_gpsp_ais').removeClass('avn_ais_info_warning');
+        }
+    }
+    else {
+        $('#avi_gpsp_ais').text("");
+        $('#avi_gpsp_ais').removeClass('avn_ais_info_first');
+        $('#avi_gpsp_ais').removeClass('avn_ais_info_warning');
+    }
+
 };
 //-------------------------- Buttons ----------------------------------------
 /**
