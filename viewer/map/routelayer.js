@@ -204,7 +204,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         this.routePixel=[];
 
     }
-    if (to && (routeTarget<0) && leg.active){
+    if (to && (routeTarget<0)){
         drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
     }
 
