@@ -29,6 +29,16 @@ avnav.nav.NavEventSource={
 };
 
 /**
+ * the center mode for ais
+ * @type {{NONE: number, GPS: number, MAP: number}}
+ */
+avnav.nav.AisCenterMode={
+    NONE:0,
+    GPS:1,
+    MAP:2
+};
+
+/**
  *
  * @param {avnav.nav.NavEventType} type
  * @param {Array.<string>} changedNames the display names that have changed data
@@ -95,6 +105,8 @@ avnav.nav.NavObject=function(propertyHandler){
      * @type {avnav.nav.navdata.Point}
      */
     this.maplatlon=new avnav.nav.navdata.Point(0,0);
+
+    this.aisMode=avnav.nav.AisCenterMode.NONE;
 
 
     /**
@@ -277,6 +289,28 @@ avnav.nav.NavObject.prototype.computeValues=function(){
  */
 avnav.nav.NavObject.prototype.getMapCenter=function(){
     return this.maplatlon;
+};
+
+/**
+ * get the center for AIS queries
+ * @returns {avnav.nav.navdata.Point|avnav.nav.NavObject.maplatlon|*}
+ */
+avnav.nav.NavObject.prototype.getAisCenter=function(){
+    if (this.aisMode == avnav.nav.AisCenterMode.NONE) return undefined;
+    if (this.aisMode == avnav.nav.AisCenterMode.GPS) {
+        var data=this.gpsdata.getGpsData();
+        if (data.valid) return data;
+        return undefined;
+    }
+    return this.maplatlon;
+};
+
+/**
+ * set the mode for the AIS query
+ * @param {avnav.nav.AisCenterMode} mode
+ */
+avnav.nav.NavObject.prototype.setAisCenterMode=function(mode){
+    this.aisMode=mode;
 };
 /**
  * @private

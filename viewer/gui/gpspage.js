@@ -12,16 +12,10 @@ avnav.provide('avnav.gui.Gpspage');
 avnav.gui.Gpspage=function(){
     avnav.gui.Page.call(this,'gpspage');
     /**
-     * if set - return to this page on cancel
-     * @type {string}
-     */
-    this.returnpage=undefined;
-    /**
      * @private
      * @type {avnav.util.Formatter}
      */
     this.formatter=new avnav.util.Formatter();
-
 };
 avnav.inherits(avnav.gui.Gpspage,avnav.gui.Page);
 
@@ -29,12 +23,8 @@ avnav.inherits(avnav.gui.Gpspage,avnav.gui.Page);
 
 avnav.gui.Gpspage.prototype.showPage=function(options){
     if (!this.gui) return;
-    if (options && options.returnpage){
-        this.returnpage=options.returnpage;
-    }
-    else {
-        this.returnpage=undefined;
-    }
+    this.gui.navobject.setAisCenterMode(avnav.nav.AisCenterMode.GPS);
+    this.gui.navobject.getAisData().setTrackedTarget(0);
     this.computeLayout();
 };
 avnav.gui.Gpspage.prototype.localInit=function(){
@@ -43,7 +33,11 @@ avnav.gui.Gpspage.prototype.localInit=function(){
        self.computeLayout();
     });
     $('#avi_gps_page_inner').on('click',function(){
-       self.gui.showPage(self.returnpage?self.returnpage:'mainpage');
+       self.gui.showPageOrReturn(self.returnpage,'mainpage');
+    });
+    $('#avi_gpsp_aisframe').on('click',function(evt){
+        evt.stopPropagation();
+        self.gui.showPage('aispage',{returnpage:'gpspage'});
     });
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -94,11 +88,15 @@ avnav.gui.Gpspage.prototype.computeLayout=function(){
             $(hel).css('height',relheight+"%");
             var fontbase=relheight*vheight*0.7/100;
             var labelbase=fontbase;
+            var padding=0;
             if ((fontbase * vfieldlengths[idx]) > vwidth ){
-                fontbase = vwidth/(vfieldlengths[idx]);
+                var nfontbase = vwidth/(vfieldlengths[idx]);
+                padding=(fontbase-nfontbase)/2;
+                fontbase=nfontbase;
             }
             $(hel).find('.avn_gpsp_value').each(function(vidx,vel){
                 $(vel).css('font-size',fontbase+"px");
+                $(vel).css('padding-top',padding+"px");
             });
             $(hel).find('.avn_gpsp_unit').each(function(vidx,vel){
                 $(vel).css('font-size',fontbase*0.3+"px");
@@ -179,23 +177,23 @@ avnav.gui.Gpspage.prototype.drawXte=function(context){
 avnav.gui.Gpspage.prototype.navEvent=function(evt){
     var canvas=$('#avi_gpsp_xte')[0];
     this.drawXte(canvas.getContext("2d"));
-    if (this.gui.properties.getProperties().layers.ais){
-        var nearestTarget = this.navobject.getAisData().getNearestAisTarget();
-        var txt="CPA: "+this.navobject.getValue('aisCpa')+"nm, TCPA: "+this.navobject.getValue('aisTcpa');
-        $('#avi_gpsp_ais').text(txt);
+    var nearestTarget = this.navobject.getAisData().getNearestAisTarget();
+    if (this.gui.properties.getProperties().layers.ais && nearestTarget.cpa ){
+        var txt="CPA: "+this.navobject.getValue('aisCpa')+"nm&nbsp;TCPA: "+this.navobject.getValue('aisTcpa');
+        $('#avi_gpsp_ais').html(txt);
         if (nearestTarget.warning){
-            $('#avi_gpsp_ais').removeClass('avn_ais_info_first');
-            $('#avi_gpsp_ais').addClass('avn_ais_info_warning');
+            $('#avi_gpsp_ais_status').removeClass('avn_ais_info_first');
+            $('#avi_gpsp_ais_status').addClass('avn_ais_info_warning');
         }
         else {
-            $('#avi_gpsp_ais').addClass('avn_ais_info_first');
-            $('#avi_gpsp_ais').removeClass('avn_ais_info_warning');
+            $('#avi_gpsp_ais_status').addClass('avn_ais_info_first');
+            $('#avi_gpsp_ais_status').removeClass('avn_ais_info_warning');
         }
     }
     else {
         $('#avi_gpsp_ais').text("");
-        $('#avi_gpsp_ais').removeClass('avn_ais_info_first');
-        $('#avi_gpsp_ais').removeClass('avn_ais_info_warning');
+        $('#avi_gpsp_ais_status').removeClass('avn_ais_info_first');
+        $('#avi_gpsp_ais_status').removeClass('avn_ais_info_warning');
     }
 
 };
@@ -206,7 +204,7 @@ avnav.gui.Gpspage.prototype.navEvent=function(evt){
  */
 avnav.gui.Gpspage.prototype.btnGpsCancel=function(button,ev){
     log("GpsCancel clicked");
-    this.gui.showPage(this.returnpage?this.returnpage:'mainpage');
+    this.gui.showPageOrReturn(this.returnpage,'mainpage');
 };
 
 (function(){

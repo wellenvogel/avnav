@@ -144,6 +144,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
         if (this.showHideAdditionalPanel('#aisInfo', false, '#' + this.mapdom))
             this.gui.map.updateSize();
     }
+    this.gui.navobject.setAisCenterMode(avnav.nav.AisCenterMode.MAP);
     this.updateAisPanel();
     this.fillDisplayFromGps();
     if (!this.gui.properties.getProperties().layers.nav) this.hideRouting();
@@ -198,23 +199,21 @@ avnav.gui.Navpage.prototype.localInit=function(){
             navobject.getRoutingData().setActiveWp(routingTarget);
         }
     });
-    $('#leftBottomPosition').click({page:this},function(ev){
+    $('#leftBottomPositionCourse').click({page:this},function(ev){
+        ev.stopPropagation();
         var gps=ev.data.page.navobject.getRawData(avnav.nav.NavEventType.GPS);
         if (gps.valid) ev.data.page.gui.map.setCenter(gps);
     });
-    $('#leftBottomPositionPos').click({page:this},function(ev){
+    $('#leftBottomPosition').click({page:this},function(ev){
+        ev.stopPropagation();
         ev.data.page.gui.showPage('gpspage',{returnpage:'navpage'});
-        ev.preventDefault();
     });
-    $('#leftBottomPositionStatus').click({page:this},function(ev){
-        ev.data.page.gui.showPage('gpspage',{returnpage:'navpage'});
-        ev.preventDefault();
-    });
+
     $('#centerDisplay').click({page:this},function(ev){
        ev.data.page.hideOverlay();
     });
     $('#aisInfo').click({page:this},function(ev){
-        ev.data.page.gui.showPage('aispage');
+        ev.data.page.gui.showPage('aispage',{returnpage:'navpage'});
     });
     var self=this;
     $(this.waypointPopUp).find('input').on('change',function(ev){
@@ -334,7 +333,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         if (! aisparam) return;
         if (aisparam.mmsi){
             this.navobject.getAisData().setTrackedTarget(aisparam.mmsi);
-            this.gui.showPage('aispage');
+            this.gui.showPage('aispage',{returnpage:'navpage'});
         }
     }
 };

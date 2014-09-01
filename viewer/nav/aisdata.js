@@ -309,12 +309,7 @@ avnav.nav.AisData.prototype.getFormattedAisValue=function(dname){
 avnav.nav.AisData.prototype.startQuery=function() {
     var url = this.propertyHandler.getProperties().navUrl+"?request=ais";
     var timeout = this.propertyHandler.getProperties().aisQueryTimeout; //in ms
-    var center=this.navobject.getMapCenter();
-    if (! center || (center.lat==0 && center.lon==0)){
-        //TODO: we should have some other indicator for undefined map center...
-        center=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
-        if (! center.valid) center=undefined;
-    }
+    var center=this.navobject.getAisCenter();
     var self=this;
     if (! center){
         window.clearTimeout(this.timer);

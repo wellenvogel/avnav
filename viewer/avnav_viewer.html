@@ -154,12 +154,15 @@ all buttons with ids avb_... will call corresponding js functions
                       <div class='avn_gpsp_vfield' avnfs="15">
                           <div class='avn_gpsp_field_label'>Pos</div>
                           <div>
-                              <span class='avd_gpsPosition avn_gpsp_value' avnrel="15"></span>
+                              <span id='avi_gpsp_position' class='avd_gpsPosition avn_gpsp_value' avnrel="15"></span>
                           </div>
                       </div>
                       <div class='avn_gpsp_vfield' avnfs="15">
                           <div class='avn_gpsp_field_label'>AIS</div>
-                          <div id='avi_gpsp_ais' class='avn_gpsp_value' avnrel="20"></div>
+                          <div id="avi_gpsp_aisframe" class="avn_gpsp_value" avnrel="22">
+                              <div id="avi_gpsp_ais_status"></div>
+                              <div id='avi_gpsp_ais' ></div>
+                          </div>
                       </div>
 
                   </div>

@@ -18,6 +18,7 @@ avnav.gui.Page=function(name){
     this.navobject=null;
     this.name=name;
     this.visible=false;
+    this.returnpage=undefined;
     var myself=this;
     /**
      * a list of items with class avd_ - key are the names, values the jQuery dom objects
@@ -72,6 +73,13 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         //visibility changed
         this.visible=this.isVisible();
         if (this.visible){
+            if (evdata.options && evdata.options.returnpage){
+                this.returnpage=evdata.options.returnpage;
+            }
+            else {
+                if (!evdata.options || !evdata.options.returning)this.returnpage=undefined;
+                //keep returnpage unchanged if we return
+            }
             this.showPage(evdata.options);
             this.updateDisplayObjects();
         }

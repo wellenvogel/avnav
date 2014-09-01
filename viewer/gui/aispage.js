@@ -63,7 +63,7 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         ev.data.self.aishandler.setTrackedTarget(mmsi);
         var pos=ev.data.self.aishandler.getAisPositionByMmsi(mmsi);
         if (pos)ev.data.self.gui.map.setCenter(pos);
-        ev.data.self.gui.showPage('navpage');
+        ev.data.self.gui.showPageOrReturn(ev.data.self.returnpage,'navpage');
     });
     if (initial){
         var topElement=$(domid+' .avn_ais_selected').position();
@@ -93,13 +93,13 @@ avnav.gui.Aispage.prototype.navEvent=function(ev){
 
 avnav.gui.Aispage.prototype.btnAisNearest=function (button,ev){
     this.aishandler.setTrackedTarget(0);
-    this.gui.showPage('navpage');
+    this.gui.showPageOrReturn(this.returnpage,'navpage');
     log("Nearest clicked");
 };
 
 avnav.gui.Aispage.prototype.btnAisCancel=function (button,ev){
     log("Cancel clicked");
-    this.gui.showPage('navpage');
+    this.gui.showPageOrReturn(this.returnpage,'navpage');
 };
 /**
  * create the page instance

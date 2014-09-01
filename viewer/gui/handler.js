@@ -44,7 +44,23 @@ avnav.gui.Handler=function(properties,navobject,map){
     /** {avnav.map.MapHolder} */
     this.map=map;
 };
-
+/**
+ * return to a page or show a new one if returnpage is not set
+ * set the returning flag in options if we return
+ * @param returnpage
+ * @param page
+ * @param opt_options
+ * @returns {boolean|*}
+ */
+avnav.gui.Handler.prototype.showPageOrReturn=function(returnpage,page,opt_options){
+    var spage=page;
+    if (returnpage !== undefined){
+        if (! opt_options) opt_options={};
+        opt_options.returning=true;
+        spage=returnpage;
+    }
+    return this.showPage(spage,opt_options);
+};
 /**
  * show a certain page
  * @param {String} name
