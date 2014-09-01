@@ -386,6 +386,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     $(this.waypointPopUp).hide();
     if (this.lastGpsLock) {
         this.gui.map.setGpsLock(true);
+        this.lastGpsLock=false;
     }
 };
 
