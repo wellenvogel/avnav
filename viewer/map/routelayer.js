@@ -63,6 +63,7 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.markerStyle={};
     this.courseStyle={};
     this.textStyle={};
+    this.dashedStyle={};
     this.setStyle();
     var self=this;
     this.getRoute();
@@ -84,6 +85,11 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
             color: this.mapholder.properties.getProperties().routeColor,
             width: this.mapholder.properties.getProperties().routeWidth
         };
+    this.dashedStyle = {
+        color: this.mapholder.properties.getProperties().routeColor,
+        width: this.mapholder.properties.getProperties().routeWidth,
+        dashed: true
+    };
     this.normalWpStyle={
         color: "yellow",
         width: 1,
@@ -174,12 +180,10 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     if (leg.active && gps.valid ){
         var line=[this.mapholder.pointToMap(gps.toCoord()),to];
         drawing.drawLineToContext(line,this.courseStyle);
-        /*
         if (from){
             line=[from,to];
-            drawing.drawLineToContext(line,this.lineStyle);
+            drawing.drawLineToContext(line,this.dashedStyle);
         }
-        */
     }
     var routeTarget=this.navobject.getRoutingData().getCurrentRouteTargetIdx();
     if ((routeTarget >=0) || this.mapholder.getRoutingActive()) {

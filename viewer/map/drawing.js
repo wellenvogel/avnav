@@ -164,6 +164,32 @@ avnav.map.Drawing.prototype.drawImageToContext=function(point,image,opt_options)
     return rt;
 };
 /**
+ * draw a dashed line
+ * coordinates have to be in device coordinates
+ * @private
+ * @param x1 start x
+ * @param y1 start y
+ * @param x2 end x
+ * @param y2 end y
+ * @param dashLen the len in device pixel
+ */
+avnav.map.Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
+    this.context.moveTo(x1, y1);
+    var dX = x2 - x1;
+    var dY = y2 - y1;
+    var dashes = Math.floor(Math.sqrt(dX * dX + dY * dY) / dashLen);
+    var dashX = dX / dashes;
+    var dashY = dY / dashes;
+
+    var q = 0;
+    while (q++ < dashes) {
+        x1 += dashX;
+        y1 += dashY;
+        this.context[q % 2 == 0 ? 'moveTo' : 'lineTo'](x1, y1);
+    }
+    this.context[q % 2 == 0 ? 'moveTo' : 'lineTo'](x2, y2);
+};
+/**
  * draw a line string
  * @param {Array.<ol.Coordinate>}points in map coordinates
  * @param opt_style - properties:
@@ -171,6 +197,7 @@ avnav.map.Drawing.prototype.drawImageToContext=function(point,image,opt_options)
  *          width:  - width in px
  *          cap:    - line cap
  *          join:   - line join
+ *          dashed: - if set draw a dashed line
  * @return {Array.<ol.Coordinate>} the css pixel coordinates of the points
  */
 avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
@@ -184,11 +211,19 @@ avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
     p=this.pixelToDevice(p);
     this.context.moveTo(p[0],p[1]);
     var i;
+    var dashlen=0;
+    if (opt_style && opt_style.dashed){
+        dashlen=this.context.canvas.width/100;
+        dashlen*=this.devPixelRatio;
+    }
+    var last=p;
     for (i=1;i<points.length;i++){
         p=this.pointToCssPixel(points[i]);
         rt.push(p);
         p=this.pixelToDevice(p);
-        this.context.lineTo(p[0],p[1]);
+        if (dashlen == 0) this.context.lineTo(p[0],p[1]);
+        else this.dashedLine(last[0],last[1],p[0],p[1],dashlen);
+        last=p;
     }
     this.context.stroke();
     return rt;
