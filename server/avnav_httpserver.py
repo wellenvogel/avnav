@@ -49,6 +49,7 @@ from avnav_nmea import *
 from avnav_worker import *
 from avnav_router import *
 from avnav_trackwriter import *
+from avnav_httpserver import *
 
  
   

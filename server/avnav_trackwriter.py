@@ -32,6 +32,8 @@ import threading
 import os
 import datetime
 import glob
+import sys
+import traceback
 
 from avnav_util import *
 from avnav_worker import *
@@ -172,7 +174,7 @@ class AVNTrackWriter(AVNWorker):
     except:
       pass
     if f is None:
-      AVNlog.warn("unable to write to gpx file %s",filename)
+      AVNLog.warn("unable to write to gpx file %s",filename)
       return
     AVNLog.debug("writing gpx file %s",filename)
     title,e=os.path.splitext(os.path.basename(filename))

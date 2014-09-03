@@ -150,9 +150,9 @@ class AVNChartHandler(AVNWorker):
             args=["","-i",chartdir]
             rt=create_overview.main(args)
             if rt == 0:
-              AVNLog.info("created/updated %s in %s",AVNHttpSserver.navxml,chartdir)
+              AVNLog.info("created/updated %s in %s",AVNHTTPServer.navxml,chartdir)
             if rt == 1:
-              AVNLog.error("error creating/updating %s in %s",navxml,chartdir)
+              AVNLog.error("error creating/updating %s in %s",AVNHTTPServer.navxml,chartdir)
       except:
         AVNLog.error("error while trying to update charts %s",traceback.format_exc())
       time.sleep(self.getIntParam('period') or 10)   
