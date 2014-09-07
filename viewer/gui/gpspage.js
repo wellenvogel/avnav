@@ -147,7 +147,7 @@ avnav.gui.Gpspage.prototype.drawXte=function(context){
     context.fillText(xteText,left,textBase);
     context.fillText(xteText,right,textBase);
     context.fillText("0",0.5*w,textBase);
-    context.lineWidth=2;
+    context.lineWidth=3;
     context.beginPath();
     context.moveTo(left,linebase-0.5*sideHeight);
     context.lineTo(left,linebase+0.5*sideHeight);
