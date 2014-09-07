@@ -216,28 +216,35 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.data.centerMarkerDistance=mcdst.dtsnm;
     //route data
     var route=this.routeHandler.getCurrentRoute();
-    if (this.routeHandler.getLock() && this.routeHandler.getRouteData().name) {
+    if (this.routeHandler.getRouteData().name) {
         this.data.routeName = route.name;
         this.data.routeNumPoints = route.points.length;
         this.data.routeLen = this.routeHandler.computeLength(0);
-        this.data.routeRemain = this.routeHandler.computeLength(-1) + this.data.markerDistance;
-        var routetime = gps.rtime ? gps.rtime.getTime() : 0;
-        if (vmgapp > 0) {
-            routetime += this.data.routeRemain / vmgapp * 3600 * 1000; //time in ms
-            var routeDate = new Date(Math.round(routetime));
-            this.data.routeEta = routeDate;
+        if (this.routeHandler.getLock()) {
+            this.data.routeRemain = this.routeHandler.computeLength(-1) + this.data.markerDistance;
+            var routetime = gps.rtime ? gps.rtime.getTime() : 0;
+            if (vmgapp > 0) {
+                routetime += this.data.routeRemain / vmgapp * 3600 * 1000; //time in ms
+                var routeDate = new Date(Math.round(routetime));
+                this.data.routeEta = routeDate;
+            }
+            else {
+                this.data.routeEta = undefined;
+            }
+            this.data.routeNextCourse = undefined;
+            var curwpidx = this.routeHandler.getCurrentRouteTargetIdx();
+            if (curwpidx >= 0 && gps.valid) {
+                var nextwp = this.routeHandler.getWp(curwpidx + 1);
+                if (nextwp) {
+                    var dst = avnav.nav.NavCompute.computeDistance(gps, nextwp);
+                    this.data.routeNextCourse = dst.course;
+                }
+            }
         }
         else {
-            this.data.routeEta = undefined;
-        }
-        this.data.routeNextCourse = undefined;
-        var curwpidx = this.routeHandler.getCurrentRouteTargetIdx();
-        if (curwpidx >= 0 && gps.valid) {
-            var nextwp = this.routeHandler.getWp(curwpidx + 1);
-            if (nextwp) {
-                var dst = avnav.nav.NavCompute.computeDistance(gps, nextwp);
-                this.data.routeNextCourse = dst.course;
-            }
+            this.data.routeRemain=0;
+            this.data.routeEta=undefined;
+            this.data.routeNextCourse=undefined;
         }
     }
     else {
