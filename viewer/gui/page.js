@@ -96,7 +96,10 @@ avnav.gui.Page.prototype.initDisplayObjects=function(){
     var self=this;
     for (var i=0;i< names.length;i++){
         this.getDiv().find('.avd_'+names[i]).each(function(idx,el){
-            self.displayItems[names[i]]=el;
+            if (self.displayItems[names[i]] === undefined){
+                self.displayItems[names[i]]=[];
+            }
+            self.displayItems[names[i]].push(el);
         });
     }
 };
@@ -107,9 +110,12 @@ avnav.gui.Page.prototype.initDisplayObjects=function(){
 avnav.gui.Page.prototype.updateDisplayObjects=function(){
     var name;
     for (name in this.displayItems){
-        var el=this.displayItems[name];
-        var val=this.navobject.getValue(name);
-        $(el).text(val);
+        var ellist=this.displayItems[name];
+        var el;
+        for (el in ellist) {
+            var val = this.navobject.getValue(name);
+            $(ellist[el]).text(val);
+        }
     }
 };
 
