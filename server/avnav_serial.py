@@ -63,7 +63,8 @@ class SerialReader():
                'xonxoff': 0,
                'rtscts': 0,
                'numerrors': 20, #set this to 0 to avoid any check for NMEA data
-               'autobaudtime': 5 #use that many seconds to read data for autobauding if no newline is found
+               'autobaudtime': 5, #use that many seconds to read data for autobauding if no newline is found
+               'filter':"" #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
                }
     return cfg
     

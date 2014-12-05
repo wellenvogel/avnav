@@ -75,6 +75,7 @@ class AVNUsbSerialReader(AVNWorker):
         'name':'',    #will be set automatically
         'usbid':None, #an identifier of the USB device 
                       #.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1
+        'type': 'reader',
                })
     return rt
   

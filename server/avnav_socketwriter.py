@@ -33,6 +33,7 @@ import threading
 from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
+from avnav_nmea import *
 
 
 #a worker to output data via a socket
@@ -103,23 +104,7 @@ class AVNSocketWriter(AVNWorker):
       return None
     return rt
   
-  #check if the line matches a provided filter
-  def checkFilter(self,line,filter):
-    try:
-      if filter is None:
-        return True
-      for f in filter:
-        if f[0:1]=='$':
-          if line[0:1]!='$':
-            return False
-          if f[1:4]==line[3:6]:
-            return True
-          return False
-        if line.startswith(f):
-          return True
-    except:
-      pass
-    return False
+
   #the writer for a connected client
   def client(self,socket,addr):
     infoName="SocketWriter-%s"%(str(addr),)
@@ -136,7 +121,7 @@ class AVNSocketWriter(AVNWorker):
         seq,data=self.feeder.fetchFromHistory(seq,10)
         if len(data)>0:
           for line in data:
-            if self.checkFilter(line, filter):
+            if NMEAParser.checkFilter(line, filter):
               socket.sendall(line)
         else:
           time.sleep(0.1)

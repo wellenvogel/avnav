@@ -124,7 +124,24 @@ class NMEAParser():
     AVNLog.ld("pos",pos,rt)
     return rt
    
-  
+  @classmethod
+  #check if the line matches a provided filter
+  def checkFilter(cls,line,filter):
+    try:
+      if filter is None:
+        return True
+      for f in filter:
+        if f[0:1]=='$':
+          if line[0:1]!='$':
+            return False
+          if f[1:4]==line[3:6]:
+            return True
+          return False
+        if line.startswith(f):
+          return True
+    except:
+      pass
+    return False
  
   #parse a line of NMEA data and store it in the navdata array      
   def parseData(self,data):
@@ -163,9 +180,9 @@ class NMEAParser():
         rt['track']=float(darray[1] or '0')
         if (mode == 'T'):
           #new mode
-          rt['speed']=float(darray[5] or '0')*NM/3600
+          rt['speed']=float(darray[5] or '0')*self.NM/3600
         else:
-          rt['speed']=float(darray[3]or '0')*NM/3600
+          rt['speed']=float(darray[3]or '0')*self.NM/3600
         self.addToNavData(rt, None)
         return True
       if tag=='RMC':
