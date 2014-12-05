@@ -31,6 +31,7 @@ import subprocess
 import re
 __author__ = 'andreas'
 
+
 class  AvnavGui(Avnav):
     def __init__(self, *args, **kwds):
         Avnav.__init__(self, *args, **kwds)
@@ -57,7 +58,7 @@ class  AvnavGui(Avnav):
             return
         script=os.path.join(self.getBaseDir(),"..","server","avnav_server.py")
         args=["xterm","-hold","-e",sys.executable,script,"-c",os.path.join(self.outputDir.GetValue(),"out"),os.path.join(self.getBaseDir(),"avnav_server.xml")]
-        self.server=subprocess.Popen(args)
+        self.server=subprocess.Popen(args,cwd=self.getBaseDir())
         self.checkServerRunning()
 
     def terminateServer(self):
@@ -155,7 +156,7 @@ class  AvnavGui(Avnav):
             args.append("-f")
         for name in selectedFiles:
             args.append(name)
-        self.converter=subprocess.Popen(args)
+        self.converter=subprocess.Popen(args,cwd=self.getBaseDir())
         self.btStart.SetLabel("Stop")
         self.checkConverterRunning()
 
@@ -173,7 +174,7 @@ class  AvnavGui(Avnav):
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
-    wx.InitAllImageHandlers()
+    #wx.InitAllImageHandlers()
     frame_1 = AvnavGui(None, -1, "")
     app.SetTopWindow(frame_1)
     frame_1.Show()
