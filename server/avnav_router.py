@@ -42,6 +42,7 @@ import xml.etree.ElementTree as ET
 from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
+from avnav_data import *
 
 
 class AVNRoutingLeg():
@@ -80,7 +81,9 @@ class AVNRouter(AVNWorker):
     if child is None:
       
       rt={
-          "routesdir":""
+          "routesdir":"",
+          "interval": 5, #interval in seconds for computing route data
+          "feederName":''
           };
       return rt
     return None
@@ -229,6 +232,7 @@ class AVNRouter(AVNWorker):
   #this is the main thread - listener
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    interval=self.getIntParam('interval')
     routesdir=self.getStringParam("routesdir")
     if routesdir == "":
       routesdir=os.path.join(unicode(os.path.dirname(sys.argv[0])),u'routes')
@@ -253,10 +257,30 @@ class AVNRouter(AVNWorker):
       #TODO: open route
     else:
       AVNLog.info("no current leg %s found"%(self.currentLegFileName,))
+    feeder=self.findFeeder(self.getStringParam('feederName'))
     while True:
-      time.sleep(1)
+      time.sleep(interval)
       try:
-        pass
+        #do the computation of some route data
+        if self.currentLeg:
+          startWp=self.currentLeg.fromWP
+          endWp=self.currentLeg.toWP
+          if startWp is not None and endWp is not None:
+            curTPV=self.navdata.getMergedEntries("TPV", [])
+            lat=curTPV.data.get('lat')
+            lon=curTPV.data.get('lon')
+            #we could have speed(kn) or course(deg) in curTPV
+            #they are basically as decoded by gpsd
+            if lat is not None and lon is not None:
+              AVNLog.debug("compute route data from %s to %s",str(startWp),str(endWp))
+              #do the computation here using e.g. geo
+              #see some lines above for a distance
+              nmeaData="$XXXaha\n"
+              AVNLog.debug("adding NMEA %s",nmeaData,)
+              feeder.addNMEA(nmeaData)
+          pass
+        else:
+          pass
       except Exception as e:
         AVNLog.warn("exception in router %s, retrying",traceback.format_exc())
   

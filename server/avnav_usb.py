@@ -213,7 +213,7 @@ class AVNUsbSerialReader(AVNWorker):
           if handlertype == 'reader':
             handler=SerialReader(param, None, self.writeData, self)
           else:
-            AVNLog.info("ignore device %s : type %s",(usbid,handlertype))
+            AVNLog.info("ignore device %s : type %s",usbid,handlertype)
             handler=DummyHandler()
         res=self.checkAndAddHandler(usbid, handler,devicelist[usbid])
         if not res:
