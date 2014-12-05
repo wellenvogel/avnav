@@ -21,5 +21,8 @@ Or directly:
 cd linux
 ../server/avnav_server.py [-d] avnav_server.xml
 
+Settings when testing serial receive:
+stty -icrnl < /dev/ttyUSB1
+cat /dev/ttyUSB1
 
 
