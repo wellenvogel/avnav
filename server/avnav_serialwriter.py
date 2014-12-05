@@ -69,9 +69,9 @@ class SerialWriter(SerialReader):
     self.infoHandler=infoHandler
     self.doStop=False 
     self.setInfo("created",AVNWorker.Status.INACTIVE)
-    feeder=AVNWorker.findFeeder(self.getStringParam('feederName'))
+    feeder=AVNWorker.findFeeder(self.param.get('feederName'))
     if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam('feederName') or "")
+      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.param.get('feederName') or "")
     self.feeder=feeder
     self.maplock=threading.Lock()
     self.addrmap={}
@@ -98,8 +98,8 @@ class SerialWriter(SerialReader):
     timeout=float(self.param['timeout'])
     name=self.getName()
     if init:
-      AVNLog.info("openDevice for port %s, baudrate=%d, timeout=%f, autobaud=%s",
-                  portname,baud,timeout,"true" if autobaud else "false")
+      AVNLog.info("openDevice for port %s, baudrate=%d, timeout=%f",
+                  portname,baud,timeout)
       init=False
     else:
       AVNLog.debug("openDevice for port %s, baudrate=%d, timeout=%f",portname,baud,timeout)
@@ -144,7 +144,7 @@ class SerialWriter(SerialReader):
       porttimeout=timeout*10
       baud=int(self.param['baud'])
       maxerrors=int(self.param['numerrors'])
-      filterstr=self.getStringParam('filter')
+      filterstr=self.param.get('filter')
       filter=None
       if filterstr != "":
         filter=filterstr.split(',')

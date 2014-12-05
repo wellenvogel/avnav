@@ -34,6 +34,7 @@ from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_serial import *
+from avnav_serialwriter import *
 hasUdev=False
 try:
   import pyudev
@@ -41,6 +42,15 @@ try:
 except:
   pass
 
+
+class DummyHandler():
+  def __init__(self):
+    self.stop=False
+  def run(self):
+    while( not self.stop):
+      time.sleep(0.2)
+  def stopHandler(self):
+    self.stop=True
 
 
 #a worker that will use udev to find serial devices
@@ -100,7 +110,7 @@ class AVNUsbSerialReader(AVNWorker):
   def start(self):
     feeder=self.findFeeder(self.getStringParam('feederName'))
     if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
+      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam('feederName') or "")
     self.writeData=feeder.addNMEA
     AVNWorker.start(self) 
    
@@ -168,15 +178,15 @@ class AVNUsbSerialReader(AVNWorker):
                })
     return rt
 
-  #a thread method to run a serial reader
-  def serialRun(self,reader,addr):
+  #a thread method to run a serial reader/writer
+  def serialRun(self,handler,addr):
     try:
-      reader.run()
+      handler.run()
     except:
-      pass
-    AVNLog.debug("serial reader for %s finished",addr)
+      AVNLog.info("serial writer stopped with %s",(traceback.format_exc(),))
+    AVNLog.debug("serial handler for %s finished",addr)
     self.removeHandler(addr)
-    self.deleteInfo(reader.getName())
+    self.deleteInfo(handler.getName())
   
   #param: a dict key being the usb id, value the device node
   def checkDevices(self,devicelist):
@@ -194,15 +204,25 @@ class AVNUsbSerialReader(AVNWorker):
         else:
           type="known"
           param=self.setParameterForSerial(param, usbid, devicelist[usbid])
-        reader=SerialReader(param, None, self.writeData, self)
-        res=self.checkAndAddHandler(usbid, reader,devicelist[usbid])
+        handlertype="reader"
+        if param.get('type') is not None:
+          handlertype=param.get('type')
+        if handlertype == 'writer':
+          handler=SerialWriter(param,self)
+        else:
+          if handlertype == 'reader':
+            handler=SerialReader(param, None, self.writeData, self)
+          else:
+            AVNLog.info("ignore device %s : type %s",(usbid,handlertype))
+            handler=DummyHandler()
+        res=self.checkAndAddHandler(usbid, handler,devicelist[usbid])
         if not res:
             AVNLog.debug("max number of readers already reached, skip start of %s at %s",usbid,devicelist[usbid])
             continue
-        readerThread=threading.Thread(target=self.serialRun,args=(reader,usbid))
-        readerThread.daemon=True
-        readerThread.start()
-        AVNLog.info("started reader for %s device  %s at %s",type,usbid,devicelist[usbid])
+        handlerThread=threading.Thread(target=self.serialRun,args=(handler,usbid))
+        handlerThread.daemon=True
+        handlerThread.start()
+        AVNLog.info("started %s for %s device  %s at %s",handlertype,type,usbid,devicelist[usbid])
       if startStop[usbid]=='stop' or startStop[usbid]=='restart':
         #really starting is left to the audit...
         self.stopHandler(usbid)

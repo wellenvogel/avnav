@@ -134,6 +134,8 @@ class NMEAParser():
         if f[0:1]=='$':
           if line[0:1]!='$':
             return False
+          if len(f) < 2:
+            return True
           if f[1:4]==line[3:6]:
             return True
           return False

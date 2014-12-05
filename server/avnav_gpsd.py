@@ -477,7 +477,7 @@ class AVNGpsdFeeder(AVNGpsd):
             self.gpsdproc.wait()
           except:
             pass
-          time.sleep(timeout/2)
+          time.sleep(self.getIntParam('timeout')/2)
           continue
         AVNLog.info("started gpsd with pid %d",self.gpsdproc.pid)
         self.setInfo('main', "gpsd running with command %s"%(gpsdcommand), AVNWorker.Status.RUNNING)
