@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.webkit.*;
 import android.widget.Toast;
@@ -24,6 +25,7 @@ public class WebViewActivity extends Activity {
     private final Activity activity=this;
     private static String URLPREFIX="file://android_asset/";
     private static String NAVURL="viewer/avnav_navi.php";
+    private static String CHARTPREFIX="charts";
     MimeTypeMap mime = MimeTypeMap.getSingleton();
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
     @Override
@@ -63,13 +65,11 @@ public class WebViewActivity extends Activity {
                         if (fname.startsWith(NAVURL)){
                             return handleNavRequest(url);
                         }
-                        InputStream is=assetManager.open(fname);
-                        String ext=fname.replaceAll(".*\\.", "");
-                        String mimeType=mime.getMimeTypeFromExtension(ext);
-                        if (mimeType == null) {
-                            mimeType=ownMimeMap.get(ext);
+                        if (fname.startsWith(CHARTPREFIX)){
+                            return handleChartRequest(fname);
                         }
-                        return new WebResourceResponse(mimeType,"",is);
+                        InputStream is=assetManager.open(fname);
+                        return new WebResourceResponse(mimeType(fname),"",is);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -99,6 +99,15 @@ public class WebViewActivity extends Activity {
 
     }
 
+    private String mimeType(String fname){
+        String ext=fname.replaceAll(".*\\.", "");
+        String mimeType=mime.getMimeTypeFromExtension(ext);
+        if (mimeType == null) {
+            mimeType=ownMimeMap.get(ext);
+        }
+        return mimeType;
+    }
+
     private WebResourceResponse handleNavRequest(String url){
         Uri uri= Uri.parse(url);
         String type=uri.getQueryParameter("request");
@@ -120,8 +129,8 @@ public class WebViewActivity extends Activity {
                 JSONArray arr=new JSONArray();
                 JSONObject e=new JSONObject();
                 e.put("name","test1");
-                e.put("url","gemf/test1");
-                e.put("charturl","gemf/test1");
+                e.put("url","/"+CHARTPREFIX);
+                e.put("charturl","/"+CHARTPREFIX);
                 arr.put(e);
                 out.put("data",arr);
             }
@@ -133,5 +142,17 @@ public class WebViewActivity extends Activity {
         return new WebResourceResponse("application/json","UTF-8",is);
     }
 
-
+    private WebResourceResponse handleChartRequest(String fname){
+        File sdcard = Environment.getExternalStorageDirectory();
+        File basedir=new File(sdcard,"avnav");
+        fname=fname.substring(CHARTPREFIX.length()+1);
+        fname=fname.replaceAll("\\?.*","");
+        File requested=new File(basedir,fname);
+        try {
+            return new WebResourceResponse(mimeType(fname),null,new FileInputStream(requested));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
