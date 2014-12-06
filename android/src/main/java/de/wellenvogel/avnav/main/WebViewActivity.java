@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.WindowManager;
 import android.webkit.*;
 import android.widget.Toast;
 import org.json.JSONArray;
@@ -110,6 +111,7 @@ public class WebViewActivity extends Activity {
         String databasePath = webView.getContext().getDir("databases",
                 Context.MODE_PRIVATE).getPath();
         webView.getSettings().setDatabasePath(databasePath);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
         webView.loadDataWithBaseURL(URLPREFIX+"viewer/dummy.html",htmlPage,"text/html","UTF-8",null);
