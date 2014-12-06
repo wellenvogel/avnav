@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">avHello1</string>
-    <string name="bt1Text">Start</string>
+    <string name="appName">avNav</string>
+    <string name="startText">Start</string>
+    <string name="selectDirLabel">SD card directory</string>
+    <string name="enableDemoLabel">show demo charts</string>
 </resources>

@@ -4,10 +4,38 @@
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android"
-        >
-    <Button
-            android:layout_width="wrap_content"
+        android:weightSum="1" android:padding="10dp">
+        <TextView
+                android:layout_width="237dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/selectDirLabel"
+                android:id="@+id/textView" android:layout_weight="0" android:autoText="false"
+                android:gravity="bottom|left" android:paddingBottom="5dp"/>
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:id="@+id/editText" android:background="#93afafb8" android:text="avnav"
+                android:paddingLeft="10dp" android:paddingRight="10dp" android:textSize="30dp"/>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_weight="0" android:paddingTop="20dp">
+                <CheckBox
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/enableDemoLabel"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:id="@+id/cbShowDemoCharts"  android:checked="true"/>
+        </LinearLayout>
+        <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"/>
+        <Button
+            android:layout_width="210dp"
             android:layout_height="wrap_content"
-            android:text="@string/bt1Text"
-            android:id="@+id/button" android:layout_gravity="bottom|right"/>
+            android:text="@string/startText"
+            android:id="@+id/button" android:layout_gravity="center" android:enabled="true"
+            android:layout_weight="0.08" android:textSize="50dp"/>
 </LinearLayout>

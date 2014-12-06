@@ -26,13 +26,22 @@ public class WebViewActivity extends Activity {
     private static String URLPREFIX="file://android_asset/";
     private static String NAVURL="viewer/avnav_navi.php";
     private static String CHARTPREFIX="charts";
+    private static String DEMOCHARTS="demo"; //urls will start with CHARTPREFIX/DEMOCHARTS
+    private static String REALCHARTS="charts";
+    private static String OVERVIEW="avnav.xml"; //request for chart overview
+
+    private String workdir;
+    private File workBase;
+    private boolean showDemoCharts;
     MimeTypeMap mime = MimeTypeMap.getSingleton();
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.webview);
-
+        workdir=getIntent().getStringExtra(AvNav.WORKDIR);
+        workBase=new File(Environment.getExternalStorageDirectory(),workdir);
+        showDemoCharts=getIntent().getBooleanExtra(AvNav.SHOWDEMO,true);
         ownMimeMap.put("js","text/javascript");
         webView = (WebView) findViewById(R.id.webView1);
         webView.getSettings().setJavaScriptEnabled(true);
@@ -117,22 +126,38 @@ public class WebViewActivity extends Activity {
         try{
             if (type.equals("gps")){
                 out.put("class","TPV");
-                out.put("lat",50.4);
-                out.put("lon",13.2);
+                out.put("lat",54.12);
+                out.put("lon",13.45);
                 out.put("speed",5);
                 out.put("track",15);
                 out.put("mode",1);
                 out.put("tag","RMC");
             }
             if (type.equals("listCharts")){
-                out.put("status","OK");
-                JSONArray arr=new JSONArray();
-                JSONObject e=new JSONObject();
-                e.put("name","test1");
-                e.put("url","/"+CHARTPREFIX);
-                e.put("charturl","/"+CHARTPREFIX);
-                arr.put(e);
-                out.put("data",arr);
+                try {
+                    out.put("status", "OK");
+                    JSONArray arr = new JSONArray();
+                    File chartDir = new File(workBase, "charts");
+                    //TODO: read gemf files from here..
+                    if (showDemoCharts){
+                        String demoCharts[]=assetManager.list("charts");
+                        for (String demo: demoCharts){
+                            if (! demo.endsWith(".xml")) continue;
+                            String name=demo.replaceAll("\\.xml$", "");
+                            Log.d(AvNav.LOGPRFX,"found demo chart "+demo);
+                            JSONObject e = new JSONObject();
+                            e.put("name", name);
+                            e.put("url", "/"+CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
+                            e.put("charturl","/"+ CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
+                            arr.put(e);
+                        }
+                    }
+                    out.put("data", arr);
+                }catch (Exception e){
+                    Log.e(AvNav.LOGPRFX,"error reading chartlist: "+e.getLocalizedMessage());
+                    out.put("status","ERROR");
+                    out.put("info",e.getLocalizedMessage());
+                }
             }
             String outstring=out.toString();
             is = new ByteArrayInputStream(outstring.getBytes("UTF-8"));
@@ -143,15 +168,34 @@ public class WebViewActivity extends Activity {
     }
 
     private WebResourceResponse handleChartRequest(String fname){
-        File sdcard = Environment.getExternalStorageDirectory();
-        File basedir=new File(sdcard,"avnav");
         fname=fname.substring(CHARTPREFIX.length()+1);
-        fname=fname.replaceAll("\\?.*","");
-        File requested=new File(basedir,fname);
+        InputStream rt=null;
         try {
-            return new WebResourceResponse(mimeType(fname),null,new FileInputStream(requested));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            if (fname.startsWith(DEMOCHARTS)){
+                fname=fname.substring(DEMOCHARTS.length()+1);
+                fname = fname.replaceAll("\\?.*", "");
+                if (fname.endsWith(OVERVIEW)){
+                    Log.d(AvNav.LOGPRFX,"overview request "+fname);
+                    fname=fname.substring(0,fname.length()-OVERVIEW.length()-1); //just the pure name
+                    fname+=".xml";
+                    rt=assetManager.open(CHARTPREFIX+"/"+fname);
+                }
+                else throw new Exception("unable to handle demo request for "+fname);
+            }
+            if (fname.startsWith(REALCHARTS)) {
+                fname=fname.substring(REALCHARTS.length()+1);
+                fname = fname.replaceAll("\\?.*", "");
+                File requested= new File(new File(workBase,CHARTPREFIX), fname);
+                rt=new FileInputStream(requested);
+            }
+            if (rt == null){
+                Log.e(AvNav.LOGPRFX,"unknown chart path "+fname);
+                return null;
+            }
+
+            return new WebResourceResponse(mimeType(fname),null,rt);
+        } catch (Exception e) {
+            Log.e(AvNav.LOGPRFX,"chart file "+fname+" not found");
         }
         return null;
     }
