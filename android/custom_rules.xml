@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="avHello" default="help">
+    <property name="assets.viewer" value="assets/viewer"/>
+    <property name="assets.libraries" value="assets/libraries"/>
+    <property name="src" value=".."/>
+<target name="-post-compile">
+    <exec executable="${src}/viewer/build/build.py" dir="${src}/viewer">
+
+    </exec>
+    <copy todir="${assets.viewer}" flatten="true">
+        <resources>
+            <file file="${src}/viewer/avnav_min.js"/>
+            <file file="${src}/viewer/loader.js"/>
+            <file file="${src}/viewer/avnav_viewer.html"/>
+            <file file="${src}/viewer/avnav_viewer.less"/>
+        </resources>
+    </copy>
+    <copy todir="${assets.viewer}/images">
+        <fileset dir="${src}/viewer/images" includes="*.png"/>
+    </copy>
+    <copy todir="${assets.libraries}/rangeslider">
+            <fileset dir="${src}/libraries/rangeslider"/>
+    </copy>
+    <copy todir="${assets.libraries}/movable-type">
+        <fileset dir="${src}/libraries/movable-type"/>
+    </copy>
+    <copy todir="${assets.libraries}/ol3b5">
+        <file file="${src}/libraries/ol3b5/ol.js"/>
+    </copy>
+    <copy todir="${assets.libraries}/less">
+        <file file="${src}/libraries/less/less-1.7.3.min.js"/>
+    </copy>
+    <copy todir="${assets.libraries}/jscolor">
+        <fileset dir="${src}/libraries/jscolor"/>
+    </copy>
+    <copy todir="${assets.libraries}/jquery">
+        <fileset dir="${src}/libraries/jquery" includes="*.js"/>
+    </copy>
+
+</target>
+
+</project>
