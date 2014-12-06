@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="avHello" default="help">
+<project name="avNav" default="help">
     <property name="assets.viewer" value="assets/viewer"/>
     <property name="assets.libraries" value="assets/libraries"/>
     <property name="src" value=".."/>
