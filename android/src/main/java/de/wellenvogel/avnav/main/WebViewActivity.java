@@ -33,29 +33,7 @@ public class WebViewActivity extends Activity {
     private static final String REALCHARTS="charts";
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
     private static final String GEMFEXTENSION =".gemf";
-    private static final String GEMFTEMPLATE="<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
-            " <TileMapService version=\"1.0.0\" >\n" +
-            "   <Title>avnav tile map service</Title>\n" +
-            "   <TileMaps>\n" +
-            "   \n" +
-            "    <TileMap \n" +
-            "       title=\"%TITLE%\" \n" +
-            "       srs=\"OSGEO:41001\" \n" +
-            "       href=\"%HREF%\" \n" +
-            "       minzoom=\"%MINZOOM%\"\n" +
-            "       maxzoom=\"%MAXZOOM%\">\n" +
-            "       \n" +
-            "       <BoundingBox minlon=\"%MINLON%\" minlat=\"%MINLAT%\" maxlon=\"%MAXLON%\" maxlat=\"%MAXLAT%\"\n" +
-            "        title=\"layer\"/>\n" +
-            "\n" +
-            "       <TileFormat width=\"256\" height=\"256\" mime-type=\"x-png\" extension=\"png\" />\n" +
-            "       \n" +
-            "    </TileMap>\n" +
-            "       \n" +
-            "\n" +
-            "   </TileMaps>\n" +
-            " </TileMapService>\n" +
-            " ";
+
 
     private String workdir;
     private File workBase;
@@ -64,7 +42,7 @@ public class WebViewActivity extends Activity {
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
 
     //gemf files
-    private HashMap<String,GEMFFile> gemfFiles=new HashMap<String, GEMFFile>();
+    private HashMap<String,GemfHandler> gemfFiles= new HashMap<String, GemfHandler>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -173,8 +151,7 @@ public class WebViewActivity extends Activity {
                         try {
                             String gemfName = f.getName();
                             gemfName = gemfName.substring(0, gemfName.length() - GEMFEXTENSION.length());
-                            GEMFFile gfile = new GEMFFile(f);
-                            gemfFiles.put(gemfName, gfile);
+                            gemfFiles.put(gemfName, new GemfHandler(f));
                             JSONObject e=new JSONObject();
                             e.put("name",gemfName);
                             e.put("url","/"+CHARTPREFIX+"/"+REALCHARTS+"/"+gemfName);
@@ -232,10 +209,10 @@ public class WebViewActivity extends Activity {
                 fname=fname.substring(REALCHARTS.length()+1);
                 fname = fname.replaceAll("\\?.*", "");
                 String baseAndUrl[]=fname.split("/",2);
-                GEMFFile f=gemfFiles.get(baseAndUrl[0]);
+                GemfHandler f=gemfFiles.get(baseAndUrl[0]);
                 if (f != null){
                     if (baseAndUrl[1].equals(OVERVIEW)){
-                        rt=gemfOverview(f);
+                        rt=f.gemfOverview();
                     }
                     else {
                         //we have source/z/x/y in baseAndUrl[1]
@@ -248,8 +225,7 @@ public class WebViewActivity extends Activity {
                         int z=Integer.parseInt(param[1]);
                         int x=Integer.parseInt(param[2]);
                         int y=Integer.parseInt(param[3].replaceAll("\\.png",""));
-                        rt = f.getInputStream(x,y,z);
-                        Log.d(AvNav.LOGPRFX,"loaded gemf z="+z+", x="+x+", y="+y+", url=" +fname);
+                        rt = f.getInputStream(x,y,z,Integer.parseInt(param[0]));
                     }
                 }
                 else {
@@ -269,89 +245,5 @@ public class WebViewActivity extends Activity {
         return null;
     }
 
-    private String replaceTemplate(String template,HashMap<String,String> values){
-        String rt=template;
-        for (String k: values.keySet()){
-            rt=rt.replaceAll("%"+k+"%",values.get(k));
-        }
-        return rt;
-    }
 
-
-    //from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Java
-    class BoundingBox {
-        double north;
-        double south;
-        double east;
-        double west;
-        void extend(BoundingBox e){
-            if (e.north > north) north=e.north;
-            if (e.south < south) south=e.south;
-            if (e.west < west)west=e.west;
-            if (e.east > east) east=e.east;
-        }
-        public BoundingBox(){
-            north=-90;
-            south=90;
-            east=-180;
-            west=180;
-        }
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
-            sb.append("BBox south=").append(south);
-            sb.append(", north=").append(north);
-            sb.append(", west=").append(west);
-            sb.append(", east=").append(east);
-            return sb.toString();
-        }
-    }
-    BoundingBox tile2boundingBox(final int x, final int y, final int zoom) {
-        BoundingBox bb = new BoundingBox();
-        bb.north = tile2lat(y, zoom);
-        bb.south = tile2lat(y + 1, zoom);
-        bb.west = tile2lon(x, zoom);
-        bb.east = tile2lon(x + 1, zoom);
-        return bb;
-    }
-    BoundingBox range2boundingBox(GEMFFile.GEMFRange range) {
-        BoundingBox bb = new BoundingBox();
-        bb.north = tile2lat(range.yMin, range.zoom);
-        bb.south = tile2lat(range.yMax + 1, range.zoom);
-        bb.west = tile2lon(range.xMin, range.zoom);
-        bb.east = tile2lon(range.xMax+1, range.zoom);
-        return bb;
-    }
-    static double tile2lon(int x, int z) {
-        return x / Math.pow(2.0, z) * 360.0 - 180;
-    }
-
-    static double tile2lat(int y, int z) {
-        double n = Math.PI - (2.0 * Math.PI * y) / Math.pow(2.0, z);
-        return Math.toDegrees(Math.atan(Math.sinh(n)));
-    }
-
-
-    private InputStream gemfOverview(GEMFFile gemf) throws UnsupportedEncodingException {
-        List<GEMFFile.GEMFRange> ranges=gemf.getRanges();
-        BoundingBox extend=new BoundingBox();
-        int minzoom=1000;
-        int maxzoom=0;
-        for (GEMFFile.GEMFRange range: ranges){
-            BoundingBox rbb=range2boundingBox(range);
-            extend.extend(rbb);
-            if (range.zoom < minzoom) minzoom=range.zoom;
-            if (range.zoom > maxzoom) maxzoom=range.zoom;
-        }
-        Log.i(AvNav.LOGPRFX,"read gemf overview "+gemf.getName()+" sources="+gemf.getSources().size()+" ,minzoom= "+minzoom+", maxzoom="+maxzoom+" : "+extend.toString());
-        HashMap<String,String> values=new HashMap<String, String>();
-        values.put("HREF","");
-        values.put("MINZOOM",Integer.toString(minzoom));
-        values.put("MAXZOOM",Integer.toString(maxzoom));
-        values.put("MAXLON", Double.toString(extend.east));
-        values.put("MINLON", Double.toString(extend.west));
-        values.put("MINLAT", Double.toString(extend.south));
-        values.put("MAXLAT", Double.toString(extend.north));
-        values.put("TITLE","");
-        return new ByteArrayInputStream(replaceTemplate(GEMFTEMPLATE,values).getBytes("UTF-8"));
-    }
 }
