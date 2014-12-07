@@ -1,11 +1,16 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.AssetManager;
+import android.location.*;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.WindowManager;
 import android.webkit.*;
@@ -14,13 +19,15 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by andreas on 04.12.14.
  */
-public class WebViewActivity extends Activity {
+public class WebViewActivity extends Activity implements LocationListener{
 
 
 
@@ -34,6 +41,7 @@ public class WebViewActivity extends Activity {
     private static final String REALCHARTS="charts";
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
     private static final String GEMFEXTENSION =".gemf";
+    private static final long MAXLOCAGE=10000; //max age of location in milliseconds
 
 
     private String workdir;
@@ -41,6 +49,11 @@ public class WebViewActivity extends Activity {
     private boolean showDemoCharts;
     MimeTypeMap mime = MimeTypeMap.getSingleton();
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
+
+    private LocationManager locationService;
+    private Location location=null;
+    private long lastLocation=0;
+    private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
 
     //gemf files
     private HashMap<String,GemfHandler> gemfFiles= new HashMap<String, GemfHandler>();
@@ -55,6 +68,9 @@ public class WebViewActivity extends Activity {
         webView = (WebView) findViewById(R.id.webView1);
         webView.getSettings().setJavaScriptEnabled(true);
         assetManager = getAssets();
+
+        checkLocationService();
+
         String htmlPage = null;
         InputStream input;
         try {
@@ -135,13 +151,17 @@ public class WebViewActivity extends Activity {
         InputStream is=null;
         try{
             if (type.equals("gps")){
-                out.put("class","TPV");
-                out.put("lat",54.12);
-                out.put("lon",13.45);
-                out.put("speed",5);
-                out.put("track",15);
-                out.put("mode",1);
-                out.put("tag","RMC");
+                if (location != null /*&& (System.currentTimeMillis()-lastLocation < MAXLOCAGE)*/) {
+                    out.put("class", "TPV");
+                    out.put("lat", location.getLatitude());
+                    out.put("lon", location.getLongitude());
+                    out.put("speed", location.getSpeed()*1852/3600); //we expect this in kn
+                    out.put("course", location.getBearing());
+                    out.put("mode", 1);
+                    out.put("tag", "RMC");
+                    out.put("time",dateFormat.format(new Date()));
+
+                }
             }
             if (type.equals("listCharts")){
                 try {
@@ -247,5 +267,92 @@ public class WebViewActivity extends Activity {
         return null;
     }
 
+    private void checkLocationService(){
+        //location services
+        locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
+        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
+        // check if enabled and if not send user to the GSP settings
+        // Better solution would be to display a dialog and suggesting to
+        // go to the settings
+        if (!enabled) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.noLocation);
+            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // User clicked OK button
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(intent);
+                }
+            });
+            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // User cancelled the dialog
+                }
+            });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+            int dummy=1;
+        }
+        else{
+            tryEnableLocation();
+        }
+
+    }
+    /* Request updates at startup */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        tryEnableLocation();
+
+    }
+
+    /* Remove the locationlistener updates when Activity is paused */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationService.removeUpdates(this);
+        location=null;
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        this.location=new Location(location);
+        lastLocation=System.currentTimeMillis();
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        tryEnableLocation();
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        tryEnableLocation();
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        tryEnableLocation();
+    }
+
+    private void tryEnableLocation(){
+        if (locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Criteria criteria = new Criteria();
+            String provider = locationService.getBestProvider(criteria, false);
+            if (provider != null) {
+                locationService.requestLocationUpdates(provider, 400, 1, this);
+                location = locationService.getLastKnownLocation(provider);
+            }
+            else{
+                Toast.makeText(this, "no location provider ",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+        else {
+            location=null;
+            Toast.makeText(this, "no gps ",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
 }
