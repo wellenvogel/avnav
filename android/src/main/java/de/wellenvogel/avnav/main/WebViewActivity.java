@@ -149,8 +149,10 @@ public class WebViewActivity extends Activity implements LocationListener{
         if (type == null) type="gps";
         JSONObject out=new JSONObject();
         InputStream is=null;
+        boolean handled=false;
         try{
             if (type.equals("gps")){
+                handled=true;
                 if (location != null /*&& (System.currentTimeMillis()-lastLocation < MAXLOCAGE)*/) {
                     out.put("class", "TPV");
                     out.put("lat", location.getLatitude());
@@ -164,6 +166,7 @@ public class WebViewActivity extends Activity implements LocationListener{
                 }
             }
             if (type.equals("listCharts")){
+                handled=true;
                 try {
                     out.put("status", "OK");
                     JSONArray arr = new JSONArray();
@@ -202,6 +205,20 @@ public class WebViewActivity extends Activity implements LocationListener{
                     out.put("status","ERROR");
                     out.put("info",e.getLocalizedMessage());
                 }
+            }
+            if (type.equals("track")) handled=true;
+            if (type.equals("ais")) handled=true;
+            if (type.equals("routing")){
+                String command=uri.getQueryParameter("command");
+                if (command.equals("getleg") ){
+                    handled=true;
+                }
+                if (command.equals("getroute")){
+                    handled=true;
+                }
+            }
+            if (!handled){
+                Log.d(AvNav.LOGPRFX,"unhandled nav request "+type);
             }
             String outstring=out.toString();
             is = new ByteArrayInputStream(outstring.getBytes("UTF-8"));
