@@ -163,9 +163,9 @@ class NMEAParser():
         rt['track']=float(darray[1] or '0')
         if (mode == 'T'):
           #new mode
-          rt['speed']=float(darray[5] or '0')*NM/3600
+          rt['speed']=float(darray[5] or '0')*self.NM/3600
         else:
-          rt['speed']=float(darray[3]or '0')*NM/3600
+          rt['speed']=float(darray[3]or '0')*self.NM/3600
         self.addToNavData(rt, None)
         return True
       if tag=='RMC':
