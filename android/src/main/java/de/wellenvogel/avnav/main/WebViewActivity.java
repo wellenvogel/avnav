@@ -43,6 +43,7 @@ public class WebViewActivity extends Activity implements LocationListener{
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
     private static final String GEMFEXTENSION =".gemf";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
+    private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
 
     private String workdir;
@@ -405,7 +406,7 @@ public class WebViewActivity extends Activity implements LocationListener{
         Location curloc=location;
         if (curloc == null) return null;
         long currtime=System.currentTimeMillis();
-        if ((currtime - lastValidLocation) > MAXLOCAGE){
+        if ((currtime - lastValidLocation) > MAXLOCWAIT){
             //no location update during this time - query directly
             if (currentProvider == null){
                 Log.d(AvNav.LOGPRFX,"location: too old to return and no provider");
