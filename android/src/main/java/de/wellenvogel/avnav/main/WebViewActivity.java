@@ -10,6 +10,7 @@ import android.location.*;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.WindowManager;
@@ -52,8 +53,9 @@ public class WebViewActivity extends Activity implements LocationListener{
 
     private LocationManager locationService;
     private Location location=null;
-    private long lastLocation=0;
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+    private String currentProvider;
+    private long lastValidLocation=0;
 
     //gemf files
     private HashMap<String,GemfHandler> gemfFiles= new HashMap<String, GemfHandler>();
@@ -153,15 +155,18 @@ public class WebViewActivity extends Activity implements LocationListener{
         try{
             if (type.equals("gps")){
                 handled=true;
-                if (location != null /*&& (System.currentTimeMillis()-lastLocation < MAXLOCAGE)*/) {
+                Location navLocation=getCurrentLocation();
+                if (navLocation != null){
+
                     out.put("class", "TPV");
-                    out.put("lat", location.getLatitude());
-                    out.put("lon", location.getLongitude());
-                    out.put("speed", location.getSpeed()*1852/3600); //we expect this in kn
-                    out.put("course", location.getBearing());
+                    out.put("lat", navLocation.getLatitude());
+                    out.put("lon", navLocation.getLongitude());
+                    out.put("speed", navLocation.getSpeed()*1852/3600); //we expect this in kn
+                    out.put("course", navLocation.getBearing());
                     out.put("mode", 1);
                     out.put("tag", "RMC");
-                    out.put("time",dateFormat.format(new Date()));
+                    out.put("time",dateFormat.format(new Date(navLocation.getTime())));
+
 
                 }
             }
@@ -330,46 +335,99 @@ public class WebViewActivity extends Activity implements LocationListener{
         super.onPause();
         locationService.removeUpdates(this);
         location=null;
+        lastValidLocation=0;
+        currentProvider=null;
     }
 
     @Override
     public void onLocationChanged(Location location) {
+        Log.d(AvNav.LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
+                ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
         this.location=new Location(location);
-        lastLocation=System.currentTimeMillis();
+        lastValidLocation=System.currentTimeMillis();
     }
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
+        Log.d(AvNav.LOGPRFX,"location: status changed for "+provider+", new status="+status);
         tryEnableLocation();
     }
 
     @Override
     public void onProviderEnabled(String provider) {
+        Log.d(AvNav.LOGPRFX,"location: provider enabled "+provider);
         tryEnableLocation();
     }
 
     @Override
     public void onProviderDisabled(String provider) {
+        Log.d(AvNav.LOGPRFX,"location: provider disabled "+provider);
         tryEnableLocation();
     }
 
     private void tryEnableLocation(){
         if (locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Criteria criteria = new Criteria();
-            String provider = locationService.getBestProvider(criteria, false);
-            if (provider != null) {
-                locationService.requestLocationUpdates(provider, 400, 1, this);
-                location = locationService.getLastKnownLocation(provider);
+            currentProvider = locationService.getBestProvider(criteria, false);
+            if (currentProvider != null) {
+                locationService.requestLocationUpdates(currentProvider, 400, 1, this);
+                location = locationService.getLastKnownLocation(currentProvider);
+                if (location != null) lastValidLocation=System.currentTimeMillis();
+                Log.d(AvNav.LOGPRFX,"location: location provider="+currentProvider+" location acc="+((location != null)?location.getAccuracy():"<null>")+", date="+new Date((location!=null)?location.getTime():0).toString());
             }
             else{
+                Log.d(AvNav.LOGPRFX,"location: no location provider");
                 Toast.makeText(this, "no location provider ",
                         Toast.LENGTH_SHORT).show();
+                location=null;
+                lastValidLocation=0;
+                currentProvider=null;
             }
         }
         else {
+            Log.d(AvNav.LOGPRFX,"location: no gps");
             location=null;
+            lastValidLocation=0;
             Toast.makeText(this, "no gps ",
                     Toast.LENGTH_SHORT).show();
+            currentProvider=null;
         }
+    }
+
+    /**
+     * get the current location checking for a recent update
+     * we do not directly compare our system time with the location time as this would break test data at all
+     * instead we check that the time elapsed since the last location update is not too far away from the really elapsed time
+     * //TODO: should we make this tread safe?
+     * @return
+     */
+    private Location getCurrentLocation(){
+        Location curloc=location;
+        if (curloc == null) return null;
+        long currtime=System.currentTimeMillis();
+        if ((currtime - lastValidLocation) > MAXLOCAGE){
+            //no location update during this time - query directly
+            if (currentProvider == null){
+                Log.d(AvNav.LOGPRFX,"location: too old to return and no provider");
+                return null;
+            }
+            Location nlocation = locationService.getLastKnownLocation(currentProvider);
+            if (nlocation == null){
+                location=null;
+                Log.d(AvNav.LOGPRFX,"location: now new location for too old location");
+                return null;
+            }
+            //the diff in location times must not be too far away from the really elapsed time
+            //we assume at least MAXLOCAGE
+            long locdiff=nlocation.getTime()-curloc.getTime();
+            if (locdiff < (currtime - lastValidLocation - MAXLOCAGE)){
+                Log.d(AvNav.LOGPRFX,"location: location updates too slow - only "+(locdiff/1000)+" seconds for time diff "+(currtime-lastValidLocation)/1000);
+                return null;
+            }
+            Log.d(AvNav.LOGPRFX,"location: refreshed location successfully");
+            location=nlocation;
+            lastValidLocation=currtime;
+        }
+        return location;
     }
 }
