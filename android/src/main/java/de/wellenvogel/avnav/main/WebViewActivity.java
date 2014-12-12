@@ -20,6 +20,7 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -185,11 +186,12 @@ public class WebViewActivity extends Activity {
         Uri uri= Uri.parse(url);
         String type=uri.getQueryParameter("request");
         if (type == null) type="gps";
-        JSONObject out=new JSONObject();
+        Object fout=null;
         InputStream is=null;
         boolean handled=false;
         try{
             if (type.equals("gps")){
+                JSONObject out=new JSONObject();
                 handled=true;
                 Location navLocation=null;
                 if (gpsService != null) navLocation=gpsService.getCurrentLocation();
@@ -206,9 +208,11 @@ public class WebViewActivity extends Activity {
 
 
                 }
+                fout=out;
             }
             if (type.equals("listCharts")){
                 handled=true;
+                JSONObject out=new JSONObject();
                 try {
                     out.put("status", "OK");
                     JSONArray arr = new JSONArray();
@@ -247,8 +251,40 @@ public class WebViewActivity extends Activity {
                     out.put("status","ERROR");
                     out.put("info",e.getLocalizedMessage());
                 }
+                fout=out;
             }
-            if (type.equals("track")) handled=true;
+            if (type.equals("track")){
+                handled=true;
+                if (gpsService != null) {
+                    String intervals = uri.getQueryParameter("interval");
+                    String maxnums = uri.getQueryParameter("maxnum");
+                    long interval = 60000;
+                    if (intervals != null) {
+                        try {
+                            interval = 1000*Long.parseLong(intervals);
+                        } catch (NumberFormatException i) {
+                        }
+                    }
+                    int maxnum = 60;
+                    if (maxnums != null) {
+                        try {
+                            maxnum = Integer.parseInt(maxnums);
+                        } catch (NumberFormatException i) {
+                        }
+                    }
+                    ArrayList<Location> track=gpsService.getTrack(maxnum,interval);
+                    JSONArray arr=new JSONArray();
+                    for (Location l: track){
+                        JSONObject e=new JSONObject();
+                        e.put("ts",l.getTime());
+                        e.put("time",dateFormat.format(new Date(l.getTime())));
+                        e.put("lon",l.getLongitude());
+                        e.put("lat",l.getLatitude());
+                        arr.put(e);
+                    }
+                    fout=arr;
+                }
+            }
             if (type.equals("ais")) handled=true;
             if (type.equals("routing")){
                 String command=uri.getQueryParameter("command");
@@ -262,7 +298,8 @@ public class WebViewActivity extends Activity {
             if (!handled){
                 Log.d(AvNav.LOGPRFX,"unhandled nav request "+type);
             }
-            String outstring=out.toString();
+            String outstring="";
+            if (fout != null) outstring=fout.toString();
             is = new ByteArrayInputStream(outstring.getBytes("UTF-8"));
         } catch (Exception e) {
             e.printStackTrace();

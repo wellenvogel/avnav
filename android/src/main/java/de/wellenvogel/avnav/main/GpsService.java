@@ -83,8 +83,8 @@ public class GpsService extends Service implements LocationListener {
         //we rely on the activity to check before...
         trackDir=new File(trackdir);
         trackInterval=intent.getLongExtra(PROP_TRACKINTERVAL,10000);
-        trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,10);
-        trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000);
+        trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
+        trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
         trackTime=intent.getLongExtra(PROP_TRACKTIME,24*60*60*1000); //24h
         Log.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+", distance="+trackDistance+", mintime="+(trackMintime/1000)+", maxtime(h)="+(trackTime/3600/1000));
         trackWriter=new TrackWriter(trackDir);
@@ -298,5 +298,40 @@ public class GpsService extends Service implements LocationListener {
 
             }
         }
+    }
+
+    /**
+     * get the current track
+     * @param maxnum - max number of points (including the newest one)
+     * @param interval - min time distance between 2 points
+     * @return the track points in inverse order, i.e. the newest is at index 0
+     */
+    public ArrayList<Location> getTrack(int maxnum, long interval){
+        ArrayList<Location> rt=new ArrayList<Location>();
+        long currts=-1;
+        long num=0;
+        try {
+            for (int i = trackpoints.size() - 1; i >= 0; i--) {
+                Location l = trackpoints.get(i);
+                if (currts == -1) {
+                    currts = l.getTime();
+                    rt.add(l);
+                    num++;
+                } else {
+                    long nts = l.getTime();
+                    if ((currts - nts) >= interval || interval == 0) {
+                        currts = nts;
+                        rt.add(l);
+                        num++;
+                    }
+                }
+
+                if (num >= maxnum) break;
+            }
+        }catch (Exception e){
+            //we are tolerant - if we hit cleanup an do not get the track once, this should be no issue
+        }
+        Log.d(LOGPRFX,"getTrack returns "+num+" points");
+        return rt;
     }
 }
