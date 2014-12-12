@@ -17,6 +17,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Timer;
@@ -41,6 +43,8 @@ public class GpsService extends Service implements LocationListener {
     private long writerInterval=0;
     private String outfile=null;
     private ArrayList<Location> trackpoints=new ArrayList<Location>();
+    private long lastTrackWrite=0;
+    private long lastTrackCount;
     private final IBinder mBinder = new GpsServiceBinder();
 
     //properties
@@ -50,6 +54,7 @@ public class GpsService extends Service implements LocationListener {
     private long trackMintime; //min interval between 2 points
     private long trackTime;   //length of track
 
+    private TrackWriter trackWriter;
     //location data
     private LocationManager locationService;
     private Location location=null;
@@ -82,6 +87,7 @@ public class GpsService extends Service implements LocationListener {
         trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000);
         trackTime=intent.getLongExtra(PROP_TRACKTIME,24*60*60*1000); //24h
         Log.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+", distance="+trackDistance+", mintime="+(trackMintime/1000)+", maxtime(h)="+(trackTime/3600/1000));
+        trackWriter=new TrackWriter(trackDir);
         startTimer();
         checkLocationService();
         return Service.START_REDELIVER_INTENT;
@@ -114,6 +120,7 @@ public class GpsService extends Service implements LocationListener {
         public void run()
         {
             Log.d(LOGPRFX,"timer fired");
+           // checkTrackWriter(GpsService.this.location);
         }
     }
     @Override
@@ -123,6 +130,13 @@ public class GpsService extends Service implements LocationListener {
         locationService.removeUpdates(this);
         location=null;
         lastValidLocation=0;
+        if (trackpoints.size() > 0){
+            try {
+                trackWriter.writeTrackFile(trackpoints, new Date(),false);
+            } catch (FileNotFoundException e) {
+                Log.d(LOGPRFX,"Exception while finally writing trackfile: "+e.getLocalizedMessage());
+            }
+        }
         Log.d(LOGPRFX,"service stopped");
         //Toast.makeText(this, "Location Service Stopped ...", Toast.LENGTH_SHORT).show();
     }
@@ -145,6 +159,7 @@ public class GpsService extends Service implements LocationListener {
                 ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
         this.location=new Location(location);
         lastValidLocation=System.currentTimeMillis();
+        checkTrackWriter(this.location);
     }
 
     @Override
@@ -229,5 +244,59 @@ public class GpsService extends Service implements LocationListener {
             lastValidLocation=lastValidLocation+(long)Math.floor(locdiff*1.1); //we allow the gps to be 10% slower than realtime
         }
         return location;
+    }
+
+    /**
+     * will be called from within the timer thread and from position updates
+     * @param l
+     */
+    private synchronized void checkTrackWriter(Location l){
+        long current=System.currentTimeMillis();
+        if (l != null) {
+            boolean add=false;
+            //check if distance is reached
+            float distance=0;
+            if (trackpoints.size() > 0) {
+                Location last = trackpoints.get(trackpoints.size() - 1);
+                distance=last.distanceTo(l);
+                if (distance >= trackDistance) {
+                    add = true;
+
+                }
+            }
+            else {
+                add=true;
+            }
+            if (add){
+                Log.d(LOGPRFX,"add location to log "+l.getLatitude()+","+l.getLongitude()+", distance="+distance);
+                Location nloc=new Location(l);
+                nloc.setTime(current);
+                trackpoints.add(nloc);
+            }
+        }
+        //now check if we should write out
+        if (current > (lastTrackWrite + trackInterval) && trackpoints.size() != lastTrackCount){
+            Log.d(LOGPRFX,"start writing track");
+            //cleanup
+            int deleted=0;
+            long deleteTime=current-trackTime;
+            Log.d(LOGPRFX,"deleting trackpoints older "+new Date(deleteTime).toString());
+            while (trackpoints.size() > 0){
+                Location first=trackpoints.get(0);
+                if (first.getTime() < deleteTime){
+                    trackpoints.remove(0);
+                    deleted++;
+                }
+                else break;
+            }
+            Log.d(LOGPRFX,"deleted "+deleted+" trackpoints");
+            lastTrackCount=trackpoints.size();
+            lastTrackWrite=current;
+            try {
+                trackWriter.writeTrackFile(trackpoints, new Date(current), true);
+            }catch (IOException io){
+
+            }
+        }
     }
 }
