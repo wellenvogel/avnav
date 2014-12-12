@@ -28,15 +28,24 @@
                         android:text="@string/enableDemoLabel"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:id="@+id/cbShowDemoCharts"  android:checked="true"/>
+                <Space
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        />
         </LinearLayout>
-        <Space
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"/>
-        <Button
-            android:layout_width="210dp"
-            android:layout_height="wrap_content"
-            android:text="@string/startText"
-            android:id="@+id/button" android:layout_gravity="center" android:enabled="true"
-            android:layout_weight="0.08" android:textSize="50dp"/>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
+                <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/exitText"
+                        android:id="@+id/btExit" android:enabled="true"
+                        android:layout_weight="1" android:textSize="50dp" android:layout_margin="10dp"
+                        />
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/startText"
+                    android:id="@+id/btStart" android:enabled="true"
+                    android:layout_weight="1" android:textSize="50dp" android:layout_margin="10dp"/>
+        </LinearLayout>
 </LinearLayout>

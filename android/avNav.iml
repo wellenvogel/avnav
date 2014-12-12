@@ -4,6 +4,7 @@
     <facet type="android" name="Android">
       <configuration>
         <option name="RUN_PROCESS_RESOURCES_MAVEN_TASK" value="false" />
+        <option name="UPDATE_PROPERTY_FILES" value="true" />
       </configuration>
     </facet>
   </component>

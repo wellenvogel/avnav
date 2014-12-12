@@ -20,5 +20,6 @@
                   android:label="@string/appName"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
+        <service android:name=".GpsService" android:label="AvnavGps"/>
     </application>
 </manifest>

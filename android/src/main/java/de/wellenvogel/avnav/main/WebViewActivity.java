@@ -2,14 +2,13 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
+import android.content.*;
 import android.content.res.AssetManager;
 import android.location.*;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
@@ -28,7 +27,7 @@ import java.util.List;
 /**
  * Created by andreas on 04.12.14.
  */
-public class WebViewActivity extends Activity implements LocationListener{
+public class WebViewActivity extends Activity {
 
 
 
@@ -42,8 +41,6 @@ public class WebViewActivity extends Activity implements LocationListener{
     private static final String REALCHARTS="charts";
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
     private static final String GEMFEXTENSION =".gemf";
-    private static final long MAXLOCAGE=10000; //max age of location in milliseconds
-    private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
 
     private String workdir;
@@ -52,14 +49,55 @@ public class WebViewActivity extends Activity implements LocationListener{
     MimeTypeMap mime = MimeTypeMap.getSingleton();
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
 
-    private LocationManager locationService;
-    private Location location=null;
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-    private String currentProvider;
-    private long lastValidLocation=0;
+    private GpsService gpsService=null;
 
     //gemf files
     private HashMap<String,GemfHandler> gemfFiles= new HashMap<String, GemfHandler>();
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
+        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        // check if enabled and if not send user to the GSP settings
+        // Better solution would be to display a dialog and suggesting to
+        // go to the settings
+        if (!enabled) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.noLocation);
+            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // User clicked OK button
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(intent);
+                }
+            });
+            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // User cancelled the dialog
+                }
+            });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+        }
+        Intent intent = new Intent(this, GpsService.class);
+        intent.putExtra(GpsService.PROP_TRACKDIR,workBase.getAbsolutePath()+"/tracks");
+        //TODO: add other parameters here
+        startService(intent);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (gpsService != null){
+            unbindService(mConnection);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,9 +109,6 @@ public class WebViewActivity extends Activity implements LocationListener{
         webView = (WebView) findViewById(R.id.webView1);
         webView.getSettings().setJavaScriptEnabled(true);
         assetManager = getAssets();
-
-        checkLocationService();
-
         String htmlPage = null;
         InputStream input;
         try {
@@ -156,7 +191,8 @@ public class WebViewActivity extends Activity implements LocationListener{
         try{
             if (type.equals("gps")){
                 handled=true;
-                Location navLocation=getCurrentLocation();
+                Location navLocation=null;
+                if (gpsService != null) navLocation=gpsService.getCurrentLocation();
                 if (navLocation != null){
 
                     out.put("class", "TPV");
@@ -290,145 +326,24 @@ public class WebViewActivity extends Activity implements LocationListener{
         return null;
     }
 
-    private void checkLocationService(){
-        //location services
-        locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
-        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
 
-        // check if enabled and if not send user to the GSP settings
-        // Better solution would be to display a dialog and suggesting to
-        // go to the settings
-        if (!enabled) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(R.string.noLocation);
-            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User clicked OK button
-                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    startActivity(intent);
-                }
-            });
-            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User cancelled the dialog
-                }
-            });
-            AlertDialog dialog = builder.create();
-            dialog.show();
-            int dummy=1;
-        }
-        else{
-            tryEnableLocation();
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
+            gpsService = binder.getService();
+            Log.d(AvNav.LOGPRFX,"gps service connected");
+
         }
 
-    }
-    /* Request updates at startup */
-    @Override
-    protected void onResume() {
-        super.onResume();
-        tryEnableLocation();
-
-    }
-
-    /* Remove the locationlistener updates when Activity is paused */
-    @Override
-    protected void onPause() {
-        super.onPause();
-        locationService.removeUpdates(this);
-        location=null;
-        lastValidLocation=0;
-        currentProvider=null;
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        Log.d(AvNav.LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
-                ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
-        this.location=new Location(location);
-        lastValidLocation=System.currentTimeMillis();
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-        Log.d(AvNav.LOGPRFX,"location: status changed for "+provider+", new status="+status);
-        tryEnableLocation();
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-        Log.d(AvNav.LOGPRFX,"location: provider enabled "+provider);
-        tryEnableLocation();
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-        Log.d(AvNav.LOGPRFX,"location: provider disabled "+provider);
-        tryEnableLocation();
-    }
-
-    private void tryEnableLocation(){
-        if (locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Criteria criteria = new Criteria();
-            currentProvider = locationService.getBestProvider(criteria, false);
-            if (currentProvider != null) {
-                locationService.requestLocationUpdates(currentProvider, 400, 1, this);
-                location = locationService.getLastKnownLocation(currentProvider);
-                if (location != null) lastValidLocation=System.currentTimeMillis();
-                Log.d(AvNav.LOGPRFX,"location: location provider="+currentProvider+" location acc="+((location != null)?location.getAccuracy():"<null>")+", date="+new Date((location!=null)?location.getTime():0).toString());
-            }
-            else{
-                Log.d(AvNav.LOGPRFX,"location: no location provider");
-                Toast.makeText(this, "no location provider ",
-                        Toast.LENGTH_SHORT).show();
-                location=null;
-                lastValidLocation=0;
-                currentProvider=null;
-            }
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            gpsService=null;
+            Log.d(AvNav.LOGPRFX,"gps service disconnected");
         }
-        else {
-            Log.d(AvNav.LOGPRFX,"location: no gps");
-            location=null;
-            lastValidLocation=0;
-            Toast.makeText(this, "no gps ",
-                    Toast.LENGTH_SHORT).show();
-            currentProvider=null;
-        }
-    }
+    };
 
-    /**
-     * get the current location checking for a recent update
-     * we do not directly compare our system time with the location time as this would break test data at all
-     * instead we check that the time elapsed since the last location update is not too far away from the really elapsed time
-     * //TODO: should we make this tread safe?
-     * @return
-     */
-    private Location getCurrentLocation(){
-        Location curloc=location;
-        if (curloc == null) return null;
-        long currtime=System.currentTimeMillis();
-        if ((currtime - lastValidLocation) > MAXLOCWAIT){
-            //no location update during this time - query directly
-            if (currentProvider == null){
-                Log.d(AvNav.LOGPRFX,"location: too old to return and no provider");
-                return null;
-            }
-            Location nlocation = locationService.getLastKnownLocation(currentProvider);
-            if (nlocation == null){
-                location=null;
-                Log.d(AvNav.LOGPRFX,"location: now new location for too old location");
-                return null;
-            }
-            //the diff in location times must not be too far away from the really elapsed time
-            //we assume at least MAXLOCAGE
-            long locdiff=nlocation.getTime()-curloc.getTime();
-            if (locdiff < (currtime - lastValidLocation - MAXLOCAGE)){
-                Log.d(AvNav.LOGPRFX,"location: location updates too slow - only "+(locdiff/1000)+" seconds for time diff "+(currtime-lastValidLocation)/1000);
-                return null;
-            }
-            Log.d(AvNav.LOGPRFX,"location: refreshed location successfully");
-            location=nlocation;
-            lastValidLocation=currtime;
-        }
-        return location;
-    }
 }

@@ -2,6 +2,7 @@
 <resources>
     <string name="appName">avNav</string>
     <string name="startText">Start</string>
+    <string name="exitText">Exit</string>
     <string name="selectDirLabel">SD card directory</string>
     <string name="enableDemoLabel">show demo charts</string>
     <string name="noLocation">No GPS found, enable now?</string>

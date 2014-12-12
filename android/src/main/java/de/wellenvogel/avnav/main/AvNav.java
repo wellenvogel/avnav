@@ -13,7 +13,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
-import de.wellenvogel.avnav.main.WebViewActivity;
 
 import java.io.File;
 
@@ -23,7 +22,8 @@ public class AvNav extends Activity {
     public static final String SHOWDEMO="showdemo";
 
     public static final String LOGPRFX="avnav";
-    private Button button;
+    private Button btStart;
+    private Button btExit;
     private EditText textWorkdir;
     private CheckBox cbShowDemo;
     private Context context=this;
@@ -35,23 +35,32 @@ public class AvNav extends Activity {
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        button=(Button)findViewById(R.id.button);
+        btStart =(Button)findViewById(R.id.btStart);
+        btExit =(Button)findViewById(R.id.btExit);
         textWorkdir=(EditText)findViewById(R.id.editText);
         cbShowDemo=(CheckBox)findViewById(R.id.cbShowDemoCharts);
-        button.setOnClickListener(new View.OnClickListener() {
+        btStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
                     saveSettings();
                     checkDirs(textWorkdir.getText().toString());
-                } catch (Exception e){
-                    Toast.makeText(context,e.getLocalizedMessage(),Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(context, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 Intent intent = new Intent(context, WebViewActivity.class);
-                intent.putExtra(WORKDIR,textWorkdir.getText().toString());
-                intent.putExtra(SHOWDEMO,cbShowDemo.isChecked());
+                intent.putExtra(WORKDIR, textWorkdir.getText().toString());
+                intent.putExtra(SHOWDEMO, cbShowDemo.isChecked());
                 startActivity(intent);
+            }
+        });
+        btExit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(context,GpsService.class);
+                stopService(intent);
+                finish();
             }
         });
         sharedPrefs= PreferenceManager.getDefaultSharedPreferences(this);
