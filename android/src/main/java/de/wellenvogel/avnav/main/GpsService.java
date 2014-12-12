@@ -82,12 +82,21 @@ public class GpsService extends Service implements LocationListener {
         String trackdir=intent.getStringExtra(PROP_TRACKDIR);
         //we rely on the activity to check before...
         trackDir=new File(trackdir);
-        trackInterval=intent.getLongExtra(PROP_TRACKINTERVAL,10000);
+        trackInterval=intent.getLongExtra(PROP_TRACKINTERVAL,300000);
         trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
         trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
         trackTime=intent.getLongExtra(PROP_TRACKTIME,24*60*60*1000); //24h
         Log.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+", distance="+trackDistance+", mintime="+(trackMintime/1000)+", maxtime(h)="+(trackTime/3600/1000));
+        //read the track data from today and yesterday
+        //we rely on the cleanup to handle outdated entries
         trackWriter=new TrackWriter(trackDir);
+        Date dt=new Date();
+        lastTrackWrite=dt.getTime();
+        ArrayList<Location> rt=trackWriter.parseTrackFile(new Date(dt.getTime()-24*60*60*1000));
+        trackpoints.addAll(rt);
+        rt=trackWriter.parseTrackFile(dt);
+        trackpoints.addAll(rt);
+        Log.d(LOGPRFX,"read "+trackpoints.size()+" trackpoints from files");
         startTimer();
         checkLocationService();
         return Service.START_REDELIVER_INTENT;
