@@ -189,7 +189,7 @@ public class GpsService extends Service implements LocationListener {
         tryEnableLocation();
     }
 
-    private void tryEnableLocation(){
+    private synchronized void tryEnableLocation(){
         if (locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Criteria criteria = new Criteria();
             currentProvider = locationService.getBestProvider(criteria, false);
@@ -259,51 +259,57 @@ public class GpsService extends Service implements LocationListener {
      * will be called from within the timer thread and from position updates
      * @param l
      */
-    private synchronized void checkTrackWriter(Location l){
-        long current=System.currentTimeMillis();
-        if (l != null) {
-            boolean add=false;
-            //check if distance is reached
-            float distance=0;
-            if (trackpoints.size() > 0) {
-                Location last = trackpoints.get(trackpoints.size() - 1);
-                distance=last.distanceTo(l);
-                if (distance >= trackDistance) {
-                    add = true;
+    private void checkTrackWriter(Location l){
+        boolean writeOut=false;
+        long current = System.currentTimeMillis();
+        synchronized (this) {
+            if (l != null) {
+                boolean add = false;
+                //check if distance is reached
+                float distance = 0;
+                if (trackpoints.size() > 0) {
+                    Location last = trackpoints.get(trackpoints.size() - 1);
+                    distance = last.distanceTo(l);
+                    if (distance >= trackDistance) {
+                        add = true;
 
+                    }
+                } else {
+                    add = true;
+                }
+                if (add) {
+                    Log.d(LOGPRFX, "add location to log " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
+                    Location nloc = new Location(l);
+                    nloc.setTime(current);
+                    trackpoints.add(nloc);
                 }
             }
-            else {
-                add=true;
-            }
-            if (add){
-                Log.d(LOGPRFX,"add location to log "+l.getLatitude()+","+l.getLongitude()+", distance="+distance);
-                Location nloc=new Location(l);
-                nloc.setTime(current);
-                trackpoints.add(nloc);
+            //now check if we should write out
+            if (current > (lastTrackWrite + trackInterval) && trackpoints.size() != lastTrackCount) {
+                Log.d(LOGPRFX, "start writing track");
+                //cleanup
+                int deleted = 0;
+                long deleteTime = current - trackTime;
+                Log.d(LOGPRFX, "deleting trackpoints older " + new Date(deleteTime).toString());
+                while (trackpoints.size() > 0) {
+                    Location first = trackpoints.get(0);
+                    if (first.getTime() < deleteTime) {
+                        trackpoints.remove(0);
+                        deleted++;
+                    } else break;
+                }
+                Log.d(LOGPRFX, "deleted " + deleted + " trackpoints");
+                writeOut=true;
             }
         }
-        //now check if we should write out
-        if (current > (lastTrackWrite + trackInterval) && trackpoints.size() != lastTrackCount){
-            Log.d(LOGPRFX,"start writing track");
-            //cleanup
-            int deleted=0;
-            long deleteTime=current-trackTime;
-            Log.d(LOGPRFX,"deleting trackpoints older "+new Date(deleteTime).toString());
-            while (trackpoints.size() > 0){
-                Location first=trackpoints.get(0);
-                if (first.getTime() < deleteTime){
-                    trackpoints.remove(0);
-                    deleted++;
-                }
-                else break;
-            }
-            Log.d(LOGPRFX,"deleted "+deleted+" trackpoints");
-            lastTrackCount=trackpoints.size();
-            lastTrackWrite=current;
+        if (writeOut) {
+            ArrayList<Location> w=getTrackCopy();
+            lastTrackCount = w.size();
+            lastTrackWrite = current;
             try {
-                trackWriter.writeTrackFile(trackpoints, new Date(current), true);
-            }catch (IOException io){
+                //we have to be careful to get a copy when having a lock
+                trackWriter.writeTrackFile(w, new Date(current), true);
+            } catch (IOException io) {
 
             }
         }
@@ -315,7 +321,7 @@ public class GpsService extends Service implements LocationListener {
      * @param interval - min time distance between 2 points
      * @return the track points in inverse order, i.e. the newest is at index 0
      */
-    public ArrayList<Location> getTrack(int maxnum, long interval){
+    public synchronized  ArrayList<Location> getTrack(int maxnum, long interval){
         ArrayList<Location> rt=new ArrayList<Location>();
         long currts=-1;
         long num=0;
@@ -341,6 +347,11 @@ public class GpsService extends Service implements LocationListener {
             //we are tolerant - if we hit cleanup an do not get the track once, this should be no issue
         }
         Log.d(LOGPRFX,"getTrack returns "+num+" points");
+        return rt;
+    }
+
+    public synchronized ArrayList<Location> getTrackCopy(){
+        ArrayList<Location> rt=new ArrayList<Location>(trackpoints);
         return rt;
     }
 }

@@ -106,7 +106,7 @@ public class WebViewActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.webview);
         workdir=getIntent().getStringExtra(AvNav.WORKDIR);
-        workBase=new File(Environment.getExternalStorageDirectory(),workdir);
+        workBase=new File(workdir);
         showDemoCharts=getIntent().getBooleanExtra(AvNav.SHOWDEMO,true);
         ownMimeMap.put("js","text/javascript");
         webView = (WebView) findViewById(R.id.webView1);

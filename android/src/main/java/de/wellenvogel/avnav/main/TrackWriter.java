@@ -69,7 +69,7 @@ public class TrackWriter {
                 out.append(footer);
                 out.close();
                 Log.d(AvNav.LOGPRFX,"track written with "+numpoints+" points");
-            } catch (IOException io) {
+            } catch (Exception io) {
                 Log.e(AvNav.LOGPRFX, "error writing trackfile: " + io.getLocalizedMessage());
             }
             writer.writerRunning=false;

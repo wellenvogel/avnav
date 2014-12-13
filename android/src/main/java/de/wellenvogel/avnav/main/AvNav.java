@@ -8,11 +8,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.*;
 
 import java.io.File;
 
@@ -64,8 +62,26 @@ public class AvNav extends Activity {
             }
         });
         sharedPrefs= PreferenceManager.getDefaultSharedPreferences(this);
-        String workdir=sharedPrefs.getString(WORKDIR,"avnav");
+        String workdir=sharedPrefs.getString(WORKDIR,Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
         textWorkdir.setText(workdir);
+        Button btSelectDir=(Button)findViewById(R.id.btSelectDir);
+        btSelectDir.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(context, "FolderChoose",
+                        new SimpleFileDialog.SimpleFileDialogListener() {
+                            @Override
+                            public void onChosenDir(String chosenDir) {
+                                // The code in this function will be executed when the dialog OK button is pushed
+                                textWorkdir.setText(chosenDir);
+                                Log.i(AvNav.LOGPRFX,"select work directory "+chosenDir);
+                            }
+                        });
+                FolderChooseDialog.Default_File_Name="avnav";
+                FolderChooseDialog.chooseFile_or_Dir(textWorkdir.getText().toString());
+            }
+        });
+
         boolean showDemo=sharedPrefs.getBoolean(SHOWDEMO,true);
         cbShowDemo.setChecked(showDemo);
 
@@ -78,8 +94,7 @@ public class AvNav extends Activity {
     }
 
     private void checkDirs(String workdir) throws Exception {
-        File sdcard = Environment.getExternalStorageDirectory();
-        File workBase=new File(sdcard,workdir);
+        File workBase=new File(workdir);
         if (! workBase.isDirectory()){
             Log.d(LOGPRFX, "creating workdir " + workdir);
             if (!workBase.mkdirs()) {
