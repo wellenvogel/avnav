@@ -697,7 +697,7 @@ public class GEMFFile {
 		public int read(final byte[] buffer, final int offset, final int length) throws IOException {
 			if (raf == null) return -1;
 			final int read = raf.read(buffer, offset, length > remainingBytes ? remainingBytes : length);
-			Log.d(AvNav.LOGPRFX,"read returns "+read);
+			//Log.d(AvNav.LOGPRFX,"read returns "+read);
 
 			remainingBytes -= read;
 			if (read <= 0) {

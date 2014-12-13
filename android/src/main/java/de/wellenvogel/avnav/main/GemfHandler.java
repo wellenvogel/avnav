@@ -24,6 +24,9 @@ public class GemfHandler {
             "        title=\"layer\"/>\n" +
             "\n" +
             "       <TileFormat width=\"256\" height=\"256\" mime-type=\"x-png\" extension=\"png\" />\n" +
+            "       <LayerBoundings>\n"+
+            "       %LAYERBOUNDINGS%\n"+
+            "       </LayerBoundings>\n"+
             "       \n" +
             "    </TileMap>\n";
     private static final String GEMFTEMPLATE="<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
@@ -37,6 +40,7 @@ public class GemfHandler {
             "   </TileMaps>\n" +
             " </TileMapService>\n" +
             " ";
+    private static final String LAYERBOUNDING="<BoundingBox minlon=\"%MINLON%\" minlat=\"%MINLAT%\" maxlon=\"%MAXLON%\" maxlat=\"%MAXLAT%\" title=\"gemfrange\"/>\n";
     private GEMFFile gemf;
     public GemfHandler(GEMFFile file, String urlName){
         this.urlName=urlName;
@@ -102,6 +106,12 @@ public class GemfHandler {
             sb.append(", east=").append(east);
             return sb.toString();
         }
+        public void fillValues(HashMap<String,String> values){
+            values.put("MAXLON", Double.toString(east));
+            values.put("MINLON", Double.toString(west));
+            values.put("MINLAT", Double.toString(south));
+            values.put("MAXLAT", Double.toString(north));
+        }
     }
     BoundingBox tile2boundingBox(final int x, final int y, final int zoom) {
         BoundingBox bb = new BoundingBox();
@@ -114,16 +124,16 @@ public class GemfHandler {
     BoundingBox range2boundingBox(GEMFFile.GEMFRange range) {
         BoundingBox bb = new BoundingBox();
         bb.north = tile2lat(range.yMin, range.zoom);
-        bb.south = tile2lat(range.yMax + 1, range.zoom);
+        bb.south = tile2lat(range.yMax + 0.999, range.zoom);
         bb.west = tile2lon(range.xMin, range.zoom);
-        bb.east = tile2lon(range.xMax+1, range.zoom);
+        bb.east = tile2lon(range.xMax+0.999, range.zoom);
         return bb;
     }
-    static double tile2lon(int x, int z) {
+    static double tile2lon(double x, int z) {
         return x / Math.pow(2.0, z) * 360.0 - 180;
     }
 
-    static double tile2lat(int y, int z) {
+    static double tile2lat(double y, int z) {
         double n = Math.PI - (2.0 * Math.PI * y) / Math.pow(2.0, z);
         return Math.toDegrees(Math.atan(Math.sinh(n)));
     }
@@ -142,31 +152,46 @@ public class GemfHandler {
         }
     }
 
+    /**
+     * create an overview of an GEMF file
+     * for the bounding boxes we assume a "nice" file - only
+     * @return
+     * @throws UnsupportedEncodingException
+     */
     public InputStream gemfOverview() throws UnsupportedEncodingException {
         HashMap<Integer,String> sources=gemf.getSources();
         List<GEMFFile.GEMFRange> ranges = gemf.getRanges();
         SourceEntry mapSources[]=new SourceEntry[sources.size()];
         int idx=0;
+        boolean multiLayer=sources.keySet().size()>1;
         for (Integer src:sources.keySet()) {
+            StringBuilder layerBoundings=new StringBuilder();
             BoundingBox extend = new BoundingBox();
             int minzoom = 1000;
             int maxzoom = 0;
+            //we first have to find out min/max zoom as we only consider max zoom for bounding boxes
+            //if we have multiple layers
             for (GEMFFile.GEMFRange range : ranges) {
-                if (range.sourceIndex != src.intValue())continue;
-                BoundingBox rbb = range2boundingBox(range);
-                extend.extend(rbb);
+                if (range.sourceIndex != src.intValue()) continue;
                 if (range.zoom < minzoom) minzoom = range.zoom;
                 if (range.zoom > maxzoom) maxzoom = range.zoom;
             }
+            for (GEMFFile.GEMFRange range : ranges) {
+                if (range.sourceIndex != src.intValue())continue;
+                if (multiLayer && range.zoom != maxzoom) continue;
+                BoundingBox rbb = range2boundingBox(range);
+                HashMap<String,String> values=new HashMap<String, String>();
+                rbb.fillValues(values);
+                layerBoundings.append(replaceTemplate(LAYERBOUNDING,values));
+                extend.extend(rbb);
+            }
             HashMap<String,String> values=new HashMap<String, String>();
-            values.put("HREF",src.toString());
-            values.put("MINZOOM",Integer.toString(minzoom));
-            values.put("MAXZOOM",Integer.toString(maxzoom));
-            values.put("MAXLON", Double.toString(extend.east));
-            values.put("MINLON", Double.toString(extend.west));
-            values.put("MINLAT", Double.toString(extend.south));
-            values.put("MAXLAT", Double.toString(extend.north));
-            values.put("TITLE","");
+            values.put("HREF", src.toString());
+            values.put("MINZOOM", Integer.toString(minzoom));
+            values.put("MAXZOOM", Integer.toString(maxzoom));
+            extend.fillValues(values);
+            values.put("TITLE", "");
+            values.put("LAYERBOUNDINGS",layerBoundings.toString());
             SourceEntry e=new SourceEntry(src.intValue(),maxzoom,replaceTemplate(MAPSRCTEMPLATE,values));
             mapSources[idx]=e;
             idx++;
@@ -185,7 +210,8 @@ public class GemfHandler {
         }
         HashMap<String,String> values=new HashMap<String, String>();
         values.put("MAPSOURCES",sourceString.toString());
-        Log.i(AvNav.LOGPRFX, "done read gemf overview " + gemf.getName() );
-        return new ByteArrayInputStream(replaceTemplate(GEMFTEMPLATE,values).getBytes("UTF-8"));
+        Log.i(AvNav.LOGPRFX, "done read gemf overview " + gemf.getName());
+        String rt=replaceTemplate(GEMFTEMPLATE,values);
+        return new ByteArrayInputStream(rt.getBytes("UTF-8"));
     }
 }
