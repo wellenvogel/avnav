@@ -62,8 +62,8 @@ public class GEMFFile {
 	private final LinkedHashMap<Integer, String> mSources = new LinkedHashMap<Integer, String>();
 
 	// Fields to restrict to a single source for reading
-	private boolean mSourceLimited = false;
-	private int mCurrentSource = 0;
+	private boolean mSourceLimited = true;
+	private int mCurrentSource = -1;
 
 	private Object lock=new Object();
 
