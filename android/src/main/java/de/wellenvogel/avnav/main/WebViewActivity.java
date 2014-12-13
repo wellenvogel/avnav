@@ -171,7 +171,7 @@ public class WebViewActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
-        webView.loadDataWithBaseURL(URLPREFIX+"viewer/dummy.html",htmlPage,"text/html","UTF-8",null);
+        webView.loadDataWithBaseURL(URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php",htmlPage,"text/html","UTF-8",null);
 
     }
 
@@ -349,7 +349,7 @@ public class WebViewActivity extends Activity {
                             rt = gemfFile.getInputStream(x, y, z, Integer.parseInt(param[0]));
                         }
                         else {
-                            Log.e(AvNav.LOGPRFX, "gemf file " + baseAndUrl[0] + " not open");
+                            Log.e(AvNav.LOGPRFX, "gemf file " + fname + " not open");
                             return null;
                         }
                     }
