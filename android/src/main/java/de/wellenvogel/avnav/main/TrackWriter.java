@@ -8,8 +8,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 
 /**
  * Created by andreas on 12.12.14.
@@ -145,6 +144,13 @@ public class TrackWriter {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            Collections.sort(track, new Comparator<Location>() {
+                @Override
+                public int compare(Location lhs, Location rhs) {
+                    if (lhs.getTime() == rhs.getTime()) return 0;
+                    return (lhs.getTime() - rhs.getTime()) > 0 ? 1 : -1;
+                }
+            });
             return track;
 
         }
@@ -152,6 +158,7 @@ public class TrackWriter {
         private void parseXML(XmlPullParser parser) throws XmlPullParserException,IOException {
             int eventType = parser.getEventType();
             Location currentLocation = null;
+            long current=System.currentTimeMillis();
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 String name = null;
@@ -195,7 +202,9 @@ public class TrackWriter {
                     case XmlPullParser.END_TAG:
                         name = parser.getName();
                         if (name.equalsIgnoreCase("trkpt") && currentLocation != null) {
-                            track.add(currentLocation);
+                            if (currentLocation.getTime()>0 && currentLocation.getTime() < current) {
+                                track.add(currentLocation);
+                            }
                             currentLocation=null;
                         }
                 }

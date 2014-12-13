@@ -273,8 +273,10 @@ public class WebViewActivity extends Activity {
                         }
                     }
                     ArrayList<Location> track=gpsService.getTrack(maxnum,interval);
+                    //the returned track is inverse order, i.e. the newest entry comes first
                     JSONArray arr=new JSONArray();
-                    for (Location l: track){
+                    for (int i=track.size()-1;i>=0;i--){
+                        Location l=track.get(i);
                         JSONObject e=new JSONObject();
                         e.put("ts",l.getTime());
                         e.put("time",dateFormat.format(new Date(l.getTime())));
