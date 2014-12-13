@@ -54,7 +54,9 @@ public class WebViewActivity extends Activity {
     private GpsService gpsService=null;
 
     //gemf files
-    private HashMap<String,GemfHandler> gemfFiles= new HashMap<String, GemfHandler>();
+    private GemfHandler gemfFile= null;
+    //mapping of url name to real filename
+    private HashMap<String,String> fileNames=new HashMap<String, String>();
 
     @Override
     protected void onStart() {
@@ -196,7 +198,6 @@ public class WebViewActivity extends Activity {
                 Location navLocation=null;
                 if (gpsService != null) navLocation=gpsService.getCurrentLocation();
                 if (navLocation != null){
-
                     out.put("class", "TPV");
                     out.put("lat", navLocation.getLatitude());
                     out.put("lon", navLocation.getLongitude());
@@ -211,27 +212,15 @@ public class WebViewActivity extends Activity {
                 fout=out;
             }
             if (type.equals("listCharts")){
+                fileNames.clear();
+                closeGemf();
                 handled=true;
                 JSONObject out=new JSONObject();
                 try {
                     out.put("status", "OK");
                     JSONArray arr = new JSONArray();
                     File chartDir = new File(workBase, "charts");
-                    for (File f : chartDir.listFiles()){
-                        if (! f.getName().endsWith(GEMFEXTENSION)) continue;
-                        try {
-                            String gemfName = f.getName();
-                            gemfName = gemfName.substring(0, gemfName.length() - GEMFEXTENSION.length());
-                            gemfFiles.put(gemfName, new GemfHandler(f));
-                            JSONObject e=new JSONObject();
-                            e.put("name",gemfName);
-                            e.put("url","/"+CHARTPREFIX+"/"+REALCHARTS+"/"+gemfName);
-                            arr.put(e);
-                        }catch (Exception e){
-                            Log.e(AvNav.LOGPRFX,"exception opening gemf file "+f.getAbsolutePath());
-                        }
-
-                    }
+                    readChartDir(chartDir,"1",arr);
                     if (showDemoCharts){
                         String demoCharts[]=assetManager.list("charts");
                         for (String demo: demoCharts){
@@ -312,45 +301,71 @@ public class WebViewActivity extends Activity {
     private WebResourceResponse handleChartRequest(String fname){
         fname=fname.substring(CHARTPREFIX.length()+1);
         InputStream rt=null;
+        fname = fname.replaceAll("\\?.*", "");
         String mimeType=mimeType(fname);
         try {
             if (fname.startsWith(DEMOCHARTS)){
                 fname=fname.substring(DEMOCHARTS.length()+1);
-                fname = fname.replaceAll("\\?.*", "");
                 if (fname.endsWith(OVERVIEW)){
                     Log.d(AvNav.LOGPRFX,"overview request "+fname);
                     fname=fname.substring(0,fname.length()-OVERVIEW.length()-1); //just the pure name
                     fname+=".xml";
+                    closeGemf();
                     rt=assetManager.open(CHARTPREFIX+"/"+fname);
                 }
                 else throw new Exception("unable to handle demo request for "+fname);
             }
             if (fname.startsWith(REALCHARTS)) {
-                fname=fname.substring(REALCHARTS.length()+1);
-                fname = fname.replaceAll("\\?.*", "");
-                String baseAndUrl[]=fname.split("/",2);
-                GemfHandler f=gemfFiles.get(baseAndUrl[0]);
-                if (f != null){
-                    if (baseAndUrl[1].equals(OVERVIEW)){
-                        rt=f.gemfOverview();
+                //the name will be REALCHARTS/index/type/name/param
+                //type being either avnav or gemf
+                String baseAndUrl[] = fname.split("/", 5);
+                if (baseAndUrl.length < 5) throw new Exception("invalid chart request "+fname);
+                String key=baseAndUrl[0]+"/"+baseAndUrl[1]+"/"+baseAndUrl[2]+"/"+baseAndUrl[3];
+                String realName=fileNames.get(key);
+                if (realName == null) throw new Exception("request a file that is not in the list: "+fname);
+                if (baseAndUrl[2].equals("gemf")) {
+                    if (baseAndUrl[4].equals(OVERVIEW)) {
+                        closeGemf();
+                        try {
+                            GemfHandler f = new GemfHandler(new GEMFFile(new File(realName)),fname);
+                            rt=f.gemfOverview();
+                            gemfFile=f;
+                        }catch (Exception e){
+                            Log.e(AvNav.LOGPRFX,"unable to read gemf file "+fname+": "+e.getLocalizedMessage());
+                        }
                     }
                     else {
-                        //we have source/z/x/y in baseAndUrl[1]
-                        String param[] = baseAndUrl[1].split("/");
-                        if (param.length < 4) {
-                            throw new Exception("invalid parameter for gemf call " + fname);
+                        if (gemfFile != null){
+                            //we have source/z/x/y in baseAndUrl[1]
+                            String param[] = baseAndUrl[4].split("/");
+                            if (param.length < 4) {
+                                throw new Exception("invalid parameter for gemf call " + fname);
+                            }
+                            mimeType = "image/png";
+                            //TODO: handle sources
+                            int z = Integer.parseInt(param[1]);
+                            int x = Integer.parseInt(param[2]);
+                            int y = Integer.parseInt(param[3].replaceAll("\\.png", ""));
+                            rt = gemfFile.getInputStream(x, y, z, Integer.parseInt(param[0]));
                         }
-                        mimeType="image/png";
-                        //TODO: handle sources
-                        int z=Integer.parseInt(param[1]);
-                        int x=Integer.parseInt(param[2]);
-                        int y=Integer.parseInt(param[3].replaceAll("\\.png",""));
-                        rt = f.getInputStream(x,y,z,Integer.parseInt(param[0]));
+                        else {
+                            Log.e(AvNav.LOGPRFX, "gemf file " + baseAndUrl[0] + " not open");
+                            return null;
+                        }
                     }
                 }
+                else if (baseAndUrl[2].equals("avnav")){
+                    if (!baseAndUrl[4].equals(OVERVIEW)){
+                        throw new Exception("only overview supported for xml files: "+fname);
+                    }
+                    File avnav=new File(realName);
+                    if (! avnav.isFile()){
+                        Log.e(AvNav.LOGPRFX,"invalid query for xml file "+fname);
+                    }
+                    rt=new FileInputStream(avnav);
+                }
                 else {
-                    Log.e(AvNav.LOGPRFX,"gemf file "+baseAndUrl[0]+" not found");
-                    return null;
+                    Log.e(AvNav.LOGPRFX,"invalid chart request "+fname);
                 }
             }
             if (rt == null){
@@ -384,5 +399,44 @@ public class WebViewActivity extends Activity {
             Log.d(AvNav.LOGPRFX,"gps service disconnected");
         }
     };
+
+    private void readChartDir(File chartDir,String index,JSONArray arr) {
+        if (! chartDir.isDirectory()) return;
+        for (File f : chartDir.listFiles()) {
+            try {
+                if (f.getName().endsWith(GEMFEXTENSION)){
+                    String gemfName = f.getName();
+                    gemfName = gemfName.substring(0, gemfName.length() - GEMFEXTENSION.length());
+                    JSONObject e = new JSONObject();
+                    e.put("name", gemfName);
+                    String urlName=REALCHARTS + "/"+index+"/gemf/" + gemfName;
+                    fileNames.put(urlName,f.getAbsolutePath());
+                    Log.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
+                    e.put("url", "/"+CHARTPREFIX + "/" +urlName);
+                    arr.put(e);
+                }
+                if (f.getName().endsWith(".xml")){
+                    String name=f.getName().substring(0,f.getName().length()-".xml".length());
+                    JSONObject e=new JSONObject();
+                    e.put("name",name);
+                    String urlName=REALCHARTS+"/"+index+"/avnav/"+name;
+                    fileNames.put(urlName,f.getAbsolutePath());
+                    Log.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
+                    e.put("url","/"+CHARTPREFIX+"/"+urlName);
+                    arr.put(e);
+                }
+            } catch (Exception e) {
+                Log.e(AvNav.LOGPRFX, "exception handling file " + f.getAbsolutePath());
+            }
+        }
+    }
+
+    private void closeGemf(){
+        if (gemfFile != null) {
+            Log.d(AvNav.LOGPRFX,"closing gemf file "+gemfFile.getUrlName());
+            gemfFile.close();
+        }
+        gemfFile=null;
+    }
 
 }

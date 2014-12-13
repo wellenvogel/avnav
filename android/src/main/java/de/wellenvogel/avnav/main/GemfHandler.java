@@ -12,6 +12,7 @@ import java.util.List;
  * Created by andreas on 06.12.14.
  */
 public class GemfHandler {
+    private String urlName;
     private static final String MAPSRCTEMPLATE="    <TileMap \n" +
             "       title=\"%TITLE%\" \n" +
             "       srs=\"OSGEO:41001\" \n" +
@@ -37,11 +38,13 @@ public class GemfHandler {
             " </TileMapService>\n" +
             " ";
     private GEMFFile gemf;
-    public GemfHandler(GEMFFile file){
+    public GemfHandler(GEMFFile file, String urlName){
+        this.urlName=urlName;
         gemf=file;
     }
     public GemfHandler(File file) throws IOException {
         gemf=new GEMFFile(file);
+        this.urlName=urlName;
     }
 
     public InputStream getInputStream(int x,int y, int z) {
@@ -53,6 +56,16 @@ public class GemfHandler {
         InputStream rt = gemf.getInputStream(x, y, z,sourceIndex);
         Log.d(AvNav.LOGPRFX, "loaded gemf z=" + z + ", x=" + x + ", y=" + y);
         return rt;
+    }
+    public String getUrlName(){
+        return urlName;
+    }
+    public void close(){
+        try {
+            gemf.close();
+        } catch (IOException e) {
+            Log.d(AvNav.LOGPRFX,"exception while closing gemf file "+urlName);
+        }
     }
     private String replaceTemplate(String template,HashMap<String,String> values){
         String rt=template;
