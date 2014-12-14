@@ -20,9 +20,13 @@ import java.util.TreeSet;
  *
  * Reference: https://sites.google.com/site/abudden/android-map-store
  * taken from: https://raw.githubusercontent.com/osmdroid/osmdroid/master/osmdroid-android/src/main/java/org/osmdroid/util/GEMFFile.java
- *
+ * improved to handle multiple sources correctly and allow thread safe access to tiles
+ * Remark:
+ *    all the opening part is not thread safe - so this must be finished within one thread
+ *    only later access is allowed to be run in multiple threads
  * @author A. S. Budden
  * @author Erik Burrows
+ * @author Andreas Vogel
  *
  */
 public class GEMFFile {
@@ -61,9 +65,6 @@ public class GEMFFile {
 	// List of tile sources within this archive
 	private final LinkedHashMap<Integer, String> mSources = new LinkedHashMap<Integer, String>();
 
-	// Fields to restrict to a single source for reading
-	private boolean mSourceLimited = true;
-	private int mCurrentSource = -1;
 
 	private Object lock=new Object();
 
@@ -521,23 +522,6 @@ public class GEMFFile {
 		return mSources;
 	}
 
-	/*
-	 * Set single source for getInputStream() to use. Otherwise, first tile found
-	 * with specified Z/X/Y coordinates will be returned.
-	 */
-	public void selectSource(final int pSource) {
-		if (mSources.containsKey(new Integer(pSource))) {
-			mSourceLimited = true;
-			mCurrentSource = pSource;
-		}
-	}
-
-	/*
-	 * Allow getInputStream() to use any source in the archive.
-	 */
-	public void acceptAnySource() {
-		mSourceLimited = false;
-	}
 
 	/*
 	 * Return list of zoom levels contained within this archive.
@@ -552,14 +536,7 @@ public class GEMFFile {
 		return zoomLevels;
 	}
 
-	/*
-         * Get an InputStream for the tile data specified by the Z/X/Y coordinates.
-         *
-         * @return InputStream of tile data, or null if not found.
-         */
-	public InputStream getInputStream(final int pX, final int pY, final int pZ) {
-		return getInputStream(pX,pY,pZ,-1);
-	}
+
 	/*
 	 * Get an InputStream for the tile data specified by the Z/X/Y coordinates.
 	 *
@@ -575,7 +552,7 @@ public class GEMFFile {
 					&& (pX <= rs.xMax)
 					&& (pY >= rs.yMin)
 					&& (pY <= rs.yMax)
-					&& ((rs.sourceIndex == sourceIndex) || ( ! mSourceLimited || (rs.sourceIndex == mCurrentSource)))) {
+					&& (rs.sourceIndex == sourceIndex) ) {
 				range = rs;
 				break;
 			}
