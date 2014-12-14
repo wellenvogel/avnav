@@ -8,5 +8,7 @@
     <string name="noLocation">No GPS found, enable now?</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
-    <string name="selectWorkDir">SelectWorkDir</string>
+    <string name="selectWorkDir">SelectWorkingDir</string>
+    <string name="newFolderName">Name for new Folder</string>
+    <string name="createFolder">Create Folder</string>
 </resources>

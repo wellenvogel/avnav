@@ -40,6 +40,7 @@ import android.content.DialogInterface.OnClickListener;
 //import android.content.DialogInterface.OnKeyListener;
 import android.os.Environment;
 import android.text.Editable;
+import android.util.Log;
 import android.view.Gravity;
 //import android.view.KeyEvent;
 import android.view.View;
@@ -74,9 +75,9 @@ public class SimpleFileDialog
     private EditText input_text;
 
     private String m_dir = "";
-    private List<String> m_subdirs = null;
+    private List<FileEntry> m_subdirs = null;
     private SimpleFileDialogListener m_SimpleFileDialogListener = null;
-    private ArrayAdapter<String> m_listAdapter = null;
+    private ArrayAdapter<FileEntry> m_listAdapter = null;
 
     //////////////////////////////////////////////////////
     // Callback interface for selected directory
@@ -84,6 +85,20 @@ public class SimpleFileDialog
     public interface SimpleFileDialogListener
     {
         public void onChosenDir(String chosenDir);
+    }
+
+    //////////////////////////////////////////////////////
+    // a directory/file entry
+    //////////////////////////////////////////////////////
+    private class FileEntry{
+        String fileName;
+        boolean isWritable=false;
+        boolean isDir=false;
+        FileEntry(String name,boolean wr,boolean dir){
+            this.fileName=name;
+            this.isWritable=wr;
+            this.isDir=dir;
+        }
     }
 
     public SimpleFileDialog(Context context, String file_select_type, SimpleFileDialogListener SimpleFileDialogListener)
@@ -155,13 +170,16 @@ public class SimpleFileDialog
             public void onClick(DialogInterface dialog, int item)
             {
                 String m_dir_old = m_dir;
-                String sel = "" + ((AlertDialog) dialog).getListView().getAdapter().getItem(item);
+                ArrayAdapter<FileEntry> list=(ArrayAdapter<FileEntry>)(((AlertDialog) dialog).getListView().getAdapter());
+                FileEntry entry=list.getItem(item);
+                String sel = entry.fileName;
                 if (sel.charAt(sel.length()-1) == '/')	sel = sel.substring(0, sel.length()-1);
 
                 // Navigate into the sub-directory
                 if (sel.equals(".."))
                 {
                     m_dir = m_dir.substring(0, m_dir.lastIndexOf("/"));
+                    if (m_dir.equals(""))m_dir="/";
                 }
                 else
                 {
@@ -174,7 +192,7 @@ public class SimpleFileDialog
                     m_dir = m_dir_old;
                     Selected_File_Name = sel;
                 }
-
+                if (m_dir.startsWith("//")) m_dir=m_dir.substring(1);
                 updateDirectory();
             }
         }
@@ -220,44 +238,50 @@ public class SimpleFileDialog
         else return false;
     }
 
-    private List<String> getDirectories(String dir)
+    private List<FileEntry> getDirectories(String dir)
     {
-        List<String> dirs = new ArrayList<String>();
+        List<FileEntry> dirs = new ArrayList<FileEntry>();
         try
         {
             File dirFile = new File(dir);
 
-            // if directory is not the base sd card directory add ".." for going up one directory
-            //if (! m_dir.equals(m_sdcardDirectory) )
-            if (! m_dir.equals("/"))
-                dirs.add("..");
 
             if (! dirFile.exists() || ! dirFile.isDirectory())
             {
                 return dirs;
             }
 
-            for (File file : dirFile.listFiles())
-            {
-                if ( file.isDirectory())
-                {
-                    // Add "/" to directory names to identify them in the list
-                    dirs.add( file.getName() + "/" );
-                }
-                else if (Select_type == FileSave || Select_type == FileOpen)
-                {
-                    // Add file names to the list if we are doing a file save or file open operation
-                    dirs.add( file.getName() );
+            // if directory is not the base sd card directory add ".." for going up one directory
+            //if (! m_dir.equals(m_sdcardDirectory) )
+            if (! m_dir.equals("/")) {
+                File parent=new File(dirFile,"..");
+                dirs.add(new FileEntry("..",parent.canWrite(),true));
+            }
+
+            File [] list=dirFile.listFiles();
+
+            if (list != null) {
+                for (File file : list) {
+                    if (file.isDirectory()) {
+
+                        dirs.add(new FileEntry(file.getName(), file.canWrite(), true));
+                    } else if (Select_type == FileSave || Select_type == FileOpen) {
+                        // Add file names to the list if we are doing a file save or file open operation
+                        dirs.add(new FileEntry(file.getName(), file.canWrite(), false));
+                    }
                 }
             }
         }
-        catch (Exception e)	{}
+        catch (Exception e)	{
+            Log.e(AvNav.LOGPRFX,"exception while reading directory: "+e);
+            e.printStackTrace();
+        }
 
-        Collections.sort(dirs, new Comparator<String>()
+        Collections.sort(dirs, new Comparator<FileEntry>()
         {
-            public int compare(String o1, String o2)
+            public int compare(FileEntry o1, FileEntry o2)
             {
-                return o1.compareTo(o2);
+                return o1.fileName.compareTo(o2.fileName);
             }
         });
         return dirs;
@@ -295,7 +319,7 @@ public class SimpleFileDialog
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////                                   START DIALOG DEFINITION                                    //////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private AlertDialog.Builder createDirectoryChooserDialog(String title, List<String> listItems,
+    private AlertDialog.Builder createDirectoryChooserDialog(String title, List<FileEntry> listItems,
                                                              DialogInterface.OnClickListener onClickListener)
     {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(m_context);
@@ -391,9 +415,9 @@ public class SimpleFileDialog
         }
     }
 
-    private ArrayAdapter<String> createListAdapter(List<String> items)
+    private ArrayAdapter<FileEntry> createListAdapter(List<FileEntry> items)
     {
-        return new ArrayAdapter<String>(m_context, android.R.layout.select_dialog_item, android.R.id.text1, items)
+        return new ArrayAdapter<FileEntry>(m_context, android.R.layout.select_dialog_item, android.R.id.text1, items)
         {
             @Override
             public View getView(int position, View convertView, ViewGroup parent)
@@ -404,10 +428,22 @@ public class SimpleFileDialog
                     // Enable list item (directory) text wrapping
                     TextView tv = (TextView) v;
                     tv.getLayoutParams().height = LayoutParams.WRAP_CONTENT;
+
                     tv.setEllipsize(null);
+                    String txt=getItem(position).fileName;
+                    if (getItem(position).isDir) txt+="/";
+                    if (!getItem(position).isWritable){
+                        tv.setTextColor(0xFFC0C0C0);
+                        //txt="*"+txt;
+                    }
+                    else {
+                        tv.setTextColor(m_context.getResources().getColor(android.R.color.white));
+                    }
+                    tv.setText(txt);
                 }
                 return v;
             }
+
         };
     }
 }
