@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -13,6 +15,8 @@ import android.view.View;
 import android.widget.*;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 public class AvNav extends Activity {
     //settings
@@ -98,6 +102,21 @@ public class AvNav extends Activity {
         e.apply();
     }
 
+    public void updateMtp(File file){
+        try {
+
+            MediaScannerConnection.scanFile(
+                    context,
+                    new String[]{file.getAbsolutePath()},
+                    null,
+                    null);
+            this.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                    Uri.fromFile(file)));
+        }catch(Exception e){
+            Log.e(LOGPRFX,"error when updating MTP "+e.getLocalizedMessage());
+        }
+    }
+
     private void checkDirs(String workdir) throws Exception {
         File workBase=new File(workdir);
         if (! workBase.isDirectory()){
@@ -105,6 +124,7 @@ public class AvNav extends Activity {
             if (!workBase.mkdirs()) {
                 throw new Exception("unable to create working directory "+workdir);
             }
+            updateMtp(workBase);
         }
         String subdirs[]=new String[]{"charts","tracks","routes"};
         for (String s: subdirs){
@@ -112,6 +132,7 @@ public class AvNav extends Activity {
             if (! sub.isDirectory()){
                 Log.d(LOGPRFX, "creating subdir " + sub.getAbsolutePath());
                 if (! sub.mkdirs()) throw new Exception("unable to create directory "+sub.getAbsolutePath());
+                updateMtp(sub);
             }
         }
     }
