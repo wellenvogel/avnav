@@ -131,6 +131,11 @@ avnav.gui.Gpspage.prototype.drawXte=function(context){
     var w=context.canvas.width;
     var h=context.canvas.height;
     context.clearRect(0,0,w,h);
+    //fix for duplicate canvas in Android 4.x stock browser and webview
+    //https://medium.com/@dhashvir/android-4-1-x-stock-browser-canvas-solution-ffcb939af758
+    context.canvas.style.visibility ='hidden'; // Force a change in DOM
+    context.canvas.offsetHeight; // Cause a repaint to take play
+    context.canvas.style.visibility = 'inherit'; // Make visible again
     var textBase=h*0.9;
     var textSize=h*0.2;
     var left=w*0.1;
