@@ -7,10 +7,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <application android:label="@string/appName" android:icon="@drawable/c60r">
+    <application android:label="@string/appName" android:icon="@drawable/sailboatr">
         <activity android:name="de.wellenvogel.avnav.main.AvNav"
                   android:label="@string/appName"
-                  android:windowSoftInputMode="stateHidden">
+                  android:windowSoftInputMode="stateHidden"
+                  android:icon="@drawable/sailboatr">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
