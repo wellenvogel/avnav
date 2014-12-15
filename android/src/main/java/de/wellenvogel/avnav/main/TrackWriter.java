@@ -108,7 +108,7 @@ public class TrackWriter {
         return ld.equals(dd);
     }
 
-    public ArrayList<Location> parseTrackFile(Date dt, long mintime) {
+    public ArrayList<Location> parseTrackFile(Date dt, long mintime,float minDistance) {
 
         ArrayList<Location> rt = new ArrayList<Location>();
         File infile = new File(trackdir, getCurrentTrackname(dt)+".gpx");
@@ -120,7 +120,7 @@ public class TrackWriter {
         try {
             in_s = new FileInputStream(infile);
 
-            rt=new TrackParser().parseTrackFile(in_s,mintime);
+            rt=new TrackParser().parseTrackFile(in_s,mintime, minDistance);
             in_s.close();
         } catch (Exception e) {
             Log.e(AvNav.LOGPRFX,"unexpected error while opening trackfile "+e);
@@ -132,8 +132,10 @@ public class TrackWriter {
     private class TrackParser {
         private ArrayList<Location> track=new ArrayList<Location>();
         private long mintime=0;
-        private ArrayList<Location> parseTrackFile(InputStream in, long mintime){
+        private float minDistance=0;
+        private ArrayList<Location> parseTrackFile(InputStream in, long mintime,float minDistance ){
             this.mintime=mintime;
+            this.minDistance=minDistance;
             XmlPullParserFactory pullParserFactory;
             try {
                 pullParserFactory = XmlPullParserFactory.newInstance();
@@ -153,7 +155,22 @@ public class TrackWriter {
                     return (lhs.getTime() - rhs.getTime()) > 0 ? 1 : -1;
                 }
             });
-            return track;
+            //now clean up and remove duplicates
+            ArrayList<Location> rt=new ArrayList<Location>();
+            Location last=null;
+            for (Location l: track){
+                if (last == null){
+                    rt.add(l);
+                    last=l;
+                }
+                else {
+                    if (last.distanceTo(l) >= minDistance ){
+                        rt.add(l);
+                        last=l;
+                    }
+                }
+            }
+            return rt;
 
         }
 

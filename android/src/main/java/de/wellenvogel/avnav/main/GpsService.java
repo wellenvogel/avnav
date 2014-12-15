@@ -93,9 +93,9 @@ public class GpsService extends Service implements LocationListener {
         long mintime=System.currentTimeMillis()-trackTime;
         Date dt=new Date();
         lastTrackWrite=dt.getTime();
-        ArrayList<Location> rt=trackWriter.parseTrackFile(new Date(dt.getTime()-24*60*60*1000),mintime);
+        ArrayList<Location> rt=trackWriter.parseTrackFile(new Date(dt.getTime()-24*60*60*1000),mintime,trackDistance);
         trackpoints.addAll(rt);
-        rt=trackWriter.parseTrackFile(dt,mintime);
+        rt=trackWriter.parseTrackFile(dt,mintime,trackDistance);
         if (rt.size() == 0){
             //empty track file - trigger write very soon
             lastTrackWrite=0;
@@ -249,7 +249,7 @@ public class GpsService extends Service implements LocationListener {
             //the diff in location times must not be too far away from the really elapsed time
             //we assume at least MAXLOCAGE
             long locdiff=nlocation.getTime()-curloc.getTime();
-            if (locdiff < (currtime - lastValidLocation - MAXLOCAGE)){
+            if (locdiff < (currtime - lastValidLocation - 5*MAXLOCAGE)){
                 Log.d(LOGPRFX,"location: location updates too slow - only "+(locdiff/1000)+" seconds for time diff "+(currtime-lastValidLocation)/1000);
                 return null;
             }
