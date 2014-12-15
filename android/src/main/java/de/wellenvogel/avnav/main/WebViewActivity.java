@@ -6,10 +6,7 @@ import android.content.*;
 import android.content.res.AssetManager;
 import android.location.*;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.IBinder;
-import android.os.SystemClock;
+import android.os.*;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.WindowManager;
@@ -111,6 +108,9 @@ public class WebViewActivity extends Activity {
         ownMimeMap.put("js","text/javascript");
         webView = (WebView) findViewById(R.id.webView1);
         webView.getSettings().setJavaScriptEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
         assetManager = getAssets();
         String htmlPage = null;
         InputStream input;
