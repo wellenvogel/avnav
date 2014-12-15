@@ -64,7 +64,7 @@ public class TrackWriter {
                     if (l.getTime() == 0) continue;
                     if (isCurrentDay(l, dt))
                         numpoints++;
-                        out.format(trkpnt, l.getLatitude(), l.getLongitude(), ISO8601DateParser.toString(new Date(l.getTime())), l.getBearing(), l.getSpeed());
+                        out.format(Locale.ENGLISH,trkpnt, l.getLatitude(), l.getLongitude(), ISO8601DateParser.toString(new Date(l.getTime())), l.getBearing(), l.getSpeed());
                 }
                 out.append(footer);
                 out.close();
@@ -108,7 +108,7 @@ public class TrackWriter {
         return ld.equals(dd);
     }
 
-    public ArrayList<Location> parseTrackFile(Date dt) {
+    public ArrayList<Location> parseTrackFile(Date dt, long mintime) {
 
         ArrayList<Location> rt = new ArrayList<Location>();
         File infile = new File(trackdir, getCurrentTrackname(dt)+".gpx");
@@ -120,7 +120,7 @@ public class TrackWriter {
         try {
             in_s = new FileInputStream(infile);
 
-            rt=new TrackParser().parseTrackFile(in_s);
+            rt=new TrackParser().parseTrackFile(in_s,mintime);
             in_s.close();
         } catch (Exception e) {
             Log.e(AvNav.LOGPRFX,"unexpected error while opening trackfile "+e);
@@ -131,7 +131,9 @@ public class TrackWriter {
 
     private class TrackParser {
         private ArrayList<Location> track=new ArrayList<Location>();
-        private ArrayList<Location> parseTrackFile(InputStream in){
+        private long mintime=0;
+        private ArrayList<Location> parseTrackFile(InputStream in, long mintime){
+            this.mintime=mintime;
             XmlPullParserFactory pullParserFactory;
             try {
                 pullParserFactory = XmlPullParserFactory.newInstance();
@@ -202,7 +204,7 @@ public class TrackWriter {
                     case XmlPullParser.END_TAG:
                         name = parser.getName();
                         if (name.equalsIgnoreCase("trkpt") && currentLocation != null) {
-                            if (currentLocation.getTime()>0 && currentLocation.getTime() < current) {
+                            if (currentLocation.getTime()>0 && currentLocation.getTime() < current && currentLocation.getTime() >= mintime) {
                                 track.add(currentLocation);
                             }
                             currentLocation=null;
