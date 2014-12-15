@@ -85,16 +85,21 @@ public class GpsService extends Service implements LocationListener {
         trackInterval=intent.getLongExtra(PROP_TRACKINTERVAL,300000);
         trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
         trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
-        trackTime=intent.getLongExtra(PROP_TRACKTIME,24*60*60*1000); //24h
+        trackTime=intent.getLongExtra(PROP_TRACKTIME,25*60*60*1000); //25h - to ensure that we at least have the whole day...
         Log.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+", distance="+trackDistance+", mintime="+(trackMintime/1000)+", maxtime(h)="+(trackTime/3600/1000));
         //read the track data from today and yesterday
         //we rely on the cleanup to handle outdated entries
         trackWriter=new TrackWriter(trackDir);
+        long mintime=System.currentTimeMillis()-trackTime;
         Date dt=new Date();
         lastTrackWrite=dt.getTime();
-        ArrayList<Location> rt=trackWriter.parseTrackFile(new Date(dt.getTime()-24*60*60*1000));
+        ArrayList<Location> rt=trackWriter.parseTrackFile(new Date(dt.getTime()-24*60*60*1000),mintime);
         trackpoints.addAll(rt);
-        rt=trackWriter.parseTrackFile(dt);
+        rt=trackWriter.parseTrackFile(dt,mintime);
+        if (rt.size() == 0){
+            //empty track file - trigger write very soon
+            lastTrackWrite=0;
+        }
         trackpoints.addAll(rt);
         Log.d(LOGPRFX,"read "+trackpoints.size()+" trackpoints from files");
         startTimer();
