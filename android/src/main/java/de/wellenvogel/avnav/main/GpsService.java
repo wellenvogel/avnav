@@ -34,11 +34,12 @@ public class GpsService extends Service implements LocationListener {
     public static String PROP_TRACKDISTANCE="track.distance";
     public static String PROP_TRACKMINTIME="track.mintime";
     public static String PROP_TRACKTIME="track.time";
+    public static String PROP_CHECKONLY="checkonly";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
 
-    private static Timer timer =null;
+    private Timer timer =null;
     private Context ctx;
     private long writerInterval=0;
     private String outfile=null;
@@ -47,8 +48,11 @@ public class GpsService extends Service implements LocationListener {
     private long lastTrackCount;
     private final IBinder mBinder = new GpsServiceBinder();
 
+    private boolean isRunning;  //this is our view whether we are running or not
+                                //running means that we are registered for updates and have our timer active
+
     //properties
-    private File trackDir;
+    private File trackDir=null;
     private long trackInterval; //interval for writing out the xml file
     private long trackDistance; //min distance in m
     private long trackMintime; //min interval between 2 points
@@ -79,31 +83,50 @@ public class GpsService extends Service implements LocationListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
+        if (intent != null && intent.getBooleanExtra(PROP_CHECKONLY,false)){
+            return Service.START_REDELIVER_INTENT;
+        }
         String trackdir=intent.getStringExtra(PROP_TRACKDIR);
         //we rely on the activity to check before...
-        trackDir=new File(trackdir);
+        File newTrackDir=new File(trackdir);
+        boolean loadTrack=true;
+        if (trackDir != null && trackDir.getAbsolutePath().equals(newTrackDir.getAbsolutePath())){
+            //seems to be a restart - so do not load again
+            loadTrack=false;
+            Log.d(LOGPRFX,"restart: do not load track data");
+        }
+
         trackInterval=intent.getLongExtra(PROP_TRACKINTERVAL,300000);
         trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
         trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
         trackTime=intent.getLongExtra(PROP_TRACKTIME,25*60*60*1000); //25h - to ensure that we at least have the whole day...
         Log.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+", distance="+trackDistance+", mintime="+(trackMintime/1000)+", maxtime(h)="+(trackTime/3600/1000));
-        //read the track data from today and yesterday
-        //we rely on the cleanup to handle outdated entries
-        trackWriter=new TrackWriter(trackDir);
-        long mintime=System.currentTimeMillis()-trackTime;
-        Date dt=new Date();
-        lastTrackWrite=dt.getTime();
-        ArrayList<Location> rt=trackWriter.parseTrackFile(new Date(dt.getTime()-24*60*60*1000),mintime,trackDistance);
-        trackpoints.addAll(rt);
-        rt=trackWriter.parseTrackFile(dt,mintime,trackDistance);
-        if (rt.size() == 0){
-            //empty track file - trigger write very soon
-            lastTrackWrite=0;
+        if (loadTrack) {
+            trackpoints.clear();
+            trackDir = new File(trackdir);
+            //read the track data from today and yesterday
+            //we rely on the cleanup to handle outdated entries
+            trackWriter = new TrackWriter(trackDir);
+            long mintime = System.currentTimeMillis() - trackTime;
+            Date dt = new Date();
+            lastTrackWrite = dt.getTime();
+            ArrayList<Location> rt = trackWriter.parseTrackFile(new Date(dt.getTime() - 24 * 60 * 60 * 1000), mintime, trackDistance);
+            synchronized (this) {
+                trackpoints.addAll(rt);
+            }
+            rt = trackWriter.parseTrackFile(dt, mintime, trackDistance);
+            if (rt.size() == 0) {
+                //empty track file - trigger write very soon
+                lastTrackWrite = 0;
+            }
+            synchronized (this) {
+                trackpoints.addAll(rt);
+            }
+            Log.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
+            startTimer();
         }
-        trackpoints.addAll(rt);
-        Log.d(LOGPRFX,"read "+trackpoints.size()+" trackpoints from files");
-        startTimer();
         checkLocationService();
+        isRunning=true;
         return Service.START_REDELIVER_INTENT;
     }
     public void onCreate()
@@ -137,11 +160,14 @@ public class GpsService extends Service implements LocationListener {
            // checkTrackWriter(GpsService.this.location);
         }
     }
-    @Override
-    public void onDestroy()
-    {
-        super.onDestroy();
-        locationService.removeUpdates(this);
+
+    /**
+     * will be called whe we intend to really stop
+     */
+    private void handleStop(){
+        if (locationService != null) {
+            locationService.removeUpdates(this);
+        }
         location=null;
         lastValidLocation=0;
         if (trackpoints.size() > 0){
@@ -151,8 +177,29 @@ public class GpsService extends Service implements LocationListener {
                 Log.d(LOGPRFX,"Exception while finally writing trackfile: "+e.getLocalizedMessage());
             }
         }
+        trackpoints.clear();
+        trackDir=null;
+        isRunning=false;
+        if (timer != null){
+            try{
+                timer.cancel();
+            }catch (Exception e){}
+            timer=null;
+        }
         Log.d(LOGPRFX,"service stopped");
-        //Toast.makeText(this, "Location Service Stopped ...", Toast.LENGTH_SHORT).show();
+    }
+
+    public void stopMe(){
+        handleStop();
+        stopSelf();
+    }
+
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        handleStop();
+
     }
 
     private void checkLocationService(){
@@ -231,6 +278,7 @@ public class GpsService extends Service implements LocationListener {
      * @return
      */
     Location getCurrentLocation(){
+        if (! isRunning) return null;
         Location curloc=location;
         if (curloc == null) return null;
         long currtime=System.currentTimeMillis();
@@ -265,6 +313,7 @@ public class GpsService extends Service implements LocationListener {
      * @param l
      */
     private void checkTrackWriter(Location l){
+        if (! isRunning) return;
         boolean writeOut=false;
         long current = System.currentTimeMillis();
         synchronized (this) {
@@ -328,6 +377,7 @@ public class GpsService extends Service implements LocationListener {
      */
     public synchronized  ArrayList<Location> getTrack(int maxnum, long interval){
         ArrayList<Location> rt=new ArrayList<Location>();
+        if (! isRunning) return rt;
         long currts=-1;
         long num=0;
         try {
@@ -358,5 +408,9 @@ public class GpsService extends Service implements LocationListener {
     public synchronized ArrayList<Location> getTrackCopy(){
         ArrayList<Location> rt=new ArrayList<Location>(trackpoints);
         return rt;
+    }
+
+    public boolean isRunning(){
+        return isRunning;
     }
 }

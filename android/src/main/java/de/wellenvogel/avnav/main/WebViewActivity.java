@@ -58,35 +58,8 @@ public class WebViewActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
-        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
-        // check if enabled and if not send user to the GSP settings
-        // Better solution would be to display a dialog and suggesting to
-        // go to the settings
-        if (!enabled) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(R.string.noLocation);
-            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User clicked OK button
-                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    startActivity(intent);
-                }
-            });
-            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User cancelled the dialog
-                }
-            });
-            AlertDialog dialog = builder.create();
-            dialog.show();
-
-        }
         Intent intent = new Intent(this, GpsService.class);
-        intent.putExtra(GpsService.PROP_TRACKDIR,workBase.getAbsolutePath()+"/tracks");
-        //TODO: add other parameters here
-        startService(intent);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 

@@ -126,6 +126,7 @@ public class TrackWriter {
             Log.e(AvNav.LOGPRFX,"unexpected error while opening trackfile "+e);
             return rt;
         }
+        Log.d(AvNav.LOGPRFX,"read trackfile "+infile+" with "+rt.size()+" trackpoints");
         return rt;
     }
 

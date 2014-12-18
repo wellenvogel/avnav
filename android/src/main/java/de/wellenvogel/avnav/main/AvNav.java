@@ -1,14 +1,16 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.app.AlertDialog;
+import android.content.*;
+import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,7 +31,36 @@ public class AvNav extends Activity {
     private EditText textWorkdir;
     private CheckBox cbShowDemo;
     private Context context=this;
+    private GpsService gpsService=null;
     SharedPreferences sharedPrefs ;
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
+            gpsService = binder.getService();
+            Log.d(LOGPRFX,"Main: gps service connected");
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            gpsService=null;
+            Log.d(LOGPRFX,"Main: gps service disconnected");
+        }
+    };
+
+    private void startGpsService(){
+        File trackDir=new File(textWorkdir.getText().toString(),"tracks");
+        Intent intent = new Intent(AvNav.this, GpsService.class);
+        intent.putExtra(GpsService.PROP_TRACKDIR,trackDir.getAbsolutePath());
+        //TODO: add other parameters here
+        startService(intent);
+    }
     /**
      * Called when the activity is first created.
      */
@@ -41,6 +72,13 @@ public class AvNav extends Activity {
         btExit =(Button)findViewById(R.id.btExit);
         textWorkdir=(EditText)findViewById(R.id.editText);
         cbShowDemo=(CheckBox)findViewById(R.id.cbShowDemoCharts);
+        if (gpsService == null) {
+            Intent intent = new Intent(AvNav.this, GpsService.class);
+            intent.putExtra(GpsService.PROP_CHECKONLY, true);
+            //TODO: add other parameters here
+            startService(intent);
+            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        }
         btStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -51,6 +89,33 @@ public class AvNav extends Activity {
                     Toast.makeText(context, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
+                boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+                // check if enabled and if not send user to the GSP settings
+                // Better solution would be to display a dialog and suggesting to
+                // go to the settings
+                if (!enabled) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(AvNav.this);
+                    builder.setMessage(R.string.noLocation);
+                    builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // User clicked OK button
+                            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(intent);
+                        }
+                    });
+                    builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // User cancelled the dialog
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                }
+                startGpsService();
                 Intent intent = new Intent(context, WebViewActivity.class);
                 intent.putExtra(WORKDIR, textWorkdir.getText().toString());
                 intent.putExtra(SHOWDEMO, cbShowDemo.isChecked());
@@ -61,6 +126,10 @@ public class AvNav extends Activity {
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent(context,GpsService.class);
+                if (gpsService !=null){
+                    gpsService.stopMe();
+                }
+                unbindService(mConnection);
                 stopService(intent);
                 finish();
             }
