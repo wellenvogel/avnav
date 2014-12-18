@@ -29,7 +29,6 @@ assets/libraries/**
 assets/viewer/**
 target/**
 out/**
-.idea/**
 
 *.swp
 
