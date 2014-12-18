@@ -343,7 +343,9 @@ public class WebViewActivity extends Activity {
             }
             if (rt == null){
                 Log.e(AvNav.LOGPRFX,"unknown chart path "+fname);
-                return null;
+                WebResourceResponse resp=new WebResourceResponse(null,null,new ByteArrayInputStream("".getBytes()));
+                //resp.setStatusCodeAndReasonPhrase(404,"not found");
+
             }
 
             return new WebResourceResponse(mimeType,"",rt);
