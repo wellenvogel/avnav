@@ -11,4 +11,9 @@
     <string name="selectWorkDir">SelectWorkingDir</string>
     <string name="newFolderName">Name for new Folder</string>
     <string name="createFolder">Create Folder</string>
+    <string name="gpsServiceStopped">GPS service stopped</string>
+    <string name="gpsServiceSearching">searching GPS</string>
+    <string name="gpsServiceOK">GPS Position OK</string>
+    <string name="startGps">start</string>
+    <string name="stopGps">stop</string>
 </resources>

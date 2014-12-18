@@ -5,10 +5,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.location.*;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -19,6 +16,8 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.Types;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Timer;
@@ -412,5 +411,48 @@ public class GpsService extends Service implements LocationListener {
 
     public boolean isRunning(){
         return isRunning;
+    }
+
+    public static String formatCoord(double coord,boolean isLat){
+        StringBuilder rt=new StringBuilder();
+        String dir=isLat?"N":"E";
+        if (coord < 0){
+            dir=isLat?"S":"W";
+            coord=-coord;
+        }
+        double deg=Math.floor(coord);
+        double min=(coord-deg)*60;
+        DecimalFormat degFormat=isLat?new DecimalFormat("00"):new DecimalFormat("000");
+        rt.append(degFormat.format(deg));
+        rt.append("°");
+        rt.append(" ");
+        DecimalFormat minFormat=new DecimalFormat("00.000");
+        rt.append(minFormat.format(min));
+        rt.append("'").append(dir);
+        return rt.toString();
+    }
+
+    public class SatStatus{
+        public int numSat=0;
+        public int numUsed=0;
+        public SatStatus(int numSat,int numUsed){
+            this.numSat=numSat;
+            this.numUsed=numUsed;
+        }
+        public String toString(){
+            return "Sat num="+numSat+", used="+numUsed;
+        }
+    }
+
+    public SatStatus getSatStatus(){
+        SatStatus rt=new SatStatus(0,0);
+        if (! isRunning) return rt;
+        GpsStatus status=locationService.getGpsStatus(null);
+        for (GpsSatellite s: status.getSatellites()){
+            rt.numSat++;
+            if (s.usedInFix()) rt.numUsed++;
+        }
+        Log.d(LOGPRFX,"getSatStatus returns "+rt);
+        return rt;
     }
 }

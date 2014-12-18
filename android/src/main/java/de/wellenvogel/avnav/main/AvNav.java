@@ -3,11 +3,13 @@ package de.wellenvogel.avnav.main;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.*;
+import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -28,10 +30,15 @@ public class AvNav extends Activity {
     public static final String LOGPRFX="avnav";
     private Button btStart;
     private Button btExit;
+    private Button btGps;
+    private TextView txGps;
     private EditText textWorkdir;
     private CheckBox cbShowDemo;
+    private ImageView gpsIcon;
     private Context context=this;
     private GpsService gpsService=null;
+    private boolean gpsRunning=false;
+    private Handler handler = new Handler();
     SharedPreferences sharedPrefs ;
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -60,6 +67,49 @@ public class AvNav extends Activity {
         intent.putExtra(GpsService.PROP_TRACKDIR,trackDir.getAbsolutePath());
         //TODO: add other parameters here
         startService(intent);
+
+    }
+
+    private void stopGpsService(boolean unbind){
+        if (gpsService !=null){
+            gpsService.stopMe();
+        }
+        if (unbind) {
+            Intent intent = new Intent(context, GpsService.class);
+            unbindService(mConnection);
+            stopService(intent);
+        }
+    }
+
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            updateServiceState();
+            handler.postDelayed(this, 500);
+        }
+    };
+
+    private void updateServiceState(){
+        if (gpsService == null || ! gpsService.isRunning()){
+            gpsIcon.setImageResource(R.drawable.redbubble);
+            txGps.setText(R.string.gpsServiceStopped);
+            btGps.setText(R.string.startGps);
+            gpsRunning=false;
+            return;
+        }
+        gpsRunning=true;
+        btGps.setText(R.string.stopGps);
+        Location current;
+        if ((current=gpsService.getCurrentLocation()) == null){
+            gpsIcon.setImageResource(R.drawable.yellowbubble);
+            GpsService.SatStatus status=gpsService.getSatStatus();
+            txGps.setText(getResources().getString(R.string.gpsServiceSearching)+", Sat : "+status.numSat+"/"+status.numUsed);
+            return;
+        }
+        gpsIcon.setImageResource(R.drawable.greenbubble);
+        txGps.setText(GpsService.formatCoord(current.getLatitude(),true)+" , "+GpsService.formatCoord(current.getLongitude(),false)+
+                "  ("+current.getAccuracy()+"m)");
+        return;
     }
     /**
      * Called when the activity is first created.
@@ -70,8 +120,11 @@ public class AvNav extends Activity {
         setContentView(R.layout.main);
         btStart =(Button)findViewById(R.id.btStart);
         btExit =(Button)findViewById(R.id.btExit);
+        btGps =(Button)findViewById(R.id.btGps);
+        txGps=(TextView)findViewById(R.id.txService);
         textWorkdir=(EditText)findViewById(R.id.editText);
         cbShowDemo=(CheckBox)findViewById(R.id.cbShowDemoCharts);
+        gpsIcon=(ImageView)findViewById(R.id.iconGps);
         if (gpsService == null) {
             Intent intent = new Intent(AvNav.this, GpsService.class);
             intent.putExtra(GpsService.PROP_CHECKONLY, true);
@@ -79,6 +132,8 @@ public class AvNav extends Activity {
             startService(intent);
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         }
+
+        handler.postDelayed(runnable, 100);
         btStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,13 +180,15 @@ public class AvNav extends Activity {
         btExit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent=new Intent(context,GpsService.class);
-                if (gpsService !=null){
-                    gpsService.stopMe();
-                }
-                unbindService(mConnection);
-                stopService(intent);
+                stopGpsService(true);
                 finish();
+            }
+        });
+        btGps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (gpsRunning) stopGpsService(false);
+                else startGpsService();
             }
         });
         sharedPrefs= PreferenceManager.getDefaultSharedPreferences(this);
