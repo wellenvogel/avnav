@@ -7,7 +7,7 @@
     <exec executable="${src}/viewer/build/build.py" dir="${src}/viewer">
 
     </exec>
-    <copy todir="${assets.viewer}" flatten="true">
+    <copy todir="${assets.viewer}" flatten="true" overwrite="true">
         <resources>
             <file file="${src}/viewer/avnav_min.js"/>
             <file file="${src}/viewer/loader.js"/>
@@ -15,25 +15,25 @@
             <file file="${src}/viewer/avnav_viewer.less"/>
         </resources>
     </copy>
-    <copy todir="${assets.viewer}/images">
+    <copy todir="${assets.viewer}/images" overwrite="true" flatten="true">
         <fileset dir="${src}/viewer/images" includes="*.png"/>
     </copy>
-    <copy todir="${assets.libraries}/rangeslider">
+    <copy todir="${assets.libraries}/rangeslider" overwrite="true" flatten="true">
             <fileset dir="${src}/libraries/rangeslider"/>
     </copy>
-    <copy todir="${assets.libraries}/movable-type">
+    <copy todir="${assets.libraries}/movable-type" overwrite="true" flatten="true">
         <fileset dir="${src}/libraries/movable-type"/>
     </copy>
-    <copy todir="${assets.libraries}/ol3b5">
+    <copy todir="${assets.libraries}/ol3b5" overwrite="true" flatten="true">
         <file file="${src}/libraries/ol3b5/ol.js"/>
     </copy>
-    <copy todir="${assets.libraries}/less">
+    <copy todir="${assets.libraries}/less" overwrite="true" flatten="true">
         <file file="${src}/libraries/less/less-1.7.3.min.js"/>
     </copy>
-    <copy todir="${assets.libraries}/jscolor">
+    <copy todir="${assets.libraries}/jscolor" overwrite="true" flatten="true">
         <fileset dir="${src}/libraries/jscolor"/>
     </copy>
-    <copy todir="${assets.libraries}/jquery">
+    <copy todir="${assets.libraries}/jquery" overwrite="true" flatten="true">
         <fileset dir="${src}/libraries/jquery" includes="*.js"/>
     </copy>
 
