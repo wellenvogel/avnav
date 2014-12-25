@@ -3,11 +3,13 @@ package de.wellenvogel.avnav.gps;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.*;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import de.wellenvogel.avnav.main.AvNav;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,7 +33,6 @@ public class GpsService extends Service  {
     public static String PROP_TRACKMINTIME="track.mintime";
     public static String PROP_TRACKTIME="track.time";
     public static String PROP_CHECKONLY="checkonly";
-    public static String PROP_USEINTERNALGPS="use.internalGps";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
@@ -55,6 +56,8 @@ public class GpsService extends Service  {
     private long trackMintime; //min interval between 2 points
     private long trackTime;   //length of track
     private boolean useInternalProvider=false;
+    private boolean ipNmea=false;
+    private boolean ipAis=false;
 
     private TrackWriter trackWriter;
     private Handler handler = new Handler();
@@ -97,8 +100,16 @@ public class GpsService extends Service  {
         trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
         trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
         trackTime=intent.getLongExtra(PROP_TRACKTIME,25*60*60*1000); //25h - to ensure that we at least have the whole day...
-        useInternalProvider=intent.getBooleanExtra(PROP_USEINTERNALGPS,true);
-        Log.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+", distance="+trackDistance+", mintime="+(trackMintime/1000)+", maxtime(h)="+(trackTime/3600/1000));
+        SharedPreferences prefs=getSharedPreferences(AvNav.PREFNAME,Context.MODE_PRIVATE);
+        useInternalProvider=prefs.getBoolean(AvNav.INTERNALGPS,true);
+        ipAis=prefs.getBoolean(AvNav.IPAIS,false);
+        ipNmea=prefs.getBoolean(AvNav.IPNMEA,false);
+        Log.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+
+                ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
+                ", maxtime(h)="+(trackTime/3600/1000)+
+                ", internalGps="+useInternalProvider+
+                ", ipNmea="+ipNmea+
+                ", ipAis="+ipAis);
         if (loadTrack) {
             trackpoints.clear();
             trackDir = new File(trackdir);

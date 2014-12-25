@@ -4,7 +4,7 @@
     <string name="startText">Start</string>
     <string name="exitText">Exit</string>
     <string name="selectDirLabel">SD card directory</string>
-    <string name="enableDemoLabel">show demo charts</string>
+    <string name="enableDemoLabel">demo charts</string>
     <string name="noLocation">No GPS found, enable now?</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
@@ -17,4 +17,10 @@
     <string name="startGps">start</string>
     <string name="stopGps">stop</string>
     <string name="gpsDisabled">GPS disabled</string>
+    <string name="gpsService">GPS Service</string>
+    <string name="labelInternalGps">internal GPS</string>
+    <string name="labelIpNmea">IP-NMEA</string>
+    <string name="labelIpAis">IP-AIS</string>
+    <string name="externalGps">external GPS</string>
+    <string name="noGpsSelected">no GPS service selected</string>
 </resources>

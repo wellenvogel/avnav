@@ -13,6 +13,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
@@ -27,6 +29,12 @@ public class AvNav extends Activity {
     //settings
     public static final String WORKDIR="workdir";
     public static final String SHOWDEMO="showdemo";
+    public static final String INTERNALGPS="internalGps";
+    public static final String IPNMEA="ip.nmea";
+    public static final String IPAIS="ip.ais";
+    public static final String IPADDR="ip.addr";
+    public static final String IPPORT="ip.port";
+    public static final String PREFNAME="AvNav";
 
     public static final String LOGPRFX="avnav";
     private Button btStart;
@@ -34,7 +42,13 @@ public class AvNav extends Activity {
     private Button btGps;
     private TextView txGps;
     private EditText textWorkdir;
+    private EditText txIp;
+    private EditText txPort;
     private CheckBox cbShowDemo;
+    private CheckBox cbInternalGps;
+    private CheckBox cbIpNmea;
+    private CheckBox cbIpAis;
+    private View externalSettings;
     private ImageView gpsIcon;
     private Context context=this;
     private GpsService gpsService=null;
@@ -63,6 +77,37 @@ public class AvNav extends Activity {
     };
 
     private void startGpsService(){
+        if (! cbInternalGps.isChecked() && ! cbIpNmea.isChecked()){
+            Toast.makeText(context, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (cbInternalGps.isChecked()) {
+            LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
+            boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+            // check if enabled and if not send user to the GSP settings
+            // Better solution would be to display a dialog and suggesting to
+            // go to the settings
+            if (!enabled) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(AvNav.this);
+                builder.setMessage(R.string.noLocation);
+                builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User clicked OK button
+                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(intent);
+                    }
+                });
+                builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User cancelled the dialog
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
+            }
+        }
         File trackDir=new File(textWorkdir.getText().toString(),"tracks");
         Intent intent = new Intent(AvNav.this, GpsService.class);
         intent.putExtra(GpsService.PROP_TRACKDIR,trackDir.getAbsolutePath());
@@ -137,7 +182,14 @@ public class AvNav extends Activity {
         txGps=(TextView)findViewById(R.id.txService);
         textWorkdir=(EditText)findViewById(R.id.editText);
         cbShowDemo=(CheckBox)findViewById(R.id.cbShowDemoCharts);
+        cbInternalGps=(CheckBox)findViewById(R.id.cbInternalGps);
+        cbIpNmea=(CheckBox)findViewById(R.id.cbIpNmea);
+        cbIpAis=(CheckBox)findViewById(R.id.cbIpAis);
+        externalSettings=findViewById(R.id.lExternalGps);
         gpsIcon=(ImageView)findViewById(R.id.iconGps);
+        txIp=(EditText)findViewById(R.id.edIP);
+        txPort=(EditText)findViewById(R.id.edPort);
+        sharedPrefs= getSharedPreferences(PREFNAME,Context.MODE_PRIVATE);
         if (gpsService == null) {
             Intent intent = new Intent(AvNav.this, GpsService.class);
             intent.putExtra(GpsService.PROP_CHECKONLY, true);
@@ -145,7 +197,20 @@ public class AvNav extends Activity {
             startService(intent);
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         }
-
+        boolean internalGps=sharedPrefs.getBoolean(INTERNALGPS,true);
+        boolean ipAis=sharedPrefs.getBoolean(IPAIS,false);
+        boolean ipNmea=sharedPrefs.getBoolean(IPNMEA,false);
+        boolean showDemo=sharedPrefs.getBoolean(SHOWDEMO,true);
+        cbShowDemo.setChecked(showDemo);
+        cbIpAis.setChecked(ipAis);
+        cbIpNmea.setChecked(ipNmea);
+        cbInternalGps.setChecked(internalGps);
+        updateExternal();
+        cbIpAis.setOnCheckedChangeListener(cbHandler);
+        cbInternalGps.setOnCheckedChangeListener(cbHandler);
+        cbIpNmea.setOnCheckedChangeListener(cbHandler);
+        txIp.addTextChangedListener(textChangeHandler);
+        txPort.addTextChangedListener(textChangeHandler);
         handler.postDelayed(runnable, 100);
         btStart.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -158,31 +223,7 @@ public class AvNav extends Activity {
                     return;
                 }
 
-                LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
-                boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
-                // check if enabled and if not send user to the GSP settings
-                // Better solution would be to display a dialog and suggesting to
-                // go to the settings
-                if (!enabled) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(AvNav.this);
-                    builder.setMessage(R.string.noLocation);
-                    builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // User clicked OK button
-                            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                            startActivity(intent);
-                        }
-                    });
-                    builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // User cancelled the dialog
-                        }
-                    });
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-
-                }
                 startGpsService();
                 Intent intent = new Intent(context, WebViewActivity.class);
                 intent.putExtra(WORKDIR, textWorkdir.getText().toString());
@@ -204,7 +245,6 @@ public class AvNav extends Activity {
                 else startGpsService();
             }
         });
-        sharedPrefs= PreferenceManager.getDefaultSharedPreferences(this);
         String workdir=sharedPrefs.getString(WORKDIR,Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
         textWorkdir.setText(workdir);
         Button btSelectDir=(Button)findViewById(R.id.btSelectDir);
@@ -230,14 +270,51 @@ public class AvNav extends Activity {
             }
         });
 
-        boolean showDemo=sharedPrefs.getBoolean(SHOWDEMO,true);
-        cbShowDemo.setChecked(showDemo);
 
+    }
+
+    private CompoundButton.OnCheckedChangeListener cbHandler=new CompoundButton.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            AvNav.this.updateExternal();
+            AvNav.this.saveSettings();
+            AvNav.this.stopGpsService(false);
+        }
+    };
+
+    private TextWatcher textChangeHandler= new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            AvNav.this.saveSettings();
+            AvNav.this.stopGpsService(false);
+        }
+    };
+
+    private void updateExternal(){
+        if (cbIpAis.isChecked() || cbIpNmea.isChecked()){
+            externalSettings.setVisibility(View.VISIBLE);
+        }
+        else{
+            externalSettings.setVisibility(View.INVISIBLE);
+        }
     }
     private void saveSettings(){
         SharedPreferences.Editor e=sharedPrefs.edit();
         e.putString(WORKDIR,textWorkdir.getText().toString());
-        e.putBoolean(SHOWDEMO,cbShowDemo.isChecked());
+        e.putBoolean(SHOWDEMO, cbShowDemo.isChecked());
+        e.putBoolean(INTERNALGPS,cbInternalGps.isChecked());
+        e.putBoolean(IPAIS,cbIpAis.isChecked());
+        e.putBoolean(IPNMEA,cbIpNmea.isChecked());
         e.apply();
     }
 
