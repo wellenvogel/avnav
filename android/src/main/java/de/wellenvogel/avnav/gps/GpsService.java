@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,6 +46,7 @@ public class GpsService extends Service  {
     private long lastTrackCount;
     private final IBinder mBinder = new GpsServiceBinder();
     private GpsDataProvider internalProvider=null;
+    private IpPositionHandler externalProvider=null;
 
     private boolean isRunning;  //this is our view whether we are running or not
                                 //running means that we are registered for updates and have our timer active
@@ -149,6 +151,25 @@ public class GpsService extends Service  {
                 internalProvider=null;
             }
         }
+        if (ipAis || ipNmea){
+            if (externalProvider == null){
+                try {
+                    InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(AvNav.IPADDR, ""),
+                            prefs.getString(AvNav.IPPORT, ""));
+                    Log.d(LOGPRFX,"starting external receiver for "+addr.toString());
+                    externalProvider=new IpPositionHandler(this,addr);
+                }catch (Exception i){
+                    Log.e(LOGPRFX,"unable to start external service");
+                }
+
+            }
+        }
+        else{
+            if (externalProvider != null){
+                Log.d(LOGPRFX,"stopping external service");
+                externalProvider.stop();
+            }
+        }
         isRunning=true;
         return Service.START_REDELIVER_INTENT;
     }
@@ -178,6 +199,7 @@ public class GpsService extends Service  {
     private void timerAction(){
             checkTrackWriter();
             if (internalProvider != null) internalProvider.check();
+            if (externalProvider != null) externalProvider.check();
     }
 
     /**
@@ -187,6 +209,10 @@ public class GpsService extends Service  {
         if (internalProvider != null){
             internalProvider.stop();
             internalProvider=null;
+        }
+        if (externalProvider != null){
+            externalProvider.stop();
+            externalProvider=null;
         }
         if (trackpoints.size() > 0){
             try {
@@ -224,8 +250,7 @@ public class GpsService extends Service  {
         if (! isRunning) return;
         boolean writeOut=false;
         long current = System.currentTimeMillis();
-        if (internalProvider == null) return;
-        Location l=internalProvider.getLocation();
+        Location l=getLocation();
         synchronized (this) {
             if (l != null) {
                 boolean add = false;
@@ -329,7 +354,10 @@ public class GpsService extends Service  {
     public GpsDataProvider.SatStatus getSatStatus(){
         GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
         if (! isRunning ) return rt;
-        if (internalProvider == null) return rt;
+        if (internalProvider == null) {
+            if (externalProvider != null) return externalProvider.getSatStatus();
+            return rt;
+        }
         rt=internalProvider.getSatStatus();
         Log.d(LOGPRFX,"getSatStatus returns "+rt);
         return rt;
@@ -337,6 +365,13 @@ public class GpsService extends Service  {
 
     public JSONObject getGpsData() throws JSONException{
         if (internalProvider != null) return internalProvider.getGpsData();
+        if (externalProvider != null) return externalProvider.getGpsData();
+        return null;
+    }
+
+    private Location getLocation(){
+        if (internalProvider != null) return internalProvider.getLocation();
+        if (externalProvider != null) return externalProvider.getLocation();
         return null;
     }
 

@@ -24,6 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.net.InetSocketAddress;
 
 public class AvNav extends Activity {
     //settings
@@ -77,9 +78,20 @@ public class AvNav extends Activity {
     };
 
     private void startGpsService(){
+        saveSettings();
         if (! cbInternalGps.isChecked() && ! cbIpNmea.isChecked()){
             Toast.makeText(context, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
             return;
+        }
+        if (cbIpAis.isChecked()||cbIpNmea.isChecked()) {
+            try {
+                InetSocketAddress addr = GpsDataProvider.convertAddress(
+                        sharedPrefs.getString(IPADDR, ""),
+                        sharedPrefs.getString(IPPORT, ""));
+            } catch (Exception i) {
+                Toast.makeText(context, R.string.invalidIp, Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
         if (cbInternalGps.isChecked()) {
             LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -206,6 +218,8 @@ public class AvNav extends Activity {
         cbIpNmea.setChecked(ipNmea);
         cbInternalGps.setChecked(internalGps);
         updateExternal();
+        txIp.setText(sharedPrefs.getString(IPADDR,"192.168.20.10"));
+        txPort.setText(sharedPrefs.getString(IPPORT,"34567"));
         cbIpAis.setOnCheckedChangeListener(cbHandler);
         cbInternalGps.setOnCheckedChangeListener(cbHandler);
         cbIpNmea.setOnCheckedChangeListener(cbHandler);
@@ -315,6 +329,8 @@ public class AvNav extends Activity {
         e.putBoolean(INTERNALGPS,cbInternalGps.isChecked());
         e.putBoolean(IPAIS,cbIpAis.isChecked());
         e.putBoolean(IPNMEA,cbIpNmea.isChecked());
+        e.putString(IPADDR,txIp.getText().toString());
+        e.putString(IPPORT,txPort.getText().toString());
         e.apply();
     }
 

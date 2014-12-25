@@ -23,4 +23,5 @@
     <string name="labelIpAis">IP-AIS</string>
     <string name="externalGps">external GPS</string>
     <string name="noGpsSelected">no GPS service selected</string>
+    <string name="invalidIp">Invalid IP or Port</string>
 </resources>

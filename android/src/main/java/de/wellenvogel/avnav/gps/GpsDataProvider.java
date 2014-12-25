@@ -5,6 +5,7 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.InetSocketAddress;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -18,7 +19,8 @@ public class GpsDataProvider {
     public static class SatStatus{
         public int numSat=0;
         public int numUsed=0;
-        public boolean gpsEnabled;
+        public boolean gpsEnabled; //for external connections this shows if it is connected
+        public String statusText=null;
         public SatStatus(int numSat,int numUsed){
             this.numSat=numSat;
             this.numUsed=numUsed;
@@ -112,6 +114,10 @@ public class GpsDataProvider {
         rt.append(minFormat.format(min));
         rt.append("'").append(dir);
         return rt.toString();
+    }
+
+    public static InetSocketAddress convertAddress(String host, String port) {
+        return new InetSocketAddress(host,Integer.parseInt(port));
     }
 
 
