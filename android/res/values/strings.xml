@@ -16,4 +16,5 @@
     <string name="gpsServiceOK">GPS Position OK</string>
     <string name="startGps">start</string>
     <string name="stopGps">stop</string>
+    <string name="gpsDisabled">GPS disabled</string>
 </resources>

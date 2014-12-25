@@ -1,22 +1,19 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.gps;
 
-import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.*;
 import android.os.Binder;
-import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.util.Log;
-import android.widget.Toast;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Types;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,7 +23,7 @@ import java.util.TimerTask;
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service implements LocationListener {
+public class GpsService extends Service  {
 
     public static String PROP_TRACKINTERVAL="track.interval";
     public static String PROP_TRACKDIR="track.dir";
@@ -34,11 +31,11 @@ public class GpsService extends Service implements LocationListener {
     public static String PROP_TRACKMINTIME="track.mintime";
     public static String PROP_TRACKTIME="track.time";
     public static String PROP_CHECKONLY="checkonly";
+    public static String PROP_USEINTERNALGPS="use.internalGps";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
 
-    private Timer timer =null;
     private Context ctx;
     private long writerInterval=0;
     private String outfile=null;
@@ -46,6 +43,7 @@ public class GpsService extends Service implements LocationListener {
     private long lastTrackWrite=0;
     private long lastTrackCount;
     private final IBinder mBinder = new GpsServiceBinder();
+    private GpsDataProvider internalProvider=null;
 
     private boolean isRunning;  //this is our view whether we are running or not
                                 //running means that we are registered for updates and have our timer active
@@ -56,19 +54,19 @@ public class GpsService extends Service implements LocationListener {
     private long trackDistance; //min distance in m
     private long trackMintime; //min interval between 2 points
     private long trackTime;   //length of track
+    private boolean useInternalProvider=false;
 
     private TrackWriter trackWriter;
+    private Handler handler = new Handler();
+    private long timerSequence=1;
+    private Runnable runnable;
     //location data
-    private LocationManager locationService;
-    private Location location=null;
-    private String currentProvider;
-    private long lastValidLocation=0;
 
 
     private static final String LOGPRFX="Avnav:GpsService";
 
-    class GpsServiceBinder extends Binder{
-      GpsService getService(){
+    public class GpsServiceBinder extends Binder{
+      public GpsService getService(){
           return GpsService.this;
       }
     };
@@ -99,6 +97,7 @@ public class GpsService extends Service implements LocationListener {
         trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
         trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
         trackTime=intent.getLongExtra(PROP_TRACKTIME,25*60*60*1000); //25h - to ensure that we at least have the whole day...
+        useInternalProvider=intent.getBooleanExtra(PROP_USEINTERNALGPS,true);
         Log.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+", distance="+trackDistance+", mintime="+(trackMintime/1000)+", maxtime(h)="+(trackTime/3600/1000));
         if (loadTrack) {
             trackpoints.clear();
@@ -122,9 +121,23 @@ public class GpsService extends Service implements LocationListener {
                 trackpoints.addAll(rt);
             }
             Log.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
-            startTimer();
+            timerSequence++;
+            runnable=new TimerRunnable(timerSequence);
+            handler.postDelayed(runnable, trackMintime);
         }
-        checkLocationService();
+        if (useInternalProvider){
+            if (internalProvider == null) {
+                Log.d(LOGPRFX,"start internal provider");
+                internalProvider=new AndroidPositionHandler(this);
+            }
+        }
+        else {
+            if (internalProvider != null){
+                Log.d(LOGPRFX,"stopping internal provider");
+                internalProvider.stop();
+                internalProvider=null;
+            }
+        }
         isRunning=true;
         return Service.START_REDELIVER_INTENT;
     }
@@ -136,39 +149,34 @@ public class GpsService extends Service implements LocationListener {
     }
 
     /**
-     * start a timer for writing out the track
+     * a timer handler
+     * we compare the sequence from the start with our current sequence to prevent
+     * multiple runs...
      */
-    private void startTimer()
-    {
-        if (timer != null) {
-            try {
-                timer.cancel();
-            } catch (Exception e) {
-                Log.d(LOGPRFX, "cancel timer failed");
-            }
+    private class TimerRunnable implements Runnable{
+        private long sequence=0;
+        TimerRunnable(long seq){sequence=seq;}
+        public void run(){
+            if (! isRunning) return;
+            if (timerSequence != sequence) return;
+            timerAction();
+            handler.postDelayed(this, trackMintime);
         }
-        timer=new Timer();
-        timer.scheduleAtFixedRate(new timerTask(), 0, trackInterval);
-    }
+    };
 
-    private class timerTask extends TimerTask
-    {
-        public void run()
-        {
-            Log.d(LOGPRFX,"timer fired");
-           // checkTrackWriter(GpsService.this.location);
-        }
+    private void timerAction(){
+            checkTrackWriter();
+            if (internalProvider != null) internalProvider.check();
     }
 
     /**
      * will be called whe we intend to really stop
      */
     private void handleStop(){
-        if (locationService != null) {
-            locationService.removeUpdates(this);
+        if (internalProvider != null){
+            internalProvider.stop();
+            internalProvider=null;
         }
-        location=null;
-        lastValidLocation=0;
         if (trackpoints.size() > 0){
             try {
                 trackWriter.writeTrackFile(trackpoints, new Date(),false);
@@ -179,12 +187,6 @@ public class GpsService extends Service implements LocationListener {
         trackpoints.clear();
         trackDir=null;
         isRunning=false;
-        if (timer != null){
-            try{
-                timer.cancel();
-            }catch (Exception e){}
-            timer=null;
-        }
         Log.d(LOGPRFX,"service stopped");
     }
 
@@ -201,120 +203,18 @@ public class GpsService extends Service implements LocationListener {
 
     }
 
-    private void checkLocationService(){
-        //location services
-        locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
-        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        if (enabled){
-            tryEnableLocation();
-        }
-
-    }
-
-
-
-    @Override
-    public void onLocationChanged(Location location) {
-        Log.d(LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
-                ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
-        this.location=new Location(location);
-        lastValidLocation=System.currentTimeMillis();
-        checkTrackWriter(this.location);
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-        Log.d(LOGPRFX,"location: status changed for "+provider+", new status="+status);
-        tryEnableLocation();
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-        Log.d(LOGPRFX,"location: provider enabled "+provider);
-        tryEnableLocation();
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-        Log.d(LOGPRFX,"location: provider disabled "+provider);
-        tryEnableLocation();
-    }
-
-    private synchronized void tryEnableLocation(){
-        if (locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Criteria criteria = new Criteria();
-            currentProvider = locationService.getBestProvider(criteria, false);
-            if (currentProvider != null) {
-                locationService.requestLocationUpdates(currentProvider, 400, 1, this);
-                location = locationService.getLastKnownLocation(currentProvider);
-                if (location != null) lastValidLocation=System.currentTimeMillis();
-                Log.d(LOGPRFX,"location: location provider="+currentProvider+" location acc="+((location != null)?location.getAccuracy():"<null>")+", date="+new Date((location!=null)?location.getTime():0).toString());
-            }
-            else{
-                Log.d(LOGPRFX,"location: no location provider");
-                Toast.makeText(this, "no location provider ",
-                        Toast.LENGTH_SHORT).show();
-                location=null;
-                lastValidLocation=0;
-                currentProvider=null;
-            }
-        }
-        else {
-            Log.d(LOGPRFX,"location: no gps");
-            location=null;
-            lastValidLocation=0;
-            Toast.makeText(this, "no gps ",
-                    Toast.LENGTH_SHORT).show();
-            currentProvider=null;
-        }
-    }
 
     /**
-     * get the current location checking for a recent update
-     * we do not directly compare our system time with the location time as this would break test data at all
-     * instead we check that the time elapsed since the last location update is not too far away from the really elapsed time
-     * //TODO: should we make this tread safe?
-     * @return
+     * will be called from within the timer thread
+     * check if position has changed and write track entries
+     * write out the track file in regular intervals
      */
-    Location getCurrentLocation(){
-        if (! isRunning) return null;
-        Location curloc=location;
-        if (curloc == null) return null;
-        long currtime=System.currentTimeMillis();
-        if ((currtime - lastValidLocation) > MAXLOCWAIT){
-            //no location update during this time - query directly
-            if (currentProvider == null){
-                Log.d(LOGPRFX,"location: too old to return and no provider");
-                return null;
-            }
-            Location nlocation = locationService.getLastKnownLocation(currentProvider);
-            if (nlocation == null){
-                location=null;
-                Log.d(LOGPRFX,"location: now new location for too old location");
-                return null;
-            }
-            //the diff in location times must not be too far away from the really elapsed time
-            //we assume at least MAXLOCAGE
-            long locdiff=nlocation.getTime()-curloc.getTime();
-            if (locdiff < (currtime - lastValidLocation - 5*MAXLOCAGE)){
-                Log.d(LOGPRFX,"location: location updates too slow - only "+(locdiff/1000)+" seconds for time diff "+(currtime-lastValidLocation)/1000);
-                return null;
-            }
-            Log.d(LOGPRFX,"location: refreshed location successfully");
-            location=nlocation;
-            lastValidLocation=lastValidLocation+(long)Math.floor(locdiff*1.1); //we allow the gps to be 10% slower than realtime
-        }
-        return location;
-    }
-
-    /**
-     * will be called from within the timer thread and from position updates
-     * @param l
-     */
-    private void checkTrackWriter(Location l){
+    private void checkTrackWriter(){
         if (! isRunning) return;
         boolean writeOut=false;
         long current = System.currentTimeMillis();
+        if (internalProvider == null) return;
+        Location l=internalProvider.getLocation();
         synchronized (this) {
             if (l != null) {
                 boolean add = false;
@@ -413,46 +313,21 @@ public class GpsService extends Service implements LocationListener {
         return isRunning;
     }
 
-    public static String formatCoord(double coord,boolean isLat){
-        StringBuilder rt=new StringBuilder();
-        String dir=isLat?"N":"E";
-        if (coord < 0){
-            dir=isLat?"S":"W";
-            coord=-coord;
-        }
-        double deg=Math.floor(coord);
-        double min=(coord-deg)*60;
-        DecimalFormat degFormat=isLat?new DecimalFormat("00"):new DecimalFormat("000");
-        rt.append(degFormat.format(deg));
-        rt.append("°");
-        rt.append(" ");
-        DecimalFormat minFormat=new DecimalFormat("00.000");
-        rt.append(minFormat.format(min));
-        rt.append("'").append(dir);
-        return rt.toString();
-    }
 
-    public class SatStatus{
-        public int numSat=0;
-        public int numUsed=0;
-        public SatStatus(int numSat,int numUsed){
-            this.numSat=numSat;
-            this.numUsed=numUsed;
-        }
-        public String toString(){
-            return "Sat num="+numSat+", used="+numUsed;
-        }
-    }
 
-    public SatStatus getSatStatus(){
-        SatStatus rt=new SatStatus(0,0);
-        if (! isRunning) return rt;
-        GpsStatus status=locationService.getGpsStatus(null);
-        for (GpsSatellite s: status.getSatellites()){
-            rt.numSat++;
-            if (s.usedInFix()) rt.numUsed++;
-        }
+    public GpsDataProvider.SatStatus getSatStatus(){
+        GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
+        if (! isRunning ) return rt;
+        if (internalProvider == null) return rt;
+        rt=internalProvider.getSatStatus();
         Log.d(LOGPRFX,"getSatStatus returns "+rt);
         return rt;
     }
+
+    public JSONObject getGpsData() throws JSONException{
+        if (internalProvider != null) return internalProvider.getGpsData();
+        return null;
+    }
+
+
 }

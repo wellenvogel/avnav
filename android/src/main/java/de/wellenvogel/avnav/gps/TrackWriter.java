@@ -1,7 +1,9 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.gps;
 
 import android.location.Location;
 import android.util.Log;
+import de.wellenvogel.avnav.main.AvNav;
+import de.wellenvogel.avnav.main.ISO8601DateParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;

@@ -1,17 +1,16 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.*;
 import android.content.res.AssetManager;
 import android.location.*;
 import android.net.Uri;
 import android.os.*;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.WindowManager;
 import android.webkit.*;
 import android.widget.Toast;
+import de.wellenvogel.avnav.gps.GpsService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -20,7 +19,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by andreas on 04.12.14.
@@ -166,23 +164,10 @@ public class WebViewActivity extends Activity {
         boolean handled=false;
         try{
             if (type.equals("gps")){
-                JSONObject out=new JSONObject();
                 handled=true;
-                Location navLocation=null;
-                if (gpsService != null) navLocation=gpsService.getCurrentLocation();
-                if (navLocation != null){
-                    out.put("class", "TPV");
-                    out.put("lat", navLocation.getLatitude());
-                    out.put("lon", navLocation.getLongitude());
-                    out.put("speed", navLocation.getSpeed()*1852/3600); //we expect this in kn
-                    out.put("course", navLocation.getBearing());
-                    out.put("mode", 1);
-                    out.put("tag", "RMC");
-                    out.put("time",dateFormat.format(new Date(navLocation.getTime())));
-
-
-                }
-                fout=out;
+                JSONObject navLocation=null;
+                if (gpsService != null) navLocation=gpsService.getGpsData();
+                fout=navLocation;
             }
             if (type.equals("listCharts")){
                 fileNames.clear();

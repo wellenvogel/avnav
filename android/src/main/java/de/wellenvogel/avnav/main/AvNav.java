@@ -14,13 +14,14 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.*;
+import de.wellenvogel.avnav.gps.GpsDataProvider;
+import de.wellenvogel.avnav.gps.GpsService;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 
 public class AvNav extends Activity {
     //settings
@@ -99,16 +100,28 @@ public class AvNav extends Activity {
         }
         gpsRunning=true;
         btGps.setText(R.string.stopGps);
-        Location current;
-        if ((current=gpsService.getCurrentLocation()) == null){
-            gpsIcon.setImageResource(R.drawable.yellowbubble);
-            GpsService.SatStatus status=gpsService.getSatStatus();
-            txGps.setText(getResources().getString(R.string.gpsServiceSearching)+", Sat : "+status.numSat+"/"+status.numUsed);
-            return;
+        JSONObject current;
+        //Location current;
+        try {
+            if ((current = gpsService.getGpsData()) == null) {
+                gpsIcon.setImageResource(R.drawable.yellowbubble);
+                GpsDataProvider.SatStatus status = gpsService.getSatStatus();
+                if (status.gpsEnabled) {
+                    txGps.setText(getResources().getString(R.string.gpsServiceSearching) + ", Sat : " + status.numSat + "/" + status.numUsed);
+                }
+                else{
+                    txGps.setText(R.string.gpsDisabled);
+                }
+
+                return;
+            }
+
+            gpsIcon.setImageResource(R.drawable.greenbubble);
+            txGps.setText(GpsDataProvider.formatCoord(current.getDouble(GpsDataProvider.G_LAT), true) +
+                    " , " + GpsDataProvider.formatCoord(current.getDouble(GpsDataProvider.G_LON), false));
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-        gpsIcon.setImageResource(R.drawable.greenbubble);
-        txGps.setText(GpsService.formatCoord(current.getLatitude(),true)+" , "+GpsService.formatCoord(current.getLongitude(),false)+
-                "  ("+current.getAccuracy()+"m)");
         return;
     }
     /**
