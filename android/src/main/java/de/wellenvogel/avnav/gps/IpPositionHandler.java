@@ -3,6 +3,13 @@ package de.wellenvogel.avnav.gps;
 import android.content.Context;
 import android.location.Location;
 import android.util.Log;
+import net.sf.marineapi.nmea.io.SentenceReader;
+import net.sf.marineapi.nmea.parser.SentenceFactory;
+import net.sf.marineapi.nmea.sentence.PositionSentence;
+import net.sf.marineapi.nmea.sentence.RMCSentence;
+import net.sf.marineapi.nmea.sentence.Sentence;
+import net.sf.marineapi.nmea.sentence.SentenceValidator;
+import net.sf.marineapi.nmea.util.Position;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,6 +19,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Created by andreas on 25.12.14.
@@ -22,6 +31,7 @@ public class IpPositionHandler extends GpsDataProvider {
         String status="disconnected";
         InetSocketAddress address;
         Socket socket=new Socket();
+        private Location location=null;
         ReceiverRunnable(InetSocketAddress address){
             this.address=address;
         }
@@ -41,6 +51,7 @@ public class IpPositionHandler extends GpsDataProvider {
                 BufferedReader in =new BufferedReader( new InputStreamReader(socket.getInputStream()));
                 status="receiving";
                 isConnected=true;
+                SentenceFactory factory = SentenceFactory.getInstance();
                 while (true){
                     String line=in.readLine();
                     Log.d(LOGPRFX,"received: "+line);
@@ -52,6 +63,38 @@ public class IpPositionHandler extends GpsDataProvider {
                         isConnected=false;
                         isRunning=false;
                         return;
+                    }
+                    if (line.startsWith("$")){
+                        //NMEA
+                        if (SentenceValidator.isValid(line)){
+                            try {
+                                Sentence s = factory.createParser(line);
+                                if (s instanceof PositionSentence){
+                                    Position p=((PositionSentence) s).getPosition();
+                                    Log.d(LOGPRFX,"external position "+p);
+                                    synchronized (this){
+                                        location=new Location((String)null);
+                                        location.setLatitude(p.getLatitude());
+                                        location.setLongitude(p.getLongitude());
+                                        if (s.getSentenceId().equals("RMC")){
+                                            Calendar cal=Calendar.getInstance();
+                                            RMCSentence r=(RMCSentence)s;
+                                            cal.setTime(r.getDate().toDate());
+                                            cal.add(Calendar.MILLISECOND,(int)(r.getTime().getMilliseconds()));
+                                            location.setTime(cal.getTime().getTime());
+                                            location.setSpeed((float)(r.getSpeed()));
+                                            location.setBearing((float)(r.getCourse()));
+                                        }
+                                        Log.d(LOGPRFX,"location: "+location);
+                                    }
+                                }
+                            }catch (Exception i){
+                                Log.e(LOGPRFX,"exception in NMEA parser "+i.getLocalizedMessage());
+                            }
+                        }
+                        else{
+                            Log.d(LOGPRFX,"ignore invalid nmea");
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -81,6 +124,9 @@ public class IpPositionHandler extends GpsDataProvider {
         }
         public boolean getConnected(){
             return isConnected;
+        }
+        public synchronized Location getLocation(){
+            return location;
         }
     }
     public static final String LOGPRFX="AvNav:IpPositionHandler";
@@ -114,12 +160,12 @@ public class IpPositionHandler extends GpsDataProvider {
 
     @Override
     public Location getLocation() {
-        return super.getLocation();
+        return this.runnable.getLocation();
     }
 
     @Override
     public JSONObject getGpsData() throws JSONException {
-        return super.getGpsData();
+        return getGpsData(getLocation());
     }
 
     @Override

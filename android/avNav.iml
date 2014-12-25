@@ -21,6 +21,6 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 21 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" scope="RUNTIME" name="net.sf.marineapi:marineapi:0.8.1" level="project" />
+    <orderEntry type="library" exported="" name="net.sf.marineapi:marineapi:0.8.1" level="project" />
   </component>
 </module>
