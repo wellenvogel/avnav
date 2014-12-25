@@ -363,6 +363,13 @@ public class GpsService extends Service  {
         return rt;
     }
 
+    public GpsDataProvider.SatStatus getExternalStatus(){
+        GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
+        if (! isRunning) return rt;
+        if (externalProvider != null) return externalProvider.getSatStatus();
+        return rt;
+    }
+
     public JSONObject getGpsData() throws JSONException{
         if (internalProvider != null) return internalProvider.getGpsData();
         if (externalProvider != null) return externalProvider.getGpsData();

@@ -51,6 +51,7 @@ public class AvNav extends Activity {
     private CheckBox cbIpAis;
     private View externalSettings;
     private ImageView gpsIcon;
+    private ImageView extIcon;
     private Context context=this;
     private GpsService gpsService=null;
     private boolean gpsRunning=false;
@@ -78,7 +79,11 @@ public class AvNav extends Activity {
     };
 
     private void startGpsService(){
+        if (cbInternalGps.isChecked() ){
+            cbIpNmea.setChecked(false);
+        }
         saveSettings();
+        updateExternal();
         if (! cbInternalGps.isChecked() && ! cbIpNmea.isChecked()){
             Toast.makeText(context, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
             return;
@@ -150,6 +155,7 @@ public class AvNav extends Activity {
     private void updateServiceState(){
         if (gpsService == null || ! gpsService.isRunning()){
             gpsIcon.setImageResource(R.drawable.redbubble);
+            extIcon.setImageResource(R.drawable.redbubble);
             txGps.setText(R.string.gpsServiceStopped);
             btGps.setText(R.string.startGps);
             gpsRunning=false;
@@ -157,6 +163,13 @@ public class AvNav extends Activity {
         }
         gpsRunning=true;
         btGps.setText(R.string.stopGps);
+        GpsDataProvider.SatStatus extStatus=gpsService.getExternalStatus();
+        if (extStatus.gpsEnabled){
+            extIcon.setImageResource(R.drawable.greenbubble);
+        }
+        else{
+            extIcon.setImageResource(R.drawable.yellowbubble);
+        }
         JSONObject current;
         //Location current;
         try {
@@ -164,10 +177,12 @@ public class AvNav extends Activity {
                 gpsIcon.setImageResource(R.drawable.yellowbubble);
                 GpsDataProvider.SatStatus status = gpsService.getSatStatus();
                 if (status.gpsEnabled) {
-                    txGps.setText(getResources().getString(R.string.gpsServiceSearching) + ", Sat : " + status.numSat + "/" + status.numUsed);
+                    if (status.statusText != null) txGps.setText(status.statusText);
+                    else txGps.setText(getResources().getString(R.string.gpsServiceSearching) + ", Sat : " + status.numSat + "/" + status.numUsed);
                 }
                 else{
-                    txGps.setText(R.string.gpsDisabled);
+                    if (status.statusText != null) txGps.setText(status.statusText);
+                    else txGps.setText(R.string.gpsDisabled);
                 }
 
                 return;
@@ -179,7 +194,7 @@ public class AvNav extends Activity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return;
+
     }
     /**
      * Called when the activity is first created.
@@ -199,6 +214,7 @@ public class AvNav extends Activity {
         cbIpAis=(CheckBox)findViewById(R.id.cbIpAis);
         externalSettings=findViewById(R.id.lExternalGps);
         gpsIcon=(ImageView)findViewById(R.id.iconGps);
+        extIcon=(ImageView)findViewById(R.id.iconIp);
         txIp=(EditText)findViewById(R.id.edIP);
         txPort=(EditText)findViewById(R.id.edPort);
         sharedPrefs= getSharedPreferences(PREFNAME,Context.MODE_PRIVATE);
@@ -218,7 +234,7 @@ public class AvNav extends Activity {
         cbIpNmea.setChecked(ipNmea);
         cbInternalGps.setChecked(internalGps);
         updateExternal();
-        txIp.setText(sharedPrefs.getString(IPADDR,"192.168.20.10"));
+        txIp.setText(sharedPrefs.getString(IPADDR, "192.168.20.10"));
         txPort.setText(sharedPrefs.getString(IPPORT,"34567"));
         cbIpAis.setOnCheckedChangeListener(cbHandler);
         cbInternalGps.setOnCheckedChangeListener(cbHandler);
@@ -329,7 +345,7 @@ public class AvNav extends Activity {
         e.putBoolean(INTERNALGPS,cbInternalGps.isChecked());
         e.putBoolean(IPAIS,cbIpAis.isChecked());
         e.putBoolean(IPNMEA,cbIpNmea.isChecked());
-        e.putString(IPADDR,txIp.getText().toString());
+        e.putString(IPADDR, txIp.getText().toString());
         e.putString(IPPORT,txPort.getText().toString());
         e.apply();
     }

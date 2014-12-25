@@ -16,7 +16,7 @@
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:text="@string/selectDirLabel"
                         android:id="@+id/textView" android:layout_weight="0" android:autoText="false"
-                        android:gravity="bottom|left" android:layout_marginLeft="10dp"/>
+                        android:gravity="bottom|left" android:layout_marginLeft="15dp"/>
                 <EditText
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -47,7 +47,7 @@
                                 android:textAppearance="?android:attr/textAppearanceMedium"
                                 android:id="@+id/cbShowDemoCharts"  android:checked="true"
 
-                                />
+                                android:layout_marginLeft="10dp"/>
                         <CheckBox android:layout_width="wrap_content" android:layout_height="wrap_content"
                                   android:text="@string/labelInternalGps"
                                   android:textAppearance="?android:attr/textAppearanceMedium" android:id="@+id/cbInternalGps"
@@ -71,7 +71,7 @@
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" android:id="@+id/lExternalGps" android:visibility="invisible">
+                android:layout_height="wrap_content" android:id="@+id/lExternalGps">
                 <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/iconIp"
                            android:src="@drawable/redbubble" android:layout_gravity="center_vertical"
                            android:layout_marginLeft="10dp"/>
@@ -91,14 +91,15 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/edIP" android:text="192.168.20.10" android:layout_weight="1"
                         android:layout_marginLeft="8dp" android:background="@color/editBackground"
-                        android:layout_gravity="center_vertical"/>
+                        android:layout_gravity="center_vertical" android:paddingLeft="3dp" android:paddingRight="3dp"/>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                           android:textAppearance="?android:attr/textAppearanceMedium" android:text="Port"
                           android:id="@+id/textView3" android:layout_marginLeft="16dp"
                           android:layout_gravity="center_vertical"/>
                 <EditText android:layout_width="wrap_content" android:layout_height="wrap_content"
                           android:id="@+id/edPort" android:text="34567" android:background="@color/editBackground"
-                          android:layout_marginLeft="8dp" android:layout_gravity="center_vertical"/>
+                          android:layout_marginLeft="8dp" android:layout_gravity="center_vertical"
+                          android:layout_marginRight="10dp" android:paddingLeft="3dp" android:paddingRight="3dp"/>
         </LinearLayout>
         <LinearLayout
                 android:orientation="horizontal"
@@ -148,6 +149,6 @@
                     android:text="@string/startText"
                     android:id="@+id/btStart" android:enabled="true"
                     android:layout_weight="1" android:textSize="50dp" android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"/>
+                    android:layout_marginRight="5dp"/>
         </LinearLayout>
 </LinearLayout>
