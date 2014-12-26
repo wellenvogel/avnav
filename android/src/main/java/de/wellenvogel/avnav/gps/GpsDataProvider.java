@@ -15,6 +15,7 @@ import java.util.Map;
  * Created by andreas on 25.12.14.
  */
 public class GpsDataProvider {
+    public static final double msToKn=1852.0/3600.0;
     private static final String LOGPRFX="GpsDataProvider";
     public static class SatStatus{
         public int numSat=0;
@@ -76,7 +77,7 @@ public class GpsDataProvider {
         rt.put(G_LAT,curLoc.getLatitude());
         rt.put(G_LON,curLoc.getLongitude());
         rt.put(G_COURSE,curLoc.getBearing());
-        rt.put(G_SPEED,curLoc.getSpeed()*1852/3600);
+        rt.put(G_SPEED,curLoc.getSpeed()*msToKn);
         rt.put(G_TIME,dateFormat.format(new Date(curLoc.getTime())));
         Log.d(LOGPRFX,"getGpsData: "+rt.toString());
         return rt;

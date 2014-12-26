@@ -5,10 +5,7 @@ import android.location.Location;
 import android.util.Log;
 import net.sf.marineapi.nmea.io.SentenceReader;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
-import net.sf.marineapi.nmea.sentence.PositionSentence;
-import net.sf.marineapi.nmea.sentence.RMCSentence;
-import net.sf.marineapi.nmea.sentence.Sentence;
-import net.sf.marineapi.nmea.sentence.SentenceValidator;
+import net.sf.marineapi.nmea.sentence.*;
 import net.sf.marineapi.nmea.util.Position;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,11 +24,14 @@ import java.util.Date;
  */
 public class IpPositionHandler extends GpsDataProvider {
     private static int connectTimeout=5000;
+    private static long POSITION_AGE=10000; //max allowed age of position
     class ReceiverRunnable implements Runnable{
         String status="disconnected";
         InetSocketAddress address;
         Socket socket=new Socket();
         private Location location=null;
+        private long lastPositionReceived=0;
+        private net.sf.marineapi.nmea.util.Date lastDate=null;
         ReceiverRunnable(InetSocketAddress address){
             this.address=address;
         }
@@ -69,27 +69,44 @@ public class IpPositionHandler extends GpsDataProvider {
                         if (SentenceValidator.isValid(line)){
                             try {
                                 Sentence s = factory.createParser(line);
-                                if (s instanceof PositionSentence){
-                                    Position p=((PositionSentence) s).getPosition();
-                                    Log.d(LOGPRFX,"external position "+p);
+                                if (s instanceof DateSentence){
+                                    lastDate=((DateSentence) s).getDate();
+                                }
+                                Position p=null;
+                                if (s instanceof PositionSentence) {
+                                    p = ((PositionSentence) s).getPosition();
+                                    Log.d(LOGPRFX, "external position " + p);
+                                }
+                                net.sf.marineapi.nmea.util.Time time=null;
+                                if (s instanceof TimeSentence) {
+                                    time=((TimeSentence) s).getTime();
+                                }
+                                if (time != null && lastDate != null && p != null){
                                     synchronized (this){
-                                        location=new Location((String)null);
+                                        Location lastLocation=location;
+                                        if (lastLocation != null) {
+                                            location = new Location(lastLocation);
+                                        }
+                                        else {
+                                            location= new Location((String)null);
+                                        }
+                                        lastPositionReceived=System.currentTimeMillis();
                                         location.setLatitude(p.getLatitude());
                                         location.setLongitude(p.getLongitude());
+                                        location.setTime(toTimeStamp(lastDate,time));
                                         if (s.getSentenceId().equals("RMC")){
-                                            Calendar cal=Calendar.getInstance();
-                                            RMCSentence r=(RMCSentence)s;
-                                            cal.setTime(r.getDate().toDate());
-                                            cal.add(Calendar.MILLISECOND,(int)(r.getTime().getMilliseconds()));
-                                            location.setTime(cal.getTime().getTime());
-                                            location.setSpeed((float)(r.getSpeed()));
-                                            location.setBearing((float)(r.getCourse()));
+                                            location.setSpeed((float)(((RMCSentence)s).getSpeed()/msToKn));
+                                            location.setBearing((float)(((RMCSentence)s).getCourse()));
                                         }
                                         Log.d(LOGPRFX,"location: "+location);
                                     }
                                 }
+                                else{
+                                    Log.d(LOGPRFX,"ignoring sentence "+line+" - no position or time");
+                                }
                             }catch (Exception i){
                                 Log.e(LOGPRFX,"exception in NMEA parser "+i.getLocalizedMessage());
+                                i.printStackTrace();
                             }
                         }
                         else{
@@ -109,6 +126,13 @@ public class IpPositionHandler extends GpsDataProvider {
             }
 
         }
+        private long toTimeStamp(net.sf.marineapi.nmea.util.Date date,net.sf.marineapi.nmea.util.Time time){
+            if (date == null) return 0;
+            Calendar cal=Calendar.getInstance();
+            cal.setTime(date.toDate());
+            cal.add(Calendar.MILLISECOND,(int)(time.getMilliseconds()));
+            return cal.getTime().getTime();
+        }
 
         public void stop(){
             if (socket != null) {
@@ -126,6 +150,10 @@ public class IpPositionHandler extends GpsDataProvider {
             return isConnected;
         }
         public synchronized Location getLocation(){
+            long current=System.currentTimeMillis();
+            if (current > (lastPositionReceived+POSITION_AGE)){
+                return null;
+            }
             return location;
         }
     }
