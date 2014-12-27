@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
-  <artifact type="apk" build-on-make="true" name="avNav-debug">
-    <output-path>$PROJECT_DIR$/artifacts/avNav_debug</output-path>
+  <artifact type="apk" name="avnav-debug">
+    <output-path>$PROJECT_DIR$/../bin</output-path>
     <properties id="android-properties">
       <options>
         <option name="keyStoreUrl" value="file://" />
@@ -9,7 +9,6 @@
             <option value="file://%MODULE_SDK_HOME%/tools/proguard/proguard-android.txt" />
           </list>
         </option>
-        <option name="signingMode" value="DEBUG" />
       </options>
     </properties>
     <properties id="ant-preprocessing">
@@ -18,8 +17,8 @@
         <target>copy-assets</target>
       </options>
     </properties>
-    <root id="archive" name="avNav-debug.apk">
-      <element id="android-final-package" facet="avNav/android/Android" />
+    <root id="archive" name="avnav-debug.apk">
+      <element id="android-final-package" facet="avnav/android/Android" />
     </root>
   </artifact>
 </component>
