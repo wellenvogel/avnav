@@ -1,0 +1,367 @@
+/* Copyright (c) 2011 Danish Maritime Authority.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.wellenvogel.avnav.aislib.messages.message;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Set;
+
+import de.wellenvogel.avnav.aislib.messages.binary.BinArray;
+import de.wellenvogel.avnav.aislib.messages.binary.SixbitEncoder;
+
+import de.wellenvogel.avnav.aislib.messages.binary.SixbitException;
+import de.wellenvogel.avnav.aislib.messages.proprietary.IProprietarySourceTag;
+import de.wellenvogel.avnav.aislib.messages.proprietary.IProprietaryTag;
+import de.wellenvogel.avnav.aislib.messages.sentence.Vdm;
+import de.wellenvogel.avnav.aislib.model.Position;
+
+
+/**
+ * Abstract base class for all AIS messages
+ */
+public abstract class AisMessage implements Serializable {
+
+    /** serialVersionUID. */
+    private static final long serialVersionUID = 1L;
+
+    /** A set of all valid AIS message types. */
+    public static final Set<Integer> VALID_MESSAGE_TYPES = Collections.unmodifiableSet(new HashSet<Integer>(Arrays.asList(1,
+            2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 17, 18, 19, 21, 24)));
+
+    protected int msgId; // 6 bit: message id
+    protected int repeat; // 2 bit: How many times message has been repeated
+    protected int userId; // 30 bit: MMSI number
+    protected transient Vdm vdm; // The VDM encapsulating the AIS message
+
+    /**
+     * Constructor given message id
+     * 
+     * @param msgId
+     */
+    public AisMessage(int msgId) {
+        this.msgId = msgId;
+        this.repeat = 0;
+    }
+
+    /**
+     * Constructor given VDM with AIS message
+     * 
+     * @param vdm
+     */
+    public AisMessage(Vdm vdm) {
+        this.vdm = vdm;
+        this.msgId = vdm.getMsgId();
+    }
+
+    /**
+     * Base parse method to be called by all extending classes
+     * 
+     * @param binArray
+     * @throws AisMessageException
+     * @throws SixbitException
+     */
+    protected void parse(BinArray binArray) throws AisMessageException, SixbitException {
+        this.repeat = (int) binArray.getVal(2);
+        this.userId = (int) binArray.getVal(30);
+    }
+
+    /**
+     * Base encode method to be called by all extending classes
+     * 
+     * @return SixbitEncoder
+     */
+    protected SixbitEncoder encode() {
+        SixbitEncoder encoder = new SixbitEncoder();
+        encoder.addVal(msgId, 6);
+        encoder.addVal(repeat, 2);
+        encoder.addVal(userId, 30);
+        return encoder;
+    }
+
+    /**
+     * Abstract method to be implemented by all extending classes
+     * 
+     * @return SixbitEncoder
+     */
+    public abstract SixbitEncoder getEncoded();
+
+    public int getMsgId() {
+        return msgId;
+    }
+
+    public int getRepeat() {
+        return repeat;
+    }
+
+    public void setRepeat(int repeat) {
+        this.repeat = repeat;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    /**
+     * Return the LAST source tag (closest to AIS sentence)
+     * 
+     * @return
+     */
+    public IProprietarySourceTag getSourceTag() {
+        LinkedList<IProprietaryTag> tags = vdm.getTags();
+        if (tags == null) {
+            return null;
+        }
+        // Iterate backwards
+        for (Iterator<IProprietaryTag> iterator = tags.descendingIterator(); iterator.hasNext();) {
+            IProprietaryTag tag = iterator.next();
+            if (tag instanceof IProprietarySourceTag) {
+                return (IProprietarySourceTag) tag;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get all tags
+     * 
+     * @return
+     */
+    public LinkedList<IProprietaryTag> getTags() {
+        return vdm.getTags();
+    }
+
+    /**
+     * Add tag (to front)
+     * 
+     * @param tag
+     */
+    public void setTag(IProprietaryTag tag) {
+        LinkedList<IProprietaryTag> tags = vdm.getTags();
+        if (tags == null) {
+            tags = new LinkedList<IProprietaryTag>();
+        }
+        tags.addFirst(tag);
+    }
+
+    public void setTags(LinkedList<IProprietaryTag> tags) {
+        vdm.setTags(tags);
+    }
+
+    /**
+     * Get VDM this message was encapsulated in
+     * 
+     * @return Vdm
+     */
+    public Vdm getVdm() {
+        return vdm;
+    }
+
+    /**
+     * Returns a valid position if this message has a valid position, otherwise null.
+     * 
+     * @return a valid position if this message has a valid position, otherwise null
+     */
+    public Position getValidPosition() {
+        return null;
+    }
+
+    /**
+     * Returns the target type of the message or <code>null</code> if the message does not have a target type.
+     * 
+     * @return the target type of the message or <code>null</code> if the message does not have a target type
+     */
+    public AisTargetType getTargetType() {
+        // TODO do we need to check target type also, or is the mmsi number enough???
+        if (userId >= 970000000 && userId <= 970999999) {
+            return AisTargetType.SART;
+        }
+        Class<? extends AisMessage> type = getClass();
+        if (AisMessage4.class.isAssignableFrom(type)) {
+            return AisTargetType.BS;
+        } else if (AisMessage21.class.isAssignableFrom(type)) {
+            return AisTargetType.ATON;
+        } else if (AisMessage18.class.isAssignableFrom(type) || AisMessage19.class.isAssignableFrom(type)
+                || AisMessage24.class.isAssignableFrom(type)) {
+            return AisTargetType.B;
+        } else if (AisPositionMessage.class.isAssignableFrom(type) || AisMessage5.class.isAssignableFrom(type)
+                || AisMessage27.class.isAssignableFrom(type)) {
+            return AisTargetType.A;
+        }
+        return null;
+    }
+
+    /**
+     * Given VDM return the encapsulated AIS message. To determine which message is returned use instanceof operator or
+     * getMsgId() before casting.
+     * 
+     * Example: AisMessage aisMessage = AisMessage.getInstance(vmd); if (aisMessage instanceof AisPositionMessage) {
+     * AisPositionMessage posMessage = (AisPositionMessage)aisMessage; } ...
+     * 
+     * @param vdm
+     * @return AisMessage
+     * @throws AisMessageException
+     * @throws SixbitException
+     */
+    public static AisMessage getInstance(Vdm vdm) throws AisMessageException, SixbitException {
+        AisMessage message = null;
+
+        switch (vdm.getMsgId()) {
+        case 1:
+            message = new AisMessage1(vdm);
+            break;
+        case 2:
+            message = new AisMessage2(vdm);
+            break;
+        case 3:
+            message = new AisMessage3(vdm);
+            break;
+        case 4:
+            message = new AisMessage4(vdm);
+            break;
+        case 5:
+            message = new AisMessage5(vdm);
+            break;
+        case 6:
+            message = new AisMessage6(vdm);
+            break;
+        case 7:
+            message = new AisMessage7(vdm);
+            break;
+        case 8:
+            message = new AisMessage8(vdm);
+            break;
+        case 9:
+            message = new AisMessage9(vdm);
+            break;
+        case 10:
+            message = new AisMessage10(vdm);
+            break;
+        case 11:
+            // TODO implement real message class
+            message = new AisUnsupportedMessageType(vdm);
+            break;
+        case 12:
+            message = new AisMessage12(vdm);
+            break;
+        case 13:
+            message = new AisMessage13(vdm);
+            break;
+        case 14:
+            message = new AisMessage14(vdm);
+            break;
+        case 15:
+            // TODO implement real message class
+            message = new AisUnsupportedMessageType(vdm);
+            break;
+        case 16:
+            // TODO implement real message class
+            message = new AisUnsupportedMessageType(vdm);
+            break;
+        case 17:
+            message = new AisMessage17(vdm);
+            break;
+        case 18:
+            message = new AisMessage18(vdm);
+            break;
+        case 19:
+            message = new AisMessage19(vdm);
+            break;
+        case 20:
+            // TODO implement real message class
+            message = new AisUnsupportedMessageType(vdm);
+            break;
+        case 21:
+            message = new AisMessage21(vdm);
+            break;
+        case 22:
+            // TODO implement real message class
+            message = new AisUnsupportedMessageType(vdm);
+            break;
+        case 23:
+            // TODO implement real message class
+            message = new AisUnsupportedMessageType(vdm);
+            break;
+        case 24:
+            message = new AisMessage24(vdm);
+            break;
+        case 27:
+            message = new AisMessage27(vdm);
+            break;
+        default:
+            throw new AisMessageException("Unknown AIS message id " + vdm.getMsgId());
+        }
+
+        return message;
+    }
+
+    /**
+     * Utility to trim text from AIS message
+     * 
+     * @param text
+     * @return
+     */
+    public static String trimText(String text) {
+        if (text == null) {
+            return null;
+        }
+        // Remove @
+        int firstAt = text.indexOf("@");
+        if (firstAt >= 0) {
+            text = text.substring(0, firstAt);
+        }
+        // Trim leading and trailing spaces
+        return text.trim();
+    }
+
+    /**
+     * Method for reassembling original message appending possible proprietary source tags
+     * 
+     * @return
+     */
+    public String reassemble() {
+        LinkedList<IProprietaryTag> tags = vdm.getTags();
+        StringBuilder buf = new StringBuilder();
+        if (tags != null) {
+            for (IProprietaryTag tag : tags) {
+                if (tag.getSentence() != null) {
+                    buf.append(tag.getSentence() + "\r\n");
+                }
+            }
+        }
+        buf.append(getVdm().getOrgLinesJoined());
+        return buf.toString();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[msgId=");
+        builder.append(msgId);
+        builder.append(", repeat=");
+        builder.append(repeat);
+        builder.append(", userId=");
+        builder.append(userId);
+        return builder.toString();
+    }
+
+}

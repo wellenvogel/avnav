@@ -3,6 +3,10 @@ package de.wellenvogel.avnav.gps;
 import android.content.Context;
 import android.location.Location;
 import android.util.Log;
+import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
+import de.wellenvogel.avnav.aislib.messages.sentence.SentenceException;
+import de.wellenvogel.avnav.aislib.packet.AisPacket;
+import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
 import net.sf.marineapi.nmea.io.SentenceReader;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.sentence.*;
@@ -37,6 +41,7 @@ public class IpPositionHandler extends GpsDataProvider {
         }
         private boolean isRunning=true;
         private boolean isConnected=false;
+        private AisPacketParser aisparser= new AisPacketParser();
         @Override
         public void run() {
             try{
@@ -113,6 +118,22 @@ public class IpPositionHandler extends GpsDataProvider {
                             Log.d(LOGPRFX,"ignore invalid nmea");
                         }
                     }
+                    if (line.startsWith("!")){
+                        if (Abk.isAbk(line)){
+                            aisparser.newVdm();
+                            Log.i(LOGPRFX,"ignore abk line "+line);
+                        }
+                        try {
+                            AisPacket p=aisparser.readLine(line);
+                            if (p != null){
+                                Log.i(LOGPRFX,"AisPacket received: "+p.getAisMessage().toString());
+                            }
+                        } catch (Exception e) {
+                            Log.e(LOGPRFX,"AIS exception while parsing "+line);
+                            e.printStackTrace();
+                        }
+                    }
+
                 }
             } catch (IOException e) {
                 Log.e(LOGPRFX,"Exception during read "+e.getLocalizedMessage());
