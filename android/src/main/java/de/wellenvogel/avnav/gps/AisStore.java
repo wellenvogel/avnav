@@ -97,13 +97,13 @@ public class AisStore {
                     AisStaticCommon m = (AisStaticCommon) msg;
                     rt = new JSONObject();
                     rt.put("mmsi", m.getUserId());
-                    rt.put("callsign", m.getCallsign().replaceAll("@*$",""));
-                    rt.put("shipname", m.getName().replaceAll("@*$",""));
+                    rt.put("callsign", m.getCallsign()!=null?m.getCallsign().replaceAll("@*$",""):"");
+                    rt.put("shipname", m.getName()!=null?m.getName().replaceAll("@*$",""):"");
                     rt.put("shiptype", m.getShipType());
                     if (msg.getMsgId() == 5) {
                         AisMessage5 m5=(AisMessage5)msg;
                         rt.put("imo_id", m5.getImo());
-                        rt.put("destination", m5.getDest().replaceAll("@*$",""));
+                        rt.put("destination", m5.getDest()!=null?m5.getDest().replaceAll("@*$",""):"");
                     }
                     break;
                 }
