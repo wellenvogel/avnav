@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import de.wellenvogel.avnav.main.AvNav;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -380,6 +381,11 @@ public class GpsService extends Service  {
         if (internalProvider != null) return internalProvider.getLocation();
         if (externalProvider != null) return externalProvider.getLocation();
         return null;
+    }
+
+    public JSONArray getAisData(double lat,double lon, double distance){
+        if (externalProvider == null) return new JSONArray();
+        return externalProvider.getAisData(lat,lon,distance);
     }
 
 

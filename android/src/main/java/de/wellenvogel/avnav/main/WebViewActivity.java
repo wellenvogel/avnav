@@ -234,7 +234,21 @@ public class WebViewActivity extends Activity {
                     fout=arr;
                 }
             }
-            if (type.equals("ais")) handled=true;
+            if (type.equals("ais")) {
+                handled=true;
+                String slat=uri.getQueryParameter("lat");
+                String slon=uri.getQueryParameter("lon");
+                String sdistance=uri.getQueryParameter("distance");
+                double lat=0,lon=0,distance=0;
+                try{
+                    if (slat != null) lat=Double.parseDouble(slat);
+                    if (slon != null) lon=Double.parseDouble(slon);
+                    if (sdistance != null)distance=Double.parseDouble(sdistance);
+                }catch (Exception e){}
+                if (gpsService !=null){
+                    fout=gpsService.getAisData(lat,lon,distance);
+                }
+            }
             if (type.equals("routing")){
                 String command=uri.getQueryParameter("command");
                 if (command.equals("getleg") ){

@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.gps;
 import android.content.Context;
 import android.location.Location;
 import android.util.Log;
+import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
 import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
 import de.wellenvogel.avnav.aislib.messages.sentence.SentenceException;
 import de.wellenvogel.avnav.aislib.packet.AisPacket;
@@ -11,6 +12,7 @@ import net.sf.marineapi.nmea.io.SentenceReader;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.sentence.*;
 import net.sf.marineapi.nmea.util.Position;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,11 +45,15 @@ public class IpPositionHandler extends GpsDataProvider {
         private boolean isRunning=true;
         private boolean isConnected=false;
         private AisPacketParser aisparser;
+        private AisStore store;
         ReceiverRunnable(InetSocketAddress address,boolean handleNmea,boolean handleAis){
             this.address=address;
             readNmea=handleNmea;
             readAis=handleAis;
-            if (readAis) aisparser=new AisPacketParser();
+            if (readAis) {
+                aisparser=new AisPacketParser();
+                store=new AisStore();
+            }
         }
         @Override
         public void run() {
@@ -133,7 +139,9 @@ public class IpPositionHandler extends GpsDataProvider {
                         try {
                             AisPacket p=aisparser.readLine(line);
                             if (p != null){
-                                Log.i(LOGPRFX,"AisPacket received: "+p.getAisMessage().toString());
+                                AisMessage m=p.getAisMessage();
+                                Log.i(LOGPRFX,"AisPacket received: "+m.toString());
+                                store.addAisMessage(m);
                             }
                         } catch (Exception e) {
                             Log.e(LOGPRFX,"AIS exception while parsing "+line);
@@ -183,6 +191,11 @@ public class IpPositionHandler extends GpsDataProvider {
                 return null;
             }
             return location;
+        }
+
+        public synchronized JSONArray getAisData(double lat,double lon, double distance){
+            if (store != null) return store.getAisData(lat,lon,distance);
+            return new JSONArray();
         }
     }
     public static final String LOGPRFX="AvNav:IpPositionHandler";
@@ -239,5 +252,17 @@ public class IpPositionHandler extends GpsDataProvider {
     @Override
     JSONObject getGpsData(Location curLoc) throws JSONException {
         return super.getGpsData(curLoc);
+    }
+
+    /**
+     * get AIS data (limited to distance)
+     * @param lat
+     * @param lon
+     * @param distance in nm
+     * @return
+     */
+    JSONArray  getAisData(double lat,double lon,double distance){
+        if (runnable == null) return new JSONArray();
+        return runnable.getAisData(lat,lon,distance);
     }
 }
