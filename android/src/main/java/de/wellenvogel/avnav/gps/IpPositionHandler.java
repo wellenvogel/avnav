@@ -29,6 +29,8 @@ import java.util.Date;
 public class IpPositionHandler extends GpsDataProvider {
     private static int connectTimeout=5000;
     private static long POSITION_AGE=10000; //max allowed age of position
+    private boolean readNmea=false;
+    private boolean readAis=false;
     class ReceiverRunnable implements Runnable{
         String status="disconnected";
         InetSocketAddress address;
@@ -36,12 +38,17 @@ public class IpPositionHandler extends GpsDataProvider {
         private Location location=null;
         private long lastPositionReceived=0;
         private net.sf.marineapi.nmea.util.Date lastDate=null;
-        ReceiverRunnable(InetSocketAddress address){
-            this.address=address;
-        }
+        private boolean readNmea=false;
+        private boolean readAis=false;
         private boolean isRunning=true;
         private boolean isConnected=false;
-        private AisPacketParser aisparser= new AisPacketParser();
+        private AisPacketParser aisparser;
+        ReceiverRunnable(InetSocketAddress address,boolean handleNmea,boolean handleAis){
+            this.address=address;
+            readNmea=handleNmea;
+            readAis=handleAis;
+            if (readAis) aisparser=new AisPacketParser();
+        }
         @Override
         public void run() {
             try{
@@ -69,7 +76,7 @@ public class IpPositionHandler extends GpsDataProvider {
                         isRunning=false;
                         return;
                     }
-                    if (line.startsWith("$")){
+                    if (line.startsWith("$") && readNmea){
                         //NMEA
                         if (SentenceValidator.isValid(line)){
                             try {
@@ -118,7 +125,7 @@ public class IpPositionHandler extends GpsDataProvider {
                             Log.d(LOGPRFX,"ignore invalid nmea");
                         }
                     }
-                    if (line.startsWith("!")){
+                    if (line.startsWith("!") && readAis){
                         if (Abk.isAbk(line)){
                             aisparser.newVdm();
                             Log.i(LOGPRFX,"ignore abk line "+line);
@@ -184,10 +191,12 @@ public class IpPositionHandler extends GpsDataProvider {
     Thread receiverThread;
     ReceiverRunnable runnable;
 
-    IpPositionHandler(Context ctx,InetSocketAddress address){
+    IpPositionHandler(Context ctx,InetSocketAddress address,boolean handleNmea,boolean handleAis){
         context=ctx;
         this.address=address;
-        this.runnable=new ReceiverRunnable(address);
+        readNmea=handleNmea;
+        readAis=handleAis;
+        this.runnable=new ReceiverRunnable(address,readNmea,readAis);
         this.receiverThread=new Thread(this.runnable);
         Log.d(LOGPRFX,"starting receiver for "+this.address.toString());
         this.receiverThread.start();
@@ -220,7 +229,7 @@ public class IpPositionHandler extends GpsDataProvider {
     @Override
     public synchronized void check() {
         if (this.runnable == null || ! this.runnable.getRunning()){
-            this.runnable=new ReceiverRunnable(this.address);
+            this.runnable=new ReceiverRunnable(this.address,readNmea,readAis);
             this.receiverThread=new Thread(this.runnable);
             Log.d(LOGPRFX,"restarting receiver thread for "+this.address.toString());
             this.receiverThread.start();

@@ -157,7 +157,7 @@ public class GpsService extends Service  {
                     InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(AvNav.IPADDR, ""),
                             prefs.getString(AvNav.IPPORT, ""));
                     Log.d(LOGPRFX,"starting external receiver for "+addr.toString());
-                    externalProvider=new IpPositionHandler(this,addr);
+                    externalProvider=new IpPositionHandler(this,addr,ipNmea,ipAis);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service");
                 }
