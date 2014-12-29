@@ -1,0 +1,28 @@
+<component name="ArtifactManager">
+  <artifact type="apk" name="avnav-release">
+    <output-path>$PROJECT_DIR$/bin</output-path>
+    <properties id="android-properties">
+      <options>
+        <option name="keyAlias" value="wellenvogel" />
+        <option name="keyPassword" value="bWF2bzA2" />
+        <option name="keyStorePassword" value="bWF2bzA2" />
+        <option name="keyStoreUrl" value="file://$USER_HOME$/btsync/keys/wellenvogel-mac.jks" />
+        <option name="proGuardCfgFiles">
+          <list>
+            <option value="file://%MODULE_SDK_HOME%/tools/proguard/proguard-android.txt" />
+          </list>
+        </option>
+        <option name="signingMode" value="RELEASE_SIGNED" />
+      </options>
+    </properties>
+    <properties id="ant-preprocessing">
+      <options enabled="true">
+        <file>file://$PROJECT_DIR$/build.xml</file>
+        <target>copy-assets</target>
+      </options>
+    </properties>
+    <root id="archive" name="avnav-release.apk">
+      <element id="android-final-package" facet="avnav/android/Android" />
+    </root>
+  </artifact>
+</component>
