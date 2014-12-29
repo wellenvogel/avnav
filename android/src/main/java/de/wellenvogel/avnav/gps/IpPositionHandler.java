@@ -31,8 +31,11 @@ import java.util.Date;
 public class IpPositionHandler extends GpsDataProvider {
     private static int connectTimeout=5000;
     private static long POSITION_AGE=10000; //max allowed age of position
+    private static long AIS_LIFETIME=1200000; //10min
+    private static long AIS_CLEANUPINTERVAL=60000; //1min
     private boolean readNmea=false;
     private boolean readAis=false;
+    private long lastAisCleanup=0;
     class ReceiverRunnable implements Runnable{
         String status="disconnected";
         InetSocketAddress address;
@@ -193,9 +196,19 @@ public class IpPositionHandler extends GpsDataProvider {
             return location;
         }
 
-        public synchronized JSONArray getAisData(double lat,double lon, double distance){
+        public JSONArray getAisData(double lat,double lon, double distance){
             if (store != null) return store.getAisData(lat,lon,distance);
             return new JSONArray();
+        }
+
+        public void cleanupAis(long lifetime){
+            if (store != null) {
+                long now=System.currentTimeMillis();
+                if (now > (lastAisCleanup+AIS_CLEANUPINTERVAL)) {
+                    lastAisCleanup=now;
+                    store.cleanup(lifetime);
+                }
+            }
         }
     }
     public static final String LOGPRFX="AvNav:IpPositionHandler";
@@ -246,6 +259,16 @@ public class IpPositionHandler extends GpsDataProvider {
             this.receiverThread=new Thread(this.runnable);
             Log.d(LOGPRFX,"restarting receiver thread for "+this.address.toString());
             this.receiverThread.start();
+        }
+        if (readAis){
+            Thread cleanupThread=new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(LOGPRFX,"cleanup AIS data");
+                    runnable.cleanupAis(AIS_LIFETIME);
+                }
+            });
+            cleanupThread.start();
         }
     }
 

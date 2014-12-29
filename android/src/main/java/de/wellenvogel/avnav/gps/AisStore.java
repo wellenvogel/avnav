@@ -27,7 +27,7 @@ public class AisStore {
         }
         return false;
     }
-    public void addAisMessage(AisMessage msg){
+    public synchronized void addAisMessage(AisMessage msg){
         if (! isHandledMessage(msg)){
             Log.i(LOGPRFX,"ignore AIS message "+msg);
             return;
@@ -122,6 +122,7 @@ public class AisStore {
             }
             if (rt != null){
                 rt.put("type",msg.getMsgId());
+                rt.put("rtime", System.currentTimeMillis());
             }
         }catch (Exception e){
             Log.w(LOGPRFX,"exception while json encoding AIS message "+e.getLocalizedMessage());
@@ -143,6 +144,9 @@ public class AisStore {
             else if (k.equals("mmsi")){
                 rt.put(k,in.getInt(k)+"");
             }
+            else if (k.equals("rtime")){
+                continue;
+            }
             else{
                 rt.put(k,in.get(k));
             }
@@ -157,12 +161,13 @@ public class AisStore {
      * @param distance
      * @return
      */
-    public JSONArray getAisData(double lat,double lon,double distance){
+    public synchronized JSONArray getAisData(double lat,double lon,double distance){
         JSONArray rt=new JSONArray();
         Location myLoc=new Location((String)null);
         myLoc.setLongitude(lon);
         myLoc.setLatitude(lat);
         distance=distance*1852; //in distance is in NM
+        Log.d(LOGPRFX,"getAisData dist="+distance);
         for(JSONObject o:aisData.values()){
             if (! o.has("lat") || ! o.has("lon")) continue;
             JSONObject cv=null;
@@ -186,5 +191,20 @@ public class AisStore {
         }
         Log.d(LOGPRFX,"getAisData returns "+rt.length()+" values");
         return rt;
+    }
+
+    public synchronized void cleanup(long lifetime){
+        long cleanupTime=System.currentTimeMillis()-lifetime;
+        for (int mmsi:aisData.keySet()){
+            try {
+                long etime=aisData.get(mmsi).getLong("rtime");
+                if (etime < cleanupTime){
+                    Log.d(LOGPRFX,"cleanup outdated entry for "+mmsi);
+                    aisData.remove(mmsi);
+                }
+            } catch (Exception e) {
+                Log.e(LOGPRFX,"exception during AIS cleanup "+e.getLocalizedMessage());
+            }
+        }
     }
 }
