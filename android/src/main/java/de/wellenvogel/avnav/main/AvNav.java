@@ -35,6 +35,10 @@ public class AvNav extends Activity {
     public static final String IPAIS="ip.ais";
     public static final String IPADDR="ip.addr";
     public static final String IPPORT="ip.port";
+    public static final String IPCONNTIMEOUT="ip.conntimeout";
+    public static final String IPPOSAGE="ip.posAge";
+    public static final String IPAISLIFETIME="ip.aisLifetime";
+    public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
     public static final String PREFNAME="AvNav";
 
     public static final String LOGPRFX="avnav";
@@ -237,8 +241,20 @@ public class AvNav extends Activity {
         txIp.setText(sharedPrefs.getString(IPADDR, "192.168.20.10"));
         txPort.setText(sharedPrefs.getString(IPPORT,"34567"));
         cbIpAis.setOnCheckedChangeListener(cbHandler);
-        cbInternalGps.setOnCheckedChangeListener(cbHandler);
-        cbIpNmea.setOnCheckedChangeListener(cbHandler);
+        cbInternalGps.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) cbIpNmea.setChecked(false);
+                cbHandler.onCheckedChanged(buttonView,isChecked);
+            }
+        });
+        cbIpNmea.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) cbInternalGps.setChecked(false);
+                cbHandler.onCheckedChanged(buttonView,isChecked);
+            }
+        });
         txIp.addTextChangedListener(textChangeHandler);
         txPort.addTextChangedListener(textChangeHandler);
         handler.postDelayed(runnable, 100);
@@ -350,15 +366,19 @@ public class AvNav extends Activity {
         e.apply();
     }
 
-    public void updateMtp(File file){
+    public static void updateMtp(File file, final Context context){
+        Log.d(LOGPRFX,"MTP update for "+file.getAbsolutePath());
         try {
+            //TODO: avoid leaked connection
 
             MediaScannerConnection.scanFile(
                     context,
                     new String[]{file.getAbsolutePath()},
                     null,
-                    null);
-            this.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                    null
+                    );
+
+            context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
                     Uri.fromFile(file)));
         }catch(Exception e){
             Log.e(LOGPRFX,"error when updating MTP "+e.getLocalizedMessage());
@@ -372,7 +392,7 @@ public class AvNav extends Activity {
             if (!workBase.mkdirs()) {
                 throw new Exception("unable to create working directory "+workdir);
             }
-            updateMtp(workBase);
+            updateMtp(workBase,this);
         }
         String subdirs[]=new String[]{"charts","tracks","routes"};
         for (String s: subdirs){
@@ -380,7 +400,7 @@ public class AvNav extends Activity {
             if (! sub.isDirectory()){
                 Log.d(LOGPRFX, "creating subdir " + sub.getAbsolutePath());
                 if (! sub.mkdirs()) throw new Exception("unable to create directory "+sub.getAbsolutePath());
-                updateMtp(sub);
+                updateMtp(sub,this);
             }
         }
     }

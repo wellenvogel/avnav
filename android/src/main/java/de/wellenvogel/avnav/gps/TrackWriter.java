@@ -43,6 +43,12 @@ public class TrackWriter {
         return rt;
     }
 
+    public File getTrackFile(Date dt){
+        String name = getCurrentTrackname(dt);
+        File ofile = new File(trackdir, name + ".gpx");
+        return ofile;
+    }
+
     private class WriteRunner implements  Runnable{
         private ArrayList<Location> track;
         private Date dt;
@@ -57,16 +63,17 @@ public class TrackWriter {
 
             try {
                 String name = getCurrentTrackname(dt);
-                File ofile = new File(trackdir, name + ".gpx");
+                File ofile = getTrackFile(dt);
                 Log.d(AvNav.LOGPRFX, "writing trackfile " + ofile.getAbsolutePath());
                 PrintStream out = new PrintStream(new FileOutputStream(ofile));
                 out.format(header, name);
                 int numpoints=0;
                 for (Location l : track) {
                     if (l.getTime() == 0) continue;
-                    if (isCurrentDay(l, dt))
+                    if (isCurrentDay(l, dt)) {
                         numpoints++;
-                        out.format(Locale.ENGLISH,trkpnt, l.getLatitude(), l.getLongitude(), ISO8601DateParser.toString(new Date(l.getTime())), l.getBearing(), l.getSpeed());
+                        out.format(Locale.ENGLISH, trkpnt, l.getLatitude(), l.getLongitude(), ISO8601DateParser.toString(new Date(l.getTime())), l.getBearing(), l.getSpeed());
+                    }
                 }
                 out.append(footer);
                 out.close();

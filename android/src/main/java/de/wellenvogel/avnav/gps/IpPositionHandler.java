@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.gps;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.util.Log;
 import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
@@ -8,6 +9,7 @@ import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
 import de.wellenvogel.avnav.aislib.messages.sentence.SentenceException;
 import de.wellenvogel.avnav.aislib.packet.AisPacket;
 import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
+import de.wellenvogel.avnav.main.AvNav;
 import net.sf.marineapi.nmea.io.SentenceReader;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.sentence.*;
@@ -29,13 +31,9 @@ import java.util.Date;
  * Created by andreas on 25.12.14.
  */
 public class IpPositionHandler extends GpsDataProvider {
-    private static int connectTimeout=5000;
-    private static long POSITION_AGE=10000; //max allowed age of position
-    private static long AIS_LIFETIME=1200000; //10min
-    private static long AIS_CLEANUPINTERVAL=60000; //1min
-    private boolean readNmea=false;
-    private boolean readAis=false;
     private long lastAisCleanup=0;
+
+
     class ReceiverRunnable implements Runnable{
         String status="disconnected";
         InetSocketAddress address;
@@ -43,17 +41,15 @@ public class IpPositionHandler extends GpsDataProvider {
         private Location location=null;
         private long lastPositionReceived=0;
         private net.sf.marineapi.nmea.util.Date lastDate=null;
-        private boolean readNmea=false;
-        private boolean readAis=false;
+        private Properties properties;
         private boolean isRunning=true;
         private boolean isConnected=false;
         private AisPacketParser aisparser;
         private AisStore store;
-        ReceiverRunnable(InetSocketAddress address,boolean handleNmea,boolean handleAis){
+        ReceiverRunnable(InetSocketAddress address,Properties prop){
+            properties=prop;
             this.address=address;
-            readNmea=handleNmea;
-            readAis=handleAis;
-            if (readAis) {
+            if (properties.readAis) {
                 aisparser=new AisPacketParser();
                 store=new AisStore();
             }
@@ -61,7 +57,7 @@ public class IpPositionHandler extends GpsDataProvider {
         @Override
         public void run() {
             try{
-                socket.connect(address,connectTimeout);
+                socket.connect(address,properties.connectTimeout);
             } catch (Exception e){
                 Log.e(LOGPRFX, "Exception during connect " + e.getLocalizedMessage());
                 status="connect error "+e;
@@ -85,7 +81,7 @@ public class IpPositionHandler extends GpsDataProvider {
                         isRunning=false;
                         return;
                     }
-                    if (line.startsWith("$") && readNmea){
+                    if (line.startsWith("$") && properties.readNmea){
                         //NMEA
                         if (SentenceValidator.isValid(line)){
                             try {
@@ -134,7 +130,7 @@ public class IpPositionHandler extends GpsDataProvider {
                             Log.d(LOGPRFX,"ignore invalid nmea");
                         }
                     }
-                    if (line.startsWith("!") && readAis){
+                    if (line.startsWith("!") && properties.readAis){
                         if (Abk.isAbk(line)){
                             aisparser.newVdm();
                             Log.i(LOGPRFX,"ignore abk line "+line);
@@ -190,7 +186,7 @@ public class IpPositionHandler extends GpsDataProvider {
         }
         public synchronized Location getLocation(){
             long current=System.currentTimeMillis();
-            if (current > (lastPositionReceived+POSITION_AGE)){
+            if (current > (lastPositionReceived+properties.postionAge)){
                 return null;
             }
             return location;
@@ -204,7 +200,7 @@ public class IpPositionHandler extends GpsDataProvider {
         public void cleanupAis(long lifetime){
             if (store != null) {
                 long now=System.currentTimeMillis();
-                if (now > (lastAisCleanup+AIS_CLEANUPINTERVAL)) {
+                if (now > (lastAisCleanup+properties.aisCleanupInterval)) {
                     lastAisCleanup=now;
                     store.cleanup(lifetime);
                 }
@@ -216,13 +212,13 @@ public class IpPositionHandler extends GpsDataProvider {
     InetSocketAddress address;
     Thread receiverThread;
     ReceiverRunnable runnable;
+    Properties properties;
 
-    IpPositionHandler(Context ctx,InetSocketAddress address,boolean handleNmea,boolean handleAis){
+    IpPositionHandler(Context ctx,InetSocketAddress address,Properties prop){
         context=ctx;
         this.address=address;
-        readNmea=handleNmea;
-        readAis=handleAis;
-        this.runnable=new ReceiverRunnable(address,readNmea,readAis);
+        properties=prop;
+        this.runnable=new ReceiverRunnable(address,properties);
         this.receiverThread=new Thread(this.runnable);
         Log.d(LOGPRFX,"starting receiver for "+this.address.toString());
         this.receiverThread.start();
@@ -255,17 +251,17 @@ public class IpPositionHandler extends GpsDataProvider {
     @Override
     public synchronized void check() {
         if (this.runnable == null || ! this.runnable.getRunning()){
-            this.runnable=new ReceiverRunnable(this.address,readNmea,readAis);
+            this.runnable=new ReceiverRunnable(this.address,properties);
             this.receiverThread=new Thread(this.runnable);
             Log.d(LOGPRFX,"restarting receiver thread for "+this.address.toString());
             this.receiverThread.start();
         }
-        if (readAis){
+        if (properties.readAis){
             Thread cleanupThread=new Thread(new Runnable() {
                 @Override
                 public void run() {
                     Log.d(LOGPRFX,"cleanup AIS data");
-                    runnable.cleanupAis(AIS_LIFETIME);
+                    runnable.cleanupAis(properties.aisLifetime);
                 }
             });
             cleanupThread.start();

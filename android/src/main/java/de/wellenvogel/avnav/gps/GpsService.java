@@ -113,28 +113,35 @@ public class GpsService extends Service  {
                 ", internalGps="+useInternalProvider+
                 ", ipNmea="+ipNmea+
                 ", ipAis="+ipAis);
+        trackDir = new File(trackdir);
         if (loadTrack) {
-            trackpoints.clear();
-            trackDir = new File(trackdir);
-            //read the track data from today and yesterday
-            //we rely on the cleanup to handle outdated entries
-            trackWriter = new TrackWriter(trackDir);
-            long mintime = System.currentTimeMillis() - trackTime;
-            Date dt = new Date();
-            lastTrackWrite = dt.getTime();
-            ArrayList<Location> rt = trackWriter.parseTrackFile(new Date(dt.getTime() - 24 * 60 * 60 * 1000), mintime, trackDistance);
-            synchronized (this) {
-                trackpoints.addAll(rt);
-            }
-            rt = trackWriter.parseTrackFile(dt, mintime, trackDistance);
-            if (rt.size() == 0) {
-                //empty track file - trigger write very soon
-                lastTrackWrite = 0;
-            }
-            synchronized (this) {
-                trackpoints.addAll(rt);
-            }
-            Log.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
+            Thread readThread=new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    ArrayList<Location> filetp=new ArrayList<Location>();
+                    //read the track data from today and yesterday
+                    //we rely on the cleanup to handle outdated entries
+                    trackWriter = new TrackWriter(trackDir);
+                    long mintime = System.currentTimeMillis() - trackTime;
+                    Date dt = new Date();
+                    lastTrackWrite = dt.getTime();
+                    ArrayList<Location> rt = trackWriter.parseTrackFile(new Date(dt.getTime() - 24 * 60 * 60 * 1000), mintime, trackDistance);
+                    filetp.addAll(rt);
+                    rt = trackWriter.parseTrackFile(dt, mintime, trackDistance);
+                    if (rt.size() == 0) {
+                        //empty track file - trigger write very soon
+                        lastTrackWrite = 0;
+                    }
+                    filetp.addAll(rt);
+                    synchronized (this) {
+                        ArrayList<Location> newTp=trackpoints;
+                        trackpoints=filetp;
+                        trackpoints.addAll(newTp);
+                    }
+                    Log.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
+                }
+            });
+            readThread.start();
             timerSequence++;
             runnable=new TimerRunnable(timerSequence);
             handler.postDelayed(runnable, trackMintime);
@@ -158,7 +165,14 @@ public class GpsService extends Service  {
                     InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(AvNav.IPADDR, ""),
                             prefs.getString(AvNav.IPPORT, ""));
                     Log.d(LOGPRFX,"starting external receiver for "+addr.toString());
-                    externalProvider=new IpPositionHandler(this,addr,ipNmea,ipAis);
+                    GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
+                    prop.aisCleanupInterval=prefs.getLong(AvNav.IPAISCLEANUPIV,prop.aisCleanupInterval);
+                    prop.aisLifetime=prefs.getLong(AvNav.IPAISLIFETIME,prop.aisLifetime);
+                    prop.postionAge=prefs.getLong(AvNav.IPPOSAGE,prop.postionAge);
+                    prop.connectTimeout=prefs.getInt(AvNav.IPCONNTIMEOUT,prop.connectTimeout);
+                    prop.readAis=ipAis;
+                    prop.readNmea=ipNmea;
+                    externalProvider=new IpPositionHandler(this,addr,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service");
                 }
@@ -218,6 +232,7 @@ public class GpsService extends Service  {
         if (trackpoints.size() > 0){
             try {
                 trackWriter.writeTrackFile(trackpoints, new Date(),false);
+                AvNav.updateMtp(trackWriter.getTrackFile(new Date()),this);
             } catch (FileNotFoundException e) {
                 Log.d(LOGPRFX,"Exception while finally writing trackfile: "+e.getLocalizedMessage());
             }
@@ -302,6 +317,9 @@ public class GpsService extends Service  {
             } catch (IOException io) {
 
             }
+            //trigger the MTP update here (even if we are not done yet)
+            AvNav.updateMtp(trackWriter.getTrackFile(new Date(current)),this);
+
         }
     }
 

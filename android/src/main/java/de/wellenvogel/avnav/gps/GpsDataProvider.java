@@ -34,6 +34,15 @@ public class GpsDataProvider {
 
     SatStatus getSatStatus(){return null;}
 
+    public static class Properties{
+        int connectTimeout=5000;
+        long postionAge=10000; //max allowed age of position
+        long aisLifetime=1200000; //20 min
+        long aisCleanupInterval=6000; //1min
+        boolean readAis=false;
+        boolean readNmea=false;
+    };
+
     /**
      * stop the service and free all resources
      * afterwards the provider will not be used any more
