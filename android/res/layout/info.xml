@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent" android:padding="10dp">
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" android:layout_weight="0" android:paddingTop="10dp"
+            android:paddingBottom="10dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/txAvnav"
+                  android:text="AvNav Android version "/>
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/txVersion" android:text="0.0.1"/>
+    </LinearLayout>
+    <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:text="test"
+            android:id="@+id/txInfo" android:layout_weight="1" android:maxLines="100"
+            android:nestedScrollingEnabled="true"/>
+
+</LinearLayout>

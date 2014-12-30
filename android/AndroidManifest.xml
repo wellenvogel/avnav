@@ -22,6 +22,7 @@
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
                   android:configChanges="orientation|screenSize">
         </activity>
+        <activity android:name=".Info" android:label="Info"/>
         <service android:name="de.wellenvogel.avnav.gps.GpsService" android:label="AvnavGps"/>
     </application>
 </manifest>

@@ -13,6 +13,9 @@ import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
@@ -210,6 +213,13 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         }
 
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity_actions, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
     /**
      * Called when the activity is first created.
      */
@@ -338,6 +348,19 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         super.onDestroy();
         if (mediaConnection != null){
             mediaConnection.disconnect();
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle presses on the action bar items
+        switch (item.getItemId()) {
+            case R.id.action_about:
+                Intent intent = new Intent(context,Info.class);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
