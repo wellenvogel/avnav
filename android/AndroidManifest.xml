@@ -19,7 +19,8 @@
         </activity>
         <activity android:name="WebViewActivity"
                   android:label="@string/appName"
-                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+                  android:configChanges="orientation|screenSize">
         </activity>
         <service android:name="de.wellenvogel.avnav.gps.GpsService" android:label="AvnavGps"/>
     </application>
