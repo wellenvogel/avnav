@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import de.wellenvogel.avnav.main.AvNav;
+import de.wellenvogel.avnav.main.IMediaUpdater;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,6 +67,9 @@ public class GpsService extends Service  {
     private Handler handler = new Handler();
     private long timerSequence=1;
     private Runnable runnable;
+    private IMediaUpdater mediaUpdater;
+    private boolean trackLoading=true; //if set to true - do not write the track
+    private long loadSequence=1;
     //location data
 
 
@@ -81,6 +85,55 @@ public class GpsService extends Service  {
     public IBinder onBind(Intent arg0)
     {
         return mBinder;
+    }
+
+    /**
+     * a class for asynchronously loading the tracks
+     * this honors the load sequence to avoid overwriting data from
+     * a new load that has been started by a restarted service
+     */
+    private class LoadRunner implements Runnable{
+        private long myLoadSequence;
+
+        LoadRunner(long loadSequence){
+            myLoadSequence=loadSequence;
+        }
+
+        @Override
+        public void run() {
+            try {
+                ArrayList<Location> filetp = new ArrayList<Location>();
+                //read the track data from today and yesterday
+                //we rely on the cleanup to handle outdated entries
+                long mintime = System.currentTimeMillis() - trackTime;
+                Date dt = new Date();
+                ArrayList<Location> rt = trackWriter.parseTrackFile(new Date(dt.getTime() - 24 * 60 * 60 * 1000), mintime, trackDistance);
+                filetp.addAll(rt);
+                if (myLoadSequence != loadSequence){
+                    Log.d(LOGPRFX,"load sequence has changed, stop loading");
+                }
+                rt = trackWriter.parseTrackFile(dt, mintime, trackDistance);
+                filetp.addAll(rt);
+                synchronized (GpsService.this) {
+                    if (myLoadSequence == loadSequence) {
+                        lastTrackWrite = dt.getTime();
+                        if (rt.size() == 0) {
+                            //empty track file - trigger write very soon
+                            lastTrackWrite = 0;
+                        }
+                        ArrayList<Location> newTp = trackpoints;
+                        trackpoints = filetp;
+                        trackpoints.addAll(newTp);
+                    }
+                    else{
+                        Log.d(LOGPRFX,"unable to store loaded track as new load has already started");
+                    }
+                }
+            }catch (Exception e){}
+            Log.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
+            if (myLoadSequence == loadSequence) trackLoading=false;
+
+        }
     }
 
     @Override
@@ -115,36 +168,18 @@ public class GpsService extends Service  {
                 ", ipAis="+ipAis);
         trackDir = new File(trackdir);
         if (loadTrack) {
-            Thread readThread=new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    ArrayList<Location> filetp=new ArrayList<Location>();
-                    //read the track data from today and yesterday
-                    //we rely on the cleanup to handle outdated entries
-                    trackWriter = new TrackWriter(trackDir);
-                    long mintime = System.currentTimeMillis() - trackTime;
-                    Date dt = new Date();
-                    lastTrackWrite = dt.getTime();
-                    ArrayList<Location> rt = trackWriter.parseTrackFile(new Date(dt.getTime() - 24 * 60 * 60 * 1000), mintime, trackDistance);
-                    filetp.addAll(rt);
-                    rt = trackWriter.parseTrackFile(dt, mintime, trackDistance);
-                    if (rt.size() == 0) {
-                        //empty track file - trigger write very soon
-                        lastTrackWrite = 0;
-                    }
-                    filetp.addAll(rt);
-                    synchronized (this) {
-                        ArrayList<Location> newTp=trackpoints;
-                        trackpoints=filetp;
-                        trackpoints.addAll(newTp);
-                    }
-                    Log.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
-                }
-            });
+            trackpoints.clear();
+            loadSequence++;
+            trackWriter = new TrackWriter(trackDir);
+            trackLoading=true;
+            Thread readThread=new Thread(new LoadRunner(loadSequence));
             readThread.start();
             timerSequence++;
             runnable=new TimerRunnable(timerSequence);
             handler.postDelayed(runnable, trackMintime);
+        }
+        else{
+            trackLoading=false;
         }
         if (useInternalProvider){
             if (internalProvider == null) {
@@ -229,15 +264,22 @@ public class GpsService extends Service  {
             externalProvider.stop();
             externalProvider=null;
         }
-        if (trackpoints.size() > 0){
-            try {
-                trackWriter.writeTrackFile(trackpoints, new Date(),false);
-                AvNav.updateMtp(trackWriter.getTrackFile(new Date()),this);
-            } catch (FileNotFoundException e) {
-                Log.d(LOGPRFX,"Exception while finally writing trackfile: "+e.getLocalizedMessage());
+        //this is not completely OK: we could fail to write our last track points
+        //if we still load the track - but otherwise we could reeally empty the track
+        if (trackpoints.size() >0){
+            if (! trackLoading) {
+                try {
+                    trackWriter.writeTrackFile(getTrackCopy(), new Date(), true, mediaUpdater);
+                } catch (FileNotFoundException e) {
+                    Log.d(LOGPRFX, "Exception while finally writing trackfile: " + e.getLocalizedMessage());
+                }
+            }
+            else {
+                Log.i(LOGPRFX,"unable to write trackfile as still loading");
             }
         }
         trackpoints.clear();
+        loadSequence++;
         trackDir=null;
         isRunning=false;
         Log.d(LOGPRFX,"service stopped");
@@ -264,6 +306,7 @@ public class GpsService extends Service  {
      */
     private void checkTrackWriter(){
         if (! isRunning) return;
+        if (trackLoading) return;
         boolean writeOut=false;
         long current = System.currentTimeMillis();
         Location l=getLocation();
@@ -283,7 +326,7 @@ public class GpsService extends Service  {
                     add = true;
                 }
                 if (add) {
-                    Log.d(LOGPRFX, "add location to log " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
+                    Log.d(LOGPRFX, "add location to track log " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
                     Location nloc = new Location(l);
                     nloc.setTime(current);
                     trackpoints.add(nloc);
@@ -295,15 +338,7 @@ public class GpsService extends Service  {
                 //cleanup
                 int deleted = 0;
                 long deleteTime = current - trackTime;
-                Log.d(LOGPRFX, "deleting trackpoints older " + new Date(deleteTime).toString());
-                while (trackpoints.size() > 0) {
-                    Location first = trackpoints.get(0);
-                    if (first.getTime() < deleteTime) {
-                        trackpoints.remove(0);
-                        deleted++;
-                    } else break;
-                }
-                Log.d(LOGPRFX, "deleted " + deleted + " trackpoints");
+                trackWriter.cleanup(trackpoints,deleteTime);
                 writeOut=true;
             }
         }
@@ -313,12 +348,10 @@ public class GpsService extends Service  {
             lastTrackWrite = current;
             try {
                 //we have to be careful to get a copy when having a lock
-                trackWriter.writeTrackFile(w, new Date(current), true);
+                trackWriter.writeTrackFile(w, new Date(current), true,mediaUpdater);
             } catch (IOException io) {
 
             }
-            //trigger the MTP update here (even if we are not done yet)
-            AvNav.updateMtp(trackWriter.getTrackFile(new Date(current)),this);
 
         }
     }
@@ -404,6 +437,10 @@ public class GpsService extends Service  {
     public JSONArray getAisData(double lat,double lon, double distance){
         if (externalProvider == null) return new JSONArray();
         return externalProvider.getAisData(lat,lon,distance);
+    }
+
+    public void setMediaUpdater(IMediaUpdater u){
+        mediaUpdater=u;
     }
 
 

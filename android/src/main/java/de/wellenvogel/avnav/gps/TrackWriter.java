@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.gps;
 import android.location.Location;
 import android.util.Log;
 import de.wellenvogel.avnav.main.AvNav;
+import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -53,10 +54,12 @@ public class TrackWriter {
         private ArrayList<Location> track;
         private Date dt;
         private TrackWriter writer;
-        WriteRunner(ArrayList<Location> track, Date dt, TrackWriter writer){
+        private IMediaUpdater updater;
+        WriteRunner(ArrayList<Location> track, Date dt, TrackWriter writer, IMediaUpdater updater){
             this.track=track;
             this.dt=dt;
             this.writer=writer;
+            this.updater=updater;
         }
         @Override
         public void run() {
@@ -64,7 +67,7 @@ public class TrackWriter {
             try {
                 String name = getCurrentTrackname(dt);
                 File ofile = getTrackFile(dt);
-                Log.d(AvNav.LOGPRFX, "writing trackfile " + ofile.getAbsolutePath());
+                Log.i(AvNav.LOGPRFX, "writing trackfile " + ofile.getAbsolutePath());
                 PrintStream out = new PrintStream(new FileOutputStream(ofile));
                 out.format(header, name);
                 int numpoints=0;
@@ -77,7 +80,10 @@ public class TrackWriter {
                 }
                 out.append(footer);
                 out.close();
-                Log.d(AvNav.LOGPRFX,"track written with "+numpoints+" points");
+                if (updater != null){
+                    updater.triggerUpdateMtp(ofile);
+                }
+                Log.i(AvNav.LOGPRFX,"writing track finished with "+numpoints+" points");
             } catch (Exception io) {
                 Log.e(AvNav.LOGPRFX, "error writing trackfile: " + io.getLocalizedMessage());
             }
@@ -92,11 +98,11 @@ public class TrackWriter {
      * @param dt
      * @throws FileNotFoundException
      */
-    public void writeTrackFile(ArrayList<Location> track, Date dt,boolean background) throws FileNotFoundException {
+    public void writeTrackFile(ArrayList<Location> track, Date dt,boolean background, IMediaUpdater updater) throws FileNotFoundException {
         if (background) {
             if (writerRunning) return; //we will come back anyway...
             writerRunning=true;
-            Thread t = new Thread(new WriteRunner(track, dt, this));
+            Thread t = new Thread(new WriteRunner(track, dt, this,updater));
             t.start();
             return;
         }
@@ -106,7 +112,7 @@ public class TrackWriter {
                 Thread.sleep(100);
             }
             writerRunning=true;
-            new WriteRunner(track,dt,this).run();
+            new WriteRunner(track,dt,this,updater).run();
         }catch (InterruptedException e){
             return;
         }
@@ -245,5 +251,19 @@ public class TrackWriter {
 
 
     }
+    public int cleanup(ArrayList<Location> trackpoints,long deleteTime){
+        int deleted=0;
+        Log.d(AvNav.LOGPRFX, "deleting trackpoints older " + new Date(deleteTime).toString());
+        while (trackpoints.size() > 0) {
+            Location first = trackpoints.get(0);
+            if (first.getTime() < deleteTime) {
+                trackpoints.remove(0);
+                deleted++;
+            } else break;
+        }
+        Log.d(AvNav.LOGPRFX, "deleted " + deleted + " trackpoints");
+        return deleted;
+    }
+
 
 }

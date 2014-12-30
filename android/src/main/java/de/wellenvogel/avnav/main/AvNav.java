@@ -7,10 +7,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.IBinder;
+import android.os.*;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.text.Editable;
@@ -26,7 +23,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.net.InetSocketAddress;
 
-public class AvNav extends Activity {
+public class AvNav extends Activity implements MediaScannerConnection.MediaScannerConnectionClient, IMediaUpdater{
     //settings
     public static final String WORKDIR="workdir";
     public static final String SHOWDEMO="showdemo";
@@ -60,7 +57,9 @@ public class AvNav extends Activity {
     private GpsService gpsService=null;
     private boolean gpsRunning=false;
     private Handler handler = new Handler();
+    private MediaUpdateHandler mediaUpdater;
     SharedPreferences sharedPrefs ;
+    private MediaScannerConnection mediaConnection;
 
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -71,6 +70,7 @@ public class AvNav extends Activity {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
             gpsService = binder.getService();
+            gpsService.setMediaUpdater(AvNav.this);
             Log.d(LOGPRFX,"Main: gps service connected");
 
         }
@@ -81,6 +81,16 @@ public class AvNav extends Activity {
             Log.d(LOGPRFX,"Main: gps service disconnected");
         }
     };
+
+    private class MediaUpdateHandler extends Handler{
+        @Override
+        public void handleMessage(Message msg) {
+            Log.d(LOGPRFX,"Mediaupdater for "+msg);
+            super.handleMessage(msg);
+            File f=(File)msg.obj;
+            updateMtp(f);
+        }
+    }
 
     private void startGpsService(){
         if (cbInternalGps.isChecked() ){
@@ -315,8 +325,20 @@ public class AvNav extends Activity {
                 FolderChooseDialog.chooseFile_or_Dir(textWorkdir.getText().toString());
             }
         });
+        if (mediaConnection != null) mediaConnection.disconnect();
+        mediaConnection=new MediaScannerConnection(this,this);
+        mediaConnection.connect();
+        if (mediaUpdater == null) mediaUpdater=new MediaUpdateHandler();
 
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaConnection != null){
+            mediaConnection.disconnect();
+        }
     }
 
     private CompoundButton.OnCheckedChangeListener cbHandler=new CompoundButton.OnCheckedChangeListener() {
@@ -366,18 +388,18 @@ public class AvNav extends Activity {
         e.apply();
     }
 
-    public static void updateMtp(File file, final Context context){
+    public void triggerUpdateMtp(File file){
+        if (mediaUpdater == null )return;
+        Message msg=mediaUpdater.obtainMessage();
+        msg.obj=file;
+        mediaUpdater.sendMessage(msg);
+    }
+
+    private void updateMtp(File file){
         Log.d(LOGPRFX,"MTP update for "+file.getAbsolutePath());
         try {
             //TODO: avoid leaked connection
-
-            MediaScannerConnection.scanFile(
-                    context,
-                    new String[]{file.getAbsolutePath()},
-                    null,
-                    null
-                    );
-
+            mediaConnection.scanFile(file.getAbsolutePath(),null);
             context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
                     Uri.fromFile(file)));
         }catch(Exception e){
@@ -392,7 +414,7 @@ public class AvNav extends Activity {
             if (!workBase.mkdirs()) {
                 throw new Exception("unable to create working directory "+workdir);
             }
-            updateMtp(workBase,this);
+            updateMtp(workBase);
         }
         String subdirs[]=new String[]{"charts","tracks","routes"};
         for (String s: subdirs){
@@ -400,8 +422,18 @@ public class AvNav extends Activity {
             if (! sub.isDirectory()){
                 Log.d(LOGPRFX, "creating subdir " + sub.getAbsolutePath());
                 if (! sub.mkdirs()) throw new Exception("unable to create directory "+sub.getAbsolutePath());
-                updateMtp(sub,this);
+                updateMtp(sub);
             }
         }
+    }
+
+    @Override
+    public void onMediaScannerConnected() {
+
+    }
+
+    @Override
+    public void onScanCompleted(String path, Uri uri) {
+        Log.d(LOGPRFX,"MTP update for "+path+" finished");
     }
 }
