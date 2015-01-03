@@ -91,7 +91,7 @@ public class GatehouseFactory extends ProprietaryFactory {
         if (country.length() > 0 && !country.equals("0")) {
             midCountry = Country.getByMid(Integer.parseInt(country));
             if (midCountry == null) {
-                Log.w(LOGPRFX,"Unkown MID " + country);
+                AvnLog.w(LOGPRFX,"Unkown MID " + country);
             }
         }
         */

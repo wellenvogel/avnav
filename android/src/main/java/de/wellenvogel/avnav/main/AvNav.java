@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.*;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
+import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -74,21 +75,21 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
             gpsService = binder.getService();
             gpsService.setMediaUpdater(AvNav.this);
-            Log.d(LOGPRFX,"Main: gps service connected");
+            AvnLog.d(LOGPRFX, "Main: gps service connected");
 
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             gpsService=null;
-            Log.d(LOGPRFX,"Main: gps service disconnected");
+            AvnLog.d(LOGPRFX,"Main: gps service disconnected");
         }
     };
 
     private class MediaUpdateHandler extends Handler{
         @Override
         public void handleMessage(Message msg) {
-            Log.d(LOGPRFX,"Mediaupdater for "+msg);
+            AvnLog.d(LOGPRFX,"Mediaupdater for "+msg);
             super.handleMessage(msg);
             File f=(File)msg.obj;
             updateMtp(f);
@@ -323,7 +324,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                             public void onChosenDir(String chosenDir) {
                                 // The code in this function will be executed when the dialog OK button is pushed
                                 textWorkdir.setText(chosenDir);
-                                Log.i(AvNav.LOGPRFX,"select work directory "+chosenDir);
+                                AvnLog.i(AvNav.LOGPRFX,"select work directory "+chosenDir);
                             }
                         });
                 FolderChooseDialog.Default_File_Name="avnav";
@@ -419,7 +420,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     }
 
     private void updateMtp(File file){
-        Log.d(LOGPRFX,"MTP update for "+file.getAbsolutePath());
+        AvnLog.d(LOGPRFX,"MTP update for "+file.getAbsolutePath());
         try {
             //TODO: avoid leaked connection
             mediaConnection.scanFile(file.getAbsolutePath(),null);
@@ -433,7 +434,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private void checkDirs(String workdir) throws Exception {
         File workBase=new File(workdir);
         if (! workBase.isDirectory()){
-            Log.d(LOGPRFX, "creating workdir " + workdir);
+            AvnLog.d(LOGPRFX, "creating workdir " + workdir);
             if (!workBase.mkdirs()) {
                 throw new Exception("unable to create working directory "+workdir);
             }
@@ -443,7 +444,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         for (String s: subdirs){
             File sub=new File(workBase,s);
             if (! sub.isDirectory()){
-                Log.d(LOGPRFX, "creating subdir " + sub.getAbsolutePath());
+                AvnLog.d(LOGPRFX, "creating subdir " + sub.getAbsolutePath());
                 if (! sub.mkdirs()) throw new Exception("unable to create directory "+sub.getAbsolutePath());
                 updateMtp(sub);
             }
@@ -457,6 +458,6 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
 
     @Override
     public void onScanCompleted(String path, Uri uri) {
-        Log.d(LOGPRFX,"MTP update for "+path+" finished");
+        AvnLog.d(LOGPRFX,"MTP update for "+path+" finished");
     }
 }

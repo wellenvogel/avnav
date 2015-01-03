@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.gps;
 
 import android.location.Location;
 import android.util.Log;
+import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -76,7 +77,7 @@ public class GpsDataProvider {
      */
     JSONObject getGpsData(Location curLoc) throws JSONException{
         if (curLoc == null) {
-            Log.d(LOGPRFX, "getGpsData returns empty data");
+            AvnLog.d(LOGPRFX, "getGpsData returns empty data");
             return null;
         }
         JSONObject rt=new JSONObject();
@@ -88,7 +89,7 @@ public class GpsDataProvider {
         rt.put(G_COURSE,curLoc.getBearing());
         rt.put(G_SPEED,curLoc.getSpeed());
         rt.put(G_TIME,dateFormat.format(new Date(curLoc.getTime())));
-        Log.d(LOGPRFX,"getGpsData: "+rt.toString());
+        AvnLog.d(LOGPRFX,"getGpsData: "+rt.toString());
         return rt;
     }
 

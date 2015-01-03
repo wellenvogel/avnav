@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.gps;
 import android.location.Location;
 import android.util.Log;
 import de.wellenvogel.avnav.aislib.messages.message.*;
+import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,18 +30,18 @@ public class AisStore {
     }
     public synchronized void addAisMessage(AisMessage msg){
         if (! isHandledMessage(msg)){
-            Log.i(LOGPRFX,"ignore AIS message "+msg);
+            AvnLog.i(LOGPRFX,"ignore AIS message "+msg);
             return;
         }
         JSONObject o=objectFromMessage(msg);
         if (o == null){
-            Log.i(LOGPRFX,"unable to convert AIS message "+msg);
+            AvnLog.i(LOGPRFX,"unable to convert AIS message "+msg);
             return;
         }
         try {
             int mmsi=o.getInt("mmsi");
             if (mmsi == 0){
-                Log.i(LOGPRFX,"ignore invalid message with mmsi 0");
+                AvnLog.i(LOGPRFX,"ignore invalid message with mmsi 0");
                 return;
             }
             int type=msg.getMsgId();
@@ -66,7 +67,7 @@ public class AisStore {
                 }
             }
             else{
-                Log.d(LOGPRFX,"store new message type "+type+" for mmsi"+mmsi);
+                AvnLog.d(LOGPRFX, "store new message type " + type + " for mmsi" + mmsi);
                 aisData.put(mmsi,o);
             }
         } catch (JSONException e) {
@@ -167,7 +168,7 @@ public class AisStore {
         myLoc.setLongitude(lon);
         myLoc.setLatitude(lat);
         distance=distance*1852; //in distance is in NM
-        Log.d(LOGPRFX,"getAisData dist="+distance);
+        AvnLog.d(LOGPRFX,"getAisData dist="+distance);
         for(JSONObject o:aisData.values()){
             if (! o.has("lat") || ! o.has("lon")) continue;
             JSONObject cv=null;
@@ -179,7 +180,7 @@ public class AisStore {
                     aloc.setLongitude(cv.getDouble("lon"));
                     double dist = aloc.distanceTo(myLoc);
                     if (dist > distance) {
-                        Log.d(LOGPRFX, "omitting ais " + cv.toString() + " distance=" + dist);
+                        AvnLog.d(LOGPRFX, "omitting ais " + cv.toString() + " distance=" + dist);
                         continue;
                     }
                 }
@@ -189,7 +190,7 @@ public class AisStore {
             if (cv == null) continue;
             rt.put(cv);
         }
-        Log.d(LOGPRFX,"getAisData returns "+rt.length()+" values");
+        AvnLog.d(LOGPRFX,"getAisData returns "+rt.length()+" values");
         return rt;
     }
 
@@ -199,7 +200,7 @@ public class AisStore {
             try {
                 long etime=aisData.get(mmsi).getLong("rtime");
                 if (etime < cleanupTime){
-                    Log.d(LOGPRFX,"cleanup outdated entry for "+mmsi);
+                    AvnLog.d(LOGPRFX,"cleanup outdated entry for "+mmsi);
                     aisData.remove(mmsi);
                 }
             } catch (Exception e) {

@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.text.Html;
@@ -19,6 +20,14 @@ public class Info extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.info);
+        TextView version=(TextView)findViewById(R.id.txVersion);
+        try {
+            String versionName = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0).versionName;
+            version.setText(versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(AvNav.LOGPRFX,"unable to access version name");
+        }
         setText("version.txt",R.id.txVersion);
         setText("info.html",R.id.txInfo);
         TextView view=(TextView)findViewById(R.id.txInfo);
