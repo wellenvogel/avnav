@@ -11,6 +11,7 @@ import android.view.WindowManager;
 import android.webkit.*;
 import android.widget.Toast;
 import de.wellenvogel.avnav.gps.GpsService;
+import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -122,14 +123,14 @@ public class WebViewActivity extends Activity {
                     return null;
                 }
                 else {
-                    Log.d("AvNav","external request "+url);
+                    AvnLog.d("AvNav","external request "+url);
                     return super.shouldInterceptRequest(view, url);
                 }
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
             public void onConsoleMessage(String message, int lineNumber, String sourceID) {
-                Log.d("AvNav", message + " -- From line "
+                AvnLog.d("AvNav", message + " -- From line "
                         + lineNumber + " of "
                         + sourceID);
             }
@@ -184,7 +185,7 @@ public class WebViewActivity extends Activity {
                         for (String demo: demoCharts){
                             if (! demo.endsWith(".xml")) continue;
                             String name=demo.replaceAll("\\.xml$", "");
-                            Log.d(AvNav.LOGPRFX,"found demo chart "+demo);
+                            AvnLog.d(AvNav.LOGPRFX,"found demo chart "+demo);
                             JSONObject e = new JSONObject();
                             e.put("name", name);
                             e.put("url", "/"+CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
@@ -259,7 +260,7 @@ public class WebViewActivity extends Activity {
                 }
             }
             if (!handled){
-                Log.d(AvNav.LOGPRFX,"unhandled nav request "+type);
+                AvnLog.d(AvNav.LOGPRFX,"unhandled nav request "+type);
             }
             String outstring="";
             if (fout != null) outstring=fout.toString();
@@ -279,7 +280,7 @@ public class WebViewActivity extends Activity {
             if (fname.startsWith(DEMOCHARTS)){
                 fname=fname.substring(DEMOCHARTS.length()+1);
                 if (fname.endsWith(OVERVIEW)){
-                    Log.d(AvNav.LOGPRFX,"overview request "+fname);
+                    AvnLog.d(AvNav.LOGPRFX,"overview request "+fname);
                     fname=fname.substring(0,fname.length()-OVERVIEW.length()-1); //just the pure name
                     fname+=".xml";
                     closeGemf();
@@ -363,14 +364,14 @@ public class WebViewActivity extends Activity {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
             gpsService = binder.getService();
-            Log.d(AvNav.LOGPRFX,"gps service connected");
+            AvnLog.d(AvNav.LOGPRFX, "gps service connected");
 
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             gpsService=null;
-            Log.d(AvNav.LOGPRFX,"gps service disconnected");
+            AvnLog.d(AvNav.LOGPRFX,"gps service disconnected");
         }
     };
 
@@ -385,7 +386,7 @@ public class WebViewActivity extends Activity {
                     e.put("name", gemfName);
                     String urlName=REALCHARTS + "/"+index+"/gemf/" + gemfName;
                     fileNames.put(urlName,f.getAbsolutePath());
-                    Log.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
+                    AvnLog.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
                     e.put("url", "/"+CHARTPREFIX + "/" +urlName);
                     arr.put(e);
                 }
@@ -395,7 +396,7 @@ public class WebViewActivity extends Activity {
                     e.put("name",name);
                     String urlName=REALCHARTS+"/"+index+"/avnav/"+name;
                     fileNames.put(urlName,f.getAbsolutePath());
-                    Log.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
+                    AvnLog.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
                     e.put("url","/"+CHARTPREFIX+"/"+urlName);
                     arr.put(e);
                 }
@@ -407,7 +408,7 @@ public class WebViewActivity extends Activity {
 
     private void closeGemf(){
         if (gemfFile != null) {
-            Log.d(AvNav.LOGPRFX,"closing gemf file "+gemfFile.getUrlName());
+            AvnLog.d(AvNav.LOGPRFX,"closing gemf file "+gemfFile.getUrlName());
             gemfFile.close();
         }
         gemfFile=null;

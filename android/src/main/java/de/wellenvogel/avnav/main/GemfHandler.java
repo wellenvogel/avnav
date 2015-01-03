@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.main;
 
 import android.util.Log;
+import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.*;
 import java.util.Arrays;
@@ -54,7 +55,7 @@ public class GemfHandler {
 
     public InputStream getInputStream(int x,int y, int z,int sourceIndex) {
         InputStream rt = gemf.getInputStream(x, y, z,sourceIndex);
-        Log.d(AvNav.LOGPRFX, "loaded gemf z=" + z + ", x=" + x + ", y=" + y+",src="+sourceIndex+", rt="+((rt!=null)?"OK":"<null>"));
+        AvnLog.d(AvNav.LOGPRFX, "loaded gemf z=" + z + ", x=" + x + ", y=" + y + ",src=" + sourceIndex + ", rt=" + ((rt != null) ? "OK" : "<null>"));
         return rt;
     }
     public String getUrlName(){
@@ -64,7 +65,7 @@ public class GemfHandler {
         try {
             gemf.close();
         } catch (IOException e) {
-            Log.d(AvNav.LOGPRFX,"exception while closing gemf file "+urlName);
+            AvnLog.d(AvNav.LOGPRFX,"exception while closing gemf file "+urlName);
         }
     }
     private String replaceTemplate(String template,HashMap<String,String> values){
@@ -191,7 +192,7 @@ public class GemfHandler {
             SourceEntry e=new SourceEntry(src.intValue(),maxzoom,replaceTemplate(MAPSRCTEMPLATE,values));
             mapSources[idx]=e;
             idx++;
-            Log.i(AvNav.LOGPRFX, "read gemf overview " + gemf.getName() + " source=" + sources.get(src) + " ,minzoom= " + minzoom + ", maxzoom=" + maxzoom + " : " + extend.toString());
+            AvnLog.i(AvNav.LOGPRFX, "read gemf overview " + gemf.getName() + " source=" + sources.get(src) + " ,minzoom= " + minzoom + ", maxzoom=" + maxzoom + " : " + extend.toString());
         }
         //sort layers by maxzoomlevel
         Arrays.sort(mapSources, new Comparator<SourceEntry>() {
@@ -206,7 +207,7 @@ public class GemfHandler {
         }
         HashMap<String,String> values=new HashMap<String, String>();
         values.put("MAPSOURCES",sourceString.toString());
-        Log.i(AvNav.LOGPRFX, "done read gemf overview " + gemf.getName());
+        AvnLog.i(AvNav.LOGPRFX, "done read gemf overview " + gemf.getName());
         String rt=replaceTemplate(GEMFTEMPLATE,values);
         return new ByteArrayInputStream(rt.getBytes("UTF-8"));
     }

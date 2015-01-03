@@ -11,6 +11,7 @@ import android.os.IBinder;
 import android.util.Log;
 import de.wellenvogel.avnav.main.AvNav;
 import de.wellenvogel.avnav.main.IMediaUpdater;
+import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -110,7 +111,7 @@ public class GpsService extends Service  {
                 ArrayList<Location> rt = trackWriter.parseTrackFile(new Date(dt.getTime() - 24 * 60 * 60 * 1000), mintime, trackDistance);
                 filetp.addAll(rt);
                 if (myLoadSequence != loadSequence){
-                    Log.d(LOGPRFX,"load sequence has changed, stop loading");
+                    AvnLog.d(LOGPRFX, "load sequence has changed, stop loading");
                 }
                 rt = trackWriter.parseTrackFile(dt, mintime, trackDistance);
                 filetp.addAll(rt);
@@ -126,11 +127,11 @@ public class GpsService extends Service  {
                         trackpoints.addAll(newTp);
                     }
                     else{
-                        Log.d(LOGPRFX,"unable to store loaded track as new load has already started");
+                        AvnLog.d(LOGPRFX,"unable to store loaded track as new load has already started");
                     }
                 }
             }catch (Exception e){}
-            Log.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
+            AvnLog.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
             if (myLoadSequence == loadSequence) trackLoading=false;
 
         }
@@ -149,7 +150,7 @@ public class GpsService extends Service  {
         if (trackDir != null && trackDir.getAbsolutePath().equals(newTrackDir.getAbsolutePath())){
             //seems to be a restart - so do not load again
             loadTrack=false;
-            Log.d(LOGPRFX,"restart: do not load track data");
+            AvnLog.d(LOGPRFX,"restart: do not load track data");
         }
 
         trackInterval=intent.getLongExtra(PROP_TRACKINTERVAL,300000);
@@ -160,7 +161,7 @@ public class GpsService extends Service  {
         useInternalProvider=prefs.getBoolean(AvNav.INTERNALGPS,true);
         ipAis=prefs.getBoolean(AvNav.IPAIS,false);
         ipNmea=prefs.getBoolean(AvNav.IPNMEA,false);
-        Log.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+
+        AvnLog.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+
                 ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
                 ", maxtime(h)="+(trackTime/3600/1000)+
                 ", internalGps="+useInternalProvider+
@@ -183,13 +184,13 @@ public class GpsService extends Service  {
         }
         if (useInternalProvider){
             if (internalProvider == null) {
-                Log.d(LOGPRFX,"start internal provider");
+                AvnLog.d(LOGPRFX,"start internal provider");
                 internalProvider=new AndroidPositionHandler(this);
             }
         }
         else {
             if (internalProvider != null){
-                Log.d(LOGPRFX,"stopping internal provider");
+                AvnLog.d(LOGPRFX,"stopping internal provider");
                 internalProvider.stop();
                 internalProvider=null;
             }
@@ -199,7 +200,7 @@ public class GpsService extends Service  {
                 try {
                     InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(AvNav.IPADDR, ""),
                             prefs.getString(AvNav.IPPORT, ""));
-                    Log.d(LOGPRFX,"starting external receiver for "+addr.toString());
+                    AvnLog.d(LOGPRFX,"starting external receiver for "+addr.toString());
                     GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
                     prop.aisCleanupInterval=prefs.getLong(AvNav.IPAISCLEANUPIV,prop.aisCleanupInterval);
                     prop.aisLifetime=prefs.getLong(AvNav.IPAISLIFETIME,prop.aisLifetime);
@@ -216,7 +217,7 @@ public class GpsService extends Service  {
         }
         else{
             if (externalProvider != null){
-                Log.d(LOGPRFX,"stopping external service");
+                AvnLog.d(LOGPRFX,"stopping external service");
                 externalProvider.stop();
             }
         }
@@ -271,18 +272,18 @@ public class GpsService extends Service  {
                 try {
                     trackWriter.writeTrackFile(getTrackCopy(), new Date(), true, mediaUpdater);
                 } catch (FileNotFoundException e) {
-                    Log.d(LOGPRFX, "Exception while finally writing trackfile: " + e.getLocalizedMessage());
+                    AvnLog.d(LOGPRFX, "Exception while finally writing trackfile: " + e.getLocalizedMessage());
                 }
             }
             else {
-                Log.i(LOGPRFX,"unable to write trackfile as still loading");
+                AvnLog.i(LOGPRFX,"unable to write trackfile as still loading");
             }
         }
         trackpoints.clear();
         loadSequence++;
         trackDir=null;
         isRunning=false;
-        Log.d(LOGPRFX,"service stopped");
+        AvnLog.d(LOGPRFX,"service stopped");
     }
 
     public void stopMe(){
@@ -326,7 +327,7 @@ public class GpsService extends Service  {
                     add = true;
                 }
                 if (add) {
-                    Log.d(LOGPRFX, "add location to track log " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
+                    AvnLog.d(LOGPRFX, "add location to track log " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
                     Location nloc = new Location(l);
                     nloc.setTime(current);
                     trackpoints.add(nloc);
@@ -334,7 +335,7 @@ public class GpsService extends Service  {
             }
             //now check if we should write out
             if (current > (lastTrackWrite + trackInterval) && trackpoints.size() != lastTrackCount) {
-                Log.d(LOGPRFX, "start writing track");
+                AvnLog.d(LOGPRFX, "start writing track");
                 //cleanup
                 int deleted = 0;
                 long deleteTime = current - trackTime;
@@ -388,7 +389,7 @@ public class GpsService extends Service  {
         }catch (Exception e){
             //we are tolerant - if we hit cleanup an do not get the track once, this should be no issue
         }
-        Log.d(LOGPRFX,"getTrack returns "+num+" points");
+        AvnLog.d(LOGPRFX,"getTrack returns "+num+" points");
         return rt;
     }
 
@@ -411,7 +412,7 @@ public class GpsService extends Service  {
             return rt;
         }
         rt=internalProvider.getSatStatus();
-        Log.d(LOGPRFX,"getSatStatus returns "+rt);
+        AvnLog.d(LOGPRFX,"getSatStatus returns "+rt);
         return rt;
     }
 

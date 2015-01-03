@@ -2,6 +2,7 @@
 #testprog for serial reading
 
 import sys
+from threading import Thread
 import time
 import socket
 import re
@@ -10,7 +11,22 @@ import re
 def err(txt):
   print "ERROR: "+txt
   exit(1)
-  
+
+class Reader:
+  def __init__(self,sock):
+    self.sock=sock
+  def readfunction(self):
+    print "reader started"
+    while True:
+      try:
+        data=self.sock.recv(1)
+        if data=='':
+          raise "EOF"
+      except:
+        self.sock.shutdown(socket.SHUT_RDWR)
+        print "reader stopped"
+        return
+
 def sendSock(file,sock,sleeptime):
   f=None
   try:
@@ -20,6 +36,10 @@ def sendSock(file,sock,sleeptime):
     
   print "start sending %s"%(file)
   sfail=0
+  reader=Reader(sock)
+  rthread=Thread(target=reader.readfunction)
+  rthread.setDaemon(True)
+  rthread.start()
   while True:
     lbytes=[]
     try:
@@ -37,7 +57,8 @@ def sendSock(file,sock,sleeptime):
       if doSend:
         try:
             print lbytes
-            sock.sendall(lbytes+"\r\n")
+            if sock.sendall(lbytes+"\r\n") is not None:
+              raise "Exception in sendall"
             sfail=0
         except:
             print "Exception on send: "+str(sys.exc_info()[0])

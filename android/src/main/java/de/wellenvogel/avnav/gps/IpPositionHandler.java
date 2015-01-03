@@ -10,6 +10,7 @@ import de.wellenvogel.avnav.aislib.messages.sentence.SentenceException;
 import de.wellenvogel.avnav.aislib.packet.AisPacket;
 import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
 import de.wellenvogel.avnav.main.AvNav;
+import de.wellenvogel.avnav.util.AvnLog;
 import net.sf.marineapi.nmea.io.SentenceReader;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.sentence.*;
@@ -64,6 +65,7 @@ public class IpPositionHandler extends GpsDataProvider {
                 isRunning=false;
                 return;
             }
+            AvnLog.d(LOGPRFX,"connected to "+socket.getInetAddress().toString());
             try {
                 BufferedReader in =new BufferedReader( new InputStreamReader(socket.getInputStream()));
                 status="receiving";
@@ -71,7 +73,7 @@ public class IpPositionHandler extends GpsDataProvider {
                 SentenceFactory factory = SentenceFactory.getInstance();
                 while (true){
                     String line=in.readLine();
-                    Log.d(LOGPRFX,"received: "+line);
+                    AvnLog.d(LOGPRFX, "received: " + line);
                     if (line == null){
                         status="disconnected, EOF";
                         try{
@@ -92,7 +94,7 @@ public class IpPositionHandler extends GpsDataProvider {
                                 Position p=null;
                                 if (s instanceof PositionSentence) {
                                     p = ((PositionSentence) s).getPosition();
-                                    Log.d(LOGPRFX, "external position " + p);
+                                    AvnLog.d(LOGPRFX, "external position " + p);
                                 }
                                 net.sf.marineapi.nmea.util.Time time=null;
                                 if (s instanceof TimeSentence) {
@@ -115,11 +117,11 @@ public class IpPositionHandler extends GpsDataProvider {
                                             location.setSpeed((float)(((RMCSentence)s).getSpeed()/msToKn));
                                             location.setBearing((float)(((RMCSentence)s).getCourse()));
                                         }
-                                        Log.d(LOGPRFX,"location: "+location);
+                                        AvnLog.d(LOGPRFX,"location: "+location);
                                     }
                                 }
                                 else{
-                                    Log.d(LOGPRFX,"ignoring sentence "+line+" - no position or time");
+                                    AvnLog.d(LOGPRFX,"ignoring sentence "+line+" - no position or time");
                                 }
                             }catch (Exception i){
                                 Log.e(LOGPRFX,"exception in NMEA parser "+i.getLocalizedMessage());
@@ -127,19 +129,19 @@ public class IpPositionHandler extends GpsDataProvider {
                             }
                         }
                         else{
-                            Log.d(LOGPRFX,"ignore invalid nmea");
+                            AvnLog.d(LOGPRFX,"ignore invalid nmea");
                         }
                     }
                     if (line.startsWith("!") && properties.readAis){
                         if (Abk.isAbk(line)){
                             aisparser.newVdm();
-                            Log.i(LOGPRFX,"ignore abk line "+line);
+                            AvnLog.i(LOGPRFX,"ignore abk line "+line);
                         }
                         try {
                             AisPacket p=aisparser.readLine(line);
                             if (p != null){
                                 AisMessage m=p.getAisMessage();
-                                Log.i(LOGPRFX,"AisPacket received: "+m.toString());
+                                AvnLog.i(LOGPRFX,"AisPacket received: "+m.toString());
                                 store.addAisMessage(m);
                             }
                         } catch (Exception e) {
@@ -172,7 +174,7 @@ public class IpPositionHandler extends GpsDataProvider {
         public void stop(){
             if (socket != null) {
                 try{
-                    Log.d(LOGPRFX,"closing socket");
+                    AvnLog.d(LOGPRFX,"closing socket");
                     socket.close();
                     isConnected=false;
                 }catch (Exception i){}
@@ -220,7 +222,7 @@ public class IpPositionHandler extends GpsDataProvider {
         properties=prop;
         this.runnable=new ReceiverRunnable(address,properties);
         this.receiverThread=new Thread(this.runnable);
-        Log.d(LOGPRFX,"starting receiver for "+this.address.toString());
+        AvnLog.d(LOGPRFX,"starting receiver for "+this.address.toString());
         this.receiverThread.start();
     }
 
@@ -253,14 +255,14 @@ public class IpPositionHandler extends GpsDataProvider {
         if (this.runnable == null || ! this.runnable.getRunning()){
             this.runnable=new ReceiverRunnable(this.address,properties);
             this.receiverThread=new Thread(this.runnable);
-            Log.d(LOGPRFX,"restarting receiver thread for "+this.address.toString());
+            AvnLog.d(LOGPRFX,"restarting receiver thread for "+this.address.toString());
             this.receiverThread.start();
         }
         if (properties.readAis){
             Thread cleanupThread=new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d(LOGPRFX,"cleanup AIS data");
+                    AvnLog.d(LOGPRFX,"cleanup AIS data");
                     runnable.cleanupAis(properties.aisLifetime);
                 }
             });

@@ -6,7 +6,7 @@
         <option name="keyAlias" value="wellenvogel" />
         <option name="keyPassword" value="bWF2bzA2" />
         <option name="keyStorePassword" value="bWF2bzA2" />
-        <option name="keyStoreUrl" value="file://$USER_HOME$/btsync/keys/wellenvogel-mac.jks" />
+        <option name="keyStoreUrl" value="file://$USER_HOME$/btsync/keys/android.jks" />
         <option name="proGuardCfgFiles">
           <list>
             <option value="file://%MODULE_SDK_HOME%/tools/proguard/proguard-android.txt" />

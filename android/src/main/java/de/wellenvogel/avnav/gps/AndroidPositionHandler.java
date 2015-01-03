@@ -5,6 +5,7 @@ import android.location.*;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -48,7 +49,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         }
         location=null;
         lastValidLocation=0;
-        Log.d(LOGPRFX,"stopped");
+        AvnLog.d(LOGPRFX,"stopped");
     }
 
     public void check(){
@@ -57,7 +58,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d(LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
+        AvnLog.d(LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
                 ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
         this.location=new Location(location);
         lastValidLocation=System.currentTimeMillis();
@@ -66,26 +67,26 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-        Log.d(LOGPRFX,"location: status changed for "+provider+", new status="+status);
+        AvnLog.d(LOGPRFX,"location: status changed for "+provider+", new status="+status);
         tryEnableLocation();
     }
 
     @Override
     public void onProviderEnabled(String provider) {
-        Log.d(LOGPRFX,"location: provider enabled "+provider);
+        AvnLog.d(LOGPRFX,"location: provider enabled "+provider);
         tryEnableLocation();
     }
 
     @Override
     public void onProviderDisabled(String provider) {
-        Log.d(LOGPRFX,"location: provider disabled "+provider);
+        AvnLog.d(LOGPRFX,"location: provider disabled "+provider);
         tryEnableLocation();
     }
     private synchronized void tryEnableLocation(){
         tryEnableLocation(false);
     }
     private synchronized void tryEnableLocation(boolean notify){
-        Log.d(LOGPRFX,"tryEnableLocation");
+        AvnLog.d(LOGPRFX,"tryEnableLocation");
         if (locationService != null && locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Criteria criteria = new Criteria();
             currentProvider = locationService.getBestProvider(criteria, false);
@@ -93,10 +94,10 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
                 locationService.requestLocationUpdates(currentProvider, 400, 1, this);
                 location = locationService.getLastKnownLocation(currentProvider);
                 if (location != null) lastValidLocation=System.currentTimeMillis();
-                Log.d(LOGPRFX,"location: location provider="+currentProvider+" location acc="+((location != null)?location.getAccuracy():"<null>")+", date="+new Date((location!=null)?location.getTime():0).toString());
+                AvnLog.d(LOGPRFX,"location: location provider="+currentProvider+" location acc="+((location != null)?location.getAccuracy():"<null>")+", date="+new Date((location!=null)?location.getTime():0).toString());
             }
             else{
-                Log.d(LOGPRFX,"location: no location provider");
+                AvnLog.d(LOGPRFX,"location: no location provider");
                 if (notify)Toast.makeText(context, "no location provider ",
                         Toast.LENGTH_SHORT).show();
                 location=null;
@@ -105,7 +106,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
             }
         }
         else {
-            Log.d(LOGPRFX,"location: no gps");
+            AvnLog.d(LOGPRFX, "location: no gps");
             location=null;
             lastValidLocation=0;
             if (notify)Toast.makeText(context, "no gps ",
@@ -128,23 +129,23 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         if ((currtime - lastValidLocation) > MAXLOCWAIT){
             //no location update during this time - query directly
             if (currentProvider == null){
-                Log.d(LOGPRFX,"location: too old to return and no provider");
+                AvnLog.d(LOGPRFX,"location: too old to return and no provider");
                 return null;
             }
             Location nlocation = locationService.getLastKnownLocation(currentProvider);
             if (nlocation == null){
                 location=null;
-                Log.d(LOGPRFX,"location: now new location for too old location");
+                AvnLog.d(LOGPRFX,"location: now new location for too old location");
                 return null;
             }
             //the diff in location times must not be too far away from the really elapsed time
             //we assume at least MAXLOCAGE
             long locdiff=nlocation.getTime()-curloc.getTime();
             if (locdiff < (currtime - lastValidLocation - 5*MAXLOCAGE)){
-                Log.d(LOGPRFX,"location: location updates too slow - only "+(locdiff/1000)+" seconds for time diff "+(currtime-lastValidLocation)/1000);
+                AvnLog.d(LOGPRFX,"location: location updates too slow - only "+(locdiff/1000)+" seconds for time diff "+(currtime-lastValidLocation)/1000);
                 return null;
             }
-            Log.d(LOGPRFX,"location: refreshed location successfully");
+            AvnLog.d(LOGPRFX,"location: refreshed location successfully");
             location=nlocation;
             lastValidLocation=lastValidLocation+(long)Math.floor(locdiff*1.1); //we allow the gps to be 10% slower than realtime
         }
@@ -160,7 +161,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
             if (s.usedInFix()) rt.numUsed++;
         }
         rt.gpsEnabled=(currentProvider != null);
-        Log.d(LOGPRFX,"getSatStatus returns "+rt);
+        AvnLog.d(LOGPRFX,"getSatStatus returns "+rt);
         return rt;
     }
 
