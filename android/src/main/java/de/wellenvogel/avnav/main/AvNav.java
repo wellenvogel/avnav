@@ -64,6 +64,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private MediaUpdateHandler mediaUpdater;
     SharedPreferences sharedPrefs ;
     private MediaScannerConnection mediaConnection;
+    private long timerSequence=1;
 
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -162,13 +163,19 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         }
     }
 
-    private Runnable runnable = new Runnable() {
+    private class TimerRunnable implements Runnable{
+        long seq=1;
+        TimerRunnable(long seq){
+            this.seq=seq;
+        }
         @Override
         public void run() {
+            if (seq != timerSequence) return;
             updateServiceState();
             handler.postDelayed(this, 500);
         }
     };
+
 
     private void updateServiceState(){
         if (gpsService == null || ! gpsService.isRunning()){
@@ -220,6 +227,11 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_activity_actions, menu);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private void startTimer(){
+        timerSequence++;
+        handler.postDelayed(new TimerRunnable(timerSequence),500);
     }
     /**
      * Called when the activity is first created.
@@ -278,7 +290,6 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         });
         txIp.addTextChangedListener(textChangeHandler);
         txPort.addTextChangedListener(textChangeHandler);
-        handler.postDelayed(runnable, 100);
         btStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -350,6 +361,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         if (mediaConnection != null){
             mediaConnection.disconnect();
         }
+        timerSequence++;
     }
 
     @Override
@@ -363,6 +375,18 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        startTimer();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        timerSequence++; //stops timer
     }
 
     private CompoundButton.OnCheckedChangeListener cbHandler=new CompoundButton.OnCheckedChangeListener() {
