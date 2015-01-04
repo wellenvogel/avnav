@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by andreas on 28.12.14.
@@ -196,12 +197,14 @@ public class AisStore {
 
     public synchronized void cleanup(long lifetime){
         long cleanupTime=System.currentTimeMillis()-lifetime;
-        for (int mmsi:aisData.keySet()){
+        Iterator<Map.Entry<Integer,JSONObject>> it=aisData.entrySet().iterator();
+        while (it.hasNext()){
+            Map.Entry<Integer,JSONObject>et=it.next();
             try {
-                long etime=aisData.get(mmsi).getLong("rtime");
+                long etime=et.getValue().getLong("rtime");
                 if (etime < cleanupTime){
-                    AvnLog.d(LOGPRFX,"cleanup outdated entry for "+mmsi);
-                    aisData.remove(mmsi);
+                    AvnLog.d(LOGPRFX,"cleanup outdated entry for "+et.getKey());
+                    it.remove();
                 }
             } catch (Exception e) {
                 Log.e(LOGPRFX,"exception during AIS cleanup "+e.getLocalizedMessage());
