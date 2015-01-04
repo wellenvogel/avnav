@@ -1,4 +1,5 @@
 /**
  * Created by Andreas on 09.07.2014.
  */
-avnav_version="2014-09-01";
+avnav_version="release-2015-01-04"
+
