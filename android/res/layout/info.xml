@@ -21,6 +21,6 @@
             android:layout_height="fill_parent"
             android:text="test"
             android:id="@+id/txInfo" android:layout_weight="1" android:maxLines="100"
-            android:nestedScrollingEnabled="true"/>
+            android:scrollbars="vertical"/>
 
 </LinearLayout>

@@ -24,13 +24,12 @@ import de.wellenvogel.avnav.aislib.messages.sentence.SentenceException;
 import de.wellenvogel.avnav.aislib.messages.sentence.Vdm;
 import de.wellenvogel.avnav.aislib.model.Position;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static java.util.Objects.requireNonNull;
 
 /**
  * Encapsulation of the VDM lines containing a single AIS message including leading proprietary tags and comment/tag
@@ -48,7 +47,7 @@ public class AisPacket implements Comparable<AisPacket> {
     private volatile long timestamp = Long.MIN_VALUE;
 
     private AisPacket(String stringMessage) {
-        this.rawMessage = requireNonNull(stringMessage);
+        this.rawMessage = stringMessage;
     }
 
     AisPacket(Vdm vdm, String stringMessage) {
@@ -64,11 +63,21 @@ public class AisPacket implements Comparable<AisPacket> {
     }
 
     public static AisPacket fromByteArray(byte[] array) {
-        return from(new String(array, StandardCharsets.US_ASCII));
+        try {
+            return from(new String(array, "US-ASCII"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public byte[] toByteArray() {
-        return rawMessage.getBytes(StandardCharsets.US_ASCII);
+        try {
+            return rawMessage.getBytes("US_ASCII");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
@@ -215,6 +224,6 @@ public class AisPacket implements Comparable<AisPacket> {
     /** {@inheritDoc} */
     @Override
     public int compareTo(AisPacket p) {
-        return Long.compare(getBestTimestamp(), p.getBestTimestamp());
+        return new Long(getBestTimestamp()).compareTo( p.getBestTimestamp());
     }
 }
