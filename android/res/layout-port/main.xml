@@ -43,6 +43,11 @@
                         <CheckBox
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:text="@string/useExttBrowser"
+                                android:id="@+id/cbExternalServer"/>
+                        <CheckBox
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:text="@string/enableDemoLabel"
                                 android:textAppearance="?android:attr/textAppearanceMedium"
                                 android:id="@+id/cbShowDemoCharts"  android:checked="true"

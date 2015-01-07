@@ -53,8 +53,8 @@ public class GemfHandler {
     }
 
 
-    public InputStream getInputStream(int x,int y, int z,int sourceIndex) {
-        InputStream rt = gemf.getInputStream(x, y, z,sourceIndex);
+    public GEMFFile.GEMFInputStream getInputStream(int x,int y, int z,int sourceIndex) {
+        GEMFFile.GEMFInputStream rt = gemf.getInputStream(x, y, z,sourceIndex);
         AvnLog.d(AvNav.LOGPRFX, "loaded gemf z=" + z + ", x=" + x + ", y=" + y + ",src=" + sourceIndex + ", rt=" + ((rt != null) ? "OK" : "<null>"));
         return rt;
     }

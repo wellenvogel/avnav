@@ -54,6 +54,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private CheckBox cbInternalGps;
     private CheckBox cbIpNmea;
     private CheckBox cbIpAis;
+    private CheckBox cbServer;
     private View externalSettings;
     private ImageView gpsIcon;
     private ImageView extIcon;
@@ -249,6 +250,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         cbInternalGps=(CheckBox)findViewById(R.id.cbInternalGps);
         cbIpNmea=(CheckBox)findViewById(R.id.cbIpNmea);
         cbIpAis=(CheckBox)findViewById(R.id.cbIpAis);
+        cbServer=(CheckBox)findViewById(R.id.cbExternalServer);
         externalSettings=findViewById(R.id.lExternalGps);
         gpsIcon=(ImageView)findViewById(R.id.iconGps);
         extIcon=(ImageView)findViewById(R.id.iconIp);
@@ -303,7 +305,13 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
 
 
                 startGpsService();
-                Intent intent = new Intent(context, WebViewActivity.class);
+                Intent intent;
+                if (cbServer.isChecked()){
+                    intent = new Intent(context, WebServerActivity.class);
+                }
+                else {
+                    intent = new Intent(context, WebViewActivity.class);
+                }
                 intent.putExtra(WORKDIR, textWorkdir.getText().toString());
                 intent.putExtra(SHOWDEMO, cbShowDemo.isChecked());
                 startActivity(intent);

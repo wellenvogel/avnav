@@ -25,4 +25,6 @@
     <string name="noGpsSelected">no GPS service selected</string>
     <string name="invalidIp">Invalid IP or Port</string>
     <string name="action_about">about</string>
+    <string name="stopServer">Stop Server</string>
+    <string name="useExttBrowser">Browser</string>
 </resources>

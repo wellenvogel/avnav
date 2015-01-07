@@ -543,7 +543,7 @@ public class GEMFFile {
 	 *
 	 * @return InputStream of tile data, or null if not found.
 	 */
-	public InputStream getInputStream(final int pX, final int pY, final int pZ, final int sourceIndex) {
+	public GEMFInputStream getInputStream(final int pX, final int pY, final int pZ, final int sourceIndex) {
 		GEMFRange range = null;
 
 		for (final GEMFRange rs: mRangeData)
@@ -645,17 +645,23 @@ public class GEMFFile {
 
 		RandomAccessFile raf=null;
 		int remainingBytes;
+		int length;
 
 		GEMFInputStream(final String filePath, final long offset, final int length) throws IOException {
 			this.raf = new RandomAccessFile(filePath, "r");
 			raf.seek(offset);
 
 			this.remainingBytes = length;
+			this.length=length;
 		}
 
 		@Override
 		public int available() {
 			return remainingBytes;
+		}
+
+		public int getLength(){
+			return length;
 		}
 
 		@Override

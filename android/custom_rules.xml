@@ -24,8 +24,8 @@
     <copy todir="${assets.libraries}/movable-type" overwrite="true" flatten="true">
         <fileset dir="${src}/libraries/movable-type"/>
     </copy>
-    <copy todir="${assets.libraries}/ol3b5" overwrite="true" flatten="true">
-        <file file="${src}/libraries/ol3b5/ol.js"/>
+    <copy todir="${assets.libraries}/ol311" overwrite="true" flatten="true">
+        <file file="${src}/libraries/ol311/ol.js"/>
     </copy>
     <copy todir="${assets.libraries}/less" overwrite="true" flatten="true">
         <file file="${src}/libraries/less/less-1.7.3.min.js"/>
