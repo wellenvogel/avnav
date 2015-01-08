@@ -24,5 +24,6 @@
     <orderEntry type="jdk" jdkName="Android API 14 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="marineapi-0.8.1" level="project" />
+    <orderEntry type="library" name="xwalk_core_library_java_app_part" level="project" />
   </component>
 </module>

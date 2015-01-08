@@ -53,6 +53,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private CheckBox cbIpNmea;
     private CheckBox cbIpAis;
     private RadioButton rbServer;
+    private RadioButton rbCrosswalk;
     private View externalSettings;
     private ImageView gpsIcon;
     private ImageView extIcon;
@@ -249,6 +250,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         cbIpNmea=(CheckBox)findViewById(R.id.cbIpNmea);
         cbIpAis=(CheckBox)findViewById(R.id.cbIpAis);
         rbServer =(RadioButton)findViewById(R.id.rbRunExternal);
+        rbCrosswalk=(RadioButton)findViewById(R.id.rbModeXwalk);
         externalSettings=findViewById(R.id.lExternalGps);
         gpsIcon=(ImageView)findViewById(R.id.iconGps);
         extIcon=(ImageView)findViewById(R.id.iconIp);
@@ -306,6 +308,9 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                 Intent intent;
                 if (rbServer.isChecked()){
                     intent = new Intent(context, WebServerActivity.class);
+                }
+                else if (rbCrosswalk.isChecked()) {
+                    intent = new Intent(context, Xwalk.class);
                 }
                 else {
                     intent = new Intent(context, WebViewActivity.class);

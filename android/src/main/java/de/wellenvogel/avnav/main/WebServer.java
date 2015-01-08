@@ -176,7 +176,16 @@ public class WebServer {
         private HttpService httpService;
 
         Listener() throws IOException {
-            serversocket = new ServerSocket(serverPort);
+            serversocket = new ServerSocket();
+            try {
+                serversocket.setReuseAddress(true);
+                serversocket.bind(new InetSocketAddress(serverPort));
+            }catch (IOException ex){
+                try {
+                    serversocket.close();
+                }catch (IOException i){}
+                throw ex;
+            }
             params = new BasicHttpParams();
             params
                     .setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 5000)

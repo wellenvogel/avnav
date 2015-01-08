@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.webkit.*;
 import android.widget.Toast;
@@ -115,6 +116,48 @@ public class WebViewActivityBase extends Activity {
         public int getLength(){
             return length;
         }
+    }
+
+    WebResourceResponse handleRequest(View view,String url){
+        if (url.startsWith(URLPREFIX)){
+            try {
+                String fname=url.substring(URLPREFIX.length());
+                if (fname.startsWith(NAVURL)){
+                    return handleNavRequest(url);
+                }
+                if (fname.startsWith(CHARTPREFIX)){
+                    return handleChartRequest(fname);
+                }
+                InputStream is=assetManager.open(fname);
+                return new WebResourceResponse(mimeType(fname),"",is);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        else {
+            AvnLog.d("AvNav", "external request " + url);
+            return null;
+        }
+    }
+
+    String getStartPage(){
+        InputStream input;
+        String htmlPage=null;
+        try {
+            input = assetManager.open("viewer/avnav_viewer.html");
+
+            int size = input.available();
+            byte[] buffer = new byte[size];
+            input.read(buffer);
+            input.close();
+            // byte buffer into a string
+            htmlPage = new String(buffer);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return htmlPage;
     }
 
     ExtendedWebResourceResponse handleNavRequest(String url){

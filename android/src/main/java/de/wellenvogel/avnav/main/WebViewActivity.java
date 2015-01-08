@@ -38,21 +38,7 @@ public class WebViewActivity extends WebViewActivityBase {
             WebView.setWebContentsDebuggingEnabled(true);
         }
         */
-        String htmlPage = null;
-        InputStream input;
-        try {
-            input = assetManager.open("viewer/avnav_viewer.html");
-
-            int size = input.available();
-            byte[] buffer = new byte[size];
-            input.read(buffer);
-            input.close();
-            // byte buffer into a string
-            htmlPage = new String(buffer);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String htmlPage = getStartPage();
         webView.setWebViewClient(new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 Toast.makeText(activity, "Oh no! " + description, Toast.LENGTH_SHORT).show();
@@ -60,26 +46,9 @@ public class WebViewActivity extends WebViewActivityBase {
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-                if (url.startsWith(URLPREFIX)){
-                    try {
-                        String fname=url.substring(URLPREFIX.length());
-                        if (fname.startsWith(NAVURL)){
-                            return handleNavRequest(url);
-                        }
-                        if (fname.startsWith(CHARTPREFIX)){
-                            return handleChartRequest(fname);
-                        }
-                        InputStream is=assetManager.open(fname);
-                        return new WebResourceResponse(mimeType(fname),"",is);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }
-                else {
-                    AvnLog.d("AvNav", "external request " + url);
-                    return super.shouldInterceptRequest(view, url);
-                }
+                WebResourceResponse rt=handleRequest(view,url);
+                if (rt==null) return super.shouldInterceptRequest(view, url);
+                return rt;
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
