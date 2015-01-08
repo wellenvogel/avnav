@@ -30,6 +30,28 @@
                         android:text="..."
                         android:id="@+id/btSelectDir" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"/>
         </LinearLayout>
+        <RadioGroup android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                        android:text="@string/runMode"
+                        android:id="@+id/textView6" android:paddingLeft="5dp" android:layout_marginLeft="10dp"/>
+                <RadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/runNormal"
+                        android:id="@+id/rbRunNormal" android:checked="true"/>
+                <RadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/useExtBrowser"
+                        android:id="@+id/rbRunExternal" android:layout_marginLeft="10dp"/>
+                <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                             android:text="@string/runCrosswalk" android:id="@+id/rbModeXwalk"
+                             android:layout_marginLeft="10dp"/>
+        </RadioGroup>
         <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="fill_parent"
@@ -40,11 +62,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" android:layout_weight="0" android:rowOrderPreserved="false"
                         >
-                        <CheckBox
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/useExttBrowser"
-                                android:id="@+id/cbExternalServer"/>
                         <CheckBox
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"

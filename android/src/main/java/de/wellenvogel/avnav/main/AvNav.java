@@ -3,12 +3,10 @@ package de.wellenvogel.avnav.main;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.*;
-import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.*;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -54,7 +52,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private CheckBox cbInternalGps;
     private CheckBox cbIpNmea;
     private CheckBox cbIpAis;
-    private CheckBox cbServer;
+    private RadioButton rbServer;
     private View externalSettings;
     private ImageView gpsIcon;
     private ImageView extIcon;
@@ -250,7 +248,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         cbInternalGps=(CheckBox)findViewById(R.id.cbInternalGps);
         cbIpNmea=(CheckBox)findViewById(R.id.cbIpNmea);
         cbIpAis=(CheckBox)findViewById(R.id.cbIpAis);
-        cbServer=(CheckBox)findViewById(R.id.cbExternalServer);
+        rbServer =(RadioButton)findViewById(R.id.rbRunExternal);
         externalSettings=findViewById(R.id.lExternalGps);
         gpsIcon=(ImageView)findViewById(R.id.iconGps);
         extIcon=(ImageView)findViewById(R.id.iconIp);
@@ -306,7 +304,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
 
                 startGpsService();
                 Intent intent;
-                if (cbServer.isChecked()){
+                if (rbServer.isChecked()){
                     intent = new Intent(context, WebServerActivity.class);
                 }
                 else {

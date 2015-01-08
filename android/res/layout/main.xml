@@ -30,6 +30,30 @@
                         android:text="..."
                         android:id="@+id/btSelectDir" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"/>
         </LinearLayout>
+
+                <RadioGroup android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                                android:text="@string/runMode"
+                                android:id="@+id/textView6" android:paddingLeft="5dp" android:layout_marginLeft="10dp"/>
+                        <RadioButton
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/runNormal"
+                                android:id="@+id/rbRunNormal" android:checked="true"/>
+                        <RadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/useExtBrowser"
+                        android:id="@+id/rbRunExternal" android:layout_marginLeft="10dp"/>
+                        <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                     android:text="@string/runCrosswalk" android:id="@+id/rbModeXwalk"
+                                     android:layout_marginLeft="10dp"/>
+                </RadioGroup>
+
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
@@ -43,11 +67,6 @@
                         <CheckBox
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/useExttBrowser"
-                                android:id="@+id/cbExternalServer"/>
-                        <CheckBox
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
                                 android:text="@string/enableDemoLabel"
                                 android:textAppearance="?android:attr/textAppearanceMedium"
                                 android:id="@+id/cbShowDemoCharts"  android:checked="true"
@@ -57,7 +76,7 @@
                                   android:text="@string/labelInternalGps"
                                   android:textAppearance="?android:attr/textAppearanceMedium" android:id="@+id/cbInternalGps"
                                   android:checked="true"
-                                  />
+                                  android:layout_marginLeft="10dp"/>
                 </LinearLayout>
                 <LinearLayout
                         android:orientation="horizontal"
@@ -134,17 +153,19 @@
                         android:text="@string/startGps"
                         android:id="@+id/btGps"
                         android:layout_marginLeft="5dp"
-                        android:layout_marginRight="5dp" android:textAppearance="?android:attr/textAppearanceLarge"
-                        android:layout_marginTop="5dp" android:layout_marginBottom="5dp"/>
+                        android:layout_marginRight="5dp"
+                        android:layout_marginTop="5dp" android:layout_marginBottom="5dp"
+                        style="@android:style/TextAppearance.DeviceDefault.Large"/>
         </LinearLayout>
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent">
+                android:layout_height="fill_parent" style="@android:style/TextAppearance.DeviceDefault.Large">
                 <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/exitText"
                         android:id="@+id/btExit" android:enabled="true"
-                        android:layout_weight="1" android:textSize="50dp"
-                        android:layout_marginLeft="10dp" android:layout_marginRight="10dp"/>
+                        android:layout_weight="1"
+                        android:layout_marginLeft="10dp" android:layout_marginRight="10dp"
+                        style="@android:style/TextAppearance.DeviceDefault.Large"/>
                 <FrameLayout
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent" android:layout_alignParentBottom="true"
@@ -156,7 +177,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/startText"
                     android:id="@+id/btStart" android:enabled="true"
-                    android:layout_weight="1" android:textSize="50dp" android:layout_marginLeft="10dp"
-                    android:layout_marginRight="5dp"/>
+                    android:layout_weight="1" android:layout_marginLeft="10dp"
+                    android:layout_marginRight="5dp" style="@android:style/TextAppearance.DeviceDefault.Large"/>
         </LinearLayout>
 </LinearLayout>
