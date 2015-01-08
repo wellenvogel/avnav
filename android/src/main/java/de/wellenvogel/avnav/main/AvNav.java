@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.main;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.*;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -39,6 +40,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     public static final String IPAISLIFETIME="ip.aisLifetime";
     public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
     public static final String PREFNAME="AvNav";
+    public static final String XWALKAPP="org.xwalk.core";
 
     public static final String LOGPRFX="avnav";
     private Button btStart;
@@ -65,6 +67,8 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     SharedPreferences sharedPrefs ;
     private MediaScannerConnection mediaConnection;
     private long timerSequence=1;
+    private int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+    private boolean firstStart=true;
 
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -163,6 +167,18 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         }
     }
 
+    private boolean isAppInstalled(String packageName) {
+        PackageManager pm = getPackageManager();
+        boolean installed = false;
+        try {
+            pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+            installed = true;
+        } catch (PackageManager.NameNotFoundException e) {
+            installed = false;
+        }
+        return installed;
+    }
+
     private class TimerRunnable implements Runnable{
         long seq=1;
         TimerRunnable(long seq){
@@ -257,6 +273,9 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         txIp=(EditText)findViewById(R.id.edIP);
         txPort=(EditText)findViewById(R.id.edPort);
         sharedPrefs= getSharedPreferences(PREFNAME,Context.MODE_PRIVATE);
+        if (currentapiVersion < 19 && isAppInstalled(XWALKAPP) && firstStart){
+            rbCrosswalk.setChecked(true);
+        }
         if (gpsService == null) {
             Intent intent = new Intent(AvNav.this, GpsService.class);
             intent.putExtra(GpsService.PROP_CHECKONLY, true);
@@ -362,12 +381,13 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         mediaConnection=new MediaScannerConnection(this,this);
         mediaConnection.connect();
         if (mediaUpdater == null) mediaUpdater=new MediaUpdateHandler();
-
+        firstStart=false;
 
     }
 
     @Override
     protected void onDestroy() {
+        stopGpsService(true);
         super.onDestroy();
         if (mediaConnection != null){
             mediaConnection.disconnect();
@@ -392,6 +412,15 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     protected void onStart() {
         super.onStart();
         startTimer();
+        //if we have crosswalk available
+        //show the selection for it
+        //make this the default before KitKat
+        if (isAppInstalled(XWALKAPP)){
+            rbCrosswalk.setVisibility(View.VISIBLE);
+        }
+        else {
+            rbCrosswalk.setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
