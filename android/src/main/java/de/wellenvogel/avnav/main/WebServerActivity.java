@@ -1,30 +1,26 @@
 package de.wellenvogel.avnav.main;
 
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.view.WindowManager;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Created by andreas on 04.12.14.
  */
 public class WebServerActivity extends WebViewActivityBase {
     private WebView webView;
-    private Button stopServer;
+    private Button btServer;
+    private Button btCancel;
+    private Button btLaunch;
     private TextView txServer;
     private static final String LOGPRFX="Avnav:webserver";
     private boolean serverRunning=false;
@@ -34,13 +30,32 @@ public class WebServerActivity extends WebViewActivityBase {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.server);
-        stopServer=(Button) findViewById(R.id.btStopServer);
+        btServer =(Button) findViewById(R.id.btWebServer);
+        btCancel=(Button)findViewById(R.id.btBack);
+        btLaunch=(Button)findViewById(R.id.btLaunchBrowser);
         txServer=(TextView)findViewById(R.id.txServer);
-        stopServer.setOnClickListener(new View.OnClickListener() {
+        btServer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopWebServer();
+                if (serverRunning){
+                    stopWebServer();
+                }
+                else {
+                    startWebServer();
+                }
+
+            }
+        });
+        btCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 finish();
+            }
+        });
+        btLaunch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchBrowser();
             }
         });
         webServer=new WebServer(this);
@@ -51,13 +66,36 @@ public class WebServerActivity extends WebViewActivityBase {
     @Override
     protected void onStart() {
         super.onStart();
-        startWebServer();
+        if (serverRunning){
+            btServer.setText(R.string.stopServer);
+            btLaunch.setEnabled(true);
+        }
+        else {
+            btServer.setText(R.string.startServer);
+            btLaunch.setEnabled(false);
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         stopWebServer();
+    }
+
+    private void launchBrowser(){
+        if (! serverRunning) return;
+        int port=webServer.getPort();
+        String start="http://localhost:"+port+"/viewer/avnav_viewer.html";
+        AvnLog.d(LOGPRFX,"start browser with "+start);
+        try {
+            Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(start));
+            startActivity(Intent.createChooser(myIntent, "Chose browser"));
+
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, "No application can handle this request."
+                    + " Please install a webbrowser",  Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
     }
 
     private void startWebServer(){
@@ -73,17 +111,9 @@ public class WebServerActivity extends WebViewActivityBase {
         AvnLog.d(LOGPRFX,"starting webserver");
         int port=webServer.getPort();
         txServer.setText("server running at port "+port);
-        String start="http://localhost:"+port+"/viewer/avnav_viewer.html";
-        AvnLog.d(LOGPRFX,"start browser with "+start);
-        try {
-            Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(start));
-            startActivity(Intent.createChooser(myIntent, "Chose browser"));
-            //startActivity(myIntent);
-        } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, "No application can handle this request."
-                    + " Please install a webbrowser",  Toast.LENGTH_LONG).show();
-            e.printStackTrace();
-        }
+        btLaunch.setEnabled(true);
+        btServer.setText(R.string.stopServer);
+
     }
 
     private void stopWebServer(){
@@ -92,6 +122,8 @@ public class WebServerActivity extends WebViewActivityBase {
         AvnLog.d(LOGPRFX,"stopping webserver");
         webServer.stopServer();
         txServer.setText("server stopped");
+        btLaunch.setEnabled(false);
+        btServer.setText(R.string.startServer);
     }
 
 }

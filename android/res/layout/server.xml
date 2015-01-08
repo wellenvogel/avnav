@@ -2,22 +2,35 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
               android:layout_width="match_parent"
-              android:layout_height="match_parent" android:weightSum="1">
+              android:layout_height="match_parent" android:weightSum="1"
+        >
 
     <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Large Text"
-            android:id="@+id/txServer"/>
+            android:id="@+id/txServer" android:layout_weight="1"/>
     <LinearLayout
             android:orientation="horizontal"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
+            android:layout_height="wrap_content" android:layout_weight="0">
+        <Button style="@android:style/TextAppearance.DeviceDefault.Large" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:text="@string/launchBrowser" android:id="@+id/btLaunchBrowser"
+                android:layout_weight="1" android:layout_gravity="right"/>
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" android:layout_weight="0" android:layout_gravity="bottom">
+        <Button style="@android:style/TextAppearance.DeviceDefault.Large" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:text="@string/cancel" android:id="@+id/btBack"
+                android:layout_weight="1" android:layout_gravity="bottom"/>
         <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/stopServer"
-                android:id="@+id/btStopServer" android:layout_weight="1" android:layout_gravity="bottom"/>
+                android:text="@string/startServer"
+                android:id="@+id/btWebServer" android:layout_weight="1" android:layout_gravity="bottom"
+                style="@android:style/TextAppearance.DeviceDefault.Large"/>
     </LinearLayout>
 </LinearLayout>
