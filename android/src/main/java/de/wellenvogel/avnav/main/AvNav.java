@@ -162,8 +162,10 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         }
         if (unbind) {
             Intent intent = new Intent(context, GpsService.class);
-            unbindService(mConnection);
-            stopService(intent);
+            try {
+                unbindService(mConnection);
+                stopService(intent);
+            }catch (Exception e){}
         }
     }
 
