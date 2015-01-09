@@ -3,14 +3,15 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent" android:weightSum="1"
-        >
+              android:paddingLeft="10dp" android:paddingRight="10dp">
 
     <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Large Text"
-            android:id="@+id/txServer" android:layout_weight="1"/>
+            android:id="@+id/txServer" android:layout_weight="1" android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp" android:layout_marginRight="5dp" android:layout_marginBottom="5dp"/>
     <LinearLayout
             android:orientation="horizontal"
             android:layout_width="fill_parent"

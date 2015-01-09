@@ -1,14 +1,12 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.*;
 import android.content.res.AssetManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
@@ -90,9 +88,10 @@ public class WebViewActivityBase extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.webview);
-        workdir=getIntent().getStringExtra(AvNav.WORKDIR);
+        SharedPreferences prefs=getSharedPreferences(AvNav.PREFNAME,Context.MODE_PRIVATE);
+        workdir=prefs.getString(AvNav.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
         workBase=new File(workdir);
-        showDemoCharts=getIntent().getBooleanExtra(AvNav.SHOWDEMO,true);
+        showDemoCharts=prefs.getBoolean(AvNav.SHOWDEMO,false);
         ownMimeMap.put("js","text/javascript");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();

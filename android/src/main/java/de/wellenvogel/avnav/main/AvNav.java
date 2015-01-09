@@ -336,8 +336,6 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                 else {
                     intent = new Intent(context, WebViewActivity.class);
                 }
-                intent.putExtra(WORKDIR, textWorkdir.getText().toString());
-                intent.putExtra(SHOWDEMO, cbShowDemo.isChecked());
                 startActivity(intent);
             }
         });

@@ -32,4 +32,6 @@
     <string name="runCrosswalk">Crosswalk</string>
     <string name="launchBrowser">Start Browser</string>
     <string name="startServer">Start</string>
+    <string name="notifyTitle">AvNav</string>
+    <string name="notifyText">WebServer running on port</string>
 </resources>

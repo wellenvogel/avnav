@@ -1,6 +1,10 @@
 package de.wellenvogel.avnav.main;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,6 +29,7 @@ public class WebServerActivity extends WebViewActivityBase {
     private static final String LOGPRFX="Avnav:webserver";
     private boolean serverRunning=false;
     private WebServer webServer;
+    private static final int NOTIFY_ID=1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,9 +63,37 @@ public class WebServerActivity extends WebViewActivityBase {
                 launchBrowser();
             }
         });
-        webServer=new WebServer(this);
+        if (webServer == null) webServer=new WebServer(this);
         startWebServer();
 
+    }
+    private void handleNotification(){
+        if (serverRunning) {
+            Notification.Builder notificationBuilder =
+                    new Notification.Builder(this)
+                            .setSmallIcon(R.drawable.sailboat)
+                            .setContentTitle(getResources().getString(R.string.notifyTitle))
+                            .setContentText(getResources().getString(R.string.notifyText) + webServer.getPort());
+            Intent notificationIntent = new Intent(this, Dummy.class);
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                    notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            notificationBuilder.setContentIntent(contentIntent);
+
+
+
+            NotificationManager mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            Notification not=notificationBuilder.getNotification();
+            not.flags|=Notification.FLAG_ONGOING_EVENT;
+            mNotificationManager.notify(NOTIFY_ID,
+                    not);
+        }
+        else{
+            NotificationManager mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.cancel(NOTIFY_ID);
+        }
     }
 
     @Override
@@ -74,6 +107,7 @@ public class WebServerActivity extends WebViewActivityBase {
             btServer.setText(R.string.startServer);
             btLaunch.setEnabled(false);
         }
+        handleNotification();
     }
 
     @Override
@@ -113,7 +147,7 @@ public class WebServerActivity extends WebViewActivityBase {
         txServer.setText("server running at port "+port);
         btLaunch.setEnabled(true);
         btServer.setText(R.string.stopServer);
-
+        handleNotification();
     }
 
     private void stopWebServer(){
@@ -124,6 +158,7 @@ public class WebServerActivity extends WebViewActivityBase {
         txServer.setText("server stopped");
         btLaunch.setEnabled(false);
         btServer.setText(R.string.startServer);
+        handleNotification();
     }
 
 }
