@@ -17,6 +17,11 @@
                 android:id="@+id/txVersion" android:text="0.0.1"/>
     </LinearLayout>
     <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Xwalk"
+            android:id="@+id/txXwalk"/>
+    <TextView
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:text="test"

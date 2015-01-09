@@ -30,6 +30,9 @@ public class Info extends Activity {
         }
         setText("version.txt",R.id.txVersion);
         setText("info.html",R.id.txInfo);
+        TextView xwalk=(TextView)findViewById(R.id.txXwalk);
+        boolean xw=AvNav.isAppInstalled(this,AvNav.XWALKAPP,AvNav.XWALKVERSION);
+        xwalk.setText("XWALK V "+AvNav.XWALKVERSION+" ("+(xw?"installed":"not installed")+")");
         TextView view=(TextView)findViewById(R.id.txInfo);
         view.setMovementMethod(LinkMovementMethod.getInstance());
     }

@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.main;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.*;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
@@ -41,6 +42,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
     public static final String PREFNAME="AvNav";
     public static final String XWALKAPP="org.xwalk.core";
+    public static final String XWALKVERSION="10.39.235.15";
 
     public static final String LOGPRFX="avnav";
     private Button btStart;
@@ -169,12 +171,12 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         }
     }
 
-    private boolean isAppInstalled(String packageName) {
-        PackageManager pm = getPackageManager();
+    public static boolean isAppInstalled(Context ctx,String packageName, String version) {
+        PackageManager pm = ctx.getPackageManager();
         boolean installed = false;
         try {
-            pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
-            installed = true;
+            PackageInfo pi=pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+            if (pi.versionName.equals(version)) installed = true;
         } catch (PackageManager.NameNotFoundException e) {
             installed = false;
         }
@@ -275,7 +277,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         txIp=(EditText)findViewById(R.id.edIP);
         txPort=(EditText)findViewById(R.id.edPort);
         sharedPrefs= getSharedPreferences(PREFNAME,Context.MODE_PRIVATE);
-        if (currentapiVersion < 19 && isAppInstalled(XWALKAPP) && firstStart){
+        if (currentapiVersion < 19 && isAppInstalled(this,XWALKAPP,XWALKVERSION) && firstStart){
             rbCrosswalk.setChecked(true);
         }
         if (gpsService == null) {
@@ -415,7 +417,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         //if we have crosswalk available
         //show the selection for it
         //make this the default before KitKat
-        if (isAppInstalled(XWALKAPP)){
+        if (isAppInstalled(this,XWALKAPP,XWALKVERSION)){
             rbCrosswalk.setVisibility(View.VISIBLE);
         }
         else {
