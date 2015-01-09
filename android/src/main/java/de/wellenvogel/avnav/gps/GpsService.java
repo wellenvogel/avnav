@@ -1,5 +1,8 @@
 package de.wellenvogel.avnav.gps;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -10,7 +13,9 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import de.wellenvogel.avnav.main.AvNav;
+import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
+import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -71,6 +76,7 @@ public class GpsService extends Service  {
     private IMediaUpdater mediaUpdater;
     private boolean trackLoading=true; //if set to true - do not write the track
     private long loadSequence=1;
+    private static final int NOTIFY_ID=1;
     //location data
 
 
@@ -137,12 +143,41 @@ public class GpsService extends Service  {
         }
     }
 
+    private void handleNotification(boolean start){
+        if (start) {
+            Notification.Builder notificationBuilder =
+                    new Notification.Builder(this)
+                            .setSmallIcon(R.drawable.sailboat)
+                            .setContentTitle(getResources().getString(R.string.notifyTitle))
+                            .setContentText(getResources().getString(R.string.notifyText));
+            Intent notificationIntent = new Intent(this, Dummy.class);
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                    notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            notificationBuilder.setContentIntent(contentIntent);
+
+
+
+            NotificationManager mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            Notification not=notificationBuilder.getNotification();
+            not.flags|=Notification.FLAG_ONGOING_EVENT;
+            mNotificationManager.notify(NOTIFY_ID,
+                    not);
+        }
+        else{
+            NotificationManager mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.cancel(NOTIFY_ID);
+        }
+    }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
         if (intent != null && intent.getBooleanExtra(PROP_CHECKONLY,false)){
             return Service.START_REDELIVER_INTENT;
         }
+        handleNotification(true);
         String trackdir=intent.getStringExtra(PROP_TRACKDIR);
         //we rely on the activity to check before...
         File newTrackDir=new File(trackdir);
@@ -248,6 +283,7 @@ public class GpsService extends Service  {
     };
 
     private void timerAction(){
+            handleNotification(true);
             checkTrackWriter();
             if (internalProvider != null) internalProvider.check();
             if (externalProvider != null) externalProvider.check();
@@ -283,6 +319,7 @@ public class GpsService extends Service  {
         loadSequence++;
         trackDir=null;
         isRunning=false;
+        handleNotification(false);
         AvnLog.d(LOGPRFX,"service stopped");
     }
 
@@ -296,7 +333,6 @@ public class GpsService extends Service  {
     {
         super.onDestroy();
         handleStop();
-
     }
 
 

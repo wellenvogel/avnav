@@ -39,6 +39,7 @@ public class Xwalk extends WebViewActivityBase {
             XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
         }
         mXwalkView.load(URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php", getStartPage());
+
     }
     @Override
     protected void onPause() {

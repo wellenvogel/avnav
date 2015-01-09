@@ -33,5 +33,5 @@
     <string name="launchBrowser">Start Browser</string>
     <string name="startServer">Start</string>
     <string name="notifyTitle">AvNav</string>
-    <string name="notifyText">WebServer running on port</string>
+    <string name="notifyText">AvNav running</string>
 </resources>
