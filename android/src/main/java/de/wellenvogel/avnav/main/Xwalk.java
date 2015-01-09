@@ -6,10 +6,7 @@ import android.os.Bundle;
 import android.view.WindowManager;
 import android.webkit.WebResourceResponse;
 import de.wellenvogel.avnav.util.AvnLog;
-import org.xwalk.core.SharedXWalkView;
-import org.xwalk.core.XWalkPreferences;
-import org.xwalk.core.XWalkResourceClient;
-import org.xwalk.core.XWalkView;
+import org.xwalk.core.*;
 
 /**
  * Created by andreas on 08.01.15.

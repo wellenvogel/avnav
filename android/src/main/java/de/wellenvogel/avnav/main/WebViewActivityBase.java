@@ -17,6 +17,7 @@ import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.xwalk.core.XWalkActivity;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -27,7 +28,7 @@ import java.util.HashMap;
 /**
  * Created by andreas on 06.01.15.
  */
-public class WebViewActivityBase extends Activity {
+public class WebViewActivityBase extends XWalkActivity {
     protected static final String URLPREFIX="file://android_asset/";
     protected static final String NAVURL="viewer/avnav_navi.php";
     protected static final String CHARTPREFIX="charts";
