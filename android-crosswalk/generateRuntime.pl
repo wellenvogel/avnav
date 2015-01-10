@@ -7,6 +7,7 @@ use strict;
 use File::Basename;
 use File::Copy 'copy';
 use Cwd 'abs_path';
+use Getopt::Long;
 my $PACKAGE="de.wellenvogel.xwalk";
 my $NAME="AvNavXwalk";
 my $BUILDNAME="Xwalk"; #the cw tooling has some strange idea how to create this from the App name
@@ -22,6 +23,8 @@ sub usage(){
   print "       versionString must match the version in the app and should be equal to the crosswalk version\n";
   print "       will be retrieved from the crosswalk tooling if not provided\n";
   print "       version must count up from the last delivery\n";
+  print "       --keystore-passcode for the android build keytore password\n";
+  print "       --keystore-alias-passcode for the key allias password\n";
 }
 
 sub err($;$){
@@ -33,6 +36,29 @@ sub err($;$){
 sub wLog($){
   print "LOG: ".$_[0]."\n";
 }
+
+sub replaceTemplates($$$){
+  my ($in,$out,$vals)=@_;
+  open(my $h,"<",$in) or err("unable to read $in");
+  open(my $o,">",$out) or err("unable to write $out");
+  while (<$h>){
+    foreach my $k (keys(%$vals)){
+      my $v=$vals->{$k};
+      s/#$k#/$v/g;
+    }
+    print $o $_;
+  }
+  close($h);
+  close($o);
+}
+
+my $keystorepass;
+my $keyaliaspass;
+
+my %options=("keystore-passcode=s" =>\$keystorepass,
+  "keystore-alias-passcode=s" =>\$keyaliaspass);
+
+GetOptions(%options) or err("invalid option",1);
 
 if (scalar(@ARGV) < 2) {
   err("missing parameters",1);
@@ -77,13 +103,8 @@ my $mf="$appbase/manifest.json";
 open(my $h,"<",$MANIFEST) or err("unable to read $MANIFEST");
 open(my $o,">",$mf) or err("unable to write $mf");
 wLog("writing $mf, name=$NAME, version=$versionString");
-while (<$h>){
-  s/#NAME#/$NAME/g;
-  s/#VERSION#/$versionString/g;
-  print $o $_;
-}
-close($h);
-close($o);
+my %repl=('NAME'=>$NAME,'VERSION'=>$versionString);
+replaceTemplates($MANIFEST,$mf,\%repl);
 my $cmbase="python $cmd --name=$NAME --package=$PACKAGE --mode=embedded --app-root=$appbase --app-local-path=index.html --app-versionCodeBase=$version --project-only";
 for my $arch ('arm','x86'){
   if (-d $arch){
@@ -99,7 +120,7 @@ for my $arch ('arm','x86'){
     my $prop=$archbase."/local.properties";
     open(my $h,"<",$CONFIG) or err("unable to read $CONFIG");
     open(my $o,">>",$prop) or err("unable to append to $prop");
-    wLog("using configuration from $CONFIG, appending key entries to $prop");
+    wLog("using conkey.store.passwordfiguration from $CONFIG, appending key entries to $prop");
     while (<$h>){
       next if $_ !~ /^ *key/;
       print $o $_;
@@ -109,9 +130,17 @@ for my $arch ('arm','x86'){
     if (-f $CUSTOMERULE) {
       my $of=$archbase."/".$CUSTOMERULE;
       wLog("using $CUSTOMERULE");
-      copy($CUSTOMERULE,$of) or err("copy $CUSTOMERULE to $of failed");
+      my %repl=('ARCH'=>$arch);
+      replaceTemplates($CUSTOMERULE,$of,\%repl);
     }
-    my $buildcmd="cd $archbase && ant release";
+    my $antoptions="";
+    if ($keystorepass) {
+      $antoptions.=" -Dkey.store.password=$keystorepass";
+    }
+    if ($keyaliaspass) {
+      $antoptions.=" -Dkey.alias.password=$keyaliaspass";
+    }
+    my $buildcmd="cd $archbase && ant $antoptions release";
     wLog("building apk for $arch with command $buildcmd");
     system($buildcmd);
     err("building for $arch failed") if ($?);
