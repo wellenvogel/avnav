@@ -41,7 +41,8 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     public static final String IPAISLIFETIME="ip.aisLifetime";
     public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
     public static final String PREFNAME="AvNav";
-    public static final String XWALKAPP="org.xwalk.core";
+    public static final String XWALKORIG="org.xwalk.core";
+    public static final String XWALKAPP="de.wellenvogel.xwalk";
     public static final String XWALKVERSION="10.39.235.15";
 
     public static final String LOGPRFX="avnav";
