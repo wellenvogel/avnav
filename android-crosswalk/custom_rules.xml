@@ -10,7 +10,7 @@
 		<property name="out.packaged.file" 
 		          location="${out.absolute.dir}/${ant.project.name}-${themanifest.manifest.android:versionName}-#ARCH#-unsigned.apk" />
 		<property name="out.final.file" 
-		          location="${out.absolute.dir}/${ant.project.name}-${themanifest.manifest.android:versionName}_#ARCH#.apk" />
+		          location="${out.absolute.dir}/${themanifest.manifest.application.android:label}-${themanifest.manifest.android:versionName}_#ARCH#.apk" />
 	</target>
 	<target name="-set-release-mode"
 		 depends="rename-release-with-version-number,android_rules.-set-release-mode">
