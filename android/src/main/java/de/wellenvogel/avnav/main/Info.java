@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.io.InputStream;
  * Created by andreas on 30.12.14.
  */
 public class Info extends Activity {
+    private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,8 +34,18 @@ public class Info extends Activity {
         setText("version.txt",R.id.txVersion);
         setText("info.html",R.id.txInfo);
         TextView xwalk=(TextView)findViewById(R.id.txXwalk);
-        boolean xw=AvNav.isAppInstalled(this,AvNav.XWALKAPP,AvNav.XWALKVERSION);
-        xwalk.setText("XWALK V "+AvNav.XWALKVERSION+" ("+(xw?"installed":"not installed")+")");
+        boolean xw=AvNav.isXwalRuntimeInstalled(this);
+        xwalk.setText("XWALK V "+AvNav.XWALKVERSION+" \n("+(xw?"installed":"not installed")+")");
+        Button xwalxDl=(Button)findViewById(R.id.btDownloadXwalk);
+        if (xw) xwalxDl.setVisibility(View.INVISIBLE);
+        else xwalxDl.setVisibility(View.VISIBLE);
+        xwalxDl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
+                        getString(R.string.xwalkNotFoundText)+AvNav.XWALKVERSION,false);
+            }
+        });
         TextView view=(TextView)findViewById(R.id.txInfo);
         view.setMovementMethod(LinkMovementMethod.getInstance());
     }

@@ -34,4 +34,11 @@
     <string name="startServer">Start</string>
     <string name="notifyTitle">AvNav</string>
     <string name="notifyText">AvNav running</string>
+    <string name="xwalkDownloadFromUrl">Apk Download</string>
+    <string name="xwalkDownloadFromPlaystore">Google Play</string>
+    <string name="xwalkNotFoundTitle">AvNavXwalk not found</string>
+    <string name="xwalkNotFoundText">The AvNavXwalk runtime is not installed.
+        Do you want to install it now?
+        Required runtime version=</string>
+    <string name="btXwalDownload">Download</string>
 </resources>

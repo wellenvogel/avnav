@@ -13,12 +13,19 @@ import org.xwalk.core.*;
  */
 public class Xwalk extends WebViewActivityBase {
     private SharedXWalkView mXwalkView;
+    private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.xwalkold);
-        mXwalkView = new SharedXWalkView(this,this);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        mXwalkView = new SharedXWalkView(this, null, new SharedXWalkExceptionHandler() {
+            @Override
+            public void onSharedLibraryNotFound() {
+                downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
+                        getString(R.string.xwalkNotFoundText)+AvNav.XWALKVERSION,true);
+            }
+        });
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         ActionBar a=getActionBar();
         if (a != null) a.hide();

@@ -18,7 +18,7 @@
         <activity android:name="de.wellenvogel.avnav.main.AvNav"
                   android:label="@string/appName"
                   android:windowSoftInputMode="stateHidden"
-                  android:icon="@drawable/sailboatr">
+                  >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -34,6 +34,7 @@
         </activity>
         <activity android:name=".Info" android:label="Info"/>
         <activity android:name=".Xwalk"
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
                   android:configChanges="orientation|screenSize"/>
         <activity android:name=".Dummy">
             <intent-filter>

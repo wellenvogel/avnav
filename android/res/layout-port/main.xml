@@ -13,6 +13,12 @@
                 android:text="@string/selectDirLabel"
                 android:id="@+id/textView" android:layout_weight="0" android:autoText="false"
                 android:gravity="bottom|left" android:layout_marginLeft="10dp"/>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                android:text="@string/runMode"
+                android:id="@+id/textView6" android:paddingLeft="5dp" android:layout_marginLeft="10dp"/>
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
@@ -32,12 +38,6 @@
         </LinearLayout>
         <RadioGroup android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:orientation="horizontal">
-                <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
-                        android:text="@string/runMode"
-                        android:id="@+id/textView6" android:paddingLeft="5dp" android:layout_marginLeft="10dp"/>
                 <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -153,7 +153,7 @@
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
                         android:text="@string/gpsServiceStopped"
                         android:id="@+id/txService" android:layout_gravity="center_vertical" android:layout_weight="1"
                         android:gravity="center_vertical|center_horizontal" android:padding="8dp"/>

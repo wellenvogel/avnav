@@ -40,7 +40,11 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     public static final String IPPOSAGE="ip.posAge";
     public static final String IPAISLIFETIME="ip.aisLifetime";
     public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
+    public static final String RUNMODE="runmode"; //normal,server,xwalk
     public static final String PREFNAME="AvNav";
+
+
+
     public static final String XWALKORIG="org.xwalk.core";
     public static final String XWALKAPP="de.wellenvogel.xwalk";
     public static final String XWALKVERSION="10.39.235.15";
@@ -59,6 +63,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private CheckBox cbIpAis;
     private RadioButton rbServer;
     private RadioButton rbCrosswalk;
+    private RadioButton rbNormal;
     private View externalSettings;
     private ImageView gpsIcon;
     private ImageView extIcon;
@@ -72,6 +77,8 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private long timerSequence=1;
     private int currentapiVersion = android.os.Build.VERSION.SDK_INT;
     private boolean firstStart=true;
+
+    private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
 
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -183,6 +190,9 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         }
         return installed;
     }
+    public static boolean isXwalRuntimeInstalled(Context ctx){
+        return isAppInstalled(ctx,XWALKAPP,XWALKVERSION);
+    }
 
     private class TimerRunnable implements Runnable{
         long seq=1;
@@ -272,19 +282,32 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         cbIpAis=(CheckBox)findViewById(R.id.cbIpAis);
         rbServer =(RadioButton)findViewById(R.id.rbRunExternal);
         rbCrosswalk=(RadioButton)findViewById(R.id.rbModeXwalk);
+        rbNormal=(RadioButton)findViewById(R.id.rbRunNormal);
         externalSettings=findViewById(R.id.lExternalGps);
         gpsIcon=(ImageView)findViewById(R.id.iconGps);
         extIcon=(ImageView)findViewById(R.id.iconIp);
         txIp=(EditText)findViewById(R.id.edIP);
         txPort=(EditText)findViewById(R.id.edPort);
         sharedPrefs= getSharedPreferences(PREFNAME,Context.MODE_PRIVATE);
-        if (currentapiVersion < 19 && isAppInstalled(this,XWALKAPP,XWALKVERSION) && firstStart){
-            rbCrosswalk.setChecked(true);
+        String mode=sharedPrefs.getString(RUNMODE,"");
+        if (mode.equals("")) {
+            //never set before
+            if (currentapiVersion < 19 && firstStart) {
+                if (! isXwalRuntimeInstalled(this)){
+                    downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundText),
+                            getString(R.string.xwalkNotFoundText)+AvNav.XWALKVERSION,false);
+                }
+                else {
+                    rbCrosswalk.setChecked(true);
+                }
+            }
+        }
+        else {
+            setButtonsFromMode(mode);
         }
         if (gpsService == null) {
             Intent intent = new Intent(AvNav.this, GpsService.class);
             intent.putExtra(GpsService.PROP_CHECKONLY, true);
-            //TODO: add other parameters here
             startService(intent);
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         }
@@ -385,7 +408,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         mediaConnection.connect();
         if (mediaUpdater == null) mediaUpdater=new MediaUpdateHandler();
         firstStart=false;
-
+        saveSettings();
     }
 
     @Override
@@ -418,7 +441,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         //if we have crosswalk available
         //show the selection for it
         //make this the default before KitKat
-        if (isAppInstalled(this,XWALKAPP,XWALKVERSION)){
+        if (isXwalRuntimeInstalled(this)){
             rbCrosswalk.setVisibility(View.VISIBLE);
         }
         else {
@@ -467,6 +490,25 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             externalSettings.setVisibility(View.INVISIBLE);
         }
     }
+
+    private String getModeFromButtons(){
+        if (rbCrosswalk.isChecked()) return "xwalk";
+        if (rbServer.isChecked()) return "server";
+        return "normal";
+    }
+    private void setButtonsFromMode(String mode){
+        if (mode.equals("xwalk") && isXwalRuntimeInstalled(this)) {
+            rbCrosswalk.setChecked(true);
+            return;
+        }
+        else rbCrosswalk.setChecked(false);
+        if (mode.equals("server")){
+            rbServer.setChecked(true);
+            return;
+        }
+        else rbServer.setChecked(false);
+        rbNormal.setChecked(true);
+    }
     private void saveSettings(){
         SharedPreferences.Editor e=sharedPrefs.edit();
         e.putString(WORKDIR,textWorkdir.getText().toString());
@@ -476,6 +518,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         e.putBoolean(IPNMEA,cbIpNmea.isChecked());
         e.putString(IPADDR, txIp.getText().toString());
         e.putString(IPPORT,txPort.getText().toString());
+        e.putString(RUNMODE,getModeFromButtons());
         e.apply();
     }
 
