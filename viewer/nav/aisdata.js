@@ -246,9 +246,11 @@ avnav.nav.AisData.prototype.handleAisData=function() {
         }
         if (!foundTrackedTarget) this.trackedAIStarget = null;
     }
-    this.currentAis.sort(this.aisSort);
-    if (this.currentAis.length){
-        this.currentAis[0].nearest=true;
+    if (this.currentAis) {
+        this.currentAis.sort(this.aisSort);
+        if (this.currentAis.length) {
+            this.currentAis[0].nearest = true;
+        }
     }
     if (aisWarningAis) {
         aisWarningAis.warning=true;

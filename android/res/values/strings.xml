@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appName">avNav</string>
+    <string name="startText">Start</string>
+    <string name="exitText">Exit</string>
+    <string name="selectDirLabel">SD card directory</string>
+    <string name="enableDemoLabel">demo charts</string>
+    <string name="noLocation">No GPS found, enable now?</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="selectWorkDir">SelectWorkingDir</string>
+    <string name="newFolderName">Name for new Folder</string>
+    <string name="createFolder">Create Folder</string>
+    <string name="gpsServiceStopped">GPS service stopped</string>
+    <string name="gpsServiceSearching">searching GPS</string>
+    <string name="gpsServiceOK">GPS Position OK</string>
+    <string name="startGps">start</string>
+    <string name="stopGps">stop</string>
+    <string name="gpsDisabled">GPS disabled</string>
+    <string name="gpsService">GPS Service</string>
+    <string name="labelInternalGps">internal GPS</string>
+    <string name="labelIpNmea">IP-NMEA</string>
+    <string name="labelIpAis">IP-AIS</string>
+    <string name="externalGps">external GPS</string>
+    <string name="noGpsSelected">no GPS service selected</string>
+    <string name="invalidIp">Invalid IP or Port</string>
+    <string name="action_about">about</string>
+    <string name="stopServer">Stop</string>
+    <string name="useExtBrowser">Browser</string>
+    <string name="runMode">Mode</string>
+    <string name="runNormal">Normal</string>
+    <string name="runCrosswalk">Crosswalk</string>
+    <string name="launchBrowser">Start Browser</string>
+    <string name="startServer">Start</string>
+    <string name="notifyTitle">AvNav</string>
+    <string name="notifyText">AvNav running</string>
+    <string name="xwalkDownloadFromUrl">Apk Download</string>
+    <string name="xwalkDownloadFromPlaystore">Google Play</string>
+    <string name="xwalkNotFoundTitle">AvNavXwalk not found</string>
+    <string name="xwalkNotFoundText">The AvNavXwalk runtime is not installed.
+        Do you want to install it now?
+        Required runtime version=</string>
+    <string name="btXwalDownload">Download</string>
+</resources>

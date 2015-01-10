@@ -60,7 +60,7 @@
     ];
     //scripts used in debug mode
     var debug_scripts = [
-        '../libraries/ol3b5/ol-whitespace.js',
+        '../libraries/ol311/ol-debug.js',
         //all files have to be collected here (in correct order)
         //the build script will pick them up between the tags...
         //STARTFILES
@@ -94,7 +94,7 @@
     ];
     //scripts in runmode
     var run_scripts = [
-        '../libraries/ol3b5/ol.js',
+        '../libraries/ol311/ol.js',
         'avnav_min.js'
     ];
     var mode="";

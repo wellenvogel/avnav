@@ -140,7 +140,7 @@ class AVNTrackWriter(AVNWorker):
           speed=float(par[4])
           rt.append((AVNUtil.gt(par[0]),newLat,newLon,track,speed))
         except:
-          AVNLog.warn("exception while reding track file %s: %s",filename,traceback.format_exc())
+          AVNLog.warn("exception while reading track file %s: %s",filename,traceback.format_exc())
     except:
       pass
     f.close()

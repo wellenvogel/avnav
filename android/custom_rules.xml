@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project >
+
+    <property name="assets.viewer" value="assets/viewer"/>
+    <property name="assets.libraries" value="assets/libraries"/>
+    <property name="src" value=".."/>
+<target name="-post-compile">
+    <exec executable="${src}/viewer/build/build.py" dir="${src}/viewer">
+
+    </exec>
+    <copy todir="${assets.viewer}" flatten="true" overwrite="true">
+        <resources>
+            <file file="${src}/viewer/avnav_min.js"/>
+            <file file="${src}/viewer/loader.js"/>
+            <file file="${src}/viewer/avnav_viewer.html"/>
+            <file file="${src}/viewer/avnav_viewer.less"/>
+        </resources>
+    </copy>
+    <copy todir="${assets.viewer}/images" overwrite="true" flatten="true">
+        <fileset dir="${src}/viewer/images" includes="*.png"/>
+    </copy>
+    <copy todir="${assets.libraries}/rangeslider" overwrite="true" flatten="true">
+            <fileset dir="${src}/libraries/rangeslider"/>
+    </copy>
+    <copy todir="${assets.libraries}/movable-type" overwrite="true" flatten="true">
+        <fileset dir="${src}/libraries/movable-type"/>
+    </copy>
+    <copy todir="${assets.libraries}/ol311" overwrite="true" flatten="true">
+        <file file="${src}/libraries/ol311/ol.js"/>
+    </copy>
+    <copy todir="${assets.libraries}/less" overwrite="true" flatten="true">
+        <file file="${src}/libraries/less/less-1.7.3.min.js"/>
+    </copy>
+    <copy todir="${assets.libraries}/jscolor" overwrite="true" flatten="true">
+        <fileset dir="${src}/libraries/jscolor"/>
+    </copy>
+    <copy todir="${assets.libraries}/jquery" overwrite="true" flatten="true">
+        <fileset dir="${src}/libraries/jquery" includes="*.js"/>
+    </copy>
+
+</target>
+
+<target name="copy-assets" depends="-post-compile"></target>
+
+	<target name="rename-release-with-version-number">
+		<xmlproperty file="AndroidManifest.xml" 
+					 prefix="themanifest" 
+					 collapseAttributes="true"/>
+		
+		<!--  see ${sdk.dir}/tools/ant/build.xml -set-release-mode -->
+		<property name="out.packaged.file" 
+		          location="${out.absolute.dir}/${ant.project.name}-${themanifest.manifest.android:versionName}-unsigned.apk" />
+		<property name="out.final.file" 
+		          location="${out.absolute.dir}/${ant.project.name}-${themanifest.manifest.android:versionName}.apk" />
+	</target>
+	<target name="-set-release-mode"
+		 depends="rename-release-with-version-number,android_rules.-set-release-mode">
+		<echo message="target: ${build.target}"></echo>
+	</target>
+
+
+
+</project>

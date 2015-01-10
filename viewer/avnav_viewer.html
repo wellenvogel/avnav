@@ -48,6 +48,8 @@ all buttons with ids avb_... will call corresponding js functions
         var viewPortScale=1/viewPortRatio;
         $('#viewport').attr('content','user-scalable=no, width=device-width, initial-scale='+viewPortScale);
       }
+          if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();;
+          if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
       } catch (e){}
     </script>
 	<title>AVNav</title>

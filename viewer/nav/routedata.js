@@ -225,7 +225,7 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
     try {
         var raw=localStorage.getItem(this.propertyHandler.getProperties().routingDataName);
         if (raw){
-            this.currentLeg.fromJson(raw);
+            this.currentLeg.fromJsonString(raw);
         }
     }catch(e){
         log("Exception reading currentLeg "+e);
@@ -466,7 +466,7 @@ avnav.nav.RouteData.prototype.saveRoute=function(){
  * @private
  */
 avnav.nav.RouteData.prototype.saveLeg=function(){
-    var raw=JSON.stringify(this.currentLeg);
+    var raw=this.currentLeg.toJsonString();
     localStorage.setItem(this.propertyHandler.getProperties().routingDataName,raw);
 };
 

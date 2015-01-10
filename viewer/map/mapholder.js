@@ -186,7 +186,8 @@ avnav.map.MapHolder.prototype.getProperties=function(){
 
 avnav.map.MapHolder.prototype.getView=function(){
     if (!this.olmap)return null;
-    return this.olmap.getView().getView2D();
+    var mview=this.olmap.getView();
+    return mview;
 };
 /**
  * init the map (deinit an old one...)
@@ -235,7 +236,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
                 pinchRotate: false
             }),
             controls: [],
-            view: new ol.View2D({
+            view: new ol.View({
                 center: ol.proj.transform([ 13.8, 54.1], 'EPSG:4326', 'EPSG:3857'),
                 zoom: 9
             })
@@ -274,7 +275,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     else {
         if (layers.length > 0) {
             var view = this.getView();
-            view.fitExtent(layers[0].getSource().getExtent(), this.olmap.getSize());
+            view.fitExtent(layers[0].getExtent(), this.olmap.getSize());
             if (view.getZoom() < this.minzoom) {
                 view.setZoom(this.minzoom);
             }
@@ -530,7 +531,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
             layerurl=baseurl+"/"+rt.url;
         }
         else layerurl=rt.url;
-        rt.extent=ol.extent.transform(rt.layerExtent,self.transformToMap);
+        rt.extent=ol.extent.applyTransform(rt.layerExtent,self.transformToMap);
         if (rt.wms){
             var param={};
             $(tm).find(">WMSParameter").each(function(nr,wp){
@@ -569,7 +570,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         source = new ol.source.XYZ({
             tileUrlFunction: function (coord) {
                 if (!coord) return undefined;
-                var zxy = coord.getZXY();
+                var zxy = coord;
                 var z = zxy[0];
                 var x = zxy[1];
                 var y = zxy[2];
@@ -838,7 +839,7 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
  * @param {oli.render.Event} evt
  */
 avnav.map.MapHolder.prototype.onPostCompose=function(evt){
-    var newCenter=this.pointFromMap(evt.frameState.view2DState.center);
+    var newCenter=this.pointFromMap(evt.frameState.viewState.center);
     this.setCenterFromMove(newCenter);
     if (this.opacity != this.lastOpacity){
         $(evt.context.canvas).css('opacity',this.opacity);
@@ -846,13 +847,13 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     }
     this.drawing.setContext(evt.context);
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
-    this.drawing.setRotation(evt.frameState.view2DState.rotation);
+    this.drawing.setRotation(evt.frameState.viewState.rotation);
     this.drawGrid();
     this.drawNorth();
-    this.tracklayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
-    this.aislayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
-    this.routinglayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
-    this.navlayer.onPostCompose(evt.frameState.view2DState.center,this.drawing);
+    this.tracklayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
+    this.aislayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
+    this.routinglayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
+    this.navlayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
 
 };
 

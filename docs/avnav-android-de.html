@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <title>AvNav-Android</title>
+  </head>
+  <body>
+    <h1>AvNav Android</h1>
+    <p>Version 0.1.2</p>
+    <p>Nachdem die Navigations-App für die <a href="beschreibung.html">Nutzung
+        mit dem Raspberry Pi</a>&nbsp; bereits 2 Jahre erfolgreich im Einsatz
+      ist, gibt es jetzt auch eine erste Version, die direkt (ohne einen
+      Raspberry) auf Android läuft.</p>
+    <p>Zum <a href="../downloads">Download</a>. Demnächst auch im AppStore.</p>
+    <p>Sie verpackt im Wesentlichen die Web-App (siehe <a href="avnav-de.html">Beschreibung</a>)
+      in eine Android Applikation - siehe dort auch zum <a href="beschreibung.html">Erzeugen/Konvertieren</a>
+      der Karten.</p>
+    <p>Es kann das interne GPS des Gerätes genutzt werden. Alternativ können
+      NMEA Daten über TCP/IP empfangen werden (RMC für die Positionsdaten und
+      AIS Daten). Die Quelle dafür kann z.B. ein Raspberry mit meiner Software
+      sein - aber auch ein beliebiger anderer Sender, der die NMEA Daten per
+      WLAN bereitstellt.</p>
+    <p>Die Karten werden im gleichen gemf Format erwartet und müssen in das
+      avnav/charts Verzeichnis auf der SD-Karte kopiert werden (Verzeichnis kann
+      beim Start ausgewählt werden). Zusätzlich sind einige Demo-Karten
+      vorhanden, die allerdings eine Online-Verbindung erfordern.</p>
+    <p>Wenn das Verzeichnis avnav noch nicht da ist, wird es beim ersten Start
+      angelegt.</p>
+    <p>Die Track-Daten werden in das Verzeichnis avnav/tracks auf der SD-Karte
+      geschrieben.</p>
+    <p>Nach dem Start der App befindet man sich auf der Konfigurationsseite:</p>
+    <img alt="" src="android-start-internal.png" height="400"><br>
+    Hier kann das Verzeichnis auf der SD-Karte für Karten und Tracks gewählt
+    werden, sowie die Quelle für die Positionsdaten.<br>
+    Durch einen Klick auf den kleinen Start-Button wird das GPS gestartet (bzw.
+    die IP Verbindung) und man kann prüfen, ob eine Position empfangen wird.<br>
+    <span style="font-weight: bold;">Wichtig:<br>
+      Bitte die Applikation immer über diese Seite und den Exit Button verlassen
+      - sonst laufen der Positions-Empfang und die Track-Aufzeichnung weiter
+      (und das belastet den Akku).</span> <br>
+    Wenn die Trackaufzeichnung läuft wird das über ein kleines Boot in der
+    Navigation angezeigt.<br>
+    Ein Klick auf den großen Start-Button unten startet die AvNav Web-App -
+    genauso wie sonst im Browser.<br>
+    Ein Klick auf den (i) Button zeigt die Version der Applikation sowie
+    Lizenz-Daten an.<br>
+    <br>
+    Falls NMEA Daten über AIS empfangen werden sollen, müssen die Checkboxen
+    entsprechend aktiviert werden, im dann sichtbaren Feld müssen IP-Adresse und
+    Port des NMEA Senders eingetragen werden:<br>
+    <img alt="" src="android-start-ip-running.png"><br>
+    <br>
+    Im Bild ist die IP Verbindung erfolgreich aufgebaut (oberer gründer Punkt)
+    und es wird eine gültige Position empfangen (unterer grüner Punkt).<br>
+    Zum Testen kann man über den kleinen Start/Stop Button die Verbindung
+    prüfen.<br>
+    Wenn beide Punkte grün sind, über den großen Start-Button die Applikation
+    starten.<br>
+    <br>
+    Auf dieser Seite kann auch der Modus ausgewählt werden:<br>
+    Ab Android 4.4 (Kitkat) läuft die App problemlos ohne weitere
+    Installationen. In Versionen ab 4.0 (in älteren läuft sie nicht) ist sie im
+    Normalmodus meist kaum bedienbar. Das liegt an dem recht fehlerhaften
+    Browser unter Android.<br>
+    Dafür gibt es zwei Lösungsmöglichkeiten:<br>
+    <ol>
+    </ol>
+    <h4>Die "Crosswalk" runtime installieren.</h4>
+    Das ist eine embedded Chrome runtime (d.h. ein Stückchen Chrome läuft in der
+    App). Die muss allerdings in der Version genau passen (die AvNavApp prüft
+    das und zeigt das auf der Info-Seite (i) an). Diese kann man entweder von
+    der <a href="../downloads">Download-Seite</a> oder von <a href="https://download.01.org/crosswalk/releases/crosswalk/android/stable/">https://download.01.org/crosswalk/releases/crosswalk/android/stable/</a>
+    herunterladen. In jedem Falle auf die Versionsnummer und die Architektur
+    achten (dürfte meist ARM sein).<br>
+    Wenn die App das erste mal gestartet wird, prüft sie, ob eine solche runtime
+    installiert ist und bietet sonst an, das zu tun.<br>
+    <img alt="" src="android-download-runtime.png"><br>
+    Hier gibt es 2 Möglichkeiten:<br>
+    GooglePlay - das installiert die neueste Version der runtime. Wenn man die
+    App auch auf der neuesten Version hat, sollte das funktionieren.<br>
+    Sonst die Möglichkeit ApkDownload auswählen (das geht zur passenden Version
+    auf der <a href="../downloads">download Seite</a>) . Dann sollte im
+    Normalfall ein Browser zum Download gestartet werden. Zum Installieren muss
+    dann allerdings unter Sicherheit die "Installation aus unbekannten Quellen"
+    erlaubt werden.<br>
+    <br>
+    Wenn die Runtime erfolgreich installiert wurde, den Mode "Crosswalk"
+    auswählen. Das ist auf jeden Fall von der Performance die beste Variante.
+    Wenn die Runtime App nicht installiert ist, ist der Button nicht zu sehen.<br>
+    <br>
+    <h4>Chrome Browser installieren</h4>
+    &nbsp;<a href="https://play.google.com/store/apps/details?id=com.android.chrome">https://play.google.com/store/apps/details?id=com.android.chrome<br>
+    </a>Dann auf dem Bildschirm den Mode "Browser" auswählen (siehe) unten - ist
+    von der Bedienung beim Start etwas umständlicher.<br>
+    <br>
+    <br>
+    Im Browser Mode startet die App einen kleinen Webserver (also spielt so ein
+    wenig Raspberry...) auf einem festen Port (34567) und zeigt die folgende
+    Seite an:<br>
+    <img alt="" src="android-webserver.png"><br>
+    <br>
+    Durch einen Klick auf Start Browser wird eine Auswahl der installierten
+    Browser angezeigt, hier Chrome auswählen.<br>
+    Leider hat man dann im Browser immer die Adressleiste, die etwas Platz
+    wegnimmt. Um das zu verhindern, kann man in Chrome im Einstellungsmenü "Zum
+    Startbildschirm hinzufügen" einstellen, dann noch einen sinnvollen Namen
+    vergeben (im Moment gibt es noch kein schönes icon, das kommt noch...).<br>
+    <br>
+    <img alt="" src="android-chrome.png"><br>
+    <br>
+    Danach über den Home Button hier den Chrome Browser verlassen und auf dem
+    Startbildschirm auf das neue Icon klicken.<br>
+    Das sieht dann wieder gut aus:<br>
+    <img alt="" src="android-chrome2.png"><br>
+    <br>
+    Zum Beenden oben (roter Pfeil) über die Notifikation gehen (kleines
+    Segelboot), darüber kommt man wieder in die App und kann sie über die
+    Startseite verlassen.<br>
+    Sonst laufen der GPS Empfang und das Trackschreiben im Hintergrund weiter.<br>
+    Beim nächsten Start nur die App im Browser Mode starten, dann direkt über
+    den Home Button zum Startbildschirm und den Browser über das abgelegte Icon
+    dort starten.<br>
+    <br>
+    Aus der App kommt man mittels "Zurück" Button immer auf die Startseite und
+    kann sie geordnet verlassen (das schreibt auch die Track-Daten noch einmal
+    in eine Datei).<br>
+    Wenn die App läuft werden die Track-Daten alle 10 Minuten in eine Datei
+    geschrieben.<br>
+    Wichtiger Hinweis:<br>
+    Wenn man im Browser-Mode mal direkt aus der App und mal vom Home Bildschirm
+    startet, hat man jedesmal andere Einstellungen/Wegepunkt/Routen in der App.<br>
+    Also bitte immer den gleichen Weg benutzen.<br>
+    <br>
+    <br>
+    <br>
+  </body>
+</html>
