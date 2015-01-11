@@ -16,17 +16,17 @@ avnav.nav.Leg=function(from,to,active,opt_routeName,opt_routeTarget){
      * start of leg
      * @type {avnav.nav.navdata.WayPoint}
      */
-    this.from=from;
+    this.from=from|| new avnav.nav.navdata.WayPoint();
     /**
      * current target waypoint
      * @type {avnav.nav.navdata.WayPoint}
      */
-    this.to=to;
+    this.to=to||new avnav.nav.navdata.WayPoint();
     /**
      * is the leg active?
      * @type {boolean}
      */
-    this.active=active;
+    this.active=active||false;
     /**
      * if set the route with this name is active
      * @type {boolean}
@@ -107,6 +107,7 @@ avnav.nav.Leg.prototype.differsTo=function(leg2){
     }
     if (leg1.name != leg2.name) changed=true;
     if (leg1.currentTarget != leg2.currentTarget) changed=true;
+    if (leg1.active != leg2.active) changed=true;
     return changed;
 };
 
@@ -506,9 +507,6 @@ avnav.nav.RouteData.prototype.legChanged=function(newLeg){
     this.navobject.routeEvent();
     var self=this;
     if (this.connectMode){
-        if (!newLeg.active){
-            return true; //do only send activates to the server
-        }
         if (newLeg.name !== undefined) {
             this.sendRoute(self.currentRoute.toJsonString());
         }
@@ -573,6 +571,7 @@ avnav.nav.RouteData.prototype.routeOff=function(){
     if (! this.getLock()) return; //is already off
     this.currentLeg.active=false;
     this.currentLeg.name=undefined;
+    this.legChanged(this.currentLeg); //send deactivate
     this.saveLeg();
     this.saveRoute();
     this.navobject.routeEvent();
