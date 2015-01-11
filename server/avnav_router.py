@@ -31,6 +31,7 @@ import socket
 import threading
 import os
 import sys
+import math
 from __main__ import traceback
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 import gpxpy098.gpx as gpx
@@ -43,6 +44,7 @@ from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_data import *
+from avnav_nmea import *
 
 
 class AVNRoutingLeg():
@@ -83,7 +85,8 @@ class AVNRouter(AVNWorker):
       rt={
           "routesdir":"",
           "interval": 5, #interval in seconds for computing route data
-          "feederName":''
+          "feederName":'',
+          "computeRMB":True #if set we compute AP control data
           };
       return rt
     return None
@@ -163,7 +166,12 @@ class AVNRouter(AVNWorker):
          'active':leg.active,
          'currentTarget':leg.currentTarget
          }
-    return dct 
+    return dct
+
+  #get a simple tuple lat,lon from a WP
+  #as this is used by our util functions
+  def wpToLatLon(self,wP):
+    return (wP.latitude,wP.longitude)
   
   def setCurrentLeg(self,leg):
     self.currentLeg=leg;
@@ -258,32 +266,74 @@ class AVNRouter(AVNWorker):
     else:
       AVNLog.info("no current leg %s found"%(self.currentLegFileName,))
     feeder=self.findFeeder(self.getStringParam('feederName'))
+    startWp=None
+    endWp=None
+    WpNr=0
     while True:
+      hasLeg=False
+      hasRMB=False
       time.sleep(interval)
       try:
-        #do the computation of some route data
-        if self.currentLeg:
-          startWp=self.currentLeg.fromWP
-          endWp=self.currentLeg.toWP
-          if startWp is not None and endWp is not None:
-            curTPV=self.navdata.getMergedEntries("TPV", [])
-            lat=curTPV.data.get('lat')
-            lon=curTPV.data.get('lon')
-            #we could have speed(kn) or course(deg) in curTPV
-            #they are basically as decoded by gpsd
-            if lat is not None and lon is not None:
-              AVNLog.debug("compute route data from %s to %s",str(startWp),str(endWp))
-              #do the computation here using e.g. geo
-              #see some lines above for a distance
-              nmeaData="$XXXaha\n"
-              AVNLog.debug("adding NMEA %s",nmeaData,)
-              feeder.addNMEA(nmeaData)
-          pass
-        else:
-          pass
+        if self.getBoolParam("computeRMB"):
+          #do the computation of some route data
+          nmeaData="$GPRMB,A,,,,,,,,,,,,V,D*19\r\n"
+          if self.currentLeg and self.currentLeg.active:
+            hasLeg=True
+            self.setInfo("leg","from %s, to %s, route=%s"%
+                         (str(self.currentLeg.fromWP) if self.currentLeg.fromWP else "NONE",str(self.currentLeg.toWP) if self.currentLeg.toWP else "NONE",
+                         self.currentLeg.name if self.currentLeg.name is not None else "NONE")
+                        ,AVNWorker.Status.RUNNING)
+            if startWp!=self.currentLeg.fromWP or endWp!=self.currentLeg.toWP:
+              startWp=self.currentLeg.fromWP
+              endWp=self.currentLeg.toWP
+              WpNr+=1
+
+            if startWp is not None and endWp is not None:
+              curTPV=self.navdata.getMergedEntries("TPV", [])
+              lat=curTPV.data.get('lat')
+              lon=curTPV.data.get('lon')
+              kn=curTPV.data.get('speed')
+              if kn is None:
+                kn=""
+              #we could have speed(kn) or course(deg) in curTPV
+              #they are basically as decoded by gpsd
+              if lat is not None and lon is not None:
+                AVNLog.debug("compute route data from %s to %s",str(startWp),str(endWp))
+                XTE=AVNUtil.calcXTE((lat,lon), self.wpToLatLon(startWp), self.wpToLatLon(endWp))/float(AVNUtil.NM)
+                if XTE < 0:
+                  LR="L"
+                else:
+                  LR="R"
+                XTE=abs(XTE)
+                if XTE>9.99:
+                  XTE=9.99
+                XTE="%.2f"%(XTE)
+                destDis=AVNUtil.distance((lat,lon),self.wpToLatLon(endWp))
+                if destDis>999.9:
+                  destDis=999.9
+                if destDis<0.1:
+                  arrival="A"
+                else:
+                  arrival="V"
+                destDis="%.1f"%(destDis)
+                destBearing="%.1f"%AVNUtil.calcBearing((lat,lon),self.wpToLatLon(endWp))
+                nmeaData="GPRMB,A,"+XTE+","+LR+","+"%s"%(WpNr)+","+"%s"%(WpNr+1)+",,,,,"+destDis+","+destBearing+","+"%s"%kn+","+arrival+",A"
+                nmeaData="$"+nmeaData+"*"+NMEAParser.nmeaChecksum(nmeaData)+"\r\n"
+                self.setInfo("autopilot","GPRMB:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s"%
+                            (WpNr,XTE,LR,destDis,destBearing,arrival),AVNWorker.Status.NMEA)
+                hasRMB=True
+
+          AVNLog.debug("adding NMEA %s",nmeaData,)
+          feeder.addNMEA(nmeaData)
       except Exception as e:
         AVNLog.warn("exception in router %s, retrying",traceback.format_exc())
-  
+      if (not hasLeg):
+        self.setInfo("leg","no leg",AVNWorker.Status.INACTIVE)
+      if (not hasRMB):
+        self.setInfo("autopilot","no autopilot data",AVNWorker.Status.INACTIVE)
+
+
+
   #get a HTTP request param
   def getRequestParam(self,requestparam,name):
     rt=requestparam.get(name)

@@ -33,6 +33,8 @@ import threading
 import subprocess
 import math
 import re
+import sys
+import ctypes
 
 VERSION="0.9.1"
 
@@ -147,7 +149,8 @@ class AVNLog():
 
 class AVNUtil():
   
-  NM=1852; #convert nm into m
+  NM=1852.0; #convert nm into m
+  R=6371000; #earth radius in m
   #convert a datetime UTC to a timestamp
   @classmethod
   def datetimeToTsUTC(cls,dt):
@@ -187,20 +190,47 @@ class AVNUtil():
   
   # Haversine formula example in Python
   # Author: Wayne Dyck
+  #distance in M
   @classmethod
-  def distance(cls,origin, destination):
+  def distanceM(cls,origin, destination):
     lat1, lon1 = origin
     lat2, lon2 = destination
-    radius = 6371 # km
 
     dlat = math.radians(lat2-lat1)
     dlon = math.radians(lon2-lon1)
     a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) \
         * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-    d = (radius * c * 1000)/float(cls.NM)
+    d = (cls.R * c )
     return d
-  
+
+  #distance in NM
+  @classmethod
+  def distance(cls,origin,destination):
+    rt=cls.distanceM(origin,destination);
+    return rt/float(cls.NM);
+
+  #XTE - originally from Dirk HH, crosschecked against
+  #http://www.movable-type.co.uk/scripts/latlong.html
+  #points are always tuples lat,lon
+  @classmethod
+  def calcXTE(cls,Pp, startWp, endWp):
+    d13 = cls.distanceM(startWp,Pp);
+    w13 = cls.calcBearing(startWp,Pp)
+    w12 = cls.calcBearing(startWp,endWp)
+    return math.asin(math.sin(d13/cls.R)*math.sin(math.radians(w13)-math.radians(w12))) * cls.R
+
+  #bearing from one point the next originally by DirkHH
+  #http://www.movable-type.co.uk/scripts/latlong.html
+  @classmethod
+  def calcBearing(cls,curP,endP):
+    clat,clon=curP
+    elat,elon=endP
+    y = math.sin(math.radians(elon)-math.radians(clon)) * math.cos(math.radians(elat))
+    x = math.cos(math.radians(clat))*math.sin(math.radians(elat)) - \
+        math.sin(math.radians(clat))*math.cos(math.radians(elat))*math.cos(math.radians(elon)-math.radians(clon))
+    return ((math.atan2(y, x)*180/math.pi)+360)%360.0
+
   #convert AIS data (and clone the data)
   #positions / 600000
   #speed/10

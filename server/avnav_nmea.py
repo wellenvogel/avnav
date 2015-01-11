@@ -137,14 +137,22 @@ class NMEAParser():
           if len(f) < 2:
             return True
           if f[1:4]==line[3:6]:
-            return True
+            return Trueself
           return False
         if line.startswith(f):
           return True
     except:
       pass
     return False
- 
+
+  #compute the NMEA checksum
+  @classmethod
+  def nmeaChecksum(cls,part):
+    chksum = 0
+    for s in part:
+      chksum ^= ord(s)
+    return ("%X"%chksum).zfill(2)
+
   #parse a line of NMEA data and store it in the navdata array      
   def parseData(self,data):
     darray=data.split(",")

@@ -128,7 +128,7 @@ class AVNWorker(threading.Thread):
     if rt is None:
       return False
     else:
-      return rt.upper()=='TRUE'
+      return str(rt).upper()=='TRUE'
     
   def getStringParam(self,name,throw=False):
     rt=self.getParamValue(name,throw)
