@@ -362,8 +362,8 @@ class LocationDelta:
         elif (latitude_diff is not None) and (longitude_diff is not None):
             if (distance is not None) or (angle is not None):
                 raise Exception('No distance/angle if using lat/lon diff!')
-            this.latitude_diff  = latitude_diff
-            this.longitude_diff = longitude_diff
+            self.latitude_diff  = latitude_diff
+            self.longitude_diff = longitude_diff
             self.move_function = self.move_by_lat_lon_diff
 
     def move(self, location):
