@@ -50,6 +50,9 @@ avnav.util.Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
  * @returns {string}
  */
 avnav.util.Formatter.prototype.formatLonLats=function(lonlat){
+    if (isNaN(lonlat.lat) || isNaN(lonlat.lon)){
+        return "-----";
+    }
     var ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
     var ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
     return ns + ', ' + ew;
@@ -67,6 +70,14 @@ avnav.util.Formatter.prototype.formatLonLats=function(lonlat){
 avnav.util.Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace){
     var sign="";
     number=parseFloat(number);
+    if (isNaN(number)){
+        rt="";
+        while (fix > 0) {
+            rt+="-";
+            fix--;
+        }
+        return rt;
+    }
     if (addSpace != null && addSpace) sign=" ";
     if (number < 0) {
         number=-number;
