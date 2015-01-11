@@ -18,6 +18,12 @@ my $CONFIG="../android/local.properties"; #relative to basedir
 my $VERSIONLOG="versions.log";
 #control the output file name
 my $CUSTOMERULE="custom_rules.xml"; 
+#options
+my $keystorepass;
+my $keyaliaspass;
+my $keystore;
+my $keyalias="wellenvogel";
+
 sub usage(){
   print "usage: $0 pathToCrosswalk version [versionString]\n";
   print "       versionString must match the version in the app and should be equal to the crosswalk version\n";
@@ -25,6 +31,8 @@ sub usage(){
   print "       version must count up from the last delivery\n";
   print "       --keystore-passcode for the android build keytore password\n";
   print "       --keystore-alias-passcode for the key allias password\n";
+  print "       --keystore-path keystore for signing (otherwise try to get from $CONFIG)\n";
+  print "       --keystore-alias keystore alias for signing (if keytore path is given, defaults to $keyalias)\n";
 }
 
 sub err($;$){
@@ -52,11 +60,11 @@ sub replaceTemplates($$$){
   close($o);
 }
 
-my $keystorepass;
-my $keyaliaspass;
 
 my %options=("keystore-passcode=s" =>\$keystorepass,
-  "keystore-alias-passcode=s" =>\$keyaliaspass);
+  "keystore-alias-passcode=s" =>\$keyaliaspass,
+  "keystore-path=s" => \$keystore,
+  "keystore-alias=s" => \$keyalias);
 
 GetOptions(%options) or err("invalid option",1);
 
@@ -115,18 +123,26 @@ for my $arch ('arm','x86'){
   wLog("generating project for $arch, running: $cmstring");
   system($cmstring);
   err("$cmstring failed") if ($?);
-  if (-f $CONFIG) {
-    my $archbase=$arch."/".$BUILDNAME;
+  my $archbase=$arch."/".$BUILDNAME;
+  for my $dir (glob($archbase."/native_libs/*")) {
+    if ($dir !~ /native_libs.$arch/){
+      wLog("removing invalid subdir $dir for arch $arch");
+      system("rm -rf $dir");
+    }
+  }
+  if (-f $CONFIG || $keystore) {
     my $prop=$archbase."/local.properties";
-    open(my $h,"<",$CONFIG) or err("unable to read $CONFIG");
-    open(my $o,">>",$prop) or err("unable to append to $prop");
-    wLog("using conkey.store.passwordfiguration from $CONFIG, appending key entries to $prop");
-    while (<$h>){
-      next if $_ !~ /^ *key/;
-      print $o $_;
+    if (! $keystore){
+      open(my $h,"<",$CONFIG) or err("unable to read $CONFIG");
+      open(my $o,">>",$prop) or err("unable to append to $prop");
+      wLog("using configuration from $CONFIG, appending key entries to $prop");
+      while (<$h>){
+        next if $_ !~ /^ *key/;
+        print $o $_;
     }
     close($o);
     close($h);
+    }
     if (-f $CUSTOMERULE) {
       my $of=$archbase."/".$CUSTOMERULE;
       wLog("using $CUSTOMERULE");
@@ -139,6 +155,9 @@ for my $arch ('arm','x86'){
     }
     if ($keyaliaspass) {
       $antoptions.=" -Dkey.alias.password=$keyaliaspass";
+    }
+    if ($keystore) {
+      $antoptions.=" -D.key.store=$keystore -Dkey.alias=$keyalias ";
     }
     my $buildcmd="cd $archbase && ant $antoptions release";
     wLog("building apk for $arch with command $buildcmd");
