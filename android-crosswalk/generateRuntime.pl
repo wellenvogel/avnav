@@ -8,6 +8,8 @@ use File::Basename;
 use File::Copy 'copy';
 use Cwd 'abs_path';
 use Getopt::Long;
+use XML::LibXML;
+use Data::Dumper;
 my $PACKAGE="de.wellenvogel.xwalk";
 my $NAME="AvNavXwalk";
 my $BUILDNAME="Xwalk"; #the cw tooling has some strange idea how to create this from the App name
@@ -113,7 +115,7 @@ open(my $o,">",$mf) or err("unable to write $mf");
 wLog("writing $mf, name=$NAME, version=$versionString");
 my %repl=('NAME'=>$NAME,'VERSION'=>$versionString);
 replaceTemplates($MANIFEST,$mf,\%repl);
-my $cmbase="python $cmd --name=$NAME --package=$PACKAGE --mode=embedded --app-root=$appbase --app-local-path=index.html --app-versionCodeBase=$version --project-only";
+my $cmbase="python $cmd --name=$NAME --package=$PACKAGE --permissions= --mode=embedded --app-root=$appbase --app-local-path=index.html --app-versionCodeBase=$version --project-only";
 for my $arch ('arm','x86'){
   if (-d $arch){
     wLog("removing existing directory $arch");
@@ -130,6 +132,32 @@ for my $arch ('arm','x86'){
       system("rm -rf $dir");
     }
   }
+  #remove unnecessary permissions
+  my $androidManifest=$archbase."/AndroidManifest.xml";
+  open (my $fh,"<",$androidManifest) or err("cannot read $androidManifest");
+  binmode($fh);
+  my $xml=XML::LibXML->load_xml(IO=>$fh);
+  close($fh);
+  err("invalid manifest $androidManifest") if (! $xml);
+  my @oldParam=$xml->getElementsByTagName('uses-permission');
+  for my $perm (@oldParam){
+    my $curp=$perm->getAttribute('android:name');
+    my $kept=0;
+    foreach my $allow ('android.permission.ACCESS_NETWORK_STATE','android.permission.ACCESS_WIFI_STATE'){
+      if ($curp eq $allow){
+        $kept=1;
+      }
+    }
+    if (! $kept){
+      wLog("omitting permission $curp");
+      $perm->unbindNode();
+    }
+  }
+  unlink($androidManifest) or err("Unable to remove $androidManifest");
+  open(my $h,">",$androidManifest) or err("Unable to rewrite $androidManifest");
+  binmode($h);
+  $xml->toFH($h);
+  close($h);
   if (-f $CONFIG || $keystore) {
     my $prop=$archbase."/local.properties";
     if (! $keystore){
