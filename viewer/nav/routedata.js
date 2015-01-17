@@ -37,11 +37,24 @@ avnav.nav.Leg=function(from,to,active,opt_routeName,opt_routeTarget){
      * @type {number}
      */
     this.currentTarget=(opt_routeTarget !== undefined)?opt_routeTarget:-1;
+
+    /**
+     * whether we are currently approaching
+     * @type {boolean}
+     */
+    this.approach=false;
+    /**
+     * the approach distance (in m)
+     * @type {number}
+     */
+    this.approachDistance=0; //to be set from properties
 };
 
 avnav.nav.Leg.prototype.clone=function(){
     var rt=new avnav.nav.Leg(avnav.clone(this.from),avnav.clone(this.to),this.active,
         this.name?this.name.slice(0):undefined,this.currentTarget);
+    rt.approach=false;
+    rt.approachDistance=this.approachDistance;
     return rt;
 };
 /**
@@ -54,7 +67,9 @@ avnav.nav.Leg.prototype.toJsonString=function(){
         to: this.to,
         name: this.name,
         active: this.active,
-        currentTarget: this.currentTarget
+        currentTarget: this.currentTarget,
+        approach: this.approach,
+        approachDistance: this.approachDistance
     };
     return JSON.stringify(rt);
 };
@@ -79,11 +94,14 @@ avnav.nav.Leg.prototype.fromJson=function(raw){
     this.active=raw.active||false;
     this.currentTarget=(raw.currentTarget !== undefined)?raw.currentTarget:-1;
     this.name=raw.name;
+    this.approach=raw.approach;
+    this.approachDistance=raw.approachDistance;
     return this;
 };
 
 /**
  * check if the leg differs from another leg
+ * we do not consider the approach distance
  * @param {avnav.nav.Leg} leg2
  * @returns {boolean} true if differs
  */
@@ -108,6 +126,7 @@ avnav.nav.Leg.prototype.differsTo=function(leg2){
     if (leg1.name != leg2.name) changed=true;
     if (leg1.currentTarget != leg2.currentTarget) changed=true;
     if (leg1.active != leg2.active) changed=true;
+    if (leg1.approach != leg2.approach) changed=true;
     return changed;
 };
 
@@ -222,6 +241,7 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
             new avnav.nav.navdata.WayPoint(0,0),
             new avnav.nav.navdata.WayPoint(0,0),
             false);
+    this.currentLeg.approachDistance=this.propertyHandler.getProperties().routeApproach;
 
     try {
         var raw=localStorage.getItem(this.propertyHandler.getProperties().routingDataName);
@@ -535,6 +555,7 @@ avnav.nav.RouteData.prototype.legChanged=function(newLeg){
  */
 avnav.nav.RouteData.prototype.routeOn=function(mode,opt_keep_from){
     var nLeg=this.currentLeg.clone(); //make a copy to prevent the remote update from disturbing us
+    nLeg.approachDistance=this.propertyHandler.getProperties().routeApproach;
     nLeg.active=true;
     nLeg.name=undefined;
     nLeg.currentTarget=-1;
@@ -748,7 +769,11 @@ avnav.nav.RouteData.prototype.deleteRoute=function(){
  * check if we have to switch to the next WP
  */
 avnav.nav.RouteData.prototype.checkNextWp=function(){
-    if (! this.currentLeg.name) return;
+    if (! this.currentLeg.name) {
+        this.currentLeg.approach=false;
+        this.isApproaching=false;
+        return;
+    }
     var boat=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
     //TODO: switch of routing?!
     if (! boat.valid) return;
@@ -759,7 +784,14 @@ avnav.nav.RouteData.prototype.checkNextWp=function(){
         //TODO: some handling for approach
         if (dst.dts <= approach){
             this.isApproaching=true;
-            var nextDst=avnav.nav.NavCompute.computeDistance(boat, this.currentRoute.points[this.currentLeg.currentTarget+1]);
+            this.currentLeg.approach=true;
+            var nextDst=new avnav.nav.navdata.Distance();
+            var hasNextWp=false;
+            var nextWpNum=this.currentLeg.currentTarget+1;
+            if (nextWpNum < this.currentRoute.points.length) {
+                hasNextWp=true;
+                nextDst=avnav.nav.NavCompute.computeDistance(boat, this.currentRoute.points[this.currentLeg.currentTarget+1]);
+            }
             if (this.lastDistanceToCurrent < 0 || this.lastDistanceToNext < 0){
                 //seems to be the first time
                 this.lastDistanceToCurrent=dst.dts;
@@ -782,12 +814,19 @@ avnav.nav.RouteData.prototype.checkNextWp=function(){
                 return;
             }
             //should we wait for some time???
-            this.activeWp=this.currentLeg.currentTarget+1;
-            this.routeOn(avnav.nav.RoutingMode.ROUTE);
-            log("switching to next WP");
+            if (hasNextWp) {
+                this.activeWp = this.currentLeg.currentTarget + 1;
+                this.routeOn(avnav.nav.RoutingMode.ROUTE);
+                log("switching to next WP");
+            }
+            else {
+                this.routeOff();
+                log("end of route reached");
+            }
         }
         else{
             this.isApproaching=false;
+            this.currentLeg.approach=false;
         }
     } catch (ex){} //ignore errors
 };
