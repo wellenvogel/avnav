@@ -45,6 +45,15 @@ class Enum(set):
         raise AttributeError
 
 
+class LogFilter(logging.Filter):
+  def __init__(self,filter):
+    self.filterre=re.compile(filter,re.I)
+  def filter(self, record):
+    if (self.filterre.search(record.msg)):
+      return True
+    if (self.filterre.search(record.threadName)):
+      return True
+    return False
 
 class AVNLog():
   logger=logging.getLogger('avn')
@@ -68,6 +77,7 @@ class AVNLog():
     cls.logger.propagate=False
     cls.logger.addHandler(cls.consoleHandler)
     cls.logger.setLevel(numeric_level)
+    cls.filter=None
   
   @classmethod
   def levelToNumeric(cls,level):
@@ -113,7 +123,21 @@ class AVNLog():
       return True
     except:
       return False
-  
+  @classmethod
+  def setFilter(cls,filter):
+    if cls.filter is not None:
+      cls.consoleHandler.removeFilter(cls.filter)
+      if cls.fhandler is not None:
+        cls.fhandler.removeFilter(cls.filter)
+      cls.filter=None
+    if filter is None:
+      return
+    cls.filter=LogFilter(filter)
+    cls.consoleHandler.addFilter(cls.filter)
+    if cls.fhandler is not None:
+      cls.fhandler.addFilter(cls.filter)
+
+
   @classmethod
   def debug(cls,str,*args,**kwargs):
     cls.logger.debug(str,*args,**kwargs)

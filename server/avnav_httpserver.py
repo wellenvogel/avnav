@@ -582,6 +582,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rt['info']='set loglevel to '+str(level)
       else:
         rt['info']="invalid level "+str(level)
+    filter=self.getRequestParam(requestParam,'filter')
+    AVNLog.setFilter(filter)
     return json.dumps(rt) 
   
   def handleListChartRequest(self,requestParam):

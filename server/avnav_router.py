@@ -286,10 +286,12 @@ class AVNRouter(AVNWorker):
       time.sleep(interval)
       if self.currentLeg and self.currentLeg.active:
         hasLeg=True
-        self.setInfo("leg","from %s, to %s, route=%s, activeWp=%d, approach=%s (approach radius %dm)"%
-                   (str(self.currentLeg.fromWP) if self.currentLeg.fromWP else "NONE",str(self.currentLeg.toWP) if self.currentLeg.toWP else "NONE",
+        routerInfo="from %s, to %s, route=%s, activeWp=%d, approach=%s (approach radius %dm)"%(str(self.currentLeg.fromWP)
+                   if self.currentLeg.fromWP else "NONE",str(self.currentLeg.toWP) if self.currentLeg.toWP else "NONE",
                    self.currentLeg.name if self.currentLeg.name is not None else "NONE", self.currentLeg.currentTarget,
                    "TRUE" if self.currentLeg.approach else "FALSE",int(self.currentLeg.approachDistance))
+        AVNLog.debug(routerInfo)
+        self.setInfo("leg",routerInfo
                   ,AVNWorker.Status.RUNNING)
       try:
         if self.getBoolParam("computeRMB"):
@@ -333,7 +335,7 @@ class AVNRouter(AVNWorker):
       self.setCurrentLeg(self.currentLeg)
     AVNLog.info("Route: approaching wp %d (%s) currentDistance=%f",self.currentLeg.currentTarget,str(self.currentLeg.toWP),float(dst))
     if self.currentLeg.name is None:
-      AVNLog.debug("Approach: not route active")
+      AVNLog.debug("Approach: no route active")
       return
     self.activeRouteName=self.currentLeg.name
     try:
