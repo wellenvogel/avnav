@@ -66,6 +66,9 @@ avnav.gui.Navpage=function(){
     $(document).on(avnav.map.MapEvent.EVENT_TYPE, function(ev,evdata){
         self.mapEvent(evdata);
     });
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
+        self.updateMainPanelSize('#'+self.mapdom);
+    })
 
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
