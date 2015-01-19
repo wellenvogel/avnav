@@ -43,11 +43,16 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     public static final String RUNMODE="runmode"; //normal,server,xwalk
     public static final String PREFNAME="AvNav";
 
+    //modes
+    public static final String MODE_NORMAL="normal";
+    public static final String MODE_XWALK="xwalk";
+    public static final String MODE_SERVER ="server";
+
 
 
     public static final String XWALKORIG="org.xwalk.core";
     public static final String XWALKAPP="de.wellenvogel.xwalk";
-    public static final String XWALKVERSION="10.39.235.15";
+    public static final String XWALKVERSION="10.39.235.16";
 
     public static final String LOGPRFX="avnav";
     private Button btStart;
@@ -294,7 +299,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             //never set before
             if (currentapiVersion < 19 && firstStart) {
                 if (! isXwalRuntimeInstalled(this)){
-                    downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundText),
+                    downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
                             getString(R.string.xwalkNotFoundText)+AvNav.XWALKVERSION,false);
                 }
                 else {
@@ -303,6 +308,17 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             }
         }
         else {
+            if (mode.equals(MODE_XWALK)){
+                if (! isXwalRuntimeInstalled(this) ){
+                    if (firstStart && currentapiVersion < 19) {
+                        downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
+                                getString(R.string.xwalkNotFoundText) + AvNav.XWALKVERSION, false);
+                    }
+                    else {
+                        mode=MODE_NORMAL;
+                    }
+                }
+            }
             setButtonsFromMode(mode);
         }
         if (gpsService == null) {
@@ -492,17 +508,17 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     }
 
     private String getModeFromButtons(){
-        if (rbCrosswalk.isChecked()) return "xwalk";
-        if (rbServer.isChecked()) return "server";
-        return "normal";
+        if (rbCrosswalk.isChecked()) return MODE_XWALK;
+        if (rbServer.isChecked()) return MODE_SERVER;
+        return MODE_NORMAL;
     }
     private void setButtonsFromMode(String mode){
-        if (mode.equals("xwalk") && isXwalRuntimeInstalled(this)) {
+        if (mode.equals(MODE_XWALK) && isXwalRuntimeInstalled(this)) {
             rbCrosswalk.setChecked(true);
             return;
         }
         else rbCrosswalk.setChecked(false);
-        if (mode.equals("server")){
+        if (mode.equals(MODE_SERVER)){
             rbServer.setChecked(true);
             return;
         }
