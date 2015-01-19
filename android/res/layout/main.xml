@@ -4,12 +4,12 @@
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android"
-        android:weightSum="1" android:padding="10dp"
-        >
+        android:weightSum="1"
+        android:paddingLeft="5dp" android:paddingRight="5dp">
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content" android:layout_weight="0">
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -31,8 +31,8 @@
                         android:id="@+id/btSelectDir" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"/>
         </LinearLayout>
 
-                <RadioGroup android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:orientation="horizontal">
+                <RadioGroup android:layout_width="fill_parent" android:layout_height="wrap_content"
+                            android:orientation="horizontal" android:layout_weight="0">
                         <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -57,8 +57,8 @@
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" android:layout_gravity="center_horizontal"
-                android:layout_weight="0">
+                android:layout_height="wrap_content"
+                android:layout_weight="0" android:layout_gravity="top">
                 <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="wrap_content"
@@ -129,19 +129,19 @@
         </LinearLayout>
         <LinearLayout
                 android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_weight="0">
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" android:layout_weight="0" android:measureWithLargestChild="false">
                 <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:id="@+id/iconGps" android:src="@drawable/redbubble"
-                        android:layout_gravity="center_vertical" android:layout_marginLeft="10dp"/>
+                        android:layout_gravity="center_vertical|top" android:layout_marginLeft="10dp"/>
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:text="@string/gpsServiceStopped"
-                        android:id="@+id/txService" android:layout_gravity="center_vertical" android:layout_weight="1"
+                        android:id="@+id/txService" android:layout_gravity="center_vertical|top" android:layout_weight="1"
                         android:gravity="center_vertical|center_horizontal" android:padding="8dp"/>
                 <Space
                         android:layout_width="wrap_content"
@@ -155,12 +155,14 @@
                         android:layout_marginLeft="5dp"
                         android:layout_marginRight="5dp"
                         android:layout_marginTop="5dp" android:layout_marginBottom="5dp"
-                        style="@android:style/TextAppearance.DeviceDefault.Large"/>
+                        style="@android:style/TextAppearance.DeviceDefault.Large"
+                        android:layout_gravity="center_vertical|top"/>
         </LinearLayout>
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent" style="@android:style/TextAppearance.DeviceDefault.Large">
+                android:layout_height="wrap_content" style="@android:style/TextAppearance.DeviceDefault.Large"
+                android:layout_weight="1">
                 <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/exitText"
                         android:id="@+id/btExit" android:enabled="true"
                         android:layout_weight="1"
