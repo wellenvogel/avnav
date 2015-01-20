@@ -126,23 +126,46 @@ class NMEAParser():
    
   @classmethod
   #check if the line matches a provided filter
+  #filter entries starting with ^are considered as blacklist
   def checkFilter(cls,line,filter):
     try:
       if filter is None:
         return True
+      okMatch=False
+      inversMatch=False
       for f in filter:
+        invers=False
+        if f[0:1]=="^":
+          invers=True
+          f=f[1:]
         if f[0:1]=='$':
           if line[0:1]!='$':
-            return False
+            continue
           if len(f) < 2:
-            return True
+            if not invers:
+              okMatch=True
+            else:
+              inversMatch=True
+            continue
           if f[1:4]==line[3:6]:
-            return Trueself
-          return False
+            if not invers:
+              okMatch=True
+            else:
+              inversMatch=True
+            continue
+          continue
         if line.startswith(f):
-          return True
+          if not invers:
+            okMatch=True
+          else:
+            inversMatch=True
+          continue
     except:
       pass
+    if inversMatch:
+      return False
+    if okMatch:
+      return True
     return False
 
   #compute the NMEA checksum

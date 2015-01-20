@@ -9,7 +9,7 @@
 <AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />
 <!-- <AVNSerialReader name="com4reader" port="3" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
-<AVNSerialReader useFeeder="true" name="com8reader" port="7" baud="38400" minbaud="4800"/>
+<!--<AVNSerialReader useFeeder="true" name="com8reader" port="7" baud="38400" minbaud="4800"/>-->
 <!-- bluetooth support
 	 we have a scanner that is looking for bluetooth devices
 	 if one is found, it will try to connect and feed the data through the gpsd feeder
@@ -37,10 +37,18 @@
 	<UsbDevice usbid="1-1.2.1:1.0" baud="38400" minbaud="4800"/>
 	<!-- a serial output device at one particular USB port
              with this filter it will output all NMEA data but no AIS data
-             you can further restrict this by using e.g. $RMC for NMEA RMC sentences -->
-	<UsbDevice usbid="3-4.2:1.0" baud="38400" type="writer" xonxoff="1" timeout="10" filter="$"/>
+             you can further restrict this by using e.g. $RMC for NMEA RMC sentences 
+	     in this configuration it additionally has a reader enabled that runs at the same baudrate
+	     use a readerFilter to also apply a filter at the reader-->
+	<!-- <UsbDevice usbid="3-4.3.1:1.0" baud="38400" type="writer" xonxoff="1" timeout="10" filter="$RMC" combined="True" /> -->
+	<!-- more readable form ...-->
+	<UsbDevice usbid="3-4.3.1:1.0" baud="38400" type="combined" xonxoff="1" timeout="10" filter="$RMC" />
 	<!-- a device to be ignored - e.g. for testing -->
 	<UsbDevice usbid="3-4.3.3:1.0" baud="38400" type="ignore" />
+	<!-- a reader with autobaud and filter - it will filter out any RMC records and all AIS stuff-->
+	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="reader" filter="^$RMC,^!"/>-->
+	<!-- a pure writer that outputs RMB -->
+	<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="writer" filter="$RMC"/>
 </AVNUsbSerialReader>
 
 

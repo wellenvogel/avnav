@@ -79,7 +79,7 @@ class AVNUsbSerialReader(AVNWorker):
   #get the parameters for an usb device
   @classmethod
   def getSerialParam(cls):
-    rt=SerialReader.getConfigParam().copy()
+    rt=SerialWriter.getConfigParam().copy()
     rt.update({
         'port': 0,
         'name':'',    #will be set automatically
@@ -183,7 +183,7 @@ class AVNUsbSerialReader(AVNWorker):
     try:
       handler.run()
     except:
-      AVNLog.info("serial writer stopped with %s",(traceback.format_exc(),))
+      AVNLog.info("serial handler stopped with %s",(traceback.format_exc(),))
     AVNLog.debug("serial handler for %s finished",addr)
     self.removeHandler(addr)
     self.deleteInfo(handler.getName())
@@ -207,8 +207,10 @@ class AVNUsbSerialReader(AVNWorker):
         handlertype="reader"
         if param.get('type') is not None:
           handlertype=param.get('type')
-        if handlertype == 'writer':
-          handler=SerialWriter(param,self)
+        if handlertype == 'writer' or handlertype == "combined":
+          handler=SerialWriter(param,None,self.writeData,self)
+          if handlertype == "combined":
+            handler.param["combined"]=True
         else:
           if handlertype == 'reader':
             handler=SerialReader(param, None, self.writeData, self)

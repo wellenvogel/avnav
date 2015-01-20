@@ -218,6 +218,10 @@ class SerialReader():
     isOpen=False
     AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in self.param.keys()))
     self.setInfo("created",AVNWorker.Status.STARTED)
+    filterstr=self.param.get('filter')
+    filter=None
+    if filterstr != "":
+      filter=filterstr.split(',')
     while True and not self.doStop:
       name=self.getName()
       timeout=float(self.param['timeout'])
@@ -298,17 +302,21 @@ class SerialReader():
                   break;
                 continue
             else:
-              self.setInfo("receiving",AVNWorker.Status.NMEA)
-              hasNMEA=True
-              numerrors=0
+              pass
           if len(data) < 5:
             AVNLog.debug("ignore short data %s",data)
           else:
+            numerrors=0
+            lastTime=time.time()
+            if not NMEAParser.checkFilter(data,filter):
+              continue
+            self.setInfo("receiving",AVNWorker.Status.NMEA)
+            hasNMEA=True
             if not self.writeData is None:
               self.writeData(data)
             else:
               self.nmeaParser.parseData(data)
-            lastTime=time.time()
+
         if (time.time() - lastTime) > porttimeout:
           self.setInfo("timeout",AVNWorker.Status.ERROR)
           f.close()
