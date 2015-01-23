@@ -29,6 +29,7 @@
 import time
 import socket
 import threading
+import re
 
 from avnav_util import *
 from avnav_nmea import *
@@ -293,3 +294,23 @@ class AVNUsbSerialReader(AVNWorker):
         AVNLog.debug("exception when querying usb serial devices %s, retrying after 10s",traceback.format_exc())
         context=None
       time.sleep(10)
+  #overloaded info method
+  def getInfo(self):
+    try:
+      rt=self.info.copy();
+      st=self.status.copy()
+      rta=[]
+      keys=sorted(rt.keys(),key=lambda x: re.sub("^[^-]*[-]","-",x))
+      for k in keys:
+        try:
+          elem={}
+          elem['name']=k
+          elem['info']=rt[k]
+          elem['status']=st[k]
+          rta.append(elem)
+        except:
+          pass
+      return {'name':self.getName(),'items':rta}
+    except:
+      return {'name':self.getName(),'items':[],'error':"no info available"}
+

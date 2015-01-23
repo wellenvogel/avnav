@@ -74,7 +74,6 @@ class SerialWriter(SerialReader):
     self.writeData=writeData
     if self.navdata is None and self.writeData is None:
       raise Exception("either navdata or writeData has to be set")
-    self.setInfo("created",AVNWorker.Status.INACTIVE)
     feeder=AVNWorker.findFeeder(self.param.get('feederName'))
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.param.get('feederName') or "")
@@ -85,7 +84,7 @@ class SerialWriter(SerialReader):
     self.device=None
   def getName(self):
     if self.param.get('combined') is not None and str(self.param.get('combined')).upper()=="TRUE":
-      return "SerialReaderWriter"+self.param['name']
+      return "SerialReaderWriter-"+self.param['name']
     return "SerialWriter-"+self.param['name']
    
   def stopHandler(self):
@@ -115,12 +114,12 @@ class SerialWriter(SerialReader):
       AVNLog.debug("openDevice for port %s, baudrate=%d, timeout=%f",portname,baud,timeout)
     lastTime=time.time()
     try:
-      self.setInfo("opening %s at %d baud"%(portname,baud),AVNWorker.Status.STARTED)
+      self.setInfoWithKey("writer","opening %s at %d baud"%(portname,baud),AVNWorker.Status.STARTED)
       f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
-      self.setInfo("port open",AVNWorker.Status.STARTED)
+      self.setInfoWithKey("writer","port open",AVNWorker.Status.STARTED)
       return f
     except Exception:
-      self.setInfo("unable to open port",AVNWorker.Status.ERROR)
+      self.setInfoWithKey("writer","unable to open port",AVNWorker.Status.ERROR)
       try:
         tf=traceback.format_exc(3).decode('ascii','ignore')
       except:
@@ -146,7 +145,7 @@ class SerialWriter(SerialReader):
     init=True
     isOpen=False
     AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in self.param.keys()))
-    self.setInfo("created",AVNWorker.Status.STARTED)
+    self.setInfoWithKey("writer","created",AVNWorker.Status.STARTED)
     startReader=self.param.get('combined')
     if startReader is not None and str(startReader).upper()=='TRUE':
       AVNLog.debug("starting reader")
@@ -168,7 +167,7 @@ class SerialWriter(SerialReader):
       init=False
       if self.doStop:
         AVNLog.info("handler stopped, leaving")
-        self.setInfo("stopped",AVNWorker.Status.INACTIVE)
+        self.setInfoWithKey("writer","stopped",AVNWorker.Status.INACTIVE)
         try:
           self.device.close()
           self.device=None
@@ -204,13 +203,13 @@ class SerialWriter(SerialReader):
           break
 
     AVNLog.info("stopping handler")
-    self.setInfo("stopped",AVNWorker.Status.INACTIVE)
+    self.setInfoWithKey("writer","stopped",AVNWorker.Status.INACTIVE)
     self.deleteInfo()
 
   #the read method for the combined reader/writer
   def readMethod(self):
     threading.current_thread().setName("[%s]%s-combinedReader"%(AVNLog.getThreadId(),self.getName()))
-    self.setInfoWithKey("combinedReader","started",AVNWorker.Status.STARTED)
+    self.setInfoWithKey("reader","started",AVNWorker.Status.STARTED)
     AVNLog.info("started")
     filterstr=self.param.get('readFilter')
     filter=None
@@ -223,7 +222,7 @@ class SerialWriter(SerialReader):
           bytes=self.device.readline(300)
           if self.doStop:
             AVNLog.info("Stopping reader of combined reader/writer %s",str(self.param['port']))
-            self.deleteInfoWithKey("combinedReader")
+            self.deleteInfoWithKey("reader")
             return
           if bytes is None or len(bytes)==0:
             #if there is no data at all we simply take all the time we have...
@@ -238,7 +237,7 @@ class SerialWriter(SerialReader):
               AVNLog.debug("ignore line %s due to not matching filter",data)
               continue
             if not hasNmea:
-              self.setInfoWithKey("combinedReader","receiving data",AVNWorker.Status.NMEA)
+              self.setInfoWithKey("reader","receiving data",AVNWorker.Status.NMEA)
             if not self.writeData is None:
               self.writeData(data)
             else:
