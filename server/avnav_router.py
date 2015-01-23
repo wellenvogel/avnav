@@ -411,7 +411,7 @@ class AVNRouter(AVNWorker):
         curTPV=self.navdata.getMergedEntries("TPV", [])
         lat=curTPV.data.get('lat')
         lon=curTPV.data.get('lon')
-        kn=curTPV.data.get('speed')
+        kn=curTPV.data.get('speed')*3600/AVNUtil.NM;
         if kn is None:
           kn=""
         #we could have speed(kn) or course(deg) in curTPV
@@ -419,7 +419,7 @@ class AVNRouter(AVNWorker):
         if lat is not None and lon is not None:
           AVNLog.debug("compute route data from %s to %s",str(self.startWp),str(self.endWp))
           XTE=AVNUtil.calcXTE((lat,lon), self.wpToLatLon(self.startWp), self.wpToLatLon(self.endWp))/float(AVNUtil.NM)
-          if XTE < 0:
+          if XTE > 0:
             LR="L"
           else:
             LR="R"
