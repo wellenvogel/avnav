@@ -48,7 +48,7 @@
 	<!-- a reader with autobaud and filter - it will filter out any RMC records and all AIS stuff-->
 	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="reader" filter="^$RMC,^!"/>-->
 	<!-- a pure writer that outputs RMB -->
-	<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="writer" filter="$RMC"/>
+	<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="writer" filter=""/>
 </AVNUsbSerialReader>
 
 
