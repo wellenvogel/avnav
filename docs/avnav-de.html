@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta content="text/html; charset=windows-1252" http-equiv="content-type">
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
     <title>AvNav Beschreibung</title>
   </head>
   <body>
     <h2 class="western">AvNav - Navigation per WebApp</h2>
-    <p>Stand 2014/09/01</p>
+    <p>Stand 2015/01/23</p>
     <p>Ein Hinweis vorweg:</p>
     <p>I<i><b>ch kann keine Garantie für die Funktion der App übernehmen,
           insbesondere die Nutzung zu Navigationszwecken geschieht auf eigenes
@@ -44,15 +44,15 @@
     <p>Nach dem Aufruf der Start-Url landet man auf der Einstigesseite.</p>
     <p><img src="mainpage.png" name="Grafik3" border="0" width="600"> </p>
     <p>Im Hauptbereich der Seite befindet sich die Liste der vom Server
-      gefundenen Kartensätze (gemf files unter /data/avnav/charts). Durch
-      Anklicken gelang man zur Navigationsseite mit dem enstprechenden
-      Kartensatz.</p>
+      gefundenen Kartensätze (beim Raspi-Server gemf files unter
+      /data/avnav/charts, in der Android App unter charts im gewählten
+      Verzeichnis). Durch Anklicken gelang man zur Navigationsseite mit dem
+      enstprechenden Kartensatz.</p>
     <p>Wie auf allen Seiten befindet sich am rechten Rand eine Button-Leiste.
       Von hier aus erreich man eine Status-Seite des Servers und die Hilfe.</p>
     <h4 class="western">Die Navigationsseite</h4>
     <p><br clear="RIGHT">
-      Dieses Bild zeigt einen gesetzten Marker (locked) – das Boot ist
-      allaerdings noch nicht auf Kurs (daher noch keine ETA).</p>
+      Dieses Bild zeigt einen gesetzten Marker (locked) – das Boot ist auf Kurs.</p>
     <p><img src="navi-routing-wp-ais.png" name="Grafik4" border="0" height="400">
     </p>
     <p>Dies ist die Hauptansicht. In der Mitte befindet sich die Kartenansicht
@@ -65,6 +65,9 @@
       +/- auf der rechten Leiste benutzt werden.Wenn (wie im Bild) der
       Schiff-Button einen grünen Rand hat ("Schiff lock"), ist die Karten-Mitte
       auf die Schiffsposition fixiert und springt immer wieder dahin zurück.</p>
+    <p>Um das Schiff kann man bis zu 3 Kreise in entsprechenden Entfernungen
+      einstellen um Abstände zu schätzen (Über settings-&gt;Navigation Display,
+      Standard 300m und 1000m).</p>
     <p>Links befindet sich die Darstellung des nächsten AIS Zieles (geringste
       momentane Entfernung). Dieses färbt sich rot, wenn eine CPA von 500m
       unterschritten wird. Gelb bedeuted, dass nicht das nächste Ziel sondern
@@ -208,12 +211,13 @@
     </p>
     <h4>Die Routingseite</h4>
     <img alt="" src="navi-route-add.png" height="400">
-    <p>Auf der Routing Seite kann man eine Route bearbeiten bzw.
-      editieren.&nbsp;</p>
+    <p>Auf der Routing Seite kann man eine Route bearbeiten bzw. editieren.
+      Aufgerufen wird sie durch den Routting Button (<img alt="" src="../viewer/images/RoutingButton40.png"
+        height="20">).</p>
     <p>Zu jeder Zeit gibt es einen aktiven Wegepunkt (rot dargestellt, links in
-      der Anzeige rot mnarkiert und oben in der Wegepunkt-Box angezeigt). Die
+      der Anzeige rot markiert und oben in der Wegepunkt-Box angezeigt). Die
       meisten Aktionen bezihen sich auf diesen Wegepunkt. Er kann durch
-      Anklicken links, durch die Pfeiltasten oebn oder durch anklicken auf der
+      Anklicken links, durch die Pfeiltasten oben oder durch anklicken auf der
       Karte geändert werden.</p>
     <p>Neben den Standard buttons der Navigationsseite wird eine zusätzliche
       Leiste mit routing buttons eingeblendet:</p>
@@ -254,7 +258,7 @@
       </tbody>
     </table>
     <p>Ein Klick auf den <img alt="" src="../viewer/images/RoutingButton40.png"
-        height="20">Button verläßt den Editier-Modus ohne dass die Route aktiv
+        height="20">Button verläßt den Editier-Modus ohne das die Route aktiv
       wird.</p>
     <p>Auf der linken Seite werden die Wegepunkte der aktuellen Route angezeigt.
       Dazu jeweils die Kurse und Distanzen für die Abschnitte. Im oberen Teil
@@ -281,7 +285,8 @@
       (-&gt;) zum nächsten WP schalten und diesen aktivieren (<img alt="" src="../viewer/images/wpgoto60.png"
         height="20">).</p>
     <h3>Die AIS Übersicht</h3>
-    <p>Mit einem Klick auf die AIS Info gelangt man zur AIS Übersicht:</p>
+    <p>Mit einem Klick auf die AIS Info (oder auf ein AIS Target in der Karte)
+      gelangt man zur AIS Übersicht:</p>
     <p><img src="navi-ais.png" name="Grafik10" border="0" width="600"><br clear="RIGHT">
       Auf dieser Seite sieht man alle empfangenen AIS Ziele im Umkreis von ca.
       10nm zur Bootsposition (sortiert nach CPA). Mit Klick auf eine Zeile
@@ -470,18 +475,13 @@
       <br>
     </p>
     <h3 class="western">Technische Infos</h3>
-    <p>Die WebApp kommuniziert mit dem server (Stand heute) „read only“ - d.h.
-      sie liest nur Daten, verändert aber keine Daten auf dem Server. Das Setzen
-      des Markers ist somit eine rein lokale Sache, wenn man auf einem
-      Display-Gerät den Marker setzt, beeinflusst das nicht die Anzeige auf den
-      anderen Geräten. Das wird sich in zukünftigen Versionen ändern.</p>
-    <p>Sie besteht aus einem HTML Gerüst (avnav_viewer.html) sowie den
-      eingebundenen JavaScript Bibliotheken und einem JavaScript Anteil
-      (avnav_viewer.js). Die Darstellung ist weitgehend von der eigentlichen
-      Funktion entkoppelt und wird per css (unter Nutzung von less) gesteuert.
-      Man kann die Darstellung in der HTMl Datei und in avnav_viewer.less
-      weitgehend anpassen.</p>
-    <p>Die Kommunikation erfolgt durch einfache GET requests zur url <a href="http://avnav/viewer/avnav_navi.php">http://avnav/viewer/avnav_navi.php</a>,
+    <p>Die WebApp besteht aus einem HTML Gerüst (avnav_viewer.html) sowie den
+      eingebundenen JavaScript Bibliotheken und einem JavaScript Anteil (avnav_min.js).
+      Die Darstellung ist weitgehend von der eigentlichen Funktion entkoppelt
+      und wird per css (unter Nutzung von less) gesteuert. Man kann die
+      Darstellung in der HTMl Datei und in avnav_viewer.less weitgehend
+      anpassen.</p>
+    <p>Die Kommunikation erfolgt durch einfache GET/POST requests zur url <a href="http://avnav/viewer/avnav_navi.php">http://avnav/viewer/avnav_navi.php</a>,
       dann folgen Parameter, die den request beschreiben. Die Antworten vom
       server sind json kodiert.</p>
     <p>Die wichtigsten requests sind:</p>
@@ -497,7 +497,7 @@
       </li>
     </ul>
     <p>Diese Requests werden periodisch wiederholt (polling).</p>
-    <p>Viele Parameter lassen sich in der Variable properties am Anfang der Java
-      Script Datei einstellen.</p>
+    <p><br>
+    </p>
   </body>
 </html>

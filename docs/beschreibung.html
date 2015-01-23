@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="content-type">
-    <title></title>
+    <title>Beschreibung avNav</title>
     <meta name="GENERATOR" content="OpenOffice.org 3.4.1  (Unix)">
     <meta name="CREATED" content="20130720;22180300">
     <meta name="CHANGED" content="20130729;17353700">
@@ -16,7 +16,7 @@
   </head>
   <body dir="LTR" style=" max-width: 650px" lang="de-DE">
     <h1>Raspberry Pi als Bordcomputer / Navigation im Browser </h1>
-    <p>03.01.2015</p>
+    <p>23.01.2015</p>
     <p>Direkt zur Beschreibung der WebApp <a href="avnav-de.html">hier</a>. </p>
     <p>NEU! - <a href="avnav-android-de.html">Android App</a></p>
     <p>Konvertieren der Karten <a href="avnav-chart-convert-de.html">hier</a>.</p>
@@ -162,7 +162,7 @@
       Anschliessend versucht er ein auto bauding zwischen 4800 und 34000 Baud
       und bemüht sich, NMEA Daten zu erkennen. Falls keine Daten empfangen
       werden, wird die Schnittstelle geschlossen und das Spiel beginnt von vorn.
-      Damit „überlebt“ er auch das anschliessen/abstecken von Wandlern im
+      Damit „überlebt“ er auch das Anschliessen/Abstecken von Wandlern im
       Betrieb oder das An- bzw. Abschalten von Geräten. Bei mir hängt ein RO4800
       mit AIS Decoder dran, die GPS Daten werden durchgereicht. Alternativ
       versucht er auch Kontakt zu seriellen Bluetooth Geräten aufzunehmen, falls
@@ -186,7 +186,7 @@
       Track Dateien zu schreiben.</p>
     <p>Über den integrierten WebServer kann der Zugriff auf diese dekodierten
       Daten erfolgen (per HTTP GET, Antwort als json).</p>
-    <p><span style="font-style: italic;">Neu ab Versionen 2015-01-xxx:</span></p>
+    <p><span style="font-style: italic;">Neu ab Versionen 2015-01-23:</span></p>
     <p><span style="font-style: italic;">Der Route-Handler wertet eingestellte
         Routen (bzw. Wegepunkte) aus und berechnet daraus die Daten für eine
         Autopilot-Steuerung. Diese werden als RMB NMEA Datensätze wieder in die
@@ -213,12 +213,12 @@
     <p>In der Auslieferung für den pi ist die Software so konfiguriert, dass sie
       alle per USB angebundenen seriellen Schnittstellen öffnet, dort versucht
       NMEA DAten zu erkennen (per auto-bauding von 4800 B/s bis 38400 B/s) und
-      diese dann verarbeitet. Wenn eine gültige Uhrzeit erkannt wird, wird die
-      Systemzeit gesetzt. Ausserdem wird (falls ein Bluetooth adapter erkannt
-      wurde) versucht, mit allen seriellen Bluetooth Geräten Verbindung
-      aufzunehmen und auch von dort NMEA Daten zu empfangen. Damit sollte im
-      Normalfall keine weitere Konfiguration nötig sein und NMEA Daten sofort
-      erkannt werden (kann man im Status display prüfen - s.u.).</p>
+      diese dann verarbeitet. </p>
+    <p>Ausserdem wird (falls ein Bluetooth adapter erkannt wurde) versucht, mit
+      allen seriellen Bluetooth Geräten Verbindung aufzunehmen und auch von dort
+      NMEA Daten zu empfangen. Damit sollte im Normalfall keine weitere
+      Konfiguration nötig sein und NMEA Daten sofort erkannt werden (kann man im
+      Status display prüfen - s.u.).</p>
     <p>Die ausgelieferte avnav_server.xml Datei enthält Kommentare, so das
       Anpassungen an die eigenen Bedürfnisse einfach möglich sein sollten.</p>
     <p>Die Software ist auf <a href="https://github.com/wellenvogel/avnav">github</a>
@@ -277,6 +277,11 @@
               Momentan ist das ein simples csv Format, eine Konvertierung nach
               gpx steht schon auf der todo Liste.</p>
           </td>
+        </tr>
+        <tr>
+          <td>/data/avnav/routes</td>
+          <td>die aktuelle route default.gpx und das aktuelle Segment
+            currentLeg.json</td>
         </tr>
         <tr valign="TOP">
           <td width="28%">
@@ -584,11 +589,11 @@
     Einstiegsseite ist unter der url <a href="http://avnav/viewer/avnav_viewer.html">http://avnav/viewer/avnav_viewer.html</a>
     erreichbar. Es is eine sogenannte „single page app“, d.h. Die weitere
     Kommunikation mit dem server geschieht per Ajax durch den JavaScript Anteil.
-    Vom Layout ist sie optimiert für die Darstellung auf einem 7 Zoll Tablet
-    (bei mir momentan im Einsatz: Nexus 7 am Navitisch, Blackberry Playbook
-    draussen), sie läuft aber natürlich auch auf größeren Tablets (Ipad) oder
-    auf einem Laptop/Desktop. Eine sinnvolle Nutzung ist ab etwa 900x540 Pixel
-    möglich.<br>
+    Vom Layout ist sie optimiert für die Darstellung auf einem 7 Zoll (oder
+    größer) Tablet (bei mir momentan im Einsatz: Nexus 7 am Navitisch,
+    Blackberry Playbook draussen), sie läuft aber natürlich auch auf größeren
+    Tablets (Ipad) oder auf einem Laptop/Desktop. Eine sinnvolle Nutzung ist ab
+    etwa 900x540 Pixel möglich.<br>
     <br>
     Zur Beschreibung der WebApp <a href="avnav-de.html">hier</a>.<br>
   </body>
