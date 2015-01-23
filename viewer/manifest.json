@@ -1,0 +1,15 @@
+{
+  "name": "avNav",
+  "icons": [
+    {
+      "src": "images/WebIcon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "density": "0.75"
+    }
+
+  ],
+  "start_url": "avnav_viewer.html",
+  "display": "standalone",
+  "orientation": "landscape"
+}
