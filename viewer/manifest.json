@@ -10,6 +10,6 @@
 
   ],
   "start_url": "avnav_viewer.html",
-  "display": "standalone",
-  "orientation": "landscape"
+  "display": "standalone"
+
 }
