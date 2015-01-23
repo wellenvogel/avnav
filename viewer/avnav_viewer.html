@@ -33,12 +33,20 @@ Buttons:
 all buttons with ids avb_... will call corresponding js functions
 -->
 
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-     <meta name="viewport" id="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+     <meta name="viewport" id="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0"/>
      <!--<meta name="viewport" id="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, target-densityDpi=device-dpi">-->
-     <meta name="apple-mobile-web-app-capable" content="yes">
-     <meta name="mobile-web-app-capable" content="yes">
+     <meta name="apple-mobile-web-app-capable" content="yes"/>
+     <meta name="mobile-web-app-capable" content="yes"/>
+     <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+     <meta name="apple-mobile-web-app-title" content="avNav"/>
 
+      <!-- workaround for less bugs on ios -->
+    <style>
+        .less-error-message{
+            display: none;
+        }
+    </style>
     <link rel="stylesheet/less" type="text/css" href="avnav_viewer.less"/>
 	<script type="text/javascript" src='loader.js'></script>
     <script type="text/javascript">
@@ -52,11 +60,14 @@ all buttons with ids avb_... will call corresponding js functions
           if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
       } catch (e){}
     </script>
-	<title>AVNav</title>
+      <link rel="manifest" href="manifest.json">
+      <link rel="icon" sizes="512x512" href="images/WebIcon-512.png">
+      <link rel="apple-touch-icon" sizes="128x128" href="images/WebIcon-128.png">
+	<title>AVNav-Web</title>
 
 	</head>
 
-  <body onload="avnav.main()">
+  <body onload="avnav.main()" >
   <!-- mainPage -->
   <div id="avi_mainpage" class="avn_page">
       <div class='avn_panel avn_left_panel'>
@@ -357,7 +368,7 @@ all buttons with ids avb_... will call corresponding js functions
                           <!-- leftBottomPositionPos -->
                           <div id='leftBottomPositionStatus' class='avn_float_left'>
                               <div id='boatLocalTime' class='avd_gpsTime avn_float_left'>00:00:00</div>
-                              <img id='boatPositionStatus' class='avn_status_image' src='images/GreyBubble40.png'></img>
+                              <img id='boatPositionStatus' class='avn_status_image' src='images/GreyBubble40.png'/>
                           </div>
                           <div id='leftBottomPositionPos' class='avn_float_left'>
                               <div id='boatPosition' class='avd_gpsPosition avn_float_left'>-------------</div>
