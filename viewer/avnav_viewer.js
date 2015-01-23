@@ -161,6 +161,8 @@ function getParam(key)
  *
  */
 avnav.main=function() {
+    less.modifyVars();
+    $("body").show();
     var propertyHandler=new avnav.util.PropertyHandler(propertyDefinitions(),{});
     propertyHandler.loadUserData();
     var navobject=new avnav.nav.NavObject(propertyHandler);
