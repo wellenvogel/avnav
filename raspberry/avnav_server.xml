@@ -59,6 +59,21 @@
 	 -->
 <AVNUsbSerialReader maxDevices="5" allowUnknown="true" baud="38400" minbaud="4800">
 	<UsbDevice usbid="1-1.2.1:1.0" baud="38400" minbaud="4800"/>
+    <!-- a serial input + output device at one particular USB port
+         with this filter it will output only RMB NMEA records data
+	     use a readerFilter to also apply a filter at the reader
+	     Filter examples:
+	     filter="$"              - all NMEA data (no AIS)
+	     filter="$RMC,$RMB"      - NMEA RMB,RMC data
+	     readerFilter="^!,^$RMC" - read no AIS data, no RMC, no RMB but all other NMEA data -->
+    <!--<UsbDevice usbid="1-1.2:1.0" baud="4800"  type="combined" xonxoff="0" timeout="10" filter="$RMB"/> -->
+    <!-- a dedicated device for only reading AIS data -->
+    <!-- <UsbDevice usbid="1-1.3:1.0" baud="38400" minbaud="" filter="!"/> -->
+    <!-- a dedicated reader only reading at 4800 -->
+    <!-- <UsbDevice usbid="1-1.5:1.0" baud="4800" minbaud=""/> -->
+    <!-- a pure serial output device
+         outputting all NMEA data (but no AIS)-->
+    <!-- <UsbDevice usbid="1-1.5:1.0" baud="4800" minbaud="" type="writer" filter="$"/> -->
 </AVNUsbSerialReader>
 
 <!--  serial reader
@@ -70,8 +85,9 @@
       But if we need to interface to some none usb-serial interfaces or run on a system without udev
       those configurations can be used
       Devices like /dev/rfcommn can be used for bluetooth connections setup outside of us...
--->   
-<!-- 
+-->
+
+<!--
 <AVNSerialReader useFeeder="true" name="ttyUSB0Reader" port="/dev/ttyUSB0" baud="38400" minbaud="4800" numerrors="20"/> 
 <AVNSerialReader useFeeder="true" name="ttyUSB1Reader" port="/dev/ttyUSB1" baud="38400" minbaud="4800" numerrors="20"/>
 <AVNSerialReader useFeeder="true" name="ttyUSB2Reader" port="/dev/ttyUSB2" baud="38400" minbaud="4800" numerrors="20"/>
