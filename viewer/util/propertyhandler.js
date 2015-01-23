@@ -59,6 +59,11 @@ avnav.util.PropertyHandler=function(propertyDescriptions,properties){
     this.extractProperties(this.currentProperties,"",this.propertyDescriptions);
     this.extend(this.currentProperties,properties);
     this.userData={};
+    var self=this;
+    $(document).ready(function(){
+       self.updateLayout();
+       $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this));
+    });
 };
 
 /**
@@ -226,17 +231,29 @@ avnav.util.PropertyHandler.prototype.loadUserData=function(){
  */
 avnav.util.PropertyHandler.prototype.updateLayout=function(){
     var vars=this.propertyDescriptions.style;
+    var height=$(window).height();
+    //ensure that our buttons fit...
+    var numButtons=this.getValue(this.propertyDescriptions.maxButtons);
+    var buttonHeight=height/numButtons-8; //TODO: should we get this from CSS?
+    var currentButtonHeight=this.getValue(this.propertyDescriptions.style.buttonSize);
+    var scale=buttonHeight/currentButtonHeight;
+    if (scale > 1) scale=1;
     if (vars){
         var lessparam={};
         //we rely on exactly one level below style
         for (var k in vars){
             var val=this.getValue(vars[k]);
+            if (k == "buttonSize"){
+                //if (val > buttonHeight) val=Math.ceil(buttonHeight);
+            }
             if (vars[k].type == avnav.util.PropertyType.RANGE) {
-                lessparam['@' + k] = "" + val + "px";
+                if (k != "nightMode") val=scale*val;
+                lessparam['@' + k] = "" + Math.ceil(val) + "px";
             }
             if (vars[k].type == avnav.util.PropertyType.COLOR) {
                 lessparam['@' + k] = "" + val;
             }
+
         }
         less.modifyVars(lessparam);
     }

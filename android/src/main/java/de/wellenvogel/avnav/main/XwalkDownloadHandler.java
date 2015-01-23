@@ -49,7 +49,12 @@ public class XwalkDownloadHandler {
                         Intent goToMarket = new Intent(Intent.ACTION_VIEW);
                         goToMarket.setData(Uri.parse(
                                 "market://details?id=" + AvNav.XWALKAPP));
-                        activity.startActivity(goToMarket);
+                        try {
+                            activity.startActivity(goToMarket);
+                        }catch (Exception e) {
+                            Toast.makeText(activity, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                            return;
+                        }
                     }
                 });
 

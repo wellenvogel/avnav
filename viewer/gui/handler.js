@@ -43,6 +43,19 @@ avnav.gui.Handler=function(properties,navobject,map){
     this.navobject=navobject;
     /** {avnav.map.MapHolder} */
     this.map=map;
+    /**
+     * the curent page
+     * @type {String}
+     */
+    this.page=undefined;
+    var self=this;
+    $(window).on('resize',function(){
+        setTimeout(function(){
+            self.properties.updateLayout();
+            $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.properties));
+            },10);
+    });
+
 };
 /**
  * return to a page or show a new one if returnpage is not set
@@ -94,5 +107,6 @@ avnav.gui.Handler.prototype.isMobileBrowser=function(){
     return ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) )||
         this.properties.getProperties().forceMobile;
     };
+
 
 

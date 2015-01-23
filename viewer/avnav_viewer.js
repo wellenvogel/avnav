@@ -69,6 +69,7 @@ var propertyDefinitions=function(){
         courseAverageTolerance: new avnav.util.Property(15,"Rotation Tolerance",avnav.util.PropertyType.RANGE,[1,30]), //tolerance for slow rotation
         minGridLedvel: new avnav.util.Property( 10),
         loggingEnabled: new avnav.util.Property( true),
+        maxButtons: new avnav.util.Property(7),
         positionQueryTimeout: new avnav.util.Property( 1000,"Position",avnav.util.PropertyType.RANGE,[500,5000,10]), //1000ms
         trackQueryTimeout: new avnav.util.Property( 5000,"Track",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
         routeQueryTimeout: new avnav.util.Property( 1000,"Route",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
@@ -129,7 +130,7 @@ var propertyDefinitions=function(){
             nightMode: new avnav.util.Property( 100,"NightMode",avnav.util.PropertyType.RANGE,[0,100]),
             aisPanelWidth:new avnav.util.Property( 90,"AIS Width(px)",avnav.util.PropertyType.RANGE,[50,300]),
             routeInfoPanelWidth:new avnav.util.Property( 120,"RoutePanel Width(px)",avnav.util.PropertyType.RANGE,[50,300]),
-            buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[40,100]),
+            buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[35,100]),
             centerDisplayHeight:new avnav.util.Property( 30,"+ Display Height(px)",avnav.util.PropertyType.RANGE,[20,80]),
             aisWarningColor: new avnav.util.Property( "#FA584A","Warning",avnav.util.PropertyType.COLOR),
             aisNormalColor: new avnav.util.Property( "#EBEB55","Normal",avnav.util.PropertyType.COLOR),

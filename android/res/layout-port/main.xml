@@ -4,8 +4,8 @@
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android"
-        android:weightSum="1" android:padding="10dp"
-        >
+        android:weightSum="1"
+        android:paddingTop="5dp">
         <TextView
                 android:layout_width="237dp"
                 android:layout_height="wrap_content"
@@ -13,12 +13,6 @@
                 android:text="@string/selectDirLabel"
                 android:id="@+id/textView" android:layout_weight="0" android:autoText="false"
                 android:gravity="bottom|left" android:layout_marginLeft="10dp"/>
-        <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
-                android:text="@string/runMode"
-                android:id="@+id/textView6" android:paddingLeft="5dp" android:layout_marginLeft="10dp"/>
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
@@ -36,6 +30,12 @@
                         android:text="..."
                         android:id="@+id/btSelectDir" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"/>
         </LinearLayout>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                android:text="@string/runMode"
+                android:id="@+id/textView6" android:paddingLeft="5dp" android:layout_marginLeft="10dp"/>
         <RadioGroup android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:orientation="horizontal">
                 <RadioButton
