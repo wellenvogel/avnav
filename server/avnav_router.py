@@ -401,7 +401,7 @@ class AVNRouter(AVNWorker):
     hasRMB=False
     #do the computation of some route data
     nmeaData="$GPRMB,A,,,,,,,,,,,,V,D*19\r\n"
-    if self.currentLeg and self.currentLeg.active:
+    if self.currentLeg is not None and self.currentLeg.active:
       if self.startWp!=self.currentLeg.fromWP or self.endWp!=self.currentLeg.toWP:
         self.startWp=self.currentLeg.fromWP
         self.endWp=self.currentLeg.toWP
@@ -411,9 +411,11 @@ class AVNRouter(AVNWorker):
         curTPV=self.navdata.getMergedEntries("TPV", [])
         lat=curTPV.data.get('lat')
         lon=curTPV.data.get('lon')
-        kn=curTPV.data.get('speed')*3600/AVNUtil.NM;
+        kn=curTPV.data.get('speed')
         if kn is None:
-          kn=""
+          kn=0
+        else:
+          kn=kn*3600/AVNUtil.NM
         #we could have speed(kn) or course(deg) in curTPV
         #they are basically as decoded by gpsd
         if lat is not None and lon is not None:
@@ -430,13 +432,13 @@ class AVNRouter(AVNWorker):
           destDis=AVNUtil.distance((lat,lon),self.wpToLatLon(self.endWp))
           if destDis>999.9:
             destDis=999.9
-          if destDis<0.1:
+          if self.currentLeg.approach:
             arrival="A"
           else:
             arrival="V"
           destDis="%.1f"%(destDis)
           destBearing="%.1f"%AVNUtil.calcBearing((lat,lon),self.wpToLatLon(self.endWp))
-          nmeaData="GPRMB,A,"+XTE+","+LR+","+"%s"%(self.WpNr)+","+"%s"%(self.WpNr+1)+",,,,,"+destDis+","+destBearing+","+"%s"%kn+","+arrival+",A"
+          nmeaData="GPRMB,A,"+XTE+","+LR+","+"%s"%(self.WpNr)+","+"%s"%(self.WpNr+1)+",,,,,"+destDis+","+destBearing+","+"%.1f"%kn+","+arrival+",A"
           nmeaData="$"+nmeaData+"*"+NMEAParser.nmeaChecksum(nmeaData)+"\r\n"
           self.setInfo("autopilot","GPRMB:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s"%
                       (self.WpNr,XTE,LR,destDis,destBearing,arrival),AVNWorker.Status.NMEA)
