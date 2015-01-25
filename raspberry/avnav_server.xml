@@ -167,7 +167,11 @@
 <AVNSocketWriter port="34567" maxDevices="5" filter=""/>
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
-<!--  routing handler -->
+<!--  routing handler 
+      additional parameters:
+      interval: interval in seconds for computing RMB data (default: 5)
+      computeRMB: default True, set to fals if you do not want RMB computation
+-->
 <AVNRouter routesdir="/home/pi/avnav/data/routes"></AVNRouter>
 
 
