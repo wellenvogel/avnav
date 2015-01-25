@@ -31,6 +31,8 @@ __date__ ="$29.06.2014 21:23:34$"
 import json
 import threading
 import pprint
+import time
+import traceback
 from avnav_util import *
 
 #a data entry
@@ -247,7 +249,7 @@ class AVNNavData():
         
   
   def __str__(self):
-    rt="AVNNavData \n";
+    rt="AVNNavData \n"
     idx=0
     self.listLock.acquire()
     for k in self.list.keys():
