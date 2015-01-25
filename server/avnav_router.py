@@ -114,6 +114,8 @@ class AVNRouter(AVNWorker):
     #approach handling
     self.lastDistanceToCurrent=None
     self.lastDistanceToNext=None
+    self.routes=[]
+    self.routeListLock=threading.Lock()
     #build the backward conversion
     for k in self.fromGpx.keys():
       v=self.fromGpx[k]
@@ -447,6 +449,28 @@ class AVNRouter(AVNWorker):
           self.feeder.addNMEA(nmeaData)
     return hasRMB
 
+  #get a route from our internal list
+  def getRouteFromList(self,name):
+    rt=None
+    self.routeListLock.acquire()
+    for rt in self.routes:
+      if rt.name is not None and rt.name == name:
+        self.routeListLock.release()
+        return rt
+    self.routeListLock.release()
+    return None
+
+  def addRouteToList(self,route):
+    self.routeListLock.acquire()
+    for rt in self.routes:
+      if rt.name is not None and rt.name == route.name:
+        self.routeListLock.release()
+        return
+    if len(self.routes) > 10:
+      self.routes.pop(0)
+    self.routes.append(route)
+    self.routeListLock.release()
+
   #get a HTTP request param
   def getRequestParam(self,requestparam,name):
     rt=requestparam.get(name)
@@ -492,9 +516,13 @@ class AVNRouter(AVNWorker):
       data=self.getRequestParam(requestparam, 'name')
       if data is None:
         return json.dumps({'status':'no route name'})
-      if not os.path.exists(self.getRouteFileName(data)):
-        return json.dumps({'status':'route '+data+' not found'})
-      route=self.loadRoute(data)
+      route=self.getRouteFromList(data)
+      if route is None:
+        AVNLog.debug("load route %s"%(data))
+        if not os.path.exists(self.getRouteFileName(data)):
+          return json.dumps({'status':'route '+data+' not found'})
+        route=self.loadRoute(data)
+        self.addRouteToList(route)
       AVNLog.debug("get route %s"%(route.name))
       return self.routeToJson(route)
 
