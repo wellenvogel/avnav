@@ -22,6 +22,7 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 
+#set -x
 #general raspi image handling stuff
 #create our diskimage out of the PI SD card
 #we assume 2 or 3 partitions - anyway we throw away the 3rd one
@@ -48,7 +49,7 @@ wlog(){
 #p1 image or device 
 #p2 image number 1...
 getPartStart(){
-  $PARTED -m $1 unit B print | grep "^$2:" | awk -F: '{ print substr($2,0,length($2))} ' || err "unable to get partstart"
+  $PARTED -m $1 unit B print | grep "^$2:" | awk -F: '{ print substr($2,0,length($2)-1)} ' || err "unable to get partstart"
 }
 
 #get the end of a partition in bytes
