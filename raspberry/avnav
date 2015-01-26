@@ -67,24 +67,21 @@ do_start()
 	#sometimes gpsd seems to grab our port...
 	killall gpsd 2> /dev/null
 	if [ "$FORWARD" != "" ]; then
-	  log_daemon_msg switching on port forward to port $FORWARD
-	  for addr in `ip addr list | sed -n 's/.*inet *\([^/]*\).*/\1/p'` 
-	  do
-	  	iptables -A PREROUTING -t nat -p tcp -d $addr --dport 80 -j REDIRECT --to-ports $FORWARD
-	  done
+	  log_daemon_msg avnav switching on port forward to port $FORWARD
+	  iptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports $FORWARD
 	fi
 	if [ "$HCIDEVICES" != "" ] ; then
 		for d in `echo $HCIDEVICES`
 		do
-		  	log_daemon_msg trying to enable bluetooth device $d
+		  	log_daemon_msg avnav trying to enable bluetooth device $d
 			hciconfig $d up
 		done
 	fi
 	if [ ! -f $CONFIG ] ; then
-		log "trying to intialize $CONFIG"
+		log_daemon_msg "trying to intialize $CONFIG"
 		cp $BASECONFIG $CONFIG 
 		if [ $? != 0 ] ; then
-			log_daemon_msg "unable to create $CONFIG"
+			log_daemon_msg avnav "unable to create $CONFIG"
 			return 1
 		fi
 		chown pi $CONFIG
