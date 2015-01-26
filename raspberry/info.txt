@@ -5,6 +5,17 @@ raspberry pi installation
 http://www.raspberrypi.org/downloads
 win32 discimager http://sourceforge.net/projects/win32diskimager/
 
+1.1 first login (setup starts automatically)
+Overclock 900 Mhz, reboot
+
+1.2. update OS
+apt-get update
+apt-get upgrade
+
+rpi-update
+
+update
+
 2. gpsd
 http://blog.retep.org/2012/06/18/getting-gps-to-work-on-a-raspberry-pi/
 sudo apt-get install gpsd gpsd-clients python-gps
@@ -14,16 +25,21 @@ sudo apt-get install gpsd gpsd-clients python-gps
 DBT-122 (DLINK) - pi restarted on plugin
 http://www.rpiblog.com/2012/08/bluetooth-pairing-of-raspberry-pi-with.html
 apt-get install -y bluetooth [bluez-utils blueman]
+#installed a lot of printer drivers
+apt-get autoremove cups
 
 1st connect:
 hcitool scan
 rfcomm bind 0 00:0B:0D:89:39:B4
 
 4.pyserial
-copy pyserial to pi (https://pypi.python.org/packages/source/p/pyserial/pyserial-2.6.tar.gz#md5=cde799970b7c1ce1f7d6e9ceebe64c98)
-unpack tar -xvzf ...
-cd into pyserial dir
-python setup.py install
+#old:
+#copy pyserial to pi (https://pypi.python.org/packages/source/p/pyserial/pyserial-2.6.tar.gz#md5=cde799970b7c1ce1f7d6e9ceebe64c98)
+#unpack tar -xvzf ...
+#cd into pyserial dir
+#python setup.py install
+
+apt-get install python-serial
 
 5. python bluetooth support
 sudo apt-get install python-bluez
@@ -99,7 +115,11 @@ iface eth0:1 inet static
 *  /etc/hostapd/hostapd.conf
 ################### snip
 interface=wlan0
-driver=rtl8192cu
+#use this driver for 8192/8188
+#needs hostapd.edimax - rename this to hostapd (sbin)
+#driver=rtl871xdrv
+#setting for normal hostapd
+driver=nl80211
 ssid=avnav
 hw_mode=g
 channel=6
@@ -118,6 +138,9 @@ DAEMON_CONF="/etc/hostapd/hostapd.conf"
 
 -- does not work - invalid driver, so get a new hostapd from http://dl.dropbox.com/u/1663660/hostapd/hostapd.zip
    see http://blog.sip2serve.com/post/38010690418/raspberry-pi-access-point-using-rtl8192cu
+   new url: http://itwelt.org/downloads/hostapd
+   see http://itwelt.org/anleitungen-howto/raspberry-pi/590-raspberry-pi-und-edimax-ew-7811un-access-point-einrichten
+   
    cd /usr/sbin
    mv hostapd hostapd.ori
    unzip download here...
@@ -154,6 +177,11 @@ ntpq -p gives:
 
 -- finally we use our own settime - setuid' to root and let avnav handle the time update
    we do an update if gpsd reports a valid timestamp to us
+   
+-- remove dhcp server ntp conf
+   rm /var/lib/ntp/ntp.conf.dhcp
+   rm /etc/dhcp/dhclient-exit-hooks.d/ntp
+   
    
 10. final disk layout
 To prepare for easy updates we will create a system partition and additionally a data partition
@@ -192,7 +220,42 @@ and in /home/pi/avnav/data/avnav_server.xml:
 FORWARD=8080
 
 
+13.1
+  apt-get install bc
+  copy initial delivery to /home/pi
+  unpack
+  cd avnav
+  ./setup.sh part
+  update-rc.d check_parts defaults
+  update-rc.d check_wlan defaults
 
+  
+13.5 cleanup
+  apt-get remove wolfram-engine
+  
+13.6
+  raspi-config generate locales
+  
+13.7
+  to ensure forwarding:
+  write FORWARD=8080 to /etc/default/avnav
+  iptables-restore < /etc/iptables.ipv4.nat
+  service avnav restart
+  iptables-save > /etc/iptables.ipv4.nat
+  
+14. auto detect RTL81xx driver
+cd /usr/sbin
+mv hostapd hostapd.ori
+ln -s hostapd.ori hostapd
+
+in check_wlan we test for lsusb RTL81xx and we do lsmod to search for 8192cu
+if both are found -> change the link and edit hostapd.conf
+
+  
+
+  
+  
+  ----------------------------------------------
 14. update firmware and debian (2013/10/20):
 1. downloaded new firmware from https://github.com/raspberrypi/firmware/tree/master/boot
    maybe could have been done by raspi-upgrade..
