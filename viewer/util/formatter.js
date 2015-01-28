@@ -23,7 +23,12 @@ avnav.util.Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
     var coordinatedegrees = Math.floor(abscoordinate);
 
     var coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
-
+    var numdecimal=2;
+    //correctly handle the toFixed(x) - will do math rounding
+    if (coordinateminutes.toFixed(numdecimal) == 60){
+        coordinatedegrees+=1;
+        coordinateminutes=0;
+    }
     if( coordinatedegrees < 10 ) {
         coordinatedegrees = "0" + coordinatedegrees;
     }
@@ -35,7 +40,7 @@ avnav.util.Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
     if( coordinateminutes < 10 ) {
         str +="0";
     }
-    str += coordinateminutes.toFixed(2) + "'";
+    str += coordinateminutes.toFixed(numdecimal) + "'";
     if (axis == "lon") {
         str += coordinate < 0 ? "W" :"E";
     } else {
