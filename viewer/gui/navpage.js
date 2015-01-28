@@ -55,6 +55,12 @@ avnav.gui.Navpage=function(){
     this.firstShow=true;
 
     this.waypointPopUp='#avi_waypoint_popup';
+
+    /**
+     * @private
+     * @type {avnav.nav.Route}
+     */
+    this.lastRoute=new avnav.nav.Route("");
     /**
      * @private
      * @type {avnav.util.Formatter}
@@ -363,7 +369,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.handleToggleButton('#avb_ShowRoutePanel',true);
     this.gui.map.setRoutingActive(true);
     this.handleRouteDisplay();
-    this.updateRoutePoints();
+    this.updateRoutePoints(true);
     if (this.gui.isMobileBrowser()) this.showWpPopUp(this.navobject.getRoutingData().getActiveWpIdx());
     var nLock=this.gui.map.getGpsLock();
     this.lastGpsLock=nLock;
@@ -422,7 +428,9 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     var self=this;
     var curlen=$('#avi_route_info_list').find('.avn_route_info_point').length;
     var rebuild=opt_force||false;
-    if (curlen != route.points.length || rebuild){
+    if (! rebuild) rebuild=this.lastRoute.differsTo(route);
+    this.lastRoute=route;
+    if (rebuild){
         //rebuild
         for (i=0;i<route.points.length;i++){
             html+='<div class="avn_route_info_point ';
@@ -625,6 +633,11 @@ avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
 avnav.gui.Navpage.prototype.btnNavDeleteAll=function(button,ev){
     log("navDeletAll clicked");
     this.navobject.getRoutingData().deleteRoute();
+};
+
+avnav.gui.Navpage.prototype.btnNavInvert=function(button,ev){
+    log("navInvert clicked");
+    this.navobject.getRoutingData().invertRoute();
 };
 /**
  * create the page instance

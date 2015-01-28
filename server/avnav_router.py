@@ -233,6 +233,9 @@ class AVNRouter(AVNWorker):
     return os.path.join(self.routesdir,name+u'.gpx')
 
   def saveRoute(self,route):
+    self.addRouteToList(route)
+    if self.activeRouteName is not None and self.activeRouteName == route.name:
+      self.activeRoute=route
     filename=self.getRouteFileName(route.name)
     f=open(filename,"w")
     try:
@@ -462,8 +465,10 @@ class AVNRouter(AVNWorker):
 
   def addRouteToList(self,route):
     self.routeListLock.acquire()
-    for rt in self.routes:
-      if rt.name is not None and rt.name == route.name:
+    for i in range(0,len(self.routes)):
+      if self.routes[i].name is not None and self.routes[i].name == route.name:
+        self.routes.pop(i)
+        self.routes.append(route)
         self.routeListLock.release()
         return
     if len(self.routes) > 10:
