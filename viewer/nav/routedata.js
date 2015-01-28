@@ -487,6 +487,11 @@ avnav.nav.RouteData.prototype.saveRoute=function(){
  * @private
  */
 avnav.nav.RouteData.prototype.saveLeg=function(){
+    //just to be sure ... - avoid inconsistency between leg and route
+    if (this.currentLeg.name && this.currentLeg.name == this.currentRoute.name) {
+        this.currentLeg.to = new avnav.nav.navdata.WayPoint();
+        this.currentRoute.points[this.currentLeg.currentTarget].assign(this.currentLeg.to);
+    }
     var raw=this.currentLeg.toJsonString();
     localStorage.setItem(this.propertyHandler.getProperties().routingDataName,raw);
 };
@@ -763,6 +768,32 @@ avnav.nav.RouteData.prototype.deleteRoute=function(){
         this.currentLeg.active=false;
     }
     this.navobject.routeEvent();
+};
+
+avnav.nav.RouteData.prototype.invertRoute=function(){
+    var active=this.activeWp;
+    var target=this.currentLeg.currentTarget;
+    for (var i=0;i<this.currentRoute.points.length/2;i++){
+        var swap=this.currentRoute.points.length-i-1;
+        var old=this.currentRoute.points[i];
+        this.currentRoute.points[i]=this.currentRoute.points[swap];
+        this.currentRoute.points[swap]=old;
+    }
+
+    active = this.currentRoute.points.length -1 - active;
+    this.activeWp = active;
+
+    this.saveRoute();
+    if (this.currentLeg.name && this.currentLeg.name == this.currentRoute.name){
+        this.currentLeg.currentTarget=this.currentRoute.points.length-target-1;
+        this.saveLeg();
+        this.legChanged(this.currentLeg);
+    }
+    else {
+        this.navobject.routeEvent();
+    }
+
+
 };
 
 /**
