@@ -67,8 +67,13 @@ do_start()
 	#sometimes gpsd seems to grab our port...
 	killall gpsd 2> /dev/null
 	if [ "$FORWARD" != "" ]; then
-	  log_daemon_msg avnav switching on port forward to port $FORWARD
-	  iptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports $FORWARD
+          dip=`getent hosts avnav | awk '{ print $1;}'`
+          if [ "$dip" != "" ] ; then
+	    log_daemon_msg avnav switching on port forward to port $FORWARD
+	    iptables -A PREROUTING -t nat -p tcp --dport 80 -d $dip -j REDIRECT --to-ports $FORWARD
+          else
+            log_daemon_msg avnav unable to set forwarding as I cannot find my ip
+          fi
 	fi
 	if [ "$HCIDEVICES" != "" ] ; then
 		for d in `echo $HCIDEVICES`

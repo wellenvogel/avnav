@@ -1,5 +1,5 @@
 raspberry pi installation
-2013/03/16...
+2015/01/28...
 
 1.basic raspberry installation:
 http://www.raspberrypi.org/downloads
@@ -84,6 +84,8 @@ dhcp-option=42,0.0.0.0
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+#the port forwarding from port 80 to our avnav port 8080
+iptables -t nat -A PREROUTING -p tcp --dport 80 -d 192.168.20.10 -j REDIRECT --to-port 8080
 iptables-save > /etc/iptables.ipv4.nat
 
 
@@ -136,8 +138,7 @@ rsn_pairwise=CCMP
 *  /etc/default/hostapd
 DAEMON_CONF="/etc/hostapd/hostapd.conf"
 
--- does not work - invalid driver, so get a new hostapd from http://dl.dropbox.com/u/1663660/hostapd/hostapd.zip
-   see http://blog.sip2serve.com/post/38010690418/raspberry-pi-access-point-using-rtl8192cu
+-- does not work for rtl18xx chips:
    new url: http://itwelt.org/downloads/hostapd
    see http://itwelt.org/anleitungen-howto/raspberry-pi/590-raspberry-pi-und-edimax-ew-7811un-access-point-einrichten
    
@@ -180,10 +181,61 @@ ntpq -p gives:
    
 -- remove dhcp server ntp conf
    rm /var/lib/ntp/ntp.conf.dhcp
-   rm /etc/dhcp/dhclient-exit-hooks.d/ntp
+   mkdir /etc/dhcp/save
+   mv /etc/dhcp/dhclient-exit-hooks.d/ntp /etc/dhcp/save
    
    
-10. final disk layout
+10. prevent pi from interacting on boot due to corrupted FS
+see http://www.raspberrypi.org/phpBB3/viewtopic.php?f=28&t=15870
+sudo vi /etc/default/rcS
+change #FSCKFIX=no
+to FSCKFIX=yes
+			
+
+11. lighthttpd for faster chart delivery
+apt-get update
+apt-get install lighttpd
+first shot: configure to port 81 (so that our redirect from 80 to 8080 can remain...):
+/etc/lighttpd/lighttpd.conf:
+server.port                 = 81
+alias.url = ( "/charts" => "/data/avnav/charts/" )
+and in /home/pi/avnav/data/avnav_server.xml:
+<AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080" chartbaseurl="http://$host:81/charts/">
+
+
+12
+  apt-get install bc
+  copy initial delivery to /home/pi
+  unpack
+  cd avnav
+  ./setup.sh part
+  update-rc.d check_parts defaults
+  update-rc.d check_wlan defaults
+
+  
+13 cleanup
+  apt-get remove wolfram-engine
+  
+14
+  raspi-config generate locales
+  
+ 
+14. auto detect RTL81xx driver
+cd /usr/sbin
+mv hostapd hostapd.ori
+ln -s hostapd.ori hostapd
+wget -O hostapd.edimax http://itwelt.org/downloads/hostapd
+--have the hostapd.conf exactly as described above
+  in check_wlan we test for lsusb RTL81xx and we do lsmod to search for 8192cu
+  if both are found -> change the link and edit hostapd.conf
+
+  
+15. copy demo charts from .../homepage/software/avnav/viewer to .../home/pi/avnav/data/charts
+  
+  
+---------------------------------------------- older stuff -------------
+  
+XX. final disk layout
 To prepare for easy updates we will create a system partition and additionally a data partition
 Sizes:
 system 	/dev/mmcblk0p2  tbd - 1...2GB
@@ -197,65 +249,11 @@ layout:
 /data/avnav/tracks
 /data/avnav/charts    - subdir for each chart set, containing an avnav.xml
 
-11. prevent pi from interacting on boot due to corrupted FS
-see http://www.raspberrypi.org/phpBB3/viewtopic.php?f=28&t=15870
-sudo vi /etc/default/rcS
-change #FSCKFIX=no
-to FSCKFIX=yes
-			
 12. sometimes wlan0 seems not to come up
 an additional service check_wlan has been set up to ensure that wlan0 is up.
 if not, try to restart it and restart hostapd
 
-13. try with lighthttpd for faster chart delivery
-apt-get update
-apt-get install lighttpd
-first shot: configure to port 81 (so that our redirect from 80 to 8080 can remain...):
-/etc/lighttpd/lighttpd.conf:
-server.port                 = 81
-alias.url = ( "/charts" => "/data/avnav/charts/" )
-and in /home/pi/avnav/data/avnav_server.xml:
-<AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080" chartbaseurl="http://$host:81/charts/">
-* --  vi /etc/default/avnav
-FORWARD=8080
 
-
-13.1
-  apt-get install bc
-  copy initial delivery to /home/pi
-  unpack
-  cd avnav
-  ./setup.sh part
-  update-rc.d check_parts defaults
-  update-rc.d check_wlan defaults
-
-  
-13.5 cleanup
-  apt-get remove wolfram-engine
-  
-13.6
-  raspi-config generate locales
-  
-13.7
-  to ensure forwarding:
-  write FORWARD=8080 to /etc/default/avnav
-  iptables-restore < /etc/iptables.ipv4.nat
-  service avnav restart
-  iptables-save > /etc/iptables.ipv4.nat
-  
-14. auto detect RTL81xx driver
-cd /usr/sbin
-mv hostapd hostapd.ori
-ln -s hostapd.ori hostapd
-
-in check_wlan we test for lsusb RTL81xx and we do lsmod to search for 8192cu
-if both are found -> change the link and edit hostapd.conf
-
-  
-
-  
-  
-  ----------------------------------------------
 14. update firmware and debian (2013/10/20):
 1. downloaded new firmware from https://github.com/raspberrypi/firmware/tree/master/boot
    maybe could have been done by raspi-upgrade..

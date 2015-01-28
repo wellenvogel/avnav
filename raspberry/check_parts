@@ -103,8 +103,8 @@ if [ "$check" != "" ] ; then
 else
   #2. determine free space
   wlog "going to create 3rd partition on $DEVICE"
-  partstart=`$PARTED -m $DEVICE unit B print | grep '^2:'| awk -F: ' { x=substr($3,0,length($3)); print x } '`
-  partend=`$PARTED -m $DEVICE unit B print | grep "^$DEVICE"| awk -F: ' { x=substr($2,0,length($2)); print x; } '`
+  partstart=`$PARTED -m $DEVICE unit B print | grep '^2:'| awk -F: ' { gsub("B$","",$3); print $3 } '`
+  partend=`$PARTED -m $DEVICE unit B print | grep "^$DEVICE"| awk -F: ' { gsub("B$","",$2); print $2; } '`
   [ "$partstart" = "" -o "$partend" = "" ] && err "cannot determine start and end for new partition"
   partstart=` echo "$partstart + 1" | bc`
   partend=` echo "$partend - 1" | bc`
@@ -135,7 +135,7 @@ if [ ! -d $BASE/data ] ; then
   chown pi:pi $BASE/data
   chmod 755 $BASE/data
 fi
-for d in log tracks charts
+for d in log tracks charts routes
 do
   if [ ! -d $ROOTDIR/$d ] ; then
     wlog "creating $ROOTDIR/$d"

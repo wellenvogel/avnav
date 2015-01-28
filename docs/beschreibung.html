@@ -14,7 +14,7 @@
 	-->
 	</style>
   </head>
-  <body dir="LTR" style=" max-width: 650px" lang="de-DE">
+  <body dir="LTR" style="  max-width: 650px" lang="de-DE">
     <h1>Raspberry Pi als Bordcomputer / Navigation im Browser </h1>
     <p>23.01.2015</p>
     <p>Direkt zur Beschreibung der WebApp <a href="avnav-de.html">hier</a>. </p>
@@ -408,13 +408,21 @@
     <p>Am schwierigsten kann sich das Aufsetzen des WLAN gestalten. Das hängt
       vom verwendeten Adapter ab. Ich habe einen rtl8192cu verwendet (TP-Link
       TL-WN725N). Dazu musste ich den hostapd (/usr/sbin/hostapd) austauschen
-      gegen den von <a href="http://dl.dropbox.com/u/1663660/hostapd/hostapd.zip">http://dl.dropbox.com/u/1663660/hostapd/hostapd.zip</a>.
+      gegen den von <a href="http://itwelt.org/downloads/hostapd">http://itwelt.org/downloads/hostapd</a>.
       Der originale ist noch als hostapd.ori vorhanden – also ggf. wieder
       umbennen. Anpassungen zur Konfiguration muss man in
       /etc/hostapd/hostapd.conf vornehmen. In jedem Falle sollte hier der
       WPA-Key getauscht werden (standard: SSID avnav, pw: avnav-secret). Ggf.
       muss man den driver ändern. Danach service hostapd restart und die
       WLAN-Verbindung testen. Eine gute Anleitung findet sich unter <a href="http://elinux.org/RPI-Wireless-Hotspot">http://elinux.org/RPI-Wireless-Hotspot</a>.</p>
+    <p>Mit dem image 2015-01-28 sollte eine Erkennung der rtl18x WLAN Adapter
+      erfolgen. Dazu liegen unter /usr/sbin 2 hostapd (.ori/.edimax). Die werden
+      durch ein script (/etc/init.d/check_wlan) enstprechend auf den hostapd
+      gelinkt. Gleichzeitig wird die Datei /etc/hostapd/hostapd.conf angepaßt -
+      daher bitte die beiden driver Zeilen so lassen wie sie im image sind. Wenn
+      die automatische Umstellung nicht gewollt ist, in /etc/default/check_wlan
+      NO_HOSTAPD_SWITCH=1<br>
+      setzen.</p>
     <p>Das WLAN hat den Adressbereich 192.168.20.0/24. Der pi selbst ist auf
       192.168.20.10 erreichbar (ggf. als url im Browser benutzen, wenn die
       Namensauflösung nicht funktioniert). Auf dem pi läuft ein DHCP server und
@@ -442,146 +450,209 @@
       einstellen.<br>
       Hier eine kurze Dokumentation der Schritte (ohne ganz detaillierte
       Beschreibung):</p>
-    <ul>
-      <li>
-        <p>gpsd<br>
-          <a href="http://blog.retep.org/2012/06/18/getting-gps-to-work-on-a-raspberry-pi/">http://blog.retep.org/2012/06/18/getting-gps-to-work-on-a-raspberry-pi/</a><br>
-          sudo apt-get install gpsd gpsd-clients python-gps</p>
-      </li>
-      <li>
-        <p>bluetooth<br>
-          <a href="http://www.rpiblog.com/2012/08/bluetooth-pairing-of-raspberry-pi-with.html">http://www.rpiblog.com/2012/08/bluetooth-pairing-of-raspberry-pi-with.html</a><br>
-          apt-get install -y bluetooth [bluez-utils blueman]</p>
-      </li>
-      <li>
-        <p>pyserial<br>
-          copy pyserial to pi (<a href="https://pypi.python.org/packages/source/p/pyserial/pyserial-2.6.tar.gz#md5=cde799970b7c1ce1f7d6e9ceebe64c98">https://pypi.python.org/packages/source/p/pyserial/pyserial-2.6.tar.gz#md5=cde799970b7c1ce1f7d6e9ceebe64c98</a>)<br>
-          unpack tar -xvzf …<br>
-          cd into pyserial dir<br>
-          python setup.py install</p>
-      </li>
-      <li>
-        <p> python bluetooth support<br>
-          sudo apt-get install python-bluez</p>
-      </li>
-      <li>
-        <p>python udev support<br>
-          sudo apt-get install python-pyudev</p>
-      </li>
-      <li>
-        <p>hotspot - see <a href="http://elinux.org/RPI-Wireless-Hotspot">http://elinux.org/RPI-Wireless-Hotspot</a><br>
-          sudo apt-get install hostapd dnsmasqd<br>
-          we use 192.168.20.00 for our wireless setup<br>
-          20...254 - dhcp raspi<br>
-          10 - raspi itself</p>
-      </li>
-      <li>
-        <p>etc/hosts<br>
-          192.168.20.10 avnav</p>
-      </li>
-      <li>
-        <p>/etc/dnsmasqd.conf<br>
-          interface=wlan0<br>
-          domain=avnav<br>
-          dhcp-range=192.168.20.20,192.168.20.254,255.255.255.0,12h<br>
-          dhcp-option=42,0.0.0.0<br>
-          expand-hosts<br>
-          dhcp-option=6,192.168.20.10</p>
-      </li>
-      <li>
-        <p>natting<br>
-          /etc/sysctl.conf: net.ipv4.ip_forward=1<br>
-          iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE<br>
-          iptables -A FORWARD -i eth0 -o wlan0 -m state --state
-          RELATED,ESTABLISHED -j ACCEPT<br>
-          iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT<br>
-          iptables-save &gt; /etc/iptables.ipv4.nat</p>
-      </li>
-      <li>
-        <p>/etc/network/interfaces<br>
-          auto lo<br>
-          iface lo inet loopback<br>
-          iface eth0 inet dhcp<br>
-          allow-hotplug wlan0<br>
-          iface wlan0 inet static<br>
-          address 192.168.20.10<br>
-          netmask 255.255.255.0<br>
-          up iptables-restore &lt; /etc/iptables.ipv4.nat</p>
-      </li>
-      <li>
-        <p>/etc/hostapd/hostapd.conf<br>
-          interface=wlan0<br>
-          #driver=nl80211 #original value <br>
-          driver=rtl8192cu<br>
-          ssid=avnav<br>
-          hw_mode=g<br>
-          channel=6<br>
-          macaddr_acl=0<br>
-          auth_algs=1<br>
-          ignore_broadcast_ssid=0<br>
-          wpa=2<br>
-          wpa_passphrase=avnav-secret<br>
-          wpa_key_mgmt=WPA-PSK<br>
-          wpa_pairwise=TKIP<br>
-          rsn_pairwise=CCMP</p>
-      </li>
-      <li>
-        <p>/etc/default/hostapd<br>
-          DAEMON_CONF="/etc/hostapd/hostapd.conf"</p>
-      </li>
-      <li>
-        <p>check hostapd (see avnav image)</p>
-      </li>
-      <li>
-        <p>set up ntp sync<br>
-          see <a href="http://catb.org/gpsd/gpsd.html">http://catb.org/gpsd/gpsd.html</a><br>
-          -- does not work out of the box<br>
-          as gpsd is running non root, we have to enable other SHM segments!<br>
-          /etc/ntp.conf:<br>
-          server 127.127.28.0<br>
-          fudge 127.127.28.0 time1 0.420 refid GPS<br>
-          server 127.127.28.1 prefer<br>
-          fudge 127.127.28.1 refid GPS1<br>
-          server 127.127.28.2<br>
-          fudge 127.127.28.2 time1 0.420 refid GPS2<br>
-          server 127.127.28.3 prefer<br>
-          fudge 127.127.28.3 refid GPS3</p>
-      </li>
-      <li>
-        <p>prevent pi from interacting on boot due to corrupted FS<br>
-          see <a href="http://www.raspberrypi.org/phpBB3/viewtopic.php?f=28&amp;t=15870">http://www.raspberrypi.org/phpBB3/viewtopic.php?f=28&amp;t=15870</a><br>
-          sudo vi /etc/default/rcS<br>
-          change #FSCKFIX=no<br>
-          to FSCKFIX=yes</p>
-      </li>
-      <li>
-        <p>lighthttpd for faster chart delivery<br>
-          apt-get update<br>
-          apt-get install lighttpd<br>
-          first shot: configure to port 81 (so that our redirect from 80 to 8080
-          can remain...):<br>
-          /etc/lighttpd/lighttpd.conf:<br>
-          server.port = 81<br>
-          alias.url = ( "/charts" =&gt; "/data/avnav/charts/" )</p>
-      </li>
-      <li>enable port forwarding of port 80 to 8080 <br>
-        in /etc/defaults/avnav:<br>
-        FORWARD=8080 </li>
-      <li>bluetooth workaround<br>
-        bluetoothd crashes on btd-122<br>
-        in /etc/default/avnav:<br>
-        HCIDEVICES="hci0 hci1 hci2 hci3 hci4"<br>
-        started diese devices wenn avnav started<br>
-      </li>
-      <li>nstall avnav<br>
-        Herunterladen der aktuellen Software von <a href="http://www.wellenvogel.de/software/avnav/download">wellenvogel.de</a>.
-        Auspacken des archives als pi im Verzeichnis /home/pi/avnav. Danach
-        Aufruf (als root) ./setup.sh part </li>
-      <li>checken service avnav status. </li>
-    </ul>
-    <p><br>
-      <br>
-    </p>
+    <pre><br>1.basic raspberry installation:
+http://www.raspberrypi.org/downloads
+win32 discimager http://sourceforge.net/projects/win32diskimager/
+
+1.1 first login (setup starts automatically)
+Overclock 900 Mhz, reboot
+
+1.2. update OS
+apt-get update
+apt-get upgrade
+
+rpi-update
+
+update
+
+2. gpsd
+http://blog.retep.org/2012/06/18/getting-gps-to-work-on-a-raspberry-pi/
+sudo apt-get install gpsd gpsd-clients python-gps
+
+3. bluetooth
+DBT-122 (DLINK) - pi restarted on plugin
+http://www.rpiblog.com/2012/08/bluetooth-pairing-of-raspberry-pi-with.html
+apt-get install -y bluetooth [bluez-utils blueman]
+#installed a lot of printer drivers
+apt-get autoremove cups
+
+4.pyserial
+apt-get install python-serial
+
+5. python bluetooth support
+sudo apt-get install python-bluez
+
+6. python udev support
+sudo apt-get install python-pyudev
+<br>7. omitted
+8. Wifi
+everything as root (sudo -i)
+adapter here:
+Apr  4 17:04:22 raspberrypi kernel: [160175.254169] usb 1-1.2.4: New USB device found, idVendor=0bda, idProduct=8176
+Apr  4 17:04:22 raspberrypi kernel: [160175.254201] usb 1-1.2.4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Apr  4 17:04:22 raspberrypi kernel: [160175.254243] usb 1-1.2.4: Product: 802.11n WLAN Adapter
+Apr  4 17:04:22 raspberrypi kernel: [160175.254261] usb 1-1.2.4: Manufacturer: Realtek
+Apr  4 17:04:22 raspberrypi kernel: [160175.254275] usb 1-1.2.4: SerialNumber: 00e04c000001
+Apr  4 17:04:22 raspberrypi kernel: [160175.694841] usbcore: registered new interface driver rtl8192cu
+
+hotspot - see http://elinux.org/RPI-Wireless-Hotspot
+* sudo apt-get install hostapd dnsmasq
+we use 192.168.20.00 for our wireless setup
+20...254 - dhcp raspi
+10       - raspi itself
+
+* etc/hosts
+192.168.20.10 avnav
+
+* /etc/dnsmasq.conf
+interface=wlan0
+domain=avnav
+dhcp-range=192.168.20.20,192.168.20.254,255.255.255.0,12h
+dhcp-option=42,0.0.0.0
+
+* natting
+/etc/sysctl.conf: net.ipv4.ip_forward=1
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+#the port forwarding from port 80 to our avnav port 8080
+iptables -t nat -A PREROUTING -p tcp --dport 80 -d 192.168.20.10 -j REDIRECT --to-port 8080
+iptables-save &gt; /etc/iptables.ipv4.nat
+
+
+*  /etc/network/interfaces
+This gives us an additional address at eth0 - 192.168.20.11 to connect to via fixed line
+################# //snip
+auto lo
+
+iface lo inet loopback
+iface eth0 inet dhcp
+
+allow-hotplug wlan0
+
+iface wlan0 inet static
+  address 192.168.20.10
+  netmask 255.255.255.0
+  up iptables-restore &lt; /etc/iptables.ipv4.nat
+
+iface eth0:1 inet static
+  address 192.168.20.11
+  netmask 255.255.255.0
+
+################### //snip
+* with this config often the WLAN does not get it's IP...
+
+*  /etc/hostapd/hostapd.conf
+################### snip
+interface=wlan0
+#use this driver for 8192/8188
+#needs hostapd.edimax - rename this to hostapd (sbin)
+#driver=rtl871xdrv
+#setting for normal hostapd
+driver=nl80211
+ssid=avnav
+hw_mode=g
+channel=6
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=avnav-secret
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+#################### //snip - this driver stuff needs some work...
+
+*  /etc/default/hostapd
+DAEMON_CONF="/etc/hostapd/hostapd.conf"
+
+-- does not work for rtl18xx chips:
+   new url: http://itwelt.org/downloads/hostapd
+   see http://itwelt.org/anleitungen-howto/raspberry-pi/590-raspberry-pi-und-edimax-ew-7811un-access-point-einrichten
+   
+  see point 14.
+-- for testing sudo apt-get install iw
+   - separate power to HUB-&gt;OK (maybe reboot solved the issue)
+   
+ 9. set up ntp sync
+ see http://catb.org/gpsd/gpsd.html
+ -- does not work out of the box
+    as gpsd is running non root, we have to enable other SHM segments!
+ * /etc/ntp.conf:
+ server 127.127.28.0
+fudge 127.127.28.0 time1 0.420 refid GPS
+server 127.127.28.1 prefer
+fudge 127.127.28.1 refid GPS1
+server 127.127.28.2
+fudge 127.127.28.2 time1 0.420 refid GPS2
+server 127.127.28.3 prefer
+fudge 127.127.28.3 refid GPS3
+
+ntpq -p gives:
+     remote           refid      st t when poll reach   delay   offset  jitter
+==============================================================================
+ SHM(0)          .GPS.            0 l    -   64    0    0.000    0.000   0.000
+ SHM(1)          .GPS1.           0 l    -   64    0    0.000    0.000   0.000
+-SHM(2)          .GPS2.           0 l   29   64    3    0.000    1.740  20.409
+ SHM(3)          .GPS3.           0 l    -   64    0    0.000    0.000   0.000
+
+
+-- finally we use our own settime - setuid' to root and let avnav handle the time update
+   we do an update if gpsd reports a valid timestamp to us
+   
+-- remove dhcp server ntp conf
+   rm /var/lib/ntp/ntp.conf.dhcp
+   mkdir /etc/dhcp/save
+   mv /etc/dhcp/dhclient-exit-hooks.d/ntp /etc/dhcp/save
+   
+   
+10. prevent pi from interacting on boot due to corrupted FS
+see http://www.raspberrypi.org/phpBB3/viewtopic.php?f=28&amp;t=15870
+sudo vi /etc/default/rcS
+change #FSCKFIX=no
+to FSCKFIX=yes
+			
+
+11. lighthttpd for faster chart delivery
+apt-get update
+apt-get install lighttpd
+first shot: configure to port 81 (so that our redirect from 80 to 8080 can remain...):
+/etc/lighttpd/lighttpd.conf:
+server.port                 = 81
+alias.url = ( "/charts" =&gt; "/data/avnav/charts/" )
+and in /home/pi/avnav/data/avnav_server.xml:
+&lt;AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080" chartbaseurl="http://$host:81/charts/"&gt;
+
+
+12
+  apt-get install bc
+  copy initial delivery to /home/pi
+  unpack
+  cd avnav
+  ./setup.sh part
+  update-rc.d check_parts defaults
+  update-rc.d check_wlan defaults
+
+  
+13 cleanup
+  apt-get remove wolfram-engine
+  
+14
+  raspi-config generate locales
+  
+ 
+14. auto detect RTL81xx driver
+cd /usr/sbin
+mv hostapd hostapd.ori
+ln -s hostapd.ori hostapd
+wget -O hostapd.edimax http://itwelt.org/downloads/hostapd
+--have the hostapd.conf exactly as described above
+  in check_wlan we test for lsusb RTL81xx and we do lsmod to search for 8192cu
+  if both are found -&gt; change the link and edit hostapd.conf
+
+  
+15. copy demo charts from .../homepage/software/avnav/viewer to .../home/pi/avnav/data/charts
+  </pre>
     <h2>Die Web App</h2>
     Zur Navigation mit den auf dem Raspberry Pi vorhandenen Karten gibt es eine
     Web App.<br>
