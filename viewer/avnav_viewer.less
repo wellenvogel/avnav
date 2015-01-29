@@ -348,6 +348,13 @@ font-size: ( @bottomPanelHeight - 2 );
 #avi_waypoint_popup{
     top: 10px;
     left: 100px; //in case we have the compass
+    margin-right: ( @buttonSize + 10px );
+    @media (max-width: ( @buttonSize * 12)) {
+      left: 0;
+      top: 0;
+      right: (@buttonSize + 10px);
+      margin-right: 0;
+    }
     z-index: 90;
     background-color: rgba(222, 226, 207, 0.92);
     font-size: ( @routeInfoFontBase / 5.5);
