@@ -296,7 +296,15 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
      * @private
      * @type {number}
      */
-    this.activeWp=0;
+    this.activeWpIdx=0;
+
+    /**
+     * the current coordinates of the active WP (if set)
+     * used to find the best matching point if the route changes
+     * @private
+     * @type {avnav.nav.davdata.WayPoint}
+     */
+    this.activeWp=undefined;
     /**
      * the current route
      * @private
@@ -309,8 +317,10 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
      * @type {avnav.nav.Route}
      */
     this.serverRoute=this.currentRoute.clone();
-    if (this.currentLeg.name) this.activeWp=this.currentLeg.currentTarget;
-    if (this.activeWp <0) this.activeWp=0;
+    if (this.currentLeg.name) this.activeWpIdx=this.currentLeg.currentTarget;
+    if (this.activeWpIdx >= this.currentRoute.points.length) this.activeWp=this.currentRoute.points-length-1;
+    if (this.activeWpIdx <0) this.activeWpIdx=0;
+    this.activeWp=this.getActiveWp();
 
 
     /**legChanged
@@ -546,6 +556,29 @@ avnav.nav.RouteData.prototype.saveLeg=function(){
     var raw=this.currentLeg.toJsonString();
     localStorage.setItem(this.propertyHandler.getProperties().routingDataName,raw);
 };
+
+/**
+ * try to set the active waypoint to the one that is closest to the position
+ * we had before
+ */
+avnav.nav.RouteData.prototype.findBestMatchingPoint=function(){
+    if (! this.currentRoute) return;
+    if (! this.activeWp) return;
+    var idx;
+    var mindistance=undefined;
+    var minidx=-1;
+    var dst;
+    for (idx=0;idx<this.currentRoute.points.length;idx++){
+        dst=avnav.nav.NavCompute.computeDistance(this.activeWp,this.currentRoute.points[idx]);
+        if (minidx == -1 || dst.dts<mindistance){
+            minidx=idx;
+            mindistance=dst.dts;
+        }
+    }
+    if (minidx < 0) minidx=0;
+    this.activeWpIdx=minidx;
+    this.activeWp=this.getActiveWp();
+};
 /**
  * checks if the route name from the leg matches the current route
  * otherwise change the current route
@@ -555,12 +588,14 @@ avnav.nav.RouteData.prototype.checkRoute=function(){
     if (this.currentLeg.currentRoute){
         //this is the new handling and should always be available
         this.currentRoute=this.currentLeg.currentRoute.clone();
+        this.findBestMatchingPoint();
         this.saveRoute();
         return;
     }
     if (this.currentLeg.name != this.currentRoute.name){
         log("must load new route");
         this.currentRoute=this.loadRoute(this.currentLeg.name);
+        this.findBestMatchingPoint();
     }
 };
 
@@ -695,7 +730,8 @@ avnav.nav.RouteData.prototype.getLock=function(){
  */
 avnav.nav.RouteData.prototype.setActiveWp=function(id){
     if (id <0 || id >= this.currentRoute.points.length) return;
-    this.activeWp=id;
+    this.activeWpIdx=id;
+    this.activeWp=this.getActiveWp();
     this.navobject.routeEvent();
 };
 
@@ -705,8 +741,9 @@ avnav.nav.RouteData.prototype.setActiveWp=function(id){
  */
 avnav.nav.RouteData.prototype.setActiveWpFromRoute=function(){
     if (this.isActiveRoute()){
-        if (this.activeWp != this.currentLeg.currentTarget){
-            this.activeWp=this.currentLeg.currentTarget;
+        if (this.activeWpIdx != this.currentLeg.currentTarget){
+            this.activeWpIdx=this.currentLeg.currentTarget;
+            this.activeWp=this.getActiveWp();
             this.navobject.routeEvent();
         }
     }
@@ -717,7 +754,7 @@ avnav.nav.RouteData.prototype.setActiveWpFromRoute=function(){
  * @return {number}
  */
 avnav.nav.RouteData.prototype.getActiveWpIdx=function(){
-    if (this.activeWp < this.currentRoute.points.length) return this.activeWp;
+    if (this.activeWpIdx < this.currentRoute.points.length) return this.activeWpIdx;
     else return this.currentRoute.points.length-1;
 };
 
@@ -743,8 +780,8 @@ avnav.nav.RouteData.prototype.getCurrentRouteTarget=function(){
  */
 avnav.nav.RouteData.prototype.getActiveWp=function(){
     if (this.currentRoute.points) {
-        if (this.activeWp<0 ||this.activeWp>=this.currentRoute.points.length) return undefined;
-        return this.currentRoute.points[this.activeWp];
+        if (this.activeWpIdx<0 ||this.activeWpIdx>=this.currentRoute.points.length) return undefined;
+        return this.currentRoute.points[this.activeWpIdx];
     }
     return undefined;
 };
@@ -765,7 +802,7 @@ avnav.nav.RouteData.prototype.getWp=function(idx){
  */
 avnav.nav.RouteData.prototype.deleteWp=function(id){
     if (id == -1){
-        id=this.activeWp;
+        id=this.activeWpIdx;
     }
     if (id<0)id=0;
     var changeTarget=this.isActiveRoute() && id == this.currentLeg.currentTarget;
@@ -773,11 +810,12 @@ avnav.nav.RouteData.prototype.deleteWp=function(id){
         if (id >= this.currentRoute.points.length)id=this.currentRoute.points.length-1;
         this.currentRoute.points.splice(id,1);
         if (id <= this.currentLeg.currentTarget && this.currentLeg.currentTarget > 0) this.currentLeg.currentTarget--;
-        if (id <= this.activeWp && this.activeWp > 0) this.activeWp--;
-        if (this.activeWp >= this.currentRoute.points.length)this.activeWp=this.currentRoute.points.length-1;
+        if (id <= this.activeWpIdx && this.activeWpIdx > 0) this.activeWpIdx--;
+        if (this.activeWpIdx >= this.currentRoute.points.length)this.activeWpIdx=this.currentRoute.points.length-1;
         if (this.currentLeg.currentTarget >= this.currentRoute.points.length)this.currentLeg.currentTarget=this.currentRoute.points.length-1;
     }
     if (changeTarget) this.routeOn(avnav.nav.RoutingMode.ROUTE,true);
+    this.activeWp=this.getActiveWp();
     this.saveRoute(); //will only send if we modified not the active one
     if (this.isActiveRoute()) {
         this.currentLeg.currentRoute=this.currentRoute.clone();
@@ -792,16 +830,17 @@ avnav.nav.RouteData.prototype.deleteWp=function(id){
  */
 avnav.nav.RouteData.prototype.changeWp=function(id,point){
     if (id == -1){
-        id=this.activeWp;
+        id=this.activeWpIdx;
+        this.activeWp=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
     }
-    if (this.currentRoute.points){
+    if (this.currentRoute.points) {
         if (id < 0 || id >= this.currentRoute.points.length) return;
-        if (! (point instanceof avnav.nav.navdata.WayPoint)){
-            var p=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
-            point=p;
-            if (this.currentRoute.points[id].name) point.name=this.currentRoute.points[id].name;
+        if (!(point instanceof avnav.nav.navdata.WayPoint)) {
+            var p = new avnav.nav.navdata.WayPoint(point.lon, point.lat);
+            point = p;
+            if (this.currentRoute.points[id].name) point.name = this.currentRoute.points[id].name;
         }
-        this.currentRoute.points[id]=point;
+        this.currentRoute.points[id] = point;
     }
     if (this.isActiveRoute() && id == this.currentLeg.currentTarget){
         this.routeOn(avnav.nav.RoutingMode.ROUTE,true);
@@ -810,6 +849,10 @@ avnav.nav.RouteData.prototype.changeWp=function(id,point){
 
     }
     this.saveRoute();
+    if (this.isActiveRoute()) {
+        this.currentLeg.currentRoute=this.currentRoute.clone();
+        this.legChanged();
+    }
     this.navobject.routeEvent();
 };
 /**
@@ -819,7 +862,7 @@ avnav.nav.RouteData.prototype.changeWp=function(id,point){
  */
 avnav.nav.RouteData.prototype.addWp=function(id,point){
     if (id == -1){
-        id=this.activeWp;
+        id=this.activeWpIdx;
     }
     if (id <0) id=0;
     var setName=false;
@@ -830,14 +873,14 @@ avnav.nav.RouteData.prototype.addWp=function(id,point){
         }
         if (id >= this.currentRoute.points.length){
             this.currentRoute.points.push(point);
-            this.activeWp=this.currentRoute.points.length-1;
+            this.activeWpIdx=this.currentRoute.points.length-1;
 
 
         }
         else {
             if (id < 0) return;
             this.currentRoute.points.splice(id+1, 0, point);
-            this.activeWp=id+1;
+            this.activeWpIdx=id+1;
         }
         if (setName){
             //find a free name
@@ -855,7 +898,12 @@ avnav.nav.RouteData.prototype.addWp=function(id,point){
             point.name="WP"+this.formatter.formatDecimal(highest+1,2,0);
         }
     }
+    this.activeWp=this.getActiveWp();
     this.saveRoute();
+    if (this.isActiveRoute()) {
+        this.currentLeg.currentRoute=this.currentRoute.clone();
+        this.legChanged();
+    }
     this.navobject.routeEvent();
 };
 /**
@@ -863,7 +911,8 @@ avnav.nav.RouteData.prototype.addWp=function(id,point){
  */
 avnav.nav.RouteData.prototype.deleteRoute=function(){
     this.currentRoute.points=[];
-    this.activeWp=0;
+    this.activeWpIdx=0;
+    this.activeWp=undefined;
     if (this.isActiveRoute()){
         this.currentLeg.name=undefined;
         this.currentLeg.currentTarget=-1;
@@ -876,7 +925,7 @@ avnav.nav.RouteData.prototype.deleteRoute=function(){
 };
 
 avnav.nav.RouteData.prototype.invertRoute=function(){
-    var active=this.activeWp;
+    var active=this.activeWpIdx;
     var target=this.currentLeg.currentTarget;
     for (var i=0;i<this.currentRoute.points.length/2;i++){
         var swap=this.currentRoute.points.length-i-1;
@@ -886,7 +935,8 @@ avnav.nav.RouteData.prototype.invertRoute=function(){
     }
 
     active = this.currentRoute.points.length -1 - active;
-    this.activeWp = active;
+    this.activeWpIdx = active;
+    this.activeWp=this.getActiveWp();
 
     this.saveRoute();
     if (this.isActiveRoute()){
@@ -897,7 +947,6 @@ avnav.nav.RouteData.prototype.invertRoute=function(){
     else {
         this.navobject.routeEvent();
     }
-
 
 };
 
@@ -951,7 +1000,8 @@ avnav.nav.RouteData.prototype.checkNextWp=function(){
             }
             //should we wait for some time???
             if (hasNextWp) {
-                this.activeWp = this.currentLeg.currentTarget + 1;
+                this.activeWpIdx = this.currentLeg.currentTarget + 1;
+                this.activeWp=this.getActiveWp();
                 this.routeOn(avnav.nav.RoutingMode.ROUTE);
                 log("switching to next WP");
             }
