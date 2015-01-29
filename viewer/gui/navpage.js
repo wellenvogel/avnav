@@ -429,7 +429,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     var curlen=$('#avi_route_info_list').find('.avn_route_info_point').length;
     var rebuild=opt_force||false;
     if (! rebuild) rebuild=this.lastRoute.differsTo(route);
-    this.lastRoute=route;
+    this.lastRoute=route.clone();
     if (rebuild){
         //rebuild
         for (i=0;i<route.points.length;i++){

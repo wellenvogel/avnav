@@ -109,7 +109,7 @@ var propertyDefinitions=function(){
         maxGpsErrors: new avnav.util.Property( 3), //after that much invalid responses/timeouts the GPS is dead
         settingsName: new avnav.util.Property( "avnav.settings"), //storage name
         routingDataName: new avnav.util.Property( "avnav.routing"),
-        routeName: new avnav.util.Property( "avnav.defaultRoute"),
+        routeName: new avnav.util.Property( "avnav.route"), //prefix for route names
         routingServerError: new avnav.util.Property(true,"ServerError",avnav.util.PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize:new avnav.util.Property( 14,"Text Size(px)",avnav.util.PropertyType.RANGE,[8,36]), //in px
         centerName: new avnav.util.Property( "avnav.center"),

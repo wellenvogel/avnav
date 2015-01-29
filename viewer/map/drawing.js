@@ -199,8 +199,9 @@ avnav.map.Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
  * @param y2
  * @param w
  * @param pe: pixel from line end for peak
+ * @param open: if true - open arrow
  */
-avnav.map.Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe){
+avnav.map.Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe,open){
     var dx=x2-x1;
     var dy=y2-y1;
     if (Math.abs(dx)<0.0001) return;
@@ -222,7 +223,8 @@ avnav.map.Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe){
     var ca=Math.cos(a);
     var sa=Math.sin(a);
     this.context.lineTo(x2-sa*w,y2+ca*w);
-    this.context.lineTo(x2+sa*w,y2-ca*w);
+    if (open) this.context.moveTo(x2+sa*w,y2-ca*w);
+    else this.context.lineTo(x2+sa*w,y2-ca*w);
     this.context.lineTo(x0,y0);
     this.context.moveTo(x1,y1);
 };
@@ -263,12 +265,14 @@ avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
                arrowStyle.width=opt_style.arrow.width||(this.context.lineWidth||1)*3;
                arrowStyle.length=opt_style.arrow.length||(this.context.lineWidth||1)*8;
                arrowStyle.offset=opt_style.arrow.offset||10;
+               arrowStyle.open=opt_style.arrow.open||false;
            } catch (e){;}
        } else{
            arrowStyle={}
            arrowStyle.width=(this.context.lineWidth||1)*3;
            arrowStyle.length=(this.context.lineWidth||1)*8;
            arrowStyle.offset=10;
+           arrowStyle.open=false;
        }
     }
     for (i=1;i<points.length;i++){
@@ -280,7 +284,7 @@ avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
         nminus1=last;
         last=p;
         if (arrowStyle){
-            this.arrow(last[0],last[1],nminus1[0],nminus1[1],arrowStyle.width,arrowStyle.length,arrowStyle.offset);
+            this.arrow(last[0],last[1],nminus1[0],nminus1[1],arrowStyle.width,arrowStyle.length,arrowStyle.offset,arrowStyle.open);
         }
     }
 

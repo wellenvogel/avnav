@@ -85,9 +85,10 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
             color: this.mapholder.properties.getProperties().routeColor,
             width: this.mapholder.properties.getProperties().routeWidth,
             arrow: {
-                width: this.mapholder.properties.getProperties().routeWidth*2,
-                length: this.mapholder.properties.getProperties().routeWidth*5,
-                offset: 10
+                width: this.mapholder.properties.getProperties().routeWidth*3,
+                length: this.mapholder.properties.getProperties().routeWidth*7,
+                offset: 10,
+                open: true
                 }
         };
     this.dashedStyle = {
