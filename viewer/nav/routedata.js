@@ -242,6 +242,9 @@ avnav.nav.Route.prototype.clone=function(){
 /**
  * the handler for the routing data
  * query the server...
+ * basically it can work in 2 modes:
+ * active route mode - the currentleg and the editingRoute will kept in sync
+ * editing mode      - the editing route is different from the one in the leg
  * @param {avnav.util.PropertyHandler} propertyHandler
  * @param {avnav.nav.NavObject} navobject
  * @constructor
@@ -296,7 +299,7 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
      * @private
      * @type {number}
      */
-    this.activeWpIdx=0;
+    this.editingWpIdx=0;
 
     /**
      * the current coordinates of the active WP (if set)
@@ -304,23 +307,23 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
      * @private
      * @type {avnav.nav.davdata.WayPoint}
      */
-    this.activeWp=undefined;
+    this.editingWp=undefined;
     /**
      * the current route
      * @private
      * @type {avnav.nav.Route}
      */
-    this.currentRoute=this.currentLeg.currentRoute?this.currentLeg.currentRoute:this.loadRoute(this.currentLeg.name||this.DEFAULTROUTE);
+    this.editingRoute=this.currentLeg.currentRoute?this.currentLeg.currentRoute:this.loadRoute(this.currentLeg.name||this.DEFAULTROUTE);
     /**
      * the last received route from server
      * initially we set this to our route to get the route from the server if it differs
      * @type {avnav.nav.Route}
      */
-    this.serverRoute=this.currentRoute.clone();
-    if (this.currentLeg.name) this.activeWpIdx=this.currentLeg.currentTarget;
-    if (this.activeWpIdx >= this.currentRoute.points.length) this.activeWp=this.currentRoute.points-length-1;
-    if (this.activeWpIdx <0) this.activeWpIdx=0;
-    this.activeWp=this.getActiveWp();
+    this.serverRoute=this.editingRoute.clone();
+    if (this.currentLeg.name) this.editingWpIdx=this.currentLeg.currentTarget;
+    if (this.editingWpIdx >= this.editingRoute.points.length) this.editingWp=this.editingRoute.points-length-1;
+    if (this.editingWpIdx <0) this.editingWpIdx=0;
+    this.editingWp=this.getEditingWp();
 
 
     /**legChanged
@@ -365,6 +368,69 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
     });
 };
 
+/**
+ * sync the editing route from the leg
+ * only if we are in active route mode
+ */
+avnav.nav.RouteData.prototype.syncRouteFromLeg=function(){
+    if (! this.isActiveRoute()) return;
+    this.setRouteFromLeg();
+};
+
+/**
+ * set the current route from the active leg
+ */
+avnav.nav.RouteData.prototype.setRouteFromLeg=function() {
+    if (this.currentLeg.currentRoute){
+        this.editingRoute=this.currentLeg.currentRoute.clone();
+    }
+    else {
+        this.editingRoute=undefined;
+    }
+    this.findBestMatchingPoint();
+    this.saveRoute();
+};
+/**
+ * set the route currently being edited als the current active one
+ * this also set the current target to the active WP
+ */
+avnav.nav.RouteData.prototype.setLegFromRoute=function(){
+    if (this.editingRoute){
+        this.currentLeg.currentRoute=this.editingRoute.clone();
+        this.currentLeg.name=this.editingRoute.name;
+        this.currentLeg.currentTarget=this.editingWpIdx;
+        if (this.currentLeg.currentTarget >= this.currentLeg.currentRoute.points.length){
+            this.currentLeg.currentTarget = this.currentLeg.currentRoute.points.length-1;
+        }
+        if (this.currentLeg.currentTarget < 0){
+            this.currentLeg.active=false;
+        }
+        else{
+            this.currentLeg.to=this.currentLeg.currentRoute.points[this.currentLeg.currentTarget];
+        }
+    }
+    else {
+        this.currentLeg.currentRoute=undefined;
+        this.currentLeg.name=undefined;
+        this.currentLeg.currentTarget=0;
+    }
+};
+/**
+ * sync the route to the leg if we are in active route mode
+ */
+avnav.nav.RouteData.prototype.syncRouteToLeg=function(){
+    if (! this.isActiveRoute()) return;
+    this.setLegFromRoute();
+};
+
+/**
+ * reset the editing route to the active route
+ * also setting the active WP
+ */
+avnav.nav.RouteData.prototype.resetToActive=function(){
+    this.editingWpIdx=this.currentLeg.currentTarget||0;
+    this.setRouteFromLeg();
+};
 
 
 /**
@@ -376,11 +442,11 @@ avnav.nav.RouteData.prototype.computeLength=function(startIdx){
     var rt=0;
     if (startIdx == -1) startIdx=this.currentLeg.currentTarget;
     if (startIdx < 0) startIdx=0;
-    if (this.currentRoute.points.length < (startIdx+2)) return rt;
-    var last=this.currentRoute.points[startIdx];
+    if (this.editingRoute.points.length < (startIdx+2)) return rt;
+    var last=this.editingRoute.points[startIdx];
     startIdx++;
-    for (;startIdx<this.currentRoute.points.length;startIdx++){
-        var next=this.currentRoute.points[startIdx];
+    for (;startIdx<this.editingRoute.points.length;startIdx++){
+        var next=this.editingRoute.points[startIdx];
         var dst=avnav.nav.NavCompute.computeDistance(last,next);
         rt+=dst.dtsnm;
         last=next;
@@ -393,20 +459,32 @@ avnav.nav.RouteData.prototype.computeLength=function(startIdx){
  * @private
  * @return {Boolean} - true if data has changed
  */
-avnav.nav.RouteData.prototype.convertLegResponse=function(data) {
+avnav.nav.RouteData.prototype.handleLegResponse=function(data) {
     if (!data) {
         this.serverConnected = false;
-        return true;
+        return false;
     }
+    this.routeErrors=0;
+    this.serverConnected=true;
     if (! data.to || ! data.from) return false;
     var nleg=new avnav.nav.Leg();
     nleg.fromJson(data);
-    if (nleg.differsTo(this.serverLeg)){
-        this.serverLeg=nleg;
-        return true;
+    if (!nleg.differsTo(this.serverLeg)) {
+        return false;
     }
-    return false;
+    this.serverLeg=nleg;
+
+    if (this.connectMode ) {
+        if (this.serverLeg.differsTo(this.currentLeg)) {
+            var activeMode=this.isActiveRoute();
+            this.currentLeg = this.serverLeg.clone();
+            this.syncRouteFromLeg();
+            this.saveLeg();
+            this.navobject.routeEvent();
+        }
+    }
 };
+
 
 /**
  * @private
@@ -421,16 +499,19 @@ avnav.nav.RouteData.prototype.startQuery=function() {
         dataType: 'json',
         cache:	false,
         success: function(data,status){
-            var change = self.convertLegResponse(data);
+            var change = self.handleLegResponse(data);
             log("leg data change="+change);
-            self.handleLegStatus(true, change);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
             },timeout);
         },
         error: function(status,data,error){
             log("query leg error");
-            self.handleLegStatus(false);
+            this.routeErrors++;
+            if (this.routeErrors > 10){
+                log("lost route");
+                this.serverConnected=false;
+            }
             self.timer=window.setTimeout(function(){
                 self.startQuery();
             },timeout);
@@ -440,7 +521,7 @@ avnav.nav.RouteData.prototype.startQuery=function() {
     //we only query the route separately if it is currently not active
     if (! this.isActiveRoute()) {
         url = this.propertyHandler.getProperties().navUrl + "?request=routing&command=getroute&name=" +
-        encodeURIComponent(this.currentRoute.name);
+        encodeURIComponent(this.editingRoute.name);
         $.ajax({
             url: url,
             dataType: 'json',
@@ -457,9 +538,10 @@ avnav.nav.RouteData.prototype.startQuery=function() {
                 log("route data change=" + change);
                 if (change) {
                     self.serverRoute = nRoute;
-                    if (self.currentRoute.differsTo(self.serverRoute)) {
-                        self.currentRoute = self.serverRoute.clone();
+                    if (self.editingRoute.differsTo(self.serverRoute)) {
+                        self.editingRoute = self.serverRoute.clone();
                         self.saveRoute();
+                        self.findBestMatchingPoint();
                         self.navobject.routeEvent();
                     }
 
@@ -474,38 +556,6 @@ avnav.nav.RouteData.prototype.startQuery=function() {
     }
 };
 
-/**
- * handle the status and trigger the FPS event
- * @param success
- */
-avnav.nav.RouteData.prototype.handleLegStatus=function(success,change){
-    var oldConnect=this.serverConnected;
-    if (! success){
-        this.routeErrors++;
-        if (this.routeErrors > 10){
-            log("lost route");
-            this.serverConnected=false;
-        }
-        else{
-            return;
-        }
-    }
-    else {
-        this.routeErrors=0;
-        this.serverConnected=true;
-    }
-    //if we are in connected mode - set our own data
-    //if the data from the server has changed
-    if (this.connectMode && change && success){
-        if (this.serverLeg.differsTo(this.currentLeg)) {
-            this.currentLeg = this.serverLeg.clone();
-            this.checkRoute();
-            this.saveLeg()
-        }
-    }
-    //inform the navobject on any change
-    if (change || (oldConnect != this.serverConnected))this.navobject.routeEvent();
-};
 
 /**
  * return the current leg
@@ -520,17 +570,23 @@ avnav.nav.RouteData.prototype.getRouteData=function(){
  * @returns {avnav.nav.Route}
  */
 avnav.nav.RouteData.prototype.getCurrentRoute=function(){
-    return this.currentRoute;
+    return this.editingRoute;
 };
 
 avnav.nav.RouteData.prototype.saveRoute=function(){
-    var str=this.currentRoute.toJsonString();
-    localStorage.setItem(this.propertyHandler.getProperties().routeName,str);
+    var str=this.editingRoute.toJsonString();
+    localStorage.setItem(this.propertyHandler.getProperties().routeName+"."+this.editingRoute.name,str);
     //send the route to the server if this is not the active one
     if ( ! this.isActiveRoute()) {
-        if (this.connectMode) this.sendRoute(this.currentRoute.toJsonString());
+        if (this.connectMode) this.sendRoute(this.editingRoute.toJsonString());
     }
 };
+/**
+ * load a locally stored route
+ * @private
+ * @param name
+ * @returns {avnav.nav.Route}
+ */
 avnav.nav.RouteData.prototype.loadRoute=function(name){
     var rt=new avnav.nav.Route(name);
     try{
@@ -558,46 +614,29 @@ avnav.nav.RouteData.prototype.saveLeg=function(){
 };
 
 /**
+ * @private
  * try to set the active waypoint to the one that is closest to the position
  * we had before
  */
 avnav.nav.RouteData.prototype.findBestMatchingPoint=function(){
-    if (! this.currentRoute) return;
-    if (! this.activeWp) return;
+    if (! this.editingRoute) return;
+    if (! this.editingWp) return;
     var idx;
     var mindistance=undefined;
     var minidx=-1;
     var dst;
-    for (idx=0;idx<this.currentRoute.points.length;idx++){
-        dst=avnav.nav.NavCompute.computeDistance(this.activeWp,this.currentRoute.points[idx]);
+    for (idx=0;idx<this.editingRoute.points.length;idx++){
+        dst=avnav.nav.NavCompute.computeDistance(this.editingWp,this.editingRoute.points[idx]);
         if (minidx == -1 || dst.dts<mindistance){
             minidx=idx;
             mindistance=dst.dts;
         }
     }
     if (minidx < 0) minidx=0;
-    this.activeWpIdx=minidx;
-    this.activeWp=this.getActiveWp();
+    this.editingWpIdx=minidx;
+    this.editingWp=this.getEditingWp();
 };
-/**
- * checks if the route name from the leg matches the current route
- * otherwise change the current route
- */
-avnav.nav.RouteData.prototype.checkRoute=function(){
-    if (! this.currentLeg.name) return;
-    if (this.currentLeg.currentRoute){
-        //this is the new handling and should always be available
-        this.currentRoute=this.currentLeg.currentRoute.clone();
-        this.findBestMatchingPoint();
-        this.saveRoute();
-        return;
-    }
-    if (this.currentLeg.name != this.currentRoute.name){
-        log("must load new route");
-        this.currentRoute=this.loadRoute(this.currentLeg.name);
-        this.findBestMatchingPoint();
-    }
-};
+
 
 /**
  * send the route
@@ -626,7 +665,7 @@ avnav.nav.RouteData.prototype.sendRoute=function(route){
  */
 avnav.nav.RouteData.prototype.isActiveRoute=function(){
     if (! this.currentLeg.name) return false;
-    if (this.currentLeg.name != this.currentRoute.name) return false;
+    if (this.currentLeg.name != this.editingRoute.name) return false;
     return true;
 };
 
@@ -641,7 +680,7 @@ avnav.nav.RouteData.prototype.legChanged=function(opt_newLeg){
     this.lastDistanceToCurrent=-1;
     this.lastDistanceToNext=-1;
     this.saveLeg();
-    this.checkRoute();
+    this.syncRouteFromLeg();
     this.navobject.routeEvent();
     var self=this;
     if (this.connectMode){
@@ -664,17 +703,14 @@ avnav.nav.RouteData.prototype.legChanged=function(opt_newLeg){
 
 /**
  * set the route active state
+ * this will also set our active mode
  * @param {avnav.nav.NavRoutingMode} mode
  * @param {boolean} opt_keep_from if set - do not change from
  * @returns {boolean} true if changed - fires route event
  */
 avnav.nav.RouteData.prototype.routeOn=function(mode,opt_keep_from){
-    var nLeg=this.currentLeg.clone(); //make a copy to prevent the remote update from disturbing us
-    nLeg.approachDistance=this.propertyHandler.getProperties().routeApproach;
-    nLeg.active=true;
-    nLeg.name=undefined;
-    nLeg.currentRoute=undefined;
-    nLeg.currentTarget=-1;
+    this.currentLeg.approachDistance=this.propertyHandler.getProperties().routeApproach;
+    this.currentLeg.active=true;
     var pfrom;
     var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
     var center=this.navobject.getMapCenter();
@@ -685,21 +721,19 @@ avnav.nav.RouteData.prototype.routeOn=function(mode,opt_keep_from){
         pfrom=new avnav.nav.navdata.WayPoint();
         center.assign(pfrom);
     }
-    if (! opt_keep_from) nLeg.from=pfrom;
+    if (! opt_keep_from) this.currentLeg.from=pfrom;
     if (mode == avnav.nav.RoutingMode.CENTER){
-        nLeg.to=new avnav.nav.navdata.WayPoint();
-        center.assign(nLeg.to);
-        this.legChanged(nLeg);
+        this.currentLeg.to=new avnav.nav.navdata.WayPoint();
+        center.assign(this.currentLeg.to);
+        this.currentLeg.name=undefined;
+        this.currentLeg.currentRoute=undefined;
+        this.currentLeg.currentTarget=0;
+        this.legChanged();
         return true;
     }
     if (mode == avnav.nav.RoutingMode.ROUTE){
-        this.saveRoute();
-        nLeg.to = new avnav.nav.navdata.WayPoint();
-        this.getActiveWp().assign(nLeg.to);
-        nLeg.name=this.currentRoute.name;
-        nLeg.currentRoute=this.currentRoute.clone();
-        nLeg.currentTarget=this.getActiveWpIdx();
-        this.legChanged(nLeg);
+        this.setLegFromRoute();
+        this.legChanged();
         return true;
     }
     return false;
@@ -712,7 +746,6 @@ avnav.nav.RouteData.prototype.routeOff=function(){
     this.currentLeg.currentRoute=undefined;
     this.currentLeg.currentTarget=0;
     this.legChanged(); //send deactivate
-    this.saveRoute();
     this.navobject.routeEvent();
 };
 
@@ -724,14 +757,24 @@ avnav.nav.RouteData.prototype.routeOff=function(){
 avnav.nav.RouteData.prototype.getLock=function(){
     return this.currentLeg.active;
 };
+
+/**
+ * check if we currently have an active route
+ * @returns {boolean}
+ */
+avnav.nav.RouteData.prototype.hasCurrentRoute=function(){
+    if (! this.currentLeg.name) return false;
+    if (! this.currentLeg.currentRoute) return false;
+    return true;
+};
 /**
  *
  * @param {number} id the index in the route
  */
-avnav.nav.RouteData.prototype.setActiveWp=function(id){
-    if (id <0 || id >= this.currentRoute.points.length) return;
-    this.activeWpIdx=id;
-    this.activeWp=this.getActiveWp();
+avnav.nav.RouteData.prototype.setEditingWp=function(id){
+    if (id <0 || id >= this.editingRoute.points.length) return;
+    this.editingWpIdx=id;
+    this.editingWp=this.getEditingWp();
     this.navobject.routeEvent();
 };
 
@@ -741,9 +784,9 @@ avnav.nav.RouteData.prototype.setActiveWp=function(id){
  */
 avnav.nav.RouteData.prototype.setActiveWpFromRoute=function(){
     if (this.isActiveRoute()){
-        if (this.activeWpIdx != this.currentLeg.currentTarget){
-            this.activeWpIdx=this.currentLeg.currentTarget;
-            this.activeWp=this.getActiveWp();
+        if (this.editingWpIdx != this.currentLeg.currentTarget){
+            this.editingWpIdx=this.currentLeg.currentTarget;
+            this.editingWp=this.getEditingWp();
             this.navobject.routeEvent();
         }
     }
@@ -754,46 +797,54 @@ avnav.nav.RouteData.prototype.setActiveWpFromRoute=function(){
  * @return {number}
  */
 avnav.nav.RouteData.prototype.getActiveWpIdx=function(){
-    if (this.activeWpIdx < this.currentRoute.points.length) return this.activeWpIdx;
-    else return this.currentRoute.points.length-1;
+    if (this.editingWpIdx < this.editingRoute.points.length) return this.editingWpIdx;
+    else return this.editingRoute.points.length-1;
 };
 
 /**
  * get the current routing target index - -1 if not active
  * @returns {*}
  */
-avnav.nav.RouteData.prototype.getCurrentRouteTargetIdx=function(){
-    if (! this.isActiveRoute()) return -1;
-    if (this.currentLeg.currentTarget < this.currentRoute.points.length) return this.currentLeg.currentTarget;
-    else return this.currentRoute.points.length-1;
+avnav.nav.RouteData.prototype.getCurrentLegTargetIdx=function(){
+    if (! this.currentLeg.name) return -1;
+    if (! this.currentLeg.currentRoute) return -1;
+    if (this.currentLeg.currentTarget < this.currentLeg.currentRoute.points.length) return this.currentLeg.currentTarget;
+    else return this.currentLeg.currentRoute.points.length-1;
 };
 /**
  * get the current route target wp (or undefined)
  * @returns {avnav.nav.navdata.WayPoint|undefined}
  */
-avnav.nav.RouteData.prototype.getCurrentRouteTarget=function(){
-    return this.getWp(this.getCurrentRouteTargetIdx());
+avnav.nav.RouteData.prototype.getCurrentLegTarget=function(){
+    return this.currentLeg.to;
 };
+
+avnav.nav.RouteData.prototype.getCurrentLegNextWp=function(){
+    if (! this.currentLeg.currentRoute) return undefined;
+    if (this.currentLeg.currentTarget >= (this.currentLeg.currentRoute.points.length-1)) return undefined;
+    return this.currentLeg.currentRoute.points[this.currentLeg.currentTarget+1];
+};
+
 /**
  * get the active wp
  * @returns {avnav.nav.navdata.WayPoint}
  */
-avnav.nav.RouteData.prototype.getActiveWp=function(){
-    if (this.currentRoute.points) {
-        if (this.activeWpIdx<0 ||this.activeWpIdx>=this.currentRoute.points.length) return undefined;
-        return this.currentRoute.points[this.activeWpIdx];
+avnav.nav.RouteData.prototype.getEditingWp=function(){
+    if (this.editingRoute.points) {
+        if (this.editingWpIdx<0 ||this.editingWpIdx>=this.editingRoute.points.length) return undefined;
+        return this.editingRoute.points[this.editingWpIdx];
     }
     return undefined;
 };
 /**
- *
+ * returns the waypoint with the given index from the editing route
  * @param {number} idx
  * @returns {avnav.nav.navdata.WayPoint}
  */
 
 avnav.nav.RouteData.prototype.getWp=function(idx){
-    if (idx < 0 || idx >= this.currentRoute.points.length) return undefined;
-    return this.currentRoute.points[idx];
+    if (idx < 0 || idx >= this.editingRoute.points.length) return undefined;
+    return this.editingRoute.points[idx];
 };
 
 /**
@@ -802,23 +853,23 @@ avnav.nav.RouteData.prototype.getWp=function(idx){
  */
 avnav.nav.RouteData.prototype.deleteWp=function(id){
     if (id == -1){
-        id=this.activeWpIdx;
+        id=this.editingWpIdx;
     }
     if (id<0)id=0;
     var changeTarget=this.isActiveRoute() && id == this.currentLeg.currentTarget;
-    if (this.currentRoute.points){
-        if (id >= this.currentRoute.points.length)id=this.currentRoute.points.length-1;
-        this.currentRoute.points.splice(id,1);
+    if (this.editingRoute.points){
+        if (id >= this.editingRoute.points.length)id=this.editingRoute.points.length-1;
+        this.editingRoute.points.splice(id,1);
         if (id <= this.currentLeg.currentTarget && this.currentLeg.currentTarget > 0) this.currentLeg.currentTarget--;
-        if (id <= this.activeWpIdx && this.activeWpIdx > 0) this.activeWpIdx--;
-        if (this.activeWpIdx >= this.currentRoute.points.length)this.activeWpIdx=this.currentRoute.points.length-1;
-        if (this.currentLeg.currentTarget >= this.currentRoute.points.length)this.currentLeg.currentTarget=this.currentRoute.points.length-1;
+        if (id <= this.editingWpIdx && this.editingWpIdx > 0) this.editingWpIdx--;
+        if (this.editingWpIdx >= this.editingRoute.points.length)this.editingWpIdx=this.editingRoute.points.length-1;
+        if (this.currentLeg.currentTarget >= this.editingRoute.points.length)this.currentLeg.currentTarget=this.editingRoute.points.length-1;
     }
     if (changeTarget) this.routeOn(avnav.nav.RoutingMode.ROUTE,true);
-    this.activeWp=this.getActiveWp();
+    this.editingWp=this.getEditingWp();
     this.saveRoute(); //will only send if we modified not the active one
     if (this.isActiveRoute()) {
-        this.currentLeg.currentRoute=this.currentRoute.clone();
+        this.currentLeg.currentRoute=this.editingRoute.clone();
         this.legChanged();
     }
     this.navobject.routeEvent();
@@ -830,17 +881,17 @@ avnav.nav.RouteData.prototype.deleteWp=function(id){
  */
 avnav.nav.RouteData.prototype.changeWp=function(id,point){
     if (id == -1){
-        id=this.activeWpIdx;
-        this.activeWp=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
+        id=this.editingWpIdx;
+        this.editingWp=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
     }
-    if (this.currentRoute.points) {
-        if (id < 0 || id >= this.currentRoute.points.length) return;
+    if (this.editingRoute.points) {
+        if (id < 0 || id >= this.editingRoute.points.length) return;
         if (!(point instanceof avnav.nav.navdata.WayPoint)) {
             var p = new avnav.nav.navdata.WayPoint(point.lon, point.lat);
             point = p;
-            if (this.currentRoute.points[id].name) point.name = this.currentRoute.points[id].name;
+            if (this.editingRoute.points[id].name) point.name = this.editingRoute.points[id].name;
         }
-        this.currentRoute.points[id] = point;
+        this.editingRoute.points[id] = point;
     }
     if (this.isActiveRoute() && id == this.currentLeg.currentTarget){
         this.routeOn(avnav.nav.RoutingMode.ROUTE,true);
@@ -850,7 +901,7 @@ avnav.nav.RouteData.prototype.changeWp=function(id,point){
     }
     this.saveRoute();
     if (this.isActiveRoute()) {
-        this.currentLeg.currentRoute=this.currentRoute.clone();
+        this.currentLeg.currentRoute=this.editingRoute.clone();
         this.legChanged();
     }
     this.navobject.routeEvent();
@@ -862,32 +913,32 @@ avnav.nav.RouteData.prototype.changeWp=function(id,point){
  */
 avnav.nav.RouteData.prototype.addWp=function(id,point){
     if (id == -1){
-        id=this.activeWpIdx;
+        id=this.editingWpIdx;
     }
     if (id <0) id=0;
     var setName=false;
-    if (this.currentRoute.points){
+    if (this.editingRoute.points){
         if (! (point instanceof avnav.nav.navdata.WayPoint)){
             point=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
             setName=true;
         }
-        if (id >= this.currentRoute.points.length){
-            this.currentRoute.points.push(point);
-            this.activeWpIdx=this.currentRoute.points.length-1;
+        if (id >= this.editingRoute.points.length){
+            this.editingRoute.points.push(point);
+            this.editingWpIdx=this.editingRoute.points.length-1;
 
 
         }
         else {
             if (id < 0) return;
-            this.currentRoute.points.splice(id+1, 0, point);
-            this.activeWpIdx=id+1;
+            this.editingRoute.points.splice(id+1, 0, point);
+            this.editingWpIdx=id+1;
         }
         if (setName){
             //find a free name
             var highest=-1;
             var p;
-            for (p=0;p<this.currentRoute.points.length;p++){
-                var cp=this.currentRoute.points[p];
+            for (p=0;p<this.editingRoute.points.length;p++){
+                var cp=this.editingRoute.points[p];
                 if (cp.name && cp.name.match("^WP[0-9][0-9]")){
                     try {
                         var v=parseInt(cp.name.substr(2));
@@ -898,10 +949,10 @@ avnav.nav.RouteData.prototype.addWp=function(id,point){
             point.name="WP"+this.formatter.formatDecimal(highest+1,2,0);
         }
     }
-    this.activeWp=this.getActiveWp();
+    this.editingWp=this.getEditingWp();
     this.saveRoute();
     if (this.isActiveRoute()) {
-        this.currentLeg.currentRoute=this.currentRoute.clone();
+        this.currentLeg.currentRoute=this.editingRoute.clone();
         this.legChanged();
     }
     this.navobject.routeEvent();
@@ -910,9 +961,9 @@ avnav.nav.RouteData.prototype.addWp=function(id,point){
  * delete all points from the route
  */
 avnav.nav.RouteData.prototype.deleteRoute=function(){
-    this.currentRoute.points=[];
-    this.activeWpIdx=0;
-    this.activeWp=undefined;
+    this.editingRoute.points=[];
+    this.editingWpIdx=0;
+    this.editingWp=undefined;
     if (this.isActiveRoute()){
         this.currentLeg.name=undefined;
         this.currentLeg.currentTarget=-1;
@@ -924,24 +975,27 @@ avnav.nav.RouteData.prototype.deleteRoute=function(){
     this.navobject.routeEvent();
 };
 
+/**
+ * invert the order of waypoints in the route
+ */
 avnav.nav.RouteData.prototype.invertRoute=function(){
-    var active=this.activeWpIdx;
+    var active=this.editingWpIdx;
     var target=this.currentLeg.currentTarget;
-    for (var i=0;i<this.currentRoute.points.length/2;i++){
-        var swap=this.currentRoute.points.length-i-1;
-        var old=this.currentRoute.points[i];
-        this.currentRoute.points[i]=this.currentRoute.points[swap];
-        this.currentRoute.points[swap]=old;
+    for (var i=0;i<this.editingRoute.points.length/2;i++){
+        var swap=this.editingRoute.points.length-i-1;
+        var old=this.editingRoute.points[i];
+        this.editingRoute.points[i]=this.editingRoute.points[swap];
+        this.editingRoute.points[swap]=old;
     }
 
-    active = this.currentRoute.points.length -1 - active;
-    this.activeWpIdx = active;
-    this.activeWp=this.getActiveWp();
+    active = this.editingRoute.points.length -1 - active;
+    this.editingWpIdx = active;
+    this.editingWp=this.getEditingWp();
 
     this.saveRoute();
     if (this.isActiveRoute()){
-        this.currentLeg.currentTarget=this.currentRoute.points.length-target-1;
-        this.currentLeg.currentRoute=this.currentRoute.clone();
+        this.currentLeg.currentTarget=this.editingRoute.points.length-target-1;
+        this.currentLeg.currentRoute=this.editingRoute.clone();
         this.legChanged();
     }
     else {
@@ -951,10 +1005,11 @@ avnav.nav.RouteData.prototype.invertRoute=function(){
 };
 
 /**
+ * @private
  * check if we have to switch to the next WP
  */
 avnav.nav.RouteData.prototype.checkNextWp=function(){
-    if (! this.isActiveRoute()) {
+    if (! this.currentLeg.active || ! this.currentLeg.name || ! this.currentLeg.currentRoute) {
         this.currentLeg.approach=false;
         this.isApproaching=false;
         return;
@@ -962,10 +1017,10 @@ avnav.nav.RouteData.prototype.checkNextWp=function(){
     var boat=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
     //TODO: switch of routing?!
     if (! boat.valid) return;
-    if (this.currentLeg.currentTarget >= (this.currentRoute.points-length-1)) return;
+    if (this.currentLeg.currentTarget >= (this.currentLeg.currentRoute.points-length-1)) return;
     var approach=this.propertyHandler.getProperties().routeApproach;
     try {
-        var dst = avnav.nav.NavCompute.computeDistance(boat, this.currentRoute.points[this.currentLeg.currentTarget]);
+        var dst = avnav.nav.NavCompute.computeDistance(boat, this.currentLeg.currentRoute.points[this.currentLeg.currentTarget]);
         //TODO: some handling for approach
         if (dst.dts <= approach){
             this.isApproaching=true;
@@ -973,9 +1028,9 @@ avnav.nav.RouteData.prototype.checkNextWp=function(){
             var nextDst=new avnav.nav.navdata.Distance();
             var hasNextWp=false;
             var nextWpNum=this.currentLeg.currentTarget+1;
-            if (nextWpNum < this.currentRoute.points.length) {
+            if (nextWpNum < this.currentLeg.currentRoute.points.length) {
                 hasNextWp=true;
-                nextDst=avnav.nav.NavCompute.computeDistance(boat, this.currentRoute.points[this.currentLeg.currentTarget+1]);
+                nextDst=avnav.nav.NavCompute.computeDistance(boat, this.currentLeg.currentRoute.points[this.currentLeg.currentTarget+1]);
             }
             if (this.lastDistanceToCurrent < 0 || this.lastDistanceToNext < 0){
                 //seems to be the first time
@@ -1000,10 +1055,20 @@ avnav.nav.RouteData.prototype.checkNextWp=function(){
             }
             //should we wait for some time???
             if (hasNextWp) {
-                this.activeWpIdx = this.currentLeg.currentTarget + 1;
-                this.activeWp=this.getActiveWp();
-                this.routeOn(avnav.nav.RoutingMode.ROUTE);
+                if (this.isActiveRoute()) {
+                    this.editingWpIdx = this.currentLeg.currentTarget + 1;
+                    this.editingWp = this.getEditingWp();
+                    this.routeOn(avnav.nav.RoutingMode.ROUTE);
+                }
+                else {
+                    //we cannot use routeOn - so simply change this in the leg
+                    this.currentLeg.currentTarget++;
+                    this.currentLeg.from.assign(boat);
+                    this.currentLeg.to=this.currentLeg.currentRoute.points[this.currentLeg.currentTarget].clone();
+                    this.legChanged();
+                }
                 log("switching to next WP");
+                //TODO: should we fire a route event?
             }
             else {
                 this.routeOff();
@@ -1032,13 +1097,13 @@ avnav.nav.RouteData.prototype.propertyChange=function(evdata) {
         //newly connected
         var oldActive;
         if (this.serverConnected && this.serverRoute) {
-            this.currentRoute = this.serverRoute.clone();
+            this.editingRoute = this.serverRoute.clone();
         }
         if (this.serverConnected && this.serverLeg){
             this.currentLeg=this.serverLeg.clone();
-            this.checkRoute();
-            this.navobject.routeEvent();
+            this.syncRouteFromLeg();
         }
+        this.navobject.routeEvent();
     }
 };
 

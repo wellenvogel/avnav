@@ -74,6 +74,11 @@ avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
 avnav.nav.navdata.WayPoint.fromPlain=function(plain){
     return new avnav.nav.navdata.WayPoint(plain.lon,plain.lat,plain.name);
 };
+
+avnav.nav.navdata.WayPoint.clone=function(){
+    var rt=new avnav.nav.navdata.WayPoint(this.lon,this.lat,this.name);
+    return rt;
+};
 /**
  * a track point
  * @param {number} lon

@@ -203,9 +203,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
         var marker=navobject.getRawData(avnav.nav.NavEventType.NAV).markerLatlon;
         ev.data.page.gui.map.setCenter(marker);
         //make the current WP the active again...
-        var routingTarget=this.navobject.getRoutingData().getCurrentRouteTargetIdx();
-        if (routingTarget >= 0){
-            navobject.getRoutingData().setActiveWp(routingTarget);
+        var routingTarget=navobject.getRoutingData().getCurrentLegTargetIdx();
+        if (routingTarget >= 0 && navobject.getRoutingData().isActiveRoute()){
+            navobject.getRoutingData().setEditingWp(routingTarget);
         }
     });
     $('#leftBottomPositionCourse').click({page:this},function(ev){
@@ -260,11 +260,11 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
         $('#avi_route_display_next').hide();
     }
     var route=this.navobject.getRoutingData().getCurrentRoute();
-    var routeTarget=this.navobject.getRoutingData().getCurrentRouteTarget();
+    var routeTarget=this.navobject.getRoutingData().getCurrentLegTarget();
     var txt="Marker";
     if (routeTarget){
         txt=routeTarget.name;
-        if (! txt) txt=this.navobject.getRoutingData().getCurrentRouteTargetIdx()+"";
+        if (! txt) txt=this.navobject.getRoutingData().getCurrentLegTargetIdx()+"";
     }
     $('#markerLabel').text(txt);
 };
@@ -404,7 +404,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
  * @private
  */
 avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
-    var routeActive=this.navobject.getRoutingData().getCurrentRouteTargetIdx()>=0;
+    var routeActive=this.navobject.getRoutingData().getRouteData().name;
     if (routeActive ){
         $('#avi_route_display').show();
         if (this.overlay){
@@ -491,8 +491,8 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
                 });
             }
             $(el).click(function (ev) {
-                self.navobject.getRoutingData().setActiveWp(idx);
-                self.getMap().setCenter(self.navobject.getRoutingData().getActiveWp());
+                self.navobject.getRoutingData().setEditingWp(idx);
+                self.getMap().setCenter(self.navobject.getRoutingData().getEditingWp());
                 if (self.gui.isMobileBrowser()){
                     self.showWpPopUp(idx);
                 }
@@ -591,19 +591,19 @@ avnav.gui.Navpage.prototype.btnWpDone=function(button,ev){
     $(this.waypointPopUp).hide();
 };
 avnav.gui.Navpage.prototype.btnWpPrevious=function(button,ev){
-    this.navobject.getRoutingData().setActiveWp(this.navobject.getRoutingData().getActiveWpIdx()-1);
-    this.getMap().setCenter(this.navobject.getRoutingData().getActiveWp());
+    this.navobject.getRoutingData().setEditingWp(this.navobject.getRoutingData().getActiveWpIdx()-1);
+    this.getMap().setCenter(this.navobject.getRoutingData().getEditingWp());
 };
 avnav.gui.Navpage.prototype.btnWpNext=function(button,ev){
-    this.navobject.getRoutingData().setActiveWp(this.navobject.getRoutingData().getActiveWpIdx()+1);
-    this.getMap().setCenter(this.navobject.getRoutingData().getActiveWp());
+    this.navobject.getRoutingData().setEditingWp(this.navobject.getRoutingData().getActiveWpIdx()+1);
+    this.getMap().setCenter(this.navobject.getRoutingData().getEditingWp());
 };
 
 //-------------------------- Route ----------------------------------------
 avnav.gui.Navpage.prototype.btnNavAdd=function (button,ev){
     log("navAdd clicked");
     var center=this.gui.map.getCenter();
-    var current=this.navobject.getRoutingData().getActiveWp();
+    var current=this.navobject.getRoutingData().getEditingWp();
     if (current) {
         var dst = this.gui.map.pixelDistance(center, current);
         //TODO: make this configurable

@@ -10,3 +10,6 @@ for lib in jquery jscolor less movable-type ol311 rangeslider
 do
 	rsync -rav --delete $BASE/libraries/$lib/* $TARGET/libraries/$lib/
 done
+
+chmod -R a+r $BASE
+

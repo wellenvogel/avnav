@@ -232,9 +232,8 @@ avnav.nav.NavObject.prototype.computeValues=function(){
                 this.data.routeEta = undefined;
             }
             this.data.routeNextCourse = undefined;
-            var curwpidx = this.routeHandler.getCurrentRouteTargetIdx();
-            if (curwpidx >= 0 && gps.valid) {
-                var nextwp = this.routeHandler.getWp(curwpidx + 1);
+            if ( gps.valid) {
+                var nextwp = this.routeHandler.getCurrentLegNextWp();
                 if (nextwp) {
                     var dst = avnav.nav.NavCompute.computeDistance(gps, nextwp);
                     this.data.routeNextCourse = dst.course;
