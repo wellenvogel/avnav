@@ -89,6 +89,7 @@
         'gui/settingspage.js',
         'gui/statuspage.js',
         'gui/gpspage.js',
+        'gui/routepage.js',
         'avnav_viewer.js'
         //ENDFILES
     ];

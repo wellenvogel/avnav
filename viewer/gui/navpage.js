@@ -159,7 +159,14 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (!this.gui.properties.getProperties().layers.nav) this.hideRouting();
     this.handleRouteDisplay();
     this.updateRoutePoints(true);
+    if (options && options.showRouting){
+        this.showRouting();
+    }
+    else {
+        this.hideRouting();
+    }
     if (! this.routingVisible) this.navobject.getRoutingData().setActiveWpFromRoute();
+
 };
 /**
  * the periodic timer call
@@ -190,7 +197,7 @@ avnav.gui.Navpage.prototype.hidePage=function(){
     if (this.timer) window.clearTimeout(this.timer);
     this.hideOverlay();
     this.hidetime=0;
-    this.hideRouting();
+    //this.hideRouting();
 };
 /**
  *
@@ -233,6 +240,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
             if (point) point.name = $(this).val();
             self.navobject.getRoutingData().changeWp(wpid, point);
         }
+    });
+    $('#avi_route_info_navpage_inner').click({page:this},function(ev){
+        ev.data.page.gui.showPage('routepage',{returnpage:'navpage'});
     });
 
 };
@@ -378,6 +388,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
         this.handleToggleButton(button, !nLock);
         this.gui.map.triggerRender();
     }
+    $('#avi_route_info_navpage_inner').addClass(this.navobject.getRoutingData().isActiveRoute()?"avn_activeRoute":"avn_otherRoute");
 };
 
 /**
@@ -397,6 +408,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
         this.gui.map.setGpsLock(true);
         this.lastGpsLock=false;
     }
+    $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
 };
 
 /**

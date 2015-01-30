@@ -289,8 +289,15 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 
 #avi_route_info_navpage_inner {
-  margin-left: 3px;
-  margin-right: 3px;
+  //margin-left: 3px;
+  //margin-right: 3px;
+}
+/* we edit the current route */
+.avn_activeRoute{
+  border: 3px solid fade(#fa584a,@nightModePercent);
+}
+.avn_otherRoute{
+  border: 3px solid fade(#E6E6E6,@nightModePercent)
 }
 /*-------------------------------------------------------------
    route info
@@ -342,6 +349,11 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 .avn_route_info_active_point when (@nightModePercent<100%){
   background-color: #7A5957 !important;
+}
+
+//no margin at last display of route head
+#avi_route_info_eta{
+  margin-bottom: 0px;
 }
 
 
@@ -572,6 +584,12 @@ button#avb_AisNearest {
   .avn_button_icon_base('images/Ais-Up-40.png');
 }
 
+button#avb_RoutePageOk{
+  .avn_button_icon_base('images/check32.png');
+}
+button#avb_RoutePageCancel{
+  .avn_button_icon_base('images/Cancel40.png');
+}
 
 button#avb_SettingsCancel{
   .avn_button_icon_base('images/Cancel40.png');
