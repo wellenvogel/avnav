@@ -297,28 +297,28 @@ font-size: ( @bottomPanelHeight - 2 );
   border: 3px solid fade(#fa584a,@nightModePercent);
 }
 .avn_otherRoute{
-  border: 3px solid fade(#E6E6E6,@nightModePercent)
+  border: 3px solid fade(#1DB81D,@nightModePercent)
 }
 /*-------------------------------------------------------------
    route info
 -------------------------------------------------------------*/
-.avn_route_base(@factor: 6){
+.avn_route_base(@factor: 8){
     font-size: ( @routeInfoFontBase / @factor );
     padding-left: 3px;
 }
 .avn_route_label{
-    .avn_route_base(8);
+    .avn_route_base(10);
 }
 .avn_routeInfo{
-  .avn_route_base(6);
+  .avn_route_base(8);
   border-bottom: 1px solid black;
   margin-bottom: 5px;
 }
 #avi_route_info_heading{
-    .avn_route_base(5);
+    .avn_route_base(7);
 }
 #avi_route_info_name{
-    .avn_route_base(7);
+    .avn_route_base(10);
     margin-top: 5px;
 
 }
@@ -329,7 +329,7 @@ font-size: ( @bottomPanelHeight - 2 );
     right:0;
     bottom: 0;
     position: absolute;
-    top: (@routeInfoFontBase * 2.15);
+    top: (@routeInfoFontBase * 1.8);
     margin-left: 5px;
     overflow: auto;
 }
@@ -437,6 +437,80 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 
 /*-------------------------------------------------------------
+   routes page
+-------------------------------------------------------------*/
+#avi_route_page_inner{
+  padding-left: 10px;
+  padding-right: 10px;
+  font-size: ( @routeInfoFontBase / 7)
+}
+#avi_routes_headline{
+  font-size: 1.2em;
+  font-weight: bold;
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
+}
+
+#avi_route_name{
+  width: 95%;
+  font-size: ( @routeInfoFontBase / 5);
+}
+#avi_route_listhead{
+  margin-top: 10px;
+  border-bottom: 1px solid;
+  font-size: 1.3em;
+}
+
+#avi_route_listcontainer {
+  position: absolute;
+  left: 5px;
+  right: 0;
+  top: 9.5em;
+  overflow: auto;
+  bottom: 0;
+}
+.avn_route_list_entry{
+  height: ( @buttonSize + 5px);
+  overflow: hidden;
+  position: relative;
+  border-bottom: 1px solid;
+  padding-top: 5px;
+}
+.avn_route_listinfo{
+  padding-left: 1.5em;
+  float: left;
+}
+.avn_route_listdate{
+  float: left;
+
+}
+
+.avn_route_btnDelete{
+  position: absolute;
+  left: 3px;
+  top: 0;
+}
+.avn_route_btnLoad{
+  position: absolute;
+  right: 3px;
+  top: 0;
+}
+
+@listrasimagesize: 30px;
+.avn_route_listrasimage{
+  width: @listrasimagesize;
+  height: @listrasimagesize;
+  position: absolute;
+  top: (( @buttonSize - @listrasimagesize)/2) +2px;
+  right: (@buttonSize+10);
+}
+
+.avn_route_list_row{
+  margin-left: (@buttonSize + 10px);
+  margin-right: (@buttonSize + @listrasimagesize+15px);
+}
+
+/*-------------------------------------------------------------
    buttons
 -------------------------------------------------------------*/
 
@@ -479,7 +553,9 @@ button.avn_buttonInactive{
 	border: 4px solid fade(#E6E6E6,@nightModePercent);
 }
 
+
 .avn_button_icon_base(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
+  .avn_button_base();
   background-image: url(@icon);
   background-position: center center;
   background-size: @innerWidth @innerWidth;
@@ -589,6 +665,13 @@ button#avb_RoutePageOk{
 }
 button#avb_RoutePageCancel{
   .avn_button_icon_base('images/Cancel40.png');
+}
+
+.avn_route_btnDelete{
+  .avn_button_icon_base('images/trash32.png');
+}
+.avn_route_btnLoad{
+  .avn_button_icon_base('images/check32.png');
 }
 
 button#avb_SettingsCancel{

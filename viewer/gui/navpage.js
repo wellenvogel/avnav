@@ -388,7 +388,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
         this.handleToggleButton(button, !nLock);
         this.gui.map.triggerRender();
     }
-    $('#avi_route_info_navpage_inner').addClass(this.navobject.getRoutingData().isActiveRoute()?"avn_activeRoute":"avn_otherRoute");
+
 };
 
 /**
@@ -401,6 +401,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     this.routingVisible=false;
     this.handleToggleButton('#avb_ShowRoutePanel',false);
     this.gui.map.setRoutingActive(false);
+    this.navobject.getRoutingData().resetToActive();
     this.navobject.getRoutingData().setActiveWpFromRoute();
     this.handleRouteDisplay();
     $(this.waypointPopUp).hide();
@@ -433,8 +434,19 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
 };
 
 avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
+    $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
+    $('#avi_route_info_navpage_inner').addClass(this.navobject.getRoutingData().isActiveRoute()?"avn_activeRoute":"avn_otherRoute");
     var html="";
     var route=this.navobject.getRoutingData().getCurrentRoute();
+    if (route) {
+        var rname = route.name.substr(0, 14);
+        if (route.name.length > 14) rname += "..";
+        $('#avi_route_info_name').text(rname);
+    }
+    else {
+        $('#avi_route_info_list').html("");
+        return;
+    }
     var active=this.navobject.getRoutingData().getActiveWpIdx();
     var i;
     var self=this;

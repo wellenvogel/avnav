@@ -44,7 +44,7 @@ all buttons with ids avb_... will call corresponding js functions
       <!-- workaround for less bugs on ios -->
     <style>
         .less-error-message{
-            display: none;
+            /*display: none;*/
         }
     </style>
     <link rel="stylesheet/less" type="text/css" href="avnav_viewer.less"/>
@@ -268,7 +268,7 @@ all buttons with ids avb_... will call corresponding js functions
               <div id="avi_route_info_navpage" class="avn_panel avn_hidden avn_left">
                   <div id="avi_route_info_navpage_inner">
                       <div id="avi_route_info_heading">Route</div>
-                      <div id="avi_route_info_name" class="avn_routeInfo avd_routeName"></div>
+                      <div id="avi_route_info_name" class="avn_routeInfo"></div>
                       <div class="avn_route_label">Points:</div>
                       <div id="avi_route_info_numPoints" class="avn_routeInfo avd_routeNumPoints"></div>
                       <div class="avn_route_label">Length:</div>
@@ -402,7 +402,26 @@ all buttons with ids avb_... will call corresponding js functions
           </div>
 
           <div id='avi_route_page_inner' class="avn_panel avn_scrollable_page">
-              <h1>Route</h1>
+              <div id="avi_routes_headline">Routes</div>
+              <div id="avi_route_current">
+                  <label>Name</label>
+                  <form>
+                      <input type="text" id="avi_route_name"/>
+                  </form>
+                  <div id="avi_route_info"></div>
+              </div>
+              <div id="avi_route_listhead">Load Route</div>
+              <div id="avi_route_listcontainer" class="">
+                  <div class="avn_route_list_entry" id="avi_route_list_template">
+                      <button class="avn_route_btnDelete"></button>
+                      <div class="avn_route_list_row">
+                          <div class="avn_route_listdate">22.07.2014</div>
+                          <div class="avn_route_listinfo">Greiswald-Ruden,17sm,20 Points</div>
+                          <div class="avn_route_listrasimage"></div>
+                      </div>
+                      <button class="avn_route_btnLoad"></button>
+                  </div>
+              </div>
           </div>
 
       </div>

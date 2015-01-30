@@ -179,7 +179,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     var drawNav=prop.layers.boat&&prop.layers.nav;
     var route=this.navobject.getRoutingData().getCurrentRoute();
     var text,wp;
-    if (! drawNav) {
+    if (! drawNav || ! route) {
         this.routePixel=[];
         return;
     }
