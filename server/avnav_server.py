@@ -322,9 +322,9 @@ def main(argv):
         if hasFix:
           AVNLog.warn("lost GPS fix")
         hasFix=False
-      #AVNLog.debug("entries for TPV: "+str(curTPV))
+      #AVNLog.debug("entries for TPV: "+unicode(curTPV))
       curAIS=navData.getMergedEntries("AIS",[])
-      #AVNLog.debug("entries for AIS: "+str(curAIS))  
+      #AVNLog.debug("entries for AIS: "+unicode(curAIS))
   except Exception as e:
     AVNLog.error("Exception in main %s",traceback.format_exc())
     sighandler(None, None)

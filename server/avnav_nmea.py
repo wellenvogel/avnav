@@ -232,7 +232,7 @@ class NMEAParser():
         return True
         
     except Exception:
-        AVNLog.info(" error parsing nmea data "+str(data)+"\n"+traceback.format_exc())
+        AVNLog.info(" error parsing nmea data "+unicode(data)+"\n"+traceback.format_exc())
   
   #parse one line of AIS data 
   #taken from ais.py and adapted to our input handling     

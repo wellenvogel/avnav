@@ -115,7 +115,7 @@ class AVNGpsd(AVNWorker):
       self.setName("[%s]%s-dev:%s-port:%d"%(AVNLog.getThreadId(),self.getName(),device,port))
       if init:
         AVNLog.info("started for %s with command %s, timeout %f",device,gpsdcommand,timeout)
-        self.setInfo('main', "waiting for device %s"%(str(device)), AVNWorker.Status.STARTED)
+        self.setInfo('main', "waiting for device %s"%(unicode(device)), AVNWorker.Status.STARTED)
         init=False
       if not ( os.path.exists(device) or noCheck):
         self.setInfo('main',"device not visible",AVNWorker.Status.INACTIVE)
@@ -389,12 +389,12 @@ class AVNGpsdFeeder(AVNGpsd):
         listener.bind(('localhost',lport))
         self.setInfo(infoName, "listening at port %d"%(lport), AVNWorker.Status.STARTED)
         listener.listen(1)
-        AVNLog.info("feeder listening at port address %s",str(listener.getsockname()))
+        AVNLog.info("feeder listening at port address %s",unicode(listener.getsockname()))
         while True:
           self.gpsdsocket=None
           self.gpsdsocket,addr=listener.accept()
-          self.setInfo(infoName, "gpsd connected from %s"%(str(addr)), AVNWorker.Status.RUNNING)
-          AVNLog.info("feeder - gpsd connected from %s",str(addr))
+          self.setInfo(infoName, "gpsd connected from %s"%(unicode(addr)), AVNWorker.Status.RUNNING)
+          AVNLog.info("feeder - gpsd connected from %s",unicode(addr))
           try:
             while True:
               data=self.popListEntry()

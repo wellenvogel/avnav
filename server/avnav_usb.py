@@ -282,7 +282,7 @@ class AVNUsbSerialReader(AVNWorker):
           if dev.parent is None or not dev.parent.subsystem == "usb-serial":
             continue
           usbid=self.usbIdFromPath(dev.device_path)
-          AVNLog.debug("discovered usb serial tty device %s at %s (usbid=%s)",dev.device_node,str(dev),usbid)
+          AVNLog.debug("discovered usb serial tty device %s at %s (usbid=%s)",dev.device_node,unicode(dev),usbid)
           currentDevices[usbid]=dev.device_node
         self.checkDevices(currentDevices)
         if init:

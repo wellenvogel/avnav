@@ -57,12 +57,12 @@ class AVNDataEntry():
   def fromData(cls,data):
     dcls=data.get('class');
     if dcls is None:
-      AVNLog.debug("data %s does not contain a class - ignore",str(data))
+      AVNLog.debug("data %s does not contain a class - ignore",unicode(data))
       return None
     if dcls == 'TPV':
       tag=data.get('tag')
       if tag is None:
-        AVNLog.debug("no tag for TPV in %s - ignore",str(data))
+        AVNLog.debug("no tag for TPV in %s - ignore",unicode(data))
         return None
       rt=AVNDataEntry()
       rt.key=cls.createKey(dcls, tag)
@@ -76,11 +76,11 @@ class AVNDataEntry():
         AVNLog.ld("no type in AIS data",data)
         return None
       if not type in cls.knownAISTypes:
-        AVNLog.debug("ignore type %d in AIS data %s",type,str(data))
+        AVNLog.debug("ignore type %d in AIS data %s",type,unicode(data))
         return None
       mmsi=data.get('mmsi')
       if mmsi is None:
-        AVNLog.debug("AIS data without mmsi - ignore: %s",str(data))
+        AVNLog.debug("AIS data without mmsi - ignore: %s",unicode(data))
         return None
       rt=AVNDataEntry()
       rt.key=cls.createKey(dcls, str(mmsi))
@@ -89,7 +89,7 @@ class AVNDataEntry():
       return rt
         
     #we should not arrive here...
-    AVNLog.debug("unknown class in %s - ignore",str(data))
+    AVNLog.debug("unknown class in %s - ignore",unicode(data))
     return None
     
   
@@ -104,7 +104,7 @@ class AVNDataEntry():
       return None
     return cls.fromData(data)
   
-  def __str__(self):
+  def __unicode__(self):
     rt="AVNDataEntry: %s(ts=%f)=%s" % (self.key,(self.timestamp if self.timestamp is not None else 0),pprint.pformat(self.data))
     return rt
   def toJson(self):
@@ -161,12 +161,12 @@ class AVNNavData():
         return
       else:
         if self.list[navEntry.key].timestamp > navEntry.timestamp:
-          AVNLog.debug("not adding entry, older ts %s",str(navEntry))
+          AVNLog.debug("not adding entry, older ts %s",unicode(navEntry))
           self.listLock.release()
           return
     self.list[navEntry.key]=navEntry
     
-    AVNLog.debug("adding entry %s",str(navEntry))
+    AVNLog.debug("adding entry %s",unicode(navEntry))
     self.listLock.release()
   #check for an entry being expired
   #the list must already being locked!
@@ -176,7 +176,7 @@ class AVNNavData():
     if entry.data['class']=='AIS':
       et=AVNUtil.utcnow()-self.aisExpiryTime
     if entry.timestamp < et:
-      AVNLog.debug("remove expired entry %s, et=%s ",str(entry),str(et))
+      AVNLog.debug("remove expired entry %s, et=%s ",unicode(entry),unicode(et))
       del self.list[key]
       return None
     return entry
@@ -233,7 +233,7 @@ class AVNNavData():
       if not k in rt.data or rt.data[k] == rt.EMPTY_CLASS:
         rt.data[k]=e.data[k]
       if e.data[k] != rt.data[k] and rt.data[k] != rt.EMPTY_CLASS:
-        AVNLog.debug("mixing different classes in merge, ignore %s",str(e))
+        AVNLog.debug("mixing different classes in merge, ignore %s",unicode(e))
         continue
       for k in e.data.keys():
         if not (k in rt.data) or newer or rt.data.get(k) is None:
@@ -248,7 +248,7 @@ class AVNNavData():
     self.listLock.release()
         
   
-  def __str__(self):
+  def __unicode__(self):
     rt="AVNNavData \n"
     idx=0
     self.listLock.acquire()

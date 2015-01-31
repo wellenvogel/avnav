@@ -103,7 +103,7 @@ class GemfFile():
     self.handles.append(handle)
     self.isOpen=True
     for i in range(1,100):
-      aname=self.filename+"-"+str(i)
+      aname=self.filename+"-"+unicode(i)
       if os.path.isfile(aname):
         h=open(aname,"rb")
         self.handles.append(h)
@@ -213,7 +213,7 @@ class GemfFile():
     self.isOpen=False
 
 
-  def __str__(self):
+  def __unicode__(self):
     rt="GEMF %s (srcnum=%d:" %(self.filename,self.numsources)
     for s in self.sources:
       rt+="%(num)d,%(idx)d,%(name)s;" % s

@@ -320,7 +320,7 @@ class Location:
         latitude, longitude = location_delta.move(self)
         return Location(latitude, longitude)
 
-    def __str__(self):
+    def __unicode__(self):
         return '[loc:%s,%s@%s]' % (self.latitude, self.longitude, self.elevation)
 
     def __repr__(self):

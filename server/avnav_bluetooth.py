@@ -107,7 +107,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
   def readBT(self,host,port):
     infoName="BTReader-%s"%(host)
     threading.current_thread().setName("[%s]%s[Reader %s]"%(AVNLog.getThreadId(),self.getName(),host))
-    AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
+    AVNLog.debug("started bluetooth reader thread for %s:%s",unicode(host),unicode(port))
     self.setInfo(infoName, "connecting", AVNWorker.Status.STARTED)
     try:
       sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )

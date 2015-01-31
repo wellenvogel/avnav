@@ -128,8 +128,8 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
   
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),"HTTPServer"))
-    AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
-    self.setInfo('main',"serving at port %s"%(str(self.server_port)),AVNWorker.Status.RUNNING)
+    AVNLog.info("HTTP server "+self.server_name+", "+unicode(self.server_port)+" started at thread "+self.name)
+    self.setInfo('main',"serving at port %s"%(unicode(self.server_port)),AVNWorker.Status.RUNNING)
     self.gemfhandler=threading.Thread(target=self.handleGemfFiles)
     self.gemfhandler.daemon=True
     emptyname=self.getParamValue("empty", False)
@@ -221,7 +221,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
                 avnav=self.getGemfInfo(gemf)
               gemfdata={'name':newgemf.replace(".gemf",""),'gemf':gemf,'avnav':avnav,'mtime':gstat.st_mtime}
               self.gemflist[newgemf]=gemfdata
-              AVNLog.info("successfully added gemf file %s %s",newgemf,str(gemf))
+              AVNLog.info("successfully added gemf file %s %s",newgemf,unicode(gemf))
             except:
               AVNLog.error("error while trying to open gemf file %s  %s",fname,traceback.format_exc())
       except:
@@ -283,12 +283,12 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       elif ctype == 'application/x-www-form-urlencoded':
         length = int(self.headers.getheader('content-length'))
         if length > maxlen:
-          raise Exception("too much data"+str(length))
+          raise Exception("too much data"+unicode(length))
         postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
       elif ctype == 'application/json':
         length = int(self.headers.getheader('content-length'))
         if length > maxlen:
-          raise Exception("too much data"+str(length))
+          raise Exception("too much data"+unicode(length))
         postvars = { '_json':self.rfile.read(length)}
       else:
         postvars = {}      
@@ -367,7 +367,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       # abandon query parameters
       (path,sep,query) = path.partition('?')
       path = path.split('#',1)[0]
-      path = posixpath.normpath(urllib.unquote(path))
+      path = posixpath.normpath(urllib.unquote(path).decode('utf-8'))
       if path==self.server.navurl:
         self.handleNavRequest(path,query)
         return None
@@ -400,7 +400,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     if pa is None:
       return None
     if len(pa) > 0:
-      return pa[0]
+      return pa[0].decode('utf-8')
     return None
 
   #handle the request to an gemf file
@@ -527,7 +527,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             fentry['distance']=mdist
             frt.append(fentry)
           else:
-            AVNLog.debug("filtering out %s due to distance %f",str(fentry['mmsi']),mdist)
+            AVNLog.debug("filtering out %s due to distance %f",unicode(fentry['mmsi']),mdist)
         except:
           AVNLog.debug("unable to convert ais data: %s",traceback.format_exc())
     else:

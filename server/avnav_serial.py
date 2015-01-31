@@ -216,7 +216,7 @@ class SerialReader():
     f=None
     init=True
     isOpen=False
-    AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in self.param.keys()))
+    AVNLog.debug("started with param %s",",".join(unicode(i)+"="+unicode(self.param[i]) for i in self.param.keys()))
     self.setInfo("created",AVNWorker.Status.STARTED)
     filterstr=self.param.get('filter')
     filter=None
@@ -235,7 +235,7 @@ class SerialReader():
       if minbaud != baud and minbaud != 0:
         autobaud=True
         if not baud in rates or not minbaud in rates:
-          AVNLog.debug("minbaud/baud not in allowed rates %s","".join(str(f) for f in rates))
+          AVNLog.debug("minbaud/baud not in allowed rates %s","".join(unicode(f) for f in rates))
           autobaud=False
         if minbaud >= baud:
           AVNLog.debug("minbaud >= baud")
