@@ -461,12 +461,12 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
             html+='">';
             html+='<input type="text" id="avi_route_point_'+i+'"/>';
             if (this.gui.properties.getProperties().routeShowLL) {
-                html += '<span class="avn_route_point_ll">';
+                html += '<div class="avn_route_point_ll">';
             }
             else{
-                html += '<span class="avn_route_point_course">';
+                html += '<div class="avn_route_point_course">';
             }
-            html+='</span>';
+            html+='</div>';
             html+='</div>';
         }
         $('#avi_route_info_list').html(html);
