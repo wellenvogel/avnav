@@ -417,8 +417,8 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
  * @private
  */
 avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
-    var routeActive=this.navobject.getRoutingData().getRouteData().name;
-    if (routeActive ){
+    var routeActive=this.navobject.getRoutingData().hasActiveRoute();
+    if (routeActive  ){
         $('#avi_route_display').show();
         if (this.overlay){
             var h=this.overlay.height();

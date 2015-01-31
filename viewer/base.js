@@ -83,4 +83,12 @@ if (! avnav) {
             }
             return res;
     };
+
+    avnav.assign=function(target,obj){
+        if (! target) target={};
+        for (var key in obj) {
+            target[key] = obj[key];
+        }
+        return target;
+    }
 }

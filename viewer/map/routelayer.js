@@ -192,7 +192,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         }
     }
     var routeTarget=this.navobject.getRoutingData().getActiveWpIdx();
-    if (this.mapholder.getRoutingActive() || this.navobject.getRoutingData().hasCurrentRoute()) {
+    if (this.mapholder.getRoutingActive() || this.navobject.getRoutingData().hasActiveRoute()) {
         this.routePixel = drawing.drawLineToContext(this.currentRoutePoints, this.lineStyle);
         var active = this.navobject.getRoutingData().getActiveWpIdx();
         var i,style;

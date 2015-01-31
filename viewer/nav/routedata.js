@@ -4,6 +4,7 @@
 avnav.provide('avnav.nav.RouteData');
 avnav.provide('avnav.nav.Route');
 avnav.provide('avnav.nav.Leg');
+avnav.provide('avnav.nav.RouteInfo');
 avnav.provide('avnav.nav.RoutingMode');
 
 avnav.nav.RoutingMode={
@@ -166,6 +167,11 @@ avnav.nav.Route=function(name,opt_points){
      * @type {Array.<avnav.nav.navdata.WayPoint>|Array}
      */
     this.points=opt_points||[];
+    /**
+     * the timestamp of last modification
+     * @type {number}
+     */
+    this.time=new Date().getTime();
 };
 
 /**
@@ -183,6 +189,7 @@ avnav.nav.Route.prototype.fromJsonString=function(jsonString) {
  */
 avnav.nav.Route.prototype.fromJson=function(parsed) {
     this.name=parsed.name||"default";
+    this.time=parsed.time||0;
     this.points=[];
     var i;
     var wp;
@@ -197,6 +204,7 @@ avnav.nav.Route.prototype.fromJson=function(parsed) {
 avnav.nav.Route.prototype.toJson=function(){
     var rt={};
     rt.name=this.name;
+    rt.time=this.time;
     rt.points=[];
     var i;
     for (i in this.points){
@@ -235,6 +243,34 @@ avnav.nav.Route.prototype.clone=function(){
     var rt=new avnav.nav.Route();
     rt.fromJsonString(str);
     return rt;
+};
+
+avnav.nav.RouteInfo=function(name,opt_server){
+    /**
+     * the name of the route
+     * @type {string}
+     */
+    this.name=name||"default";
+    /**
+     * is this a route from the server
+     * @type {boolean}
+     */
+    this.server=opt_server||false;
+    /**
+     * the length in nm
+     * @type {number}
+     */
+    this.length=0;
+    /**
+     * the number of waypoints
+     * @type {number}
+     */
+    this.numpoints=0;
+    /**
+     * UTC timestamp
+     * @type {number}
+     */
+    this.time=0;
 };
 
 
@@ -440,16 +476,17 @@ avnav.nav.RouteData.prototype.resetToActive=function(){
  * @param {number} startIdx
  * @returns {number} distance in nm
  */
-avnav.nav.RouteData.prototype.computeLength=function(startIdx){
+avnav.nav.RouteData.prototype.computeLength=function(startIdx,opt_route){
     var rt=0;
-    if (! this.editingRoute) return 0;
+    if (! opt_route) opt_route=this.editingRoute;
+    if (! opt_route) return 0;
     if (startIdx == -1) startIdx=this.currentLeg.currentTarget;
     if (startIdx < 0) startIdx=0;
-    if (this.editingRoute.points.length < (startIdx+2)) return rt;
-    var last=this.editingRoute.points[startIdx];
+    if (opt_route.points.length < (startIdx+2)) return rt;
+    var last=opt_route.points[startIdx];
     startIdx++;
-    for (;startIdx<this.editingRoute.points.length;startIdx++){
-        var next=this.editingRoute.points[startIdx];
+    for (;startIdx<opt_route.points.length;startIdx++){
+        var next=opt_route.points[startIdx];
         var dst=avnav.nav.NavCompute.computeDistance(last,next);
         rt+=dst.dtsnm;
         last=next;
@@ -487,7 +524,57 @@ avnav.nav.RouteData.prototype.handleLegResponse=function(data) {
         }
     }
 };
-
+/**
+ *
+ * @param operation: getroute,listroutes,setroute,deleteroute
+ * @param param {object}
+ *        okcallback(data,param)
+ *        errorcallback(errdata,param)
+ *        name for operation load
+ *        route for operation save
+ *
+ */
+avnav.nav.RouteData.prototype.remoteRouteOperation=function(operation,param) {
+    url = this.propertyHandler.getProperties().navUrl + "?request=routing&command=" + operation;
+    var type="GET";
+    var data=undefined;
+    if (operation == "getroute" || operation=="deleteroute") {
+        url += "&name=" + encodeURIComponent(param.name);
+    }
+    if(operation=="setroute"){
+        type="POST";
+        data=param.route.toJsonString();
+    }
+    param.operation=operation;
+    $.ajax({
+        url: url,
+        type: type,
+        data: data?data:undefined,
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        cache: false,
+        success: function (data, status) {
+            if (data.status && data.status != "OK") {
+                //seems to be some error
+                log("query route error: " + data.status);
+                if (param.errorcallback){
+                    param.errorcallback(data.status,param);
+                }
+                return;
+            }
+            if (param.okcallback) {
+                param.okcallback(data, param);
+            }
+        },
+        error: function (status, data, error) {
+            log("query route error");
+            if (param.errorcallback){
+                param.errorcallback(error,param);
+            }
+        },
+        timeout: 10000
+    });
+};
 
 /**
  * @private
@@ -497,6 +584,12 @@ avnav.nav.RouteData.prototype.startQuery=function() {
     var url = this.propertyHandler.getProperties().navUrl+"?request=routing&command=getleg";
     var timeout = this.propertyHandler.getProperties().routeQueryTimeout; //in ms!
     var self = this;
+    if (! this.connectMode){
+        self.timer=window.setTimeout(function() {
+            self.startQuery();
+        },timeout);
+        return;
+    }
     $.ajax({
         url: url,
         dataType: 'json',
@@ -524,18 +617,10 @@ avnav.nav.RouteData.prototype.startQuery=function() {
     //we only query the route separately if it is currently not active
     if (! this.isActiveRoute()) {
         if (! this.editingRoute) return;
-        url = this.propertyHandler.getProperties().navUrl + "?request=routing&command=getroute&name=" +
-        encodeURIComponent(this.editingRoute.name);
-        $.ajax({
-            url: url,
-            dataType: 'json',
-            cache: false,
-            success: function (data, status) {
-                if (data.status) {
-                    //seems to be some error
-                    log("query route error: " + data.status);
-                    return;
-                }
+        if (! this.connectMode) return;
+        this.remoteRouteOperation("getroute",{
+            name:this.editingRoute.name,
+            okcallback:function(data,param){
                 var nRoute = new avnav.nav.Route();
                 nRoute.fromJson(data);
                 var change = nRoute.differsTo(self.serverRoute)
@@ -550,13 +635,12 @@ avnav.nav.RouteData.prototype.startQuery=function() {
                     }
 
                 }
+            },
+            errorcallback: function(status,param){
 
-            },
-            error: function (status, data, error) {
-                log("query route error");
-            },
-            timeout: 10000
+            }
         });
+
     }
 };
 
@@ -594,13 +678,25 @@ avnav.nav.RouteData.prototype.changeRouteName=function(name){
 /**
  * @private
  */
-avnav.nav.RouteData.prototype.saveRoute=function(){
-    if (! this.editingRoute) return;
-    var str=this.editingRoute.toJsonString();
-    localStorage.setItem(this.propertyHandler.getProperties().routeName+"."+this.editingRoute.name,str);
+avnav.nav.RouteData.prototype.saveRouteLocal=function(opt_route) {
+    var route = opt_route;
+    if (!route) {
+        route = this.editingRoute;
+        if (!route) return route;
+        route.time = new Date().getTime();
+        route.time = new Date().getTime();
+    }
+    var str = route.toJsonString();
+    localStorage.setItem(this.propertyHandler.getProperties().routeName + "." + route.name, str);
+    return route;
+};
+
+avnav.nav.RouteData.prototype.saveRoute=function(opt_route) {
+    var route=this.saveRouteLocal(opt_route);
+    if (! route ) return;
     //send the route to the server if this is not the active one
     if ( ! this.isActiveRoute()) {
-        if (this.connectMode) this.sendRoute(this.editingRoute.toJsonString());
+        if (this.connectMode) this.sendRoute(route);
     }
 };
 /**
@@ -667,17 +763,14 @@ avnav.nav.RouteData.prototype.findBestMatchingPoint=function(){
 avnav.nav.RouteData.prototype.sendRoute=function(route){
     //send route to server
     var self=this;
-    $.ajax({
-        type: "POST",
-        url: this.propertyHandler.getProperties().navUrl + "?request=routing&command=setroute",
-        data: route,
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        success: function (data) {
+    this.remoteRouteOperation("setroute",{
+        route:route,
+        self:self,
+        okcallback:function(data,param){
             log("route sent to server");
         },
-        error: function (errMsg, x) {
-            if (self.propertyHandler.getProperties().routingServerError) alert("unable to send route to server:" + errMsg);
+        errorcallback:function(status,param){
+            if (param.self.propertyHandler.getProperties().routingServerError) alert("unable to send route to server:" + errMsg);
         }
     });
 };
@@ -785,7 +878,8 @@ avnav.nav.RouteData.prototype.getLock=function(){
  * check if we currently have an active route
  * @returns {boolean}
  */
-avnav.nav.RouteData.prototype.hasCurrentRoute=function(){
+avnav.nav.RouteData.prototype.hasActiveRoute=function(){
+    if (! this.currentLeg.active) return false;
     if (! this.currentLeg.name) return false;
     if (! this.currentLeg.currentRoute) return false;
     return true;
@@ -1035,6 +1129,125 @@ avnav.nav.RouteData.prototype.invertRoute=function(){
     }
 
 };
+
+/**
+ * list functions for routes
+ * works async
+ * @param server
+ * @param okCallback function that will be called with a list of RouteInfo
+ * @param opt_failCallback
+ */
+avnav.nav.RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_callbackData){
+    return this.remoteRouteOperation("listroutes",{
+        okcallback:function(data,param){
+            if ((data.status && data.status!='OK') || (!data.items)) {
+                if (opt_failCallback) {
+                    opt_failCallback(data.status || "no items", param.callbackdata)
+                    return;
+                }
+            }
+            var items = [];
+            var i;
+            for (i = 0; i < data.items.length; i++) {
+                var ri = new avnav.nav.RouteInfo();
+                avnav.assign(ri, data.items[i]);
+                ri.server = true;
+                items.push(ri);
+            }
+            okCallback(items, param.callbackdata);
+
+        },
+        errorcallback:function(err,param){
+            if (opt_failCallback){
+                opt_failCallback(err,param.callbackdata)
+            }
+        },
+        callbackdata:opt_callbackData
+
+    });
+};
+/**
+ * list local routes
+ * returns a list of RouteInfo
+ */
+avnav.nav.RouteData.prototype.listRoutesLocal=function(){
+    var rt=[];
+    var i=0;
+    var key,rtinfo,route;
+    var routeprfx=this.propertyHandler.getProperties().routeName+".";
+    for (i=0;i<localStorage.length;i++){
+        key=localStorage.key(i);
+        if (key.substr(0,routeprfx.length)==routeprfx){
+            rtinfo=new avnav.nav.RouteInfo(key.substr(routeprfx.length));
+            try {
+                route=new avnav.nav.Route();
+                route.fromJsonString(localStorage.getItem(key));
+                if (route.points) rtinfo.numpoints=route.points.length;
+                rtinfo.length=this.computeLength(0,route);
+                rtinfo.time=route.time;
+
+            } catch(e){}
+            rt.push(rtinfo);
+        }
+
+    }
+    return rt;
+};
+/**
+ * delete a route both locally and on server
+ * @param name
+ * @param opt_errorcallback
+ */
+avnav.nav.RouteData.prototype.deleteRoute=function(name,opt_errorcallback){
+    try{
+        localStorage.removeItem(this.propertyHandler.getProperties().routeName+"."+name);
+    }catch(e){}
+    if (this.connectMode){
+        this.remoteRouteOperation("deleteroute",{
+            name:name,
+            errorcallback:opt_errorcallback
+        });
+    }
+};
+
+avnav.nav.RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallback){
+    var route;
+    if (localOnly || ! this.connectMode){
+        route=this.loadRoute(name);
+        if (route){
+            setTimeout(function(){
+                okcallback(route);
+            },0);
+        }
+        else if (opt_errorcallback){
+            setTimeout(function(){
+                opt_errorcallback(name);
+            },0);
+        }
+        return;
+    }
+    this.remoteRouteOperation("getroute",{
+        name:name,
+        self:this,
+        f_okcallback:okcallback,
+        f_errorcallback:opt_errorcallback,
+        okcallback: function(data,param){
+            var rt=new avnav.nav.Route(param.name);
+            rt.fromJsonString(data);
+            para.self.saveRouteLocal(rt);
+            if (param.f_okcallback){
+                param.f_okcallback(rt);
+            }
+        },
+        errorcallback:function(status,param){
+            if (param.f_errorcallback){
+                param.f_errorcallback(param.name);
+            }
+        }
+    });
+};
+
+
 
 /**
  * @private
