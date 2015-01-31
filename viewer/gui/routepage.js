@@ -98,6 +98,7 @@ avnav.gui.Routepage.prototype.addRoutes=function(routeInfos){
         curid=this.findRouteInfo(routeInfos[i]);
         if (curid >= 0){
             //a second one will always update...
+            this.routes[curid]=routeInfos[i];
             this.displayInfo(curid,routeInfos[i]);
             continue;
         }
@@ -129,7 +130,16 @@ avnav.gui.Routepage.prototype.addRoutes=function(routeInfos){
             }catch(e){}
             if (rtinfo){
                 var name=rtinfo.name;
-                alert("loading route "+name);
+                self.routingData.fetchRoute(name,!rtinfo.server,
+                    function(route){
+                        self.routingData.setNewEditingRoute(route);
+                        self.gui.showPageOrReturn(this.returnpage,'navpage',{showRouting:true});
+                    },
+                    function(err){
+                        alert("unable to load route "+name+": "+err);
+                    }
+                );
+
             }
 
         });

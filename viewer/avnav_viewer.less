@@ -332,7 +332,8 @@ font-size: ( @bottomPanelHeight - 2 );
     bottom: 0;
     position: absolute;
     top: (@routeInfoFontBase * 1.8);
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 #avi_route_info_list input{
     @width: max(@aisPanelWidth,@routeInfoPanelWidth);

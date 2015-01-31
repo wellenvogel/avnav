@@ -1084,7 +1084,7 @@ avnav.nav.RouteData.prototype.addWp=function(id,point){
 /**
  * delete all points from the route
  */
-avnav.nav.RouteData.prototype.deleteRoute=function(){
+avnav.nav.RouteData.prototype.emptyRoute=function(){
     if (! this.editingRoute) return;
     this.editingRoute.points=[];
     this.editingWpIdx=0;
@@ -1233,8 +1233,8 @@ avnav.nav.RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_
         f_errorcallback:opt_errorcallback,
         okcallback: function(data,param){
             var rt=new avnav.nav.Route(param.name);
-            rt.fromJsonString(data);
-            para.self.saveRouteLocal(rt);
+            rt.fromJson(data);
+            param.self.saveRouteLocal(rt);
             if (param.f_okcallback){
                 param.f_okcallback(rt);
             }
@@ -1247,7 +1247,11 @@ avnav.nav.RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_
     });
 };
 
-
+avnav.nav.RouteData.prototype.setNewEditingRoute=function(route){
+    this.editingRoute=route.clone();
+    this.findBestMatchingPoint();
+    this.navobject.routeEvent();
+};
 
 /**
  * @private

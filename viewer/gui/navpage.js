@@ -656,7 +656,7 @@ avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
 };
 avnav.gui.Navpage.prototype.btnNavDeleteAll=function(button,ev){
     log("navDeletAll clicked");
-    this.navobject.getRoutingData().deleteRoute();
+    this.navobject.getRoutingData().emptyRoute();
 };
 
 avnav.gui.Navpage.prototype.btnNavInvert=function(button,ev){
