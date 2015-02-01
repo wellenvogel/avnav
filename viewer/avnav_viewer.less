@@ -510,7 +510,7 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 
 
-@listrasimagesize: 30px;
+@listrasimagesize: 20px;
 .avn_route_listrasimage{
   width: @listrasimagesize;
   height: @listrasimagesize;
@@ -518,11 +518,30 @@ font-size: ( @bottomPanelHeight - 2 );
   top: (( @buttonSize - @listrasimagesize ) / 2 );
   right: 8px;
   background-image: url('images/plug32.png');
+  background-size: contain;
 }
+
+.avn_route_liststatimage{
+  width: @listrasimagesize;
+  height: @listrasimagesize;
+  background-size: contain;
+  position: absolute;
+  top: (( @buttonSize - @listrasimagesize ) / 2 );
+  right: ( @listrasimagesize + 12);
+}
+
+
 
 .avn_route_list_row{
   margin-left: (@buttonSize + 10px);
-  margin-right: (@listrasimagesize+16px);
+  margin-right: (2 * @listrasimagesize + 20px);
+}
+
+.avn_route_current{
+  background-image: url('images/GreenBubble40.png');
+}
+.avn_route_active{
+  background-image: url('images/RedBubble40.png');
 }
 
 /*-------------------------------------------------------------

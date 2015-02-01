@@ -112,3 +112,17 @@ avnav.util.Formatter.prototype.formatTime=function(curDate){
         this.formatDecimal(curDate.getSeconds(),2,0);
     return datestr;
 };
+/**
+ * format date and time
+ * @param {Date} curDate
+ * @returns {string}
+ */
+avnav.util.Formatter.prototype.formatDateTime=function(curDate){
+    var datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
+        this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
+        this.formatDecimal(curDate.getDate(),2,0)+" "+
+        this.formatDecimal(curDate.getHours(),2,0)+":"+
+        this.formatDecimal(curDate.getMinutes(),2,0)+":"+
+        this.formatDecimal(curDate.getSeconds(),2,0);
+    return datestr;
+};

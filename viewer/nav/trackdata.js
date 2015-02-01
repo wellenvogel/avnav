@@ -55,7 +55,7 @@ avnav.nav.TrackData=function(propertyHandler,navobject){
  * @param data
  * @private
  */
-avnav.nav.TrackData.prototype.handleLegResponse=function(data){
+avnav.nav.TrackData.prototype.handleTrackResponse=function(data){
     var lastts=0;
     if (this.currentTrack.length>0){
         lastts=this.currentTrack[this.currentTrack.length-1].ts;
@@ -114,7 +114,7 @@ avnav.nav.TrackData.prototype.startQuery=function() {
         cache:	false,
         success: function(data,status){
             self.lastTrackQuery=new Date().getTime();
-            self.handleLegResponse(data);
+            self.handleTrackResponse(data);
             log("trackdatadata");
             self.handleTrackStatus(true);
             self.timer=window.setTimeout(function(){

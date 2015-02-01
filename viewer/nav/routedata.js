@@ -679,14 +679,14 @@ avnav.nav.RouteData.prototype.changeRouteName=function(name){
 /**
  * @private
  */
-avnav.nav.RouteData.prototype.saveRouteLocal=function(opt_route) {
+avnav.nav.RouteData.prototype.saveRouteLocal=function(opt_route,opt_keepTime) {
     var route = opt_route;
     if (!route) {
         route = this.editingRoute;
         if (!route) return route;
-        route.time = new Date().getTime();
-        route.time = new Date().getTime();
+
     }
+    if (! opt_keepTime || ! route.time) route.time = new Date().getTime();
     var str = route.toJsonString();
     localStorage.setItem(this.propertyHandler.getProperties().routeName + "." + route.name, str);
     return route;
@@ -759,11 +759,13 @@ avnav.nav.RouteData.prototype.findBestMatchingPoint=function(){
 
 /**
  * send the route
- * @param {string} route as json string
+ * @param {avnav.nav.Route} route
  */
 avnav.nav.RouteData.prototype.sendRoute=function(route){
     //send route to server
     var self=this;
+    var sroute=route.clone();
+    if (sroute.time) sroute.time=sroute.time/1000;
     this.remoteRouteOperation("setroute",{
         route:route,
         self:self,
@@ -1153,6 +1155,7 @@ avnav.nav.RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallb
                 var ri = new avnav.nav.RouteInfo();
                 avnav.assign(ri, data.items[i]);
                 ri.server = true;
+                ri.time=ri.time*1e3; //we receive TS in s
                 items.push(ri);
             }
             okCallback(items, param.callbackdata);
@@ -1235,7 +1238,8 @@ avnav.nav.RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_
         okcallback: function(data,param){
             var rt=new avnav.nav.Route(param.name);
             rt.fromJson(data);
-            param.self.saveRouteLocal(rt);
+            if (rt.time) rt.time=rt.time*1000;
+            param.self.saveRouteLocal(rt,true);
             if (param.f_okcallback){
                 param.f_okcallback(rt);
             }
