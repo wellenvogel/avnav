@@ -360,9 +360,19 @@ class AVNRouter(AVNWorker):
         if self.currentLeg.currentRoute is not None:
           #this will also set the active route
           self.saveRoute(self.currentLeg.currentRoute)
+          if self.currentLeg.name != self.currentLeg.currentRoute.name:
+            AVNLog.error("leg inconsistent, name in route %s different from name in leg %s, correcting to route name",self.currentLeg.name,
+                         self.currentLeg.currentRoute.name)
+            self.currentLeg.name=self.currentLeg.currentRoute.name
+            self.activeRouteName=self.currentLeg.name
+            #write back the corrected leg
+            self.setCurrentLeg(self.currentLeg)
         else:
           if self.currentLeg.name is not None:
             self.activeRoute=self.loadRoute(self.currentLeg.name)
+            if self.activeRoute is None:
+              self.activeRoute=GPXRoute(self.currentLeg.name)
+            self.currentLeg.currentRoute=self.activeRoute
       except:
         AVNLog.error("error parsing current leg %s: %s"%(self.currentLegFileName,traceback.format_exc()))
       f.close()

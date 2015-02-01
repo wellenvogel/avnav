@@ -319,8 +319,10 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
         var route=this.loadRoute(this.currentLeg.name);
         if (route){
             this.currentLeg.currentRoute=route;
-            //TODO: should we switch off the route if we don't have it?
-            //TODO: check consistency
+            this.currentLeg.name=route.name;
+        }
+        else {
+            this.currentLeg.currentRoute=new avnav.nav.Route(this.currentLeg.name);
         }
     }
     /**
@@ -519,6 +521,18 @@ avnav.nav.RouteData.prototype.handleLegResponse=function(data) {
         if (this.serverLeg.differsTo(this.currentLeg)) {
             var activeMode=this.isEditingActiveRoute();
             this.currentLeg = this.serverLeg.clone();
+            if (this.currentLeg.name){
+                if (! this.currentLeg.currentRoute){
+                    var route=this.loadRoute(this.currentLeg.name);
+                    if (route){
+                        this.currentLeg.currentRoute=route;
+                        this.currentLeg.name=route.name;
+                    }
+                    else{
+                        this.currentLeg.currentRoute=new avnav.nav.Route(this.currentLeg.name);
+                    }
+                }
+            }
             this.syncRouteFromLeg();
             this.saveLeg();
             this.navobject.routeEvent();
