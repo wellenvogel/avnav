@@ -623,7 +623,11 @@ class AVNRouter(AVNWorker):
         route=self.loadRoute(data)
         self.addRouteToList(route)
       AVNLog.debug("get route %s"%(route.name))
-      return self.routeToJsonString(route)
+      jroute=self.routeToJson(route)
+      rinfo=self.routeInfos.get(data)
+      if rinfo is not None:
+        jroute['time']=rinfo.time
+      return json.dumps(jroute)
     if (command == 'deleteroute'):
       name=self.getRequestParam(requestparam, 'name')
       if name is None:

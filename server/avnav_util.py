@@ -175,7 +175,7 @@ class AVNUtil():
   
   NM=1852.0; #convert nm into m
   R=6371000; #earth radius in m
-  #convert a datetime UTC to a timestamp
+  #convert a datetime UTC to a timestamp in seconds
   @classmethod
   def datetimeToTsUTC(cls,dt):
     if dt is None:
