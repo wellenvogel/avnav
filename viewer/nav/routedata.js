@@ -409,7 +409,7 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
  * only if we are in active route mode
  */
 avnav.nav.RouteData.prototype.syncRouteFromLeg=function(){
-    if (! this.isActiveRoute()) return;
+    if (! this.isEditingActiveRoute()) return;
     this.setRouteFromLeg();
 };
 
@@ -457,7 +457,7 @@ avnav.nav.RouteData.prototype.setLegFromRoute=function(){
  * sync the route to the leg if we are in active route mode
  */
 avnav.nav.RouteData.prototype.syncRouteToLeg=function(){
-    if (! this.isActiveRoute()) return;
+    if (! this.isEditingActiveRoute()) return;
     this.setLegFromRoute();
 };
 
@@ -466,6 +466,7 @@ avnav.nav.RouteData.prototype.syncRouteToLeg=function(){
  * also setting the active WP
  */
 avnav.nav.RouteData.prototype.resetToActive=function(){
+    if (this.isEditingActiveRoute()) return;
     this.editingWpIdx=this.currentLeg.currentTarget||0;
     this.setRouteFromLeg();
 };
@@ -516,7 +517,7 @@ avnav.nav.RouteData.prototype.handleLegResponse=function(data) {
 
     if (this.connectMode ) {
         if (this.serverLeg.differsTo(this.currentLeg)) {
-            var activeMode=this.isActiveRoute();
+            var activeMode=this.isEditingActiveRoute();
             this.currentLeg = this.serverLeg.clone();
             this.syncRouteFromLeg();
             this.saveLeg();
@@ -615,7 +616,7 @@ avnav.nav.RouteData.prototype.startQuery=function() {
         timeout: 10000
     });
     //we only query the route separately if it is currently not active
-    if (! this.isActiveRoute()) {
+    if (! this.isEditingActiveRoute()) {
         if (! this.editingRoute) return;
         if (! this.connectMode) return;
         this.remoteRouteOperation("getroute",{
@@ -695,7 +696,7 @@ avnav.nav.RouteData.prototype.saveRoute=function(opt_route) {
     var route=this.saveRouteLocal(opt_route);
     if (! route ) return;
     //send the route to the server if this is not the active one
-    if ( ! this.isActiveRoute()) {
+    if ( ! this.isEditingActiveRoute()) {
         if (this.connectMode) this.sendRoute(route);
     }
 };
@@ -778,7 +779,7 @@ avnav.nav.RouteData.prototype.sendRoute=function(route){
  * check if the current route is active
  * @returns {boolean}
  */
-avnav.nav.RouteData.prototype.isActiveRoute=function(){
+avnav.nav.RouteData.prototype.isEditingActiveRoute=function(){
     if (! this.currentLeg.name) return false;
     if (! this.editingRoute) return false; //TODO: is this really false?
     if (this.currentLeg.name != this.editingRoute.name) return false;
@@ -901,7 +902,7 @@ avnav.nav.RouteData.prototype.setEditingWp=function(id){
  * if the route is active
  */
 avnav.nav.RouteData.prototype.setActiveWpFromRoute=function(){
-    if (this.isActiveRoute()){
+    if (this.isEditingActiveRoute()){
         if (this.editingWpIdx != this.currentLeg.currentTarget){
             this.editingWpIdx=this.currentLeg.currentTarget;
             this.editingWp=this.getEditingWp();
@@ -978,7 +979,7 @@ avnav.nav.RouteData.prototype.deleteWp=function(id){
     }
     if (id<0)id=0;
     if (! this.editingRoute) return;
-    var changeTarget=this.isActiveRoute() && id == this.currentLeg.currentTarget;
+    var changeTarget=this.isEditingActiveRoute() && id == this.currentLeg.currentTarget;
     if (this.editingRoute.points){
         if (id >= this.editingRoute.points.length)id=this.editingRoute.points.length-1;
         this.editingRoute.points.splice(id,1);
@@ -990,7 +991,7 @@ avnav.nav.RouteData.prototype.deleteWp=function(id){
     if (changeTarget) this.routeOn(avnav.nav.RoutingMode.ROUTE,true);
     this.editingWp=this.getEditingWp();
     this.saveRoute(); //will only send if we modified not the active one
-    if (this.isActiveRoute()) {
+    if (this.isEditingActiveRoute()) {
         this.currentLeg.currentRoute=this.editingRoute.clone();
         this.legChanged();
     }
@@ -1016,14 +1017,14 @@ avnav.nav.RouteData.prototype.changeWp=function(id,point){
         }
         this.editingRoute.points[id] = point;
     }
-    if (this.isActiveRoute() && id == this.currentLeg.currentTarget){
+    if (this.isEditingActiveRoute() && id == this.currentLeg.currentTarget){
         this.routeOn(avnav.nav.RoutingMode.ROUTE,true);
     }
     else {
 
     }
     this.saveRoute();
-    if (this.isActiveRoute()) {
+    if (this.isEditingActiveRoute()) {
         this.currentLeg.currentRoute=this.editingRoute.clone();
         this.legChanged();
     }
@@ -1075,7 +1076,7 @@ avnav.nav.RouteData.prototype.addWp=function(id,point){
     }
     this.editingWp=this.getEditingWp();
     this.saveRoute();
-    if (this.isActiveRoute()) {
+    if (this.isEditingActiveRoute()) {
         this.currentLeg.currentRoute=this.editingRoute.clone();
         this.legChanged();
     }
@@ -1089,7 +1090,7 @@ avnav.nav.RouteData.prototype.emptyRoute=function(){
     this.editingRoute.points=[];
     this.editingWpIdx=0;
     this.editingWp=undefined;
-    if (this.isActiveRoute()){
+    if (this.isEditingActiveRoute()){
         this.currentLeg.name=undefined;
         this.currentLeg.currentTarget=-1;
         this.currentLeg.active=false;
@@ -1119,7 +1120,7 @@ avnav.nav.RouteData.prototype.invertRoute=function(){
     this.editingWp=this.getEditingWp();
 
     this.saveRoute();
-    if (this.isActiveRoute()){
+    if (this.isEditingActiveRoute()){
         this.currentLeg.currentTarget=this.editingRoute.points.length-target-1;
         this.currentLeg.currentRoute=this.editingRoute.clone();
         this.legChanged();
@@ -1304,7 +1305,7 @@ avnav.nav.RouteData.prototype.checkNextWp=function(){
             }
             //should we wait for some time???
             if (hasNextWp) {
-                if (this.isActiveRoute()) {
+                if (this.isEditingActiveRoute()) {
                     this.editingWpIdx = this.currentLeg.currentTarget + 1;
                     this.editingWp = this.getEditingWp();
                     this.routeOn(avnav.nav.RoutingMode.ROUTE);

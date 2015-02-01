@@ -54,6 +54,13 @@
   opacity: @nightModeValue;
 }
 
+input when (@nightModePercent<100%) {
+  background-color: #646463;
+}
+
+input {
+  border: 2px inset;
+}
 html,body {
 	.nightColors();
 	height: 100%;
@@ -192,6 +199,10 @@ font-size: ( @bottomPanelHeight - 2 );
 	margin-top: ( @bottomSmallFont / 4 );
     margin-right: (@bottomSmallFont / 4);
     .bottomhideverysmall();
+}
+
+#markerLabel {
+  max-width: 7em;
 }
 #leftBottomMarker #leftBottomMarkerBearing{
 	//width: ( @bottomBigFont * 5.8 );
@@ -338,12 +349,9 @@ font-size: ( @bottomPanelHeight - 2 );
 #avi_route_info_list input{
     @width: max(@aisPanelWidth,@routeInfoPanelWidth);
     width: (@width - 10px);
-    border: 2px inset;
     font-size: ( @routeInfoFontBase / 8);
 }
-#avi_route_info_list input when (@nightModePercent<100%) {
-    background-color: #646463;
-}
+
 .avn_route_info_point{
   border-bottom: 1px solid black;
   padding-left: 2px;
@@ -377,16 +385,27 @@ font-size: ( @bottomPanelHeight - 2 );
 
 #avi_waypoint_popup input{
   font-size: ( @routeInfoFontBase / 5);
-  margin-left: 5px;
+  width: 100%;
 }
-#avi_waypoint_popup input when (@nightModePercent<100%) {
-  background-color: #646463;
-}
+
+
+/* make the waypoint popup 2 rows on small screen width */
+@wpsmall: ( 5.583 * @routeInfoFontBase );
 #avi_waypoint_popup_left{
     float: left;
     padding-top: 5px;
     padding-left: 5px;
     padding-bottom: 3px;
+  @media (min-width: @wpsmall) {
+    width: 100%;
+    box-sizing: border-box;
+    margin-right: -( 3 * @buttonSize + 47);
+    padding-right: ( 3 * @buttonSize + 47);
+  }
+  @media (max-width: ( @wpsmall - 1) ) {
+    padding-right: 10px;
+  }
+
 }
 #avi_waypoint_popup_right{
     float:right;
@@ -401,9 +420,7 @@ font-size: ( @bottomPanelHeight - 2 );
     bottom: 0px;
     background-color: rgba(222, 226, 207, 0.92);
     z-index: 90;
-    border-radius: 5px;
-    margin-bottom: 8px;
-    margin-left:  8px;
+    border-radius: 2px;
     border: 1px solid;
     padding-right: 8px;
     padding-left: 3px;
@@ -491,11 +508,7 @@ font-size: ( @bottomPanelHeight - 2 );
   left: 3px;
   top: 0;
 }
-.avn_route_btnLoad{
-  position: absolute;
-  right: 3px;
-  top: 0;
-}
+
 
 @listrasimagesize: 30px;
 .avn_route_listrasimage{
@@ -503,13 +516,13 @@ font-size: ( @bottomPanelHeight - 2 );
   height: @listrasimagesize;
   position: absolute;
   top: (( @buttonSize - @listrasimagesize ) / 2 );
-  right: (@buttonSize+14);
+  right: 8px;
   background-image: url('images/plug32.png');
 }
 
 .avn_route_list_row{
   margin-left: (@buttonSize + 10px);
-  margin-right: (@buttonSize + @listrasimagesize+15px);
+  margin-right: (@listrasimagesize+16px);
 }
 
 /*-------------------------------------------------------------

@@ -211,7 +211,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
         ev.data.page.gui.map.setCenter(marker);
         //make the current WP the active again...
         var routingTarget=navobject.getRoutingData().getCurrentLegTargetIdx();
-        if (routingTarget >= 0 && navobject.getRoutingData().isActiveRoute()){
+        if (routingTarget >= 0 && navobject.getRoutingData().isEditingActiveRoute()){
             navobject.getRoutingData().setEditingWp(routingTarget);
         }
     });
@@ -243,6 +243,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
     });
     $('#avi_route_info_navpage_inner').click({page:this},function(ev){
         ev.data.page.gui.showPage('routepage',{returnpage:'navpage'});
+    });
+    $('#avi_route_display').click({page:this},function(ev){
+       ev.data.page.navobject.getRoutingData().resetToActive();
     });
 
 };
@@ -435,7 +438,7 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
 
 avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
-    $('#avi_route_info_navpage_inner').addClass(this.navobject.getRoutingData().isActiveRoute()?"avn_activeRoute":"avn_otherRoute");
+    $('#avi_route_info_navpage_inner').addClass(this.navobject.getRoutingData().isEditingActiveRoute()?"avn_activeRoute":"avn_otherRoute");
     var html="";
     var route=this.navobject.getRoutingData().getCurrentRoute();
     if (route) {

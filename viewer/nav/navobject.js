@@ -125,13 +125,21 @@ avnav.nav.NavObject=function(propertyHandler){
          */
         markerEta:null,
         markerLatlon:new avnav.nav.navdata.Point(0,0),
+        /* data for the active route */
         routeName: undefined,
         routeNumPoints: 0,
         routeLen: 0,
         routeRemain: 0,
         routeEta: null,
         routeNextCourse: 0,
-        routeXte: 0
+        routeXte: 0,
+        /* data for the route we are editing */
+        edRouteName: undefined,
+        edRouteNumPoints: 0,
+        edRouteLen: 0,
+        /* the next 2 will only be filled when the editing route is the current */
+        edRouteRemain: 0,
+        edRouteEta:0
     };
     this.formattedValues={
         markerEta:"--:--:--",
@@ -149,7 +157,12 @@ avnav.nav.NavObject=function(propertyHandler){
         routeRemain: "--",
         routeEta: "--:--:--",
         routeNextCourse: "---",
-        routeXte: "---"
+        routeXte: "---",
+        edRouteName: "default",
+        edRouteNumPoints: "--",
+        edRouteLen: "--",
+        edRouteRemain: "--",
+        edRouteEta: "--:--:--"
     };
     for (var k in this.formattedValues){
         this.registerValueProvider(k,this,this.getFormattedNavValue);
@@ -215,13 +228,13 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.data.centerMarkerCourse=mcdst.course;
     this.data.centerMarkerDistance=mcdst.dtsnm;
     //route data
-    var route=this.routeHandler.getCurrentRoute();
-    if (this.routeHandler.getRouteData().name) {
-        this.data.routeName = route.name;
-        this.data.routeNumPoints = route.points.length;
-        this.data.routeLen = this.routeHandler.computeLength(0);
+    var curRoute=this.routeHandler.getRouteData().currentRoute;
+    if (this.routeHandler.hasActiveRoute()) {
+        this.data.routeName = curRoute.name;
+        this.data.routeNumPoints = curRoute.points.length;
+        this.data.routeLen = this.routeHandler.computeLength(0,curRoute);
         if (this.routeHandler.getLock()) {
-            this.data.routeRemain = this.routeHandler.computeLength(-1) + this.data.markerDistance;
+            this.data.routeRemain = this.routeHandler.computeLength(-1,curRoute) + this.data.markerDistance;
             var routetime = gps.rtime ? gps.rtime.getTime() : 0;
             if (vmgapp > 0) {
                 routetime += this.data.routeRemain / vmgapp * 3600 * 1000; //time in ms
@@ -253,6 +266,21 @@ avnav.nav.NavObject.prototype.computeValues=function(){
         this.data.routeRemain=0;
         this.data.routeEta=undefined;
         this.data.routeNextCourse=undefined;
+    }
+    if (this.routeHandler.isEditingActiveRoute()){
+        this.data.edRouteName=this.data.routeName;
+        this.data.edRouteNumPoints=this.data.routeNumPoints;
+        this.data.edRouteLen=this.data.routeLen;
+        this.data.edRouteRemain=this.data.routeRemain;
+        this.data.edRouteEta=this.data.routeEta;
+    }
+    else {
+        var edRoute=this.routeHandler.getCurrentRoute();
+        this.data.edRouteRemain=0
+        this.data.edRouteEta=undefined;
+        this.data.edRouteName=edRoute.name;
+        this.data.edRouteNumPoints=edRoute.points.length;
+        this.data.edRouteLen=this.routeHandler.computeLength(0,edRoute);
     }
 
     //now create text values
@@ -287,6 +315,12 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"--:--:--";
     this.formattedValues.routeNextCourse=(this.data.routeNextCourse !== undefined)?this.formatter.formatDecimal(this.data.routeNextCourse,3,0):"---";
     this.formattedValues.routeXte=(this.data.routeXte !== undefined)?this.formatter.formatDecimal(this.data.routeXte,2,2):"---";
+
+    this.formattedValues.edRouteName=this.data.edRouteName||"default";
+    this.formattedValues.edRouteNumPoints=this.formatter.formatDecimal(this.data.edRouteNumPoints,4,0);
+    this.formattedValues.edRouteLen=this.formatter.formatDecimal(this.data.edRouteLen,4,1);
+    this.formattedValues.edRouteRemain=this.formatter.formatDecimal(this.data.edRouteRemain,4,1);
+    this.formattedValues.edRouteEta=this.data.edRouteEta?this.formatter.formatTime(this.data.edRouteEta):"--:--:--";
 };
 
 /**

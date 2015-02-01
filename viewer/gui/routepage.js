@@ -38,6 +38,12 @@ avnav.gui.Routepage=function(){
      * @type {undefined}
      */
     this.currentName=undefined;
+    /**
+     * if we loaded a route we will keep it here and set this as editing
+     * when we leave
+     * @type {avnav.nav.Route}
+     */
+    this.loadedRoute=undefined;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -92,6 +98,10 @@ avnav.gui.Routepage.prototype.addRoutes=function(routeInfos){
     var i,id,curid;
     var self=this;
     id=this.routes.length;
+    var activeName=undefined;
+    if (this.routingData.hasActiveRoute()){
+        activeName=this.routingData.getRouteData().name;
+    }
     for (i=0;i<routeInfos.length;i++){
         //skip current route
         if (this.currentName && routeInfos[i].name == this.currentName) continue;
@@ -111,18 +121,33 @@ avnav.gui.Routepage.prototype.addRoutes=function(routeInfos){
             .show()
             .insertAfter('.avn_route_list_entry:last');
         this.displayInfo(id,routeInfos[i]);
-        $('#routeInfo-'+id).find('.avn_route_btnDelete').on('click',null,{id:id},function(ev){
-            var lid=ev.data.id;
-            var name=self.routes[lid].name;
-            var ok=confirm("delete route "+name+"?");
-            if (ok){
-                self.routingData.deleteRoute(name,function(info){
-                    alert("failed to delete route "+name+" on server: "+info);
-                });
-                $('#routeInfo-'+lid).remove();
-            }
-        });
-        $('#routeInfo-'+id).find('.avn_route_btnLoad').on('click',null,{id:id},function(ev){
+        if (activeName && activeName == routeInfos[i].name){
+            $('#routeInfo-'+id).addClass("avn_route_current");
+            $('#routeInfo-' + id).find('.avn_route_btnDelete').hide();
+        }
+        else {
+            $('#routeInfo-' + id).find('.avn_route_btnDelete').on('click', null, {id: id}, function (ev) {
+                ev.preventDefault();
+                var lid = ev.data.id;
+                var name = self.routes[lid].name;
+                //the current route could have changed...
+                if (self.routingData.hasActiveRoute() && self.routingData.getRouteData().name == name){
+                    alert("cannot delete active route");
+                    self.fillData(false);
+                    return false;
+                }
+                var ok = confirm("delete route " + name + "?");
+                if (ok) {
+                    self.routingData.deleteRoute(name, function (info) {
+                        alert("failed to delete route " + name + " on server: " + info);
+                    });
+                    $('#routeInfo-' + lid).remove();
+                }
+                return false;
+            });
+        }
+        $('#routeInfo-'+id).on('click',null,{id:id},function(ev){
+            ev.preventDefault();
             var lid=ev.data.id;
             var rtinfo=undefined;
             try {
@@ -132,8 +157,9 @@ avnav.gui.Routepage.prototype.addRoutes=function(routeInfos){
                 var name=rtinfo.name;
                 self.routingData.fetchRoute(name,!rtinfo.server,
                     function(route){
-                        self.routingData.setNewEditingRoute(route);
-                        self.gui.showPageOrReturn(this.returnpage,'navpage',{showRouting:true});
+                        self.loadedRoute=route;
+                        self.fillData(false);
+                        //self.gui.showPageOrReturn(this.returnpage,'navpage',{showRouting:true});
                     },
                     function(err){
                         alert("unable to load route "+name+": "+err);
@@ -148,7 +174,13 @@ avnav.gui.Routepage.prototype.addRoutes=function(routeInfos){
 };
 avnav.gui.Routepage.prototype.fillData=function(initial){
     this.currentName=undefined;
-    if (this.routingData.getCurrentRoute() ) this.currentName=this.routingData.getCurrentRoute().name;
+    if (initial) this.loadedRoute=undefined;
+    if (this.loadedRoute){
+        this.currentName=this.loadedRoute.name;
+    }
+    else {
+        if (this.routingData.getCurrentRoute()) this.currentName = this.routingData.getCurrentRoute().name;
+    }
     $('#avi_route_name').val(this.currentName);
     $("."+this.visibleListEntryClass).remove();
     this.routes=[];
@@ -182,6 +214,20 @@ avnav.gui.Routepage.prototype.navEvent=function(ev){
 
 avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
     var name=$('#avi_route_name').val();
+    var i;
+    //if the name has been changed in the edit box
+    //it must be different from any loaded route
+    if (name != this.currentName) {
+        for (i = 0; i < this.routes.length; i++) {
+            if (name == this.routes[i].name) {
+                alert("route with name " + name + " already exists");
+                return;
+            }
+        }
+    }
+    if (this.loadedRoute){
+        this.routingData.setNewEditingRoute(this.loadedRoute);
+    }
     if (name && name !=""){
         this.routingData.changeRouteName(name);
     }
