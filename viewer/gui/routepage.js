@@ -12,6 +12,7 @@ avnav.provide('avnav.gui.Routepage');
  */
 avnav.gui.Routepage=function(){
     avnav.gui.Page.call(this,'routepage');
+    this.MAXUPLOADSIZE=100000;
     /**
      * the class that is assigned to visible routing entries
      * @type {string}
@@ -51,6 +52,9 @@ avnav.gui.Routepage=function(){
 };
 avnav.inherits(avnav.gui.Routepage,avnav.gui.Page);
 
+avnav.gui.Routepage.prototype.resetUpload=function(){
+    $('#avi_route_uploadfile').replaceWith($('#avi_route_uploadfile').clone(true));
+};
 avnav.gui.Routepage.prototype.localInit=function(){
     if (! this.gui) return;
     this.routingData=this.gui.navobject.getRoutingData();
@@ -60,6 +64,53 @@ avnav.gui.Routepage.prototype.localInit=function(){
             event.preventDefault();
             self.btnRoutePageOk();
         }
+    });
+    $('#avi_route_uploadform').submit(function(form){
+       alert("upload file");
+    });
+    $('#avi_route_uploadfile').on('change',function(ev){
+        ev.preventDefault();
+        if (this.files && this.files.length > 0){
+            var file=this.files[0];
+            if (file.name.indexOf(".gpx",file.name.length-4) == -1){
+                alert("only .gpx routes");
+                self.resetUpload();
+                return false;
+            }
+            var rname=file.name.replace(".gpx","");
+            if (file.size){
+               if (file.size > self.MAXUPLOADSIZE){
+                   alert("file is to big, max allowed: "+self.MAXUPLOADSIZE);
+                   self.resetUpload();
+                   return;
+               }
+            }
+            var i;
+            for (i=0;i<self.routes.length;i++){
+               if (self.routes[i].name == rname){
+                   alert("route with name "+rname+" already exists");
+                   self.resetUpload();
+                   return false;
+               }
+            }
+            var url=self.gui.properties.getProperties().navUrl+"?request=upload&type=route&filename="+encodeURIComponent(file.name);
+            self.resetUpload();
+            avnav.util.Helper.uploadFile(url,file,{
+                self:self,
+                errorhandler:function(param,err){
+                   alert("route upload failed: "+err.statusText);
+                },
+                progresshandler: function(param,ev){
+                   if (ev.lengthComputable) {
+                       log("progress called");
+                   }
+                },
+                okhandler: function(param,data){
+                    param.self.fillData(false);
+                }
+            });
+        }
+        return false;
     });
 };
 avnav.gui.Routepage.prototype.showPage=function(options) {
@@ -277,6 +328,12 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
     }
     else {
         route=this.routingData.getEditingRoute().clone();
+    }var route;
+    if (this.loadedRoute){
+        route=this.loadedRoute.clone();
+    }
+    else {
+        route=this.routingData.getEditingRoute().clone();
     }
     if (! route) return;
     var name=$('#avi_route_name').val();
@@ -287,6 +344,22 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
     $(f).find('input[name="_json"]').val(route.toJsonString());
     //$(f).find('input[name="filename"]').val(route.name+".gpx");
     $(f).submit();
+    if (! route) return;
+    var name=$('#avi_route_name').val();
+    if (! name || name == "") return;
+    route.name=name;
+    var f=$('#avi_route_downloadform')
+        .attr('action',this.gui.properties.getProperties().navUrl+"/"+encodeURIComponent(name+".gpx"));
+    $(f).find('input[name="_json"]').val(route.toJsonString());
+    //$(f).find('input[name="filename"]').val(route.name+".gpx");
+    $(f).submit();
+};
+
+avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
+    log("route upload clicked");
+    var i=$("#avi_route_uploadfile");
+    $(i).click();
+    return false;
 };
 /**
  * create the page instance

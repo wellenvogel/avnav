@@ -68,6 +68,7 @@
         'base.js',
         'util/formatter.js',
         'util/propertyhandler.js',
+        'util/helper.js',
         'nav/navdata.js',
         'nav/navcompute.js',
         'nav/navobject.js',

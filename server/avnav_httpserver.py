@@ -503,9 +503,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # the dow not return json...
         self.handleDownloadRequest(requestParam)
         return
+      if requestType=='upload':
+        rtj=self.handleUploadRequest(requestParam)
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
-          text=traceback.format_exc()
+          text=e.message+"\n"+traceback.format_exc()
           AVNLog.ld("unable to process request for navrequest ",text)
           self.send_response(500,text);
           self.end_headers()
@@ -691,3 +693,23 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()
     self.wfile.write(rtd)
+
+  #we use a special form of upload
+  #where the file is completely unencoded in the input stream
+  #returns json status
+  def handleUploadRequest(self,requestParam):
+    len=self.headers.get("Content-Length");
+    if len is None:
+      raise Exception("Content-Length not set in upload request")
+    self.connection.settimeout(30)
+    type=self.getRequestParam(requestParam,"type")
+    if type == "route":
+      rt=self.server.getHandler(AVNRouter.getConfigName())
+      if rt is not None:
+        rtd=rt.handleRouteUploadRequest(requestParam,self.rfile,int(len))
+        return rtd;
+      else:
+        raise Exception("router not configured")
+    else:
+      raise Exception("invalid request %s",type)
+

@@ -86,6 +86,7 @@ class AVNRouteInfo():
 
 #routing handler
 class AVNRouter(AVNWorker):
+  MAXROUTESIZE=100000;
   gpxFormat='''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
     <gpx version="1.1" creator="avnav">%s</gpx>'''
   currentLegName=u"currentLeg.json"
@@ -693,6 +694,31 @@ class AVNRouter(AVNWorker):
       AVNLog.error("exception in route download %s",traceback.format_exc())
       return "error"
 
+  #we expect a filename parameter...
+  #TODO: should we check that the filename is the same like the route name?
+  def handleRouteUploadRequest(self,requestparam,rfile,flen):
+    fname=self.getRequestParam(requestparam,"filename")
+    AVNLog.debug("route upload request for %s",fname)
+    if flen > self.MAXROUTESIZE:
+      raise Exception("route is to big, max allowed filesize: "+self.MAXROUTESIZE)
+    try:
+      data=rfile.read(flen)
+      parser = gpxparser.GPXParser(data)
+      gpx = parser.parse()
+      if gpx.routes is None or len(gpx.routes)  == 0:
+        raise "no routes in "+fname
+      route=gpx.routes[0]
+      if route is None:
+        raise Exception("no route found in file")
+      rinfo=self.routeInfos.get(route.name)
+      if rinfo is not None:
+        raise Exception("route with name "+route.name+" already exists")
+      rinfo=AVNRouteInfo.fromRoute(route,AVNUtil.utcnow())
+      self.routeInfos[route.name]=rinfo;
+      self.saveRoute(route);
+      return json.dumps({'status':'OK'})
+    except Exception as e:
+      raise Exception("exception parsing "+fname+": "+e.message)
 
 
 

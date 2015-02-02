@@ -429,6 +429,7 @@ all buttons with ids avb_... will call corresponding js functions
       <div class='avn_panel avn_right_panel'>
           <button id="avb_RoutePageOk" type="button" class="avn_button"></button>
           <button id="avb_RoutePageDownload" type="button" class="avn_button"></button>
+          <button id="avb_RoutePageUpload" type="button" class="avn_button"></button>
           <button id="avb_RoutePageCancel" type="button" class="avn_button"></button>
       </div>
       <form id="avi_route_downloadform" class="avn_hidden" method="post" >
@@ -436,6 +437,9 @@ all buttons with ids avb_... will call corresponding js functions
           <input type="hidden" name="name"/>
           <input type="hidden" name="request" value="download"/>
           <input type="hidden" name="type" value="route"/>
+      </form>
+      <form id="avi_route_uploadform" class="avn_hidden" method="post">
+          <input type="file" id="avi_route_uploadfile" name="routefile"/>
       </form>
   </div>
   <!-- end aisPage-->
@@ -660,5 +664,6 @@ all buttons with ids avb_... will call corresponding js functions
       </div>
   </div>
   <!-- end settingsPage-->
+
   </body>
 </html>
