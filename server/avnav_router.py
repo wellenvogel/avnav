@@ -291,8 +291,14 @@ class AVNRouter(AVNWorker):
     f.close()
 
   def loadRoute(self,name):
+    rt=self.getRouteFromList(name)
+    if rt is not None:
+      return rt
     filename=self.getRouteFileName(name)
-    return self.loadRouteFile(filename)
+    rt=self.loadRouteFile(filename)
+    if rt is not None:
+      self.addRouteToList(rt)
+    return rt
 
   def loadRouteFile(self,filename):
     f=open(filename,"r")
@@ -625,13 +631,10 @@ class AVNRouter(AVNWorker):
       data=self.getRequestParam(requestparam, 'name')
       if data is None:
         return json.dumps({'status':'no route name'})
-      route=self.getRouteFromList(data)
+      AVNLog.debug("load route %s"%(data))
+      route=self.loadRoute(data)
       if route is None:
-        AVNLog.debug("load route %s"%(data))
-        if not os.path.exists(self.getRouteFileName(data)):
-          return json.dumps({'status':'route '+data+' not found'})
-        route=self.loadRoute(data)
-        self.addRouteToList(route)
+        return json.dumps({'status':'route'+data+' not found'})
       AVNLog.debug("get route %s"%(route.name))
       jroute=self.routeToJson(route)
       rinfo=self.routeInfos.get(data)
@@ -663,7 +666,38 @@ class AVNRouter(AVNWorker):
       return json.dumps(rt)
 
     raise Exception("invalid command "+command)
-      
+  #download a route in xml format
+  #this has 2 flavours:
+  #either we have a name as parameter - in this case, download the route from us
+  #otherwise we expected a JSON route as post param and send back this one
+  #we need to ensure that we always return some data
+  #otherwise we break the GUI
+  def handleRouteDownloadRequest(self,requestparam):
+    route=None
+    try:
+      name=self.getRequestParam(requestparam,"name")
+      if name is not None and not name == "":
+        AVNLog.debug("download route name=%s",name)
+        route=self.loadRoute()
+      else:
+        data=self.getRequestParam(requestparam,'_json');
+        if data is None:
+          AVNLog.error("unable to find a route for download, returning an empty")
+          return ""
+        route=self.routeFromJsonString(data)
+      if route is None:
+          return "error - route not found"
+      rt=self.gpxFormat%(route.to_xml())
+      return rt
+    except:
+      AVNLog.error("exception in route download %s",traceback.format_exc())
+      return "error"
+
+
+
+
+
+
     
           
   

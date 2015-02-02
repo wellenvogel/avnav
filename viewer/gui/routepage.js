@@ -203,7 +203,7 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
         this.currentName=this.loadedRoute.name;
     }
     else {
-        if (this.routingData.getCurrentRoute()) this.currentName = this.routingData.getCurrentRoute().name;
+        if (this.routingData.getEditingRoute()) this.currentName = this.routingData.getEditingRoute().name;
     }
     this.routes=[];
     var localRoutes=this.routingData.listRoutesLocal();
@@ -267,6 +267,26 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
 avnav.gui.Routepage.prototype.btnRoutePageCancel=function (button,ev){
     log("Cancel clicked");
     this.gui.showPageOrReturn(this.returnpage,'navpage',{showRouting:true});
+};
+
+avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
+    log("route download clicked");
+    var route;
+    if (this.loadedRoute){
+        route=this.loadedRoute.clone();
+    }
+    else {
+        route=this.routingData.getEditingRoute().clone();
+    }
+    if (! route) return;
+    var name=$('#avi_route_name').val();
+    if (! name || name == "") return;
+    route.name=name;
+    var f=$('#avi_route_downloadform')
+        .attr('action',this.gui.properties.getProperties().navUrl+"/"+encodeURIComponent(name+".gpx"));
+    $(f).find('input[name="_json"]').val(route.toJsonString());
+    //$(f).find('input[name="filename"]').val(route.name+".gpx");
+    $(f).submit();
 };
 /**
  * create the page instance

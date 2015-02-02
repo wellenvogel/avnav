@@ -272,7 +272,7 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
         $('#avi_route_display').removeClass('avn_route_display_approach');
         $('#avi_route_display_next').hide();
     }
-    var route=this.navobject.getRoutingData().getCurrentRoute();
+    var route=this.navobject.getRoutingData().getEditingRoute();
     var routeTarget=this.navobject.getRoutingData().getCurrentLegTarget();
     var txt="Marker";
     if (routeTarget){
@@ -440,7 +440,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
     $('#avi_route_info_navpage_inner').addClass(this.navobject.getRoutingData().isEditingActiveRoute()?"avn_activeRoute":"avn_otherRoute");
     var html="";
-    var route=this.navobject.getRoutingData().getCurrentRoute();
+    var route=this.navobject.getRoutingData().getEditingRoute();
     if (route) {
         var rname = route.name.substr(0, 14);
         if (route.name.length > 14) rname += "..";

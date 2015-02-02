@@ -672,7 +672,7 @@ avnav.nav.RouteData.prototype.getRouteData=function(){
  * return the current route
  * @returns {avnav.nav.Route}
  */
-avnav.nav.RouteData.prototype.getCurrentRoute=function(){
+avnav.nav.RouteData.prototype.getEditingRoute=function(){
     return this.editingRoute;
 };
 /**

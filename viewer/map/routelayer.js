@@ -140,7 +140,7 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
 avnav.map.RouteLayer.prototype.getRoute=function(){
     this.currentRoutePoints=[];
     //for now only the points
-    this.currentRoute=this.routingDate.getCurrentRoute().clone();
+    this.currentRoute=this.routingDate.getEditingRoute().clone();
     var i;
     for (i in this.currentRoute.points){
         var p=this.mapholder.pointToMap(this.currentRoute.points[i].toCoord());
@@ -177,7 +177,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     var from=leg.from?this.mapholder.pointToMap(leg.from.toCoord()):undefined;
     var prop=this.mapholder.getProperties().getProperties();
     var drawNav=prop.layers.boat&&prop.layers.nav;
-    var route=this.navobject.getRoutingData().getCurrentRoute();
+    var route=this.navobject.getRoutingData().getEditingRoute();
     var text,wp;
     if (! drawNav || ! route) {
         this.routePixel=[];

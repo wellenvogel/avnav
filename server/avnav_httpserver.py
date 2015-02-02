@@ -271,9 +271,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     return self.server.handlePathmapping(path)
   
   def do_POST(self):
-    maxlen=500000
+    maxlen=5000000
     (path,sep,query) = self.path.partition('?')
-    if not path==self.server.navurl:
+    if not path.startswith(self.server.navurl):
       self.send_error(404, "unsupported post url")
       return
     try:
@@ -294,7 +294,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         postvars = {}      
       requestParam=urlparse.parse_qs(query,True)
       requestParam.update(postvars)
-      rtj=self.handleRoutingRequest(requestParam)
+      rtj=self.handleNavRequest(requestParam)
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
       txt=traceback.format_exc()
@@ -368,8 +368,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       (path,sep,query) = path.partition('?')
       path = path.split('#',1)[0]
       path = posixpath.normpath(urllib.unquote(path).decode('utf-8'))
-      if path==self.server.navurl:
-        self.handleNavRequest(path,query)
+      if path.startswith(self.server.navurl):
+        requestParam=urlparse.parse_qs(query,True)
+        self.handleNavRequest(requestParam)
         return None
       if path.startswith("/gemf"):
         self.handleGemfRequest(path,query)
@@ -471,8 +472,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   #request: gps,status,...
   #filter is a key of the map in the form prefix-suffix
   
-  def handleNavRequest(self,path,query):
-    requestParam=urlparse.parse_qs(query,True)
+  def handleNavRequest(self,requestParam):
     requestType=requestParam.get('request')
     if requestType is None:
       requestType='gps'
@@ -495,6 +495,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleListChartRequest(requestParam)
       if requestType=='routing':
         rtj=self.handleRoutingRequest(requestParam)
+      if requestType=='download':
+        #download requests are special
+        # the dow not return json...
+        self.handleDownloadRequest(requestParam)
+        return
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
           text=traceback.format_exc()
@@ -656,3 +661,30 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     else:
       raise Exception("router not configured")
     return rtj
+
+  #download requests
+  #parameters:
+  #   type
+  #   type specific parameters
+  #        route: name
+  #   filename
+  def handleDownloadRequest(self,requestParam):
+    type=self.getRequestParam(requestParam,"type")
+    rtd=None
+    if type == "route":
+      rt=self.server.getHandler(AVNRouter.getConfigName())
+      if rt is not None:
+        rtd=rt.handleRouteDownloadRequest(requestParam)
+      else:
+        raise Exception("router not configured")
+    else:
+      raise Exception("invalid request %s",type)
+    if rtd is None:
+      self.send_error(404, "File not found")
+      return
+    self.send_response(200)
+    self.send_header("Content-type", "application/octet-stream")
+    self.send_header("Content-Length", len(rtd))
+    self.send_header("Last-Modified", self.date_time_string())
+    self.end_headers()
+    self.wfile.write(rtd)
