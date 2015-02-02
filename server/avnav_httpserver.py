@@ -256,6 +256,9 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
 
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def __init__(self,request,client_address,server):
+    #allow write buffering
+    #see https://lautaportti.wordpress.com/2011/04/01/basehttprequesthandler-wastes-tcp-packets/
+    self.wbufsize=-1
     self.id=None
     AVNLog.ld("receiver thread started",client_address)
     SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
@@ -503,7 +506,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
           text=traceback.format_exc()
-          AVNLog.ld("unable to process request for ",path,query,text)
+          AVNLog.ld("unable to process request for navrequest ",text)
           self.send_response(500,text);
           self.end_headers()
           return
