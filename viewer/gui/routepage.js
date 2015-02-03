@@ -46,6 +46,11 @@ avnav.gui.Routepage=function(){
      */
     this.loadedRoute=undefined;
     /**
+     * count the number of local routes
+     * @type {number}
+     */
+    this.numLocalRoutes=0;
+    /**
      * set this to directly upload (only if we are connected)
      * this will be used if we do not have the FileReader (e.g. safari on windows)
      * @type {boolean}
@@ -201,6 +206,7 @@ avnav.gui.Routepage.prototype.addRoutes=function(routeInfos){
 };
 avnav.gui.Routepage.prototype.updateDisplay=function(){
     var self=this;
+    this.numLocalRoutes=0;
     $('#avi_route_name').val(this.currentName);
     $("."+this.visibleListEntryClass).remove();
     var activeName=undefined;
@@ -218,6 +224,7 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
             .show()
             .insertAfter('.avn_route_list_entry:last');
         this.displayInfo(id,routeInfos[id]);
+        if (!this.routes[id].server) this.numLocalRoutes++;
         if (this.currentName && routeInfos[id].name == this.currentName){
             $('#routeInfo-'+id).find('.avn_route_liststatimage').addClass("avn_route_current");
         }
@@ -274,6 +281,12 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
             }
 
         });
+    }
+    if (this.numLocalRoutes && this.gui.properties.getProperties().connectedMode){
+        $('#avb_RoutePageDelete').show();
+    }
+    else {
+        $('#avb_RoutePageDelete').hide();
     }
 };
 
@@ -427,7 +440,7 @@ avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
 
 avnav.gui.Routepage.prototype.btnRoutePageDelete=function(button,ev){
     log("route delete all clicked");
-    ok=confirm("delete all local routes on this device?");
+    ok=confirm("delete all local routes on this device that are not on the server?");
     if (! ok) return;
     var i;
     var activeName=undefined;
