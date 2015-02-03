@@ -45,6 +45,12 @@ avnav.gui.Routepage=function(){
      * @type {avnav.nav.Route}
      */
     this.loadedRoute=undefined;
+    /**
+     * set this to directly upload (only if we are connected)
+     * this will be used if we do not have the FileReader (e.g. safari on windows)
+     * @type {boolean}
+     */
+    this.fallbackUpload=false;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -65,6 +71,7 @@ avnav.gui.Routepage.prototype.localInit=function(){
             self.btnRoutePageOk();
         }
     });
+
     $('#avi_route_uploadform').submit(function(form){
        alert("upload file");
     });
@@ -72,49 +79,72 @@ avnav.gui.Routepage.prototype.localInit=function(){
         ev.preventDefault();
         if (this.files && this.files.length > 0){
             var file=this.files[0];
+            self.resetUpload();
             if (file.name.indexOf(".gpx",file.name.length-4) == -1){
                 alert("only .gpx routes");
-                self.resetUpload();
                 return false;
             }
             var rname=file.name.replace(".gpx","");
             if (file.size){
                if (file.size > self.MAXUPLOADSIZE){
                    alert("file is to big, max allowed: "+self.MAXUPLOADSIZE);
-                   self.resetUpload();
                    return;
                }
             }
-            var i;
-            for (i=0;i<self.routes.length;i++){
-               if (self.routes[i].name == rname){
-                   alert("route with name "+rname+" already exists");
-                   self.resetUpload();
-                   return false;
-               }
-            }
-            var url=self.gui.properties.getProperties().navUrl+"?request=upload&type=route&filename="+encodeURIComponent(file.name);
-            self.resetUpload();
-            avnav.util.Helper.uploadFile(url,file,{
-                self:self,
-                errorhandler:function(param,err){
-                   alert("route upload failed: "+err.statusText);
-                },
-                progresshandler: function(param,ev){
-                   if (ev.lengthComputable) {
-                       log("progress called");
-                   }
-                },
-                okhandler: function(param,data){
-                    param.self.fillData(false);
+            if (! window.FileReader){
+                if (! self.fallbackUpload) {
+                    alert("your browser does not support FileReader, cannot upload")
+                    return;
                 }
-            });
+                self.directUpload(file);
+                return;
+            }
+            var reader=new FileReader();
+            reader.onloadend=function() {
+                var xml=reader.result;
+                if (! xml){
+                    alert("unable to load file "+file.name);
+                    return;
+                }
+                var route=undefined;
+                try {
+                    route=new avnav.nav.Route("");
+                    route.fromXml(xml);
+                } catch(e){
+                    alert("unable to parse route from "+file.name+", error: "+ e);
+                    return;
+                }
+                if (! route.name || route.name == ""){
+                    alert("route from "+file.name+" has no route name");
+                    return;
+                }
+                var i;
+                for (i = 0; i < self.routes.length; i++) {
+                    if (self.routes[i].name == route.name) {
+                        alert("route with name " + route.name +" in file "+rname + " already exists");
+                        return false;
+                    }
+                }
+                self.routingData.saveRoute(route,true);
+                self.fillData(false);
+            };
+            reader.readAsText(file);
         }
         return false;
     });
 };
 avnav.gui.Routepage.prototype.showPage=function(options) {
     if (!this.gui) return;
+    this.fallbackUpload=false;
+    if (! window.FileReader){
+        if (!this.gui.properties.getProperties().connectedMode){
+            $('#avb_RoutePageUpload').hide();
+        }
+        else {
+            this.fallbackUpload=true;
+            $('#avb_RoutePageUpload').show();
+        }
+    }
     this.fillData(true);
 };
 /**
@@ -273,6 +303,25 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
     );
 };
 
+avnav.gui.Routepage.prototype.directUpload=function(file) {
+    self=this;
+    var url = self.gui.properties.getProperties().navUrl + "?request=upload&type=route&filename=" + encodeURIComponent(file.name);
+    avnav.util.Helper.uploadFile(url, file, {
+        self: self,
+        errorhandler: function (param, err) {
+            alert("route upload failed: " + err.statusText);
+        },
+        progresshandler: function (param, ev) {
+            if (ev.lengthComputable) {
+                log("progress called");
+            }
+        },
+        okhandler: function (param, data) {
+            param.self.fillData(false);
+        }
+    });
+};
+
 
 avnav.gui.Routepage.prototype.hidePage=function(){
 
@@ -329,36 +378,50 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
     else {
         route=this.routingData.getEditingRoute().clone();
     }var route;
-    if (this.loadedRoute){
-        route=this.loadedRoute.clone();
+    if (! route) return;
+    var name=$('#avi_route_name').val();
+    if (! name || name == "") return;
+    route.name=name;
+    if (this.gui.properties.getProperties().connectedMode) {
+        var f = $('#avi_route_downloadform')
+            .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name + ".gpx"));
+        $(f).find('input[name="_json"]').val(route.toJsonString());
+        //$(f).find('input[name="filename"]').val(route.name+".gpx");
+        $(f).submit();
+        if (!route) return;
+        var name = $('#avi_route_name').val();
+        if (!name || name == "") return;
+        route.name = name;
+        var f = $('#avi_route_downloadform')
+            .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name + ".gpx"));
+        $(f).find('input[name="_json"]').val(route.toJsonString());
+        //$(f).find('input[name="filename"]').val(route.name+".gpx");
+        $(f).submit();
     }
     else {
-        route=this.routingData.getEditingRoute().clone();
+        var xmlroute=route.toXml();
+        var datauri="data:application/octet-stream;base64,"+btoa(xmlroute);
+        $('#avi_route_localdownload').attr('href',datauri);
+        $('#avi_route_localdownload').attr('download',unescape(encodeURIComponent(route.name+".gpx")));
+        $('#avi_route_localdownload span').click();
     }
-    if (! route) return;
-    var name=$('#avi_route_name').val();
-    if (! name || name == "") return;
-    route.name=name;
-    var f=$('#avi_route_downloadform')
-        .attr('action',this.gui.properties.getProperties().navUrl+"/"+encodeURIComponent(name+".gpx"));
-    $(f).find('input[name="_json"]').val(route.toJsonString());
-    //$(f).find('input[name="filename"]').val(route.name+".gpx");
-    $(f).submit();
-    if (! route) return;
-    var name=$('#avi_route_name').val();
-    if (! name || name == "") return;
-    route.name=name;
-    var f=$('#avi_route_downloadform')
-        .attr('action',this.gui.properties.getProperties().navUrl+"/"+encodeURIComponent(name+".gpx"));
-    $(f).find('input[name="_json"]').val(route.toJsonString());
-    //$(f).find('input[name="filename"]').val(route.name+".gpx");
-    $(f).submit();
+    return false;
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
     log("route upload clicked");
     var i=$("#avi_route_uploadfile");
     $(i).click();
+    return false;
+    //safari hack - seems to handle the click only if the form is visible
+    //so we shortly show it
+    $("#avi_route_uploadform").show();
+    setTimeout(function(){
+        $(i).click();
+        setTimeout(function(){
+            $('#avi_route_uploadform').hide();
+        },10);
+    },0);
     return false;
 };
 /**

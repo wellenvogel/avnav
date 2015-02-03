@@ -244,6 +244,40 @@ avnav.nav.Route.prototype.clone=function(){
     rt.fromJsonString(str);
     return rt;
 };
+/**
+ * fill a route from an xml doc
+ * @param xml
+ */
+avnav.nav.Route.prototype.fromXml=function(xml){
+    this.name=undefined;
+    var doc= $.parseXML(xml);
+    var self=this;
+    $(doc).find('rte:first').each(function(id,el){
+        self.name=$(el).find('>name').text();
+        $(el).find('rtept').each(function(pid,pel){
+            var pt=new avnav.nav.navdata.WayPoint(0,0);
+            pt.lon=parseFloat($(pel).attr('lon'));
+            pt.lat=parseFloat($(pel).attr('lat'));
+            pt.name=$(pel).find('>name').text();
+            self.points.push(pt);
+        })
+    });
+    return this;
+};
+
+avnav.nav.Route.prototype.toXml=function(){
+    var rt='<?xml version="1.0" encoding="UTF-8" standalone="no" ?>'+"\n"+
+           '<gpx version="1.1" creator="avnav">'+"\n"+
+           '<rte>'+"\n";
+    rt+="<name>"+unescape(encodeURIComponent(this.name))+"</name>\n";
+    var i;
+    for (i=0;i<this.points.length;i++){
+        rt+='<rtept lon="'+this.points[i].lon+'" lat="'+this.points[i].lat+'"><name>'+
+            unescape(encodeURIComponent(this.points[i].name))+'</name></rtept>'+"\n";
+    }
+    rt+="</rte>\n</gpx>\n";
+    return rt;
+};
 
 avnav.nav.RouteInfo=function(name,opt_server){
     /**
@@ -706,11 +740,11 @@ avnav.nav.RouteData.prototype.saveRouteLocal=function(opt_route,opt_keepTime) {
     return route;
 };
 
-avnav.nav.RouteData.prototype.saveRoute=function(opt_route) {
+avnav.nav.RouteData.prototype.saveRoute=function(opt_route,opt_force) {
     var route=this.saveRouteLocal(opt_route);
     if (! route ) return;
     //send the route to the server if this is not the active one
-    if ( ! this.isEditingActiveRoute()) {
+    if ( ! this.isEditingActiveRoute() || opt_force) {
         if (this.connectMode) this.sendRoute(route);
     }
 };

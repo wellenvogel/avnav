@@ -58,6 +58,7 @@ var propertyDefinitions=function(){
         },
         forceMobile: new avnav.util.Property(false,"forceMobile",avnav.util.PropertyType.CHECKBOX),
         connectedMode:new avnav.util.Property(true,"connected",avnav.util.PropertyType.CHECKBOX),
+        readOnlyServer:new avnav.util.Property(false),
         NM: new avnav.util.Property(1852), //one mile
         buttonUpdateTime: new avnav.util.Property( 500), //timer for button updates
         slideTime: new avnav.util.Property( 300), //time in ms for upzoom
@@ -166,18 +167,27 @@ avnav.main=function() {
     $("body").show();
     var propertyHandler=new avnav.util.PropertyHandler(propertyDefinitions(),{});
     propertyHandler.loadUserData();
+    var navurl=getParam('navurl');
+    if (navurl){
+        propertyHandler.setValueByName('navUrl',navurl);
+        propertyHandler.setValueByName('routingServerError',false);
+    }
+    var readOnlyServer=getParam('readOnlyServer');
+    if (readOnlyServer){
+        propertyHandler.setValueByName('readOnlyServer',true);
+        propertyHandler.setValueByName('routingServerError',false);
+        propertyHandler.setValueByName('connectedMode',false);
+    }
     var navobject=new avnav.nav.NavObject(propertyHandler);
     var mapholder=new avnav.map.MapHolder(propertyHandler,navobject);
     var gui=new avnav.gui.Handler(propertyHandler,navobject,mapholder);
     if (avnav_version !== undefined){
         $('#avi_mainpage_version').text(avnav_version);
     }
-    var navurl=getParam('navurl');
-    if (navurl){
-        propertyHandler.setValueByName('navUrl',navurl);
-        propertyHandler.setValueByName('routingServerError',false);
-    }
     gui.showPage("mainpage");
+    //fire a property change as some parts maybe read their properties during constructor - and now they are maybe changed...
+    $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(propertyHandler));
+    propertyHandler.updateLayout();
     log("avnav loaded");
 };
 

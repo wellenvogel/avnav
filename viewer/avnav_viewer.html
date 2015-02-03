@@ -44,7 +44,7 @@ all buttons with ids avb_... will call corresponding js functions
       <!-- workaround for less bugs on ios -->
     <style>
         .less-error-message{
-            /*display: none;*/
+            display: none;
         }
     </style>
     <link rel="stylesheet/less" type="text/css" href="avnav_viewer.less"/>
@@ -438,9 +438,12 @@ all buttons with ids avb_... will call corresponding js functions
           <input type="hidden" name="request" value="download"/>
           <input type="hidden" name="type" value="route"/>
       </form>
-      <form id="avi_route_uploadform" class="avn_hidden" method="post">
+      <form id="avi_route_uploadform" class="" method="post">
           <input type="file" id="avi_route_uploadfile" name="routefile"/>
       </form>
+      <div class="avn_hidden">
+          <a href="" id="avi_route_localdownload" target="_blank"><span></span></a>
+      </div>
   </div>
   <!-- end aisPage-->
 

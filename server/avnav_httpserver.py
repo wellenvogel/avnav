@@ -297,7 +297,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         postvars = {}      
       requestParam=urlparse.parse_qs(query,True)
       requestParam.update(postvars)
-      rtj=self.handleNavRequest(requestParam)
+      rtj=self.handleNavRequest(path,requestParam)
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
       txt=traceback.format_exc()
@@ -354,6 +354,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     self.send_header("Content-type", ctype)
     fs = os.fstat(f.fileno())
     self.send_header("Content-Length", str(fs[6]))
+    if path.endswith(".js") or path.endswith(".less"):
+      self.send_header("cache-control","private, max-age=0, no-cache")
     self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
     self.end_headers()
     return f
@@ -373,7 +375,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       path = posixpath.normpath(urllib.unquote(path).decode('utf-8'))
       if path.startswith(self.server.navurl):
         requestParam=urlparse.parse_qs(query,True)
-        self.handleNavRequest(requestParam)
+        self.handleNavRequest(path,requestParam)
         return None
       if path.startswith("/gemf"):
         self.handleGemfRequest(path,query)
@@ -475,7 +477,15 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   #request: gps,status,...
   #filter is a key of the map in the form prefix-suffix
   
-  def handleNavRequest(self,requestParam):
+  def handleNavRequest(self,path,requestParam):
+    #check if we have something behind the navurl
+    #treat this as a filename and set it ion the request parameter
+    fname=path[(len(self.server.navurl)+1):]
+    if fname is not None and fname != "":
+      fname=fname.split('?',1)[0]
+      if fname != "":
+        if requestParam.get('filename') is None:
+          requestParam['filename']=[fname]
     requestType=requestParam.get('request')
     if requestType is None:
       requestType='gps'
@@ -676,7 +686,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def handleDownloadRequest(self,requestParam):
     type=self.getRequestParam(requestParam,"type")
     rtd=None
+    mtype="application/octet-stream"
     if type == "route":
+      mtype="application/gpx+xml"
       rt=self.server.getHandler(AVNRouter.getConfigName())
       if rt is not None:
         rtd=rt.handleRouteDownloadRequest(requestParam)
@@ -688,7 +700,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.send_error(404, "File not found")
       return
     self.send_response(200)
-    self.send_header("Content-type", "application/octet-stream")
+    fname=self.getRequestParam(requestParam,"filename")
+    if fname is not None and fname != "":
+      self.send_header("Content-Disposition","attachment")
+    self.send_header("Content-type", mtype)
     self.send_header("Content-Length", len(rtd))
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()

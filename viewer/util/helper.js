@@ -28,6 +28,9 @@ avnav.util.Helper.uploadFile=function(url,file,param){
             data: file,
             processData: false, //Work around #1
             contentType: file.type, //Work around #2
+            beforeSend: function(xhdr,settings){
+                settings.data=file; //workaround for safari - see http://www.redmine.org/issues/13932
+            },
             success: function (data) {
                 if (param.okhandler) {
                     param.okhandler(param, data);
