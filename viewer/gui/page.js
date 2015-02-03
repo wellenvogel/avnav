@@ -68,6 +68,7 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         this.initButtons();
         this.localInit();
         this.initDisplayObjects();
+        this.initFocusHandler();
     }
     if (this.visible != this.isVisible()){
         //visibility changed
@@ -137,7 +138,7 @@ avnav.gui.Page.prototype.localInit=function(){
 avnav.gui.Page.prototype.initButtons=function(){
     var page=this;
     var div=this.getDiv();
-    div.find('.avn_button').each(function (i, e) {
+    $(div).find('.avn_button').each(function (i, e) {
         //$(e).html('<span class="avn_button_icon"></span>');
         var id = $(e).attr('id');
         if (id) {
@@ -154,6 +155,22 @@ avnav.gui.Page.prototype.initButtons=function(){
         }
     });
 
+};
+
+avnav.gui.Page.prototype.initFocusHandler=function() {
+    var page = this;
+    var div = this.getDiv();
+    var num=0;
+    $(div).find('input').each(function(id,el){
+        var id=page.name+num;
+        $(el).on('focus', function () {
+            page.gui.addActiveInput(id);
+        });
+        $(el).on('blur', function () {
+            page.gui.removeActiveInput(id);
+        });
+        num++;
+    });
 };
 
 /**

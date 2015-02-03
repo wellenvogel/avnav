@@ -49,19 +49,73 @@ avnav.gui.Handler=function(properties,navobject,map){
      */
     this.page=undefined;
     var self=this;
+    /**
+     * if any entry is set, do not resize the layout
+     * (but potentially trigger a resize later)
+     * @type {{}}
+     */
+    this.activeInputs={};
+    this.lasth=$(window).height();
+    this.lastw=$(window).width();
     $(window).on('resize',function(){
+        try{
+            if (Object.keys(self.activeInputs).length > 0){
+                log("resize skipped due to active input");
+                return;
+            }
+        }catch (e){}
         setTimeout(function(){
+            self.lasth=$(window).height();
+            self.lastw=$(window).width();
             self.properties.updateLayout();
-            $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.properties));
+            $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(self.properties));
             },10);
     });
 
 };
 /**
+ * sets an active input field (will disable resize events)
+ * @param id
+ */
+avnav.gui.Handler.prototype.addActiveInput=function(id){
+    this.activeInputs[id]=true;
+};
+
+avnav.gui.Handler.prototype.removeActiveInput=function(id){
+    var trigger=(Object.keys(this.activeInputs).length >0);
+    delete this.activeInputs[id];
+    if (! trigger) return;
+    var self=this;
+    //if we now removed focus from any input, we could resize
+    //if the window size has changed
+    //we delay a bit to give the on screen keyboard a chance to disappear
+    if (Object.keys(this.activeInputs).length == 0){
+        setTimeout(function(){
+            var ch=$(window).height();
+            var cw=$(window).width();
+            if (ch != self.lasth || cw != self.lastw){
+                self.lasth=ch;
+                self.lastw=cw;
+                self.properties.updateLayout();
+                $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(self.properties));
+            }
+        },1000);
+    }
+};
+
+avnav.gui.Handler.prototype.removeAllActiveInputs=function(){
+    var trigger=(Object.keys(this.activeInputs).length >0);
+    this.activeInputs={};
+    if (trigger) this.removeActiveInput('dummy'); //trigger a resize if necessary
+};
+
+
+
+/**
  * return to a page or show a new one if returnpage is not set
  * set the returning flag in options if we return
  * @param returnpage
- * @param page
+ * @param pagefocus
  * @param opt_options
  * @returns {boolean|*}
  */
@@ -84,6 +138,7 @@ avnav.gui.Handler.prototype.showPageOrReturn=function(returnpage,page,opt_option
 avnav.gui.Handler.prototype.showPage=function(name,options){
     if (! name) return false;
     if (name == this.page) return false;
+    this.removeAllActiveInputs();
     $('.avn_page').hide();
     $('#avi_'+name).show();
     var oldname=this.page;

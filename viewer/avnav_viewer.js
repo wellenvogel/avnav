@@ -188,6 +188,7 @@ avnav.main=function() {
     //ios browser sometimes has issues with less...
     setTimeout(function(){
         propertyHandler.updateLayout();
+        $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(propertyHandler));
     },1000);
     log("avnav loaded");
 };

@@ -60,10 +60,6 @@ avnav.util.PropertyHandler=function(propertyDescriptions,properties){
     this.extend(this.currentProperties,properties);
     this.userData={};
     var self=this;
-    $(document).ready(function(){
-       self.updateLayout();
-       $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this));
-    });
 };
 
 /**
