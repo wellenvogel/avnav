@@ -59,6 +59,7 @@ all buttons with ids avb_... will call corresponding js functions
           if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();;
           if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
       } catch (e){}
+      $(document).ready(avnav.main);
     </script>
       <link rel="manifest" href="manifest.json">
       <link rel="icon" sizes="512x512" href="images/WebIcon-512.png">
@@ -67,7 +68,7 @@ all buttons with ids avb_... will call corresponding js functions
 
 	</head>
 
-  <body onload="avnav.main()" >
+  <body  >
   <!-- mainPage -->
   <div id="avi_mainpage" class="avn_page">
       <div class='avn_panel avn_left_panel'>
@@ -431,6 +432,7 @@ all buttons with ids avb_... will call corresponding js functions
           <button id="avb_RoutePageDownload" type="button" class="avn_button"></button>
           <button id="avb_RoutePageUpload" type="button" class="avn_button"></button>
           <button id="avb_RoutePageCancel" type="button" class="avn_button"></button>
+          <button id="avb_RoutePageDelete" type="button" class="avn_button"></button>
       </div>
       <form id="avi_route_downloadform" class="avn_hidden" method="post" >
           <input type="hidden" name="_json"/>

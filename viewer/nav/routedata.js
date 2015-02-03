@@ -1250,11 +1250,11 @@ avnav.nav.RouteData.prototype.listRoutesLocal=function(){
  * @param name
  * @param opt_errorcallback
  */
-avnav.nav.RouteData.prototype.deleteRoute=function(name,opt_errorcallback){
+avnav.nav.RouteData.prototype.deleteRoute=function(name,opt_errorcallback,opt_localonly){
     try{
         localStorage.removeItem(this.propertyHandler.getProperties().routeName+"."+name);
     }catch(e){}
-    if (this.connectMode){
+    if (this.connectMode && ! opt_localonly){
         this.remoteRouteOperation("deleteroute",{
             name:name,
             errorcallback:opt_errorcallback

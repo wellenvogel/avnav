@@ -185,9 +185,10 @@ avnav.main=function() {
         $('#avi_mainpage_version').text(avnav_version);
     }
     gui.showPage("mainpage");
-    //fire a property change as some parts maybe read their properties during constructor - and now they are maybe changed...
-    $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(propertyHandler));
-    propertyHandler.updateLayout();
+    //ios browser sometimes has issues with less...
+    setTimeout(function(){
+        propertyHandler.updateLayout();
+    },1000);
     log("avnav loaded");
 };
 
