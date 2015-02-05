@@ -297,8 +297,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         postvars = {}      
       requestParam=urlparse.parse_qs(query,True)
       requestParam.update(postvars)
-      rtj=self.handleNavRequest(path,requestParam)
-      self.sendNavResponse(rtj,requestParam)
+      self.handleNavRequest(path,requestParam)
     except Exception as e:
       txt=traceback.format_exc()
       AVNLog.ld("unable to process request for ",path,query,txt)

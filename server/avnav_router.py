@@ -593,7 +593,7 @@ class AVNRouter(AVNWorker):
     if rt is None:
       return None
     if isinstance(rt,list):
-      return rt[0].decode('utf-8')
+      return rt[0].decode('utf-8',errors='ignore')
     return rt
   
   #handle a routing request
