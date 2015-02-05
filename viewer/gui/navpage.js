@@ -388,7 +388,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.lastGpsLock=nLock;
     if (nLock) {
         this.gui.map.setGpsLock(!nLock);
-        this.handleToggleButton(button, !nLock);
+        this.handleToggleButton('#avb_LockPos', !nLock);
         this.gui.map.triggerRender();
     }
 

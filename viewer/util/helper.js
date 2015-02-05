@@ -15,6 +15,7 @@ avnav.util.Helper=function(){};
  * @param file {File}
  * @param param parameter object
  *        all handlers get the param object as first parameter
+ *        starthandler: will get the xhdr as second parameter - so it can be used for interrupts
  *        progresshandler: progressfunction
  *        okhandler: called when done
  *        errorhandler: called on error
@@ -30,6 +31,9 @@ avnav.util.Helper.uploadFile=function(url,file,param){
             contentType: file.type, //Work around #2
             beforeSend: function(xhdr,settings){
                 settings.data=file; //workaround for safari - see http://www.redmine.org/issues/13932
+                if (param.starthandler){
+                    param.starthandler(param,xhdr);
+                }
             },
             success: function (data) {
                 if (param.okhandler) {

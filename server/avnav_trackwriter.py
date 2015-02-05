@@ -49,6 +49,10 @@ class AVNTrackWriter(AVNWorker):
     self.getFloatParam('mindistance', throw)
     self.getFloatParam('interval', throw)
     self.tracklock=threading.Lock()
+    trackdir=self.getStringParam("trackdir")
+    if trackdir == "":
+      trackdir=unicode(os.path.join(os.path.dirname(sys.argv[0]),'tracks'))
+    self.trackdir=trackdir
   @classmethod
   def getConfigName(cls):
     return "AVNTrackWriter"
@@ -65,7 +69,9 @@ class AVNTrackWriter(AVNWorker):
   @classmethod
   def createInstance(cls, cfgparam):
     return AVNTrackWriter(cfgparam)
-  
+
+  def getTrackDir(self):
+    return self.trackdir
   def getName(self):
     return "TrackWriter"
   #write out the line
@@ -226,24 +232,19 @@ class AVNTrackWriter(AVNWorker):
     while True:
       loopCount+=1
       currentTime=datetime.datetime.utcnow();
-      
-      trackdir=self.getStringParam("trackdir")
-      if trackdir == "":
-        trackdir=unicode(os.path.join(os.path.dirname(sys.argv[0]),'tracks'))
-      self.trackdir=trackdir
       if initial:
         theConverter=threading.Thread(target=self.converter)
         theConverter.daemon=True
         theConverter.start()
         AVNLog.info("started with dir=%s,interval=%d, distance=%d",
-                trackdir,
+                self.trackdir,
                 self.getFloatParam("interval"),
                 self.getFloatParam("mindistance"))
         initial=False
       try:
-        if not os.path.isdir(trackdir):
-          os.makedirs(trackdir, 0775)
-        curfname=os.path.join(trackdir,self.createFileName(currentTime))
+        if not os.path.isdir(self.trackdir):
+          os.makedirs(self.trackdir, 0775)
+        curfname=os.path.join(self.trackdir,self.createFileName(currentTime))
         if not curfname == fname:
           fname=curfname
           if not f is None:

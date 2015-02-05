@@ -401,15 +401,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         $(f).find('input[name="_json"]').val(route.toJsonString());
         //$(f).find('input[name="filename"]').val(route.name+".gpx");
         $(f).submit();
-        if (!route) return;
-        var name = $('#avi_route_name').val();
-        if (!name || name == "") return;
-        route.name = name;
-        var f = $('#avi_route_downloadform')
-            .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name + ".gpx"));
-        $(f).find('input[name="_json"]').val(route.toJsonString());
-        //$(f).find('input[name="filename"]').val(route.name+".gpx");
-        $(f).submit();
+
     }
     else {
         var xmlroute=route.toXml();
@@ -426,16 +418,7 @@ avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
     var i=$("#avi_route_uploadfile");
     $(i).click();
     return false;
-    //safari hack - seems to handle the click only if the form is visible
-    //so we shortly show it
-    $("#avi_route_uploadform").show();
-    setTimeout(function(){
-        $(i).click();
-        setTimeout(function(){
-            $('#avi_route_uploadform').hide();
-        },10);
-    },0);
-    return false;
+
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageDelete=function(button,ev){

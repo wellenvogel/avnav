@@ -507,6 +507,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleListChartRequest(requestParam)
       if requestType=='routing':
         rtj=self.handleRoutingRequest(requestParam)
+      if requestType=='listdir':
+        rtj=self.handleListDir(requestParam)
       if requestType=='download':
         #download requests are special
         # the dow not return json...
@@ -622,7 +624,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       entry={
              'name':gemfdata['name'],
              'url':"/gemf/"+gemfdata['name'],
-             'charturl':"/gemf/"+gemfdata['name']
+             'charturl':"/gemf/"+gemfdata['name'],
+             'time': gemfdata['mtime']
       }
       rt['data'].append(entry)
     try:
@@ -645,9 +648,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       if de=="..":
         continue
       dpath=os.path.join(chartbaseDir,de)
+      fname=os.path.join(dpath,self.server.navxml)
       if not os.path.isdir(dpath):
         continue
-      if not os.path.isfile(os.path.join(dpath,self.server.navxml)):
+      if not os.path.isfile(fname):
         continue
       url="/"+chartbaseUrl+"/"+de
       charturl=url
@@ -658,6 +662,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
              'name':de,
              'url':url,
              'charturl':charturl,
+             'time': os.path.getmtime(fname)
              }
       if os.path.exists(os.path.join(dpath,icon)):
         entry['icon']="/"+chartbaseUrl+"/"+icon
@@ -693,6 +698,18 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtd=rt.handleRouteDownloadRequest(requestParam)
       else:
         raise Exception("router not configured")
+    if type == "track":
+      mtype="application/gpx+xml"
+      name=self.getRequestParam(requestParam,"name")
+      trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
+      trackdir=trackWriter.getTrackDir()
+      #TODO: some security stuff
+      name=name.replace("/","")
+      fname=os.path.join(trackdir,name)
+      if os.path.isfile(fname):
+        f=open(fname,"rb")
+        rtd=f.read()
+        f.close()
     else:
       raise Exception("invalid request %s",type)
     if rtd is None:
@@ -727,3 +744,32 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     else:
       raise Exception("invalid request %s",type)
 
+  def handleListDir(self,requestParam):
+    type=self.getRequestParam(requestParam,"type")
+    if type is None:
+      raise Exception("no type for listdir")
+    if type != "chart" and type != "track":
+      raise Exception("invalid type %s, allowed are track and chart"%type)
+    rt={'status':'OK','items':[]}
+    filter=".gpx"
+    dir=None
+    if type == "track":
+      trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
+      dir=trackWriter.getTrackDir()
+    if type == "chart":
+      charts=self.handleListChartRequest(requestParam)
+      rt['items']=charts['data']
+      return json.dumps(rt)
+    if os.path.isdir(dir):
+      for f in os.listdir(dir):
+        if not f.endswith(filter):
+           continue
+        fname=os.path.join(dir,f)
+        if not os.path.isfile(fname):
+           continue
+        item={
+           'name': f,
+           'time': os.path.getmtime(fname)
+        }
+        rt['items'].append(item)
+    return json.dumps(rt)

@@ -103,7 +103,7 @@ class GemfFile():
     self.handles.append(handle)
     self.isOpen=True
     for i in range(1,100):
-      aname=self.filename+"-"+unicode(i)
+      aname=self.filename+"-"+str(i)
       if os.path.isfile(aname):
         h=open(aname,"rb")
         self.handles.append(h)

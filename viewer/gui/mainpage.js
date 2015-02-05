@@ -129,6 +129,10 @@ avnav.gui.Mainpage.prototype.btnNight=function (button,ev){
     this.handleToggleButton('#avb_Night',ncon!=100);
     this.changeDim(ncon);
 };
+avnav.gui.Mainpage.prototype.btnShowDownload=function (button,ev) {
+    log("show download clicked");
+    this.gui.showPage('downloadpage');
+};
 /**
  * create the page instance
  */

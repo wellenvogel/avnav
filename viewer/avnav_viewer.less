@@ -453,15 +453,41 @@ font-size: ( @bottomPanelHeight - 2 );
   background-color: #702620 !important
 }
 
-/*-------------------------------------------------------------
-   routes page
--------------------------------------------------------------*/
-#avi_route_page_inner{
+
+/* some settings for pages that have lists */
+
+.avm_listpage {
   padding-left: 10px;
   padding-right: 10px;
   font-size: ( @routeInfoFontBase / 8);
   background-color: white;
   .nightColors();
+}
+
+.avm_listhead{
+  margin-top: 10px;
+  border-bottom: 1px solid;
+}
+
+.avm_listcontainer {
+  position: absolute;
+  left: 5px;
+  right: 0;
+  overflow: auto;
+  bottom: 0;
+}
+.avm_list_entry{
+  height: ( @buttonSize + 5px);
+  overflow: hidden;
+  position: relative;
+  border-bottom: 1px solid;
+  padding-top: 5px;
+}
+/*-------------------------------------------------------------
+   routes page
+-------------------------------------------------------------*/
+#avi_route_page_inner{
+  .avm_listpage();
 }
 #avi_routes_headline{
   font-size: 1.2em;
@@ -482,19 +508,12 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 
 #avi_route_listcontainer {
-  position: absolute;
-  left: 5px;
-  right: 0;
+  .avm_listcontainer();
   top: 8.3em;
-  overflow: auto;
-  bottom: 0;
+
 }
 .avn_route_list_entry{
-  height: ( @buttonSize + 5px);
-  overflow: hidden;
-  position: relative;
-  border-bottom: 1px solid;
-  padding-top: 5px;
+  .avm_list_entry();
 }
 .avn_route_listinfo{
   padding-left: 1.5em;
@@ -545,6 +564,59 @@ font-size: ( @bottomPanelHeight - 2 );
 .avn_route_active{
   background-image: url('images/RedBubble40.png');
 }
+
+
+/*-------------------------------------------------------------
+   download/upload page
+-------------------------------------------------------------*/
+#avi_download_page_inner{
+  .avm_listpage();
+}
+#avi_download_page__headline{
+  font-size: 1.2em;
+  font-weight: bold;
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
+}
+
+#avi_download_page_listhead{
+  .avm_listhead();
+}
+
+#avi_download_page_listcontainer {
+  .avm_listcontainer();
+  top: 4em;
+}
+.avn_download_list_entry{
+  .avm_list_entry();
+}
+.avn_download_listinfo{
+  padding-left: 1.5em;
+  float: left;
+}
+.avn_download_listdate{
+  float: left;
+
+}
+
+.avn_download_btnDelete{
+  position: absolute;
+  left: 3px;
+  top: 0;
+}
+
+.avn_download_btnDownload{
+  position: absolute;
+  right: 3px;
+  top: 0;
+}
+
+.avn_download_list_row{
+  margin-left: (@buttonSize + 10px);
+  margin-right: (@buttonSize + 10px);
+}
+
+
 
 /*-------------------------------------------------------------
    buttons
@@ -716,6 +788,20 @@ button#avb_RoutePageDelete{
 }
 .avn_route_btnLoad{
   .avn_button_icon_base('images/check32.png');
+}
+
+
+button#avb_DownloadPageCancel{
+  .avn_button_icon_base('images/Cancel40.png');
+}
+button#avb_DownloadPageUpload{
+  .avn_button_icon_base('images/upload32.png');
+}
+.avn_download_btnDelete{
+  .avn_button_icon_base('images/trash32.png');
+}
+.avn_download_btnDownload{
+  .avn_button_icon_base('images/download32.png');
 }
 
 button#avb_SettingsCancel{
