@@ -212,6 +212,10 @@ avnav.util.PropertyHandler.prototype.saveUserData=function(){
  * this overwrites any current data
  */
 avnav.util.PropertyHandler.prototype.loadUserData=function(){
+    if (! window.localStorage){
+        alert("local storage is not available, seems that your browser is not HTML5... - application will not work");
+        return;
+    }
     var rawdata=localStorage.getItem(this.currentProperties.settingsName);
     if (! rawdata) return;
     var ndata= JSON.parse(rawdata);
