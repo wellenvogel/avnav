@@ -120,6 +120,9 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
         this.handleToggleButton('#avb_DownloadPageCharts',false);
         this.handleToggleButton('#avb_DownloadPageTracks',true);
     }
+    if (!this.gui.properties.getProperties().connectedMode){
+        $('#avb_DownloadPageUpload').hide();
+    }
     this.fillData(true);
     this.hideProgress();
 };
@@ -159,18 +162,23 @@ avnav.gui.Downloadpage.prototype.updateDisplay=function(){
             .show()
             .insertAfter('.avn_download_list_entry:last');
         this.displayInfo(id,infos[id]);
+        if (this.gui.properties.getProperties().connectedMode) {
+            $('#' + this.idPrefix + id).find('.avn_download_btnDelete').on('click', null, {id: id}, function (ev) {
+                ev.preventDefault();
+                var lid = ev.data.id;
+                var name = self.files[lid].name;
+                var ok = confirm("delete " + self.files[lid].type + " " + name + "?");
+                if (ok) {
+                    self.sendDelete(self.files[lid]);
+                    self.fillData(false);
+                }
+                return false;
+            });
+        }
+        else {
+            $('#' + this.idPrefix + id).find('.avn_download_btnDelete').hide();
+        }
 
-        $('#' + this.idPrefix + id).find('.avn_download_btnDelete').on('click', null, {id: id}, function (ev) {
-            ev.preventDefault();
-            var lid = ev.data.id;
-            var name = self.files[lid].name;
-            var ok = confirm("delete " + self.files[lid].type + " " + name + "?");
-            if (ok) {
-                self.sendDelete(self.files[lid]);
-                self.fillData(false);
-            }
-            return false;
-        });
         if (self.type == "track" || (infos[id].url && infos[id].url.match("^/gemf")) ) {
             $('#' + this.idPrefix + id).find('.avn_download_btnDownload').show();
             $('#' + this.idPrefix + id).find('.avn_download_btnDownload').on('click', null, {id: id}, function (ev) {
@@ -198,10 +206,6 @@ avnav.gui.Downloadpage.prototype.updateDisplay=function(){
 avnav.gui.Downloadpage.prototype.fillData=function(initial){
     var self=this;
     this.files=[];
-    if (!this.gui.properties.getProperties().connectedMode) {{
-        this.updateDisplay();
-        return;
-    }};
     var url = self.gui.properties.getProperties().navUrl + "?request=listdir&type="+this.type;
     $.ajax({
         url: url,
