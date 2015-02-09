@@ -752,6 +752,50 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         f=open(fname,"rb")
         rtd=f.read()
         f.close()
+    if type=="chart":
+      requestOk=True
+      url=self.getRequestParam(requestParam,"url")
+      if url is None:
+        rtd="missing parameter url in request"
+      else:
+        if url.startswith("/gemf"):
+          url=url.replace("/gemf/","",1)
+          gemfname=url.split("/")[0]+".gemf"
+          gemfentry=self.server.gemflist.get(gemfname)
+          if gemfentry is None:
+            rtd="file %s not found"%(url)
+          else:
+            #TODO: currently we only download the first file
+            fname=gemfentry['gemf'].filename
+            if os.path.isfile(fname):
+              fh=open(fname,"rb")
+              maxread=1000000
+              if fh is not None:
+                try:
+                  bToSend=os.path.getsize(fname)
+                  self.send_response(200)
+                  self.send_header("Content-Disposition","attachment")
+                  self.send_header("Content-type", mtype)
+                  self.send_header("Content-Length", bToSend)
+                  self.end_headers()
+                  while bToSend > 0:
+                    buf=fh.read(maxread if bToSend > maxread else bToSend)
+                    if buf is None or len(buf) == 0:
+                      raise Exception("no more data")
+                    self.wfile.write(buf)
+                    bToSend-=len(buf)
+                  fh.close()
+                except:
+                  AVNLog.error("error during download %s",url)
+                  try:
+                    fh.close()
+                  except:
+                    pass
+                return
+              else:
+                rtd="unable to open file %s"%(url)
+            else:
+              rtd="%s not found"%(url)
     if not requestOk:
       raise Exception("invalid request %s",type)
     if rtd is None:
