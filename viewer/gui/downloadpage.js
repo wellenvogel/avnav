@@ -171,7 +171,7 @@ avnav.gui.Downloadpage.prototype.updateDisplay=function(){
             }
             return false;
         });
-        if (self.type == "track") {
+        if (self.type == "track" || (infos[id].url && infos[id].url.match("^/gemf")) ) {
             $('#' + this.idPrefix + id).find('.avn_download_btnDownload').show();
             $('#' + this.idPrefix + id).find('.avn_download_btnDownload').on('click', null, {id: id}, function (ev) {
                 ev.preventDefault();
@@ -182,7 +182,8 @@ avnav.gui.Downloadpage.prototype.updateDisplay=function(){
                 } catch (e) {
                 }
                 if (info) {
-                    self.download(info.name);
+                    if (info.type == "track") self.download(info.name);
+                    else self.download(info.name+".gemf",info.url);
                 }
 
             });
@@ -211,9 +212,11 @@ avnav.gui.Downloadpage.prototype.fillData=function(initial){
         success: function(data){
             if (data.status && data.status != 'OK'){
                 alert("unable to load list of "+self.type+" from server: "+data.status);
+                self.files=[];
                 self.updateDisplay();
                 return;
             }
+            self.files=[];
             var i;
             for (i=0;i<data.items.length;i++){
                 var fi=new avnav.gui.FileInfo();
@@ -225,19 +228,21 @@ avnav.gui.Downloadpage.prototype.fillData=function(initial){
         },
         error:function(err){
             alert("unable to load list of "+self.type+" from server: "+err.statusText);
+            self.files=[];
             self.updateDisplay();
         }
     });
 
 };
 
-avnav.gui.Downloadpage.prototype.download=function(name) {
+avnav.gui.Downloadpage.prototype.download=function(name,opt_url) {
     log("download");
     if (!name || name == "") return;
     if (this.gui.properties.getProperties().connectedMode) {
         var f = $('#avi_download_downloadform')
             .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name));
         $(f).find('input[name="name"]').val(name);
+        $(f).find('input[name="url"]').val(opt_url||"");
         $(f).find('input[name="type"]').val(this.type);
         $(f).submit();
     }
