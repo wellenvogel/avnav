@@ -41,6 +41,62 @@
   -moz-box-sizing: border-box;
 }
 
+/*-------------------------------------------------------------
+   buttons
+-------------------------------------------------------------*/
+
+.avn_button_base(@bWitdh:@buttonSize,@bSize:@buttonSize){
+  width: @bWitdh;
+  height: @bSize;
+  margin: 3px 3px 3px 3px;
+  border-top-right-radius: 4px;
+  border-top-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border: 1px solid #D3D3D3;
+  background: fade(#E6E6E6,@nightModePercent);
+  //position: relative;
+  cursor: pointer;
+  outline: none;
+
+}
+button.avn_button{
+  .avn_button_base;
+}
+
+.avn_button:active{
+  border: 2px solid #6B6B6B;
+}
+
+button.avn_toggleButton{
+  .avn_button_base;
+}
+
+button.avn_buttonActive{
+  border: 4px solid #1DB81D !important;
+}
+
+button.avn_buttonActiveError{
+  border: 4px solid #EC420C !important;
+}
+
+button.avn_buttonInactive{
+  border: 4px solid fade(#E6E6E6,@nightModePercent) !important;
+}
+
+
+.avn_button_icon_base(@icon,@innerWidth: ( @buttonSize * 30 / 60 ),@size: @buttonSize ){
+  .avn_button_base(@size,@size);
+  background-image: url(@icon);
+  background-position: center center;
+  background-size: @innerWidth @innerWidth;
+  background-repeat: no-repeat;
+  text-decoration: none;
+}
+
+.avn_button_icon_base_toggle(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
+  .avn_button_icon_base(@icon,@innerWidth);
+}
 
 /*-------------------------------------------------------------
    general settings
@@ -452,6 +508,69 @@ font-size: ( @bottomPanelHeight - 2 );
 .avn_route_display_approach when (@nightModePercent<100%) {
   background-color: #702620 !important
 }
+button#avb_ZoomIn {
+  .avn_button_icon_base('images/Plus40.png');
+}
+button#avb_ZoomOut {
+  .avn_button_icon_base('images/Minus40.png');
+}
+button#avb_LockPos  {
+  .avn_button_icon_base_toggle('images/Sail-Boat-40.png');
+}
+
+button#avb_LockMarker {
+  .avn_button_icon_base_toggle('images/Marker1.png');
+}
+
+button#avb_CourseUp {
+  .avn_button_icon_base_toggle('images/nadel-2.png',( @buttonSize * 45 /60 ));
+}
+button#avb_ShowRoutePanel {
+  .avn_button_icon_base('images/RoutingButton40.png',( @buttonSize * 45 /60 ));
+}
+
+
+button#avb_CancelNav {
+  .avn_button_icon_base('images/Cancel40.png');
+
+}
+
+/*- nav page routing panel --*/
+button#avb_NavAdd {
+  .avn_button_icon_base('images/wpplus40.png',( @buttonSize * 45 /60 ));
+}
+button#avb_NavDelete {
+  .avn_button_icon_base('images/wpminus40.png',( @buttonSize * 45 /60 ));
+}
+button#avb_NavToCenter {
+  .avn_button_icon_base('images/wpcenter60.png',( @buttonSize * 45 /60 ));
+}
+button#avb_NavGoto {
+  .avn_button_icon_base('images/wpgoto60.png',( @buttonSize * 45 /60 ));
+}
+button#avb_NavInvert {
+  .avn_button_icon_base('images/InvertRoute60.png',( @buttonSize * 45 /60 ));
+}
+button#avb_NavDeleteAll {
+  .avn_button_icon_base('images/trash32.png');
+}
+
+button#avb_NavWp {
+  .avn_hidden();
+  .avn_button_icon_base('images/YellowBubble40.png');
+}
+
+button#avb_WpDone{
+  .avn_button_icon_base('images/check32.png');
+}
+button#avb_WpPrevious{
+  .avn_button_icon_base('images/arrowleft32.png');
+}
+button#avb_WpNext{
+  .avn_button_icon_base('images/arrowright32.png');
+}
+
+
 
 
 /* some settings for pages that have lists */
@@ -477,7 +596,7 @@ font-size: ( @bottomPanelHeight - 2 );
   bottom: 0;
 }
 .avm_list_entry{
-  height: ( @buttonSize + 5px);
+  height: ( @buttonSize *0.8 + 5px);
   overflow: hidden;
   position: relative;
   border-bottom: 1px solid;
@@ -565,6 +684,38 @@ font-size: ( @bottomPanelHeight - 2 );
   background-image: url('images/RedBubble40.png');
 }
 
+button#avb_RoutePageOk{
+  .avn_button_icon_base('images/check32.png');
+}
+button#avb_RoutePageCancel{
+  .avn_button_icon_base('images/Cancel40.png');
+}
+button#avb_RoutePageDownload{
+  .avn_button_icon_base('images/download32.png');
+}
+button#avb_RoutePageUpload{
+  .avn_button_icon_base('images/upload32.png');
+}
+button#avb_RoutePageDelete{
+  .avn_button_icon_base('images/trash32.png');
+}
+button#avb_RoutePageRoutes{
+  .avn_button_icon_base('images/RoutingButton40.png');
+}
+button#avb_RoutePageCharts{
+  .avn_button_icon_base_toggle('images/Chart60.png');
+}
+button#avb_RoutePageTracks{
+  .avn_button_icon_base_toggle('images/TrackButton60.png');
+}
+.avn_route_btnDelete{
+  .avn_button_icon_base('images/trash32.png',null,(@buttonSize *0.8));
+}
+.avn_route_btnLoad{
+  .avn_button_icon_base('images/check32.png',null,(@buttonSize *0.8));
+}
+
+
 
 /*-------------------------------------------------------------
    download/upload page
@@ -572,9 +723,7 @@ font-size: ( @bottomPanelHeight - 2 );
 #avi_download_page_inner{
   .avm_listpage();
 }
-#avi_download_page_inner.avn_downloadpage_progress_visible{
-  bottom:(@buttonSize + 20px);
-}
+
 #avi_download_page__headline{
   font-size: 1.2em;
   font-weight: bold;
@@ -588,7 +737,7 @@ font-size: ( @bottomPanelHeight - 2 );
 
 #avi_download_page_listcontainer {
   .avm_listcontainer();
-  top: 4em;
+  top: 3em;
 }
 .avn_download_list_entry{
   .avm_list_entry();
@@ -667,194 +816,6 @@ font-size: ( @bottomPanelHeight - 2 );
   background-color: @nightColor;
 }
 
-
-
-/*-------------------------------------------------------------
-   buttons
--------------------------------------------------------------*/
-
-.avn_button_base(@bWitdh:@buttonSize,@bSize:@buttonSize){
-  width: @bWitdh;
-  height: @bSize;
-  margin: 3px 3px 3px 3px;
-  border-top-right-radius: 4px;
-  border-top-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  border-bottom-left-radius: 4px;
-  border: 1px solid #D3D3D3;
-  background: fade(#E6E6E6,@nightModePercent);
-  //position: relative;
-  cursor: pointer;
-  outline: none;
-
-}
-button.avn_button{
-  .avn_button_base;
-}
-
-.avn_button:active{
-  border: 2px solid #6B6B6B;
-}
-
-button.avn_toggleButton{
-	.avn_button_base;
-}
-
-button.avn_buttonActive{
-	border: 4px solid #1DB81D !important;
-}
-
-button.avn_buttonActiveError{
-	border: 4px solid #EC420C !important;
-}
-
-button.avn_buttonInactive{
-	border: 4px solid fade(#E6E6E6,@nightModePercent) !important;
-}
-
-
-.avn_button_icon_base(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
-  .avn_button_base();
-  background-image: url(@icon);
-  background-position: center center;
-  background-size: @innerWidth @innerWidth;
-  background-repeat: no-repeat;
-  text-decoration: none;
-}
-
-.avn_button_icon_base_toggle(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
-    .avn_button_icon_base(@icon,@innerWidth);
-}
-
-button#avb_ShowStatus {
-  .avn_button_icon_base('images/bargraph32.png');
-}
-button#avb_ShowSettings {
-  .avn_button_icon_base('images/spanner32.png');
-}
-button#avb_ShowHelp {
-  .avn_button_icon_base('images/Question.png');
-}
-
-button#avb_Connected {
-  .avn_button_icon_base_toggle('images/plug32.png');
-}
-
-button#avb_Night {
-  .avn_button_icon_base_toggle('images/Night60.png');
-}
-button#avb_ShowDownload {
-  .avn_button_icon_base('images/download32.png');
-}
-
-button#avb_StatusCancel {
-  .avn_button_icon_base('images/Cancel40.png');
-}
-button#avb_StatusUpdate {
-  .avn_button_icon_base('images/exchange32.png');
-}
-
-button#avb_ZoomIn {
-  .avn_button_icon_base('images/Plus40.png');
-}
-button#avb_ZoomOut {
-  .avn_button_icon_base('images/Minus40.png');
-}
-button#avb_LockPos  {
-	.avn_button_icon_base_toggle('images/Sail-Boat-40.png');
-}
-
-button#avb_LockMarker {
-  .avn_button_icon_base_toggle('images/Marker1.png');
-}
-
-button#avb_CourseUp {
-  .avn_button_icon_base_toggle('images/nadel-2.png',( @buttonSize * 45 /60 ));
-}
-button#avb_ShowRoutePanel {
-  .avn_button_icon_base('images/RoutingButton40.png',( @buttonSize * 45 /60 ));
-}
-
-
-button#avb_CancelNav {
-  .avn_button_icon_base('images/Cancel40.png');
-
-}
-
-/*- nav page routing panel --*/
-button#avb_NavAdd {
-  .avn_button_icon_base('images/wpplus40.png',( @buttonSize * 45 /60 ));
-}
-button#avb_NavDelete {
-  .avn_button_icon_base('images/wpminus40.png',( @buttonSize * 45 /60 ));
-}
-button#avb_NavToCenter {
-  .avn_button_icon_base('images/wpcenter60.png',( @buttonSize * 45 /60 ));
-}
-button#avb_NavGoto {
-  .avn_button_icon_base('images/wpgoto60.png',( @buttonSize * 45 /60 ));
-}
-button#avb_NavInvert {
-  .avn_button_icon_base('images/InvertRoute60.png',( @buttonSize * 45 /60 ));
-}
-button#avb_NavDeleteAll {
-  .avn_button_icon_base('images/trash32.png');
-}
-
-button#avb_NavWp {
-  .avn_hidden();
-  .avn_button_icon_base('images/YellowBubble40.png');
-}
-
-button#avb_WpDone{
-  .avn_button_icon_base('images/check32.png');
-}
-button#avb_WpPrevious{
-  .avn_button_icon_base('images/arrowleft32.png');
-}
-button#avb_WpNext{
-  .avn_button_icon_base('images/arrowright32.png');
-}
-
-button#avb_AisCancel{
-  .avn_button_icon_base('images/Cancel40.png');
-}
-button#avb_AisNearest {
-  .avn_button_icon_base('images/Ais-Up-40.png');
-}
-
-button#avb_RoutePageOk{
-  .avn_button_icon_base('images/check32.png');
-}
-button#avb_RoutePageCancel{
-  .avn_button_icon_base('images/Cancel40.png');
-}
-button#avb_RoutePageDownload{
-  .avn_button_icon_base('images/download32.png');
-}
-button#avb_RoutePageUpload{
-  .avn_button_icon_base('images/upload32.png');
-}
-button#avb_RoutePageDelete{
-  .avn_button_icon_base('images/trash32.png');
-}
-button#avb_RoutePageRoutes{
-  .avn_button_icon_base('images/RoutingButton40.png');
-}
-button#avb_RoutePageCharts{
-  .avn_button_icon_base_toggle('images/Chart60.png');
-}
-button#avb_RoutePageTracks{
-  .avn_button_icon_base_toggle('images/TrackButton60.png');
-}
-.avn_route_btnDelete{
-  .avn_button_icon_base('images/trash32.png');
-}
-.avn_route_btnLoad{
-  .avn_button_icon_base('images/check32.png');
-}
-
-
 button#avb_DownloadPageCancel{
   .avn_button_icon_base('images/Cancel40.png');
 }
@@ -872,30 +833,17 @@ button#avb_DownloadPageTracks{
   .avn_button_icon_base_toggle('images/TrackButton60.png');
 }
 .avn_download_btnDelete{
-  .avn_button_icon_base('images/trash32.png');
+  .avn_button_icon_base('images/trash32.png',null,(@buttonSize *0.8) );
 }
 .avn_download_btnDownload{
-  .avn_button_icon_base('images/download32.png');
+  .avn_button_icon_base('images/download32.png',null,(@buttonSize *0.8) );
 }
 
 button#avb_DownloadPageUploadCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/Cancel40.png',null,(@buttonSize * 0.8) );
 }
 
-button#avb_SettingsCancel{
-  .avn_button_icon_base('images/Cancel40.png');
-}
-button#avb_SettingsOK {
-  .avn_button_icon_base('images/check32.png');
-}
 
-button#avb_SettingsDefaults{
-  .avn_button_icon_base('images/trash32.png');
-}
-
-button#avb_GpsCancel{
-  .avn_button_icon_base('images/Cancel40.png');
-}
 
 /*-------------------------------------------------------------
    AIS display
@@ -972,6 +920,12 @@ button#avb_GpsCancel{
 	padding-left: 3px;
 }
 
+button#avb_AisCancel{
+  .avn_button_icon_base('images/Cancel40.png');
+}
+button#avb_AisNearest {
+  .avn_button_icon_base('images/Ais-Up-40.png');
+}
 
 
 /*-------------------------------------------------------------
@@ -1001,6 +955,17 @@ button#avb_GpsCancel{
 #avi_status_page_inner{
   padding-left: 8px;
 }
+
+
+
+button#avb_StatusCancel {
+  .avn_button_icon_base('images/Cancel40.png');
+}
+button#avb_StatusUpdate {
+  .avn_button_icon_base('images/exchange32.png');
+}
+
+
 
 /*-------------------------------------------------------------
    gps page
@@ -1088,7 +1053,10 @@ button#avb_GpsCancel{
 #avi_gpsp_position{
   display: block;
 }
-  
+
+button#avb_GpsCancel{
+  .avn_button_icon_base('images/Cancel40.png');
+}
 
 /*-------------------------------------------------------------------------------
     settings page
@@ -1250,6 +1218,17 @@ button#avb_GpsCancel{
   border: 2px solid #6B6B6B;
 }
 
+button#avb_SettingsCancel{
+  .avn_button_icon_base('images/Cancel40.png');
+}
+button#avb_SettingsOK {
+  .avn_button_icon_base('images/check32.png');
+}
+
+button#avb_SettingsDefaults{
+  .avn_button_icon_base('images/trash32.png');
+}
+
 /*-------------------------------------------------------------------------------
     main page
   -------------------------------------------------------------------------------
@@ -1289,6 +1268,28 @@ button#avb_GpsCancel{
 }
 #avi_mainpage_selections {
 	display: inline-block;
+}
+
+button#avb_ShowStatus {
+  .avn_button_icon_base('images/bargraph32.png');
+}
+button#avb_ShowSettings {
+  .avn_button_icon_base('images/spanner32.png');
+}
+button#avb_ShowHelp {
+  .avn_button_icon_base('images/Question.png');
+  .avn_hidden();
+}
+
+button#avb_Connected {
+  .avn_button_icon_base_toggle('images/plug32.png');
+}
+
+button#avb_Night {
+  .avn_button_icon_base_toggle('images/Night60.png');
+}
+button#avb_ShowDownload {
+  .avn_button_icon_base('images/download32.png');
 }
 
 

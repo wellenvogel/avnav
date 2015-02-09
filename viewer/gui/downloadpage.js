@@ -271,7 +271,7 @@ avnav.gui.Downloadpage.prototype.directUpload=function(file) {
             param.self.fillData(false);
             setTimeout(function(){
                 param.self.fillData(false);
-            },2000);
+            },1500);
         }
     });
 };
