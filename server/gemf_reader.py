@@ -212,6 +212,14 @@ class GemfFile():
     self.rangenum=0
     self.isOpen=False
 
+  def deleteFiles(self):
+    self.close()
+    if os.path.isfile(self.filename):
+      os.unlink(self.filename)
+    for i in range(1,100):
+      aname=self.filename+"-"+str(i)
+      if os.path.isfile(aname):
+        os.unlink(aname)
 
   def __unicode__(self):
     rt="GEMF %s (srcnum=%d:" %(self.filename,self.numsources)

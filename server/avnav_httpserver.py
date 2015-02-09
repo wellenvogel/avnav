@@ -40,6 +40,7 @@ import re
 import select
 import gemf_reader
 import cgi
+import shutil
 try:
   import create_overview
 except:
@@ -122,6 +123,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     AVNWorker.__init__(self, cfgparam)
     self.type=AVNWorker.Type.HTTPSERVER;
     self.handlers={}
+    self.gemfCondition=threading.Condition();
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
   def getName(self):
     return "HTTPServer"
@@ -155,6 +157,23 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       return path
     else:
       return path
+
+  def waitOnGemfCondition(self,timeoutms):
+    self.gemfCondition.acquire()
+    try:
+      self.gemfCondition.wait(timeoutms)
+    except:
+      pass
+    self.gemfCondition.release()
+
+  def notifyGemf(self):
+    self.gemfCondition.acquire()
+    try:
+      self.gemfCondition.notifyAll()
+    except:
+      pass
+    self.gemfCondition.release()
+
   #check the list of open gemf files
   def handleGemfFiles(self):
     while True:
@@ -162,12 +181,12 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
         chartbaseurl=self.getStringParam('chartbase')
         if chartbaseurl is None:
           AVNLog.debug("no chartbase defined - no gemf handling")
-          time.sleep(5)
+          self.waitOnGemfCondition(5)
           continue
         chartbaseDir=self.handlePathmapping(chartbaseurl)
         if not os.path.isdir(chartbaseDir):
           AVNLog.debug("chartbase is no directory - no gemf handling")
-          time.sleep(5)
+          self.waitOnGemfCondition(5)
           continue
         files=os.listdir(chartbaseDir)
         oldlist=self.gemflist.keys()
@@ -182,9 +201,15 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
         for old in oldlist:
           if not old in currentlist:
             AVNLog.info("closing gemf file %s",old)
-            oldfile=self.gemflist[old]
+            oldfile=self.gemflist.get(old)
+            if oldfile is None:
+              #maybe someone else already deleted...
+              continue
             oldfile['gemf'].close()
-            del self.gemflist[old]
+            try:
+              del self.gemflist[old]
+            except:
+              pass
         for newgemf in currentlist:
           fname=os.path.join(chartbaseDir,newgemf)
           govname=fname.replace(".gemf",".xml")
@@ -201,7 +226,10 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
             if mtime != oldgemfFile['mtime']:
               AVNLog.info("closing gemf file %s due to changed timestamp",newgemf)
               oldgemfFile['gemf'].close()
-              del self.gemflist[newgemf]
+              try:
+                del self.gemflist[newgemf]
+              except:
+                pass
               oldgemfFile=None
           if oldgemfFile is None:
             AVNLog.info("trying to add gemf file %s",fname)
@@ -226,7 +254,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
               AVNLog.error("error while trying to open gemf file %s  %s",fname,traceback.format_exc())
       except:
         AVNLog.error("Exception in gemf handler %s, ignore",traceback.format_exc())
-      time.sleep(5)
+      self.waitOnGemfCondition(5)
 
   #get the avnav info from a gemf file
   #we can nicely reuse here the stuff we have for MOBAC atlas files
@@ -516,6 +544,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return
       if requestType=='upload':
         rtj=self.handleUploadRequest(requestParam)
+      if requestType=='delete':
+        rtj=self.handleDeleteRequest(requestParam)
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
           text=e.message+"\n"+traceback.format_exc()
@@ -606,17 +636,23 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     filter=self.getRequestParam(requestParam,'filter')
     AVNLog.setFilter(filter)
     return json.dumps(rt) 
-  
-  def handleListChartRequest(self,requestParam):
+
+  def getChartDir(self):
+    chartbaseUrl=self.server.getStringParam('chartbase')
+    if chartbaseUrl is None:
+      return None
+    chartbaseDir=self.handlePathmapping(chartbaseUrl)
+    if not os.path.isdir(chartbaseDir):
+      return None
+    return chartbaseDir
+
+  def listCharts(self,requestParam):
     chartbaseUrl=self.server.getStringParam('chartbase')
     rt={
         'status': 'ERROR',
         'info':'chart directory not found'}
-    if chartbaseUrl is None:
-      return json.dumps(rt)
-    chartbaseDir=self.handlePathmapping(chartbaseUrl)
-    if not os.path.isdir(chartbaseDir):
-      rt['info']="chart directory %s not found"%(chartbaseDir)
+    chartbaseDir=self.getChartDir()
+    if chartbaseDir is None:
       return json.dumps(rt)
     rt['status']='OK'
     rt['data']=[]
@@ -670,7 +706,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       rt['data'].append(entry)
     num=len(rt['data'])
     rt['info']="read %d entries from %s"%(num,chartbaseDir)
-    return json.dumps(rt)
+    return rt
+
+  def handleListChartRequest(self,requestParam):
+    return json.dumps(self.listCharts(requestParam))
 
   def handleRoutingRequest(self,requestParam):
     rt=self.server.getHandler(AVNRouter.getConfigName())
@@ -691,7 +730,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     type=self.getRequestParam(requestParam,"type")
     rtd=None
     mtype="application/octet-stream"
+    requestOk=False
     if type == "route":
+      requestOk=True
       mtype="application/gpx+xml"
       rt=self.server.getHandler(AVNRouter.getConfigName())
       if rt is not None:
@@ -699,6 +740,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       else:
         raise Exception("router not configured")
     if type == "track":
+      requestOk=True
       mtype="application/gpx+xml"
       name=self.getRequestParam(requestParam,"name")
       trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
@@ -710,7 +752,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         f=open(fname,"rb")
         rtd=f.read()
         f.close()
-    else:
+    if not requestOk:
       raise Exception("invalid request %s",type)
     if rtd is None:
       self.send_error(404, "File not found")
@@ -729,18 +771,58 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   #where the file is completely unencoded in the input stream
   #returns json status
   def handleUploadRequest(self,requestParam):
-    len=self.headers.get("Content-Length");
-    if len is None:
+    rlen=self.headers.get("Content-Length");
+    if rlen is None:
       raise Exception("Content-Length not set in upload request")
     self.connection.settimeout(30)
     type=self.getRequestParam(requestParam,"type")
     if type == "route":
       rt=self.server.getHandler(AVNRouter.getConfigName())
       if rt is not None:
-        rtd=rt.handleRouteUploadRequest(requestParam,self.rfile,int(len))
+        rtd=rt.handleRouteUploadRequest(requestParam,self.rfile,int(rlen))
         return rtd;
       else:
         raise Exception("router not configured")
+    if type == "chart":
+      filename=self.getRequestParam(requestParam,"filename")
+      if filename is None:
+        raise Exception("missing filename in upload request")
+      filename=filename.replace("/","")
+      if not filename.endswith(".gemf"):
+        raise Exception("invalid filename %s, must be .gemf"%filename)
+      outname=os.path.join(self.getChartDir(),filename)
+      if os.path.exists(outname):
+        raise Exception("chart file %s already exists"%filename)
+      writename=outname+".tmp"
+      AVNLog.info("start upload of chart file %s",outname)
+      fh=open(writename,"wb")
+      if fh is None:
+        raise Exception("unable to write to %s"%filename)
+      bToRead=int(rlen)
+      bufSize=1000000
+      try:
+        while bToRead > 0:
+          buf=self.rfile.read(bufSize if bToRead >= bufSize else bToRead)
+          if len(buf) == 0 or buf is None:
+            raise Exception("no more data received")
+          bToRead-=len(buf)
+          fh.write(buf)
+        fh.close()
+        os.rename(writename,outname)
+        AVNLog.info("created chart file %s",filename)
+      except Exception as e:
+        try:
+          fh.close()
+        except:
+          pass
+        try:
+          os.unlink(writename)
+        except:
+          pass
+        AVNLog.error("upload of chart file %s failed: %s",filename,unicode(e))
+        raise Exception("exception during writing %s: %s"%(writename,unicode(e)))
+      self.server.notifyGemf()
+      return json.dumps({'status':'OK'})
     else:
       raise Exception("invalid request %s",type)
 
@@ -757,7 +839,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
       dir=trackWriter.getTrackDir()
     if type == "chart":
-      charts=self.handleListChartRequest(requestParam)
+      charts=self.listCharts(requestParam)
       rt['items']=charts['data']
       return json.dumps(rt)
     if os.path.isdir(dir):
@@ -773,3 +855,61 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         }
         rt['items'].append(item)
     return json.dumps(rt)
+
+  def handleDeleteRequest(self,requestParam):
+    type=self.getRequestParam(requestParam,"type")
+    if type is None:
+      raise Exception("no type for delete")
+    if type != "chart" and type != "track":
+      raise Exception("invalid type %s, allowed are track and chart"%type)
+    rt={'status':'OK'}
+    dir=None
+    if type == "track":
+      name=self.getRequestParam(requestParam,"name")
+      if name is None:
+        raise Exception("no name for delete track")
+      AVNLog.debug("delete track request, name=%s",name)
+      name=name.replace("/","")
+      trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
+      dir=trackWriter.getTrackDir()
+      fname=os.path.join(dir,name)
+      if not os.path.isfile(fname):
+        raise Exception("track %s not found "%name)
+      os.unlink(fname)
+      AVNLog.info("deleting track %s",name)
+      return json.dumps(rt)
+    if type == "chart":
+      dir=self.getChartDir()
+      url=self.getRequestParam(requestParam,"url")
+      if url is None:
+        raise Exception("no url for delete chart")
+      AVNLog.debug("delete chart request, url=%s",url)
+      if url.startswith("/gemf"):
+          url=url.replace("/gemf/","",1)
+          gemfname=url.split("/")[0]+".gemf"
+          gemfentry=self.server.gemflist.get(gemfname)
+          if gemfentry is None:
+            raise Exception("chart %s not found "%gemfname)
+          AVNLog.info("deleting gemf charts %s",gemfname)
+          gemfentry['gemf'].deleteFiles()
+          try:
+            #potentially the gemf handler was faster then we...
+            del self.server.gemflist[gemfname]
+          except:
+            pass
+          return json.dumps(rt)
+      else:
+        chartbaseUrl=self.server.getStringParam('chartbaseurl')
+        if not url.startswith("/"+chartbaseUrl):
+          raise Exception("invalid chart url %s"%url)
+        dirname=url.replace("/"+chartbaseUrl+"/").split("/")[0]
+        if dirname == "." or dirname == "..":
+          raise Exception("invalid chart url %s"%url)
+        dirname=os.path.join(self.getChartDir(),dirname)
+        if not os.path.isdir(dirname):
+          raise Exception("chart dir %s not found"%dirname)
+        AVNLog.info("deleting chart directory %s",dirname)
+        #TODO: how to avoid timeout here?
+        shutil.rmtree(dirname)
+        return json.dumps(rt)
+
