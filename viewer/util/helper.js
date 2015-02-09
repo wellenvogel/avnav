@@ -61,3 +61,9 @@ avnav.util.Helper.uploadFile=function(url,file,param){
     }
 };
 
+avnav.util.Helper.endsWith=function(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+};
+
+
+

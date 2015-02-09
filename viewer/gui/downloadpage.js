@@ -92,6 +92,11 @@ avnav.gui.Downloadpage.prototype.localInit=function(){
         ev.preventDefault();
         if (this.files && this.files.length > 0) {
             var file = this.files[0];
+            if (! avnav.util.Helper.endsWith(file.name,".gemf")){
+                alert("upload only for .gemf files");
+                self.resetUpload();
+                return;
+            }
             self.resetUpload();
             self.directUpload(file);
         }
@@ -103,14 +108,20 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
     if(options && options.downloadtype){
         this.type=options.downloadtype;
     }
-    else this.type="track";
     if (this.type == "chart"){
+        $('#avi_download_page_listhead').text("Charts");
         $('#avb_DownloadPageUpload').show();
+        this.handleToggleButton('#avb_DownloadPageTracks',false);
+        this.handleToggleButton('#avb_DownloadPageCharts',true);
     }
     else {
+        $('#avi_download_page_listhead').text("Tracks");
         $('#avb_DownloadPageUpload').hide();
+        this.handleToggleButton('#avb_DownloadPageCharts',false);
+        this.handleToggleButton('#avb_DownloadPageTracks',true);
     }
     this.fillData(true);
+    this.hideProgress();
 };
 
 /**
@@ -160,19 +171,25 @@ avnav.gui.Downloadpage.prototype.updateDisplay=function(){
             }
             return false;
         });
+        if (self.type == "track") {
+            $('#' + this.idPrefix + id).find('.avn_download_btnDownload').show();
+            $('#' + this.idPrefix + id).find('.avn_download_btnDownload').on('click', null, {id: id}, function (ev) {
+                ev.preventDefault();
+                var lid = ev.data.id;
+                var info = undefined;
+                try {
+                    info = self.files[lid];
+                } catch (e) {
+                }
+                if (info) {
+                    self.download(info.name);
+                }
 
-        $('#'+this.idPrefix+id).find('.avn_download_btnDownload').on('click',null,{id:id},function(ev){
-            ev.preventDefault();
-            var lid=ev.data.id;
-            var info=undefined;
-            try {
-                info=self.files[lid];
-            }catch(e){}
-            if (info){
-                self.download(info.name);
-            }
-
-        });
+            });
+        }
+        else {
+            $('#' + this.idPrefix + id).find('.avn_download_btnDownload').hide();
+        }
     }
 
 };
@@ -201,6 +218,7 @@ avnav.gui.Downloadpage.prototype.fillData=function(initial){
             for (i=0;i<data.items.length;i++){
                 var fi=new avnav.gui.FileInfo();
                 avnav.assign(fi,data.items[i]);
+                fi.type=self.type;
                 self.files.push(fi);
             }
             self.updateDisplay();
@@ -228,35 +246,65 @@ avnav.gui.Downloadpage.prototype.download=function(name) {
 avnav.gui.Downloadpage.prototype.directUpload=function(file) {
     self=this;
     var url = self.gui.properties.getProperties().navUrl + "?request=upload&type="+this.type+"&filename=" + encodeURIComponent(file.name);
-    $('#avi_download_progess').show();
+    self.showProgress();
     avnav.util.Helper.uploadFile(url, file, {
         self: self,
         starthandler: function(param,xhdr){
             param.self.xhdr=xhdr;
         },
         errorhandler: function (param, err) {
-            $('#avi_download_progess').hide();
+            self.hideProgress();
             param.self.xhdr=undefined;
-            alert("upload failed: " + err.responseText||err.statusText);
+            alert("upload failed: " + err.statusText);
         },
         progresshandler: function (param, ev) {
             if (ev.lengthComputable) {
-                //TODO: update progress bar
-                log("progress called");
+                var percentComplete = 100*ev.loaded / ev.total;
+                $('#avi_download_progress_info').text(ev.loaded+"/"+ev.total);
+                self.getDiv().find('.avn_progress_bar_done').css('width',percentComplete+"%");
+
             }
         },
         okhandler: function (param, data) {
             param.self.xhdr=undefined;
-            $('#avi_download_progess').hide();
+            param.self.hideProgress();
             param.self.fillData(false);
+            setTimeout(function(){
+                param.self.fillData(false);
+            },2000);
         }
     });
 };
+/**
+ * show the progress bar
+ * @private
+ * @param size
+ */
+avnav.gui.Downloadpage.prototype.showProgress=function(size){
+    $('#avi_download_progress').show();
+    $('#avi_download_progress_info').text("0/"+size);
+    $('#avi_download_page_inner').addClass("avn_downloadpage_progress_visible");
+};
+/**
+ * hide the progress bar
+ * @private
+ */
+avnav.gui.Downloadpage.prototype.hideProgress=function() {
+    $('#avi_download_progress').hide();
+    $('#avi_download_page_inner').removeClass("avn_downloadpage_progress_visible");
+};
+
 
 avnav.gui.Downloadpage.prototype.sendDelete=function(info){
     var rname=info.name;
     var self=this;
-    var url = self.gui.properties.getProperties().navUrl + "?request=delete&type="+this.type+"&name="+encodeURIComponent(rname);
+    var url = self.gui.properties.getProperties().navUrl + "?request=delete&type="+self.type;
+    if (self.type == "track"){
+        url+="&name="+encodeURIComponent(rname);
+    }
+    else {
+        url+="&url="+encodeURIComponent(info.url);
+    }
     $.ajax({
         url: url,
         cache: false,
@@ -264,19 +312,24 @@ avnav.gui.Downloadpage.prototype.sendDelete=function(info){
         contentType: "application/json; charset=utf-8",
         timeout: 10000,
         success: function(data){
-            self.updateDisplay();
+            self.fillData();
         },
         error:function(err){
             alert("unable to delete "+rname+": "+err.statusText);
-            self.updateDisplay();
+            self.fillData();
         }
     });
 };
 
 avnav.gui.Downloadpage.prototype.hidePage=function(){
+    this.abortUpload();
+};
+
+avnav.gui.Downloadpage.prototype.abortUpload=function(){
     if (this.xhdr){
-        alert("upload running");
+        this.xhdr.abort();
     }
+    this.hideProgress();
 };
 
 //-------------------------- Buttons ----------------------------------------
@@ -297,27 +350,20 @@ avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
 
 };
 
-avnav.gui.Downloadpage.prototype.btnDownloadPageDelete=function(button,ev){
-    log("route delete all clicked");
-    ok=confirm("delete all local routes on this device that are not on the server?");
-    if (! ok) return;
-    var i;
-    var activeName=undefined;
-    if (this.routingData.hasActiveRoute()){
-        activeName=this.routingData.getRouteData().name;
-    }
-    var dname=$('#avi_route_name').val();
-    for (i=0;i<this.routes.length;i++){
-        if (this.routes[i].server) continue;
-        if (activeName && this.routes[i].name == activeName) continue;
-        if (this.loadedRoute && this.loadedRoute.name == this.routes[i].name) {
-            this.loadedRoute=undefined;
-            this.currentName=undefined;
-        }
-        this.routingData.deleteRoute(this.routes[i].name,undefined,true);
-    }
-    this.fillData(false);
+avnav.gui.Downloadpage.prototype.btnDownloadPageRoutes=function(button,ev){
+    this.gui.showPage('routepage',{fromdownload:true,returnpage:"mainpage"})
 };
+avnav.gui.Downloadpage.prototype.btnDownloadPageTracks=function(button,ev){
+    this.showPage({downloadtype:"track"});
+};
+avnav.gui.Downloadpage.prototype.btnDownloadPageCharts=function(button,ev){
+    this.showPage({downloadtype:"chart"});
+};
+avnav.gui.Downloadpage.prototype.btnDownloadPageUploadCancel=function(button,ev){
+    this.abortUpload();
+};
+
+
 /**
  * create the page instance
  */

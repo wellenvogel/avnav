@@ -572,6 +572,9 @@ font-size: ( @bottomPanelHeight - 2 );
 #avi_download_page_inner{
   .avm_listpage();
 }
+#avi_download_page_inner.avn_downloadpage_progress_visible{
+  bottom:(@buttonSize + 20px);
+}
 #avi_download_page__headline{
   font-size: 1.2em;
   font-weight: bold;
@@ -614,6 +617,54 @@ font-size: ( @bottomPanelHeight - 2 );
 .avn_download_list_row{
   margin-left: (@buttonSize + 10px);
   margin-right: (@buttonSize + 10px);
+}
+
+#avi_download_progress{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: (@buttonSize + 20px);
+  background-color: lightgrey;
+  .nightColors();
+}
+
+#avi_download_page_inner.avn_downloadpage_progress_visible{
+  bottom:(@buttonSize + 20px);
+}
+
+
+
+#avi_download_progress_display {
+  position: absolute;
+  left: 20px;
+  right: (@buttonSize + 30px);
+  bottom: 15px;
+  top:  ( @routeInfoFontBase / 10 + 5px);
+  box-sizing: border-box;
+  border: 1px solid;
+}
+
+#avi_download_progress_info{
+  font-size: ( @routeInfoFontBase / 10);
+  position: absolute;
+  left:0px;
+  right: 0px;
+  text-align: center;
+}
+#avb_DownloadPageUploadCancel {
+  position: absolute;
+  right: 15px;
+  top: 7px;
+}
+.avn_progress_bar_done{
+  height: 100%;
+  background-color: blue;
+  width: 20%;
+}
+
+.avn_progress_bar_done when (@nightModePercent < 100){
+  background-color: @nightColor;
 }
 
 
@@ -692,6 +743,10 @@ button#avb_Connected {
 button#avb_Night {
   .avn_button_icon_base_toggle('images/Night60.png');
 }
+button#avb_ShowDownload {
+  .avn_button_icon_base('images/download32.png');
+}
+
 button#avb_StatusCancel {
   .avn_button_icon_base('images/Cancel40.png');
 }
@@ -783,6 +838,15 @@ button#avb_RoutePageUpload{
 button#avb_RoutePageDelete{
   .avn_button_icon_base('images/trash32.png');
 }
+button#avb_RoutePageRoutes{
+  .avn_button_icon_base('images/RoutingButton40.png');
+}
+button#avb_RoutePageCharts{
+  .avn_button_icon_base_toggle('images/Chart60.png');
+}
+button#avb_RoutePageTracks{
+  .avn_button_icon_base_toggle('images/TrackButton60.png');
+}
 .avn_route_btnDelete{
   .avn_button_icon_base('images/trash32.png');
 }
@@ -797,11 +861,25 @@ button#avb_DownloadPageCancel{
 button#avb_DownloadPageUpload{
   .avn_button_icon_base('images/upload32.png');
 }
+
+button#avb_DownloadPageRoutes{
+  .avn_button_icon_base('images/RoutingButton40.png');
+}
+button#avb_DownloadPageCharts{
+  .avn_button_icon_base_toggle('images/Chart60.png');
+}
+button#avb_DownloadPageTracks{
+  .avn_button_icon_base_toggle('images/TrackButton60.png');
+}
 .avn_download_btnDelete{
   .avn_button_icon_base('images/trash32.png');
 }
 .avn_download_btnDownload{
   .avn_button_icon_base('images/download32.png');
+}
+
+button#avb_DownloadPageUploadCancel{
+  .avn_button_icon_base('images/Cancel40.png');
 }
 
 button#avb_SettingsCancel{

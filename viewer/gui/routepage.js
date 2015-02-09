@@ -56,6 +56,11 @@ avnav.gui.Routepage=function(){
      * @type {boolean}
      */
     this.fallbackUpload=false;
+    /**
+     * set true if called from download page
+     * @type {boolean}
+     */
+    this.fromdownload=false;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -149,6 +154,17 @@ avnav.gui.Routepage.prototype.showPage=function(options) {
             this.fallbackUpload=true;
             $('#avb_RoutePageUpload').show();
         }
+    }
+    if (options && options.fromdownload){
+        this.fromdownload=true;
+        this.getDiv().find(".avn_routepage_optional").show();
+        this.getDiv().find("#avb_RoutePageOk").hide();
+        this.handleToggleButton("#avb_RoutePageRoutes",true);
+    }
+    else {
+        this.fromdownload=false;
+        this.getDiv().find(".avn_routepage_optional").hide();
+        this.getDiv().find("#avb_RoutePageOk").show();
     }
     this.fillData(true);
 };
@@ -390,7 +406,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
     }
     else {
         route=this.routingData.getEditingRoute().clone();
-    }var route;
+    }
     if (! route) return;
     var name=$('#avi_route_name').val();
     if (! name || name == "") return;
@@ -441,6 +457,16 @@ avnav.gui.Routepage.prototype.btnRoutePageDelete=function(button,ev){
         this.routingData.deleteRoute(this.routes[i].name,undefined,true);
     }
     this.fillData(false);
+};
+
+avnav.gui.Routepage.prototype.btnRoutePageTracks=function(button,ev) {
+    log("route tracks clicked");
+    this.gui.showPage("downloadpage",{downloadtype:"track"});
+};
+
+avnav.gui.Routepage.prototype.btnRoutePageCharts=function(button,ev) {
+    log("route tracks clicked");
+    this.gui.showPage("downloadpage",{downloadtype:"chart"});
 };
 /**
  * create the page instance
