@@ -74,7 +74,7 @@ class AVNSocketWriter(AVNWorker):
   def start(self):
     feeder=self.findFeeder(self.getStringParam('feederName'))
     if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
+      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam("feederName") or "")
     self.feeder=feeder
     self.maplock=threading.Lock()
     self.addrmap={}

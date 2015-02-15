@@ -887,7 +887,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     if type != "chart" and type != "track":
       raise Exception("invalid type %s, allowed are track and chart"%type)
     rt={'status':'OK','items':[]}
-    filter=".gpx"
+    filter=".gpx,.nmea"
     dir=None
     if type == "track":
       trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
@@ -898,8 +898,12 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       return json.dumps(rt)
     if os.path.isdir(dir):
       for f in os.listdir(dir):
-        if not f.endswith(filter):
-           continue
+        match=False
+        for fe in filter.split(","):
+          if f.endswith(fe):
+            match=True
+        if not match:
+          continue
         fname=os.path.join(dir,f)
         if not os.path.isfile(fname):
            continue

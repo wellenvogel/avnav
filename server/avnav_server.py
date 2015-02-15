@@ -67,6 +67,7 @@ from avnav_socketreader import *
 from avnav_httpserver import *
 from avnav_router import *
 from avnav_serialwriter import *
+from avnav_nmealogger import *
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 
@@ -173,7 +174,7 @@ def main(argv):
   debugger=sys.gettrace()
   workerlist=[AVNBaseConfig,AVNGpsdFeeder,AVNSerialReader,AVNGpsd,
               AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader,AVNUsbSerialReader,
-              AVNSocketWriter,AVNSocketReader,AVNChartHandler,AVNRouter, AVNSerialWriter]
+              AVNSocketWriter,AVNSocketReader,AVNChartHandler,AVNRouter, AVNSerialWriter, AVNNmeaLogger]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
