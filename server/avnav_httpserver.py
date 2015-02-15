@@ -543,7 +543,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.handleDownloadRequest(requestParam)
         return
       if requestType=='upload':
-        rtj=self.handleUploadRequest(requestParam)
+        try:
+          rtj=self.handleUploadRequest(requestParam)
+        except Exception as e:
+          AVNLog.error("upload error: %s",unicode(e))
+          rtj=json.dumps({'status':unicode(e)})
       if requestType=='delete':
         rtj=self.handleDeleteRequest(requestParam)
       self.sendNavResponse(rtj,requestParam)
@@ -815,60 +819,66 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   #where the file is completely unencoded in the input stream
   #returns json status
   def handleUploadRequest(self,requestParam):
-    rlen=self.headers.get("Content-Length");
-    if rlen is None:
-      raise Exception("Content-Length not set in upload request")
-    self.connection.settimeout(30)
-    type=self.getRequestParam(requestParam,"type")
-    if type == "route":
-      rt=self.server.getHandler(AVNRouter.getConfigName())
-      if rt is not None:
-        rtd=rt.handleRouteUploadRequest(requestParam,self.rfile,int(rlen))
-        return rtd;
-      else:
-        raise Exception("router not configured")
-    if type == "chart":
-      filename=self.getRequestParam(requestParam,"filename")
-      if filename is None:
-        raise Exception("missing filename in upload request")
-      filename=filename.replace("/","")
-      if not filename.endswith(".gemf"):
-        raise Exception("invalid filename %s, must be .gemf"%filename)
-      outname=os.path.join(self.getChartDir(),filename)
-      if os.path.exists(outname):
-        raise Exception("chart file %s already exists"%filename)
-      writename=outname+".tmp"
-      AVNLog.info("start upload of chart file %s",outname)
-      fh=open(writename,"wb")
-      if fh is None:
-        raise Exception("unable to write to %s"%filename)
-      bToRead=int(rlen)
-      bufSize=1000000
-      try:
-        while bToRead > 0:
-          buf=self.rfile.read(bufSize if bToRead >= bufSize else bToRead)
-          if len(buf) == 0 or buf is None:
-            raise Exception("no more data received")
-          bToRead-=len(buf)
-          fh.write(buf)
-        fh.close()
-        os.rename(writename,outname)
-        AVNLog.info("created chart file %s",filename)
-      except Exception as e:
+    rlen=None
+    try:
+      rlen=self.headers.get("Content-Length");
+      if rlen is None:
+        raise Exception("Content-Length not set in upload request")
+      self.connection.settimeout(30)
+      type=self.getRequestParam(requestParam,"type")
+      if type == "route":
+        rt=self.server.getHandler(AVNRouter.getConfigName())
+        if rt is not None:
+          rtd=rt.handleRouteUploadRequest(requestParam,self.rfile,int(rlen))
+          return rtd;
+        else:
+          raise Exception("router not configured")
+      if type == "chart":
+        filename=self.getRequestParam(requestParam,"filename")
+        if filename is None:
+          raise Exception("missing filename in upload request")
+        filename=filename.replace("/","")
+        if not filename.endswith(".gemf"):
+          raise Exception("invalid filename %s, must be .gemf"%filename)
+        outname=os.path.join(self.getChartDir(),filename)
+        if os.path.exists(outname):
+          raise Exception("chart file %s already exists"%filename)
+        writename=outname+".tmp"
+        AVNLog.info("start upload of chart file %s",outname)
+        fh=open(writename,"wb")
+        if fh is None:
+          raise Exception("unable to write to %s"%filename)
+        bToRead=int(rlen)
+        bufSize=1000000
         try:
+          while bToRead > 0:
+            buf=self.rfile.read(bufSize if bToRead >= bufSize else bToRead)
+            if len(buf) == 0 or buf is None:
+              raise Exception("no more data received")
+            bToRead-=len(buf)
+            fh.write(buf)
           fh.close()
-        except:
-          pass
-        try:
-          os.unlink(writename)
-        except:
-          pass
-        AVNLog.error("upload of chart file %s failed: %s",filename,unicode(e))
-        raise Exception("exception during writing %s: %s"%(writename,unicode(e)))
-      self.server.notifyGemf()
-      return json.dumps({'status':'OK'})
-    else:
-      raise Exception("invalid request %s",type)
+          os.rename(writename,outname)
+          AVNLog.info("created chart file %s",filename)
+        except Exception as e:
+          try:
+            fh.close()
+          except:
+            pass
+          try:
+            os.unlink(writename)
+          except:
+            pass
+          AVNLog.error("upload of chart file %s failed: %s",filename,unicode(e))
+          raise Exception("exception during writing %s: %s"%(writename,unicode(e)))
+        self.server.notifyGemf()
+        return json.dumps({'status':'OK'})
+      else:
+        raise Exception("invalid request %s",type)
+    except Exception as e:
+      return json.dumps({'status':unicode(e)})
+
+
 
   def handleListDir(self,requestParam):
     type=self.getRequestParam(requestParam,"type")
