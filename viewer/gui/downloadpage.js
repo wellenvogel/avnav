@@ -97,6 +97,14 @@ avnav.gui.Downloadpage.prototype.localInit=function(){
                 self.resetUpload();
                 return;
             }
+            var i;
+            for (i=0;i<self.files.length;i++){
+                var fname=self.files[i].name+".gemf";
+                if (self.files[i].url && avnav.util.Helper.startsWith(self.files[i].url,"/gemf") && fname==file.name){
+                    alert("file "+file.name+" already exists");
+                    return;
+                }
+            }
             self.resetUpload();
             self.directUpload(file);
         }

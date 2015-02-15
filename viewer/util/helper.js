@@ -22,13 +22,16 @@ avnav.util.Helper=function(){};
  *        see https://mobiarch.wordpress.com/2012/08/21/html5-file-upload-with-progress-bar-using-jquery/
  */
 avnav.util.Helper.uploadFile=function(url,file,param){
+    var type=file.type;
+    if (! type || type == "") type="application/octet-stream";
     try {
         $.ajax({
             url: url,
             type: "POST",
             data: file,
+            dataType: "json",
             processData: false, //Work around #1
-            contentType: file.type, //Work around #2
+            contentType: type, //Work around #2
             beforeSend: function(xhdr,settings){
                 settings.data=file; //workaround for safari - see http://www.redmine.org/issues/13932
                 if (param.starthandler){
@@ -36,6 +39,12 @@ avnav.util.Helper.uploadFile=function(url,file,param){
                 }
             },
             success: function (data) {
+                if (data.status && data.status != "OK"){
+                    if (param.errorhandler){
+                        param.errorhandler(param,data.status);
+                    }
+                    return;
+                }
                 if (param.okhandler) {
                     param.okhandler(param, data);
                 }
@@ -47,7 +56,7 @@ avnav.util.Helper.uploadFile=function(url,file,param){
             },
             //Work around #3
             xhr: function () {
-                myXhr = $.ajaxSettings.xhr();
+                var myXhr = $.ajaxSettings.xhr();
                 if (myXhr.upload && param.progresshandler) {
                     myXhr.upload.addEventListener('progress', function (ev) {
                         param.progresshandler(param, ev);
@@ -65,5 +74,8 @@ avnav.util.Helper.endsWith=function(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
 };
 
+avnav.util.Helper.startsWith=function(str, prefix) {
+    return (str.indexOf(prefix, 0) == 0);
+};
 
 
