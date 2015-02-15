@@ -55,6 +55,7 @@ avnav.nav.Leg=function(from,to,active,opt_routeName,opt_routeTarget){
      * @type {avnav.nav.Route}
      */
     this.currentRoute=undefined;
+
 };
 
 avnav.nav.Leg.prototype.clone=function(){
@@ -172,6 +173,11 @@ avnav.nav.Route=function(name,opt_points){
      * @type {number}
      */
     this.time=new Date().getTime();
+    /**
+     * if set this is a server route
+     * @type {boolean}
+     */
+    this.server=false;
 };
 
 /**
@@ -217,7 +223,7 @@ avnav.nav.Route.prototype.toJsonString=function(){
     return JSON.stringify(this.toJson());
 };
 /**
- * check if a route differs to another route
+ * check if a route differs to another route (does not consider the server flag)
  * @param {avnav.nav.Route} route2
  * @returns {boolean} true if differs
  */
@@ -242,6 +248,7 @@ avnav.nav.Route.prototype.clone=function(){
     var str=this.toJsonString();
     var rt=new avnav.nav.Route();
     rt.fromJsonString(str);
+    rt.server=this.server;
     return rt;
 };
 /**
@@ -713,12 +720,14 @@ avnav.nav.RouteData.prototype.getEditingRoute=function(){
  * change the name of the route
  * this will stop our active mode and move us to edit mode
  * @param name {string}
+ * @param setLocal {boolean} if set make the route a local route
  */
-avnav.nav.RouteData.prototype.changeRouteName=function(name){
+avnav.nav.RouteData.prototype.changeRouteName=function(name,setLocal){
     if (! this.editingRoute){
         this.editingRoute=new avnav.nav.Route();
     }
     this.editingRoute.name=name;
+    if (setLocal) this.editingRoute.server=false;
     log("switch to new route");
     this.saveRoute();
     this.navobject.routeEvent();
@@ -735,8 +744,10 @@ avnav.nav.RouteData.prototype.saveRouteLocal=function(opt_route,opt_keepTime) {
 
     }
     if (! opt_keepTime || ! route.time) route.time = new Date().getTime();
-    var str = route.toJsonString();
-    localStorage.setItem(this.propertyHandler.getProperties().routeName + "." + route.name, str);
+    if (! route.server) {
+        var str = route.toJsonString();
+        localStorage.setItem(this.propertyHandler.getProperties().routeName + "." + route.name, str);
+    }
     return route;
 };
 
@@ -1182,6 +1193,16 @@ avnav.nav.RouteData.prototype.invertRoute=function(){
 };
 
 /**
+ * check whether the editing route is writable
+ * @returns {boolean}
+ */
+avnav.nav.RouteData.prototype.isRouteWritable=function(){
+    if (! this.editingRoute) return false;
+    if (this.connectMode) return true;
+    if (this.editingRoute.server) return false;
+};
+
+/**
  * list functions for routes
  * works async
  * @param server
@@ -1286,6 +1307,7 @@ avnav.nav.RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_
         okcallback: function(data,param){
             var rt=new avnav.nav.Route(param.name);
             rt.fromJson(data);
+            rt.server=true;
             if (rt.time) rt.time=rt.time*1000;
             param.self.saveRouteLocal(rt,true);
             if (param.f_okcallback){

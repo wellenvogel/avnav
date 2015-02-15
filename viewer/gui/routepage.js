@@ -244,8 +244,10 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
         if (this.currentName && routeInfos[id].name == this.currentName){
             $('#routeInfo-'+id).find('.avn_route_liststatimage').addClass("avn_route_current");
         }
-        if (activeName && activeName == routeInfos[id].name){
-            $('#routeInfo-'+id).find('.avn_route_liststatimage').addClass("avn_route_active").removeClass("avn_route_current");
+        if ((activeName && activeName == routeInfos[id].name) || (!this.gui.properties.getProperties().connectedMode && routeInfos[id].server)){
+            if (activeName && activeName == routeInfos[id].name) {
+                $('#routeInfo-' + id).find('.avn_route_liststatimage').addClass("avn_route_active").removeClass("avn_route_current");
+            }
             $('#routeInfo-' + id).find('.avn_route_btnDelete').hide();
         }
         else {
@@ -319,7 +321,6 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
     var localRoutes=this.routingData.listRoutesLocal();
     this.addRoutes(localRoutes);
     this.updateDisplay();
-    if (!this.gui.properties.getProperties().connectedMode) return;
     this.routingData.listRoutesServer(
         function(routingInfos,param){
             param.self.addRoutes(routingInfos);
@@ -381,12 +382,12 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
     if (this.loadedRoute){
         this.routingData.setNewEditingRoute(this.loadedRoute);
         if (name && name != "" && name != this.loadedRoute.name){
-            this.routingData.changeRouteName(name);
+            this.routingData.changeRouteName(name,!this.gui.properties.getProperties().connectedMode);
         }
     }
     else {
         if (name && name != "") {
-            this.routingData.changeRouteName(name);
+            this.routingData.changeRouteName(name,!this.gui.properties.getProperties().connectedMode);
         }
     }
     this.gui.showPageOrReturn(this.returnpage,'navpage',{showRouting:true});
