@@ -679,7 +679,7 @@ class AVNRouter(AVNWorker):
       name=self.getRequestParam(requestparam,"name")
       if name is not None and not name == "":
         AVNLog.debug("download route name=%s",name)
-        route=self.loadRoute()
+        route=self.loadRoute(name)
       else:
         data=self.getRequestParam(requestparam,'_json');
         if data is None:
