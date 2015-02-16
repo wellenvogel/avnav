@@ -250,14 +250,14 @@ avnav.gui.Downloadpage.prototype.fillData=function(initial){
 avnav.gui.Downloadpage.prototype.download=function(name,opt_url) {
     log("download");
     if (!name || name == "") return;
-    if (this.gui.properties.getProperties().connectedMode) {
-        var f = $('#avi_download_downloadform')
-            .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name));
-        $(f).find('input[name="name"]').val(name);
-        $(f).find('input[name="url"]').val(opt_url||"");
-        $(f).find('input[name="type"]').val(this.type);
-        $(f).submit();
-    }
+
+    var f = $('#avi_download_downloadform')
+        .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name));
+    $(f).find('input[name="name"]').val(name);
+    $(f).find('input[name="url"]').val(opt_url || "");
+    $(f).find('input[name="type"]').val(this.type);
+    $(f).submit();
+
 };
 
 avnav.gui.Downloadpage.prototype.directUpload=function(file) {

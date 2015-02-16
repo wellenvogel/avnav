@@ -1200,6 +1200,7 @@ avnav.nav.RouteData.prototype.isRouteWritable=function(){
     if (! this.editingRoute) return false;
     if (this.connectMode) return true;
     if (this.editingRoute.server) return false;
+    return true;
 };
 
 /**
@@ -1285,7 +1286,7 @@ avnav.nav.RouteData.prototype.deleteRoute=function(name,opt_errorcallback,opt_lo
 
 avnav.nav.RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallback){
     var route;
-    if (localOnly || ! this.connectMode){
+    if (localOnly){
         route=this.loadRoute(name);
         if (route){
             setTimeout(function(){

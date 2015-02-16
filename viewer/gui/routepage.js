@@ -135,6 +135,7 @@ avnav.gui.Routepage.prototype.localInit=function(){
                         return false;
                     }
                 }
+                if (self.gui.properties.getProperties().connectedMode) route.server=true;
                 self.routingData.saveRoute(route,true);
                 self.fillData(false);
             };
@@ -411,16 +412,38 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
     if (! route) return;
     var name=$('#avi_route_name').val();
     if (! name || name == "") return;
-    route.name=name;
-    if (this.gui.properties.getProperties().connectedMode) {
+    if (name != route.name) {
+        //if we apply a new name this route is not any longer a server route...
+        route.name = name;
+        route.server=false;
+    }
+    if (route.server){
+        //nice simple case:
+        //we can ask the server directly to send us the route
+        //we assume that the route is always up to date at the server
+        //and we can use a simple get request
         var f = $('#avi_route_downloadform')
             .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name + ".gpx"));
+        $(f).attr('method','get');
+        $(f).find('input[name="name"]').val(name);
+        $(f).find('input[name="_json"]').val("");
+        $(f).submit();
+        return false;
+    }
+    if (this.gui.properties.getProperties().connectedMode) {
+        //in connected mode we upload the route and ask the server to send it back
+        //this will work in all browsers
+        var f = $('#avi_route_downloadform')
+            .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name + ".gpx"));
+        $(f).attr('method','post');
         $(f).find('input[name="_json"]').val(route.toJsonString());
+        $(f).find('input[name="name"]').val("");
         //$(f).find('input[name="filename"]').val(route.name+".gpx");
         $(f).submit();
 
     }
     else {
+        //this local download is the last resort if it is neither a server route nbor we are connected
         var xmlroute=route.toXml();
         var datauri="data:application/octet-stream;base64,"+btoa(xmlroute);
         $('#avi_route_localdownload').attr('href',datauri);

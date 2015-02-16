@@ -234,7 +234,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
     var self=this;
     $(this.waypointPopUp).find('input').on('change',function(ev){
         var wpid=$(self.waypointPopUp).attr('wpid');
-        self.checkRouteWritable();
+        if (!self.checkRouteWritable()) return false;
         if (wpid !== undefined) {
             wpid=parseInt(wpid);
             var point = self.navobject.getRoutingData().getWp(wpid);
@@ -422,7 +422,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
  */
 avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
     var routeActive=this.navobject.getRoutingData().hasActiveRoute();
-    if (routeActive  ){
+    if (routeActive && (! this.routingVisible || this.gui.properties.getProperties().routeShowRteWhenEdit) ){
         $('#avi_route_display').show();
         if (this.overlay){
             var h=this.overlay.height();
@@ -515,7 +515,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
                 $(el).find('input').on('change', function (ev) {
                     var point = self.navobject.getRoutingData().getWp(idx);
                     if (point) point.name = $(this).val();
-                    self.checkRouteWritable();
+                    if (!self.checkRouteWritable()) return false;
                     self.navobject.getRoutingData().changeWp(idx, point);
                 });
             }
@@ -577,6 +577,7 @@ avnav.gui.Navpage.prototype.checkRouteWritable=function(){
     if (ok){
         this.gui.showPage('routepage',{returnpage:'navpage'});
     }
+    return false;
 };
 
 //-------------------------- Buttons ----------------------------------------
@@ -639,7 +640,7 @@ avnav.gui.Navpage.prototype.btnWpNext=function(button,ev){
 //-------------------------- Route ----------------------------------------
 avnav.gui.Navpage.prototype.btnNavAdd=function (button,ev){
     log("navAdd clicked");
-    this.checkRouteWritable();
+    if (!this.checkRouteWritable()) return false;
     var center=this.gui.map.getCenter();
     var current=this.navobject.getRoutingData().getEditingWp();
     if (current) {
@@ -654,12 +655,12 @@ avnav.gui.Navpage.prototype.btnNavAdd=function (button,ev){
 
 avnav.gui.Navpage.prototype.btnNavDelete=function (button,ev){
     log("navDelete clicked");this.checkRouteWritable();
-    this.checkRouteWritable();
+    if (!this.checkRouteWritable()) return false;
     this.navobject.getRoutingData().deleteWp(-1);
 };
 avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
     log("navDelete clicked");
-    this.checkRouteWritable();
+    if (!this.checkRouteWritable()) return false;
     var center=this.gui.map.getCenter();
     this.navobject.getRoutingData().changeWp(
         -1,center
@@ -672,13 +673,13 @@ avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
 };
 avnav.gui.Navpage.prototype.btnNavDeleteAll=function(button,ev){
     log("navDeletAll clicked");
-    this.checkRouteWritable();
+    if (!this.checkRouteWritable()) return false;
     this.navobject.getRoutingData().emptyRoute();
 };
 
 avnav.gui.Navpage.prototype.btnNavInvert=function(button,ev){
     log("navInvert clicked");
-    this.checkRouteWritable();
+    if (!this.checkRouteWritable()) return false;
     this.navobject.getRoutingData().invertRoute();
 };
 /**
