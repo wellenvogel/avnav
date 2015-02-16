@@ -83,8 +83,15 @@ if ($rq == 'listCharts'){
 		$rt['status']='OK';
 		$de=array('name'=>'eniro','url'=>'demo-eniro','charturl'=>'demo-eniro');
 		$de2=array('name'=>'bsh','url'=>'demo-bsh','charturl'=>'demo-bsh');
-		$rt['data']=array($de,$de2);
+		$de3=array('name'=>'osm','url'=>'demo-osm','charturl'=>'demo-osm');
+		$rt['data']=array($de,$de2,$de3);
 		$isEncoded=0;
+}
+else if ($rq == 'listdir' || $rq == 'routing'){
+    $rt['status']='OK';
+    $rt['data']=array();
+    $rt['items']=array();
+    $isEncoded=0;
 }
 else {
 	$rt=readFileEntry($rq);
