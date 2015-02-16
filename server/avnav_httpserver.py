@@ -887,7 +887,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     if type != "chart" and type != "track":
       raise Exception("invalid type %s, allowed are track and chart"%type)
     rt={'status':'OK','items':[]}
-    filter=".gpx,.nmea"
+    filter=".gpx,.nmea,.nmea.gz"
     dir=None
     if type == "track":
       trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())

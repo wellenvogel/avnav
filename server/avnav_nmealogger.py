@@ -34,6 +34,7 @@ import datetime
 import glob
 import sys
 import traceback
+import gzip
 
 from avnav_util import *
 from avnav_worker import *
@@ -108,26 +109,48 @@ class AVNNmeaLogger(AVNWorker):
     lastcleanup=None
     seq=0
     last={}
+    initial=True
     while True:
       currentTime=datetime.datetime.utcnow()
       try:
         if not os.path.isdir(self.trackdir):
           os.makedirs(self.trackdir, 0775)
-        if lastcleanup is None or (currentTime > lastcleanup+datetime.timedelta(seconds=60)):
-          self.cleanup()
+        curfname=os.path.join(self.trackdir,self.createFileName(currentTime))
+        #we have to consider time shift backward
+        if lastcleanup is None or (currentTime > lastcleanup+datetime.timedelta(seconds=60)) or (currentTime < lastcleanup-datetime.timedelta(seconds=5)):
+          self.cleanup(curfname)
           lastcleanup=currentTime
           #force reopen file
           fname=None
-        curfname=os.path.join(self.trackdir,self.createFileName(currentTime))
         if not curfname == fname:
+          if fname is not None or initial:
+            AVNLog.info("new nmea logfile %s",curfname)
+          initial=False
           fname=curfname
           if not f is None:
             f.close()
           newFile=True
           last={}
-          AVNLog.info("new nmea logfile %s",curfname)
         if newFile:
+          zfname=curfname+".gz"
           f=open(curfname,"a")
+          if os.path.isfile(zfname):
+            #we must uncompress first
+            AVNLog.info("decompressing existing nmea log %s",zfname)
+            try:
+              zf=gzip.open(zfname,"rb")
+              while True:
+                buf=zf.read(100000)
+                if buf is None or len(buf) == 0:
+                  break
+                f.write(buf)
+              zf.close()
+            except:
+              AVNLog.error("unable to read old compressed log %s: %s",zfname,traceback.format_exc())
+            try:
+              os.unlink(zfname)
+            except:
+              pass
           newFile=False
           self.setInfo('main', "writing to %s"%(curfname,), AVNWorker.Status.NMEA)
         seq,data=self.feeder.fetchFromHistory(seq,10)
@@ -149,16 +172,34 @@ class AVNNmeaLogger(AVNWorker):
         AVNLog.error("exception in nmea logger: %s",traceback.format_exc());
         time.sleep(1)
 
-  def cleanup(self):
+  def cleanup(self,currentname):
     currentTime=datetime.datetime.utcnow()
     files=[]
     for f in os.listdir(self.trackdir):
-      if not f.endswith(".nmea"):
+      if not f.endswith(".nmea") and not f.endswith(".nmea.gz"):
         continue
       path=os.path.join(self.trackdir,f)
       if not os.path.isfile(path):
         continue
       files.append(path)
+      if path == currentname:
+        continue
+      if path.endswith(".nmea"):
+        AVNLog.info("compressing nmea log %s",path)
+        zfname=path+".gz"
+        try:
+          lf=open(path,"rb")
+          zf=gzip.open(zfname,"wb")
+          while True:
+            buf=lf.read(100000)
+            if buf is None or len(buf) == 0:
+              break
+            zf.write(buf)
+          zf.close()
+          lf.close()
+          os.unlink(path)
+        except:
+          AVNLog.error("exception while compressing log file %s: %s",path,traceback.format_exc())
     AVNLog.debug("cleanup, found %d files",len(files))
     if len(files) > self.maxfiles:
       files.sort(key=lambda x: os.path.getmtime(x))
