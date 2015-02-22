@@ -29,5 +29,6 @@
 
 <!--  routing handler -->
 <AVNRouter routesdir="..\data_windows\routes"></AVNRouter>
+<AVNNmeaLogger></AVNNmeaLogger>
 
 </AVNServer>

@@ -50,7 +50,7 @@
 	 this heavily depends on the topology of the connected devices
 	 for my setup with an USB 4 port HUB at the upper USB port
 	 a device at the hubs first port will look like: 1-1.2.1:1.0 ,
-	 at the second 1-1.2.2:1.0 - potentially you must check the logs
+	 at the second 1-1.2.2:1.0 - potentially you must check the logshttps://sharegallery.strato.com/u/NPZBrnUq/Js_KXr01
 	 The below config uses a predefined device with this ID and 
 	 room for 4 additional autodetect devices
 	 The serial parameters are the same like for all serial readers
@@ -104,7 +104,7 @@
      by default they will check if the device is there and will start gpsd 
      once they have been able to at least receive one byte
      gpsd seems to have difficulties with autobaud - so you can set the baud here to the correct rate
-     to assist...
+     to assist...https://sharegallery.strato.com/u/NPZBrnUq/Js_KXr01
      The timeout is a compromise - just give gpsd enough time to sync
      but kill it and release the device to allow for USB reconnects
      
@@ -170,9 +170,16 @@
 <!--  routing handler 
       additional parameters:
       interval: interval in seconds for computing RMB data (default: 5)
-      computeRMB: default True, set to fals if you do not want RMB computation
+      computeRMB: default True, set to false if you do not want RMB computation
 -->
 <AVNRouter routesdir="/home/pi/avnav/data/routes"></AVNRouter>
-
+<!-- log nmea data
+     will create .nmea(.gz) files in the tracks directory
+     parameters:
+     maxfiles: the number of logs (1 per day) that are kept - default 100
+     filter: the filter for the sentences to be written, default "$RMC,$DBT,$DBP" - suitable to help openseamap by logging depth
+     interval: minimal interval in seconds between sentences of the same type (default: 5)
+-->
+<AVNNmeaLogger></AVNNmeaLogger>
 
 </AVNServer>
