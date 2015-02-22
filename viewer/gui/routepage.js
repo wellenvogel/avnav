@@ -136,8 +136,10 @@ avnav.gui.Routepage.prototype.localInit=function(){
                     }
                 }
                 if (self.gui.properties.getProperties().connectedMode) route.server=true;
-                self.routingData.saveRoute(route,true);
-                self.fillData(false);
+                self.routingData.saveRoute(route,true,function(){
+                    self.fillData(false);
+                });
+
             };
             reader.readAsText(file);
         }
@@ -230,6 +232,7 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
     if (this.routingData.hasActiveRoute()){
         activeName=this.routingData.getRouteData().name;
     }
+    var editingName=this.routingData.getEditingRoute().name;
     var id;
     var routeInfos=this.routes;
     for (id=0;id<this.routes.length;id++){
@@ -245,7 +248,9 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
         if (this.currentName && routeInfos[id].name == this.currentName){
             $('#routeInfo-'+id).find('.avn_route_liststatimage').addClass("avn_route_current");
         }
-        if ((activeName && activeName == routeInfos[id].name) || (!this.gui.properties.getProperties().connectedMode && routeInfos[id].server)){
+        if ((activeName && activeName == routeInfos[id].name) ||
+            (editingName && editingName == routeInfos[id].name)||
+            (!this.gui.properties.getProperties().connectedMode && routeInfos[id].server)){
             if (activeName && activeName == routeInfos[id].name) {
                 $('#routeInfo-' + id).find('.avn_route_liststatimage').addClass("avn_route_active").removeClass("avn_route_current");
             }
@@ -264,14 +269,14 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
                 }
                 var ok = confirm("delete route " + name + "?");
                 if (ok) {
-                    self.routingData.deleteRoute(name, function (info) {
-                        alert("failed to delete route " + name + " on server: " + info);
-                    });
                     if (name == self.currentName) {
                         self.currentName = undefined;
                     }
                     if (self.loadedRoute && name == self.loadedRoute.name) self.loadedRoute=undefined;
-                    self.fillData(false);
+                    self.routingData.deleteRoute(name,
+                        function(data){ self.fillData(false);},
+                        function (info) {alert("failed to delete route " + name + " on server: " + info);
+                    });
 
                 }
                 return false;
@@ -461,27 +466,6 @@ avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
 
 };
 
-avnav.gui.Routepage.prototype.btnRoutePageDelete=function(button,ev){
-    log("route delete all clicked");
-    ok=confirm("delete all local routes on this device that are not on the server?");
-    if (! ok) return;
-    var i;
-    var activeName=undefined;
-    if (this.routingData.hasActiveRoute()){
-        activeName=this.routingData.getRouteData().name;
-    }
-    var dname=$('#avi_route_name').val();
-    for (i=0;i<this.routes.length;i++){
-        if (this.routes[i].server) continue;
-        if (activeName && this.routes[i].name == activeName) continue;
-        if (this.loadedRoute && this.loadedRoute.name == this.routes[i].name) {
-            this.loadedRoute=undefined;
-            this.currentName=undefined;
-        }
-        this.routingData.deleteRoute(this.routes[i].name,undefined,true);
-    }
-    this.fillData(false);
-};
 
 avnav.gui.Routepage.prototype.btnRoutePageTracks=function(button,ev) {
     log("route tracks clicked");

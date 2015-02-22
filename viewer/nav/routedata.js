@@ -196,6 +196,7 @@ avnav.nav.Route.prototype.fromJsonString=function(jsonString) {
 avnav.nav.Route.prototype.fromJson=function(parsed) {
     this.name=parsed.name||"default";
     this.time=parsed.time||0;
+    this.server=parsed.server||false;
     this.points=[];
     var i;
     var wp;
@@ -211,6 +212,7 @@ avnav.nav.Route.prototype.toJson=function(){
     var rt={};
     rt.name=this.name;
     rt.time=this.time;
+    rt.server=this.server;
     rt.points=[];
     var i;
     for (i in this.points){
@@ -461,15 +463,22 @@ avnav.nav.RouteData.prototype.syncRouteFromLeg=function(){
  * this stops the editing mode
  */
 avnav.nav.RouteData.prototype.setRouteFromLeg=function() {
+    var hasChanged=false;
     if (this.currentLeg.currentRoute){
         this.editingRoute=this.currentLeg.currentRoute.clone();
+        hasChanged=true;
     }
     else {
-        if (! this.editingRoute) this.editingRoute=new avnav.nav.Route();
+        if (! this.editingRoute){
+            this.editingRoute=new avnav.nav.Route();
+            hasChanged=true;
+        }
     }
-    this.findBestMatchingPoint();
-    this.saveRoute();
-    this.navobject.routeEvent();
+    if (hasChanged) {
+        this.findBestMatchingPoint();
+        this.saveRoute();
+        this.navobject.routeEvent();
+    }
 };
 /**
  * set the route currently being edited als the current active one
@@ -674,6 +683,7 @@ avnav.nav.RouteData.prototype.startQuery=function() {
     if (! this.isEditingActiveRoute()) {
         if (! this.editingRoute) return;
         if (! this.connectMode) return;
+        if (! this.editingRoute.server) return;
         this.remoteRouteOperation("getroute",{
             name:this.editingRoute.name,
             okcallback:function(data,param){
@@ -751,12 +761,22 @@ avnav.nav.RouteData.prototype.saveRouteLocal=function(opt_route,opt_keepTime) {
     return route;
 };
 
-avnav.nav.RouteData.prototype.saveRoute=function(opt_route,opt_force) {
+avnav.nav.RouteData.prototype.saveRoute=function(opt_route,opt_force,opt_callback) {
     var route=this.saveRouteLocal(opt_route);
     if (! route ) return;
     //send the route to the server if this is not the active one
     if ( ! this.isEditingActiveRoute() || opt_force) {
-        if (this.connectMode) this.sendRoute(route);
+        if (this.connectMode) this.sendRoute(route,opt_callback);
+        else {
+            if (opt_callback) setTimeout(function(){
+                opt_callback(true);
+            },0);
+        }
+    }
+    else{
+        if (opt_callback) setTimeout(function(){
+            opt_callback(true);
+        },0);
     }
 };
 /**
@@ -819,8 +839,9 @@ avnav.nav.RouteData.prototype.findBestMatchingPoint=function(){
 /**
  * send the route
  * @param {avnav.nav.Route} route
+ * @param opt_callback -. will be called on result, param: true on success
  */
-avnav.nav.RouteData.prototype.sendRoute=function(route){
+avnav.nav.RouteData.prototype.sendRoute=function(route,opt_callback){
     //send route to server
     var self=this;
     var sroute=route.clone();
@@ -830,9 +851,11 @@ avnav.nav.RouteData.prototype.sendRoute=function(route){
         self:self,
         okcallback:function(data,param){
             log("route sent to server");
+            if (opt_callback)opt_callback(true);
         },
         errorcallback:function(status,param){
             if (param.self.propertyHandler.getProperties().routingServerError) alert("unable to send route to server:" + errMsg);
+            if (opt_callback) opt_callback(false);
         }
     });
 };
@@ -1272,15 +1295,23 @@ avnav.nav.RouteData.prototype.listRoutesLocal=function(){
  * @param name
  * @param opt_errorcallback
  */
-avnav.nav.RouteData.prototype.deleteRoute=function(name,opt_errorcallback,opt_localonly){
+avnav.nav.RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,opt_localonly){
     try{
         localStorage.removeItem(this.propertyHandler.getProperties().routeName+"."+name);
     }catch(e){}
     if (this.connectMode && ! opt_localonly){
         this.remoteRouteOperation("deleteroute",{
             name:name,
-            errorcallback:opt_errorcallback
+            errorcallback:opt_errorcallback,
+            okcallback:opt_okcallback
         });
+    }
+    else {
+        if (opt_okcallback){
+            setTimeout(function(){
+                opt_okcallback();
+            },0);
+        }
     }
 };
 
