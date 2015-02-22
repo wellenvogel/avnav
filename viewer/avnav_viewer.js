@@ -173,11 +173,18 @@ avnav.main=function() {
         propertyHandler.setValueByName('navUrl',navurl);
         propertyHandler.setValueByName('routingServerError',false);
     }
+    else {
+        propertyHandler.setValueByName('routingServerError',true);
+    }
     var readOnlyServer=getParam('readOnlyServer');
     if (readOnlyServer){
         propertyHandler.setValueByName('readOnlyServer',true);
         propertyHandler.setValueByName('routingServerError',false);
         propertyHandler.setValueByName('connectedMode',false);
+    }
+    else {
+        propertyHandler.setValueByName('readOnlyServer',false);
+        propertyHandler.setValueByName('routingServerError',true);
     }
     var navobject=new avnav.nav.NavObject(propertyHandler);
     var mapholder=new avnav.map.MapHolder(propertyHandler,navobject);
