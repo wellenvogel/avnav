@@ -42,7 +42,7 @@
       danach einige technische Details.</p>
     <h3 class="western">Die Bedienung</h3>
     <p>Nach dem Aufruf der Start-Url landet man auf der Einstigesseite.</p>
-    <p><img src="mainpage.png" name="Grafik3" border="0" width="600"> </p>
+    <p><img src="navi-start.png" name="Grafik3" border="0" width="600"> </p>
     <p>Im Hauptbereich der Seite befindet sich die Liste der vom Server
       gefundenen Kartensätze (beim Raspi-Server gemf files unter
       /data/avnav/charts, in der Android App unter charts im gewählten
@@ -219,6 +219,8 @@
       meisten Aktionen bezihen sich auf diesen Wegepunkt. Er kann durch
       Anklicken links, durch die Pfeiltasten oben oder durch anklicken auf der
       Karte geändert werden.</p>
+    <p>Wenn man die momentan aktive Route bearbeitet, wird das durch einen roten
+      Rahmen links um die Routen-Info angezeigt.</p>
     <p>Neben den Standard buttons der Navigationsseite wird eine zusätzliche
       Leiste mit routing buttons eingeblendet:</p>
     <table style="width: 100%" border="1">
@@ -250,6 +252,11 @@
           </td>
         </tr>
         <tr>
+          <td><img alt="" src="../viewer/images/InvertRoute60.png" height="40"><br>
+          </td>
+          <td>Umkehren der Route</td>
+        </tr>
+        <tr>
           <td><img alt="" src="../viewer/images/trash32.png"><br>
           </td>
           <td>Löschen der aktuellen Route (alle Wegepunkte werden gelöscht)<br>
@@ -259,13 +266,25 @@
     </table>
     <p>Ein Klick auf den <img alt="" src="../viewer/images/RoutingButton40.png"
         height="20">Button verläßt den Editier-Modus ohne das die Route aktiv
-      wird.</p>
+      wird. Falls eine andere als die aktive Route editiert wurde, geht die
+      Anzeige jetzt zur aktiven Route zurück.</p>
     <p>Auf der linken Seite werden die Wegepunkte der aktuellen Route angezeigt.
       Dazu jeweils die Kurse und Distanzen für die Abschnitte. Im oberen Teil
       die Gesamtlänge der Route sowie die Gesamtstrecke sowie die ETA. Durch
       Anklicken kann man einen Wegepunkt aktivieren.</p>
     <p>Im oberen "Waypoint" Feld (nur sichtbar auf Mobilgeräten) kann man den
       Namen des Wegepunktes ändern und durch die Wegepunkte navigieren.</p>
+    <p>Ein Klick auf das Route Info Feld (links oben) führt zur Auswahl der
+      vorhandenen Routen.</p>
+    <img alt="" src="routepage.png" height="400">
+    <p>Hier kann man Routen löschen, herunterladen, Routen vom Tablet auf den
+      Raspberry laden oder eine Route unter einem neuen Namen speichern. Routen
+      mit dem Stecker-Symbol sind auf dem Raspberry vorhanden (und können nur
+      geändert werden, wenn man im connected mode ist). Die aktive Route ist mit
+      einem roten Punkt gekennzeichnet, die ausgewählte mit einem grünen.</p>
+    <p>Durch den <img alt="" src="../viewer/images/check32.png" height="20">Button
+      öffnet man die ausgewählte Route im Editor, der Cancel-Button geht zum
+      Editor mit der ursprünglichen Route zurück.&nbsp;</p>
     <p>Wenn eine Route aktiv ist, ändert sich das Navigationsdisplay und enthält
       die noch zurückzulegende Strecke sowie die ETA (links unten):</p>
     <img alt="" src="navi-route-active.png" height="400">
@@ -322,6 +341,13 @@
     <p><img src="navi-status.png" name="Grafik11" border="0" width="600"><br clear="RIGHT">
       Wichtig ist hier insbesondere der Status der „Serial reader“ - dieser
       zeigt, ob sie NMEA Daten empfangen.</p>
+    <h3>Die Download/Upload Seite</h3>
+    <p>Von der Startseite kommt man mit dem Button <img alt="" src="../viewer/images/download32.png" height="20">
+      zur Download-/Upload Seite. Auf dieser Seite kann man Tracks, Routen und
+      Karten herunterladen oder auf den Raspberry hochladen und sie dort auch
+      löschen.</p>
+    <p>Hochladen/Löschen funktionert nur im connected Mode.</p>
+    <img alt="" src="trackpage.png">
     <h3>Der Nachtmodus</h3>
     <p>Um im Dunkeln nicht zu blenden, kann man auf einen Nachtmodus umstellen
       (button <img alt="" src="../viewer/images/Night60.png" height="20">auf
@@ -476,11 +502,11 @@
     </p>
     <h3 class="western">Technische Infos</h3>
     <p>Die WebApp besteht aus einem HTML Gerüst (avnav_viewer.html) sowie den
-      eingebundenen JavaScript Bibliotheken und einem JavaScript Anteil (avnav_min.js).
-      Die Darstellung ist weitgehend von der eigentlichen Funktion entkoppelt
-      und wird per css (unter Nutzung von less) gesteuert. Man kann die
-      Darstellung in der HTMl Datei und in avnav_viewer.less weitgehend
-      anpassen.</p>
+      eingebundenen JavaScript Bibliotheken und einem JavaScript Anteil
+      (avnav_min.js). Die Darstellung ist weitgehend von der eigentlichen
+      Funktion entkoppelt und wird per css (unter Nutzung von less) gesteuert.
+      Man kann die Darstellung in der HTMl Datei und in avnav_viewer.less
+      weitgehend anpassen.</p>
     <p>Die Kommunikation erfolgt durch einfache GET/POST requests zur url <a href="http://avnav/viewer/avnav_navi.php">http://avnav/viewer/avnav_navi.php</a>,
       dann folgen Parameter, die den request beschreiben. Die Antworten vom
       server sind json kodiert.</p>
