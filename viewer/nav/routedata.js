@@ -457,7 +457,7 @@ avnav.nav.RouteData.prototype.syncRouteFromLeg=function(){
 };
 
 /**
- * set the current route from the active leg
+ * set the current route from the active leg (if we have an active route)
  * this stops the editing mode
  */
 avnav.nav.RouteData.prototype.setRouteFromLeg=function() {
@@ -465,7 +465,7 @@ avnav.nav.RouteData.prototype.setRouteFromLeg=function() {
         this.editingRoute=this.currentLeg.currentRoute.clone();
     }
     else {
-        this.editingRoute=new avnav.nav.Route();
+        if (! this.editingRoute) this.editingRoute=new avnav.nav.Route();
     }
     this.findBestMatchingPoint();
     this.saveRoute();
