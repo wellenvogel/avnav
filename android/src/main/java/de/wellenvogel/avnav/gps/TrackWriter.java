@@ -5,6 +5,7 @@ import android.util.Log;
 import de.wellenvogel.avnav.main.AvNav;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
+import de.wellenvogel.avnav.main.WebViewActivityBase;
 import de.wellenvogel.avnav.util.AvnLog;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -18,6 +19,11 @@ import java.util.*;
  * Created by andreas on 12.12.14.
  */
 public class TrackWriter {
+
+    public static class TrackInfo{
+        public String name;
+        public long mtime;
+    }
 
     private static final String header="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"+
         "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" version=\"1.1\" creator=\"avnav\"\n"+
@@ -264,6 +270,19 @@ public class TrackWriter {
         }
         AvnLog.d(AvNav.LOGPRFX, "deleted " + deleted + " trackpoints");
         return deleted;
+    }
+
+    public ArrayList<TrackInfo> listTracks(){
+        ArrayList<TrackInfo> rt=new ArrayList<TrackInfo>();
+        for (File f: trackdir.listFiles()){
+            if (! f.isFile()) continue;
+            if(! f.getName().endsWith(".gpx")) continue;
+            TrackInfo e=new TrackInfo();
+            e.name=f.getName();
+            e.mtime=f.lastModified();
+            rt.add(e);
+        }
+        return rt;
     }
 
 

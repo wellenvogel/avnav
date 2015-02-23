@@ -118,6 +118,7 @@ public class WebServer {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
             url=url.replaceAll("^/*","");
+            url=url.replaceAll("\\?.*","");
             //TODO: restrict access
             try {
                 InputStream is = activity.assetManager.open(url);

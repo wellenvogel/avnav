@@ -118,7 +118,8 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
     }
     if (this.type == "chart"){
         $('#avi_download_page_listhead').text("Charts");
-        $('#avb_DownloadPageUpload').show();
+        if (avnav.android) $('#avb_DownloadPageUpload').hide();
+        else  $('#avb_DownloadPageUpload').show();
         this.handleToggleButton('#avb_DownloadPageTracks',false);
         this.handleToggleButton('#avb_DownloadPageCharts',true);
     }
@@ -170,7 +171,7 @@ avnav.gui.Downloadpage.prototype.updateDisplay=function(){
             .show()
             .insertAfter('.avn_download_list_entry:last');
         this.displayInfo(id,infos[id]);
-        if (this.gui.properties.getProperties().connectedMode) {
+        if (this.gui.properties.getProperties().connectedMode && (self.type=="track" || ! avnav.android)) {
             $('#' + this.idPrefix + id).find('.avn_download_btnDelete').on('click', null, {id: id}, function (ev) {
                 ev.preventDefault();
                 var lid = ev.data.id;
@@ -187,7 +188,7 @@ avnav.gui.Downloadpage.prototype.updateDisplay=function(){
             $('#' + this.idPrefix + id).find('.avn_download_btnDelete').hide();
         }
 
-        if (self.type == "track" || (infos[id].url && infos[id].url.match("^/gemf")) ) {
+        if (self.type == "track" || (infos[id].url && infos[id].url.match("^/gemf") && ! avnav.android) ) {
             $('#' + this.idPrefix + id).find('.avn_download_btnDownload').show();
             $('#' + this.idPrefix + id).find('.avn_download_btnDownload').on('click', null, {id: id}, function (ev) {
                 ev.preventDefault();
@@ -198,8 +199,13 @@ avnav.gui.Downloadpage.prototype.updateDisplay=function(){
                 } catch (e) {
                 }
                 if (info) {
-                    if (info.type == "track") self.download(info.name);
-                    else self.download(info.name+".gemf",info.url);
+                    if (avnav.android){
+                        if (info.type=="track") avnav.android.downloadTrack(info.name);
+                    }
+                    else {
+                        if (info.type == "track") self.download(info.url ? info.url : info.name);
+                        else self.download(info.name + ".gemf", info.url);
+                    }
                 }
 
             });

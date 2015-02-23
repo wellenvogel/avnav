@@ -610,16 +610,21 @@ avnav.nav.RouteData.prototype.remoteRouteOperation=function(operation,param) {
         type="POST";
         data=param.route.toJsonString();
     }
+    var responseType="json";
+    if (operation == "getroute" && avnav.android){
+        responseType="text";
+    }
+    log("remoteRouteOperation, operation="+operation+", response="+responseType+", type="+type);
     param.operation=operation;
     $.ajax({
         url: url,
         type: type,
         data: data?data:undefined,
-        dataType: 'json',
+        dataType: responseType,
         contentType: "application/json; charset=utf-8",
         cache: false,
         success: function (data, status) {
-            if (data.status && data.status != "OK") {
+            if (responseType == "json" && data.status && data.status != "OK") {
                 //seems to be some error
                 log("query route error: " + data.status);
                 if (param.errorcallback){
@@ -628,6 +633,13 @@ avnav.nav.RouteData.prototype.remoteRouteOperation=function(operation,param) {
                 return;
             }
             if (param.okcallback) {
+                if (responseType=="text" && operation=="getroute"){
+                    log("convert route from xml: "+data);
+                    var route=new avnav.nav.Route();
+                    route.fromXml(data);
+                    data=route.toJson();
+                    log("converted Route: "+route.toJsonString());
+                }
                 param.okcallback(data, param);
             }
         },
@@ -649,7 +661,7 @@ avnav.nav.RouteData.prototype.startQuery=function() {
     var url = this.propertyHandler.getProperties().navUrl+"?request=routing&command=getleg";
     var timeout = this.propertyHandler.getProperties().routeQueryTimeout; //in ms!
     var self = this;
-    if (! this.connectMode){
+    if (! this.connectMode || avnav.android){
         self.timer=window.setTimeout(function() {
             self.startQuery();
         },timeout);
@@ -764,6 +776,9 @@ avnav.nav.RouteData.prototype.saveRouteLocal=function(opt_route,opt_keepTime) {
 avnav.nav.RouteData.prototype.saveRoute=function(opt_route,opt_force,opt_callback) {
     var route=this.saveRouteLocal(opt_route);
     if (! route ) return;
+    if (avnav.android){
+        avnav.android.storeRoute(route.toXml(),route.name);
+    }
     //send the route to the server if this is not the active one
     if ( ! this.isEditingActiveRoute() || opt_force) {
         if (this.connectMode) this.sendRoute(route,opt_callback);

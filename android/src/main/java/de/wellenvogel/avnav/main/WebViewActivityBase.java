@@ -14,9 +14,12 @@ import android.view.WindowManager;
 import android.webkit.*;
 import android.widget.Toast;
 import de.wellenvogel.avnav.gps.GpsService;
+import de.wellenvogel.avnav.gps.TrackWriter;
 import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.xwalk.core.JavascriptInterface;
 import org.xwalk.core.XWalkActivity;
 
 import java.io.*;
@@ -29,7 +32,7 @@ import java.util.HashMap;
  * Created by andreas on 06.01.15.
  */
 public class WebViewActivityBase extends XWalkActivity {
-    protected static final String URLPREFIX="file://android_asset/";
+    public static final String URLPREFIX="file://android_asset/";
     protected static final String NAVURL="viewer/avnav_navi.php";
     protected static final String CHARTPREFIX="charts";
     private static final String DEMOCHARTS="demo"; //urls will start with CHARTPREFIX/DEMOCHARTS
@@ -49,6 +52,56 @@ public class WebViewActivityBase extends XWalkActivity {
     private GemfHandler gemfFile= null;
     //mapping of url name to real filename
     private HashMap<String,String> fileNames=new HashMap<String, String>();
+
+    protected class JavaScriptApi{
+        @JavascriptInterface
+        public String storeRoute(String route,String name){
+            try {
+                JSONObject rt = new JSONObject();
+                try {
+                    rt.put("status", "OK");
+                    File routeDir = new File(workBase, "routes");
+                    File routeFile=new File(routeDir,name+".gpx");
+                    if (! routeFile.exists()) {
+                        FileOutputStream os = new FileOutputStream(routeFile);
+                        os.write(route.getBytes());
+                        os.close();
+                    }
+                    else {
+                        rt.put("status","route already exists");
+                    }
+                } catch (Exception e) {
+                    rt.put("status",e.getLocalizedMessage());
+                }
+                return rt.toString();
+            }catch (Exception e){
+                return "";
+            }
+        }
+        @JavascriptInterface
+        public void downloadRoute(String routeXml,String name){
+            Toast.makeText(getApplicationContext(), "download route not implemented yet", Toast.LENGTH_LONG).show();
+        }
+
+        @JavascriptInterface
+        public String uploadRoute(){
+            Toast.makeText(getApplicationContext(), "upload not implemented yet", Toast.LENGTH_LONG).show();
+            return "";
+        }
+
+        @JavascriptInterface
+        public void downloadTrack(String name){
+            Toast.makeText(getApplicationContext(), "download track not implemented yet", Toast.LENGTH_LONG).show();
+        }
+        @JavascriptInterface
+        public String test(String text){
+            Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
+            return "";
+        }
+    };
+
+    protected JavaScriptApi mJavaScriptApi=new JavaScriptApi();
+
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
 
@@ -256,13 +309,109 @@ public class WebViewActivityBase extends XWalkActivity {
                 }
             }
             if (type.equals("routing")){
+                JSONObject o = new JSONObject();
+                o.put("status","OK");
                 String command=uri.getQueryParameter("command");
-                if (command.equals("getleg") ){
+                if (command.equals("getleg") || command.equals("setleg")){
                     handled=true;
                 }
-                if (command.equals("getroute")){
+                if (command.equals("getroute") || command.equals("deleteroute")){
+                    String name=uri.getQueryParameter("name");
+                    if (name != null) {
+                        File routes = new File(workBase, "routes");
+                        File routeFile = new File(routes, name + ".gpx");
+
+                        if (command.equals("deleteroute")) {
+                            if (routeFile.isFile()) {
+                                routeFile.delete();
+                            }
+                            else {
+                                o.put("status","route not found");
+                            }
+                        } else {
+                            if (routeFile.isFile()) {
+                                return new ExtendedWebResourceResponse((int) routeFile.length(), "application/xml", "", new FileInputStream(routeFile));
+                            }
+                            return new ExtendedWebResourceResponse(0, "application/octet-stream", "", new ByteArrayInputStream(new byte[0]));
+                        }
+                    }
+                    handled = true;
+                }
+                if (command.equals("listroutes")){
+                    handled=true;
+                    JSONArray a=new JSONArray();
+                    File routes=new File(workBase,"routes");
+                    for (File r:routes.listFiles()){
+                        if (! r.getName().endsWith(".gpx")) continue;
+                        JSONObject e=new JSONObject();
+                        e.put("name",r.getName().replaceAll("\\.gpx$",""));
+                        e.put("time",r.lastModified()/1000);
+                        e.put("numpoints",0); //TODO
+                        e.put("length",0); //TODO
+                        a.put(e);
+                    }
+                    o.put("items",a);
+                    fout=o;
+                }
+                if (handled) fout=o;
+            }
+            if (type.equals("listdir")){
+                String dirtype=uri.getQueryParameter("type");
+                JSONArray items=new JSONArray();
+                if (dirtype.equals("track")){
+                    ArrayList<TrackWriter.TrackInfo> tracks=gpsService.listTracks();
+                    for (TrackWriter.TrackInfo info:tracks){
+                        JSONObject e=new JSONObject();
+                        e.put("name",info.name);
+                        e.put("time",info.mtime/1000);
+                        items.put(e);
+                    }
                     handled=true;
                 }
+                if (dirtype.equals("chart")){
+                    handled=true;
+                    File chartDir = new File(workBase, "charts");
+                    readChartDir(chartDir,"1",items);
+                }
+                if (handled){
+                    JSONObject o=new JSONObject();
+                    o.put("status","OK");
+                    o.put("items",items);
+                    fout=o;
+                }
+
+            }
+            if (type.equals("download")){
+                String dltype=uri.getQueryParameter("type");
+                String name=uri.getQueryParameter("name");
+                if (dltype != null && dltype.equals("track") && name != null) {
+                    File trackfile = new File(gpsService.getTrackDir(), name);
+                    if (trackfile.isFile()) {
+                        return new ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
+                    }
+                }
+                byte[] o = ("file " + ((name!=null)?name:"<null>") + " not found").getBytes();
+                return new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
+            }
+            if (type.equals("delete")) {
+                JSONObject o=new JSONObject();
+                String dtype = uri.getQueryParameter("type");
+                String name = uri.getQueryParameter("name");
+                if (dtype == null || !dtype.equals("track")){
+                    o.put("status","invalid type");
+                }
+                else {
+                    File trackfile = new File(gpsService.getTrackDir(), name);
+                    if (! trackfile.isFile()){
+                        o.put("status","track "+name+" not found");
+                    }
+                    else {
+                        trackfile.delete();
+                        o.put("status","OK");
+                    }
+                }
+                handled=true;
+                fout=o;
             }
             if (!handled){
                 AvnLog.d(AvNav.LOGPRFX,"unhandled nav request "+type);
@@ -376,6 +525,7 @@ public class WebViewActivityBase extends XWalkActivity {
                     gemfName = gemfName.substring(0, gemfName.length() - GEMFEXTENSION.length());
                     JSONObject e = new JSONObject();
                     e.put("name", gemfName);
+                    e.put("time",f.lastModified()/1000);
                     String urlName=REALCHARTS + "/"+index+"/gemf/" + gemfName;
                     fileNames.put(urlName,f.getAbsolutePath());
                     AvnLog.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
@@ -386,6 +536,7 @@ public class WebViewActivityBase extends XWalkActivity {
                     String name=f.getName().substring(0,f.getName().length()-".xml".length());
                     JSONObject e=new JSONObject();
                     e.put("name",name);
+                    e.put("time",f.lastModified()/1000);
                     String urlName=REALCHARTS+"/"+index+"/avnav/"+name;
                     fileNames.put(urlName,f.getAbsolutePath());
                     AvnLog.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());

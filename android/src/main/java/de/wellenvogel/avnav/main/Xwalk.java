@@ -42,6 +42,7 @@ public class Xwalk extends WebViewActivityBase {
             AvnLog.d(AvNav.LOGPRFX,"enable xwalk remote debugging");
             XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
         }
+        mXwalkView.addJavascriptInterface(mJavaScriptApi,"avnavAndroid");
         mXwalkView.load(URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php", getStartPage());
 
     }

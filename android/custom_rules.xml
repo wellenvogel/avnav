@@ -11,6 +11,7 @@
     <copy todir="${assets.viewer}" flatten="true" overwrite="true">
         <resources>
             <file file="${src}/viewer/avnav_min.js"/>
+            <!--<file file="${src}/viewer/avnav_combine.js"/>-->
             <file file="${src}/viewer/loader.js"/>
             <file file="${src}/viewer/avnav_viewer.html"/>
             <file file="${src}/viewer/avnav_viewer.less"/>

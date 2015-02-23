@@ -72,7 +72,7 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
         }
 
     });
-    if (this.gui.properties.getProperties().readOnlyServer){
+    if (this.gui.properties.getProperties().readOnlyServer || avnav.android){
         $('#avb_Connected').hide();
     }
 

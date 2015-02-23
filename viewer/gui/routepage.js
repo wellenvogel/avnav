@@ -422,6 +422,10 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         route.name = name;
         route.server=false;
     }
+    if (avnav.android){
+        avnav.android.downloadRoute(route.toXml(),route.name);
+        return false;
+    }
     if (route.server){
         //nice simple case:
         //we can ask the server directly to send us the route
@@ -460,6 +464,18 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
 
 avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
     log("route upload clicked");
+    if (avnav.android){
+        var routeXml=avnav.android.uploadRoute();
+        if (routeXml == null || routeXml.length == 0) return false;
+        var route=new avnav.nav.Route();
+        route.fromXml(routeXml);
+        this.routingData.saveRoute(route);
+        var self=this;
+        setTimeout(function(){
+            self.fillData(false);
+        },0);
+        return false;
+    }
     var i=$("#avi_route_uploadfile");
     $(i).click();
     return false;

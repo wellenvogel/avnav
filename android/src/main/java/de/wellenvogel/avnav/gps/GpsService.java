@@ -36,6 +36,7 @@ import java.util.TimerTask;
  */
 public class GpsService extends Service  {
 
+
     public static String PROP_TRACKINTERVAL="track.interval";
     public static String PROP_TRACKDIR="track.dir";
     public static String PROP_TRACKDISTANCE="track.distance";
@@ -480,5 +481,11 @@ public class GpsService extends Service  {
         mediaUpdater=u;
     }
 
-
+    public ArrayList<TrackWriter.TrackInfo> listTracks(){
+        if (trackWriter == null) return new ArrayList<TrackWriter.TrackInfo>();
+        return trackWriter.listTracks();
+    }
+    public File getTrackDir(){
+        return trackDir;
+    }
 }

@@ -146,7 +146,7 @@ var propertyDefinitions=function(){
 
 function log(txt){
     try{
-        //console.log(txt);
+        console.log(txt);
     }catch(e){}
 }
 
@@ -191,6 +191,14 @@ avnav.main=function() {
     var gui=new avnav.gui.Handler(propertyHandler,navobject,mapholder);
     if (avnav_version !== undefined){
         $('#avi_mainpage_version').text(avnav_version);
+    }
+    //make the android API available as avnav.android
+    if (window.avnavAndroid){
+        log("android integration enabled");
+        avnav.android=window.avnavAndroid;
+        propertyHandler.setValueByName('readOnlyServer',false);
+        propertyHandler.setValueByName('routingServerError',false);
+        propertyHandler.setValueByName('connectedMode',true);
     }
     gui.showPage("mainpage");
     //ios browser sometimes has issues with less...
