@@ -274,15 +274,15 @@ avnav.nav.Route.prototype.fromXml=function(xml){
     return this;
 };
 
-avnav.nav.Route.prototype.toXml=function(){
+avnav.nav.Route.prototype.toXml=function(noUtf8){
     var rt='<?xml version="1.0" encoding="UTF-8" standalone="no" ?>'+"\n"+
            '<gpx version="1.1" creator="avnav">'+"\n"+
            '<rte>'+"\n";
-    rt+="<name>"+unescape(encodeURIComponent(this.name))+"</name>\n";
+    rt+="<name>"+(noUtf8?this.name:unescape(encodeURIComponent(this.name)))+"</name>\n";
     var i;
     for (i=0;i<this.points.length;i++){
         rt+='<rtept lon="'+this.points[i].lon+'" lat="'+this.points[i].lat+'"><name>'+
-            unescape(encodeURIComponent(this.points[i].name))+'</name></rtept>'+"\n";
+        (noUtf8?this.points[i].name:unescape(encodeURIComponent(this.points[i].name)))+'</name></rtept>'+"\n";
     }
     rt+="</rte>\n</gpx>\n";
     return rt;
@@ -777,7 +777,7 @@ avnav.nav.RouteData.prototype.saveRoute=function(opt_route,opt_force,opt_callbac
     var route=this.saveRouteLocal(opt_route);
     if (! route ) return;
     if (avnav.android){
-        avnav.android.storeRoute(route.toXml(),route.name);
+        avnav.android.storeRoute(route.toXml(true),route.name);
     }
     //send the route to the server if this is not the active one
     if ( ! this.isEditingActiveRoute() || opt_force) {

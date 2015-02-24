@@ -423,7 +423,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         route.server=false;
     }
     if (avnav.android){
-        avnav.android.downloadRoute(route.toXml(),route.name);
+        avnav.android.downloadRoute(route.toXml(true),route.name);
         return false;
     }
     if (route.server){
@@ -452,11 +452,11 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
 
     }
     else {
-        //this local download is the last resort if it is neither a server route nbor we are connected
+        //this local download is the last resort if it is neither a server route nor we are connected
         var xmlroute=route.toXml();
         var datauri="data:application/octet-stream;base64,"+btoa(xmlroute);
         $('#avi_route_localdownload').attr('href',datauri);
-        $('#avi_route_localdownload').attr('download',unescape(encodeURIComponent(route.name+".gpx")));
+        $('#avi_route_localdownload').attr('download',route.name+".gpx");
         $('#avi_route_localdownload span').click();
     }
     return false;
