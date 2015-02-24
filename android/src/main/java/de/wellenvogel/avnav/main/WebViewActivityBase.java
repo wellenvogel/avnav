@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -39,6 +40,8 @@ public class WebViewActivityBase extends XWalkActivity {
     private static final String REALCHARTS="charts";
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
     private static final String GEMFEXTENSION =".gemf";
+    private static final int ROUTE_OPEN_REQUEST=0;
+    private static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
     protected final Activity activity=this;
     MimeTypeMap mime = MimeTypeMap.getSingleton();
     AssetManager assetManager;
@@ -53,45 +56,118 @@ public class WebViewActivityBase extends XWalkActivity {
     //mapping of url name to real filename
     private HashMap<String,String> fileNames=new HashMap<String, String>();
 
+    private void sendFile(String name, String type){
+        if (!type.equals("track") && ! type.equals("route")){
+            Log.e(AvNav.LOGPRFX,"invalid type "+type+" for sendFile");
+            return;
+        }
+        String dirname="tracks";
+        if (type.equals("route")) dirname="routes";
+        File dir=new File(workBase,dirname);
+        File file=new File(dir,name);
+        if (! file.isFile()){
+            Log.e(AvNav.LOGPRFX,"file "+name+" not found");
+            return;
+        }
+        Uri data=Uri.fromFile(file);
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, data);
+        shareIntent.setType("application/gpx+xml");
+        startActivity(Intent.createChooser(shareIntent, getResources().getText(R.string.selectApp)+name));
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != ROUTE_OPEN_REQUEST) return;
+        if (resultCode != RESULT_OK) {
+            // Exit without doing anything else
+            return;
+        } else {
+            Uri returnUri = data.getData();
+            String name=returnUri.getLastPathSegment();
+            name=name.replaceAll("\\.gpx$","");
+            try {
+                ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(returnUri, "r");
+                long size=pfd.getStatSize();
+                if (size > ROUTE_MAX_SIZE) throw new Exception("route to big, allowed "+ROUTE_MAX_SIZE);
+                int isize=(int)size;
+                FileDescriptor fd=pfd.getFileDescriptor();
+                FileInputStream is=new FileInputStream(pfd.getFileDescriptor());
+                byte buffer[]=new byte[isize];
+                int rd=is.read(buffer,0,isize);
+                if (rd != isize) throw new Exception("unable to read file");
+                File routefile=new File(new File(workBase,"routes"),name+".gpx");
+                if (routefile.exists()) throw new Exception("route "+name+" already exists");
+                saveRoute(new String(buffer,"UTF-8"),name,false);
+            } catch (Exception e) {
+                Toast.makeText(getApplicationContext(), "unable top open file "+name+": "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+                Log.e(AvNav.LOGPRFX, "File not found.");
+                return;
+            }
+        }
+    }
+    private String saveRoute(String xml,String name,boolean force){
+        try {
+            JSONObject rt = new JSONObject();
+            try {
+                rt.put("status", "OK");
+                File routeDir = new File(workBase, "routes");
+                File routeFile=new File(routeDir,name+".gpx");
+                if (! routeFile.exists() || force) {
+                    FileOutputStream os = new FileOutputStream(routeFile);
+                    os.write(xml.getBytes());
+                    os.close();
+                }
+                else {
+                    rt.put("status","route already exists");
+                }
+            } catch (Exception e) {
+                rt.put("status",e.getLocalizedMessage());
+            }
+            return rt.toString();
+        }catch (Exception e){
+            return "";
+        }
+    }
+
     protected class JavaScriptApi{
+
+
         @JavascriptInterface
         public String storeRoute(String route,String name){
-            try {
-                JSONObject rt = new JSONObject();
-                try {
-                    rt.put("status", "OK");
-                    File routeDir = new File(workBase, "routes");
-                    File routeFile=new File(routeDir,name+".gpx");
-                    if (! routeFile.exists()) {
-                        FileOutputStream os = new FileOutputStream(routeFile);
-                        os.write(route.getBytes());
-                        os.close();
-                    }
-                    else {
-                        rt.put("status","route already exists");
-                    }
-                } catch (Exception e) {
-                    rt.put("status",e.getLocalizedMessage());
-                }
-                return rt.toString();
-            }catch (Exception e){
-                return "";
-            }
+            return saveRoute(route,name,false);
         }
         @JavascriptInterface
         public void downloadRoute(String routeXml,String name){
-            Toast.makeText(getApplicationContext(), "download route not implemented yet", Toast.LENGTH_LONG).show();
+            saveRoute(routeXml,name,true);
+            sendFile(name+".gpx","route");
         }
 
         @JavascriptInterface
         public String uploadRoute(){
-            Toast.makeText(getApplicationContext(), "upload not implemented yet", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+            try {
+                startActivityForResult(
+                        Intent.createChooser(intent, getText(R.string.uploadRoute)),
+                        0);
+            } catch (android.content.ActivityNotFoundException ex) {
+                // Potentially direct the user to the Market with a Dialog
+                Toast.makeText(getApplicationContext(), getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+            }
+
             return "";
+
         }
 
         @JavascriptInterface
         public void downloadTrack(String name){
-            Toast.makeText(getApplicationContext(), "download track not implemented yet", Toast.LENGTH_LONG).show();
+            sendFile(name,"track");
         }
         @JavascriptInterface
         public String test(String text){
