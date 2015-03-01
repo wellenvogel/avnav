@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -41,7 +42,7 @@ public class WebViewActivityBase extends XWalkActivity {
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
     private static final String GEMFEXTENSION =".gemf";
     private static final int ROUTE_OPEN_REQUEST=0;
-    private static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
+    public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
     protected final Activity activity=this;
     MimeTypeMap mime = MimeTypeMap.getSingleton();
     AssetManager assetManager;
@@ -102,7 +103,7 @@ public class WebViewActivityBase extends XWalkActivity {
                 File routefile=new File(new File(workBase,"routes"),name+".gpx");
                 if (routefile.exists()) throw new Exception("route "+name+" already exists");
                 AvnLog.i("saving route "+name);
-                saveRoute(new String(buffer,"UTF-8"),name,false);
+                saveRoute(new String(buffer, "UTF-8"), name, false);
                 sendEventToJs("routeImported",1);
             } catch (Exception e) {
                 Toast.makeText(getApplicationContext(), "unable top open file "+name+": "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
@@ -241,12 +242,19 @@ public class WebViewActivityBase extends XWalkActivity {
 
     public static class ExtendedWebResourceResponse extends WebResourceResponse{
         int length;
+        private HashMap<String,String> headers=new HashMap<String, String>();
         public ExtendedWebResourceResponse(int length,String mime,String encoding,InputStream is){
             super(mime,encoding,is);
             this.length=length;
         }
         public int getLength(){
             return length;
+        }
+        public void setHeader(String name,String value){
+            headers.put(name,value);
+        }
+        public HashMap<String,String> getHeaders() {
+            return headers;
         }
     }
 
@@ -255,7 +263,7 @@ public class WebViewActivityBase extends XWalkActivity {
             try {
                 String fname=url.substring(URLPREFIX.length());
                 if (fname.startsWith(NAVURL)){
-                    return handleNavRequest(url);
+                    return handleNavRequest(url,null);
                 }
                 if (fname.startsWith(CHARTPREFIX)){
                     return handleChartRequest(fname);
@@ -292,7 +300,7 @@ public class WebViewActivityBase extends XWalkActivity {
         return htmlPage;
     }
 
-    ExtendedWebResourceResponse handleNavRequest(String url){
+    ExtendedWebResourceResponse handleNavRequest(String url, String postData){
         Uri uri= Uri.parse(url);
         String type=uri.getQueryParameter("request");
         if (type == null) type="gps";
@@ -432,6 +440,16 @@ public class WebViewActivityBase extends XWalkActivity {
                     o.put("items",a);
                     fout=o;
                 }
+                if (command.equals("setroute")){
+                    handled=true;
+                    if (postData == null){
+                        o.put("status","no data for setroute");
+                    }
+                    else {
+                        JSONObject route=new JSONObject(postData);
+                        //TODO: convert route to xml
+                    }
+                }
                 if (handled) fout=o;
             }
             if (type.equals("listdir")){
@@ -463,14 +481,26 @@ public class WebViewActivityBase extends XWalkActivity {
             if (type.equals("download")){
                 String dltype=uri.getQueryParameter("type");
                 String name=uri.getQueryParameter("name");
+                ExtendedWebResourceResponse resp=null;
                 if (dltype != null && dltype.equals("track") && name != null) {
                     File trackfile = new File(gpsService.getTrackDir(), name);
                     if (trackfile.isFile()) {
-                        return new ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
+                        resp=new ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
                     }
                 }
-                byte[] o = ("file " + ((name!=null)?name:"<null>") + " not found").getBytes();
-                return new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
+                if (dltype != null && dltype.equals("route") && name != null) {
+                    File routefile = new File(new File(workBase,"routes"), name+".gpx");
+                    if (routefile.isFile()) {
+                        resp=new ExtendedWebResourceResponse((int) routefile.length(), "application/gpx+xml", "", new FileInputStream(routefile));
+                    }
+                }
+                if (resp == null) {
+                    byte[] o = ("file " + ((name != null) ? name : "<null>") + " not found").getBytes();
+                    resp = new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
+                }
+                resp.setHeader("Content-Disposition","attachment");
+                resp.setHeader("Content-Type",resp.getMimeType());
+                return resp;
             }
             if (type.equals("delete")) {
                 JSONObject o=new JSONObject();

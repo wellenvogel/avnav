@@ -25,6 +25,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.protocol.*;
+import org.apache.http.util.EntityUtils;
 
 import java.io.*;
 import java.net.*;
@@ -53,13 +54,34 @@ public class WebServer {
             AvnLog.d(NAME,"nav request"+httpRequest.getRequestLine());
             String url = URLDecoder.decode(httpRequest.getRequestLine().getUri());
             String method = httpRequest.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
-            if (!method.equals("GET") && !method.equals("HEAD") ) {
+            if (!method.equals("GET") && !method.equals("HEAD")  && ! method.equals("POST")) {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
-            url=url.replaceAll("^/*","");
-            WebViewActivityBase.ExtendedWebResourceResponse resp=activity.handleNavRequest(url);
+            url=url.replaceAll("^/*", "");
+            String postData=null;
+            if (httpRequest instanceof HttpEntityEnclosingRequest){
+                //currently we only support here simple unformatted data
+                String contentType=httpRequest.getFirstHeader("content-type").getValue().replaceAll(";.*","");
+                String contentLengthS=httpRequest.getFirstHeader("content-length").getValue();
+                if (!contentType.equalsIgnoreCase("application/json")) throw new MethodNotSupportedException("invalid content type for post: "+contentType);
+                int contentLength=0;
+                try{
+                    contentLength=Integer.parseInt(contentLengthS);
+                }catch (Exception e){}
+                if (contentLength <= 0 || contentLength > activity.ROUTE_MAX_SIZE) throw new MethodNotSupportedException("invalid content length");
+                HttpEntity entity = ((HttpEntityEnclosingRequest) httpRequest).getEntity();
+                InputStream inputStream = entity.getContent();
+                byte [] data=new byte[contentLength];
+                int bread=inputStream.read(data);
+                if (bread != contentLength) throw new IOException("not enough post data");
+                postData=new String(data);
+            }
+            WebViewActivityBase.ExtendedWebResourceResponse resp=activity.handleNavRequest(url,postData);
             if (resp != null){
                 httpResponse.setHeader("content-type","application/json");
+                for (String k:resp.getHeaders().keySet()){
+                    httpResponse.setHeader(k,resp.getHeaders().get(k));
+                }
                 if (resp.getLength() < 0){
                     httpResponse.setEntity(streamToEntity(resp.getData()));
                 }

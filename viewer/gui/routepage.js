@@ -436,6 +436,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         return false;
     }
     if (route.server){
+        log("route download server direct");
         //nice simple case:
         //we can ask the server directly to send us the route
         //we assume that the route is always up to date at the server
@@ -451,6 +452,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
     if (this.gui.properties.getProperties().connectedMode) {
         //just store the route first and afterwards download it from the server
         route.server=true;
+        log("route download server upload");
         this.routingData.saveRoute(route,true, function(ok){
             self.fillData(false);
             if (! ok) return;
@@ -464,6 +466,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         });
     }
     else {
+        log("route download local");
         //this local download is the last resort if it is neither a server route nor we are connected
         var xmlroute=route.toXml();
         var datauri="data:application/octet-stream;base64,"+btoa(xmlroute);
