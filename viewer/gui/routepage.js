@@ -416,6 +416,7 @@ avnav.gui.Routepage.prototype.btnRoutePageCancel=function (button,ev){
 avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
     log("route download clicked");
     var route;
+    var self=this;
     if (this.loadedRoute){
         route=this.loadedRoute.clone();
     }
@@ -448,16 +449,19 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         return false;
     }
     if (this.gui.properties.getProperties().connectedMode) {
-        //in connected mode we upload the route and ask the server to send it back
-        //this will work in all browsers
-        var f = $('#avi_route_downloadform')
-            .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name + ".gpx"));
-        $(f).attr('method','post');
-        $(f).find('input[name="_json"]').val(route.toJsonString());
-        $(f).find('input[name="name"]').val("");
-        //$(f).find('input[name="filename"]').val(route.name+".gpx");
-        $(f).submit();
-
+        //just store the route first and afterwards download it from the server
+        route.server=true;
+        this.routingData.saveRoute(route,true, function(ok){
+            self.fillData(false);
+            if (! ok) return;
+            var f = $('#avi_route_downloadform')
+                .attr('action', self.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(name + ".gpx"));
+            $(f).attr('method','get');
+            $(f).find('input[name="name"]').val(name);
+            $(f).find('input[name="_json"]').val("");
+            $(f).submit();
+            return;
+        });
     }
     else {
         //this local download is the last resort if it is neither a server route nor we are connected
