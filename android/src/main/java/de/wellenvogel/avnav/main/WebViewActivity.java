@@ -71,4 +71,14 @@ public class WebViewActivity extends WebViewActivityBase {
 
     }
 
+    /**
+     * send an event to the js code
+     * @param key - a key string - only a-z_0-9A-Z
+     * @param id
+     */
+    @Override
+    protected void sendEventToJs(String key, int id) {
+        AvnLog.i("js event key="+key+", id="+id);
+        webView.loadUrl("javascript:avnav.gui.sendAndroidEvent('" + key + "'," + id + ")");
+    }
 }

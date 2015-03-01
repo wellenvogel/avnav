@@ -4,6 +4,7 @@
 
 avnav.provide('avnav.gui.Handler');
 avnav.provide('avnav.gui.PageEvent');
+avnav.provide('avnav.gui.AndroidEvent');
 /**
  * the page change event
  * @param {avnav.gui.Handler} gui
@@ -26,8 +27,19 @@ avnav.gui.PageEvent=function(gui,navobject,oldpage,newpage,opt_options){
  * @type {string}
  * @const
  */
-avnav.gui.PageEvent.EVENT_TYPE='cangepage';
+avnav.gui.PageEvent.EVENT_TYPE='changepage';
 
+/**
+ * an event triggered by the android integration
+ * @param {string} key - the event key
+ * @param {number} id - an id
+ * @constructor
+ */
+avnav.gui.AndroidEvent=function(key,id){
+    this.key=key;
+    this.id=id;
+};
+avnav.gui.AndroidEvent.EVENT_TYPE='android';
 
 /**
  *
@@ -84,7 +96,7 @@ avnav.gui.Handler.prototype.addActiveInput=function(id){
 avnav.gui.Handler.prototype.removeActiveInput=function(id){
     var trigger=(Object.keys(this.activeInputs).length >0);
     delete this.activeInputs[id];
-    if (! trigger) return;
+    if (! trigger) return;PageEvent
     var self=this;
     //if we now removed focus from any input, we could resize
     //if the window size has changed
@@ -162,6 +174,11 @@ avnav.gui.Handler.prototype.isMobileBrowser=function(){
     return ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) )||
         this.properties.getProperties().forceMobile;
     };
+
+avnav.gui.sendAndroidEvent=function(key,id){
+    log("android event key="+key+", id="+id);
+    $(document).trigger(avnav.gui.AndroidEvent.EVENT_TYPE, new avnav.gui.AndroidEvent(key,id));
+};
 
 
 

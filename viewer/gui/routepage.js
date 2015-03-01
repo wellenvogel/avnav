@@ -65,6 +65,11 @@ avnav.gui.Routepage=function(){
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
+    $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,function(ev,evdata){
+        if (evdata.key && avnav.util.Helper.startsWith(evdata.key,"route")){
+            self.androidEvent(evdata.key,evdata.id);
+        }
+    })
 };
 avnav.inherits(avnav.gui.Routepage,avnav.gui.Page);
 
@@ -369,6 +374,9 @@ avnav.gui.Routepage.prototype.hidePage=function(){
 avnav.gui.Routepage.prototype.navEvent=function(ev){
     if (! this.visible) return;
 
+};
+avnav.gui.Routepage.prototype.androidEvent=function(key,id){
+    this.fillData(false);
 };
 //-------------------------- Buttons ----------------------------------------
 

@@ -89,6 +89,7 @@ public class WebViewActivityBase extends XWalkActivity {
             String name=returnUri.getLastPathSegment();
             name=name.replaceAll("\\.gpx$","");
             try {
+                AvnLog.i("importing route: "+returnUri);
                 ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(returnUri, "r");
                 long size=pfd.getStatSize();
                 if (size > ROUTE_MAX_SIZE) throw new Exception("route to big, allowed "+ROUTE_MAX_SIZE);
@@ -100,7 +101,9 @@ public class WebViewActivityBase extends XWalkActivity {
                 if (rd != isize) throw new Exception("unable to read file");
                 File routefile=new File(new File(workBase,"routes"),name+".gpx");
                 if (routefile.exists()) throw new Exception("route "+name+" already exists");
+                AvnLog.i("saving route "+name);
                 saveRoute(new String(buffer,"UTF-8"),name,false);
+                sendEventToJs("routeImported",1);
             } catch (Exception e) {
                 Toast.makeText(getApplicationContext(), "unable top open file "+name+": "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
@@ -632,4 +635,11 @@ public class WebViewActivityBase extends XWalkActivity {
         }
         gemfFile=null;
     }
+
+    /**
+     * to be overloaded
+     * @param key
+     * @param id
+     */
+    protected void sendEventToJs(String key, int id){}
 }

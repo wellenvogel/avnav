@@ -74,6 +74,7 @@ public class Xwalk extends WebViewActivityBase {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode,resultCode,data);
         if (mXwalkView != null) {
             mXwalkView.onActivityResult(requestCode, resultCode, data);
         }
@@ -81,8 +82,20 @@ public class Xwalk extends WebViewActivityBase {
 
     @Override
     protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         if (mXwalkView != null) {
             mXwalkView.onNewIntent(intent);
         }
+    }
+
+    /**
+     * send an event to the js code
+     * @param key - a key string - only a-z_0-9A-Z
+     * @param id
+     */
+    @Override
+    protected void sendEventToJs(String key, int id) {
+        AvnLog.i("js event key="+key+", id="+id);
+        if (mXwalkView !=null) mXwalkView.load("javascript:avnav.gui.sendAndroidEvent('" + key + "'," + id + ")", null);
     }
 }
