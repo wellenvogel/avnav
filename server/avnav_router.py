@@ -86,7 +86,7 @@ class AVNRouteInfo():
 
 #routing handler
 class AVNRouter(AVNWorker):
-  MAXROUTESIZE=100000;
+  MAXROUTESIZE=500000;
   gpxFormat='''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
     <gpx version="1.1" creator="avnav">%s</gpx>'''
   currentLegName=u"currentLeg.json"
@@ -357,7 +357,7 @@ class AVNRouter(AVNWorker):
     if os.path.exists(self.currentLegFileName):
       try:
         f=open(self.currentLegFileName,"r")
-        strleg=f.read(20000)
+        strleg=f.read(self.MAXROUTESIZE+1000)
         self.currentLeg=self.parseLeg(strleg)
         distance=geo.length([self.currentLeg.fromWP,self.currentLeg.toWP])
         AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.name,
