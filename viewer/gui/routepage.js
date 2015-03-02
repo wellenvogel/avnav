@@ -432,7 +432,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         route.server=false;
     }
     if (avnav.android){
-        avnav.android.downloadRoute(route.toXml(true),route.name);
+        avnav.android.downloadRoute(route.toJsonString());
         return false;
     }
     if (route.server){
@@ -481,14 +481,6 @@ avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
     log("route upload clicked");
     if (avnav.android){
         var routeXml=avnav.android.uploadRoute();
-        if (routeXml == null || routeXml.length == 0) return false;
-        var route=new avnav.nav.Route();
-        route.fromXml(routeXml);
-        this.routingData.saveRoute(route);
-        var self=this;
-        setTimeout(function(){
-            self.fillData(false);
-        },0);
         return false;
     }
     var i=$("#avi_route_uploadfile");

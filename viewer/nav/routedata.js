@@ -368,6 +368,19 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
             this.currentLeg.currentRoute=new avnav.nav.Route(this.currentLeg.name);
         }
     }
+    if (avnav.android){
+        var data=avnav.android.getLeg();
+        if (data && data != ""){
+            log("android: get leg from server");
+            try {
+                var nLeg = new avnav.nav.Leg();
+                nLeg.fromJsonString(data);
+                this.currentLeg=nLeg;
+            }catch (e){
+                log("unable to get leg from server");
+            }
+        }
+    }
     /**
      * @private
      * @type {boolean}
@@ -395,6 +408,7 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
      * @type {avnav.nav.Route}
      */
     this.editingRoute=this.currentLeg.currentRoute?this.currentLeg.currentRoute:this.loadRoute(this.currentLeg.name||this.DEFAULTROUTE);
+
     /**
      * the last received route from server
      * initially we set this to our route to get the route from the server if it differs
@@ -607,13 +621,26 @@ avnav.nav.RouteData.prototype.remoteRouteOperation=function(operation,param) {
         url += "&name=" + encodeURIComponent(param.name);
     }
     if(operation=="setroute"){
+        if (avnav.android){
+            log("android: setRoute");
+            var status=avnav.android.storeRoute(param.route.toJsonString());
+            var jstatus=JSON.parse(status);
+            if (jstatus.status == "OK" && param.okcallback){
+                setTimeout(function(){
+                   param.okcallback(jstatus,param);
+                },0);
+            }
+            if (param.errorcallback){
+                setTimeout(function(){
+                    param.errorcallback(jstatus.status,param);
+                },0);
+            }
+            return;
+        }
         type="POST";
         data=param.route.toJsonString();
     }
-    var responseType="json";
-    if (operation == "getroute" && avnav.android){
-        responseType="text";
-    }
+    var responseType="json"
     log("remoteRouteOperation, operation="+operation+", response="+responseType+", type="+type);
     param.operation=operation;
     $.ajax({
@@ -667,30 +694,32 @@ avnav.nav.RouteData.prototype.startQuery=function() {
         },timeout);
         return;
     }
-    $.ajax({
-        url: url,
-        dataType: 'json',
-        cache:	false,
-        success: function(data,status){
-            var change = self.handleLegResponse(data);
-            log("leg data change="+change);
-            self.timer=window.setTimeout(function(){
-                self.startQuery();
-            },timeout);
-        },
-        error: function(status,data,error){
-            log("query leg error");
-            this.routeErrors++;
-            if (this.routeErrors > 10){
-                log("lost route");
-                this.serverConnected=false;
-            }
-            self.timer=window.setTimeout(function(){
-                self.startQuery();
-            },timeout);
-        },
-        timeout: 10000
-    });
+    else {
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            cache: false,
+            success: function (data, status) {
+                var change = self.handleLegResponse(data);
+                log("leg data change=" + change);
+                self.timer = window.setTimeout(function () {
+                    self.startQuery();
+                }, timeout);
+            },
+            error: function (status, data, error) {
+                log("query leg error");
+                this.routeErrors++;
+                if (this.routeErrors > 10) {
+                    log("lost route");
+                    this.serverConnected = false;
+                }
+                self.timer = window.setTimeout(function () {
+                    self.startQuery();
+                }, timeout);
+            },
+            timeout: 10000
+        });
+    }
     //we only query the route separately if it is currently not active
     if (! this.isEditingActiveRoute()) {
         if (! this.editingRoute) return;
@@ -777,7 +806,7 @@ avnav.nav.RouteData.prototype.saveRoute=function(opt_route,opt_force,opt_callbac
     var route=this.saveRouteLocal(opt_route);
     if (! route ) return;
     if (avnav.android){
-        avnav.android.storeRoute(route.toXml(true),route.name);
+        avnav.android.storeRoute(route.toJsonString());
     }
     //send the route to the server if this is not the active one
     if ( ! this.isEditingActiveRoute() || opt_force) {
@@ -899,6 +928,10 @@ avnav.nav.RouteData.prototype.legChanged=function(opt_newLeg){
     this.syncRouteFromLeg();
     this.navobject.routeEvent();
     var self=this;
+    if (avnav.android){
+        avnav.android.setLeg(this.currentLeg.toJsonString());
+        return;
+    }
     if (this.connectMode){
         $.ajax({
             type: "POST",

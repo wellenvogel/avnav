@@ -96,7 +96,7 @@ avnav.gui.Handler.prototype.addActiveInput=function(id){
 avnav.gui.Handler.prototype.removeActiveInput=function(id){
     var trigger=(Object.keys(this.activeInputs).length >0);
     delete this.activeInputs[id];
-    if (! trigger) return;PageEvent
+    if (! trigger) return;
     var self=this;
     //if we now removed focus from any input, we could resize
     //if the window size has changed
