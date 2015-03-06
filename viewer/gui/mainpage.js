@@ -21,6 +21,10 @@ avnav.gui.Mainpage.prototype.changeDim=function(newDim){
     this.gui.properties.updateLayout();
     $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
 };
+
+avnav.gui.Mainpage.prototype.localInit=function(){
+
+};
 avnav.gui.Mainpage.prototype.showPage=function(options){
     if (!this.gui) return;
     var ncon=this.gui.properties.getProperties().connectedMode;
@@ -90,7 +94,9 @@ avnav.gui.Mainpage.prototype.showNavpage=function(entry){
 avnav.gui.Mainpage.prototype.hidePage=function(){
 
 };
-
+avnav.gui.Mainpage.prototype.goBack=function(){
+    avnav.android.goBack();
+};
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Mainpage.prototype.btnShowHelp=function (button,ev){

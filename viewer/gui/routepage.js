@@ -69,7 +69,7 @@ avnav.gui.Routepage=function(){
         if (evdata.key && avnav.util.Helper.startsWith(evdata.key,"route")){
             self.androidEvent(evdata.key,evdata.id);
         }
-    })
+    });
 };
 avnav.inherits(avnav.gui.Routepage,avnav.gui.Page);
 
@@ -377,6 +377,9 @@ avnav.gui.Routepage.prototype.navEvent=function(ev){
 };
 avnav.gui.Routepage.prototype.androidEvent=function(key,id){
     this.fillData(false);
+};
+avnav.gui.Routepage.prototype.goBack=function(){
+    this.btnRoutePageCancel();
 };
 //-------------------------- Buttons ----------------------------------------
 

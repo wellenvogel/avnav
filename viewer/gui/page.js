@@ -61,6 +61,7 @@ avnav.gui.Page.prototype.isVisible=function(){
  * @private
  */
 avnav.gui.Page.prototype.handlePage=function(evdata){
+    var self=this;
     if (! this.isInitialized){
         this.gui=evdata.gui;
         this.navobject=evdata.navobject;
@@ -69,6 +70,11 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         this.localInit();
         this.initDisplayObjects();
         this.initFocusHandler();
+        $(document).on(avnav.gui.BackEvent.EVENT_TYPE,function(ev,evdata){
+           if (evdata.name && evdata.name==self.name){
+               self.goBack();
+           }
+        });
     }
     if (this.visible != this.isVisible()){
         //visibility changed
@@ -128,6 +134,12 @@ avnav.gui.Page.prototype.localInit=function(){
 
 };
 
+/**
+ * function to handle back-keys
+ * intended to be overloaded by subclasses
+ */
+avnav.gui.Page.prototype.goBack=function(){
+};
 /**
  * init the buttons (i.e. assign listeners and add the icons)
  * each button click will call a btn<ButtonName> method at this gui object

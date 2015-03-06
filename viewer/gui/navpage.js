@@ -580,6 +580,10 @@ avnav.gui.Navpage.prototype.checkRouteWritable=function(){
     return false;
 };
 
+avnav.gui.Navpage.prototype.goBack=function(){
+    this.btnCancelNav();
+};
+
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Navpage.prototype.btnZoomIn=function (button,ev){

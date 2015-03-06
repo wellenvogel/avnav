@@ -42,6 +42,17 @@ avnav.gui.AndroidEvent=function(key,id){
 avnav.gui.AndroidEvent.EVENT_TYPE='android';
 
 /**
+ * an event for a generic back handling
+ * @param name - the name of the page that should handle the event
+ * @constructor
+ */
+avnav.gui.BackEvent=function(name){
+    this.name=name;
+};
+
+avnav.gui.BackEvent.EVENT_TYPE="avnback";
+
+/**
  *
  * @param {avnav.util.PropertyHandler} properties
  * @param {avnav.nav.NavObject} navobject
@@ -82,6 +93,11 @@ avnav.gui.Handler=function(properties,navobject,map){
             self.properties.updateLayout();
             $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(self.properties));
             },10);
+    });
+    $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,function(ev,evdata){
+        if (evdata.key && evdata.key=="backPressed") {
+            $(document).trigger(avnav.gui.BackEvent.EVENT_TYPE, new avnav.gui.BackEvent(self.page));
+        }
     });
 
 };

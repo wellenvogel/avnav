@@ -88,7 +88,12 @@ avnav.gui.Statuspage.prototype.statusTextToImageUrl=function(text){
     if (! rt) rt=this.gui.properties.getProperties().statusIcons.INACTIVE;
     return rt;
 };
+avnav.gui.Statuspage.prototype.localInit=function() {
+};
 
+avnav.gui.Statuspage.prototype.goBack=function() {
+    this.btnStatusCancel();
+};
 //-------------------------- Buttons ----------------------------------------
 /**
  * cancel status page (go back to main)

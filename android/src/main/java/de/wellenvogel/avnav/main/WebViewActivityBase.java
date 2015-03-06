@@ -5,10 +5,7 @@ import android.content.*;
 import android.content.res.AssetManager;
 import android.location.Location;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.IBinder;
-import android.os.ParcelFileDescriptor;
+import android.os.*;
 import android.util.JsonReader;
 import android.util.Log;
 import android.view.View;
@@ -60,6 +57,14 @@ public class WebViewActivityBase extends XWalkActivity {
     private RouteHandler routeHandler=null;
     //mapping of url name to real filename
     private HashMap<String,String> fileNames=new HashMap<String, String>();
+
+    private Handler backHandler=new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            WebViewActivityBase.this.goBack();
+        }
+    };
 
     private void sendFile(String name, String type){
         if (!type.equals("track") && ! type.equals("route")){
@@ -202,11 +207,20 @@ public class WebViewActivityBase extends XWalkActivity {
             return "";
         }
         @JavascriptInterface
+        public void goBack(){
+            WebViewActivityBase.this.backHandler.sendEmptyMessage(1);
+        }
+        @JavascriptInterface
         public String test(String text){
             Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
             return "";
         }
     };
+
+    //to be called e.g. from js
+    private void goBack(){
+        super.onBackPressed();
+    }
 
     protected JavaScriptApi mJavaScriptApi=new JavaScriptApi();
 
@@ -715,6 +729,11 @@ public class WebViewActivityBase extends XWalkActivity {
             gemfFile.close();
         }
         gemfFile=null;
+    }
+
+    @Override
+    public void onBackPressed(){
+        sendEventToJs("backPressed",1);
     }
 
     /**

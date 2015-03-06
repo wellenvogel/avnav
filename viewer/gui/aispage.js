@@ -75,6 +75,10 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
 
 };
 
+avnav.gui.Aispage.prototype.localInit=function(){
+
+};
+
 
 avnav.gui.Aispage.prototype.hidePage=function(){
 
@@ -88,6 +92,9 @@ avnav.gui.Aispage.prototype.navEvent=function(ev){
     if (ev.type==avnav.nav.NavEventType.AIS){
         this.fillData(false);
     }
+};
+avnav.gui.Aispage.prototype.goBack=function(){
+    this.btnAisCancel();
 };
 //-------------------------- Buttons ----------------------------------------
 

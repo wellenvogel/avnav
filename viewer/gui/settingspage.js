@@ -47,6 +47,7 @@ avnav.gui.Settingspage.prototype.localInit=function(){
             }
         }) ;
     });
+
 };
 /**
  * create the html for a settings item
@@ -165,7 +166,9 @@ avnav.gui.Settingspage.prototype.hidePage=function(){
 
 };
 
-
+avnav.gui.Settingspage.prototype.goBack=function(){
+    this.btnSettingsCancel();
+};
 
 
 //-------------------------- Buttons ----------------------------------------

@@ -110,6 +110,7 @@ avnav.gui.Downloadpage.prototype.localInit=function(){
         }
         return false;
     });
+
 };
 avnav.gui.Downloadpage.prototype.showPage=function(options) {
     if (!this.gui) return;
@@ -353,6 +354,9 @@ avnav.gui.Downloadpage.prototype.abortUpload=function(){
         this.xhdr.abort();
     }
     this.hideProgress();
+};
+avnav.gui.Downloadpage.prototype.goBack=function(){
+  this.btnDownloadPageCancel();
 };
 
 //-------------------------- Buttons ----------------------------------------

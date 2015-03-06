@@ -42,6 +42,7 @@ avnav.gui.Gpspage.prototype.localInit=function(){
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
+
 };
 
 
@@ -201,6 +202,10 @@ avnav.gui.Gpspage.prototype.navEvent=function(evt){
         $('#avi_gpsp_ais_status').removeClass('avn_ais_info_warning');
     }
 
+};
+
+avnav.gui.Gpspage.prototype.goBack=function(){
+  this.btnGpsCancel();
 };
 //-------------------------- Buttons ----------------------------------------
 /**
