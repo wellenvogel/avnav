@@ -481,6 +481,10 @@ public class GpsService extends Service  {
         mediaUpdater=u;
     }
 
+    public IMediaUpdater getMediaUpdater(){
+        return mediaUpdater;
+    }
+
     public ArrayList<TrackWriter.TrackInfo> listTracks(){
         if (trackWriter == null) return new ArrayList<TrackWriter.TrackInfo>();
         return trackWriter.listTracks();

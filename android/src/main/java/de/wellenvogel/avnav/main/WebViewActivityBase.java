@@ -233,6 +233,9 @@ public class WebViewActivityBase extends XWalkActivity {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
             gpsService = binder.getService();
+            if (gpsService != null && routeHandler != null){
+                routeHandler.setMediaUpdater(gpsService.getMediaUpdater());
+            }
             AvnLog.d(AvNav.LOGPRFX, "gps service connected");
 
         }

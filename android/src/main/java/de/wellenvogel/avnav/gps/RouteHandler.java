@@ -36,6 +36,8 @@ public class RouteHandler {
     private static final String rtpnt="<rtept lat=\"%2.9f\" lon=\"%2.9f\" >%s</rtept>\n";
     private static final String rtpntName="<name>%s</name>";
 
+    private IMediaUpdater mediaUpdater;
+
     private static String escapeXml(String in){
         String rt=in.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;").replace("'","&apos;");
         return rt;
@@ -377,6 +379,7 @@ public class RouteHandler {
         FileOutputStream os=new FileOutputStream(routeFile);
         os.write(rt.toXml().getBytes("UTF-8"));
         os.close();
+        if (mediaUpdater != null) mediaUpdater.triggerUpdateMtp(routeFile);
         addRouteInfo(rt);
         return rt;
     }
@@ -444,6 +447,10 @@ public class RouteHandler {
         File legFile=new File(routedir,LEGFILE);
         if (legFile.isFile()) legFile.delete();
         currentLeg=null;
+    }
+
+    public void setMediaUpdater(IMediaUpdater u){
+        mediaUpdater=u;
     }
 
 
