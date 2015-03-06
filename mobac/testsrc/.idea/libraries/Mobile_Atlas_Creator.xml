@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Mobile_Atlas_Creator">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/Mobile_Atlas_Creator.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
