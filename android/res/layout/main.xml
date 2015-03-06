@@ -5,40 +5,52 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android"
         android:weightSum="1"
-        android:paddingLeft="5dp" android:paddingRight="5dp">
+        android:padding="5dp">
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content" android:layout_weight="0">
                 <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
                         android:text="@string/selectDirLabel"
-                        android:id="@+id/textView" android:layout_weight="0" android:autoText="false"
-                        android:gravity="bottom|left" android:layout_marginLeft="15dp"/>
-                <EditText
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/editText" android:background="#93afafb8" android:text="avnav"
-                        android:layout_weight="1" android:textSize="20dp" android:layout_marginLeft="10dp"
-                        android:layout_marginRight="5dp" android:paddingLeft="5dp" android:paddingRight="5dp"
-                        android:paddingTop="2dp" android:paddingBottom="2dp"/>
-                <Button
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="..."
-                        android:id="@+id/btSelectDir" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"/>
-        </LinearLayout>
-
-                <RadioGroup android:layout_width="fill_parent" android:layout_height="wrap_content"
-                            android:orientation="horizontal" android:layout_weight="0">
-                        <TextView
+                        android:id="@+id/textView" android:layout_weight="1.5" android:autoText="false"
+                        android:gravity="bottom|left"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                        android:layout_gravity="center_vertical"/>
+                <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:layout_weight="9">
+                        <EditText
+                                android:layout_width="wrap_content"
+                                android:layout_height="fill_parent"
+                                android:id="@+id/editText" android:background="#93afafb8" android:text="avnav"
+                                android:layout_weight="1" android:textSize="20dp" android:layout_marginLeft="10dp"
+                                android:layout_marginRight="5dp" android:paddingLeft="5dp" android:paddingRight="5dp"
+                                android:paddingTop="2dp" android:paddingBottom="2dp" android:layout_marginTop="4dp"
+                                android:layout_marginBottom="4dp"/>
+                        <Button
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
-                                android:text="@string/runMode"
-                                android:id="@+id/textView6" android:paddingLeft="5dp" android:layout_marginLeft="10dp"/>
+                                android:text="..."
+                                android:id="@+id/btSelectDir" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"/>
+                </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="7dp">
+                <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                        android:text="@string/runMode"
+                        android:id="@+id/textView6" android:layout_weight="1.5"
+                        android:layout_gravity="center_vertical"/>
+                <RadioGroup android:layout_width="0dp" android:layout_height="wrap_content"
+                                    android:orientation="horizontal" android:layout_weight="9">
                         <RadioButton
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -51,91 +63,108 @@
                         android:id="@+id/rbRunExternal" android:layout_marginLeft="10dp"/>
                         <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
                                      android:text="@string/runCrosswalk" android:id="@+id/rbModeXwalk"
-                                     android:layout_marginLeft="10dp"/>
+                                     android:layout_marginLeft="10dp" android:layout_weight="0"/>
                 </RadioGroup>
+        </LinearLayout>
 
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="0" android:layout_gravity="top">
+                android:layout_weight="0" android:layout_gravity="top" android:layout_marginTop="7dp">
+                <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/features"
+                        android:id="@+id/textView5"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                        android:layout_gravity="center_vertical" android:layout_weight="1.5"/>
                 <LinearLayout
                         android:orientation="horizontal"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:layout_weight="0" android:rowOrderPreserved="false"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:layout_weight="9" android:rowOrderPreserved="false"
                         >
                         <CheckBox
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/enableDemoLabel"
-                                android:textAppearance="?android:attr/textAppearanceMedium"
                                 android:id="@+id/cbShowDemoCharts"  android:checked="true"
 
-                                android:layout_marginLeft="10dp"/>
+                                android:layout_gravity="center_vertical"/>
                         <CheckBox android:layout_width="wrap_content" android:layout_height="wrap_content"
                                   android:text="@string/labelInternalGps"
-                                  android:textAppearance="?android:attr/textAppearanceMedium" android:id="@+id/cbInternalGps"
+                                  android:id="@+id/cbInternalGps"
                                   android:checked="true"
                                   android:layout_marginLeft="10dp"/>
-                </LinearLayout>
-                <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:layout_weight="0">
                         <CheckBox android:layout_width="wrap_content" android:layout_height="wrap_content"
                                   android:text="@string/labelIpNmea"
-                                  android:textAppearance="?android:attr/textAppearanceMedium" android:id="@+id/cbIpNmea"
+                                  android:id="@+id/cbIpNmea"
                                   android:checked="false"
-                                  />
+                                  android:layout_gravity="center_vertical"/>
                         <CheckBox android:layout_width="wrap_content" android:layout_height="wrap_content"
-                                  android:text="@string/labelIpAis" android:textAppearance="?android:attr/textAppearanceMedium"
-                                  android:id="@+id/cbIpAis" android:checked="false" />
+                                  android:text="@string/labelIpAis"
+                                  android:id="@+id/cbIpAis" android:checked="false"
+                                  android:layout_gravity="center_vertical"/>
                 </LinearLayout>
         </LinearLayout>
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" android:id="@+id/lExternalGps">
-                <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/iconIp"
-                           android:src="@drawable/redbubble" android:layout_gravity="center_vertical"
-                           android:layout_marginLeft="10dp"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textAppearance="?android:attr/textAppearanceMedium" android:text="@string/externalGps"
-                          android:id="@+id/textView4" android:layout_marginLeft="8dp"
-                          android:layout_gravity="center_vertical"/>
-                <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:text="IP"
-                        android:id="@+id/textView2" android:layout_marginLeft="8dp"
-                        android:layout_gravity="center_vertical"/>
-                <EditText
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/edIP" android:text="192.168.20.10" android:layout_weight="1"
-                        android:layout_marginLeft="8dp" android:background="@color/editBackground"
-                        android:layout_gravity="center_vertical" android:paddingLeft="3dp" android:paddingRight="3dp"
-                        android:textAppearance="?android:attr/textAppearanceMedium"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textAppearance="?android:attr/textAppearanceMedium" android:text="Port"
-                          android:id="@+id/textView3" android:layout_marginLeft="16dp"
-                          android:layout_gravity="center_vertical"/>
-                <EditText android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:id="@+id/edPort" android:text="34567" android:background="@color/editBackground"
-                          android:layout_marginLeft="8dp" android:layout_gravity="center_vertical"
-                          android:layout_marginRight="10dp" android:paddingLeft="3dp" android:paddingRight="3dp"
-                          android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:layout_height="wrap_content" android:id="@+id/lExternalGps" android:layout_marginTop="5dp">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                          android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small" android:text="@string/externalGps"
+                          android:id="@+id/textView4"
+                          android:layout_gravity="center_vertical" android:layout_weight="1.5"/>
+                <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:layout_weight="9">
+                        <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/iconIp"
+                                   android:src="@drawable/redbubble" android:layout_gravity="center_vertical"
+                                />
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?android:attr/textAppearanceMedium"
+                                android:text="IP"
+                                android:id="@+id/textView2" android:layout_marginLeft="8dp"
+                                android:layout_gravity="center_vertical"/>
+                        <EditText
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:id="@+id/edIP" android:text="192.168.20.10" android:layout_weight="1"
+                                android:layout_marginLeft="8dp" android:background="@color/editBackground"
+                                android:layout_gravity="center_vertical" android:paddingLeft="3dp" android:paddingRight="3dp"
+                                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                  android:textAppearance="?android:attr/textAppearanceMedium" android:text="Port"
+                                  android:id="@+id/textView3" android:layout_marginLeft="16dp"
+                                  android:layout_gravity="center_vertical"/>
+                        <EditText android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                  android:id="@+id/edPort" android:text="34567" android:background="@color/editBackground"
+                                  android:layout_marginLeft="8dp" android:layout_gravity="center_vertical"
+                                  android:layout_marginRight="10dp" android:paddingLeft="3dp" android:paddingRight="3dp"
+                                  android:textAppearance="?android:attr/textAppearanceMedium"/>
+                </LinearLayout>
         </LinearLayout>
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content" android:layout_weight="0" android:measureWithLargestChild="false">
+                <Space
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.5"/>
+                <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:layout_weight="9" android:layout_gravity="bottom">
+
                 <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:id="@+id/iconGps" android:src="@drawable/redbubble"
-                        android:layout_gravity="center_vertical|top" android:layout_marginLeft="10dp"/>
+                        android:layout_gravity="center_vertical|top"/>
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -143,20 +172,16 @@
                         android:text="@string/gpsServiceStopped"
                         android:id="@+id/txService" android:layout_gravity="center_vertical|top" android:layout_weight="1"
                         android:gravity="center_vertical|center_horizontal" android:padding="8dp"/>
-                <Space
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"/>
-                <Button
+                        <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/startGps"
                         android:id="@+id/btGps"
                         android:layout_marginLeft="5dp"
                         android:layout_marginRight="5dp"
-                        android:layout_marginTop="5dp" android:layout_marginBottom="5dp"
                         style="@android:style/TextAppearance.DeviceDefault.Large"
                         android:layout_gravity="center_vertical|top"/>
+                </LinearLayout>
         </LinearLayout>
         <LinearLayout
                 android:orientation="horizontal"
@@ -166,20 +191,18 @@
                 <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/exitText"
                         android:id="@+id/btExit" android:enabled="true"
                         android:layout_weight="1"
-                        android:layout_marginLeft="10dp" android:layout_marginRight="10dp"
+                        android:layout_marginRight="10dp"
                         style="@android:style/TextAppearance.DeviceDefault.Large"/>
-                <FrameLayout
+                <Space
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent" android:layout_alignParentBottom="true"
-                        android:layout_toRightOf="@+id/cbShowDemoCharts" android:layout_marginLeft="42dp"
-                        android:layout_weight="1">
-                </FrameLayout>
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"/>
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/startText"
                     android:id="@+id/btStart" android:enabled="true"
                     android:layout_weight="1" android:layout_marginLeft="10dp"
-                    android:layout_marginRight="5dp" style="@android:style/TextAppearance.DeviceDefault.Large"/>
+                    style="@android:style/TextAppearance.DeviceDefault.Large"/>
         </LinearLayout>
 </LinearLayout>
