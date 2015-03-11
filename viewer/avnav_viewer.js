@@ -42,7 +42,7 @@ avnav.provide('avnav.main');
 
 
 
-
+var debugMode=false;
 
 
 
@@ -145,6 +145,7 @@ var propertyDefinitions=function(){
 
 
 function log(txt){
+    if (! debugMode) return;
     try{
         console.log(txt);
     }catch(e){}
@@ -164,8 +165,11 @@ function getParam(key)
  *
  */
 avnav.main=function() {
+    //some workaround for lees being broken on IOS browser
     less.modifyVars();
     $("body").show();
+
+    if (getParam('log')) debugMode=true;
     var propertyHandler=new avnav.util.PropertyHandler(propertyDefinitions(),{});
     propertyHandler.loadUserData();
     var navurl=getParam('navurl');
