@@ -40,16 +40,24 @@ def readJsNames(fname):
     return rt;
 
 def runBuild(args):
+    version=None
+    if len(args) > 1:
+      version=args[1]
     base = os.path.dirname(os.path.realpath(__file__))
     dn=os.path.join(base,"..")
     files=readJsNames(os.path.join(dn,'loader.js'))
     tmpfname=os.path.join(dn,tmpname)
     fo=open(tmpfname,"w")
     for fn in files:
-        f=open(os.path.join(dn,fn),"r")
-        print "collect "+fn
-        shutil.copyfileobj(f,fo)
-        f.close()
+        if fn.endswith("version.js") and version is not None:
+          print "write version ",version
+          fo.write("avnav_version=\"%s\";\n"%(version))
+        else:
+          f=open(os.path.join(dn,fn),"r")
+          print "collect "+fn
+          shutil.copyfileobj(f,fo)
+          f.close()
+
     fo.close()
     os.chdir(dn)
     print "creating "+os.path.join(dn,target)+" from "+tmpfname

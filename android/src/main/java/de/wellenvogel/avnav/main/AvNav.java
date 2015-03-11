@@ -376,7 +376,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                     intent = new Intent(context, WebServerActivity.class);
                 }
                 else if (rbCrosswalk.isChecked()) {
-                    intent = new Intent(context, Xwalk.class);
+                    intent = new Intent(context, XwalkActivity.class);
                 }
                 else {
                     intent = new Intent(context, WebViewActivity.class);

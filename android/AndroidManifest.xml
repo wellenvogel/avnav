@@ -33,7 +33,7 @@
                   android:label="@string/appName">
         </activity>
         <activity android:name=".Info" android:label="Info"/>
-        <activity android:name=".Xwalk"
+        <activity android:name=".XwalkActivity"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
                   android:configChanges="orientation|screenSize"/>
         <activity android:name=".Dummy">

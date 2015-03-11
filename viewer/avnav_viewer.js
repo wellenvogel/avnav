@@ -183,9 +183,7 @@ avnav.main=function() {
     var navobject=new avnav.nav.NavObject(propertyHandler);
     var mapholder=new avnav.map.MapHolder(propertyHandler,navobject);
     var gui=new avnav.gui.Handler(propertyHandler,navobject,mapholder);
-    if (avnav_version !== undefined){
-        $('#avi_mainpage_version').text(avnav_version);
-    }
+
     if (getParam('onAndroid')){
         propertyHandler.setValueByName('onAndroid',true);
     }
@@ -199,6 +197,9 @@ avnav.main=function() {
         avnav.android=window.avnavAndroid;
         propertyHandler.setValueByName('routingServerError',false);
         propertyHandler.setValueByName('connectedMode',true);
+    }
+    if (avnav_version !== undefined){
+        $('#avi_mainpage_version').text(avnav_version);
     }
     gui.showPage("mainpage");
     //ios browser sometimes has issues with less...

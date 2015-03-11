@@ -6,8 +6,17 @@
     <property name="src" value=".."/>
     
 <target name="-build-viewer">
-      <exec executable="${src}/viewer/build/build.py" dir="${src}/viewer">
-    </exec>
+  <xmlproperty file="AndroidManifest.xml" 
+					 prefix="themanifest" 
+					 collapseAttributes="true"/>
+  <condition property="avnav.version" 
+	     value="android-${themanifest.manifest.android:versionName}-debug"
+	     else="android-${themanifest.manifest.android:versionName}">
+    <equals arg1="${build.is.packaging.debug}" arg2="true"/>
+  </condition>
+  <exec executable="${src}/viewer/build/build.py" dir="${src}/viewer">
+    <arg value="${avnav.version}"/>
+  </exec>
 </target>
       
 <target name="-post-compile" depends="-post-compile-debug,-post-compile-release,-build-viewer">

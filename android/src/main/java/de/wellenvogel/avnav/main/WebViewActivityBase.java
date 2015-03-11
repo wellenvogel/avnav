@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
 import android.content.*;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.location.Location;
 import android.net.Uri;
@@ -212,11 +213,7 @@ public class WebViewActivityBase extends XWalkActivity {
         public void goBack(){
             WebViewActivityBase.this.backHandler.sendEmptyMessage(1);
         }
-        @JavascriptInterface
-        public String test(String text){
-            Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
-            return "";
-        }
+
     };
 
     //to be called e.g. from js

@@ -11,7 +11,7 @@ import org.xwalk.core.*;
 /**
  * Created by andreas on 08.01.15.
  */
-public class Xwalk extends WebViewActivityBase {
+public class XwalkActivity extends WebViewActivityBase {
     private SharedXWalkView mXwalkView;
     private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
     @Override
@@ -43,7 +43,9 @@ public class Xwalk extends WebViewActivityBase {
             XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
         }
         mXwalkView.addJavascriptInterface(mJavaScriptApi,"avnavAndroid");
-        mXwalkView.load(URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php", getStartPage());
+        String start=URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
+        if (BuildConfig.DEBUG) start+="&log=1";
+        mXwalkView.load(start, getStartPage());
 
     }
     @Override

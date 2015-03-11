@@ -67,7 +67,9 @@ public class WebViewActivity extends WebViewActivityBase {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
-        webView.loadDataWithBaseURL(URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php",htmlPage,"text/html","UTF-8",null);
+        String start=URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
+        if (BuildConfig.DEBUG) start+="&log=1";
+        webView.loadDataWithBaseURL(start,htmlPage,"text/html","UTF-8",null);
 
     }
 
