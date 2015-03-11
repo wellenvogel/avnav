@@ -75,10 +75,6 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
 
 };
 
-avnav.gui.Aispage.prototype.localInit=function(){
-
-};
-
 
 avnav.gui.Aispage.prototype.hidePage=function(){
 
