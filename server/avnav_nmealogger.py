@@ -65,7 +65,7 @@ class AVNNmeaLogger(AVNWorker):
   def createInstance(cls, cfgparam):
     return AVNNmeaLogger(cfgparam)
   def getName(self):
-    return "TrackWriter"
+    return "NmeaLogger"
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,data):
