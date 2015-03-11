@@ -4,14 +4,15 @@
     <property name="assets.viewer" value="assets/viewer"/>
     <property name="assets.libraries" value="assets/libraries"/>
     <property name="src" value=".."/>
-<target name="-post-compile">
-    <exec executable="${src}/viewer/build/build.py" dir="${src}/viewer">
-
+    
+<target name="-build-viewer">
+      <exec executable="${src}/viewer/build/build.py" dir="${src}/viewer">
     </exec>
+</target>
+      
+<target name="-post-compile" depends="-post-compile-debug,-post-compile-release,-build-viewer">
     <copy todir="${assets.viewer}" flatten="true" overwrite="true">
         <resources>
-            <file file="${src}/viewer/avnav_min.js"/>
-            <!--<file file="${src}/viewer/avnav_combine.js"/>-->
             <file file="${src}/viewer/loader.js"/>
             <file file="${src}/viewer/avnav_viewer.html"/>
             <file file="${src}/viewer/avnav_viewer.less"/>
@@ -38,10 +39,23 @@
     <copy todir="${assets.libraries}/jquery" overwrite="true" flatten="true">
         <fileset dir="${src}/libraries/jquery" includes="*.js"/>
     </copy>
-
 </target>
 
+<target name="-check-debug">
+  <condition property="avnav.dodebug">
+    <equals arg1="${build.is.packaging.debug}" arg2="true"/>
+  </condition>
+</target>
+<target name="-post-compile-debug" if="avnav.dodebug" depends="-check-debug,-build-viewer">
+  <copy overwrite="true" file="${src}/viewer/avnav_combine.js" tofile="${assets.viewer}/avnav_min.js"/>
+</target>
+<target name="-post-compile-release" unless="avnav.dodebug" depends="-check-debug,-build-viewer">
+  <copy overwrite="true" file="${src}/viewer/avnav_min.js" tofile="${assets.viewer}/avnav_min.js"/>
+</target>
+
+
 <target name="copy-assets" depends="-post-compile"></target>
+<target name="copy-assets-debug" depends="-set-debug-mode,-post-compile"></target>
 
 	<target name="rename-release-with-version-number">
 		<xmlproperty file="AndroidManifest.xml" 
