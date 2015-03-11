@@ -58,6 +58,8 @@ public class WebViewActivityBase extends XWalkActivity {
     //mapping of url name to real filename
     private HashMap<String,String> fileNames=new HashMap<String, String>();
 
+    private IMediaUpdater updater;
+
     private Handler backHandler=new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -235,6 +237,7 @@ public class WebViewActivityBase extends XWalkActivity {
             gpsService = binder.getService();
             if (gpsService != null && routeHandler != null){
                 routeHandler.setMediaUpdater(gpsService.getMediaUpdater());
+                updater=gpsService.getMediaUpdater();
             }
             AvnLog.d(AvNav.LOGPRFX, "gps service connected");
 
@@ -243,6 +246,7 @@ public class WebViewActivityBase extends XWalkActivity {
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             gpsService=null;
+            updater=null;
             AvnLog.d(AvNav.LOGPRFX,"gps service disconnected");
         }
     };
@@ -370,15 +374,12 @@ public class WebViewActivityBase extends XWalkActivity {
                 fout=navLocation;
             }
             if (type.equals("listCharts")){
-                fileNames.clear();
-                closeGemf();
                 handled=true;
                 JSONObject out=new JSONObject();
                 try {
                     out.put("status", "OK");
                     JSONArray arr = new JSONArray();
-                    File chartDir = new File(workBase, "charts");
-                    readChartDir(chartDir,"1",arr);
+                    readAllCharts(arr);
                     if (showDemoCharts){
                         String demoCharts[]=assetManager.list("charts");
                         for (String demo: demoCharts){
@@ -535,8 +536,7 @@ public class WebViewActivityBase extends XWalkActivity {
                 }
                 if (dirtype.equals("chart")){
                     handled=true;
-                    File chartDir = new File(workBase, "charts");
-                    readChartDir(chartDir,"1",items);
+                    readAllCharts(items);
                 }
                 if (handled){
                     JSONObject o=new JSONObject();
@@ -574,16 +574,30 @@ public class WebViewActivityBase extends XWalkActivity {
                 JSONObject o=new JSONObject();
                 String dtype = uri.getQueryParameter("type");
                 String name = uri.getQueryParameter("name");
-                if (dtype == null || !dtype.equals("track")){
+                if (dtype == null || (! dtype.equals("track") && ! dtype.equals("chart"))){
                     o.put("status","invalid type");
                 }
-                else {
+                if (dtype.equals("track")) {
                     File trackfile = new File(gpsService.getTrackDir(), name);
                     if (! trackfile.isFile()){
                         o.put("status","track "+name+" not found");
                     }
                     else {
                         trackfile.delete();
+                        if (updater != null) updater.triggerUpdateMtp(trackfile);
+                        o.put("status","OK");
+                    }
+                }
+                if (dtype.equals("chart")) {
+                    String charturl=uri.getQueryParameter("url");
+                    String realName=fileNames.get(charturl.substring(CHARTPREFIX.length()+2));
+                    if (realName == null){
+                        o.put("status","chart "+name+" not found");
+                    }
+                    else {
+                        File chartfile=new File(realName);
+                        chartfile.delete();
+                        if (updater != null) updater.triggerUpdateMtp(chartfile);
                         o.put("status","OK");
                     }
                 }
@@ -635,7 +649,7 @@ public class WebViewActivityBase extends XWalkActivity {
                     if (baseAndUrl[4].equals(OVERVIEW)) {
                         closeGemf();
                         try {
-                            GemfHandler f = new GemfHandler(new GEMFFile(new File(realName)),fname);
+                            GemfHandler f = new GemfHandler(new GEMFFile(new File(realName)),key);
                             rt=f.gemfOverview();
                             len=-1;
                             gemfFile=f;
@@ -645,6 +659,10 @@ public class WebViewActivityBase extends XWalkActivity {
                     }
                     else {
                         if (gemfFile != null){
+                            if (!gemfFile.getUrlName().equals(key)){
+                                Log.e(AvnLog.LOGPREFIX,"unable to operate multiple gemf files in parallel");
+                                throw new Exception("unable to operate multiple gemf files in parallel");
+                            }
                             //we have source/z/x/y in baseAndUrl[1]
                             String param[] = baseAndUrl[4].split("/");
                             if (param.length < 4) {
@@ -691,6 +709,15 @@ public class WebViewActivityBase extends XWalkActivity {
             Log.e(AvNav.LOGPRFX,"chart file "+fname+" not found: "+e.getLocalizedMessage());
         }
         return null;
+    }
+
+    private void readAllCharts(JSONArray arr){
+        closeGemf();
+        fileNames.clear();
+        //here we will have more dirs in the future...
+        File chartDir = new File(workBase, "charts");
+        readChartDir(chartDir,"1",arr);
+        return;
     }
 
     private void readChartDir(File chartDir,String index,JSONArray arr) {

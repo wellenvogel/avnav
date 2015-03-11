@@ -58,7 +58,7 @@ var propertyDefinitions=function(){
         },
         forceMobile: new avnav.util.Property(false,"forceMobile",avnav.util.PropertyType.CHECKBOX),
         connectedMode:new avnav.util.Property(true,"connected",avnav.util.PropertyType.CHECKBOX),
-        readOnlyServer:new avnav.util.Property(false),
+        onAndroid:new avnav.util.Property(false),
         NM: new avnav.util.Property(1852), //one mile
         buttonUpdateTime: new avnav.util.Property( 500), //timer for button updates
         slideTime: new avnav.util.Property( 300), //time in ms for upzoom
@@ -176,27 +176,23 @@ avnav.main=function() {
     else {
         propertyHandler.setValueByName('routingServerError',true);
     }
-    var readOnlyServer=getParam('readOnlyServer');
-    if (readOnlyServer){
-        propertyHandler.setValueByName('readOnlyServer',true);
-        propertyHandler.setValueByName('routingServerError',false);
-        propertyHandler.setValueByName('connectedMode',false);
-    }
-    else {
-        propertyHandler.setValueByName('readOnlyServer',false);
-        propertyHandler.setValueByName('routingServerError',true);
-    }
     var navobject=new avnav.nav.NavObject(propertyHandler);
     var mapholder=new avnav.map.MapHolder(propertyHandler,navobject);
     var gui=new avnav.gui.Handler(propertyHandler,navobject,mapholder);
     if (avnav_version !== undefined){
         $('#avi_mainpage_version').text(avnav_version);
     }
+    if (getParam('onAndroid')){
+        propertyHandler.setValueByName('onAndroid',true);
+    }
+    else {
+        propertyHandler.setValueByName('onAndroid',false);
+    }
     //make the android API available as avnav.android
     if (window.avnavAndroid){
         log("android integration enabled");
+        propertyHandler.setValueByName('onAndroid',true);
         avnav.android=window.avnavAndroid;
-        propertyHandler.setValueByName('readOnlyServer',false);
         propertyHandler.setValueByName('routingServerError',false);
         propertyHandler.setValueByName('connectedMode',true);
     }

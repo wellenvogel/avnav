@@ -47,10 +47,6 @@ public class GemfHandler {
         this.urlName=urlName;
         gemf=file;
     }
-    public GemfHandler(File file) throws IOException {
-        gemf=new GEMFFile(file);
-        this.urlName=urlName;
-    }
 
 
     public GEMFFile.GEMFInputStream getInputStream(int x,int y, int z,int sourceIndex) {
