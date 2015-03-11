@@ -42,6 +42,8 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
     public static final String RUNMODE="runmode"; //normal,server,xwalk
     public static final String PREFNAME="AvNav";
+    //dummy file to make the media scanner see or directories...
+    public static final String EMPTY_FILE="EMPTY";
 
     //modes
     public static final String MODE_NORMAL="normal";
@@ -82,6 +84,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private long timerSequence=1;
     private int currentapiVersion = android.os.Build.VERSION.SDK_INT;
     private boolean firstStart=true;
+    private boolean firstCheck=true;
 
     private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
 
@@ -558,22 +561,50 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     }
 
     private void checkDirs(String workdir) throws Exception {
-        File workBase=new File(workdir);
+        final File workBase=new File(workdir);
         if (! workBase.isDirectory()){
             AvnLog.d(LOGPRFX, "creating workdir " + workdir);
             if (!workBase.mkdirs()) {
                 throw new Exception("unable to create working directory "+workdir);
             }
-            updateMtp(workBase);
+
         }
-        String subdirs[]=new String[]{"charts","tracks","routes"};
+        final String subdirs[]=new String[]{"charts","tracks","routes"};
         for (String s: subdirs){
             File sub=new File(workBase,s);
             if (! sub.isDirectory()){
                 AvnLog.d(LOGPRFX, "creating subdir " + sub.getAbsolutePath());
                 if (! sub.mkdirs()) throw new Exception("unable to create directory "+sub.getAbsolutePath());
-                updateMtp(sub);
             }
+
+        }
+        if (firstCheck) {
+            firstCheck = false;
+            //do an MTP update for all files at least once when we start
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for (String s : subdirs) {
+                        boolean hasFiles = false;
+                        File sub = new File(workBase, s);
+                        for (File f : sub.listFiles()) {
+                            if (!f.isFile()) continue;
+                            hasFiles = true;
+                            AvnLog.d("MTP update for "+f.getAbsolutePath());
+                            triggerUpdateMtp(f);
+                        }
+                        if (!hasFiles) {
+                            File dummy = new File(sub, EMPTY_FILE);
+                            try {
+                                dummy.createNewFile();
+                                updateMtp(dummy);
+                            } catch (Exception i) {
+                                Log.e(AvnLog.LOGPREFIX, "error when updating MTP: " + i.getLocalizedMessage());
+                            }
+                        }
+                    }
+                }
+            }).run();
         }
     }
 
