@@ -610,7 +610,7 @@ public class GpsService extends Service  {
         rt.put(item);
         item=new JSONObject();
         item.put("name","bluetooth");
-        if (externalProvider != null) {
+        if (bluetoothProvider != null) {
             String addr=bluetoothProvider.socket.getId();
             GpsDataProvider.SatStatus st=bluetoothProvider.getSatStatus();
             Location loc=bluetoothProvider.getLocation();
