@@ -601,6 +601,25 @@ public class WebViewActivityBase extends XWalkActivity {
                 handled=true;
                 fout=o;
             }
+            if (type.equals("status")){
+                handled=true;
+                JSONObject o=new JSONObject();
+                JSONArray items=new JSONArray();
+                if (gpsService != null) {
+                    //internal GPS
+                    JSONObject gps = new JSONObject();
+                    gps.put("name", "GPS");
+                    gps.put("info", gpsService.getStatus());
+                    items.put(gps);
+                    JSONObject tw=new JSONObject();
+                    tw.put("name","TrackWriter");
+                    tw.put("info",gpsService.getTrackStatus());
+                    items.put(tw);
+
+                }
+                o.put("handler",items);
+                fout=o;
+            }
             if (!handled){
                 AvnLog.d(AvNav.LOGPRFX,"unhandled nav request "+type);
             }

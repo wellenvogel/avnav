@@ -25,11 +25,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by andreas on 12.12.14.
@@ -491,5 +488,86 @@ public class GpsService extends Service  {
     }
     public File getTrackDir(){
         return trackDir;
+    }
+
+    public JSONObject getStatus() throws JSONException {
+        JSONArray rt=new JSONArray();
+        JSONObject item=new JSONObject();
+        item.put("name","internalGPS");
+        if (internalProvider != null) {
+            GpsDataProvider.SatStatus st=internalProvider.getSatStatus();
+            Location loc=internalProvider.getLocation();
+            if (loc != null) {
+                item.put("info", "valid position");
+                item.put("status", GpsDataProvider.STATUS_NMEA);
+            }
+            else {
+                item.put("info","searching "+st.numUsed+"/"+st.numSat);
+                item.put("status", GpsDataProvider.STATUS_STARTED);
+            }
+        }
+        else {
+            item.put("info","disabled");
+            item.put("status",GpsDataProvider.STATUS_INACTIVE);
+        }
+        rt.put(item);
+        item=new JSONObject();
+        item.put("name","externalGPS");
+        if (externalProvider != null) {
+            String addr=externalProvider.address.toString();
+            GpsDataProvider.SatStatus st=externalProvider.getSatStatus();
+            Location loc=externalProvider.getLocation();
+            if (loc != null) {
+                String info="("+addr+") valid position";
+                if (externalProvider.hasAisData())info+=", valid AIS data";
+                item.put("info", info);
+                item.put("status", GpsDataProvider.STATUS_NMEA);
+            }
+            else {
+                if (!ipNmea && externalProvider.hasAisData()) {
+                    item.put("info", "(" + addr + ") valid AIS data");
+                    item.put("status", GpsDataProvider.STATUS_NMEA);
+
+                }
+                else {
+                    if (st.gpsEnabled) {
+                        item.put("info", "(" + addr + ") connected, waiting for data");
+                        item.put("status", GpsDataProvider.STATUS_STARTED);
+                    } else {
+                        item.put("info", "(" + addr + ") disconnected");
+                        item.put("status", GpsDataProvider.STATUS_ERROR);
+                    }
+                }
+            }
+        }
+        else {
+            item.put("info","disabled");
+            item.put("status",GpsDataProvider.STATUS_INACTIVE);
+        }
+        rt.put(item);
+
+        JSONObject out=new JSONObject();
+        out.put("name","GPS");
+        out.put("items",rt);
+        return out;
+    }
+
+    public JSONObject getTrackStatus() throws JSONException {
+        JSONArray rt = new JSONArray();
+        JSONObject item=new JSONObject();
+        item.put("name","Writer");
+        if (trackWriter != null && lastTrackWrite != 0){
+            item.put("info",trackpoints.size()+" points, writing to "+trackWriter.getTrackFile(new Date(lastTrackWrite)).getAbsolutePath());
+            item.put("status",GpsDataProvider.STATUS_NMEA);
+        }
+        else {
+            item.put("info","waiting");
+            item.put("status",GpsDataProvider.STATUS_INACTIVE);
+        }
+        rt.put(item);
+        JSONObject out = new JSONObject();
+        out.put("name", "TrackWriter");
+        out.put("items", rt);
+        return out;
     }
 }

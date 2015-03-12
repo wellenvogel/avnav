@@ -211,4 +211,8 @@ public class AisStore {
             }
         }
     }
+
+    public int numAisEntries(){
+        return aisData.size();
+    }
 }

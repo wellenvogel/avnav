@@ -208,6 +208,10 @@ public class IpPositionHandler extends GpsDataProvider {
                 }
             }
         }
+        public boolean hasAisData(){
+            if (store == null ) return false;
+            return store.numAisEntries()>0;
+        }
     }
     public static final String LOGPRFX="AvNav:IpPositionHandler";
     Context context;
@@ -285,5 +289,10 @@ public class IpPositionHandler extends GpsDataProvider {
     JSONArray  getAisData(double lat,double lon,double distance){
         if (runnable == null) return new JSONArray();
         return runnable.getAisData(lat,lon,distance);
+    }
+
+    public boolean hasAisData(){
+        if (runnable == null) return false;
+        return runnable.hasAisData();
     }
 }

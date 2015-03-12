@@ -16,6 +16,12 @@ import java.util.Map;
  * Created by andreas on 25.12.14.
  */
 public class GpsDataProvider {
+    public static final String STATUS_INACTIVE ="INACTIVE";
+    public static final String STATUS_STARTED="STARTED";
+    public static final String STATUS_RUNNING="RUNNING";
+    public static final String STATUS_NMEA="NMEA";
+    public static final String STATUS_ERROR="ERROR";
+
     public static final double msToKn=3600.0/1852.0;
     private static final String LOGPRFX="GpsDataProvider";
     public static class SatStatus{
