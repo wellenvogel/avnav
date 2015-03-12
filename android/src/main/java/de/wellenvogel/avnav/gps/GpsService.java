@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -53,6 +54,7 @@ public class GpsService extends Service  {
     private final IBinder mBinder = new GpsServiceBinder();
     private GpsDataProvider internalProvider=null;
     private IpPositionHandler externalProvider=null;
+    private BluetoothPositionHandler bluetoothProvider=null;
 
     private boolean isRunning;  //this is our view whether we are running or not
                                 //running means that we are registered for updates and have our timer active
@@ -66,6 +68,8 @@ public class GpsService extends Service  {
     private boolean useInternalProvider=false;
     private boolean ipNmea=false;
     private boolean ipAis=false;
+    private boolean btNmea=false;
+    private boolean btAis=false;
 
     private TrackWriter trackWriter;
     private Handler handler = new Handler();
@@ -194,12 +198,16 @@ public class GpsService extends Service  {
         useInternalProvider=prefs.getBoolean(AvNav.INTERNALGPS,true);
         ipAis=prefs.getBoolean(AvNav.IPAIS,false);
         ipNmea=prefs.getBoolean(AvNav.IPNMEA,false);
+        btAis=prefs.getBoolean(AvNav.BTAIS,false);
+        btNmea=prefs.getBoolean(AvNav.BTNMEA,false);
         AvnLog.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+
                 ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
                 ", maxtime(h)="+(trackTime/3600/1000)+
                 ", internalGps="+useInternalProvider+
                 ", ipNmea="+ipNmea+
-                ", ipAis="+ipAis);
+                ", ipAis="+ipAis+
+                ", btNmea="+btNmea+
+                ", btAis="+btAis);
         trackDir = new File(trackdir);
         if (loadTrack) {
             trackpoints.clear();
@@ -243,7 +251,7 @@ public class GpsService extends Service  {
                     prop.readNmea=ipNmea;
                     externalProvider=new IpPositionHandler(this,addr,prop);
                 }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service");
+                    Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
                 }
 
             }
@@ -252,6 +260,35 @@ public class GpsService extends Service  {
             if (externalProvider != null){
                 AvnLog.d(LOGPRFX,"stopping external service");
                 externalProvider.stop();
+            }
+        }
+        if (btAis || btNmea){
+            if (bluetoothProvider == null){
+                try {
+                    String dname=prefs.getString(AvNav.BTDEVICE, "");
+                    BluetoothDevice dev=BluetoothPositionHandler.getDeviceForName(dname);
+                    if (dev == null){
+                        throw new Exception("no bluetooth device found for"+dname);
+                    }
+                    AvnLog.d(LOGPRFX,"starting bluetooth receiver for "+dname+": "+ dev.getAddress());
+                    GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
+                    prop.aisCleanupInterval=prefs.getLong(AvNav.IPAISCLEANUPIV,prop.aisCleanupInterval);
+                    prop.aisLifetime=prefs.getLong(AvNav.IPAISLIFETIME,prop.aisLifetime);
+                    prop.postionAge=prefs.getLong(AvNav.IPPOSAGE,prop.postionAge);
+                    prop.connectTimeout=prefs.getInt(AvNav.IPCONNTIMEOUT,prop.connectTimeout);
+                    prop.readAis=btAis;
+                    prop.readNmea=btNmea;
+                    bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);
+                }catch (Exception i){
+                    Log.e(LOGPRFX,"unable to start external service");
+                }
+
+            }
+        }
+        else{
+            if (bluetoothProvider != null){
+                AvnLog.d(LOGPRFX,"stopping bluetooth service");
+                bluetoothProvider.stop();
             }
         }
         isRunning=true;
@@ -298,6 +335,10 @@ public class GpsService extends Service  {
         if (externalProvider != null){
             externalProvider.stop();
             externalProvider=null;
+        }
+        if (bluetoothProvider != null){
+            bluetoothProvider.stop();
+            bluetoothProvider=null;
         }
         //this is not completely OK: we could fail to write our last track points
         //if we still load the track - but otherwise we could reeally empty the track
@@ -442,7 +483,8 @@ public class GpsService extends Service  {
         GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
         if (! isRunning ) return rt;
         if (internalProvider == null) {
-            if (externalProvider != null) return externalProvider.getSatStatus();
+            if (externalProvider != null && ipNmea) return externalProvider.getSatStatus();
+            if (bluetoothProvider != null && btNmea) return bluetoothProvider.getSatStatus();
             return rt;
         }
         rt=internalProvider.getSatStatus();
@@ -457,21 +499,42 @@ public class GpsService extends Service  {
         return rt;
     }
 
+    public GpsDataProvider.SatStatus getBluetoothStatus(){
+        GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
+        if (! isRunning) return rt;
+        if (bluetoothProvider != null) return bluetoothProvider.getSatStatus();
+        return rt;
+    }
+
     public JSONObject getGpsData() throws JSONException{
         if (internalProvider != null) return internalProvider.getGpsData();
-        if (externalProvider != null) return externalProvider.getGpsData();
+        if (externalProvider != null && ipNmea) return externalProvider.getGpsData();
+        if (bluetoothProvider != null && btNmea) return bluetoothProvider.getGpsData();
         return null;
     }
 
     private Location getLocation(){
         if (internalProvider != null) return internalProvider.getLocation();
-        if (externalProvider != null) return externalProvider.getLocation();
+        if (externalProvider != null && ipNmea) return externalProvider.getLocation();
+        if (bluetoothProvider != null && btNmea) return bluetoothProvider.getLocation();
         return null;
     }
 
     public JSONArray getAisData(double lat,double lon, double distance){
-        if (externalProvider == null) return new JSONArray();
-        return externalProvider.getAisData(lat,lon,distance);
+        JSONArray rt=new JSONArray();
+        for (SocketPositionHandler h: new SocketPositionHandler[]{externalProvider,bluetoothProvider}){
+            if (h != null){
+                try {
+                    JSONArray items = h.getAisData(lat, lon, distance);
+                    for (int i = 0; i < items.length(); i++) {
+                        rt.put(items.get(i));
+                    }
+                }catch (JSONException e){
+                    Log.e(LOGPRFX,"exception while merging AIS data: "+e.getLocalizedMessage());
+                }
+            }
+        }
+        return rt;
     }
 
     public void setMediaUpdater(IMediaUpdater u){
@@ -514,7 +577,7 @@ public class GpsService extends Service  {
         item=new JSONObject();
         item.put("name","externalGPS");
         if (externalProvider != null) {
-            String addr=externalProvider.address.toString();
+            String addr=externalProvider.socket.getId();
             GpsDataProvider.SatStatus st=externalProvider.getSatStatus();
             Location loc=externalProvider.getLocation();
             if (loc != null) {
@@ -525,6 +588,40 @@ public class GpsService extends Service  {
             }
             else {
                 if (!ipNmea && externalProvider.hasAisData()) {
+                    item.put("info", "(" + addr + ") valid AIS data");
+                    item.put("status", GpsDataProvider.STATUS_NMEA);
+
+                }
+                else {
+                    if (st.gpsEnabled) {
+                        item.put("info", "(" + addr + ") connected, waiting for data");
+                        item.put("status", GpsDataProvider.STATUS_STARTED);
+                    } else {
+                        item.put("info", "(" + addr + ") disconnected");
+                        item.put("status", GpsDataProvider.STATUS_ERROR);
+                    }
+                }
+            }
+        }
+        else {
+            item.put("info","disabled");
+            item.put("status",GpsDataProvider.STATUS_INACTIVE);
+        }
+        rt.put(item);
+        item=new JSONObject();
+        item.put("name","bluetooth");
+        if (externalProvider != null) {
+            String addr=bluetoothProvider.socket.getId();
+            GpsDataProvider.SatStatus st=bluetoothProvider.getSatStatus();
+            Location loc=bluetoothProvider.getLocation();
+            if (loc != null) {
+                String info="("+addr+") valid position";
+                if (bluetoothProvider.hasAisData())info+=", valid AIS data";
+                item.put("info", info);
+                item.put("status", GpsDataProvider.STATUS_NMEA);
+            }
+            else {
+                if (!btNmea && bluetoothProvider.hasAisData()) {
                     item.put("info", "(" + addr + ") valid AIS data");
                     item.put("status", GpsDataProvider.STATUS_NMEA);
 

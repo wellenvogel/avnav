@@ -2,6 +2,8 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.*;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -13,11 +15,9 @@ import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
+import android.view.*;
 import android.widget.*;
+import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -26,6 +26,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Set;
 
 public class AvNav extends Activity implements MediaScannerConnection.MediaScannerConnectionClient, IMediaUpdater{
     //settings
@@ -36,6 +38,9 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     public static final String IPAIS="ip.ais";
     public static final String IPADDR="ip.addr";
     public static final String IPPORT="ip.port";
+    public static final String BTNMEA="bt.nmea";
+    public static final String BTAIS="bt.ais";
+    public static final String BTDEVICE="bt.device";
     public static final String IPCONNTIMEOUT="ip.conntimeout";
     public static final String IPPOSAGE="ip.posAge";
     public static final String IPAISLIFETIME="ip.aisLifetime";
@@ -68,12 +73,17 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private CheckBox cbInternalGps;
     private CheckBox cbIpNmea;
     private CheckBox cbIpAis;
+    private CheckBox cbBtNmea;
+    private CheckBox cbBtAis;
     private RadioButton rbServer;
     private RadioButton rbCrosswalk;
     private RadioButton rbNormal;
+    private TextView edBt;
     private View externalSettings;
+    private View bluetoothSettings;
     private ImageView gpsIcon;
     private ImageView extIcon;
+    private ImageView btIcon;
     private Context context=this;
     private GpsService gpsService=null;
     private boolean gpsRunning=false;
@@ -85,6 +95,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private int currentapiVersion = android.os.Build.VERSION.SDK_INT;
     private boolean firstStart=true;
     private boolean firstCheck=true;
+    private BluetoothAdapter mBluetoothAdapter;
 
     private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
 
@@ -122,10 +133,11 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private void startGpsService(){
         if (cbInternalGps.isChecked() ){
             cbIpNmea.setChecked(false);
+            cbBtNmea.setChecked(false);
         }
         saveSettings();
         updateExternal();
-        if (! cbInternalGps.isChecked() && ! cbIpNmea.isChecked()){
+        if (! cbInternalGps.isChecked() && ! cbIpNmea.isChecked() && ! cbBtNmea.isChecked()){
             Toast.makeText(context, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -136,6 +148,12 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                         sharedPrefs.getString(IPPORT, ""));
             } catch (Exception i) {
                 Toast.makeText(context, R.string.invalidIp, Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        if (cbBtAis.isChecked()||cbBtNmea.isChecked()){
+            if (BluetoothPositionHandler.getDeviceForName(edBt.getText().toString()) == null){
+                Toast.makeText(context, getText(R.string.noSuchBluetoothDevice)+":"+edBt.getText().toString(), Toast.LENGTH_SHORT).show();
                 return;
             }
         }
@@ -220,6 +238,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         if (gpsService == null || ! gpsService.isRunning()){
             gpsIcon.setImageResource(R.drawable.redbubble);
             extIcon.setImageResource(R.drawable.redbubble);
+            btIcon.setImageResource(R.drawable.redbubble);
             txGps.setText(R.string.gpsServiceStopped);
             btGps.setText(R.string.startGps);
             gpsRunning=false;
@@ -233,6 +252,13 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         }
         else{
             extIcon.setImageResource(R.drawable.yellowbubble);
+        }
+        extStatus=gpsService.getBluetoothStatus();
+        if (extStatus.gpsEnabled){
+            btIcon.setImageResource(R.drawable.greenbubble);
+        }
+        else{
+            btIcon.setImageResource(R.drawable.yellowbubble);
         }
         JSONObject current;
         //Location current;
@@ -288,15 +314,25 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         cbInternalGps=(CheckBox)findViewById(R.id.cbInternalGps);
         cbIpNmea=(CheckBox)findViewById(R.id.cbIpNmea);
         cbIpAis=(CheckBox)findViewById(R.id.cbIpAis);
+        cbBtAis=(CheckBox)findViewById(R.id.cbBtAis);
+        cbBtNmea=(CheckBox)findViewById(R.id.cbBtNmea);
         rbServer =(RadioButton)findViewById(R.id.rbRunExternal);
         rbCrosswalk=(RadioButton)findViewById(R.id.rbModeXwalk);
         rbNormal=(RadioButton)findViewById(R.id.rbRunNormal);
-        externalSettings=findViewById(R.id.lExternalGps);
+        externalSettings=findViewById(R.id.frmIp);
+        bluetoothSettings=findViewById(R.id.frmBt);
         gpsIcon=(ImageView)findViewById(R.id.iconGps);
         extIcon=(ImageView)findViewById(R.id.iconIp);
+        btIcon=(ImageView)findViewById(R.id.iconBt);
         txIp=(EditText)findViewById(R.id.edIP);
         txPort=(EditText)findViewById(R.id.edPort);
+        edBt=(TextView)findViewById(R.id.edBt);
         sharedPrefs= getSharedPreferences(PREFNAME,Context.MODE_PRIVATE);
+        edBt.setText(sharedPrefs.getString(BTDEVICE,""));
+        View bt=findViewById(R.id.frmExtBt);
+        mBluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) bt.setVisibility(View.INVISIBLE);
+        else bt.setVisibility(View.VISIBLE);
         String mode=sharedPrefs.getString(RUNMODE,"");
         if (mode.equals("")) {
             //never set before
@@ -334,25 +370,46 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         boolean ipAis=sharedPrefs.getBoolean(IPAIS,false);
         boolean ipNmea=sharedPrefs.getBoolean(IPNMEA,false);
         boolean showDemo=sharedPrefs.getBoolean(SHOWDEMO,true);
+        boolean btAis=sharedPrefs.getBoolean(BTAIS,false);
+        boolean btNmea=sharedPrefs.getBoolean(BTNMEA,false);
         cbShowDemo.setChecked(showDemo);
         cbIpAis.setChecked(ipAis);
         cbIpNmea.setChecked(ipNmea);
         cbInternalGps.setChecked(internalGps);
+        cbBtAis.setChecked(btAis);
+        cbBtNmea.setChecked(btNmea);
         updateExternal();
         txIp.setText(sharedPrefs.getString(IPADDR, "192.168.20.10"));
         txPort.setText(sharedPrefs.getString(IPPORT,"34567"));
         cbIpAis.setOnCheckedChangeListener(cbHandler);
+        cbBtAis.setOnCheckedChangeListener(cbHandler);
         cbInternalGps.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) cbIpNmea.setChecked(false);
+                if (isChecked) {
+                    cbIpNmea.setChecked(false);
+                    cbBtNmea.setChecked(false);
+                }
                 cbHandler.onCheckedChanged(buttonView,isChecked);
             }
         });
         cbIpNmea.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) cbInternalGps.setChecked(false);
+                if (isChecked) {
+                    cbInternalGps.setChecked(false);
+                    cbBtNmea.setChecked(false);
+                }
+                cbHandler.onCheckedChanged(buttonView,isChecked);
+            }
+        });
+        cbBtNmea.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    cbInternalGps.setChecked(false);
+                    cbIpNmea.setChecked(false);
+                }
                 cbHandler.onCheckedChanged(buttonView,isChecked);
             }
         });
@@ -422,6 +479,36 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                 FolderChooseDialog.chooseFile_or_Dir(textWorkdir.getText().toString());
             }
         });
+        edBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopGpsService(false);
+                if (!mBluetoothAdapter.isEnabled()) {
+                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(enableBtIntent, 1);
+                    return;
+                }
+                AlertDialog.Builder builder = new AlertDialog.Builder(AvNav.this);
+                builder.setTitle(R.string.selectBlueTooth);
+                final ArrayList<String> items=getBlueToothDevices();
+                ArrayAdapter<String>adapter=new ArrayAdapter<String>(AvNav.this,android.R.layout.simple_list_item_1,items);
+                builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String name=items.get(which);
+                        edBt.setText(name);
+                    }
+                });
+                builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                edBt.setText("");
+                builder.create().show();
+            }
+        });
         if (mediaConnection != null) mediaConnection.disconnect();
         mediaConnection=new MediaScannerConnection(this,this);
         mediaConnection.connect();
@@ -474,6 +561,18 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         timerSequence++; //stops timer
     }
 
+    private ArrayList<String> getBlueToothDevices(){
+        ArrayList<String> rt=new ArrayList<String>();
+        if (mBluetoothAdapter == null) return rt;
+        if (! mBluetoothAdapter.isEnabled()) return rt;
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        for (BluetoothDevice d: pairedDevices){
+            AvnLog.d("found bluetooth device "+d.getName()+",class="+d.getBluetoothClass().toString());
+            rt.add(d.getName());
+        }
+        return rt;
+    }
+
     private CompoundButton.OnCheckedChangeListener cbHandler=new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -508,6 +607,12 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         else{
             externalSettings.setVisibility(View.INVISIBLE);
         }
+        if (cbBtAis.isChecked() ||cbBtNmea.isChecked()){
+            bluetoothSettings.setVisibility(View.VISIBLE);
+        }
+        else {
+            bluetoothSettings.setVisibility(View.INVISIBLE);
+        }
     }
 
     private String getModeFromButtons(){
@@ -535,6 +640,9 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         e.putBoolean(INTERNALGPS,cbInternalGps.isChecked());
         e.putBoolean(IPAIS,cbIpAis.isChecked());
         e.putBoolean(IPNMEA,cbIpNmea.isChecked());
+        e.putBoolean(BTAIS,cbBtAis.isChecked());
+        e.putBoolean(BTNMEA,cbBtNmea.isChecked());
+        e.putString(BTDEVICE,edBt.getText().toString());
         e.putString(IPADDR, txIp.getText().toString());
         e.putString(IPPORT,txPort.getText().toString());
         e.putString(RUNMODE,getModeFromButtons());
