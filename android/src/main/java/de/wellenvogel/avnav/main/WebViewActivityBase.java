@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.location.Location;
 import android.net.Uri;
 import android.os.*;
@@ -70,7 +71,7 @@ public class WebViewActivityBase extends XWalkActivity {
         }
     };
 
-    private void sendFile(String name, String type){
+    private void sendFile(String name, String type,Resources res){
         if (!type.equals("track") && ! type.equals("route")){
             Log.e(AvNav.LOGPRFX,"invalid type "+type+" for sendFile");
             return;
@@ -88,7 +89,8 @@ public class WebViewActivityBase extends XWalkActivity {
         shareIntent.setAction(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_STREAM, data);
         shareIntent.setType("application/gpx+xml");
-        startActivity(Intent.createChooser(shareIntent, getResources().getText(R.string.selectApp)+" "+name));
+        String title=res.getText(R.string.selectApp)+" "+name;
+        startActivity(Intent.createChooser(shareIntent,title ));
     }
 
     @Override
@@ -123,6 +125,9 @@ public class WebViewActivityBase extends XWalkActivity {
         }
     }
 
+    //potentially the Javascript interface code is called from the Xwalk app package
+    //so we have to be careful to always access the correct resource manager when accessing resources!
+    //to make this visible we pass a resource manager to functions called from here that open dialogs
     protected class JavaScriptApi{
         private String returnStatus(String status){
             JSONObject o=new JSONObject();
@@ -130,6 +135,16 @@ public class WebViewActivityBase extends XWalkActivity {
                 o.put("status", status);
             }catch (JSONException i){}
             return o.toString();
+        }
+        private Resources getAppResources(){
+            Resources rt=null;
+            try {
+                rt = getPackageManager().getResourcesForApplication(AvNav.OWN_PACKAGE);
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.e(AvnLog.LOGPREFIX,"own package "+AvNav.OWN_PACKAGE+" not found");
+                rt=getResources();
+            }
+            return rt;
         }
         @JavascriptInterface
         public String storeRoute(String route){
@@ -150,7 +165,7 @@ public class WebViewActivityBase extends XWalkActivity {
             }
             try {
                 RouteHandler.Route rt=routeHandler.saveRoute(route, true);
-                sendFile(rt.name + ".gpx", "route");
+                sendFile(rt.name + ".gpx", "route",getAppResources());
             }catch(Exception e){
                 Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
@@ -161,14 +176,14 @@ public class WebViewActivityBase extends XWalkActivity {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
-
+            Resources res=getAppResources();
             try {
                 startActivityForResult(
-                        Intent.createChooser(intent, getText(R.string.uploadRoute)),
+                        Intent.createChooser(intent, res.getText(R.string.uploadRoute)),
                         0);
             } catch (android.content.ActivityNotFoundException ex) {
                 // Potentially direct the user to the Market with a Dialog
-                Toast.makeText(getApplicationContext(), getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
             }
 
             return "";
@@ -177,7 +192,7 @@ public class WebViewActivityBase extends XWalkActivity {
 
         @JavascriptInterface
         public void downloadTrack(String name){
-            sendFile(name,"track");
+            sendFile(name,"track",getAppResources());
         }
 
         @JavascriptInterface

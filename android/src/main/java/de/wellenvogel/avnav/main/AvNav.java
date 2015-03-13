@@ -61,6 +61,8 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     public static final String XWALKAPP="de.wellenvogel.xwalk";
     public static final String XWALKVERSION="10.39.235.16";
 
+    public static final String OWN_PACKAGE="de.wellenvogel.avnav.main";
+
     public static final String LOGPRFX="avnav";
     private Button btStart;
     private Button btExit;
