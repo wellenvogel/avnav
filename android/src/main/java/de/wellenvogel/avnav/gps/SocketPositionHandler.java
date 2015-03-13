@@ -14,7 +14,9 @@ import de.wellenvogel.avnav.util.AvnLog;
 import net.sf.marineapi.nmea.io.SentenceReader;
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.sentence.*;
+import net.sf.marineapi.nmea.util.DataStatus;
 import net.sf.marineapi.nmea.util.Position;
+import net.sf.marineapi.nmea.util.SatelliteInfo;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,6 +29,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by andreas on 25.12.14.
@@ -48,6 +51,7 @@ public class SocketPositionHandler extends GpsDataProvider {
         private AisStore store;
         private boolean doStop;
         private Object waiter=new Object();
+        private SatStatus stat=new SatStatus(0,0);
         ReceiverRunnable(AbstractSocket socket,Properties prop){
             properties=prop;
             this.socket=socket;
@@ -60,6 +64,7 @@ public class SocketPositionHandler extends GpsDataProvider {
         public void run() {
             while (! doStop) {
                 isConnected=false;
+                stat.gpsEnabled=false;
                 try {
                     socket.connect();
                 } catch (Exception e) {
@@ -79,6 +84,7 @@ public class SocketPositionHandler extends GpsDataProvider {
                     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     status = "receiving";
                     isConnected = true;
+                    stat.gpsEnabled=true;
                     SentenceFactory factory = SentenceFactory.getInstance();
                     while (!doStop) {
                         String line = in.readLine();
@@ -90,6 +96,7 @@ public class SocketPositionHandler extends GpsDataProvider {
                             } catch (Exception i) {
                             }
                             isConnected = false;
+                            stat.gpsEnabled=false;
                             break;
                         }
                         if (line.startsWith("$") && properties.readNmea) {
@@ -100,10 +107,38 @@ public class SocketPositionHandler extends GpsDataProvider {
                                     if (s instanceof DateSentence) {
                                         lastDate = ((DateSentence) s).getDate();
                                     }
+                                    if (s instanceof  GSVSentence){
+                                        stat.numSat=((GSVSentence)s).getSatelliteCount();
+                                        AvnLog.d(name+": GSV sentence, numSat="+stat.numSat);
+                                        continue;
+                                    }
+                                    if (s instanceof GSASentence){
+                                        stat.numUsed=((GSASentence)s).getSatelliteIds().length;
+                                        AvnLog.d(name+": GSA sentence, used="+stat.numUsed);
+                                        continue;
+                                    }
                                     Position p = null;
                                     if (s instanceof PositionSentence) {
-                                        p = ((PositionSentence) s).getPosition();
-                                        AvnLog.d(LOGPRFX, name + ": external position " + p);
+                                        //we need to verify the position quality
+                                        //it could be either RMC or GLL - they have DataStatus or GGA - GpsFixQuality
+                                        boolean isValid=false;
+                                        if (s instanceof  RMCSentence){
+                                            isValid=((RMCSentence)s).getStatus()== DataStatus.ACTIVE;
+                                            AvnLog.d(name+": RMC sentence, valid="+isValid);
+                                        }
+                                        if (s instanceof GLLSentence){
+                                            isValid=((GLLSentence)s).getStatus()== DataStatus.ACTIVE;
+                                            AvnLog.d(name+": GLL sentence, valid="+isValid);
+                                        }
+                                        if (s instanceof  GGASentence){
+                                            int qual=((GGASentence)s).getFixQuality().toInt();
+                                            isValid=qual>0;
+                                            AvnLog.d(name+": GGA sentence, quality="+qual+", valid="+isValid);
+                                        }
+                                        if (isValid) {
+                                            p = ((PositionSentence) s).getPosition();
+                                            AvnLog.d(LOGPRFX, name + ": external position " + p);
+                                        }
                                     }
                                     net.sf.marineapi.nmea.util.Time time = null;
                                     if (s instanceof TimeSentence) {
@@ -122,8 +157,16 @@ public class SocketPositionHandler extends GpsDataProvider {
                                             location.setLongitude(p.getLongitude());
                                             location.setTime(toTimeStamp(lastDate, time));
                                             if (s.getSentenceId().equals("RMC")) {
-                                                location.setSpeed((float) (((RMCSentence) s).getSpeed() / msToKn));
-                                                location.setBearing((float) (((RMCSentence) s).getCourse()));
+                                                try {
+                                                    location.setSpeed((float) (((RMCSentence) s).getSpeed() / msToKn));
+                                                }catch (Exception i){
+                                                    AvnLog.d(name+": Exception querying speed: "+i.getLocalizedMessage());
+                                                }
+                                                try {
+                                                    location.setBearing((float) (((RMCSentence) s).getCourse()));
+                                                }catch (Exception i){
+                                                    AvnLog.d(name+": Exception querying bearing: "+i.getLocalizedMessage());
+                                                }
                                             }
                                             AvnLog.d(LOGPRFX, name + ": location: " + location);
                                         }
@@ -216,7 +259,7 @@ public class SocketPositionHandler extends GpsDataProvider {
                     lastAisCleanup=now;
                     store.cleanup(lifetime);
                 }
-            }
+            }//satellite view
         }
         public boolean hasAisData(){
             if (store == null ) return false;
@@ -246,7 +289,10 @@ public class SocketPositionHandler extends GpsDataProvider {
     SatStatus getSatStatus() {
         SatStatus rt=new SatStatus(0,0);
         synchronized (this) {
-            rt.gpsEnabled = runnable.getConnected();
+            if (runnable != null && runnable.stat != null) {
+                rt = new SatStatus(runnable.stat.numSat, runnable.stat.numUsed);
+                rt.gpsEnabled = runnable.stat.gpsEnabled;
+            }
         }
         return rt;
     }
@@ -291,7 +337,7 @@ public class SocketPositionHandler extends GpsDataProvider {
         return super.getGpsData(curLoc);
     }
 
-    /**
+    /**btSocket=device.createRfcommSocketToServiceRecord(UUID.fromString(RFCOMM_UUID));
      * get AIS data (limited to distance)
      * @param lat
      * @param lon

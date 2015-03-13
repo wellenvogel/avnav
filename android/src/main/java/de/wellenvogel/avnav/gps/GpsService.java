@@ -556,7 +556,7 @@ public class GpsService extends Service  {
     public JSONObject getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
         JSONObject item=new JSONObject();
-        item.put("name","internalGPS");
+        item.put("name","internal GPS");
         if (internalProvider != null) {
             GpsDataProvider.SatStatus st=internalProvider.getSatStatus();
             Location loc=internalProvider.getLocation();
@@ -565,7 +565,7 @@ public class GpsService extends Service  {
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }
             else {
-                item.put("info","searching "+st.numUsed+"/"+st.numSat);
+                item.put("info","searching, sats: "+st.numUsed+" available / "+st.numSat+" used");
                 item.put("status", GpsDataProvider.STATUS_STARTED);
             }
         }
@@ -575,7 +575,7 @@ public class GpsService extends Service  {
         }
         rt.put(item);
         item=new JSONObject();
-        item.put("name","externalGPS");
+        item.put("name","IP");
         if (externalProvider != null) {
             String addr=externalProvider.socket.getId();
             GpsDataProvider.SatStatus st=externalProvider.getSatStatus();
@@ -594,7 +594,7 @@ public class GpsService extends Service  {
                 }
                 else {
                     if (st.gpsEnabled) {
-                        item.put("info", "(" + addr + ") connected, waiting for data");
+                        item.put("info", "(" + addr + ") connected, sats: "+st.numSat+" available / "+st.numUsed+" used");
                         item.put("status", GpsDataProvider.STATUS_STARTED);
                     } else {
                         item.put("info", "(" + addr + ") disconnected");
@@ -628,7 +628,7 @@ public class GpsService extends Service  {
                 }
                 else {
                     if (st.gpsEnabled) {
-                        item.put("info", "(" + addr + ") connected, waiting for data");
+                        item.put("info", "(" + addr + ") connected, sats: "+st.numSat+" available / "+st.numUsed+" used");
                         item.put("status", GpsDataProvider.STATUS_STARTED);
                     } else {
                         item.put("info", "(" + addr + ") disconnected");
