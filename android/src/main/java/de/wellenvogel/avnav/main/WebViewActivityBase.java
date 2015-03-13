@@ -52,6 +52,7 @@ public class WebViewActivityBase extends XWalkActivity {
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     private GpsService gpsService=null;
+    private int goBackSequence;
     //gemf files
     private GemfHandler gemfFile= null;
     //routes
@@ -212,6 +213,11 @@ public class WebViewActivityBase extends XWalkActivity {
         @JavascriptInterface
         public void goBack(){
             WebViewActivityBase.this.backHandler.sendEmptyMessage(1);
+        }
+
+        @JavascriptInterface
+        public void acceptEvent(String key,int num){
+            if (key != null && key.equals("backPressed")) goBackSequence=num;
         }
 
     };
@@ -779,7 +785,31 @@ public class WebViewActivityBase extends XWalkActivity {
 
     @Override
     public void onBackPressed(){
-        sendEventToJs("backPressed",1);
+        final int num=goBackSequence+1;
+        sendEventToJs("backPressed",num);
+        //as we cannot be sure that the JS code will for sure handle
+        //our back pressed (maybe a different page has been loaded) , we wait at most 200ms for it to ack this
+        //otherwise we really go back here
+        Thread waiter=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long wait=200;
+                while (wait>0) {
+                    long current = System.currentTimeMillis();
+                    if (goBackSequence == num) break;
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                    }
+                    wait-=10;
+                }
+                if (wait == 0) {
+                    Log.e(AvnLog.LOGPREFIX,"go back handler did not fire");
+                    backHandler.sendEmptyMessage(1);
+                }
+            }
+        });
+        waiter.start();
     }
 
     /**

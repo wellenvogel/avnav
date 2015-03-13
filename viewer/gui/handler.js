@@ -15,19 +15,19 @@ avnav.provide('avnav.gui.AndroidEvent');
  * @constructor
  * @extends {
  */
-avnav.gui.PageEvent=function(gui,navobject,oldpage,newpage,opt_options){
-    this.gui=gui;
-    this.navobject=navobject;
-    this.oldpage=oldpage;
-    this.newpage=newpage;
-    this.options=opt_options;
+avnav.gui.PageEvent = function (gui, navobject, oldpage, newpage, opt_options) {
+    this.gui = gui;
+    this.navobject = navobject;
+    this.oldpage = oldpage;
+    this.newpage = newpage;
+    this.options = opt_options;
 };
 /**
  * the type for the page event
  * @type {string}
  * @const
  */
-avnav.gui.PageEvent.EVENT_TYPE='changepage';
+avnav.gui.PageEvent.EVENT_TYPE = 'changepage';
 
 /**
  * an event triggered by the android integration
@@ -35,22 +35,22 @@ avnav.gui.PageEvent.EVENT_TYPE='changepage';
  * @param {number} id - an id
  * @constructor
  */
-avnav.gui.AndroidEvent=function(key,id){
-    this.key=key;
-    this.id=id;
+avnav.gui.AndroidEvent = function (key, id) {
+    this.key = key;
+    this.id = id;
 };
-avnav.gui.AndroidEvent.EVENT_TYPE='android';
+avnav.gui.AndroidEvent.EVENT_TYPE = 'android';
 
 /**
  * an event for a generic back handling
  * @param name - the name of the page that should handle the event
  * @constructor
  */
-avnav.gui.BackEvent=function(name){
-    this.name=name;
+avnav.gui.BackEvent = function (name) {
+    this.name = name;
 };
 
-avnav.gui.BackEvent.EVENT_TYPE="avnback";
+avnav.gui.BackEvent.EVENT_TYPE = "avnback";
 
 /**
  *
@@ -59,43 +59,44 @@ avnav.gui.BackEvent.EVENT_TYPE="avnback";
  * @param {ol.Map} map
  * @constructor
  */
-avnav.gui.Handler=function(properties,navobject,map){
+avnav.gui.Handler = function (properties, navobject, map) {
     /** {avnav.util.PropertyHandler} */
-    this.properties=properties;
+    this.properties = properties;
     /** {avnav.nav.NavObject} */
-    this.navobject=navobject;
+    this.navobject = navobject;
     /** {avnav.map.MapHolder} */
-    this.map=map;
+    this.map = map;
     /**
      * the curent page
      * @type {String}
      */
-    this.page=undefined;
-    var self=this;
+    this.page = undefined;
+    var self = this;
     /**
      * if any entry is set, do not resize the layout
      * (but potentially trigger a resize later)
      * @type {{}}
      */
-    this.activeInputs={};
-    this.lasth=$(window).height();
-    this.lastw=$(window).width();
-    $(window).on('resize',function(){
-        try{
-            if (Object.keys(self.activeInputs).length > 0){
+    this.activeInputs = {};
+    this.lasth = $(window).height();
+    this.lastw = $(window).width();
+    $(window).on('resize', function () {
+        try {
+            if (Object.keys(self.activeInputs).length > 0) {
                 log("resize skipped due to active input");
                 return;
             }
-        }catch (e){}
-        setTimeout(function(){
-            self.lasth=$(window).height();
-            self.lastw=$(window).width();
+        } catch (e) {
+        }
+        setTimeout(function () {
+            self.lasth = $(window).height();
+            self.lastw = $(window).width();
             self.properties.updateLayout();
-            $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(self.properties));
-            },10);
+            $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE, new avnav.util.PropertyChangeEvent(self.properties));
+        }, 10);
     });
-    $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,function(ev,evdata){
-        if (evdata.key && evdata.key=="backPressed") {
+    $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE, function (ev, evdata) {
+        if (evdata.key && evdata.key == "backPressed") {
             $(document).trigger(avnav.gui.BackEvent.EVENT_TYPE, new avnav.gui.BackEvent(self.page));
         }
     });
@@ -105,38 +106,37 @@ avnav.gui.Handler=function(properties,navobject,map){
  * sets an active input field (will disable resize events)
  * @param id
  */
-avnav.gui.Handler.prototype.addActiveInput=function(id){
-    this.activeInputs[id]=true;
+avnav.gui.Handler.prototype.addActiveInput = function (id) {
+    this.activeInputs[id] = true;
 };
 
-avnav.gui.Handler.prototype.removeActiveInput=function(id){
-    var trigger=(Object.keys(this.activeInputs).length >0);
+avnav.gui.Handler.prototype.removeActiveInput = function (id) {
+    var trigger = (Object.keys(this.activeInputs).length > 0);
     delete this.activeInputs[id];
-    if (! trigger) return;
-    var self=this;
+    if (!trigger) return;
+    var self = this;
     //if we now removed focus from any input, we could resize
     //if the window size has changed
     //we delay a bit to give the on screen keyboard a chance to disappear
-    if (Object.keys(this.activeInputs).length == 0){
-        setTimeout(function(){
-            var ch=$(window).height();
-            var cw=$(window).width();
-            if (ch != self.lasth || cw != self.lastw){
-                self.lasth=ch;
-                self.lastw=cw;
+    if (Object.keys(this.activeInputs).length == 0) {
+        setTimeout(function () {
+            var ch = $(window).height();
+            var cw = $(window).width();
+            if (ch != self.lasth || cw != self.lastw) {
+                self.lasth = ch;
+                self.lastw = cw;
                 self.properties.updateLayout();
-                $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(self.properties));
+                $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE, new avnav.util.PropertyChangeEvent(self.properties));
             }
-        },1000);
+        }, 1000);
     }
 };
 
-avnav.gui.Handler.prototype.removeAllActiveInputs=function(){
-    var trigger=(Object.keys(this.activeInputs).length >0);
-    this.activeInputs={};
+avnav.gui.Handler.prototype.removeAllActiveInputs = function () {
+    var trigger = (Object.keys(this.activeInputs).length > 0);
+    this.activeInputs = {};
     if (trigger) this.removeActiveInput('dummy'); //trigger a resize if necessary
 };
-
 
 
 /**
@@ -147,14 +147,14 @@ avnav.gui.Handler.prototype.removeAllActiveInputs=function(){
  * @param opt_options
  * @returns {boolean|*}
  */
-avnav.gui.Handler.prototype.showPageOrReturn=function(returnpage,page,opt_options){
-    var spage=page;
-    if (returnpage !== undefined){
-        if (! opt_options) opt_options={};
-        opt_options.returning=true;
-        spage=returnpage;
+avnav.gui.Handler.prototype.showPageOrReturn = function (returnpage, page, opt_options) {
+    var spage = page;
+    if (returnpage !== undefined) {
+        if (!opt_options) opt_options = {};
+        opt_options.returning = true;
+        spage = returnpage;
     }
-    return this.showPage(spage,opt_options);
+    return this.showPage(spage, opt_options);
 };
 /**
  * show a certain page
@@ -163,14 +163,14 @@ avnav.gui.Handler.prototype.showPageOrReturn=function(returnpage,page,opt_option
  * @returns {boolean}
  */
 
-avnav.gui.Handler.prototype.showPage=function(name,options){
-    if (! name) return false;
+avnav.gui.Handler.prototype.showPage = function (name, options) {
+    if (!name) return false;
     if (name == this.page) return false;
     this.removeAllActiveInputs();
     $('.avn_page').hide();
-    $('#avi_'+name).show();
-    var oldname=this.page;
-    this.page=name;
+    $('#avi_' + name).show();
+    var oldname = this.page;
+    this.page = name;
     log("trigger page event");
     $(document).trigger(avnav.gui.PageEvent.EVENT_TYPE, new avnav.gui.PageEvent(
         this,
@@ -185,15 +185,20 @@ avnav.gui.Handler.prototype.showPage=function(name,options){
  * check whether we are on mobile
  * @returns {boolean}
  */
-avnav.gui.Handler.prototype.isMobileBrowser=function(){
+avnav.gui.Handler.prototype.isMobileBrowser = function () {
     //return true;
-    return ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) )||
+    return ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) ||
         this.properties.getProperties().forceMobile;
-    };
+};
 
-avnav.gui.sendAndroidEvent=function(key,id){
-    log("android event key="+key+", id="+id);
-    $(document).trigger(avnav.gui.AndroidEvent.EVENT_TYPE, new avnav.gui.AndroidEvent(key,id));
+avnav.gui.sendAndroidEvent = function (key, id) {
+    log("android event key=" + key + ", id=" + id);
+    try {
+        //inform the android part that we noticed the event
+        avnav.android.acceptEvent(key, id);
+    } catch (e) {
+    }
+    $(document).trigger(avnav.gui.AndroidEvent.EVENT_TYPE, new avnav.gui.AndroidEvent(key, id));
 };
 
 
