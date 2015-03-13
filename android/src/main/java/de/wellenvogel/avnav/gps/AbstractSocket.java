@@ -1,10 +1,13 @@
 package de.wellenvogel.avnav.gps;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.UUID;
@@ -29,6 +32,7 @@ public class AbstractSocket {
             ipSocket.connect(ipAddr,timeout);
             return;
         }
+
         btSocket.connect();
     }
 
@@ -77,7 +81,7 @@ public class AbstractSocket {
     }
 
     private void createBtSocket() throws IOException {
-        btSocket=btDevice.createRfcommSocketToServiceRecord(UUID.fromString(RFCOMM_UUID));
+        btSocket = btDevice.createRfcommSocketToServiceRecord(UUID.fromString(RFCOMM_UUID));
     }
 
 }

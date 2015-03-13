@@ -71,6 +71,9 @@ public class SocketPositionHandler extends GpsDataProvider {
                     Log.e(LOGPRFX, name + ": Exception during connect " + e.getLocalizedMessage());
                     status = "connect error " + e;
                     try {
+                        socket.close();
+                    }catch (Exception i){}
+                    try {
                         synchronized (waiter) {
                             waiter.wait(5000);
                         }
