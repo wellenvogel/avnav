@@ -6,20 +6,22 @@
   </head>
   <body>
     <h1>AvNav Android</h1>
-    <p>Version 0.1.2</p>
+    <p>Version 0.2.0.</p>
     <p>Nachdem die Navigations-App für die <a href="beschreibung.html">Nutzung
         mit dem Raspberry Pi</a>&nbsp; bereits 2 Jahre erfolgreich im Einsatz
       ist, gibt es jetzt auch eine erste Version, die direkt (ohne einen
       Raspberry) auf Android läuft.</p>
-    <p>Zum <a href="../downloads">Download</a>. Demnächst auch im AppStore.</p>
+    <p>Zum <a href="../downloads">Download</a>. Oder im <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">AppStore</a>.</p>
     <p>Sie verpackt im Wesentlichen die Web-App (siehe <a href="avnav-de.html">Beschreibung</a>)
       in eine Android Applikation - siehe dort auch zum <a href="beschreibung.html">Erzeugen/Konvertieren</a>
       der Karten.</p>
     <p>Es kann das interne GPS des Gerätes genutzt werden. Alternativ können
-      NMEA Daten über TCP/IP empfangen werden (RMC für die Positionsdaten und
-      AIS Daten). Die Quelle dafür kann z.B. ein Raspberry mit meiner Software
-      sein - aber auch ein beliebiger anderer Sender, der die NMEA Daten per
-      WLAN bereitstellt.</p>
+      NMEA Daten über TCP/IP oder bluetooth empfangen werden (RMC für die
+      Positionsdaten und AIS Daten). Die Quelle dafür kann z.B. ein Raspberry
+      mit meiner Software sein - aber auch ein beliebiger anderer Sender, der
+      die NMEA Daten per WLAN bereitstellt. Auch eine einfache GPS bluetooth
+      "Maus" ist geeignet.</p>
+    <p>Damit kann die Software auch auf Tablets ohne eingebautes GPS laufen.</p>
     <p>Die Karten werden im gleichen gemf Format erwartet und müssen in das
       avnav/charts Verzeichnis auf der SD-Karte kopiert werden (Verzeichnis kann
       beim Start ausgewählt werden). Zusätzlich sind einige Demo-Karten
@@ -28,6 +30,13 @@
       angelegt.</p>
     <p>Die Track-Daten werden in das Verzeichnis avnav/tracks auf der SD-Karte
       geschrieben.</p>
+    <p>Im Verzeichnis avnav/routes werden die Routen im gpx Format gespeichert.
+      Routen und Tracks können aus der App über die Download Funktion an andere
+      Apps weitergegeben werden (siehe Beschreibung der App). Um sie in andere
+      Verzeichnisse zu speichern oder Routen aus anderen Verzeichnissen zu laden
+      (upload Funktion) sollte sinnvollerweise ein Dateimanager installiert sein
+      - z.B. <a href="https://play.google.com/store/apps/details?id=com.estrongs.android.pop&amp;hl=de">ES
+        Datei Manager.</a></p>
     <p>Nach dem Start der App befindet man sich auf der Konfigurationsseite:</p>
     <img alt="" src="android-start-internal.png" height="400"><br>
     Hier kann das Verzeichnis auf der SD-Karte für Karten und Tracks gewählt
@@ -45,17 +54,33 @@
     Ein Klick auf den (i) Button zeigt die Version der Applikation sowie
     Lizenz-Daten an.<br>
     <br>
-    Falls NMEA Daten über AIS empfangen werden sollen, müssen die Checkboxen
-    entsprechend aktiviert werden, im dann sichtbaren Feld müssen IP-Adresse und
-    Port des NMEA Senders eingetragen werden:<br>
+    Falls NMEA Daten über AIS (oder Bluetooth) empfangen werden sollen, müssen
+    die Checkboxen entsprechend aktiviert werden.<br>
+    Im dann sichtbaren Feld müssen - für IP - IP-Adresse und Port des NMEA
+    Senders eingetragen werden:<br>
     <img alt="" src="android-start-ip-running.png"><br>
     <br>
-    Im Bild ist die IP Verbindung erfolgreich aufgebaut (oberer gründer Punkt)
-    und es wird eine gültige Position empfangen (unterer grüner Punkt).<br>
+    Im Bild ist die IP Verbindung erfolgreich aufgebaut (unterer gründer Punkt)
+    und es wird eine gültige Position empfangen (oberer grüner Punkt).<br>
     Zum Testen kann man über den kleinen Start/Stop Button die Verbindung
     prüfen.<br>
     Wenn beide Punkte grün sind, über den großen Start-Button die Applikation
     starten.<br>
+    <br>
+    Zum Verbinden mit einem Bluetooth GPS, dieses zunächst über die Bluetooth
+    Einstellungen (ausserhalb der Applikation) "pairen".<br>
+    In der App dann NMEA oder AIS bei Bluetooth auswählen und auf das sichtbare
+    Eingabefeld tippen, es erscheint ein Auswahldialog für verbundene Bluetooth
+    Geräte:<br>
+    <br>
+    <img alt="" src="android-select-bt.png"><br>
+    <br>
+    Mit dem Auswählen eines Gerätes wird der Name in der Bluetooth Zeile
+    sichtbar. Falls Bluetooth nicht aktiv ist, wird gefragt, ob es eingeschaltet
+    werden soll.<br>
+    <img alt="" src="android-bt-gps.png"><br>
+    Im Bild ist der Positionsempfang über Bluetooth aktiv, AIS Daten werden über
+    IP empfangen.<br>
     <br>
     Auf dieser Seite kann auch der Modus ausgewählt werden:<br>
     Ab Android 4.4 (Kitkat) läuft die App problemlos ohne weitere
@@ -67,13 +92,15 @@
     </ol>
     <h4>Die "Crosswalk" runtime installieren.</h4>
     Das ist eine embedded Chrome runtime (d.h. ein Stückchen Chrome läuft in der
-    App). Die muss allerdings in der Version genau passen (die AvNavApp prüft
+    App) - damit wird der Stand für den embedded Browser auf Android 4.4 angehoben.
+    Die runtime muss allerdings in der Version genau passen (die AvNavApp prüft
     das und zeigt das auf der Info-Seite (i) an). Diese kann man entweder von
-    der <a href="../downloads">Download-Seite</a> oder von <a href="https://download.01.org/crosswalk/releases/crosswalk/android/stable/">https://download.01.org/crosswalk/releases/crosswalk/android/stable/</a>
+    der <a href="../downloads">Download-Seite</a> oder aus dem AppStore
     herunterladen. In jedem Falle auf die Versionsnummer und die Architektur
     achten (dürfte meist ARM sein).<br>
     Wenn die App das erste mal gestartet wird, prüft sie, ob eine solche runtime
     installiert ist und bietet sonst an, das zu tun.<br>
+    <br>
     <img alt="" src="android-download-runtime.png"><br>
     Hier gibt es 2 Möglichkeiten:<br>
     GooglePlay - das installiert die neueste Version der runtime. Wenn man die
@@ -92,7 +119,6 @@
     &nbsp;<a href="https://play.google.com/store/apps/details?id=com.android.chrome">https://play.google.com/store/apps/details?id=com.android.chrome<br>
     </a>Dann auf dem Bildschirm den Mode "Browser" auswählen (siehe) unten - ist
     von der Bedienung beim Start etwas umständlicher.<br>
-    <br>
     <br>
     Im Browser Mode startet die App einen kleinen Webserver (also spielt so ein
     wenig Raspberry...) auf einem festen Port (34567) und zeigt die folgende
@@ -128,7 +154,7 @@
     geschrieben.<br>
     Wichtiger Hinweis:<br>
     Wenn man im Browser-Mode mal direkt aus der App und mal vom Home Bildschirm
-    startet, hat man jedesmal andere Einstellungen/Wegepunkt/Routen in der App.<br>
+    startet, hat man jedesmal andere Einstellungen in der App.<br>
     Also bitte immer den gleichen Weg benutzen.<br>
     <br>
     <br>

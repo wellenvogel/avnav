@@ -14,29 +14,22 @@
           Genauigkeit der Darstellung und des verwendeten Kartenmaterials.</b></i></p>
     <p>Die wesentlichen Fähigkeiten:</p>
     <ul>
-      <li>
-        <p>Darstellung der Kartendaten (blattschnittfrei je Satz), mit den
-          enstprechenden Funktionen (Zoom, move,...)</p>
-      </li>
-      <li>
-        <p>Dartstellung der aktuellen Schiffsposition mit Kurs, Geschwindigkeit
-          (mit Lock der Karte auf Schiffsposition)</p>
-      </li>
-      <li>
-        <p>Darstellung des aktuellen Tracks (der Track wird auch in einer gpx
-          Datei gespeichert)</p>
-      </li>
-      <li>
-        <p>Setzen eines Wegepunktes, Anzeige von Richtung,Entfernung,ETA</p>
-      </li>
-      <li>
-        <p>AIS Anzeige mit Darstellung in der Karte, AIS Target am nächsten zum
-          Schiff, Warnung bei CPA &lt; 500m, CPA,TCPA, AIS Infos</p>
-      </li>
-      <li>
-        <p>Erzeugen einer Route (mit Editiermöglichkeit zu jedem Zeitpunkt)</p>
-      </li>
-      <li>Mehrere Displays an einem Server</li>
+      <li> Darstellung der Kartendaten (blattschnittfrei je Satz), mit den
+        enstprechenden Funktionen (Zoom, move,...) </li>
+      <li> Dartstellung der aktuellen Schiffsposition mit Kurs, Geschwindigkeit
+        (mit Lock der Karte auf Schiffsposition) </li>
+      <li> Darstellung des aktuellen Tracks (der Track wird auch in einer gpx
+        Datei gespeichert) </li>
+      <li> Setzen eines Wegepunktes, Anzeige von Richtung,Entfernung,ETA </li>
+      <li> AIS Anzeige mit Darstellung in der Karte, AIS Target am nächsten zum
+        Schiff, Warnung bei CPA &lt; 500m, CPA,TCPA, AIS Infos </li>
+      <li> Erzeugen von Routen (mit Editiermöglichkeit zu jedem Zeitpunkt),
+        Speichern/Laden/ImportExport von Routen im gpx Format</li>
+      <li>Automatisches Target Handling in der Route inklusive Autopilot-Steuerung</li>
+      <li>Upload/download von Karten zum Raspberry</li>
+      <li>Mehrere Displays an einem Server (connected/dicsonnected mode)</li>
+      <li>Nachtmodus</li>
+      <li>GPS Display (Anzeige ohne Karte)</li>
     </ul>
     <p>Im Folgenden beschreibe ich kurz die Bedienung der aktuellen Version,
       danach einige technische Details.</p>
@@ -163,7 +156,10 @@
               Karte verschieben bis sich der Marker an der gewünschten Stelle
               (=Wegepunkt) befindet. Mit Klick auf den Marker button erscheint
               ein grüner Rand und die Kurslinie zum Marker wird angezeigt. Der
-              Marker bleibt auf dieser Position.</p>
+              Marker bleibt auf dieser Position. Der Marker lock ist auch aktiv,
+              wenn eine Route läuft.<br>
+              Über diesen Button kann das routing/der WP-Modus immer beendet
+              werden.</p>
           </td>
         </tr>
         <tr>
@@ -195,7 +191,7 @@
     </table>
     <p> </p>
     <p>Eine typische Bedienfolge:</p>
-    <p>Waypoint setzen:</p>
+    <p>Waypoint setzen (simples Wegepunkt-Routing):</p>
     <p>unlock Boot-&gt;unlock Marker-&gt;Karte verschieben bis Marker auf
       gewünschter Pos (Zoom nutzen)-&gt;lock Marker-&gt;lock Boot </p>
     <p>Wenn man einen Wegepunkt aktiv hat (Marker Button grün) und die Karte
@@ -220,7 +216,8 @@
       Anklicken links, durch die Pfeiltasten oben oder durch anklicken auf der
       Karte geändert werden.</p>
     <p>Wenn man die momentan aktive Route bearbeitet, wird das durch einen roten
-      Rahmen links um die Routen-Info angezeigt.</p>
+      Rahmen links um die Routen-Info angezeigt. Falls eine andere Route
+      bearbeitet wird, ist dieser grün.</p>
     <p>Neben den Standard buttons der Navigationsseite wird eine zusätzliche
       Leiste mit routing buttons eingeblendet:</p>
     <table style="width: 100%" border="1">
@@ -346,7 +343,7 @@
         height="20"> zur Download-/Upload Seite. Auf dieser Seite kann man
       Tracks, Routen und Karten herunterladen oder auf den Raspberry hochladen
       und sie dort auch löschen.</p>
-    <p>Hochladen/Löschen funktionert nur im connected Mode.</p>
+    <p>Hochladen/Löschen funktioneren nur im connected Mode.</p>
     <img alt="" src="trackpage.png">
     <h3>Der Nachtmodus</h3>
     <p>Um im Dunkeln nicht zu blenden, kann man auf einen Nachtmodus umstellen
