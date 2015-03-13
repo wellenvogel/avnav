@@ -18,6 +18,7 @@ public class AbstractSocket {
     private InetSocketAddress ipAddr;
     private int timeout;
     private BluetoothSocket btSocket;
+    private BluetoothDevice btDevice;
 
     /**
      * connect the socket
@@ -37,26 +38,46 @@ public class AbstractSocket {
     }
 
     public void close() throws IOException {
-        if (ipSocket!=null) ipSocket.close();
-        btSocket.close();
+        if (ipSocket!=null) {
+            try {
+                ipSocket.close();
+            }catch (IOException e){
+                ipSocket=new Socket();
+                throw e;
+            }
+            ipSocket=new Socket();
+            return;
+        }
+        try {
+            btSocket.close();
+        }catch (IOException e){
+            createBtSocket();
+            throw e;
+        }
+        createBtSocket();
     }
 
     public String getId(){
         if (ipSocket!=null) {
             return ipAddr.toString();
         }
-        return btSocket.getRemoteDevice().getName();
+        return btDevice.getName();
     }
 
-    public AbstractSocket(InetSocketAddress addr,Socket socket,int timeout){
-        ipSocket=socket;
+    public AbstractSocket(InetSocketAddress addr,int timeout){
+        ipSocket=new Socket();
         ipAddr=addr;
         this.timeout=timeout;
     }
 
     public static String RFCOMM_UUID="00001101-0000-1000-8000-00805F9B34FB"; //the somehow magic id..
     public AbstractSocket(BluetoothDevice device, int connectTimeout) throws IOException {
-        btSocket=device.createRfcommSocketToServiceRecord(UUID.fromString(RFCOMM_UUID));
+        btDevice=device;
+        createBtSocket();
+    }
+
+    private void createBtSocket() throws IOException {
+        btSocket=btDevice.createRfcommSocketToServiceRecord(UUID.fromString(RFCOMM_UUID));
     }
 
 }

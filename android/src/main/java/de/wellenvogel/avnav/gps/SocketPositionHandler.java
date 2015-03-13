@@ -46,6 +46,8 @@ public class SocketPositionHandler extends GpsDataProvider {
         private boolean isConnected=false;
         private AisPacketParser aisparser;
         private AisStore store;
+        private boolean doStop;
+        private Object waiter=new Object();
         ReceiverRunnable(AbstractSocket socket,Properties prop){
             properties=prop;
             this.socket=socket;
@@ -56,111 +58,116 @@ public class SocketPositionHandler extends GpsDataProvider {
         }
         @Override
         public void run() {
-            try{
-                socket.connect();
-            } catch (Exception e){
-                Log.e(LOGPRFX, name+": Exception during connect " + e.getLocalizedMessage());
-                status="connect error "+e;
-                isRunning=false;
-                return;
-            }
-            AvnLog.d(LOGPRFX,name+": connected to "+socket.getId());
-            try {
-                BufferedReader in =new BufferedReader( new InputStreamReader(socket.getInputStream()));
-                status="receiving";
-                isConnected=true;
-                SentenceFactory factory = SentenceFactory.getInstance();
-                while (true){
-                    String line=in.readLine();
-                    AvnLog.d(LOGPRFX, name+": received: " + line);
-                    if (line == null){
-                        status="disconnected, EOF";
-                        try{
-                            socket.close();
-                        }catch (Exception i){}
-                        isConnected=false;
-                        isRunning=false;
-                        return;
-                    }
-                    if (line.startsWith("$") && properties.readNmea){
-                        //NMEA
-                        if (SentenceValidator.isValid(line)){
-                            try {
-                                Sentence s = factory.createParser(line);
-                                if (s instanceof DateSentence){
-                                    lastDate=((DateSentence) s).getDate();
-                                }
-                                Position p=null;
-                                if (s instanceof PositionSentence) {
-                                    p = ((PositionSentence) s).getPosition();
-                                    AvnLog.d(LOGPRFX, name+": external position " + p);
-                                }
-                                net.sf.marineapi.nmea.util.Time time=null;
-                                if (s instanceof TimeSentence) {
-                                    time=((TimeSentence) s).getTime();
-                                }
-                                if (time != null && lastDate != null && p != null){
-                                    synchronized (this){
-                                        Location lastLocation=location;
-                                        if (lastLocation != null) {
-                                            location = new Location(lastLocation);
-                                        }
-                                        else {
-                                            location= new Location((String)null);
-                                        }
-                                        lastPositionReceived=System.currentTimeMillis();
-                                        location.setLatitude(p.getLatitude());
-                                        location.setLongitude(p.getLongitude());
-                                        location.setTime(toTimeStamp(lastDate,time));
-                                        if (s.getSentenceId().equals("RMC")){
-                                            location.setSpeed((float)(((RMCSentence)s).getSpeed()/msToKn));
-                                            location.setBearing((float)(((RMCSentence)s).getCourse()));
-                                        }
-                                        AvnLog.d(LOGPRFX,name+": location: "+location);
-                                    }
-                                }
-                                else{
-                                    AvnLog.d(LOGPRFX,name+": ignoring sentence "+line+" - no position or time");
-                                }
-                            }catch (Exception i){
-                                Log.e(LOGPRFX,name+": exception in NMEA parser "+i.getLocalizedMessage());
-                                i.printStackTrace();
-                            }
-                        }
-                        else{
-                            AvnLog.d(LOGPRFX,name+": ignore invalid nmea");
-                        }
-                    }
-                    if (line.startsWith("!") && properties.readAis){
-                        if (Abk.isAbk(line)){
-                            aisparser.newVdm();
-                            AvnLog.i(LOGPRFX,name+": ignore abk line "+line);
-                        }
-                        try {
-                            AisPacket p=aisparser.readLine(line);
-                            if (p != null){
-                                AisMessage m=p.getAisMessage();
-                                AvnLog.i(LOGPRFX,name+": AisPacket received: "+m.toString());
-                                store.addAisMessage(m);
-                            }
-                        } catch (Exception e) {
-                            Log.e(LOGPRFX,name+": AIS exception while parsing "+line);
-                            e.printStackTrace();
-                        }
-                    }
-
-                }
-            } catch (IOException e) {
-                Log.e(LOGPRFX,name+": Exception during read "+e.getLocalizedMessage());
-                status="read exception "+e;
-                try {
-                    socket.close();
-                }catch (Exception i){}
-                isRunning=false;
+            while (! doStop) {
                 isConnected=false;
-                return;
-            }
+                try {
+                    socket.connect();
+                } catch (Exception e) {
+                    Log.e(LOGPRFX, name + ": Exception during connect " + e.getLocalizedMessage());
+                    status = "connect error " + e;
+                    try {
+                        synchronized (waiter) {
+                            waiter.wait(5000);
+                        }
+                    } catch (InterruptedException e1) {
 
+                    }
+                    continue;
+                }
+                AvnLog.d(LOGPRFX, name + ": connected to " + socket.getId());
+                try {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    status = "receiving";
+                    isConnected = true;
+                    SentenceFactory factory = SentenceFactory.getInstance();
+                    while (!doStop) {
+                        String line = in.readLine();
+                        AvnLog.d(LOGPRFX, name + ": received: " + line);
+                        if (line == null) {
+                            status = "disconnected, EOF";
+                            try {
+                                socket.close();
+                            } catch (Exception i) {
+                            }
+                            isConnected = false;
+                            break;
+                        }
+                        if (line.startsWith("$") && properties.readNmea) {
+                            //NMEA
+                            if (SentenceValidator.isValid(line)) {
+                                try {
+                                    Sentence s = factory.createParser(line);
+                                    if (s instanceof DateSentence) {
+                                        lastDate = ((DateSentence) s).getDate();
+                                    }
+                                    Position p = null;
+                                    if (s instanceof PositionSentence) {
+                                        p = ((PositionSentence) s).getPosition();
+                                        AvnLog.d(LOGPRFX, name + ": external position " + p);
+                                    }
+                                    net.sf.marineapi.nmea.util.Time time = null;
+                                    if (s instanceof TimeSentence) {
+                                        time = ((TimeSentence) s).getTime();
+                                    }
+                                    if (time != null && lastDate != null && p != null) {
+                                        synchronized (this) {
+                                            Location lastLocation = location;
+                                            if (lastLocation != null) {
+                                                location = new Location(lastLocation);
+                                            } else {
+                                                location = new Location((String) null);
+                                            }
+                                            lastPositionReceived = System.currentTimeMillis();
+                                            location.setLatitude(p.getLatitude());
+                                            location.setLongitude(p.getLongitude());
+                                            location.setTime(toTimeStamp(lastDate, time));
+                                            if (s.getSentenceId().equals("RMC")) {
+                                                location.setSpeed((float) (((RMCSentence) s).getSpeed() / msToKn));
+                                                location.setBearing((float) (((RMCSentence) s).getCourse()));
+                                            }
+                                            AvnLog.d(LOGPRFX, name + ": location: " + location);
+                                        }
+                                    } else {
+                                        AvnLog.d(LOGPRFX, name + ": ignoring sentence " + line + " - no position or time");
+                                    }
+                                } catch (Exception i) {
+                                    Log.e(LOGPRFX, name + ": exception in NMEA parser " + i.getLocalizedMessage());
+                                    i.printStackTrace();
+                                }
+                            } else {
+                                AvnLog.d(LOGPRFX, name + ": ignore invalid nmea");
+                            }
+                        }
+                        if (line.startsWith("!") && properties.readAis) {
+                            if (Abk.isAbk(line)) {
+                                aisparser.newVdm();
+                                AvnLog.i(LOGPRFX, name + ": ignore abk line " + line);
+                            }
+                            try {
+                                AisPacket p = aisparser.readLine(line);
+                                if (p != null) {
+                                    AisMessage m = p.getAisMessage();
+                                    AvnLog.i(LOGPRFX, name + ": AisPacket received: " + m.toString());
+                                    store.addAisMessage(m);
+                                }
+                            } catch (Exception e) {
+                                Log.e(LOGPRFX, name + ": AIS exception while parsing " + line);
+                                e.printStackTrace();
+                            }
+                        }
+
+                    }
+                } catch (IOException e) {
+                    Log.e(LOGPRFX, name + ": Exception during read " + e.getLocalizedMessage());
+                    status = "read exception " + e;
+                    try {
+                        socket.close();
+                    } catch (Exception i) {
+                    }
+                    isConnected = false;
+                }
+            }
+            isRunning=false;
         }
         private long toTimeStamp(net.sf.marineapi.nmea.util.Date date,net.sf.marineapi.nmea.util.Time time){
             if (date == null) return 0;
@@ -171,12 +178,16 @@ public class SocketPositionHandler extends GpsDataProvider {
         }
 
         public void stop(){
+            doStop=true;
             if (socket != null) {
                 try{
                     AvnLog.d(LOGPRFX,name+": closing socket");
                     socket.close();
                     isConnected=false;
                 }catch (Exception i){}
+            }
+            synchronized (waiter){
+                waiter.notifyAll();
             }
         }
         public boolean getRunning(){

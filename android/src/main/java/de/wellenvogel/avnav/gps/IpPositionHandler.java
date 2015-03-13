@@ -28,7 +28,7 @@ import java.util.Calendar;
 public class IpPositionHandler extends SocketPositionHandler {
 
     IpPositionHandler(Context ctx, InetSocketAddress address, Properties prop){
-        super("IpPositionHandler",ctx,new AbstractSocket(address,new Socket(),prop.connectTimeout),prop);
+        super("IpPositionHandler",ctx,new AbstractSocket(address,prop.connectTimeout),prop);
     }
 
 }
