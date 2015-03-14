@@ -239,7 +239,12 @@ public class WebViewActivityBase extends XWalkActivity {
 
     //to be called e.g. from js
     private void goBack(){
-        super.onBackPressed();
+        try {
+            super.onBackPressed();
+        } catch(Throwable i){
+            //sometime a second call (e.g. when the JS code was too slow) will throw an exception
+            Log.e(AvnLog.LOGPREFIX,"exception in goBack:"+i.getLocalizedMessage());
+        }
     }
 
     protected JavaScriptApi mJavaScriptApi=new JavaScriptApi();
