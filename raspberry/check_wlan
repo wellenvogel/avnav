@@ -129,7 +129,7 @@ while [ 1 = 1 ]
 do
 	for if in `echo $INTERFACES`
 	do
-		addr=`ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
+		addr=`LANG=C ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
                 if [ ! -e /sys/class/net/$if ] ; then
                   if [ "$first" = 1 ] ; then
                    wlog "no interface $if found, keep looping"
@@ -138,11 +138,12 @@ do
                 else
                   first=1
 		  if [ "$addr" = "" ] ; then
-			service hostapd stop
+			#service hostapd stop
 			errlog "interface $if has no address, trying to restart"
 			ifdown $if
 			ifup $if
-			addr2=`ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
+			sleep 10
+			addr2=`LANG=C ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
 			if [ "$addr2" != "" ] ; then
 				wlog "interface $if now up with address $addr2, restart hostapd"
                                 checkHostapd 2
