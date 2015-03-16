@@ -103,7 +103,10 @@ checkHostapd(){
     needSwitch=`grep '#driver=rtl' $HOSTAPDCONF`
     if [ "$needSwitch" != "" ] ; then
       wlog "switch hostapd"
-      [ "$needStart" != 2 ] && service hostapd stop
+      if [ "$needStart" != 2 ] ; then
+        service hostapd stop
+        ifdown $if
+      fi
       cd /usr/sbin && rm hostapd && ln -s hostapd.edimax hostapd
       sed -i -e 's/^[#]driver=rtl/driver=rtl/' -e 's/driver=nl80/#driver=nl80/' $HOSTAPDCONF
       needStart=1
@@ -113,7 +116,10 @@ checkHostapd(){
     needSwitch=`grep '^ *driver=nl80' $HOSTAPDCONF`
     if [ "$needSwitch" = "" ] ; then
       wlog "switch hostapd"
-      [ "$needStart" != 2 ] && service hostapd stop
+      if [ "$needStart" != 2 ] ; then
+        service hostapd stop
+        ifdown $if
+      fi
       cd /usr/sbin && rm hostapd && ln -s hostapd.ori hostapd
       sed -i -e 's/^ *[#]driver=nl80/driver=nl80/' -e 's/driver=rtl/#driver=rtl/' $HOSTAPDCONF
       needStart=1
@@ -138,15 +144,16 @@ do
                 else
                   first=1
 		  if [ "$addr" = "" ] ; then
-			#service hostapd stop
+			service hostapd stop
 			errlog "interface $if has no address, trying to restart"
 			ifdown $if
-			ifup $if
-			sleep 10
+			sleep 5
+			service hostapd start
+			sleep 5
 			addr2=`LANG=C ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
 			if [ "$addr2" != "" ] ; then
-				wlog "interface $if now up with address $addr2, restart hostapd"
-                                checkHostapd 2
+				wlog "interface $if now up with address $addr2"
+                                checkHostapd 1
 				wlog "restart hostapd finished"
 			else
 				errlog "unable to restart interface $if"

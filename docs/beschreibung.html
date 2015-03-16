@@ -561,6 +561,8 @@ wpa_passphrase=avnav-secret
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
+#we had to add this for 3.18++ kernel to make our 5370 adapter working again...
+ieee80211n=1
 #################### //snip - this driver stuff needs some work...
 
 *  /etc/default/hostapd
@@ -645,8 +647,7 @@ and in /home/pi/avnav/data/avnav_server.xml:
 cd /usr/sbin
 mv hostapd hostapd.ori
 ln -s hostapd.ori hostapd
-wget -O hostapd.edimax http://itwelt.org/downloads/hostapd
---have the hostapd.conf exactly as described above
+wget -O hostapd.edimax http://itwelt.org/downloads/hostapd<br>chmod 755 hostapd.edimax<br>&nbsp;--have the hostapd.conf exactly as described above
   in check_wlan we test for lsusb RTL81xx and we do lsmod to search for 8192cu
   if both are found -&gt; change the link and edit hostapd.conf
 
