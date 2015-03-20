@@ -158,12 +158,14 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     else:
       return path
 
-  def waitOnGemfCondition(self,timeoutms):
+  def waitOnGemfCondition(self,timeout):
     self.gemfCondition.acquire()
     try:
-      self.gemfCondition.wait(timeoutms)
+      AVNLog.debug("gemf reader wait")
+      self.gemfCondition.wait(timeout)
     except:
       pass
+    AVNLog.debug("gemf reader wait end")
     self.gemfCondition.release()
 
   def notifyGemf(self):
