@@ -289,7 +289,7 @@ class AVNSerialWriter(AVNWorker):
     if not hasSerial:
       AVNLog.warn("serial writers configured but serial module not available, ignore them")
       return None
-    rt=AVNSerialReader(cfgparam)
+    rt=AVNSerialWriter(cfgparam)
     return rt
     
   def __init__(self,param):

@@ -74,6 +74,8 @@
     <!-- a pure serial output device
          outputting all NMEA data (but no AIS)-->
     <!-- <UsbDevice usbid="1-1.5:1.0" baud="4800" minbaud="" type="writer" filter="$"/> -->
+    <!-- an usb device that should be ignored -->
+    <!-- <UsbDevice usbid="1-1.2:1.0" type="ignore"/> -->
 </AVNUsbSerialReader>
 
 <!--  serial reader
@@ -92,6 +94,11 @@
 <AVNSerialReader useFeeder="true" name="ttyUSB1Reader" port="/dev/ttyUSB1" baud="38400" minbaud="4800" numerrors="20"/>
 <AVNSerialReader useFeeder="true" name="ttyUSB2Reader" port="/dev/ttyUSB2" baud="38400" minbaud="4800" numerrors="20"/>
 <AVNSerialReader useFeeder="true" name="ttyUSB3Reader" port="/dev/ttyUSB3" baud="38400" minbaud="4800" numerrors="20"/>
+-->
+<!-- a combined reader and writer on a non-USB tty device
+     for a pure writer omit the combined flag -->
+<!--
+<AVNSerialWriter name="ttyS2" port="/dev/ttyS2" baud="4800" combined="true"/>
 -->
 <!-- all workers below are deprecated and make only sense in very special situations
 	 they do not pipe their data through our feeder, so there is no chance for
