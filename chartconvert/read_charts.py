@@ -60,6 +60,7 @@ import re
 import generate_efficient_map_file
 import create_gemf
 import StringIO
+import traceback
 
 hasNvConvert=False
 try:
