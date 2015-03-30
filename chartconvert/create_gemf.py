@@ -35,6 +35,7 @@ import threading
 # in a first phase all tiles infos (source,z,x,y) must be added to prepare the header
 # in a second phase tiles can be written "stream like"
 # logwriter must be a class having a log(string) method for writing infos
+# tiles are tuples (z,x,y)
 class GemfWriter():
   MAXFILESIZE = 2000000000L
   def __init__(self,filename,logwriter=None):
