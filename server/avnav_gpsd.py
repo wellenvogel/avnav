@@ -290,7 +290,6 @@ class AVNGpsdFeeder(AVNGpsd):
             'name': ''           #if there should be more then one reader we must set the name
             }
     
-  
   @classmethod
   def createInstance(cls, cfgparam):
     
@@ -321,12 +320,12 @@ class AVNGpsdFeeder(AVNGpsd):
   def getName(self):
     return self.name
   
-  def addNMEA(self,entry):
+  def addNMEA(self, entry):
     rt=False
     ll=0
     hl=0
     if len(entry) < 5:
-      AVNlog.debug("addNMEA: ignoring short data %s",entry)
+      AVNLog.debug("addNMEA: ignoring short data %s",entry)
       return False
     self.listlock.acquire()
     self.sequence+=1
