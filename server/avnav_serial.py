@@ -359,7 +359,7 @@ class AVNSerialReader(AVNWorker):
     cfg=SerialReader.getConfigParam()
     rt=cfg.copy()
     rt.update({
-               'useFeeder':'false', #if set to true, pipe the data trough a feeder instead handling by its own
+               'useFeeder':'true', #if set to true, pipe the data trough a feeder instead handling by its own
                'feederName':''      #if this one is set, we do not use the defaul feeder by this one
     })
     return rt
