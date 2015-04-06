@@ -53,7 +53,7 @@ class SerialWriter(SerialReader):
   def getConfigParam(cls):
       rt=SerialReader.getConfigParam().copy();
       rt.update({
-          'feederName':'',  #if set, use this feeder
+          'feederName':'',  #if set, use this feeder (if combined use it both for reader and writer)
           'combined' : False, #if true, also start a reader
           'readFilter':''   #filterstring for reading
           })
@@ -61,7 +61,7 @@ class SerialWriter(SerialReader):
     
   #parameters:
   #param - the config dict
-  #navdata - a nav data object (can be none if this reader doesn not directly write)
+  #navdata - a nav data object (can be none if this reader does not directly write)
   #a write data method used to write a received line
   def __init__(self,param,navdata,writeData,infoHandler):
     for p in ('port','name','timeout'):
@@ -82,6 +82,8 @@ class SerialWriter(SerialReader):
     self.addrmap={}
     #the serial device
     self.device=None
+    self.nmeaParser=NMEAParser(navdata)
+
   def getName(self):
     if self.param.get('combined') is not None and unicode(self.param.get('combined')).upper()=="TRUE":
       return "SerialReaderWriter-"+self.param['name']
@@ -283,6 +285,9 @@ class AVNSerialWriter(AVNWorker):
       return None
     cfg=SerialWriter.getConfigParam()
     rt=cfg.copy()
+    rt.update({
+      'useFeeder':'true'
+    })
     return rt
   @classmethod
   def createInstance(cls, cfgparam):
@@ -305,6 +310,12 @@ class AVNSerialWriter(AVNWorker):
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have tp find the feeder...
   def start(self):
+    if self.getBoolParam('useFeeder'):
+      feedername=self.getStringParam('feederName')
+      feeder=self.findFeeder(feedername)
+      if feeder is None:
+        raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
+      self.writeData=feeder.addNMEA
     AVNWorker.start(self) 
      
   #thread run method - just try forever  
