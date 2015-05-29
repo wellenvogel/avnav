@@ -29,6 +29,7 @@ import logging
 import logging.handlers
 import datetime
 import itertools
+import os
 import threading
 import subprocess
 import math
@@ -60,6 +61,7 @@ class AVNLog():
   consoleHandler=None
   fhandler=None
   debugToFile=False
+  logDir=None
   
   #1st step init of logging - create a console handler
   #will be removed after parsing the cfg file
@@ -107,6 +109,7 @@ class AVNLog():
       cls.logger.addHandler(cls.fhandler)
     cls.logger.setLevel(numeric_level)
     cls.debugToFile=debugToFile
+    cls.logDir=os.path.dirname(filename)
   
   @classmethod
   def changeLogLevel(cls,level):
@@ -153,6 +156,9 @@ class AVNLog():
   @classmethod
   def ld(cls,*parms):
     cls.logger.debug(' '.join(itertools.imap(repr,parms)))
+  @classmethod
+  def getLogDir(cls):
+    return cls.logDir
   
   #some hack to get the current thread ID
   #basically the constant to search for was

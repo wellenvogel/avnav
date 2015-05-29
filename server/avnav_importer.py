@@ -24,6 +24,7 @@
 #
 ###############################################################################
 import os
+import shutil
 
 import time
 import traceback
@@ -50,11 +51,11 @@ class AVNImporter(AVNWorker):
     if not child is None:
       return None
     rt={
-
+      'converterDir':'',
       'importDir':'import', #directory below our data dir
       'workDir': 'work',    #directory in each xxx subdirectory
       'waittime': 30,       #time to wait in seconds before a conversion is started after detecting a change (and no further change)
-      'knowExtensions': 'kap' #extensions for gdal conversion
+      'knownExtensions': 'kap,map,geo' #extensions for gdal conversion
     }
     return rt
   @classmethod
@@ -70,8 +71,11 @@ class AVNImporter(AVNWorker):
     self.runningConversions={} #dictionary of current running conversions (key is the filename/dirname)
     self.waittime=self.getIntParam('waittime',True)
     self.chartbase=None
-    self.extensions=self.getStringParam('knownExtension').split(',')
+    self.extensions=self.getStringParam('knownExtensions').split(',')
     self.importDir=self.getStringParam('importDir')
+    self.converterDir=self.getStringParam('converterDir')
+    if self.converterDir is None or self.converterDir=='':
+      self.converterDir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"..","chartconvert")
 
 
     
@@ -95,12 +99,14 @@ class AVNImporter(AVNWorker):
       except Exception:
         AVNLog.error("unable to create import directory %s:%s, stopping importer",self.importDir,traceback.format_exc())
         return
-    AVNLog.info("starting importer with directory %s",self.importDir)
+    AVNLog.info("starting importer with directory %s, tools dir %s",self.importDir,self.converterDir)
     AVNWorker.start(self) 
      
   #thread run method - just try forever  
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setInfo("main","monitoring started for %s"%(self.importDir),AVNWorker.Status.NMEA)
+    self.setInfo("converter","free",AVNWorker.Status.INACTIVE)
     while True:
       AVNLog.debug("mainloop")
       if len(self.runningConversions.keys()) == 0:
@@ -128,6 +134,7 @@ class AVNImporter(AVNWorker):
                 gemftime=self.getGemfTimestamp(k)
                 if gemftime is None or gemftime < currentFileTime:
                   self.startConversion(k)
+
         #end for currentKeys
       else:
         AVNLog.debug("conversion(s) running, skip check")
@@ -169,12 +176,16 @@ class AVNImporter(AVNWorker):
     AVNLog.debug("return %d entries",len(rt.keys()))
     return rt
 
-  #get the timestamp for the matching gemf file (if it exists) - otherwise none
-  def getGemfTimestamp(self,name):
+  def getGemfName(self,name):
     filename=name
     if (name.endswith(".mbtiles")):
       filename=name.replace(".mbtiles","")
     filename=os.path.join(self.chartbase,filename+".gemf")
+    return filename
+
+  #get the timestamp for the matching gemf file (if it exists) - otherwise none
+  def getGemfTimestamp(self,name):
+    filename=self.getGemfName(name)
     if not os.path.exists(filename):
       AVNLog.debug("getGemfTimestamp for %s returns None",name)
       return None
@@ -189,21 +200,118 @@ class AVNImporter(AVNWorker):
     except:
       pass
     now=time.time()
+    self.setInfo("converter","running for %s"%(name),AVNWorker.Status.RUNNING)
     self.lastTimeStamps[name]=now
+    fullname=os.path.join(self.importDir,name)
+    gemfName=self.getGemfName(name)
+    po=None
+    if os.path.isdir(fullname):
+      AVNLog.info("directory conversion for %s",name)
+      with open(self.getGemfName(name),"w") as f:
+        f.write("coming from dir %s"%(name))
+        f.close()
+    else:
+      args=[sys.executable,os.path.join(self.converterDir,"convert_mbtiles.py"),gemfName+".tmp",fullname]
+      po=self.runConverter(name,args)
+    if po is None:
+      AVNLog.error("unable to start conversion for %s",name)
+      self.setInfo("converter","start for %s failed",AVNWorker.Status.ERROR)
+      return
     #dummy - simply remember the time when we started
-    self.runningConversions[name]=now
+    self.runningConversions[name]=po
 
   def checkConversionFinished(self):
     if len(self.runningConversions.keys()) == 0:
       return
     now=time.time()
     for k in self.runningConversions.keys():
-      v=self.runningConversions.get(k)
-      AVNLog.debug("check running conversion for %s, param %d",k,v)
-      #TODO
-      if (v+30) < now:
-        AVNLog.info("finished conversion for %s",k)
+      po=self.runningConversions.get(k)
+      AVNLog.debug("check running conversion for %s",k)
+      rtc=po.poll()
+      if rtc is None:
+        AVNLog.debug("converter for %s still running",k)
+      else:
+        AVNLog.info("finished conversion for %s with return code %d",k,rtc)
+        if rtc == 0:
+          gemfname=self.getGemfName(k)
+          tmpname=gemfname+".tmp"
+          if not os.path.exists(tmpname):
+            AVNLog.error("converter for %s did not create %s",k,tmpname)
+            rtc=1
+          else:
+            AVNLog.info("renaming %s to %s",tmpname,gemfname)
+            if os.path.exists(gemfname):
+              try:
+                os.unlink(gemfname)
+              except:
+                pass
+            try:
+              #TODO: handle multiple files...
+              os.rename(tmpname,gemfname)
+            except:
+              AVNLog.error("unable to rename %s to %s: %s",tmpname,gemfname,traceback.format_exc())
+              rtc=1
+        if rtc == 0:
+          self.setInfo("converter","successful for %s"%(k),AVNWorker.Status.INACTIVE)
+        else:
+          self.setInfo("converter","failed for %s"%(k),AVNWorker.Status.ERROR)
         del(self.runningConversions[k])
+
+  #delete an import dir/file
+  #name being the name of a gemf file (without path)
+  def deleteImport(self,name):
+    if (name.endswith(".gemf")):
+      name=name[:-5]
+    isRunning=self.runningConversions.get(name)
+    if isRunning is not None:
+      AVNLog.info("trying to delete import %s, conversion currently running",name)
+      try:
+        isRunning.kill()
+        isRunning.poll()
+        del(self.runningConversions[name])
+        self.setInfo("converter","killed for %s"%(name),AVNWorker.Status.INACTIVE)
+      except:
+        pass
+    try:
+      del(self.lastTimeStamps[name])
+    except:
+      pass
+    fullname=os.path.join(self.importDir,name)
+    if os.path.isdir(fullname):
+      AVNLog.info("deleting import directory %s",fullname)
+      try:
+        os.removedirs(fullname)
+      except:
+        AVNLog.error("error deleting directory %s:%s",fullname,traceback.format_exc())
+    else:
+      fullname=os.path.join(self.importDir,name+".mbtiles")
+      if os.path.isfile(fullname):
+        AVNLog.info("deleting import file %s",fullname)
+        try:
+          os.unlink(fullname)
+        except:
+          AVNLog.error("error deleting file %s:%s",fullname,traceback.format_exc())
+
+  def runConverter(self,name,args):
+    logdir=AVNLog.getLogDir()
+    rt=None
+    try:
+      logfile=None
+      if logdir is not None:
+        logfilename=os.path.join(logdir,"convert-"+name+".log")
+        try:
+          logfile=open(logfilename,"w")
+        except:
+          AVNLog.error("unable to open logile %s: %s",logfilename,traceback.format_exc())
+      if logfile is not None:
+        AVNLog.info("starting converter for %s with args %s, logfile=%s",name," ".join(args),logfilename)
+        rt=subprocess.Popen(args,stdin=None,stdout=logfile,stderr=subprocess.STDOUT)
+      else:
+        AVNLog.info("starting converter for %s with args %s",name," ".join(args))
+        rt=subprocess.Popen(args)
+      return rt
+    except:
+      AVNLog.error("unable to start converter for %s:%s",name,traceback.format_exc())
 
 
 

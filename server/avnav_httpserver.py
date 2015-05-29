@@ -961,6 +961,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             del self.server.gemflist[gemfname]
           except:
             pass
+          importer=self.server.getHandler("AVNImporter") #cannot import this as we would get cycling dependencies...
+          if importer is not None:
+            importer.deleteImport(gemfname)
           return json.dumps(rt)
       else:
         chartbaseUrl=self.server.getStringParam('chartbaseurl')
