@@ -53,7 +53,7 @@ class AVNImporter(AVNWorker):
     rt={
       'converterDir':'',
       'importDir':'import', #directory below our data dir
-      'workDir': 'work',    #directory in each xxx subdirectory
+      'workDir': '',    #working directory
       'waittime': 30,       #time to wait in seconds before a conversion is started after detecting a change (and no further change)
       'knownExtensions': 'kap,map,geo' #extensions for gdal conversion
     }
@@ -73,6 +73,7 @@ class AVNImporter(AVNWorker):
     self.chartbase=None
     self.extensions=self.getStringParam('knownExtensions').split(',')
     self.importDir=self.getStringParam('importDir')
+    self.workDir=self.getStringParam('workDir')
     self.converterDir=self.getStringParam('converterDir')
     if self.converterDir is None or self.converterDir=='':
       self.converterDir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"..","chartconvert")
@@ -99,7 +100,16 @@ class AVNImporter(AVNWorker):
       except Exception:
         AVNLog.error("unable to create import directory %s:%s, stopping importer",self.importDir,traceback.format_exc())
         return
-    AVNLog.info("starting importer with directory %s, tools dir %s",self.importDir,self.converterDir)
+    if self.workDir is None or self.workDir == "":
+      self.workDir=os.path.join(os.path.dirname(self.importDir),"work")
+    if not os.path.isdir(self.workDir):
+      AVNLog.info("creating work dir %s",self.workDir)
+      try:
+        os.makedirs(self.workDir)
+      except Exception:
+        AVNLog.error("unable to create work directory %s:%s, stopping importer",self.importDir,traceback.format_exc())
+        return
+    AVNLog.info("starting importer with directory %s, tools dir %s, workdir %s",self.importDir,self.converterDir,self.workDir)
     AVNWorker.start(self) 
      
   #thread run method - just try forever  
@@ -207,9 +217,17 @@ class AVNImporter(AVNWorker):
     po=None
     if os.path.isdir(fullname):
       AVNLog.info("directory conversion for %s",name)
-      with open(self.getGemfName(name),"w") as f:
-        f.write("coming from dir %s"%(name))
-        f.close()
+      workdir=os.path.join(self.workDir,name)
+      doStart=True
+      if not os.path.isdir(workdir):
+        try:
+          os.makedirs(workdir)
+        except:
+          AVNLog.error("unable to create workdir %s",workdir)
+          doStart=False
+      if doStart:
+        args=[sys.executable,os.path.join(self.converterDir,"read_charts.py"),"-o",name,"-b",workdir,fullname]
+        po=self.runConverter(name,args)
     else:
       args=[sys.executable,os.path.join(self.converterDir,"convert_mbtiles.py"),gemfName+".tmp",fullname]
       po=self.runConverter(name,args)
@@ -234,7 +252,10 @@ class AVNImporter(AVNWorker):
         AVNLog.info("finished conversion for %s with return code %d",k,rtc)
         if rtc == 0:
           gemfname=self.getGemfName(k)
+          fullname=os.path.join(self.importDir,k)
           tmpname=gemfname+".tmp"
+          if os.path.isdir(fullname):
+            tmpname=os.path.join(self.workDir,k,"out",k+".gemf")
           if not os.path.exists(tmpname):
             AVNLog.error("converter for %s did not create %s",k,tmpname)
             rtc=1

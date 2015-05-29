@@ -76,7 +76,7 @@ class GemfWriter():
     for s in self.sources:
       if s['name']==source:
         s['tiles'] |= tileset
-        self.log("adding %d tiles to source %s" %(len(tileset),source))
+        #self.log("adding %d tiles to source %s" %(len(tileset),source))
         return
     self.log("adding new source %s with %d tiles" %(source,len(tileset)))
     s={'name':source,'index':len(self.sources),'tiles':tileset}
