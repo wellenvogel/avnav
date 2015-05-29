@@ -226,7 +226,7 @@ class AVNImporter(AVNWorker):
           AVNLog.error("unable to create workdir %s",workdir)
           doStart=False
       if doStart:
-        args=[sys.executable,os.path.join(self.converterDir,"read_charts.py"),"-o",name,"-b",workdir,fullname]
+        args=[sys.executable,os.path.join(self.converterDir,"read_charts.py"),"-o",name,"-b",workdir,"-g",fullname]
         po=self.runConverter(name,args)
     else:
       args=[sys.executable,os.path.join(self.converterDir,"convert_mbtiles.py"),gemfName+".tmp",fullname]
@@ -300,8 +300,11 @@ class AVNImporter(AVNWorker):
     fullname=os.path.join(self.importDir,name)
     if os.path.isdir(fullname):
       AVNLog.info("deleting import directory %s",fullname)
+      workdir=os.path.join(self.workDir,name)
       try:
-        os.removedirs(fullname)
+        shutil.rmtree(fullname)
+        if os.path.isdir(workdir):
+          shutil.rmtree(workdir)
       except:
         AVNLog.error("error deleting directory %s:%s",fullname,traceback.format_exc())
     else:
