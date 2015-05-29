@@ -48,8 +48,10 @@
 	<!-- a reader with autobaud and filter - it will filter out any RMC records and all AIS stuff-->
 	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="reader" filter="^$RMC,^!"/>-->
 	<!-- a pure writer that outputs RMB -->
-	<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="writer" filter=""/>
+	<UsbDevice usbid="3-4.3.2:1.0" baud="4800" minbaud="4800" type="writer" filter=""/>
+	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="ignore" filter=""/>-->
 </AVNUsbSerialReader>
+
 
 
 <!-- for testing purposes: connect to a socket for reading NMEA data -->
@@ -73,5 +75,6 @@
     <!--  routing handler -->
 <AVNRouter routesdir="../data_linux/routes"></AVNRouter>
 <AVNNmeaLogger></AVNNmeaLogger>
+<AVNImporter importDir="../data_linux/import"></AVNImporter>
 
 </AVNServer>

@@ -176,6 +176,10 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       pass
     self.gemfCondition.release()
 
+  def getChartBaseDir(self):
+    chartbaseurl=self.getStringParam('chartbase')
+    return self.handlePathmapping(chartbaseurl)
+
   #check the list of open gemf files
   def handleGemfFiles(self):
     while True:
@@ -185,7 +189,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
           AVNLog.debug("no chartbase defined - no gemf handling")
           self.waitOnGemfCondition(5)
           continue
-        chartbaseDir=self.handlePathmapping(chartbaseurl)
+        chartbaseDir=self.getChartBaseDir()
         if not os.path.isdir(chartbaseDir):
           AVNLog.debug("chartbase is no directory - no gemf handling")
           self.waitOnGemfCondition(5)
