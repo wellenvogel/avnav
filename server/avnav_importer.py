@@ -226,7 +226,7 @@ class AVNImporter(AVNWorker):
           AVNLog.error("unable to create workdir %s",workdir)
           doStart=False
       if doStart:
-        args=[sys.executable,os.path.join(self.converterDir,"read_charts.py"),"-o",name,"-b",workdir,"-g",fullname]
+        args=[sys.executable,os.path.join(self.converterDir,"read_charts.py"),"-o",name,"-b",workdir,"-g","-t","1",fullname]
         po=self.runConverter(name,args)
     else:
       args=[sys.executable,os.path.join(self.converterDir,"convert_mbtiles.py"),gemfName+".tmp",fullname]
