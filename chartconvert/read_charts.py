@@ -571,10 +571,12 @@ class TileStore:
     
   def copyin(self,tlist):
     if isinstance(tlist, TileStore):
-      self.mode=tlist.mode
-      self.tile=tlist.tile
-      self.mode=tlist.mode
-      self.data=tlist.data
+      if self.mode == TileStore.PIL:
+        self.data.paste(tlist.data,None,tlist.data)
+      else:
+        self.mode=tlist.mode
+        self.tile=tlist.tile
+        self.data=tlist.data
       return
     num=len(tlist)
     if num == 0:
@@ -621,16 +623,22 @@ class TileStore:
     self.data=Image.new("RGBA",(TILESIZE*2,TILESIZE*2),(0,0,0,0))
     offsets=self.getOffsets()
     for uts in uppertiles:
+      if uts.mode == TileStore.EMPTY or uts.mode == TileStore.NONE:
+        ld("merge upper ignore %s",uts.getName())
+        continue
+      if uts.mode != TileStore.PIL:
+        raise Exception("invalid mode %s for createFromUpperLevel, only PIL"%(uts.mode))
       offset=offsets.get(uts.tile)
       if offset is None:
         raise Exception("invalid upper tile %s for tile %s",(uts.getName(),self.getName()))
       ld("merge upper %s into %s offset(%d,%d)"%(uts.getName(),self.getName(),offset[0],offset[1]))
       self.data.paste(uts.data,offset)
-    self.data.resize((TILESIZE,TILESIZE))
+    self.data=self.data.resize((TILESIZE,TILESIZE))
+    self.mode=TileStore.PIL
 
   def readChartTiles(self,basedir,celist):
     '''
-    read in the generated base tiles of the charts fro celist
+    read in the generated base tiles of the charts from celist
     if they match our tile
     :param basedir: - the basedir where the chart tiles had been generated
     :param celist: - the list of chartentries to be considered
@@ -643,7 +651,7 @@ class TileStore:
     #maybe in the future this should be more intelligent to consider which chart we used "around" to avoid
     #changing the chart to often (will not look very nice...)
     for ce in celist.tlist[::-1]:
-      indir=getTilesDir(ce,self.tile,False)
+      indir=getTilesDir(ce,basedir,False)
       tilefile=os.path.join(indir,getTilePath(self.tile))
       if os.path.isfile(tilefile):
         indirs.append(indir)
@@ -661,7 +669,7 @@ class TileStore:
 #a build pyramid
 #contains at level 0 one tile of the min zoom level
 #and on the higher levels all tiles belonging to the layer up to the max zoom level
-oldPyramidHandling = True
+
 class BuildPyramid:    
   def __init__(self,layercharts,layername,outdir,writer=None):
     self.layercharts=layercharts
@@ -694,6 +702,7 @@ class BuildPyramid:
     return None
 
   def writeTileStore(self,tileStore):
+    ld("writing out tile %s",tileStore.getName())
     if self.writer is None:
       tileStore.write(self.layerdir)
     else:
@@ -711,7 +720,8 @@ class BuildPyramid:
     buildts=[];
     currentLevel=self.getNumZoom()-1;
     startlevel=currentLevel;
-    if oldPyramidHandling:
+    if options.oldpyramid == 1:
+      ld("old pyramid handling")
       for curtile in buildtiles:
         celist=self.layercharts.filterByBaseTile(curtile)
         buildts.append(mergeChartTiles(self.outdir,self.layername,curtile,celist))
@@ -747,87 +757,105 @@ class BuildPyramid:
           ts.emptyData()
         buildts=nextbuildts
         nextbuildts=None
-      #if oldPyramidHandlin
-      else:
-        #the tilesets for each zoomlevel (new handling)
-        #each set contains a dictionary of at most 4 entries of TileStore (the ones belonging to one one tile in the next lower zoomlevel)
-        #once all of them are computed we can go to a lower zoom level
-        tileSets=[]
-        for zoom in range(0,self.getNumZoom()):
-          tileSets[zoom]=None
-        allDone=False
-        currentLevel==self.getNumZoom()-1
-        #if not None this gives a hint which tiles to handle next
-        requiredLowerLevelTile=None
-        #we start at the max zoom level and always pick up 2x2 tiles
-        #we generate them and keep them for the next lower zoom level
-        #we repeat this until one level is completely handled
-        while not allDone:
-          if tileSets[currentLevel] is None:
-            ld("fill in new tiles at index %d",currentLevel)
-            levelTiles=self.getZoomLevelTiles(currentLevel)
-            nextSet=set()
-            corresponding=None
-            if requiredLowerLevelTile is None:
+      #if oldPyramidHandling
+    else:
+      #the tilesets for each zoomlevel (new handling)
+      #each set contains a dictionary of at most 4 entries of TileStore (the ones belonging to one one tile in the next lower zoomlevel)
+      #once all of them are computed we can go to a lower zoom level
+      tileSets=[0] * self.getNumZoom()
+      for zoom in range(0,self.getNumZoom()):
+        tileSets[zoom]=None
+      allDone=False
+      set0=set()
+      for l0tile in self.getZoomLevelTiles(0):
+        set0.add(TileStore(l0tile))
+      tileSets[0]=set0
+      currentLevel=0
+      #if not None this gives a hint which tiles to handle next
+      requiredLowerLevelTile=None
+      #we start at the max zoom level and always pick up 2x2 tiles
+      #we generate them and keep them for the next lower zoom level
+      #we repeat this until one level is completely handled
+      while not allDone:
+        if tileSets[currentLevel] is None:
+          ld("fill in new tiles at index %d",currentLevel)
+          levelTiles=self.getZoomLevelTiles(currentLevel)
+          nextSet=set()
+          corresponding=None
+          if requiredLowerLevelTile is None:
+            warn("no requiredLowerLevelTile on level %d"%(currentLevel))
+            tile=None
+            if len(levelTiles) > 0:
               tile=levelTiles.pop()
-              if tile is None:
-                ld("no more tiles in level %d",currentLevel)
-              else:
-                nextSet.add(TileStore(tile))
-                corresponding=self.getCorrespondingTiles(tile)
+            if tile is None:
+              ld("no more tiles in level %d",currentLevel)
             else:
-              corresponding=getUpperTiles(requiredLowerLevelTile)
-            for ctile in corresponding:
-              #we skip non existing ones...
-              if ctile in self.getZoomLevelTiles(currentLevel):
-                self.getZoomLevelTiles(currentLevel).remove(ctile)
-                nextSet.add(TileStore(tile))
-          if tileSets[currentLevel] is None:
-            ld("no more tiles on level %d",currentLevel)
-            if currentLevel==0:
-              ld("finished processing")
-              break
-            currentLevel-=1
-            continue
-          #we need to check now if we still need to process some tile on the current level
-          nextTs=self.getNextTileToProcess(tileSets[currentLevel])
-          if nextTs is None:
-            ld("processed one array on level %d",currentLevel)
-            #no we can go up one level and see if we can continue there
-            #fore sure we can now safely delete all tilestores of the next (higher) level
-            if currentLevel < (self.getNumZoom()-1):
-              tileSets[currentLevel+1]=None
-            #if we are on top level we continue on the lowest (although this should not happen at all...)
-            if currentLevel == 0:
-              warn("strange behavior: nextTs on top level...")
-              currentLevel=self.getNumZoom()-1
-              continue
-            currentLevel-=1
-            continue
-          #now process the next tile
-          #if we are at the base level we can always fill it directly
-          #otherwise we need to see if all tiles of the next higher level are already computed
-          #if not - continue there
-          if currentLevel < (self.getNumZoom()-1):
-            #not base level
-            if tileSets[currentLevel+1] is None:
-              requiredLowerLevelTile=nextTs.tile
-              currentLevel+=1
-              continue
-            higherLevelNext=self.getNextTileToProcess(tileSets[currentLevel+1])
-            if higherLevelNext is not None:
-              #needs further processing on higher zoomlevel
-              requiredLowerLevelTile=nextTs.tile
-              currentLevel+=1
-              continue
-            #merge tiles now
-            #TODO
-            #empty higher level
+              nextSet.add(TileStore(tile))
+              corresponding=self.getCorrespondingTiles(tile)
           else:
-            #fill in all base tiles
-            pass
-          self.writeTileStore(nextTs)
-        #end loop
+            corresponding=getUpperTiles(requiredLowerLevelTile)
+          for ctile in corresponding:
+            #we skip non existing ones...
+            if ctile in levelTiles:
+              levelTiles.remove(ctile)
+              nextSet.add(TileStore(ctile))
+            else:
+              #add an empty tile for tiles we do not have
+              #this one will never be written but we need this for the next level
+              #to show that we already processed all upper level tiles
+              empty=TileStore(ctile)
+              empty.mode=TileStore.EMPTY
+              nextSet.add(empty)
+          if len(nextSet) > 0:
+            tileSets[currentLevel]=nextSet
+        if tileSets[currentLevel] is None:
+          ld("no more tiles on level %d",currentLevel)
+          if currentLevel==0:
+            ld("finished processing")
+            break
+          requiredLowerLevelTile=None
+          currentLevel-=1
+          continue
+        #we need to check now if we still need to process some tile on the current level
+        nextTs=self.getNextTileToProcess(tileSets[currentLevel])
+        if nextTs is None:
+          ld("processed one array on level %d",currentLevel)
+          #no we can go down one zoom level and see if we can continue there
+          #fore sure we can now safely delete all tilestores of the next (higher) level
+          if currentLevel < (self.getNumZoom()-1):
+            tileSets[currentLevel+1]=None
+          #if we are on top level we continue on the lowest (although this should not happen at all...)
+          if currentLevel == 0:
+            ld("processing done")
+            break
+          currentLevel-=1
+          requiredLowerLevelTile=None
+          continue
+        #now process the next tile
+        #if we are at the base level we can always fill it directly
+        #otherwise we need to see if all tiles of the next higher level are already computed
+        #if not - continue there
+        if currentLevel < (self.getNumZoom()-1):
+          #not base level
+          if tileSets[currentLevel+1] is None:
+            requiredLowerLevelTile=nextTs.tile
+            currentLevel+=1
+            continue
+          higherLevelNext=self.getNextTileToProcess(tileSets[currentLevel+1])
+          if higherLevelNext is not None:
+            #needs further processing on higher zoomlevel
+            warn("we must go up again at level %d"%(currentLevel))
+            requiredLowerLevelTile=nextTs.tile
+            currentLevel+=1
+            continue
+          nextTs.createFromUpperLevel(tileSets[currentLevel+1])
+          tileSets[currentLevel+1]=None
+          requiredLowerLevelTile=None
+        else:
+          celist=self.layercharts.filterByBaseTile(nextTs.tile)
+          nextTs.readChartTiles(self.outdir,celist)
+        self.writeTileStore(nextTs)
+      #end loop
 
 
 
@@ -1481,7 +1509,8 @@ def mergeLayerTiles(chartlist,outdir,layerindex,tilespyramid,gemf,onlyOverview=F
                       "tile_ext":"png",
                       "tile_mime":"x-png",
                       "tilesets":tilesets}
-  
+  if not os.path.exists(layerdir):
+    os.makedirs(layerdir,0777)
   with open(layerxmlfile,"w") as f:
     f.write(outstr)
   log(layerxmlfile+" written")
@@ -1572,6 +1601,7 @@ def main(argv):
   parser.add_option("-n", "--opencpn", dest="opencpn", help="directory where opencpn is installed (if used for conversion) (if not set use environment OPENCPN)")
   parser.add_option("-f", "--force", action="store_const", const=0, dest="update", help="force update of existing charts (if not set, only necessary charts are generated")
   parser.add_option("-g", "--newgemf", action="store_const", const=1, dest="newgemf", help="use new gemf writer (do not write merged tiles separately)")
+  parser.add_option("-r", "--oldpyramid", action="store_const", const=1, dest="oldpyramid", help="use old pyramid handling")
   basedir=DEFAULT_OUTDIR
   (options, args) = parser.parse_args(argv[1:])
   if options.update is None :
