@@ -143,7 +143,7 @@ public class SimpleFileDialog
         if (! dirFile.exists() || ! dirFile.isDirectory())
         {
             File parent=dirFile.getParentFile();
-            if (parent.isDirectory() && Select_type == FolderChoose){
+            if (parent != null && parent.isDirectory() && Select_type == FolderChoose){
                 startWithNewDir=true;
                 Default_File_Name=dirFile.getName();
                 dir=parent.getAbsolutePath();
