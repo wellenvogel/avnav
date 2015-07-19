@@ -63,6 +63,7 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         ev.data.self.aishandler.setTrackedTarget(mmsi);
         var pos=ev.data.self.aishandler.getAisPositionByMmsi(mmsi);
         if (pos)ev.data.self.gui.map.setCenter(pos);
+        ev.data.self.gui.map.setGpsLock(false);
         ev.data.self.gui.showPageOrReturn(ev.data.self.returnpage,'navpage');
     });
     if (initial){
