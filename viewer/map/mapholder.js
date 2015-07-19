@@ -243,20 +243,20 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
 
         });
         this.olmap.on('moveend',function(evt){
-           self.onMoveEnd(evt);
+           return self.onMoveEnd(evt);
         });
         this.olmap.on('postrender',function(evt){
             //more or less similar top ol2 move
-            self.onMoveEnd(evt);
+            return self.onMoveEnd(evt);
         });
         this.olmap.on('postcompose',function(evt){
-            self.onPostCompose(evt);
+            return self.onPostCompose(evt);
         });
         this.olmap.on('click', function(evt) {
-            self.onClick(evt);
+            return self.onClick(evt);
         });
         this.olmap.on('dblclick', function(evt) {
-            self.onDoubleClick(evt);
+            return self.onDoubleClick(evt);
         });
     }
     if (this.center && this.zoom >0){
@@ -744,7 +744,8 @@ avnav.map.MapHolder.prototype.setGpsLock=function(lock){
  */
 avnav.map.MapHolder.prototype.onClick=function(evt){
     this.routinglayer.findTarget(evt.pixel);
-    if (this.routingActive) return;
+    evt.preventDefault();
+    if (this.routingActive) return false;
     var aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
         $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
@@ -752,6 +753,7 @@ avnav.map.MapHolder.prototype.onClick=function(evt){
         );
 
     }
+    return false;
 };
 /**
  * @private
