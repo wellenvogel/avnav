@@ -4,21 +4,41 @@
     <property name="assets.viewer" value="assets/viewer"/>
     <property name="assets.libraries" value="assets/libraries"/>
     <property name="src" value=".."/>
-    
-<target name="-build-viewer">
-  <xmlproperty file="AndroidManifest.xml" 
-					 prefix="themanifest" 
-					 collapseAttributes="true"/>
-  <condition property="avnav.version" 
-	     value="android-${themanifest.manifest.android:versionName}-debug"
-	     else="android-${themanifest.manifest.android:versionName}">
-    <equals arg1="${build.is.packaging.debug}" arg2="true"/>
-  </condition>
+
+    <condition property="avnav.onWindows">
+        <os family="windows"/>
+    </condition>
+
+<target name="-build-viewer-windows" depends="-build-version" if="avnav.onWindows">
+
+  <exec  dir="${src}/viewer" executable="cmd">
+    <arg value="/c"/>
+    <arg value="${src}\viewer\build\build.py" />
+    <arg value="${avnav.version}"/>
+  </exec>
+</target>
+<target name="-build-viewer-unix" depends="-build-version" unless="avnav.onWindows">
+
   <exec executable="${src}/viewer/build/build.py" dir="${src}/viewer">
     <arg value="${avnav.version}"/>
   </exec>
 </target>
-      
+
+<target name="-build-version">
+  <xmlproperty file="AndroidManifest.xml"
+					 prefix="themanifest"
+					 collapseAttributes="true"/>
+  <condition property="avnav.version"
+	     value="android-${themanifest.manifest.android:versionName}-debug"
+	     else="android-${themanifest.manifest.android:versionName}">
+    <equals arg1="${build.is.packaging.debug}" arg2="true"/>
+  </condition>
+  <echo>Version: ${avnav.version}</echo>
+</target>
+<target name="-build-viewer"
+  depends="-build-viewer-windows, -build-viewer-unix">
+</target>
+
 <target name="-post-compile" depends="-post-compile-debug,-post-compile-release,-build-viewer">
     <copy todir="${assets.viewer}" flatten="true" overwrite="true">
         <resources>
@@ -67,14 +87,14 @@
 <target name="copy-assets-debug" depends="-set-debug-mode,-post-compile"></target>
 
 	<target name="rename-release-with-version-number">
-		<xmlproperty file="AndroidManifest.xml" 
-					 prefix="themanifest" 
+		<xmlproperty file="AndroidManifest.xml"
+					 prefix="themanifest"
 					 collapseAttributes="true"/>
-		
+
 		<!--  see ${sdk.dir}/tools/ant/build.xml -set-release-mode -->
-		<property name="out.packaged.file" 
+		<property name="out.packaged.file"
 		          location="${out.absolute.dir}/${ant.project.name}-${themanifest.manifest.android:versionName}-unsigned.apk" />
-		<property name="out.final.file" 
+		<property name="out.final.file"
 		          location="${out.absolute.dir}/${ant.project.name}-${themanifest.manifest.android:versionName}.apk" />
 	</target>
 	<target name="-set-release-mode"
