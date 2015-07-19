@@ -48,7 +48,17 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         var addClass='';
         if (ais.warning) addClass='avn_ais_warning';
         else {
-            if ((ais.tracking)|| (ais.nearest && ! hasTracking)) addClass='avn_ais_selected';
+            if (hasTracking){
+                if (ais.tracking) addClass='avn_ais_selected';
+                else {
+                    if (ais.nearest) addClass='avn_ais_info_first';
+                    else addClass='avn_ais_info_normal';
+                }
+            }
+            else {
+                if (ais.nearest) addClass='avn_ais_info_first';
+                else addClass='avn_ais_info_normal';
+            }
         }
         html+='<div class="avn_ais '+addClass+' avn_ais_selector" mmsi="'+ais['mmsi']+'">';
         for (var p in formatter){
