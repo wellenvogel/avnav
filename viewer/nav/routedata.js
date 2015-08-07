@@ -597,7 +597,7 @@ avnav.nav.RouteData.prototype.handleLegResponse=function(data) {
                     }
                 }
             }
-            this.syncRouteFromLeg();
+            if (activeMode) this.setRouteFromLeg();
             this.saveLeg();
             this.navobject.routeEvent();
         }
