@@ -28,7 +28,7 @@ avnav.gui.Aispage.prototype.localInit=function(){
     this.aishandler=this.navobject.getAisData();
     $('#avi_ais_page_inner').on('scroll',function(){
         $('.avn_ais_headline_elem').css('top',$('#avi_ais_page_inner').scrollTop()-2);
-    })
+    });
 };
 avnav.gui.Aispage.prototype.showPage=function(options) {
     if (!this.gui) return;
@@ -84,7 +84,7 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         var topElement=$(domid+' .avn_ais_selected').position();
         if (! topElement)topElement=$(domid+' .avn_ais_warning').position();
         if (topElement){
-            $(domid).scrollTop(topElement.top);
+            $(domid).scrollTop(topElement.top - $('.avn_ais_headline').height());
         }
     }
 

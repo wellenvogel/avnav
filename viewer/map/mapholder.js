@@ -748,9 +748,11 @@ avnav.map.MapHolder.prototype.onClick=function(evt){
     if (this.routingActive) return false;
     var aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
-        $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
-            new avnav.map.MapEvent(avnav.map.EventType.SELECTAIS, {aisparam: aisparam})
-        );
+        setTimeout(function() {
+            $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
+                new avnav.map.MapEvent(avnav.map.EventType.SELECTAIS, {aisparam: aisparam})
+            );
+        },0);
 
     }
     return false;
