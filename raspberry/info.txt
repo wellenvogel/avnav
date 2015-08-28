@@ -291,7 +291,12 @@ if not, try to restart it and restart hostapd
  	add FORWARD=1 to /etc/default/avnav
  	
  	
- 	
+ 
+ 
+ --- 2015/05/30 install gdal, pil for converter
+ apt-get update
+ apt-get install python-gdal python-imaging
+ 
    
    
    
