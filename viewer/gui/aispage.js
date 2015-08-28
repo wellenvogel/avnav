@@ -26,6 +26,9 @@ avnav.inherits(avnav.gui.Aispage,avnav.gui.Page);
 
 avnav.gui.Aispage.prototype.localInit=function(){
     this.aishandler=this.navobject.getAisData();
+    $('#avi_ais_page_inner').on('scroll',function(){
+        $('.avn_ais_headline_elem').css('top',$('#avi_ais_page_inner').scrollTop()-2);
+    });
 };
 avnav.gui.Aispage.prototype.showPage=function(options) {
     if (!this.gui) return;
@@ -33,43 +36,55 @@ avnav.gui.Aispage.prototype.showPage=function(options) {
 };
 
 avnav.gui.Aispage.prototype.fillData=function(initial){
+    if (! initial) return;
     var domid="#avi_ais_page_inner";
     var formatter=this.aishandler.getAisFormatter();
     var aisList=this.aishandler.getAisData();
-    var html='<div class="avn_ais_infotable">';
-    html+='<div class="avn_ais avn_ais_headline">';
+    var html='<table class="avn_ais_infotable">';
+    html+='<thead class="avn_ais avn_ais_headline"><tr>';
     for (var p in formatter){
-        html+='<div class="avn_aisparam">'+formatter[p].headline+'</div>';
+        html+='<th class="avn_aisparam avn_ais_headline_elem">'+formatter[p].headline+'</th>';
     }
-    html+='</div>';
+    html+='</tr></thead><tbody>';
     var hasTracking=this.aishandler.getTrackedTarget();
     for( var aisidx in aisList){
         var ais=aisList[aisidx];
         var addClass='';
         if (ais.warning) addClass='avn_ais_warning';
         else {
-            if ((ais.tracking)|| (ais.nearest && ! hasTracking)) addClass='avn_ais_selected';
+            if (hasTracking){
+                if (ais.tracking) addClass='avn_ais_selected';
+                else {
+                    if (ais.nearest) addClass='avn_ais_info_first';
+                    else addClass='avn_ais_info_normal';
+                }
+            }
+            else {
+                if (ais.nearest) addClass='avn_ais_info_first';
+                else addClass='avn_ais_info_normal';
+            }
         }
-        html+='<div class="avn_ais '+addClass+' avn_ais_selector" mmsi="'+ais['mmsi']+'">';
+        html+='<tr class="avn_ais '+addClass+' avn_ais_selector" mmsi="'+ais['mmsi']+'">';
         for (var p in formatter){
-            html+='<div class="avn_aisparam">'+formatter[p].format(ais)+'</div>';
+            html+='<td class="avn_aisparam">'+formatter[p].format(ais)+'</td>';
         }
-        html+='</div>';
+        html+='</tr>';
     }
-    html+='</div>';
+    html+='</tbody></table>';
     $(domid).html(html);
     $(domid+' .avn_ais_selector').click({self:this},function(ev){
         var mmsi=$(this).attr('mmsi');
         ev.data.self.aishandler.setTrackedTarget(mmsi);
         var pos=ev.data.self.aishandler.getAisPositionByMmsi(mmsi);
         if (pos)ev.data.self.gui.map.setCenter(pos);
+        ev.data.self.gui.map.setGpsLock(false);
         ev.data.self.gui.showPageOrReturn(ev.data.self.returnpage,'navpage');
     });
     if (initial){
         var topElement=$(domid+' .avn_ais_selected').position();
         if (! topElement)topElement=$(domid+' .avn_ais_warning').position();
         if (topElement){
-            $(domid).scrollTop(topElement.top);
+            $(domid).scrollTop(topElement.top - $('.avn_ais_headline').height());
         }
     }
 

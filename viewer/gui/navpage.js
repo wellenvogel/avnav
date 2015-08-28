@@ -297,14 +297,20 @@ avnav.gui.Navpage.prototype.updateAisPanel=function() {
                 this.gui.map.updateSize();
             var displayClass = "avn_ais_info_first";
             var warningClass = "avn_ais_info_warning";
+            var normalClass = 'avn_ais_info_normal';
+            $('#aisInfo').addClass(normalClass);
             if (!nearestTarget.warning) {
                 $('#aisInfo').removeClass(warningClass);
-                if (nearestTarget.nearest) $('#aisInfo').addClass(displayClass);
+                if (nearestTarget.nearest) {
+                    $('#aisInfo').addClass(displayClass);
+                    $('#aisInfo').removeClass(normalClass);
+                }
                 else $('#aisInfo').removeClass(displayClass);
             }
             else {
                 $('#aisInfo').addClass(warningClass);
                 $('#aisInfo').removeClass(displayClass);
+                $('#aisInfo').removeClass(normalClass);
             }
         }
         else {
