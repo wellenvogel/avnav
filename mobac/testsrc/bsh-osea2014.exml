@@ -47,6 +47,7 @@
 		<out>#5883CE</out>
 	</colorMapping>
 </colorMappings>
+<userAgent>curl</userAgent>
 </exCustomWmsMapSource>
 <exCustomWmsMapSource>
 <name>BSHNavigationalAids</name>
@@ -68,6 +69,7 @@
 <url>https://www.geoseaportal.de/wss/service/NAUTHIS_AidsAndServices/guest?</url>
 <coordinatesystem>EPSG:4326</coordinatesystem>
 <aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+<userAgent>curl</userAgent>
 </exCustomWmsMapSource>
 <exCustomWmsMapSource>
 <name>BSHRocksWrecks</name>
@@ -85,6 +87,7 @@
 <url>https://www.geoseaportal.de/wss/service/NAUTHIS_RocksWrecksObstructions/guest?</url>
 <coordinatesystem>EPSG:4326</coordinatesystem>
 <aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0x777777&TRANSPARENT=TRUE]]></aditionalparameters>
+<userAgent>curl</userAgent>
 </exCustomWmsMapSource>
 <exCustomWmsMapSource>
 <name>BSHHydrography</name>
@@ -107,6 +110,7 @@
 <url>https://www.geoseaportal.de/wss/service/NAUTHIS_Hydrography/guest?</url>
 <coordinatesystem>EPSG:4326</coordinatesystem>
 <aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0x777777&TRANSPARENT=TRUE]]></aditionalparameters>
+<userAgent>curl</userAgent>
 </exCustomWmsMapSource>
 <exCustomMapSource>
 <retries>1</retries>

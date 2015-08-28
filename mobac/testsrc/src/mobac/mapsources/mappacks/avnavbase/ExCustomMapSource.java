@@ -106,6 +106,9 @@ public class ExCustomMapSource implements HttpMapSource {
 
 	@XmlElement(required = false, defaultValue = "false")
 	protected boolean ignoreErrors = false;
+
+	@XmlElement(nillable = true)
+	protected String userAgent;
 	
 	/**
 	 * set a list of HTTP error codes that will lead to 
@@ -178,9 +181,14 @@ public class ExCustomMapSource implements HttpMapSource {
 
 	public HttpURLConnection getTileUrlConnection(int zoom, int tilex, int tiley) throws IOException {
 		String url = getTileUrl(zoom, tilex, tiley);
+		log.trace("geTileUrlConnection: "+url);
 		if (url == null)
 			return null;
-		return (HttpURLConnection) new URL(url).openConnection();
+		HttpURLConnection rt=(HttpURLConnection) new URL(url).openConnection();
+		if (userAgent != null && !userAgent.isEmpty()){
+			rt.setRequestProperty("User-agent",userAgent);
+		}
+		return rt;
 	}
 
 	public String getTileUrl(int zoom, int tilex, int tiley) {
@@ -228,6 +236,7 @@ public class ExCustomMapSource implements HttpMapSource {
 			} 
 			
 			catch (Throwable e) {
+				log.trace(name+" download failed with Exception "+e);
 				return null;
 			}
 
@@ -322,6 +331,7 @@ public class ExCustomMapSource implements HttpMapSource {
 		int currentFactor=1;
 		int orix=x;
 		int oriy=y;
+		log.trace(name+" getTileData z="+zoom+", x="+x+", y="+y+", loadMethod="+loadMethod);
 		ArrayList<BufferedImage> stack=new ArrayList<BufferedImage>(numLowerLevels+1);
 		for (int nz = 0; nz <= numLowerLevels && currentZoom >= getMinZoom(); nz++) {
 			for (int ntry = 0; ntry < retries; ntry++) {
