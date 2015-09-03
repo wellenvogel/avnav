@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="de.wellenvogel.avnav.main"
-          android:versionCode="20"
-          android:versionName="0.2.0"
+          android:versionCode="21"
+          android:versionName="0.2.1"
         >
     <uses-sdk android:minSdkVersion="14"/>
     <!--make bluetooth optional -->
@@ -45,6 +45,8 @@
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
+        <activity android:name=".SettingsActivity"
+                android:label="@string/labelSettingsActivity"></activity>
         <service android:name="de.wellenvogel.avnav.gps.GpsService" android:label="AvnavGps"/>
     </application>
 </manifest>

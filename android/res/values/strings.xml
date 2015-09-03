@@ -48,4 +48,8 @@
     <string name="bluetoothLabel">Bluetooth</string>
     <string name="selectBlueTooth">Select Bluetooth Device</string>
     <string name="noSuchBluetoothDevice">No such bluetooth device</string>
+    <string name="labelSettingsIpAddress">Address</string>
+    <string name="labelSettingsIpPort">Port</string>
+    <string name="labelSettingsIpcategory">External IP connection</string>
+    <string name="labelSettingsActivity">avNav Settings</string>
 </resources>

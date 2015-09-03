@@ -98,6 +98,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private boolean firstStart=true;
     private boolean firstCheck=true;
     private BluetoothAdapter mBluetoothAdapter;
+    private boolean disableChangeActions=false;
 
     private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
 
@@ -300,6 +301,49 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         timerSequence++;
         handler.postDelayed(new TimerRunnable(timerSequence),500);
     }
+
+    private boolean updateCheckBox(CheckBox box,String pref,boolean defaultV){
+        boolean old=box.isChecked();
+        boolean newV=sharedPrefs.getBoolean(pref,defaultV);
+        box.setChecked(newV);
+        return old != newV;
+    }
+    private boolean updateCheckBox(CheckBox box,boolean newV){
+        boolean old=box.isChecked();
+        box.setChecked(newV);
+        return old != newV;
+    }
+    private boolean updateText(EditText etxt,String newV){
+        String old=etxt.getText().toString();
+        if (! old.equals(newV)){
+            etxt.setText(newV);
+            return true;
+        }
+        return false;
+    }
+
+
+    private void updateValues(){
+        disableChangeActions=true;
+        boolean isChanged=false;
+        boolean btAis=sharedPrefs.getBoolean(BTAIS,false);
+        boolean btNmea=sharedPrefs.getBoolean(BTNMEA,false);
+        if (updateCheckBox(cbShowDemo,SHOWDEMO,true)) isChanged=true;
+        if (updateCheckBox(cbIpAis,IPAIS,false)) isChanged=true;
+        if (updateCheckBox(cbIpNmea,IPNMEA,false)) isChanged=true;
+        if (updateCheckBox(cbInternalGps,INTERNALGPS,true)) isChanged=true;
+        if (updateCheckBox(cbBtAis,btAis && mBluetoothAdapter!= null && mBluetoothAdapter.isEnabled())) isChanged=true;
+        if (updateCheckBox(cbBtNmea,btNmea && mBluetoothAdapter!= null && mBluetoothAdapter.isEnabled())) isChanged=true;
+        if (updateText(txIp,sharedPrefs.getString(IPADDR, "192.168.20.10"))) isChanged=true;
+        if (updateText(txPort,sharedPrefs.getString(IPPORT,"34567"))) isChanged=true;
+        String workdir=sharedPrefs.getString(WORKDIR,Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
+        if (updateText(textWorkdir,workdir))isChanged=true;
+        updateExternal();
+        if (isChanged){
+            stopGpsService(false);
+        }
+        disableChangeActions=false;
+    }
     /**
      * Called when the activity is first created.
      */
@@ -368,21 +412,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             startService(intent);
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         }
-        boolean internalGps=sharedPrefs.getBoolean(INTERNALGPS,true);
-        boolean ipAis=sharedPrefs.getBoolean(IPAIS,false);
-        boolean ipNmea=sharedPrefs.getBoolean(IPNMEA,false);
-        boolean showDemo=sharedPrefs.getBoolean(SHOWDEMO,true);
-        boolean btAis=sharedPrefs.getBoolean(BTAIS,false);
-        boolean btNmea=sharedPrefs.getBoolean(BTNMEA,false);
-        cbShowDemo.setChecked(showDemo);
-        cbIpAis.setChecked(ipAis);
-        cbIpNmea.setChecked(ipNmea);
-        cbInternalGps.setChecked(internalGps);
-        cbBtAis.setChecked(btAis);
-        cbBtNmea.setChecked(btNmea);
-        updateExternal();
-        txIp.setText(sharedPrefs.getString(IPADDR, "192.168.20.10"));
-        txPort.setText(sharedPrefs.getString(IPPORT,"34567"));
+        updateValues();
         cbIpAis.setOnCheckedChangeListener(cbHandler);
         cbBtAis.setOnCheckedChangeListener(cbHandler);
         cbInternalGps.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -457,8 +487,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                 else startGpsService();
             }
         });
-        String workdir=sharedPrefs.getString(WORKDIR,Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
-        textWorkdir.setText(workdir);
+
         Button btSelectDir=(Button)findViewById(R.id.btSelectDir);
         btSelectDir.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -485,7 +514,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             @Override
             public void onClick(View v) {
                 stopGpsService(false);
-                if (!mBluetoothAdapter.isEnabled()) {
+                if (mBluetoothAdapter != null && !mBluetoothAdapter.isEnabled()) {
                     Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     startActivityForResult(enableBtIntent, 1);
                     return;
@@ -537,6 +566,9 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                 Intent intent = new Intent(context,Info.class);
                 startActivity(intent);
                 return true;
+            case R.id.action_settings:
+                Intent sintent= new Intent(context,SettingsActivity.class);
+                startActivity(sintent);
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -545,6 +577,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     @Override
     protected void onStart() {
         super.onStart();
+        updateValues();
         startTimer();
         //if we have crosswalk available
         //show the selection for it
@@ -555,6 +588,12 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         else {
             rbCrosswalk.setVisibility(View.INVISIBLE);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateValues();
     }
 
     @Override
@@ -578,6 +617,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private CompoundButton.OnCheckedChangeListener cbHandler=new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            if (AvNav.this.disableChangeActions) return;
             AvNav.this.updateExternal();
             AvNav.this.saveSettings();
             AvNav.this.stopGpsService(false);
@@ -597,6 +637,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
 
         @Override
         public void afterTextChanged(Editable s) {
+            if (AvNav.this.disableChangeActions) return;
             AvNav.this.saveSettings();
             AvNav.this.stopGpsService(false);
         }
