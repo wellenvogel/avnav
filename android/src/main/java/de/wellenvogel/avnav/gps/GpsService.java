@@ -561,11 +561,11 @@ public class GpsService extends Service  {
             GpsDataProvider.SatStatus st=internalProvider.getSatStatus();
             Location loc=internalProvider.getLocation();
             if (loc != null) {
-                item.put("info", "valid position");
+                item.put("info", "valid position,sats: "+st.numSat+" available / "+st.numUsed+" used, acc="+loc.getAccuracy());
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }
             else {
-                item.put("info","searching, sats: "+st.numUsed+" available / "+st.numSat+" used");
+                item.put("info","searching, sats: "+st.numSat+" available / "+st.numUsed+" used");
                 item.put("status", GpsDataProvider.STATUS_STARTED);
             }
         }
