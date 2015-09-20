@@ -17,6 +17,11 @@ avnav.gui.Aispage=function(){
      * @type {avnav.nav.AisData}
      */
     this.aishandler=null;
+    /**
+     * private
+     * @type {number}
+     */
+    this.showTime=(new Date()).getTime();
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -33,6 +38,7 @@ avnav.gui.Aispage.prototype.localInit=function(){
 avnav.gui.Aispage.prototype.showPage=function(options) {
     if (!this.gui) return;
     this.fillData(true);
+    this.showTime=(new Date()).getTime();
 };
 
 avnav.gui.Aispage.prototype.fillData=function(initial){
@@ -73,18 +79,32 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
     html+='</tbody></table>';
     $(domid).html(html);
     $(domid+' .avn_ais_selector').click({self:this},function(ev){
+        var self=ev.data.self;
+        var clickDelay=self.gui.properties.getProperties().aisBrowserWorkaround;
+        if (clickDelay> 0 ){
+            if ((new Date()).getTime() < (self.showTime+clickDelay)){
+                log("ais page click delay");
+                return false;
+            }
+        }
         var mmsi=$(this).attr('mmsi');
-        ev.data.self.aishandler.setTrackedTarget(mmsi);
-        var pos=ev.data.self.aishandler.getAisPositionByMmsi(mmsi);
-        if (pos)ev.data.self.gui.map.setCenter(pos);
-        ev.data.self.gui.map.setGpsLock(false);
-        ev.data.self.gui.showPageOrReturn(ev.data.self.returnpage,'navpage');
+        self.aishandler.setTrackedTarget(mmsi);
+        var pos=self.aishandler.getAisPositionByMmsi(mmsi);
+        if (pos)self.gui.map.setCenter(pos);
+        self.gui.map.setGpsLock(false);
+        self.gui.showPageOrReturn(ev.data.self.returnpage,'navpage');
     });
     if (initial){
-        var topElement=$(domid+' .avn_ais_selected').position();
-        if (! topElement)topElement=$(domid+' .avn_ais_warning').position();
+        $(domid).scrollTop(0);
+        var topDom=$(domid+' .avn_ais_selected');
+        var topElement;
+        if (! topDom)topDom=$(domid+' .avn_ais_warning');
+        if (topDom) topElement=$(topDom).position();
         if (topElement){
-            $(domid).scrollTop(topElement.top - $('.avn_ais_headline').height());
+            var scrollTop=topElement.top - $('.avn_ais_headline').height();
+            var currentTop=$(domid).scrollTop();
+            log("aisPage scroll: elTop:"+topElement.top+",current="+currentTop+", scroll="+scrollTop+", mmsi="+$(topDom).attr('mmsi'));
+            $(domid).scrollTop(scrollTop);
         }
     }
 

@@ -47,6 +47,11 @@ all buttons with ids avb_... will call corresponding js functions
            /* display: none;*/
         }
     </style>
+      <script type="text/javascript">
+          less={
+              env: "development"
+          }
+      </script>
     <link rel="stylesheet/less" type="text/css" href="avnav_viewer.less"/>
 	<script type="text/javascript" src='loader.js'></script>
     <script type="text/javascript">
@@ -618,6 +623,10 @@ all buttons with ids avb_... will call corresponding js functions
                   </div>
                   <div class="avn_settings_line">
                       <div class="avn_setting" avn_name="style.aisWarningColor"></div>
+                      <div class="avn_clear"></div>
+                  </div>
+                  <div class="avn_settings_line">
+                      <div class="avn_setting" avn_name="aisBrowserWorkaround"></div>
                       <div class="avn_clear"></div>
                   </div>
               </div>

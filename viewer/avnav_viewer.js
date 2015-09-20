@@ -58,6 +58,7 @@ var propertyDefinitions=function(){
         },
         forceMobile: new avnav.util.Property(false,"forceMobile",avnav.util.PropertyType.CHECKBOX),
         connectedMode:new avnav.util.Property(true,"connected",avnav.util.PropertyType.CHECKBOX),
+        readOnlyServer: new avnav.util.Property(false),
         onAndroid:new avnav.util.Property(false),
         NM: new avnav.util.Property(1852), //one mile
         buttonUpdateTime: new avnav.util.Property( 500), //timer for button updates
@@ -105,6 +106,7 @@ var propertyDefinitions=function(){
         aisNormalImage: new avnav.util.Property( 'images/ais-default.png'),
         aisNearestImage: new avnav.util.Property( 'images/ais-nearest.png'),
         aisWarningImage: new avnav.util.Property( 'images/ais-warning.png'),
+        aisBrowserWorkaround: new avnav.util.Property(600,"Browser AisPage Workaround(ms)",avnav.util.PropertyType.RANGE,[0,6000,10]),
         statusQueryTimeout: new avnav.util.Property( 3000), //ms
         centerDisplayTimeout: new avnav.util.Property( 45000), //ms - auto hide measure display (0 - no auto hide)
         navUrl: new avnav.util.Property( "/viewer/avnav_navi.php"),
@@ -189,6 +191,15 @@ avnav.main=function() {
     }
     else {
         propertyHandler.setValueByName('onAndroid',false);
+    }
+    var ro="readOnlyServer";
+    if (getParam(ro) && getParam(ro) == "true"){
+        propertyHandler.setValueByName(ro,true);
+        propertyHandler.setValueByName('connectedMode',false);
+    }
+    else{
+
+        propertyHandler.setValueByName(ro,false);
     }
     //make the android API available as avnav.android
     if (window.avnavAndroid){

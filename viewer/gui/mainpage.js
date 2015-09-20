@@ -76,7 +76,7 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
         }
 
     });
-    if (avnav.android){
+    if (avnav.android || this.gui.properties.getProperties().readOnlyServer){
         $('#avb_Connected').hide();
     }
 

@@ -108,7 +108,7 @@ avnav.gui.Routepage.prototype.localInit=function(){
             }
             if (! window.FileReader){
                 if (! self.fallbackUpload) {
-                    alert("your browser does not support FileReader, cannot upload")
+                    alert("your browser does not support FileReader, cannot upload");
                     return;
                 }
                 self.directUpload(file);
@@ -332,16 +332,18 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
     var localRoutes=this.routingData.listRoutesLocal();
     this.addRoutes(localRoutes);
     this.updateDisplay();
-    this.routingData.listRoutesServer(
-        function(routingInfos,param){
-            param.self.addRoutes(routingInfos);
-            param.self.updateDisplay();
-        },
-        function(err,param){
-            alert("unable to load routes from server: "+err);
-        },
-        { self:this}
-    );
+    if (! this.gui.properties.getProperties().readOnlyServer) {
+        this.routingData.listRoutesServer(
+            function (routingInfos, param) {
+                param.self.addRoutes(routingInfos);
+                param.self.updateDisplay();
+            },
+            function (err, param) {
+                alert("unable to load routes from server: " + err);
+            },
+            {self: this}
+        );
+    }
 };
 
 avnav.gui.Routepage.prototype.directUpload=function(file) {
@@ -452,7 +454,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         $(f).submit();
         return false;
     }
-    if (this.gui.properties.getProperties().connectedMode) {
+    if (this.gui.properties.getProperties().connectedMode && ! this.gui.properties.getProperties().readOnlyServer) {
         //just store the route first and afterwards download it from the server
         route.server=true;
         log("route download server upload");
