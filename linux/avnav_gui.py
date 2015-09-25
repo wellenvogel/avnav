@@ -36,6 +36,7 @@ class  AvnavGui(Avnav):
     def __init__(self, *args, **kwds):
         Avnav.__init__(self, *args, **kwds)
         self.defaultOut=os.path.join(os.path.expanduser("~"),"AvNavCharts")
+        self.txLogfile.SetValue(os.path.join(self.defaultOut,"avnav-chartconvert.log"))
         self.outputDir.SetValue(self.defaultOut)
         self.server=None
         self.serverRunning=False
@@ -151,7 +152,11 @@ class  AvnavGui(Avnav):
         if len(selectedFiles) < 1:
             wx.MessageBox("no files selected")
             return
-        args=["xterm","-T","Avnav Chartconvert","-hold","-e",sys.executable,os.path.join(self.getBaseDir(),"..","chartconvert","read_charts.py"),"-b",self.outputDir.GetValue()]
+        log=[]
+        if self.cbLogfile.IsChecked():
+          pass
+          log=[os.path.join(self.getBaseDir(),"run.py") ,self.txLogfile.GetValue()]
+        args=["xterm","-T","Avnav Chartconvert","-hold","-e"]+log+[os.path.join(self.getBaseDir(),"..","chartconvert","read_charts.py"), "-b",self.outputDir.GetValue()]
         if self.updateMode.IsChecked():
             args.append("-f")
         for name in selectedFiles:
@@ -168,6 +173,12 @@ class  AvnavGui(Avnav):
         if openFileDialog.ShowModal() == wx.ID_CANCEL:
             return     # the user changed idea...
         self.outputDir.SetValue(openFileDialog.GetPath())
+
+    def btLogfileClicked(self, event):
+      openFileDialog = wx.FileDialog(self, "Select Logfile", style=1,defaultFile=self.txLogfile.GetValue())
+      if openFileDialog.ShowModal() == wx.ID_CANCEL:
+            return     # the user changed idea...
+      self.txLogfile.SetValue(openFileDialog.GetPath())
 
 
 
