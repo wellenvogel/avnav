@@ -61,6 +61,9 @@ namespace AvChartConvert
             string outdir = (string)Properties.Settings.Default["OutDir"];
             if (outdir == null || outdir == "") outdir = defaultOut;
             this.textOutdir.Text = outdir;
+            string logfile = (string)Properties.Settings.Default["LogFile"];
+            if (logfile == null || logfile == "") logfile=Path.Combine(outdir, "avnav-chartconvert.log");
+            this.tbLogFile.Text = logfile;
             this.textIn.Clear();
             this.textOpenCPN.Text=locateOpenCpn((string)Properties.Settings.Default["OpenCPN"]);
             string[] args = Environment.GetCommandLineArgs();
@@ -196,8 +199,17 @@ namespace AvChartConvert
                             MessageBox.Show("command not found at " + cmd  + " - unable to execute");
                             return;
                         }
+                        if (cbLogFile.Checked)
+                        {
+                            args="\""+tbLogFile.Text+"\" \""+cmd+"\" ";
+                            cmd = Path.Combine(myPath, "..", "chartconvert", "run_with_log.py");
+                        }
+                        else
+                        {
+                            
+                            args = " ";
+                        }
                         info = new ProcessStartInfo(cmd);
-                        args = " ";
                         converterStartedWithCmd = false;
 
                     }
@@ -266,6 +278,14 @@ namespace AvChartConvert
             {
                 this.labelProcess.Text = "";
                 
+            }
+            if (File.Exists(tbLogFile.Text))
+            {
+                if (! btViewLog.Visible) btViewLog.Show();
+            }
+            else
+            {
+                if (btViewLog.Visible) btViewLog.Hide();
             }
         }
 
@@ -444,6 +464,43 @@ namespace AvChartConvert
         {
             stopServer();
             buttonStop_Click(null, null);
+        }
+
+        private void btLogFile_Click(object sender, EventArgs e)
+        {
+            this.openOutputDialog.Reset();
+            this.openOutputDialog.Title = "Select Logfile";
+            this.openOutputDialog.FileName = tbLogFile.Text;
+            this.openOutputDialog.ValidateNames = false;
+            this.openOutputDialog.CheckFileExists = false;
+            this.openOutputDialog.CheckPathExists = true;
+            this.openOutputDialog.Filter = string.Empty;
+            if (this.openOutputDialog.ShowDialog() == DialogResult.OK)
+            {
+                tbLogFile.Text = openOutputDialog.FileName;
+                Properties.Settings.Default["LogFile"] = tbLogFile.Text;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        private void btViewLog_Click(object sender, EventArgs e)
+        {
+            if (!File.Exists(tbLogFile.Text))
+            {
+                MessageBox.Show("Logfile " + tbLogFile.Text + " does not exist");
+                return;
+            }
+            try {
+                Process.Start(tbLogFile.Text);
+            }catch(Exception ex)
+            {
+                MessageBox.Show("Exception when showing " + tbLogFile.Text + ": " + ex);
+            }
+        }
+
+        private void panel2_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
     //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp

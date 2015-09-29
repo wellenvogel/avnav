@@ -60,23 +60,35 @@
             this.checkUseCmd = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.cbLogFile = new System.Windows.Forms.CheckBox();
+            this.tbLogFile = new System.Windows.Forms.TextBox();
+            this.btLogFile = new System.Windows.Forms.Button();
+            this.openOutputDialog = new System.Windows.Forms.SaveFileDialog();
+            this.btViewLog = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // textIn
             // 
-            this.textIn.Location = new System.Drawing.Point(14, 36);
+            this.textIn.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textIn.Location = new System.Drawing.Point(19, 44);
+            this.textIn.Margin = new System.Windows.Forms.Padding(4);
             this.textIn.Multiline = true;
             this.textIn.Name = "textIn";
-            this.textIn.Size = new System.Drawing.Size(491, 321);
+            this.textIn.Size = new System.Drawing.Size(653, 394);
             this.textIn.TabIndex = 0;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Location = new System.Drawing.Point(16, 11);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(52, 13);
+            this.label1.Size = new System.Drawing.Size(68, 17);
             this.label1.TabIndex = 1;
             this.label1.Text = "InputFiles";
             // 
@@ -86,9 +98,11 @@
             // 
             // buttonAddFile
             // 
-            this.buttonAddFile.Location = new System.Drawing.Point(529, 63);
+            this.buttonAddFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonAddFile.Location = new System.Drawing.Point(705, 78);
+            this.buttonAddFile.Margin = new System.Windows.Forms.Padding(4);
             this.buttonAddFile.Name = "buttonAddFile";
-            this.buttonAddFile.Size = new System.Drawing.Size(94, 23);
+            this.buttonAddFile.Size = new System.Drawing.Size(125, 28);
             this.buttonAddFile.TabIndex = 2;
             this.buttonAddFile.Text = "AddFile(s)";
             this.buttonAddFile.UseVisualStyleBackColor = true;
@@ -96,19 +110,24 @@
             // 
             // buttonOK
             // 
-            this.buttonOK.Location = new System.Drawing.Point(547, 501);
+            this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOK.Location = new System.Drawing.Point(732, 7);
+            this.buttonOK.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOK.Name = "buttonOK";
-            this.buttonOK.Size = new System.Drawing.Size(75, 23);
+            this.buttonOK.Size = new System.Drawing.Size(100, 28);
             this.buttonOK.TabIndex = 3;
-            this.buttonOK.Text = "Start";
+            this.buttonOK.Text = "Convert";
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(548, 576);
+            this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancel.Location = new System.Drawing.Point(730, 767);
+            this.buttonCancel.Margin = new System.Windows.Forms.Padding(4);
             this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(75, 23);
+            this.buttonCancel.Size = new System.Drawing.Size(100, 28);
             this.buttonCancel.TabIndex = 4;
             this.buttonCancel.Text = "Exit";
             this.buttonCancel.UseVisualStyleBackColor = true;
@@ -116,38 +135,48 @@
             // 
             // checkBoxUpdate
             // 
+            this.checkBoxUpdate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.checkBoxUpdate.AutoSize = true;
             this.checkBoxUpdate.Checked = true;
             this.checkBoxUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxUpdate.Location = new System.Drawing.Point(14, 505);
+            this.checkBoxUpdate.Location = new System.Drawing.Point(15, 13);
+            this.checkBoxUpdate.Margin = new System.Windows.Forms.Padding(4);
             this.checkBoxUpdate.Name = "checkBoxUpdate";
-            this.checkBoxUpdate.Size = new System.Drawing.Size(86, 17);
+            this.checkBoxUpdate.Size = new System.Drawing.Size(109, 21);
             this.checkBoxUpdate.TabIndex = 5;
             this.checkBoxUpdate.Text = "updateMode";
             this.checkBoxUpdate.UseVisualStyleBackColor = true;
             // 
             // textOutdir
             // 
-            this.textOutdir.Location = new System.Drawing.Point(14, 389);
+            this.textOutdir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textOutdir.Location = new System.Drawing.Point(19, 479);
+            this.textOutdir.Margin = new System.Windows.Forms.Padding(4);
             this.textOutdir.Name = "textOutdir";
-            this.textOutdir.Size = new System.Drawing.Size(491, 20);
+            this.textOutdir.Size = new System.Drawing.Size(653, 22);
             this.textOutdir.TabIndex = 6;
             this.textOutdir.TextChanged += new System.EventHandler(this.textOutdir_TextChanged);
             // 
             // label2
             // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 373);
+            this.label2.Location = new System.Drawing.Point(16, 459);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(52, 13);
+            this.label2.Size = new System.Drawing.Size(69, 17);
             this.label2.TabIndex = 7;
             this.label2.Text = "OutputDir";
             // 
             // buttonOutDir
             // 
-            this.buttonOutDir.Location = new System.Drawing.Point(511, 389);
+            this.buttonOutDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOutDir.Location = new System.Drawing.Point(681, 479);
+            this.buttonOutDir.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOutDir.Name = "buttonOutDir";
-            this.buttonOutDir.Size = new System.Drawing.Size(54, 23);
+            this.buttonOutDir.Size = new System.Drawing.Size(72, 28);
             this.buttonOutDir.TabIndex = 8;
             this.buttonOutDir.Text = "Change";
             this.buttonOutDir.UseVisualStyleBackColor = true;
@@ -155,9 +184,11 @@
             // 
             // buttonAddDirectories
             // 
-            this.buttonAddDirectories.Location = new System.Drawing.Point(529, 34);
+            this.buttonAddDirectories.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonAddDirectories.Location = new System.Drawing.Point(705, 42);
+            this.buttonAddDirectories.Margin = new System.Windows.Forms.Padding(4);
             this.buttonAddDirectories.Name = "buttonAddDirectories";
-            this.buttonAddDirectories.Size = new System.Drawing.Size(94, 23);
+            this.buttonAddDirectories.Size = new System.Drawing.Size(125, 28);
             this.buttonAddDirectories.TabIndex = 9;
             this.buttonAddDirectories.Text = "AddDirectories";
             this.buttonAddDirectories.UseVisualStyleBackColor = true;
@@ -171,9 +202,12 @@
             // 
             // buttonStop
             // 
-            this.buttonStop.Location = new System.Drawing.Point(451, 501);
+            this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonStop.Location = new System.Drawing.Point(624, 8);
+            this.buttonStop.Margin = new System.Windows.Forms.Padding(4);
             this.buttonStop.Name = "buttonStop";
-            this.buttonStop.Size = new System.Drawing.Size(75, 23);
+            this.buttonStop.Size = new System.Drawing.Size(100, 28);
             this.buttonStop.TabIndex = 10;
             this.buttonStop.Text = "Stop";
             this.buttonStop.UseVisualStyleBackColor = true;
@@ -182,9 +216,11 @@
             // 
             // buttonEmpty
             // 
-            this.buttonEmpty.Location = new System.Drawing.Point(529, 130);
+            this.buttonEmpty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonEmpty.Location = new System.Drawing.Point(705, 128);
+            this.buttonEmpty.Margin = new System.Windows.Forms.Padding(4);
             this.buttonEmpty.Name = "buttonEmpty";
-            this.buttonEmpty.Size = new System.Drawing.Size(94, 24);
+            this.buttonEmpty.Size = new System.Drawing.Size(125, 30);
             this.buttonEmpty.TabIndex = 11;
             this.buttonEmpty.Text = "Empty";
             this.buttonEmpty.UseVisualStyleBackColor = true;
@@ -192,9 +228,11 @@
             // 
             // buttonDefaultOut
             // 
-            this.buttonDefaultOut.Location = new System.Drawing.Point(571, 389);
+            this.buttonDefaultOut.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonDefaultOut.Location = new System.Drawing.Point(761, 479);
+            this.buttonDefaultOut.Margin = new System.Windows.Forms.Padding(4);
             this.buttonDefaultOut.Name = "buttonDefaultOut";
-            this.buttonDefaultOut.Size = new System.Drawing.Size(52, 23);
+            this.buttonDefaultOut.Size = new System.Drawing.Size(69, 28);
             this.buttonDefaultOut.TabIndex = 12;
             this.buttonDefaultOut.Text = "Default";
             this.buttonDefaultOut.UseVisualStyleBackColor = true;
@@ -202,9 +240,12 @@
             // 
             // buttonFocus
             // 
-            this.buttonFocus.Location = new System.Drawing.Point(355, 501);
+            this.buttonFocus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonFocus.Location = new System.Drawing.Point(516, 8);
+            this.buttonFocus.Margin = new System.Windows.Forms.Padding(4);
             this.buttonFocus.Name = "buttonFocus";
-            this.buttonFocus.Size = new System.Drawing.Size(75, 23);
+            this.buttonFocus.Size = new System.Drawing.Size(100, 28);
             this.buttonFocus.TabIndex = 13;
             this.buttonFocus.Text = "Focus";
             this.buttonFocus.UseVisualStyleBackColor = true;
@@ -213,32 +254,44 @@
             // 
             // labelProcess
             // 
-            this.labelProcess.Location = new System.Drawing.Point(132, 506);
+            this.labelProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelProcess.AutoSize = true;
+            this.labelProcess.Location = new System.Drawing.Point(182, 13);
+            this.labelProcess.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelProcess.Name = "labelProcess";
-            this.labelProcess.Size = new System.Drawing.Size(204, 21);
+            this.labelProcess.Size = new System.Drawing.Size(0, 17);
             this.labelProcess.TabIndex = 14;
             // 
             // textOpenCPN
             // 
-            this.textOpenCPN.Location = new System.Drawing.Point(14, 432);
+            this.textOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textOpenCPN.Location = new System.Drawing.Point(19, 532);
+            this.textOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.textOpenCPN.Name = "textOpenCPN";
-            this.textOpenCPN.Size = new System.Drawing.Size(491, 20);
+            this.textOpenCPN.Size = new System.Drawing.Size(653, 22);
             this.textOpenCPN.TabIndex = 15;
             // 
             // labelOpenCPN
             // 
+            this.labelOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelOpenCPN.AutoSize = true;
-            this.labelOpenCPN.Location = new System.Drawing.Point(12, 416);
+            this.labelOpenCPN.Location = new System.Drawing.Point(16, 512);
+            this.labelOpenCPN.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelOpenCPN.Name = "labelOpenCPN";
-            this.labelOpenCPN.Size = new System.Drawing.Size(96, 13);
+            this.labelOpenCPN.Size = new System.Drawing.Size(125, 17);
             this.labelOpenCPN.TabIndex = 16;
             this.labelOpenCPN.Text = "OpenCPNLocation";
             // 
             // buttonOpenCPN
             // 
-            this.buttonOpenCPN.Location = new System.Drawing.Point(511, 430);
+            this.buttonOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOpenCPN.Location = new System.Drawing.Point(681, 529);
+            this.buttonOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOpenCPN.Name = "buttonOpenCPN";
-            this.buttonOpenCPN.Size = new System.Drawing.Size(54, 23);
+            this.buttonOpenCPN.Size = new System.Drawing.Size(72, 28);
             this.buttonOpenCPN.TabIndex = 17;
             this.buttonOpenCPN.Text = "Change";
             this.buttonOpenCPN.UseVisualStyleBackColor = true;
@@ -246,21 +299,27 @@
             // 
             // checkStartServer
             // 
+            this.checkStartServer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.checkStartServer.AutoSize = true;
             this.checkStartServer.Checked = true;
             this.checkStartServer.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkStartServer.Location = new System.Drawing.Point(9, 10);
+            this.checkStartServer.Location = new System.Drawing.Point(12, 12);
+            this.checkStartServer.Margin = new System.Windows.Forms.Padding(4);
             this.checkStartServer.Name = "checkStartServer";
-            this.checkStartServer.Size = new System.Drawing.Size(100, 17);
+            this.checkStartServer.Size = new System.Drawing.Size(130, 21);
             this.checkStartServer.TabIndex = 18;
             this.checkStartServer.Text = "autoStartServer";
             this.checkStartServer.UseVisualStyleBackColor = true;
             // 
             // btnStopServer
             // 
-            this.btnStopServer.Location = new System.Drawing.Point(446, 6);
+            this.btnStopServer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnStopServer.Location = new System.Drawing.Point(624, 8);
+            this.btnStopServer.Margin = new System.Windows.Forms.Padding(4);
             this.btnStopServer.Name = "btnStopServer";
-            this.btnStopServer.Size = new System.Drawing.Size(75, 23);
+            this.btnStopServer.Size = new System.Drawing.Size(98, 28);
             this.btnStopServer.TabIndex = 19;
             this.btnStopServer.Text = "StopServer";
             this.btnStopServer.UseVisualStyleBackColor = true;
@@ -269,9 +328,12 @@
             // 
             // btnStartServer
             // 
-            this.btnStartServer.Location = new System.Drawing.Point(542, 6);
+            this.btnStartServer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnStartServer.Location = new System.Drawing.Point(732, 7);
+            this.btnStartServer.Margin = new System.Windows.Forms.Padding(4);
             this.btnStartServer.Name = "btnStartServer";
-            this.btnStartServer.Size = new System.Drawing.Size(75, 23);
+            this.btnStartServer.Size = new System.Drawing.Size(100, 28);
             this.btnStartServer.TabIndex = 20;
             this.btnStartServer.Text = "StartServer";
             this.btnStartServer.UseVisualStyleBackColor = true;
@@ -279,11 +341,15 @@
             // 
             // lbServerRunning
             // 
+            this.lbServerRunning.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.lbServerRunning.AutoSize = true;
             this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lbServerRunning.Location = new System.Drawing.Point(203, 11);
+            this.lbServerRunning.Location = new System.Drawing.Point(271, 14);
+            this.lbServerRunning.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbServerRunning.Name = "lbServerRunning";
-            this.lbServerRunning.Size = new System.Drawing.Size(79, 13);
+            this.lbServerRunning.Size = new System.Drawing.Size(105, 17);
             this.lbServerRunning.TabIndex = 21;
             this.lbServerRunning.Text = "Server stopped";
             // 
@@ -295,68 +361,147 @@
             // 
             // checkUseCmd
             // 
+            this.checkUseCmd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkUseCmd.AutoSize = true;
-            this.checkUseCmd.Location = new System.Drawing.Point(14, 468);
+            this.checkUseCmd.Location = new System.Drawing.Point(19, 576);
+            this.checkUseCmd.Margin = new System.Windows.Forms.Padding(4);
             this.checkUseCmd.Name = "checkUseCmd";
-            this.checkUseCmd.Size = new System.Drawing.Size(80, 17);
+            this.checkUseCmd.Size = new System.Drawing.Size(103, 21);
             this.checkUseCmd.TabIndex = 22;
             this.checkUseCmd.Text = "useCmdFile";
             this.checkUseCmd.UseVisualStyleBackColor = true;
             // 
             // label3
             // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(109, 468);
+            this.label3.Location = new System.Drawing.Point(145, 576);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(252, 13);
+            this.label3.Size = new System.Drawing.Size(334, 17);
             this.label3.TabIndex = 23;
             this.label3.Text = "check this if python is not found and adapt cmd files";
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel1.Controls.Add(this.lbServerRunning);
             this.panel1.Controls.Add(this.btnStartServer);
             this.panel1.Controls.Add(this.btnStopServer);
             this.panel1.Controls.Add(this.checkStartServer);
-            this.panel1.Location = new System.Drawing.Point(4, 530);
+            this.panel1.Location = new System.Drawing.Point(-2, 710);
+            this.panel1.Margin = new System.Windows.Forms.Padding(4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(629, 40);
+            this.panel1.Size = new System.Drawing.Size(864, 49);
             this.panel1.TabIndex = 24;
+            // 
+            // panel2
+            // 
+            this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel2.Controls.Add(this.btViewLog);
+            this.panel2.Controls.Add(this.btLogFile);
+            this.panel2.Controls.Add(this.tbLogFile);
+            this.panel2.Controls.Add(this.cbLogFile);
+            this.panel2.Controls.Add(this.checkBoxUpdate);
+            this.panel2.Controls.Add(this.buttonFocus);
+            this.panel2.Controls.Add(this.buttonStop);
+            this.panel2.Controls.Add(this.labelProcess);
+            this.panel2.Controls.Add(this.buttonOK);
+            this.panel2.Location = new System.Drawing.Point(-2, 623);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(864, 87);
+            this.panel2.TabIndex = 25;
+            this.panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.panel2_Paint);
+            // 
+            // cbLogFile
+            // 
+            this.cbLogFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.cbLogFile.AutoSize = true;
+            this.cbLogFile.Checked = true;
+            this.cbLogFile.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbLogFile.Location = new System.Drawing.Point(15, 48);
+            this.cbLogFile.Margin = new System.Windows.Forms.Padding(4);
+            this.cbLogFile.Name = "cbLogFile";
+            this.cbLogFile.Size = new System.Drawing.Size(71, 21);
+            this.cbLogFile.TabIndex = 14;
+            this.cbLogFile.Text = "logFile";
+            this.cbLogFile.UseVisualStyleBackColor = true;
+            // 
+            // tbLogFile
+            // 
+            this.tbLogFile.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbLogFile.Location = new System.Drawing.Point(94, 47);
+            this.tbLogFile.Margin = new System.Windows.Forms.Padding(4);
+            this.tbLogFile.Name = "tbLogFile";
+            this.tbLogFile.Size = new System.Drawing.Size(521, 22);
+            this.tbLogFile.TabIndex = 16;
+            // 
+            // btLogFile
+            // 
+            this.btLogFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btLogFile.Location = new System.Drawing.Point(732, 43);
+            this.btLogFile.Margin = new System.Windows.Forms.Padding(4);
+            this.btLogFile.Name = "btLogFile";
+            this.btLogFile.Size = new System.Drawing.Size(100, 28);
+            this.btLogFile.TabIndex = 18;
+            this.btLogFile.Text = "Change";
+            this.btLogFile.UseVisualStyleBackColor = true;
+            this.btLogFile.Click += new System.EventHandler(this.btLogFile_Click);
+            // 
+            // btViewLog
+            // 
+            this.btViewLog.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btViewLog.Location = new System.Drawing.Point(624, 44);
+            this.btViewLog.Margin = new System.Windows.Forms.Padding(4);
+            this.btViewLog.Name = "btViewLog";
+            this.btViewLog.Size = new System.Drawing.Size(100, 28);
+            this.btViewLog.TabIndex = 19;
+            this.btViewLog.Text = "View";
+            this.btViewLog.UseVisualStyleBackColor = true;
+            this.btViewLog.Click += new System.EventHandler(this.btViewLog_Click);
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(637, 606);
+            this.ClientSize = new System.Drawing.Size(852, 808);
+            this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.checkUseCmd);
             this.Controls.Add(this.buttonOpenCPN);
             this.Controls.Add(this.labelOpenCPN);
             this.Controls.Add(this.textOpenCPN);
-            this.Controls.Add(this.labelProcess);
-            this.Controls.Add(this.buttonFocus);
             this.Controls.Add(this.buttonDefaultOut);
             this.Controls.Add(this.buttonEmpty);
-            this.Controls.Add(this.buttonStop);
             this.Controls.Add(this.buttonAddDirectories);
             this.Controls.Add(this.buttonOutDir);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textOutdir);
-            this.Controls.Add(this.checkBoxUpdate);
             this.Controls.Add(this.buttonCancel);
-            this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.buttonAddFile);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textIn);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4);
+            this.MinimumSize = new System.Drawing.Size(500, 600);
             this.Name = "Form1";
             this.Text = "AvChartConvert";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -394,6 +539,12 @@
         private System.Windows.Forms.CheckBox checkUseCmd;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Button btLogFile;
+        private System.Windows.Forms.TextBox tbLogFile;
+        private System.Windows.Forms.CheckBox cbLogFile;
+        private System.Windows.Forms.SaveFileDialog openOutputDialog;
+        private System.Windows.Forms.Button btViewLog;
     }
 }
 
