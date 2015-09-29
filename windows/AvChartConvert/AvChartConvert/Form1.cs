@@ -207,7 +207,11 @@ namespace AvChartConvert
                     }
                     if (cbLogFile.Checked)
                     {
-                    args += " -e \"" + tbLogFile.Text + "\"";
+                        args += " -e \"" + tbLogFile.Text + "\"";
+                    }
+                    if (cbNewGemf.Checked)
+                    {
+                        args += " -g";
                     }
                     //MessageBox.Show("CMD:" + cmd);
                     if (!this.checkBoxUpdate.Checked) args += " -f";

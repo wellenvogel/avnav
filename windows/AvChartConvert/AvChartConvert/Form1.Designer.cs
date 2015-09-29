@@ -60,14 +60,15 @@
             this.checkUseCmd = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.tbUrl = new System.Windows.Forms.TextBox();
+            this.cbBrowser = new System.Windows.Forms.CheckBox();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btViewLog = new System.Windows.Forms.Button();
             this.btLogFile = new System.Windows.Forms.Button();
             this.tbLogFile = new System.Windows.Forms.TextBox();
             this.cbLogFile = new System.Windows.Forms.CheckBox();
             this.openOutputDialog = new System.Windows.Forms.SaveFileDialog();
-            this.cbBrowser = new System.Windows.Forms.CheckBox();
-            this.tbUrl = new System.Windows.Forms.TextBox();
+            this.cbNewGemf = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.SuspendLayout();
@@ -397,11 +398,36 @@
             this.panel1.Size = new System.Drawing.Size(875, 78);
             this.panel1.TabIndex = 24;
             // 
+            // tbUrl
+            // 
+            this.tbUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbUrl.Location = new System.Drawing.Point(158, 46);
+            this.tbUrl.Margin = new System.Windows.Forms.Padding(4);
+            this.tbUrl.Name = "tbUrl";
+            this.tbUrl.Size = new System.Drawing.Size(359, 22);
+            this.tbUrl.TabIndex = 23;
+            this.tbUrl.TextChanged += new System.EventHandler(this.tbUrl_TextChanged);
+            // 
+            // cbBrowser
+            // 
+            this.cbBrowser.AutoSize = true;
+            this.cbBrowser.Checked = true;
+            this.cbBrowser.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbBrowser.Location = new System.Drawing.Point(15, 48);
+            this.cbBrowser.Margin = new System.Windows.Forms.Padding(4);
+            this.cbBrowser.Name = "cbBrowser";
+            this.cbBrowser.Size = new System.Drawing.Size(109, 21);
+            this.cbBrowser.TabIndex = 22;
+            this.cbBrowser.Text = "startBrowser";
+            this.cbBrowser.UseVisualStyleBackColor = true;
+            // 
             // panel2
             // 
             this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel2.Controls.Add(this.cbNewGemf);
             this.panel2.Controls.Add(this.btViewLog);
             this.panel2.Controls.Add(this.btLogFile);
             this.panel2.Controls.Add(this.tbLogFile);
@@ -468,29 +494,20 @@
             this.cbLogFile.Text = "logFile";
             this.cbLogFile.UseVisualStyleBackColor = true;
             // 
-            // cbBrowser
+            // cbNewGemf
             // 
-            this.cbBrowser.AutoSize = true;
-            this.cbBrowser.Checked = true;
-            this.cbBrowser.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbBrowser.Location = new System.Drawing.Point(15, 48);
-            this.cbBrowser.Margin = new System.Windows.Forms.Padding(4);
-            this.cbBrowser.Name = "cbBrowser";
-            this.cbBrowser.Size = new System.Drawing.Size(109, 21);
-            this.cbBrowser.TabIndex = 22;
-            this.cbBrowser.Text = "startBrowser";
-            this.cbBrowser.UseVisualStyleBackColor = true;
-            // 
-            // tbUrl
-            // 
-            this.tbUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbUrl.Location = new System.Drawing.Point(158, 46);
-            this.tbUrl.Margin = new System.Windows.Forms.Padding(4);
-            this.tbUrl.Name = "tbUrl";
-            this.tbUrl.Size = new System.Drawing.Size(359, 22);
-            this.tbUrl.TabIndex = 23;
-            this.tbUrl.TextChanged += new System.EventHandler(this.tbUrl_TextChanged);
+            this.cbNewGemf.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.cbNewGemf.AutoSize = true;
+            this.cbNewGemf.Checked = true;
+            this.cbNewGemf.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbNewGemf.Location = new System.Drawing.Point(132, 13);
+            this.cbNewGemf.Margin = new System.Windows.Forms.Padding(4);
+            this.cbNewGemf.Name = "cbNewGemf";
+            this.cbNewGemf.Size = new System.Drawing.Size(89, 21);
+            this.cbNewGemf.TabIndex = 20;
+            this.cbNewGemf.Text = "newGemf";
+            this.cbNewGemf.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -569,6 +586,7 @@
         private System.Windows.Forms.Button btViewLog;
         private System.Windows.Forms.CheckBox cbBrowser;
         private System.Windows.Forms.TextBox tbUrl;
+        private System.Windows.Forms.CheckBox cbNewGemf;
     }
 }
 
