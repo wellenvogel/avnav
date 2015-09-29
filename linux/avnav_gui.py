@@ -155,8 +155,8 @@ class  AvnavGui(Avnav):
         log=[]
         if self.cbLogfile.IsChecked():
           pass
-          log=[os.path.join(self.getBaseDir(),"..","chartconvert","run_with_log.py") ,self.txLogfile.GetValue()]
-        args=["xterm","-T","Avnav Chartconvert","-hold","-e"]+log+[os.path.join(self.getBaseDir(),"..","chartconvert","read_charts.py"), "-b",self.outputDir.GetValue()]
+          log=["-e" ,self.txLogfile.GetValue()]
+        args=["xterm","-T","Avnav Chartconvert","-hold","-e",os.path.join(self.getBaseDir(),"..","chartconvert","read_charts.py")]+log+[ "-b",self.outputDir.GetValue()]
         if self.updateMode.IsChecked():
             args.append("-f")
         for name in selectedFiles:
