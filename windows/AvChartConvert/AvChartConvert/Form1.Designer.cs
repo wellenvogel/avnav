@@ -112,7 +112,7 @@
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOK.Location = new System.Drawing.Point(732, 7);
+            this.buttonOK.Location = new System.Drawing.Point(731, 8);
             this.buttonOK.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(100, 28);
@@ -448,7 +448,7 @@
             // 
             this.btLogFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btLogFile.Location = new System.Drawing.Point(732, 43);
+            this.btLogFile.Location = new System.Drawing.Point(731, 44);
             this.btLogFile.Margin = new System.Windows.Forms.Padding(4);
             this.btLogFile.Name = "btLogFile";
             this.btLogFile.Size = new System.Drawing.Size(100, 28);
