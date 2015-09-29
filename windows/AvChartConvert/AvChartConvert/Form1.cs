@@ -64,6 +64,8 @@ namespace AvChartConvert
             string logfile = (string)Properties.Settings.Default["LogFile"];
             if (logfile == null || logfile == "") logfile=Path.Combine(outdir, "avnav-chartconvert.log");
             this.tbLogFile.Text = logfile;
+            this.tbUrl.Text = (string)Properties.Settings.Default["LocalUrl"];
+            if (tbUrl.Text == "") tbUrl.Text = "http://localhost:8080";
             this.textIn.Clear();
             this.textOpenCPN.Text=locateOpenCpn((string)Properties.Settings.Default["OpenCPN"]);
             string[] args = Environment.GetCommandLineArgs();
@@ -414,6 +416,10 @@ namespace AvChartConvert
             this.lbServerRunning.Text = "Server running with pid " + serverProcess.Id;
             this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(0, 192, 0);
             this.btnStopServer.Visible = true;
+            if (cbBrowser.Checked)
+            {
+                Process.Start(tbUrl.Text);
+            }
         }
 
         private void stopServer()
@@ -491,9 +497,12 @@ namespace AvChartConvert
             }
         }
 
-        private void panel2_Paint(object sender, PaintEventArgs e)
-        {
+        
 
+        private void tbUrl_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["LocalUrl"] = tbUrl.Text;
+            Properties.Settings.Default.Save();
         }
     }
     //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp
