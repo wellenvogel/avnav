@@ -1602,12 +1602,19 @@ def main(argv):
   parser.add_option("-f", "--force", action="store_const", const=0, dest="update", help="force update of existing charts (if not set, only necessary charts are generated")
   parser.add_option("-g", "--newgemf", action="store_const", const=1, dest="newgemf", help="use new gemf writer (do not write merged tiles separately)")
   parser.add_option("-r", "--oldpyramid", action="store_const", const=1, dest="oldpyramid", help="use old pyramid handling")
+  parser.add_option("-e", "--logfile",dest="logfile",help="logfile")
   basedir=DEFAULT_OUTDIR
   (options, args) = parser.parse_args(argv[1:])
   if options.update is None :
     options.update=1
-  logging.basicConfig(level=logging.DEBUG if options.verbose==2 else 
-      (logging.ERROR if options.verbose==0 else logging.INFO))
+  logger=logging.getLogger()
+  loglevel=logging.DEBUG if options.verbose==2 else (logging.ERROR if options.verbose==0 else logging.INFO)
+  logger.setLevel(loglevel)
+  sh=logging.StreamHandler()
+  logger.addHandler(sh)
+  if options.logfile is not None:
+    fh=logging.FileHandler(options.logfile,mode="w")
+    logger.addHandler(fh)
   if options.threads is None:
     options.threads=4
   if options.chartlist is not None:
@@ -1711,4 +1718,13 @@ def main(argv):
 
 
 if __name__ == "__main__":
+  try:
     main(sys.argv)
+  except:
+    log("ERROR: %s"%(traceback.format_exc()))
+    sys.stderr.write("ERROR: %s"%(traceback.format_exc()))
+    log("ERROR: conversion failed")
+    sys.exit(1)
+
+
+

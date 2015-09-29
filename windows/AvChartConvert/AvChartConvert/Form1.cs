@@ -199,22 +199,15 @@ namespace AvChartConvert
                             MessageBox.Show("command not found at " + cmd  + " - unable to execute");
                             return;
                         }
-                        if (cbLogFile.Checked)
-                        {
-                            args="\""+tbLogFile.Text+"\" \""+cmd+"\" ";
-                            cmd = Path.Combine(myPath, "..", "chartconvert", "run_with_log.py");
-                        }
-                        else
-                        {
-                            
-                            args = " ";
-                        }
+                        args = " ";
                         info = new ProcessStartInfo(cmd);
                         converterStartedWithCmd = false;
-
+                    }
+                    if (cbLogFile.Checked)
+                    {
+                    args += " -e \"" + tbLogFile.Text + "\"";
                     }
                     //MessageBox.Show("CMD:" + cmd);
-                    
                     if (!this.checkBoxUpdate.Checked) args += " -f";
                     args += " -b " + "\"" + this.textOutdir.Text + "\"";
                     if (this.textOpenCPN.Visible && this.textOpenCPN.Text != "")
