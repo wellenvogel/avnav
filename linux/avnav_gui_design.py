@@ -29,6 +29,7 @@ class Avnav(wx.Frame):
         self.btOutDefault = wx.Button(self, wx.ID_ANY, _("Default"))
         self.updateMode = wx.CheckBox(self, wx.ID_ANY, _("update mode"))
         self.cbLogfile = wx.CheckBox(self, wx.ID_ANY, _("logfile"))
+        self.cbNewGemf = wx.CheckBox(self, wx.ID_ANY, _("newGemf"))
         self.txLogfile = wx.TextCtrl(self, wx.ID_ANY, "")
         self.btLogfile = wx.Button(self, wx.ID_ANY, _("Change"))
         self.btStart = wx.Button(self, wx.ID_ANY, _("Convert"))
@@ -58,6 +59,7 @@ class Avnav(wx.Frame):
         self.SetSize((1134, 503))
         self.inputFiles.SetBackgroundColour(wx.Colour(255, 247, 69))
         self.cbLogfile.SetValue(1)
+        self.cbNewGemf.SetValue(1)
         self.serverPid.SetBackgroundColour(wx.Colour(112, 219, 147))
         self.serverPid.SetForegroundColour(wx.Colour(255, 0, 0))
         # end wxGlade
@@ -87,6 +89,7 @@ class Avnav(wx.Frame):
         sizer_left.Add(sizer_7, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.EXPAND, 5)
         sizer_10.Add(self.updateMode, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 8)
         sizer_10.Add(self.cbLogfile, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_10.Add(self.cbNewGemf, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 0)
         sizer_10.Add(self.txLogfile, 4, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
         sizer_10.Add(self.btLogfile, 0, wx.RIGHT, 10)
         sizer_6.Add(sizer_10, 4, wx.RIGHT | wx.EXPAND, 5)
