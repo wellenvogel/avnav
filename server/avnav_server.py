@@ -224,7 +224,7 @@ def main(argv):
       level=baseConfig.param.get("loglevel")
   AVNLog.ld("baseconfig",baseConfig.param)
   if not baseConfig.param.get("logfile") == "":
-    filename=baseConfig.param.get("logfile")
+    filename=os.path.expanduser(baseConfig.param.get("logfile"))
   AVNLog.info("####start processing (logging to %s)####",filename)
   if not os.path.exists(os.path.dirname(filename)):
     os.makedirs(os.path.dirname(filename), 0777)

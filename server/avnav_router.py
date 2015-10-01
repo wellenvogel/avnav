@@ -345,7 +345,7 @@ class AVNRouter(AVNWorker):
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
     interval=self.getIntParam('interval')
-    routesdir=self.getStringParam("routesdir")
+    routesdir=os.path.expanduser(self.getStringParam("routesdir"))
     if routesdir == "":
       routesdir=os.path.join(unicode(os.path.dirname(sys.argv[0])),u'routes')
     self.routesdir=routesdir

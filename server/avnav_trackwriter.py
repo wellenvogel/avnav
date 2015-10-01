@@ -52,6 +52,8 @@ class AVNTrackWriter(AVNWorker):
     trackdir=self.getStringParam("trackdir")
     if trackdir == "":
       trackdir=unicode(os.path.join(os.path.dirname(sys.argv[0]),'tracks'))
+    else:
+      trackdir=os.path.expanduser(trackdir)
     self.trackdir=trackdir
   @classmethod
   def getConfigName(cls):

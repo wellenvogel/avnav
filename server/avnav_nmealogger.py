@@ -93,6 +93,8 @@ class AVNNmeaLogger(AVNWorker):
         trackdir=trackwriter.getTrackDir()
       if trackdir is None or trackdir == "":
         trackdir=unicode(os.path.join(os.path.dirname(sys.argv[0]),'tracks'))
+    else:
+      trackdir=os.path.expanduser(trackdir)
     self.trackdir=trackdir
     interval=self.getIntParam('interval')
     maxfiles=100
