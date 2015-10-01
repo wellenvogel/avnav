@@ -157,6 +157,8 @@ class  AvnavGui(Avnav):
           pass
           log=["-e" ,self.txLogfile.GetValue()]
         args=["xterm","-T","Avnav Chartconvert","-hold","-e",os.path.join(self.getBaseDir(),"..","chartconvert","read_charts.py")]+log+[ "-b",self.outputDir.GetValue()]
+        if self.cbNewGemf.IsChecked():
+          args.append("-g")
         if self.updateMode.IsChecked():
             args.append("-f")
         for name in selectedFiles:
