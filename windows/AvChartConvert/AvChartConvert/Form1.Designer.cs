@@ -58,17 +58,17 @@
             this.lbServerRunning = new System.Windows.Forms.Label();
             this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.checkUseCmd = new System.Windows.Forms.CheckBox();
-            this.label3 = new System.Windows.Forms.Label();
+            this.lbCmd = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.tbUrl = new System.Windows.Forms.TextBox();
             this.cbBrowser = new System.Windows.Forms.CheckBox();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.cbNewGemf = new System.Windows.Forms.CheckBox();
             this.btViewLog = new System.Windows.Forms.Button();
             this.btLogFile = new System.Windows.Forms.Button();
             this.tbLogFile = new System.Windows.Forms.TextBox();
             this.cbLogFile = new System.Windows.Forms.CheckBox();
             this.openOutputDialog = new System.Windows.Forms.SaveFileDialog();
-            this.cbNewGemf = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.SuspendLayout();
@@ -82,7 +82,7 @@
             this.textIn.Margin = new System.Windows.Forms.Padding(4);
             this.textIn.Multiline = true;
             this.textIn.Name = "textIn";
-            this.textIn.Size = new System.Drawing.Size(664, 446);
+            this.textIn.Size = new System.Drawing.Size(438, 139);
             this.textIn.TabIndex = 0;
             // 
             // label1
@@ -102,7 +102,7 @@
             // buttonAddFile
             // 
             this.buttonAddFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonAddFile.Location = new System.Drawing.Point(716, 78);
+            this.buttonAddFile.Location = new System.Drawing.Point(490, 78);
             this.buttonAddFile.Margin = new System.Windows.Forms.Padding(4);
             this.buttonAddFile.Name = "buttonAddFile";
             this.buttonAddFile.Size = new System.Drawing.Size(125, 28);
@@ -115,7 +115,7 @@
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOK.Location = new System.Drawing.Point(742, 8);
+            this.buttonOK.Location = new System.Drawing.Point(516, 8);
             this.buttonOK.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(100, 28);
@@ -127,7 +127,7 @@
             // buttonCancel
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCancel.Location = new System.Drawing.Point(742, 823);
+            this.buttonCancel.Location = new System.Drawing.Point(516, 516);
             this.buttonCancel.Margin = new System.Windows.Forms.Padding(4);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(100, 28);
@@ -155,10 +155,10 @@
             // 
             this.textOutdir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textOutdir.Location = new System.Drawing.Point(19, 531);
+            this.textOutdir.Location = new System.Drawing.Point(19, 224);
             this.textOutdir.Margin = new System.Windows.Forms.Padding(4);
             this.textOutdir.Name = "textOutdir";
-            this.textOutdir.Size = new System.Drawing.Size(664, 22);
+            this.textOutdir.Size = new System.Drawing.Size(438, 22);
             this.textOutdir.TabIndex = 6;
             this.textOutdir.TextChanged += new System.EventHandler(this.textOutdir_TextChanged);
             // 
@@ -166,7 +166,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(16, 511);
+            this.label2.Location = new System.Drawing.Point(16, 204);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(69, 17);
@@ -176,7 +176,7 @@
             // buttonOutDir
             // 
             this.buttonOutDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOutDir.Location = new System.Drawing.Point(692, 531);
+            this.buttonOutDir.Location = new System.Drawing.Point(466, 224);
             this.buttonOutDir.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOutDir.Name = "buttonOutDir";
             this.buttonOutDir.Size = new System.Drawing.Size(72, 28);
@@ -188,7 +188,7 @@
             // buttonAddDirectories
             // 
             this.buttonAddDirectories.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonAddDirectories.Location = new System.Drawing.Point(716, 42);
+            this.buttonAddDirectories.Location = new System.Drawing.Point(490, 42);
             this.buttonAddDirectories.Margin = new System.Windows.Forms.Padding(4);
             this.buttonAddDirectories.Name = "buttonAddDirectories";
             this.buttonAddDirectories.Size = new System.Drawing.Size(125, 28);
@@ -207,7 +207,7 @@
             // 
             this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStop.Location = new System.Drawing.Point(635, 8);
+            this.buttonStop.Location = new System.Drawing.Point(409, 8);
             this.buttonStop.Margin = new System.Windows.Forms.Padding(4);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(100, 28);
@@ -220,7 +220,7 @@
             // buttonEmpty
             // 
             this.buttonEmpty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonEmpty.Location = new System.Drawing.Point(716, 128);
+            this.buttonEmpty.Location = new System.Drawing.Point(490, 128);
             this.buttonEmpty.Margin = new System.Windows.Forms.Padding(4);
             this.buttonEmpty.Name = "buttonEmpty";
             this.buttonEmpty.Size = new System.Drawing.Size(125, 30);
@@ -232,7 +232,7 @@
             // buttonDefaultOut
             // 
             this.buttonDefaultOut.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonDefaultOut.Location = new System.Drawing.Point(772, 531);
+            this.buttonDefaultOut.Location = new System.Drawing.Point(546, 224);
             this.buttonDefaultOut.Margin = new System.Windows.Forms.Padding(4);
             this.buttonDefaultOut.Name = "buttonDefaultOut";
             this.buttonDefaultOut.Size = new System.Drawing.Size(69, 28);
@@ -245,7 +245,7 @@
             // 
             this.buttonFocus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonFocus.Location = new System.Drawing.Point(527, 8);
+            this.buttonFocus.Location = new System.Drawing.Point(301, 8);
             this.buttonFocus.Margin = new System.Windows.Forms.Padding(4);
             this.buttonFocus.Name = "buttonFocus";
             this.buttonFocus.Size = new System.Drawing.Size(100, 28);
@@ -271,17 +271,17 @@
             // 
             this.textOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textOpenCPN.Location = new System.Drawing.Point(19, 584);
+            this.textOpenCPN.Location = new System.Drawing.Point(19, 277);
             this.textOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.textOpenCPN.Name = "textOpenCPN";
-            this.textOpenCPN.Size = new System.Drawing.Size(664, 22);
+            this.textOpenCPN.Size = new System.Drawing.Size(438, 22);
             this.textOpenCPN.TabIndex = 15;
             // 
             // labelOpenCPN
             // 
             this.labelOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelOpenCPN.AutoSize = true;
-            this.labelOpenCPN.Location = new System.Drawing.Point(16, 564);
+            this.labelOpenCPN.Location = new System.Drawing.Point(16, 257);
             this.labelOpenCPN.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelOpenCPN.Name = "labelOpenCPN";
             this.labelOpenCPN.Size = new System.Drawing.Size(125, 17);
@@ -291,7 +291,7 @@
             // buttonOpenCPN
             // 
             this.buttonOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOpenCPN.Location = new System.Drawing.Point(692, 581);
+            this.buttonOpenCPN.Location = new System.Drawing.Point(466, 274);
             this.buttonOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOpenCPN.Name = "buttonOpenCPN";
             this.buttonOpenCPN.Size = new System.Drawing.Size(72, 28);
@@ -316,7 +316,7 @@
             // btnStopServer
             // 
             this.btnStopServer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStopServer.Location = new System.Drawing.Point(635, 14);
+            this.btnStopServer.Location = new System.Drawing.Point(409, 14);
             this.btnStopServer.Margin = new System.Windows.Forms.Padding(4);
             this.btnStopServer.Name = "btnStopServer";
             this.btnStopServer.Size = new System.Drawing.Size(100, 28);
@@ -329,7 +329,7 @@
             // btnStartServer
             // 
             this.btnStartServer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStartServer.Location = new System.Drawing.Point(743, 14);
+            this.btnStartServer.Location = new System.Drawing.Point(517, 14);
             this.btnStartServer.Margin = new System.Windows.Forms.Padding(4);
             this.btnStartServer.Name = "btnStartServer";
             this.btnStartServer.Size = new System.Drawing.Size(100, 28);
@@ -361,7 +361,7 @@
             // 
             this.checkUseCmd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkUseCmd.AutoSize = true;
-            this.checkUseCmd.Location = new System.Drawing.Point(19, 628);
+            this.checkUseCmd.Location = new System.Drawing.Point(19, 321);
             this.checkUseCmd.Margin = new System.Windows.Forms.Padding(4);
             this.checkUseCmd.Name = "checkUseCmd";
             this.checkUseCmd.Size = new System.Drawing.Size(103, 21);
@@ -369,17 +369,17 @@
             this.checkUseCmd.Text = "useCmdFile";
             this.checkUseCmd.UseVisualStyleBackColor = true;
             // 
-            // label3
+            // lbCmd
             // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.lbCmd.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(145, 628);
-            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(334, 17);
-            this.label3.TabIndex = 23;
-            this.label3.Text = "check this if python is not found and adapt cmd files";
+            this.lbCmd.AutoSize = true;
+            this.lbCmd.Location = new System.Drawing.Point(145, 321);
+            this.lbCmd.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbCmd.Name = "lbCmd";
+            this.lbCmd.Size = new System.Drawing.Size(334, 17);
+            this.lbCmd.TabIndex = 23;
+            this.lbCmd.Text = "check this if python is not found and adapt cmd files";
             // 
             // panel1
             // 
@@ -392,10 +392,10 @@
             this.panel1.Controls.Add(this.btnStartServer);
             this.panel1.Controls.Add(this.btnStopServer);
             this.panel1.Controls.Add(this.checkStartServer);
-            this.panel1.Location = new System.Drawing.Point(-2, 737);
+            this.panel1.Location = new System.Drawing.Point(-2, 430);
             this.panel1.Margin = new System.Windows.Forms.Padding(4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(875, 78);
+            this.panel1.Size = new System.Drawing.Size(649, 78);
             this.panel1.TabIndex = 24;
             // 
             // tbUrl
@@ -405,7 +405,7 @@
             this.tbUrl.Location = new System.Drawing.Point(158, 46);
             this.tbUrl.Margin = new System.Windows.Forms.Padding(4);
             this.tbUrl.Name = "tbUrl";
-            this.tbUrl.Size = new System.Drawing.Size(359, 22);
+            this.tbUrl.Size = new System.Drawing.Size(133, 22);
             this.tbUrl.TabIndex = 23;
             this.tbUrl.TextChanged += new System.EventHandler(this.tbUrl_TextChanged);
             // 
@@ -437,16 +437,31 @@
             this.panel2.Controls.Add(this.buttonStop);
             this.panel2.Controls.Add(this.labelProcess);
             this.panel2.Controls.Add(this.buttonOK);
-            this.panel2.Location = new System.Drawing.Point(-2, 656);
+            this.panel2.Location = new System.Drawing.Point(-2, 349);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(875, 87);
+            this.panel2.Size = new System.Drawing.Size(649, 87);
             this.panel2.TabIndex = 25;
+            // 
+            // cbNewGemf
+            // 
+            this.cbNewGemf.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.cbNewGemf.AutoSize = true;
+            this.cbNewGemf.Checked = true;
+            this.cbNewGemf.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbNewGemf.Location = new System.Drawing.Point(132, 13);
+            this.cbNewGemf.Margin = new System.Windows.Forms.Padding(4);
+            this.cbNewGemf.Name = "cbNewGemf";
+            this.cbNewGemf.Size = new System.Drawing.Size(89, 21);
+            this.cbNewGemf.TabIndex = 20;
+            this.cbNewGemf.Text = "newGemf";
+            this.cbNewGemf.UseVisualStyleBackColor = true;
             // 
             // btViewLog
             // 
             this.btViewLog.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btViewLog.Location = new System.Drawing.Point(635, 44);
+            this.btViewLog.Location = new System.Drawing.Point(409, 44);
             this.btViewLog.Margin = new System.Windows.Forms.Padding(4);
             this.btViewLog.Name = "btViewLog";
             this.btViewLog.Size = new System.Drawing.Size(100, 28);
@@ -459,7 +474,7 @@
             // 
             this.btLogFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btLogFile.Location = new System.Drawing.Point(742, 44);
+            this.btLogFile.Location = new System.Drawing.Point(516, 44);
             this.btLogFile.Margin = new System.Windows.Forms.Padding(4);
             this.btLogFile.Name = "btLogFile";
             this.btLogFile.Size = new System.Drawing.Size(100, 28);
@@ -476,7 +491,7 @@
             this.tbLogFile.Location = new System.Drawing.Point(94, 47);
             this.tbLogFile.Margin = new System.Windows.Forms.Padding(4);
             this.tbLogFile.Name = "tbLogFile";
-            this.tbLogFile.Size = new System.Drawing.Size(532, 22);
+            this.tbLogFile.Size = new System.Drawing.Size(306, 22);
             this.tbLogFile.TabIndex = 16;
             // 
             // cbLogFile
@@ -494,29 +509,14 @@
             this.cbLogFile.Text = "logFile";
             this.cbLogFile.UseVisualStyleBackColor = true;
             // 
-            // cbNewGemf
-            // 
-            this.cbNewGemf.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.cbNewGemf.AutoSize = true;
-            this.cbNewGemf.Checked = true;
-            this.cbNewGemf.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbNewGemf.Location = new System.Drawing.Point(132, 13);
-            this.cbNewGemf.Margin = new System.Windows.Forms.Padding(4);
-            this.cbNewGemf.Name = "cbNewGemf";
-            this.cbNewGemf.Size = new System.Drawing.Size(89, 21);
-            this.cbNewGemf.TabIndex = 20;
-            this.cbNewGemf.Text = "newGemf";
-            this.cbNewGemf.UseVisualStyleBackColor = true;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(863, 860);
+            this.ClientSize = new System.Drawing.Size(637, 553);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.lbCmd);
             this.Controls.Add(this.checkUseCmd);
             this.Controls.Add(this.buttonOpenCPN);
             this.Controls.Add(this.labelOpenCPN);
@@ -533,7 +533,7 @@
             this.Controls.Add(this.textIn);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
-            this.MinimumSize = new System.Drawing.Size(500, 600);
+            this.MinimumSize = new System.Drawing.Size(655, 600);
             this.Name = "Form1";
             this.Text = "AvChartConvert";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
@@ -576,7 +576,7 @@
         private System.Windows.Forms.Label lbServerRunning;
         private System.Windows.Forms.Timer timer2;
         private System.Windows.Forms.CheckBox checkUseCmd;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label lbCmd;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Button btLogFile;

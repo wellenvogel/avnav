@@ -48,16 +48,27 @@ namespace AvChartConvert
         string defaultOut = null;
         Process converter = null;
         string lastdir = (string)Properties.Settings.Default["InputDir"];
-        String myPath = System.IO.Path.GetDirectoryName(
+        string myPath = System.IO.Path.GetDirectoryName(
           System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");
+        string scriptpath ;
+        string serverpath;
         Process serverProcess = null;
         bool enableDoneAction = false;
         bool serverStartedWithCmd = false;
         bool converterStartedWithCmd = false;
+        static string SCRIPTCMD = "AvChartConvert.cmd";
         public Form1()
         {
             InitializeComponent();
             defaultOut= Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)+"\\"+BASE;
+            scriptpath = Path.Combine(myPath, "scripts");
+            serverpath = scriptpath;
+            if (!Directory.Exists(scriptpath))
+            {
+                //dev env
+                scriptpath = Path.Combine(myPath, "..", "chartconvert");
+                serverpath = Path.Combine(myPath, "..", "server");
+            }
             string outdir = (string)Properties.Settings.Default["OutDir"];
             if (outdir == null || outdir == "") outdir = defaultOut;
             this.textOutdir.Text = outdir;
@@ -69,8 +80,12 @@ namespace AvChartConvert
             this.textIn.Clear();
             this.textOpenCPN.Text=locateOpenCpn((string)Properties.Settings.Default["OpenCPN"]);
             string[] args = Environment.GetCommandLineArgs();
-            bool hasOpenCpnConvert = File.Exists(Path.Combine(new[] { myPath, "..\\chartconvert\\convert_nv.py" }));
+            bool hasOpenCpnConvert = File.Exists(Path.Combine(scriptpath, "convert_nv.py" ));
             showOpenCPN(hasOpenCpnConvert);
+            if (!File.Exists(Path.Combine(myPath, SCRIPTCMD))){
+                checkUseCmd.Hide();
+                lbCmd.Hide();
+            }
             if (args.Length > 1){
                 for (int i = 1; i < args.Length;i++ )
                 {
@@ -182,7 +197,7 @@ namespace AvChartConvert
                     if (checkUseCmd.Checked)
                     {
                         
-                        String cmd = Path.Combine(myPath ,"AvChartConvert.cmd");
+                        String cmd = Path.Combine(myPath ,SCRIPTCMD);
                         
                         if (!File.Exists(cmd))
                         {
@@ -195,7 +210,7 @@ namespace AvChartConvert
                     }
                     else
                     {
-                        String cmd = Path.Combine(myPath, "..", "chartconvert", "read_charts.py");
+                        String cmd = Path.Combine(scriptpath, "read_charts.py");
                         if (!File.Exists(cmd))
                         {
                             MessageBox.Show("command not found at " + cmd  + " - unable to execute");
@@ -397,7 +412,7 @@ namespace AvChartConvert
             }
             else
             {
-                cmd=Path.Combine(myPath,"..","server","avnav_server.py");
+                cmd=Path.Combine(serverpath,"avnav_server.py");
                 if (!File.Exists(cmd))
                 {
                     MessageBox.Show("server command " + cmd + " not found");
