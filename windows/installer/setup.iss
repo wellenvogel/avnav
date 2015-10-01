@@ -6,6 +6,7 @@
 #define MyAppPublisher "Andreas Vogel"
 #define MyAppURL "http://www.wellenvogel.de/software/avnav"
 #define MyAppExeName "AvChartConvert.exe"
+#define RegKey "Software\AvNav"
 
 
 [Setup]
@@ -58,7 +59,37 @@ Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: 
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\python-2.7.10.msi"" /qb TARGETDIR=""{app}\python"""; WorkingDir: "{tmp}"
 
-[UninstallRun]
-;take the uninstall id from the properties of the MSI
-;getmsiinfo.py library\python-2.7.10.msi "ProductCode"
-Filename: "msiexec.exe"; Parameters: "/x {{E2B51919-207A-43EB-AE78-733F9C6797C2} /qb";
+
+[Registry]
+Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: createvalueifdoesntexist
+
+[Code]
+function CheckPython(): Boolean;
+var 
+  path: String;
+begin
+  Result:= False;
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE, ExpandConstant('{#RegKey}'),'InstallDir', path) then  begin     
+     Result:=DirExists(path+'\python');
+  end
+  else begin
+     MsgBox('unable to read reg',mbInformation, MB_OK);
+  end;
+end;
+//take the uninstall id from the properties of the MSI
+//getmsiinfo.py library\python-2.7.10.msi "ProductCode"
+//would be better to check for the python install dir...
+procedure DeinitializeUninstall();
+var 
+  removePython: Boolean;
+  ResultCode: Integer;
+begin
+  removePython:=CheckPython();
+  if removePython then begin
+    MsgBox('remove python',mbInformation, MB_OK);
+    Exec('msiexec.exe', '/x {E2B51919-207A-43EB-AE78-733F9C6797C2} /qb', '', SW_SHOW,
+     ewWaitUntilTerminated, ResultCode)
+  end;
+end;
+
+
