@@ -429,6 +429,7 @@ namespace AvChartConvert
             info.RedirectStandardInput = false;
             info.RedirectStandardOutput = false;
             info.UseShellExecute = true;
+            info.WorkingDirectory = scriptpath;
             serverProcess=new Process();
             serverProcess.StartInfo = info;
             serverProcess.Start();

@@ -56,3 +56,8 @@ Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\python-2.7.10.msi"" /qb TARGETDIR=""{app}\python"""; WorkingDir: "{tmp}"
+
+[UninstallRun]
+;take the uninstall id from the properties of the MSI
+;getmsiinfo.py library\python-2.7.10.msi "ProductCode"
+Filename: "msiexec.exe"; Parameters: "/x ""{{E2B51919-207A-43EB-AE78-733F9C6797C2}}"" /qb ";
