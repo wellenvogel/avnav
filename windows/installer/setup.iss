@@ -7,6 +7,7 @@
 #define MyAppURL "http://www.wellenvogel.de/software/avnav"
 #define MyAppExeName "AvChartConvert.exe"
 
+
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
@@ -60,4 +61,4 @@ Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\python-2.7.10.msi"" /qb TARGETD
 [UninstallRun]
 ;take the uninstall id from the properties of the MSI
 ;getmsiinfo.py library\python-2.7.10.msi "ProductCode"
-Filename: "msiexec.exe"; Parameters: "/x ""{{E2B51919-207A-43EB-AE78-733F9C6797C2}}"" /qb ";
+Filename: "msiexec.exe"; Parameters: "/x {{E2B51919-207A-43EB-AE78-733F9C6797C2} /qb";
