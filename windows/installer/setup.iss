@@ -7,6 +7,14 @@
 #define MyAppURL "http://www.wellenvogel.de/software/avnav"
 #define MyAppExeName "AvChartConvert.exe"
 #define RegKey "Software\AvNav"
+#define PythonMSI "python-2.7.10.msi"
+#define PythonCode "{{E2B51919-207A-43EB-AE78-733F9C6797C2}"
+#define PythonDir "python"
+#define GdalMSI "gdal-111-1500-core.msi"
+#define GdalCode "{{A811F26E-D8EE-4DDB-8E23-ED5386E98695}"
+#define GdalDir "gdal"
+#define GdalPythonMSI "GDAL-1.11.0.win32-py2.7.msi"
+#define GdalPythonCode "{{B086ED88-4BB5-46E0-9CDA-8AA8ED2BF906}"
 
 
 [Setup]
@@ -41,7 +49,9 @@ Source: "..\AvChartConvert.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\avnav_server_home.xml"; DestDir: "{app}"; DestName: "avnav_server.xml"
 Source: "..\..\server\*.py"; DestDir: "{app}\scripts"
 Source: "..\..\chartconvert\*.py"; DestDir: "{app}\scripts"
-Source: "library\python-2.7.10.msi"; DestDir: "{tmp}"
+Source: "library\{#PythonMSI}"; DestDir: "{tmp}"
+Source: "library\{#GdalMSI}"; DestDir: "{tmp}"
+Source: "library\{#GdalPythonMSI}"; DestDir: "{tmp}"
 Source: "..\..\viewer\avnav_min.js"; DestDir: "{app}\viewer"
 Source: "..\..\viewer\loader.js"; DestDir: "{app}\viewer"
 Source: "..\..\viewer\version.js"; DestDir: "{app}\viewer"
@@ -57,39 +67,49 @@ Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: 
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\python-2.7.10.msi"" /qb TARGETDIR=""{app}\python"""; WorkingDir: "{tmp}"
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#PythonMSI}"" /qb TARGETDIR=""{app}\{#PythonDir}"""; WorkingDir: "{tmp}"
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalMSI}"" /qb TARGETDIR=""{app}\{#GdalDir}"" INSTALLDIR=""{app}\{#GdalDir}"""; WorkingDir: "{tmp}"
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalPythonMSI}"" /qb TARGETDIR=""{app}\{#GdalDir}"" INSTALLDIR=""{app}\{#GdalDir}"""; WorkingDir: "{tmp}"
 
 
 [Registry]
 Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: createvalueifdoesntexist
 
 [Code]
-function CheckPython(): Boolean;
+function CheckFeature(Name:String): Boolean;
 var 
   path: String;
 begin
   Result:= False;
   if RegQueryStringValue(HKEY_LOCAL_MACHINE, ExpandConstant('{#RegKey}'),'InstallDir', path) then  begin     
-     Result:=DirExists(path+'\python');
+     Result:=DirExists(path+'\'+Name);
   end
   else begin
-     MsgBox('unable to read reg',mbInformation, MB_OK);
+     MsgBox('unable to read reg ',mbInformation, MB_OK);
   end;
 end;
+
+procedure DeinstallFeature(name:String;fkey:String);
+var 
+  ResultCode: Integer;
+begin
+  if CheckFeature(name) then begin
+    Exec('msiexec.exe', '/x '+fkey+' /qb', '', SW_SHOW,
+     ewWaitUntilTerminated, ResultCode)
+    Log('Deinstall for '+name+' ended with '+IntToStr(ResultCode));
+  end else begin
+    Log('Deinstall for '+name+' skipped');
+  end;
+end;
+  
 //take the uninstall id from the properties of the MSI
 //getmsiinfo.py library\python-2.7.10.msi "ProductCode"
 //would be better to check for the python install dir...
 procedure DeinitializeUninstall();
-var 
-  removePython: Boolean;
-  ResultCode: Integer;
 begin
-  removePython:=CheckPython();
-  if removePython then begin
-    MsgBox('remove python',mbInformation, MB_OK);
-    Exec('msiexec.exe', '/x {E2B51919-207A-43EB-AE78-733F9C6797C2} /qb', '', SW_SHOW,
-     ewWaitUntilTerminated, ResultCode)
-  end;
+  DeinstallFeature(ExpandConstant('{#PythonDir}'),ExpandConstant('{#PythonCode}'));
+  DeinstallFeature(ExpandConstant('{#GdalDir}'),ExpandConstant('{#GdalCode}'));
+  DeinstallFeature(ExpandConstant('{#GdalDir}'),ExpandConstant('{#GdalPythonCode}'));
 end;
 
 
