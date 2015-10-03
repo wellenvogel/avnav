@@ -15,6 +15,7 @@
 #define GdalDir "gdal"
 #define GdalPythonMSI "GDAL-1.11.0.win32-py2.7.msi"
 #define GdalPythonCode "{{B086ED88-4BB5-46E0-9CDA-8AA8ED2BF906}"
+#define PillowWhl "Pillow-3.0.0-cp27-none-win32.whl"
 #define KeyInstalledPython "installedPython"
 #define KeyInstalledGdal "installedGdal"
 #define KeyUnistallBase "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\"
@@ -55,6 +56,7 @@ Source: "..\..\chartconvert\*.py"; DestDir: "{app}\scripts"
 Source: "library\{#PythonMSI}"; DestDir: "{tmp}"
 Source: "library\{#GdalMSI}"; DestDir: "{tmp}"
 Source: "library\{#GdalPythonMSI}"; DestDir: "{tmp}"
+Source: "library\{#PillowWhl}"; DestDir: "{tmp}"
 Source: "..\..\viewer\avnav_min.js"; DestDir: "{app}\viewer"
 Source: "..\..\viewer\loader.js"; DestDir: "{app}\viewer"
 Source: "..\..\viewer\version.js"; DestDir: "{app}\viewer"
@@ -80,6 +82,27 @@ Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalled
 Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledGdal}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey; Check: checkInstallGdal
 
 [Code]
+
+function findPip(): string;
+var
+val: string;
+pip: string;
+spos: integer;
+begin
+  Result:='';
+  if RegQueryStringValue(HKEY_CLASSES_ROOT,'Python.File\shell\open\command','',val) then begin
+       spos:=Pos('" ',val);
+       if spos > 0 then begin
+         val:=copy(val,1,spos);
+       end;
+       val:=RemoveQuotes(val);
+       Log('val='+val);
+       pip:=ExtractFilePath(val)+'\scripts\pip.exe';
+       //MsgBox('found pip at '+pip,mbError, MB_OK);
+       Result:=pip;
+  end;
+end;
+
 function BoolToStr(ip:Boolean): string;
 begin
   if ip then 
@@ -146,6 +169,25 @@ begin
   Result:=checkInstall(1);
 end;
 
+procedure CurStepChanged(CurStep: TSetupStep);
+var 
+pip:string;
+ResultCode: integer;
+begin
+  if CurStep = ssPostInstall then begin
+    pip:=findPip();
+    Log('pip found at '+pip);
+    if FileExists(pip) then begin
+       Exec(pip,'install "'+ExpandConstant('{tmp}\{#PillowWhl}')+'"','',SW_SHOW,ewWaitUntilTerminated, ResultCode);
+       if ResultCode <> 0 then begin
+         MsgBox('error during installing Pillow ',mbError, MB_OK);
+       end
+    end else begin
+      MsgBox('unable to find pip for python, cannot install Pillow ',mbError, MB_OK);
+    end;
+  end;
+end;
+
 //check if a feature was installed by us
 function CheckFeature(Name:String;Key:String): Boolean;
 var 
@@ -166,6 +208,8 @@ begin
   end;
 end;
 
+
+//Deinstall functions
 procedure DeinstallFeature(fkey:String);
 var 
   ResultCode: Integer;
