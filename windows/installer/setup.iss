@@ -6,7 +6,7 @@
 #define MyAppPublisher "Andreas Vogel"
 #define MyAppURL "http://www.wellenvogel.de/software/avnav"
 #define MyAppExeName "AvChartConvert.exe"
-#define RegKey "Software\AvNav"
+#define RegKey "SOFTWARE\AvNav"
 #define PythonMSI "python-2.7.10.msi"
 #define PythonCode "{{E2B51919-207A-43EB-AE78-733F9C6797C2}"
 #define PythonDir "python"
@@ -17,6 +17,7 @@
 #define GdalPythonCode "{{B086ED88-4BB5-46E0-9CDA-8AA8ED2BF906}"
 #define KeyInstalledPython "installedPython"
 #define KeyInstalledGdal "installedGdal"
+#define KeyUnistallBase "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\"
 
 
 [Setup]
@@ -69,57 +70,131 @@ Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: 
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#PythonMSI}"" /qb TARGETDIR=""{app}\{#PythonDir}"""; WorkingDir: "{tmp}"
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalMSI}"" /qb TARGETDIR=""{app}\{#GdalDir}"" INSTALLDIR=""{app}\{#GdalDir}"""; WorkingDir: "{tmp}"
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalPythonMSI}"" /qb TARGETDIR=""{app}\{#GdalDir}"" INSTALLDIR=""{app}\{#GdalDir}"""; WorkingDir: "{tmp}"
-
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#PythonMSI}"" /qb TARGETDIR=""{app}\{#PythonDir}"""; WorkingDir: "{tmp}"; Check: checkInstallPython
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalMSI}"" /qb TARGETDIR=""{app}\{#GdalDir}"" INSTALLDIR=""{app}\{#GdalDir}"""; WorkingDir: "{tmp}"; Check: checkInstallGdal
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalPythonMSI}"" /qb TARGETDIR=""{app}\{#GdalDir}"" INSTALLDIR=""{app}\{#GdalDir}"""; WorkingDir: "{tmp}"; Check: checkInstallGdal
 
 [Registry]
-Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: createvalueifdoesntexist
-Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledPython}"; ValueData: "true"; Flags: createvalueifdoesntexist
-Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledGdal}"; ValueData: "true"; Flags: createvalueifdoesntexist
+Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: createvalueifdoesntexist  uninsdeletekey
+Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledPython}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey; Check: checkInstallPython
+Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledGdal}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey; Check: checkInstallGdal
+
 [Code]
+function BoolToStr(ip:Boolean): string;
+begin
+  if ip then 
+  begin
+    Result:='true';
+  end else begin
+    Result:='false';
+  end;
+end;
+
+function isProductInstalled(ProductCode: String): Boolean;
+var rkey:string;
+begin
+  rkey:=ExpandConstant('{#KeyUnistallBase}')+ProductCode;
+  Log('isProductInstalled '+rkey);
+  Result:=RegKeyExists(HKEY_LOCAL_MACHINE,rkey);
+end;
+
+var
+OptionPage: TInputOptionWizardPage;
+uninstallPython: Boolean;
+uninstallGdal: Boolean;
+procedure InitializeWizard;
+var 
+subcap:String;
+pythonInstalled:Boolean;
+gdalInstalled: Boolean;
+
+begin
+  { Create the pages }
+  subcap:='If select to install python/gdal the embedded python/gdal will become your default';
+  pythonInstalled:=isProductInstalled(ExpandConstant('{#PythonCode}'));
+  Log('pythonInstalled: '+BoolToStr(pythonInstalled));
+  gdalInstalled:=isProductInstalled(ExpandConstant('{#GdalCode}'));
+  Log('gdalInstalled: '+BoolToStr(gdalInstalled));
+  if pythonInstalled then begin
+    subcap:=subcap+#13+'HINT: Python 2.7 is already installed';
+  end;
+  if gdalInstalled then begin
+    subcap:=subcap+#13+'HINT: gdal is already installed';
+  end;
+  OptionPage := CreateInputOptionPage(wpWelcome,
+    'Install Python/GDAL', 'Select if you want to install the embedded python/gdal',
+    subcap,
+    True, False);
+  OptionPage.AddEx('Install Python',0,false);
+  OptionPage.AddEx('Install GDAL',0,false);
+  OptionPage.Values[0]:= not pythonInstalled;
+  OptionPage.Values[1]:= not gdalInstalled;
+end;
+
+function checkInstall(index:integer): Boolean;
+begin
+  Result:=OptionPage.Values[index];
+end;
+
+function checkInstallPython(): Boolean;
+begin
+  Result:=checkInstall(0);
+end;
+
+function checkInstallGdal(): Boolean;
+begin
+  Result:=checkInstall(1);
+end;
+
+//check if a feature was installed by us
 function CheckFeature(Name:String;Key:String): Boolean;
 var 
   path: String;
   isInstalledByUs: string;
+  dirpath: string;
+  rkey: string;
 begin
   Result:= False;
-  if RegQueryStringValue(HKEY_LOCAL_MACHINE,ExpandConstant('{#RegKey}'),Key,isInstalledByUs) then begin
+  rkey:=ExpandConstant('{#RegKey}');
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE,rkey,Key,isInstalledByUs) then begin
     if isInstalledByUs = 'true' then begin
-      if RegQueryStringValue(HKEY_LOCAL_MACHINE, ExpandConstant('{#RegKey}'),'InstallDir', path) then  begin     
-        Result:=DirExists(path+'\'+Name);
-      end
-      else begin
-        MsgBox('unable to read reg ',mbInformation, MB_OK);
+      if RegQueryStringValue(HKEY_LOCAL_MACHINE, rkey,'InstallDir', path) then  begin
+        dirpath:=path+'\'+Name;
+        Result:=DirExists(dirpath);
       end;
     end;
   end;
 end;
 
-procedure DeinstallFeature(name:String;ikey: String;fkey:String);
+procedure DeinstallFeature(fkey:String);
 var 
   ResultCode: Integer;
 begin
-  if CheckFeature(name,ikey) then begin
     Exec('msiexec.exe', '/x '+fkey+' /qb', '', SW_SHOW,
      ewWaitUntilTerminated, ResultCode)
-    Log('Deinstall for '+name+' ended with '+IntToStr(ResultCode));
-  end else begin
-    Log('Deinstall for '+name+' skipped');
-  end;
+    Log('Deinstall for '+fkey+' ended with '+IntToStr(ResultCode));
 end;
-  
+
+function InitializeUninstall(): Boolean;
+begin
+  Result:=true;
+  uninstallPython:=checkFeature(ExpandConstant('{#PythonDir}'),ExpandConstant('{#KeyInstalledPython}'));
+  uninstallGdal:=checkFeature(ExpandConstant('{#GdalDir}'),ExpandConstant('{#KeyInstalledGdal}'));
+end;
 //take the uninstall id from the properties of the MSI
 //getmsiinfo.py library\python-2.7.10.msi "ProductCode"
 //would be better to check for the python install dir...
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if CurUninstallStep = usPostUninstall then begin
-    DeinstallFeature(ExpandConstant('{#PythonDir}'),ExpandConstant('{#KeyInstalledPython}'),ExpandConstant('{#PythonCode}'));
-    DeinstallFeature(ExpandConstant('{#GdalDir}'),ExpandConstant('{#KeyInstalledGdal}'),ExpandConstant('{#GdalCode}'));
-    DeinstallFeature(ExpandConstant('{#GdalDir}'),ExpandConstant('{#KeyInstalledGdal}'),ExpandConstant('{#GdalPythonCode}'));
+    if uninstallPython then 
+    begin
+      DeinstallFeature(ExpandConstant('{#PythonCode}'));
+    end;
+    if uninstallGdal then
+    begin
+      DeinstallFeature(ExpandConstant('{#GdalCode}'));
+      DeinstallFeature(ExpandConstant('{#GdalPythonCode}'));
+    end;
   end;
 end;
-
-
