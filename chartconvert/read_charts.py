@@ -1613,6 +1613,12 @@ def main(argv):
   sh=logging.StreamHandler()
   logger.addHandler(sh)
   if options.logfile is not None:
+    logdir=os.path.dirname(options.logfile)
+    if not os.path.exists(logdir):
+      try:
+        os.makedirs(logdir)
+      except:
+        pass
     fh=logging.FileHandler(options.logfile,mode="w")
     logger.addHandler(fh)
   if options.threads is None:
