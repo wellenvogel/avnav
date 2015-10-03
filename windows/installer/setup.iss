@@ -40,6 +40,7 @@ AllowNoIcons=yes
 OutputBaseFilename=AvNavSetup
 Compression=lzma
 SolidCompression=yes
+ChangesEnvironment=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -53,6 +54,9 @@ Source: "..\AvChartConvert.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\avnav_server_home.xml"; DestDir: "{app}"; DestName: "avnav_server.xml"
 Source: "..\..\server\*.py"; DestDir: "{app}\scripts"
 Source: "..\..\chartconvert\*.py"; DestDir: "{app}\scripts"
+Source: "..\..\chartconvert\tiler_tools\*.py"; DestDir: "{app}\scripts\tiler_tools"
+Source: "..\..\chartconvert\tiler_tools\*.csv"; DestDir: "{app}\scripts\tiler_tools"
+Source: "..\..\chartconvert\tiler_tools\*.html"; DestDir: "{app}\scripts\tiler_tools"
 Source: "library\{#PythonMSI}"; DestDir: "{tmp}"
 Source: "library\{#GdalMSI}"; DestDir: "{tmp}"
 Source: "library\{#GdalPythonMSI}"; DestDir: "{tmp}"
@@ -79,7 +83,8 @@ Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalPythonMSI}"" /qb TARGETDI
 [Registry]
 Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: createvalueifdoesntexist  uninsdeletekey
 Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledPython}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey; Check: checkInstallPython
-Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledGdal}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey; Check: checkInstallGdal
+Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledGdal}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey;  Check: checkInstallGdal
+Root: "HKCU"; Subkey: "Environment"; ValueType:string; ValueName:"GDAL_DATA"; ValueData:"{app}\gdal\gdal_data" ; Flags: preservestringtype ; Check: checkInstallGdal
 
 [Code]
 
@@ -173,6 +178,7 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var 
 pip:string;
 ResultCode: integer;
+oldPath: string;
 begin
   if CurStep = ssPostInstall then begin
     pip:=findPip();
@@ -185,6 +191,16 @@ begin
     end else begin
       MsgBox('unable to find pip for python, cannot install Pillow ',mbError, MB_OK);
     end;
+    if checkInstallGdal() then begin
+      oldpath:='';
+      RegQueryStringValue(HKEY_LOCAL_MACHINE,'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+        'Path',oldpath);
+      if Pos('gdal',oldpath) < 1 then begin
+        RegWriteExpandStringValue(HKEY_LOCAL_MACHINE,'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+          'Path',oldpath+';'+ExpandConstant('{app}\{#GdalDir}'));
+      end;
+    end;
+    //add path
   end;
 end;
 
