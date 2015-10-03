@@ -15,6 +15,8 @@
 #define GdalDir "gdal"
 #define GdalPythonMSI "GDAL-1.11.0.win32-py2.7.msi"
 #define GdalPythonCode "{{B086ED88-4BB5-46E0-9CDA-8AA8ED2BF906}"
+#define KeyInstalledPython "installedPython"
+#define KeyInstalledGdal "installedGdal"
 
 
 [Setup]
@@ -74,26 +76,32 @@ Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalPythonMSI}"" /qb TARGETDI
 
 [Registry]
 Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: createvalueifdoesntexist
-
+Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledPython}"; ValueData: "true"; Flags: createvalueifdoesntexist
+Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledGdal}"; ValueData: "true"; Flags: createvalueifdoesntexist
 [Code]
-function CheckFeature(Name:String): Boolean;
+function CheckFeature(Name:String;Key:String): Boolean;
 var 
   path: String;
+  isInstalledByUs: string;
 begin
   Result:= False;
-  if RegQueryStringValue(HKEY_LOCAL_MACHINE, ExpandConstant('{#RegKey}'),'InstallDir', path) then  begin     
-     Result:=DirExists(path+'\'+Name);
-  end
-  else begin
-     MsgBox('unable to read reg ',mbInformation, MB_OK);
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE,ExpandConstant('{#RegKey}'),Key,isInstalledByUs) then begin
+    if isInstalledByUs = 'true' then begin
+      if RegQueryStringValue(HKEY_LOCAL_MACHINE, ExpandConstant('{#RegKey}'),'InstallDir', path) then  begin     
+        Result:=DirExists(path+'\'+Name);
+      end
+      else begin
+        MsgBox('unable to read reg ',mbInformation, MB_OK);
+      end;
+    end;
   end;
 end;
 
-procedure DeinstallFeature(name:String;fkey:String);
+procedure DeinstallFeature(name:String;ikey: String;fkey:String);
 var 
   ResultCode: Integer;
 begin
-  if CheckFeature(name) then begin
+  if CheckFeature(name,ikey) then begin
     Exec('msiexec.exe', '/x '+fkey+' /qb', '', SW_SHOW,
      ewWaitUntilTerminated, ResultCode)
     Log('Deinstall for '+name+' ended with '+IntToStr(ResultCode));
@@ -105,11 +113,13 @@ end;
 //take the uninstall id from the properties of the MSI
 //getmsiinfo.py library\python-2.7.10.msi "ProductCode"
 //would be better to check for the python install dir...
-procedure DeinitializeUninstall();
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
-  DeinstallFeature(ExpandConstant('{#PythonDir}'),ExpandConstant('{#PythonCode}'));
-  DeinstallFeature(ExpandConstant('{#GdalDir}'),ExpandConstant('{#GdalCode}'));
-  DeinstallFeature(ExpandConstant('{#GdalDir}'),ExpandConstant('{#GdalPythonCode}'));
+  if CurUninstallStep = usPostUninstall then begin
+    DeinstallFeature(ExpandConstant('{#PythonDir}'),ExpandConstant('{#KeyInstalledPython}'),ExpandConstant('{#PythonCode}'));
+    DeinstallFeature(ExpandConstant('{#GdalDir}'),ExpandConstant('{#KeyInstalledGdal}'),ExpandConstant('{#GdalCode}'));
+    DeinstallFeature(ExpandConstant('{#GdalDir}'),ExpandConstant('{#KeyInstalledGdal}'),ExpandConstant('{#GdalPythonCode}'));
+  end;
 end;
 
 
