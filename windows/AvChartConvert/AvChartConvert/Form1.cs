@@ -433,7 +433,7 @@ namespace AvChartConvert
             serverProcess=new Process();
             serverProcess.StartInfo = info;
             serverProcess.Start();
-            this.lbServerRunning.Text = "Server running with pid " + serverProcess.Id;
+            this.lbServerRunning.Text = "Server pid " + serverProcess.Id;
             this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(0, 192, 0);
             this.btnStopServer.Visible = true;
             if (cbBrowser.Checked)

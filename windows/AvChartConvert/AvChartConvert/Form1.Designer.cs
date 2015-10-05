@@ -340,11 +340,9 @@
             // 
             // lbServerRunning
             // 
-            this.lbServerRunning.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.lbServerRunning.AutoSize = true;
             this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lbServerRunning.Location = new System.Drawing.Point(284, 20);
+            this.lbServerRunning.Location = new System.Drawing.Point(155, 20);
             this.lbServerRunning.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbServerRunning.Name = "lbServerRunning";
             this.lbServerRunning.Size = new System.Drawing.Size(105, 17);
