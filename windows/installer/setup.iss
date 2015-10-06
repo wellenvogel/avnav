@@ -53,7 +53,7 @@ Source: "..\AvChartConvert.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: "..\avnav_server_home.xml"; DestDir: "{app}"; DestName: "avnav_server.xml"
 Source: "..\..\server\*.py"; DestDir: "{app}\scripts"
-Source: "..\..\chartconvert\*.py"; DestDir: "{app}\scripts"
+Source: "..\..\chartconvert\*.py"; DestDir: "{app}\scripts" ; Excludes: "convert_nv.py"
 Source: "..\..\chartconvert\tiler_tools\*.py"; DestDir: "{app}\scripts\tiler_tools"
 Source: "..\..\chartconvert\tiler_tools\*.csv"; DestDir: "{app}\scripts\tiler_tools"
 Source: "..\..\chartconvert\tiler_tools\*.html"; DestDir: "{app}\scripts\tiler_tools"
