@@ -57,13 +57,13 @@ def swarn(txt):
 #nv converter
 def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn,updateOnly=False):
   if updateOnly and os.path.exists(outname):
-    ostat=os.stat(oouname)
+    ostat=os.stat(outname)
     cstat=os.stat(chart)
     if (ostat.st_mtime >= cstat.st_mtime):
-      log(outname +" newer as "+chart+" no need to recreate")
+      logf(outname +" newer as "+chart+" no need to recreate")
       return
     else:
-      log(chart +" newer then "+outname+", recreate")
+      logf(chart +" newer then "+outname+", recreate")
   exename="opencpn.exe"
   if os.name != 'nt':
     warn("converting NV %s only possible on windows"%(chart,))
