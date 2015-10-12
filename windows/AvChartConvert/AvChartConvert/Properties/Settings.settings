@@ -17,5 +17,11 @@
     <Setting Name="LocalUrl" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="TestData" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="TestPort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">34568</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

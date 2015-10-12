@@ -82,5 +82,29 @@ namespace AvChartConvert.Properties {
                 this["LocalUrl"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TestData {
+            get {
+                return ((string)(this["TestData"]));
+            }
+            set {
+                this["TestData"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("34568")]
+        public int TestPort {
+            get {
+                return ((int)(this["TestPort"]));
+            }
+            set {
+                this["TestPort"] = value;
+            }
+        }
     }
 }

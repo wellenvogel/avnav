@@ -52,10 +52,12 @@ namespace AvChartConvert
           System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");
         string scriptpath ;
         string serverpath;
+        string testdir;
         Process serverProcess = null;
         bool enableDoneAction = false;
         bool serverStartedWithCmd = false;
         bool converterStartedWithCmd = false;
+        SocketServer server = null;
         static string SCRIPTCMD = "AvChartConvert.cmd";
         public Form1()
         {
@@ -63,15 +65,20 @@ namespace AvChartConvert
             defaultOut= Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)+"\\"+BASE;
             scriptpath = Path.Combine(myPath, "scripts");
             serverpath = scriptpath;
+            testdir = Path.Combine(myPath, "test");
             if (!Directory.Exists(scriptpath))
             {
                 //dev env
                 scriptpath = Path.Combine(myPath, "..", "chartconvert");
                 serverpath = Path.Combine(myPath, "..", "server");
+                testdir = Path.Combine(myPath, "..", "test");
             }
             string outdir = (string)Properties.Settings.Default["OutDir"];
             if (outdir == null || outdir == "") outdir = defaultOut;
             this.textOutdir.Text = outdir;
+            string testdata = (string)Properties.Settings.Default["TestData"];
+            if (testdata == null || testdata == "") testdata = Path.Combine(testdir, "nmea-20130630-3.log");
+            this.txTestData.Text = testdata;
             string logfile = (string)Properties.Settings.Default["LogFile"];
             if (logfile == null || logfile == "") logfile=Path.Combine(outdir, "avnav-chartconvert.log");
             this.tbLogFile.Text = logfile;
@@ -393,6 +400,7 @@ namespace AvChartConvert
         private void startServer()
         {
             if (isServerRunning()) return;
+            if (this.server != null) this.server.stop();
             ProcessStartInfo info = null;
             string cmd=null;
             string args = null;
@@ -436,6 +444,11 @@ namespace AvChartConvert
             this.lbServerRunning.Text = "Server pid " + serverProcess.Id;
             this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(0, 192, 0);
             this.btnStopServer.Visible = true;
+            if (this.cbTestData.Checked)
+            {
+                this.server = new SocketServer(this.txTestData.Text, 34568, 300);
+                this.server.start();
+            }
             if (cbBrowser.Checked)
             {
                 Process.Start(tbUrl.Text);
@@ -444,6 +457,11 @@ namespace AvChartConvert
 
         private void stopServer()
         {
+            if (server != null)
+            {
+                server.stop();
+                server = null;
+            }
             if (!isServerRunning()) return;
             try
             {
@@ -522,6 +540,31 @@ namespace AvChartConvert
         private void tbUrl_TextChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default["LocalUrl"] = tbUrl.Text;
+            Properties.Settings.Default.Save();
+        }
+
+        private void btTestData_Click(object sender, EventArgs e)
+        {
+            this.openInputDialog.Reset();
+            this.openInputDialog.Title = "Select TestData";
+            this.openInputDialog.Multiselect = false;
+            this.openInputDialog.FileName = Path.GetFileName(this.txTestData.Text);
+            this.openInputDialog.CheckFileExists = true;
+            this.openInputDialog.CheckPathExists = true;
+            this.openInputDialog.Filter = string.Empty;
+            string dir= Path.GetDirectoryName(this.txTestData.Text).Replace("..\\","");
+            this.openInputDialog.InitialDirectory = dir;
+
+            if (this.openInputDialog.ShowDialog() == DialogResult.OK)
+            {
+                testdir = Path.GetDirectoryName(this.openInputDialog.FileName);
+                this.txTestData.Text = this.openInputDialog.FileName;
+            }
+        }
+
+        private void txTestData_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["TestData"] = txTestData.Text;
             Properties.Settings.Default.Save();
         }
     }
