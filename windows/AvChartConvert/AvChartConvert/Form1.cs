@@ -87,7 +87,7 @@ namespace AvChartConvert
             this.textIn.Clear();
             this.textOpenCPN.Text=locateOpenCpn((string)Properties.Settings.Default["OpenCPN"]);
             string[] args = Environment.GetCommandLineArgs();
-            bool hasOpenCpnConvert = File.Exists(Path.Combine(scriptpath, "convert_nv.py" ));
+            bool hasOpenCpnConvert = File.Exists(Path.Combine(scriptpath, "opencpn.exe" ));
             showOpenCPN(hasOpenCpnConvert);
             if (!File.Exists(Path.Combine(myPath, SCRIPTCMD))){
                 checkUseCmd.Hide();
@@ -567,6 +567,8 @@ namespace AvChartConvert
             Properties.Settings.Default["TestData"] = txTestData.Text;
             Properties.Settings.Default.Save();
         }
+
+        
     }
     //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp
     class ProcessUtilities
