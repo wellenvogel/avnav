@@ -16,6 +16,7 @@
 #define GdalPythonMSI "GDAL-1.11.0.win32-py2.7.msi"
 #define GdalPythonCode "{{B086ED88-4BB5-46E0-9CDA-8AA8ED2BF906}"
 #define PillowWhl "Pillow-3.0.0-cp27-none-win32.whl"
+#define PySerial "pyserial-2.7.tar.gz"
 #define KeyInstalledPython "installedPython"
 #define KeyInstalledGdal "installedGdal"
 #define KeyUnistallBase "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\"
@@ -61,6 +62,7 @@ Source: "library\{#PythonMSI}"; DestDir: "{tmp}"
 Source: "library\{#GdalMSI}"; DestDir: "{tmp}"
 Source: "library\{#GdalPythonMSI}"; DestDir: "{tmp}"
 Source: "library\{#PillowWhl}"; DestDir: "{tmp}"
+Source: "library\{#PySerial}"; DestDir: "{tmp}"
 Source: "..\..\viewer\avnav_min.js"; DestDir: "{app}\viewer"
 Source: "..\..\viewer\loader.js"; DestDir: "{app}\viewer"
 Source: "..\..\viewer\version.js"; DestDir: "{app}\viewer"
@@ -188,9 +190,13 @@ begin
        Exec(pip,'install "'+ExpandConstant('{tmp}\{#PillowWhl}')+'"','',SW_SHOW,ewWaitUntilTerminated, ResultCode);
        if ResultCode <> 0 then begin
          MsgBox('error during installing Pillow ',mbError, MB_OK);
+       end;
+       Exec(pip,'install "'+ExpandConstant('{tmp}\{#PySerial}')+'"','',SW_SHOW,ewWaitUntilTerminated, ResultCode);
+       if ResultCode <> 0 then begin
+         MsgBox('error during installing Pyserial ',mbError, MB_OK);
        end
     end else begin
-      MsgBox('unable to find pip for python, cannot install Pillow ',mbError, MB_OK);
+      MsgBox('unable to find pip for python, cannot install Pillow/Pyserial ',mbError, MB_OK);
     end;
     if checkInstallGdal() then begin
       oldpath:='';
