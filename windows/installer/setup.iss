@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "AvNav"
-#define MyAppVersion "1.0"
+#define MyAppVersion "2015-10-12"
 #define MyAppPublisher "Andreas Vogel"
 #define MyAppURL "http://www.wellenvogel.de/software/avnav"
 #define MyAppExeName "AvChartConvert.exe"
@@ -69,6 +69,7 @@ Source: "..\..\viewer\avnav_viewer.less"; DestDir: "{app}\viewer"
 Source: "..\..\viewer\base.js"; DestDir: "{app}\viewer"
 Source: "..\..\viewer\images\*.png"; DestDir: "{app}\viewer\images"
 Source: "..\..\libraries\*"; DestDir: "{app}\libraries"; Flags: recursesubdirs; Excludes: "*.pyc,*debug.js"
+Source: "..\..\test\nmea-20130630-3.log"; DestDir: "{app}\test"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
