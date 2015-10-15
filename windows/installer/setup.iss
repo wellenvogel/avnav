@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "AvNav"
-#define MyAppVersion "2015-10-12"
+#define MyAppVersion "2015-10-16"
 #define MyAppPublisher "Andreas Vogel"
 #define MyAppURL "http://www.wellenvogel.de/software/avnav"
 #define MyAppExeName "AvChartConvert.exe"
