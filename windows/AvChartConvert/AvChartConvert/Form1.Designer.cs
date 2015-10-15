@@ -88,17 +88,17 @@
             this.textIn.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textIn.Location = new System.Drawing.Point(5, 45);
+            this.textIn.Location = new System.Drawing.Point(10, 45);
             this.textIn.Margin = new System.Windows.Forms.Padding(4);
             this.textIn.Multiline = true;
             this.textIn.Name = "textIn";
-            this.textIn.Size = new System.Drawing.Size(427, 151);
+            this.textIn.Size = new System.Drawing.Size(456, 151);
             this.textIn.TabIndex = 0;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(9, 15);
+            this.label1.Location = new System.Drawing.Point(14, 15);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(68, 17);
@@ -138,10 +138,10 @@
             // 
             this.textOutdir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textOutdir.Location = new System.Drawing.Point(5, 220);
+            this.textOutdir.Location = new System.Drawing.Point(10, 220);
             this.textOutdir.Margin = new System.Windows.Forms.Padding(4);
             this.textOutdir.Name = "textOutdir";
-            this.textOutdir.Size = new System.Drawing.Size(427, 22);
+            this.textOutdir.Size = new System.Drawing.Size(456, 22);
             this.textOutdir.TabIndex = 6;
             this.textOutdir.TextChanged += new System.EventHandler(this.textOutdir_TextChanged);
             // 
@@ -149,7 +149,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(2, 199);
+            this.label2.Location = new System.Drawing.Point(7, 199);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(69, 17);
@@ -159,12 +159,14 @@
             // buttonOutDir
             // 
             this.buttonOutDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOutDir.Location = new System.Drawing.Point(440, 217);
+            this.buttonOutDir.AutoSize = true;
+            this.buttonOutDir.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.buttonOutDir.Location = new System.Drawing.Point(474, 218);
             this.buttonOutDir.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOutDir.Name = "buttonOutDir";
-            this.buttonOutDir.Size = new System.Drawing.Size(83, 28);
+            this.buttonOutDir.Size = new System.Drawing.Size(30, 27);
             this.buttonOutDir.TabIndex = 8;
-            this.buttonOutDir.Text = "Change";
+            this.buttonOutDir.Text = "...";
             this.buttonOutDir.UseVisualStyleBackColor = true;
             this.buttonOutDir.Click += new System.EventHandler(this.buttonOutDir_Click);
             // 
@@ -201,10 +203,10 @@
             // buttonDefaultOut
             // 
             this.buttonDefaultOut.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonDefaultOut.Location = new System.Drawing.Point(539, 217);
+            this.buttonDefaultOut.Location = new System.Drawing.Point(512, 217);
             this.buttonDefaultOut.Margin = new System.Windows.Forms.Padding(4);
             this.buttonDefaultOut.Name = "buttonDefaultOut";
-            this.buttonDefaultOut.Size = new System.Drawing.Size(83, 28);
+            this.buttonDefaultOut.Size = new System.Drawing.Size(110, 28);
             this.buttonDefaultOut.TabIndex = 12;
             this.buttonDefaultOut.Text = "Default";
             this.buttonDefaultOut.UseVisualStyleBackColor = true;
@@ -214,17 +216,17 @@
             // 
             this.textOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textOpenCPN.Location = new System.Drawing.Point(4, 267);
+            this.textOpenCPN.Location = new System.Drawing.Point(9, 267);
             this.textOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.textOpenCPN.Name = "textOpenCPN";
-            this.textOpenCPN.Size = new System.Drawing.Size(430, 22);
+            this.textOpenCPN.Size = new System.Drawing.Size(457, 22);
             this.textOpenCPN.TabIndex = 15;
             // 
             // labelOpenCPN
             // 
             this.labelOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelOpenCPN.AutoSize = true;
-            this.labelOpenCPN.Location = new System.Drawing.Point(2, 246);
+            this.labelOpenCPN.Location = new System.Drawing.Point(7, 246);
             this.labelOpenCPN.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelOpenCPN.Name = "labelOpenCPN";
             this.labelOpenCPN.Size = new System.Drawing.Size(125, 17);
@@ -234,12 +236,14 @@
             // buttonOpenCPN
             // 
             this.buttonOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOpenCPN.Location = new System.Drawing.Point(440, 264);
+            this.buttonOpenCPN.AutoSize = true;
+            this.buttonOpenCPN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.buttonOpenCPN.Location = new System.Drawing.Point(474, 265);
             this.buttonOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOpenCPN.Name = "buttonOpenCPN";
-            this.buttonOpenCPN.Size = new System.Drawing.Size(83, 28);
+            this.buttonOpenCPN.Size = new System.Drawing.Size(30, 27);
             this.buttonOpenCPN.TabIndex = 17;
-            this.buttonOpenCPN.Text = "Change";
+            this.buttonOpenCPN.Text = "...";
             this.buttonOpenCPN.UseVisualStyleBackColor = true;
             this.buttonOpenCPN.Click += new System.EventHandler(this.buttonOpenCPN_Click);
             // 
@@ -302,7 +306,7 @@
             // 
             this.checkUseCmd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkUseCmd.AutoSize = true;
-            this.checkUseCmd.Location = new System.Drawing.Point(4, 297);
+            this.checkUseCmd.Location = new System.Drawing.Point(9, 297);
             this.checkUseCmd.Margin = new System.Windows.Forms.Padding(4);
             this.checkUseCmd.Name = "checkUseCmd";
             this.checkUseCmd.Size = new System.Drawing.Size(103, 21);
@@ -315,7 +319,7 @@
             this.lbCmd.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lbCmd.AutoSize = true;
-            this.lbCmd.Location = new System.Drawing.Point(103, 298);
+            this.lbCmd.Location = new System.Drawing.Point(108, 298);
             this.lbCmd.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbCmd.Name = "lbCmd";
             this.lbCmd.Size = new System.Drawing.Size(334, 17);
@@ -326,12 +330,14 @@
             // 
             this.btTestData.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btTestData.Location = new System.Drawing.Point(479, 170);
+            this.btTestData.AutoSize = true;
+            this.btTestData.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btTestData.Location = new System.Drawing.Point(574, 137);
             this.btTestData.Margin = new System.Windows.Forms.Padding(4);
             this.btTestData.Name = "btTestData";
-            this.btTestData.Size = new System.Drawing.Size(110, 28);
+            this.btTestData.Size = new System.Drawing.Size(30, 27);
             this.btTestData.TabIndex = 26;
-            this.btTestData.Text = "Change";
+            this.btTestData.Text = "...";
             this.btTestData.UseVisualStyleBackColor = true;
             this.btTestData.Click += new System.EventHandler(this.btTestData_Click);
             // 
@@ -339,10 +345,10 @@
             // 
             this.txTestData.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txTestData.Location = new System.Drawing.Point(172, 140);
+            this.txTestData.Location = new System.Drawing.Point(153, 140);
             this.txTestData.Margin = new System.Windows.Forms.Padding(4);
             this.txTestData.Name = "txTestData";
-            this.txTestData.Size = new System.Drawing.Size(417, 22);
+            this.txTestData.Size = new System.Drawing.Size(403, 22);
             this.txTestData.TabIndex = 25;
             this.txTestData.TextChanged += new System.EventHandler(this.txTestData_TextChanged);
             // 
@@ -363,10 +369,10 @@
             // 
             this.tbUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbUrl.Location = new System.Drawing.Point(172, 97);
+            this.tbUrl.Location = new System.Drawing.Point(153, 98);
             this.tbUrl.Margin = new System.Windows.Forms.Padding(4);
             this.tbUrl.Name = "tbUrl";
-            this.tbUrl.Size = new System.Drawing.Size(417, 22);
+            this.tbUrl.Size = new System.Drawing.Size(403, 22);
             this.tbUrl.TabIndex = 23;
             this.tbUrl.TextChanged += new System.EventHandler(this.tbUrl_TextChanged);
             // 
@@ -385,7 +391,7 @@
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Location = new System.Drawing.Point(-2, 0);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -430,6 +436,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
+            this.panel1.Padding = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.panel1.Size = new System.Drawing.Size(634, 481);
             this.panel1.TabIndex = 25;
             // 
@@ -437,7 +444,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(244, 8);
+            this.label3.Location = new System.Drawing.Point(249, 8);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(107, 25);
             this.label3.TabIndex = 25;
@@ -447,7 +454,7 @@
             // 
             this.labelProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelProcess.AutoSize = true;
-            this.labelProcess.Location = new System.Drawing.Point(9, 439);
+            this.labelProcess.Location = new System.Drawing.Point(14, 439);
             this.labelProcess.Name = "labelProcess";
             this.labelProcess.Size = new System.Drawing.Size(89, 17);
             this.labelProcess.TabIndex = 24;
@@ -457,12 +464,14 @@
             // 
             this.btLogFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btLogFile.Location = new System.Drawing.Point(440, 374);
+            this.btLogFile.AutoSize = true;
+            this.btLogFile.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btLogFile.Location = new System.Drawing.Point(474, 375);
             this.btLogFile.Margin = new System.Windows.Forms.Padding(4);
             this.btLogFile.Name = "btLogFile";
-            this.btLogFile.Size = new System.Drawing.Size(83, 28);
+            this.btLogFile.Size = new System.Drawing.Size(30, 27);
             this.btLogFile.TabIndex = 18;
-            this.btLogFile.Text = "Change";
+            this.btLogFile.Text = "...";
             this.btLogFile.UseVisualStyleBackColor = true;
             this.btLogFile.Click += new System.EventHandler(this.btLogFile_Click);
             // 
@@ -470,10 +479,10 @@
             // 
             this.btViewLog.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btViewLog.Location = new System.Drawing.Point(539, 374);
+            this.btViewLog.Location = new System.Drawing.Point(512, 374);
             this.btViewLog.Margin = new System.Windows.Forms.Padding(4);
             this.btViewLog.Name = "btViewLog";
-            this.btViewLog.Size = new System.Drawing.Size(83, 28);
+            this.btViewLog.Size = new System.Drawing.Size(110, 28);
             this.btViewLog.TabIndex = 19;
             this.btViewLog.Text = "View";
             this.btViewLog.UseVisualStyleBackColor = true;
@@ -486,7 +495,7 @@
             this.cbNewGemf.AutoSize = true;
             this.cbNewGemf.Checked = true;
             this.cbNewGemf.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbNewGemf.Location = new System.Drawing.Point(121, 319);
+            this.cbNewGemf.Location = new System.Drawing.Point(126, 319);
             this.cbNewGemf.Margin = new System.Windows.Forms.Padding(4);
             this.cbNewGemf.Name = "cbNewGemf";
             this.cbNewGemf.Size = new System.Drawing.Size(89, 21);
@@ -499,10 +508,10 @@
             this.tbLogFile.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbLogFile.Location = new System.Drawing.Point(4, 377);
+            this.tbLogFile.Location = new System.Drawing.Point(9, 377);
             this.tbLogFile.Margin = new System.Windows.Forms.Padding(4);
             this.tbLogFile.Name = "tbLogFile";
-            this.tbLogFile.Size = new System.Drawing.Size(428, 22);
+            this.tbLogFile.Size = new System.Drawing.Size(457, 22);
             this.tbLogFile.TabIndex = 16;
             // 
             // cbLogFile
@@ -512,7 +521,7 @@
             this.cbLogFile.AutoSize = true;
             this.cbLogFile.Checked = true;
             this.cbLogFile.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbLogFile.Location = new System.Drawing.Point(4, 348);
+            this.cbLogFile.Location = new System.Drawing.Point(9, 348);
             this.cbLogFile.Margin = new System.Windows.Forms.Padding(4);
             this.cbLogFile.Name = "cbLogFile";
             this.cbLogFile.Size = new System.Drawing.Size(71, 21);
@@ -524,7 +533,7 @@
             // 
             this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStop.Location = new System.Drawing.Point(378, 433);
+            this.buttonStop.Location = new System.Drawing.Point(394, 433);
             this.buttonStop.Margin = new System.Windows.Forms.Padding(4);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(110, 28);
@@ -551,7 +560,7 @@
             // 
             this.buttonFocus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonFocus.Location = new System.Drawing.Point(249, 433);
+            this.buttonFocus.Location = new System.Drawing.Point(276, 433);
             this.buttonFocus.Margin = new System.Windows.Forms.Padding(4);
             this.buttonFocus.Name = "buttonFocus";
             this.buttonFocus.Size = new System.Drawing.Size(110, 28);
@@ -568,7 +577,7 @@
             this.checkBoxUpdate.AutoSize = true;
             this.checkBoxUpdate.Checked = true;
             this.checkBoxUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxUpdate.Location = new System.Drawing.Point(4, 319);
+            this.checkBoxUpdate.Location = new System.Drawing.Point(9, 319);
             this.checkBoxUpdate.Margin = new System.Windows.Forms.Padding(4);
             this.checkBoxUpdate.Name = "checkBoxUpdate";
             this.checkBoxUpdate.Size = new System.Drawing.Size(109, 21);
@@ -599,7 +608,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(237, 8);
+            this.label4.Location = new System.Drawing.Point(246, 8);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(76, 25);
             this.label4.TabIndex = 27;
