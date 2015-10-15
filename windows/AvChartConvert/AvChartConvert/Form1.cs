@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.Management;
 using System.IO;
+using System.IO.Ports;
 using System.Runtime.InteropServices;
 
 
@@ -50,14 +51,18 @@ namespace AvChartConvert
         string lastdir = (string)Properties.Settings.Default["InputDir"];
         string myPath = System.IO.Path.GetDirectoryName(
           System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");
+        string serverconfigtemplate;
         string scriptpath ;
         string serverpath;
         string testdir;
+        string servermode="test";
         Process serverProcess = null;
         bool enableDoneAction = false;
         bool serverStartedWithCmd = false;
         bool converterStartedWithCmd = false;
         SocketServer server = null;
+        string serverconfig;
+        string defaultuserconfig;
         static string SCRIPTCMD = "AvChartConvert.cmd";
         public Form1()
         {
@@ -100,6 +105,93 @@ namespace AvChartConvert
                 }
                 this.buttonOK_Click(null, null);
             }
+            serverconfig = Path.Combine(outdir, "avnav_server_tmp.xml");
+            defaultuserconfig= Path.Combine(outdir, "avnav_server_user.xml");
+            serverconfigtemplate = Path.Combine(myPath, "avnav_server.xml");
+            servermode = (string)Properties.Settings.Default["ServerMode"];
+            if (servermode == null || servermode == "") servermode = "test";
+            if (servermode != "com" && servermode != "ip" && servermode != "custom" ) rbModeTest.Checked = true;
+            if (servermode == "com") rbModeCom.Checked = true;
+            if (servermode == "ip") rbModeIP.Checked = true;
+            if (servermode == "custom") rbModeCustom.Checked = true;
+            txIpAddress.Text= (string)Properties.Settings.Default["IPAddress"];
+            txIpPort.Text= (string)Properties.Settings.Default["IPPort"];
+            txUserConfig.Text= (string)Properties.Settings.Default["UserConfig"];
+            if (txUserConfig.Text == "") txUserConfig.Text = defaultuserconfig;
+            handleServerModeChange();
+            fillComPorts();
+        }
+
+        private int serverConfigFromTemplate(string template,string outfile,Dictionary<string,string> replacements)
+        {
+            if (!File.Exists(template))
+            {
+                MessageBox.Show("Exception while creating config " + outfile + ": template "+template+" not found", "Error creating server config", MessageBoxButtons.OK);
+                return -1;
+            }
+            try {
+                using (StreamWriter writer = new StreamWriter(outfile))
+                {
+                    using (StreamReader reader = new StreamReader(template))
+                    {
+                        string line = reader.ReadLine();
+                        while (line != null)
+                        {
+                            foreach (string k in replacements.Keys)
+                            {
+                                line = line.Replace("<!--" + k + "-->", replacements[k]);
+                            }
+                            writer.WriteLine(line);
+                            line = reader.ReadLine();
+                        }
+                    }
+                }
+            }catch (Exception e)
+            {
+                Console.WriteLine("Exception while creating config " + outfile+": "+e);
+                MessageBox.Show("Exception while creating config " + outfile + ": " + e,"Error creating server config",MessageBoxButtons.OK);
+                return -1;
+            }
+            return 0;
+        }
+
+        private string createServerConfig()
+        {
+            if (rbModeCustom.Checked)
+            {
+                if (File.Exists(txUserConfig.Text))
+                {
+                    //nothing to be done
+                    return txUserConfig.Text;
+                }
+                serverConfigFromTemplate(serverconfigtemplate, txUserConfig.Text, new Dictionary<string, string>());
+                return txUserConfig.Text;
+            }
+            Dictionary<string, string> replace = new Dictionary<string, string>();
+            if (rbModeTest.Checked)
+            {
+                replace.Add("IPREADER", "<AVNSocketReader host=\"localhost\" port=\"34568\"/>");
+            }
+            if (rbModeIP.Checked)
+            {
+                replace.Add("IPREADER", "<AVNSocketReader host=\"" + txIpAddress.Text + "\" port=\"" + txIpPort.Text + "\"/>");
+            }
+            if (rbModeCom.Checked)
+            {
+                if (lbComPort.Items.Count> 0)
+                {
+                    string comport = (string)lbComPort.SelectedItem;
+                    comport = comport.Replace("COM", "");
+                    if (comport != "")
+                    {
+                        int comportnum = Convert.ToInt32(comport);
+                        comportnum--;
+                        replace.Add("COMREADER", "<AVNSerialReader useFeeder=\"true\" name=\"com" + comport + "reader\" port=\"" + string.Format("{0}",comportnum) + "\" baud=\"38400\" minbaud=\"4800\"/>");
+                    }
+                }
+            }
+            serverConfigFromTemplate(serverconfigtemplate, serverconfig, replace);
+            return serverconfig;
         }
 
         private void showOpenCPN(bool show)
@@ -404,7 +496,7 @@ namespace AvChartConvert
             ProcessStartInfo info = null;
             string cmd=null;
             string args = null;
-            
+            string configfile = createServerConfig();
             if (this.checkUseCmd.Checked)
             {
                 cmd = "cmd.exe";
@@ -432,7 +524,7 @@ namespace AvChartConvert
             
             info = new ProcessStartInfo(cmd);
             args += " -c \"" + Path.Combine(textOutdir.Text,"out") + "\" ";
-            args += " \"" + Path.Combine(myPath, "avnav_server.xml")+"\""; 
+            args += " \"" + configfile+"\""; 
             info.Arguments = args;
             info.RedirectStandardInput = false;
             info.RedirectStandardOutput = false;
@@ -568,7 +660,134 @@ namespace AvChartConvert
             Properties.Settings.Default.Save();
         }
 
-        
+        private void rbModeTest_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbModeTest.Checked) servermode = "test";
+            handleServerModeChange();
+        }
+
+        private void handleServerModeChange()
+        {
+            if (rbModeTest.Checked) pTestData.Show(); else pTestData.Hide();
+            if (rbModeCustom.Checked) pUserConfig.Show(); else pUserConfig.Hide();
+            if (rbModeIP.Checked) pIp.Show(); else pIp.Hide();
+            if (rbModeCom.Checked) pCom.Show(); else pCom.Hide();
+            Properties.Settings.Default["ServerMode"] = servermode;
+            Properties.Settings.Default.Save();
+            fillComPorts();
+            stopServer();
+        }
+
+        private void rbModeCom_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbModeCom.Checked) servermode = "com";
+            handleServerModeChange();
+        }
+
+        private void rbModeIP_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbModeIP.Checked) servermode = "ip";
+            handleServerModeChange();
+        }
+
+        private void rbModeCustom_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbModeCustom.Checked) servermode = "custom";
+            handleServerModeChange();
+        }
+
+        private void txUserConfig_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["UserConfig"] = txUserConfig.Text;
+            Properties.Settings.Default.Save();
+            stopServer();
+        }
+
+        private void txIpPort_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["IPPort"] = txIpPort.Text;
+            Properties.Settings.Default.Save();
+            stopServer();
+        }
+
+        private void txIpAddress_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["IpAddress"] = txIpAddress.Text;
+            Properties.Settings.Default.Save();
+            stopServer();
+        }
+
+        private void lbComPort_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["ComPort"] = lbComPort.SelectedItem;
+            Properties.Settings.Default.Save();
+            stopServer();
+        }
+
+        private void fillComPorts()
+        {
+            string[] ports = SerialPort.GetPortNames();
+            lbComPort.Items.Clear();
+            int index = 0;
+            int found = -1;
+            string selected = (string)Properties.Settings.Default["ComPort"];
+            foreach (string port in ports)
+            {
+                lbComPort.Items.Add(port);
+                if (port == selected)
+                {
+                    found = index;
+                }
+                index++;
+            }
+            if (lbComPort.Items.Count > 0)
+            {
+                if (found >= 0) lbComPort.SelectedIndex = found;
+                else lbComPort.SelectedIndex = 0;
+            }
+        }
+
+        private void btRefreshCom_Click(object sender, EventArgs e)
+        {
+            fillComPorts();
+        }
+
+        private void btChangeUserConfig_Click(object sender, EventArgs e)
+        {
+            this.openInputDialog.Reset();
+            this.openInputDialog.Title = "Select User Config File";
+            this.openInputDialog.Multiselect = false;
+            this.openInputDialog.FileName = Path.GetFileName(this.txUserConfig.Text);
+            this.openInputDialog.CheckFileExists = false;
+            this.openInputDialog.CheckPathExists = true;
+            this.openInputDialog.Filter = string.Empty;
+            string dir = Path.GetDirectoryName(this.txUserConfig.Text).Replace("..\\", "");
+            this.openInputDialog.InitialDirectory = dir;
+
+            if (this.openInputDialog.ShowDialog() == DialogResult.OK)
+            {
+                stopServer();
+                testdir = Path.GetDirectoryName(this.openInputDialog.FileName);
+                this.txUserConfig.Text = this.openInputDialog.FileName;
+            }
+        }
+
+        private void btEditUserConfig_Click(object sender, EventArgs e)
+        {
+            if (!File.Exists(txUserConfig.Text))
+            {
+                serverConfigFromTemplate(serverconfigtemplate, txUserConfig.Text, new Dictionary<string, string>());
+            }
+            stopServer();
+            try
+            {
+                Process.Start(txUserConfig.Text);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Exception when showing " + txUserConfig.Text + ": " + ex);
+            }
+        }
     }
     //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp
     class ProcessUtilities

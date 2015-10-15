@@ -74,6 +74,27 @@
             this.buttonFocus = new System.Windows.Forms.Button();
             this.checkBoxUpdate = new System.Windows.Forms.CheckBox();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.pUserConfig = new System.Windows.Forms.Panel();
+            this.btEditUserConfig = new System.Windows.Forms.Button();
+            this.label9 = new System.Windows.Forms.Label();
+            this.btChangeUserConfig = new System.Windows.Forms.Button();
+            this.txUserConfig = new System.Windows.Forms.TextBox();
+            this.pServerMode = new System.Windows.Forms.Panel();
+            this.rbModeCustom = new System.Windows.Forms.RadioButton();
+            this.rbModeTest = new System.Windows.Forms.RadioButton();
+            this.rbModeIP = new System.Windows.Forms.RadioButton();
+            this.rbModeCom = new System.Windows.Forms.RadioButton();
+            this.pIp = new System.Windows.Forms.Panel();
+            this.label8 = new System.Windows.Forms.Label();
+            this.txIpPort = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.txIpAddress = new System.Windows.Forms.TextBox();
+            this.pCom = new System.Windows.Forms.Panel();
+            this.btRefreshCom = new System.Windows.Forms.Button();
+            this.label6 = new System.Windows.Forms.Label();
+            this.lbComPort = new System.Windows.Forms.ListBox();
+            this.pTestData = new System.Windows.Forms.Panel();
+            this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -81,6 +102,11 @@
             this.splitContainer1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
+            this.pUserConfig.SuspendLayout();
+            this.pServerMode.SuspendLayout();
+            this.pIp.SuspendLayout();
+            this.pCom.SuspendLayout();
+            this.pTestData.SuspendLayout();
             this.SuspendLayout();
             // 
             // textIn
@@ -332,7 +358,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btTestData.AutoSize = true;
             this.btTestData.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btTestData.Location = new System.Drawing.Point(574, 137);
+            this.btTestData.Location = new System.Drawing.Point(567, 9);
             this.btTestData.Margin = new System.Windows.Forms.Padding(4);
             this.btTestData.Name = "btTestData";
             this.btTestData.Size = new System.Drawing.Size(30, 27);
@@ -345,7 +371,7 @@
             // 
             this.txTestData.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txTestData.Location = new System.Drawing.Point(153, 140);
+            this.txTestData.Location = new System.Drawing.Point(146, 12);
             this.txTestData.Margin = new System.Windows.Forms.Padding(4);
             this.txTestData.Name = "txTestData";
             this.txTestData.Size = new System.Drawing.Size(403, 22);
@@ -357,7 +383,7 @@
             this.cbTestData.AutoSize = true;
             this.cbTestData.Checked = true;
             this.cbTestData.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbTestData.Location = new System.Drawing.Point(14, 142);
+            this.cbTestData.Location = new System.Drawing.Point(7, 14);
             this.cbTestData.Margin = new System.Windows.Forms.Padding(4);
             this.cbTestData.Name = "cbTestData";
             this.cbTestData.Size = new System.Drawing.Size(83, 21);
@@ -588,12 +614,15 @@
             // panel2
             // 
             this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel2.Controls.Add(this.pUserConfig);
+            this.panel2.Controls.Add(this.pServerMode);
+            this.panel2.Controls.Add(this.pIp);
+            this.panel2.Controls.Add(this.pCom);
+            this.panel2.Controls.Add(this.pTestData);
+            this.panel2.Controls.Add(this.label5);
             this.panel2.Controls.Add(this.label4);
-            this.panel2.Controls.Add(this.btTestData);
             this.panel2.Controls.Add(this.checkStartServer);
-            this.panel2.Controls.Add(this.txTestData);
             this.panel2.Controls.Add(this.lbServerRunning);
-            this.panel2.Controls.Add(this.cbTestData);
             this.panel2.Controls.Add(this.btnStopServer);
             this.panel2.Controls.Add(this.cbBrowser);
             this.panel2.Controls.Add(this.tbUrl);
@@ -603,6 +632,238 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(635, 481);
             this.panel2.TabIndex = 27;
+            // 
+            // pUserConfig
+            // 
+            this.pUserConfig.Controls.Add(this.btEditUserConfig);
+            this.pUserConfig.Controls.Add(this.label9);
+            this.pUserConfig.Controls.Add(this.btChangeUserConfig);
+            this.pUserConfig.Controls.Add(this.txUserConfig);
+            this.pUserConfig.Location = new System.Drawing.Point(6, 211);
+            this.pUserConfig.Name = "pUserConfig";
+            this.pUserConfig.Size = new System.Drawing.Size(594, 38);
+            this.pUserConfig.TabIndex = 46;
+            this.pUserConfig.Visible = false;
+            // 
+            // btEditUserConfig
+            // 
+            this.btEditUserConfig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btEditUserConfig.Location = new System.Drawing.Point(468, 3);
+            this.btEditUserConfig.Margin = new System.Windows.Forms.Padding(4);
+            this.btEditUserConfig.Name = "btEditUserConfig";
+            this.btEditUserConfig.Size = new System.Drawing.Size(110, 28);
+            this.btEditUserConfig.TabIndex = 45;
+            this.btEditUserConfig.Text = "Edit";
+            this.btEditUserConfig.UseVisualStyleBackColor = true;
+            this.btEditUserConfig.Click += new System.EventHandler(this.btEditUserConfig_Click);
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(10, 11);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(80, 17);
+            this.label9.TabIndex = 44;
+            this.label9.Text = "User config";
+            // 
+            // btChangeUserConfig
+            // 
+            this.btChangeUserConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btChangeUserConfig.AutoSize = true;
+            this.btChangeUserConfig.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btChangeUserConfig.Location = new System.Drawing.Point(430, 5);
+            this.btChangeUserConfig.Margin = new System.Windows.Forms.Padding(4);
+            this.btChangeUserConfig.Name = "btChangeUserConfig";
+            this.btChangeUserConfig.Size = new System.Drawing.Size(30, 27);
+            this.btChangeUserConfig.TabIndex = 43;
+            this.btChangeUserConfig.Text = "...";
+            this.btChangeUserConfig.UseVisualStyleBackColor = true;
+            this.btChangeUserConfig.Click += new System.EventHandler(this.btChangeUserConfig_Click);
+            // 
+            // txUserConfig
+            // 
+            this.txUserConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txUserConfig.Location = new System.Drawing.Point(127, 8);
+            this.txUserConfig.Margin = new System.Windows.Forms.Padding(4);
+            this.txUserConfig.Name = "txUserConfig";
+            this.txUserConfig.Size = new System.Drawing.Size(295, 22);
+            this.txUserConfig.TabIndex = 42;
+            this.txUserConfig.TextChanged += new System.EventHandler(this.txUserConfig_TextChanged);
+            // 
+            // pServerMode
+            // 
+            this.pServerMode.Controls.Add(this.rbModeCustom);
+            this.pServerMode.Controls.Add(this.rbModeTest);
+            this.pServerMode.Controls.Add(this.rbModeIP);
+            this.pServerMode.Controls.Add(this.rbModeCom);
+            this.pServerMode.Location = new System.Drawing.Point(142, 146);
+            this.pServerMode.Name = "pServerMode";
+            this.pServerMode.Size = new System.Drawing.Size(360, 47);
+            this.pServerMode.TabIndex = 42;
+            // 
+            // rbModeCustom
+            // 
+            this.rbModeCustom.AutoSize = true;
+            this.rbModeCustom.Location = new System.Drawing.Point(265, 9);
+            this.rbModeCustom.Name = "rbModeCustom";
+            this.rbModeCustom.Size = new System.Drawing.Size(76, 21);
+            this.rbModeCustom.TabIndex = 31;
+            this.rbModeCustom.TabStop = true;
+            this.rbModeCustom.Text = "Custom";
+            this.rbModeCustom.UseVisualStyleBackColor = true;
+            this.rbModeCustom.CheckedChanged += new System.EventHandler(this.rbModeCustom_CheckedChanged);
+            // 
+            // rbModeTest
+            // 
+            this.rbModeTest.AutoSize = true;
+            this.rbModeTest.Location = new System.Drawing.Point(11, 9);
+            this.rbModeTest.Name = "rbModeTest";
+            this.rbModeTest.Size = new System.Drawing.Size(57, 21);
+            this.rbModeTest.TabIndex = 30;
+            this.rbModeTest.TabStop = true;
+            this.rbModeTest.Text = "Test";
+            this.rbModeTest.UseVisualStyleBackColor = true;
+            this.rbModeTest.CheckedChanged += new System.EventHandler(this.rbModeTest_CheckedChanged);
+            // 
+            // rbModeIP
+            // 
+            this.rbModeIP.AutoSize = true;
+            this.rbModeIP.Location = new System.Drawing.Point(178, 9);
+            this.rbModeIP.Name = "rbModeIP";
+            this.rbModeIP.Size = new System.Drawing.Size(41, 21);
+            this.rbModeIP.TabIndex = 29;
+            this.rbModeIP.TabStop = true;
+            this.rbModeIP.Text = "IP";
+            this.rbModeIP.UseVisualStyleBackColor = true;
+            this.rbModeIP.CheckedChanged += new System.EventHandler(this.rbModeIP_CheckedChanged);
+            // 
+            // rbModeCom
+            // 
+            this.rbModeCom.AutoSize = true;
+            this.rbModeCom.Location = new System.Drawing.Point(83, 9);
+            this.rbModeCom.Name = "rbModeCom";
+            this.rbModeCom.Size = new System.Drawing.Size(89, 21);
+            this.rbModeCom.TabIndex = 28;
+            this.rbModeCom.TabStop = true;
+            this.rbModeCom.Text = "COM port";
+            this.rbModeCom.UseVisualStyleBackColor = true;
+            this.rbModeCom.CheckedChanged += new System.EventHandler(this.rbModeCom_CheckedChanged);
+            // 
+            // pIp
+            // 
+            this.pIp.Controls.Add(this.label8);
+            this.pIp.Controls.Add(this.txIpPort);
+            this.pIp.Controls.Add(this.label7);
+            this.pIp.Controls.Add(this.txIpAddress);
+            this.pIp.Location = new System.Drawing.Point(6, 211);
+            this.pIp.Name = "pIp";
+            this.pIp.Size = new System.Drawing.Size(545, 35);
+            this.pIp.TabIndex = 40;
+            this.pIp.Visible = false;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(340, 9);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(49, 17);
+            this.label8.TabIndex = 39;
+            this.label8.Text = "IP port";
+            // 
+            // txIpPort
+            // 
+            this.txIpPort.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txIpPort.Location = new System.Drawing.Point(423, 6);
+            this.txIpPort.Margin = new System.Windows.Forms.Padding(4);
+            this.txIpPort.Name = "txIpPort";
+            this.txIpPort.Size = new System.Drawing.Size(104, 22);
+            this.txIpPort.TabIndex = 38;
+            this.txIpPort.TextChanged += new System.EventHandler(this.txIpPort_TextChanged);
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(7, 9);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(75, 17);
+            this.label7.TabIndex = 37;
+            this.label7.Text = "IP address";
+            // 
+            // txIpAddress
+            // 
+            this.txIpAddress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txIpAddress.Location = new System.Drawing.Point(124, 6);
+            this.txIpAddress.Margin = new System.Windows.Forms.Padding(4);
+            this.txIpAddress.Name = "txIpAddress";
+            this.txIpAddress.Size = new System.Drawing.Size(131, 22);
+            this.txIpAddress.TabIndex = 36;
+            this.txIpAddress.TextChanged += new System.EventHandler(this.txIpAddress_TextChanged);
+            // 
+            // pCom
+            // 
+            this.pCom.Controls.Add(this.btRefreshCom);
+            this.pCom.Controls.Add(this.label6);
+            this.pCom.Controls.Add(this.lbComPort);
+            this.pCom.Location = new System.Drawing.Point(6, 211);
+            this.pCom.Name = "pCom";
+            this.pCom.Size = new System.Drawing.Size(597, 37);
+            this.pCom.TabIndex = 35;
+            this.pCom.Visible = false;
+            // 
+            // btRefreshCom
+            // 
+            this.btRefreshCom.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btRefreshCom.Location = new System.Drawing.Point(265, -1);
+            this.btRefreshCom.Margin = new System.Windows.Forms.Padding(4);
+            this.btRefreshCom.Name = "btRefreshCom";
+            this.btRefreshCom.Size = new System.Drawing.Size(110, 28);
+            this.btRefreshCom.TabIndex = 46;
+            this.btRefreshCom.Text = "Refresh";
+            this.btRefreshCom.UseVisualStyleBackColor = true;
+            this.btRefreshCom.Click += new System.EventHandler(this.btRefreshCom_Click);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(8, 4);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(69, 17);
+            this.label6.TabIndex = 34;
+            this.label6.Text = "COM Port";
+            // 
+            // lbComPort
+            // 
+            this.lbComPort.FormattingEnabled = true;
+            this.lbComPort.ItemHeight = 16;
+            this.lbComPort.Location = new System.Drawing.Point(127, 4);
+            this.lbComPort.Name = "lbComPort";
+            this.lbComPort.Size = new System.Drawing.Size(131, 20);
+            this.lbComPort.TabIndex = 33;
+            this.lbComPort.SelectedIndexChanged += new System.EventHandler(this.lbComPort_SelectedIndexChanged);
+            // 
+            // pTestData
+            // 
+            this.pTestData.Controls.Add(this.btTestData);
+            this.pTestData.Controls.Add(this.txTestData);
+            this.pTestData.Controls.Add(this.cbTestData);
+            this.pTestData.Location = new System.Drawing.Point(6, 211);
+            this.pTestData.Name = "pTestData";
+            this.pTestData.Size = new System.Drawing.Size(614, 51);
+            this.pTestData.TabIndex = 41;
+            this.pTestData.Visible = false;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(11, 157);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(94, 17);
+            this.label5.TabIndex = 32;
+            this.label5.Text = "Server Config";
             // 
             // label4
             // 
@@ -635,6 +896,16 @@
             this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
+            this.pUserConfig.ResumeLayout(false);
+            this.pUserConfig.PerformLayout();
+            this.pServerMode.ResumeLayout(false);
+            this.pServerMode.PerformLayout();
+            this.pIp.ResumeLayout(false);
+            this.pIp.PerformLayout();
+            this.pCom.ResumeLayout(false);
+            this.pCom.PerformLayout();
+            this.pTestData.ResumeLayout(false);
+            this.pTestData.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -686,6 +957,27 @@
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.RadioButton rbModeIP;
+        private System.Windows.Forms.RadioButton rbModeCom;
+        private System.Windows.Forms.Panel pServerMode;
+        private System.Windows.Forms.RadioButton rbModeCustom;
+        private System.Windows.Forms.RadioButton rbModeTest;
+        private System.Windows.Forms.Panel pTestData;
+        private System.Windows.Forms.Panel pUserConfig;
+        private System.Windows.Forms.Button btEditUserConfig;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Button btChangeUserConfig;
+        private System.Windows.Forms.TextBox txUserConfig;
+        private System.Windows.Forms.Panel pIp;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox txIpPort;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox txIpAddress;
+        private System.Windows.Forms.Panel pCom;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ListBox lbComPort;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button btRefreshCom;
     }
 }
 

@@ -9,13 +9,16 @@
 <AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />
 <!-- <AVNSerialReader name="com4reader" port="3" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
-<AVNSerialReader useFeeder="true" name="com8reader" port="7" baud="38400" minbaud="4800"/>
+<!--<AVNSerialReader useFeeder="true" name="com8reader" port="7" baud="38400" minbaud="4800"/>-->
+<!-- the next line will be replaced by the GUI -->
+<!--COMREADER-->
+<!--IPREADER-->
 </Readers>
 <!-- provide your data at this port for e.g. OpenCPN -->
 <AVNSocketWriter port="34567" maxDevices="5" filter=""/>
 <AVNTrackWriter interval="10" distance="100" trackdir="~\AvNav\tracks"/>
 <!-- for testing purposes: connect to a socket for reading NMEA data -->
-<AVNSocketReader host="localhost" port="34568"/>
+<!--<AVNSocketReader host="localhost" port="34568"/>-->
 <AVNHttpServer navurl="/viewer/avnav_navi.php" chartbase="maps" upzoom="0" empty="nonexist">
 	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
 	<Directory urlpath="viewer" path="..\viewer"></Directory>
