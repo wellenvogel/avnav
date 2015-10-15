@@ -129,6 +129,11 @@ namespace AvChartConvert
                 MessageBox.Show("Exception while creating config " + outfile + ": template "+template+" not found", "Error creating server config", MessageBoxButtons.OK);
                 return -1;
             }
+            string dir = Path.GetDirectoryName(outfile).Replace("..\\", "");
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
             try {
                 using (StreamWriter writer = new StreamWriter(outfile))
                 {
