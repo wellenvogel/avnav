@@ -81,7 +81,18 @@ def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn,updateOnly=False
   #will write <basename>.tif and <basename>_header.kap
   args=[callprog,'-o',outdir,os.path.join(opencpn,'plugins'),chart]
   logf("calling %s,%s"%(",".join(args),my_env['PATH']))
-  rt=subprocess.call(args,env=my_env)
+  proc=subprocess.Popen(args,env=my_env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=None)
+
+  while (True):
+    line=proc.stdout.readline()
+    if line is None or line == '':
+      break
+    if proc.stdout.closed:
+      break
+    logf("CONVERTNV: "+line.rstrip('\n'))
+    if proc.poll() is not None:
+      break
+  rt=proc.wait()
   base,ext=os.path.splitext(os.path.basename(chart))
   if rt != 0:
     warn("converting %s failed"%(chart,))
