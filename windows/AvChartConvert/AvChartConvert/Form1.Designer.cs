@@ -56,7 +56,6 @@
             this.lbCmd = new System.Windows.Forms.Label();
             this.btTestData = new System.Windows.Forms.Button();
             this.txTestData = new System.Windows.Forms.TextBox();
-            this.cbTestData = new System.Windows.Forms.CheckBox();
             this.tbUrl = new System.Windows.Forms.TextBox();
             this.cbBrowser = new System.Windows.Forms.CheckBox();
             this.openOutputDialog = new System.Windows.Forms.SaveFileDialog();
@@ -94,8 +93,16 @@
             this.label6 = new System.Windows.Forms.Label();
             this.lbComPort = new System.Windows.Forms.ListBox();
             this.pTestData = new System.Windows.Forms.Panel();
+            this.label10 = new System.Windows.Forms.Label();
+            this.txTestPort = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
+            this.txTestDelay = new System.Windows.Forms.TextBox();
+            this.lnkHome = new System.Windows.Forms.LinkLabel();
+            this.label13 = new System.Windows.Forms.Label();
+            this.lbVersion = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -118,7 +125,7 @@
             this.textIn.Margin = new System.Windows.Forms.Padding(4);
             this.textIn.Multiline = true;
             this.textIn.Name = "textIn";
-            this.textIn.Size = new System.Drawing.Size(456, 151);
+            this.textIn.Size = new System.Drawing.Size(322, 151);
             this.textIn.TabIndex = 0;
             // 
             // label1
@@ -138,7 +145,7 @@
             // buttonAddFile
             // 
             this.buttonAddFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonAddFile.Location = new System.Drawing.Point(512, 78);
+            this.buttonAddFile.Location = new System.Drawing.Point(378, 78);
             this.buttonAddFile.Margin = new System.Windows.Forms.Padding(4);
             this.buttonAddFile.Name = "buttonAddFile";
             this.buttonAddFile.Size = new System.Drawing.Size(110, 28);
@@ -151,7 +158,7 @@
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCancel.Location = new System.Drawing.Point(577, 503);
+            this.buttonCancel.Location = new System.Drawing.Point(846, 499);
             this.buttonCancel.Margin = new System.Windows.Forms.Padding(4);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(110, 28);
@@ -164,10 +171,10 @@
             // 
             this.textOutdir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textOutdir.Location = new System.Drawing.Point(10, 220);
+            this.textOutdir.Location = new System.Drawing.Point(10, 223);
             this.textOutdir.Margin = new System.Windows.Forms.Padding(4);
             this.textOutdir.Name = "textOutdir";
-            this.textOutdir.Size = new System.Drawing.Size(456, 22);
+            this.textOutdir.Size = new System.Drawing.Size(322, 22);
             this.textOutdir.TabIndex = 6;
             this.textOutdir.TextChanged += new System.EventHandler(this.textOutdir_TextChanged);
             // 
@@ -185,12 +192,11 @@
             // buttonOutDir
             // 
             this.buttonOutDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOutDir.AutoSize = true;
             this.buttonOutDir.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.buttonOutDir.Location = new System.Drawing.Point(474, 218);
+            this.buttonOutDir.Location = new System.Drawing.Point(340, 219);
             this.buttonOutDir.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOutDir.Name = "buttonOutDir";
-            this.buttonOutDir.Size = new System.Drawing.Size(30, 27);
+            this.buttonOutDir.Size = new System.Drawing.Size(30, 28);
             this.buttonOutDir.TabIndex = 8;
             this.buttonOutDir.Text = "...";
             this.buttonOutDir.UseVisualStyleBackColor = true;
@@ -199,7 +205,7 @@
             // buttonAddDirectories
             // 
             this.buttonAddDirectories.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonAddDirectories.Location = new System.Drawing.Point(512, 42);
+            this.buttonAddDirectories.Location = new System.Drawing.Point(378, 42);
             this.buttonAddDirectories.Margin = new System.Windows.Forms.Padding(4);
             this.buttonAddDirectories.Name = "buttonAddDirectories";
             this.buttonAddDirectories.Size = new System.Drawing.Size(110, 28);
@@ -217,7 +223,7 @@
             // buttonEmpty
             // 
             this.buttonEmpty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonEmpty.Location = new System.Drawing.Point(512, 166);
+            this.buttonEmpty.Location = new System.Drawing.Point(378, 166);
             this.buttonEmpty.Margin = new System.Windows.Forms.Padding(4);
             this.buttonEmpty.Name = "buttonEmpty";
             this.buttonEmpty.Size = new System.Drawing.Size(110, 28);
@@ -229,7 +235,7 @@
             // buttonDefaultOut
             // 
             this.buttonDefaultOut.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonDefaultOut.Location = new System.Drawing.Point(512, 217);
+            this.buttonDefaultOut.Location = new System.Drawing.Point(378, 219);
             this.buttonDefaultOut.Margin = new System.Windows.Forms.Padding(4);
             this.buttonDefaultOut.Name = "buttonDefaultOut";
             this.buttonDefaultOut.Size = new System.Drawing.Size(110, 28);
@@ -245,7 +251,7 @@
             this.textOpenCPN.Location = new System.Drawing.Point(9, 267);
             this.textOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.textOpenCPN.Name = "textOpenCPN";
-            this.textOpenCPN.Size = new System.Drawing.Size(457, 22);
+            this.textOpenCPN.Size = new System.Drawing.Size(323, 22);
             this.textOpenCPN.TabIndex = 15;
             // 
             // labelOpenCPN
@@ -262,12 +268,11 @@
             // buttonOpenCPN
             // 
             this.buttonOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOpenCPN.AutoSize = true;
             this.buttonOpenCPN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.buttonOpenCPN.Location = new System.Drawing.Point(474, 265);
+            this.buttonOpenCPN.Location = new System.Drawing.Point(340, 266);
             this.buttonOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOpenCPN.Name = "buttonOpenCPN";
-            this.buttonOpenCPN.Size = new System.Drawing.Size(30, 27);
+            this.buttonOpenCPN.Size = new System.Drawing.Size(30, 28);
             this.buttonOpenCPN.TabIndex = 17;
             this.buttonOpenCPN.Text = "...";
             this.buttonOpenCPN.UseVisualStyleBackColor = true;
@@ -289,7 +294,7 @@
             // btnStopServer
             // 
             this.btnStopServer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStopServer.Location = new System.Drawing.Point(212, 439);
+            this.btnStopServer.Location = new System.Drawing.Point(223, 439);
             this.btnStopServer.Margin = new System.Windows.Forms.Padding(4);
             this.btnStopServer.Name = "btnStopServer";
             this.btnStopServer.Size = new System.Drawing.Size(110, 28);
@@ -302,7 +307,7 @@
             // btnStartServer
             // 
             this.btnStartServer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStartServer.Location = new System.Drawing.Point(338, 439);
+            this.btnStartServer.Location = new System.Drawing.Point(341, 439);
             this.btnStartServer.Margin = new System.Windows.Forms.Padding(4);
             this.btnStartServer.Name = "btnStartServer";
             this.btnStartServer.Size = new System.Drawing.Size(110, 28);
@@ -358,7 +363,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btTestData.AutoSize = true;
             this.btTestData.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btTestData.Location = new System.Drawing.Point(567, 9);
+            this.btTestData.Location = new System.Drawing.Point(447, 45);
             this.btTestData.Margin = new System.Windows.Forms.Padding(4);
             this.btTestData.Name = "btTestData";
             this.btTestData.Size = new System.Drawing.Size(30, 27);
@@ -371,25 +376,12 @@
             // 
             this.txTestData.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txTestData.Location = new System.Drawing.Point(146, 12);
+            this.txTestData.Location = new System.Drawing.Point(81, 47);
             this.txTestData.Margin = new System.Windows.Forms.Padding(4);
             this.txTestData.Name = "txTestData";
-            this.txTestData.Size = new System.Drawing.Size(403, 22);
+            this.txTestData.Size = new System.Drawing.Size(358, 22);
             this.txTestData.TabIndex = 25;
             this.txTestData.TextChanged += new System.EventHandler(this.txTestData_TextChanged);
-            // 
-            // cbTestData
-            // 
-            this.cbTestData.AutoSize = true;
-            this.cbTestData.Checked = true;
-            this.cbTestData.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbTestData.Location = new System.Drawing.Point(7, 14);
-            this.cbTestData.Margin = new System.Windows.Forms.Padding(4);
-            this.cbTestData.Name = "cbTestData";
-            this.cbTestData.Size = new System.Drawing.Size(83, 21);
-            this.cbTestData.TabIndex = 24;
-            this.cbTestData.Text = "testData";
-            this.cbTestData.UseVisualStyleBackColor = true;
             // 
             // tbUrl
             // 
@@ -398,7 +390,7 @@
             this.tbUrl.Location = new System.Drawing.Point(153, 98);
             this.tbUrl.Margin = new System.Windows.Forms.Padding(4);
             this.tbUrl.Name = "tbUrl";
-            this.tbUrl.Size = new System.Drawing.Size(403, 22);
+            this.tbUrl.Size = new System.Drawing.Size(264, 22);
             this.tbUrl.TabIndex = 23;
             this.tbUrl.TextChanged += new System.EventHandler(this.tbUrl_TextChanged);
             // 
@@ -427,8 +419,8 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.panel2);
-            this.splitContainer1.Size = new System.Drawing.Size(1273, 481);
-            this.splitContainer1.SplitterDistance = 634;
+            this.splitContainer1.Size = new System.Drawing.Size(1000, 481);
+            this.splitContainer1.SplitterDistance = 500;
             this.splitContainer1.TabIndex = 27;
             // 
             // panel1
@@ -463,7 +455,7 @@
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
             this.panel1.Padding = new System.Windows.Forms.Padding(5, 0, 0, 0);
-            this.panel1.Size = new System.Drawing.Size(634, 481);
+            this.panel1.Size = new System.Drawing.Size(500, 481);
             this.panel1.TabIndex = 25;
             // 
             // label3
@@ -490,12 +482,11 @@
             // 
             this.btLogFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btLogFile.AutoSize = true;
             this.btLogFile.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btLogFile.Location = new System.Drawing.Point(474, 375);
+            this.btLogFile.Location = new System.Drawing.Point(340, 374);
             this.btLogFile.Margin = new System.Windows.Forms.Padding(4);
             this.btLogFile.Name = "btLogFile";
-            this.btLogFile.Size = new System.Drawing.Size(30, 27);
+            this.btLogFile.Size = new System.Drawing.Size(30, 28);
             this.btLogFile.TabIndex = 18;
             this.btLogFile.Text = "...";
             this.btLogFile.UseVisualStyleBackColor = true;
@@ -505,7 +496,7 @@
             // 
             this.btViewLog.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btViewLog.Location = new System.Drawing.Point(512, 374);
+            this.btViewLog.Location = new System.Drawing.Point(378, 374);
             this.btViewLog.Margin = new System.Windows.Forms.Padding(4);
             this.btViewLog.Name = "btViewLog";
             this.btViewLog.Size = new System.Drawing.Size(110, 28);
@@ -537,7 +528,7 @@
             this.tbLogFile.Location = new System.Drawing.Point(9, 377);
             this.tbLogFile.Margin = new System.Windows.Forms.Padding(4);
             this.tbLogFile.Name = "tbLogFile";
-            this.tbLogFile.Size = new System.Drawing.Size(457, 22);
+            this.tbLogFile.Size = new System.Drawing.Size(323, 22);
             this.tbLogFile.TabIndex = 16;
             // 
             // cbLogFile
@@ -559,7 +550,7 @@
             // 
             this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStop.Location = new System.Drawing.Point(394, 433);
+            this.buttonStop.Location = new System.Drawing.Point(260, 433);
             this.buttonStop.Margin = new System.Windows.Forms.Padding(4);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(110, 28);
@@ -573,7 +564,7 @@
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOK.Location = new System.Drawing.Point(512, 433);
+            this.buttonOK.Location = new System.Drawing.Point(378, 433);
             this.buttonOK.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(110, 28);
@@ -586,7 +577,7 @@
             // 
             this.buttonFocus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonFocus.Location = new System.Drawing.Point(276, 433);
+            this.buttonFocus.Location = new System.Drawing.Point(142, 433);
             this.buttonFocus.Margin = new System.Windows.Forms.Padding(4);
             this.buttonFocus.Name = "buttonFocus";
             this.buttonFocus.Size = new System.Drawing.Size(110, 28);
@@ -630,7 +621,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(635, 481);
+            this.panel2.Size = new System.Drawing.Size(496, 481);
             this.panel2.TabIndex = 27;
             // 
             // pUserConfig
@@ -641,14 +632,14 @@
             this.pUserConfig.Controls.Add(this.txUserConfig);
             this.pUserConfig.Location = new System.Drawing.Point(6, 211);
             this.pUserConfig.Name = "pUserConfig";
-            this.pUserConfig.Size = new System.Drawing.Size(594, 38);
+            this.pUserConfig.Size = new System.Drawing.Size(485, 88);
             this.pUserConfig.TabIndex = 46;
             this.pUserConfig.Visible = false;
             // 
             // btEditUserConfig
             // 
             this.btEditUserConfig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btEditUserConfig.Location = new System.Drawing.Point(468, 3);
+            this.btEditUserConfig.Location = new System.Drawing.Point(329, 37);
             this.btEditUserConfig.Margin = new System.Windows.Forms.Padding(4);
             this.btEditUserConfig.Name = "btEditUserConfig";
             this.btEditUserConfig.Size = new System.Drawing.Size(110, 28);
@@ -662,20 +653,17 @@
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(10, 11);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(80, 17);
+            this.label9.Size = new System.Drawing.Size(48, 17);
             this.label9.TabIndex = 44;
-            this.label9.Text = "User config";
+            this.label9.Text = "Config";
             // 
             // btChangeUserConfig
             // 
-            this.btChangeUserConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.btChangeUserConfig.AutoSize = true;
             this.btChangeUserConfig.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btChangeUserConfig.Location = new System.Drawing.Point(430, 5);
+            this.btChangeUserConfig.Location = new System.Drawing.Point(447, 5);
             this.btChangeUserConfig.Margin = new System.Windows.Forms.Padding(4);
             this.btChangeUserConfig.Name = "btChangeUserConfig";
-            this.btChangeUserConfig.Size = new System.Drawing.Size(30, 27);
+            this.btChangeUserConfig.Size = new System.Drawing.Size(30, 28);
             this.btChangeUserConfig.TabIndex = 43;
             this.btChangeUserConfig.Text = "...";
             this.btChangeUserConfig.UseVisualStyleBackColor = true;
@@ -685,10 +673,10 @@
             // 
             this.txUserConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txUserConfig.Location = new System.Drawing.Point(127, 8);
+            this.txUserConfig.Location = new System.Drawing.Point(65, 8);
             this.txUserConfig.Margin = new System.Windows.Forms.Padding(4);
             this.txUserConfig.Name = "txUserConfig";
-            this.txUserConfig.Size = new System.Drawing.Size(295, 22);
+            this.txUserConfig.Size = new System.Drawing.Size(374, 22);
             this.txUserConfig.TabIndex = 42;
             this.txUserConfig.TextChanged += new System.EventHandler(this.txUserConfig_TextChanged);
             // 
@@ -753,20 +741,22 @@
             // 
             // pIp
             // 
+            this.pIp.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.pIp.Controls.Add(this.label8);
             this.pIp.Controls.Add(this.txIpPort);
             this.pIp.Controls.Add(this.label7);
             this.pIp.Controls.Add(this.txIpAddress);
             this.pIp.Location = new System.Drawing.Point(6, 211);
             this.pIp.Name = "pIp";
-            this.pIp.Size = new System.Drawing.Size(545, 35);
+            this.pIp.Size = new System.Drawing.Size(489, 35);
             this.pIp.TabIndex = 40;
             this.pIp.Visible = false;
             // 
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(340, 9);
+            this.label8.Location = new System.Drawing.Point(171, 9);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(49, 17);
             this.label8.TabIndex = 39;
@@ -776,10 +766,10 @@
             // 
             this.txIpPort.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txIpPort.Location = new System.Drawing.Point(423, 6);
+            this.txIpPort.Location = new System.Drawing.Point(227, 6);
             this.txIpPort.Margin = new System.Windows.Forms.Padding(4);
             this.txIpPort.Name = "txIpPort";
-            this.txIpPort.Size = new System.Drawing.Size(104, 22);
+            this.txIpPort.Size = new System.Drawing.Size(48, 22);
             this.txIpPort.TabIndex = 38;
             this.txIpPort.TextChanged += new System.EventHandler(this.txIpPort_TextChanged);
             // 
@@ -796,28 +786,30 @@
             // 
             this.txIpAddress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txIpAddress.Location = new System.Drawing.Point(124, 6);
+            this.txIpAddress.Location = new System.Drawing.Point(89, 6);
             this.txIpAddress.Margin = new System.Windows.Forms.Padding(4);
             this.txIpAddress.Name = "txIpAddress";
-            this.txIpAddress.Size = new System.Drawing.Size(131, 22);
+            this.txIpAddress.Size = new System.Drawing.Size(75, 22);
             this.txIpAddress.TabIndex = 36;
             this.txIpAddress.TextChanged += new System.EventHandler(this.txIpAddress_TextChanged);
             // 
             // pCom
             // 
+            this.pCom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.pCom.Controls.Add(this.btRefreshCom);
             this.pCom.Controls.Add(this.label6);
             this.pCom.Controls.Add(this.lbComPort);
             this.pCom.Location = new System.Drawing.Point(6, 211);
             this.pCom.Name = "pCom";
-            this.pCom.Size = new System.Drawing.Size(597, 37);
+            this.pCom.Size = new System.Drawing.Size(489, 37);
             this.pCom.TabIndex = 35;
             this.pCom.Visible = false;
             // 
             // btRefreshCom
             // 
             this.btRefreshCom.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btRefreshCom.Location = new System.Drawing.Point(265, -1);
+            this.btRefreshCom.Location = new System.Drawing.Point(265, 4);
             this.btRefreshCom.Margin = new System.Windows.Forms.Padding(4);
             this.btRefreshCom.Name = "btRefreshCom";
             this.btRefreshCom.Size = new System.Drawing.Size(110, 28);
@@ -829,7 +821,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(8, 4);
+            this.label6.Location = new System.Drawing.Point(11, 10);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(69, 17);
             this.label6.TabIndex = 34;
@@ -839,7 +831,7 @@
             // 
             this.lbComPort.FormattingEnabled = true;
             this.lbComPort.ItemHeight = 16;
-            this.lbComPort.Location = new System.Drawing.Point(127, 4);
+            this.lbComPort.Location = new System.Drawing.Point(127, 8);
             this.lbComPort.Name = "lbComPort";
             this.lbComPort.Size = new System.Drawing.Size(131, 20);
             this.lbComPort.TabIndex = 33;
@@ -847,14 +839,38 @@
             // 
             // pTestData
             // 
+            this.pTestData.Controls.Add(this.txTestDelay);
+            this.pTestData.Controls.Add(this.label12);
+            this.pTestData.Controls.Add(this.label11);
+            this.pTestData.Controls.Add(this.label10);
+            this.pTestData.Controls.Add(this.txTestPort);
             this.pTestData.Controls.Add(this.btTestData);
             this.pTestData.Controls.Add(this.txTestData);
-            this.pTestData.Controls.Add(this.cbTestData);
             this.pTestData.Location = new System.Drawing.Point(6, 211);
             this.pTestData.Name = "pTestData";
-            this.pTestData.Size = new System.Drawing.Size(614, 51);
+            this.pTestData.Size = new System.Drawing.Size(489, 88);
             this.pTestData.TabIndex = 41;
             this.pTestData.Visible = false;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(11, 14);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(34, 17);
+            this.label10.TabIndex = 28;
+            this.label10.Text = "Port";
+            // 
+            // txTestPort
+            // 
+            this.txTestPort.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txTestPort.Location = new System.Drawing.Point(81, 12);
+            this.txTestPort.Margin = new System.Windows.Forms.Padding(4);
+            this.txTestPort.Name = "txTestPort";
+            this.txTestPort.Size = new System.Drawing.Size(57, 22);
+            this.txTestPort.TabIndex = 27;
+            this.txTestPort.TextChanged += new System.EventHandler(this.txTestPort_TextChanged);
             // 
             // label5
             // 
@@ -875,16 +891,77 @@
             this.label4.TabIndex = 27;
             this.label4.Text = "Server";
             // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(11, 50);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(69, 17);
+            this.label11.TabIndex = 29;
+            this.label11.Text = "NMEA file";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(163, 14);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(92, 17);
+            this.label12.TabIndex = 30;
+            this.label12.Text = "Line Delay(s)";
+            // 
+            // txTestDelay
+            // 
+            this.txTestDelay.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txTestDelay.Location = new System.Drawing.Point(262, 12);
+            this.txTestDelay.Margin = new System.Windows.Forms.Padding(4);
+            this.txTestDelay.Name = "txTestDelay";
+            this.txTestDelay.Size = new System.Drawing.Size(57, 22);
+            this.txTestDelay.TabIndex = 31;
+            this.txTestDelay.TextChanged += new System.EventHandler(this.txTestDelay_TextChanged);
+            // 
+            // lnkHome
+            // 
+            this.lnkHome.AutoSize = true;
+            this.lnkHome.Location = new System.Drawing.Point(326, 505);
+            this.lnkHome.Name = "lnkHome";
+            this.lnkHome.Size = new System.Drawing.Size(336, 17);
+            this.lnkHome.TabIndex = 28;
+            this.lnkHome.TabStop = true;
+            this.lnkHome.Text = "http://www.wellenvogel.net/software/avnav/index.php";
+            this.lnkHome.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkHome_LinkClicked);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(23, 505);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(60, 17);
+            this.label13.TabIndex = 29;
+            this.label13.Text = "Version:";
+            // 
+            // lbVersion
+            // 
+            this.lbVersion.AutoSize = true;
+            this.lbVersion.Location = new System.Drawing.Point(109, 505);
+            this.lbVersion.Name = "lbVersion";
+            this.lbVersion.Size = new System.Drawing.Size(0, 17);
+            this.lbVersion.TabIndex = 30;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1271, 553);
+            this.ClientSize = new System.Drawing.Size(1001, 553);
+            this.Controls.Add(this.lbVersion);
+            this.Controls.Add(this.label13);
+            this.Controls.Add(this.lnkHome);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.buttonCancel);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
-            this.MinimumSize = new System.Drawing.Size(655, 600);
+            this.MinimumSize = new System.Drawing.Size(1019, 600);
             this.Name = "Form1";
             this.Text = "AvChartConvert";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
@@ -907,6 +984,7 @@
             this.pTestData.ResumeLayout(false);
             this.pTestData.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -941,7 +1019,6 @@
         private System.Windows.Forms.TextBox tbUrl;
         private System.Windows.Forms.Button btTestData;
         private System.Windows.Forms.TextBox txTestData;
-        private System.Windows.Forms.CheckBox cbTestData;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Button btLogFile;
         private System.Windows.Forms.Button btViewLog;
@@ -978,6 +1055,14 @@
         private System.Windows.Forms.ListBox lbComPort;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btRefreshCom;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox txTestPort;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.TextBox txTestDelay;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.LinkLabel lnkHome;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label lbVersion;
     }
 }
 

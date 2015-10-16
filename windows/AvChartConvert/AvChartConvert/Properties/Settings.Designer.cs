@@ -166,5 +166,17 @@ namespace AvChartConvert.Properties {
                 this["IPPort"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TestDelay {
+            get {
+                return ((string)(this["TestDelay"]));
+            }
+            set {
+                this["TestDelay"] = value;
+            }
+        }
     }
 }

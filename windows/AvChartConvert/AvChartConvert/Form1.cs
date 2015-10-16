@@ -35,7 +35,7 @@ using System.Management;
 using System.IO;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
-
+using System.Globalization;
 
 namespace AvChartConvert
 {
@@ -120,6 +120,18 @@ namespace AvChartConvert
             if (txUserConfig.Text == "") txUserConfig.Text = defaultuserconfig;
             handleServerModeChange();
             fillComPorts();
+            int testPort = 34568;
+            try
+            {
+                testPort = (int)Properties.Settings.Default["TestPort"];
+            }
+            catch (Exception e) { }
+            if (testPort <= 0) testPort = 34568;
+            txTestPort.Text = string.Format("{0}", testPort);
+            txTestDelay.Text = (string)Properties.Settings.Default["TestDelay"];
+            if (txTestDelay.Text == "") txTestDelay.Text = "0.3";
+            lnkHome.Links.Add(0,1000,"http://www.wellenvogel.net/software/avnav/index.php");
+            lbVersion.Text = Application.ProductVersion;
         }
 
         private int serverConfigFromTemplate(string template,string outfile,Dictionary<string,string> replacements)
@@ -175,7 +187,7 @@ namespace AvChartConvert
             Dictionary<string, string> replace = new Dictionary<string, string>();
             if (rbModeTest.Checked)
             {
-                replace.Add("IPREADER", "<AVNSocketReader host=\"localhost\" port=\"34568\"/>");
+                replace.Add("IPREADER", "<AVNSocketReader host=\"localhost\" port=\""+txTestPort.Text+"\"/>");
             }
             if (rbModeIP.Checked)
             {
@@ -537,15 +549,27 @@ namespace AvChartConvert
             info.WorkingDirectory = scriptpath;
             serverProcess=new Process();
             serverProcess.StartInfo = info;
+            
+            if (this.rbModeTest.Checked)
+            {
+                double delayS = 0.3;
+                try
+                {
+                    char a = Convert.ToChar(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+                    delayS = Convert.ToDouble(txTestDelay.Text.Replace(',',a).Replace('.',a));
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("invalid delay time " + txTestDelay.Text + ", using 0.3s");
+                }
+                this.server = new SocketServer(this.txTestData.Text, Convert.ToInt32(txTestPort.Text),Convert.ToInt32(delayS*1000));
+                this.server.start();
+            }
             serverProcess.Start();
             this.lbServerRunning.Text = "Server pid " + serverProcess.Id;
             this.lbServerRunning.ForeColor = System.Drawing.Color.FromArgb(0, 192, 0);
             this.btnStopServer.Visible = true;
-            if (this.cbTestData.Checked)
-            {
-                this.server = new SocketServer(this.txTestData.Text, 34568, 300);
-                this.server.start();
-            }
+            
             if (cbBrowser.Checked)
             {
                 Process.Start(tbUrl.Text);
@@ -786,12 +810,31 @@ namespace AvChartConvert
             stopServer();
             try
             {
-                Process.Start(txUserConfig.Text);
+                Process.Start(@"notepad.exe",txUserConfig.Text);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Exception when showing " + txUserConfig.Text + ": " + ex);
             }
+        }
+
+        private void txTestPort_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["TestPort"] = Convert.ToInt32(txTestPort.Text);
+            Properties.Settings.Default.Save();
+            stopServer();
+        }
+
+        private void txTestDelay_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default["TestDelay"] = txTestDelay.Text;
+            Properties.Settings.Default.Save();
+            stopServer();
+        }
+
+        private void lnkHome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start(e.Link.LinkData.ToString());
         }
     }
     //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp
