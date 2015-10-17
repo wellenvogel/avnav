@@ -3,6 +3,7 @@
 
 #define MyAppName "AvNav"
 #define MyAppVersion GetFileVersion("..\\AvChartConvert.exe")
+#define MyAppVersionMinus StringChange(MyAppVersion,".","-")
 ;#define MyAppVersion "2015-10-16"
 #define MyAppPublisher "Andreas Vogel"
 #define MyAppURL "http://www.wellenvogel.de/software/avnav"
@@ -39,7 +40,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 ;OutputDir=C:\Users\andreas\Documents\GitHub\avnav\windows\installer
-OutputBaseFilename=AvNavSetup
+OutputBaseFilename=AvNavSetup-{#MyAppVersionMinus}
 Compression=lzma
 SolidCompression=yes
 ChangesEnvironment=yes
