@@ -24,6 +24,7 @@
 #define KeyUnistallBase "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\"
 
 
+
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
@@ -90,6 +91,9 @@ Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "InstallDir"; V
 Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledPython}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey; Check: checkInstallPython
 Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledGdal}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey;  Check: checkInstallGdal
 Root: "HKCU"; Subkey: "Environment"; ValueType:string; ValueName:"GDAL_DATA"; ValueData:"{app}\gdal\gdal_data" ; Flags: preservestringtype ; Check: checkInstallGdal
+
+[PreCompile]
+Name: "build.cmd"; Flags: abortonerror cmdprompt redirectoutput
 
 [Code]
 
