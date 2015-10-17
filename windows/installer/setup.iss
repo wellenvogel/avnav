@@ -3,6 +3,7 @@
 
 #define MyAppName "AvNav"
 #define MyAppVersion GetFileVersion("..\\AvChartConvert.exe")
+#define MyAppVersionMinus StringChange(MyAppVersion,".","-")
 ;#define MyAppVersion "2015-10-16"
 #define MyAppPublisher "Andreas Vogel"
 #define MyAppURL "http://www.wellenvogel.de/software/avnav"
@@ -23,6 +24,7 @@
 #define KeyUnistallBase "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\"
 
 
+
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
@@ -39,7 +41,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 ;OutputDir=C:\Users\andreas\Documents\GitHub\avnav\windows\installer
-OutputBaseFilename=AvNavSetup
+OutputBaseFilename=AvNavSetup-{#MyAppVersionMinus}
 Compression=lzma
 SolidCompression=yes
 ChangesEnvironment=yes
@@ -89,6 +91,9 @@ Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "InstallDir"; V
 Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledPython}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey; Check: checkInstallPython
 Root: "HKLM"; Subkey: "{#RegKey}"; ValueType: string; ValueName: "{#KeyInstalledGdal}"; ValueData: "true"; Flags: createvalueifdoesntexist uninsdeletekey;  Check: checkInstallGdal
 Root: "HKCU"; Subkey: "Environment"; ValueType:string; ValueName:"GDAL_DATA"; ValueData:"{app}\gdal\gdal_data" ; Flags: preservestringtype ; Check: checkInstallGdal
+
+[PreCompile]
+Name: "build.cmd"; Flags: abortonerror cmdprompt redirectoutput
 
 [Code]
 
