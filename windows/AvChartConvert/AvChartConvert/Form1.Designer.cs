@@ -93,13 +93,13 @@
             this.label6 = new System.Windows.Forms.Label();
             this.lbComPort = new System.Windows.Forms.ListBox();
             this.pTestData = new System.Windows.Forms.Panel();
+            this.txTestDelay = new System.Windows.Forms.TextBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.txTestPort = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
-            this.label12 = new System.Windows.Forms.Label();
-            this.txTestDelay = new System.Windows.Forms.TextBox();
             this.lnkHome = new System.Windows.Forms.LinkLabel();
             this.label13 = new System.Windows.Forms.Label();
             this.lbVersion = new System.Windows.Forms.Label();
@@ -248,7 +248,7 @@
             // 
             this.textOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textOpenCPN.Location = new System.Drawing.Point(9, 267);
+            this.textOpenCPN.Location = new System.Drawing.Point(9, 272);
             this.textOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.textOpenCPN.Name = "textOpenCPN";
             this.textOpenCPN.Size = new System.Drawing.Size(323, 22);
@@ -258,7 +258,7 @@
             // 
             this.labelOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelOpenCPN.AutoSize = true;
-            this.labelOpenCPN.Location = new System.Drawing.Point(7, 246);
+            this.labelOpenCPN.Location = new System.Drawing.Point(9, 251);
             this.labelOpenCPN.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelOpenCPN.Name = "labelOpenCPN";
             this.labelOpenCPN.Size = new System.Drawing.Size(125, 17);
@@ -269,7 +269,7 @@
             // 
             this.buttonOpenCPN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOpenCPN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.buttonOpenCPN.Location = new System.Drawing.Point(340, 266);
+            this.buttonOpenCPN.Location = new System.Drawing.Point(340, 269);
             this.buttonOpenCPN.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOpenCPN.Name = "buttonOpenCPN";
             this.buttonOpenCPN.Size = new System.Drawing.Size(30, 28);
@@ -472,7 +472,7 @@
             // 
             this.labelProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelProcess.AutoSize = true;
-            this.labelProcess.Location = new System.Drawing.Point(14, 439);
+            this.labelProcess.Location = new System.Drawing.Point(6, 412);
             this.labelProcess.Name = "labelProcess";
             this.labelProcess.Size = new System.Drawing.Size(89, 17);
             this.labelProcess.TabIndex = 24;
@@ -550,7 +550,7 @@
             // 
             this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStop.Location = new System.Drawing.Point(260, 433);
+            this.buttonStop.Location = new System.Drawing.Point(260, 439);
             this.buttonStop.Margin = new System.Windows.Forms.Padding(4);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(110, 28);
@@ -564,7 +564,7 @@
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOK.Location = new System.Drawing.Point(378, 433);
+            this.buttonOK.Location = new System.Drawing.Point(378, 439);
             this.buttonOK.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(110, 28);
@@ -577,7 +577,7 @@
             // 
             this.buttonFocus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonFocus.Location = new System.Drawing.Point(142, 433);
+            this.buttonFocus.Location = new System.Drawing.Point(142, 439);
             this.buttonFocus.Margin = new System.Windows.Forms.Padding(4);
             this.buttonFocus.Name = "buttonFocus";
             this.buttonFocus.Size = new System.Drawing.Size(110, 28);
@@ -852,6 +852,35 @@
             this.pTestData.TabIndex = 41;
             this.pTestData.Visible = false;
             // 
+            // txTestDelay
+            // 
+            this.txTestDelay.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txTestDelay.Location = new System.Drawing.Point(262, 12);
+            this.txTestDelay.Margin = new System.Windows.Forms.Padding(4);
+            this.txTestDelay.Name = "txTestDelay";
+            this.txTestDelay.Size = new System.Drawing.Size(57, 22);
+            this.txTestDelay.TabIndex = 31;
+            this.txTestDelay.TextChanged += new System.EventHandler(this.txTestDelay_TextChanged);
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(163, 14);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(92, 17);
+            this.label12.TabIndex = 30;
+            this.label12.Text = "Line Delay(s)";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(11, 50);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(69, 17);
+            this.label11.TabIndex = 29;
+            this.label11.Text = "NMEA file";
+            // 
             // label10
             // 
             this.label10.AutoSize = true;
@@ -890,35 +919,6 @@
             this.label4.Size = new System.Drawing.Size(76, 25);
             this.label4.TabIndex = 27;
             this.label4.Text = "Server";
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(11, 50);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(69, 17);
-            this.label11.TabIndex = 29;
-            this.label11.Text = "NMEA file";
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(163, 14);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(92, 17);
-            this.label12.TabIndex = 30;
-            this.label12.Text = "Line Delay(s)";
-            // 
-            // txTestDelay
-            // 
-            this.txTestDelay.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txTestDelay.Location = new System.Drawing.Point(262, 12);
-            this.txTestDelay.Margin = new System.Windows.Forms.Padding(4);
-            this.txTestDelay.Name = "txTestDelay";
-            this.txTestDelay.Size = new System.Drawing.Size(57, 22);
-            this.txTestDelay.TabIndex = 31;
-            this.txTestDelay.TextChanged += new System.EventHandler(this.txTestDelay_TextChanged);
             // 
             // lnkHome
             // 
