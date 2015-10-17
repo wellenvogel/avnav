@@ -25,6 +25,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from threading import Thread
 
 import time
 import socket
@@ -34,11 +35,12 @@ from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_nmea import *
+from avnav_socketreaderbase import *
 
 
 #a worker to output data via a socket
 
-class AVNSocketWriter(AVNWorker):
+class AVNSocketWriter(AVNWorker,SocketReader):
   @classmethod
   def getConfigName(cls):
     return "AVNSocketWriter"
@@ -48,12 +50,15 @@ class AVNSocketWriter(AVNWorker):
     if child is None:
       
       rt={
-          'port': None,      #local listener port
+          'port': None,       #local listener port
           'name':'',
-          'maxDevices':5,   #max external connections
-          'feederName':'',  #if set, use this feeder
-          'filter': '',      #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
-          'address':''      #the local bind address
+          'maxDevices':5,     #max external connections
+          'feederName':'',    #if set, use this feeder
+          'filter': '',       #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
+          'address':'',       #the local bind address
+          'read': False,
+          'readerFilter':'',
+          'minTime':0         #if this is set, wait this time before reading new data (ms)
           };
       return rt
     return None
@@ -65,17 +70,19 @@ class AVNSocketWriter(AVNWorker):
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
     self.setName(self.getName())
+    self.readFilter=None
     
   def getName(self):
     return "AVNSocketWriter-%d"%(self.getIntParam('port'))
   
   #make some checks when we have to start
-  #we cannot do this on init as we potentiall have tp find the feeder...
+  #we cannot do this on init as we potentially have to find the feeder...
   def start(self):
     feeder=self.findFeeder(self.getStringParam('feederName'))
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam("feederName") or "")
     self.feeder=feeder
+    self.feederWrite=feeder.addNMEA
     self.maplock=threading.Lock()
     self.addrmap={}
     AVNWorker.start(self) 
@@ -110,6 +117,10 @@ class AVNSocketWriter(AVNWorker):
     infoName="SocketWriter-%s"%(unicode(addr),)
     self.setName("[%s]%s-Writer %s"%(AVNLog.getThreadId(),self.getName(),unicode(addr)))
     self.setInfo(infoName,"sending data",AVNWorker.Status.RUNNING)
+    if self.getBoolParam('read',False):
+      clientHandler=threading.Thread(target=self.clientRead,args=(socket, addr))
+      clientHandler.daemon=True
+      clientHandler.start()
     filterstr=self.getStringParam('filter')
     filter=None
     if filterstr != "":
@@ -131,7 +142,31 @@ class AVNSocketWriter(AVNWorker):
     AVNLog.info("client disconnected")
     socket.close()
     self.removeHandler(addr)
-    self.deleteInfo(infoName)        
+    self.deleteInfo(infoName)
+
+  def clientRead(self,socket,addr):
+    infoName="SocketReader-%s"%(unicode(addr),)
+    threading.currentThread().setName("SocketWriter-Reader-%s"%unicode(addr))
+    #on each newly connected socket we recompute the filter
+    filterstr=self.getStringParam('readerFilter')
+    filter=None
+    if filterstr != "":
+      filter=filterstr.split(',')
+    self.readFilter=filter
+    self.readSocket(socket,infoName)
+    self.deleteInfo(infoName)
+
+  #if we have writing enabled...
+  def writeData(self,data):
+    doFeed=True
+    if self.readFilter is not None:
+      if not NMEAParser.checkFilter(data,self.readFilter):
+        doFeed=False
+        AVNLog.debug("ingoring line %s due to filter",data)
+    if doFeed:
+      self.feederWrite(data)
+    if (self.getIntParam('minTime')):
+      time.sleep(float(self.getIntParam('minTime'))/1000)
         
   #this is the main thread - listener
   def run(self):
