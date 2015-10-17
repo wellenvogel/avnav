@@ -170,8 +170,11 @@
 	 filter can be either $XXX,... - the NMEA setence, in this case the first 2 characters are ignored or
 	        any other value like !AIVDM. If not set or empty any data will be sent out
 	 address - if set, only bind to this address, otherwise allow connections from any port
+         read    - if set to true allow data input from connected devices
+         minTime - when reading data wait that many milliseconds between records to avoid overloading
+         readFilter - if set, only read filtered data
  -->
-<AVNSocketWriter port="34567" maxDevices="5" filter=""/>
+<AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="50"/>
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
 <!--  routing handler 
