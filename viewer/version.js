@@ -1,5 +1,5 @@
 /**
  * Created by Andreas on 09.07.2014.
  */
-avnav_version="2015-10-18";
+avnav_version="2015-10-19";
 
