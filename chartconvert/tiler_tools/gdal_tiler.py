@@ -831,6 +831,9 @@ class Pyramid(object):
             
             # write tile-level metadata (html/kml)            
             self.write_metadata(tile,[ch for img,ch,opacities in ch_results])
+            if len(self.zoom_range) == 1:
+              #if we have only one zoom level we can immediately drop the image here to save memory
+              tile_img=None
             return tile_img,tile,[(tile,opacity)]+ch_opacities
 
     #----------------------------
