@@ -74,7 +74,7 @@ trap cleanup 0 1 2 3 4 5 6 7 8 15
 mkdir -p $TMPDIR || err "unable to create $TMPDIR"
 chown 1000:1000 $TMPDIR || err "unable to chown $TMPDIR"
 
-for d in avnav avnav/program avnav/program/server avnav/program/viewer avnav/program/raspberry avnav/program/libraries 
+for d in avnav avnav/program avnav/program/server avnav/program/viewer avnav/program/raspberry avnav/program/libraries avnav/program/chartconvert avnav/program/chartconvert/tiler_tools
 do
   mkdir -p $TMPDIR/$d || err "unable to create $TMPDIR/$d"
   chown 1000:1000 $TMPDIR/$d
@@ -104,6 +104,22 @@ wlog "writing files for $TDIR"
 for f in *py
 do
   ( cd $TDIR && cp -p $TMPDIR/$gitsub/server/$f . ) || err "cp $f failed"
+  chown 1000:1000 $TDIR/$f || err "chown $f failed"
+  chmod a+rx $TDIR/$f || err "chmod $f failed"
+done
+TDIR=$TMPDIR/avnav/program/chartconvert
+wlog "writing files for $TDIR"
+for f in *py
+do
+  ( cd $TDIR && cp -p $TMPDIR/$gitsub/chartconvert/$f . ) || err "cp $f failed"
+  chown 1000:1000 $TDIR/$f || err "chown $f failed"
+  chmod a+rx $TDIR/$f || err "chmod $f failed"
+done
+TDIR=$TMPDIR/avnav/program/chartconvert/tiler_tools
+wlog "writing files for $TDIR"
+for f in *py *html *csv
+do
+  ( cd $TDIR && cp -p $TMPDIR/$gitsub/chartconvert/tiler_tools/$f . ) || err "cp $f failed"
   chown 1000:1000 $TDIR/$f || err "chown $f failed"
   chmod a+rx $TDIR/$f || err "chmod $f failed"
 done
