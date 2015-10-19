@@ -56,9 +56,9 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           'feederName':'',    #if set, use this feeder
           'filter': '',       #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
           'address':'',       #the local bind address
-          'read': False,
+          'read': True,       #allow for reading data
           'readerFilter':'',
-          'minTime':0         #if this is set, wait this time before reading new data (ms)
+          'minTime':50         #if this is set, wait this time before reading new data (ms)
           };
       return rt
     return None
