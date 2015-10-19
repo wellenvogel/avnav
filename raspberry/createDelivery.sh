@@ -58,10 +58,16 @@ done
 
 shift `expr $OPTIND - 1`
 
-[ "$1" = "" -o "$2" = "" ] && err "usage: $0 [-r repo] git-tag tarfile"
+[ "$1" = "" ] && err "usage: $0 [-r repo] git-tag [tarfile]"
 
-zipname=`echo $2 | sed s/\.[^.]*$//`-host.zip
-rm -f $2
+if [ "$2" = "" ] ; then
+  tarname=avnav-`echo $1 | sed 's/release-//'`.tar
+else
+  tarname=$2
+fi
+
+zipname=`echo $tarname | sed s/\.[^.]*$//`-host.zip
+rm -f $tarname
 rm -f $zipname
 
 trap cleanup 0 1 2 3 4 5 6 7 8 15
@@ -121,13 +127,13 @@ chmod -R a+r $TDIR
 
 mv $TMPDIR/avnav/program/raspberry/setup.sh $TMPDIR/avnav
 
-wlog "creating tar file $2"
-(cd $TMPDIR  && tar -cf - --exclude=$gitsub .) | cat > $2 || err "unable to create tar file $2"
-wlog "tar file $2 created"
+wlog "creating tar file $tarname"
+(cd $TMPDIR  && tar -cf - --exclude=$gitsub .) | cat > $tarname || err "unable to create tar file $tarname"
 wlog "creating $zipname"
-( cd $TMPDIR/$gitsub && zip -r --exclude=\*readme-nv.txt --exclude=\*convert_nv.py --exclude=\*/AvChartConvert/\* ../host.zip * ) || err "unable to create $TMPDIR/host.zip"
+( cd $TMPDIR/$gitsub && zip -r --exclude=\*readme-nv.txt --exclude=\*convert_nv.py --exclude=\*/AvChartConvert/\* --exclude=windows/installer/\* ../host.zip * ) || err "unable to create $TMPDIR/host.zip"
 rm -f $zipname 2> /dev/null
 mv $TMPDIR/host.zip $zipname
+wlog "tar file $tarname and zip file $zipname created"
 
 
 
