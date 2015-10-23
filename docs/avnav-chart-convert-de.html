@@ -81,8 +81,25 @@
     <p>Achtung: die folgende Beschreibung bezieht sich auf diese Version -
       ältere Server-Versionen können mit der GEMF Datei nichts anfangen.</p>
     <h3 class="western">Konvertierung von Karten mit GDAL</h3>
-    <p>Für diese Konvertierung müssen einige Tools installiert werden. Das ist
-      zwar leider ein wenig Aufwand, muss aber nur einmalig erledigt werden. </p>
+    <p>Ab Version 2015-10-19 kann die Konvertierung direkt auf dem Raspi
+      erfolgen. Da hier die Resourcen jedoch ziemlich begrenzt sind, muß mit
+      längeren Laufzeiten gerechnet werden (Beispiel: Auf einem Raspi 2 dauerte
+      das Konvertieren eines älteren NV Satzes (Ostsee 4) ca. 1 Stunde).</p>
+    <p>Dazu müssen die Karten in das /data/avnav/import Verzeichnis kopiert
+      werden (ganze Sätze bitte in ein Unterverzeichnis). Der Server beobachtet
+      dieses Verzeichnis und wird die Konvertierung starten, sobald er neue
+      Dateien dort entdeckt. Neben den Dateien, die GDAL lesen kann, können auch
+      Dateien vom Typ .mbtiles konvertiert werden. Der Zustand des "Importers"
+      kann auf der Status Seite geprüft werden. Logfiles liegen dann unter
+      /data/avnav/log. Ein Upload über die App wird sicher in einer späteren
+      Version folgen.</p>
+    <p>Da beim Konvertieren temporär recht viele Dateien entstehen, sollte das
+      Filesystem auf der SD Karte darauf vorbereitet sein (ist bei meinen Images
+      so gegeben). Es sollte auch ausreichen Platz vorhanden sein (eine 8GB
+      Karte ist aber gut ausreichend).</p>
+    <p>Einfacher geht die Konvertierung auf einem Windows (oder Linux/Mac)
+      Rechner.</p>
+    <p>Für diese Konvertierung müssen einige Tools installiert werden. </p>
     <p><span style="font-weight: bold;">Ab 2015-10-05 gibt es für Windows einen
         Installer, der alle benötigten Pakete enthält. Damit ist die
         Installation mit wenigen Klicks erledigt</span>. Zum Download <a href="../downloads">hier</a>.</p>
@@ -205,6 +222,8 @@ Type "copyright", "credits" or "license()" for more information.
     <p>Wenn die Datei xxx.gemf rezeugt wurde, diese auf den raspberry nach
       /data/avnav/charts kopieren (darauf achten, dass sie für den Nutzer pi
       lesbar ist). Der Server sollte sie automatisch erkennen...</p>
+    <p>Der upload kann auch über die App erfolgen (dazu z.B. mit dem Laptop im
+      Raspi WLAN anmelden und die Startseite aufrufen, dann Upload/Download).</p>
     <h4>Windows</h4>
     <p>Der Installer für windows installiert (wenn es angewählt wird) neben der
       eigentlichen Konverter-Software auch die nötigen Programme:</p>
@@ -214,14 +233,15 @@ Type "copyright", "credits" or "license()" for more information.
       <li>Pillow 2.7.0</li>
       <li>pyserial 2.7</li>
     </ul>
-    Alle Programme werden unter ProgramFiles\AvNav installiert. Wenn AvNav
+    Alle Dateien werden unter ProgramFiles\AvNav installiert. Wenn AvNav
     deinstalliert wird, werden auch diese Anteile mit entfernt. Python und GDAL
     sollten nur dann mit installiert werden, wenn sie auf dem Rechner noch nicht
     vorhanden sind.<br>
     Nach der Installation kann man mit AvChartConvert die Applikation starten.
     Unter einigen Windows Versionen scheint der Start aus dem Installer heraus
-    nicht sehr gut zu funktionieren - bitte einfach nochmal beenden und über das
-    Startmenü/Desktop starten.<br>
+    nicht sehr gut zu funktionieren (beim Start des Konverters blinkt kurz ein
+    Fenster auf, aber es gibt noch nicht einmal ein logfile)- bitte einfach
+    nochmal beenden und über das Startmenü/Desktop starten.<br>
     <br>
     Die Applikation hat nur einen Bildschirm:<br>
     <br>
@@ -233,7 +253,7 @@ Type "copyright", "credits" or "license()" for more information.
     <p>Mit den default-Einstellungen startet danach sofort der AvNav Server
       (also die Software, die sonst auf dem Raspberry läuft) und ein Browser
       wird geöffnet, der die App anzeigt.</p>
-    <p>Wie im Bild zu sehen liefere ich eine Date mit NMEA Daten mit (vom
+    <p>Wie im Bild zu sehen liefere ich eine Datei mit NMEA Daten mit (vom
       Greifswalder Bodden). Es kann natürlich zum Test auch jede andere eigene
       NMEA-log Datei gewählt werden.</p>
     <p>Alternativ kann der Server auch direkt die NMEA Daten von einem
@@ -311,9 +331,9 @@ Type "copyright", "credits" or "license()" for more information.
       output Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den raspberry
       unter /data/avnav/charts kopieren. Ab der Version avnav-2014-04-08 ist das
       ausreichend, bei älteren Versionen muss man noch Folgendes tun:<br>
-      Den Atlas speichern (Profil speichern). Diese Datei (liegt im
-      Programmverzeichnis von MOBAC) in das gleiche Verzeichnis kopieren und zu
-      xxx.xml umbenennen (wichtig!).</p>
+      <span style="font-size: small;">Den Atlas speichern (Profil speichern).
+        Diese Datei (liegt im Programmverzeichnis von MOBAC) in das gleiche
+        Verzeichnis kopieren und zu xxx.xml umbenennen (wichtig!).</span></p>
     <p>Auf der <a href="../downloads">download Seite</a> sammle ich chart
       sources für den mobac, die für uns nützlich sein lönnten. </p>
     <p><br>

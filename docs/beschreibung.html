@@ -120,8 +120,9 @@
       Web-Applikation verwendet werden soll, müssen die Karten dafür auch auf
       dem raspberry installiert werden. Diese müssen dazu vorher auf dem PC
       (Windows, Osx, Linux) in das <a href="http://www.cgtk.co.uk/gemf">gemf</a>
-      Format konvertiert werden. Im Wesentlichen können die folgenden
-      Kartenquellen verarbeitet werden:</p>
+      Format konvertiert werden (ab 2015-10-19 kann das auch direkt auf dem
+      Raspberry erfolgen) . Im Wesentlichen können die folgenden Kartenquellen
+      verarbeitet werden:</p>
     <ul>
       <li>
         <p>Alle Kartentypen, die die GDAL software lesen kann (also insbesondere
@@ -213,7 +214,7 @@
       mit.</p>
     <p>In der Auslieferung für den pi ist die Software so konfiguriert, dass sie
       alle per USB angebundenen seriellen Schnittstellen öffnet, dort versucht
-      NMEA DAten zu erkennen (per auto-bauding von 4800 B/s bis 38400 B/s) und
+      NMEA Daten zu erkennen (per auto-bauding von 4800 B/s bis 38400 B/s) und
       diese dann verarbeitet. </p>
     <p>Ausserdem wird (falls ein Bluetooth adapter erkannt wurde) versucht, mit
       allen seriellen Bluetooth Geräten Verbindung aufzunehmen und auch von dort
@@ -227,7 +228,7 @@
     <h2 class="western">Software auf dem raspberry</h2>
     <p>Auf dem raspberry ist die Software in der folgenden Verzeichnisstruktur
       installiert:</p>
-    <table border="1" cellpadding="4" cellspacing="4" width="100%">
+    <table cellspacing="4" border="1" cellpadding="4" width="100%">
       <colgroup><col width="73*"> <col width="183*"> </colgroup>
       <tbody>
         <tr valign="TOP">
@@ -283,6 +284,11 @@
           <td>/data/avnav/routes</td>
           <td>die aktuelle route default.gpx und das aktuelle Segment
             currentLeg.json</td>
+        </tr>
+        <tr>
+          <td>/data/avnav/import</td>
+          <td>ab 2015-10-19: Hier abgelegte Karten werden konvertiert in das
+            gemf Format, so das die WebApp sie verarbeiten kann</td>
         </tr>
         <tr valign="TOP">
           <td width="28%">
@@ -402,7 +408,7 @@
       auch Tastatur + Bildschirm an den Pi direkt anschliessen.</p>
     <p>Die Paßworte sind auf Standardwerte gesetzt – also login pi, Paßwort
       raspberry. Per sudo -i wechselt man in eine root shell. Man sollte
-      kontrollieren, ob die /data partition existier und gemounted ist (df -h,
+      kontrollieren, ob die /data partition existiert und gemounted ist (df -h,
       mount). Anschliessend sollte man noch das Paßwort für den user pi ändern
       (passwd). Per sudo raspi-config (siehe u.a. <a href="http://www.raspberrypi.org/phpBB3/viewtopic.php?f=91&amp;t=4751">hier</a>)
       sollte ein Übertakten auf 1GHz eingestellt werden.</p>
@@ -422,7 +428,7 @@
       gelinkt. Gleichzeitig wird die Datei /etc/hostapd/hostapd.conf angepaßt -
       daher bitte die beiden driver Zeilen so lassen wie sie im image sind. Wenn
       die automatische Umstellung nicht gewollt ist, in /etc/default/check_wlan
-      NO_HOSTAPD_SWITCH=1<br>
+      (Datei ggf. anlegen) NO_HOSTAPD_SWITCH=1<br>
       setzen.</p>
     <p>Das WLAN hat den Adressbereich 192.168.20.0/24. Der pi selbst ist auf
       192.168.20.10 erreichbar (ggf. als url im Browser benutzen, wenn die
