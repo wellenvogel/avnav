@@ -51,6 +51,29 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
+    signingConfigs {
+        release {
+            storeFile file(System.getenv("ANDROID_KEYSTORE"))
+            storePassword System.getenv("ANDROID_KEYPASS")
+            keyAlias System.getenv("ANDROID_KEYALIAS")
+            keyPassword System.getenv("ANDROID_KEYPASS")
+        }
+    }
+    //see http://stackoverflow.com/questions/18332474/how-to-set-versionname-in-apk-filename-using-gradle
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            applicationVariants.all { variant ->
+                println "Variant: "+variant.getName()
+                def manifestParser = new com.android.builder.core.DefaultManifestParser()
+                def version=manifestParser.getVersionName(android.sourceSets.main.manifest.srcFile)
+                variant.outputs.each { output ->
+                    if (! output.outputFile.name.matches('.*debug.*'))
+                        output.outputFile = new File(output.outputFile.parent, output.outputFile.name.replace("android-release.apk", "avNav-"+ version + ".apk"))
+                }
+            }
+        }
+    }
 }
 File viewerDir=new File(project.rootDir,".."+File.separator+"viewer")
 File libraryDir=new File(project.rootDir,".."+File.separator+"libraries")
@@ -65,13 +88,14 @@ task copyToAssetsViewer(type: org.gradle.api.tasks.Copy) {
         include 'loader.js'
         include 'avnav_viewer.html'
         include 'avnav_viewer.less'
-        include 'avnav_min.js'
         include 'images'+File.separator+"*.png"
     }
-
     into new File(assetsDir, "viewer")
 }
 copyToAssetsViewer.dependsOn(buildViewer)
+
+
+
 
 task copyToAssetsLib(type: org.gradle.api.tasks.Copy){
     group=taskgroup
@@ -93,6 +117,26 @@ task copyToAssets(type: org.gradle.api.Task) {
     }
 }
 copyToAssets.dependsOn(copyToAssetsViewer,copyToAssetsLib)
-build.dependsOn(copyToAssets)
+task copyDebugViewer(type: org.gradle.api.tasks.Copy){
+    group=taskgroup
+    from(viewerDir) {
+        include 'avnav_combine.js'
+        rename 'avnav_combine.js','avnav_min.js'
+    }
+    into new File(assetsDir, "viewer")
+}
+copyDebugViewer.dependsOn(copyToAssets)
+assembleDebug.dependsOn(copyDebugViewer)
+
+task copyReleaseViewer(type: org.gradle.api.tasks.Copy){
+    group=taskgroup
+    from(viewerDir) {
+        include 'avnav_min.js'
+    }
+    into new File(assetsDir, "viewer")
+}
+copyReleaseViewer.dependsOn(copyToAssets)
+assembleRelease.dependsOn(copyReleaseViewer)
+
 
 
