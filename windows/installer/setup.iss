@@ -82,7 +82,7 @@ Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: 
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#PythonMSI}"" /qb TARGETDIR=""{app}\{#PythonDir}"""; WorkingDir: "{tmp}"; Check: checkInstallPython
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#PythonMSI}"" /qb TARGETDIR=""{app}\{#PythonDir}"" ALLUSERS=1"; WorkingDir: "{tmp}"; Check: checkInstallPython
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalMSI}"" /qb TARGETDIR=""{app}\{#GdalDir}"" INSTALLDIR=""{app}\{#GdalDir}"""; WorkingDir: "{tmp}"; Check: checkInstallGdal
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\{#GdalPythonMSI}"" /qb TARGETDIR=""{app}\{#GdalDir}"" INSTALLDIR=""{app}\{#GdalDir}"""; WorkingDir: "{tmp}"; Check: checkInstallGdal
 
