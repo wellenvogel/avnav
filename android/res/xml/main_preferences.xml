@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/labelSettingsMain">
+    <EditTextPreference
+        android:key="workdir"
+        android:title="@string/selectDirLabel">
+    </EditTextPreference>
+    <CheckBoxPreference
+        android:key="showdemo"
+        android:title="@string/enableDemoLabel">
+    </CheckBoxPreference>
+</PreferenceScreen>

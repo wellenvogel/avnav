@@ -20,6 +20,7 @@ import android.widget.*;
 import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
+import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -535,6 +536,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                 startActivity(intent);
                 return true;
             case R.id.action_settings:
+                saveSettings();
                 Intent sintent= new Intent(context,SettingsActivity.class);
                 startActivity(sintent);
             default:

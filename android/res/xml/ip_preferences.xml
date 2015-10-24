@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-            android:title="@string/labelSettingsIpcategory">
+    android:title="@string/labelSettingsIpcategory">
+    <CheckBoxPreference
+        android:key="ip.nmea"
+        android:title="@string/labelIpNmea">
+    </CheckBoxPreference>
+    <CheckBoxPreference
+        android:key="ip.ais"
+        android:title="@string/labelIpAis">
+    </CheckBoxPreference>
     <EditTextPreference
-            android:title="@string/labelSettingsIpAddress"
-            android:key="ip.addr">
-    </EditTextPreference>
-        <EditTextPreference
-                android:title="@string/labelSettingsIpPort"
-                android:key="ip.port">
-        </EditTextPreference>
+        android:key="ip.addr"
+        android:title="@string/labelSettingsIpAddress"></EditTextPreference>
+    <EditTextPreference
+        android:key="ip.port"
+        android:title="@string/labelSettingsIpPort"></EditTextPreference>
 </PreferenceScreen>

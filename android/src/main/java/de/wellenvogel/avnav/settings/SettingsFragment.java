@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
@@ -8,6 +8,9 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 
+import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.R;
+
 /**
  * Created by andreas on 24.10.15.
  */
@@ -16,25 +19,28 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Preference pref = findPreference(key);
         if (pref != null) {
-            if (pref instanceof EditTextPreference) {
-                pref.setSummary(((EditTextPreference) pref).getText());
+            if (updatePreferenceSummary(pref)) {
+                if (pref instanceof EditTextPreference) {
+                    pref.setSummary(((EditTextPreference) pref).getText());
+                }
             }
         }
         updateActivity();
     }
 
+    /**
+     * override this
+     * @param pref
+     * @return false if no further handling
+     */
+    protected boolean updatePreferenceSummary(Preference pref){
+        return true;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Load the preferences from an XML resource
         getPreferenceManager().setSharedPreferencesName(Constants.PREFNAME);
-        String settings = getArguments().getString("fragmentName");
-        if ("ip".equals(settings)) {
-            addPreferencesFromResource(R.xml.ip_preferences);
-        } else if ("bluetooth".equals(settings)) {
-            addPreferencesFromResource(R.xml.bluetooth_preferences);
-        }
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
@@ -73,6 +79,5 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         getPreferenceScreen().getSharedPreferences()
                 .unregisterOnSharedPreferenceChangeListener(this);
     }
-
 
 }

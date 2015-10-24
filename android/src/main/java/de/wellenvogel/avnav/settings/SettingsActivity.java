@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -9,6 +9,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.List;
+
+import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.R;
 
 /**
  * Created by andreas on 03.09.15.
@@ -64,18 +67,17 @@ public class SettingsActivity extends PreferenceActivity {
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         boolean hasChanged=false;
         for (Header h: headers){
-            if (h == null || h.fragmentArguments == null) continue;
-            Object o=h.fragmentArguments.get("fragmentName");
-            if (o != null && o instanceof String){
-                String fragment=(String)o;
-                String newSummary;
-                if (fragment.equals("ip")){
-                    newSummary=prefs.getString(Constants.IPADDR,"")+":"+prefs.getString(Constants.IPPORT,"");
-                    if (! newSummary.equals(h.summary)){
-                        h.summary=newSummary;
-                        hasChanged=true;
-                    }
-                }
+            String newSummary=null;
+            if (h == null || h.fragment == null) continue;
+            if (h.fragment.equals(IpSettingsFragment.class.getName())){
+                newSummary=IpSettingsFragment.getSummary(this);
+            }
+            if (h.fragment.equals(ModeSettingsFragment.class.getName())){
+                newSummary= ModeSettingsFragment.getSummary(this);
+            }
+            if (newSummary != null && newSummary != h.summary){
+                h.summary=newSummary;
+                hasChanged=true;
             }
         }
         if (hasChanged && allowInvalidate) invalidateHeaders();
