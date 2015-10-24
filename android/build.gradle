@@ -52,17 +52,21 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
     signingConfigs {
-        release {
-            storeFile file(System.getenv("ANDROID_KEYSTORE"))
-            storePassword System.getenv("ANDROID_KEYPASS")
-            keyAlias System.getenv("ANDROID_KEYALIAS")
-            keyPassword System.getenv("ANDROID_KEYPASS")
+        if (System.getenv("ANDROID_KEYSTORE") != null) {
+            release {
+                storeFile file(System.getenv("ANDROID_KEYSTORE"))
+                storePassword System.getenv("ANDROID_KEYPASS")
+                keyAlias System.getenv("ANDROID_KEYALIAS")
+                keyPassword System.getenv("ANDROID_KEYPASS")
+            }
         }
     }
     //see http://stackoverflow.com/questions/18332474/how-to-set-versionname-in-apk-filename-using-gradle
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (System.getenv("ANDROID_KEYSTORE") != null) {
+                signingConfig signingConfigs.release
+            }
             applicationVariants.all { variant ->
                 println "Variant: "+variant.getName()
                 def manifestParser = new com.android.builder.core.DefaultManifestParser()
@@ -79,7 +83,12 @@ File viewerDir=new File(project.rootDir,".."+File.separator+"viewer")
 File libraryDir=new File(project.rootDir,".."+File.separator+"libraries")
 task buildViewer(type: org.gradle.api.tasks.Exec){
     group=taskgroup
-    commandLine new File(viewerDir,"build"+File.separator+"build.py")
+    if (System.properties['os.name'].toLowerCase().contains('windows')) {
+        commandLine 'cmd','/c',new File(viewerDir, "build" + File.separator + "build.py")
+    }
+    else {
+        commandLine new File(viewerDir, "build" + File.separator + "build.py")
+    }
 }
 
 task copyToAssetsViewer(type: org.gradle.api.tasks.Copy) {
