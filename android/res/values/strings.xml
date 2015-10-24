@@ -52,4 +52,5 @@
     <string name="labelSettingsIpPort">Port</string>
     <string name="labelSettingsIpcategory">External IP connection</string>
     <string name="labelSettingsActivity">avNav Settings</string>
+    <string name="labelSettingsBluetoothCategory">Bluetooth</string>
 </resources>

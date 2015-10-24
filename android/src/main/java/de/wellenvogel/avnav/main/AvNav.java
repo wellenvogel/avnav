@@ -30,40 +30,8 @@ import java.util.ArrayList;
 import java.util.Set;
 
 public class AvNav extends Activity implements MediaScannerConnection.MediaScannerConnectionClient, IMediaUpdater{
-    //settings
-    public static final String WORKDIR="workdir";
-    public static final String SHOWDEMO="showdemo";
-    public static final String INTERNALGPS="internalGps";
-    public static final String IPNMEA="ip.nmea";
-    public static final String IPAIS="ip.ais";
-    public static final String IPADDR="ip.addr";
-    public static final String IPPORT="ip.port";
-    public static final String BTNMEA="bt.nmea";
-    public static final String BTAIS="bt.ais";
-    public static final String BTDEVICE="bt.device";
-    public static final String IPCONNTIMEOUT="ip.conntimeout";
-    public static final String IPPOSAGE="ip.posAge";
-    public static final String IPAISLIFETIME="ip.aisLifetime";
-    public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
-    public static final String RUNMODE="runmode"; //normal,server,xwalk
-    public static final String PREFNAME="AvNav";
-    //dummy file to make the media scanner see or directories...
-    public static final String EMPTY_FILE="EMPTY";
-
-    //modes
-    public static final String MODE_NORMAL="normal";
-    public static final String MODE_XWALK="xwalk";
-    public static final String MODE_SERVER ="server";
 
 
-
-    public static final String XWALKORIG="org.xwalk.core";
-    public static final String XWALKAPP="de.wellenvogel.xwalk";
-    public static final String XWALKVERSION="10.39.235.16";
-
-    public static final String OWN_PACKAGE="de.wellenvogel.avnav.main";
-
-    public static final String LOGPRFX="avnav";
     private Button btStart;
     private Button btExit;
     private Button btGps;
@@ -112,21 +80,21 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
             gpsService = binder.getService();
             gpsService.setMediaUpdater(AvNav.this);
-            AvnLog.d(LOGPRFX, "Main: gps service connected");
+            AvnLog.d(Constants.LOGPRFX, "Main: gps service connected");
 
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             gpsService=null;
-            AvnLog.d(LOGPRFX,"Main: gps service disconnected");
+            AvnLog.d(Constants.LOGPRFX,"Main: gps service disconnected");
         }
     };
 
     private class MediaUpdateHandler extends Handler{
         @Override
         public void handleMessage(Message msg) {
-            AvnLog.d(LOGPRFX,"Mediaupdater for "+msg);
+            AvnLog.d(Constants.LOGPRFX,"Mediaupdater for "+msg);
             super.handleMessage(msg);
             File f=(File)msg.obj;
             updateMtp(f);
@@ -147,8 +115,8 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         if (cbIpAis.isChecked()||cbIpNmea.isChecked()) {
             try {
                 InetSocketAddress addr = GpsDataProvider.convertAddress(
-                        sharedPrefs.getString(IPADDR, ""),
-                        sharedPrefs.getString(IPPORT, ""));
+                        sharedPrefs.getString(Constants.IPADDR, ""),
+                        sharedPrefs.getString(Constants.IPPORT, ""));
             } catch (Exception i) {
                 Toast.makeText(context, R.string.invalidIp, Toast.LENGTH_SHORT).show();
                 return;
@@ -220,7 +188,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         return installed;
     }
     public static boolean isXwalRuntimeInstalled(Context ctx){
-        return isAppInstalled(ctx,XWALKAPP,XWALKVERSION);
+        return isAppInstalled(ctx, Constants.XWALKAPP, Constants.XWALKVERSION);
     }
 
     private class TimerRunnable implements Runnable{
@@ -326,17 +294,17 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     private void updateValues(){
         disableChangeActions=true;
         boolean isChanged=false;
-        boolean btAis=sharedPrefs.getBoolean(BTAIS,false);
-        boolean btNmea=sharedPrefs.getBoolean(BTNMEA,false);
-        if (updateCheckBox(cbShowDemo,SHOWDEMO,true)) isChanged=true;
-        if (updateCheckBox(cbIpAis,IPAIS,false)) isChanged=true;
-        if (updateCheckBox(cbIpNmea,IPNMEA,false)) isChanged=true;
-        if (updateCheckBox(cbInternalGps,INTERNALGPS,true)) isChanged=true;
+        boolean btAis=sharedPrefs.getBoolean(Constants.BTAIS,false);
+        boolean btNmea=sharedPrefs.getBoolean(Constants.BTNMEA,false);
+        if (updateCheckBox(cbShowDemo, Constants.SHOWDEMO,true)) isChanged=true;
+        if (updateCheckBox(cbIpAis, Constants.IPAIS,false)) isChanged=true;
+        if (updateCheckBox(cbIpNmea, Constants.IPNMEA,false)) isChanged=true;
+        if (updateCheckBox(cbInternalGps, Constants.INTERNALGPS,true)) isChanged=true;
         if (updateCheckBox(cbBtAis,btAis && mBluetoothAdapter!= null && mBluetoothAdapter.isEnabled())) isChanged=true;
         if (updateCheckBox(cbBtNmea,btNmea && mBluetoothAdapter!= null && mBluetoothAdapter.isEnabled())) isChanged=true;
-        if (updateText(txIp,sharedPrefs.getString(IPADDR, "192.168.20.10"))) isChanged=true;
-        if (updateText(txPort,sharedPrefs.getString(IPPORT,"34567"))) isChanged=true;
-        String workdir=sharedPrefs.getString(WORKDIR,Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
+        if (updateText(txIp,sharedPrefs.getString(Constants.IPADDR, "192.168.20.10"))) isChanged=true;
+        if (updateText(txPort,sharedPrefs.getString(Constants.IPPORT,"34567"))) isChanged=true;
+        String workdir=sharedPrefs.getString(Constants.WORKDIR,Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
         if (updateText(textWorkdir,workdir))isChanged=true;
         updateExternal();
         if (isChanged){
@@ -373,19 +341,19 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         txIp=(EditText)findViewById(R.id.edIP);
         txPort=(EditText)findViewById(R.id.edPort);
         edBt=(TextView)findViewById(R.id.edBt);
-        sharedPrefs= getSharedPreferences(PREFNAME,Context.MODE_PRIVATE);
-        edBt.setText(sharedPrefs.getString(BTDEVICE,""));
+        sharedPrefs= getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        edBt.setText(sharedPrefs.getString(Constants.BTDEVICE,""));
         View bt=findViewById(R.id.frmExtBt);
         mBluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) bt.setVisibility(View.INVISIBLE);
         else bt.setVisibility(View.VISIBLE);
-        String mode=sharedPrefs.getString(RUNMODE,"");
+        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
         if (mode.equals("")) {
             //never set before
             if (currentapiVersion < 19 && firstStart) {
                 if (! isXwalRuntimeInstalled(this)){
                     downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
-                            getString(R.string.xwalkNotFoundText)+AvNav.XWALKVERSION,false);
+                            getString(R.string.xwalkNotFoundText)+ Constants.XWALKVERSION,false);
                 }
                 else {
                     rbCrosswalk.setChecked(true);
@@ -393,14 +361,14 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             }
         }
         else {
-            if (mode.equals(MODE_XWALK)){
+            if (mode.equals(Constants.MODE_XWALK)){
                 if (! isXwalRuntimeInstalled(this) ){
                     if (firstStart && currentapiVersion < 19) {
                         downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
-                                getString(R.string.xwalkNotFoundText) + AvNav.XWALKVERSION, false);
+                                getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, false);
                     }
                     else {
-                        mode=MODE_NORMAL;
+                        mode= Constants.MODE_NORMAL;
                     }
                 }
             }
@@ -498,7 +466,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                             public void onChosenDir(String chosenDir) {
                                 // The code in this function will be executed when the dialog OK button is pushed
                                 textWorkdir.setText(chosenDir);
-                                AvnLog.i(AvNav.LOGPRFX,"select work directory "+chosenDir);
+                                AvnLog.i(Constants.LOGPRFX,"select work directory "+chosenDir);
                             }
                         });
                 FolderChooseDialog.Default_File_Name="avnav";
@@ -659,17 +627,17 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     }
 
     private String getModeFromButtons(){
-        if (rbCrosswalk.isChecked()) return MODE_XWALK;
-        if (rbServer.isChecked()) return MODE_SERVER;
-        return MODE_NORMAL;
+        if (rbCrosswalk.isChecked()) return Constants.MODE_XWALK;
+        if (rbServer.isChecked()) return Constants.MODE_SERVER;
+        return Constants.MODE_NORMAL;
     }
     private void setButtonsFromMode(String mode){
-        if (mode.equals(MODE_XWALK) && isXwalRuntimeInstalled(this)) {
+        if (mode.equals(Constants.MODE_XWALK) && isXwalRuntimeInstalled(this)) {
             rbCrosswalk.setChecked(true);
             return;
         }
         else rbCrosswalk.setChecked(false);
-        if (mode.equals(MODE_SERVER)){
+        if (mode.equals(Constants.MODE_SERVER)){
             rbServer.setChecked(true);
             return;
         }
@@ -678,17 +646,17 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     }
     private void saveSettings(){
         SharedPreferences.Editor e=sharedPrefs.edit();
-        e.putString(WORKDIR,textWorkdir.getText().toString());
-        e.putBoolean(SHOWDEMO, cbShowDemo.isChecked());
-        e.putBoolean(INTERNALGPS,cbInternalGps.isChecked());
-        e.putBoolean(IPAIS,cbIpAis.isChecked());
-        e.putBoolean(IPNMEA,cbIpNmea.isChecked());
-        e.putBoolean(BTAIS,cbBtAis.isChecked());
-        e.putBoolean(BTNMEA,cbBtNmea.isChecked());
-        e.putString(BTDEVICE,edBt.getText().toString());
-        e.putString(IPADDR, txIp.getText().toString());
-        e.putString(IPPORT,txPort.getText().toString());
-        e.putString(RUNMODE,getModeFromButtons());
+        e.putString(Constants.WORKDIR,textWorkdir.getText().toString());
+        e.putBoolean(Constants.SHOWDEMO, cbShowDemo.isChecked());
+        e.putBoolean(Constants.INTERNALGPS,cbInternalGps.isChecked());
+        e.putBoolean(Constants.IPAIS,cbIpAis.isChecked());
+        e.putBoolean(Constants.IPNMEA,cbIpNmea.isChecked());
+        e.putBoolean(Constants.BTAIS,cbBtAis.isChecked());
+        e.putBoolean(Constants.BTNMEA,cbBtNmea.isChecked());
+        e.putString(Constants.BTDEVICE,edBt.getText().toString());
+        e.putString(Constants.IPADDR, txIp.getText().toString());
+        e.putString(Constants.IPPORT,txPort.getText().toString());
+        e.putString(Constants.RUNMODE,getModeFromButtons());
         e.apply();
     }
 
@@ -700,21 +668,21 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     }
 
     private void updateMtp(File file){
-        AvnLog.d(LOGPRFX,"MTP update for "+file.getAbsolutePath());
+        AvnLog.d(Constants.LOGPRFX,"MTP update for "+file.getAbsolutePath());
         try {
             //TODO: avoid leaked connection
             mediaConnection.scanFile(file.getAbsolutePath(),null);
             context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
                     Uri.fromFile(file)));
         }catch(Exception e){
-            Log.e(LOGPRFX,"error when updating MTP "+e.getLocalizedMessage());
+            Log.e(Constants.LOGPRFX,"error when updating MTP "+e.getLocalizedMessage());
         }
     }
 
     private void checkDirs(String workdir) throws Exception {
         final File workBase=new File(workdir);
         if (! workBase.isDirectory()){
-            AvnLog.d(LOGPRFX, "creating workdir " + workdir);
+            AvnLog.d(Constants.LOGPRFX, "creating workdir " + workdir);
             if (!workBase.mkdirs()) {
                 throw new Exception("unable to create working directory "+workdir);
             }
@@ -724,7 +692,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         for (String s: subdirs){
             File sub=new File(workBase,s);
             if (! sub.isDirectory()){
-                AvnLog.d(LOGPRFX, "creating subdir " + sub.getAbsolutePath());
+                AvnLog.d(Constants.LOGPRFX, "creating subdir " + sub.getAbsolutePath());
                 if (! sub.mkdirs()) throw new Exception("unable to create directory "+sub.getAbsolutePath());
             }
 
@@ -745,7 +713,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                             triggerUpdateMtp(f);
                         }
                         if (!hasFiles) {
-                            File dummy = new File(sub, EMPTY_FILE);
+                            File dummy = new File(sub, Constants.EMPTY_FILE);
                             try {
                                 dummy.createNewFile();
                                 updateMtp(dummy);
@@ -766,6 +734,6 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
 
     @Override
     public void onScanCompleted(String path, Uri uri) {
-        AvnLog.d(LOGPRFX,"MTP update for "+path+" finished");
+        AvnLog.d(Constants.LOGPRFX,"MTP update for "+path+" finished");
     }
 }

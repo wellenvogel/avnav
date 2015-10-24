@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.main;
 
-import android.util.Log;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.File;
@@ -606,7 +605,7 @@ public class GEMFFile {
 			return new GEMFInputStream(mFileNames.get(index), dataOffset, dataLength);
 
 		} catch (final java.io.IOException e) {
-			AvnLog.d(AvNav.LOGPRFX, "exception when searching for offset: " + e.getLocalizedMessage());
+			AvnLog.d(Constants.LOGPRFX, "exception when searching for offset: " + e.getLocalizedMessage());
 			return null;
 		}
 	}

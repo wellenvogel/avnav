@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
-import org.xwalk.core.SharedXWalkView;
 
 /**
  * Created by andreas on 10.01.15.
@@ -48,7 +47,7 @@ public class XwalkDownloadHandler {
                     public void onClick(DialogInterface dialog, int id) {
                         Intent goToMarket = new Intent(Intent.ACTION_VIEW);
                         goToMarket.setData(Uri.parse(
-                                "market://details?id=" + AvNav.XWALKAPP));
+                                "market://details?id=" + Constants.XWALKAPP));
                         try {
                             activity.startActivity(goToMarket);
                         }catch (Exception e) {
@@ -84,12 +83,12 @@ public class XwalkDownloadHandler {
                 suffix="x86";
             }
             else {
-                Log.e(AvNav.LOGPRFX,"unknown architecture "+arch+"do not have any download url" );
+                Log.e(Constants.LOGPRFX,"unknown architecture "+arch+"do not have any download url" );
                 return null;
             }
         }
-        String rt="http://www.wellenvogel.de/software/avnav/downloads/AvNavXwalk-"+AvNav.XWALKVERSION+"_"+suffix+".apk";
-        Log.d(AvNav.LOGPRFX,"download url: "+rt);
+        String rt="http://www.wellenvogel.de/software/avnav/downloads/AvNavXwalk-"+ Constants.XWALKVERSION+"_"+suffix+".apk";
+        Log.d(Constants.LOGPRFX,"download url: "+rt);
         return rt;
     }
 

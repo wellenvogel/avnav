@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory
-            android:title="@string/labelSettingsIpcategory">
+    <PreferenceScreen
+            android:title="@string/labelSettingsIpcategory"
+            android:key="prefscreen_ip"
+            android:persistent="false">
     <EditTextPreference
             android:title="@string/labelSettingsIpAddress"
             android:key="ip.addr">
@@ -10,6 +12,14 @@
                 android:title="@string/labelSettingsIpPort"
                 android:key="ip.port">
         </EditTextPreference>
-    </PreferenceCategory>
+    </PreferenceScreen>
+    <PreferenceScreen
+        android:title="@string/labelSettingsBluetoothCategory"
+        android:key="prefscreen_bt"
+        android:persistent="false">
+      <ListPreference
+          android:title="@string/selectBlueTooth"
+          android:key="bt.device"></ListPreference>
+    </PreferenceScreen>
 
 </PreferenceScreen>

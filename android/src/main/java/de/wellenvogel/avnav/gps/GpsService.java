@@ -13,7 +13,8 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import de.wellenvogel.avnav.main.AvNav;
+
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
@@ -194,12 +195,12 @@ public class GpsService extends Service  {
         trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
         trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
         trackTime=intent.getLongExtra(PROP_TRACKTIME,25*60*60*1000); //25h - to ensure that we at least have the whole day...
-        SharedPreferences prefs=getSharedPreferences(AvNav.PREFNAME,Context.MODE_PRIVATE);
-        useInternalProvider=prefs.getBoolean(AvNav.INTERNALGPS,true);
-        ipAis=prefs.getBoolean(AvNav.IPAIS,false);
-        ipNmea=prefs.getBoolean(AvNav.IPNMEA,false);
-        btAis=prefs.getBoolean(AvNav.BTAIS,false);
-        btNmea=prefs.getBoolean(AvNav.BTNMEA,false);
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        useInternalProvider=prefs.getBoolean(Constants.INTERNALGPS,true);
+        ipAis=prefs.getBoolean(Constants.IPAIS,false);
+        ipNmea=prefs.getBoolean(Constants.IPNMEA,false);
+        btAis=prefs.getBoolean(Constants.BTAIS,false);
+        btNmea=prefs.getBoolean(Constants.BTNMEA,false);
         AvnLog.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+
                 ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
                 ", maxtime(h)="+(trackTime/3600/1000)+
@@ -239,14 +240,14 @@ public class GpsService extends Service  {
         if (ipAis || ipNmea){
             if (externalProvider == null){
                 try {
-                    InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(AvNav.IPADDR, ""),
-                            prefs.getString(AvNav.IPPORT, ""));
+                    InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(Constants.IPADDR, ""),
+                            prefs.getString(Constants.IPPORT, ""));
                     AvnLog.d(LOGPRFX,"starting external receiver for "+addr.toString());
                     GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                    prop.aisCleanupInterval=prefs.getLong(AvNav.IPAISCLEANUPIV,prop.aisCleanupInterval);
-                    prop.aisLifetime=prefs.getLong(AvNav.IPAISLIFETIME,prop.aisLifetime);
-                    prop.postionAge=prefs.getLong(AvNav.IPPOSAGE,prop.postionAge);
-                    prop.connectTimeout=prefs.getInt(AvNav.IPCONNTIMEOUT,prop.connectTimeout);
+                    prop.aisCleanupInterval=prefs.getLong(Constants.IPAISCLEANUPIV,prop.aisCleanupInterval);
+                    prop.aisLifetime=prefs.getLong(Constants.IPAISLIFETIME,prop.aisLifetime);
+                    prop.postionAge=prefs.getLong(Constants.IPPOSAGE,prop.postionAge);
+                    prop.connectTimeout=prefs.getInt(Constants.IPCONNTIMEOUT,prop.connectTimeout);
                     prop.readAis=ipAis;
                     prop.readNmea=ipNmea;
                     externalProvider=new IpPositionHandler(this,addr,prop);
@@ -265,17 +266,17 @@ public class GpsService extends Service  {
         if (btAis || btNmea){
             if (bluetoothProvider == null){
                 try {
-                    String dname=prefs.getString(AvNav.BTDEVICE, "");
+                    String dname=prefs.getString(Constants.BTDEVICE, "");
                     BluetoothDevice dev=BluetoothPositionHandler.getDeviceForName(dname);
                     if (dev == null){
                         throw new Exception("no bluetooth device found for"+dname);
                     }
                     AvnLog.d(LOGPRFX,"starting bluetooth receiver for "+dname+": "+ dev.getAddress());
                     GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                    prop.aisCleanupInterval=prefs.getLong(AvNav.IPAISCLEANUPIV,prop.aisCleanupInterval);
-                    prop.aisLifetime=prefs.getLong(AvNav.IPAISLIFETIME,prop.aisLifetime);
-                    prop.postionAge=prefs.getLong(AvNav.IPPOSAGE,prop.postionAge);
-                    prop.connectTimeout=prefs.getInt(AvNav.IPCONNTIMEOUT,prop.connectTimeout);
+                    prop.aisCleanupInterval=prefs.getLong(Constants.IPAISCLEANUPIV,prop.aisCleanupInterval);
+                    prop.aisLifetime=prefs.getLong(Constants.IPAISLIFETIME,prop.aisLifetime);
+                    prop.postionAge=prefs.getLong(Constants.IPPOSAGE,prop.postionAge);
+                    prop.connectTimeout=prefs.getInt(Constants.IPCONNTIMEOUT,prop.connectTimeout);
                     prop.readAis=btAis;
                     prop.readNmea=btNmea;
                     bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);

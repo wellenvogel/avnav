@@ -8,7 +8,6 @@ import android.content.res.Resources;
 import android.location.Location;
 import android.net.Uri;
 import android.os.*;
-import android.util.JsonReader;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -73,7 +72,7 @@ public class WebViewActivityBase extends XWalkActivity {
 
     private void sendFile(String name, String type,Resources res){
         if (!type.equals("track") && ! type.equals("route")){
-            Log.e(AvNav.LOGPRFX,"invalid type "+type+" for sendFile");
+            Log.e(Constants.LOGPRFX,"invalid type "+type+" for sendFile");
             return;
         }
         String dirname="tracks";
@@ -81,7 +80,7 @@ public class WebViewActivityBase extends XWalkActivity {
         File dir=new File(workBase,dirname);
         File file=new File(dir,name);
         if (! file.isFile()){
-            Log.e(AvNav.LOGPRFX,"file "+name+" not found");
+            Log.e(Constants.LOGPRFX,"file "+name+" not found");
             return;
         }
         Uri data=Uri.fromFile(file);
@@ -119,7 +118,7 @@ public class WebViewActivityBase extends XWalkActivity {
             } catch (Exception e) {
                 Toast.makeText(getApplicationContext(), "unable save route file "+name+": "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
-                Log.e(AvNav.LOGPRFX, "File not found.");
+                Log.e(Constants.LOGPRFX, "File not found.");
                 return;
             }
         }
@@ -139,9 +138,9 @@ public class WebViewActivityBase extends XWalkActivity {
         private Resources getAppResources(){
             Resources rt=null;
             try {
-                rt = getPackageManager().getResourcesForApplication(AvNav.OWN_PACKAGE);
+                rt = getPackageManager().getResourcesForApplication(Constants.OWN_PACKAGE);
             } catch (PackageManager.NameNotFoundException e) {
-                Log.e(AvnLog.LOGPREFIX,"own package "+AvNav.OWN_PACKAGE+" not found");
+                Log.e(AvnLog.LOGPREFIX,"own package "+ Constants.OWN_PACKAGE+" not found");
                 rt=getResources();
             }
             return rt;
@@ -262,7 +261,7 @@ public class WebViewActivityBase extends XWalkActivity {
                 routeHandler.setMediaUpdater(gpsService.getMediaUpdater());
                 updater=gpsService.getMediaUpdater();
             }
-            AvnLog.d(AvNav.LOGPRFX, "gps service connected");
+            AvnLog.d(Constants.LOGPRFX, "gps service connected");
 
         }
 
@@ -270,7 +269,7 @@ public class WebViewActivityBase extends XWalkActivity {
         public void onServiceDisconnected(ComponentName arg0) {
             gpsService=null;
             updater=null;
-            AvnLog.d(AvNav.LOGPRFX,"gps service disconnected");
+            AvnLog.d(Constants.LOGPRFX,"gps service disconnected");
         }
     };
 
@@ -300,10 +299,10 @@ public class WebViewActivityBase extends XWalkActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.webview);
-        SharedPreferences prefs=getSharedPreferences(AvNav.PREFNAME,Context.MODE_PRIVATE);
-        workdir=prefs.getString(AvNav.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        workdir=prefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
         workBase=new File(workdir);
-        showDemoCharts=prefs.getBoolean(AvNav.SHOWDEMO,false);
+        showDemoCharts=prefs.getBoolean(Constants.SHOWDEMO,false);
         ownMimeMap.put("js","text/javascript");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
@@ -408,7 +407,7 @@ public class WebViewActivityBase extends XWalkActivity {
                         for (String demo: demoCharts){
                             if (! demo.endsWith(".xml")) continue;
                             String name=demo.replaceAll("\\.xml$", "");
-                            AvnLog.d(AvNav.LOGPRFX,"found demo chart "+demo);
+                            AvnLog.d(Constants.LOGPRFX,"found demo chart "+demo);
                             JSONObject e = new JSONObject();
                             e.put("name", name);
                             e.put("url", "/"+CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
@@ -418,7 +417,7 @@ public class WebViewActivityBase extends XWalkActivity {
                     }
                     out.put("data", arr);
                 }catch (Exception e){
-                    Log.e(AvNav.LOGPRFX, "error reading chartlist: " + e.getLocalizedMessage());
+                    Log.e(Constants.LOGPRFX, "error reading chartlist: " + e.getLocalizedMessage());
                     out.put("status","ERROR");
                     out.put("info",e.getLocalizedMessage());
                 }
@@ -647,7 +646,7 @@ public class WebViewActivityBase extends XWalkActivity {
                 fout=o;
             }
             if (!handled){
-                AvnLog.d(AvNav.LOGPRFX,"unhandled nav request "+type);
+                AvnLog.d(Constants.LOGPRFX,"unhandled nav request "+type);
             }
             String outstring="";
             if (fout != null) outstring=fout.toString();
@@ -670,7 +669,7 @@ public class WebViewActivityBase extends XWalkActivity {
             if (fname.startsWith(DEMOCHARTS)){
                 fname=fname.substring(DEMOCHARTS.length()+1);
                 if (fname.endsWith(OVERVIEW)){
-                    AvnLog.d(AvNav.LOGPRFX,"overview request "+fname);
+                    AvnLog.d(Constants.LOGPRFX,"overview request "+fname);
                     fname=fname.substring(0,fname.length()-OVERVIEW.length()-1); //just the pure name
                     fname+=".xml";
                     closeGemf();
@@ -696,7 +695,7 @@ public class WebViewActivityBase extends XWalkActivity {
                             len=-1;
                             gemfFile=f;
                         }catch (Exception e){
-                            Log.e(AvNav.LOGPRFX,"unable to read gemf file "+fname+": "+e.getLocalizedMessage());
+                            Log.e(Constants.LOGPRFX,"unable to read gemf file "+fname+": "+e.getLocalizedMessage());
                         }
                     }
                     else {
@@ -720,7 +719,7 @@ public class WebViewActivityBase extends XWalkActivity {
                             len=gs.getLength();
                         }
                         else {
-                            Log.e(AvNav.LOGPRFX, "gemf file " + fname + " not open");
+                            Log.e(Constants.LOGPRFX, "gemf file " + fname + " not open");
                             return null;
                         }
                     }
@@ -731,24 +730,24 @@ public class WebViewActivityBase extends XWalkActivity {
                     }
                     File avnav=new File(realName);
                     if (! avnav.isFile()){
-                        Log.e(AvNav.LOGPRFX,"invalid query for xml file "+fname);
+                        Log.e(Constants.LOGPRFX,"invalid query for xml file "+fname);
                     }
                     rt=new FileInputStream(avnav);
                     len=(int)avnav.length();
                 }
                 else {
-                    Log.e(AvNav.LOGPRFX,"invalid chart request "+fname);
+                    Log.e(Constants.LOGPRFX,"invalid chart request "+fname);
                 }
             }
             if (rt == null){
-                Log.e(AvNav.LOGPRFX,"unknown chart path "+fname);
+                Log.e(Constants.LOGPRFX,"unknown chart path "+fname);
 
 
             }
 
             return new ExtendedWebResourceResponse(len,mimeType,"",rt);
         } catch (Exception e) {
-            Log.e(AvNav.LOGPRFX,"chart file "+fname+" not found: "+e.getLocalizedMessage());
+            Log.e(Constants.LOGPRFX,"chart file "+fname+" not found: "+e.getLocalizedMessage());
         }
         return null;
     }
@@ -774,7 +773,7 @@ public class WebViewActivityBase extends XWalkActivity {
                     e.put("time",f.lastModified()/1000);
                     String urlName=REALCHARTS + "/"+index+"/gemf/" + gemfName;
                     fileNames.put(urlName,f.getAbsolutePath());
-                    AvnLog.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
+                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
                     e.put("url", "/"+CHARTPREFIX + "/" +urlName);
                     arr.put(e);
                 }
@@ -785,19 +784,19 @@ public class WebViewActivityBase extends XWalkActivity {
                     e.put("time",f.lastModified()/1000);
                     String urlName=REALCHARTS+"/"+index+"/avnav/"+name;
                     fileNames.put(urlName,f.getAbsolutePath());
-                    AvnLog.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
+                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
                     e.put("url","/"+CHARTPREFIX+"/"+urlName);
                     arr.put(e);
                 }
             } catch (Exception e) {
-                Log.e(AvNav.LOGPRFX, "exception handling file " + f.getAbsolutePath());
+                Log.e(Constants.LOGPRFX, "exception handling file " + f.getAbsolutePath());
             }
         }
     }
 
     private void closeGemf(){
         if (gemfFile != null) {
-            AvnLog.d(AvNav.LOGPRFX,"closing gemf file "+gemfFile.getUrlName());
+            AvnLog.d(Constants.LOGPRFX,"closing gemf file "+gemfFile.getUrlName());
             gemfFile.close();
         }
         gemfFile=null;

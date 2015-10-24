@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.main;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.util.Log;
@@ -24,9 +23,9 @@ public class AvNavApp extends XWalkApplication {
      */
     @Override
     public Context createPackageContext(String packageName, int flags) throws PackageManager.NameNotFoundException {
-        if (packageName.equals(AvNav.XWALKORIG)){
-            String nname=AvNav.XWALKAPP;
-            Log.i(AvNav.LOGPRFX, "changing package name for AvnAvXwalk runtime from " + packageName + " to " + nname);
+        if (packageName.equals(Constants.XWALKORIG)){
+            String nname= Constants.XWALKAPP;
+            Log.i(Constants.LOGPRFX, "changing package name for AvnAvXwalk runtime from " + packageName + " to " + nname);
             packageName=nname;
         }
         return super.createPackageContext(packageName, flags);

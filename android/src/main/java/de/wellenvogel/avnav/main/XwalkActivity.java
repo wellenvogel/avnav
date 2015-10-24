@@ -23,7 +23,7 @@ public class XwalkActivity extends WebViewActivityBase {
             @Override
             public void onSharedLibraryNotFound() {
                 downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
-                        getString(R.string.xwalkNotFoundText)+AvNav.XWALKVERSION,true);
+                        getString(R.string.xwalkNotFoundText)+ Constants.XWALKVERSION,true);
             }
         });
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -39,7 +39,7 @@ public class XwalkActivity extends WebViewActivityBase {
             }
         });
         if (BuildConfig.DEBUG){
-            AvnLog.d(AvNav.LOGPRFX,"enable xwalk remote debugging");
+            AvnLog.d(Constants.LOGPRFX,"enable xwalk remote debugging");
             XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
         }
         mXwalkView.addJavascriptInterface(mJavaScriptApi,"avnavAndroid");

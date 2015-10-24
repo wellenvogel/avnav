@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+    <header
+        android:fragment="de.wellenvogel.avnav.main.SettingsFragment"
+        android:title="@string/labelSettingsIpcategory"
+        android:summary="" >
+        <extra
+            android:name="fragmentName"
+            android:value="ip"></extra>
+    </header>
+    <header
+        android:fragment="de.wellenvogel.avnav.main.SettingsFragment"
+        android:title="@string/bluetoothLabel"
+        android:summary="" >
+        <!-- key/value pairs can be included as arguments for the fragment. -->
+        <extra android:name="fragmentName" android:value="bluetooth" />
+    </header>
+</preference-headers>

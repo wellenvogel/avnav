@@ -273,7 +273,7 @@ public class SimpleFileDialog
             }
         }
         catch (Exception e)	{
-            Log.e(AvNav.LOGPRFX,"exception while reading directory: "+e);
+            Log.e(Constants.LOGPRFX,"exception while reading directory: "+e);
             e.printStackTrace();
         }
 

@@ -2,10 +2,10 @@ package de.wellenvogel.avnav.gps;
 
 import android.location.Location;
 import android.util.Log;
-import de.wellenvogel.avnav.main.AvNav;
+
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
-import de.wellenvogel.avnav.main.WebViewActivityBase;
 import de.wellenvogel.avnav.util.AvnLog;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -74,7 +74,7 @@ public class TrackWriter {
             try {
                 String name = getCurrentTrackname(dt);
                 File ofile = getTrackFile(dt);
-                AvnLog.i(AvNav.LOGPRFX, "writing trackfile " + ofile.getAbsolutePath());
+                AvnLog.i(Constants.LOGPRFX, "writing trackfile " + ofile.getAbsolutePath());
                 PrintStream out = new PrintStream(new FileOutputStream(ofile));
                 out.format(header, name);
                 int numpoints=0;
@@ -90,9 +90,9 @@ public class TrackWriter {
                 if (updater != null){
                     updater.triggerUpdateMtp(ofile);
                 }
-                AvnLog.i(AvNav.LOGPRFX,"writing track finished with "+numpoints+" points");
+                AvnLog.i(Constants.LOGPRFX,"writing track finished with "+numpoints+" points");
             } catch (Exception io) {
-                Log.e(AvNav.LOGPRFX, "error writing trackfile: " + io.getLocalizedMessage());
+                Log.e(Constants.LOGPRFX, "error writing trackfile: " + io.getLocalizedMessage());
             }
             writer.writerRunning=false;
         }
@@ -115,7 +115,7 @@ public class TrackWriter {
         }
         try {
             while (writerRunning) {
-                Log.w(AvNav.LOGPRFX, "writer still running when trying sync write");
+                Log.w(Constants.LOGPRFX, "writer still running when trying sync write");
                 Thread.sleep(100);
             }
             writerRunning=true;
@@ -135,7 +135,7 @@ public class TrackWriter {
         ArrayList<Location> rt = new ArrayList<Location>();
         File infile = new File(trackdir, getCurrentTrackname(dt)+".gpx");
         if (!infile.isFile()) {
-            AvnLog.d(AvNav.LOGPRFX, "unable to read trackfile " + infile.getName());
+            AvnLog.d(Constants.LOGPRFX, "unable to read trackfile " + infile.getName());
             return rt;
         }
         InputStream in_s = null;
@@ -145,10 +145,10 @@ public class TrackWriter {
             rt=new TrackParser().parseTrackFile(in_s,mintime, minDistance);
             in_s.close();
         } catch (Exception e) {
-            Log.e(AvNav.LOGPRFX,"unexpected error while opening trackfile "+e);
+            Log.e(Constants.LOGPRFX,"unexpected error while opening trackfile "+e);
             return rt;
         }
-        AvnLog.d(AvNav.LOGPRFX,"read trackfile "+infile+" with "+rt.size()+" trackpoints");
+        AvnLog.d(Constants.LOGPRFX,"read trackfile "+infile+" with "+rt.size()+" trackpoints");
         return rt;
     }
 
@@ -222,21 +222,21 @@ public class TrackWriter {
                                     v = parser.nextText();
                                     currentLocation.setTime(ISO8601DateParser.parse(v).getTime());
                                 }catch (Exception e){
-                                    AvnLog.d(AvNav.LOGPRFX,"exception parsing track date "+v+": "+e.getLocalizedMessage());
+                                    AvnLog.d(Constants.LOGPRFX,"exception parsing track date "+v+": "+e.getLocalizedMessage());
                                 }
                             } else if (name.equalsIgnoreCase("course")) {
                                 try {
                                     v = parser.nextText();
                                     currentLocation.setBearing(Float.parseFloat(v));
                                 }catch (Exception e){
-                                    AvnLog.d(AvNav.LOGPRFX,"exception parsing bearing "+v+": "+e.getLocalizedMessage());
+                                    AvnLog.d(Constants.LOGPRFX,"exception parsing bearing "+v+": "+e.getLocalizedMessage());
                                 }
                             } else if (name.equalsIgnoreCase("speed")) {
                                 try {
                                     v = parser.nextText();
                                     currentLocation.setSpeed(Float.parseFloat(v));
                                 }catch (Exception e){
-                                    AvnLog.d(AvNav.LOGPRFX,"exception parsing speed "+v+": "+e.getLocalizedMessage());
+                                    AvnLog.d(Constants.LOGPRFX,"exception parsing speed "+v+": "+e.getLocalizedMessage());
                                 }
                             }
                         }
@@ -260,7 +260,7 @@ public class TrackWriter {
     }
     public int cleanup(ArrayList<Location> trackpoints,long deleteTime){
         int deleted=0;
-        AvnLog.d(AvNav.LOGPRFX, "deleting trackpoints older " + new Date(deleteTime).toString());
+        AvnLog.d(Constants.LOGPRFX, "deleting trackpoints older " + new Date(deleteTime).toString());
         while (trackpoints.size() > 0) {
             Location first = trackpoints.get(0);
             if (first.getTime() < deleteTime) {
@@ -268,7 +268,7 @@ public class TrackWriter {
                 deleted++;
             } else break;
         }
-        AvnLog.d(AvNav.LOGPRFX, "deleted " + deleted + " trackpoints");
+        AvnLog.d(Constants.LOGPRFX, "deleted " + deleted + " trackpoints");
         return deleted;
     }
 
