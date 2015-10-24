@@ -5,7 +5,7 @@
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$USER_HOME$/.ideaLibSources/marineapi-0.8.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/marineapi-0.8.1-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
