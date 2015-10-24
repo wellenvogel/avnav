@@ -75,6 +75,9 @@ public class SettingsActivity extends PreferenceActivity {
             if (h.fragment.equals(ModeSettingsFragment.class.getName())){
                 newSummary= ModeSettingsFragment.getSummary(this);
             }
+            if (h.fragment.equals(MainSettingsFragment.class.getName())){
+                newSummary= MainSettingsFragment.getSummary(this);
+            }
             if (newSummary != null && newSummary != h.summary){
                 h.summary=newSummary;
                 hasChanged=true;

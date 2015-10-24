@@ -21,7 +21,8 @@ android {
     lintOptions{
         abortOnError false
     }
-    compileSdkVersion 19
+    //original: 19
+    compileSdkVersion 21
     buildToolsVersion "21.1.1"
 
     sourceSets {
