@@ -46,12 +46,14 @@
     <string name="uploadRoute">Select a route to upload</string>
     <string name="installFileManager">Please install a file manager</string>
     <string name="bluetoothLabel">Bluetooth</string>
-    <string name="selectBlueTooth">Select Bluetooth Device</string>
+    <string name="selectBlueTooth">Bluetooth Device</string>
     <string name="noSuchBluetoothDevice">No such bluetooth device</string>
-    <string name="labelSettingsIpAddress">Address</string>
-    <string name="labelSettingsIpPort">Port</string>
-    <string name="labelSettingsIpcategory">External IP connection</string>
+    <string name="labelSettingsIpAddress">IP Address</string>
+    <string name="labelSettingsIpPort">IP Port</string>
+    <string name="labelSettingsNmea">NMEA</string>
     <string name="labelSettingsActivity">avNav Settings</string>
-    <string name="labelSettingsBluetoothCategory">Bluetooth</string>
-    <string name="labelSettingsMain">Charts and Directories</string>
+    <string name="labelSettingsMain">Main Settings</string>
+    <string name="labelSettingsNmeaInput">NMEA Source</string>
+    <string name="labelSettingsAisInput">AIS Source</string>
+    <string name="labelSettingsNone">Off</string>
 </resources>

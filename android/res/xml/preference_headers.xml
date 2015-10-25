@@ -6,18 +6,9 @@
         android:summary="" >
     </header>
     <header
-        android:fragment="de.wellenvogel.avnav.settings.ModeSettingsFragment"
-        android:title="@string/runMode"
+        android:fragment="de.wellenvogel.avnav.settings.NmeaSettingsFragment"
+        android:title="@string/labelSettingsNmea"
         android:summary="" >
     </header>
-    <header
-        android:fragment="de.wellenvogel.avnav.settings.IpSettingsFragment"
-        android:title="@string/labelSettingsIpcategory"
-        android:summary="" >
-    </header>
-    <header
-        android:fragment="de.wellenvogel.avnav.settings.BluetoothSettingsFragment"
-        android:title="@string/bluetoothLabel"
-        android:summary="" >
-    </header>
+
 </preference-headers>

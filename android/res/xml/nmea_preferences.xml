@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/labelSettingsNmea">
+    <ListPreference
+        android:title="@string/labelSettingsNmeaInput"
+        android:key="nmeaInput"
+        android:persistent="false">
+    </ListPreference>
+    <ListPreference
+        android:title="@string/labelSettingsAisInput"
+        android:key="aisInput"
+        android:persistent="false">
+    </ListPreference>
+    <EditTextPreference
+        android:key="ip.addr"
+        android:title="@string/labelSettingsIpAddress"></EditTextPreference>
+    <EditTextPreference
+        android:key="ip.port"
+        android:title="@string/labelSettingsIpPort"></EditTextPreference>
+    <EditTextPreference
+        android:title="@string/selectBlueTooth"
+        android:key="bt.device"></EditTextPreference>
+</PreferenceScreen>

@@ -69,11 +69,8 @@ public class SettingsActivity extends PreferenceActivity {
         for (Header h: headers){
             String newSummary=null;
             if (h == null || h.fragment == null) continue;
-            if (h.fragment.equals(IpSettingsFragment.class.getName())){
-                newSummary=IpSettingsFragment.getSummary(this);
-            }
-            if (h.fragment.equals(ModeSettingsFragment.class.getName())){
-                newSummary= ModeSettingsFragment.getSummary(this);
+            if (h.fragment.equals(NmeaSettingsFragment.class.getName())){
+                newSummary= NmeaSettingsFragment.getSummary(this);
             }
             if (h.fragment.equals(MainSettingsFragment.class.getName())){
                 newSummary= MainSettingsFragment.getSummary(this);
