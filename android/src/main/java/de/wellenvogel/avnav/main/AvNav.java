@@ -461,7 +461,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         btSelectDir.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(context, "FolderChoose",
+                SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(context, SimpleFileDialog.FolderChooseWrite,
                         new SimpleFileDialog.SimpleFileDialogListener() {
                             @Override
                             public void onChosenDir(String chosenDir) {

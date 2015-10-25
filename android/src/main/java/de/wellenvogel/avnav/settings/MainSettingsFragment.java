@@ -6,11 +6,14 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.DialogPreference;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.main.SimpleFileDialog;
+import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 24.10.15.
@@ -20,12 +23,28 @@ public class MainSettingsFragment extends SettingsFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.main_preferences);
-        Preference myPref = (Preference) findPreference(Constants.WORKDIR);
+        final EditTextPreference myPref = (EditTextPreference) findPreference(Constants.WORKDIR);
         if (myPref != null) {
             myPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                public boolean onPreferenceClick(Preference preference) {
+                public boolean onPreferenceClick(final Preference preference) {
                     //open browser or intent here
                     ((DialogPreference)preference).getDialog().dismiss();
+                    SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(getActivity(), SimpleFileDialog.FolderChooseWrite,
+                            new SimpleFileDialog.SimpleFileDialogListener() {
+                                @Override
+                                public void onChosenDir(String chosenDir) {
+                                    // The code in this function will be executed when the dialog OK button is pushed
+                                    ((EditTextPreference)preference).setText(chosenDir);
+                                    AvnLog.i(Constants.LOGPRFX, "select work directory " + chosenDir);
+                                }
+                            });
+                    FolderChooseDialog.Default_File_Name="avnav";
+                    FolderChooseDialog.dialogTitle=getString(R.string.selectWorkDir);
+                    FolderChooseDialog.okButtonText=getString(R.string.ok);
+                    FolderChooseDialog.cancelButtonText=getString(R.string.cancel);
+                    FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
+                    FolderChooseDialog.newFolderText=getString(R.string.createFolder);
+                    FolderChooseDialog.chooseFile_or_Dir(myPref.getText());
                     return true;
                 }
             });
