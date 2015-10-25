@@ -6,16 +6,20 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.*;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.io.File;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.main.SimpleFileDialog;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
+import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 03.09.15.
@@ -49,7 +53,7 @@ public class SettingsActivity extends PreferenceActivity {
         return installed;
     }
     public static void handleInitialSettings(Activity activity){
-        SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        final SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
         if (mode.equals("")) {
             //never set before
@@ -76,9 +80,49 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             }
         }
+        String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
+        if (workdir.isEmpty()){
+            File wdf=new File(Environment.getExternalStorageDirectory(),"avnav");
+            if (! wdf.isDirectory()){
+                wdf.mkdirs();
+            }
+            workdir=wdf.getAbsolutePath();
+        }
+        //TODO: handle unwritable workdir
+        String chartdir=sharedPrefs.getString(Constants.CHARTDIR,new File(new File(workdir),"charts").getAbsolutePath());
         SharedPreferences.Editor e=sharedPrefs.edit();
         e.putString(Constants.RUNMODE, mode);
+        e.putString(Constants.WORKDIR,workdir);
+        e.putString(Constants.CHARTDIR,chartdir);
         e.apply();
+        final String oldWorkdir=workdir;
+        if (!(new File(workdir)).canWrite()){
+            SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(activity, SimpleFileDialog.FolderChoose,
+                    new SimpleFileDialog.SimpleFileDialogListener() {
+                        @Override
+                        public void onChosenDir(String chosenDir) {
+                            // The code in this function will be executed when the dialog OK button is pushed
+                            SharedPreferences.Editor e=sharedPrefs.edit();
+                            e.putString(Constants.WORKDIR,chosenDir);
+                            e.apply();
+                            if (!oldWorkdir.equals(chosenDir)){
+                                //TODO: copy files
+                            }
+                            AvnLog.i(Constants.LOGPRFX, "select work directory " + chosenDir);
+                        }
+                    });
+            FolderChooseDialog.Default_File_Name="avnav";
+            FolderChooseDialog.dialogTitle=activity.getString(R.string.selectWorkDirWritable);
+            FolderChooseDialog.okButtonText=activity.getString(R.string.ok);
+            FolderChooseDialog.cancelButtonText=activity.getString(R.string.cancel);
+            FolderChooseDialog.newFolderNameText=activity.getString(R.string.newFolderName);
+            FolderChooseDialog.newFolderText=activity.getString(R.string.createFolder);
+            File wdf=new File(Environment.getExternalStorageDirectory(),"avnav");
+            if (! wdf.isDirectory()){
+                wdf.mkdirs();
+            }
+            FolderChooseDialog.chooseFile_or_Dir(wdf.getAbsolutePath());
+        }
         NmeaSettingsFragment.checkGpsEnabled(activity,false);
     }
 

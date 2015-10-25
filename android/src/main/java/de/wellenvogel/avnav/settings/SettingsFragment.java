@@ -9,7 +9,6 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.R;
 
 /**
  * Created by andreas on 24.10.15.
@@ -19,9 +18,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Preference pref = findPreference(key);
         if (pref != null) {
-            if (updatePreferenceSummary(pref)) {
+            if (updatePreferenceSummary(pref,sharedPreferences)) {
                 if (pref instanceof EditTextPreference) {
-                    pref.setSummary(((EditTextPreference) pref).getText());
+                    pref.setSummary(sharedPreferences.getString(key,""));
                 }
             }
         }
@@ -31,9 +30,10 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     /**
      * override this
      * @param pref
+     * @param prefs
      * @return false if no further handling
      */
-    protected boolean updatePreferenceSummary(Preference pref){
+    protected boolean updatePreferenceSummary(Preference pref, SharedPreferences prefs){
         return true;
     }
 

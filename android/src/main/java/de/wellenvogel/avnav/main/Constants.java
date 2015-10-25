@@ -6,6 +6,7 @@ package de.wellenvogel.avnav.main;
 public class Constants {
     //settings
     public static final String WORKDIR="workdir";
+    public static final String CHARTDIR="chartdir";
     public static final String SHOWDEMO="showdemo";
     public static final String INTERNALGPS="internalGps";
     public static final String IPNMEA="ip.nmea";

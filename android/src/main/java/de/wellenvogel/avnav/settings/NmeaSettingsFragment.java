@@ -2,6 +2,8 @@ package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,12 +11,19 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.provider.Settings;
+import android.view.View;
+import android.widget.ArrayAdapter;
+
+import java.util.ArrayList;
+import java.util.Set;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 24.10.15.
@@ -22,14 +31,17 @@ import de.wellenvogel.avnav.main.R;
 public class NmeaSettingsFragment extends SettingsFragment {
     private ListPreference nmeaSelector;
     private ListPreference aisSelector;
+    private EditTextPreference blueToothDevice;
     //list pref values
     private static final String MODE_INTERNAL="internal";
     private static final String MODE_IP="ip";
     private static final String MODE_BLUETOOTH="bluetooth";
     private static final String MODE_NONE="none";
+    private BluetoothAdapter bluetoothAdapter;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        bluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
         addPreferencesFromResource(R.xml.nmea_preferences);
         final SharedPreferences prefs=getActivity().getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         Preference p=getPreferenceScreen().findPreference("nmeaInput");
@@ -58,6 +70,45 @@ public class NmeaSettingsFragment extends SettingsFragment {
                     return true;
                 }
             });
+        }
+        blueToothDevice=(EditTextPreference) findPreference(Constants.BTDEVICE);
+        if (blueToothDevice != null){
+            if (bluetoothAdapter==null) {
+                getPreferenceScreen().removePreference(blueToothDevice);
+                blueToothDevice=null;
+            }
+            else {
+                blueToothDevice.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        blueToothDevice.getDialog().dismiss();
+                        if (bluetoothAdapter != null && ! bluetoothAdapter.isEnabled()){
+                            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                            startActivityForResult(enableBtIntent, 1);
+                            return false;
+                        }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                        builder.setTitle(R.string.selectBlueTooth);
+                        final ArrayList<String> items=getBlueToothDevices();
+                        ArrayAdapter<String> adapter=new ArrayAdapter<String>(getActivity(),android.R.layout.simple_list_item_1,items);
+                        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String name=items.get(which);
+                                blueToothDevice.setText(name);
+                            }
+                        });
+                        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+                        builder.create().show();
+                        return false;
+                    }
+                });
+            }
         }
 
     }
@@ -101,30 +152,57 @@ public class NmeaSettingsFragment extends SettingsFragment {
         }
     }
 
+    private ArrayList<String> getBlueToothDevices(){
+        ArrayList<String> rt=new ArrayList<String>();
+        if (bluetoothAdapter == null) return rt;
+        if (! bluetoothAdapter.isEnabled()) return rt;
+        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        for (BluetoothDevice d: pairedDevices){
+            AvnLog.d("found bluetooth device " + d.getName() + ",class=" + d.getBluetoothClass().toString());
+            rt.add(d.getName());
+        }
+        return rt;
+    }
+
     private void fillData(Activity a){
         SharedPreferences prefs=a.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         Resources res=a.getResources();
         nmeaSelector.setEntries(new String[]{getModeEntrieNmea(res,MODE_NONE),getModeEntrieNmea(res,MODE_INTERNAL),getModeEntrieNmea(res,MODE_IP),getModeEntrieNmea(res,MODE_BLUETOOTH)});
-        nmeaSelector.setEntryValues(new String[]{MODE_NONE,MODE_INTERNAL,MODE_IP,MODE_BLUETOOTH});
+        if (bluetoothAdapter == null) {
+            nmeaSelector.setEntryValues(new String[]{MODE_NONE, MODE_INTERNAL, MODE_IP});
+            aisSelector.setEntryValues(new String[]{MODE_NONE,MODE_IP});
+        }
+        else {
+            nmeaSelector.setEntryValues(new String[]{MODE_NONE, MODE_INTERNAL, MODE_IP, MODE_BLUETOOTH});
+            aisSelector.setEntryValues(new String[]{MODE_NONE,MODE_IP,MODE_BLUETOOTH});
+        }
+        String e[]=new String[nmeaSelector.getEntryValues().length];
+        for (int i=0;i<nmeaSelector.getEntryValues().length;i++){
+            e[i]=getModeEntrieNmea(res,nmeaSelector.getEntryValues()[i]);
+        }
+        nmeaSelector.setEntries(e);
         int nmeasel=nmeaSelector.findIndexOfValue(getNmeaMode(prefs));
         if (nmeasel<0) nmeasel=0;
         nmeaSelector.setValueIndex(nmeasel);
         nmeaSelector.setSummary(nmeaSelector.getEntry());
-        aisSelector.setEntries(new String[]{getModeEntrieAis(res,MODE_NONE),getModeEntrieAis(res,MODE_IP),getModeEntrieAis(res,MODE_BLUETOOTH)});
-        aisSelector.setEntryValues(new String[]{MODE_NONE,MODE_IP,MODE_BLUETOOTH});
+        e=new String[aisSelector.getEntryValues().length];
+        for (int i=0;i<aisSelector.getEntryValues().length;i++){
+            e[i]=getModeEntrieAis(res,aisSelector.getEntryValues()[i]);
+        }
+        aisSelector.setEntries(e);
         int aissel=aisSelector.findIndexOfValue(getAisMode(prefs));
         if (aissel<0) aissel=0;
         aisSelector.setValueIndex(aissel);
         aisSelector.setSummary(aisSelector.getEntry());
     }
 
-    private static String getModeEntrieAis(Resources res,String mode){
+    private static String getModeEntrieAis(Resources res,CharSequence mode){
         if (mode.equals(MODE_NONE)) return res.getString(R.string.labelSettingsNone);
         if (mode.equals(MODE_IP)) return res.getString(R.string.externalGps);
         if (mode.equals(MODE_BLUETOOTH)) return res.getString(R.string.bluetoothLabel);
         return "";
     }
-    private static String getModeEntrieNmea(Resources res,String mode){
+    private static String getModeEntrieNmea(Resources res,CharSequence mode){
         if (mode.equals(MODE_NONE)) return res.getString(R.string.labelSettingsNone);
         if (mode.equals(MODE_INTERNAL)) return res.getString(R.string.labelInternalGps);
         if (mode.equals(MODE_IP)) return res.getString(R.string.externalGps);

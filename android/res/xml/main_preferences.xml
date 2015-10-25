@@ -9,6 +9,10 @@
         android:key="workdir"
         android:title="@string/selectDirLabel">
     </EditTextPreference>
+    <EditTextPreference
+        android:key="chartdir"
+        android:title="@string/selectChartDirLabel">
+    </EditTextPreference>
     <CheckBoxPreference
         android:key="showdemo"
         android:title="@string/enableDemoLabel">

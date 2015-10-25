@@ -3,12 +3,15 @@
     <string name="appName">avNav</string>
     <string name="startText">Start</string>
     <string name="exitText">Exit</string>
-    <string name="selectDirLabel">SD card directory</string>
+    <string name="selectDirLabel">Working directory</string>
+    <string name="selectChartDirLabel">Charts directory</string>
     <string name="enableDemoLabel">Show Demo charts</string>
     <string name="noLocation">No GPS found, enable now?</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
-    <string name="selectWorkDir">SelectWorkingDir</string>
+    <string name="selectWorkDir">Select Working Dir</string>
+    <string name="selectWorkDirWritable">Your old workdir ist not writable, select a new one</string>
+    <string name="selectChartDir">Select Additional Chart Dir</string>
     <string name="newFolderName">Name for new Folder</string>
     <string name="createFolder">Create Folder</string>
     <string name="gpsServiceStopped">stopped</string>
