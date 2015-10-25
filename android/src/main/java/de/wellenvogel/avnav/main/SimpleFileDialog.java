@@ -62,9 +62,10 @@ public class SimpleFileDialog
     public String okButtonText="OK";
     public String cancelButtonText="Cancel";
 
-    private int FileOpen     = 0;
-    private int FileSave     = 1;
-    private int FolderChoose = 2;
+    public static final int FileOpen     = 0;
+    public static final int FileSave     = 1;
+    public static final int FolderChoose = 2;
+    public static final int FolderChooseWrite=3;
     private int Select_type = FileSave;
     private String m_sdcardDirectory = "";
     private Context m_context;
@@ -101,12 +102,9 @@ public class SimpleFileDialog
         }
     }
 
-    public SimpleFileDialog(Context context, String file_select_type, SimpleFileDialogListener SimpleFileDialogListener)
+    public SimpleFileDialog(Context context, int file_select_type, SimpleFileDialogListener SimpleFileDialogListener)
     {
-        if (file_select_type.equals("FileOpen"))          Select_type = FileOpen;
-        else if (file_select_type.equals("FileSave"))     Select_type = FileSave;
-        else if (file_select_type.equals("FolderChoose")) Select_type = FolderChoose;
-        else Select_type = FileOpen;
+        Select_type = file_select_type;
 
         m_context = context;
         m_sdcardDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -143,7 +141,7 @@ public class SimpleFileDialog
         if (! dirFile.exists() || ! dirFile.isDirectory())
         {
             File parent=dirFile.getParentFile();
-            if (parent != null && parent.isDirectory() && Select_type == FolderChoose){
+            if (parent != null && parent.isDirectory() && (Select_type == FolderChoose || Select_type == FolderChooseWrite)){
                 startWithNewDir=true;
                 Default_File_Name=dirFile.getName();
                 dir=parent.getAbsolutePath();
@@ -200,32 +198,46 @@ public class SimpleFileDialog
         AlertDialog.Builder dialogBuilder = createDirectoryChooserDialog(dir, m_subdirs,
                 new SimpleFileDialogOnClickListener());
 
-        dialogBuilder.setPositiveButton(okButtonText, new OnClickListener()
-        {
+        dialogBuilder.setNegativeButton(cancelButtonText, null);
+        dialogBuilder.setPositiveButton(okButtonText, new OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                // Current directory chosen
-                // Call registered listener supplied with the chosen directory
-                if (m_SimpleFileDialogListener != null){
-                    {
-                        if (Select_type == FileOpen || Select_type == FileSave)
-                        {
-                            Selected_File_Name= input_text.getText() +"";
-                            m_SimpleFileDialogListener.onChosenDir(m_dir + "/" + Selected_File_Name);}
-                        else
-                        {
-                            m_SimpleFileDialogListener.onChosenDir(m_dir);
-                        }
-                    }
-                }
+            public void onClick(DialogInterface dialog, int which) {
+
             }
-        }).setNegativeButton(cancelButtonText, null);
+        });
 
         final AlertDialog dirsDialog = dialogBuilder.create();
 
         // Show directory chooser dialog
         dirsDialog.show();
+        dirsDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Current directory chosen
+                // Call registered listener supplied with the chosen directory
+                Boolean wantToCloseDialog = true;
+                if (m_SimpleFileDialogListener != null) {
+                    {
+                        if (Select_type == FileOpen || Select_type == FileSave) {
+                            Selected_File_Name = input_text.getText() + "";
+                            m_SimpleFileDialogListener.onChosenDir(m_dir + "/" + Selected_File_Name);
+                        } else {
+                            if (Select_type == FolderChooseWrite && !(new File(m_dir)).canWrite()){
+                                wantToCloseDialog = false;
+                                Toast.makeText(	m_context, m_dir + " not writable", Toast.LENGTH_SHORT).show();
+                            }
+                            else {
+                                m_SimpleFileDialogListener.onChosenDir(m_dir);
+                            }
+                        }
+                    }
+                }
+                //Do stuff, possibly set wantToCloseDialog to true then...
+                if (wantToCloseDialog)
+                    dirsDialog.dismiss();
+                //else dialog stays open. Make sure you have an obvious way to close the dialog especially if you set cancellable to false.
+            }
+        });
         if (startWithNewDir){
             showNewDirDialog();
         }
@@ -336,7 +348,7 @@ public class SimpleFileDialog
         else {
             if (Select_type == FileOpen) m_titleView1.setText("Open:");
             if (Select_type == FileSave) m_titleView1.setText("Save As:");
-            if (Select_type == FolderChoose) m_titleView1.setText("Folder Select:");
+            if (Select_type == FolderChoose || Select_type == FolderChooseWrite) m_titleView1.setText("Folder Select:");
         }
 
         //need to make this a variable Save as, Open, Select Directory
@@ -350,7 +362,7 @@ public class SimpleFileDialog
         titleLayout1.addView(m_titleView1);
 
 
-        if (Select_type == FolderChoose || Select_type == FileSave)
+        if (Select_type == FolderChoose || Select_type == FolderChooseWrite|| Select_type == FileSave)
         {
             ///////////////////////////////
             // Create New Folder Button  //
