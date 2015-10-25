@@ -38,7 +38,8 @@
     <string name="xwalkDownloadFromUrl">Apk Download</string>
     <string name="xwalkDownloadFromPlaystore">Google Play</string>
     <string name="xwalkNotFoundTitle">AvNavXwalk not found</string>
-    <string name="xwalkNotFoundText">The AvNavXwalk runtime is not installed.
+    <string name="xwalkNotFoundText">You are running on a rather old android version
+        and should install the AvNavXwalk runtime for the app to work properly.
         Do you want to install it now?
         Required runtime version=</string>
     <string name="btXwalDownload">Download</string>

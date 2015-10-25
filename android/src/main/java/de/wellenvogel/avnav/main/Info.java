@@ -13,6 +13,8 @@ import android.widget.TextView;
 
 import java.io.InputStream;
 
+import de.wellenvogel.avnav.settings.SettingsActivity;
+
 /**
  * Created by andreas on 30.12.14.
  */
@@ -33,7 +35,7 @@ public class Info extends Activity {
         setText("version.txt",R.id.txVersion);
         setText("info.html",R.id.txInfo);
         TextView xwalk=(TextView)findViewById(R.id.txXwalk);
-        boolean xw=AvNav.isXwalRuntimeInstalled(this);
+        boolean xw= SettingsActivity.isXwalRuntimeInstalled(this);
         xwalk.setText("XWALK V "+ Constants.XWALKVERSION+" \n("+(xw?"installed":"not installed")+")");
         Button xwalxDl=(Button)findViewById(R.id.btDownloadXwalk);
         if (xw) xwalxDl.setVisibility(View.INVISIBLE);

@@ -1,12 +1,17 @@
 package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.provider.Settings;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
@@ -34,8 +39,9 @@ public class NmeaSettingsFragment extends SettingsFragment {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
                     String nval=(String)newValue;
-                    updateNmeaMode(prefs,nval);
+                    updateNmeaMode(prefs, nval);
                     ((ListPreference)preference).setSummary(getModeEntrieNmea(getActivity().getResources(),nval));
+                    if (nval.equals(MODE_INTERNAL)) checkGpsEnabled(getActivity(),true);
                     return true;
                 }
             });
@@ -53,13 +59,46 @@ public class NmeaSettingsFragment extends SettingsFragment {
                 }
             });
         }
-        fillData(getActivity());
+
     }
 
     @Override
     public void onResume() {
         super.onResume();
         fillData(getActivity());
+        checkGpsEnabled(getActivity(),false);
+    }
+
+    public static void checkGpsEnabled(Activity activity,boolean force) {
+        if (! force) {
+            SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+            String nmeaMode = getNmeaMode(prefs);
+            if (!nmeaMode.equals(MODE_INTERNAL)) return;
+        }
+        LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
+        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        // check if enabled and if not send user to the GSP settings
+        // Better solution would be to display a dialog and suggesting to
+        // go to the settings
+        if (!enabled) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            builder.setMessage(R.string.noLocation);
+            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // User clicked OK button
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    builder.getContext().startActivity(intent);
+                }
+            });
+            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    // User cancelled the dialog
+                }
+            });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+        }
     }
 
     private void fillData(Activity a){

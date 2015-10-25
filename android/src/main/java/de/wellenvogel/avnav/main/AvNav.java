@@ -63,13 +63,10 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     SharedPreferences sharedPrefs ;
     private MediaScannerConnection mediaConnection;
     private long timerSequence=1;
-    private int currentapiVersion = android.os.Build.VERSION.SDK_INT;
     private boolean firstStart=true;
     private boolean firstCheck=true;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean disableChangeActions=false;
-
-    private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
 
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -177,20 +174,8 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         }
     }
 
-    public static boolean isAppInstalled(Context ctx,String packageName, String version) {
-        PackageManager pm = ctx.getPackageManager();
-        boolean installed = false;
-        try {
-            PackageInfo pi=pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
-            if (pi.versionName.equals(version)) installed = true;
-        } catch (PackageManager.NameNotFoundException e) {
-            installed = false;
-        }
-        return installed;
-    }
-    public static boolean isXwalRuntimeInstalled(Context ctx){
-        return isAppInstalled(ctx, Constants.XWALKAPP, Constants.XWALKVERSION);
-    }
+
+
 
     private class TimerRunnable implements Runnable{
         long seq=1;
@@ -319,6 +304,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SettingsActivity.handleInitialSettings(this);
         setContentView(R.layout.main);
         btStart =(Button)findViewById(R.id.btStart);
         btExit =(Button)findViewById(R.id.btExit);
@@ -350,31 +336,9 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         else bt.setVisibility(View.VISIBLE);
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
         if (mode.equals("")) {
-            //never set before
-            if (currentapiVersion < 19 && firstStart) {
-                if (! isXwalRuntimeInstalled(this)){
-                    downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
-                            getString(R.string.xwalkNotFoundText)+ Constants.XWALKVERSION,false);
-                }
-                else {
-                    rbCrosswalk.setChecked(true);
-                }
-            }
+            mode=Constants.MODE_NORMAL;
         }
-        else {
-            if (mode.equals(Constants.MODE_XWALK)){
-                if (! isXwalRuntimeInstalled(this) ){
-                    if (firstStart && currentapiVersion < 19) {
-                        downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
-                                getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, false);
-                    }
-                    else {
-                        mode= Constants.MODE_NORMAL;
-                    }
-                }
-            }
-            setButtonsFromMode(mode);
-        }
+        setButtonsFromMode(mode);
         if (gpsService == null) {
             Intent intent = new Intent(AvNav.this, GpsService.class);
             intent.putExtra(GpsService.PROP_CHECKONLY, true);
@@ -552,7 +516,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         //if we have crosswalk available
         //show the selection for it
         //make this the default before KitKat
-        if (isXwalRuntimeInstalled(this)){
+        if (SettingsActivity.isXwalRuntimeInstalled(this)){
             rbCrosswalk.setVisibility(View.VISIBLE);
         }
         else {
@@ -634,7 +598,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         return Constants.MODE_NORMAL;
     }
     private void setButtonsFromMode(String mode){
-        if (mode.equals(Constants.MODE_XWALK) && isXwalRuntimeInstalled(this)) {
+        if (mode.equals(Constants.MODE_XWALK) && SettingsActivity.isXwalRuntimeInstalled(this)) {
             rbCrosswalk.setChecked(true);
             return;
         }
