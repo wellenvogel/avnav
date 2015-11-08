@@ -236,7 +236,7 @@ public class ExCustomMapSource implements HttpMapSource {
 			} 
 			
 			catch (Throwable e) {
-				log.trace(name+" download failed with Exception "+e);
+				log.debug(name + " download failed with Exception (retries)" + e);
 				return null;
 			}
 
@@ -317,7 +317,10 @@ public class ExCustomMapSource implements HttpMapSource {
 	public BufferedImage getTileImage(int zoom, int x, int y, LoadMethod loadMethod)
 			throws IOException, UnrecoverableDownloadException, InterruptedException {
 		byte [] data=getTileData(zoom, x, y, loadMethod);
-		if (data == null || data.length==0) return null;
+		if (data == null || data.length==0) {
+			log.debug(name+" no data in getTileImage for z="+zoom+", x="+x+", y="+y);
+			return null;
+		}
 		BufferedImage i = ImageIO.read(new ByteArrayInputStream(data));
 		return i;
 	}
@@ -337,6 +340,8 @@ public class ExCustomMapSource implements HttpMapSource {
 			for (int ntry = 0; ntry < retries; ntry++) {
 				byte[] data = fetchTileData(currentZoom, x, y, loadMethod);
 				if (data == null || data.length == 0) {
+					if (ntry < (retries-1)) log.debug(name+"retrying download for z="+zoom+", x="+x+", y="+y);
+					else log.debug(name+" unable to download after retry for z="+zoom+", x="+x+", y="+y);
 					continue;
 				}
 				if (zoom == currentZoom && ! mergeLevels && converterMap.size() == 0){

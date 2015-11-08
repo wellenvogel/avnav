@@ -1,0 +1,95 @@
+group 'de.wellenvogel.avnav'
+apply plugin: 'java'
+
+def revision="1"
+def mobacJar="Mobile_Atlas_Creator.jar"
+
+dependencies{
+    compile files("$rootDir"+File.separator+"lib"+File.separator+mobacJar)
+}
+def srcbase=new File(project.rootDir,"src")
+def srcsub="mobac"+File.separator+"mapsources"+File.separator+"mappacks"+File.separator+"avnavbase"
+sourceSets.main.java.setSrcDirs([srcbase])
+
+task copyDefs(type: org.gradle.api.tasks.Copy){
+    from new File(srcbase,srcsub)
+    into new File(project.buildDir,"classes"+File.separator+"main"+File.separator+srcsub)
+    include "*.png"
+    include "*properties"
+    include "*.list"
+}
+
+task writeVersion<<{
+    def outfile=new File(project.buildDir,"classes"+File.separator+"main"+File.separator+srcsub+
+        File.separator+"mappack.properties")
+    outfile.withWriter {
+        out->
+            out.println("mappack.revision="+revision)
+    }
+}
+writeVersion.dependsOn classes
+jar.dependsOn writeVersion
+
+jar{
+    archiveName="mp-avnavbase.jar"
+    manifest.getAttributes().with{
+        put 'MapPackVersion', '${mobac.mappackversion}'
+        put 'MapPackRevision',revision
+        put 'MapPackName','avnavbase'
+        put 'MapPackBuild-Date',new Date().format("yyyy-MM-dd HH:mm:ss")
+    }
+    from sourceSets.main.output.classesDir
+    from new File(sourceSets.main.output.classesDir,srcsub),{
+        rename{ "mobac.program.interfaces.MapSource"}
+        into "META-INF/services/"
+        include "mapsources.list"
+    }
+}
+
+//create a zip file that contains all
+task createZip(type: org.gradle.api.tasks.bundling.Zip){
+    archiveName="avnav-mapsources.zip"
+    destinationDir new File(project.buildDir,"libs")
+    from jar.archivePath
+    from project.rootDir,{
+        include "*exml"
+        include "README.txt"
+    }
+    doLast{
+        logger.lifecycle("created "+archivePath)
+    }
+}
+
+def testdir=new File(project.buildDir,"test")
+def testmapsrc=new File(testdir,"mapsources")
+task prepareTest(type: org.gradle.api.tasks.Copy){
+    from project.libsDir,{
+        include "*.jar"
+        into "mapsources"
+    }
+    from project.rootDir,{
+        include "*.exml"
+        into "mapsources"
+    }
+    from new File(project.rootDir,"lib"),{
+        include mobacJar
+    }
+    into testdir
+    doFirst{
+        if (! testmapsrc.exists()){
+            testmapsrc.mkdirs()
+        }
+    }
+}
+
+
+
+build.doLast{
+    createZip.execute()
+    prepareTest.execute()
+}
+
+copyDefs.dependsOn classes
+jar.dependsOn copyDefs
+
+
