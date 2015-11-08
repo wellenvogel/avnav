@@ -11,6 +11,7 @@ import android.preference.*;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.List;
@@ -52,7 +53,22 @@ public class SettingsActivity extends PreferenceActivity {
         }
         return installed;
     }
-    public static void handleInitialSettings(Activity activity){
+
+    public static void createWorkingDir(Activity activity,File workdir) throws Exception{
+        if (! workdir.isDirectory()){
+            workdir.mkdirs();
+        }
+        if (! workdir.isDirectory()) throw new Exception("unable to create "+workdir.getAbsolutePath());
+        final String subdirs[]=new String[]{"charts","tracks","routes"};
+        for (String s: subdirs){
+            File sub=new File(workdir,s);
+            if (! sub.isDirectory()){
+                AvnLog.d(Constants.LOGPRFX, "creating subdir " + sub.getAbsolutePath());
+                if (! sub.mkdirs()) throw new Exception("unable to create directory "+sub.getAbsolutePath());
+            }
+        }
+    }
+    public static void handleInitialSettings(final Activity activity){
         final SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
         if (mode.equals("")) {
@@ -83,8 +99,9 @@ public class SettingsActivity extends PreferenceActivity {
         String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
         if (workdir.isEmpty()){
             File wdf=new File(Environment.getExternalStorageDirectory(),"avnav");
-            if (! wdf.isDirectory()){
-                wdf.mkdirs();
+            try {
+                createWorkingDir(activity,wdf);
+            } catch (Exception e) {
             }
             workdir=wdf.getAbsolutePath();
         }
@@ -93,7 +110,7 @@ public class SettingsActivity extends PreferenceActivity {
         SharedPreferences.Editor e=sharedPrefs.edit();
         e.putString(Constants.RUNMODE, mode);
         e.putString(Constants.WORKDIR,workdir);
-        e.putString(Constants.CHARTDIR,chartdir);
+        e.putString(Constants.CHARTDIR, chartdir);
         e.apply();
         final String oldWorkdir=workdir;
         if (!(new File(workdir)).canWrite()){
@@ -105,9 +122,12 @@ public class SettingsActivity extends PreferenceActivity {
                             SharedPreferences.Editor e=sharedPrefs.edit();
                             e.putString(Constants.WORKDIR,chosenDir);
                             e.apply();
-                            if (!oldWorkdir.equals(chosenDir)){
-                                //TODO: copy files
+                            try {
+                                createWorkingDir(activity, new File(chosenDir));
+                            } catch (Exception ex) {
+                                Toast.makeText(activity, ex.getMessage(), Toast.LENGTH_SHORT).show();
                             }
+                            //TODO: copy files
                             AvnLog.i(Constants.LOGPRFX, "select work directory " + chosenDir);
                         }
                     });
@@ -123,7 +143,7 @@ public class SettingsActivity extends PreferenceActivity {
             }
             FolderChooseDialog.chooseFile_or_Dir(wdf.getAbsolutePath());
         }
-        NmeaSettingsFragment.checkGpsEnabled(activity,false);
+        NmeaSettingsFragment.checkGpsEnabled(activity, false);
     }
 
     @Override
@@ -157,7 +177,7 @@ public class SettingsActivity extends PreferenceActivity {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         boolean preferMultiPane=false;
-        if (metrics.widthPixels >= 1000) preferMultiPane=true;
+        if (metrics.widthPixels >= 900) preferMultiPane=true;
         return preferMultiPane;
     }
 

@@ -16,6 +16,7 @@ import android.widget.Toast;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.gps.TrackWriter;
+import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -164,7 +165,7 @@ public class WebViewActivityBase extends XWalkActivity {
             }
             try {
                 RouteHandler.Route rt=routeHandler.saveRoute(route, true);
-                sendFile(rt.name + ".gpx", "route",getAppResources());
+                sendFile(rt.name + ".gpx", "route", getAppResources());
             }catch(Exception e){
                 Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
@@ -234,7 +235,18 @@ public class WebViewActivityBase extends XWalkActivity {
             if (key != null && key.equals("backPressed")) goBackSequence=num;
         }
 
+        @android.webkit.JavascriptInterface
+        public void showSettings(){
+            WebViewActivityBase.this.showSettings();
+        }
+
     };
+
+    private void showSettings(){
+        Intent sintent= new Intent(this,SettingsActivity.class);
+        startActivity(sintent);
+        this.finish();
+    }
 
     //to be called e.g. from js
     private void goBack(){

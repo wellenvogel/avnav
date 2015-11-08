@@ -253,7 +253,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
 
     private void startTimer(){
         timerSequence++;
-        handler.postDelayed(new TimerRunnable(timerSequence),500);
+        handler.postDelayed(new TimerRunnable(timerSequence), 500);
     }
 
     private boolean updateCheckBox(CheckBox box,String pref,boolean defaultV){
@@ -267,7 +267,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         box.setChecked(newV);
         return old != newV;
     }
-    private boolean updateText(EditText etxt,String newV){
+    private boolean updateText(TextView etxt,String newV){
         String old=etxt.getText().toString();
         if (! old.equals(newV)){
             etxt.setText(newV);
@@ -288,15 +288,37 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         if (updateCheckBox(cbInternalGps, Constants.INTERNALGPS,true)) isChanged=true;
         if (updateCheckBox(cbBtAis,btAis && mBluetoothAdapter!= null && mBluetoothAdapter.isEnabled())) isChanged=true;
         if (updateCheckBox(cbBtNmea,btNmea && mBluetoothAdapter!= null && mBluetoothAdapter.isEnabled())) isChanged=true;
-        if (updateText(txIp,sharedPrefs.getString(Constants.IPADDR, "192.168.20.10"))) isChanged=true;
+        if (updateText(txIp, sharedPrefs.getString(Constants.IPADDR, "192.168.20.10"))) isChanged=true;
         if (updateText(txPort,sharedPrefs.getString(Constants.IPPORT,"34567"))) isChanged=true;
+        if (updateText(edBt,sharedPrefs.getString(Constants.BTDEVICE,""))) isChanged=true;
         String workdir=sharedPrefs.getString(Constants.WORKDIR,Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
         if (updateText(textWorkdir,workdir))isChanged=true;
         updateExternal();
+        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
+        if (mode.equals("")) {
+            mode=Constants.MODE_NORMAL;
+        }
+        setButtonsFromMode(mode);
         if (isChanged){
             stopGpsService(false);
         }
         disableChangeActions=false;
+    }
+
+    private void doStart(){
+        stopGpsService(false);
+        startGpsService();
+        Intent intent;
+        if (rbServer.isChecked()){
+            intent = new Intent(context, WebServerActivity.class);
+        }
+        else if (rbCrosswalk.isChecked()) {
+            intent = new Intent(context, XwalkActivity.class);
+        }
+        else {
+            intent = new Intent(context, WebViewActivity.class);
+        }
+        startActivity(intent);
     }
     /**
      * Called when the activity is first created.
@@ -334,11 +356,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
         mBluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) bt.setVisibility(View.INVISIBLE);
         else bt.setVisibility(View.VISIBLE);
-        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
-        if (mode.equals("")) {
-            mode=Constants.MODE_NORMAL;
-        }
-        setButtonsFromMode(mode);
+
         if (gpsService == null) {
             Intent intent = new Intent(AvNav.this, GpsService.class);
             intent.putExtra(GpsService.PROP_CHECKONLY, true);
@@ -392,18 +410,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
                 }
 
 
-                startGpsService();
-                Intent intent;
-                if (rbServer.isChecked()){
-                    intent = new Intent(context, WebServerActivity.class);
-                }
-                else if (rbCrosswalk.isChecked()) {
-                    intent = new Intent(context, XwalkActivity.class);
-                }
-                else {
-                    intent = new Intent(context, WebViewActivity.class);
-                }
-                startActivity(intent);
+                doStart();
             }
         });
         btExit.setOnClickListener(new View.OnClickListener() {
@@ -528,6 +535,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
     protected void onResume() {
         super.onResume();
         updateValues();
+        doStart();
     }
 
     @Override

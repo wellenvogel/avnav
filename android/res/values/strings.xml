@@ -60,4 +60,5 @@
     <string name="labelSettingsNmeaInput">NMEA Source</string>
     <string name="labelSettingsAisInput">AIS Source</string>
     <string name="labelSettingsNone">Off</string>
+    
 </resources>

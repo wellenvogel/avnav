@@ -159,6 +159,9 @@ avnav.gui.Settingspage.prototype.readData=function(){
 avnav.gui.Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.readData();
+    if (avnav.android){
+        $('#avb_SettingsAndroid').show();
+    }
 };
 
 
@@ -205,6 +208,12 @@ avnav.gui.Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
         this.allItems[idx].write(val);
     }
 };
+
+avnav.gui.Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
+    log("SettingsAndroid clicked");
+    avnav.android.showSettings();
+};
+
 
 (function(){
     //create an instance of the status page handler

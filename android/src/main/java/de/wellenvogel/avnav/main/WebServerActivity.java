@@ -8,11 +8,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.IOException;
@@ -30,6 +35,29 @@ public class WebServerActivity extends WebViewActivityBase {
     private boolean serverRunning=false;
     private WebServer webServer;
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity_actions, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle presses on the action bar items
+        switch (item.getItemId()) {
+            case R.id.action_about:
+                Intent intent = new Intent(this,Info.class);
+                startActivity(intent);
+                return true;
+            case R.id.action_settings:
+                Intent sintent= new Intent(this,SettingsActivity.class);
+                startActivity(sintent);
+                this.finish();
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
