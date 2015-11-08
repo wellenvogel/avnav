@@ -1,7 +1,7 @@
 group 'de.wellenvogel.avnav'
 apply plugin: 'java'
 
-def revision="1"
+def revision="2"
 def mobacJar="Mobile_Atlas_Creator.jar"
 
 dependencies{
@@ -11,12 +11,14 @@ def srcbase=new File(project.rootDir,"src")
 def srcsub="mobac"+File.separator+"mapsources"+File.separator+"mappacks"+File.separator+"avnavbase"
 sourceSets.main.java.setSrcDirs([srcbase])
 
-task copyDefs(type: org.gradle.api.tasks.Copy){
-    from new File(srcbase,srcsub)
-    into new File(project.buildDir,"classes"+File.separator+"main"+File.separator+srcsub)
-    include "*.png"
-    include "*properties"
-    include "*.list"
+task copyDefs(type: org.gradle.api.tasks.Copy) {
+    from new File(srcbase, srcsub), {
+        include "*png"
+        include "*properties"
+        include "*list"
+    }
+    into new File(project.buildDir, "classes" + File.separator + "main" + File.separator + srcsub)
+    outputs.upToDateWhen {false}
 }
 
 task writeVersion<<{
@@ -29,6 +31,7 @@ task writeVersion<<{
 }
 writeVersion.dependsOn classes
 jar.dependsOn writeVersion
+jar.dependsOn copyDefs
 
 jar{
     archiveName="mp-avnavbase.jar"
@@ -38,7 +41,6 @@ jar{
         put 'MapPackName','avnavbase'
         put 'MapPackBuild-Date',new Date().format("yyyy-MM-dd HH:mm:ss")
     }
-    from sourceSets.main.output.classesDir
     from new File(sourceSets.main.output.classesDir,srcsub),{
         rename{ "mobac.program.interfaces.MapSource"}
         into "META-INF/services/"
