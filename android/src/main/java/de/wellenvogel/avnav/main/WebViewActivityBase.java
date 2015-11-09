@@ -240,6 +240,7 @@ public class WebViewActivityBase extends XWalkActivity {
             WebViewActivityBase.this.showSettings();
         }
 
+
     };
 
     private void showSettings(){
