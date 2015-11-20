@@ -1,6 +1,8 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -22,7 +24,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xwalk.core.JavascriptInterface;
-import org.xwalk.core.XWalkActivity;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -34,7 +35,7 @@ import java.util.Map;
 /**
  * Created by andreas on 06.01.15.
  */
-public class WebViewActivityBase extends XWalkActivity {
+public class WebViewActivityBase extends Activity {
     public static final String URLPREFIX="file://android_asset/";
     protected static final String NAVURL="viewer/avnav_navi.php";
     protected static final String CHARTPREFIX="charts";
@@ -311,7 +312,7 @@ public class WebViewActivityBase extends XWalkActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.webview);
+        setContentView(R.layout.viewcontainer);
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         workdir=prefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
         workBase=new File(workdir);
@@ -323,7 +324,19 @@ public class WebViewActivityBase extends XWalkActivity {
             routeHandler=new RouteHandler(new File(workBase,"routes"));
         }
         routeHandler.start();
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        WebViewFragment fragment = new WebViewFragment();
+        fragmentTransaction.replace(R.id.webmain, fragment);
+        fragmentTransaction.commit();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
     String mimeType(String fname){
         String ext=fname.replaceAll(".*\\.", "");
         String mimeType=mime.getMimeTypeFromExtension(ext);

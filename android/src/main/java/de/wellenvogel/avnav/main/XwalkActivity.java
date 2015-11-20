@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.main;
 import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.AttributeSet;
 import android.view.WindowManager;
 import android.webkit.WebResourceResponse;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -12,20 +13,21 @@ import org.xwalk.core.*;
  * Created by andreas on 08.01.15.
  */
 public class XwalkActivity extends WebViewActivityBase {
-    private SharedXWalkView mXwalkView;
+    private XWalkView mXwalkView;
     private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        mXwalkView = new SharedXWalkView(this, null, new SharedXWalkExceptionHandler() {
+        SharedXWalkView.initialize(this, new SharedXWalkExceptionHandler() {
             @Override
             public void onSharedLibraryNotFound() {
                 downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
-                        getString(R.string.xwalkNotFoundText)+ Constants.XWALKVERSION,true);
+                        getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, true);
             }
         });
+        mXwalkView = new XWalkView(this,(AttributeSet)null);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         ActionBar a=getActionBar();
         if (a != null) a.hide();

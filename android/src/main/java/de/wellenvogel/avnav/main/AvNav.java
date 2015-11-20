@@ -2,7 +2,6 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,12 +20,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.CheckBox;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -180,7 +174,7 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             intent = new Intent(context, XwalkActivity.class);
         }
         else {
-            intent = new Intent(context, WebViewActivity.class);
+            intent = new Intent(context, WebViewActivityBase.class);
         }
         startActivity(intent);
     }
