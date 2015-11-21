@@ -1,6 +1,8 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.*;
@@ -8,13 +10,18 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.*;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.*;
 import android.widget.Toast;
+
+import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
+import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.gps.TrackWriter;
@@ -26,6 +33,7 @@ import org.json.JSONObject;
 import org.xwalk.core.JavascriptInterface;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,7 +43,7 @@ import java.util.Map;
 /**
  * Created by andreas on 06.01.15.
  */
-public class WebViewActivityBase extends Activity {
+public class MainActivity extends Activity implements IDialogHandler{
     public static final String URLPREFIX="file://android_asset/";
     protected static final String NAVURL="viewer/avnav_navi.php";
     protected static final String CHARTPREFIX="charts";
@@ -45,6 +53,9 @@ public class WebViewActivityBase extends Activity {
     private static final String GEMFEXTENSION =".gemf";
     private static final int ROUTE_OPEN_REQUEST=0;
     public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
+
+    private String lastStartMode=null; //The last mode we used to select the fragment
+    private SharedPreferences sharedPrefs;
     protected final Activity activity=this;
     MimeTypeMap mime = MimeTypeMap.getSingleton();
     AssetManager assetManager;
@@ -64,11 +75,13 @@ public class WebViewActivityBase extends Activity {
 
     private IMediaUpdater updater;
 
+    private IJsEventHandler jsEventHandler;
+
     private Handler backHandler=new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            WebViewActivityBase.this.goBack();
+            MainActivity.this.goBack();
         }
     };
 
@@ -125,6 +138,99 @@ public class WebViewActivityBase extends Activity {
             }
         }
     }
+
+    private void startGpsService(){
+
+
+        if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
+                ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
+                ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false)){
+            Toast.makeText(this, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
+            try {
+                InetSocketAddress addr = GpsDataProvider.convertAddress(
+                        sharedPrefs.getString(Constants.IPADDR, ""),
+                        sharedPrefs.getString(Constants.IPPORT, ""));
+            } catch (Exception i) {
+                Toast.makeText(this, R.string.invalidIp, Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        if (sharedPrefs.getBoolean(Constants.BTAIS,false)||sharedPrefs.getBoolean(Constants.BTNMEA,false)){
+            String btdevice=sharedPrefs.getString(Constants.BTDEVICE,"");
+            if (BluetoothPositionHandler.getDeviceForName(btdevice) == null){
+                Toast.makeText(this, getText(R.string.noSuchBluetoothDevice)+":"+btdevice, Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        if (sharedPrefs.getBoolean(Constants.INTERNALGPS,false)) {
+            LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
+            boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+            // check if enabled and if not send user to the GSP settings
+            // Better solution would be to display a dialog and suggesting to
+            // go to the settings
+            if (!enabled) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(R.string.noLocation);
+                builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User clicked OK button
+                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(intent);
+                    }
+                });
+                builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User cancelled the dialog
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
+            }
+        }
+        File trackDir=new File(sharedPrefs.getString(Constants.WORKDIR,""),"tracks");
+        Intent intent = new Intent(this, GpsService.class);
+        intent.putExtra(GpsService.PROP_TRACKDIR, trackDir.getAbsolutePath());
+        //TODO: add other parameters here
+        startService(intent);
+
+    }
+
+    private void stopGpsService(boolean unbind){
+        if (gpsService !=null){
+            gpsService.stopMe();
+        }
+        if (unbind) {
+            Intent intent = new Intent(this, GpsService.class);
+            try {
+                unbindService(mConnection);
+                stopService(intent);
+            }catch (Exception e){}
+        }
+    }
+
+    @Override
+    public boolean onCancel(int dialogId) {
+        if (dialogId == XwalkDownloadHandler.DIALOGID){
+            sharedPrefs.edit().putString(Constants.RUNMODE,Constants.MODE_NORMAL).commit();
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOk(int dialogId) {
+        return true;
+    }
+
+    @Override
+    public boolean onNeutral(int dialogId) {
+        return true;
+    }
+
 
     //potentially the Javascript interface code is called from the Xwalk app package
     //so we have to be careful to always access the correct resource manager when accessing resources!
@@ -228,7 +334,7 @@ public class WebViewActivityBase extends Activity {
         }
         @JavascriptInterface
         public void goBack(){
-            WebViewActivityBase.this.backHandler.sendEmptyMessage(1);
+            MainActivity.this.backHandler.sendEmptyMessage(1);
         }
 
         @JavascriptInterface
@@ -238,7 +344,7 @@ public class WebViewActivityBase extends Activity {
 
         @android.webkit.JavascriptInterface
         public void showSettings(){
-            WebViewActivityBase.this.showSettings();
+            MainActivity.this.showSettings();
         }
 
 
@@ -313,10 +419,10 @@ public class WebViewActivityBase extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.viewcontainer);
-        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        workdir=prefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
+        sharedPrefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        workdir=sharedPrefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
         workBase=new File(workdir);
-        showDemoCharts=prefs.getBoolean(Constants.SHOWDEMO,false);
+        showDemoCharts=sharedPrefs.getBoolean(Constants.SHOWDEMO,false);
         ownMimeMap.put("js","text/javascript");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
@@ -324,16 +430,30 @@ public class WebViewActivityBase extends Activity {
             routeHandler=new RouteHandler(new File(workBase,"routes"));
         }
         routeHandler.start();
-        FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        WebViewFragment fragment = new WebViewFragment();
-        fragmentTransaction.replace(R.id.webmain, fragment);
-        fragmentTransaction.commit();
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        String mode=sharedPrefs.getString(Constants.RUNMODE,Constants.MODE_NORMAL);
+        if (lastStartMode == null || !lastStartMode.equals(mode)){
+            jsEventHandler=null;
+            FragmentManager fragmentManager = getFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            //TODO: select right fragment based on mode
+            Fragment fragment=null;
+            if (mode.equals(Constants.MODE_XWALK)){
+                if (!SettingsActivity.isXwalRuntimeInstalled(this)){
+                    new XwalkDownloadHandler(this).showDownloadDialog(getString(R.string.xwalkNotFoundTitle),getString(R.string.xwalkNotFoundTitle),false);
+                }
+                fragment= new XwalkFragment();
+            }
+            if (fragment == null) fragment=new WebViewFragment();
+            fragmentTransaction.replace(R.id.webmain, fragment);
+            fragmentTransaction.commit();
+            lastStartMode=mode;
+        }
 
     }
 
@@ -773,7 +893,7 @@ public class WebViewActivityBase extends Activity {
 
             return new ExtendedWebResourceResponse(len,mimeType,"",rt);
         } catch (Exception e) {
-            Log.e(Constants.LOGPRFX,"chart file "+fname+" not found: "+e.getLocalizedMessage());
+            Log.e(Constants.LOGPRFX, "chart file " + fname + " not found: " + e.getLocalizedMessage());
         }
         return null;
     }
@@ -858,9 +978,17 @@ public class WebViewActivityBase extends Activity {
     }
 
     /**
-     * to be overloaded
      * @param key
      * @param id
      */
-    protected void sendEventToJs(String key, int id){}
+    private void sendEventToJs(String key, int id){
+        if (jsEventHandler != null) jsEventHandler.sendEventToJs(key,id);
+    }
+
+    public void registerJsEventHandler(IJsEventHandler handler){
+        jsEventHandler=handler;
+    }
+    public void deregisterJsEventHandler(IJsEventHandler handler){
+        if (jsEventHandler == handler) jsEventHandler=null;
+    }
 }

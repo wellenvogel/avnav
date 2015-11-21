@@ -171,10 +171,10 @@ public class AvNav extends Activity implements MediaScannerConnection.MediaScann
             intent = new Intent(context, WebServerActivity.class);
         }
         else if (mode.equals(Constants.MODE_XWALK)) {
-            intent = new Intent(context, XwalkActivity.class);
+            intent = new Intent(context, XwalkFragment.class);
         }
         else {
-            intent = new Intent(context, WebViewActivityBase.class);
+            intent = new Intent(context, MainActivity.class);
         }
         startActivity(intent);
     }

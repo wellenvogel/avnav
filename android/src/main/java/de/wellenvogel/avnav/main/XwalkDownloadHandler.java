@@ -12,6 +12,7 @@ import android.widget.Toast;
  * Created by andreas on 10.01.15.
  */
 public class XwalkDownloadHandler {
+    public static int DIALOGID=1;
     private Activity activity;
     public XwalkDownloadHandler(Activity activity) {
         this.activity = activity;
@@ -23,6 +24,9 @@ public class XwalkDownloadHandler {
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         if (finishOnCancel) activity.finish();
+                        else if (activity instanceof IDialogHandler){
+                            ((IDialogHandler) activity).onCancel(DIALOGID);
+                        }
                         // User cancelled the dialog
                     }
                 });
@@ -31,6 +35,9 @@ public class XwalkDownloadHandler {
             builder.setNeutralButton(R.string.xwalkDownloadFromUrl,
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
+                            if (activity instanceof IDialogHandler) {
+                                if (!((IDialogHandler) activity).onNeutral(DIALOGID)) return;
+                            }
                             Intent goDownload = new Intent(Intent.ACTION_VIEW);
                             goDownload.setData(Uri.parse(downloadUrl));
                             try {
@@ -45,6 +52,9 @@ public class XwalkDownloadHandler {
         builder.setPositiveButton(R.string.xwalkDownloadFromPlaystore,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        if (activity instanceof IDialogHandler){
+                            if (! ((IDialogHandler) activity).onOk(DIALOGID)) return;
+                        }
                         Intent goToMarket = new Intent(Intent.ACTION_VIEW);
                         goToMarket.setData(Uri.parse(
                                 "market://details?id=" + Constants.XWALKAPP));

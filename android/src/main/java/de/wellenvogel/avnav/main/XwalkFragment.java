@@ -1,9 +1,16 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.ActionBar;
+import android.app.Activity;
+import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.WebResourceResponse;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -12,30 +19,41 @@ import org.xwalk.core.*;
 /**
  * Created by andreas on 08.01.15.
  */
-public class XwalkActivity extends WebViewActivityBase {
+public class XwalkFragment extends Fragment implements IJsEventHandler {
     private XWalkView mXwalkView;
-    private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        SharedXWalkView.initialize(this, new SharedXWalkExceptionHandler() {
-            @Override
-            public void onSharedLibraryNotFound() {
-                downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
-                        getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, true);
-            }
-        });
-        mXwalkView = new XWalkView(this,(AttributeSet)null);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        ActionBar a=getActionBar();
-        if (a != null) a.hide();
-        setContentView(mXwalkView);
+    }
+
+    private MainActivity getMainActivity(){
+        return (MainActivity)getActivity();
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        getMainActivity().registerJsEventHandler(this);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        MainActivity a=getMainActivity();
+        if (a!=null) a.deregisterJsEventHandler(this);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        SharedXWalkView.initialize(this.getActivity(),null);
+        mXwalkView = new XWalkView(inflater.getContext(),(AttributeSet)null);
+        mXwalkView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         mXwalkView.setResourceClient(new XWalkResourceClient(mXwalkView){
             @Override
             public WebResourceResponse shouldInterceptLoadRequest(XWalkView view, String url) {
-                WebResourceResponse rt=handleRequest(view,url);
+                WebResourceResponse rt=getMainActivity().handleRequest(view,url);
                 if (rt != null) return rt;
                 return super.shouldInterceptLoadRequest(view, url);
             }
@@ -44,14 +62,15 @@ public class XwalkActivity extends WebViewActivityBase {
             AvnLog.d(Constants.LOGPRFX,"enable xwalk remote debugging");
             XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
         }
-        mXwalkView.addJavascriptInterface(mJavaScriptApi,"avnavAndroid");
-        String start=URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
+        mXwalkView.addJavascriptInterface(getMainActivity().mJavaScriptApi,"avnavAndroid");
+        String start=getMainActivity().URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
         if (BuildConfig.DEBUG) start+="&log=1";
-        mXwalkView.load(start, getStartPage());
+        mXwalkView.load(start, getMainActivity().getStartPage());
+        return mXwalkView;
 
     }
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         if (mXwalkView != null) {
             mXwalkView.pauseTimers();
@@ -60,7 +79,7 @@ public class XwalkActivity extends WebViewActivityBase {
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         if (mXwalkView != null) {
             mXwalkView.resumeTimers();
@@ -69,7 +88,7 @@ public class XwalkActivity extends WebViewActivityBase {
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         if (mXwalkView != null) {
             mXwalkView.onDestroy();
@@ -77,20 +96,14 @@ public class XwalkActivity extends WebViewActivityBase {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode,resultCode,data);
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (mXwalkView != null) {
             mXwalkView.onActivityResult(requestCode, resultCode, data);
         }
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if (mXwalkView != null) {
-            mXwalkView.onNewIntent(intent);
-        }
-    }
+
 
     /**
      * send an event to the js code
@@ -98,7 +111,7 @@ public class XwalkActivity extends WebViewActivityBase {
      * @param id
      */
     @Override
-    protected void sendEventToJs(String key, int id) {
+    public void sendEventToJs(String key, int id) {
         AvnLog.i("js event key="+key+", id="+id);
         if (mXwalkView !=null) mXwalkView.load("javascript:avnav.gui.sendAndroidEvent('" + key + "'," + id + ")", null);
     }

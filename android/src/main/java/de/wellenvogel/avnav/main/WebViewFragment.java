@@ -3,32 +3,20 @@ package de.wellenvogel.avnav.main;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.*;
-import android.content.res.AssetManager;
-import android.location.*;
-import android.net.Uri;
 import android.os.*;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.*;
 import android.widget.Toast;
-import de.wellenvogel.avnav.gps.GpsService;
-import de.wellenvogel.avnav.util.AvnLog;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
+import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 04.12.14.
  */
-public class WebViewFragment extends Fragment {
+public class WebViewFragment extends Fragment implements IJsEventHandler {
     private WebView webView;
 
     @Override
@@ -36,21 +24,21 @@ public class WebViewFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
-    private WebViewActivityBase getWebActivity(){
-        return (WebViewActivityBase)getActivity();
+    private MainActivity getMainActivity(){
+        return (MainActivity)getActivity();
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        //super.onCreateView(inflater, container, savedInstanceState);
-        View main=inflater.inflate(R.layout.webview,container,false);
-        webView = (WebView)main.findViewById(R.id.webview);
+        super.onCreateView(inflater, container, savedInstanceState);
+        webView = new WebView(inflater.getContext());
+        webView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         webView.getSettings().setJavaScriptEnabled(true);
         /*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true);
         }
         */
-        String htmlPage = getWebActivity().getStartPage();
+        String htmlPage = getMainActivity().getStartPage();
         webView.setWebViewClient(new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 Toast.makeText(getActivity(), "Oh no! " + description, Toast.LENGTH_SHORT).show();
@@ -58,7 +46,9 @@ public class WebViewFragment extends Fragment {
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-                WebResourceResponse rt=getWebActivity().handleRequest(view,url);
+                MainActivity base= getMainActivity();
+                WebResourceResponse rt=null;
+                if (base != null) rt=base.handleRequest(view,url);
                 if (rt==null) return super.shouldInterceptRequest(view, url);
                 return rt;
             }
@@ -75,14 +65,27 @@ public class WebViewFragment extends Fragment {
         String databasePath = webView.getContext().getDir("databases",
                 Context.MODE_PRIVATE).getPath();
         webView.getSettings().setDatabasePath(databasePath);
-        webView.addJavascriptInterface(getWebActivity().mJavaScriptApi,"avnavAndroid");
+        webView.addJavascriptInterface(getMainActivity().mJavaScriptApi,"avnavAndroid");
         getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
-        String start=getWebActivity().URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
+        String start= getMainActivity().URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
         if (BuildConfig.DEBUG) start+="&log=1";
         webView.loadDataWithBaseURL(start,htmlPage,"text/html","UTF-8",null);
-        return main;
+        return webView;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        getMainActivity().registerJsEventHandler(this);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        MainActivity a= getMainActivity();
+        if (a!= null) a.deregisterJsEventHandler(this);
     }
 
     /**
@@ -90,8 +93,8 @@ public class WebViewFragment extends Fragment {
      * @param key - a key string - only a-z_0-9A-Z
      * @param id
      */
-
-    protected void sendEventToJs(String key, int id) {
+    @Override
+    public void sendEventToJs(String key, int id) {
         AvnLog.i("js event key="+key+", id="+id);
         webView.loadUrl("javascript:avnav.gui.sendAndroidEvent('" + key + "'," + id + ")");
     }

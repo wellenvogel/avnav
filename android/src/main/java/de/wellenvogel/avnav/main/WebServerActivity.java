@@ -1,10 +1,6 @@
 package de.wellenvogel.avnav.main;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,7 +21,7 @@ import java.io.IOException;
 /**
  * Created by andreas on 04.12.14.
  */
-public class WebServerActivity extends WebViewActivityBase {
+public class WebServerActivity extends MainActivity {
     private WebView webView;
     private Button btServer;
     private Button btCancel;
