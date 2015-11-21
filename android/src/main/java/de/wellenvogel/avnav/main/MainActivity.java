@@ -31,6 +31,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xwalk.core.JavascriptInterface;
+import org.xwalk.core.XWalkActivity;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -43,7 +44,7 @@ import java.util.Map;
 /**
  * Created by andreas on 06.01.15.
  */
-public class MainActivity extends Activity implements IDialogHandler{
+public class MainActivity extends XWalkActivity implements IDialogHandler{
     public static final String URLPREFIX="file://android_asset/";
     protected static final String NAVURL="viewer/avnav_navi.php";
     protected static final String CHARTPREFIX="charts";
@@ -990,5 +991,9 @@ public class MainActivity extends Activity implements IDialogHandler{
     }
     public void deregisterJsEventHandler(IJsEventHandler handler){
         if (jsEventHandler == handler) jsEventHandler=null;
+    }
+
+    public void resetMode(){
+        sharedPrefs.edit().putString(Constants.RUNMODE,Constants.MODE_NORMAL).commit();
     }
 }
