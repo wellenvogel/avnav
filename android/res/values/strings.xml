@@ -63,5 +63,9 @@
     <string name="labelSettingsNmeaInput">NMEA Source</string>
     <string name="labelSettingsAisInput">AIS Source</string>
     <string name="labelSettingsNone">Off</string>
+    <string name="somethingWrong">StartupError</string>
+    <string name="somethingWrongMessage">Something went wrong during the last start. Please change your settings and try again.</string>
+    <string name="firstStart">Initial Settings</string>
+    <string name="firstStartMessage">You are starting for the first time.</string>
 
 </resources>

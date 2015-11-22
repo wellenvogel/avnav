@@ -21,6 +21,7 @@ public class Constants {
     public static final String IPAISLIFETIME="ip.aisLifetime";
     public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
     public static final String RUNMODE="runmode"; //normal,server,xwalk
+    public static final String WAITSTART="waitstart";
     public static final String PREFNAME="AvNav";
     //dummy file to make the media scanner see or directories...
     public static final String EMPTY_FILE="EMPTY";
@@ -34,4 +35,5 @@ public class Constants {
     public static final String OWN_PACKAGE="de.wellenvogel.avnav.main";
     public static final String LOGPRFX="avnav";
     public static final int    OSVERSION_XWALK=19;  //if below this version we should have xwalk
+    public static final int ROUTE_OPEN_REQUEST=0;
 }

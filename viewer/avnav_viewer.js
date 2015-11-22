@@ -208,6 +208,7 @@ avnav.main=function() {
         avnav.android=window.avnavAndroid;
         propertyHandler.setValueByName('routingServerError',false);
         propertyHandler.setValueByName('connectedMode',true);
+	avnav.android.applicationStarted();
     }
     if (avnav_version !== undefined){
         $('#avi_mainpage_version').text(avnav_version);

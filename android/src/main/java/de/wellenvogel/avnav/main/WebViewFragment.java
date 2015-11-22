@@ -27,6 +27,12 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
     private MainActivity getMainActivity(){
         return (MainActivity)getActivity();
     }
+
+    private RequestHandler getRequestHandler(){
+        MainActivity a=getMainActivity();
+        if (a == null) return null;
+        return a.getRequestHandler();
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
@@ -38,7 +44,7 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
             WebView.setWebContentsDebuggingEnabled(true);
         }
         */
-        String htmlPage = getMainActivity().getStartPage();
+        String htmlPage = getRequestHandler().getStartPage();
         webView.setWebViewClient(new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 Toast.makeText(getActivity(), "Oh no! " + description, Toast.LENGTH_SHORT).show();
@@ -46,9 +52,9 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-                MainActivity base= getMainActivity();
+                RequestHandler handler= getRequestHandler();
                 WebResourceResponse rt=null;
-                if (base != null) rt=base.handleRequest(view,url);
+                if (handler != null) rt=handler.handleRequest(view,url);
                 if (rt==null) return super.shouldInterceptRequest(view, url);
                 return rt;
             }
@@ -65,11 +71,11 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
         String databasePath = webView.getContext().getDir("databases",
                 Context.MODE_PRIVATE).getPath();
         webView.getSettings().setDatabasePath(databasePath);
-        webView.addJavascriptInterface(getMainActivity().mJavaScriptApi,"avnavAndroid");
+        webView.addJavascriptInterface(getRequestHandler().mJavaScriptApi,"avnavAndroid");
         getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
-        String start= getMainActivity().URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
+        String start= RequestHandler.URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
         if (BuildConfig.DEBUG) start+="&log=1";
         webView.loadDataWithBaseURL(start,htmlPage,"text/html","UTF-8",null);
         return webView;

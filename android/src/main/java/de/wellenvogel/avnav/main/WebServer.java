@@ -34,7 +34,7 @@ public class WebServer {
     private HttpRequestHandlerRegistry registry = null;
     private NotificationManager notifyManager = null;
 
-    protected WebServerActivity activity;
+    protected MainActivity activity;
     private boolean running;
 
     class NavRequestHandler implements HttpRequestHandler{
@@ -58,7 +58,7 @@ public class WebServer {
                 try{
                     contentLength=Integer.parseInt(contentLengthS);
                 }catch (Exception e){}
-                if (contentLength <= 0 || contentLength > activity.ROUTE_MAX_SIZE) throw new MethodNotSupportedException("invalid content length");
+                if (contentLength <= 0 || contentLength > RequestHandler.ROUTE_MAX_SIZE) throw new MethodNotSupportedException("invalid content length");
                 HttpEntity entity = ((HttpEntityEnclosingRequest) httpRequest).getEntity();
                 InputStream inputStream = entity.getContent();
                 byte [] data=new byte[contentLength];
@@ -66,7 +66,7 @@ public class WebServer {
                 if (bread != contentLength) throw new IOException("not enough post data");
                 postData=new String(data);
             }
-            MainActivity.ExtendedWebResourceResponse resp=activity.handleNavRequest(url,postData);
+            RequestHandler.ExtendedWebResourceResponse resp=activity.getRequestHandler().handleNavRequest(url, postData);
             if (resp != null){
                 httpResponse.setHeader("content-type","application/json");
                 for (String k:resp.getHeaders().keySet()){
@@ -100,7 +100,7 @@ public class WebServer {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
             url=url.replaceAll("^/*","");
-            MainActivity.ExtendedWebResourceResponse resp=activity.handleChartRequest(url);
+            RequestHandler.ExtendedWebResourceResponse resp=activity.getRequestHandler().handleChartRequest(url);
             if (resp != null){
                 httpResponse.setHeader("content-type",resp.getMimeType());
                 if (resp.getLength() < 0){
@@ -136,7 +136,7 @@ public class WebServer {
                 InputStream is = activity.assetManager.open(url);
                 httpResponse.setStatusCode(HttpStatus.SC_OK);
                 httpResponse.setEntity(streamToEntity(is));
-                httpResponse.addHeader("content-type", activity.mimeType(url));
+                httpResponse.addHeader("content-type", activity.getRequestHandler().mimeType(url));
 
             }catch (Exception e){
                 AvnLog.d(NAME,"file "+url+" not found: "+e);
@@ -164,7 +164,7 @@ public class WebServer {
     private Listener listener;
 
 
-    public WebServer(WebServerActivity controller) {
+    public WebServer(MainActivity controller) {
 
         activity=controller;
 
@@ -218,8 +218,8 @@ public class WebServer {
                     new DefaultHttpResponseFactory());
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
-            registry.register("/"+activity.NAVURL+"*",navRequestHandler);
-            registry.register("/"+activity.CHARTPREFIX+"*",chartRequestHandler);
+            registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
+            registry.register("/"+ RequestHandler.CHARTPREFIX+"*",chartRequestHandler);
 
             registry.register("*",baseRequestHandler);
 

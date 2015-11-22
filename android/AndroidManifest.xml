@@ -48,7 +48,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".WebServerActivity"
+            android:name=".WebServerFragment"
             android:label="@string/appName"></activity>
         <activity
             android:name=".Info"

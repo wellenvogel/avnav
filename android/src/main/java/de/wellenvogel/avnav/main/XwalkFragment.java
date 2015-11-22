@@ -1,17 +1,14 @@
 package de.wellenvogel.avnav.main;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.webkit.WebResourceResponse;
 import de.wellenvogel.avnav.util.AvnLog;
 import org.xwalk.core.*;
@@ -31,6 +28,11 @@ public class XwalkFragment extends Fragment implements IJsEventHandler {
         return (MainActivity)getActivity();
     }
 
+    private RequestHandler getRequestHandler(){
+        MainActivity a=getMainActivity();
+        if (a == null) return null;
+        return a.getRequestHandler();
+    }
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -53,7 +55,9 @@ public class XwalkFragment extends Fragment implements IJsEventHandler {
         mXwalkView.setResourceClient(new XWalkResourceClient(mXwalkView){
             @Override
             public WebResourceResponse shouldInterceptLoadRequest(XWalkView view, String url) {
-                WebResourceResponse rt=getMainActivity().handleRequest(view,url);
+                WebResourceResponse rt=null;
+                RequestHandler handler=getRequestHandler();
+                if (handler != null) rt=handler.handleRequest(view, url);
                 if (rt != null) return rt;
                 return super.shouldInterceptLoadRequest(view, url);
             }
@@ -62,10 +66,10 @@ public class XwalkFragment extends Fragment implements IJsEventHandler {
             AvnLog.d(Constants.LOGPRFX,"enable xwalk remote debugging");
             XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
         }
-        mXwalkView.addJavascriptInterface(getMainActivity().mJavaScriptApi,"avnavAndroid");
-        String start=getMainActivity().URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
+        mXwalkView.addJavascriptInterface(getRequestHandler().mJavaScriptApi,"avnavAndroid");
+        String start= RequestHandler.URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
         if (BuildConfig.DEBUG) start+="&log=1";
-        mXwalkView.load(start, getMainActivity().getStartPage());
+        mXwalkView.load(start, getRequestHandler().getStartPage());
         return mXwalkView;
 
     }

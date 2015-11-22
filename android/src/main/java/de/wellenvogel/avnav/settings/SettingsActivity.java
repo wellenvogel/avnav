@@ -1,7 +1,9 @@
 package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -68,15 +70,24 @@ public class SettingsActivity extends PreferenceActivity {
             }
         }
     }
-    public static void handleInitialSettings(final Activity activity){
+
+    /**
+     * check the current settings
+     * @param activity
+     * @return false when a new dialog had been opened
+     */
+    public static boolean handleInitialSettings(final Activity activity){
+        boolean rt=true;
         final SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
+
         if (mode.equals("")) {
             //never set before
             if (currentapiVersion < Constants.OSVERSION_XWALK ) {
                 if (! isXwalRuntimeInstalled(activity)){
                     (new XwalkDownloadHandler(activity)).showDownloadDialog(activity.getString(R.string.xwalkNotFoundTitle),
                             activity.getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, false);
+                    rt=false;
                 }
                 else {
                     mode=Constants.MODE_XWALK;
@@ -89,6 +100,7 @@ public class SettingsActivity extends PreferenceActivity {
                     if (currentapiVersion < Constants.OSVERSION_XWALK) {
                         (new XwalkDownloadHandler(activity)).showDownloadDialog(activity.getString(R.string.xwalkNotFoundTitle),
                                 activity.getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, false);
+                        rt=false;
                     }
                     else {
                         mode= Constants.MODE_NORMAL;
@@ -142,8 +154,10 @@ public class SettingsActivity extends PreferenceActivity {
                 wdf.mkdirs();
             }
             FolderChooseDialog.chooseFile_or_Dir(wdf.getAbsolutePath());
+            rt=false;
         }
         NmeaSettingsFragment.checkGpsEnabled(activity, false);
+        return rt;
     }
 
     @Override
@@ -170,6 +184,29 @@ public class SettingsActivity extends PreferenceActivity {
     protected void onResume() {
         updateHeaderSummaries(true);
         super.onResume();
+        SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
+        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
+        if (mode.isEmpty() || startPendig) {
+            //TODO: the dialogs must be handled by the settings activity
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setPositiveButton(android.R.string.ok,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+
+                        }
+                    });
+
+            if (startPendig) {
+                builder.setTitle(R.string.somethingWrong).setMessage(R.string.somethingWrongMessage);
+            } else {
+                builder.setTitle(R.string.firstStart).setMessage(R.string.firstStartMessage);
+            }
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
+            if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
+        }
+
     }
     @Override
     public boolean onIsMultiPane() {

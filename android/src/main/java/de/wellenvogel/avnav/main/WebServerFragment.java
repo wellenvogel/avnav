@@ -1,13 +1,17 @@
 package de.wellenvogel.avnav.main;
 
+import android.app.Fragment;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
@@ -21,7 +25,7 @@ import java.io.IOException;
 /**
  * Created by andreas on 04.12.14.
  */
-public class WebServerActivity extends MainActivity {
+public class WebServerFragment extends Fragment {
     private WebView webView;
     private Button btServer;
     private Button btCancel;
@@ -31,38 +35,22 @@ public class WebServerActivity extends MainActivity {
     private boolean serverRunning=false;
     private WebServer webServer;
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu items for use in the action bar
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_activity_actions, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle presses on the action bar items
-        switch (item.getItemId()) {
-            case R.id.action_about:
-                Intent intent = new Intent(this,Info.class);
-                startActivity(intent);
-                return true;
-            case R.id.action_settings:
-                Intent sintent= new Intent(this,SettingsActivity.class);
-                startActivity(sintent);
-                this.finish();
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
+
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.server);
-        btServer =(Button) findViewById(R.id.btWebServer);
-        btCancel=(Button)findViewById(R.id.btBack);
-        btLaunch=(Button)findViewById(R.id.btLaunchBrowser);
-        txServer=(TextView)findViewById(R.id.txServer);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        View rt=inflater.inflate(R.layout.server, container,false);
+        btServer =(Button) rt.findViewById(R.id.btWebServer);
+        btCancel=(Button)rt.findViewById(R.id.btBack);
+        btLaunch=(Button)rt.findViewById(R.id.btLaunchBrowser);
+        txServer=(TextView)rt.findViewById(R.id.txServer);
         btServer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -78,7 +66,7 @@ public class WebServerActivity extends MainActivity {
         btCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                ((MainActivity)getActivity()).showSettings();
             }
         });
         btLaunch.setOnClickListener(new View.OnClickListener() {
@@ -87,15 +75,17 @@ public class WebServerActivity extends MainActivity {
                 launchBrowser();
             }
         });
-        if (webServer == null) webServer=new WebServer(this);
+        if (webServer == null) webServer=new WebServer((MainActivity)getActivity());
         startWebServer();
+        return rt;
 
     }
 
 
     @Override
-    protected void onStart() {
+    public void onStart() {
         super.onStart();
+        ((MainActivity)getActivity()).sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
         if (serverRunning){
             btServer.setText(R.string.stopServer);
             btLaunch.setEnabled(true);
@@ -108,9 +98,10 @@ public class WebServerActivity extends MainActivity {
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         stopWebServer();
+        webServer=null;
     }
 
     private void launchBrowser(){
@@ -124,7 +115,7 @@ public class WebServerActivity extends MainActivity {
             startActivity(Intent.createChooser(myIntent, "Chose browser"));
 
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, "No application can handle this request."
+            Toast.makeText(getActivity(), "No application can handle this request."
                     + " Please install a webbrowser",  Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
