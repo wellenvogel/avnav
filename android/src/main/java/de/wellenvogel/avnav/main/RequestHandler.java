@@ -52,7 +52,7 @@ public class RequestHandler {
     protected JavaScriptApi mJavaScriptApi=new JavaScriptApi();
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
-    private Object routeHandlerMonitor=new Object();
+    private final Object routeHandlerMonitor=new Object();
     private IMediaUpdater updater=null;
     //routes
     private RouteHandler routeHandler=null;

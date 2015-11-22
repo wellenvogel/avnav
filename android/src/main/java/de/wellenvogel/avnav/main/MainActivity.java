@@ -180,6 +180,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
     //to be called e.g. from js
     private void goBack(){
         try {
+            //TODO: add dialog
             super.onBackPressed();
         } catch(Throwable i){
             //sometime a second call (e.g. when the JS code was too slow) will throw an exception
@@ -222,8 +223,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
     @Override
     protected void onStop() {
         super.onStop();
-        stopGpsService(true);
+        //stopGpsService(false);
         if (requestHandler != null) requestHandler.stop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopGpsService(true);
     }
 
     @Override
