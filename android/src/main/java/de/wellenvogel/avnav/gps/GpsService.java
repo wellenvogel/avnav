@@ -180,10 +180,10 @@ public class GpsService extends Service  {
         if (intent != null && intent.getBooleanExtra(PROP_CHECKONLY,false)){
             return Service.START_REDELIVER_INTENT;
         }
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         handleNotification(true);
-        String trackdir=intent.getStringExtra(PROP_TRACKDIR);
         //we rely on the activity to check before...
-        File newTrackDir=new File(trackdir);
+        File newTrackDir=new File(new File(prefs.getString(Constants.WORKDIR,"")),"tracks");
         boolean loadTrack=true;
         if (trackDir != null && trackDir.getAbsolutePath().equals(newTrackDir.getAbsolutePath())){
             //seems to be a restart - so do not load again
@@ -195,13 +195,12 @@ public class GpsService extends Service  {
         trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
         trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
         trackTime=intent.getLongExtra(PROP_TRACKTIME,25*60*60*1000); //25h - to ensure that we at least have the whole day...
-        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         useInternalProvider=prefs.getBoolean(Constants.INTERNALGPS,true);
         ipAis=prefs.getBoolean(Constants.IPAIS,false);
         ipNmea=prefs.getBoolean(Constants.IPNMEA,false);
         btAis=prefs.getBoolean(Constants.BTAIS,false);
         btNmea=prefs.getBoolean(Constants.BTNMEA,false);
-        AvnLog.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+
+        AvnLog.d(LOGPRFX,"started with dir="+newTrackDir.getAbsolutePath()+", interval="+(trackInterval/1000)+
                 ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
                 ", maxtime(h)="+(trackTime/3600/1000)+
                 ", internalGps="+useInternalProvider+
@@ -209,7 +208,7 @@ public class GpsService extends Service  {
                 ", ipAis="+ipAis+
                 ", btNmea="+btNmea+
                 ", btAis="+btAis);
-        trackDir = new File(trackdir);
+        trackDir = newTrackDir;
         if (loadTrack) {
             trackpoints.clear();
             loadSequence++;

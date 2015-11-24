@@ -47,8 +47,8 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
     int goBackSequence;
     private IMediaUpdater updater;
     private IJsEventHandler jsEventHandler;
-
     RequestHandler requestHandler=null;
+    private boolean serviceNeedsRestart=false;
 
     Handler backHandler=new Handler() {
         @Override
@@ -130,7 +130,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
         intent.putExtra(GpsService.PROP_TRACKDIR, trackDir.getAbsolutePath());
         //TODO: add other parameters here
         startService(intent);
-
+        serviceNeedsRestart=false;
     }
 
     private void stopGpsService(boolean unbind){
@@ -173,19 +173,34 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
 
 
     void showSettings(){
+        serviceNeedsRestart=true;
         Intent sintent= new Intent(this,SettingsActivity.class);
         startActivity(sintent);
     }
 
     //to be called e.g. from js
-    private void goBack(){
+    void goBack(){
         try {
             //TODO: add dialog
-            super.onBackPressed();
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setPositiveButton(android.R.string.ok,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            MainActivity.this.endApp();
+                        }
+                    });
+            builder.setNegativeButton(android.R.string.cancel,null);
+            builder.setMessage(R.string.endApplication);
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
         } catch(Throwable i){
             //sometime a second call (e.g. when the JS code was too slow) will throw an exception
             Log.e(AvnLog.LOGPREFIX,"exception in goBack:"+i.getLocalizedMessage());
         }
+    }
+
+    private void endApp(){
+        finish();
     }
 
 
@@ -231,6 +246,8 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
     protected void onDestroy() {
         super.onDestroy();
         stopGpsService(true);
+        serviceNeedsRestart=true;
+        System.exit(0);
     }
 
     @Override
@@ -238,11 +255,12 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.viewcontainer);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        workdir=sharedPrefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
+        workdir=sharedPrefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath() + "/avnav");
         workBase=new File(workdir);
         showDemoCharts=sharedPrefs.getBoolean(Constants.SHOWDEMO,false);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
+        serviceNeedsRestart=true;
         if (gpsService == null) {
             Intent intent = new Intent(this, GpsService.class);
             intent.putExtra(GpsService.PROP_CHECKONLY, true);
@@ -250,14 +268,22 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         }
         requestHandler=new RequestHandler(this);
+        sharedPrefs.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                serviceNeedsRestart=true;
+                Log.d(Constants.LOGPRFX,"preferences changed");
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        stopGpsService(false);
+        if (serviceNeedsRestart) Log.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
+        if (serviceNeedsRestart) stopGpsService(false);
         boolean startSomething=SettingsActivity.handleInitialSettings(this);
-        startGpsService();
+        if (serviceNeedsRestart) startGpsService();
         requestHandler.update();
         if (startSomething) startFragmentOrActivity();
     }

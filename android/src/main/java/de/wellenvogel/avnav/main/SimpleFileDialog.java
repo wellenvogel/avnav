@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -53,8 +54,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import de.wellenvogel.avnav.util.AvnDialogHandler;
+
 public class SimpleFileDialog
 {
+    public static final int DIALOGID=2;
     //some customization
     public String dialogTitle=null; //use this if set
     public String newFolderText="New Folder";
@@ -68,7 +72,8 @@ public class SimpleFileDialog
     public static final int FolderChooseWrite=3;
     private int Select_type = FileSave;
     private String m_sdcardDirectory = "";
-    private Context m_context;
+    private Activity m_context;
+    private AvnDialogHandler handler;
     private TextView m_titleView1;
     private TextView m_titleView;
     public String Default_File_Name = "default.txt";
@@ -102,11 +107,12 @@ public class SimpleFileDialog
         }
     }
 
-    public SimpleFileDialog(Context context, int file_select_type, SimpleFileDialogListener SimpleFileDialogListener)
+    public SimpleFileDialog(Activity context, int file_select_type, SimpleFileDialogListener SimpleFileDialogListener)
     {
         Select_type = file_select_type;
 
         m_context = context;
+        handler=new AvnDialogHandler(context);
         m_sdcardDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
         m_SimpleFileDialogListener = SimpleFileDialogListener;
 
@@ -216,6 +222,7 @@ public class SimpleFileDialog
                 // Current directory chosen
                 // Call registered listener supplied with the chosen directory
                 Boolean wantToCloseDialog = true;
+                if (!handler.onOk(DIALOGID)) return;
                 if (m_SimpleFileDialogListener != null) {
                     {
                         if (Select_type == FileOpen || Select_type == FileSave) {

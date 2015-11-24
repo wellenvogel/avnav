@@ -7,9 +7,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
@@ -17,7 +14,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.IOException;
@@ -28,8 +24,9 @@ import java.io.IOException;
 public class WebServerFragment extends Fragment {
     private WebView webView;
     private Button btServer;
-    private Button btCancel;
+    private Button btSettings;
     private Button btLaunch;
+    private Button btExit;
     private TextView txServer;
     private static final String LOGPRFX="Avnav:webserver";
     private boolean serverRunning=false;
@@ -48,8 +45,9 @@ public class WebServerFragment extends Fragment {
 
         View rt=inflater.inflate(R.layout.server, container,false);
         btServer =(Button) rt.findViewById(R.id.btWebServer);
-        btCancel=(Button)rt.findViewById(R.id.btBack);
+        btSettings =(Button)rt.findViewById(R.id.btBack);
         btLaunch=(Button)rt.findViewById(R.id.btLaunchBrowser);
+        btExit=(Button)rt.findViewById(R.id.btExit);
         txServer=(TextView)rt.findViewById(R.id.txServer);
         btServer.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,16 +61,22 @@ public class WebServerFragment extends Fragment {
 
             }
         });
-        btCancel.setOnClickListener(new View.OnClickListener() {
+        btSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity)getActivity()).showSettings();
+                ((MainActivity) getActivity()).showSettings();
             }
         });
         btLaunch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 launchBrowser();
+            }
+        });
+        btExit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                exitApp();
             }
         });
         if (webServer == null) webServer=new WebServer((MainActivity)getActivity());
@@ -148,6 +152,10 @@ public class WebServerFragment extends Fragment {
         btLaunch.setEnabled(false);
         btServer.setText(R.string.startServer);
 
+    }
+
+    private void exitApp(){
+        ((MainActivity)getActivity()).goBack();
     }
 
 }

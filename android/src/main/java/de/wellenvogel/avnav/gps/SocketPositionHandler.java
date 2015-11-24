@@ -269,7 +269,7 @@ public class SocketPositionHandler extends GpsDataProvider {
             return store.numAisEntries()>0;
         }
     }
-    public static final String LOGPRFX="AvNav:SocketPositionHandler";
+    public static final String LOGPRFX="AvNav:SocketPh";
     Context context;
     AbstractSocket socket;
     String name;

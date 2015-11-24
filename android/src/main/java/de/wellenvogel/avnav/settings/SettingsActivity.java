@@ -79,9 +79,13 @@ public class SettingsActivity extends PreferenceActivity {
     public static boolean handleInitialSettings(final Activity activity){
         boolean rt=true;
         final SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor e=sharedPrefs.edit();
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
-
         if (mode.equals("")) {
+            e.putBoolean(Constants.SHOWDEMO,true);
+            e.putString(Constants.IPADDR, "192.168.20.10");
+            e.putString(Constants.IPPORT,"34567");
+            e.putBoolean(Constants.INTERNALGPS,true);
             //never set before
             if (currentapiVersion < Constants.OSVERSION_XWALK ) {
                 if (! isXwalRuntimeInstalled(activity)){
@@ -113,15 +117,14 @@ public class SettingsActivity extends PreferenceActivity {
             File wdf=new File(Environment.getExternalStorageDirectory(),"avnav");
             try {
                 createWorkingDir(activity,wdf);
-            } catch (Exception e) {
+            } catch (Exception ex) {
             }
             workdir=wdf.getAbsolutePath();
         }
         //TODO: handle unwritable workdir
-        String chartdir=sharedPrefs.getString(Constants.CHARTDIR,new File(new File(workdir),"charts").getAbsolutePath());
-        SharedPreferences.Editor e=sharedPrefs.edit();
+        String chartdir=sharedPrefs.getString(Constants.CHARTDIR, new File(new File(workdir), "charts").getAbsolutePath());
         e.putString(Constants.RUNMODE, mode);
-        e.putString(Constants.WORKDIR,workdir);
+        e.putString(Constants.WORKDIR, workdir);
         e.putString(Constants.CHARTDIR, chartdir);
         e.apply();
         final String oldWorkdir=workdir;
@@ -156,6 +159,7 @@ public class SettingsActivity extends PreferenceActivity {
             FolderChooseDialog.chooseFile_or_Dir(wdf.getAbsolutePath());
             rt=false;
         }
+        e.commit();
         NmeaSettingsFragment.checkGpsEnabled(activity, false);
         return rt;
     }

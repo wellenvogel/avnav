@@ -55,6 +55,7 @@
     <string name="bluetoothLabel">Bluetooth</string>
     <string name="selectBlueTooth">Bluetooth Device</string>
     <string name="noSuchBluetoothDevice">No such bluetooth device</string>
+    <string name="settings">Settings</string>
     <string name="labelSettingsIpAddress">IP Address</string>
     <string name="labelSettingsIpPort">IP Port</string>
     <string name="labelSettingsNmea">NMEA</string>
@@ -66,6 +67,8 @@
     <string name="somethingWrong">StartupError</string>
     <string name="somethingWrongMessage">Something went wrong during the last start. Please change your settings and try again.</string>
     <string name="firstStart">Initial Settings</string>
-    <string name="firstStartMessage">You are starting for the first time.</string>
+    <string name="firstStartMessage">You are starting for the first time. Please choose some initial settings. Later you can go to the settings screen via the settings page, android button.</string>
+    <string name="endApplication">Really exit AvNav?</string>
+    <string name="exit">Exit</string>
 
 </resources>

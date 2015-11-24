@@ -8,13 +8,17 @@ import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
 
+import de.wellenvogel.avnav.util.AvnDialogHandler;
+
 /**
  * Created by andreas on 10.01.15.
  */
 public class XwalkDownloadHandler {
     public static int DIALOGID=1;
     private Activity activity;
+    private AvnDialogHandler handler;
     public XwalkDownloadHandler(Activity activity) {
+        this.handler=new AvnDialogHandler(activity);
         this.activity = activity;
     }
     private AlertDialog alertDialog;
@@ -23,11 +27,8 @@ public class XwalkDownloadHandler {
         builder.setNegativeButton(android.R.string.cancel,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        if (handler.onCancel(DIALOGID)) return;
                         if (finishOnCancel) activity.finish();
-                        else if (activity instanceof IDialogHandler){
-                            ((IDialogHandler) activity).onCancel(DIALOGID);
-                        }
-                        // User cancelled the dialog
                     }
                 });
         final String downloadUrl = getLibraryApkDownloadUrl();
@@ -35,9 +36,7 @@ public class XwalkDownloadHandler {
             builder.setNeutralButton(R.string.xwalkDownloadFromUrl,
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            if (activity instanceof IDialogHandler) {
-                                if (!((IDialogHandler) activity).onNeutral(DIALOGID)) return;
-                            }
+                            if (! handler.onNeutral(DIALOGID)) return;
                             Intent goDownload = new Intent(Intent.ACTION_VIEW);
                             goDownload.setData(Uri.parse(downloadUrl));
                             try {
@@ -52,9 +51,7 @@ public class XwalkDownloadHandler {
         builder.setPositiveButton(R.string.xwalkDownloadFromPlaystore,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        if (activity instanceof IDialogHandler){
-                            if (! ((IDialogHandler) activity).onOk(DIALOGID)) return;
-                        }
+                        if (! handler.onOk(DIALOGID)) return;
                         Intent goToMarket = new Intent(Intent.ACTION_VIEW);
                         goToMarket.setData(Uri.parse(
                                 "market://details?id=" + Constants.XWALKAPP));
