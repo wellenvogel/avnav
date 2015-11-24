@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * Created by andreas on 25.12.14.
  */
-public class GpsDataProvider {
+public abstract class GpsDataProvider {
     public static final String STATUS_INACTIVE ="INACTIVE";
     public static final String STATUS_STARTED="STARTED";
     public static final String STATUS_RUNNING="RUNNING";
@@ -40,6 +40,12 @@ public class GpsDataProvider {
     }
 
     SatStatus getSatStatus(){return null;}
+
+    public abstract boolean handlesNmea();
+    public abstract boolean handlesAis();
+    public abstract String getName();
+    public boolean hasAisData(){return false;}
+    public String getConnectionId(){ return "";}
 
     public static class Properties{
         int connectTimeout=5000;

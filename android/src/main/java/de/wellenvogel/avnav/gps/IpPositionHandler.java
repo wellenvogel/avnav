@@ -31,4 +31,8 @@ public class IpPositionHandler extends SocketPositionHandler {
         super("IpPositionHandler",ctx,new AbstractSocket(address,prop.connectTimeout),prop);
     }
 
+    @Override
+    public String getName() {
+        return "IP";
+    }
 }

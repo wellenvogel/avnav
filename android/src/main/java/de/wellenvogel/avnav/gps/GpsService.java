@@ -553,6 +553,78 @@ public class GpsService extends Service  {
         return trackDir;
     }
 
+    /**
+     * get the status for NMEA and AIS
+     * @return
+     * nmea: { source: internal, status: green , info: 3 visible/2 used}
+     * ais: [ source: IP, status: yellow, info: connected to 10.222.9.1:34567}
+     * @throws JSONException
+     */
+    public JSONObject getNmeaStatus() throws JSONException{
+        JSONObject nmea=new JSONObject();
+        nmea.put("source","unknown");
+        nmea.put("status","red");
+        nmea.put("info","disabled");
+        JSONObject ais=new JSONObject();
+        ais.put("source","unknown");
+        ais.put("status","red");
+        ais.put("info","disabled");
+        if (internalProvider != null){
+            //internal has NMEA if it is there...
+            nmea.put("source","internal");
+            GpsDataProvider.SatStatus st=internalProvider.getSatStatus();
+            Location loc=internalProvider.getLocation();
+            if (loc != null) {
+                nmea.put("status","green");
+                nmea.put("info", "valid position,sats: "+st.numSat+" available / "+st.numUsed+" used, acc="+loc.getAccuracy());
+            }
+            else {
+                nmea.put("status","yellow");
+                nmea.put("info","searching, sats: "+st.numSat+" available / "+st.numUsed+" used");
+            }
+        }
+        for (GpsDataProvider provider: new GpsDataProvider[]{externalProvider,bluetoothProvider}) {
+            if (provider != null) {
+                GpsDataProvider.SatStatus st = provider.getSatStatus();
+                Location loc = provider.getLocation();
+                String addr = provider.getConnectionId();
+                if (provider.handlesNmea()) {
+                    nmea.put("source", provider.getName());
+                    if (loc != null) {
+                        nmea.put("status", "green");
+                        nmea.put("info", "(" + addr + ") valid position");
+                    } else {
+                        if (st.gpsEnabled) {
+                            nmea.put("info", "(" + addr + ") connected, sats: " + st.numSat + " available / " + st.numUsed + " used");
+                            nmea.put("status", "yellow");
+                        } else {
+                            nmea.put("info", "(" + addr + ") disconnected");
+                            nmea.put("status", "red");
+                        }
+                    }
+                }
+                if (provider.handlesAis()) {
+                    ais.put("source", provider.getName());
+                    if (provider.hasAisData()) {
+                        ais.put("status", "green");
+                        ais.put("info", "(" + addr + ") connected");
+                    } else {
+                        if (st.gpsEnabled) {
+                            ais.put("info", "(" + addr + ") connected");
+                            ais.put("status", "yellow");
+                        } else {
+                            ais.put("info", "(" + addr + ") disconnected");
+                            ais.put("status", "red");
+                        }
+                    }
+                }
+            }
+        }
+        JSONObject rt=new JSONObject();
+        rt.put("nmea",nmea);
+        rt.put("ais",ais);
+        return rt;
+    }
     public JSONObject getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
         JSONObject item=new JSONObject();

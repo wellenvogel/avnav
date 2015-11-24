@@ -148,5 +148,8 @@ task copyReleaseViewer(type: org.gradle.api.tasks.Copy) {
 copyReleaseViewer.dependsOn(copyToAssets)
 assembleRelease.dependsOn(copyReleaseViewer)
 
+clean.delete.add "assets/viewer"
+
+
 
 

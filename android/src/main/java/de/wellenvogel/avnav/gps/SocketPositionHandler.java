@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Created by andreas on 25.12.14.
  */
-public class SocketPositionHandler extends GpsDataProvider {
+public abstract class SocketPositionHandler extends GpsDataProvider {
     private long lastAisCleanup=0;
 
 
@@ -301,6 +301,16 @@ public class SocketPositionHandler extends GpsDataProvider {
     }
 
     @Override
+    public boolean handlesNmea() {
+        return properties.readNmea;
+    }
+
+    @Override
+    public boolean handlesAis() {
+        return properties.readAis;
+    }
+
+    @Override
     public synchronized void stop() {
         this.runnable.stop();
     }
@@ -355,5 +365,10 @@ public class SocketPositionHandler extends GpsDataProvider {
     public boolean hasAisData(){
         if (runnable == null) return false;
         return runnable.hasAisData();
+    }
+
+    @Override
+    public String getConnectionId() {
+        return socket.getId();
     }
 }
