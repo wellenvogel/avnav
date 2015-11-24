@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -12,6 +13,7 @@ import android.os.Environment;
 import android.preference.*;
 import android.util.DisplayMetrics;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -19,6 +21,7 @@ import java.io.File;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.main.SimpleFileDialog;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
@@ -32,10 +35,12 @@ public class SettingsActivity extends PreferenceActivity {
     private List<Header> headers=null;
     private static final int currentapiVersion = android.os.Build.VERSION.SDK_INT;
 
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        //getActionBar().setDisplayHomeAsUpEnabled(true);
         handleInitialSettings(this);
         updateHeaderSummaries(true);
 
@@ -168,12 +173,28 @@ public class SettingsActivity extends PreferenceActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home){
             finish();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_ok){
+            finish();
+            return true;
+        }
+        if (item.getItemId()== R.id.action_about) {
+            Intent intent = new Intent(this, Info.class);
+            startActivity(intent);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
     @Override
-    public boolean onCreateOptionsMenu(Menu menu){
-        return true;
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.settings_activity_actions, menu);
+        return super.onCreateOptionsMenu(menu);
+
     }
 
     @Override

@@ -23,6 +23,7 @@ public class Info extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
         setContentView(R.layout.info);
         TextView version=(TextView)findViewById(R.id.txVersion);
         try {

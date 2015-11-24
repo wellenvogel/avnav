@@ -59,7 +59,7 @@
     <string name="labelSettingsIpAddress">IP Address</string>
     <string name="labelSettingsIpPort">IP Port</string>
     <string name="labelSettingsNmea">NMEA</string>
-    <string name="labelSettingsActivity">avNav Settings</string>
+    <string name="labelSettingsActivity">Android Settings</string>
     <string name="labelSettingsMain">Main Settings</string>
     <string name="labelSettingsNmeaInput">NMEA Source</string>
     <string name="labelSettingsAisInput">AIS Source</string>
