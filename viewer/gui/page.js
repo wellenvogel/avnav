@@ -165,6 +165,9 @@ avnav.gui.Page.prototype.initButtons=function(){
                 });
             }
         }
+        if ($(e).hasClass("avn_android") && avnav.android){
+            $(e).show();
+        }
     });
 
 };

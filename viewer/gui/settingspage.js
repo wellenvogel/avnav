@@ -159,9 +159,6 @@ avnav.gui.Settingspage.prototype.readData=function(){
 avnav.gui.Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.readData();
-    if (avnav.android){
-        $('#avb_SettingsAndroid').show();
-    }
 };
 
 
