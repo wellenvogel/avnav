@@ -63,6 +63,7 @@ public class RequestHandler {
 
     RequestHandler(MainActivity activity){
         this.activity=activity;
+        this.updater=activity;
         ownMimeMap.put("js", "text/javascript");
         startRouteHandler();
     }
@@ -74,6 +75,7 @@ public class RequestHandler {
             }
             routeHandler = new RouteHandler(new File(getWorkDir(), "routes"));
             routeHandler.start();
+            routeHandler.setMediaUpdater(updater);
         }
 
     }

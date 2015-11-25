@@ -35,7 +35,7 @@ import java.util.HashMap;
 /**
  * Created by andreas on 06.01.15.
  */
-public class MainActivity extends XWalkActivity implements IDialogHandler,IMediaUpdater{
+public class MainActivity extends XWalkActivity implements IDialogHandler,IMediaUpdater,SharedPreferences.OnSharedPreferenceChangeListener{
 
     private String lastStartMode=null; //The last mode we used to select the fragment
     SharedPreferences sharedPrefs;
@@ -283,21 +283,20 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         }
         requestHandler=new RequestHandler(this);
-        sharedPrefs.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                serviceNeedsRestart = true;
-                Log.d(Constants.LOGPRFX, "preferences changed");
-                if (key.equals(Constants.WORKDIR)){
-                    updateWorkDir(new File(sharedPreferences.getString(Constants.WORKDIR,"")));
-                }
-                if (key.equals(Constants.CHARTDIR)){
-                    updateWorkDir(new File(sharedPreferences.getString(Constants.CHARTDIR,"")));
-                }
-            }
-        });
+        sharedPrefs.registerOnSharedPreferenceChangeListener(this);
         updateWorkDir(workBase);
-        updateWorkDir(new File(sharedPrefs.getString(Constants.CHARTDIR,"")));
+        updateWorkDir(new File(sharedPrefs.getString(Constants.CHARTDIR, "")));
+    }
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        serviceNeedsRestart = true;
+        Log.d(Constants.LOGPRFX, "preferences changed");
+        if (key.equals(Constants.WORKDIR)){
+            updateWorkDir(new File(sharedPreferences.getString(Constants.WORKDIR,"")));
+        }
+        if (key.equals(Constants.CHARTDIR)){
+            updateWorkDir(new File(sharedPreferences.getString(Constants.CHARTDIR,"")));
+        }
     }
 
     private void updateWorkDir(File workDir){
