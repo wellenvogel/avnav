@@ -139,6 +139,14 @@ avnav.gui.Mainpage.prototype.btnShowDownload=function (button,ev) {
     log("show download clicked");
     this.gui.showPage('downloadpage');
 };
+avnav.gui.Mainpage.prototype.btnMainAndroid=function (button,ev) {
+    log("main android settings clicked");
+    avnav.android.showSettings();
+};
+avnav.gui.Mainpage.prototype.btnMainCancel=function (button,ev) {
+    log("main cancel clicked");
+    avnav.android.goBack();
+};
 /**
  * create the page instance
  */
