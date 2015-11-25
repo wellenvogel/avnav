@@ -147,8 +147,8 @@ task copyReleaseViewer(type: org.gradle.api.tasks.Copy) {
 }
 copyReleaseViewer.dependsOn(copyToAssets)
 afterEvaluate {
-    preDebugBuild.dependsOn(copyDebugViewer)
-    preReleaseBuild.dependsOn(copyReleaseViewer)
+    generateDebugAssets.dependsOn(copyDebugViewer)
+    generateReleaseAssets.dependsOn(copyReleaseViewer)
 }
 
 
