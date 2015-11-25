@@ -172,6 +172,12 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     public boolean onCancel(int dialogId) {
         if (dialogId == XwalkDownloadHandler.DIALOGID){
             sharedPrefs.edit().putString(Constants.RUNMODE,Constants.MODE_NORMAL).commit();
+            if (serviceNeedsRestart) {
+                stopGpsService(false);
+                startGpsService();
+            }
+            startFragmentOrActivity();
+
         }
         return true;
     }

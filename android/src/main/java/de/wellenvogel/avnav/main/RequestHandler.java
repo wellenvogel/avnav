@@ -731,12 +731,12 @@ public class RequestHandler {
             if (key != null && key.equals("backPressed")) activity.goBackSequence=num;
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         public void showSettings(){
             activity.showSettings();
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         public void applicationStarted(){
             getSharedPreferences().edit().putBoolean(Constants.WAITSTART,false).commit();
         }

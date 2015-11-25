@@ -95,7 +95,7 @@ public class SettingsActivity extends PreferenceActivity {
             if (currentapiVersion < Constants.OSVERSION_XWALK ) {
                 if (! isXwalRuntimeInstalled(activity)){
                     (new XwalkDownloadHandler(activity)).showDownloadDialog(activity.getString(R.string.xwalkNotFoundTitle),
-                            activity.getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, false);
+                            activity.getString(R.string.xwalkShouldUse) + Constants.XWALKVERSION, false);
                     rt=false;
                 }
                 else {
