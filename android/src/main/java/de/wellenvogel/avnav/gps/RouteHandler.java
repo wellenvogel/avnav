@@ -2,10 +2,7 @@ package de.wellenvogel.avnav.gps;
 
 import android.location.Location;
 import android.util.Log;
-import de.wellenvogel.avnav.main.AvNav;
-import de.wellenvogel.avnav.main.IMediaUpdater;
-import de.wellenvogel.avnav.main.ISO8601DateParser;
-import de.wellenvogel.avnav.util.AvnLog;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,10 +10,20 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import de.wellenvogel.avnav.main.IMediaUpdater;
+import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 12.12.14.

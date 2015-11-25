@@ -1,35 +1,37 @@
 package de.wellenvogel.avnav.gps;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.location.Location;
 import android.util.Log;
-import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
-import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
-import de.wellenvogel.avnav.aislib.messages.sentence.SentenceException;
-import de.wellenvogel.avnav.aislib.packet.AisPacket;
-import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
-import de.wellenvogel.avnav.main.AvNav;
-import de.wellenvogel.avnav.util.AvnLog;
-import net.sf.marineapi.nmea.io.SentenceReader;
+
 import net.sf.marineapi.nmea.parser.SentenceFactory;
-import net.sf.marineapi.nmea.sentence.*;
+import net.sf.marineapi.nmea.sentence.DateSentence;
+import net.sf.marineapi.nmea.sentence.GGASentence;
+import net.sf.marineapi.nmea.sentence.GLLSentence;
+import net.sf.marineapi.nmea.sentence.GSASentence;
+import net.sf.marineapi.nmea.sentence.GSVSentence;
+import net.sf.marineapi.nmea.sentence.PositionSentence;
+import net.sf.marineapi.nmea.sentence.RMCSentence;
+import net.sf.marineapi.nmea.sentence.Sentence;
+import net.sf.marineapi.nmea.sentence.SentenceValidator;
+import net.sf.marineapi.nmea.sentence.TimeSentence;
 import net.sf.marineapi.nmea.util.DataStatus;
 import net.sf.marineapi.nmea.util.Position;
-import net.sf.marineapi.nmea.util.SatelliteInfo;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+
+import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
+import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
+import de.wellenvogel.avnav.aislib.packet.AisPacket;
+import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
+import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 25.12.14.

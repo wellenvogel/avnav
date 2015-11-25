@@ -172,7 +172,15 @@ public class RequestHandler {
             if (type.equals("gps")){
                 handled=true;
                 JSONObject navLocation=null;
-                if (getGpsService() != null) navLocation=getGpsService().getGpsData();
+                if (getGpsService() != null) {
+                    navLocation=getGpsService().getGpsData();
+                    if (navLocation != null) {
+                        JSONObject nmea = new JSONObject();
+                        JSONObject status = getGpsService().getNmeaStatus();
+                        nmea.put("status", status);
+                        navLocation.put("nmea", nmea);
+                    }
+                }
                 fout=navLocation;
             }
             if (type.equals("listCharts")){
@@ -538,6 +546,13 @@ public class RequestHandler {
         //here we will have more dirs in the future...
         File chartDir = new File(getWorkDir(), "charts");
         readChartDir(chartDir,"1",arr);
+        String secondChartDirStr=getSharedPreferences().getString(Constants.CHARTDIR,"");
+        if (! secondChartDirStr.isEmpty()){
+            File secondChartDir=new File(secondChartDirStr);
+            if (! secondChartDir.equals(chartDir)){
+                readChartDir(secondChartDir,"2",arr);
+            }
+        }
         return;
     }
 

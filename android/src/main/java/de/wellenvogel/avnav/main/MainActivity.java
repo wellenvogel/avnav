@@ -9,6 +9,7 @@ import android.content.*;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.location.LocationManager;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.*;
 import android.provider.Settings;
@@ -34,7 +35,7 @@ import java.util.HashMap;
 /**
  * Created by andreas on 06.01.15.
  */
-public class MainActivity extends XWalkActivity implements IDialogHandler{
+public class MainActivity extends XWalkActivity implements IDialogHandler,IMediaUpdater{
 
     private String lastStartMode=null; //The last mode we used to select the fragment
     SharedPreferences sharedPrefs;
@@ -42,11 +43,18 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
     AssetManager assetManager;
     private String workdir;
     private File workBase;
-    private boolean showDemoCharts;
     GpsService gpsService=null;
     int goBackSequence;
-    private IMediaUpdater updater;
     private IJsEventHandler jsEventHandler;
+    private Handler mediaUpdateHandler=new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            AvnLog.d(Constants.LOGPRFX,"Mediaupdater for "+msg);
+            super.handleMessage(msg);
+            File f=(File)msg.obj;
+            updateMtp(f);
+        }
+    };
     RequestHandler requestHandler=null;
     private boolean serviceNeedsRestart=false;
 
@@ -58,6 +66,17 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
         }
     };
 
+
+    public void updateMtp(File file){
+        AvnLog.d(Constants.LOGPRFX, "MTP update for " + file.getAbsolutePath());
+        try {
+            MediaScannerConnection.scanFile(this, new String[]{file.getAbsolutePath()}, null, null);
+            this.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                    Uri.fromFile(file)));
+        }catch(Exception e){
+            Log.e(Constants.LOGPRFX, "error when updating MTP " + e.getLocalizedMessage());
+        }
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -214,9 +233,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
             gpsService = binder.getService();
-            if (gpsService != null ){
-                updater=gpsService.getMediaUpdater();
-            }
+            if (gpsService !=null) gpsService.setMediaUpdater(MainActivity.this);
             AvnLog.d(Constants.LOGPRFX, "gps service connected");
 
         }
@@ -224,7 +241,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             gpsService=null;
-            updater=null;
             AvnLog.d(Constants.LOGPRFX,"gps service disconnected");
         }
     };
@@ -257,7 +273,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         workdir=sharedPrefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath() + "/avnav");
         workBase=new File(workdir);
-        showDemoCharts=sharedPrefs.getBoolean(Constants.SHOWDEMO,false);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
         serviceNeedsRestart=true;
@@ -271,10 +286,38 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
         sharedPrefs.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                serviceNeedsRestart=true;
-                Log.d(Constants.LOGPRFX,"preferences changed");
+                serviceNeedsRestart = true;
+                Log.d(Constants.LOGPRFX, "preferences changed");
+                if (key.equals(Constants.WORKDIR)){
+                    updateWorkDir(new File(sharedPreferences.getString(Constants.WORKDIR,"")));
+                }
+                if (key.equals(Constants.CHARTDIR)){
+                    updateWorkDir(new File(sharedPreferences.getString(Constants.CHARTDIR,"")));
+                }
             }
         });
+        updateWorkDir(workBase);
+        updateWorkDir(new File(sharedPrefs.getString(Constants.CHARTDIR,"")));
+    }
+
+    private void updateWorkDir(File workDir){
+        final File baseDir=workDir;
+        if (! baseDir.isDirectory()) return;
+        Thread initialUpdater=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                triggerUpdateMtp(baseDir);
+                for (File uf: baseDir.listFiles()){
+                    if (uf.exists()) triggerUpdateMtp(uf);
+                    if (uf.isDirectory()) {
+                        for (File df : uf.listFiles()) {
+                            triggerUpdateMtp(df);
+                        }
+                    }
+                }
+            }
+        });
+        initialUpdater.start();
     }
 
     @Override
@@ -373,5 +416,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler{
 
     RequestHandler getRequestHandler(){
         return requestHandler;
+    }
+
+    @Override
+    public void triggerUpdateMtp(File file) {
+        if (mediaUpdateHandler == null )return;
+        Message msg=mediaUpdateHandler.obtainMessage();
+        msg.obj=file;
+        Log.d(Constants.LOGPRFX,"mtp update for "+file);
+        mediaUpdateHandler.sendMessage(msg);
     }
 }
