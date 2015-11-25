@@ -368,7 +368,30 @@ public class SimpleFileDialog
         titleLayout1.setOrientation(LinearLayout.VERTICAL);
         titleLayout1.addView(m_titleView1);
 
+        m_titleView = new TextView(m_context);
+        m_titleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        m_titleView.setBackgroundColor(-12303292); // dark gray -12303292
+        m_titleView.setTextColor( m_context.getResources().getColor(android.R.color.white) );
+        m_titleView.setGravity(Gravity.CENTER_VERTICAL);
+        m_titleView.setText(title);
 
+        titleLayout1.addView(m_titleView);
+
+
+        /////////////////////////////////////////////////////
+        // Create View with folder path and entry text box //
+        /////////////////////////////////////////////////////
+        LinearLayout titleLayout = new LinearLayout(m_context);
+        titleLayout.setOrientation(LinearLayout.VERTICAL);
+
+
+
+        if (Select_type == FileOpen || Select_type == FileSave)
+        {
+            input_text = new EditText(m_context);
+            input_text.setText(Default_File_Name);
+            titleLayout.addView(input_text);
+        }
         if (Select_type == FolderChoose || Select_type == FolderChooseWrite|| Select_type == FileSave)
         {
             ///////////////////////////////
@@ -377,38 +400,14 @@ public class SimpleFileDialog
             Button newDirButton = new Button(m_context);
             newDirButton.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             newDirButton.setText(newFolderText);
-            newDirButton.setOnClickListener(new View.OnClickListener()
-                                            {
+            newDirButton.setOnClickListener(new View.OnClickListener() {
                                                 @Override
-                                                public void onClick(View v)
-                                                {
+                                                public void onClick(View v) {
                                                     showNewDirDialog();
                                                 }
                                             }
             );
-            titleLayout1.addView(newDirButton);
-        }
-
-        /////////////////////////////////////////////////////
-        // Create View with folder path and entry text box //
-        /////////////////////////////////////////////////////
-        LinearLayout titleLayout = new LinearLayout(m_context);
-        titleLayout.setOrientation(LinearLayout.VERTICAL);
-
-        m_titleView = new TextView(m_context);
-        m_titleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        m_titleView.setBackgroundColor(-12303292); // dark gray -12303292
-        m_titleView.setTextColor( m_context.getResources().getColor(android.R.color.white) );
-        m_titleView.setGravity(Gravity.CENTER_VERTICAL);
-        m_titleView.setText(title);
-
-        titleLayout.addView(m_titleView);
-
-        if (Select_type == FileOpen || Select_type == FileSave)
-        {
-            input_text = new EditText(m_context);
-            input_text.setText(Default_File_Name);
-            titleLayout.addView(input_text);
+            titleLayout.addView(newDirButton);
         }
         //////////////////////////////////////////
         // Set Views and Finish Dialog builder  //
