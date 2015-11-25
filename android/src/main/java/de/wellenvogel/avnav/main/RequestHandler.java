@@ -740,6 +740,17 @@ public class RequestHandler {
         public void applicationStarted(){
             getSharedPreferences().edit().putBoolean(Constants.WAITSTART,false).commit();
         }
+        @JavascriptInterface
+        public void externalLink(String url){
+            Intent goDownload = new Intent(Intent.ACTION_VIEW);
+            goDownload.setData(Uri.parse(url));
+            try {
+                activity.startActivity(goDownload);
+            } catch (Exception e) {
+                Toast.makeText(activity, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
 
     };
 

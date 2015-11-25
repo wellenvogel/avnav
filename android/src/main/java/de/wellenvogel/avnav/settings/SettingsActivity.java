@@ -164,6 +164,11 @@ public class SettingsActivity extends PreferenceActivity {
             FolderChooseDialog.chooseFile_or_Dir(wdf.getAbsolutePath());
             rt=false;
         }
+        if (sharedPrefs.getBoolean(Constants.INTERNALGPS,false)==false &&
+                sharedPrefs.getBoolean(Constants.IPNMEA,false)==false &&
+                sharedPrefs.getBoolean(Constants.BTNMEA,false)==false){
+            e.putBoolean(Constants.INTERNALGPS,true);
+        }
         e.commit();
         NmeaSettingsFragment.checkGpsEnabled(activity, false);
         return rt;

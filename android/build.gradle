@@ -136,7 +136,7 @@ task copyDebugViewer(type: org.gradle.api.tasks.Copy) {
     into new File(assetsDir, "viewer")
 }
 copyDebugViewer.dependsOn(copyToAssets)
-assembleDebug.dependsOn(copyDebugViewer)
+
 
 task copyReleaseViewer(type: org.gradle.api.tasks.Copy) {
     group = taskgroup
@@ -146,7 +146,11 @@ task copyReleaseViewer(type: org.gradle.api.tasks.Copy) {
     into new File(assetsDir, "viewer")
 }
 copyReleaseViewer.dependsOn(copyToAssets)
-assembleRelease.dependsOn(copyReleaseViewer)
+afterEvaluate {
+    preDebugBuild.dependsOn(copyDebugViewer)
+    preReleaseBuild.dependsOn(copyReleaseViewer)
+}
+
 
 clean.delete.add "assets/viewer"
 
