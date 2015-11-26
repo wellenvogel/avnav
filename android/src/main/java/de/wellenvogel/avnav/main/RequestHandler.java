@@ -180,7 +180,7 @@ public class RequestHandler {
                         JSONObject nmea = new JSONObject();
                         JSONObject status = getGpsService().getNmeaStatus();
                         nmea.put("status", status);
-                        navLocation.put("nmea", nmea);
+                        navLocation.put("raw", nmea);
                     }
                 }
                 fout=navLocation;
