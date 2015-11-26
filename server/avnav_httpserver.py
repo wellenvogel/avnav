@@ -626,10 +626,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       AVNLog.info("unable to get sat count: %s",traceback.format_exc())
     statusNmea={"status":status,"source":src,"info":"Sat %d visible/%d used"%(visible,used)}
     status="red"
-    if self.server.navdata.getCounter('AIS') > 0:
+    numAis=self.server.navdata.getCounter('AIS')
+    if numAis > 0:
       status="green"
     src=self.server.navdata.getLastSource('AIS')
-    statusAis={"status":status,"source":src,"info":""}
+    statusAis={"status":status,"source":src,"info":"%d targets"%(numAis)}
     rtv.data["raw"]={"status":{"nmea":statusNmea,"ais":statusAis}}
     return json.dumps(rtv.data)
   #query the current list of trackpoints
