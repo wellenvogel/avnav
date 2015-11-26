@@ -190,7 +190,7 @@ public class WebServerFragment extends Fragment {
             imgAis.setImageResource(R.drawable.redbubble);
             imgNmea.setImageResource(R.drawable.redbubble);
             txNmea.setText("disabled");
-            txAis.setText("diabled");
+            txAis.setText("disabled");
         }
         else{
             try {
