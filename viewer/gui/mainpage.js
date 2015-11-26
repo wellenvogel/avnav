@@ -12,6 +12,12 @@ avnav.provide('avnav.gui.Mainpage');
  */
 avnav.gui.Mainpage=function(){
     avnav.gui.Page.call(this,'mainpage');
+    var self=this;
+    this.lastNmeaStatus=null;
+    this.lastAisStatus=null;
+    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+        self.navEvent(evdata);
+    });
 };
 avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 
@@ -97,6 +103,33 @@ avnav.gui.Mainpage.prototype.hidePage=function(){
 avnav.gui.Mainpage.prototype.goBack=function(){
     avnav.android.goBack();
 };
+
+avnav.gui.Mainpage.prototype.setImageColor=function(imageId,color){
+    if (color == "red") $(imageId).attr('src', this.gui.properties.getProperties().statusErrorImage);
+    if (color == "green") $(imageId).attr('src', this.gui.properties.getProperties().statusOkImage);
+    if (color == "yellow") $(imageId).attr('src', this.gui.properties.getProperties().statusYellowImage);
+};
+
+/**
+ *
+ * @param {avnav.nav.NavEvent} evdata
+ */
+avnav.gui.Mainpage.prototype.navEvent=function(evdata) {
+    if (!this.visible) return;
+    if (evdata.type == avnav.nav.NavEventType.GPS){
+        var status=this.navobject.getValue("aisStatusColor");
+        if (status != this.lastAisStatus) {
+            this.setImageColor('#avi_mainAisStatusImage',status);
+            this.lastAisStatus=status;
+        }
+        status=this.navobject.getValue("nmeaStatusColor");
+        if (status != this.lastNmeaStatus) {
+            this.setImageColor('#avi_mainNmeaStatusImage',status);
+            this.lastNmeaStatus=status;
+        }
+    }
+};
+
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Mainpage.prototype.btnShowHelp=function (button,ev){

@@ -24,7 +24,11 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
         gpsPosition:"NO FIX",
         gpsCourse:"0",
         gpsSpeed:"0",
-        gpsTime:"---"
+        gpsTime:"---",
+        nmeaStatusColor:"red",
+        nmeaStatusText:"???",
+        aisStatusColor: "red",
+        aisStatusText: "???"
     };
     /** {avnav.util.Formatter} @private */
     this.formatter=new avnav.util.Formatter();
@@ -54,12 +58,30 @@ avnav.nav.GpsData.prototype.handleGpsResponse=function(data){
     if (gpsdata.course === undefined) gpsdata.course=data.track;
     gpsdata.speed=data.speed*3600/this.NM;
     gpsdata.valid=true;
+    gpsdata.raw=data.raw;
     this.gpsdata=gpsdata;
     var formattedData={};
     formattedData.gpsPosition=this.formatter.formatLonLats(gpsdata);
     formattedData.gpsCourse=this.formatter.formatDecimal(gpsdata.course||0,3,0);
     formattedData.gpsSpeed=this.formatter.formatDecimal(gpsdata.speed||0,2,1);
     formattedData.gpsTime=this.formatter.formatTime(gpsdata.rtime||new Date());
+    formattedData.nmeaStatusColor="red";
+    formattedData.nmeaStatusText="???"
+    try {
+        if (data.raw && data.raw.status && data.raw.status.nmea){
+            formattedData.nmeaStatusColor = data.raw.status.nmea.status;
+            formattedData.nmeaStatusText=data.raw.status.nmea.source+":"+data.raw.status.nmea.info;
+        }
+    }catch(e){}
+    formattedData.aisStatusColor="red";
+    formattedData.aisStatusText="???"
+    try {
+        if (data.raw && data.raw.status && data.raw.status.ais){
+            formattedData.aisStatusColor = data.raw.status.ais.status;
+            formattedData.aisStatusText=data.raw.status.ais.source+":"+data.raw.status.ais.info;
+        }
+    }catch(e){}
+
     this.formattedData=formattedData;
 };
 
