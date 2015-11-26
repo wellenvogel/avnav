@@ -274,9 +274,9 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                 }
             }//satellite view
         }
-        public boolean hasAisData(){
-            if (store == null ) return false;
-            return store.numAisEntries()>0;
+        public int numAisData(){
+            if (store == null ) return 0;
+            return store.numAisEntries();
         }
     }
     public static final String LOGPRFX="AvNav:SocketPh";
@@ -376,9 +376,9 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
         return runnable.getAisData(lat,lon,distance);
     }
 
-    public boolean hasAisData(){
-        if (runnable == null) return false;
-        return runnable.hasAisData();
+    public int numAisData(){
+        if (runnable == null) return 0;
+        return runnable.numAisData();
     }
 
     @Override

@@ -609,9 +609,10 @@ public class GpsService extends Service  {
                 }
                 if (provider.handlesAis()) {
                     ais.put("source", provider.getName());
-                    if (provider.hasAisData()) {
+                    int aisTargets=provider.numAisData();
+                    if (aisTargets> 0) {
                         ais.put("status", "green");
-                        ais.put("info", "(" + addr + ") connected");
+                        ais.put("info", "(" + addr + ") connected, "+aisTargets+" targets");
                     } else {
                         if (st.gpsEnabled) {
                             ais.put("info", "(" + addr + ") connected");
@@ -656,15 +657,16 @@ public class GpsService extends Service  {
             String addr=externalProvider.socket.getId();
             GpsDataProvider.SatStatus st=externalProvider.getSatStatus();
             Location loc=externalProvider.getLocation();
+            int numAis=externalProvider.numAisData();
             if (loc != null) {
                 String info="("+addr+") valid position";
-                if (externalProvider.hasAisData())info+=", valid AIS data";
+                if (numAis> 0)info+=", valid AIS data, "+numAis+" targets";
                 item.put("info", info);
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }
             else {
-                if (!ipNmea && externalProvider.hasAisData()) {
-                    item.put("info", "(" + addr + ") valid AIS data");
+                if (!ipNmea && numAis>0) {
+                    item.put("info", "(" + addr + ") valid AIS data, "+numAis+" targets");
                     item.put("status", GpsDataProvider.STATUS_NMEA);
 
                 }
@@ -690,15 +692,16 @@ public class GpsService extends Service  {
             String addr=bluetoothProvider.socket.getId();
             GpsDataProvider.SatStatus st=bluetoothProvider.getSatStatus();
             Location loc=bluetoothProvider.getLocation();
+            int numAis=bluetoothProvider.numAisData();
             if (loc != null) {
                 String info="("+addr+") valid position";
-                if (bluetoothProvider.hasAisData())info+=", valid AIS data";
+                if (numAis>0)info+=", valid AIS data, "+numAis+" targets";
                 item.put("info", info);
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }
             else {
-                if (!btNmea && bluetoothProvider.hasAisData()) {
-                    item.put("info", "(" + addr + ") valid AIS data");
+                if (!btNmea && numAis>0) {
+                    item.put("info", "(" + addr + ") valid AIS data, "+numAis+" targets");
                     item.put("status", GpsDataProvider.STATUS_NMEA);
 
                 }

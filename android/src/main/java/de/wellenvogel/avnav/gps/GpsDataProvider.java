@@ -49,7 +49,7 @@ public abstract class GpsDataProvider {
     public abstract boolean handlesNmea();
     public abstract boolean handlesAis();
     public abstract String getName();
-    public boolean hasAisData(){return false;}
+    public int numAisData(){return 0;}
     public String getConnectionId(){ return "";}
 
     public static class Properties{
