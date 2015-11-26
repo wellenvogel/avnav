@@ -219,10 +219,7 @@ class AVNNavData():
         if e is not None:
           nrt[k]=e
       #update the number of entries for this prefix for fast status queries
-      ocv=self.prefixCounter.get(prefix)
-      if ocv is None:
-        ocv=0
-      ocv=ocv+len(rt.keys())
+      ocv=len(rt.keys())
       self.prefixCounter[prefix]=ocv
       AVNLog.debug("NavData: count for %s=%d"%(prefix,ocv))
       self.listLock.release()
