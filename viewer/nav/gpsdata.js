@@ -132,8 +132,10 @@ avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
         this.gpsErrors++;
         if (this.gpsErrors > this.propertyHandler.getProperties().maxGpsErrors){
             log("lost gps");
+            this.handleGpsResponse({});
             this.validPosition=false;
             this.gpsdata.valid=false;
+
             //continue to count errrors...
         }
         else{
