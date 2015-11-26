@@ -10,5 +10,10 @@
         android:title="@string/labelSettingsNmea"
         android:summary="" >
     </header>
+    <header
+        android:fragment="de.wellenvogel.avnav.settings.ExpertSettingsFragment"
+        android:title="@string/labelSettingsExpert"
+        android:summary="" >
+    </header>
 
 </preference-headers>

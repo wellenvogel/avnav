@@ -64,11 +64,27 @@
     <string name="labelSettingsNmeaInput">NMEA Source</string>
     <string name="labelSettingsAisInput">AIS Source</string>
     <string name="labelSettingsNone">Off</string>
+    <string name="labelSettingsExpert">Expert Settings</string>
+    <string name="labelSettingsGpsOffset">Internal GPS Time offset(s)</string>
+    <string name="labelSettingsIpGpsOffset">IP GPS Time offset(s)</string>
+    <string name="labelSettingsBtGpsOffset">Bluetooth GPS Time offset(s)</string>
+    <string name="labelSettingsTrackInterval">Interval for writing track file(s)</string>
+    <string name="labelSettingsTrackMinDist">Min Trackpoint distance(m)</string>
+    <string name="labelSettingsTrackMinTime">Min time between track points(s)</string>
+    <string name="labelSettingsTrackLength">Track Length(h)</string>
+    <string name="labelSettingsDefaults">Reset to Defaults</string>
+    <string name="labelSettingsAisLifetime">Lifetime of AIS data(s)</string>
+    <string name="labelSettingsPosAge">Max age of position(s)</string>
+    <string name="labelSettingsIpConnectTime">IP connect timeout(s)</string>
+    <string name="labelSettingsOwnMMSI">Own MMSI</string>
     <string name="somethingWrong">StartupError</string>
     <string name="somethingWrongMessage">Something went wrong during the last start. Please change your settings and try again.</string>
     <string name="firstStart">Initial Settings</string>
     <string name="firstStartMessage">You are starting for the first time. Please choose some initial settings. Later you can go to the settings screen via the settings page, android button.</string>
     <string name="endApplication">Really exit AvNav?</string>
     <string name="exit">Exit</string>
+
+    <!-- some default values -->
+    <string name="defaultTrackLength">25</string>
 
 </resources>

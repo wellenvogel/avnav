@@ -27,12 +27,14 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
     private long lastValidLocation=0;
     private Context context;
     private boolean isRegistered=false;
+    private long timeOffset=0;
 
 
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
 
-    AndroidPositionHandler(Context ctx){
+    AndroidPositionHandler(Context ctx, long timeOffset){
         this.context=ctx;
+        this.timeOffset=timeOffset;
         locationService=(LocationManager)context.getSystemService(context.LOCATION_SERVICE);
         tryEnableLocation(true);
     }
@@ -148,7 +150,10 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
             location=nlocation;
             lastValidLocation=lastValidLocation+(long)Math.floor(locdiff*1.1); //we allow the gps to be 10% slower than realtime
         }
-        return location;
+        if (location == null) return location;
+        Location rt=new Location(location);
+        rt.setTime(rt.getTime()+timeOffset);
+        return rt;
     }
 
     @Override

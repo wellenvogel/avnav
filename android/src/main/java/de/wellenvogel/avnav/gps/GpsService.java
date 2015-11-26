@@ -19,6 +19,8 @@ import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,11 +38,7 @@ import java.util.Date;
 public class GpsService extends Service  {
 
 
-    public static String PROP_TRACKINTERVAL="track.interval";
     public static String PROP_TRACKDIR="track.dir";
-    public static String PROP_TRACKDISTANCE="track.distance";
-    public static String PROP_TRACKMINTIME="track.mintime";
-    public static String PROP_TRACKTIME="track.time";
     public static String PROP_CHECKONLY="checkonly";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
@@ -174,6 +172,7 @@ public class GpsService extends Service  {
             mNotificationManager.cancel(NOTIFY_ID);
         }
     }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
@@ -191,10 +190,10 @@ public class GpsService extends Service  {
             AvnLog.d(LOGPRFX,"restart: do not load track data");
         }
 
-        trackInterval=intent.getLongExtra(PROP_TRACKINTERVAL,300000);
-        trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
-        trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
-        trackTime=intent.getLongExtra(PROP_TRACKTIME,25*60*60*1000); //25h - to ensure that we at least have the whole day...
+        trackInterval=1000* AvnUtil.getLongPref(prefs, Constants.TRACKINTERVAL, 300);
+        trackDistance=AvnUtil.getLongPref(prefs, Constants.TRACKDISTANCE, 25);
+        trackMintime=1000*AvnUtil.getLongPref(prefs, Constants.TRACKMINTIME, 10);
+        trackTime=1000*60*60*AvnUtil.getLongPref(prefs, Constants.TRACKTIME, 25); //25h - to ensure that we at least have the whole day...
         useInternalProvider=prefs.getBoolean(Constants.INTERNALGPS,true);
         ipAis=prefs.getBoolean(Constants.IPAIS,false);
         ipNmea=prefs.getBoolean(Constants.IPNMEA,false);
@@ -226,7 +225,8 @@ public class GpsService extends Service  {
         if (useInternalProvider){
             if (internalProvider == null) {
                 AvnLog.d(LOGPRFX,"start internal provider");
-                internalProvider=new AndroidPositionHandler(this);
+                GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
+                internalProvider=new AndroidPositionHandler(this,1000*AvnUtil.getLongPref(prefs,Constants.GPSOFFSET,prop.timeOffset));
             }
         }
         else {
@@ -243,10 +243,12 @@ public class GpsService extends Service  {
                             prefs.getString(Constants.IPPORT, ""));
                     AvnLog.d(LOGPRFX,"starting external receiver for "+addr.toString());
                     GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                    prop.aisCleanupInterval=prefs.getLong(Constants.IPAISCLEANUPIV,prop.aisCleanupInterval);
-                    prop.aisLifetime=prefs.getLong(Constants.IPAISLIFETIME,prop.aisLifetime);
-                    prop.postionAge=prefs.getLong(Constants.IPPOSAGE,prop.postionAge);
-                    prop.connectTimeout=prefs.getInt(Constants.IPCONNTIMEOUT,prop.connectTimeout);
+                    prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
+                    prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
+                    prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
+                    prop.connectTimeout=1000*(int)AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout);
+                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.IPOFFSET,prop.timeOffset);
+                    prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
                     prop.readAis=ipAis;
                     prop.readNmea=ipNmea;
                     externalProvider=new IpPositionHandler(this,addr,prop);
@@ -272,15 +274,17 @@ public class GpsService extends Service  {
                     }
                     AvnLog.d(LOGPRFX,"starting bluetooth receiver for "+dname+": "+ dev.getAddress());
                     GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                    prop.aisCleanupInterval=prefs.getLong(Constants.IPAISCLEANUPIV,prop.aisCleanupInterval);
-                    prop.aisLifetime=prefs.getLong(Constants.IPAISLIFETIME,prop.aisLifetime);
-                    prop.postionAge=prefs.getLong(Constants.IPPOSAGE,prop.postionAge);
-                    prop.connectTimeout=prefs.getInt(Constants.IPCONNTIMEOUT,prop.connectTimeout);
+                    prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
+                    prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
+                    prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
+                    prop.connectTimeout=(int)(1000*AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout));
+                    prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
                     prop.readAis=btAis;
                     prop.readNmea=btNmea;
+                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);
                 }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service");
+                    Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
                 }
 
             }

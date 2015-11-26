@@ -16,10 +16,14 @@ public class Constants {
     public static final String BTNMEA="bt.nmea";
     public static final String BTAIS="bt.ais";
     public static final String BTDEVICE="bt.device";
+    public static final String BTOFFSET="bt.offset";
     public static final String IPCONNTIMEOUT="ip.conntimeout";
     public static final String IPPOSAGE="ip.posAge";
-    public static final String IPAISLIFETIME="ip.aisLifetime";
+    public static final String AISLIFETIME ="ais.Lifetime";
+    public static final String AISOWN="ais.own"; //own MMSI to filter
     public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
+    public static final String IPOFFSET="ip.offset";
+    public static final String GPSOFFSET="gps.offset";
     public static final String RUNMODE="runmode"; //normal,server,xwalk
     public static final String WAITSTART="waitstart";
     public static final String PREFNAME="AvNav";
@@ -36,4 +40,8 @@ public class Constants {
     public static final String LOGPRFX="avnav";
     public static final int    OSVERSION_XWALK=19;  //if below this version we should have xwalk
     public static final int ROUTE_OPEN_REQUEST=0;
+    public static final String TRACKINTERVAL ="track.interval";
+    public static final String TRACKDISTANCE ="track.distance";
+    public static final String TRACKMINTIME ="track.mintime";
+    public static final String TRACKTIME ="track.time";
 }

@@ -12,6 +12,10 @@
         android:persistent="false">
     </ListPreference>
     <EditTextPreference
+        android:key="ais.own"
+        android:numeric="integer"
+        android:title="@string/labelSettingsOwnMMSI"></EditTextPreference>
+    <EditTextPreference
         android:key="ip.addr"
         android:title="@string/labelSettingsIpAddress"></EditTextPreference>
     <EditTextPreference

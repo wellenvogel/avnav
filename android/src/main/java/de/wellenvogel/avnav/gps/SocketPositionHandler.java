@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
 import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
@@ -59,7 +60,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
             this.socket=socket;
             if (properties.readAis) {
                 aisparser=new AisPacketParser();
-                store=new AisStore();
+                store=new AisStore(properties.ownMmsi);
             }
         }
         @Override
@@ -219,10 +220,17 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
         }
         private long toTimeStamp(net.sf.marineapi.nmea.util.Date date,net.sf.marineapi.nmea.util.Time time){
             if (date == null) return 0;
-            Calendar cal=Calendar.getInstance();
-            cal.setTime(date.toDate());
+            Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.set(Calendar.YEAR, date.getYear());
+            cal.set(Calendar.MONTH, date.getMonth()-1); //!!! the java calendar counts from 0
+            cal.set(Calendar.DAY_OF_MONTH, date.getDay());
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
             cal.add(Calendar.MILLISECOND,(int)(time.getMilliseconds()));
-            return cal.getTime().getTime();
+            long millis=cal.getTime().getTime();
+            return millis;
         }
 
         public void stop(){
@@ -319,7 +327,11 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
 
     @Override
     public Location getLocation() {
-        return this.runnable.getLocation();
+        Location rt=this.runnable.getLocation();
+        if (rt == null) return rt;
+        rt=new Location(rt);
+        rt.setTime(rt.getTime()+properties.timeOffset);
+        return rt;
     }
 
     @Override
@@ -352,7 +364,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
         return super.getGpsData(curLoc);
     }
 
-    /**btSocket=device.createRfcommSocketToServiceRecord(UUID.fromString(RFCOMM_UUID));
+    /**
      * get AIS data (limited to distance)
      * @param lat
      * @param lon
