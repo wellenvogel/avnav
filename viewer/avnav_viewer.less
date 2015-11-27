@@ -1289,23 +1289,27 @@ button#avb_SettingsAndroid{
 	text-align: center;
 }
 #avi_mainpage_link{
+  font-size: ( @bottomPanelHeight / 4 );
   text-align: right;
   position: absolute;
   right: 0;
   bottom: 0;
   margin-right: 1em;
-  margin-bottom: 0.5em;
   z-index: 0;
+  white-space: nowrap;
 }
 #avi_mainpage_status {
+  font-size: ( @bottomPanelHeight / 4 );
   position: absolute;
   left: 0;
   bottom: 0;
-  margin-bottom: 0.5em;
+  margin-bottom: ( @bottomPanelHeight / 20 );
   margin-left: 1em;
+  margin-right: 1em;
   text-align: left;
   background-color: fade(rgb(222, 226, 207),@nightModePercent);
   z-index: 10;
+  white-space: nowrap;
 }
 #avi_mainpage_selections {
 	display: inline-block;
@@ -1446,7 +1450,7 @@ button#avb_MainAndroid{
 }
 
 .avn_status_image_small{
-  width: 15px;
-  height: 15px;
+  width: ( @bottomPanelHeight / 2.5 );
+  height: ( @bottomPanelHeight / 2.5 );
 }
 

@@ -48,23 +48,28 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
  * @param data
  * @private
  */
-avnav.nav.GpsData.prototype.handleGpsResponse=function(data){
+avnav.nav.GpsData.prototype.handleGpsResponse=function(data, status){
     var gpsdata=new avnav.nav.navdata.GpsInfo();
-    gpsdata.rtime=null;
-    if (data.time != null) gpsdata.rtime=new Date(data.time);
-    gpsdata.lon=data.lon;
-    gpsdata.lat=data.lat;
-    gpsdata.course=data.course;
-    if (gpsdata.course === undefined) gpsdata.course=data.track;
-    gpsdata.speed=data.speed*3600/this.NM;
-    gpsdata.valid=true;
+    gpsdata.valid=false;
+    if (status) {
+        gpsdata.rtime = null;
+        if (data.time != null) gpsdata.rtime = new Date(data.time);
+        gpsdata.lon = data.lon;
+        gpsdata.lat = data.lat;
+        gpsdata.course = data.course;
+        if (gpsdata.course === undefined) gpsdata.course = data.track;
+        gpsdata.speed = data.speed * 3600 / this.NM;
+        gpsdata.valid = true;
+    }
     gpsdata.raw=data.raw;
     this.gpsdata=gpsdata;
     var formattedData={};
-    formattedData.gpsPosition=this.formatter.formatLonLats(gpsdata);
-    formattedData.gpsCourse=this.formatter.formatDecimal(gpsdata.course||0,3,0);
-    formattedData.gpsSpeed=this.formatter.formatDecimal(gpsdata.speed||0,2,1);
-    formattedData.gpsTime=this.formatter.formatTime(gpsdata.rtime||new Date());
+    if (status) {
+        formattedData.gpsPosition = this.formatter.formatLonLats(gpsdata);
+        formattedData.gpsCourse = this.formatter.formatDecimal(gpsdata.course || 0, 3, 0);
+        formattedData.gpsSpeed = this.formatter.formatDecimal(gpsdata.speed || 0, 2, 1);
+        formattedData.gpsTime = this.formatter.formatTime(gpsdata.rtime || new Date());
+    }
     formattedData.nmeaStatusColor="red";
     formattedData.nmeaStatusText="???"
     try {
@@ -100,11 +105,12 @@ avnav.nav.GpsData.prototype.startQuery=function(){
             if (data['class'] != null && data['class'] == "TPV" &&
                 data.tag != null && data.lon != null && data.lat != null &&
                 data['mode'] != null && data['mode'] >=1){
-                self.handleGpsResponse(data);
+                self.handleGpsResponse(data,true);
                 log("gpsdata: "+self.formattedData.gpsPosition);
                 self.handleGpsStatus(true);
             }
             else{
+                self.handleGpsResponse(data,false);
                 self.handleGpsStatus(false);
             }
             self.timer=window.setTimeout(function(){
@@ -132,7 +138,6 @@ avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
         this.gpsErrors++;
         if (this.gpsErrors > this.propertyHandler.getProperties().maxGpsErrors){
             log("lost gps");
-            this.handleGpsResponse({});
             this.validPosition=false;
             this.gpsdata.valid=false;
 
