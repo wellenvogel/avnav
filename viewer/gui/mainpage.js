@@ -20,6 +20,8 @@ avnav.gui.Mainpage=function(){
     });
     $(window).on('resize', function () {
         $('#avi_mainpage_selections').vAlign();
+        $('#avi_mainpage_selections').hAlign();
+
     });
 };
 avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
@@ -83,6 +85,9 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
                 div.find('#avi_mainpage_selections').append(domEntry);
             }
             $('#avi_mainpage_selections').vAlign();
+            $('#avi_mainpage_selections').hAlign();
+
+
         }
 
     });

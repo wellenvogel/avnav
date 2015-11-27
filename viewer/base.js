@@ -103,4 +103,16 @@ if (! avnav) {
             });
         };
     })(jQuery);
+    (function ($) {
+        // HORIZONTALLY ALIGN FUNCTION
+        $.fn.hAlign = function() {
+            return this.each(function(i){
+                var ah = $(this).width();
+                var ph = $(this).parent().width();
+                var mh = (ph - ah) / 2;
+                if (mh > 0) $(this).css('margin-left', mh);
+            });
+        };
+    })(jQuery);
+    
 }
