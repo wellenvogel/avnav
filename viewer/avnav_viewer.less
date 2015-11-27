@@ -1279,15 +1279,10 @@ button#avb_SettingsAndroid{
 
 
 #avi_mainpage_inner_content {
-	display: table;
 	width: 100%;
 	height: 100%;
 }
-.avn_vertical_aligner{
-	display: table-cell;
-	vertical-align: middle;
-	text-align: center;
-}
+
 #avi_mainpage_link{
   font-size: ( @bottomPanelHeight / 4 );
   text-align: right;
@@ -1297,6 +1292,7 @@ button#avb_SettingsAndroid{
   padding-right: 1em;
   z-index: 0;
   white-space: nowrap;
+  .hidemedia(0px, ( @bottomPanelHeight * 16 ))
 }
 #avi_mainpage_status {
   font-size: ( @bottomPanelHeight / 4 );
@@ -1452,5 +1448,6 @@ button#avb_MainAndroid{
 .avn_status_image_small{
   width: ( @bottomPanelHeight / 2.5 );
   height: ( @bottomPanelHeight / 2.5 );
+  vertical-align: middle;
 }
 

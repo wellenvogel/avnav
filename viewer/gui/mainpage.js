@@ -18,6 +18,9 @@ avnav.gui.Mainpage=function(){
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
+    $(window).on('resize', function () {
+        $('#avi_mainpage_selections').vAlign();
+    });
 };
 avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 
@@ -79,6 +82,7 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
                 domEntry.html(ehtml);
                 div.find('#avi_mainpage_selections').append(domEntry);
             }
+            $('#avi_mainpage_selections').vAlign();
         }
 
     });
