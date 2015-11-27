@@ -604,13 +604,14 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     #we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
     status="red"
     mode=rtv.data.get('mode')
-    if int(mode) == 1:
-      status="yellow"
-    if int(mode) == 2 or int(mode) == 3:
-      if rtv.data.get("lat") is not None and rtv.data.get('lon') is not None:
-        status="green"
-      else:
+    if mode is not None:
+      if int(mode) == 1:
         status="yellow"
+      if int(mode) == 2 or int(mode) == 3:
+        if rtv.data.get("lat") is not None and rtv.data.get('lon') is not None:
+          status="green"
+        else:
+          status="yellow"
     src=self.server.navdata.getLastSource('TPV')
     #TODO: add info from sky
     sky=self.server.navdata.getMergedEntries("SKY",[])
