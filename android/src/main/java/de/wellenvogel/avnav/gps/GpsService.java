@@ -609,11 +609,11 @@ public class GpsService extends Service implements INmeaLogger {
             Location loc=internalProvider.getLocation();
             if (loc != null) {
                 nmea.put("status","green");
-                nmea.put("info", "valid position,sats: "+st.numSat+" available / "+st.numUsed+" used, acc="+loc.getAccuracy());
+                nmea.put("info", "sats: "+st.numSat+" / "+st.numUsed+", acc="+loc.getAccuracy());
             }
             else {
                 nmea.put("status","yellow");
-                nmea.put("info","searching, sats: "+st.numSat+" available / "+st.numUsed+" used");
+                nmea.put("info","sats: "+st.numSat+" / "+st.numUsed);
             }
         }
         for (GpsDataProvider provider: new GpsDataProvider[]{externalProvider,bluetoothProvider}) {
@@ -628,7 +628,7 @@ public class GpsService extends Service implements INmeaLogger {
                         nmea.put("info", "(" + addr + ") valid position");
                     } else {
                         if (st.gpsEnabled) {
-                            nmea.put("info", "(" + addr + ") connected, sats: " + st.numSat + " available / " + st.numUsed + " used");
+                            nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed );
                             nmea.put("status", "yellow");
                         } else {
                             nmea.put("info", "(" + addr + ") disconnected");
@@ -641,7 +641,7 @@ public class GpsService extends Service implements INmeaLogger {
                     int aisTargets=provider.numAisData();
                     if (aisTargets> 0) {
                         ais.put("status", "green");
-                        ais.put("info", "(" + addr + ") connected, "+aisTargets+" targets");
+                        ais.put("info", "(" + addr + "), "+aisTargets+" targets");
                     } else {
                         if (st.gpsEnabled) {
                             ais.put("info", "(" + addr + ") connected");
@@ -667,11 +667,11 @@ public class GpsService extends Service implements INmeaLogger {
             GpsDataProvider.SatStatus st=internalProvider.getSatStatus();
             Location loc=internalProvider.getLocation();
             if (loc != null) {
-                item.put("info", "valid position,sats: "+st.numSat+" available / "+st.numUsed+" used, acc="+loc.getAccuracy());
+                item.put("info", "valid position, sats: "+st.numSat+" / "+st.numUsed+", acc="+loc.getAccuracy());
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }
             else {
-                item.put("info","searching, sats: "+st.numSat+" available / "+st.numUsed+" used");
+                item.put("info","sats: "+st.numSat+" / "+st.numUsed);
                 item.put("status", GpsDataProvider.STATUS_STARTED);
             }
         }
@@ -689,7 +689,7 @@ public class GpsService extends Service implements INmeaLogger {
             int numAis=externalProvider.numAisData();
             if (loc != null) {
                 String info="("+addr+") valid position";
-                if (numAis> 0)info+=", valid AIS data, "+numAis+" targets";
+                if (numAis> 0)info+=", AIS data, "+numAis+" targets";
                 item.put("info", info);
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }

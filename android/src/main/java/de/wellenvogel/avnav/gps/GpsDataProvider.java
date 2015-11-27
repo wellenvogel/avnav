@@ -170,16 +170,16 @@ public abstract class GpsDataProvider {
     }
 
     public static net.sf.marineapi.nmea.util.Date toSfDate(long timestamp){
-        Calendar cal=Calendar.getInstance();
+        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.setTimeInMillis(timestamp);
         net.sf.marineapi.nmea.util.Date rt=new net.sf.marineapi.nmea.util.Date(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH)+1,cal.get(Calendar.DAY_OF_MONTH));
         return rt;
     }
 
     public static net.sf.marineapi.nmea.util.Time toSfTime(long timestamp){
-        Calendar cal=Calendar.getInstance();
+        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.setTimeInMillis(timestamp);
-        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR),cal.get(Calendar.MINUTE)+1,cal.get(Calendar.SECOND));
+        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE)+1,cal.get(Calendar.SECOND));
         return rt;
     }
 

@@ -176,12 +176,14 @@ public class RequestHandler {
                 JSONObject navLocation=null;
                 if (getGpsService() != null) {
                     navLocation=getGpsService().getGpsData();
-                    if (navLocation != null) {
-                        JSONObject nmea = new JSONObject();
-                        JSONObject status = getGpsService().getNmeaStatus();
-                        nmea.put("status", status);
-                        navLocation.put("raw", nmea);
+                    if (navLocation == null) {
+                        navLocation = new JSONObject();
                     }
+                    JSONObject nmea = new JSONObject();
+                    JSONObject status = getGpsService().getNmeaStatus();
+                    nmea.put("status", status);
+                    navLocation.put("raw", nmea);
+
                 }
                 fout=navLocation;
             }
