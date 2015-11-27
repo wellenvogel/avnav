@@ -86,5 +86,7 @@
 
     <!-- some default values -->
     <string name="defaultTrackLength">25</string>
+    <string name="labelSettingsNmeaLog">NMEA log</string>
+    <string name="labelSettingsAisLog">AIS log</string>
 
 </resources>

@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import java.net.InetSocketAddress;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
@@ -153,5 +154,33 @@ public abstract class GpsDataProvider {
         return new InetSocketAddress(host,Integer.parseInt(port));
     }
 
+    public static long toTimeStamp(net.sf.marineapi.nmea.util.Date date,net.sf.marineapi.nmea.util.Time time){
+        if (date == null) return 0;
+        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(Calendar.YEAR, date.getYear());
+        cal.set(Calendar.MONTH, date.getMonth()-1); //!!! the java calendar counts from 0
+        cal.set(Calendar.DAY_OF_MONTH, date.getDay());
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        cal.add(Calendar.MILLISECOND, (int) (time.getMilliseconds()));
+        long millis=cal.getTime().getTime();
+        return millis;
+    }
+
+    public static net.sf.marineapi.nmea.util.Date toSfDate(long timestamp){
+        Calendar cal=Calendar.getInstance();
+        cal.setTimeInMillis(timestamp);
+        net.sf.marineapi.nmea.util.Date rt=new net.sf.marineapi.nmea.util.Date(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH)+1,cal.get(Calendar.DAY_OF_MONTH));
+        return rt;
+    }
+
+    public static net.sf.marineapi.nmea.util.Time toSfTime(long timestamp){
+        Calendar cal=Calendar.getInstance();
+        cal.setTimeInMillis(timestamp);
+        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR),cal.get(Calendar.MINUTE)+1,cal.get(Calendar.SECOND));
+        return rt;
+    }
 
 }

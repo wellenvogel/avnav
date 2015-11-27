@@ -37,7 +37,7 @@ public class TrackWriter {
         "</gpx>\n";
     private static final String trkpnt="<trkpt lat=\"%2.9f\" lon=\"%2.9f\" ><time>%s</time><course>%3.1f</course><speed>%3.2f</speed></trkpt>\n";
     private File trackdir;
-    private SimpleDateFormat nameFormat =new SimpleDateFormat("yyyy-MM-dd");
+    private static SimpleDateFormat nameFormat =new SimpleDateFormat("yyyy-MM-dd");
     private SimpleDateFormat cmpFormat=new SimpleDateFormat("yyyyMMdd"); //we only need to compare the day
 
     private boolean writerRunning=false;
@@ -46,7 +46,7 @@ public class TrackWriter {
     TrackWriter(File trackdir){
         this.trackdir=trackdir;
     }
-    private String getCurrentTrackname(Date dt){
+    public static String getCurrentTrackname(Date dt){
         String rt= nameFormat.format(dt);
         return rt;
     }
@@ -276,7 +276,7 @@ public class TrackWriter {
         ArrayList<TrackInfo> rt=new ArrayList<TrackInfo>();
         for (File f: trackdir.listFiles()){
             if (! f.isFile()) continue;
-            if(! f.getName().endsWith(".gpx")) continue;
+            if(! f.getName().endsWith(".gpx") && ! f.getName().endsWith(".nmea")) continue;
             TrackInfo e=new TrackInfo();
             e.name=f.getName();
             e.mtime=f.lastModified();

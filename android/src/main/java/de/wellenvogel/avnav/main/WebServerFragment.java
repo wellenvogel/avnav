@@ -134,7 +134,7 @@ public class WebServerFragment extends Fragment {
         if (! serverRunning) return;
         int port=webServer.getPort();
         String start="http://localhost:"+port+"/viewer/avnav_viewer.html?onAndroid=1";
-        if (BuildConfig.DEBUG) start+="&log=1";
+        if (BuildConfig.DEBUG) start+="&logNmea=1";
         AvnLog.d(LOGPRFX, "start browser with " + start);
         try {
             Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(start));

@@ -106,6 +106,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                             break;
                         }
                         if (line.startsWith("$") && properties.readNmea) {
+                            if (nmeaLogger != null) nmeaLogger.logNmea(line);
                             //NMEA
                             if (SentenceValidator.isValid(line)) {
                                 try {
@@ -188,6 +189,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                             }
                         }
                         if (line.startsWith("!") && properties.readAis) {
+                            if (nmeaLogger != null) nmeaLogger.logNmea(line);
                             if (Abk.isAbk(line)) {
                                 aisparser.newVdm();
                                 AvnLog.i(LOGPRFX, name + ": ignore abk line " + line);
@@ -218,20 +220,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
             }
             isRunning=false;
         }
-        private long toTimeStamp(net.sf.marineapi.nmea.util.Date date,net.sf.marineapi.nmea.util.Time time){
-            if (date == null) return 0;
-            Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.set(Calendar.YEAR, date.getYear());
-            cal.set(Calendar.MONTH, date.getMonth()-1); //!!! the java calendar counts from 0
-            cal.set(Calendar.DAY_OF_MONTH, date.getDay());
-            cal.set(Calendar.HOUR_OF_DAY, 0);
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
-            cal.add(Calendar.MILLISECOND,(int)(time.getMilliseconds()));
-            long millis=cal.getTime().getTime();
-            return millis;
-        }
+
 
         public void stop(){
             doStop=true;
@@ -286,9 +275,10 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
     Thread receiverThread;
     ReceiverRunnable runnable;
     Properties properties;
-
+    INmeaLogger nmeaLogger;
     SocketPositionHandler(String name,Context ctx, AbstractSocket socket, Properties prop){
         context=ctx;
+        if (ctx instanceof INmeaLogger) nmeaLogger=(INmeaLogger)ctx;
         this.name=name;
         this.socket=socket;
         properties=prop;

@@ -35,7 +35,7 @@ import java.util.Date;
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service  {
+public class GpsService extends Service implements INmeaLogger {
 
 
     public static String PROP_TRACKDIR="track.dir";
@@ -71,6 +71,7 @@ public class GpsService extends Service  {
     private boolean btAis=false;
 
     private TrackWriter trackWriter;
+    private NmeaLogger nmeaLogger;
     private Handler handler = new Handler();
     private long timerSequence=1;
     private Runnable runnable;
@@ -78,10 +79,21 @@ public class GpsService extends Service  {
     private boolean trackLoading=true; //if set to true - do not write the track
     private long loadSequence=1;
     private static final int NOTIFY_ID=1;
+    private Object loggerLock=new Object();
     //location data
 
 
     private static final String LOGPRFX="Avnav:GpsService";
+
+    @Override
+    public void logNmea(String data) {
+        synchronized (loggerLock){
+            if (nmeaLogger != null){
+                nmeaLogger.addRecord(data);
+            }
+        }
+
+    }
 
     public class GpsServiceBinder extends Binder{
       public GpsService getService(){
@@ -199,6 +211,8 @@ public class GpsService extends Service  {
         ipNmea=prefs.getBoolean(Constants.IPNMEA,false);
         btAis=prefs.getBoolean(Constants.BTAIS,false);
         btNmea=prefs.getBoolean(Constants.BTNMEA,false);
+        boolean logNmea=prefs.getBoolean(Constants.NMEALOG,false);
+        boolean logAis=prefs.getBoolean(Constants.AISLOG,false);
         AvnLog.d(LOGPRFX,"started with dir="+newTrackDir.getAbsolutePath()+", interval="+(trackInterval/1000)+
                 ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
                 ", maxtime(h)="+(trackTime/3600/1000)+
@@ -208,6 +222,15 @@ public class GpsService extends Service  {
                 ", btNmea="+btNmea+
                 ", btAis="+btAis);
         trackDir = newTrackDir;
+        synchronized (loggerLock) {
+            if (logNmea||logAis) {
+                if (nmeaLogger != null) nmeaLogger.stop();
+                nmeaLogger = new NmeaLogger(trackDir,mediaUpdater,logNmea,logAis);
+            } else {
+                if (nmeaLogger != null) nmeaLogger.stop();
+                nmeaLogger = null;
+            }
+        }
         if (loadTrack) {
             trackpoints.clear();
             loadSequence++;
@@ -363,7 +386,7 @@ public class GpsService extends Service  {
         trackDir=null;
         isRunning=false;
         handleNotification(false);
-        AvnLog.d(LOGPRFX,"service stopped");
+        AvnLog.d(LOGPRFX, "service stopped");
     }
 
     public void stopMe(){
@@ -406,7 +429,7 @@ public class GpsService extends Service  {
                     add = true;
                 }
                 if (add) {
-                    AvnLog.d(LOGPRFX, "add location to track log " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
+                    AvnLog.d(LOGPRFX, "add location to track logNmea " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
                     Location nloc = new Location(l);
                     nloc.setTime(current);
                     trackpoints.add(nloc);
@@ -542,7 +565,13 @@ public class GpsService extends Service  {
     }
 
     public void setMediaUpdater(IMediaUpdater u){
+
         mediaUpdater=u;
+        synchronized (loggerLock) {
+            if (mediaUpdater != null && nmeaLogger != null) {
+                nmeaLogger.setMediaUpdater(mediaUpdater);
+            }
+        }
     }
 
     public IMediaUpdater getMediaUpdater(){

@@ -12,10 +12,6 @@
         android:persistent="false">
     </ListPreference>
     <EditTextPreference
-        android:key="ais.own"
-        android:numeric="integer"
-        android:title="@string/labelSettingsOwnMMSI"></EditTextPreference>
-    <EditTextPreference
         android:key="ip.addr"
         android:title="@string/labelSettingsIpAddress"></EditTextPreference>
     <EditTextPreference
@@ -24,4 +20,17 @@
     <EditTextPreference
         android:title="@string/selectBlueTooth"
         android:key="bt.device"></EditTextPreference>
+    <CheckBoxPreference
+        android:key="gps.logNmea"
+        android:defaultValue="false"
+        android:title="@string/labelSettingsNmeaLog"></CheckBoxPreference>
+    <CheckBoxPreference
+        android:key="gps.logAis"
+        android:defaultValue="false"
+        android:title="@string/labelSettingsAisLog"></CheckBoxPreference>
+    <EditTextPreference
+        android:key="ais.own"
+        android:numeric="integer"
+        android:title="@string/labelSettingsOwnMMSI"></EditTextPreference>
+
 </PreferenceScreen>

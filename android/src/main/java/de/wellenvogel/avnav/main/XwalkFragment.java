@@ -68,7 +68,7 @@ public class XwalkFragment extends Fragment implements IJsEventHandler {
         }
         mXwalkView.addJavascriptInterface(getRequestHandler().mJavaScriptApi,"avnavAndroid");
         String start= RequestHandler.URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
-        if (BuildConfig.DEBUG) start+="&log=1";
+        if (BuildConfig.DEBUG) start+="&logNmea=1";
         mXwalkView.load(start, getRequestHandler().getStartPage());
         return mXwalkView;
 

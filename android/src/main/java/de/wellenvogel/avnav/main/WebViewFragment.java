@@ -76,7 +76,7 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
         String start= RequestHandler.URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
-        if (BuildConfig.DEBUG) start+="&log=1";
+        if (BuildConfig.DEBUG) start+="&logNmea=1";
         webView.loadDataWithBaseURL(start,htmlPage,"text/html","UTF-8",null);
         return webView;
     }
