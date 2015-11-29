@@ -42,6 +42,13 @@ avnav.nav.TrackData=function(propertyHandler,navobject){
      * @type {number}
      */
     this.trackErrors=0;
+
+    /**
+     * ignore responses that do belong to older sequences
+     * @private
+     * @type {number}
+     */
+    this.trackRequestSequence=0;
     this.NM=this.propertyHandler.getProperties().NM;
     this.startQuery();
     var self=this;
@@ -106,13 +113,15 @@ avnav.nav.TrackData.prototype.startQuery=function() {
     maxItems=Math.floor(maxItems);
     if (maxItems == 0) maxItems=1;
     url+="&maxnum="+maxItems+"&interval="+interval;
-    var ctxdata={};
-    ctxdata.self=this;
+    var sequence=self.trackRequestSequence;
     $.ajax({
         url: url,
         dataType: 'json',
         cache:	false,
         success: function(data,status){
+            if (sequence != self.trackRequestSequence){
+              return;
+            }
             self.lastTrackQuery=new Date().getTime();
             self.handleTrackResponse(data);
             log("trackdatadata");
@@ -169,6 +178,13 @@ avnav.nav.TrackData.prototype.getTrackData=function(){
  * @param evdata
  */
 avnav.nav.TrackData.prototype.propertyChange=function(evdata) {
-    this.currentTrack=[];
+    this.resetTrack();
+};
+/**
+ * reset the current track (trigger reload)
+ */
+avnav.nav.TrackData.prototype.resetTrack=function(){
+    self.trackRequestSequence++;
+    this.currentTrack=[]
 };
 

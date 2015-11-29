@@ -327,6 +327,7 @@ avnav.gui.Downloadpage.prototype.sendDelete=function(info){
     if (self.type == "chart"){
         url+="&url="+encodeURIComponent(info.url);
     }
+
     $.ajax({
         url: url,
         cache: false,
@@ -335,6 +336,10 @@ avnav.gui.Downloadpage.prototype.sendDelete=function(info){
         timeout: 10000,
         success: function(data){
             self.fillData();
+            if (self.type =="track"){
+                self.gui.navobject.resetTrack(); //this could be our own track - just ensure that we reload from server
+                                                 //we do this lazy to ensure that first the server deleted
+            }
         },
         error:function(err){
             alert("unable to delete "+rname+": "+err.statusText);

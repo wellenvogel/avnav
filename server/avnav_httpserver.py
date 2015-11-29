@@ -967,12 +967,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       AVNLog.debug("delete track request, name=%s",name)
       name=name.replace("/","")
       trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
-      dir=trackWriter.getTrackDir()
-      fname=os.path.join(dir,name)
-      if not os.path.isfile(fname):
-        raise Exception("track %s not found "%name)
-      os.unlink(fname)
-      AVNLog.info("deleting track %s",name)
+      trackWriter.deleteTrack(name)
       return json.dumps(rt)
     if type == "chart":
       dir=self.getChartDir()
