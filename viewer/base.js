@@ -90,7 +90,7 @@ if (! avnav) {
             target[key] = obj[key];
         }
         return target;
-    }
+    };
     //see http://stackoverflow.com/questions/1909753/vertically-align-div-no-tables
     (function ($) {
         // VERTICALLY ALIGN FUNCTION
@@ -99,7 +99,8 @@ if (! avnav) {
                 var ah = $(this).height();
                 var ph = $(this).parent().height();
                 var mh = (ph - ah) / 2;
-                if (mh > 0) $(this).css('margin-top', mh);
+                if (mh < 0) mh=0;
+                $(this).css('margin-top', mh);
             });
         };
     })(jQuery);
@@ -110,9 +111,10 @@ if (! avnav) {
                 var ah = $(this).width();
                 var ph = $(this).parent().width();
                 var mh = (ph - ah) / 2;
-                if (mh > 0) $(this).css('margin-left', mh);
+                if (mh <0) mh=0;
+                $(this).css('margin-left', mh);
             });
         };
     })(jQuery);
-    
+
 }

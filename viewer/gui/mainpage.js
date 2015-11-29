@@ -19,9 +19,10 @@ avnav.gui.Mainpage=function(){
         self.navEvent(evdata);
     });
     $(window).on('resize', function () {
-        $('#avi_mainpage_selections').vAlign();
-        $('#avi_mainpage_selections').hAlign();
-
+        self.layout();
+    });
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
+        self.layout();
     });
 };
 avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
@@ -84,8 +85,7 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
                 domEntry.html(ehtml);
                 div.find('#avi_mainpage_selections').append(domEntry);
             }
-            $('#avi_mainpage_selections').vAlign();
-            $('#avi_mainpage_selections').hAlign();
+            page.layout();
 
 
         }
@@ -137,6 +137,11 @@ avnav.gui.Mainpage.prototype.navEvent=function(evdata) {
             this.lastNmeaStatus=status;
         }
     }
+};
+
+avnav.gui.Mainpage.prototype.layout=function(){
+    $('#avi_mainpage_selections').vAlign();
+    $('#avi_mainpage_selections').hAlign();
 };
 
 //-------------------------- Buttons ----------------------------------------
