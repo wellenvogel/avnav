@@ -18,6 +18,8 @@ import android.provider.Settings;
 import android.view.View;
 import android.widget.ArrayAdapter;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -109,6 +111,15 @@ public class NmeaSettingsFragment extends SettingsFragment {
                     }
                 });
             }
+        }
+        Preference ipPort=findPreference(Constants.IPPORT);
+        if (ipPort != null){
+            ((CheckEditTextPreference)ipPort).setChecker(new ISettingsChecker() {
+                @Override
+                public String checkValue(String newValue) {
+                    return checkNumberRange(newValue,0,1<<17-1);
+                }
+            });
         }
         setDefaults(R.xml.nmea_preferences,true);
 

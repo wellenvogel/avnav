@@ -11,12 +11,12 @@
         android:key="aisInput"
         android:persistent="false">
     </ListPreference>
-    <EditTextPreference
+    <de.wellenvogel.avnav.settings.CheckEditTextPreference
         android:key="ip.addr"
-        android:title="@string/labelSettingsIpAddress"></EditTextPreference>
-    <EditTextPreference
+        android:title="@string/labelSettingsIpAddress"></de.wellenvogel.avnav.settings.CheckEditTextPreference>
+    <de.wellenvogel.avnav.settings.CheckEditTextPreference
         android:key="ip.port"
-        android:title="@string/labelSettingsIpPort"></EditTextPreference>
+        android:title="@string/labelSettingsIpPort"></de.wellenvogel.avnav.settings.CheckEditTextPreference>
     <EditTextPreference
         android:title="@string/selectBlueTooth"
         android:key="bt.device"></EditTextPreference>

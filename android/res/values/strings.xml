@@ -89,5 +89,6 @@
     <string name="labelSettingsNmeaLogFilter">filter NMEA logs (e.g. RMB,RMC)</string>
     <string name="clear">Clear</string>
     <string name="setDefault">Default</string>
+    <string name="invalidParameterValue">invalid parameter value</string>
 
 </resources>

@@ -136,4 +136,17 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                 .unregisterOnSharedPreferenceChangeListener(this);
     }
 
+    public static String checkNumberRange(String val, int min, int max){
+        int nv=-1;
+        try {
+            nv=Integer.parseInt(val);
+        }catch (Exception e){
+            return "invalid integer value";
+        }
+        if (nv < min || nv > max){
+            return "allowed range "+min+"..."+max;
+        }
+        return null;
+    }
+
 }
