@@ -130,6 +130,23 @@ public class WebServerFragment extends Fragment {
         timerSequence++;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        String port=((MainActivity)getActivity()).sharedPrefs.getString(Constants.WEBSERVERPORT,"34567");
+        try {
+            int portnum = Integer.parseInt(port);
+            if (serverRunning) {
+                if (webServer.getPort() != portnum) {
+                    stopWebServer();
+                }
+            }
+            if (! serverRunning){
+                startWebServer();
+            }
+        }catch (Exception e){}
+    }
+
     private void launchBrowser(){
         if (! serverRunning) return;
         int port=webServer.getPort();
@@ -150,8 +167,8 @@ public class WebServerFragment extends Fragment {
     private void startWebServer(){
         if (serverRunning) return;
         try {
-            webServer.startServer();
-        } catch (IOException e) {
+            webServer.startServer(((MainActivity)getActivity()).sharedPrefs.getString(Constants.WEBSERVERPORT,"34567"));
+        } catch (Exception e) {
             e.printStackTrace();
             txServer.setText("failed to start server: "+e.getLocalizedMessage());
             return;

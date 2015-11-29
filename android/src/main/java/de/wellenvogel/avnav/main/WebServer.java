@@ -313,8 +313,17 @@ public class WebServer {
         listener=null;
     }
 
-    public int startServer() throws IOException {
-        if (running && listener != null) return listener.getPort();
+    public int startServer(String port) throws Exception {
+        int newPort=Integer.parseInt(port);
+        if (running && listener != null) {
+            int oldPort=listener.getPort();
+            if (oldPort == newPort) return oldPort;
+            AvnLog.d(NAME,"stop");
+            running=false;
+            listener.close();
+            listener=null;
+        }
+        this.serverPort=newPort;
         AvnLog.d(NAME,"start");
         running=true;
         listener=new Listener();

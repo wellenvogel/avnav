@@ -62,6 +62,15 @@ public class ExpertSettingsFragment extends SettingsFragment {
             }
         });
         setDefaults(R.xml.expert_preferences,true);
+        Preference ipPort=findPreference(Constants.WEBSERVERPORT);
+        if (ipPort != null){
+            ((CheckEditTextPreference)ipPort).setChecker(new ISettingsChecker() {
+                @Override
+                public String checkValue(String newValue) {
+                    return checkNumberRange(newValue,0,1<<17-1);
+                }
+            });
+        }
 
 
     }
