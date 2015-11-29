@@ -380,7 +380,7 @@ public class RequestHandler {
                     byte[] o = ("file " + ((name != null) ? name : "<null>") + " not found").getBytes();
                     resp = new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
                 }
-                resp.setHeader("Content-Disposition","attachment");
+                resp.setHeader("Content-Disposition", "attachment");
                 resp.setHeader("Content-Type",resp.getMimeType());
                 return resp;
             }
@@ -392,14 +392,11 @@ public class RequestHandler {
                     o.put("status","invalid type");
                 }
                 if (dtype.equals("track")) {
-                    File trackfile = new File(getGpsService().getTrackDir(), name);
-                    if (! trackfile.isFile()){
-                        o.put("status","track "+name+" not found");
-                    }
-                    else {
-                        trackfile.delete();
-                        if (updater != null) updater.triggerUpdateMtp(trackfile);
+                    try {
+                        getGpsService().deleteTrackFile(name);
                         o.put("status","OK");
+                    }catch (Exception e){
+                        o.put("status",e.getMessage());
                     }
                 }
                 if (dtype.equals("chart")) {

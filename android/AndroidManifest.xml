@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.wellenvogel.avnav.main"
-    android:versionCode="21"
-    android:versionName="0.2.1">
+    android:versionCode="1000"
+    android:versionName="1.0.0">
 
     <uses-sdk android:minSdkVersion="14" />
     <!-- make bluetooth optional -->
@@ -28,12 +28,6 @@
         android:icon="@drawable/sailboatr"
         android:label="@string/appName">
         <activity
-            android:name=".AvNav"
-            android:label="@string/appName"
-            android:windowSoftInputMode="stateHidden">
-
-        </activity>
-        <activity
 
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
@@ -48,12 +42,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".WebServerFragment"
-            android:label="@string/appName"></activity>
-        <activity
             android:name=".Info"
             android:label="Info" />
-
         <activity android:name=".Dummy">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

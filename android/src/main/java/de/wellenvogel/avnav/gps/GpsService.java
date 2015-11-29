@@ -590,6 +590,25 @@ public class GpsService extends Service implements INmeaLogger {
         return trackDir;
     }
 
+    public void deleteTrackFile(String name) throws Exception{
+        File trackfile = new File(trackDir, name);
+        if (! trackfile.isFile()){
+            throw new Exception("track "+name+" not found");
+        }
+        else {
+            trackfile.delete();
+            if (mediaUpdater != null) mediaUpdater.triggerUpdateMtp(trackfile);
+            if (name.endsWith(".gpx")){
+                if (name.replace(".gpx","").equals(TrackWriter.getCurrentTrackname(new Date()))){
+                    AvnLog.i("deleting current trackfile");
+                    synchronized (this){
+                        trackpoints=new ArrayList<Location>();
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * get the status for NMEA and AIS
      * @return
