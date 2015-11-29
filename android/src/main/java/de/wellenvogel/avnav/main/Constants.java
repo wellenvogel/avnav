@@ -26,6 +26,8 @@ public class Constants {
     public static final String GPSOFFSET="gps.offset";
     public static final String NMEALOG="gps.logNmea";
     public static final String AISLOG="gps.logAis";
+    public static final String NMEAFILTER="gps.filter";
+    public static final String NMEALOGFILTER="gps.logFilter";
     public static final String RUNMODE="runmode"; //normal,server,xwalk
     public static final String WAITSTART="waitstart";
     public static final String PREFNAME="AvNav";

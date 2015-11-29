@@ -24,4 +24,29 @@ public class AvnUtil {
         }
         return defaultValue;
     }
+    public static boolean matchesNmeaFilter(String record, String [] nmeaFilter){
+        if (record == null || ! record.startsWith("$")) return true;
+        boolean matches=true;
+        if (nmeaFilter != null && nmeaFilter.length > 0){
+            matches=false;
+            for (String f: nmeaFilter){
+                if (record.substring(3,3+f.length()).equals(f)){
+                    matches=true;
+                    break;
+                }
+            }
+        }
+        return matches;
+    }
+    public static String[] splitNmeaFilter(String nmeaFilter){
+        if (nmeaFilter != null && ! nmeaFilter.isEmpty()){
+            if (nmeaFilter.indexOf(",")>=0) {
+                return nmeaFilter.split(" *, *");
+            }
+            else{
+                return new String[]{nmeaFilter};
+            }
+        }
+        return null;
+    }
 }

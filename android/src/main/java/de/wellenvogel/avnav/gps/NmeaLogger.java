@@ -25,6 +25,7 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 /**
  * Created by andreas on 12.12.14.
@@ -41,10 +42,12 @@ public class NmeaLogger {
     private boolean logAis=false;
     private boolean logNmea=false;
     private IMediaUpdater updater;
+    private String[] nmeaFilter;
 
     public void addRecord(String record) {
         if (! logAis && record.startsWith("!")) return;
         if (! logNmea && record.startsWith("$")) return;
+        if (! AvnUtil.matchesNmeaFilter(record,nmeaFilter)) return;
         synchronized (queue) {
             if (queue.size() < MAXENTRIES) {
                 queue.add(record);
@@ -69,15 +72,16 @@ public class NmeaLogger {
         }
     }
 
-    NmeaLogger(File trackdir,IMediaUpdater updater,boolean logNmea,boolean logAis){
+    NmeaLogger(File trackdir,IMediaUpdater updater,INmeaLogger.Properties properties){
         this.trackdir=trackdir;
         writer=new LogWriter();
         writerThread=new Thread(writer);
         writerThread.setDaemon(false);
         writerThread.start();
-        this.logAis=logAis;
-        this.logNmea=logNmea;
+        this.logAis=properties.logAis;
+        this.logNmea=properties.logNmea;
         this.updater=updater;
+        nmeaFilter= AvnUtil.splitNmeaFilter(properties.nmeaFilter);
     }
 
     public void stop(){

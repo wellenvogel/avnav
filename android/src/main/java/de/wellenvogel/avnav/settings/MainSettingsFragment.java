@@ -93,6 +93,7 @@ public class MainSettingsFragment extends SettingsFragment {
                 }
             });
         }
+        setDefaults(R.xml.main_preferences,true);
     }
 
     @Override

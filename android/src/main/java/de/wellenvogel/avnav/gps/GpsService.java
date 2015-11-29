@@ -211,8 +211,10 @@ public class GpsService extends Service implements INmeaLogger {
         ipNmea=prefs.getBoolean(Constants.IPNMEA,false);
         btAis=prefs.getBoolean(Constants.BTAIS,false);
         btNmea=prefs.getBoolean(Constants.BTNMEA,false);
-        boolean logNmea=prefs.getBoolean(Constants.NMEALOG,false);
-        boolean logAis=prefs.getBoolean(Constants.AISLOG,false);
+        Properties loggerProperties=new Properties();
+        loggerProperties.logAis=prefs.getBoolean(Constants.AISLOG,false);
+        loggerProperties.logNmea=prefs.getBoolean(Constants.NMEALOG,false);
+        loggerProperties.nmeaFilter=prefs.getString(Constants.NMEALOGFILTER,null);
         AvnLog.d(LOGPRFX,"started with dir="+newTrackDir.getAbsolutePath()+", interval="+(trackInterval/1000)+
                 ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
                 ", maxtime(h)="+(trackTime/3600/1000)+
@@ -223,9 +225,9 @@ public class GpsService extends Service implements INmeaLogger {
                 ", btAis="+btAis);
         trackDir = newTrackDir;
         synchronized (loggerLock) {
-            if (logNmea||logAis) {
+            if (loggerProperties.logNmea||loggerProperties.logAis) {
                 if (nmeaLogger != null) nmeaLogger.stop();
-                nmeaLogger = new NmeaLogger(trackDir,mediaUpdater,logNmea,logAis);
+                nmeaLogger = new NmeaLogger(trackDir,mediaUpdater,loggerProperties);
             } else {
                 if (nmeaLogger != null) nmeaLogger.stop();
                 nmeaLogger = null;
@@ -274,6 +276,7 @@ public class GpsService extends Service implements INmeaLogger {
                     prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
                     prop.readAis=ipAis;
                     prop.readNmea=ipNmea;
+                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
                     externalProvider=new IpPositionHandler(this,addr,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
@@ -305,6 +308,7 @@ public class GpsService extends Service implements INmeaLogger {
                     prop.readAis=btAis;
                     prop.readNmea=btNmea;
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
+                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
                     bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());

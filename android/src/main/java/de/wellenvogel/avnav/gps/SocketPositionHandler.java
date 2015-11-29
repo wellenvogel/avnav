@@ -33,6 +33,7 @@ import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
 import de.wellenvogel.avnav.aislib.packet.AisPacket;
 import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 /**
  * Created by andreas on 25.12.14.
@@ -55,6 +56,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
         private boolean doStop;
         private Object waiter=new Object();
         private SatStatus stat=new SatStatus(0,0);
+        private String nmeaFilter[]=null;
         ReceiverRunnable(AbstractSocket socket,Properties prop){
             properties=prop;
             this.socket=socket;
@@ -62,6 +64,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                 aisparser=new AisPacketParser();
                 store=new AisStore(properties.ownMmsi);
             }
+            nmeaFilter=AvnUtil.splitNmeaFilter(prop.nmeaFilter);
         }
         @Override
         public void run() {
@@ -106,6 +109,9 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                             break;
                         }
                         if (line.startsWith("$") && properties.readNmea) {
+                            if (!AvnUtil.matchesNmeaFilter(line,nmeaFilter)){
+                                AvnLog.d("ignore "+line+" due to filter");
+                            }
                             if (nmeaLogger != null) nmeaLogger.logNmea(line);
                             //NMEA
                             if (SentenceValidator.isValid(line)) {

@@ -110,6 +110,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
                 });
             }
         }
+        setDefaults(R.xml.nmea_preferences,true);
 
     }
 

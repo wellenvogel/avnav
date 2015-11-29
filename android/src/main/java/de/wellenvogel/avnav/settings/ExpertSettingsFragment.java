@@ -61,6 +61,7 @@ public class ExpertSettingsFragment extends SettingsFragment {
                 return false;
             }
         });
+        setDefaults(R.xml.expert_preferences,true);
 
 
     }

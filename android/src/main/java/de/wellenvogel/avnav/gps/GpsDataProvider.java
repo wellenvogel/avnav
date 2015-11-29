@@ -62,6 +62,7 @@ public abstract class GpsDataProvider {
         boolean readNmea=false;
         long timeOffset=0;
         String ownMmsi=null;
+        String nmeaFilter=null;
     };
 
     /**

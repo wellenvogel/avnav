@@ -20,6 +20,14 @@
     <EditTextPreference
         android:title="@string/selectBlueTooth"
         android:key="bt.device"></EditTextPreference>
+    <de.wellenvogel.avnav.settings.ClearableEditTextPreference
+        android:key="ais.own"
+        android:numeric="integer"
+        android:title="@string/labelSettingsOwnMMSI"></de.wellenvogel.avnav.settings.ClearableEditTextPreference>
+    <de.wellenvogel.avnav.settings.ClearableEditTextPreference
+        android:key="gps.filter"
+        android:defaultValue=""
+        android:title="@string/labelSettingsNmeaFilter"></de.wellenvogel.avnav.settings.ClearableEditTextPreference>
     <CheckBoxPreference
         android:key="gps.logNmea"
         android:defaultValue="false"
@@ -28,9 +36,9 @@
         android:key="gps.logAis"
         android:defaultValue="false"
         android:title="@string/labelSettingsAisLog"></CheckBoxPreference>
-    <EditTextPreference
-        android:key="ais.own"
-        android:numeric="integer"
-        android:title="@string/labelSettingsOwnMMSI"></EditTextPreference>
+    <de.wellenvogel.avnav.settings.ClearableEditTextPreference
+        android:key="gps.logFilter"
+        android:defaultValue=""
+        android:title="@string/labelSettingsNmeaLogFilter"></de.wellenvogel.avnav.settings.ClearableEditTextPreference>
 
 </PreferenceScreen>

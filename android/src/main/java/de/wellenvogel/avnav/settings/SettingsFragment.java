@@ -25,7 +25,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
      * as there is no easy way of resetting all the defaults here, we parse the xml by our own...
      * @param id the resource id for the preferences xml
      */
-    protected void setDefaults(int id){
+    protected void setDefaults(int id, boolean setDefaultOnly){
         Resources res=getResources();
         XmlResourceParser xpp=res.getXml(id);
         try {
@@ -45,8 +45,15 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
                         Preference p = getPreferenceScreen().findPreference(k);
                         if (p != null) {
-                            if (p instanceof EditTextPreference) {
-                                ((EditTextPreference) p).setText(dv);
+                            if (! setDefaultOnly) {
+                                if (p instanceof EditTextPreference) {
+                                    ((EditTextPreference) p).setText(dv);
+                                }
+                            }
+                            else {
+                                if (p instanceof DefaultsEditTextPreference){
+                                    ((DefaultsEditTextPreference)p).setDefaultValue(dv);
+                                }
                             }
                         }
                     }
@@ -57,6 +64,10 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         } catch (Exception e) {
             AvnLog.e("unable to reset", e);
         }
+    }
+
+    protected void setDefaults(int id){
+        setDefaults(id,false);
     }
 
     @Override
