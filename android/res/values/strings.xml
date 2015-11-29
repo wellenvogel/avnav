@@ -90,5 +90,10 @@
     <string name="clear">Clear</string>
     <string name="setDefault">Default</string>
     <string name="invalidParameterValue">invalid parameter value</string>
+    <string name="newVersionTitle">New App Version</string>
+    <string name="newVersionMessage">This version will directly start into the application.
+        You can reach the settings via the settings page, android button.
+        Click Settings to go to the settings now.</string>
+    <string name="loading">AvNav is loading...</string>
 
 </resources>

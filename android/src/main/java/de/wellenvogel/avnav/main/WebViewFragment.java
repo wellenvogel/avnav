@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.*;
 import android.os.*;
 import android.view.LayoutInflater;
@@ -18,10 +19,13 @@ import de.wellenvogel.avnav.util.AvnLog;
  */
 public class WebViewFragment extends Fragment implements IJsEventHandler {
     private WebView webView;
+    ProgressDialog pd;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+        pd = ProgressDialog.show(getActivity(), "", getString(R.string.loading), true);
     }
 
     private MainActivity getMainActivity(){
@@ -57,6 +61,12 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
                 if (handler != null) rt=handler.handleRequest(view,url);
                 if (rt==null) return super.shouldInterceptRequest(view, url);
                 return rt;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (pd.isShowing()) pd.dismiss();
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {

@@ -30,6 +30,7 @@ public class Constants {
     public static final String NMEALOGFILTER="gps.logFilter";
     public static final String RUNMODE="runmode"; //normal,server,xwalk
     public static final String WAITSTART="waitstart";
+    public static final String VERSION="version";
     public static final String PREFNAME="AvNav";
     //dummy file to make the media scanner see or directories...
     public static final String EMPTY_FILE="EMPTY";

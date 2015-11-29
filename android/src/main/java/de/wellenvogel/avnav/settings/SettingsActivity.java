@@ -32,6 +32,7 @@ import de.wellenvogel.avnav.util.AvnLog;
  */
 
 public class SettingsActivity extends PreferenceActivity {
+
     private List<Header> headers=null;
     private static final int currentapiVersion = android.os.Build.VERSION.SDK_INT;
 

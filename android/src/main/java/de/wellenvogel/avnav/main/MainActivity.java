@@ -6,6 +6,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.*;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.location.LocationManager;
@@ -177,7 +178,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                 stopGpsService(false);
                 startGpsService();
             }
-            startFragmentOrActivity();
+            startFragmentOrActivity(false);
 
         }
         return true;
@@ -330,22 +331,60 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     @Override
     protected void onResume() {
         super.onResume();
+        int version=0;
+        boolean startSomething=true;
+        try {
+            version = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+        }
+        if (version != 0){
+            try {
+                int lastVersion = sharedPrefs.getInt(Constants.VERSION, 0);
+                //TODO: handle other version changes
+                if (lastVersion == 0 ){
+                    sharedPrefs.edit().putInt(Constants.VERSION,version).commit();
+                    startSomething=false;
+                    AlertDialog.Builder builder=new AlertDialog.Builder(this);
+                    builder.setTitle(R.string.newVersionTitle);
+                    builder.setMessage(R.string.newVersionMessage);
+                    builder.setNeutralButton(R.string.settings, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            startFragmentOrActivity(true);
+                        }
+                    });
+                    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            handleRestart(true);
+                        }
+                    });
+                    builder.create().show();
+                }
+            }catch (Exception e){}
+        }
+        if (! startSomething) return;
+        handleRestart(startSomething);
+    }
+
+    private void handleRestart(boolean startSomething){
         if (serviceNeedsRestart) Log.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
         if (serviceNeedsRestart) stopGpsService(false);
-        boolean startSomething=SettingsActivity.handleInitialSettings(this);
+        startSomething=SettingsActivity.handleInitialSettings(this);
         if (serviceNeedsRestart) startGpsService();
         requestHandler.update();
-        if (startSomething) startFragmentOrActivity();
+        if (startSomething) startFragmentOrActivity(false);
     }
 
     /**
      * when the activity becomes visible (onResume) we either
      * start a fragment or we go to a new activity (like settings)
      */
-    void startFragmentOrActivity(){
+    void startFragmentOrActivity(boolean forceSettings){
         String mode=sharedPrefs.getString(Constants.RUNMODE, "");
         boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
-        if (mode.isEmpty() || startPendig){
+        if (mode.isEmpty() || startPendig || forceSettings){
             //TODO: show info dialog
             lastStartMode=null;
             jsEventHandler=null;

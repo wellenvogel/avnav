@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -18,10 +19,12 @@ import org.xwalk.core.*;
  */
 public class XwalkFragment extends Fragment implements IJsEventHandler {
     private XWalkView mXwalkView;
+    ProgressDialog pd;
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        pd = ProgressDialog.show(getActivity(), "", getString(R.string.loading), true);
     }
 
     private MainActivity getMainActivity(){
@@ -60,6 +63,12 @@ public class XwalkFragment extends Fragment implements IJsEventHandler {
                 if (handler != null) rt=handler.handleRequest(view, url);
                 if (rt != null) return rt;
                 return super.shouldInterceptLoadRequest(view, url);
+            }
+
+            @Override
+            public void onLoadFinished(XWalkView view, String url) {
+                super.onLoadFinished(view, url);
+                if (pd.isShowing()) pd.dismiss();
             }
         });
         if (BuildConfig.DEBUG){
