@@ -54,20 +54,19 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
     signingConfigs {
-        if (System.getenv("ANDROID_KEYSTORE") != null) {
-            release {
-                storeFile file(System.getenv("ANDROID_KEYSTORE"))
-                storePassword System.getenv("ANDROID_KEYPASS")
-                keyAlias System.getenv("ANDROID_KEYALIAS")
-                keyPassword System.getenv("ANDROID_KEYPASS")
-            }
+
+        config {
+            storeFile file(System.getenv("ANDROID_KEYSTORE"))
+            storePassword System.getenv("ANDROID_KEYPASS")
+            keyAlias System.getenv("ANDROID_KEYALIAS")
+            keyPassword System.getenv("ANDROID_KEYPASS")
         }
     }
     //see http://stackoverflow.com/questions/18332474/how-to-set-versionname-in-apk-filename-using-gradle
     buildTypes {
         release {
             if (System.getenv("ANDROID_KEYSTORE") != null) {
-                signingConfig signingConfigs.release
+                signingConfig signingConfigs.config
             }
             applicationVariants.all { variant ->
                 println "Variant: " + variant.getName()
