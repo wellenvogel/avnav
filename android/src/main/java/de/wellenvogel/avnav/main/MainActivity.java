@@ -8,7 +8,6 @@ import android.app.FragmentTransaction;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.content.res.Resources;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -17,13 +16,11 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.WindowManager;
-import android.webkit.*;
 import android.widget.Toast;
 
 import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
-import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 
@@ -31,8 +28,6 @@ import org.xwalk.core.XWalkActivity;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.text.SimpleDateFormat;
-import java.util.HashMap;
 
 /**
  * Created by andreas on 06.01.15.
@@ -333,12 +328,35 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         super.onResume();
         int version=0;
         boolean startSomething=true;
+        SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
+        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
+        if (mode.isEmpty() || startPendig) {
+            startSomething=false;
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setPositiveButton(android.R.string.ok,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            handleRestart(true);
+                        }
+                    });
+
+            if (startPendig) {
+                builder.setTitle(R.string.somethingWrong).setMessage(R.string.somethingWrongMessage);
+            } else {
+                builder.setTitle(R.string.firstStart).setMessage(R.string.firstStartMessage);
+            }
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
+            if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
+        }
         try {
             version = getPackageManager()
                     .getPackageInfo(getPackageName(), 0).versionCode;
         } catch (PackageManager.NameNotFoundException e) {
         }
-        if (version != 0){
+        if (! startSomething) return;
+        if (version != 0 ){
             try {
                 int lastVersion = sharedPrefs.getInt(Constants.VERSION, 0);
                 //TODO: handle other version changes
@@ -351,13 +369,13 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                     builder.setNeutralButton(R.string.settings, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            startFragmentOrActivity(true);
+                            handleRestart(true);
                         }
                     });
                     builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            handleRestart(true);
+                            handleRestart(false);
                         }
                     });
                     builder.create().show();
@@ -365,16 +383,16 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             }catch (Exception e){}
         }
         if (! startSomething) return;
-        handleRestart(startSomething);
+        handleRestart(false);
     }
 
-    private void handleRestart(boolean startSomething){
+    private void handleRestart(boolean forceSettings){
         if (serviceNeedsRestart) Log.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
         if (serviceNeedsRestart) stopGpsService(false);
-        startSomething=SettingsActivity.handleInitialSettings(this);
+        boolean startSomething=SettingsActivity.handleInitialSettings(this);
         if (serviceNeedsRestart) startGpsService();
         requestHandler.update();
-        if (startSomething) startFragmentOrActivity(false);
+        if (startSomething) startFragmentOrActivity(forceSettings);
     }
 
     /**

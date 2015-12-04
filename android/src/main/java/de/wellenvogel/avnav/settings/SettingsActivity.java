@@ -42,7 +42,7 @@ public class SettingsActivity extends PreferenceActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        handleInitialSettings(this);
+        //handleInitialSettings(this, true);
         updateHeaderSummaries(true);
 
 
@@ -129,6 +129,7 @@ public class SettingsActivity extends PreferenceActivity {
         }
         //TODO: handle unwritable workdir
         String chartdir=sharedPrefs.getString(Constants.CHARTDIR, new File(new File(workdir), "charts").getAbsolutePath());
+        if (mode.isEmpty()) mode=Constants.MODE_NORMAL;
         e.putString(Constants.RUNMODE, mode);
         e.putString(Constants.WORKDIR, workdir);
         e.putString(Constants.CHARTDIR, chartdir);
@@ -169,6 +170,14 @@ public class SettingsActivity extends PreferenceActivity {
                 sharedPrefs.getBoolean(Constants.IPNMEA,false)==false &&
                 sharedPrefs.getBoolean(Constants.BTNMEA,false)==false){
             e.putBoolean(Constants.INTERNALGPS,true);
+        }
+        try {
+            int version = activity.getPackageManager()
+                    .getPackageInfo(activity.getPackageName(), 0).versionCode;
+            if (sharedPrefs.getInt(Constants.VERSION,-1)!= version){
+                e.putInt(Constants.VERSION,version);
+            }
+        } catch (Exception ex) {
         }
         e.commit();
         NmeaSettingsFragment.checkGpsEnabled(activity, false);
@@ -215,28 +224,7 @@ public class SettingsActivity extends PreferenceActivity {
     protected void onResume() {
         updateHeaderSummaries(true);
         super.onResume();
-        SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
-        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
-        if (mode.isEmpty() || startPendig) {
-            //TODO: the dialogs must be handled by the settings activity
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setPositiveButton(android.R.string.ok,
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
 
-                        }
-                    });
-
-            if (startPendig) {
-                builder.setTitle(R.string.somethingWrong).setMessage(R.string.somethingWrongMessage);
-            } else {
-                builder.setTitle(R.string.firstStart).setMessage(R.string.firstStartMessage);
-            }
-            AlertDialog alertDialog = builder.create();
-            alertDialog.show();
-            if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
-        }
 
     }
     @Override
