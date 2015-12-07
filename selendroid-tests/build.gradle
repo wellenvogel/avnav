@@ -2,6 +2,7 @@
 group="de.wellenvogel.avnav.test"
 
 apply plugin: "java"
+apply plugin: "groovy"
 
 
 buildscript {
@@ -16,6 +17,7 @@ repositories {
     }
 }
 dependencies{
+    compile localGroovy()
     compile "io.selendroid:selendroid-standalone:0.17.0"
     compile 'io.selendroid:selendroid-client:0.17.0'
     testCompile "junit:junit:4.12"

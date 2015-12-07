@@ -22,10 +22,7 @@ import io.selendroid.common.SelendroidCapabilities;
 import io.selendroid.standalone.SelendroidConfiguration;
 import io.selendroid.standalone.SelendroidLauncher;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
@@ -33,39 +30,14 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.io.File;
 import java.util.ArrayList;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class Test1 {
-    private SelendroidLauncher selendroidServer = null;
-    private WebDriver driver = null;
+public class Test1 extends TestBase{
     private int startcount=0;
 
 
-    private WebElement waitForElement(String id,int timeout) throws InterruptedException,ElementNotVisibleException {
-        WebElement rt=null;
-        while (timeout > 0) {
-            try {
-                rt=driver.findElement(By.id(id));
-                return rt;
-            }catch (Exception ex){
-            }
-            Thread.sleep(100);
-            timeout-=100;
-        }
-        throw new ElementNotVisibleException("element with id="+id+" not visible after timeout");
-    }
-
-    private WebElement waitForVisibleElement(String id, int timeout) throws Exception {
-        WebElement el=waitForElement(id,timeout/2);
-        timeout=timeout/2;
-        while (timeout > 0){
-            if (el.isDisplayed()) return el;
-            Thread.sleep(100);
-            timeout-=100;
-        }
-        throw new Exception("elemnt with id="+id+" not visible after timeout");
-    }
     @Test
     public void a1startApp() throws Exception {
         startSelendroidServer(true);
@@ -87,7 +59,7 @@ public class Test1 {
 
     @Test
     public void a2startApp2() throws Exception {
-        startSelendroidServer(false);
+        startSelendroidServer(false,"settingsInternal.xml",null);
         driver.get("and-activity://de.wellenvogel.avnav.MainActivity");
         System.out.println("##driver get OK");
 
@@ -95,11 +67,23 @@ public class Test1 {
         System.out.println("successfully started into main app");
         driver.quit();
     }
+    @Test
+    public void a3startAppIp() throws Exception {
+        startSelendroidServer(false,"settingsIp.xml",null);
+        driver.get("and-activity://de.wellenvogel.avnav.MainActivity");
+        System.out.println("##driver get OK");
+
+        WebElement element=waitForElement("webmain",3000);
+        System.out.println("successfully started into main app");
+        driver.quit();
+    }
+
+
     /**
      * start into main app and switch to webview
      */
-    private void startIntoMain() throws Exception {
-        startSelendroidServer(false);
+    private void startIntoMain(String settings,Map<String,String> replace) throws Exception {
+        startSelendroidServer(false,settings,replace);
         driver.get("and-activity://de.wellenvogel.avnav.MainActivity");
         System.out.println("##driver get OK");
 
@@ -109,8 +93,8 @@ public class Test1 {
     }
 
     @Test
-    public void a3StatusPage() throws Exception{
-        startIntoMain();
+    public void b1StatusPage() throws Exception{
+        startIntoMain("settingsInternal.xml",null)
         WebElement el=driver.findElement(By.id("avb_ShowStatus"));
         el.click();
         el=waitForVisibleElement("avi_statuspage",2000);
@@ -118,38 +102,15 @@ public class Test1 {
 
     }
 
-    public void startSelendroidServer(boolean clearData) throws Exception {
-        /*
-        if (selendroidServer != null) {
-            selendroidServer.stopSelendroid();
-        }
-        SelendroidConfiguration config = new SelendroidConfiguration();
+    @Test
+    public void b2StatusPageIp() throws Exception{
+        startIntoMain("settingsIp.xml",null)
+        WebElement el=driver.findElement(By.id("avb_ShowStatus"));
+        el.click();
+        el=waitForVisibleElement("avi_statuspage",2000);
+        driver.quit();
 
-        selendroidServer = new SelendroidLauncher(config);
-        selendroidServer.launchSelendroid();
-        */
-
-        SelendroidCapabilities caps = new SelendroidCapabilities("de.wellenvogel.avnav.main:1.0.0");
-        caps.setEmulator(true);
-        if (clearData){
-            ArrayList<String> commands=new ArrayList<String>();
-            commands.add("shell pm clear de.wellenvogel.avnav.main");
-            caps.setPreSessionAdbCommands(commands);
-        }
-        driver = new SelendroidDriver(caps);
-        System.out.println("##driver started");
     }
 
-    @After
-    public void stopSelendroidServer() {
-        if (driver != null) {
-            driver.quit();
-        }
-        /*
-        if (selendroidServer != null) {
-            selendroidServer.stopSelendroid();
-        }
-        */
-    }
 }
 
