@@ -65,7 +65,7 @@
 <AVNHttpServer navurl="/viewer/avnav_navi.php" httpPort="8081" upzoom="0"
                chartbase="maps" empty="nonexistent">
 <!-- chartbaseurl="http://$host/Karten/anav"> -->
-	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
+	<Directory urlpath="maps" path="~/AvNavCharts/outx"></Directory>
 	<Directory urlpath="viewer" path="../viewer"></Directory>
 	<Directory urlpath="libraries" path="../libraries"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
@@ -75,7 +75,7 @@
 <AVNChartHandler></AVNChartHandler>
     <!--  routing handler -->
 <AVNRouter routesdir="../data_linux/routes"></AVNRouter>
-<AVNNmeaLogger></AVNNmeaLogger>
+<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>
 <AVNImporter importDir="../data_linux/import"></AVNImporter>
 
 </AVNServer>
