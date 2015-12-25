@@ -48,12 +48,12 @@ public class Test1 extends TestBase{
         assert initialTitle.getText().equals("Initial Settings");
         WebElement element = driver.findElement(By.id("button1")); //setings button in init dialog
         element.click();
-        Thread.sleep(2000);
-        element=driver.findElement(By.id("headers"));
+        //Thread.sleep(2000);
+        element=waitForVisibleElement("headers",2000);
         element=driver.findElement(By.id("action_ok"));
         element.click();
-        Thread.sleep(3000);
-        element=driver.findElement(By.id("webmain"));
+        //Thread.sleep(7000);
+        element=waitForVisibleElement("webmain",7000);
         System.out.println("successfully started into main app");
     }
 
