@@ -358,7 +358,7 @@ public class GpsService extends Service implements INmeaLogger {
     /**
      * will be called whe we intend to really stop
      */
-    private void handleStop(){
+    private void handleStop(boolean emptyTrack){
         if (internalProvider != null){
             internalProvider.stop();
             internalProvider=null;
@@ -376,7 +376,9 @@ public class GpsService extends Service implements INmeaLogger {
         if (trackpoints.size() >0){
             if (! trackLoading) {
                 try {
-                    trackWriter.writeTrackFile(getTrackCopy(), new Date(), true, mediaUpdater);
+                    //when we shut down completely we have to wait until the track is written
+                    //if we only restart, we write the track in background
+                    trackWriter.writeTrackFile(getTrackCopy(), new Date(), !emptyTrack, mediaUpdater);
                 } catch (FileNotFoundException e) {
                     AvnLog.d(LOGPRFX, "Exception while finally writing trackfile: " + e.getLocalizedMessage());
                 }
@@ -385,16 +387,18 @@ public class GpsService extends Service implements INmeaLogger {
                 AvnLog.i(LOGPRFX,"unable to write trackfile as still loading");
             }
         }
-        trackpoints.clear();
+        if (emptyTrack) {
+            trackpoints.clear();
+            trackDir = null;
+        }
         loadSequence++;
-        trackDir=null;
         isRunning=false;
         handleNotification(false);
         AvnLog.d(LOGPRFX, "service stopped");
     }
 
-    public void stopMe(){
-        handleStop();
+    public void stopMe(boolean doShutdown){
+        handleStop(doShutdown);
         stopSelf();
     }
 
@@ -402,7 +406,7 @@ public class GpsService extends Service implements INmeaLogger {
     public void onDestroy()
     {
         super.onDestroy();
-        handleStop();
+        handleStop(true);
     }
 
 

@@ -151,7 +151,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
 
     private void stopGpsService(boolean unbind){
         if (gpsService !=null){
-            gpsService.stopMe();
+            gpsService.stopMe(unbind);
         }
         if (unbind) {
             Intent intent = new Intent(this, GpsService.class);
