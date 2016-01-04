@@ -171,6 +171,13 @@ public class SettingsActivity extends PreferenceActivity {
                 sharedPrefs.getBoolean(Constants.BTNMEA,false)==false){
             e.putBoolean(Constants.INTERNALGPS,true);
         }
+        //to be robust...
+        if (sharedPrefs.getBoolean(Constants.IPNMEA,false)==true) e.putBoolean(Constants.INTERNALGPS,false);
+        if (sharedPrefs.getBoolean(Constants.BTNMEA,false)==true) {
+            e.putBoolean(Constants.INTERNALGPS,false);
+            e.putBoolean(Constants.IPNMEA,false);
+        }
+        if (sharedPrefs.getBoolean(Constants.BTAIS,false)==true) e.putBoolean(Constants.IPAIS,false);
         try {
             int version = activity.getPackageManager()
                     .getPackageInfo(activity.getPackageName(), 0).versionCode;
