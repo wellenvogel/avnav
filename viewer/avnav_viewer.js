@@ -124,8 +124,8 @@ var propertyDefinitions=function(){
             INACTIVE: new avnav.util.Property( "images/GreyBubble40.png"),
             STARTED: new avnav.util.Property(  "images/YellowBubble40.png"),
             RUNNING: new avnav.util.Property(  "images/YellowBubble40.png"),
-            NMEA: new avnav.util.Property(	  "images/GreenBubble40.png"),
-            ERROR: new avnav.util.Property(	  "images/RedBubble40.png")
+            NMEA: new avnav.util.Property(    "images/GreenBubble40.png"),
+            ERROR: new avnav.util.Property(   "images/RedBubble40.png")
         },
         nightFade:new avnav.util.Property( 15,"NightDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in px
         nightChartFade:new avnav.util.Property( 30,"NightChartDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in %
@@ -202,6 +202,9 @@ avnav.main=function() {
 
         propertyHandler.setValueByName(ro,false);
     }
+    if (avnav_version !== undefined){
+        $('#avi_mainpage_version').text(avnav_version);
+    }
     //make the android API available as avnav.android
     if (window.avnavAndroid){
         log("android integration enabled");
@@ -209,10 +212,8 @@ avnav.main=function() {
         avnav.android=window.avnavAndroid;
         propertyHandler.setValueByName('routingServerError',false);
         propertyHandler.setValueByName('connectedMode',true);
-	avnav.android.applicationStarted();
-    }
-    if (avnav_version !== undefined){
-        $('#avi_mainpage_version').text(avnav_version);
+        $('#avi_mainpage_version').text(avnav.android.getVersion());
+        avnav.android.applicationStarted();
     }
     gui.showPage("mainpage");
     //ios browser sometimes has issues with less...
