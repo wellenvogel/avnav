@@ -750,6 +750,16 @@ public class RequestHandler {
                 return;
             }
         }
+        @JavascriptInterface
+        public String getVersion(){
+            try {
+                String versionName = activity.getPackageManager()
+                        .getPackageInfo(activity.getPackageName(), 0).versionName;
+                return versionName;
+            } catch (PackageManager.NameNotFoundException e) {
+                return "<unknown>";
+            }
+        }
 
     };
 
