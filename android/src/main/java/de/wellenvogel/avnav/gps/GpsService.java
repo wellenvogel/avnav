@@ -652,7 +652,7 @@ public class GpsService extends Service implements INmeaLogger {
                     nmea.put("source", provider.getName());
                     if (loc != null) {
                         nmea.put("status", "green");
-                        nmea.put("info", "(" + addr + ") valid position");
+                        nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed );
                     } else {
                         if (st.gpsEnabled) {
                             nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed );

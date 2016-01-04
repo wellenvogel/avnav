@@ -26,6 +26,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.TimeZone;
 
 import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
@@ -40,6 +42,45 @@ import de.wellenvogel.avnav.util.AvnUtil;
  */
 public abstract class SocketPositionHandler extends GpsDataProvider {
     private long lastAisCleanup=0;
+
+    class GSVStore{
+        public static final int MAXGSV=20; //max number of gsv sentences without one that is the last
+        public static final int GSVAGE=60000; //max age of gsv data in ms
+        int numGsv=0;
+        int lastReceived=0;
+        boolean isValid=false;
+        Date validDate=null;
+        HashMap<Integer,GSVSentence> sentences=new HashMap<Integer,GSVSentence>();
+        public void addSentence(GSVSentence gsv){
+            if (gsv.isFirst()){
+                numGsv=gsv.getSentenceCount();
+                sentences.clear();
+                isValid=false;
+                validDate=null;
+            }
+            if (gsv.isLast()){
+                isValid=true;
+                validDate=new Date();
+            }
+            lastReceived=gsv.getSentenceIndex();
+            sentences.put(gsv.getSentenceIndex(),gsv);
+        }
+        public boolean getValid(){
+            if (! isValid) return false;
+            if (validDate == null) return false;
+            Date now=new Date();
+            if ((now.getTime()-validDate.getTime()) > GSVAGE) return false;
+            return true;
+        }
+        public int getSatCount(){
+            if (! isValid) return 0;
+            int rt=0;
+            for (GSVSentence s: sentences.values()){
+                rt+=s.getSatelliteCount();
+            }
+            return rt;
+        }
+    }
 
 
     class ReceiverRunnable implements Runnable{
@@ -56,6 +97,8 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
         private boolean doStop;
         private Object waiter=new Object();
         private SatStatus stat=new SatStatus(0,0);
+        private GSVStore currentGsvStore=null;
+        private GSVStore validGsvStore=null;
         private String nmeaFilter[]=null;
         ReceiverRunnable(AbstractSocket socket,Properties prop){
             properties=prop;
@@ -68,6 +111,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
         }
         @Override
         public void run() {
+            int numGsv=0; //number of gsv sentences without being the last
             while (! doStop) {
                 isConnected=false;
                 stat.gpsEnabled=false;
@@ -121,8 +165,26 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                                         lastDate = ((DateSentence) s).getDate();
                                     }
                                     if (s instanceof  GSVSentence){
-                                        stat.numSat=((GSVSentence)s).getSatelliteCount();
-                                        AvnLog.d(name+": GSV sentence, numSat="+stat.numSat);
+                                        numGsv++;
+                                        if (currentGsvStore == null) currentGsvStore=new GSVStore();
+                                        GSVSentence gsv=(GSVSentence)s;
+                                        currentGsvStore.addSentence(gsv);
+                                        AvnLog.d(name + ": GSV sentence ("+gsv.getSentenceIndex()+"/"+gsv.getSentenceCount()+
+                                                "), numSat=" + gsv.getSatelliteCount());
+                                        if (currentGsvStore.getValid()){
+                                            numGsv=0;
+                                            validGsvStore=currentGsvStore;
+                                            currentGsvStore=new GSVStore();
+                                            stat.numSat=validGsvStore.getSatCount();
+                                            //TODO: aging of validGSVStore
+                                            AvnLog.d(name+": GSV sentence last, numSat="+stat.numSat);
+                                        }
+                                        if (numGsv > GSVStore.MAXGSV){
+                                            AvnLog.e(name+": to many gsv sentences without a final one "+numGsv);
+                                            stat.numSat=0;
+                                            validGsvStore=null;
+                                        }
+
                                         continue;
                                     }
                                     if (s instanceof GSASentence){
@@ -273,6 +335,12 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
             if (store == null ) return 0;
             return store.numAisEntries();
         }
+
+        public boolean hasValidStatus(){
+            if (validGsvStore == null) return false;
+            if (! validGsvStore.getValid()) return false;
+            return true;
+        }
     }
     public static final String LOGPRFX="AvNav:SocketPh";
     Context context;
@@ -298,7 +366,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
     SatStatus getSatStatus() {
         SatStatus rt=new SatStatus(0,0);
         synchronized (this) {
-            if (runnable != null && runnable.stat != null) {
+            if (runnable != null && runnable.stat != null && runnable.hasValidStatus()) {
                 rt = new SatStatus(runnable.stat.numSat, runnable.stat.numUsed);
                 rt.gpsEnabled = runnable.stat.gpsEnabled;
             }
