@@ -639,8 +639,14 @@ public class GpsService extends Service implements INmeaLogger {
                 nmea.put("info", "sats: "+st.numSat+" / "+st.numUsed+", acc="+loc.getAccuracy());
             }
             else {
-                nmea.put("status","yellow");
-                nmea.put("info","sats: "+st.numSat+" / "+st.numUsed);
+                if (st.gpsEnabled) {
+                    nmea.put("status", "yellow");
+                    nmea.put("info", "sats: " + st.numSat + " / " + st.numUsed);
+                }
+                else{
+                    nmea.put("status", "red");
+                    nmea.put("info", "disabled");
+                }
             }
         }
         for (GpsDataProvider provider: new GpsDataProvider[]{externalProvider,bluetoothProvider}) {
@@ -698,8 +704,14 @@ public class GpsService extends Service implements INmeaLogger {
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }
             else {
-                item.put("info","sats: "+st.numSat+" / "+st.numUsed);
-                item.put("status", GpsDataProvider.STATUS_STARTED);
+                if (st.gpsEnabled) {
+                    item.put("info", "sats: " + st.numSat + " / " + st.numUsed);
+                    item.put("status", GpsDataProvider.STATUS_STARTED);
+                }
+                else{
+                    item.put("info", "disabled");
+                    item.put("status", GpsDataProvider.STATUS_ERROR);
+                }
             }
         }
         else {
