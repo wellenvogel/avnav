@@ -2,10 +2,12 @@
 #testprog for serial reading
 
 import sys
+import threading
 from threading import Thread
 import time
 import socket
 import re
+import traceback
 
 
 def err(txt):
@@ -31,7 +33,7 @@ def sendSock(file,sock,sleeptime):
   try:
     f=open(file,"r")
   except:
-    err("Exception on opening: "+str(sys.exc_info()[0]))
+    err("Exception on opening: "+traceback.format_exc())
     
   print "start sending %s"%(file)
   sfail=0
@@ -46,7 +48,9 @@ def sendSock(file,sock,sleeptime):
         lbytes=f.readline()
         lbytes=re.sub('[\n\r]','',lbytes)
       except:
-        print "Exception on r: "+str(sys.exc_info()[0])
+        print "Exception on r: "+traceback.format_exc()
+        f=open(file,"r")
+        print "reopen file"
       doSend=False
       try:
         if lbytes is not None and len(lbytes)> 0:
@@ -57,18 +61,18 @@ def sendSock(file,sock,sleeptime):
         try:
             print lbytes
             if sock.sendall(lbytes+"\r\n") is not None:
-              raise "Exception in sendall"
+              raise Exception("Exception in sendall")
             sfail=0
         except:
-            print "Exception on send: "+str(sys.exc_info()[0])
+            print "Exception on send: "+traceback.format_exc()
             sfail+=1
             if sfail > 10:
-                raise "Exception on write, error counter exceeded"
+                raise Exception("Exception on write, error counter exceeded")
         time.sleep(sleeptime)
       else:
-        raise "EOF on "+file
+        raise Exception("EOF on "+file)
     except:
-      print "Exception on r/w: "+str(sys.exc_info()[0])
+      print "Exception on r/w: "+traceback.format_exc()
       try:
         sock.close()
       except:
@@ -85,7 +89,10 @@ def listen(port,sfile,sleeptime):
   while True:
     client=listener.accept()
     print "Client connected %s:%d"%client[0].getpeername()
-    sendSock(sfile,client[0],sleeptime)
+    writer=threading.Thread(target=sendSock,args=(sfile,client[0],sleeptime))
+    writer.setDaemon(True)
+    writer.start()
+    #sendSock(sfile,client[0],sleeptime)
   
 
 if __name__ == "__main__":
