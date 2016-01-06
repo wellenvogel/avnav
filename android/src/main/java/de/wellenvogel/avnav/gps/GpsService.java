@@ -715,7 +715,7 @@ public class GpsService extends Service implements INmeaLogger {
             Location loc=externalProvider.getLocation();
             int numAis=externalProvider.numAisData();
             if (loc != null) {
-                String info="("+addr+") valid position";
+                String info="("+addr+") valid position, sats: "+st.numSat+" / "+st.numUsed;
                 if (numAis> 0)info+=", AIS data, "+numAis+" targets";
                 item.put("info", info);
                 item.put("status", GpsDataProvider.STATUS_NMEA);
@@ -750,7 +750,7 @@ public class GpsService extends Service implements INmeaLogger {
             Location loc=bluetoothProvider.getLocation();
             int numAis=bluetoothProvider.numAisData();
             if (loc != null) {
-                String info="("+addr+") valid position";
+                String info="("+addr+") valid position, sats: "+st.numSat+" / "+st.numUsed;
                 if (numAis>0)info+=", valid AIS data, "+numAis+" targets";
                 item.put("info", info);
                 item.put("status", GpsDataProvider.STATUS_NMEA);
