@@ -126,9 +126,13 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
             if (! isRegistered) {
                 locationService.requestLocationUpdates(currentProvider, 400, 0, this);
                 locationService.addGpsStatusListener(this);
+                location=null;
+                lastValidLocation=0;
+                /*
                 location = locationService.getLastKnownLocation(currentProvider);
                 if (location != null) lastValidLocation = System.currentTimeMillis();
                 AvnLog.d(LOGPRFX, "location: location provider=" + currentProvider + " location acc=" + ((location != null) ? location.getAccuracy() : "<null>") + ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
+                */
                 isRegistered=true;
             }
 
