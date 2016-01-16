@@ -88,14 +88,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         }
     }
 
-    private void startGpsService(){
+    private boolean startGpsService(){
 
 
         if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
                 ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
                 ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false)){
             Toast.makeText(this, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
-            return;
+            return false;
         }
         if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
             try {
@@ -104,14 +104,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                         sharedPrefs.getString(Constants.IPPORT, ""));
             } catch (Exception i) {
                 Toast.makeText(this, R.string.invalidIp, Toast.LENGTH_SHORT).show();
-                return;
+                return false;
             }
         }
         if (sharedPrefs.getBoolean(Constants.BTAIS,false)||sharedPrefs.getBoolean(Constants.BTNMEA,false)){
             String btdevice=sharedPrefs.getString(Constants.BTDEVICE,"");
             if (BluetoothPositionHandler.getDeviceForName(btdevice) == null){
                 Toast.makeText(this, getText(R.string.noSuchBluetoothDevice)+":"+btdevice, Toast.LENGTH_SHORT).show();
-                return;
+                return false;
             }
         }
         if (sharedPrefs.getBoolean(Constants.INTERNALGPS,false)) {
@@ -147,6 +147,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         //TODO: add other parameters here
         startService(intent);
         serviceNeedsRestart=false;
+        return true;
     }
 
     private void stopGpsService(boolean unbind){
@@ -390,7 +391,9 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         if (serviceNeedsRestart) Log.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
         if (serviceNeedsRestart) stopGpsService(false);
         boolean startSomething=SettingsActivity.handleInitialSettings(this);
-        if (serviceNeedsRestart) startGpsService();
+        if (serviceNeedsRestart) {
+            if (! startGpsService()) forceSettings=true;
+        }
         requestHandler.update();
         if (startSomething) startFragmentOrActivity(forceSettings);
     }
