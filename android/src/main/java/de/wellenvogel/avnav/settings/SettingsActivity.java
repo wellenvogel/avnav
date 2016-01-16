@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.ICallback;
 import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.main.SimpleFileDialog;
@@ -82,7 +83,7 @@ public class SettingsActivity extends PreferenceActivity {
      * @param activity
      * @return false when a new dialog had been opened
      */
-    public static boolean handleInitialSettings(final Activity activity){
+    public static boolean handleInitialSettings(final Activity activity, final ICallback callback){
         boolean rt=true;
         final SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor e=sharedPrefs.edit();
@@ -121,10 +122,6 @@ public class SettingsActivity extends PreferenceActivity {
         String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
         if (workdir.isEmpty()){
             File wdf=new File(Environment.getExternalStorageDirectory(),"avnav");
-            try {
-                createWorkingDir(activity,wdf);
-            } catch (Exception ex) {
-            }
             workdir=wdf.getAbsolutePath();
         }
         //TODO: handle unwritable workdir
@@ -134,6 +131,13 @@ public class SettingsActivity extends PreferenceActivity {
         e.putString(Constants.WORKDIR, workdir);
         e.putString(Constants.CHARTDIR, chartdir);
         e.apply();
+        if (! new File(workdir).isDirectory()){
+            //maybe we can just create it...
+            try{
+                createWorkingDir(activity,new File(workdir));
+            } catch (Exception e1) {
+            }
+        }
         final String oldWorkdir=workdir;
         if (!(new File(workdir)).canWrite()){
             SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(activity, SimpleFileDialog.FolderChoose,
@@ -148,9 +152,17 @@ public class SettingsActivity extends PreferenceActivity {
                                 createWorkingDir(activity, new File(chosenDir));
                             } catch (Exception ex) {
                                 Toast.makeText(activity, ex.getMessage(), Toast.LENGTH_SHORT).show();
+                                callback.callback(1);
+                                return;
                             }
                             //TODO: copy files
                             AvnLog.i(Constants.LOGPRFX, "select work directory " + chosenDir);
+                            callback.callback(0);
+                        }
+
+                        @Override
+                        public void onCancel() {
+                            System.exit(1);
                         }
                     });
             FolderChooseDialog.Default_File_Name="avnav";

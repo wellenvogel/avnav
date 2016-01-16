@@ -32,7 +32,7 @@ import java.net.InetSocketAddress;
 /**
  * Created by andreas on 06.01.15.
  */
-public class MainActivity extends XWalkActivity implements IDialogHandler,IMediaUpdater,SharedPreferences.OnSharedPreferenceChangeListener{
+public class MainActivity extends XWalkActivity implements IDialogHandler,IMediaUpdater,SharedPreferences.OnSharedPreferenceChangeListener, ICallback {
 
     private String lastStartMode=null; //The last mode we used to select the fragment
     SharedPreferences sharedPrefs;
@@ -60,6 +60,17 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             MainActivity.this.goBack();
+        }
+    };
+
+    //asynchronously trigger a restart
+    //used when returning from dialogs
+    //msg.what == 1 - force settings again
+    private Handler restartHandler=new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            MainActivity.this.handleRestart(msg.what == 1,false);
         }
     };
 
@@ -310,6 +321,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         Thread initialUpdater=new Thread(new Runnable() {
             @Override
             public void run() {
+                if (baseDir.isDirectory()) return;
                 triggerUpdateMtp(baseDir);
                 for (File uf: baseDir.listFiles()){
                     if (uf.exists()) triggerUpdateMtp(uf);
@@ -338,7 +350,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             builder.setPositiveButton(android.R.string.ok,
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            handleRestart(true);
+                            handleRestart(true,false);
                         }
                     });
 
@@ -370,13 +382,13 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                     builder.setNeutralButton(R.string.settings, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            handleRestart(true);
+                            handleRestart(true,false);
                         }
                     });
                     builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            handleRestart(false);
+                            handleRestart(false,false);
                         }
                     });
                     builder.create().show();
@@ -384,13 +396,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             }catch (Exception e){}
         }
         if (! startSomething) return;
-        handleRestart(false);
+        handleRestart(false,false);
     }
 
-    private void handleRestart(boolean forceSettings){
+    private void handleRestart(boolean forceSettings, boolean noSettings){
         if (serviceNeedsRestart) Log.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
         if (serviceNeedsRestart) stopGpsService(false);
-        boolean startSomething=SettingsActivity.handleInitialSettings(this);
+        boolean startSomething=true;
+        if (! noSettings) startSomething=SettingsActivity.handleInitialSettings(this, this);
         if (serviceNeedsRestart) {
             if (! startGpsService()) forceSettings=true;
         }
@@ -492,5 +505,13 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         msg.obj=file;
         Log.d(Constants.LOGPRFX,"mtp update for "+file);
         mediaUpdateHandler.sendMessage(msg);
+    }
+
+    //called back from file dialog in settings
+    //1 - force settings again
+    //0 - normal
+    @Override
+    public void callback(int id) {
+        restartHandler.sendEmptyMessage(id);
     }
 }

@@ -38,6 +38,11 @@ public class MainSettingsFragment extends SettingsFragment {
                                     ((EditTextPreference)preference).setText(chosenDir);
                                     AvnLog.i(Constants.LOGPRFX, "select work directory " + chosenDir);
                                 }
+
+                                @Override
+                                public void onCancel() {
+
+                                }
                             });
                     FolderChooseDialog.Default_File_Name="avnav";
                     FolderChooseDialog.dialogTitle=getString(R.string.selectWorkDir);
@@ -63,6 +68,11 @@ public class MainSettingsFragment extends SettingsFragment {
                                     // The code in this function will be executed when the dialog OK button is pushed
                                     ((EditTextPreference)preference).setText(chosenDir);
                                     AvnLog.i(Constants.LOGPRFX, "select chart directory " + chosenDir);
+                                }
+
+                                @Override
+                                public void onCancel() {
+
                                 }
                             });
                     FolderChooseDialog.Default_File_Name="avnav";

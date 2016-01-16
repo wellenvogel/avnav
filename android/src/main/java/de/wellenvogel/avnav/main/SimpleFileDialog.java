@@ -59,6 +59,7 @@ import de.wellenvogel.avnav.util.AvnDialogHandler;
 public class SimpleFileDialog
 {
     public static final int DIALOGID=2;
+    public int dialogId=DIALOGID;
     //some customization
     public String dialogTitle=null; //use this if set
     public String newFolderText="New Folder";
@@ -91,6 +92,7 @@ public class SimpleFileDialog
     public interface SimpleFileDialogListener
     {
         public void onChosenDir(String chosenDir);
+        public void onCancel();
     }
 
     //////////////////////////////////////////////////////
@@ -204,7 +206,13 @@ public class SimpleFileDialog
         AlertDialog.Builder dialogBuilder = createDirectoryChooserDialog(dir, m_subdirs,
                 new SimpleFileDialogOnClickListener());
 
-        dialogBuilder.setNegativeButton(cancelButtonText, null);
+        dialogBuilder.setNegativeButton(cancelButtonText, new OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                handler.onCancel(dialogId);
+                m_SimpleFileDialogListener.onCancel();
+            }
+        });
         dialogBuilder.setPositiveButton(okButtonText, new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -222,7 +230,7 @@ public class SimpleFileDialog
                 // Current directory chosen
                 // Call registered listener supplied with the chosen directory
                 Boolean wantToCloseDialog = true;
-                if (!handler.onOk(DIALOGID)) return;
+                if (!handler.onOk(dialogId)) return;
                 if (m_SimpleFileDialogListener != null) {
                     {
                         if (Select_type == FileOpen || Select_type == FileSave) {
@@ -360,7 +368,7 @@ public class SimpleFileDialog
 
         //need to make this a variable Save as, Open, Select Directory
         m_titleView1.setGravity(Gravity.CENTER_VERTICAL);
-        m_titleView1.setBackgroundColor(-12303292); // dark gray 	-12303292
+        m_titleView1.setBackgroundColor(dialogBuilder.getContext().getResources().getColor(android.R.color.background_dark));
         m_titleView1.setTextColor( m_context.getResources().getColor(android.R.color.white) );
 
         // Create custom view for AlertDialog title
@@ -370,7 +378,7 @@ public class SimpleFileDialog
 
         m_titleView = new TextView(m_context);
         m_titleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        m_titleView.setBackgroundColor(-12303292); // dark gray -12303292
+        m_titleView.setBackgroundColor(dialogBuilder.getContext().getResources().getColor(android.R.color.background_dark));
         m_titleView.setTextColor( m_context.getResources().getColor(android.R.color.white) );
         m_titleView.setGravity(Gravity.CENTER_VERTICAL);
         m_titleView.setText(title);
@@ -458,6 +466,7 @@ public class SimpleFileDialog
                         tv.setTextColor(m_context.getResources().getColor(android.R.color.white));
                     }
                     tv.setText(txt);
+                    tv.setBackgroundColor(tv.getContext().getResources().getColor(android.R.color.background_dark));
                 }
                 return v;
             }
