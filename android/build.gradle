@@ -1,4 +1,4 @@
-def taskgroup='avnav'
+def taskgroup = 'avnav'
 buildscript {
     repositories {
         mavenCentral()
@@ -12,23 +12,25 @@ apply plugin: 'android'
 
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
+    compile 'com.android.support:appcompat-v7:21.0.3'
 }
 
-File srcBase=new File(project.rootDir,"src"+File.separator+"main")
-File assetsDir=new File(project.rootDir,"assets")
+File srcBase = new File(project.rootDir, "src" + File.separator + "main")
+File assetsDir = new File(project.rootDir, "assets")
 
 android {
-    lintOptions{
+    lintOptions {
         abortOnError false
     }
-    compileSdkVersion 19
+    //original: 19
+    compileSdkVersion 21
     buildToolsVersion "21.1.1"
 
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = [new File(srcBase,"java")]
-            resources.srcDirs = [new File(srcBase,"resources")]
+            java.srcDirs = [new File(srcBase, "java")]
+            resources.srcDirs = [new File(srcBase, "resources")]
             aidl.srcDirs = [srcBase]
             renderscript.srcDirs = [srcBase]
             res.srcDirs = ['res']
@@ -52,41 +54,39 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
     signingConfigs {
-        if (System.getenv("ANDROID_KEYSTORE") != null) {
-            release {
-                storeFile file(System.getenv("ANDROID_KEYSTORE"))
-                storePassword System.getenv("ANDROID_KEYPASS")
-                keyAlias System.getenv("ANDROID_KEYALIAS")
-                keyPassword System.getenv("ANDROID_KEYPASS")
-            }
+
+        config {
+            storeFile file(System.getenv("ANDROID_KEYSTORE"))
+            storePassword System.getenv("ANDROID_KEYPASS")
+            keyAlias System.getenv("ANDROID_KEYALIAS")
+            keyPassword System.getenv("ANDROID_KEYPASS")
         }
     }
     //see http://stackoverflow.com/questions/18332474/how-to-set-versionname-in-apk-filename-using-gradle
     buildTypes {
         release {
             if (System.getenv("ANDROID_KEYSTORE") != null) {
-                signingConfig signingConfigs.release
+                signingConfig signingConfigs.config
             }
             applicationVariants.all { variant ->
-                println "Variant: "+variant.getName()
+                println "Variant: " + variant.getName()
                 def manifestParser = new com.android.builder.core.DefaultManifestParser()
-                def version=manifestParser.getVersionName(android.sourceSets.main.manifest.srcFile)
+                def version = manifestParser.getVersionName(android.sourceSets.main.manifest.srcFile)
                 variant.outputs.each { output ->
-                    if (! output.outputFile.name.matches('.*debug.*'))
-                        output.outputFile = new File(output.outputFile.parent, output.outputFile.name.replace("android-release.apk", "avNav-"+ version + ".apk"))
+                    if (!output.outputFile.name.matches('.*debug.*'))
+                        output.outputFile = new File(output.outputFile.parent, output.outputFile.name.replace("android-release.apk", "avNav-" + version + ".apk"))
                 }
             }
         }
     }
 }
-File viewerDir=new File(project.rootDir,".."+File.separator+"viewer")
-File libraryDir=new File(project.rootDir,".."+File.separator+"libraries")
-task buildViewer(type: org.gradle.api.tasks.Exec){
-    group=taskgroup
+File viewerDir = new File(project.rootDir, ".." + File.separator + "viewer")
+File libraryDir = new File(project.rootDir, ".." + File.separator + "libraries")
+task buildViewer(type: org.gradle.api.tasks.Exec) {
+    group = taskgroup
     if (System.properties['os.name'].toLowerCase().contains('windows')) {
-        commandLine 'cmd','/c',new File(viewerDir, "build" + File.separator + "build.py")
-    }
-    else {
+        commandLine 'cmd', '/c', new File(viewerDir, "build" + File.separator + "build.py")
+    } else {
         commandLine new File(viewerDir, "build" + File.separator + "build.py")
     }
 }
@@ -97,7 +97,7 @@ task copyToAssetsViewer(type: org.gradle.api.tasks.Copy) {
         include 'loader.js'
         include 'avnav_viewer.html'
         include 'avnav_viewer.less'
-        include 'images'+File.separator+"*.png"
+        include 'images' + File.separator + "*.png"
     }
     into new File(assetsDir, "viewer")
 }
@@ -106,17 +106,17 @@ copyToAssetsViewer.dependsOn(buildViewer)
 
 
 
-task copyToAssetsLib(type: org.gradle.api.tasks.Copy){
-    group=taskgroup
-    from(libraryDir){
-        include 'rangeslider'+File.separator+'*'
-        include 'movable-type'+File.separator+'*'
-        include 'ol311'+File.separator+'ol.js'
-        include 'less'+File.separator+'less-1.7.3.min.js'
-        include 'jscolor'+File.separator+'*'
-        include 'jquery'+File.separator+'*.js'
+task copyToAssetsLib(type: org.gradle.api.tasks.Copy) {
+    group = taskgroup
+    from(libraryDir) {
+        include 'rangeslider' + File.separator + '*'
+        include 'movable-type' + File.separator + '*'
+        include 'ol311' + File.separator + 'ol.js'
+        include 'less' + File.separator + 'less-1.7.3.min.js'
+        include 'jscolor' + File.separator + '*'
+        include 'jquery' + File.separator + '*.js'
     }
-    into new File(assetsDir,"libraries")
+    into new File(assetsDir, "libraries")
 }
 
 task copyToAssets(type: org.gradle.api.Task) {
@@ -125,27 +125,34 @@ task copyToAssets(type: org.gradle.api.Task) {
         println "copy to assets done"
     }
 }
-copyToAssets.dependsOn(copyToAssetsViewer,copyToAssetsLib)
-task copyDebugViewer(type: org.gradle.api.tasks.Copy){
-    group=taskgroup
+copyToAssets.dependsOn(copyToAssetsViewer, copyToAssetsLib)
+task copyDebugViewer(type: org.gradle.api.tasks.Copy) {
+    group = taskgroup
     from(viewerDir) {
         include 'avnav_combine.js'
-        rename 'avnav_combine.js','avnav_min.js'
+        rename 'avnav_combine.js', 'avnav_min.js'
     }
     into new File(assetsDir, "viewer")
 }
 copyDebugViewer.dependsOn(copyToAssets)
-assembleDebug.dependsOn(copyDebugViewer)
 
-task copyReleaseViewer(type: org.gradle.api.tasks.Copy){
-    group=taskgroup
+
+task copyReleaseViewer(type: org.gradle.api.tasks.Copy) {
+    group = taskgroup
     from(viewerDir) {
         include 'avnav_min.js'
     }
     into new File(assetsDir, "viewer")
 }
 copyReleaseViewer.dependsOn(copyToAssets)
-assembleRelease.dependsOn(copyReleaseViewer)
+afterEvaluate {
+    generateDebugAssets.dependsOn(copyDebugViewer)
+    generateReleaseAssets.dependsOn(copyReleaseViewer)
+}
+
+
+clean.delete.add "assets/viewer"
+
 
 
 

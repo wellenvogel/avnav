@@ -147,6 +147,11 @@ avnav.nav.navdata.GpsInfo=function(){
      * @type {Date}
      */
     this.rtime=null;
+    /**
+     * the raw data (status and nmea objects)
+     * @type {Object}
+     */
+    this.raw=null;
 };
 avnav.inherits(avnav.nav.navdata.GpsInfo,avnav.nav.navdata.Point);
 

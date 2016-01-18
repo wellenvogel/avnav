@@ -70,6 +70,7 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         this.localInit();
         this.initDisplayObjects();
         this.initFocusHandler();
+        this.initExternalLinks();
         $(document).on(avnav.gui.BackEvent.EVENT_TYPE,function(ev,evdata){
            if (evdata.name && evdata.name==self.name){
                self.goBack();
@@ -165,6 +166,9 @@ avnav.gui.Page.prototype.initButtons=function(){
                 });
             }
         }
+        if ($(e).hasClass("avn_android") && avnav.android){
+            $(e).show();
+        }
     });
 
 };
@@ -182,6 +186,19 @@ avnav.gui.Page.prototype.initFocusHandler=function() {
             page.gui.removeActiveInput(id);
         });
         num++;
+    });
+};
+/**
+ * @private
+ */
+avnav.gui.Page.prototype.initExternalLinks=function(){
+    if (! avnav.android) return;
+    var self=this;
+    $('.avn_extlink').on('click',function(ev){
+        var url=$(this).attr('href');
+        avnav.android.externalLink(url);
+        ev.preventDefault();
+        return false;
     });
 };
 

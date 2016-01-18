@@ -980,6 +980,10 @@ button#avb_StatusUpdate {
   .avn_button_icon_base('images/exchange32.png');
 }
 
+button#avb_StatusAndroid{
+  .avn_button_icon_base('images/Android_Robot_100.png');
+}
+
 
 
 /*-------------------------------------------------------------
@@ -1244,6 +1248,9 @@ button#avb_SettingsDefaults{
   .avn_button_icon_base('images/trash32.png');
 }
 
+button#avb_SettingsAndroid{
+  .avn_button_icon_base('images/Android_Robot_100.png');
+}
 /*-------------------------------------------------------------------------------
     main page
   -------------------------------------------------------------------------------
@@ -1272,18 +1279,39 @@ button#avb_SettingsDefaults{
 
 
 #avi_mainpage_inner_content {
-	display: table;
 	width: 100%;
 	height: 100%;
 }
-.avn_vertical_aligner{
-	display: table-cell;
-	vertical-align: middle;
-	text-align: center;
+
+#avi_mainpage_link{
+  font-size: ( @bottomPanelHeight / 4 );
+  text-align: right;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding-right: 1em;
+  z-index: 0;
+  white-space: nowrap;
+  .hidemedia(0px, ( @bottomPanelHeight * 16 ))
+}
+#avi_mainpage_status {
+  font-size: ( @bottomPanelHeight / 4 );
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  margin-bottom: ( @bottomPanelHeight / 20 );
+  padding-left: 1em;
+  padding-right: 1em;
+  text-align: left;
+  background-color: fade(rgb(222, 226, 207),@nightModePercent);
+  z-index: 10;
+  white-space: nowrap;
 }
 #avi_mainpage_selections {
 	display: inline-block;
 }
+
+
 
 button#avb_ShowStatus {
   .avn_button_icon_base('images/bargraph32.png');
@@ -1306,7 +1334,12 @@ button#avb_Night {
 button#avb_ShowDownload {
   .avn_button_icon_base('images/download32.png');
 }
-
+button#avb_MainCancel{
+  .avn_button_icon_base('images/Cancel40.png');
+}
+button#avb_MainAndroid{
+  .avn_button_icon_base('images/Android_Robot_100.png');
+}
 
 /*------------------------------------------------------------------------------- 
 	element positioning
@@ -1412,5 +1445,11 @@ button#avb_ShowDownload {
 .avn_status_image{
 	width: 24px;
 	height: 24px;
+}
+
+.avn_status_image_small{
+  width: ( @bottomPanelHeight / 2.5 );
+  height: ( @bottomPanelHeight / 2.5 );
+  vertical-align: middle;
 }
 

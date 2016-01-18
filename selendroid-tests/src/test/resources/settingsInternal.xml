@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="ip.offset">0</string>
+    <boolean name="internalGps" value="true" />
+    <string name="track.distance">25</string>
+    <string name="track.interval">300</string>
+    <boolean name="showdemo" value="true" />
+    <string name="workdir">/storage/sdcard/avnav</string>
+    <string name="ais.lifetime">1200</string>
+    <boolean name="waitstart" value="false" />
+    <string name="ip.addr">192.168.20.10</string>
+    <string name="runmode">normal</string>
+    <string name="bt.offset">0</string>
+    <int name="version" value="1000" />
+    <string name="chartdir">/storage/sdcard/avnav/charts</string>
+    <string name="ip.port">34567</string>
+    <string name="track.time">25</string>
+    <string name="web.port">34567</string>
+    <string name="gps.offset">0</string>
+    <string name="ip.conntimeout">5</string>
+    <string name="track.mintime">10</string>
+</map>

@@ -7,12 +7,16 @@ import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.io.InputStream;
+
+import de.wellenvogel.avnav.settings.SettingsActivity;
 
 /**
  * Created by andreas on 30.12.14.
@@ -29,13 +33,13 @@ public class Info extends Activity {
                     .getPackageInfo(getPackageName(), 0).versionName;
             version.setText(versionName);
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e(AvNav.LOGPRFX,"unable to access version name");
+            Log.e(Constants.LOGPRFX,"unable to access version name");
         }
         setText("version.txt",R.id.txVersion);
         setText("info.html",R.id.txInfo);
         TextView xwalk=(TextView)findViewById(R.id.txXwalk);
-        boolean xw=AvNav.isXwalRuntimeInstalled(this);
-        xwalk.setText("XWALK V "+AvNav.XWALKVERSION+" \n("+(xw?"installed":"not installed")+")");
+        boolean xw= SettingsActivity.isXwalRuntimeInstalled(this);
+        xwalk.setText("XWALK V "+ Constants.XWALKVERSION+" \n("+(xw?"installed":"not installed")+")");
         Button xwalxDl=(Button)findViewById(R.id.btDownloadXwalk);
         if (xw) xwalxDl.setVisibility(View.INVISIBLE);
         else xwalxDl.setVisibility(View.VISIBLE);
@@ -43,7 +47,7 @@ public class Info extends Activity {
             @Override
             public void onClick(View v) {
                 downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
-                        getString(R.string.xwalkNotFoundText)+AvNav.XWALKVERSION,false);
+                        getString(R.string.xwalkNotFoundText)+ Constants.XWALKVERSION,false);
             }
         });
         TextView view=(TextView)findViewById(R.id.txInfo);
@@ -62,7 +66,29 @@ public class Info extends Activity {
             TextView txtContent=(TextView)findViewById(id);
             if (txtContent != null) txtContent.setText(Html.fromHtml(text));
         } catch (Exception e){
-            Log.e(AvNav.LOGPRFX,"exception setting text "+e.getLocalizedMessage());
+            Log.e(Constants.LOGPRFX,"exception setting text "+e.getLocalizedMessage());
         }
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.info_activity_actions, menu);
+        return super.onCreateOptionsMenu(menu);
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_ok){
+            finish();
+            return true;
+        }
+        return false;
     }
 }

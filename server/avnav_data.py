@@ -45,7 +45,8 @@ class AVNDataEntry():
     self.key=self.createKey(self.EMPTY_CLASS,'')
     self.data={'class':self.EMPTY_CLASS,'time':None}
     self.timestamp=None
-  
+    self.source=None
+
   #create a key from prefix and suffix
   @classmethod
   def createKey(cls,prefix,suffix):
@@ -67,6 +68,14 @@ class AVNDataEntry():
       rt=AVNDataEntry()
       rt.key=cls.createKey(dcls, tag)
       rt.data=data
+      rt.source=data.get('source')
+      AVNLog.ld("data item created",rt)
+      return rt
+    if dcls == 'SKY':
+      rt=AVNDataEntry()
+      rt.key=cls.createKey(dcls,'')
+      rt.data=data
+      rt.source=data.get('source')
       AVNLog.ld("data item created",rt)
       return rt
     if dcls == 'AIS':
@@ -85,6 +94,7 @@ class AVNDataEntry():
       rt=AVNDataEntry()
       rt.key=cls.createKey(dcls, str(mmsi))
       rt.data=data
+      rt.source=data.get('source')
       AVNLog.ld("data item created",rt)
       return rt
         
@@ -121,6 +131,9 @@ class AVNNavData():
     self.expiryTime=expiryTime
     self.aisExpiryTime=aisExpiryTime
     self.ownMMSI=ownMMSI
+    self.prefixCounter={} #contains the number of entries for TPV, AIS,...
+    self.lastSources={} #contains the last source for each class
+
   
   #add an entry to the list
   #do not add if there is already such an entry with newer timestamp
@@ -156,6 +169,7 @@ class AVNNavData():
               navEntry.data[k]=v
           self.list[navEntry.key]=navEntry
         #always replace here and merge back
+        self.lastSources[navEntry.data['class']]=navEntry.source
         self.listLock.release()
         x=navEntry.key
         return
@@ -165,6 +179,7 @@ class AVNNavData():
           self.listLock.release()
           return
     self.list[navEntry.key]=navEntry
+    self.lastSources[navEntry.data['class']]=navEntry.source
     
     AVNLog.debug("adding entry %s",unicode(navEntry))
     self.listLock.release()
@@ -203,6 +218,10 @@ class AVNNavData():
         e=self.__checkExpired__(rt[k], k)
         if e is not None:
           nrt[k]=e
+      #update the number of entries for this prefix for fast status queries
+      ocv=len(rt.keys())
+      self.prefixCounter[prefix]=ocv
+      AVNLog.debug("NavData: count for %s=%d"%(prefix,ocv))
       self.listLock.release()
       return nrt
     for sfx in suffixlist:
@@ -246,7 +265,17 @@ class AVNNavData():
     self.listLock.acquire()
     self.list.clear()
     self.listLock.release()
-        
+
+  def getCounter(self,prefix):
+    cv=self.prefixCounter.get(prefix)
+    if cv is None:
+      cv=0
+    return cv
+  def getLastSource(self,cls):
+    rt=self.lastSources.get(cls)
+    if rt is None:
+      rt=""
+    return rt
   
   def __unicode__(self):
     rt="AVNNavData \n"

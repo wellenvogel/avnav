@@ -19,4 +19,10 @@ public class AvnLog {
             android.util.Log.i(key,txt);
         }
     }
+    public static void e(String txt){
+        android.util.Log.e(LOGPREFIX,txt);
+    }
+    public static void e(String txt,Throwable t){
+        android.util.Log.e(LOGPREFIX,txt,t);
+    }
 }

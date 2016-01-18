@@ -79,24 +79,33 @@ all buttons with ids avb_... will call corresponding js functions
           </div>
 
           <div class="avn_panel avn_main">
-              <div id='avi_mainpage_inner_content' class="avn_panel">
-                  <div class="avn_vertical_aligner">
-                      <div id='avi_mainpage_selections'>
-                          <div id="avi_mainpage_default_entry" class="avn_mainpage_select_item">
-                              <img src="images/Chart60.png"/>
-                              Template
-                          </div>
-
+              <div id='avi_mainpage_inner_content' class="avn_panel avn_scrollable_page">
+                  <div id='avi_mainpage_selections'>
+                      <div id="avi_mainpage_default_entry" class="avn_mainpage_select_item">
+                          <img src="images/Chart60.png"/>
+                          Template
                       </div>
                   </div>
               </div>
               <!--mainContentInner-->
           </div>
           <div class='avn_panel avn_left_bottom '>
-              <div id="avi_mainpage_leftbottominner" class='avn_inner'>
-                  <p class="avn_label"> AVNav Version <span id="avi_mainpage_version">develop</span>
-                      <a href="http://www.wellenvogel.de/software/avnav/index.php">www.wellenvogel.de/software/avnav/index.php</a><br/>
-                  </p>
+              <div id="avi_mainpage_leftbottominner">
+                  <div id='avi_mainpage_status'>
+                      <div class='avn_label '>
+                          <img id='avi_mainNmeaStatusImage' class='avn_status_image_small' src='images/GreyBubble40.png'/>
+                          NMEA&nbsp;<span id="avi_mainNmeaStatusText" class="avd_nmeaStatusText">???</span>
+                      </div>
+                      <div class='avn_label'>
+                          <img id='avi_mainAisStatusImage' class='avn_status_image_small' src='images/GreyBubble40.png'/>
+                          AIS&nbsp;<span id="avi_mainAisStatusText" class="avd_aisStatusText">
+                          ???</span>
+                      </div>
+                  </div>
+                  <div id="avi_mainpage_link" ><p class="avn_label"> AVNav Version <span id="avi_mainpage_version">develop</span><br/>
+                      <a href="http://www.wellenvogel.de/software/avnav/index.php" class="avn_extlink">www.wellenvogel.de/software/avnav/index.php</a><br/>
+                      </p>
+                  </div>
               </div>
           </div>
       </div>
@@ -108,6 +117,8 @@ all buttons with ids avb_... will call corresponding js functions
           <button id="avb_Connected" type="button"  class="avn_button avn_toggleButton"></button>
           <button id="avb_ShowGps" type="button"  class="avn_button">000</button>
           <button id="avb_Night" type="button"  class="avn_button avn_toggleButton"></button>
+          <!--<button id="avb_MainAndroid" type="button"  class="avn_button avn_android avn_hidden"></button>-->
+          <button id="avb_MainCancel" type="button"  class="avn_button avn_android avn_hidden"></button>
       </div>
   </div>
   <!-- end mainPage -->
@@ -133,6 +144,7 @@ all buttons with ids avb_... will call corresponding js functions
       <div class='avn_panel avn_right_panel'>
           <button id="avb_StatusUpdate" type="button" class="avn_button"></button>
           <button id="avb_StatusCancel" type="button" class="avn_button"></button>
+          <button id="avb_StatusAndroid" type="button" class="avn_button avn_hidden avn_android"></button>
       </div>
   </div>
   <!-- end statusPage-->
@@ -220,7 +232,7 @@ all buttons with ids avb_... will call corresponding js functions
                           <div class='avn_gpsp_field_label'>AIS</div>
                           <div id="avi_gpsp_aisframe" class="avn_gpsp_value" avnrel="22">
                               <div id="avi_gpsp_ais_status"></div>
-                              <div id='avi_gpsp_ais' ></div>
+                              <div id='avi_gpsp_ais' ></div>    <span id="avi_aisStatusText">
                           </div>
                       </div>
 
@@ -732,6 +744,7 @@ all buttons with ids avb_... will call corresponding js functions
           <button id="avb_SettingsOK" type="button" class="avn_button"></button>
           <button id="avb_SettingsCancel" type="button" class="avn_button"></button>
           <button id="avb_SettingsDefaults" type="button" class="avn_button"></button>
+          <button id="avb_SettingsAndroid" type="button" class="avn_button avn_hidden avn_android"></button>
       </div>
   </div>
   <!-- end settingsPage-->

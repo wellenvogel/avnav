@@ -5,11 +5,18 @@ import android.location.*;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+
+import net.sf.marineapi.nmea.parser.SentenceFactory;
+import net.sf.marineapi.nmea.sentence.RMCSentence;
+import net.sf.marineapi.nmea.sentence.TalkerId;
+import net.sf.marineapi.nmea.util.*;
+
 import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.*;
+import java.util.Date;
 
 /**
  * Created by andreas on 12.12.14.
@@ -27,12 +34,16 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
     private long lastValidLocation=0;
     private Context context;
     private boolean isRegistered=false;
+    private long timeOffset=0;
+    private INmeaLogger nmeaLogger;
 
 
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
 
-    AndroidPositionHandler(Context ctx){
+    AndroidPositionHandler(Context ctx, long timeOffset){
         this.context=ctx;
+        if (ctx instanceof INmeaLogger) nmeaLogger=(INmeaLogger)ctx;
+        this.timeOffset=timeOffset;
         locationService=(LocationManager)context.getSystemService(context.LOCATION_SERVICE);
         tryEnableLocation(true);
     }
@@ -60,6 +71,24 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         AvnLog.d(LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
                 ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
         this.location=new Location(location);
+        if (nmeaLogger != null) {
+            try {
+                //build an NMEA RMC record and write out
+                SentenceFactory sf = SentenceFactory.getInstance();
+                RMCSentence rmc = (RMCSentence) sf.createParser(TalkerId.GP, "RMC");
+                Position pos = new Position(location.getLatitude(), location.getLongitude());
+                rmc.setPosition(pos);
+                rmc.setSpeed(location.getSpeed() * msToKn);
+                rmc.setCourse(location.getBearing());
+                rmc.setMode(FaaMode.DGPS);
+                rmc.setDate(toSfDate(location.getTime()));
+                rmc.setTime(toSfTime(location.getTime()));
+                rmc.setStatus(DataStatus.ACTIVE);
+                nmeaLogger.logNmea(rmc.toSentence());
+            }catch(Exception e){
+                AvnLog.e("unable to log NMEA data: "+e);
+            }
+        }
         lastValidLocation=System.currentTimeMillis();
 
     }
@@ -97,9 +126,13 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
             if (! isRegistered) {
                 locationService.requestLocationUpdates(currentProvider, 400, 0, this);
                 locationService.addGpsStatusListener(this);
+                location=null;
+                lastValidLocation=0;
+                /*
                 location = locationService.getLastKnownLocation(currentProvider);
                 if (location != null) lastValidLocation = System.currentTimeMillis();
                 AvnLog.d(LOGPRFX, "location: location provider=" + currentProvider + " location acc=" + ((location != null) ? location.getAccuracy() : "<null>") + ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
+                */
                 isRegistered=true;
             }
 
@@ -148,7 +181,10 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
             location=nlocation;
             lastValidLocation=lastValidLocation+(long)Math.floor(locdiff*1.1); //we allow the gps to be 10% slower than realtime
         }
-        return location;
+        if (location == null) return location;
+        Location rt=new Location(location);
+        rt.setTime(rt.getTime()+timeOffset);
+        return rt;
     }
 
     @Override
@@ -162,6 +198,21 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         rt.gpsEnabled=isRegistered;
         AvnLog.d(LOGPRFX,"getSatStatus returns "+rt);
         return rt;
+    }
+
+    @Override
+    public boolean handlesNmea() {
+        return true;
+    }
+
+    @Override
+    public boolean handlesAis() {
+        return false;
+    }
+
+    @Override
+    public String getName() {
+        return "internal";
     }
 
     /**

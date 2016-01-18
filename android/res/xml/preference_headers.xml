@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+    <header
+        android:fragment="de.wellenvogel.avnav.settings.MainSettingsFragment"
+        android:title="@string/labelSettingsMain"
+        android:summary="" >
+    </header>
+    <header
+        android:fragment="de.wellenvogel.avnav.settings.NmeaSettingsFragment"
+        android:title="@string/labelSettingsNmea"
+        android:summary="" >
+    </header>
+    <header
+        android:fragment="de.wellenvogel.avnav.settings.ExpertSettingsFragment"
+        android:title="@string/labelSettingsExpert"
+        android:summary="" >
+    </header>
+
+</preference-headers>

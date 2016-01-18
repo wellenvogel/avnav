@@ -9,13 +9,19 @@ import org.json.JSONObject;
 import java.net.InetSocketAddress;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Created by andreas on 25.12.14.
  */
-public class GpsDataProvider {
+public abstract class GpsDataProvider {
+    public SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+    public GpsDataProvider(){
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
     public static final String STATUS_INACTIVE ="INACTIVE";
     public static final String STATUS_STARTED="STARTED";
     public static final String STATUS_RUNNING="RUNNING";
@@ -41,13 +47,22 @@ public class GpsDataProvider {
 
     SatStatus getSatStatus(){return null;}
 
+    public abstract boolean handlesNmea();
+    public abstract boolean handlesAis();
+    public abstract String getName();
+    public int numAisData(){return 0;}
+    public String getConnectionId(){ return "";}
+
     public static class Properties{
-        int connectTimeout=5000;
-        long postionAge=10000; //max allowed age of position
-        long aisLifetime=1200000; //20 min
-        long aisCleanupInterval=6000; //1min
+        int connectTimeout=5;
+        long postionAge=10; //max allowed age of position
+        long aisLifetime=1200; //20 min
+        long aisCleanupInterval=60; //1min
         boolean readAis=false;
         boolean readNmea=false;
+        long timeOffset=0;
+        String ownMmsi=null;
+        String nmeaFilter=null;
     };
 
     /**
@@ -56,7 +71,11 @@ public class GpsDataProvider {
      */
     public void stop(){}
 
-    /**
+    /**<EditTextPreference
+        android:key="gps.offset"
+        android:defaultValue="0"
+        android:inputType="numberSigned"
+        android:title="@string/labelSettingsGpsOffset"></EditTextPreference>
      * get the current location if any available or null
      * @return
      */
@@ -112,7 +131,6 @@ public class GpsDataProvider {
     public static final String G_MODE="mode";
     public static final String G_TIME="time";
 
-    public static SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
 
     public static String formatCoord(double coord,boolean isLat){
         StringBuilder rt=new StringBuilder();
@@ -137,5 +155,33 @@ public class GpsDataProvider {
         return new InetSocketAddress(host,Integer.parseInt(port));
     }
 
+    public static long toTimeStamp(net.sf.marineapi.nmea.util.Date date,net.sf.marineapi.nmea.util.Time time){
+        if (date == null) return 0;
+        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(Calendar.YEAR, date.getYear());
+        cal.set(Calendar.MONTH, date.getMonth()-1); //!!! the java calendar counts from 0
+        cal.set(Calendar.DAY_OF_MONTH, date.getDay());
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        cal.add(Calendar.MILLISECOND, (int) (time.getMilliseconds()));
+        long millis=cal.getTime().getTime();
+        return millis;
+    }
+
+    public static net.sf.marineapi.nmea.util.Date toSfDate(long timestamp){
+        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.setTimeInMillis(timestamp);
+        net.sf.marineapi.nmea.util.Date rt=new net.sf.marineapi.nmea.util.Date(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH)+1,cal.get(Calendar.DAY_OF_MONTH));
+        return rt;
+    }
+
+    public static net.sf.marineapi.nmea.util.Time toSfTime(long timestamp){
+        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.setTimeInMillis(timestamp);
+        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE)+1,cal.get(Calendar.SECOND));
+        return rt;
+    }
 
 }

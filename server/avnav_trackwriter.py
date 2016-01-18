@@ -55,6 +55,7 @@ class AVNTrackWriter(AVNWorker):
     else:
       trackdir=os.path.expanduser(trackdir)
     self.trackdir=trackdir
+    self.fname=None
   @classmethod
   def getConfigName(cls):
     return "AVNTrackWriter"
@@ -86,7 +87,7 @@ class AVNTrackWriter(AVNWorker):
     filehandle.write(str)
     filehandle.flush()
   def createFileName(self,dt):
-    str=unicode(dt.strftime("%Y-%m-%d")+".avt")
+    str=unicode(dt.strftime("%Y-%m-%d"))
     return str
   def cleanupTrack(self):
     numremoved=0
@@ -225,7 +226,7 @@ class AVNTrackWriter(AVNWorker):
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
     f=None
-    fname=None
+    self.fname=None
     initial=True
     lastLat=None
     lastLon=None
@@ -246,28 +247,29 @@ class AVNTrackWriter(AVNWorker):
       try:
         if not os.path.isdir(self.trackdir):
           os.makedirs(self.trackdir, 0775)
-        curfname=os.path.join(self.trackdir,self.createFileName(currentTime))
-        if not curfname == fname:
-          fname=curfname
+        curfname=self.createFileName(currentTime)
+        if not curfname == self.fname:
+          self.fname=curfname
           if not f is None:
             f.close()
           newFile=True
-          AVNLog.info("new trackfile %s",curfname)         
+          realfilename=os.path.join(self.trackdir,curfname+".avt")
+          AVNLog.info("new trackfile %s",realfilename)
           if initial:
-            if os.path.exists(curfname):
+            if os.path.exists(realfilename):
               self.setInfo('main', "reading old track data", AVNWorker.Status.STARTED)
-              data=self.readTrackFile(curfname)
+              data=self.readTrackFile(realfilename)
               for trkpoint in data:
                 self.track.append((trkpoint[0],trkpoint[1],trkpoint[2]))
             initial=False
         if newFile:
-          f=open(curfname,"a")
+          f=open(realfilename,"a")
           f.write("#anvnav Trackfile started/continued at %s\n"%(currentTime.isoformat()))
           f.flush()
           newFile=False
           lastlat=None
           lastlon=None
-          self.setInfo('main', "writing to %s"%(curfname,), AVNWorker.Status.NMEA)
+          self.setInfo('main', "writing to %s"%(realfilename,), AVNWorker.Status.NMEA)
         if loopCount >= 10:
           self.cleanupTrack()
           loopCount=0
@@ -299,4 +301,17 @@ class AVNTrackWriter(AVNWorker):
       
   def getTrack(self):
     return self.track
+  #delete a track
+  #@param name: the full filename (without any dir)
+  def deleteTrack(self,name):
+    dir=self.getTrackDir()
+    fname=os.path.join(dir,name)
+    if not os.path.isfile(fname):
+        raise Exception("track %s not found "%name)
+    os.unlink(fname)
+    AVNLog.info("deleting track %s",name)
+    if name.endswith(".gpx"):
+      if self.fname == name[:-4]:
+        AVNLog.info("deleting current track!")
+        self.track=[]
         

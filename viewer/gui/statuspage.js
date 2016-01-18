@@ -103,6 +103,10 @@ avnav.gui.Statuspage.prototype.btnStatusCancel=function(button,ev){
     log("StatusCancel clicked");
     this.gui.showPage('mainpage');
 };
+avnav.gui.Statuspage.prototype.btnStatusAndroid=function(button,ev) {
+    log("StatusAndroid clicked");
+    avnav.android.showSettings();
+};
 
 (function(){
     //create an instance of the status page handler

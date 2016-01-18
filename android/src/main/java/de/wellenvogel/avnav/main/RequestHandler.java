@@ -1,327 +1,100 @@
 package de.wellenvogel.avnav.main;
 
-import android.app.Activity;
-import android.content.*;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.location.Location;
 import android.net.Uri;
-import android.os.*;
-import android.util.JsonReader;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
-import android.webkit.*;
+import android.webkit.MimeTypeMap;
+import android.webkit.WebResourceResponse;
 import android.widget.Toast;
-import de.wellenvogel.avnav.gps.GpsService;
-import de.wellenvogel.avnav.gps.RouteHandler;
-import de.wellenvogel.avnav.gps.TrackWriter;
-import de.wellenvogel.avnav.util.AvnLog;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xwalk.core.JavascriptInterface;
-import org.xwalk.core.XWalkActivity;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.wellenvogel.avnav.gps.GpsService;
+import de.wellenvogel.avnav.gps.RouteHandler;
+import de.wellenvogel.avnav.gps.TrackWriter;
+import de.wellenvogel.avnav.util.AvnLog;
+
 /**
- * Created by andreas on 06.01.15.
+ * Created by andreas on 22.11.15.
  */
-public class WebViewActivityBase extends XWalkActivity {
+public class RequestHandler {
     public static final String URLPREFIX="file://android_asset/";
+    public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
     protected static final String NAVURL="viewer/avnav_navi.php";
     protected static final String CHARTPREFIX="charts";
     private static final String DEMOCHARTS="demo"; //urls will start with CHARTPREFIX/DEMOCHARTS
     private static final String REALCHARTS="charts";
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
     private static final String GEMFEXTENSION =".gemf";
-    private static final int ROUTE_OPEN_REQUEST=0;
-    public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
-    protected final Activity activity=this;
-    MimeTypeMap mime = MimeTypeMap.getSingleton();
-    AssetManager assetManager;
-    private String workdir;
-    private File workBase;
-    private boolean showDemoCharts;
-    private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-    private GpsService gpsService=null;
-    private int goBackSequence;
-    //gemf files
-    private GemfHandler gemfFile= null;
+    private MainActivity activity;
+    protected JavaScriptApi mJavaScriptApi=new JavaScriptApi();
+    private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
+    private MimeTypeMap mime = MimeTypeMap.getSingleton();
+    private final Object routeHandlerMonitor=new Object();
+    private IMediaUpdater updater=null;
     //routes
     private RouteHandler routeHandler=null;
     //mapping of url name to real filename
     private HashMap<String,String> fileNames=new HashMap<String, String>();
+    //gemf files
+    private GemfHandler gemfFile= null;
 
-    private IMediaUpdater updater;
-
-    private Handler backHandler=new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            WebViewActivityBase.this.goBack();
-        }
-    };
-
-    private void sendFile(String name, String type,Resources res){
-        if (!type.equals("track") && ! type.equals("route")){
-            Log.e(AvNav.LOGPRFX,"invalid type "+type+" for sendFile");
-            return;
-        }
-        String dirname="tracks";
-        if (type.equals("route")) dirname="routes";
-        File dir=new File(workBase,dirname);
-        File file=new File(dir,name);
-        if (! file.isFile()){
-            Log.e(AvNav.LOGPRFX,"file "+name+" not found");
-            return;
-        }
-        Uri data=Uri.fromFile(file);
-        Intent shareIntent = new Intent();
-        shareIntent.setAction(Intent.ACTION_SEND);
-        shareIntent.putExtra(Intent.EXTRA_STREAM, data);
-        shareIntent.setType("application/gpx+xml");
-        String title=res.getText(R.string.selectApp)+" "+name;
-        startActivity(Intent.createChooser(shareIntent,title ));
+    RequestHandler(MainActivity activity){
+        this.activity=activity;
+        this.updater=activity;
+        ownMimeMap.put("js", "text/javascript");
+        startRouteHandler();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != ROUTE_OPEN_REQUEST) return;
-        if (resultCode != RESULT_OK) {
-            // Exit without doing anything else
-            return;
-        } else {
-            Uri returnUri = data.getData();
-            String name=returnUri.getLastPathSegment();
-            name=name.replaceAll("\\.gpx$","");
-            try {
-                AvnLog.i("importing route: "+returnUri);
-                ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(returnUri, "r");
-                long size=pfd.getStatSize();
-                if (size > ROUTE_MAX_SIZE) throw new Exception("route to big, allowed "+ROUTE_MAX_SIZE);
-                if (routeHandler == null){
-                    Log.e(AvnLog.LOGPREFIX,"no route handler for saving route");
-                    return;
-                }
-                AvnLog.i("saving route");
-                routeHandler.saveRoute(new FileInputStream(pfd.getFileDescriptor()),false);
-                sendEventToJs("routeImported", 1);
-            } catch (Exception e) {
-                Toast.makeText(getApplicationContext(), "unable save route file "+name+": "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-                Log.e(AvNav.LOGPRFX, "File not found.");
-                return;
+    void startRouteHandler(){
+        synchronized (routeHandlerMonitor) {
+            if (routeHandler != null) {
+                routeHandler.stop();
             }
-        }
-    }
-
-    //potentially the Javascript interface code is called from the Xwalk app package
-    //so we have to be careful to always access the correct resource manager when accessing resources!
-    //to make this visible we pass a resource manager to functions called from here that open dialogs
-    protected class JavaScriptApi{
-        private String returnStatus(String status){
-            JSONObject o=new JSONObject();
-            try {
-                o.put("status", status);
-            }catch (JSONException i){}
-            return o.toString();
-        }
-        private Resources getAppResources(){
-            Resources rt=null;
-            try {
-                rt = getPackageManager().getResourcesForApplication(AvNav.OWN_PACKAGE);
-            } catch (PackageManager.NameNotFoundException e) {
-                Log.e(AvnLog.LOGPREFIX,"own package "+AvNav.OWN_PACKAGE+" not found");
-                rt=getResources();
-            }
-            return rt;
-        }
-        @JavascriptInterface
-        public String storeRoute(String route){
-            AvnLog.i("store route");
-            if (routeHandler == null) return returnStatus("no route handler");
-            try{
-                routeHandler.saveRoute(route,true);
-                return returnStatus("OK");
-            }catch (Exception e){
-                Log.e(AvnLog.LOGPREFIX,"error while storing route: "+e.getLocalizedMessage());
-                return returnStatus(e.getLocalizedMessage());
-            }
-        }
-        @JavascriptInterface
-        public void downloadRoute(String route){
-            if (routeHandler == null){
-                Log.e(AvnLog.LOGPREFIX," no route handler for downloadRoute");
-            }
-            try {
-                RouteHandler.Route rt=routeHandler.saveRoute(route, true);
-                sendFile(rt.name + ".gpx", "route",getAppResources());
-            }catch(Exception e){
-                Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @JavascriptInterface
-        public String uploadRoute(){
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("*/*");
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            Resources res=getAppResources();
-            try {
-                startActivityForResult(
-                        Intent.createChooser(intent, res.getText(R.string.uploadRoute)),
-                        0);
-            } catch (android.content.ActivityNotFoundException ex) {
-                // Potentially direct the user to the Market with a Dialog
-                Toast.makeText(getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
-            }
-
-            return "";
-
-        }
-
-        @JavascriptInterface
-        public void downloadTrack(String name){
-            sendFile(name,"track",getAppResources());
-        }
-
-        @JavascriptInterface
-        public void setLeg(String legData){
-            if (routeHandler == null) return;
-            try {
-                routeHandler.setLeg(legData);
-            } catch (Exception e) {
-                AvnLog.i("unable to save leg "+e.getLocalizedMessage());
-            }
-        }
-
-        @JavascriptInterface
-        public void unsetLeg(){
-            if (routeHandler == null) return;
-            try {
-                routeHandler.unsetLeg();
-            } catch (Exception e) {
-                AvnLog.i("unable to unset leg "+e.getLocalizedMessage());
-            }
-        }
-
-        @JavascriptInterface
-        public String getLeg(){
-            if (routeHandler == null) return "";
-            try {
-                return routeHandler.getLeg().toString();
-            } catch (Exception e) {
-                AvnLog.i("unable to get leg "+e.getLocalizedMessage());
-            }
-            return "";
-        }
-        @JavascriptInterface
-        public void goBack(){
-            WebViewActivityBase.this.backHandler.sendEmptyMessage(1);
-        }
-
-        @JavascriptInterface
-        public void acceptEvent(String key,int num){
-            if (key != null && key.equals("backPressed")) goBackSequence=num;
-        }
-
-    };
-
-    //to be called e.g. from js
-    private void goBack(){
-        try {
-            super.onBackPressed();
-        } catch(Throwable i){
-            //sometime a second call (e.g. when the JS code was too slow) will throw an exception
-            Log.e(AvnLog.LOGPREFIX,"exception in goBack:"+i.getLocalizedMessage());
-        }
-    }
-
-    protected JavaScriptApi mJavaScriptApi=new JavaScriptApi();
-
-    /** Defines callbacks for service binding, passed to bindService() */
-    private ServiceConnection mConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
-            gpsService = binder.getService();
-            if (gpsService != null && routeHandler != null){
-                routeHandler.setMediaUpdater(gpsService.getMediaUpdater());
-                updater=gpsService.getMediaUpdater();
-            }
-            AvnLog.d(AvNav.LOGPRFX, "gps service connected");
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            gpsService=null;
-            updater=null;
-            AvnLog.d(AvNav.LOGPRFX,"gps service disconnected");
-        }
-    };
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        Intent intent = new Intent(this, GpsService.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-        if (routeHandler != null){
+            routeHandler = new RouteHandler(new File(getWorkDir(), "routes"));
             routeHandler.start();
+            routeHandler.setMediaUpdater(updater);
         }
+
+    }
+    private RouteHandler getRouteHandler(){
+        synchronized (routeHandlerMonitor){
+            return routeHandler;
+        }
+    }
+    private File getWorkDir(){
+        return new File(getSharedPreferences().getString(Constants.WORKDIR,""));
+    }
+    private GpsService getGpsService(){
+        return activity.gpsService;
+    }
+    SharedPreferences getSharedPreferences(){
+        return activity.sharedPrefs;
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (gpsService != null){
-            unbindService(mConnection);
-        }
-        if (routeHandler != null){
-            routeHandler.stop();
-        }
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.webview);
-        SharedPreferences prefs=getSharedPreferences(AvNav.PREFNAME,Context.MODE_PRIVATE);
-        workdir=prefs.getString(AvNav.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath()+"/avnav");
-        workBase=new File(workdir);
-        showDemoCharts=prefs.getBoolean(AvNav.SHOWDEMO,false);
-        ownMimeMap.put("js","text/javascript");
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        assetManager=getAssets();
-        if (routeHandler == null){
-            routeHandler=new RouteHandler(new File(workBase,"routes"));
-        }
-        routeHandler.start();
-    }
-    String mimeType(String fname){
-        String ext=fname.replaceAll(".*\\.", "");
-        String mimeType=mime.getMimeTypeFromExtension(ext);
-        if (mimeType == null) {
-            mimeType=ownMimeMap.get(ext);
-        }
-        return mimeType;
-    }
-
-    public static class ExtendedWebResourceResponse extends WebResourceResponse{
+    public static class ExtendedWebResourceResponse extends WebResourceResponse {
         int length;
         private HashMap<String,String> headers=new HashMap<String, String>();
         public ExtendedWebResourceResponse(int length,String mime,String encoding,InputStream is){
@@ -339,6 +112,14 @@ public class WebViewActivityBase extends XWalkActivity {
         }
     }
 
+    String mimeType(String fname){
+        String ext=fname.replaceAll(".*\\.", "");
+        String mimeType=mime.getMimeTypeFromExtension(ext);
+        if (mimeType == null) {
+            mimeType=ownMimeMap.get(ext);
+        }
+        return mimeType;
+    }
     WebResourceResponse handleRequest(View view,String url){
         if (url.startsWith(URLPREFIX)){
             try {
@@ -349,7 +130,7 @@ public class WebViewActivityBase extends XWalkActivity {
                 if (fname.startsWith(CHARTPREFIX)){
                     return handleChartRequest(fname);
                 }
-                InputStream is=assetManager.open(fname);
+                InputStream is=activity.assetManager.open(fname);
                 return new WebResourceResponse(mimeType(fname),"",is);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -366,7 +147,7 @@ public class WebViewActivityBase extends XWalkActivity {
         InputStream input;
         String htmlPage=null;
         try {
-            input = assetManager.open("viewer/avnav_viewer.html");
+            input = activity.assetManager.open("viewer/avnav_viewer.html");
 
             int size = input.available();
             byte[] buffer = new byte[size];
@@ -393,7 +174,17 @@ public class WebViewActivityBase extends XWalkActivity {
             if (type.equals("gps")){
                 handled=true;
                 JSONObject navLocation=null;
-                if (gpsService != null) navLocation=gpsService.getGpsData();
+                if (getGpsService() != null) {
+                    navLocation=getGpsService().getGpsData();
+                    if (navLocation == null) {
+                        navLocation = new JSONObject();
+                    }
+                    JSONObject nmea = new JSONObject();
+                    JSONObject status = getGpsService().getNmeaStatus();
+                    nmea.put("status", status);
+                    navLocation.put("raw", nmea);
+
+                }
                 fout=navLocation;
             }
             if (type.equals("listCharts")){
@@ -403,12 +194,12 @@ public class WebViewActivityBase extends XWalkActivity {
                     out.put("status", "OK");
                     JSONArray arr = new JSONArray();
                     readAllCharts(arr);
-                    if (showDemoCharts){
-                        String demoCharts[]=assetManager.list("charts");
+                    if (getSharedPreferences().getBoolean(Constants.SHOWDEMO,false)){
+                        String demoCharts[]=activity.assetManager.list("charts");
                         for (String demo: demoCharts){
                             if (! demo.endsWith(".xml")) continue;
                             String name=demo.replaceAll("\\.xml$", "");
-                            AvnLog.d(AvNav.LOGPRFX,"found demo chart "+demo);
+                            AvnLog.d(Constants.LOGPRFX,"found demo chart "+demo);
                             JSONObject e = new JSONObject();
                             e.put("name", name);
                             e.put("url", "/"+CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
@@ -418,7 +209,7 @@ public class WebViewActivityBase extends XWalkActivity {
                     }
                     out.put("data", arr);
                 }catch (Exception e){
-                    Log.e(AvNav.LOGPRFX, "error reading chartlist: " + e.getLocalizedMessage());
+                    Log.e(Constants.LOGPRFX, "error reading chartlist: " + e.getLocalizedMessage());
                     out.put("status","ERROR");
                     out.put("info",e.getLocalizedMessage());
                 }
@@ -426,7 +217,7 @@ public class WebViewActivityBase extends XWalkActivity {
             }
             if (type.equals("track")){
                 handled=true;
-                if (gpsService != null) {
+                if (getGpsService() != null) {
                     String intervals = uri.getQueryParameter("interval");
                     String maxnums = uri.getQueryParameter("maxnum");
                     long interval = 60000;
@@ -443,7 +234,7 @@ public class WebViewActivityBase extends XWalkActivity {
                         } catch (NumberFormatException i) {
                         }
                     }
-                    ArrayList<Location> track=gpsService.getTrack(maxnum,interval);
+                    ArrayList<Location> track=getGpsService().getTrack(maxnum, interval);
                     //the returned track is inverse order, i.e. the newest entry comes first
                     JSONArray arr=new JSONArray();
                     for (int i=track.size()-1;i>=0;i--){
@@ -469,28 +260,28 @@ public class WebViewActivityBase extends XWalkActivity {
                     if (slon != null) lon=Double.parseDouble(slon);
                     if (sdistance != null)distance=Double.parseDouble(sdistance);
                 }catch (Exception e){}
-                if (gpsService !=null){
-                    fout=gpsService.getAisData(lat,lon,distance);
+                if (getGpsService() !=null){
+                    fout=getGpsService().getAisData(lat, lon, distance);
                 }
             }
             if (type.equals("routing")){
-                if (routeHandler != null) {
+                if (getRouteHandler() != null) {
                     JSONObject o = new JSONObject();
                     o.put("status", "OK");
                     String command = uri.getQueryParameter("command");
                     if (command.equals("getleg")){
-                        o=routeHandler.getLeg();
+                        o=getRouteHandler().getLeg();
                         handled=true;
                     }
                     if (command.equals("unsetleg")){
-                        routeHandler.unsetLeg();
+                        getRouteHandler().unsetLeg();
                         handled=true;
                     }
                     if(command.equals("setleg")) {
                         String legData = uri.getQueryParameter("leg");
                         if (legData == null) legData=postData;
                         if (legData != null){
-                            routeHandler.setLeg(legData);
+                            getRouteHandler().setLeg(legData);
                         }
                         else{
                             o.put("status","missing leg data");
@@ -501,7 +292,7 @@ public class WebViewActivityBase extends XWalkActivity {
                         String name = uri.getQueryParameter("name");
                         handled=true;
                         if (name != null) {
-                            routeHandler.deleteRoute(name);
+                            getRouteHandler().deleteRoute(name);
                         } else {
                             o.put("status", "missing parameter name");
                         }
@@ -511,7 +302,7 @@ public class WebViewActivityBase extends XWalkActivity {
                         String name = uri.getQueryParameter("name");
                         if (name != null) {
                             try{
-                                o=routeHandler.loadRouteJson(name);
+                                o=getRouteHandler().loadRouteJson(name);
                             }catch (Exception e){
                                 o.put("status",e.getLocalizedMessage());
                             }
@@ -521,7 +312,7 @@ public class WebViewActivityBase extends XWalkActivity {
                     if (command.equals("listroutes")) {
                         handled = true;
                         JSONArray a = new JSONArray();
-                        Map<String,RouteHandler.RouteInfo> routeInfos=routeHandler.getRouteInfo();
+                        Map<String,RouteHandler.RouteInfo> routeInfos=getRouteHandler().getRouteInfo();
                         for (String k:routeInfos.keySet()){
                             a.put(routeInfos.get(k).toJson());
                         }
@@ -534,7 +325,7 @@ public class WebViewActivityBase extends XWalkActivity {
                             o.put("status", "no data for setroute");
                         } else {
                             try{
-                                routeHandler.saveRoute(postData,true);
+                                getRouteHandler().saveRoute(postData, true);
                             }
                             catch(Exception e){
                                 o.put("status",e.getLocalizedMessage());
@@ -548,7 +339,7 @@ public class WebViewActivityBase extends XWalkActivity {
                 String dirtype=uri.getQueryParameter("type");
                 JSONArray items=new JSONArray();
                 if (dirtype.equals("track")){
-                    ArrayList<TrackWriter.TrackInfo> tracks=gpsService.listTracks();
+                    ArrayList<TrackWriter.TrackInfo> tracks=getGpsService().listTracks();
                     for (TrackWriter.TrackInfo info:tracks){
                         JSONObject e=new JSONObject();
                         e.put("name",info.name);
@@ -574,13 +365,13 @@ public class WebViewActivityBase extends XWalkActivity {
                 String name=uri.getQueryParameter("name");
                 ExtendedWebResourceResponse resp=null;
                 if (dltype != null && dltype.equals("track") && name != null) {
-                    File trackfile = new File(gpsService.getTrackDir(), name);
+                    File trackfile = new File(getGpsService().getTrackDir(), name);
                     if (trackfile.isFile()) {
                         resp=new ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
                     }
                 }
                 if (dltype != null && dltype.equals("route") && name != null) {
-                    File routefile = new File(new File(workBase,"routes"), name+".gpx");
+                    File routefile = new File(new File(getWorkDir(),"routes"), name+".gpx");
                     if (routefile.isFile()) {
                         resp=new ExtendedWebResourceResponse((int) routefile.length(), "application/gpx+xml", "", new FileInputStream(routefile));
                     }
@@ -589,7 +380,7 @@ public class WebViewActivityBase extends XWalkActivity {
                     byte[] o = ("file " + ((name != null) ? name : "<null>") + " not found").getBytes();
                     resp = new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
                 }
-                resp.setHeader("Content-Disposition","attachment");
+                resp.setHeader("Content-Disposition", "attachment");
                 resp.setHeader("Content-Type",resp.getMimeType());
                 return resp;
             }
@@ -601,14 +392,11 @@ public class WebViewActivityBase extends XWalkActivity {
                     o.put("status","invalid type");
                 }
                 if (dtype.equals("track")) {
-                    File trackfile = new File(gpsService.getTrackDir(), name);
-                    if (! trackfile.isFile()){
-                        o.put("status","track "+name+" not found");
-                    }
-                    else {
-                        trackfile.delete();
-                        if (updater != null) updater.triggerUpdateMtp(trackfile);
+                    try {
+                        getGpsService().deleteTrackFile(name);
                         o.put("status","OK");
+                    }catch (Exception e){
+                        o.put("status",e.getMessage());
                     }
                 }
                 if (dtype.equals("chart")) {
@@ -631,15 +419,15 @@ public class WebViewActivityBase extends XWalkActivity {
                 handled=true;
                 JSONObject o=new JSONObject();
                 JSONArray items=new JSONArray();
-                if (gpsService != null) {
+                if (getGpsService() != null) {
                     //internal GPS
                     JSONObject gps = new JSONObject();
                     gps.put("name", "GPS");
-                    gps.put("info", gpsService.getStatus());
+                    gps.put("info", getGpsService().getStatus());
                     items.put(gps);
                     JSONObject tw=new JSONObject();
                     tw.put("name","TrackWriter");
-                    tw.put("info",gpsService.getTrackStatus());
+                    tw.put("info",getGpsService().getTrackStatus());
                     items.put(tw);
 
                 }
@@ -647,7 +435,7 @@ public class WebViewActivityBase extends XWalkActivity {
                 fout=o;
             }
             if (!handled){
-                AvnLog.d(AvNav.LOGPRFX,"unhandled nav request "+type);
+                AvnLog.d(Constants.LOGPRFX,"unhandled nav request "+type);
             }
             String outstring="";
             if (fout != null) outstring=fout.toString();
@@ -670,11 +458,11 @@ public class WebViewActivityBase extends XWalkActivity {
             if (fname.startsWith(DEMOCHARTS)){
                 fname=fname.substring(DEMOCHARTS.length()+1);
                 if (fname.endsWith(OVERVIEW)){
-                    AvnLog.d(AvNav.LOGPRFX,"overview request "+fname);
+                    AvnLog.d(Constants.LOGPRFX,"overview request "+fname);
                     fname=fname.substring(0,fname.length()-OVERVIEW.length()-1); //just the pure name
                     fname+=".xml";
                     closeGemf();
-                    rt=assetManager.open(CHARTPREFIX+"/"+fname);
+                    rt=activity.assetManager.open(CHARTPREFIX+"/"+fname);
                     len=-1;
                 }
                 else throw new Exception("unable to handle demo request for "+fname);
@@ -696,7 +484,7 @@ public class WebViewActivityBase extends XWalkActivity {
                             len=-1;
                             gemfFile=f;
                         }catch (Exception e){
-                            Log.e(AvNav.LOGPRFX,"unable to read gemf file "+fname+": "+e.getLocalizedMessage());
+                            Log.e(Constants.LOGPRFX,"unable to read gemf file "+fname+": "+e.getLocalizedMessage());
                         }
                     }
                     else {
@@ -716,11 +504,12 @@ public class WebViewActivityBase extends XWalkActivity {
                             int x = Integer.parseInt(param[2]);
                             int y = Integer.parseInt(param[3].replaceAll("\\.png", ""));
                             GEMFFile.GEMFInputStream gs = gemfFile.getInputStream(x, y, z, Integer.parseInt(param[0]));
+                            if (gs == null) return null;
                             rt=gs;
                             len=gs.getLength();
                         }
                         else {
-                            Log.e(AvNav.LOGPRFX, "gemf file " + fname + " not open");
+                            Log.e(Constants.LOGPRFX, "gemf file " + fname + " not open");
                             return null;
                         }
                     }
@@ -731,24 +520,24 @@ public class WebViewActivityBase extends XWalkActivity {
                     }
                     File avnav=new File(realName);
                     if (! avnav.isFile()){
-                        Log.e(AvNav.LOGPRFX,"invalid query for xml file "+fname);
+                        Log.e(Constants.LOGPRFX,"invalid query for xml file "+fname);
                     }
                     rt=new FileInputStream(avnav);
                     len=(int)avnav.length();
                 }
                 else {
-                    Log.e(AvNav.LOGPRFX,"invalid chart request "+fname);
+                    Log.e(Constants.LOGPRFX,"invalid chart request "+fname);
                 }
             }
             if (rt == null){
-                Log.e(AvNav.LOGPRFX,"unknown chart path "+fname);
+                Log.e(Constants.LOGPRFX,"unknown chart path "+fname);
 
 
             }
 
             return new ExtendedWebResourceResponse(len,mimeType,"",rt);
         } catch (Exception e) {
-            Log.e(AvNav.LOGPRFX,"chart file "+fname+" not found: "+e.getLocalizedMessage());
+            Log.e(Constants.LOGPRFX, "chart file " + fname + " not found: " + e.getLocalizedMessage());
         }
         return null;
     }
@@ -757,8 +546,15 @@ public class WebViewActivityBase extends XWalkActivity {
         closeGemf();
         fileNames.clear();
         //here we will have more dirs in the future...
-        File chartDir = new File(workBase, "charts");
+        File chartDir = new File(getWorkDir(), "charts");
         readChartDir(chartDir,"1",arr);
+        String secondChartDirStr=getSharedPreferences().getString(Constants.CHARTDIR,"");
+        if (! secondChartDirStr.isEmpty()){
+            File secondChartDir=new File(secondChartDirStr);
+            if (! secondChartDir.equals(chartDir)){
+                readChartDir(secondChartDir,"2",arr);
+            }
+        }
         return;
     }
 
@@ -774,7 +570,7 @@ public class WebViewActivityBase extends XWalkActivity {
                     e.put("time",f.lastModified()/1000);
                     String urlName=REALCHARTS + "/"+index+"/gemf/" + gemfName;
                     fileNames.put(urlName,f.getAbsolutePath());
-                    AvnLog.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
+                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
                     e.put("url", "/"+CHARTPREFIX + "/" +urlName);
                     arr.put(e);
                 }
@@ -785,57 +581,225 @@ public class WebViewActivityBase extends XWalkActivity {
                     e.put("time",f.lastModified()/1000);
                     String urlName=REALCHARTS+"/"+index+"/avnav/"+name;
                     fileNames.put(urlName,f.getAbsolutePath());
-                    AvnLog.d(AvNav.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
+                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
                     e.put("url","/"+CHARTPREFIX+"/"+urlName);
                     arr.put(e);
                 }
             } catch (Exception e) {
-                Log.e(AvNav.LOGPRFX, "exception handling file " + f.getAbsolutePath());
+                Log.e(Constants.LOGPRFX, "exception handling file " + f.getAbsolutePath());
             }
         }
     }
 
     private void closeGemf(){
         if (gemfFile != null) {
-            AvnLog.d(AvNav.LOGPRFX,"closing gemf file "+gemfFile.getUrlName());
+            AvnLog.d(Constants.LOGPRFX,"closing gemf file "+gemfFile.getUrlName());
             gemfFile.close();
         }
         gemfFile=null;
     }
 
-    @Override
-    public void onBackPressed(){
-        final int num=goBackSequence+1;
-        sendEventToJs("backPressed",num);
-        //as we cannot be sure that the JS code will for sure handle
-        //our back pressed (maybe a different page has been loaded) , we wait at most 200ms for it to ack this
-        //otherwise we really go back here
-        Thread waiter=new Thread(new Runnable() {
-            @Override
-            public void run() {
-                long wait=200;
-                while (wait>0) {
-                    long current = System.currentTimeMillis();
-                    if (goBackSequence == num) break;
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                    }
-                    wait-=10;
-                }
-                if (wait == 0) {
-                    Log.e(AvnLog.LOGPREFIX,"go back handler did not fire");
-                    backHandler.sendEmptyMessage(1);
-                }
+    private void sendFile(String name, String type,Resources res){
+        if (!type.equals("track") && ! type.equals("route")){
+            Log.e(Constants.LOGPRFX,"invalid type "+type+" for sendFile");
+            return;
+        }
+        String dirname="tracks";
+        if (type.equals("route")) dirname="routes";
+        File dir=new File(getWorkDir(),dirname);
+        File file=new File(dir,name);
+        if (! file.isFile()){
+            Log.e(Constants.LOGPRFX,"file "+name+" not found");
+            return;
+        }
+        Uri data=Uri.fromFile(file);
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, data);
+        shareIntent.setType("application/gpx+xml");
+        String title=res.getText(R.string.selectApp)+" "+name;
+        activity.startActivity(Intent.createChooser(shareIntent, title));
+    }
+
+    //potentially the Javascript interface code is called from the Xwalk app package
+    //so we have to be careful to always access the correct resource manager when accessing resources!
+    //to make this visible we pass a resource manager to functions called from here that open dialogs
+    protected class JavaScriptApi{
+        private String returnStatus(String status){
+            JSONObject o=new JSONObject();
+            try {
+                o.put("status", status);
+            }catch (JSONException i){}
+            return o.toString();
+        }
+        private Resources getAppResources(){
+            Resources rt=null;
+            try {
+                rt = activity.getPackageManager().getResourcesForApplication(Constants.OWN_PACKAGE);
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.e(AvnLog.LOGPREFIX,"own package "+ Constants.OWN_PACKAGE+" not found");
+                rt=activity.getResources();
             }
-        });
-        waiter.start();
+            return rt;
+        }
+        @JavascriptInterface
+        public String storeRoute(String route){
+            AvnLog.i("store route");
+            if (getRouteHandler() == null) return returnStatus("no route handler");
+            try{
+                getRouteHandler().saveRoute(route, true);
+                return returnStatus("OK");
+            }catch (Exception e){
+                Log.e(AvnLog.LOGPREFIX,"error while storing route: "+e.getLocalizedMessage());
+                return returnStatus(e.getLocalizedMessage());
+            }
+        }
+        @JavascriptInterface
+        public void downloadRoute(String route){
+            if (getRouteHandler() == null){
+                Log.e(AvnLog.LOGPREFIX," no route handler for downloadRoute");
+            }
+            try {
+                RouteHandler.Route rt=getRouteHandler().saveRoute(route, true);
+                sendFile(rt.name + ".gpx", "route", getAppResources());
+            }catch(Exception e){
+                Toast.makeText(activity.getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @JavascriptInterface
+        public String uploadRoute(){
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            Resources res=getAppResources();
+            try {
+                activity.startActivityForResult(
+                        Intent.createChooser(intent, res.getText(R.string.uploadRoute)),
+                        0);
+            } catch (android.content.ActivityNotFoundException ex) {
+                // Potentially direct the user to the Market with a Dialog
+                Toast.makeText(activity.getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+            }
+
+            return "";
+
+        }
+
+        @JavascriptInterface
+        public void downloadTrack(String name){
+            sendFile(name,"track",getAppResources());
+        }
+
+        @JavascriptInterface
+        public void setLeg(String legData){
+            if (getRouteHandler() == null) return;
+            try {
+                getRouteHandler().setLeg(legData);
+            } catch (Exception e) {
+                AvnLog.i("unable to save leg "+e.getLocalizedMessage());
+            }
+        }
+
+        @JavascriptInterface
+        public void unsetLeg(){
+            if (getRouteHandler() == null) return;
+            try {
+                getRouteHandler().unsetLeg();
+            } catch (Exception e) {
+                AvnLog.i("unable to unset leg "+e.getLocalizedMessage());
+            }
+        }
+
+        @JavascriptInterface
+        public String getLeg(){
+            if (getRouteHandler() == null) return "";
+            try {
+                return getRouteHandler().getLeg().toString();
+            } catch (Exception e) {
+                AvnLog.i("unable to get leg "+e.getLocalizedMessage());
+            }
+            return "";
+        }
+        @JavascriptInterface
+        public void goBack(){
+            activity.backHandler.sendEmptyMessage(1);
+        }
+
+        @JavascriptInterface
+        public void acceptEvent(String key,int num){
+            if (key != null && key.equals("backPressed")) activity.goBackSequence=num;
+        }
+
+        @JavascriptInterface
+        public void showSettings(){
+            activity.showSettings();
+        }
+
+        @JavascriptInterface
+        public void applicationStarted(){
+            getSharedPreferences().edit().putBoolean(Constants.WAITSTART,false).commit();
+        }
+        @JavascriptInterface
+        public void externalLink(String url){
+            Intent goDownload = new Intent(Intent.ACTION_VIEW);
+            goDownload.setData(Uri.parse(url));
+            try {
+                activity.startActivity(goDownload);
+            } catch (Exception e) {
+                Toast.makeText(activity, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+        @JavascriptInterface
+        public String getVersion(){
+            try {
+                String versionName = activity.getPackageManager()
+                        .getPackageInfo(activity.getPackageName(), 0).versionName;
+                return versionName;
+            } catch (PackageManager.NameNotFoundException e) {
+                return "<unknown>";
+            }
+        }
+
+    };
+
+    void stop(){
+        synchronized (routeHandlerMonitor) {
+            if (routeHandler != null) {
+                routeHandler.stop();
+            }
+        }
     }
 
     /**
-     * to be overloaded
-     * @param key
-     * @param id
+     * calles when settings changed
      */
-    protected void sendEventToJs(String key, int id){}
+    void update(){
+        startRouteHandler();
+    }
+
+    void saveRoute(Uri returnUri) {
+
+        String name=returnUri.getLastPathSegment();
+        name=name.replaceAll("\\.gpx$","");
+        try {
+            AvnLog.i("importing route: "+returnUri);
+            ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(returnUri, "r");
+            long size=pfd.getStatSize();
+            if (size > RequestHandler.ROUTE_MAX_SIZE) throw new Exception("route to big, allowed "+ RequestHandler.ROUTE_MAX_SIZE);
+            if (getRouteHandler() == null){
+                Log.e(AvnLog.LOGPREFIX,"no route handler for saving route");
+                return;
+            }
+            AvnLog.i("saving route");
+            getRouteHandler().saveRoute(new FileInputStream(pfd.getFileDescriptor()), false);
+            activity.sendEventToJs("routeImported", 1);
+        } catch (Exception e) {
+            Toast.makeText(activity.getApplicationContext(), "unable save route file "+name+": "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+            Log.e(Constants.LOGPRFX, "File not found.");
+            return;
+        }
+    }
 }

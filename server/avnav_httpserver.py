@@ -601,6 +601,38 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   
   def handleGpsRequest(self,requestParam):
     rtv=self.server.navdata.getMergedEntries("TPV",[])
+    #we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
+    status="red"
+    mode=rtv.data.get('mode')
+    if mode is not None:
+      if int(mode) == 1:
+        status="yellow"
+      if int(mode) == 2 or int(mode) == 3:
+        if rtv.data.get("lat") is not None and rtv.data.get('lon') is not None:
+          status="green"
+        else:
+          status="yellow"
+    src=self.server.navdata.getLastSource('TPV')
+    #TODO: add info from sky
+    sky=self.server.navdata.getMergedEntries("SKY",[])
+    visible=0
+    used=0
+    try:
+      if sky.data.get("satellites") is not None:
+        for sv in sky.data['satellites']:
+          visible=visible+1
+          if sv['used']:
+            used=used+1
+    except:
+      AVNLog.info("unable to get sat count: %s",traceback.format_exc())
+    statusNmea={"status":status,"source":src,"info":"Sat %d visible/%d used"%(visible,used)}
+    status="red"
+    numAis=self.server.navdata.getCounter('AIS')
+    if numAis > 0:
+      status="green"
+    src=self.server.navdata.getLastSource('AIS')
+    statusAis={"status":status,"source":src,"info":"%d targets"%(numAis)}
+    rtv.data["raw"]={"status":{"nmea":statusNmea,"ais":statusAis}}
     return json.dumps(rtv.data)
   #query the current list of trackpoints
   #currently we only limit by maxnumber and interval (in s)
@@ -935,12 +967,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       AVNLog.debug("delete track request, name=%s",name)
       name=name.replace("/","")
       trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
-      dir=trackWriter.getTrackDir()
-      fname=os.path.join(dir,name)
-      if not os.path.isfile(fname):
-        raise Exception("track %s not found "%name)
-      os.unlink(fname)
-      AVNLog.info("deleting track %s",name)
+      trackWriter.deleteTrack(name)
       return json.dumps(rt)
     if type == "chart":
       dir=self.getChartDir()

@@ -12,6 +12,19 @@ avnav.provide('avnav.gui.Mainpage');
  */
 avnav.gui.Mainpage=function(){
     avnav.gui.Page.call(this,'mainpage');
+    var self=this;
+    this.lastNmeaStatus=null;
+    this.lastAisStatus=null;
+    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+        self.navEvent(evdata);
+    });
+    $(window).on('resize', function () {
+        self.layout();
+    });
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
+        self.layout();
+        self.fillList();
+    });
 };
 avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 
@@ -25,17 +38,7 @@ avnav.gui.Mainpage.prototype.changeDim=function(newDim){
 avnav.gui.Mainpage.prototype.localInit=function(){
 
 };
-avnav.gui.Mainpage.prototype.showPage=function(options){
-    if (!this.gui) return;
-    var ncon=this.gui.properties.getProperties().connectedMode;
-    this.handleToggleButton('#avb_Connected',ncon);
-    ncon=this.gui.properties.getProperties().style.nightMode;
-    var nightDim=this.gui.properties.getProperties().nightFade;
-    if (ncon != 100 && ncon != nightDim){
-        //could happen if we return from settings page
-        this.changeDim(nightDim);
-    }
-    this.handleToggleButton('#avb_Night',ncon!=100);
+avnav.gui.Mainpage.prototype.fillList=function(){
     var page=this;
     var url=this.gui.properties.getProperties().navUrl+"?request=listCharts";
     $.ajax({
@@ -73,9 +76,25 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
                 domEntry.html(ehtml);
                 div.find('#avi_mainpage_selections').append(domEntry);
             }
+            page.layout();
+
+
         }
 
     });
+};
+avnav.gui.Mainpage.prototype.showPage=function(options){
+    if (!this.gui) return;
+    var ncon=this.gui.properties.getProperties().connectedMode;
+    this.handleToggleButton('#avb_Connected',ncon);
+    ncon=this.gui.properties.getProperties().style.nightMode;
+    var nightDim=this.gui.properties.getProperties().nightFade;
+    if (ncon != 100 && ncon != nightDim){
+        //could happen if we return from settings page
+        this.changeDim(nightDim);
+    }
+    this.handleToggleButton('#avb_Night',ncon!=100);
+    this.fillList();
     if (avnav.android || this.gui.properties.getProperties().readOnlyServer){
         $('#avb_Connected').hide();
     }
@@ -97,6 +116,38 @@ avnav.gui.Mainpage.prototype.hidePage=function(){
 avnav.gui.Mainpage.prototype.goBack=function(){
     avnav.android.goBack();
 };
+
+avnav.gui.Mainpage.prototype.setImageColor=function(imageId,color){
+    if (color == "red") $(imageId).attr('src', this.gui.properties.getProperties().statusErrorImage);
+    if (color == "green") $(imageId).attr('src', this.gui.properties.getProperties().statusOkImage);
+    if (color == "yellow") $(imageId).attr('src', this.gui.properties.getProperties().statusYellowImage);
+};
+
+/**
+ *
+ * @param {avnav.nav.NavEvent} evdata
+ */
+avnav.gui.Mainpage.prototype.navEvent=function(evdata) {
+    if (!this.visible) return;
+    if (evdata.type == avnav.nav.NavEventType.GPS){
+        var status=this.navobject.getValue("aisStatusColor");
+        if (status != this.lastAisStatus) {
+            this.setImageColor('#avi_mainAisStatusImage',status);
+            this.lastAisStatus=status;
+        }
+        status=this.navobject.getValue("nmeaStatusColor");
+        if (status != this.lastNmeaStatus) {
+            this.setImageColor('#avi_mainNmeaStatusImage',status);
+            this.lastNmeaStatus=status;
+        }
+    }
+};
+
+avnav.gui.Mainpage.prototype.layout=function(){
+    $('#avi_mainpage_selections').vAlign();
+    $('#avi_mainpage_selections').hAlign();
+};
+
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Mainpage.prototype.btnShowHelp=function (button,ev){
@@ -138,6 +189,14 @@ avnav.gui.Mainpage.prototype.btnNight=function (button,ev){
 avnav.gui.Mainpage.prototype.btnShowDownload=function (button,ev) {
     log("show download clicked");
     this.gui.showPage('downloadpage');
+};
+avnav.gui.Mainpage.prototype.btnMainAndroid=function (button,ev) {
+    log("main android settings clicked");
+    avnav.android.showSettings();
+};
+avnav.gui.Mainpage.prototype.btnMainCancel=function (button,ev) {
+    log("main cancel clicked");
+    avnav.android.goBack();
 };
 /**
  * create the page instance

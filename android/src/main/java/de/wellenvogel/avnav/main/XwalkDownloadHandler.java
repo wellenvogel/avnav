@@ -7,14 +7,18 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
-import org.xwalk.core.SharedXWalkView;
+
+import de.wellenvogel.avnav.util.AvnDialogHandler;
 
 /**
  * Created by andreas on 10.01.15.
  */
 public class XwalkDownloadHandler {
+    public static int DIALOGID=1;
     private Activity activity;
+    private AvnDialogHandler handler;
     public XwalkDownloadHandler(Activity activity) {
+        this.handler=new AvnDialogHandler(activity);
         this.activity = activity;
     }
     private AlertDialog alertDialog;
@@ -23,8 +27,8 @@ public class XwalkDownloadHandler {
         builder.setNegativeButton(android.R.string.cancel,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        if (handler.onCancel(DIALOGID)) return;
                         if (finishOnCancel) activity.finish();
-                        // User cancelled the dialog
                     }
                 });
         final String downloadUrl = getLibraryApkDownloadUrl();
@@ -32,6 +36,7 @@ public class XwalkDownloadHandler {
             builder.setNeutralButton(R.string.xwalkDownloadFromUrl,
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
+                            if (! handler.onNeutral(DIALOGID)) return;
                             Intent goDownload = new Intent(Intent.ACTION_VIEW);
                             goDownload.setData(Uri.parse(downloadUrl));
                             try {
@@ -46,9 +51,10 @@ public class XwalkDownloadHandler {
         builder.setPositiveButton(R.string.xwalkDownloadFromPlaystore,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        if (! handler.onOk(DIALOGID)) return;
                         Intent goToMarket = new Intent(Intent.ACTION_VIEW);
                         goToMarket.setData(Uri.parse(
-                                "market://details?id=" + AvNav.XWALKAPP));
+                                "market://details?id=" + Constants.XWALKAPP));
                         try {
                             activity.startActivity(goToMarket);
                         }catch (Exception e) {
@@ -84,12 +90,12 @@ public class XwalkDownloadHandler {
                 suffix="x86";
             }
             else {
-                Log.e(AvNav.LOGPRFX,"unknown architecture "+arch+"do not have any download url" );
+                Log.e(Constants.LOGPRFX,"unknown architecture "+arch+"do not have any download url" );
                 return null;
             }
         }
-        String rt="http://www.wellenvogel.de/software/avnav/downloads/AvNavXwalk-"+AvNav.XWALKVERSION+"_"+suffix+".apk";
-        Log.d(AvNav.LOGPRFX,"download url: "+rt);
+        String rt="http://www.wellenvogel.de/software/avnav/downloads/AvNavXwalk-"+ Constants.XWALKVERSION+"_"+suffix+".apk";
+        Log.d(Constants.LOGPRFX,"download url: "+rt);
         return rt;
     }
 

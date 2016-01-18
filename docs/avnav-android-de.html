@@ -6,10 +6,10 @@
   </head>
   <body>
     <h1>AvNav Android</h1>
-    <p>Version 0.2.0.</p>
+    <p>Version 1.0.0.</p>
     <p>Nachdem die Navigations-App für die <a href="beschreibung.html">Nutzung
-        mit dem Raspberry Pi</a>&nbsp; bereits 2 Jahre erfolgreich im Einsatz
-      ist, gibt es jetzt auch eine erste Version, die direkt (ohne einen
+        mit dem Raspberry Pi</a>&nbsp; bereits einige Jahre erfolgreich im
+      Einsatz ist, gibt es jetzt auch eine Version, die direkt (ohne einen
       Raspberry) auf Android läuft.</p>
     <p>Zum <a href="../downloads">Download</a>. Oder im <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">AppStore</a>.</p>
     <p>Sie verpackt im Wesentlichen die Web-App (siehe <a href="avnav-de.html">Beschreibung</a>)
@@ -22,73 +22,71 @@
       die NMEA Daten per WLAN bereitstellt. Auch eine einfache GPS bluetooth
       "Maus" ist geeignet.</p>
     <p>Damit kann die Software auch auf Tablets ohne eingebautes GPS laufen.</p>
-    <p>Die Karten werden im gleichen gemf Format erwartet und müssen in das
-      avnav/charts Verzeichnis auf der SD-Karte kopiert werden (Verzeichnis kann
-      beim Start ausgewählt werden). Zusätzlich sind einige Demo-Karten
-      vorhanden, die allerdings eine Online-Verbindung erfordern.</p>
-    <p>Wenn das Verzeichnis avnav noch nicht da ist, wird es beim ersten Start
+    <p>Die Karten werden im gleichen gemf Format erwartet. Sie können in 2
+      Verzeichnissen liegen:</p>
+    <ul>
+      <li> im charts Verzeichnis unterhalb des Arbeitsverzeichnisses (kann beim
+        Start gewählt werden). Dieses muß beschreibbar sein und wird daher bei
+        Android 4.4 und höher auf dem internen Speicher liegen müssen</li>
+      <li>in einem beliebigen anderen Verzeichnis (vorzugsweise auf der SD
+        Karte) - "additional charts dir" in den Einstellungen</li>
+    </ul>
+    <p>Die Karten müssen auf das Gerät in eines der Verzeichnisse kopiert werden
+      . Zusätzlich sind einige Demo-Karten vorhanden, die allerdings eine
+      Online-Verbindung erfordern.</p>
+    <p>Wenn das gewählte Arbeitsverzeichnis&nbsp; (Standard:
+      interne-sd-Karte/avnav) noch nicht da ist, wird es beim ersten Start
       angelegt.</p>
-    <p>Die Track-Daten werden in das Verzeichnis avnav/tracks auf der SD-Karte
-      geschrieben.</p>
-    <p>Im Verzeichnis avnav/routes werden die Routen im gpx Format gespeichert.
+    <p>Die Track-Daten und logs werden in das Verzeichnis tracks unterhalb des
+      Arbeitsverzeichnisses geschrieben.</p>
+    <p>Im Unterverzeichnis routes werden die Routen im gpx Format gespeichert.
       Routen und Tracks können aus der App über die Download Funktion an andere
       Apps weitergegeben werden (siehe Beschreibung der App). Um sie in andere
       Verzeichnisse zu speichern oder Routen aus anderen Verzeichnissen zu laden
       (upload Funktion) sollte sinnvollerweise ein Dateimanager installiert sein
       - z.B. <a href="https://play.google.com/store/apps/details?id=com.estrongs.android.pop&amp;hl=de">ES
         Datei Manager.</a></p>
-    <p>Nach dem Start der App befindet man sich auf der Konfigurationsseite:</p>
-    <img alt="" src="android-start-internal.png" height="400"><br>
-    Hier kann das Verzeichnis auf der SD-Karte für Karten und Tracks gewählt
+    <p>Nach dem erstmaligen Start der App befindet man sich auf einer
+      Einführungsseite:</p>
+    <img alt="" src="android-start-first.png" height="400"><br>
+    Nach dem Klick kommt man auf die Einstellungsseite:<br>
+    <img alt="" src="android-settings-main.png"><br>
+    Hier können z.B. die Verzeichnisse&nbsp; für Karten und Tracks gewählt
     werden, sowie die Quelle für die Positionsdaten.<br>
-    Durch einen Klick auf den kleinen Start-Button wird das GPS gestartet (bzw.
-    die IP Verbindung) und man kann prüfen, ob eine Position empfangen wird.<br>
-    <span style="font-weight: bold;">Wichtig:<br>
-      Bitte die Applikation immer über diese Seite und den Exit Button verlassen
-      - sonst laufen der Positions-Empfang und die Track-Aufzeichnung weiter
-      (und das belastet den Akku).</span> <br>
-    Wenn die Trackaufzeichnung läuft wird das über ein kleines Boot in der
-    Navigation angezeigt.<br>
-    Ein Klick auf den großen Start-Button unten startet die AvNav Web-App -
-    genauso wie sonst im Browser.<br>
-    Ein Klick auf den (i) Button zeigt die Version der Applikation sowie
-    Lizenz-Daten an.<br>
+    Eine Liste der Settings findet sich <a href="#Settings">hier</a>.<br>
     <br>
-    Falls NMEA Daten über AIS (oder Bluetooth) empfangen werden sollen, müssen
-    die Checkboxen entsprechend aktiviert werden.<br>
-    Im dann sichtbaren Feld müssen - für IP - IP-Adresse und Port des NMEA
-    Senders eingetragen werden:<br>
-    <img alt="" src="android-start-ip-running.png"><br>
+    Die Settings Seite kann über den OK button (oben rechts) oder über den
+    Zurück-Button verlassen werden. Im Normalmodus erreicht man damit die
+    Hauptseite der App.<br>
+    <img alt="" src="android-main-ip.png"><br>
     <br>
-    Im Bild ist die IP Verbindung erfolgreich aufgebaut (unterer gründer Punkt)
-    und es wird eine gültige Position empfangen (oberer grüner Punkt).<br>
-    Zum Testen kann man über den kleinen Start/Stop Button die Verbindung
-    prüfen.<br>
-    Wenn beide Punkte grün sind, über den großen Start-Button die Applikation
-    starten.<br>
+    <br>
+    <br>
+    Im Bild ist die IP Verbindung (eingestellt in Settings) erfolgreich
+    aufgebaut&nbsp; und es wirden eine gültige Position (oberer grüner Punkt)
+    und gültige AIS Daten (unterer grüner Punkt) empfangen.<br>
+    Um zu den Android Einstellungen zu gelangen, zunächst die Einstellungsseite
+    in der App aufrufen, dort dann auf den Android Button klicken.<br>
+    Bei weitteren Starts erreicht man sofort die Hauptseite der App.<br>
+    <br>
+    <h2>Bluetooth</h2>
     <br>
     Zum Verbinden mit einem Bluetooth GPS, dieses zunächst über die Bluetooth
     Einstellungen (ausserhalb der Applikation) "pairen".<br>
-    In der App dann NMEA oder AIS bei Bluetooth auswählen und auf das sichtbare
-    Eingabefeld tippen, es erscheint ein Auswahldialog für verbundene Bluetooth
-    Geräte:<br>
+    In der App dann in den Einstellungen Bluetooth Device auswählen, es
+    erscheint ein Auswahldialog für verbundene Bluetooth Geräte:<br>
     <br>
-    <img alt="" src="android-select-bt.png"><br>
-    <br>
-    Mit dem Auswählen eines Gerätes wird der Name in der Bluetooth Zeile
-    sichtbar. Falls Bluetooth nicht aktiv ist, wird gefragt, ob es eingeschaltet
-    werden soll.<br>
-    <img alt="" src="android-bt-gps.png"><br>
-    Im Bild ist der Positionsempfang über Bluetooth aktiv, AIS Daten werden über
-    IP empfangen.<br>
     Leider ist in älteren Android Versionen (&lt; 4.4) Bluetooth manchmal
     ziemlich fehlerbehaftet. Wenn sich partout keine Verbindung ergeben will
-    (Anzeigen bleiben auf gelb, status searchin Sat 0/0) hilft oft ein Neustart
+    (Anzeigen bleiben auf gelb, status searching Sat 0/0) hilft oft ein Neustart
     des Tablets.<br>
     Auf Nexus Geräten scheint das besser zu funktionieren als auf einigen
     anderen.<br>
     <br>
-    Auf dieser Seite kann auch der Modus ausgewählt werden:<br>
+    Zum Verlassen der App auf der Haupseite den Zurück-Button nutzen. Solange
+    die App läuft ist auch die Track-Aufzeichnung aktiv (auch wenn sie nicht
+    sichtbar ist).<br>
+    <h2> Modus</h2>
     Ab Android 4.4 (Kitkat) läuft die App problemlos ohne weitere
     Installationen. In Versionen ab 4.0 (in älteren läuft sie nicht) ist sie im
     Normalmodus meist kaum bedienbar. Das liegt an dem recht fehlerhaften
@@ -98,17 +96,20 @@
     </ol>
     <h4>Die "Crosswalk" runtime installieren.</h4>
     Das ist eine embedded Chrome runtime (d.h. ein Stückchen Chrome läuft in der
-    App) - damit wird der Stand für den embedded Browser auf Android 4.4 angehoben.
-    Die runtime muss allerdings in der Version genau passen (die AvNavApp prüft
-    das und zeigt das auf der Info-Seite (i) an). Diese kann man entweder von
-    der <a href="../downloads">Download-Seite</a> oder aus dem AppStore
-    herunterladen. In jedem Falle auf die Versionsnummer und die Architektur
-    achten (dürfte meist ARM sein).<br>
+    App) - damit wird der Stand für den embedded Browser auf Android 4.4
+    angehoben. Die runtime muss allerdings in der Version genau passen (die
+    AvNavApp prüft das und zeigt das auf der Info-Seite (i) an). <br>
+    Über die Info Seite ((i) unter Einstellungen) kann die Runtime installiert
+    werden.<br>
+    Diese kann man entweder von der <a href="../downloads">Download-Seite</a>
+    oder aus dem AppStore herunterladen. In jedem Falle auf die Versionsnummer
+    und die Architektur achten (dürfte meist ARM sein).<br>
     Wenn die App das erste mal gestartet wird, prüft sie, ob eine solche runtime
     installiert ist und bietet sonst an, das zu tun.<br>
     <br>
-    <img alt="" src="android-download-runtime.png"><br>
+    <img alt="" src="android-crosswalk-1.png"><br>
     Hier gibt es 2 Möglichkeiten:<br>
+    <img alt="" src="android-crosswalk2.png"><br>
     GooglePlay - das installiert die neueste Version der runtime. Wenn man die
     App auch auf der neuesten Version hat, sollte das funktionieren.<br>
     Sonst die Möglichkeit ApkDownload auswählen (das geht zur passenden Version
@@ -117,26 +118,27 @@
     dann allerdings unter Sicherheit die "Installation aus unbekannten Quellen"
     erlaubt werden.<br>
     <br>
-    Wenn die Runtime erfolgreich installiert wurde, den Mode "Crosswalk"
-    auswählen. Das ist auf jeden Fall von der Performance die beste Variante.
-    Wenn die Runtime App nicht installiert ist, ist der Button nicht zu sehen.<br>
+    Wenn die Runtime erfolgreich installiert wurde, unter "ApplicationMode" den
+    Mode "Crosswalk" auswählen. Das ist auf jeden Fall von der Performance die
+    beste Variante. Wenn die Runtime App nicht installiert ist, ist der Button
+    nicht zu sehen.<br>
     <br>
     <h4>Chrome Browser installieren</h4>
     &nbsp;<a href="https://play.google.com/store/apps/details?id=com.android.chrome">https://play.google.com/store/apps/details?id=com.android.chrome<br>
-    </a>Dann auf dem Bildschirm den Mode "Browser" auswählen (siehe) unten - ist
-    von der Bedienung beim Start etwas umständlicher.<br>
+    </a>Dann in den Einstellungen den Mode "External Browser" auswählen (siehe)
+    unten - ist von der Bedienung beim Start etwas umständlicher.<br>
     <br>
     Im Browser Mode startet die App einen kleinen Webserver (also spielt so ein
-    wenig Raspberry...) auf einem festen Port (34567) und zeigt die folgende
-    Seite an:<br>
-    <img alt="" src="android-webserver.png"><br>
+    wenig Raspberry...) auf einem einstellbaren Port (34567) und zeigt die
+    folgende Seite an:<br>
+    <img alt="" src="android-browser.png"><br>
     <br>
     Durch einen Klick auf Start Browser wird eine Auswahl der installierten
     Browser angezeigt, hier Chrome auswählen.<br>
     Leider hat man dann im Browser immer die Adressleiste, die etwas Platz
     wegnimmt. Um das zu verhindern, kann man in Chrome im Einstellungsmenü "Zum
     Startbildschirm hinzufügen" einstellen, dann noch einen sinnvollen Namen
-    vergeben (im Moment gibt es noch kein schönes icon, das kommt noch...).<br>
+    vergeben .<br>
     <br>
     <img alt="" src="android-chrome.png"><br>
     <br>
@@ -147,23 +149,178 @@
     <br>
     Zum Beenden oben (roter Pfeil) über die Notifikation gehen (kleines
     Segelboot), darüber kommt man wieder in die App und kann sie über die
-    Startseite verlassen.<br>
+    Browser-Seite&nbsp;&nbsp; verlassen.<br>
     Sonst laufen der GPS Empfang und das Trackschreiben im Hintergrund weiter.<br>
     Beim nächsten Start nur die App im Browser Mode starten, dann direkt über
     den Home Button zum Startbildschirm und den Browser über das abgelegte Icon
     dort starten.<br>
     <br>
-    Aus der App kommt man mittels "Zurück" Button immer auf die Startseite und
-    kann sie geordnet verlassen (das schreibt auch die Track-Daten noch einmal
-    in eine Datei).<br>
-    Wenn die App läuft werden die Track-Daten alle 10 Minuten in eine Datei
+    <br>
+    Wenn die App läuft werden die Track-Daten alle 5 Minuten in eine Datei
     geschrieben.<br>
     Wichtiger Hinweis:<br>
     Wenn man im Browser-Mode mal direkt aus der App und mal vom Home Bildschirm
     startet, hat man jedesmal andere Einstellungen in der App.<br>
     Also bitte immer den gleichen Weg benutzen.<br>
     <br>
+    <h2> <a id="Settings" name="Settings"></a>Einstellungen</h2>
+    Die folgenden Parameter können auf den Einstellungsseiten gesetzt werden<br>
+    <h3>Main Settings</h3>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Bedeutung</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>Application Mode</td>
+          <td>Arbeitsmodus, siehe Modus</td>
+          <td>Normal</td>
+        </tr>
+        <tr>
+          <td>working directory</td>
+          <td>das Arbeitsverzeichnis (mit den Unterverzeichnissen charts,tracks,
+            routes)</td>
+          <td>/storage/sdcard/avnav</td>
+        </tr>
+        <tr>
+          <td>additional charts directory</td>
+          <td>ein zusätzliches Kartenverzeichnis (sinnvoll auf der externen SD
+            Karte)</td>
+          <td>/storage/sdcard/avnav/charts</td>
+        </tr>
+        <tr>
+          <td>show demo charts</td>
+          <td>Anzeige der Demo Karten (erfordert Internet Verbindung)</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
     <br>
+    <h3> NMEA</h3>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Bedeutung</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>NMEA Source</td>
+          <td>Auswahl der Quelle für Positionsdaten (Off,Internal, IP,
+            Bluetooth)</td>
+          <td>Internal</td>
+        </tr>
+        <tr>
+          <td>AIS Source</td>
+          <td>Auswahl der Quelle für AIS Daten (Off,IP,Bluetooth)</td>
+          <td>Off</td>
+        </tr>
+        <tr>
+          <td>IP Address</td>
+          <td>IP Adresse von der NMEA/AIS Daten empfangen werden sollen</td>
+          <td>192.168.10.20</td>
+        </tr>
+        <tr>
+          <td>IP Port</td>
+          <td>Port für den IP Empfang</td>
+          <td>34567</td>
+        </tr>
+        <tr>
+          <td>filter own MMSI</td>
+          <td>hier kann die eigene MMSI eingetragen werden, wenn der AIS
+            Empfänger diese mit ausgibt, die Daten werden dann ignoriert</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>filter incoming NMEA</td>
+          <td>hier kann eine Liste von Filtern angegeben werden, d.h. NMEA
+            Datensätze, die empfangen werden sollen. Wenn die Liste leer ist,
+            werden alle Datensätze empfangen. Beispiel: RMC - nur $xxRMC
+            Datensätze werden empfangen</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>log NMEA Data</td>
+          <td>schreibe empfangene NMEA Daten in eine log Datei (im tracks
+            Verzeichnis)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>log AIS Data</td>
+          <td>schreibe empfangene AIS Daten in eine log Datein</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>filter NMEA logs</td>
+          <td>ein Filter, welche NMEA Daten in das log geschrieben werden sollen</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h3>Expert Settings</h3>
+    <table style="width: 100%;" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Bedeutung</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>offset internal gps(s)</td>
+          <td>Zeit offset für internes GPS in Sekunden</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>offset IP gps time(s)</td>
+          <td>Zeit offset für IP GPS in Sekunden</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>offset bluetooth gps time(s)</td>
+          <td>Zeit offset für bluetooth GPS in Sekunden</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td style="height: 19px;">AIS info invalid after(s)</td>
+          <td>Zeit, nach der ein AIS Ziel gelöscht wird in Sekunden</td>
+          <td>1200</td>
+        </tr>
+        <tr>
+          <td>min trackpoint distance(m)</td>
+          <td>Schreibe einen trackpoint, wenn mindestens dieser Abstand zum
+            letzten vorhanden ist</td>
+          <td>25</td>
+        </tr>
+        <tr>
+          <td>time between trackpoints(s)</td>
+          <td>Schreibe einen neuen trackpoint frühestens n Sekunden nach dem
+            letzten</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td>write track file every (s)</td>
+          <td>Schreibe das trackfile alle n Sekunden in das tracks Verzeichnis.
+            Falls die app abstürzen sollte, sind so die Daten bis zu diesem
+            Zeitpunkt gesichert. Die Trackdaten werden ausserdem beim Beenden
+            geschrieben.</td>
+          <td>300</td>
+        </tr>
+        <tr>
+          <td>port for external browser mode</td>
+          <td>Hier kann der durch den Webserver genuzte Port geändert werden.</td>
+          <td>34567</td>
+        </tr>
+      </tbody>
+    </table>
     <br>
   </body>
 </html>

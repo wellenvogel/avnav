@@ -206,6 +206,13 @@ avnav.gui.Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
     }
 };
 
+avnav.gui.Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
+    log("SettingsAndroid clicked");
+    this.gui.showPage('mainpage');
+    avnav.android.showSettings();
+};
+
+
 (function(){
     //create an instance of the status page handler
     var page=new avnav.gui.Settingspage();

@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="de.wellenvogel.avnav.main"
-          android:versionCode="21"
-          android:versionName="0.2.1"
-        >
-    <uses-sdk android:minSdkVersion="14"/>
-    <!--make bluetooth optional -->
-    <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
+    package="de.wellenvogel.avnav.main"
+    android:versionCode="1000"
+    android:versionName="1.0.0">
+
+    <uses-sdk android:minSdkVersion="14" />
+    <!-- make bluetooth optional -->
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -16,37 +19,44 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
-    <application android:label="@string/appName" android:icon="@drawable/sailboatr"
-            android:name=".AvNavApp"
-            android:hardwareAccelerated="true">
-        <activity android:name="de.wellenvogel.avnav.main.AvNav"
-                  android:label="@string/appName"
-                  android:windowSoftInputMode="stateHidden"
-                  >
+    <android:uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <android:uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <application
+        android:name=".AvNavApp"
+        android:hardwareAccelerated="true"
+        android:icon="@drawable/sailboatr"
+        android:label="@string/appName">
+        <activity
+
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/appName"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:windowSoftInputMode="stateHidden">
+            >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="WebViewActivity"
-                  android:label="@string/appName"
-                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-                  android:configChanges="orientation|screenSize">
-        </activity>
-        <activity android:name=".WebServerActivity"
-                  android:label="@string/appName">
-        </activity>
-        <activity android:name=".Info" android:label="Info"/>
-        <activity android:name=".XwalkActivity"
-                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-                  android:configChanges="orientation|screenSize"/>
+        <activity
+            android:name=".Info"
+            android:label="Info" />
         <activity android:name=".Dummy">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-        <activity android:name=".SettingsActivity"
-                android:label="@string/labelSettingsActivity"></activity>
-        <service android:name="de.wellenvogel.avnav.gps.GpsService" android:label="AvnavGps"/>
+        <activity
+            android:name="de.wellenvogel.avnav.settings.SettingsActivity"
+            android:label="@string/labelSettingsActivity" />
+
+        <service
+            android:name="de.wellenvogel.avnav.gps.GpsService"
+            android:label="AvnavGps" />
+
     </application>
+
 </manifest>

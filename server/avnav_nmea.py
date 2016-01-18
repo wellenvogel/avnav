@@ -194,6 +194,7 @@ class NMEAParser():
     #currently we only take the time from RMC
     #as only with this one we have really a valid complete timestamp
     try:
+      rt['source']=darray[0][1:2]
       if tag=='GGA':
         rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
         rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
@@ -221,7 +222,7 @@ class NMEAParser():
       if tag=='RMC':
         #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
         #this includes current date
-        rt['mode']=( 0 if darray[2] != 'A' else 1)
+        rt['mode']=( 0 if darray[2] != 'A' else 2)
         gpstime=darray[1]
         rt['lat']=self.nmeaPosToFloat(darray[3],darray[4])
         rt['lon']=self.nmeaPosToFloat(darray[5],darray[6])

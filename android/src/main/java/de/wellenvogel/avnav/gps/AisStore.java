@@ -4,6 +4,8 @@ import android.location.Location;
 import android.util.Log;
 import de.wellenvogel.avnav.aislib.messages.message.*;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +18,16 @@ import java.util.Map;
  * Created by andreas on 28.12.14.
  */
 public class AisStore {
+    private int ownMmsi=0;
+    public AisStore(String ownMmsi){
+        if (ownMmsi != null && ! ownMmsi.isEmpty()){
+            try {
+                this.ownMmsi = Integer.parseInt(ownMmsi);
+            }catch (Exception e){
+                AvnLog.e("unable to set own MMSI from "+ownMmsi+": "+e);
+            }
+        }
+    }
     private HashMap<Integer,JSONObject> aisData=new HashMap<Integer, JSONObject>();
     private static final int HANDLED_MESSAGES[]=new int[]{1,2,3,5,18,19,24};
     private static final String MERGE_FIELDS[]=new String[]{"imo_id","callsign","shipname","shiptype","destination"};
@@ -43,6 +55,10 @@ public class AisStore {
             int mmsi=o.getInt("mmsi");
             if (mmsi == 0){
                 AvnLog.i(LOGPRFX,"ignore invalid message with mmsi 0");
+                return;
+            }
+            if (mmsi == ownMmsi){
+                AvnLog.i("ignoring own MMSI "+mmsi);
                 return;
             }
             int type=msg.getMsgId();

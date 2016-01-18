@@ -43,4 +43,8 @@ public class BluetoothPositionHandler extends SocketPositionHandler {
         return null;
     }
 
+    @Override
+    public String getName() {
+        return "Bluetooth";
+    }
 }

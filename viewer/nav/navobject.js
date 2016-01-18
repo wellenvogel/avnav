@@ -482,6 +482,10 @@ avnav.nav.NavObject.prototype.getRoutingData=function(){
     return this.routeHandler;
 };
 
+avnav.nav.NavObject.prototype.resetTrack=function(){
+    return this.trackHandler.resetTrack();
+};
+
 /**
  * send out an update event
  * @param {avnav.nav.NavEventSource} source

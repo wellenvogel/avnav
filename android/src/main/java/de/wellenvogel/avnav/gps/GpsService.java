@@ -13,11 +13,14 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import de.wellenvogel.avnav.main.AvNav;
+
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,14 +35,10 @@ import java.util.Date;
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service  {
+public class GpsService extends Service implements INmeaLogger {
 
 
-    public static String PROP_TRACKINTERVAL="track.interval";
     public static String PROP_TRACKDIR="track.dir";
-    public static String PROP_TRACKDISTANCE="track.distance";
-    public static String PROP_TRACKMINTIME="track.mintime";
-    public static String PROP_TRACKTIME="track.time";
     public static String PROP_CHECKONLY="checkonly";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
@@ -72,6 +71,7 @@ public class GpsService extends Service  {
     private boolean btAis=false;
 
     private TrackWriter trackWriter;
+    private NmeaLogger nmeaLogger;
     private Handler handler = new Handler();
     private long timerSequence=1;
     private Runnable runnable;
@@ -79,10 +79,21 @@ public class GpsService extends Service  {
     private boolean trackLoading=true; //if set to true - do not write the track
     private long loadSequence=1;
     private static final int NOTIFY_ID=1;
+    private Object loggerLock=new Object();
     //location data
 
 
     private static final String LOGPRFX="Avnav:GpsService";
+
+    @Override
+    public void logNmea(String data) {
+        synchronized (loggerLock){
+            if (nmeaLogger != null){
+                nmeaLogger.addRecord(data);
+            }
+        }
+
+    }
 
     public class GpsServiceBinder extends Binder{
       public GpsService getService(){
@@ -173,16 +184,17 @@ public class GpsService extends Service  {
             mNotificationManager.cancel(NOTIFY_ID);
         }
     }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
         if (intent != null && intent.getBooleanExtra(PROP_CHECKONLY,false)){
             return Service.START_REDELIVER_INTENT;
         }
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         handleNotification(true);
-        String trackdir=intent.getStringExtra(PROP_TRACKDIR);
         //we rely on the activity to check before...
-        File newTrackDir=new File(trackdir);
+        File newTrackDir=new File(new File(prefs.getString(Constants.WORKDIR,"")),"tracks");
         boolean loadTrack=true;
         if (trackDir != null && trackDir.getAbsolutePath().equals(newTrackDir.getAbsolutePath())){
             //seems to be a restart - so do not load again
@@ -190,17 +202,20 @@ public class GpsService extends Service  {
             AvnLog.d(LOGPRFX,"restart: do not load track data");
         }
 
-        trackInterval=intent.getLongExtra(PROP_TRACKINTERVAL,300000);
-        trackDistance=intent.getLongExtra(PROP_TRACKDISTANCE,25);
-        trackMintime=intent.getLongExtra(PROP_TRACKMINTIME,10000); //not used
-        trackTime=intent.getLongExtra(PROP_TRACKTIME,25*60*60*1000); //25h - to ensure that we at least have the whole day...
-        SharedPreferences prefs=getSharedPreferences(AvNav.PREFNAME,Context.MODE_PRIVATE);
-        useInternalProvider=prefs.getBoolean(AvNav.INTERNALGPS,true);
-        ipAis=prefs.getBoolean(AvNav.IPAIS,false);
-        ipNmea=prefs.getBoolean(AvNav.IPNMEA,false);
-        btAis=prefs.getBoolean(AvNav.BTAIS,false);
-        btNmea=prefs.getBoolean(AvNav.BTNMEA,false);
-        AvnLog.d(LOGPRFX,"started with dir="+trackdir+", interval="+(trackInterval/1000)+
+        trackInterval=1000* AvnUtil.getLongPref(prefs, Constants.TRACKINTERVAL, 300);
+        trackDistance=AvnUtil.getLongPref(prefs, Constants.TRACKDISTANCE, 25);
+        trackMintime=1000*AvnUtil.getLongPref(prefs, Constants.TRACKMINTIME, 10);
+        trackTime=1000*60*60*AvnUtil.getLongPref(prefs, Constants.TRACKTIME, 25); //25h - to ensure that we at least have the whole day...
+        useInternalProvider=prefs.getBoolean(Constants.INTERNALGPS,true);
+        ipAis=prefs.getBoolean(Constants.IPAIS,false);
+        ipNmea=prefs.getBoolean(Constants.IPNMEA,false);
+        btAis=prefs.getBoolean(Constants.BTAIS,false);
+        btNmea=prefs.getBoolean(Constants.BTNMEA,false);
+        Properties loggerProperties=new Properties();
+        loggerProperties.logAis=prefs.getBoolean(Constants.AISLOG,false);
+        loggerProperties.logNmea=prefs.getBoolean(Constants.NMEALOG,false);
+        loggerProperties.nmeaFilter=prefs.getString(Constants.NMEALOGFILTER,null);
+        AvnLog.d(LOGPRFX,"started with dir="+newTrackDir.getAbsolutePath()+", interval="+(trackInterval/1000)+
                 ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
                 ", maxtime(h)="+(trackTime/3600/1000)+
                 ", internalGps="+useInternalProvider+
@@ -208,7 +223,16 @@ public class GpsService extends Service  {
                 ", ipAis="+ipAis+
                 ", btNmea="+btNmea+
                 ", btAis="+btAis);
-        trackDir = new File(trackdir);
+        trackDir = newTrackDir;
+        synchronized (loggerLock) {
+            if (loggerProperties.logNmea||loggerProperties.logAis) {
+                if (nmeaLogger != null) nmeaLogger.stop();
+                nmeaLogger = new NmeaLogger(trackDir,mediaUpdater,loggerProperties);
+            } else {
+                if (nmeaLogger != null) nmeaLogger.stop();
+                nmeaLogger = null;
+            }
+        }
         if (loadTrack) {
             trackpoints.clear();
             loadSequence++;
@@ -226,7 +250,8 @@ public class GpsService extends Service  {
         if (useInternalProvider){
             if (internalProvider == null) {
                 AvnLog.d(LOGPRFX,"start internal provider");
-                internalProvider=new AndroidPositionHandler(this);
+                GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
+                internalProvider=new AndroidPositionHandler(this,1000*AvnUtil.getLongPref(prefs,Constants.GPSOFFSET,prop.timeOffset));
             }
         }
         else {
@@ -239,16 +264,19 @@ public class GpsService extends Service  {
         if (ipAis || ipNmea){
             if (externalProvider == null){
                 try {
-                    InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(AvNav.IPADDR, ""),
-                            prefs.getString(AvNav.IPPORT, ""));
+                    InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(Constants.IPADDR, ""),
+                            prefs.getString(Constants.IPPORT, ""));
                     AvnLog.d(LOGPRFX,"starting external receiver for "+addr.toString());
                     GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                    prop.aisCleanupInterval=prefs.getLong(AvNav.IPAISCLEANUPIV,prop.aisCleanupInterval);
-                    prop.aisLifetime=prefs.getLong(AvNav.IPAISLIFETIME,prop.aisLifetime);
-                    prop.postionAge=prefs.getLong(AvNav.IPPOSAGE,prop.postionAge);
-                    prop.connectTimeout=prefs.getInt(AvNav.IPCONNTIMEOUT,prop.connectTimeout);
+                    prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
+                    prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
+                    prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
+                    prop.connectTimeout=1000*(int)AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout);
+                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.IPOFFSET,prop.timeOffset);
+                    prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
                     prop.readAis=ipAis;
                     prop.readNmea=ipNmea;
+                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
                     externalProvider=new IpPositionHandler(this,addr,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
@@ -265,22 +293,25 @@ public class GpsService extends Service  {
         if (btAis || btNmea){
             if (bluetoothProvider == null){
                 try {
-                    String dname=prefs.getString(AvNav.BTDEVICE, "");
+                    String dname=prefs.getString(Constants.BTDEVICE, "");
                     BluetoothDevice dev=BluetoothPositionHandler.getDeviceForName(dname);
                     if (dev == null){
                         throw new Exception("no bluetooth device found for"+dname);
                     }
                     AvnLog.d(LOGPRFX,"starting bluetooth receiver for "+dname+": "+ dev.getAddress());
                     GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                    prop.aisCleanupInterval=prefs.getLong(AvNav.IPAISCLEANUPIV,prop.aisCleanupInterval);
-                    prop.aisLifetime=prefs.getLong(AvNav.IPAISLIFETIME,prop.aisLifetime);
-                    prop.postionAge=prefs.getLong(AvNav.IPPOSAGE,prop.postionAge);
-                    prop.connectTimeout=prefs.getInt(AvNav.IPCONNTIMEOUT,prop.connectTimeout);
+                    prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
+                    prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
+                    prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
+                    prop.connectTimeout=(int)(1000*AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout));
+                    prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
                     prop.readAis=btAis;
                     prop.readNmea=btNmea;
+                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
+                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
                     bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);
                 }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service");
+                    Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
                 }
 
             }
@@ -327,7 +358,7 @@ public class GpsService extends Service  {
     /**
      * will be called whe we intend to really stop
      */
-    private void handleStop(){
+    private void handleStop(boolean emptyTrack){
         if (internalProvider != null){
             internalProvider.stop();
             internalProvider=null;
@@ -345,7 +376,9 @@ public class GpsService extends Service  {
         if (trackpoints.size() >0){
             if (! trackLoading) {
                 try {
-                    trackWriter.writeTrackFile(getTrackCopy(), new Date(), true, mediaUpdater);
+                    //when we shut down completely we have to wait until the track is written
+                    //if we only restart, we write the track in background
+                    trackWriter.writeTrackFile(getTrackCopy(), new Date(), !emptyTrack, mediaUpdater);
                 } catch (FileNotFoundException e) {
                     AvnLog.d(LOGPRFX, "Exception while finally writing trackfile: " + e.getLocalizedMessage());
                 }
@@ -354,16 +387,18 @@ public class GpsService extends Service  {
                 AvnLog.i(LOGPRFX,"unable to write trackfile as still loading");
             }
         }
-        trackpoints.clear();
+        if (emptyTrack) {
+            trackpoints.clear();
+            trackDir = null;
+        }
         loadSequence++;
-        trackDir=null;
         isRunning=false;
         handleNotification(false);
-        AvnLog.d(LOGPRFX,"service stopped");
+        AvnLog.d(LOGPRFX, "service stopped");
     }
 
-    public void stopMe(){
-        handleStop();
+    public void stopMe(boolean doShutdown){
+        handleStop(doShutdown);
         stopSelf();
     }
 
@@ -371,7 +406,7 @@ public class GpsService extends Service  {
     public void onDestroy()
     {
         super.onDestroy();
-        handleStop();
+        handleStop(true);
     }
 
 
@@ -402,7 +437,7 @@ public class GpsService extends Service  {
                     add = true;
                 }
                 if (add) {
-                    AvnLog.d(LOGPRFX, "add location to track log " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
+                    AvnLog.d(LOGPRFX, "add location to track logNmea " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
                     Location nloc = new Location(l);
                     nloc.setTime(current);
                     trackpoints.add(nloc);
@@ -538,7 +573,13 @@ public class GpsService extends Service  {
     }
 
     public void setMediaUpdater(IMediaUpdater u){
+
         mediaUpdater=u;
+        synchronized (loggerLock) {
+            if (mediaUpdater != null && nmeaLogger != null) {
+                nmeaLogger.setMediaUpdater(mediaUpdater);
+            }
+        }
     }
 
     public IMediaUpdater getMediaUpdater(){
@@ -553,6 +594,104 @@ public class GpsService extends Service  {
         return trackDir;
     }
 
+    public void deleteTrackFile(String name) throws Exception{
+        File trackfile = new File(trackDir, name);
+        if (! trackfile.isFile()){
+            throw new Exception("track "+name+" not found");
+        }
+        else {
+            trackfile.delete();
+            if (mediaUpdater != null) mediaUpdater.triggerUpdateMtp(trackfile);
+            if (name.endsWith(".gpx")){
+                if (name.replace(".gpx","").equals(TrackWriter.getCurrentTrackname(new Date()))){
+                    AvnLog.i("deleting current trackfile");
+                    synchronized (this){
+                        trackpoints=new ArrayList<Location>();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * get the status for NMEA and AIS
+     * @return
+     * nmea: { source: internal, status: green , info: 3 visible/2 used}
+     * ais: [ source: IP, status: yellow, info: connected to 10.222.9.1:34567}
+     * @throws JSONException
+     */
+    public JSONObject getNmeaStatus() throws JSONException{
+        JSONObject nmea=new JSONObject();
+        nmea.put("source","unknown");
+        nmea.put("status","red");
+        nmea.put("info","disabled");
+        JSONObject ais=new JSONObject();
+        ais.put("source","unknown");
+        ais.put("status","red");
+        ais.put("info","disabled");
+        if (internalProvider != null){
+            //internal has NMEA if it is there...
+            nmea.put("source","internal");
+            GpsDataProvider.SatStatus st=internalProvider.getSatStatus();
+            Location loc=internalProvider.getLocation();
+            if (loc != null) {
+                nmea.put("status","green");
+                nmea.put("info", "sats: "+st.numSat+" / "+st.numUsed+", acc="+loc.getAccuracy());
+            }
+            else {
+                if (st.gpsEnabled) {
+                    nmea.put("status", "yellow");
+                    nmea.put("info", "sats: " + st.numSat + " / " + st.numUsed);
+                }
+                else{
+                    nmea.put("status", "red");
+                    nmea.put("info", "disabled");
+                }
+            }
+        }
+        for (GpsDataProvider provider: new GpsDataProvider[]{externalProvider,bluetoothProvider}) {
+            if (provider != null) {
+                GpsDataProvider.SatStatus st = provider.getSatStatus();
+                Location loc = provider.getLocation();
+                String addr = provider.getConnectionId();
+                if (provider.handlesNmea()) {
+                    nmea.put("source", provider.getName());
+                    if (loc != null) {
+                        nmea.put("status", "green");
+                        nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed );
+                    } else {
+                        if (st.gpsEnabled) {
+                            nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed );
+                            nmea.put("status", "yellow");
+                        } else {
+                            nmea.put("info", "(" + addr + ") disconnected");
+                            nmea.put("status", "red");
+                        }
+                    }
+                }
+                if (provider.handlesAis()) {
+                    ais.put("source", provider.getName());
+                    int aisTargets=provider.numAisData();
+                    if (aisTargets> 0) {
+                        ais.put("status", "green");
+                        ais.put("info", "(" + addr + "), "+aisTargets+" targets");
+                    } else {
+                        if (st.gpsEnabled) {
+                            ais.put("info", "(" + addr + ") connected");
+                            ais.put("status", "yellow");
+                        } else {
+                            ais.put("info", "(" + addr + ") disconnected");
+                            ais.put("status", "red");
+                        }
+                    }
+                }
+            }
+        }
+        JSONObject rt=new JSONObject();
+        rt.put("nmea",nmea);
+        rt.put("ais",ais);
+        return rt;
+    }
     public JSONObject getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
         JSONObject item=new JSONObject();
@@ -561,12 +700,18 @@ public class GpsService extends Service  {
             GpsDataProvider.SatStatus st=internalProvider.getSatStatus();
             Location loc=internalProvider.getLocation();
             if (loc != null) {
-                item.put("info", "valid position,sats: "+st.numSat+" available / "+st.numUsed+" used, acc="+loc.getAccuracy());
+                item.put("info", "valid position, sats: "+st.numSat+" / "+st.numUsed+", acc="+loc.getAccuracy());
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }
             else {
-                item.put("info","searching, sats: "+st.numSat+" available / "+st.numUsed+" used");
-                item.put("status", GpsDataProvider.STATUS_STARTED);
+                if (st.gpsEnabled) {
+                    item.put("info", "sats: " + st.numSat + " / " + st.numUsed);
+                    item.put("status", GpsDataProvider.STATUS_STARTED);
+                }
+                else{
+                    item.put("info", "disabled");
+                    item.put("status", GpsDataProvider.STATUS_ERROR);
+                }
             }
         }
         else {
@@ -580,15 +725,16 @@ public class GpsService extends Service  {
             String addr=externalProvider.socket.getId();
             GpsDataProvider.SatStatus st=externalProvider.getSatStatus();
             Location loc=externalProvider.getLocation();
+            int numAis=externalProvider.numAisData();
             if (loc != null) {
-                String info="("+addr+") valid position";
-                if (externalProvider.hasAisData())info+=", valid AIS data";
+                String info="("+addr+") valid position, sats: "+st.numSat+" / "+st.numUsed;
+                if (numAis> 0)info+=", AIS data, "+numAis+" targets";
                 item.put("info", info);
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }
             else {
-                if (!ipNmea && externalProvider.hasAisData()) {
-                    item.put("info", "(" + addr + ") valid AIS data");
+                if (!ipNmea && numAis>0) {
+                    item.put("info", "(" + addr + ") valid AIS data, "+numAis+" targets");
                     item.put("status", GpsDataProvider.STATUS_NMEA);
 
                 }
@@ -614,15 +760,16 @@ public class GpsService extends Service  {
             String addr=bluetoothProvider.socket.getId();
             GpsDataProvider.SatStatus st=bluetoothProvider.getSatStatus();
             Location loc=bluetoothProvider.getLocation();
+            int numAis=bluetoothProvider.numAisData();
             if (loc != null) {
-                String info="("+addr+") valid position";
-                if (bluetoothProvider.hasAisData())info+=", valid AIS data";
+                String info="("+addr+") valid position, sats: "+st.numSat+" / "+st.numUsed;
+                if (numAis>0)info+=", valid AIS data, "+numAis+" targets";
                 item.put("info", info);
                 item.put("status", GpsDataProvider.STATUS_NMEA);
             }
             else {
-                if (!btNmea && bluetoothProvider.hasAisData()) {
-                    item.put("info", "(" + addr + ") valid AIS data");
+                if (!btNmea && numAis>0) {
+                    item.put("info", "(" + addr + ") valid AIS data, "+numAis+" targets");
                     item.put("status", GpsDataProvider.STATUS_NMEA);
 
                 }

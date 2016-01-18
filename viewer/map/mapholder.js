@@ -259,6 +259,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             return self.onDoubleClick(evt);
         });
     }
+    var recenter=true;
     if (this.center && this.zoom >0){
         //if we load a new map - try to restore old center and zoom
         var view=this.getView();
@@ -271,14 +272,22 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             this.doSlide(this.properties.getProperties().slideLevels);
         }
         view.setZoom(this.zoom);
+        recenter=false;
+        if (layers.length > 0) {
+            var lext=layers[0].avnavOptions.extent;
+            if (lext !== undefined && !ol.extent.containsCoordinate(lext,this.pointToMap(this.center))){
+                if (window.confirm("Position outside map, center to map now?")){
+                    recenter=true;
+                }
+            }
+        }
     }
-    else {
+    if (recenter) {
         if (layers.length > 0) {
             var view = this.getView();
-            view.fitExtent(layers[0].getExtent(), this.olmap.getSize());
-            if (view.getZoom() < this.minzoom) {
-                view.setZoom(this.minzoom);
-            }
+            var lext=layers[0].avnavOptions.extent;
+            if (lext !== undefined) view.fitExtent(lext, this.olmap.getSize());
+            view.setZoom(this.minzoom);
             this.center=this.pointFromMap(view.getCenter());
             this.zoom=view.getZoom();
 

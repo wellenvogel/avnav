@@ -2,10 +2,7 @@ package de.wellenvogel.avnav.gps;
 
 import android.location.Location;
 import android.util.Log;
-import de.wellenvogel.avnav.main.AvNav;
-import de.wellenvogel.avnav.main.IMediaUpdater;
-import de.wellenvogel.avnav.main.ISO8601DateParser;
-import de.wellenvogel.avnav.util.AvnLog;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,10 +10,20 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import de.wellenvogel.avnav.main.IMediaUpdater;
+import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 12.12.14.
@@ -185,37 +192,37 @@ public class RouteHandler {
             AvnLog.i("routes directory parser started");
             HashMap<String,RouteInfo> localList=new HashMap<String, RouteInfo>();
             while (true && ! stopParser){
-                for (File f:routedir.listFiles()){
-                    if (! f.isFile()) continue;
-                    if (! f.getName().endsWith(".gpx")) continue;
-                    boolean mustParse=false;
-                    String name=f.getName().replaceAll("\\.gpx$","");
-                    if (routeInfos.containsKey(name)){
-                        RouteInfo old=routeInfos.get(name);
-                        long currmtime=f.lastModified();
-                        if (currmtime == old.mtime){
-                            localList.put(name,old);
-                        }
-                        else {
-                            mustParse=true;
-                        }
-                    }
-                    else {
-                        mustParse=true;
-                    }
-                    if (mustParse){
-                        try {
-                            Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
-                            RouteInfo info=rt.getInfo();
-                            if (! rt.name.equals(name)){
-                                //TODO: make this more robust!
-                                throw new Exception("name in route "+rt.name+" does not match route file name");
+                if (routedir.isDirectory()) {
+                    for (File f : routedir.listFiles()) {
+                        if (!f.isFile()) continue;
+                        if (!f.getName().endsWith(".gpx")) continue;
+                        boolean mustParse = false;
+                        String name = f.getName().replaceAll("\\.gpx$", "");
+                        if (routeInfos.containsKey(name)) {
+                            RouteInfo old = routeInfos.get(name);
+                            long currmtime = f.lastModified();
+                            if (currmtime == old.mtime) {
+                                localList.put(name, old);
+                            } else {
+                                mustParse = true;
                             }
-                            info.mtime=f.lastModified();
-                            localList.put(name,info);
-                            AvnLog.d("parsed route: "+info.toString());
-                        }catch (Exception e){
-                            Log.e(AvnLog.LOGPREFIX,"Exception parsing route "+f.getAbsolutePath()+": "+e.getLocalizedMessage());
+                        } else {
+                            mustParse = true;
+                        }
+                        if (mustParse) {
+                            try {
+                                Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
+                                RouteInfo info = rt.getInfo();
+                                if (!rt.name.equals(name)) {
+                                    //TODO: make this more robust!
+                                    throw new Exception("name in route " + rt.name + " does not match route file name");
+                                }
+                                info.mtime = f.lastModified();
+                                localList.put(name, info);
+                                AvnLog.d("parsed route: " + info.toString());
+                            } catch (Exception e) {
+                                Log.e(AvnLog.LOGPREFIX, "Exception parsing route " + f.getAbsolutePath() + ": " + e.getLocalizedMessage());
+                            }
                         }
                     }
                 }
