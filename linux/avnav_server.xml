@@ -75,7 +75,8 @@
 <AVNChartHandler></AVNChartHandler>
     <!--  routing handler -->
 <AVNRouter routesdir="../data_linux/routes"></AVNRouter>
-<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>
+<!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
+<AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter importDir="../data_linux/import"></AVNImporter>
 
 </AVNServer>
