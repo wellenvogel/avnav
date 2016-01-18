@@ -504,6 +504,7 @@ public class RequestHandler {
                             int x = Integer.parseInt(param[2]);
                             int y = Integer.parseInt(param[3].replaceAll("\\.png", ""));
                             GEMFFile.GEMFInputStream gs = gemfFile.getInputStream(x, y, z, Integer.parseInt(param[0]));
+                            if (gs == null) return null;
                             rt=gs;
                             len=gs.getLength();
                         }
