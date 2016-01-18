@@ -99,6 +99,9 @@ avnav.gui.Handler = function (properties, navobject, map) {
         if (evdata.key && evdata.key == "backPressed") {
             $(document).trigger(avnav.gui.BackEvent.EVENT_TYPE, new avnav.gui.BackEvent(self.page));
         }
+        if (evdata.key && evdata.key == "propertyChange") {
+            $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE, new avnav.util.PropertyChangeEvent(self.properties));
+        }
     });
 
 };

@@ -443,6 +443,9 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             fragmentTransaction.commit();
             lastStartMode=mode;
         }
+        else{
+            sendEventToJs("propertyChange",0); //this will some pages cause to reload...
+        }
     }
 
     @Override

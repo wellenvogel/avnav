@@ -23,6 +23,7 @@ avnav.gui.Mainpage=function(){
     });
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
         self.layout();
+        self.fillList();
     });
 };
 avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
@@ -37,17 +38,7 @@ avnav.gui.Mainpage.prototype.changeDim=function(newDim){
 avnav.gui.Mainpage.prototype.localInit=function(){
 
 };
-avnav.gui.Mainpage.prototype.showPage=function(options){
-    if (!this.gui) return;
-    var ncon=this.gui.properties.getProperties().connectedMode;
-    this.handleToggleButton('#avb_Connected',ncon);
-    ncon=this.gui.properties.getProperties().style.nightMode;
-    var nightDim=this.gui.properties.getProperties().nightFade;
-    if (ncon != 100 && ncon != nightDim){
-        //could happen if we return from settings page
-        this.changeDim(nightDim);
-    }
-    this.handleToggleButton('#avb_Night',ncon!=100);
+avnav.gui.Mainpage.prototype.fillList=function(){
     var page=this;
     var url=this.gui.properties.getProperties().navUrl+"?request=listCharts";
     $.ajax({
@@ -91,6 +82,19 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
         }
 
     });
+};
+avnav.gui.Mainpage.prototype.showPage=function(options){
+    if (!this.gui) return;
+    var ncon=this.gui.properties.getProperties().connectedMode;
+    this.handleToggleButton('#avb_Connected',ncon);
+    ncon=this.gui.properties.getProperties().style.nightMode;
+    var nightDim=this.gui.properties.getProperties().nightFade;
+    if (ncon != 100 && ncon != nightDim){
+        //could happen if we return from settings page
+        this.changeDim(nightDim);
+    }
+    this.handleToggleButton('#avb_Night',ncon!=100);
+    this.fillList();
     if (avnav.android || this.gui.properties.getProperties().readOnlyServer){
         $('#avb_Connected').hide();
     }
