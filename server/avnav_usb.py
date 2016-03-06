@@ -279,7 +279,7 @@ class AVNUsbSerialReader(AVNWorker):
           context=pyudev.Context()
         allDev=context.list_devices(subsystem='tty')
         for dev in allDev:
-          if dev.parent is None or not dev.parent.subsystem == "usb-serial":
+          if dev.parent is None or not (dev.parent.subsystem == "usb-serial" or dev.parent.subsystem == "usb"):
             continue
           usbid=self.usbIdFromPath(dev.device_path)
           AVNLog.debug("discovered usb serial tty device %s at %s (usbid=%s)",dev.device_node,unicode(dev),usbid)
