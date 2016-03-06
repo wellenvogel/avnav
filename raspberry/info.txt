@@ -297,6 +297,21 @@ if not, try to restart it and restart hostapd
  apt-get update
  apt-get install python-gdal python-imaging
  
+ 
+ -- 2016/03/05 raspi 3
+ download raspbian jessie lite https://downloads.raspberrypi.org/raspbian_lite_latest
+ login as root, raspi-config - extend root fs
+ parted /dev/mmcblk0
+ resizepart 2 2GB
+ quit
+ 
+ reboot
+ apt-get install gpsd gpsd-clients python-gps bluetooth python-bluez python-pyudev hostapd dnsmasq python-serial lighttpd
+ apt-get install python-gdal python-imaging
+ 
+ 
+ 
+ 
    
    
    
