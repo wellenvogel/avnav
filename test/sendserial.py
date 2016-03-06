@@ -1,3 +1,4 @@
+#/usr/bin/env python
 #testprog for serial reading
 
 import serial
