@@ -39,15 +39,16 @@ from avnav_worker import *
 #should derive from this
 #the derived class must have the setInfo,writeData methods
 class SocketReader():
-  def readSocket(self,sock,infoName,timeout=None):
+  def readSocket(self,sock,infoName,timeout=None,info=None):
     pattern=AVNUtil.getNMEACheck()
-    peer="unknown"
-    try:
-      peer="%s:%d"%sock.getpeername()
-    except:
-      pass
-    AVNLog.info("connection to %s established, start reading",peer)
-    self.setInfo(infoName, "socket to %s connected"%(peer,), AVNWorker.Status.RUNNING)
+    if info is None:
+      try:
+        peer="%s:%d"%sock.getpeername()
+        info=peer
+      except:
+        info="unknown connection"
+    AVNLog.info("%s established, start reading",info)
+    self.setInfo(infoName, "receiving %s"%(info,), AVNWorker.Status.RUNNING)
     buffer=""
     hasNMEA=False
     try:
@@ -64,7 +65,7 @@ class SocketReader():
             if pattern.match(l):
               self.writeData(l)
               if not hasNMEA:
-                self.setInfo(infoName, "receiving from %s"%(peer,), AVNWorker.Status.NMEA)
+                self.setInfo(infoName, "NMEA %s"%(info,), AVNWorker.Status.NMEA)
                 hasNMEA=True
             else:
               AVNLog.debug("ignoring unknown data %s",l)

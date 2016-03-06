@@ -64,6 +64,7 @@ from avnav_bluetooth import *
 from avnav_usb import *
 from avnav_socketreaderbase import *
 from avnav_socketreader import *
+from avnav_udpreader import *
 from avnav_httpserver import *
 from avnav_router import *
 from avnav_serialwriter import *
@@ -174,7 +175,7 @@ def main(argv):
   debugger=sys.gettrace()
   workerlist=[AVNBaseConfig,AVNGpsdFeeder,AVNSerialReader,AVNGpsd,
               AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader,AVNUsbSerialReader,
-              AVNSocketWriter,AVNSocketReader,AVNChartHandler,AVNRouter, AVNSerialWriter, AVNNmeaLogger, AVNImporter]
+              AVNSocketWriter,AVNSocketReader,AVNUdpReader,AVNChartHandler,AVNRouter, AVNSerialWriter, AVNNmeaLogger, AVNImporter]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
