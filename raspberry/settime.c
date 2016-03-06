@@ -12,6 +12,8 @@ int main(int argc, char **argv){
 	int rt=system(buffer);
 	snprintf(buffer,200,"service ntp restart");
 	system(buffer);
+	snprintf(buffer,200,"/sbin/fake-hwclock save force");
+	system(buffer);
 	snprintf(buffer,200,"service fake-hwclock restart");
 	system(buffer);
 	exit(rt);

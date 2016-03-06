@@ -308,6 +308,14 @@ if not, try to restart it and restart hostapd
  reboot
  apt-get install gpsd gpsd-clients python-gps bluetooth python-bluez python-pyudev hostapd dnsmasq python-serial lighttpd
  apt-get install python-gdal python-imaging
+ apt-get install bc
+ 
+ copy tar to /home/pi
+ unpack as pi
+ run as root avnav/setup.sh
+ 
+ edit /etc/default/gpsd, START_DAEMON="false"
+ 
  
  
  
