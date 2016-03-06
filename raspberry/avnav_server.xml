@@ -136,6 +136,11 @@
 
 -->
 
+<!-- a reader that opens an UDP socket and listens for incoming data 
+     by default it will receive data only at localhost (127.0.0.1), you can change this by settintg the host parameter e.g. to 0.0.0.0
+     to listen on all interfaces
+-->
+<AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
 
 </Workers>
 
