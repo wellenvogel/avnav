@@ -436,9 +436,7 @@ iptables-save > /etc/iptables.ipv4.nat
 
 #----------- second attempt for wpa set up using nearly empty wpa_supplicant.conf (no network) but python
 
-apt-get install python-pip
-apt-get install libpython-dev
-pip install wpa_supplicant
+
 
 
  
