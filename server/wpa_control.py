@@ -29,8 +29,12 @@ class WpaControl():
   def checkOpen(self):
     if self.socket is None:
       raise Exception("socket to %s not open"%(self.wpaAddr))
-  def close(self):
-    self.checkOpen()
+  def close(self, throw=True):
+    if throw:
+      self.checkOpen()
+    else:
+      if self.socket is None:
+        return
     self.socket.close()
     os.unlink(self.ownAddr)
   def receiveData(self):
@@ -131,7 +135,7 @@ class WpaControl():
       raise Exception("ssid %s is not known"%(ssid))
     return id
   def enableNetworkSsid(self,ssid):
-    self.enableNetwork(self.getKnownSsids(ssid))
+    self.enableNetwork(self.getIdFromSsid(ssid))
   def disableNetworkSsid(self,ssid):
     self.disableNetwork(self.getIdFromSsid(ssid))
   def removeNetworkSsid(self,ssid):
@@ -150,12 +154,19 @@ class WpaControl():
       if nw.get('ssid') is not None and nw.get('ssid') == ssid:
         id=nw.get('network id')
         break
+    newnet=False
     if id is None:
       id=self.addNetwork()
+      newnet=True
     else:
       self.disableNetwork(id)
-    self.configureNetwork(id,param)
-    self.enableNetwork(id)
+    try:
+      self.configureNetwork(id,param)
+      self.enableNetwork(id)
+    except Exception as e:
+      if newnet:
+        self.removeNetwork(id)
+      raise
     return id
   ''' get a dict of known ssids, param being the network id
   '''
@@ -173,16 +184,21 @@ class WpaControl():
   '''
   def scanResultWithInfo(self):
     knownIds=self.getKnownSsids()
+    sawIds={}
     scans=self.scanResults()
     for scan in scans:
       ssid=scan.get('ssid')
       if ssid is not None:
+        sawIds[ssid]=True
         id=knownIds.get(ssid)
         if id is not None:
           scan['network id']=id
           scan['is known']=True
         else:
           scan['is known']=False
+    for k in knownIds:
+      if k not in sawIds:
+        scans.append({'ssid':k,'network id':knownIds[k],'is known':True,'signal level':'-1'})
     return scans
 
 
@@ -190,7 +206,7 @@ class WpaControl():
 
 def isInt(st):
   try:
-    v=int(str)
+    v=int(st)
     return True
   except:
     return False

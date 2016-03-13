@@ -51,6 +51,7 @@ from avnav_worker import *
 from avnav_router import *
 from avnav_trackwriter import *
 from avnav_httpserver import *
+from avnav_wpahandler import *
 
  
   
@@ -104,7 +105,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       self.basedir=os.getcwd()
     pathmappings=None
     #a list of gemf files (key is the url below charts)
-    self.gemflist={}
+    self. gemflist={}
     marray=cfgparam.get("Directory")
     if marray is not None:
       pathmappings={}
@@ -541,6 +542,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleListChartRequest(requestParam)
       if requestType=='routing':
         rtj=self.handleRoutingRequest(requestParam)
+      if requestType=='wpa':
+        rtj=self.handleWpaRequest(requestParam)
       if requestType=='listdir':
         rtj=self.handleListDir(requestParam)
       if requestType=='download':
@@ -762,6 +765,14 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       raise Exception("router not configured")
     return rtj
 
+  def handleWpaRequest(self,requestParam):
+    rt=self.server.getHandler(AVNWpaHandler.getConfigName())
+    rtj=None
+    if rt is not None:
+      rtj=rt.handleWpaRequest(requestParam)
+    else:
+      raise Exception("wpa not configured")
+    return rtj
   #download requests
   #parameters:
   #   type
