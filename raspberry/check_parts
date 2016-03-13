@@ -167,6 +167,7 @@ fi
 wlog "avnav partition setup finished"
 wlog "enabling avnav service"
 update-rc.d avnav defaults
+systemctl enable avnav
 service avnav start
 
 wlog "disable myself"

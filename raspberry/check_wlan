@@ -34,7 +34,7 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-#set -x
+set -x
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
@@ -97,40 +97,47 @@ checkHostapd(){
   fi
   rtlusb=`lsusb | grep -i rtl81`
   lsmod=`lsmod | grep 8192cu`
+  if [ "$2" = "forceNormal" ] ; then
+    rtlusb=""
+    lsmod=""
+  fi
   needStart=$1
   if [ "$rtlusb" != "" -a "$lsmod" != "" ] ; then
     wlog "rtl81xx wlan module detected"
-    needSwitch=`grep '#driver=rtl' $HOSTAPDCONF`
+    needSwitch=`grep '##*driver=rtl' $HOSTAPDCONF`
     if [ "$needSwitch" != "" ] ; then
       wlog "switch hostapd"
       if [ "$needStart" != 2 ] ; then
         service hostapd stop
-        ifdown $if
       fi
       cd /usr/sbin && rm hostapd && ln -s hostapd.edimax hostapd
-      sed -i -e 's/^[#]driver=rtl/driver=rtl/' -e 's/driver=nl80/#driver=nl80/' $HOSTAPDCONF
+      sed -i -e 's/^[#][#]*driver=rtl/driver=rtl/' -e 's/driver=nl80/#driver=nl80/' $HOSTAPDCONF
       needStart=1
     fi
   else
     wlog "standard wlan module - or none: default settings"
     needSwitch=`grep '^ *driver=nl80' $HOSTAPDCONF`
-    if [ "$needSwitch" = "" ] ; then
+    if [ "$needSwitch" = "" -o "$2" = "forceNormal" ] ; then
       wlog "switch hostapd"
       if [ "$needStart" != 2 ] ; then
         service hostapd stop
-        ifdown $if
       fi
       cd /usr/sbin && rm hostapd && ln -s hostapd.ori hostapd
-      sed -i -e 's/^ *[#]driver=nl80/driver=nl80/' -e 's/driver=rtl/#driver=rtl/' $HOSTAPDCONF
+      sed -i -e 's/^ *[#][#]*driver=nl80/driver=nl80/' -e 's/driver=rtl/#driver=rtl/' $HOSTAPDCONF
       needStart=1
     fi
   fi
-  [ "$needStart" != "" ] && service hostapd start
+  if [ "$needStart" != "" ] ; then
+    systemctl daemon-reload
+    service hostapd start
+  fi
 }
 
 wlog "avnav wlan check started with pid $$"
-checkHostapd
+service hostapd stop
+checkHostapd 1 forceNormal
 first=1
+firstNoUsb=1
 while [ 1 = 1 ] 
 do
 	for if in `echo $INTERFACES`
@@ -142,27 +149,38 @@ do
                    first=0
                   fi
                 else
+                  doCheck=1
+		  isUsb=`cat /sys/class/net/$if/device/uevent | grep DEVTYPE|grep usb`
+		  if [ "$isUsb" = "" ] ; then
+                    if [ "$firstNoUsb" = 1 ] ; then
+                     wlog "interface $if is no usb interface, keep looping"
+                     firstNoUsb=0
+                    fi
+                    doCheck=0
+                  fi
                   first=1
-		  if [ "$addr" = "" ] ; then
-			service hostapd stop
-			errlog "interface $if has no address, trying to restart"
-			ifdown $if
-			sleep 5
-			service hostapd start
-			sleep 5
-			addr2=`LANG=C ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
-			if [ "$addr2" != "" ] ; then
-				wlog "interface $if now up with address $addr2"
-                                checkHostapd 1
-				wlog "restart hostapd finished"
-			else
-				errlog "unable to restart interface $if"
-			fi 
-		  fi
-		  service hostapd status > /dev/null 2>&1
-                  if [ $? != 0 ] ; then
-		    wlog "hostapd not running, check if we need to switch"
-                    checkHostapd 1
+                  if [ "$doCheck" = 1 ] ; then
+                    if [ "$addr" = "" ] ; then
+                          service hostapd stop
+                          errlog "interface $if has no address, trying to restart"
+                          ifdown $if
+                          sleep 5
+                          service hostapd start
+                          sleep 5
+                          addr2=`LANG=C ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
+                          if [ "$addr2" != "" ] ; then
+                                  wlog "interface $if now up with address $addr2"
+                                  checkHostapd 1
+                                  wlog "restart hostapd finished"
+                          else
+                                  errlog "unable to restart interface $if"
+                          fi 
+                    fi
+                    ps -ef | grep -v grep| grep hostapd  > /dev/null 2>&1
+                    if [ $? != 0 ] ; then
+                      wlog "hostapd not running, check if we need to switch"
+                      checkHostapd 1
+                    fi
                   fi
                 fi
 	done
