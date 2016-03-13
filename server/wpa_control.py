@@ -98,6 +98,9 @@ class WpaControl():
   def status(self):
     data=self.runFreeCommand("STATUS_VERBOSE")
     return self.linesToDict(data)
+  def saveConfig(self):
+    self.runSimpleScommand("SAVE_CONFIG")
+    return True
   def listNetworks(self):
     data=self.runFreeCommand("LIST_NETWORKS")
     return self.tableToDict(data)
@@ -121,6 +124,19 @@ class WpaControl():
   def removeNetwork(self,id):
     self.runSimpleScommand("REMOVE_NETWORK %s"%(id),False)
     return id
+  def getIdFromSsid(self,ssid):
+    known=self.getKnownSsids()
+    id=known.get(ssid)
+    if id is None:
+      raise Exception("ssid %s is not known"%(ssid))
+    return id
+  def enableNetworkSsid(self,ssid):
+    self.enableNetwork(self.getKnownSsids(ssid))
+  def disableNetworkSsid(self,ssid):
+    self.disableNetwork(self.getIdFromSsid(ssid))
+  def removeNetworkSsid(self,ssid):
+    self.removeNetwork(self.getIdFromSsid(ssid))
+
   ''' add a new network, set the parameter and enable it
       if a network with the same ssid already exists reconfigure this one
   '''
@@ -141,9 +157,43 @@ class WpaControl():
     self.configureNetwork(id,param)
     self.enableNetwork(id)
     return id
+  ''' get a dict of known ssids, param being the network id
+  '''
+  def getKnownSsids(self):
+    known=self.listNetworks()
+    knownIds={}
+    for k in known:
+      ssid=k.get('ssid')
+      id=k.get('network id')
+      if ssid is not None and id is not None:
+        knownIds[ssid]=id
+    return knownIds
+  ''' provide scan results with an info whether a network (based on ssid) is known
+      in this case the network id will be set
+  '''
+  def scanResultWithInfo(self):
+    knownIds=self.getKnownSsids()
+    scans=self.scanResults()
+    for scan in scans:
+      ssid=scan.get('ssid')
+      if ssid is not None:
+        id=knownIds.get(ssid)
+        if id is not None:
+          scan['network id']=id
+          scan['is known']=True
+        else:
+          scan['is known']=False
+    return scans
 
 
 
+
+def isInt(st):
+  try:
+    v=int(str)
+    return True
+  except:
+    return False
 
 if __name__=="__main__":
   print "starting... - wpa=%s,own=%s"%(sys.argv[1],sys.argv[2])
@@ -159,9 +209,15 @@ if __name__=="__main__":
     if rq == "scan_results":
       ok=True
       print w.scanResults()
+    if rq=="scan_info":
+      ok=True
+      print w.scanResultWithInfo()
     if rq == "status":
       ok=True
       print w.status()
+    if rq == "save":
+      ok=True
+      w.saveConfig()
     if rq == "list_networks":
       ok=True
       print w.listNetworks()
@@ -178,7 +234,22 @@ if __name__=="__main__":
       w.configureNetwork(sys.argv[5],p)
     if rq =="remove_network":
       ok=True
-      w.removeNetwork(sys.argv[5])
+      if (isInt(sys.argv[5])):
+        w.removeNetwork(sys.argv[5])
+      else:
+        w.removeNetworkSsid(sys.argv[5])
+    if rq =="disable_network":
+      ok=True
+      if (isInt(sys.argv[5])):
+        w.disableNetwork(sys.argv[5])
+      else:
+        w.disableNetworkSsid(sys.argv[5])
+    if rq =="enable_network":
+      ok=True
+      if (isInt(sys.argv[5])):
+        w.enableNetwork(sys.argv[5])
+      else:
+        w.enableNetworkSsid(sys.argv[5])
     if rq== "connect":
       ok=True
       p={}
