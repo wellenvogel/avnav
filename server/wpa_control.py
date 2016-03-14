@@ -35,8 +35,15 @@ class WpaControl():
     else:
       if self.socket is None:
         return
-    self.socket.close()
-    os.unlink(self.ownAddr)
+    try:
+      self.socket.close()
+    except:
+      pass
+    try:
+      os.unlink(self.ownAddr)
+    except:
+      pass
+    self.socket=None
   def receiveData(self):
     self.checkOpen()
     ready = select.select([self.socket], [], [], 2)
@@ -47,7 +54,11 @@ class WpaControl():
     raise Exception("no response from %s in 2s"%(self.wpaAddr))
   def sendRequest(self,request):
     self.checkOpen()
-    self.socket.send(request)
+    try:
+      self.socket.send(request)
+    except:
+      self.close(False)
+      raise
 
   def runSimpleScommand(self,command,upper=True):
     if upper:

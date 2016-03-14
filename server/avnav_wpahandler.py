@@ -35,6 +35,7 @@ import glob
 import sys
 import traceback
 import json
+import datetime
 
 from avnav_util import *
 from avnav_worker import *
@@ -45,6 +46,7 @@ class AVNWpaHandler(AVNWorker):
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.wpaHandler=None
+    self.lastScan=datetime.datetime.utcnow()
   @classmethod
   def getConfigName(cls):
     return "AVNWpaHandler"
@@ -103,13 +105,21 @@ class AVNWpaHandler(AVNWorker):
       time.sleep(5)
       
 
+  def startScan(self):
+    if self.wpaHandler is None:
+      return
+    now=datetime.datetime.utcnow()
+    if now > (self.lastScan + datetime.timedelta(seconds=10)):
+      self.lastScan=now
+      self.wpaHandler.startScan()
+
   def getList(self):
     rt=[]
     wpaHandler=self.wpaHandler
     if wpaHandler is None:
       return rt
     try:
-      wpaHandler.startScan()
+      self.startScan()
     except:
       AVNLog.error("exception in WPAHandler:getList: %s",traceback.format_exc())
     try:
