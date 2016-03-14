@@ -69,6 +69,7 @@
         'util/formatter.js',
         'util/propertyhandler.js',
         'util/helper.js',
+        'util/overlay.js',
         'nav/navdata.js',
         'nav/navcompute.js',
         'nav/navobject.js',
@@ -92,6 +93,7 @@
         'gui/gpspage.js',
         'gui/routepage.js',
         'gui/downloadpage.js',
+        'gui/wpapage.js',
         'avnav_viewer.js'
         //ENDFILES
     ];

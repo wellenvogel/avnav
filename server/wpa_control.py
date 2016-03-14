@@ -43,6 +43,7 @@ class WpaControl():
     if ready[0]:
       data = self.socket.recv(self.maxReceive)
       return data
+    self.close(False)
     raise Exception("no response from %s in 2s"%(self.wpaAddr))
   def sendRequest(self,request):
     self.checkOpen()
@@ -133,7 +134,7 @@ class WpaControl():
     id=known.get(ssid)
     if id is None:
       raise Exception("ssid %s is not known"%(ssid))
-    return id
+    return id.get('network id')
   def enableNetworkSsid(self,ssid):
     self.enableNetwork(self.getIdFromSsid(ssid))
   def disableNetworkSsid(self,ssid):
@@ -153,7 +154,11 @@ class WpaControl():
     for nw in availableNetworks:
       if nw.get('ssid') is not None and nw.get('ssid') == ssid:
         id=nw.get('network id')
-        break
+      else:
+        flags=nw.get('flags')
+        if flags.find("CURRENT") >= 0:
+          #disable any previously used network
+          self.disableNetwork(nw.get('network id'))
     newnet=False
     if id is None:
       id=self.addNetwork()
@@ -177,29 +182,34 @@ class WpaControl():
       ssid=k.get('ssid')
       id=k.get('network id')
       if ssid is not None and id is not None:
-        knownIds[ssid]=id
+        knownIds[ssid]=k
     return knownIds
   ''' provide scan results with an info whether a network (based on ssid) is known
       in this case the network id will be set
   '''
   def scanResultWithInfo(self):
-    knownIds=self.getKnownSsids()
+    known=self.getKnownSsids()
     sawIds={}
     scans=self.scanResults()
     for scan in scans:
       ssid=scan.get('ssid')
       if ssid is not None:
         sawIds[ssid]=True
-        id=knownIds.get(ssid)
+        id=known.get(ssid)
         if id is not None:
-          scan['network id']=id
-          scan['is known']=True
+          self.updateEntryFromNetwork(scan,id)
         else:
           scan['is known']=False
-    for k in knownIds:
+    for k in known:
       if k not in sawIds:
-        scans.append({'ssid':k,'network id':knownIds[k],'is known':True,'signal level':'-1'})
+        scans.append(self.updateEntryFromNetwork({'ssid':k,'signal level':'-1'},known[k]))
     return scans
+
+  def updateEntryFromNetwork(self,scan,id):
+    scan['network id']=id.get('network id')
+    scan['is known']=True
+    scan['network flags']=id.get('flags')
+    return scan
 
 
 

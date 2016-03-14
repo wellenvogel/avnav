@@ -103,6 +103,10 @@ avnav.gui.Statuspage.prototype.btnStatusCancel=function(button,ev){
     log("StatusCancel clicked");
     this.gui.showPage('mainpage');
 };
+avnav.gui.Statuspage.prototype.btnStatusWpa=function(button,ev){
+    log("StatusWpa clicked");
+    this.gui.showPage('wpapage');
+};
 avnav.gui.Statuspage.prototype.btnStatusAndroid=function(button,ev) {
     log("StatusAndroid clicked");
     avnav.android.showSettings();

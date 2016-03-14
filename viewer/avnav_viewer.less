@@ -979,9 +979,89 @@ button#avb_StatusCancel {
 button#avb_StatusUpdate {
   .avn_button_icon_base('images/exchange32.png');
 }
-
+button#avb_StatusWpa {
+  .avn_button_icon_base('images/rss32.png');
+}
 button#avb_StatusAndroid{
   .avn_button_icon_base('images/Android_Robot_100.png');
+}
+
+
+/*-------------------------------------------------------------
+   wpa page
+-------------------------------------------------------------*/
+
+
+#avi_wpa_page_inner{
+  padding-left: 2em;
+  padding-right: 2em;
+}
+#avi_wpa_interface{
+  font-size: 1.5em;
+}
+.avn_wpa_interface_detail{
+  font-size: 0.8em;
+}
+#avi_wpa_list {
+  padding: 0;
+}
+
+.avn_wpa_item{
+  list-style: none;
+  font-size: 1em;
+  line-height: 2em;
+  border-bottom: 1px solid black;
+  padding-bottom: 0.4em;
+  padding-top: 0.4em;
+  padding-left: 1em;
+}
+.avn_wpa_ssid{
+  margin-right: 2em;
+  font-size: 1.6em;
+}
+.avn_wpa_item_detail{
+  margin-right: 1em;
+}
+
+.avn_wpa_active_item{
+  background-color: rgba(169, 169, 169, 0.24);
+  .nightColors();
+}
+#avi_wpa_box{
+  max-width: 99%;
+  max-height: 99%;
+}
+
+#avi_wpa_dialog{
+  padding: 1em;
+  background-color: white;
+  border-radius: 1em;
+  .nightColors();
+}
+#avi_wpa_dialog input{
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+#avi_wpa_dialog button{
+  .avn_button_base();
+  margin-top: (@buttonSize / 5);
+  margin-left: (@buttonSize / 5);
+  margin-right: (@buttonSize / 10);
+  font-size: ( min(@buttonSize / 3,14px));
+  padding: 1em;
+  width: inherit;
+}
+
+#avi_wpa_password{
+  width: 28em;
+  max-width: 90%;
+}
+
+
+
+button#avb_WpaCancel {
+  .avn_button_icon_base('images/Cancel40.png');
 }
 
 
@@ -1451,5 +1531,22 @@ button#avb_MainAndroid{
   width: ( @bottomPanelHeight / 2.5 );
   height: ( @bottomPanelHeight / 2.5 );
   vertical-align: middle;
+}
+
+
+/*------- simple modal -----------------------*/
+.avn_overlay_cover {
+  background:#000;
+  position:absolute;
+  left:0;
+  top:0;
+  right: 0;
+  bottom: 0;
+  display:none;
+  overflow:hidden }
+.avn_overlay_cover_active {
+  background-color: #000;
+  opacity: 0.8;
+  display: block;
 }
 

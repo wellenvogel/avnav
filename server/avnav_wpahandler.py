@@ -55,6 +55,7 @@ class AVNWpaHandler(AVNWorker):
     return {
             'ownSocket':'/tmp/avnav-wpa-ctrl', #my own socket endpoint
             'wpaSocket':"/var/run/wpa_supplicant/wlan-av1", #the wpa control socket
+            'ownSsid':'avnav'
     }
   @classmethod
   def createInstance(cls, cfgparam):
@@ -80,6 +81,12 @@ class AVNWpaHandler(AVNWorker):
             self.wpaHandler=WpaControl(wpaSocket,ownSocket)
             self.wpaHandler.open()
             self.setInfo('main','connected to %s'%(wpaSocket),AVNWorker.Status.STARTED)
+          else:
+            try:
+              self.wpaHandler.checkOpen()
+            except:
+              AVNLog.error("wpa handler closed...")
+              self.wpaHandler=None
         else:
           if self.wpaHandler is not None:
             self.wpaHandler.close(False)
@@ -106,7 +113,17 @@ class AVNWpaHandler(AVNWorker):
     except:
       AVNLog.error("exception in WPAHandler:getList: %s",traceback.format_exc())
     try:
-      rt=wpaHandler.scanResultWithInfo()
+      list=wpaHandler.scanResultWithInfo()
+      ownSSid=self.getStringParam('ownSsid')
+      if ownSSid is not None and ownSSid != "":
+        #remove own ssid
+        for net in list:
+          netSsid=net.get('ssid')
+          if netSsid is not None and netSsid==ownSSid:
+            continue
+          rt.append(net)
+      else:
+        rt=list
       AVNLog.debug("wpa list",rt)
       return rt
     except Exception:

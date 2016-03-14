@@ -79,5 +79,5 @@
 <!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
 <AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter importDir="../data_linux/import"></AVNImporter>
-
+<AVNWpaHandler></AVNWpaHandler>
 </AVNServer>

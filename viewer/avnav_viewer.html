@@ -144,8 +144,48 @@ all buttons with ids avb_... will call corresponding js functions
       <div class='avn_panel avn_right_panel'>
           <button id="avb_StatusUpdate" type="button" class="avn_button"></button>
           <button id="avb_StatusCancel" type="button" class="avn_button"></button>
+          <button id="avb_StatusWpa" type="button" class="avn_button"></button>
           <button id="avb_StatusAndroid" type="button" class="avn_button avn_hidden avn_android"></button>
       </div>
+  </div>
+  <!-- end statusPage-->
+  <!-- wpaPage -->
+  <div id="avi_wpapage" class="avn_page avn_hidden">
+      <div class='avn_panel avn_left_panel'>
+          <div class='avn_panel avn_left_top'>
+              <div class='avn_inner'>
+              </div>
+          </div>
+
+          <div id='avi_wpa_page_inner' class="avn_panel avn_scrollable_page">
+              <h1>Wifi Client connection</h1>
+              <div id="avi_wpa_interface"></div>
+              <ul id="avi_wpa_list"></ul>
+          </div>
+          <div id="avi_wpa_overlay" class="avn_overlay_cover avn_hidden">
+
+          </div>
+          <div id="avi_wpa_box" class="avn_hidden">
+              <div id="avi_wpa_dialog">
+                  <form>
+                      <h3><span id="avi_wpa_form_ssid">SSID</span></h3>
+                      <div>
+                          <label for="avi_wpa_password">Password</label>
+                          <input id="avi_wpa_password" type="password" name="psk"/>
+                          <input type="hidden" name="ssid"/>
+                          <input type="hidden" name="id"/>
+                      </div>
+                      <button name="remove">Remove</button>
+                      <button name="cancel">Cancel</button>
+                      <button name="connect">Connect</button>
+                  </form>
+              </div>
+          </div>
+      </div>
+      <div class='avn_panel avn_right_panel'>
+          <button id="avb_WpaCancel" type="button" class="avn_button"></button>
+      </div>
+
   </div>
   <!-- end statusPage-->
   <!-- gpsPage -->
