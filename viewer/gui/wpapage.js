@@ -17,6 +17,7 @@ avnav.gui.Wpapage=function(){
         box: '#avi_wpa_box',
         cover: '#avi_wpa_overlay'
     });
+    this.timeout=4000; //TODO: settings
 };
 avnav.inherits(avnav.gui.Wpapage,avnav.gui.Page);
 
@@ -27,7 +28,7 @@ avnav.gui.Wpapage.prototype.showPage=function(options){
     var self=this;
     this.statusQuery=window.setInterval(function(){
         self.doQuery();
-    },self.gui.properties.getProperties().statusQueryTimeout);
+    },this.timeout);
     this.indexMap={};
     $('#avi_wpa_interface').html("Query Status");
     $('#avi_wpa_list').html("");
@@ -45,10 +46,10 @@ avnav.gui.Wpapage.prototype.doQuery=function(){
             self.showWpaData(data);
         },
         error: function(status,data,error){
-            avnav.util.Overlay.Toast("Status query Error",self.gui.properties.getProperties().statusQueryTimeout*0.6)
+            avnav.util.Overlay.Toast("Status query Error",this.timeout*0.6)
             log("wpa query error");
         },
-        timeout: self.gui.properties.getProperties().statusQueryTimeout*0.9
+        timeout: this.timeout*0.9
     });
 
 };
@@ -194,7 +195,7 @@ avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
             avnav.util.Overlay.Toast(message+"...Error",5000);
             log("wpa request error: "+data);
         },
-        timeout: self.gui.properties.getProperties().statusQueryTimeout*0.9
+        timeout: this.timeout
     });
 };
 avnav.gui.Wpapage.prototype.getFormData=function(addPsk){
