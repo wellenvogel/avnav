@@ -4,6 +4,30 @@ import os
 import socket
 import select
 import re
+import threading
+import datetime
+
+class CacheEntry():
+  #age in seconds
+  age=2000
+  def __init__(self,key,data):
+    self.key=key
+    self.data=data
+    self.time=datetime.datetime.utcnow() #info only
+    self.pending=self.time #started last update
+  #return the cached value if still valid
+  #otherwise return None and set the pending flag
+  def getValue(self):
+    now=datetime.datetime.utcnow()
+    if now >= self.pending+datetime.timedelta(milliseconds=self.age):
+      #retry the query every 2*age
+      self.pending=now
+      return None
+    return self.data
+  def setValue(self,data):
+    self.time=datetime.datetime.utcnow()
+    self.data=data
+    self.pending=self.time
 
 class WpaControl():
   maxReceive=4096
@@ -11,11 +35,16 @@ class WpaControl():
     self.wpaAddr=wpaAddr
     self.ownAddr=ownAddr
     self.socket=None
+    self.lock=threading.Lock()
+    self.cacheLock=threading.Lock()
+    #a dict of CacheEntry
+    self.cache={}
   def __del__(self):
     if self.socket is not None:
       self.close()
   def checkWpa(self):
     return os.path.exists(self.wpaAddr)
+  #open - not thread safe
   def open(self):
     if not self.checkWpa():
       raise Exception("wpa control socket %s does not exist"%(self.wpaAddr))
@@ -61,18 +90,49 @@ class WpaControl():
       raise
 
   def runSimpleScommand(self,command,upper=True):
+    rt=None
     if upper:
-      self.sendRequest(command.upper())
+      rt=self.runFreeCommand(command.upper())
     else:
-      self.sendRequest(command)
-    rt=self.receiveData()
+      rt=self.runFreeCommand(command)
     if rt.strip() != "OK":
       raise Exception("command '%s' returned an error: %s"%(command,rt.strip()))
     return True
 
   def runFreeCommand(self,command):
-    self.sendRequest(command)
-    return self.receiveData()
+    self.lock.acquire()
+    rt=None
+    try:
+      self.sendRequest(command)
+      rt=self.receiveData()
+    except:
+      self.lock.release()
+      raise
+    self.lock.release()
+    return rt
+  '''get a cached value
+     if None is returned really start the operation
+     and store the cached value later'''
+  def getCachedValue(self,key):
+    self.cacheLock.acquire()
+    rt=self.cache.get(key)
+    if rt is None:
+      ne=CacheEntry(key,[])
+      self.cache[key]=ne
+    else:
+      rt=rt.getValue()
+    self.cacheLock.release()
+    return rt
+
+  def cacheValue(self,key,data):
+    self.cacheLock.acquire()
+    ce=self.cache.get(key)
+    if ce is None:
+      ce=CacheEntry(key,data)
+      self.cache[key]=ce
+    else:
+      ce.setValue(data)
+    self.cacheLock.release()
 
   ''' convert some response that contains a table
       into an arry of dict
@@ -105,20 +165,28 @@ class WpaControl():
         rt[n]=v.strip()
     return rt
 
+  '''run a command that returns some data
+     with caching'''
+  def commandWithCache(self,command):
+    data=self.getCachedValue(command)
+    if data is None:
+      data=self.runFreeCommand(command)
+      self.cacheValue(command,data)
+    return data
 
   def startScan(self):
     self.runSimpleScommand("scan")
   def scanResults(self):
-    data=self.runFreeCommand("SCAN_RESULTS")
+    data=self.commandWithCache("SCAN_RESULTS")
     return self.tableToDict(data)
   def status(self):
-    data=self.runFreeCommand("STATUS_VERBOSE")
+    data=self.commandWithCache("STATUS_VERBOSE")
     return self.linesToDict(data)
   def saveConfig(self):
     self.runSimpleScommand("SAVE_CONFIG")
     return True
   def listNetworks(self):
-    data=self.runFreeCommand("LIST_NETWORKS")
+    data=self.commandWithCache("LIST_NETWORKS")
     return self.tableToDict(data)
   def addNetwork(self):
     data=self.runFreeCommand("ADD_NETWORK")
