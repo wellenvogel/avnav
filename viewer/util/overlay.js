@@ -15,11 +15,13 @@ avnav.util.Overlay=function(opt_options){
     this.cover=opt_options.cover||'.avn_overlay_cover';
     var self=this;
     // if window is resized then reposition the overlay box
-    $(window).bind('resize',function(){self.updateOverlay();});
+    this.updateOverlayCb=this.updateOverlay.bind(this);
 };
 
 avnav.util.Overlay.prototype.showOverlayBox=function(){
     this.isOpen=true;
+    var self=this;
+    $(window).bind('resize',self.updateOverlayCb);
     this.updateOverlay();
 };
 
@@ -50,10 +52,22 @@ avnav.util.Overlay.prototype.updateOverlay=function() {
 
 avnav.util.Overlay.prototype.overlayClose=function() {
     if (! this.isOpen) return;
+    var self=this;
+    $(window).unbind('resize',self.updateOverlayCb);
     //set status to closed
     this.isOpen = false;
     $(this.box).css( 'display', 'none' );
     // now animate the background to fade out to opacity 0
     // and then hide it after the animation is complete.
     $(this.cover).removeClass('avn_overlay_cover_active');
+};
+
+avnav.util.Overlay.Toast=function(html,time){
+    $('#avi_toast').unbind('click');
+    $('#avi_toast').html(html);
+    $('#avi_toast').bind('click', function(){
+        $(this).stop();
+        $(this).fadeOut(1);
+    });
+    $('#avi_toast').stop().fadeIn(400).delay(time).fadeOut(400);
 };

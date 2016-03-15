@@ -689,7 +689,25 @@ all buttons with ids avb_... will call corresponding js functions
                   <div class="avn_settings_line">
                       <div class="avn_setting" avn_name="bearingColor"></div>
                       <div class="avn_clear"></div>
-                  </div>
+                  </div>.avn_toast{
+    width:50em;
+    height:2em;
+    height:auto;
+    position:absolute;
+    left:50%;
+    margin-left:-100px;
+    bottom:10px;
+    background-color: #383838;
+    color: #F0F0F0;
+    .nightColors();
+    font-size: 1.5em;
+    padding:1em;
+    text-align:center;
+    border-radius: 2px;
+    -webkit-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+    -moz-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+    box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+}
                   <div class="avn_settings_line">
                       <div class="avn_setting" avn_name="bearingWidth"></div>
                       <div class="avn_clear"></div>
@@ -789,6 +807,20 @@ all buttons with ids avb_... will call corresponding js functions
       </div>
   </div>
   <!-- end settingsPage-->
+  <!-- helpers -->
+  <div id="avi_toast" class="avn_toast avn_hidden"></div>
+  <div id="avi_msg_overlay" class="avn_overlay_cover avn_hidden">
 
+  </div>
+  <div id="avi_msg_box" class="avn_hidden">
+      <div id="avi_msg_dialog">
+          <form>
+              <div id="avi_msg_content"></div>
+              <button name="cancel">Cancel</button>
+              <button name="ok">OK</button>
+              <div class="avn_clear"></div>
+          </form>
+      </div>
+  </div>
   </body>
 </html>

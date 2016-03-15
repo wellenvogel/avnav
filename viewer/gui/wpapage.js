@@ -45,6 +45,7 @@ avnav.gui.Wpapage.prototype.doQuery=function(){
             self.showWpaData(data);
         },
         error: function(status,data,error){
+            avnav.util.Overlay.Toast("Status query Error",self.gui.properties.getProperties().statusQueryTimeout*0.6)
             log("wpa query error");
         },
         timeout: self.gui.properties.getProperties().statusQueryTimeout*0.9
@@ -62,10 +63,10 @@ avnav.gui.Wpapage.prototype.formatInterfaceState=function(status){
     if (status.wpa_state == "COMPLETED"){
         html+="<div class='avn_wpa_interface_detail'>";
         if (status.ssid){
-            html+="&nbsp;["+status.ssid+"]&nbsp;"
+            html+="&nbsp;["+avnav.util.Helper.escapeHtml(status.ssid)+"]&nbsp;"
         }
         if (status.ip_address){
-            html+="IP: "+status.ip_address;
+            html+="IP: "+avnav.util.Helper.escapeHtml(status.ip_address);
         }
         else{
             html+="waiting for IP...";
@@ -128,7 +129,7 @@ avnav.gui.Wpapage.prototype.addEntry=function(item,index){
     var ssid=item.ssid;
     var netid=item['network id'];
     if (netid === undefined) netid=-1;
-    var ehtml="<li class='avn_wpa_item' id='avi_wpa_item"+index+"' data-id='"+netid+"'><span class='avn_wpa_ssid'>"+item.ssid+"</span>";
+    var ehtml="<li class='avn_wpa_item' id='avi_wpa_item"+index+"' data-id='"+netid+"'><span class='avn_wpa_ssid'>"+avnav.util.Helper.escapeHtml(item.ssid)+"</span>";
     ehtml+="<div class='avn_wpa_item_details_container'>"+this.formatItemDetails(item)+"</div>";
     $('#avi_wpa_list').append(ehtml);
     $('#avi_wpa_item'+index).bind('click',function(){
@@ -171,7 +172,7 @@ avnav.gui.Wpapage.prototype.statusTextToImageUrl=function(text){
     if (! rt) rt=this.gui.properties.getProperties().statusIcons.INACTIVE;
     return rt;
 };
-avnav.gui.Wpapage.prototype.sendRequest=function(request,param){
+avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
     var self=this;
     var url=this.gui.properties.getProperties().navUrl+"?request=wpa&command="+request;
     $.ajax({
@@ -182,8 +183,15 @@ avnav.gui.Wpapage.prototype.sendRequest=function(request,param){
         data: param,
         success: function(data,status){
             log("request "+request+" OK");
+            var statusText=message;
+            if (data.status && data.status == "OK") ;
+            else {
+                statusText+="...Error";
+            }
+            avnav.util.Overlay.Toast(statusText,5000);
         },
         error: function(status,data,error){
+            avnav.util.Overlay.Toast(message+"...Error",5000);
             log("wpa request error: "+data);
         },
         timeout: self.gui.properties.getProperties().statusQueryTimeout*0.9
@@ -206,12 +214,14 @@ avnav.gui.Wpapage.prototype.localInit=function() {
     });
     $('#avi_wpa_dialog button[name=connect]').bind('click',function(){
         self.overlay.overlayClose();
-        self.sendRequest('connect',self.getFormData(true));
+        var data=self.getFormData(true);
+        self.sendRequest('connect','connecting to '+avnav.util.Helper.escapeHtml(data.ssid),data);
         return false;
     });
     $('#avi_wpa_dialog button[name=remove]').bind('click',function(){
         self.overlay.overlayClose();
-        self.sendRequest('remove',self.getFormData(false));
+        var data=self.getFormData(true);
+        self.sendRequest('remove','removing '+avnav.util.Helper.escapeHtml(data.ssid),data);
         return false;
     });
 };

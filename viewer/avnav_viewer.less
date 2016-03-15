@@ -1052,6 +1052,7 @@ button#avb_StatusAndroid{
   font-size: ( min(@buttonSize / 3,14px));
   padding: 1em;
   width: inherit;
+  .nightColors();
 }
 
 #avi_wpa_dialog button[name=cancel]{
@@ -1560,3 +1561,22 @@ button#avb_MainAndroid{
   display: block;
 }
 
+.avn_toast {
+  height: 2em;
+  height: auto;
+  padding-left: 1em;
+  padding-right: 1em;
+  position: fixed;
+  left: 50px;
+  bottom: 10px;
+  background-color: #383838;
+  color: #F0F0F0;
+  .nightColors();
+  font-size: 1.5em;
+  padding: 1em;
+  text-align: center;
+  border-radius: 2px;
+  -webkit-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+  -moz-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+  box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+}
