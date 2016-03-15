@@ -169,6 +169,9 @@ avnav.gui.Page.prototype.initButtons=function(){
         if ($(e).hasClass("avn_android") && avnav.android){
             $(e).show();
         }
+        if ($(e).hasClass("avn_no_android") && avnav.android){
+            $(e).hide();
+        }
     });
 
 };
