@@ -78,4 +78,19 @@ avnav.util.Helper.startsWith=function(str, prefix) {
     return (str.indexOf(prefix, 0) == 0);
 };
 
+avnav.util.Helper.entityMap = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': '&quot;',
+    "'": '&#39;',
+    "/": '&#x2F;'
+};
+
+avnav.util.Helper.escapeHtml=function(string) {
+    return String(string).replace(/[&<>"'\/]/g, function (s) {
+        return avnav.util.Helper.entityMap[s];
+    });
+};
+
 
