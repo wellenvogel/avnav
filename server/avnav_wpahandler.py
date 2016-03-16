@@ -36,6 +36,7 @@ import sys
 import traceback
 import json
 import datetime
+import threading
 
 from avnav_util import *
 from avnav_worker import *
@@ -47,6 +48,7 @@ class AVNWpaHandler(AVNWorker):
     AVNWorker.__init__(self, param)
     self.wpaHandler=None
     self.lastScan=datetime.datetime.utcnow()
+    self.scanLock=threading.Lock()
   @classmethod
   def getConfigName(cls):
     return "AVNWpaHandler"
@@ -108,10 +110,14 @@ class AVNWpaHandler(AVNWorker):
   def startScan(self):
     if self.wpaHandler is None:
       return
+    self.scanLock.acquire()
     now=datetime.datetime.utcnow()
-    if now > (self.lastScan + datetime.timedelta(seconds=10)):
+    if now > (self.lastScan + datetime.timedelta(seconds=30)):
       self.lastScan=now
+      self.scanLock.release()
       self.wpaHandler.startScan()
+      return
+    self.scanLock.release()
 
   def getList(self):
     rt=[]
@@ -216,6 +222,7 @@ class AVNWpaHandler(AVNWorker):
       return rt[0].decode('utf-8',errors='ignore')
     return rt
   def handleWpaRequest(self,requestparam):
+    start=datetime.datetime.utcnow()
     command=self.getRequestParam(requestparam, 'command')
     rt=None
     if command is None:
@@ -244,6 +251,8 @@ class AVNWpaHandler(AVNWorker):
       rt=json.dumps(self.connect(param))
     if rt is None:
       raise Exception("unknown command %s"%(command))
+    end=datetime.datetime.utcnow()
+    AVNLog.debug("wpa request %s lasted %d millis",command,(end-start).total_seconds()*1000)
     return rt
 
         
