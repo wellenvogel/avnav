@@ -17,7 +17,8 @@ avnav.gui.Wpapage=function(){
         box: '#avi_wpa_box',
         cover: '#avi_wpa_overlay'
     });
-    this.timeout=4000; //TODO: settings
+    this.timeout=4000;
+    this.numErrors=0;
 };
 avnav.inherits(avnav.gui.Wpapage,avnav.gui.Page);
 
@@ -44,9 +45,14 @@ avnav.gui.Wpapage.prototype.doQuery=function(){
         cache:	false,
         success: function(data,status){
             self.showWpaData(data);
+            self.numErrors=0;
         },
         error: function(status,data,error){
-            avnav.util.Overlay.Toast("Status query Error",this.timeout*0.6)
+            self.numErrors++;
+            if (self.numErrors > 3) {
+                self.numErrors=0;
+                avnav.util.Overlay.Toast("Status query Error " + avnav.util.Helper.escapeHtml(error), this.timeout * 0.6)
+            }
             log("wpa query error");
         },
         timeout: this.timeout*0.9
@@ -162,9 +168,11 @@ avnav.gui.Wpapage.prototype.handleNet=function(ssid,netid){
     $('#avi_wpa_dialog input[name=psk]').val("");
     if (netid === undefined || netid < 0){
         $('#avi_wpa_dialog button[name=remove]').css('visibility','hidden');
+        $('#avi_wpa_dialog button[name=disable]').css('visibility','hidden');
     }
     else{
         $('#avi_wpa_dialog button[name=remove]').css('visibility','normal');
+        $('#avi_wpa_dialog button[name=disable]').css('visibility','normal');
     }
     this.overlay.showOverlayBox();
 };
@@ -174,6 +182,7 @@ avnav.gui.Wpapage.prototype.statusTextToImageUrl=function(text){
     return rt;
 };
 avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
+    avnav.util.Overlay.Toast("sending "+message,this.timeout*2);
     var self=this;
     var url=this.gui.properties.getProperties().navUrl+"?request=wpa&command="+request;
     $.ajax({
@@ -195,7 +204,7 @@ avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
             avnav.util.Overlay.Toast(message+"...Error",5000);
             log("wpa request error: "+data);
         },
-        timeout: this.timeout
+        timeout: this.timeout*2
     });
 };
 avnav.gui.Wpapage.prototype.getFormData=function(addPsk){
@@ -216,15 +225,22 @@ avnav.gui.Wpapage.prototype.localInit=function() {
     $('#avi_wpa_dialog button[name=connect]').bind('click',function(){
         self.overlay.overlayClose();
         var data=self.getFormData(true);
-        self.sendRequest('connect','connecting to '+avnav.util.Helper.escapeHtml(data.ssid),data);
+        self.sendRequest('connect','connect to '+avnav.util.Helper.escapeHtml(data.ssid),data);
         return false;
     });
     $('#avi_wpa_dialog button[name=remove]').bind('click',function(){
         self.overlay.overlayClose();
         var data=self.getFormData(true);
-        self.sendRequest('remove','removing '+avnav.util.Helper.escapeHtml(data.ssid),data);
+        self.sendRequest('remove','remove '+avnav.util.Helper.escapeHtml(data.ssid),data);
         return false;
     });
+    $('#avi_wpa_dialog button[name=disable]').bind('click',function(){
+        self.overlay.overlayClose();
+        var data=self.getFormData(true);
+        self.sendRequest('disable','disable '+avnav.util.Helper.escapeHtml(data.ssid),data);
+        return false;
+    });
+    this.timeout=this.gui.properties.getProperties().wpaQueryTimeout;
 };
 
 avnav.gui.Wpapage.prototype.goBack=function() {

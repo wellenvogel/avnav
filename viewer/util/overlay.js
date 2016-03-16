@@ -63,11 +63,12 @@ avnav.util.Overlay.prototype.overlayClose=function() {
 };
 
 avnav.util.Overlay.Toast=function(html,time){
+    $('#avi_toast').finish();
     $('#avi_toast').unbind('click');
     $('#avi_toast').html(html);
     $('#avi_toast').bind('click', function(){
         $(this).stop();
         $(this).fadeOut(1);
     });
-    $('#avi_toast').stop().fadeIn(400).delay(time).fadeOut(400);
+    $('#avi_toast').fadeIn(400).delay(time).fadeOut(400);
 };
