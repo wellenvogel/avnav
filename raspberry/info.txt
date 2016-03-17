@@ -407,21 +407,15 @@ upper right: 1-1.4:1.0
 lower left: 1-1.3:1.0
 lower right: 1-1.5:1.0
 ---------------------------------
-#prepare for a second WLAN adapter - upper left socket (as wlan-av1)
+#prepare for a second WLAN adapter - upper left socket (as wlan-av1) when looking at the sockets
+
 /etc/udev/rules.d/010-avnav-net.rules
 KERNELS=="1-1.2:1.0",SUBSYSTEM=="net",NAME="wlan-av1"
+
 #wpa
 edit /etc/wpa_supplicant/wpa_supplicant.conf 
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
-network={
-	ssid="xxx"
-	psk="xxx"
-	proto=RSN
-	key_mgmt=WPA-PSK
-	pairwise=CCMP
-	auth_alg=OPEN
-}
 
 #add to /etc/network/interfaces
 allow-hotplug wlan-av1
@@ -434,7 +428,13 @@ iptables -A FORWARD -i wlan-av1 -o wlan0 -m state --state RELATED,ESTABLISHED -j
 iptables -A FORWARD -i wlan0 -o wlan-av1 -j ACCEPT
 iptables-save > /etc/iptables.ipv4.nat
 
-#----------- second attempt for wpa set up using nearly empty wpa_supplicant.conf (no network) but python
+=========== update to the newest firmware ========================
+apt-get update
+apt-get upgrade
+BRANCH=next rpi-update
+reboot
+
+
 
 
 
