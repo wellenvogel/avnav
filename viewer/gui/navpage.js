@@ -278,7 +278,11 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
     var txt="Marker";
     if (routeTarget){
         txt=routeTarget.name;
-        if (! txt) txt=this.navobject.getRoutingData().getCurrentLegTargetIdx()+"";
+        if (! txt) {
+            var wpv=this.navobject.getRoutingData().getCurrentLegTargetIdx();
+            if (wpv < 0) txt="";
+            else txt=wpv+"";
+        }
     }
     $('#markerLabel').text(txt);
 };
