@@ -203,7 +203,7 @@ class NMEAParser():
         return True
       if tag=='GLL':
         rt['mode']=1
-        if len(darray > 6):
+        if len(darray) > 6:
           rt['mode']= (0 if (darray[6] != 'A') else 2)
         rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
         rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
