@@ -34,7 +34,7 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-set -x
+#set -x
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
