@@ -14,9 +14,9 @@
 	-->
 	</style>
   </head>
-  <body dir="LTR" style="   max-width: 650px" lang="de-DE">
+  <body dir="LTR" style="    max-width: 650px" lang="de-DE">
     <h1>Raspberry Pi als Bordcomputer / Navigation im Browser </h1>
-    <p>12.03.2016</p>
+    <p>18.03.2016</p>
     <p><a href="https://www.segeln-forum.de/board1-rund-ums-segeln/board35-bootstechnik-und-elektronik/43757-raspberry-pi-als-bordcomputer-spielzeug-f%C3%BCr-den-winter/">Thread
         im Segeln Forum</a></p>
     <p><a href="https://github.com/wellenvogel/avnav">Source Code auf GitHub</a></p>
@@ -78,7 +78,7 @@
       <br>
     </p>
     <h2 class="western">Überblick </h2>
-    <p><img src="overview.png" name="Grafik1" align="LEFT" border="0" width="600"><br
+    <p><img src="overview.png" name="Grafik1" align="LEFT" border="0" width="600">avnav-raspi-2016-03<br
         clear="LEFT">
       Wie im Bild zu sehen, besteht die gesamte Lösung aus mehreren Teilen:</p>
     <ul>
@@ -424,8 +424,10 @@
       /etc/hostapd/hostapd.conf vornehmen. In jedem Falle sollte hier der
       WPA-Key getauscht werden (standard: SSID avnav, pw: avnav-secret). Ggf.
       muss man den driver ändern. Danach service hostapd restart und die
-      WLAN-Verbindung testen. Eine gute Anleitung findet sich unter <a href="http://elinux.org/RPI-Wireless-Hotspot">http://elinux.org/RPI-Wireless-Hotspot</a>.</p>
-    <p>Mit dem image 2015-01-28 sollte eine Erkennung der rtl18x WLAN Adapter
+      WLAN-Verbindung testen. Eine gute Anleitung findet sich unter <a href="http://elinux.org/RPI-Wireless-Hotspot">http://elinux.org/RPI-Wireless-Hotspot</a>.
+      Als WLAN für den access point wird das erste gefundene WLAN (wlan0)
+      verwendet (siehe auch Installationshinweise unten).</p>
+    <p>Mit dem image ab 2015-01-28 sollte eine Erkennung der rtl18x WLAN Adapter
       erfolgen. Dazu liegen unter /usr/sbin 2 hostapd (.ori/.edimax). Die werden
       durch ein script (/etc/init.d/check_wlan) enstprechend auf den hostapd
       gelinkt. Gleichzeitig wird die Datei /etc/hostapd/hostapd.conf angepaßt -
@@ -446,8 +448,27 @@
       Dieser kann gff. Auch für weitere Funktionen genutzt werden. Er ist jedoch
       per default auf port 81 aufgesetzt. Port 80 ist direkt zum Web server von
       avnav weitergeleitet (dieser lauscht auf port 8080).</p>
-    <p>Wenn alles richtig aufgesetzt ist, sollte sich unter der url <a href="http://avnav/">http://avnav</a>
+    <p>Wenn alles richtig aufgesetzt ist, sollte sich unter der url <a href="http://avnav/">http://avnav.avnav.de</a>
       die Einstiegsseite der WebApp öffnen.</p>
+    <p>Ab dem Image 2016-03-18 ist der Anschluß eines 2. WLAN Adapters
+      vorbereitet, über den dann eine Verbindung zu einem WLAN (z.B. im Hafen)
+      hergestellt werden kann. Da es potentiell nicht so einfach ist,
+      festzulegen welches WLAN den hotspot bereitstellt und welches für eine
+      Verbindung "nach draußen" genutzt wird, habe ich einfach einen festen USB
+      Steckplatz vorgesehen.</p>
+    <p>Ein Wlan Adapter der in die obere linke USB Buchse gesteckt wird (siehe
+      Bild) wird die Verbindung "nach draußen" machen, der erste andere (enteder
+      der interne oder ein in eine andere USB Buchse gesteckte) den hotspot.
+      Intern heißt das interface dann wlan-av1. Für Details siehe unten.</p>
+    <img src="raspi3-wlan.jpg"><br>
+    <br>
+    In der App gibt es eine Seite, um sich mit einem WLAN zu verbinden
+    (Status-Seite-&gt;WLAN) - siehe <a href="avnav-de.html">Beschreibung der
+      App</a>.<br>
+    <br>
+    Die Verbindung zu einem externen WLAN wird an die angeschlossenen Geräte
+    "durchgereicht".<br>
+    <br>
     <p>Mit <em>sudo service avnav status</em> kann man den Status des servers
       prüfen, mit <em>sudo service avnav start</em> bzw. <em>sudo service
         avnav stop</em> kann man ihn starten und stoppen.</p>
@@ -578,8 +599,34 @@ sudo vi /etc/default/rcS
 change #FSCKFIX=no
 to FSCKFIX=yes
   
-14. copy demo charts from .../homepage/software/avnav/viewer to .../home/pi/avnav/data/charts
-  </pre>
+14. copy demo charts from .../homepage/software/avnav/viewer to .../home/pi/avnav/data/charts<br><br>15. update firmware<br>#rapsi 3 still has a lot of issues with the build in WLAN adapter
+#an update to the newest firmware slightly improves this
+apt-get update
+apt-get upgrade
+apt-get install rpi-update
+BRANCH=next rpi-update
+reboot<br>&nbsp;</pre>
+    <h3>2. WLAN Adapter</h3>
+    <p>Um einen 2. WLAN adapter zur Verbindung mit z.B. einem hotspot
+      einzurichten, müssen 3 Dinge getan werden:</p>
+    <ol>
+      <li>Festelegen welcher WLAN Adapater was machen soll</li>
+      <li>Konfigurieren der Weiterleitung von access point in das WLAN nach
+        draußen</li>
+      <li>Konfigurieren des Zugangs</li>
+    </ol>
+    Zu 1. hatte ich oben bereits beschrieben, das der Adapter auf einem festen
+    Port dazu genutzt wird (oben links) - wlan-av1.<br>
+    2. Erfolgt durch iptables (NAT)<br>
+    3. es wird vorkonfiguriert, das wpa_supplicant für wlan-av1 gestartet wird.
+    Die eigentliche Konfiguration erfolgt über die App.<br>
+    <br>
+    <pre>#prepare for a second WLAN adapter - upper left socket (as wlan-av1) when looking at the sockets<br>#it is important to identify the WLAN adapter that should be used as client (i.e. to connect to an access point)<br>#as the linux has some own ideas how to assign names, we use a fixed relation between the USB socket to use and the wlan name<br>#with providing an udev rule file, we force a WLAN adapter that is put into the upper left socket to be named as wlan-av1<br>#this wlan will be set up to connect to an access point<br>#all other wlans (either connected to other USB ports) or the build in from the raspi 3 will be named by the system<br>#the first one will be wlan0 - this is configured for the access point<br><br>#the udev rules file (works for raspi 2 and raspi 3)<br>/etc/udev/rules.d/010-avnav-net.rules:<br>KERNELS=="1-1.2:1.0",SUBSYSTEM=="net",NAME="wlan-av1"</pre>
+    <pre><br>#wpa configuration<br>/etc/wpa_supplicant/wpa_supplicant.conf:<br>ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev<br>update_config=1</pre>
+    <pre><br>#add wlan-av1 <br>/etc/network/interfaces :<br>allow-hotplug wlan-av1<br>iface wlan-av1 inet dhcp<br>wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf</pre>
+    <pre><br>#iptables - set up NAT for data that flows from wlan0 to wlan-av1<br>#the routing will be automatically handled by the DHCP client<br>iptables -t nat -A POSTROUTING -o wlan-av1 -j MASQUERADE<br>iptables -A FORWARD -i wlan-av1 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT<br>iptables -A FORWARD -i wlan0 -o wlan-av1 -j ACCEPT<br>iptables-save &gt; /etc/iptables.ipv4.nat</pre>
+    <br>
+    <h3> </h3>
     <h2>Die Web App</h2>
     Zur Navigation mit den auf dem Raspberry Pi vorhandenen Karten gibt es eine
     Web App.<br>
