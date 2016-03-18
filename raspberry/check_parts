@@ -135,7 +135,7 @@ if [ ! -d $BASE/data ] ; then
   chown pi:pi $BASE/data
   chmod 755 $BASE/data
 fi
-for d in log tracks charts routes
+for d in log tracks charts routes import work
 do
   if [ ! -d $ROOTDIR/$d ] ; then
     wlog "creating $ROOTDIR/$d"
@@ -146,7 +146,7 @@ do
   if [ ! -h $BASE/data/$d ] ; then
     if [ -d $BASE/data/$d ] ; then
       wlog copying files from $BASE/$d to $ROOTDIR/$d
-      cp -r -p $BASE/data/$d/* $ROOTDIR/$d || err "copy data from $BASE/data/$d to $ROOTDIR/$d failed"
+      cp -r -p $BASE/data/$d/* $ROOTDIR/$d || wlog "copy data from $BASE/data/$d to $ROOTDIR/$d failed"
       rm -rf $BASE/data/$d
     else
   	  [ -e $BASE/data/$d ] && rm -f $BASE/data/$d
