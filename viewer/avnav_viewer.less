@@ -125,6 +125,7 @@ html,body {
 	padding: 0;
 	font-family: Verdana,Arial,sans-serif;
 	font-size: 0.8em;
+  .border-box();
 }
 
 .avn_panel{
@@ -139,8 +140,7 @@ html,body {
 }
 .avn_left_bottom {
 	
-	background-color: fade(rgb(222, 226, 207),@nightModePercent);
-	text-align: center;
+	background-color: fade(rgba(64, 64, 63, 0.66),@nightModePercent);
 }
 
 .avn_map{
@@ -202,6 +202,25 @@ font-size: ( @bottomPanelHeight - 2 );
 /*-------------------------------------------------------------
    bottom display
 -------------------------------------------------------------*/
+.avn_widget{
+  border-radius: 0.2em;
+  z-index: 100;
+  padding: 0.3em;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+  0 1px 5px 0 rgba(0, 0, 0, 0.12),
+  0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
+  margin-left: 0.3em;
+  margin-bottom: 0.3em;
+  margin-top: 0.3em;
+  margin-right: 0.3em;
+  .border-box();
+  overflow: hidden;
+}
+.avn_bottom_item{
+  height: @bottomPanelHeight;
+  background: white;
+  .nightColors();
+}
 @bottomSmallFont: (( @bottomPanelHeight / 2 ) - 10 );
 @bottomBigFont: ( @bottomPanelHeight  - 8 );
 .bottomhideverysmall{
@@ -215,9 +234,13 @@ font-size: ( @bottomPanelHeight - 2 );
 	margin-left: ( @bottomPanelHeight / 12 );
 	margin-right: ( @bottomPanelHeight / 12 );
 }
-.bottomInnerMargins{
-	margin-left: ( @bottomPanelHeight / 12 );
+
+#avi_nav_bottom{
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
+
 #leftBottomInner{
 	left:0;
 	right: 0;
@@ -229,71 +252,57 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 
 #leftBottomMarker{
+  float: left;
   width: 50%;
 }
-#leftBottomMarkerBearing{
-    .border-box();
-    height: @bottomPanelHeight;
-    border: 1px solid;
-    border-radius: 3px;
-    padding-right: 4px;
-}
-#leftBottomPositionCourse{
-  .border-box();
-  border: 1px solid;
-  border-radius: 3px;
-  height: @bottomPanelHeight;
-}
+
+
 #leftBottomMarker #leftBottomMarkerPos{
 	width: ( @bottomSmallFont * 7 );
-	.bottomMargins;
-	margin-top: ( @bottomSmallFont / 4 );
 	.bottomhidesmall();
 
 }
 #leftBottomMarker #leftBottomMarkerEta{
-	margin-top: ( @bottomSmallFont / 4 );
-    margin-right: (@bottomSmallFont / 4);
     .bottomhideverysmall();
+}
+#leftBottomMarker .avd_markerEta{
+  font-size: @bottomSmallFont;
+  width: 4.9em;
 }
 
 #markerLabel {
-  max-width: 7em;
+  width: 7em;
 }
-#leftBottomMarker #leftBottomMarkerBearing{
-	//width: ( @bottomBigFont * 5.8 );
-}
+
 #leftBottomMarker #markerPosition{
 	font-size: @bottomSmallFont;
 }
-#leftBottomMarker #eta{
-	font-size: @bottomSmallFont;
+
+#leftBottomMarker .avd_markerCourse{
+  font-size: @bottomBigFont;
+  width: 1.9em;
+  text-align: end;
+
 }
-#leftBottomMarker #bearing{
-	font-size: @bottomBigFont;
-	.bottomInnerMargins;
-}
-#leftBottomMarker #distance{
-	font-size: @bottomBigFont;
-	.bottomInnerMargins;
-    border-left: 1px dotted;
-    padding-left: ( @bottomPanelHeight / 12 );
+#leftBottomMarker .avd_markerDistance{
+  font-size: @bottomBigFont;
+  width: 3em;
+  text-align: end;
+
 }
 
 #leftBottomPosition{
+  float: left;
   width: 50%;
 }
 
 #leftBottomPosition #leftBottomPositionPos{
 	width: ( @bottomSmallFont * 7 );
-	margin-top: ( @bottomSmallFont / 4 );
     .bottomhidesmall();
 }
-#leftBottomPosition #leftBottomPositionStatus{
+#leftBottomPositionStatus{
 	width: ( @bottomSmallFont * 6 );
-	margin-top: ( @bottomSmallFont / 4 );
     .bottomhideverysmall();
-    padding-left: ( @bottomSmallFont / 4);
 }
 #leftBottomPosition #leftBottomPositionCourse{
 	//width: ( @bottomBigFont * 5 );
@@ -304,19 +313,20 @@ font-size: ( @bottomPanelHeight - 2 );
 	font-size: @bottomSmallFont;
 
 }
-#leftBottomPosition #boatLocalTime{
+#leftBottomPosition .avd_gpsTime{
 	font-size: @bottomSmallFont;
 
 }
-#leftBottomPosition #boatCourse{
-	font-size: @bottomBigFont;
-	.bottomInnerMargins;
+#leftBottomPosition .avd_gpsCourse{
+  font-size: @bottomBigFont;
+  width: 1.9em;
+  text-align: end;
+
 }
-#leftBottomPosition #boatSpeed{
-	font-size: @bottomBigFont;
-	.bottomInnerMargins;
-    border-left: 1px dotted;
-    padding-left: ( @bottomPanelHeight / 12 );
+#leftBottomPosition .avd_gpsSpeed{
+  font-size: @bottomBigFont;
+  width: 3em;
+  text-align: end;
 }
 
 
@@ -1398,12 +1408,20 @@ button#avb_SettingsAndroid{
   padding-left: 1em;
   padding-right: 1em;
   text-align: left;
-  background-color: fade(rgb(222, 226, 207),@nightModePercent);
   z-index: 10;
   white-space: nowrap;
 }
 #avi_mainpage_selections {
 	display: inline-block;
+}
+
+#avi_mainpage .avn_left_bottom{
+  height: 50px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(216, 216, 213, 0.29);
+  .nightColors();
 }
 
 
@@ -1470,6 +1488,12 @@ button#avb_MainAndroid{
 	3. map
 */
 
+.avn_map{
+  top: @topPanelHeight;
+  left: 0px;
+  right: 0px;
+}
+
 .avn_main{
 	top: @topPanelHeight;
 	bottom: @bottomPanelHeight;
@@ -1482,13 +1506,7 @@ button#avb_MainAndroid{
 /*
 	4. bottom line  - see .avn_leftBottom
 */
-.avn_left_bottom{
-	
-   	bottom: 0px;
-	height: @bottomPanelHeight;
-	left: 0px;
-	right: 0px;
-}
+
 
 /*
         5. additional panels
@@ -1507,12 +1525,11 @@ button#avb_MainAndroid{
 }
 
 #centerDisplay{
-	bottom: @bottomPanelHeight;
 	height: @centerDisplayHeight;
-	left:	0;
-	right:	0;
+    width:100%;
 	background-color: rgb(228, 228, 180);
     z-index: 100;
+  overflow: hidden;
 }
 #centerDisplay when (@nightModePercent <100%) {
     background-color: rgba(100, 100, 99, 1);

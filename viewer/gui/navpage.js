@@ -74,7 +74,10 @@ avnav.gui.Navpage=function(){
     });
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
         self.updateMainPanelSize('#'+self.mapdom);
-    })
+    });
+    $(window).on('resize',function(){
+       self.handleRouteDisplay();
+    });
 
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
@@ -433,14 +436,9 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
 avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
     var routeActive=this.navobject.getRoutingData().hasActiveRoute();
     if (routeActive && (! this.routingVisible || this.gui.properties.getProperties().routeShowRteWhenEdit) ){
+        var rtop=$('#avi_nav_bottom').outerHeight();
+        $('#avi_route_display').css('bottom',rtop+"px");
         $('#avi_route_display').show();
-        if (this.overlay){
-            var h=this.overlay.height();
-            $('#avi_route_display').css('bottom',h);
-        }
-        else{
-            $('#avi_route_display').css('bottom',0);
-        }
     }
     else {
         $('#avi_route_display').hide();

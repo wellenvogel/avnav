@@ -93,7 +93,7 @@ avnav.util.Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace)
     fix-=1;
     while (fix > 0){
         if (number < v){
-            rt="0"+rt;
+            rt=" "+rt;
         }
         v=v*10;
         fix-=1;
@@ -107,9 +107,9 @@ avnav.util.Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace)
  * @returns {string}
  */
 avnav.util.Formatter.prototype.formatTime=function(curDate){
-    var datestr=this.formatDecimal(curDate.getHours(),2,0)+":"+
-        this.formatDecimal(curDate.getMinutes(),2,0)+":"+
-        this.formatDecimal(curDate.getSeconds(),2,0);
+    var datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
+        this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
+        this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
     return datestr;
 };
 /**
@@ -121,8 +121,8 @@ avnav.util.Formatter.prototype.formatDateTime=function(curDate){
     var datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
         this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
         this.formatDecimal(curDate.getDate(),2,0)+" "+
-        this.formatDecimal(curDate.getHours(),2,0)+":"+
-        this.formatDecimal(curDate.getMinutes(),2,0)+":"+
-        this.formatDecimal(curDate.getSeconds(),2,0);
+        this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
+        this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
+        this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
     return datestr;
 };
