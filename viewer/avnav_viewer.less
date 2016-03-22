@@ -168,10 +168,7 @@ html,body {
 .avn_inner{
 	display: inline-block;
 }
-.avn_label{
-	padding-left: 3px;
-	padding-right: 3px;
-}
+
 
 .avi_mainpage_leftbottominner .avn_label{
 	-webkit-margin-before: 0.5em;
@@ -209,10 +206,10 @@ font-size: ( @bottomPanelHeight - 2 );
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
   0 1px 5px 0 rgba(0, 0, 0, 0.12),
   0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
-  margin-left: 0.3em;
+  margin-left: @wWidgetMargin;
   margin-bottom: 0.3em;
   margin-top: 0.3em;
-  margin-right: 0.3em;
+  margin-right: @wWidgetMargin;
   .border-box();
   overflow: hidden;
 }
@@ -221,19 +218,31 @@ font-size: ( @bottomPanelHeight - 2 );
   background: white;
   .nightColors();
 }
-@bottomSmallFont: (( @bottomPanelHeight / 2 ) - 10 );
+@bottomBaseFont: ( @bottomPanelHeight / 5 );
+@bottomSmallFont: (@bottomPanelHeight/3.2);
 @bottomBigFont: ( @bottomPanelHeight  - 8 );
+
+//bottom widgets in bottomBase font units
+@wWidgetMargin: 0.3em;
+@wLeftBottomMarkerPos: 10.5em;
+@wLeftBottomMarkerEta: 9em;
+@wLeftBottomPosition: 10.5em;
+@wLeftBottomStatus: 9em;
+@wLeftBottomCourse: 1.9em; //bigFont
+@wLeftBottomSpeed: 3em; //bigFont
+@wLeftBottomBearing: 1.9em; //bigFont
+@wLeftBottomMarkerDistance: 3em; //bigFont
+//small: without positions
+@bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 4em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
+@bottomWidgetsSmall: ( @bottomWidgetsVerySmall + unit(4 * @wWidgetMargin + @wLeftBottomMarkerPos + @wLeftBottomPosition));
 .bottomhideverysmall{
-  .hidemedia(0px,@bottomPanelHeight*14.5);
+  .hidemedia(0px,@bottomWidgetsVerySmall  * @bottomBaseFont);
 }
 .bottomhidesmall{
-  .hidemedia(0px,@bottomPanelHeight*18.8);
+  .hidemedia(0px,@bottomWidgetsSmall  * @bottomBaseFont);
 }
 
-.bottomMargins {
-	margin-left: ( @bottomPanelHeight / 12 );
-	margin-right: ( @bottomPanelHeight / 12 );
-}
+
 
 #avi_nav_bottom{
   bottom: 0;
@@ -241,52 +250,46 @@ font-size: ( @bottomPanelHeight - 2 );
   right: 0;
 }
 
-#leftBottomInner{
-	left:0;
-	right: 0;
 
-}
-#leftBottomInnerCenter{
-  display:  inline-block; //this sets the text align center as inherited
-  width: 100%;
-}
 
 #leftBottomMarker{
   float: left;
   width: 50%;
+  font-size: @bottomBaseFont;
 }
 
 
-#leftBottomMarker #leftBottomMarkerPos{
-	width: ( @bottomSmallFont * 7 );
+#leftBottomMarkerPos{
+	width: @wLeftBottomMarkerPos;
 	.bottomhidesmall();
 
 }
 #leftBottomMarker #leftBottomMarkerEta{
+    width: @wLeftBottomMarkerEta;
     .bottomhideverysmall();
 }
 #leftBottomMarker .avd_markerEta{
   font-size: @bottomSmallFont;
-  width: 4.9em;
 }
 
 #markerLabel {
-  width: 7em;
+  margin-top: 0.5em;
+  text-align: center;
 }
 
-#leftBottomMarker #markerPosition{
+#leftBottomMarker .avd_markerPosition{
 	font-size: @bottomSmallFont;
 }
 
 #leftBottomMarker .avd_markerCourse{
   font-size: @bottomBigFont;
-  width: 1.9em;
+  width: @wLeftBottomBearing;
   text-align: end;
 
 }
 #leftBottomMarker .avd_markerDistance{
   font-size: @bottomBigFont;
-  width: 3em;
+  width: @wLeftBottomMarkerDistance;
   text-align: end;
 
 }
@@ -294,21 +297,18 @@ font-size: ( @bottomPanelHeight - 2 );
 #leftBottomPosition{
   float: left;
   width: 50%;
+  font-size: @bottomBaseFont;
 }
 
-#leftBottomPosition #leftBottomPositionPos{
-	width: ( @bottomSmallFont * 7 );
+#leftBottomPositionPos{
+	width: @wLeftBottomPosition;
     .bottomhidesmall();
 }
 #leftBottomPositionStatus{
-	width: ( @bottomSmallFont * 6 );
+	width: @wLeftBottomStatus;
     .bottomhideverysmall();
 }
-#leftBottomPosition #leftBottomPositionCourse{
-	//width: ( @bottomBigFont * 5 );
-  padding-left: 5px;
-  padding-right: 5px;
-}
+
 #leftBottomPosition #boatPosition{
 	font-size: @bottomSmallFont;
 
@@ -319,13 +319,13 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 #leftBottomPosition .avd_gpsCourse{
   font-size: @bottomBigFont;
-  width: 1.9em;
+  width: @wLeftBottomCourse;
   text-align: end;
 
 }
 #leftBottomPosition .avd_gpsSpeed{
   font-size: @bottomBigFont;
-  width: 3em;
+  width: @wLeftBottomSpeed;
   text-align: end;
 }
 
@@ -1527,7 +1527,7 @@ button#avb_MainAndroid{
 #centerDisplay{
 	height: @centerDisplayHeight;
     width:100%;
-	background-color: rgb(228, 228, 180);
+	background-color: rgb(204, 204, 203);
     z-index: 100;
   overflow: hidden;
 }
