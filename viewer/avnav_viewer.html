@@ -352,7 +352,7 @@ all buttons with ids avb_... will call corresponding js functions
                           <button id="avb_WpDone" class="avn_button"></button>
                       </div>
                   </div>
-                  <div id="avi_route_display" class="avn_panel avn_hidden">
+                  <div id="avi_route_display" class="avn_widget avn_panel avn_hidden ">
                       <div id="avi_route_display_name" class="avd_routeName"></div>
                       <div><span id="avi_route_display_remain" class="avd_routeRemain"></span>nm</div>
                       <div id="avi_route_display_eta" class="avd_routeEta"></div>
@@ -399,41 +399,49 @@ all buttons with ids avb_... will call corresponding js functions
           <div id='leftBottomMarker'>
               <div class='avn_float_right avn_bottom_item avn_widget'>
                   <div class='avn_float_left avd_markerCourse'>000</div>
-                  <div class='avn_float_left'>&#176</div>
+                  <div class='avn_widgetInfoLeft'>BRG</div>
+                  <div class='avn_widgetInfoRight'>&#176</div>
               </div>
               <div id='leftBottomMarkerDistance' class='avn_float_right avn_bottom_item avn_widget'>
                   <div class='avn_float_left avd_markerDistance'>000,0</div>
-                  <div class='avn_float_left'>nm</div>
+                  <div class='avn_widgetInfoLeft'>DST</div>
+                  <div class='avn_widgetInfoRight'>nm</div>
               </div>
               <!-- marker bearing-->
               <div id='leftBottomMarkerEta' class='avn_float_right avn_bottom_item avn_widget'>
+                  <div class="avn_widgetInfoLeft">ETA</div>
                   <div class="avd_markerEta">00:00:00</div>
                   <div id='markerLabel' >Marker</div>
               </div>
               <!-- marker eta-->
               <div id='leftBottomMarkerPos' class='avn_float_right avn_bottom_item avn_widget'>
+                  <div class="avn_widgetInfoLeft">MRK</div>
                   <div  class='avn_float_left avd_markerPosition'>0E,0N</div>
               </div>
               <!-- marker pos-->
           </div>
           <!-- end marker -->
           <div id='leftBottomPosition'>
-              <div class='avn_float_left avn_bottom_item avn_widget'>
+              <div id='leftBottomPositionCourse' class='avn_float_left avn_bottom_item avn_widget'>
                   <div class='avd_gpsCourse avn_float_left'>000</div>
-                  <div class='avn_float_left'>&#176</div>
+                  <div class='avn_widgetInfoLeft'>COG</div>
+                  <div class='avn_widgetInfoRight'>&#176</div>
               </div>
               <div class='avn_float_left avn_bottom_item avn_widget'>
                   <div class='avd_gpsSpeed avn_float_left'>00.0</div>
-                  <div class='avn_float_left'>kn</div>
+                  <div class='avn_widgetInfoLeft'>SOG</div>
+                  <div class='avn_widgetInfoRight'>kn</div>
               </div>
               <!-- leftBottomPositionPos -->
               <div id='leftBottomPositionStatus' class='avn_float_left avn_bottom_item avn_widget'>
-                  <div class='avd_gpsTime avn_float_left'>00:00:00</div>
-                  <div>
+                  <div class="avn_widgetInfoLeft">GPS</div>
+                  <div id="leftBottomPositionStatusImage">
                       <img id='boatPositionStatus' class='avn_status_image' src='images/GreyBubble40.png'/>
                   </div>
+                  <div class='avd_gpsTime '>00:00:00</div>
               </div>
               <div id='leftBottomPositionPos' class='avn_float_left avn_bottom_item avn_widget'>
+                  <div class="avn_widgetInfoLeft">BOAT</div>
                   <div id='boatPosition' class='avd_gpsPosition avn_float_left'>-------------</div>
               </div>
           </div>

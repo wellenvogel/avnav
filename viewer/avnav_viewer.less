@@ -74,10 +74,12 @@ button.avn_toggleButton{
 
 button.avn_buttonActive{
   border: 4px solid #1DB81D !important;
+  .nightOPacity();
 }
 
 button.avn_buttonActiveError{
   border: 4px solid #EC420C !important;
+  .nightOPacity();
 }
 
 button.avn_buttonInactive{
@@ -92,6 +94,7 @@ button.avn_buttonInactive{
   background-size: @innerWidth @innerWidth;
   background-repeat: no-repeat;
   text-decoration: none;
+  .nightOPacity2();
 }
 
 .avn_button_icon_base_toggle(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
@@ -108,6 +111,9 @@ button.avn_buttonInactive{
 }
 .nightOPacity() when(@nightModePercent <100%){
   opacity: @nightModeValue;
+}
+.nightOPacity2() when(@nightModePercent <100%){
+  opacity: min(1,1 - (1 - @nightModeValue)*0.5);
 }
 
 input when (@nightModePercent<100%) {
@@ -140,7 +146,7 @@ html,body {
 }
 .avn_left_bottom {
 	
-	background-color: fade(rgba(64, 64, 63, 0.66),@nightModePercent);
+	background-color: rgb(64, 64, 63);
 }
 
 .avn_map{
@@ -200,6 +206,7 @@ font-size: ( @bottomPanelHeight - 2 );
    bottom display
 -------------------------------------------------------------*/
 .avn_widget{
+  position: relative;
   border-radius: 0.2em;
   z-index: 100;
   padding: 0.3em;
@@ -223,7 +230,7 @@ font-size: ( @bottomPanelHeight - 2 );
 @bottomBigFont: ( @bottomPanelHeight  - 8 );
 
 //bottom widgets in bottomBase font units
-@wWidgetMargin: 0.3em;
+@wWidgetMargin: 0.15em;
 @wLeftBottomMarkerPos: 10.5em;
 @wLeftBottomMarkerEta: 9em;
 @wLeftBottomPosition: 10.5em;
@@ -233,7 +240,7 @@ font-size: ( @bottomPanelHeight - 2 );
 @wLeftBottomBearing: 1.9em; //bigFont
 @wLeftBottomMarkerDistance: 3em; //bigFont
 //small: without positions
-@bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 4em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
+@bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 2.5em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
 @bottomWidgetsSmall: ( @bottomWidgetsVerySmall + unit(4 * @wWidgetMargin + @wLeftBottomMarkerPos + @wLeftBottomPosition));
 .bottomhideverysmall{
   .hidemedia(0px,@bottomWidgetsVerySmall  * @bottomBaseFont);
@@ -270,6 +277,8 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 #leftBottomMarker .avd_markerEta{
   font-size: @bottomSmallFont;
+  margin-top: 0.55em;
+  text-align: center;
 }
 
 #markerLabel {
@@ -278,7 +287,8 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 
 #leftBottomMarker .avd_markerPosition{
-	font-size: @bottomSmallFont;
+  font-size: @bottomSmallFont;
+  margin-top: 0.55em;
 }
 
 #leftBottomMarker .avd_markerCourse{
@@ -308,9 +318,13 @@ font-size: ( @bottomPanelHeight - 2 );
 	width: @wLeftBottomStatus;
     .bottomhideverysmall();
 }
+#leftBottomPositionStatusImage{
+  text-align: center;
+}
 
-#leftBottomPosition #boatPosition{
-	font-size: @bottomSmallFont;
+#boatPosition{
+  font-size: @bottomSmallFont;
+  margin-top: 0.55em;
 
 }
 #leftBottomPosition .avd_gpsTime{
@@ -327,6 +341,22 @@ font-size: ( @bottomPanelHeight - 2 );
   font-size: @bottomBigFont;
   width: @wLeftBottomSpeed;
   text-align: end;
+}
+
+.avn_widgetInfo{
+  font-size: @bottomBaseFont;
+  position: absolute;
+  top: 0;
+  opacity: 0.7;
+}
+
+.avn_widgetInfoRight{
+  .avn_widgetInfo();
+  right: 0.2em;
+}
+.avn_widgetInfoLeft{
+  .avn_widgetInfo();
+  left: 0.2em;
 }
 
 
@@ -489,13 +519,13 @@ font-size: ( @bottomPanelHeight - 2 );
 #avi_route_display{
     left: 0px;
     bottom: 0px;
-    background-color: rgba(222, 226, 207, 0.92);
+    background-color: white;
     z-index: 90;
-    border-radius: 2px;
-    border: 1px solid;
     padding-right: 8px;
     padding-left: 3px;
+    box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.76);
     .nightColors();
+    position: absolute;
 }
 
 
@@ -1416,7 +1446,7 @@ button#avb_SettingsAndroid{
 }
 
 #avi_mainpage .avn_left_bottom{
-  height: 50px;
+  height: @bottomPanelHeight;
   bottom: 0;
   left: 0;
   right: 0;
@@ -1555,14 +1585,16 @@ button#avb_MainAndroid{
 }
 
 .avn_status_image{
-	width: 24px;
-	height: 24px;
+  width: 24px;
+  height: 24px;
+  .nightOPacity();
 }
 
 .avn_status_image_small{
   width: ( @bottomPanelHeight / 2.5 );
   height: ( @bottomPanelHeight / 2.5 );
   vertical-align: middle;
+  .nightOPacity();
 }
 
 
