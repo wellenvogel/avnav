@@ -321,6 +321,10 @@ font-size: ( @bottomPanelHeight - 2 );
 #leftBottomPositionStatusImage{
   text-align: center;
 }
+#boatPositionStatus{
+  width: (@bottomPanelHeight/2 );
+  height: (@bottomPanelHeight/2);
+}
 
 #boatPosition{
   font-size: @bottomSmallFont;
@@ -523,10 +527,13 @@ font-size: ( @bottomPanelHeight - 2 );
     z-index: 90;
     padding-right: 8px;
     padding-left: 3px;
+    padding-top: 1.5em;
     box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.76);
     .nightColors();
     position: absolute;
+    width: 11em;
 }
+
 
 
 #avi_route_display_remain{
@@ -540,10 +547,12 @@ font-size: ( @bottomPanelHeight - 2 );
   border-bottom: 0;
 }
 #avi_route_display_next{
-  font-size: (@routeInfoPanelWidth / 5.5);
   padding-left: 3px;
   padding-bottom: 3px;
   border-top: 1px solid;
+}
+#avi_route_display_next_course{
+  font-size: (@routeInfoPanelWidth / 5.5);
 }
 
 .avn_route_display_approach{

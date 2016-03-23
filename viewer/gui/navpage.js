@@ -249,7 +249,11 @@ avnav.gui.Navpage.prototype.localInit=function(){
         ev.data.page.gui.showPage('routepage',{returnpage:'navpage'});
     });
     $('#avi_route_display').click({page:this},function(ev){
-       ev.data.page.navobject.getRoutingData().resetToActive();
+        if (! self.routingVisible) {
+            self.showRouting();
+            return;
+        }
+       ev.data.page.navobject.getRoutingData().resetToActive(); //???
     });
 
 };
