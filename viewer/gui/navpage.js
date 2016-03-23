@@ -389,11 +389,25 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
         this.handleRouteDisplay();
     }
 };
-
+avnav.gui.Navpage.prototype.toggleNextGoto=function(showNext){
+    if (showNext) {
+        $('#avb_NavNext').show();
+        $('#avb_NavGoto').hide();
+    }
+    else {
+        $('#avb_NavNext').hide();
+        $('#avb_NavGoto').show();
+    }
+};
 avnav.gui.Navpage.prototype.showRouting=function() {
     if (this.routingVisible) return;
     if (!this.gui.properties.getProperties().layers.nav) return;
-    var upd=this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
+    var upd=false;
+    //this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
+    var routeActive=this.navobject.getRoutingData().hasActiveRoute();
+    $('#avi_navpage .avn_routeBtn').show();
+    this.toggleNextGoto(routeActive);
+    $('#avi_navpage .avn_noRouteBtn').hide();
     if (this.showHideAdditionalPanel('#avi_route_info_navpage', true, '#' + this.mapdom)) upd=true;
     if (upd)this.gui.map.updateSize();
     this.routingVisible=true;
@@ -416,7 +430,10 @@ avnav.gui.Navpage.prototype.showRouting=function() {
  * @private
  */
 avnav.gui.Navpage.prototype.hideRouting=function() {
-    var upd=this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
+    var upd=false;
+    //this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
+    $('#avi_navpage .avn_routeBtn').hide();
+    $('#avi_navpage .avn_noRouteBtn').show();
     if (this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom)) upd=true;
     if (upd) this.gui.map.updateSize();
     this.routingVisible=false;
@@ -471,6 +488,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     if (! rebuild) rebuild=this.lastRoute.differsTo(route);
     this.lastRoute=route.clone();
     if (rebuild){
+        if (! opt_force) this.toggleNextGoto(false);
         //rebuild
         for (i=0;i<route.points.length;i++){
             html+='<div class="avn_route_info_point ';
@@ -495,6 +513,10 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     $('#avi_route_info_list').find('.avn_route_info_point').each(function(i,el){
         var txt=route.points[i].name?route.points[i].name:i+"";
         if (i == active) {
+            if (! $(el).hasClass('avn_route_info_active_point') && ! rebuild && ! opt_force){
+                //changed active...
+                self.toggleNextGoto(false);
+            }
             $(el).addClass('avn_route_info_active_point');
             if (rebuild){
                 el.scrollIntoView();
@@ -537,6 +559,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
                 if (self.gui.isMobileBrowser()){
                     self.showWpPopUp(idx);
                 }
+                self.toggleNextGoto(false);
                 ev.preventDefault();
             });
         }
@@ -638,6 +661,10 @@ avnav.gui.Navpage.prototype.btnShowRoutePanel=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
     log("CancelNav clicked");
+    if (this.routingVisible){
+        this.hideRouting();
+        return;
+    }
     this.gui.showPage('mainpage');
 };
 //-------------------------- Wp PopUp ------------------------------------
@@ -684,6 +711,13 @@ avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
     log("navGoto clicked");
+    this.navobject.getRoutingData().routeOn(avnav.nav.RoutingMode.ROUTE);
+    this.hideRouting();
+};
+
+avnav.gui.Navpage.prototype.btnNavNext=function(button,ev){
+    log("navNext clicked");
+    this.navobject.getRoutingData().setEditingWp(this.navobject.getRoutingData().getActiveWpIdx()+1);
     this.navobject.getRoutingData().routeOn(avnav.nav.RoutingMode.ROUTE);
     this.hideRouting();
 };

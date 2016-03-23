@@ -71,7 +71,7 @@ var propertyDefinitions=function(){
         courseAverageTolerance: new avnav.util.Property(15,"Rotation Tolerance",avnav.util.PropertyType.RANGE,[1,30]), //tolerance for slow rotation
         minGridLedvel: new avnav.util.Property( 10),
         loggingEnabled: new avnav.util.Property( true),
-        maxButtons: new avnav.util.Property(7),
+        maxButtons: new avnav.util.Property(9),
         positionQueryTimeout: new avnav.util.Property( 1000,"Position",avnav.util.PropertyType.RANGE,[500,5000,10]), //1000ms
         trackQueryTimeout: new avnav.util.Property( 5000,"Track",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
         routeQueryTimeout: new avnav.util.Property( 1000,"Route",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
