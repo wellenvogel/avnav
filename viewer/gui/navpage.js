@@ -415,7 +415,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.gui.map.setRoutingActive(true);
     this.handleRouteDisplay();
     this.updateRoutePoints(true);
-    if (this.gui.isMobileBrowser()) this.showWpPopUp(this.navobject.getRoutingData().getActiveWpIdx());
+    //if (this.gui.isMobileBrowser()) this.showWpPopUp(this.navobject.getRoutingData().getActiveWpIdx());
     var nLock=this.gui.map.getGpsLock();
     this.lastGpsLock=nLock;
     if (nLock) {
@@ -455,6 +455,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
  * @private
  */
 avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
+    if (! this.navobject) return;
     var routeActive=this.navobject.getRoutingData().hasActiveRoute();
     if (routeActive && (! this.routingVisible || this.gui.properties.getProperties().routeShowRteWhenEdit) ){
         var rtop=$('#avi_nav_bottom').outerHeight();
@@ -467,8 +468,10 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
 };
 
 avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
+    var editingActiveRoute=this.navobject.getRoutingData().isEditingActiveRoute();
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
-    $('#avi_route_info_navpage_inner').addClass(this.navobject.getRoutingData().isEditingActiveRoute()?"avn_activeRoute":"avn_otherRoute");
+    $('#avi_route_info_navpage_inner').addClass(editingActiveRoute?"avn_activeRoute":"avn_otherRoute");
+    var switchOffNext=! editingActiveRoute;
     var html="";
     var route=this.navobject.getRoutingData().getEditingRoute();
     if (route) {
@@ -488,7 +491,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     if (! rebuild) rebuild=this.lastRoute.differsTo(route);
     this.lastRoute=route.clone();
     if (rebuild){
-        if (! opt_force) this.toggleNextGoto(false);
+        if (! opt_force) switchOffNext=true;
         //rebuild
         for (i=0;i<route.points.length;i++){
             html+='<div class="avn_route_info_point ';
@@ -514,8 +517,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
         var txt=route.points[i].name?route.points[i].name:i+"";
         if (i == active) {
             if (! $(el).hasClass('avn_route_info_active_point') && ! rebuild && ! opt_force){
-                //changed active...
-                self.toggleNextGoto(false);
+               switchOffNext=true;
             }
             $(el).addClass('avn_route_info_active_point');
             if (rebuild){
@@ -533,10 +535,10 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
         else $(el).removeClass('avn_route_info_active_point');
         $(el).find('input').val(txt);
         $(el).find('.avn_route_point_ll').html(self.formatter.formatLonLats(route.points[i]));
-        var courseLen="--- &#176;<br>---- nm";
+        var courseLen="--- &#176;/ ---- nm";
         if (i>0) {
             var dst=avnav.nav.NavCompute.computeDistance(route.points[i-1],route.points[i]);
-            courseLen=self.formatter.formatDecimal(dst.course,3,0)+" &#176;<br>";
+            courseLen=self.formatter.formatDecimal(dst.course,3,0)+" &#176;/ ";
             courseLen+=self.formatter.formatDecimal(dst.dtsnm,3,1)+" nm";
         }
         $(el).find('.avn_route_point_course').html(courseLen);
@@ -554,16 +556,20 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
                 });
             }
             $(el).click(function (ev) {
-                self.navobject.getRoutingData().setEditingWp(idx);
-                self.getMap().setCenter(self.navobject.getRoutingData().getEditingWp());
-                if (self.gui.isMobileBrowser()){
+                if (self.gui.isMobileBrowser() && $(this).hasClass('avn_route_info_active_point')){
                     self.showWpPopUp(idx);
                 }
+                else{
+                    $(self.waypointPopUp).hide();
+                }
+                self.navobject.getRoutingData().setEditingWp(idx);
+                self.getMap().setCenter(self.navobject.getRoutingData().getEditingWp());
                 self.toggleNextGoto(false);
                 ev.preventDefault();
             });
         }
     });
+    if (switchOffNext) this.toggleNextGoto(false);
 };
 
 /**

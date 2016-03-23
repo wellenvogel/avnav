@@ -420,29 +420,29 @@ font-size: ( @bottomPanelHeight - 2 );
     padding-left: 3px;
 }
 .avn_route_label{
-    .avn_route_base(10);
+  .avn_route_base(10);
+  padding-left: 0;
+  opacity: 0.6;
 }
-.avn_routeInfo{
+.avn_routeInfoLine{
   .avn_route_base(8);
-  border-bottom: 1px solid black;
-  margin-bottom: 5px;
+  margin-bottom: 0.3em;
 }
 #avi_route_info_heading{
     .avn_route_base(7);
 }
 #avi_route_info_name{
-    .avn_route_base(10);
-    margin-top: 5px;
+  .avn_route_base(10);
+  padding-left: 3px;
+  margin-top: 0.5em;
+  padding-bottom: 0.5em;
+  margin-bottom: 0.5em;
+  border-bottom: 1px solid black;
 
 }
 #avi_route_info_list{
     @width: max(@aisPanelWidth,@routeInfoPanelWidth);
     font-size: ( @routeInfoFontBase / 9);
-    left:0;
-    right:0;
-    bottom: 0;
-    position: absolute;
-    top: (@routeInfoFontBase * 1.8);
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -457,6 +457,8 @@ font-size: ( @bottomPanelHeight - 2 );
   padding-left: 2px;
   padding-right: 2px;
   padding-top: 1px;
+  margin-bottom: 5px;
+  padding-bottom: 2px;
 }
 .avn_route_info_active_point{
     background-color: @routeApproachingColor !important;
