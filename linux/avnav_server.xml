@@ -69,6 +69,7 @@
 	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
 	<Directory urlpath="viewer" path="../viewer"></Directory>
 	<Directory urlpath="libraries" path="../libraries"></Directory>
+	<Directory urlpath="test" path="../../react-test/build"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
