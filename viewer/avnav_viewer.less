@@ -145,8 +145,7 @@ html,body {
 	color: white;
 }
 .avn_left_bottom {
-	
-	background-color: rgb(64, 64, 63);
+  background-color: #BFBFBF;
 }
 
 .avn_map{
@@ -176,31 +175,12 @@ html,body {
 }
 
 
-.avi_mainpage_leftbottominner .avn_label{
-	-webkit-margin-before: 0.5em;
-}
-.avn_position{
-	padding-left: 5px;
-	padding-right: 5px;
-}
+
 
 .avn_hidden{
 	display:none;
 }
 
-
-.avn_position{
-
-border-color: black;
-border-style: solid;
-border-width: 1px;
-background-color: white;
-font-size: ( @topPanelHeight - 2 );
-}
-
-.avn_left_bottom .avn_position{
-font-size: ( @bottomPanelHeight - 2 );
-}
 
 /*-------------------------------------------------------------
    bottom display
@@ -214,8 +194,8 @@ font-size: ( @bottomPanelHeight - 2 );
   0 1px 5px 0 rgba(0, 0, 0, 0.12),
   0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
   margin-left: @wWidgetMargin;
-  margin-bottom: 0.3em;
-  margin-top: 0.3em;
+  margin-bottom: 0.1em;
+  margin-top: 0.1em;
   margin-right: @wWidgetMargin;
   .border-box();
   overflow: hidden;
@@ -235,9 +215,9 @@ font-size: ( @bottomPanelHeight - 2 );
 @wLeftBottomMarkerEta: 9em;
 @wLeftBottomPosition: 10.5em;
 @wLeftBottomStatus: 9em;
-@wLeftBottomCourse: 1.9em; //bigFont
+@wLeftBottomCourse: 2.1em; //bigFont
 @wLeftBottomSpeed: 3em; //bigFont
-@wLeftBottomBearing: 1.9em; //bigFont
+@wLeftBottomBearing: 2.1em; //bigFont
 @wLeftBottomMarkerDistance: 3em; //bigFont
 //small: without positions
 @bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 2.5em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
@@ -295,6 +275,7 @@ font-size: ( @bottomPanelHeight - 2 );
   font-size: @bottomBigFont;
   width: @wLeftBottomBearing;
   text-align: end;
+  padding-right: 0.1em;
 
 }
 #leftBottomMarker .avd_markerDistance{
@@ -339,6 +320,7 @@ font-size: ( @bottomPanelHeight - 2 );
   font-size: @bottomBigFont;
   width: @wLeftBottomCourse;
   text-align: end;
+  padding-right: 0.1em;
 
 }
 #leftBottomPosition .avd_gpsSpeed{
