@@ -413,6 +413,14 @@ html,body {
 #avi_route_info_heading{
     .avn_route_base(7);
 }
+#avi_route_info_navpage_inner{
+  position: absolute;
+  top: 0;
+  height: 12em;
+  left: 0;
+  right: 0;
+}
+
 #avi_route_info_name{
   .avn_route_base(10);
   padding-left: 3px;
@@ -427,6 +435,11 @@ html,body {
     font-size: ( @routeInfoFontBase / 9);
     overflow-y: auto;
     overflow-x: hidden;
+  position: absolute;
+  top:12.5em;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 #avi_route_info_list input{
     @width: max(@aisPanelWidth,@routeInfoPanelWidth);
