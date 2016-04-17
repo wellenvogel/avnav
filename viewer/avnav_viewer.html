@@ -577,6 +577,79 @@ all buttons with ids avb_... will call corresponding js functions
   </div>
   <!-- end download/upload Page-->
 
+  <!-- aisInfo -->
+  <div id="avi_aisinfopage" class="avn_page avn_hidden">
+      <div class='avn_panel avn_left_panel'>
+          <div class='avn_panel avn_left_top'>
+              <div class='avn_inner'>
+              </div>
+          </div>
+
+          <div  class="avn_panel avn_scrollable_page">
+              <div id='avi_ais_infopage_inner'>
+                  <h1>AIS Info</h1>
+                  <div class="avn_table">
+                      <div class="avn_row">
+                          <div class='avn_label '>MMSI</div>
+                          <div class='avn_ais_data' data-name='aisMmsi'>000000</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Name</div>
+                          <div class='avn_ais_data' data-name='aisName'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Callsign</div>
+                          <div class='avn_ais_data' data-name='aisCallsign'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Distance(nm)</div>
+                          <div class='avn_ais_data' data-name="aisDst">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>HeadingTo</div>
+                          <div class='avn_ais_data' data-name="aisHeading">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>CPA(nm)</div>
+                          <div class='avn_ais_data' data-name="aisCpa">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>TCPA(min:sec)</div>
+                          <div class='avn_ais_data' data-name='aisTcpa'>00:00</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Sog(kn)</div>
+                          <div class='avn_ais_data' data-name="aisSog">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Cog</div>
+                          <div class='avn_ais_data' data-name="aisCog">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Destination</div>
+                          <div class='avn_ais_data' data-name='Destination'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Type</div>
+                          <div class='avn_ais_data' data-name='aisShiptype'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>we pass</div>
+                          <div class='avn_ais_data avn_ais_front' data-name='aisFront'>-------</div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+      </div>
+      <div class='avn_panel avn_right_panel'>
+          <button id="avb_AisInfoNearest" type="button" class="avn_button"></button>
+          <button id="avb_AisInfoLocate" type="button" class="avn_button"></button>
+          <button id="avb_AisInfoList" type="button" class="avn_button"></button>
+          <button id="avb_AisInfoCancel" type="button" class="avn_button"></button>
+      </div>
+  </div>
+  <!-- end aisInfoPage-->
   <!-- aisPage -->
   <div id="avi_aispage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>

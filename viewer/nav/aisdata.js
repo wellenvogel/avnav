@@ -63,7 +63,10 @@ avnav.nav.AisData=function(propertyHandler,navobject){
         aisName:'shipname',
         aisDestination:'destination',
         aisFront:'passFront',
-        aisShiptype:'shiptype'
+        aisShiptype:'shiptype',
+        aisCallsign: 'callsign',
+        aisPosition: 'position',
+        aisHeading: 'heading'
     };
 
     this.formattedData={};
@@ -89,6 +92,10 @@ avnav.nav.AisData=function(propertyHandler,navobject){
         distance:{
             headline: 'dist(nm)',
             format: function(v){ return self.formatter.formatDecimal(parseFloat(v.distance||0),3,2);}
+        },
+        heading:{
+            headline: 'hdg',
+            format: function(v){ return self.formatter.formatDecimal(parseFloat(v.headingTo||0),3,0);}
         },
         speed: {
             headline: 'speed(kn)',
@@ -219,7 +226,7 @@ avnav.nav.AisData.prototype.handleAisData=function() {
                 properties
             );
             ais.distance = dst.dtsnm;
-            ais.headingTo = dst.heading;
+            ais.headingTo = dst.course;
             if (cpadata.tcpa >=0) {
                 ais.cpa = cpadata.cpanm;
                 ais.tcpa = cpadata.tcpa;
@@ -299,10 +306,21 @@ avnav.nav.AisData.prototype.getAisFormatter=function(){
  * @returns {string}
  */
 avnav.nav.AisData.prototype.getFormattedAisValue=function(dname){
+    return this.formatAisValue(dname,this.nearestAisTarget);
+};
+
+/**
+ *
+ * @param dname
+ * @param aisobject an AIS entry like returned by getAisByMMsi
+ * @returns {string}
+ */
+avnav.nav.AisData.prototype.formatAisValue=function(dname,aisobject){
     var key=this.formattedDataDescription[dname];
     if (! key) return "";
-    if (this.nearestAisTarget[key] === undefined) return "";
-    return this.aisparam[key].format(this.nearestAisTarget);
+    if (aisobject[key] === undefined) return "";
+    if (aisobject === undefined) return "";
+    return this.aisparam[key].format(aisobject);
 };
 
 /**

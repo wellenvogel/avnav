@@ -8,6 +8,7 @@ avnav.provide('avnav.gui.Page');
 
 /**
  * a base class for all GUI pages
+ * @param name the dom id (without leading avp_)
  * @constructor
  */
 avnav.gui.Page=function(name){

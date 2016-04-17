@@ -232,7 +232,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
        ev.data.page.hideOverlay();
     });
     $('#aisInfo').click({page:this},function(ev){
-        ev.data.page.gui.showPage('aispage',{returnpage:'navpage'});
+        ev.data.page.gui.showPage('aisinfopage',{returnpage:'navpage'});
     });
     var self=this;
     $(this.waypointPopUp).find('input').on('change',function(ev){
@@ -373,7 +373,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         if (! aisparam) return;
         if (aisparam.mmsi){
             this.navobject.getAisData().setTrackedTarget(aisparam.mmsi);
-            this.gui.showPage('aispage',{returnpage:'navpage'});
+            this.gui.showPage('aisinfopage',{returnpage:'navpage'});
         }
     }
 };
