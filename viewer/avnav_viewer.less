@@ -947,48 +947,44 @@ button#avb_DownloadPageUploadCancel{
 	background-color: fade(@aisWarningColor,@nightModePercent * 1.5) !important;
 }
 
+#aisInfo{
+  bottom: 0px;
+  top: 100px;
+  left:	0px;
+  width:	@aisPanelWidth;
+  background-color: @aisNormalColor;
+  font-size: ( @aisPanelWidth /8);
+}
+#aisInfo when (@nightModePercent<100%){
+  color: fade(white,@nightModePercent * 1.5);
+}
+
 #avi_ais_page_inner{
 
 }
 
-/* AIS info box */
-#aisInfoInner{
-	margin-top: 2px;
-	position: absolute;
-	left: 0;
-	right: 0;
+
+
+#aisInfo .avn_ais_front {
+	font-size: 2em;
+}
+#aisInfo .avn_label {
+  opacity: 0.6;
+  display: table-cell;
+  text-align: right;
+  padding-right: 0.5em;
+}
+#aisInfo .avn_ais_data{
+  display: table-cell;
+}
+#aisInfo .avn_table{
+  display: table;
+  margin-top: 1em;
+}
+#aisInfo .avn_row{
+  display: table-row;
 }
 
-.avn_ais_base(@factor: 5) {
-	font-size: ( @aisPanelWidth / @factor );
-	margin-bottom: 5px;
-	border-bottom: 1px solid black;
-	padding-left: 3px;
-}
-
-.avn_ais_data {
-	.avn_ais_base(5);
-}
-.avn_ais_name {
-	.avn_ais_base(8);
-}
-.avn_ais_mmsi {
-	.avn_ais_base(7);
-}
-.avn_ais_front {
-	.avn_ais_base(3);
-}
-#aisInfoHeadline{
-	font-size: ( @aisPanelWidth / 3 );
-	padding-left: 3px;
-}
-
-.avn_ais_headline_elem{
-  position: relative;
-  top:0;
-  background-color: white;
-  .nightColors();
-}
 
 button#avb_AisCancel{
   .avn_button_icon_base('images/Cancel40.png');
@@ -1605,16 +1601,7 @@ button#avb_MainAndroid{
 	   correcting the .avn_main position is done by javascript
 */
 
-#aisInfo{
-	bottom: 0px;
-	top: 0px;
-	left:	0px;
-	width:	@aisPanelWidth;
-	background-color: @aisNormalColor;
-}
-#aisInfo when (@nightModePercent<100%){
-    color: fade(white,@nightModePercent * 1.5);
-}
+
 
 #centerDisplay{
 	height: @centerDisplayHeight;
