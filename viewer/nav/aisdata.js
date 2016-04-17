@@ -318,6 +318,7 @@ avnav.nav.AisData.prototype.getFormattedAisValue=function(dname){
 avnav.nav.AisData.prototype.formatAisValue=function(dname,aisobject){
     var key=this.formattedDataDescription[dname];
     if (! key) return "";
+    if (aisobject === undefined) return "";
     if (aisobject[key] === undefined) return "";
     if (aisobject === undefined) return "";
     return this.aisparam[key].format(aisobject);

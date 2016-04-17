@@ -19,6 +19,12 @@ avnav.gui.AisInfoPage=function(){
     this.aishandler=null;
 
     /**
+     * @private
+     * @type {undefined}
+     */
+    this.mmsi=undefined;
+
+    /**
      * private
      * @type {number}
      */
@@ -35,26 +41,38 @@ avnav.gui.AisInfoPage.prototype.localInit=function(){
 };
 avnav.gui.AisInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;
+    this.mmsi=options.mmsi;
+    if (this.mmsi === undefined) {
+        var current=this.aishandler.getNearestAisTarget();
+        if (current) this.mmsi=current.mmsi;
+    }
     this.fillData(true);
     this.showTime=(new Date()).getTime();
 };
 
 avnav.gui.AisInfoPage.prototype.getCurrentTarget=function(){
-    var tracked=this.aishandler.getTrackedTarget();
-    if (tracked != null) return this.aishandler.getAisByMmsi(tracked);
-    return this.aishandler.getNearestAisTarget();
+    return this.aishandler.getAisByMmsi(this.mmsi);
 };
 avnav.gui.AisInfoPage.prototype.fillData=function(initial){
     var currentObject=this.getCurrentTarget();
     if (! this.aishandler || currentObject === undefined){
-        $(this.getDiv()).find("#avi_ais_infopage_inner").hide();
+        this.gui.showPageOrReturn(this.returnpage,'navpage');
         return;
     }
     var self=this;
-    $(this.getDiv()).find("#avi_ais_infopage_inner .avn_ais_data").each(function(idx,el){
+    $("#avi_ais_infopage_inner").show();
+    $("#avi_ais_infopage_inner .avn_ais_data").each(function(idx,el){
         var name=$(this).attr('data-name');
         if (! name) return;
         var val=self.aishandler.formatAisValue(name,currentObject);
+        if (name == "aisCpa"){
+            if (currentObject.warning){
+                $(this).addClass('avn_ais_warning');
+            }
+            else{
+                $(this).remove('avn_ais_warning');
+            }
+        }
         $(this).text(val);
     });
 
@@ -92,13 +110,13 @@ avnav.gui.AisInfoPage.prototype.btnAisInfoCancel=function (button,ev){
 };
 avnav.gui.AisInfoPage.prototype.btnAisInfoList=function (button,ev){
     log("List clicked");
+    this.aishandler.setTrackedTarget(this.mmsi);
     this.gui.showPage('aispage',{returnpage:this.returnpage});
 };
 avnav.gui.AisInfoPage.prototype.btnAisInfoLocate=function (button,ev){
     log("Locate clicked");
-    var current=this.getCurrentTarget();
-    if (! current || current.mmsi === undefined) return;
-    var pos=this.aishandler.getAisPositionByMmsi(current.mmsi);
+    if (this.mmsi === undefined) return;
+    var pos=this.aishandler.getAisPositionByMmsi(this.mmsi);
     if (pos)this.gui.map.setCenter(pos);
     this.gui.map.setGpsLock(false);
     this.gui.showPage('navpage');

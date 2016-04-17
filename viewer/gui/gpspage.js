@@ -37,7 +37,7 @@ avnav.gui.Gpspage.prototype.localInit=function(){
     });
     $('#avi_gpsp_aisframe').on('click',function(evt){
         evt.stopPropagation();
-        self.gui.showPage('aispage',{returnpage:'gpspage'});
+        self.gui.showPage('aisinfopage',{returnpage:'gpspage'});
     });
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
