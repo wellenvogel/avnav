@@ -47,6 +47,16 @@ avnav.gui.Page.prototype.getDiv=function(){
     var div=$('#avi_'+this.name);
     return div;
 };
+/**
+ * select elements on page
+ * @param selector the jquery selector, will be prepended by #avi_pagename
+ * @returns {*|jQuery|HTMLElement}
+ */
+avnav.gui.Page.prototype.selectOnPage=function(selector){
+    var sel='#avi_'+this.name+' '+selector;
+    return $(sel);
+};
+
 
 /**
  * check if the page is visible

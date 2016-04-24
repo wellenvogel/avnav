@@ -948,10 +948,9 @@ button#avb_DownloadPageUploadCancel{
 }
 
 #aisInfo{
-  bottom: 0px;
   top: 100px;
   left:	0px;
-  width:	@aisPanelWidth;
+  position: absolute;
   background-color: @aisNormalColor;
   font-size: ( @aisPanelWidth /8);
 }
@@ -966,13 +965,12 @@ button#avb_DownloadPageUploadCancel{
 
 
 #aisInfo .avn_ais_front {
-	font-size: 2em;
+	font-size: 1.5em;
 }
 #aisInfo .avn_label {
   opacity: 0.6;
   display: table-cell;
-  text-align: right;
-  padding-right: 0.5em;
+  padding-right: 0.2em;
 }
 #aisInfo .avn_ais_data{
   display: table-cell;
@@ -983,6 +981,11 @@ button#avb_DownloadPageUploadCancel{
 }
 #aisInfo .avn_row{
   display: table-row;
+}
+#aisInfo .avn_unit{
+  font-size:0.7em;
+  opacity: 0.6;
+  margin-left: 0.2em;
 }
 
 

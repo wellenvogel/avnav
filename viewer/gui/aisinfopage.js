@@ -38,6 +38,10 @@ avnav.inherits(avnav.gui.AisInfoPage,avnav.gui.Page);
 
 avnav.gui.AisInfoPage.prototype.localInit=function(){
     this.aishandler=this.navobject.getAisData();
+    var self=this;
+    this.selectOnPage('.avn_left_panel').on('click',function(){
+        self.goBack();
+    });
 };
 avnav.gui.AisInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;
