@@ -63,6 +63,21 @@ avnav.gui.AisInfoPage.prototype.fillData=function(initial){
         this.gui.showPageOrReturn(this.returnpage,'navpage');
         return;
     }
+    if (currentObject.warning){
+        this.selectOnPage('.avn_aisStatus').addClass('avn_ais_warning');
+    }
+    else{
+        this.selectOnPage('.avn_aisStatus').removeClass('avn_ais_warning');
+        if (currentObject.nearest){
+            this.selectOnPage('.avn_aisStatus').removeClass('avn_ais_info_normal');
+            this.selectOnPage('.avn_aisStatus').addClass('avn_ais_info_first');
+        }
+        else{
+            this.selectOnPage('.avn_aisStatus').addClass('avn_ais_info_normal');
+            this.selectOnPage('.avn_aisStatus').removeClass('avn_ais_info_first');
+        }
+    }
+
     var self=this;
     $("#avi_ais_infopage_inner").show();
     $("#avi_ais_infopage_inner .avn_ais_data").each(function(idx,el){
