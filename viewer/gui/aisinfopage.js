@@ -11,7 +11,12 @@ avnav.provide('avnav.gui.AisInfoPage');
  * @constructor
  */
 avnav.gui.AisInfoPage=function(){
-    avnav.gui.Page.call(this,'aisinfopage');
+    avnav.gui.Page.call(this,'aisinfopage',
+        {
+            eventlist:[avnav.nav.NavEvent.EVENT_TYPE],
+            returnOnClick: true
+        }
+    );
     /**
      * @private
      * @type {avnav.nav.AisData}
@@ -24,24 +29,11 @@ avnav.gui.AisInfoPage=function(){
      */
     this.mmsi=undefined;
 
-    /**
-     * private
-     * @type {number}
-     */
-    this.showTime=(new Date()).getTime();
-    var self=this;
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
-        self.navEvent(evdata);
-    });
 };
 avnav.inherits(avnav.gui.AisInfoPage,avnav.gui.Page);
 
 avnav.gui.AisInfoPage.prototype.localInit=function(){
     this.aishandler=this.navobject.getAisData();
-    var self=this;
-    this.selectOnPage('.avn_left_panel').on('click',function(){
-        self.goBack();
-    });
 };
 avnav.gui.AisInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;
@@ -51,7 +43,6 @@ avnav.gui.AisInfoPage.prototype.showPage=function(options) {
         if (current) this.mmsi=current.mmsi;
     }
     this.fillData(true);
-    this.showTime=(new Date()).getTime();
 };
 
 avnav.gui.AisInfoPage.prototype.getCurrentTarget=function(){
@@ -86,7 +77,7 @@ avnav.gui.AisInfoPage.prototype.fillData=function(initial){
 
     var self=this;
     $("#avi_ais_infopage_inner").show();
-    $("#avi_ais_infopage_inner .avn_ais_data").each(function(idx,el){
+    this.selectOnPage(".avn_ais_data").each(function(idx,el){
         var name=$(this).attr('data-name');
         if (! name) return;
         var val=self.aishandler.formatAisValue(name,currentObject);
@@ -100,17 +91,6 @@ avnav.gui.AisInfoPage.prototype.fillData=function(initial){
 avnav.gui.AisInfoPage.prototype.hidePage=function(){
 
 };
-/**
- *
- * @param {avnav.nav.NavEvent} ev
- */
-avnav.gui.AisInfoPage.prototype.navEvent=function(ev){
-    if (! this.visible) return;
-    if (ev.type==avnav.nav.NavEventType.AIS){
-        this.fillData(false);
-    }
-};
-
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.AisInfoPage.prototype.btnAisInfoNearest=function (button,ev){

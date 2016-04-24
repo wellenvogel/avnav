@@ -9,9 +9,12 @@ avnav.provide('avnav.gui.Page');
 /**
  * a base class for all GUI pages
  * @param name the dom id (without leading avp_)
+ * @options {object} options for the page
+ *          eventlist: if not empty, register for those events and call fillData(false)
+ *          returnOnClick: if set to true return on click on leftPanel
  * @constructor
  */
-avnav.gui.Page=function(name){
+avnav.gui.Page=function(name,options){
     this.isInitialized=false;
     /** @type{avnav.gui.Handler} */
     this.gui=null;
@@ -20,6 +23,7 @@ avnav.gui.Page=function(name){
     this.name=name;
     this.visible=false;
     this.returnpage=undefined;
+    this.options=options;
     var myself=this;
     /**
      * a list of items with class avd_ - key are the names, values the jQuery dom objects
@@ -38,6 +42,17 @@ avnav.gui.Page=function(name){
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         myself.updateDisplayObjects();
     });
+    if (this.options) {
+        if (this.options.eventlist) {
+            $.each(this.options.eventlist, function (index, item) {
+                $(document).on(item, function (ev, evdata) {
+                    if (!myself.visible) return;
+                    myself.fillData(false);
+                });
+            });
+        }
+
+    }
 };
 
 /**
@@ -82,6 +97,12 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         this.initDisplayObjects();
         this.initFocusHandler();
         this.initExternalLinks();
+        if (this.options && this.options.returnOnClick){
+            var test=this.selectOnPage('.avn_left_panel');
+            this.selectOnPage('.avn_left_panel').on('click',function(){
+                self.goBack();
+            });
+        }
         $(document).on(avnav.gui.BackEvent.EVENT_TYPE,function(ev,evdata){
            if (evdata.name && evdata.name==self.name){
                self.goBack();
@@ -151,12 +172,25 @@ avnav.gui.Page.prototype.localInit=function(){
  * intended to be overloaded by subclasses
  */
 avnav.gui.Page.prototype.goBack=function(){
+    this.returnToLast();
 };
 
+/**
+ * return to the last page in the history stack
+ */
 avnav.gui.Page.prototype.returnToLast=function(){
     if (! this.gui) return;
     this.gui.returnToLast();
 };
+
+/**
+ * to be overloaded by pages
+ * @param initial
+ */
+avnav.gui.Page.prototype.fillData=function(initial){
+
+};
+
 /**
  * init the buttons (i.e. assign listeners and add the icons)
  * each button click will call a btn<ButtonName> method at this gui object
