@@ -191,6 +191,7 @@ html,body {
   margin-right: @wWidgetMargin;
   .border-box();
   overflow: hidden;
+  pointer-events: all;
 }
 .avn_bottom_item{
   height: @bottomPanelHeight;
@@ -214,11 +215,13 @@ html,body {
 //small: without positions
 @bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 2.5em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
 @bottomWidgetsSmall: ( @bottomWidgetsVerySmall + unit(4 * @wWidgetMargin + @wLeftBottomMarkerPos + @wLeftBottomPosition));
+@checkVerySmall: (@bottomWidgetsVerySmall  * @bottomBaseFont);
+@checkSmall: (@bottomWidgetsSmall  * @bottomBaseFont);
 .bottomhideverysmall{
-  .hidemedia(0px,@bottomWidgetsVerySmall  * @bottomBaseFont);
+  .hidemedia(0px,@checkVerySmall);
 }
 .bottomhidesmall{
-  .hidemedia(0px,@bottomWidgetsSmall  * @bottomBaseFont);
+  .hidemedia(0px,@checkSmall);
 }
 
 .avn_unit{
@@ -520,13 +523,25 @@ html,body {
   font-size: ( @aisPanelWidth /8);
   background-color: #BFBFBF;
   z-index: 10;
+  @media(max-width: @checkVerySmall){
+    right:0;
+    background-color: inherit;
+    pointer-events: none;
+  }
 }
+
 
 /*-------------------------------------------------------------
    AIS display
 -------------------------------------------------------------*/
 #aisInfo{
   background-color: @aisNormalColor;
+  max-width: @aisPanelWidth;
+  @media(max-width: @checkVerySmall){
+    position: absolute;
+    left: 0;
+    bottom: 0;
+  }
 }
 #aisInfo when (@nightModePercent<100%){
   color: fade(white,@nightModePercent * 1.5);
@@ -556,12 +571,18 @@ html,body {
 /*-------------------------------------------------------------
    route display
 -------------------------------------------------------------*/
-#avi_routeDisplay{
-    background-color: white;
-    padding-right: 0.2em;
-    padding-left: 0.2em;
-    padding-top: 1.5em;
-    .nightColors();
+#avi_routeDisplay {
+  background-color: white;
+  padding-right: 0.2em;
+  padding-left: 0.2em;
+  padding-top: 1.2em;
+  max-width: @aisPanelWidth;
+  .nightColors();
+  @media (max-width: @checkVerySmall) {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
 }
 
 
