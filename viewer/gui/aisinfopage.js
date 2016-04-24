@@ -104,7 +104,9 @@ avnav.gui.AisInfoPage.prototype.goBack=function(){
 
 avnav.gui.AisInfoPage.prototype.btnAisInfoNearest=function (button,ev){
     this.aishandler.setTrackedTarget(0);
-    this.gui.showPageOrReturn(this.returnpage,'navpage');
+    var pos=this.aishandler.getAisPositionByMmsi(this.aishandler.getTrackedTarget());
+    if (pos)this.gui.map.setCenter(pos);
+    this.gui.showPage('navpage');
     log("Nearest clicked");
 };
 

@@ -390,6 +390,9 @@ avnav.nav.AisData.prototype.getAisData=function(){
  * @returns {*}
  */
 avnav.nav.AisData.prototype.getAisByMmsi=function(mmsi){
+    if (mmsi == 0 || mmsi == null){
+        return this.nearestAisTarget;
+    }
     for (var i in this.currentAis){
         if (this.currentAis[i].mmsi == mmsi) return this.currentAis[i];
     }
