@@ -55,12 +55,18 @@ avnav.gui.AisInfoPage.prototype.showPage=function(options) {
 };
 
 avnav.gui.AisInfoPage.prototype.getCurrentTarget=function(){
-    return this.aishandler.getAisByMmsi(this.mmsi);
+    var current=this.aishandler.getAisByMmsi(this.mmsi);
+    var warning=this.aishandler.getNearestAisTarget();
+    if (warning && warning.warning){
+        this.mmsi=warning.mmsi;
+        return warning;
+    }
+    return current;
 };
 avnav.gui.AisInfoPage.prototype.fillData=function(initial){
     var currentObject=this.getCurrentTarget();
     if (! this.aishandler || currentObject === undefined){
-        this.gui.showPageOrReturn(this.returnpage,'navpage');
+        this.returnToLast();
         return;
     }
     if (currentObject.warning){
@@ -84,14 +90,6 @@ avnav.gui.AisInfoPage.prototype.fillData=function(initial){
         var name=$(this).attr('data-name');
         if (! name) return;
         var val=self.aishandler.formatAisValue(name,currentObject);
-        if (name == "aisCpa"){
-            if (currentObject.warning){
-                $(this).addClass('avn_ais_warning');
-            }
-            else{
-                $(this).remove('avn_ais_warning');
-            }
-        }
         $(this).text(val);
     });
 
@@ -127,7 +125,7 @@ avnav.gui.AisInfoPage.prototype.btnAisInfoNearest=function (button,ev){
 
 avnav.gui.AisInfoPage.prototype.btnAisInfoCancel=function (button,ev){
     log("Cancel clicked");
-    this.gui.showPageOrReturn(this.returnpage,'navpage');
+    this.returnToLast();
 };
 avnav.gui.AisInfoPage.prototype.btnAisInfoList=function (button,ev){
     log("List clicked");

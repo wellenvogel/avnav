@@ -152,6 +152,11 @@ avnav.gui.Page.prototype.localInit=function(){
  */
 avnav.gui.Page.prototype.goBack=function(){
 };
+
+avnav.gui.Page.prototype.returnToLast=function(){
+    if (! this.gui) return;
+    this.gui.returnToLast();
+};
 /**
  * init the buttons (i.e. assign listeners and add the icons)
  * each button click will call a btn<ButtonName> method at this gui object

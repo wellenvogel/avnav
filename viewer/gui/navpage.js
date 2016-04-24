@@ -225,16 +225,16 @@ avnav.gui.Navpage.prototype.localInit=function(){
     });
     $('#leftBottomPosition').click({page:this},function(ev){
         ev.stopPropagation();
-        ev.data.page.gui.showPage('gpspage',{returnpage:'navpage'});
+        ev.data.page.gui.showPage('gpspage');
     });
 
     $('#centerDisplay').click({page:this},function(ev){
        ev.data.page.hideOverlay();
     });
-    $('#aisInfo').click({page:this},function(ev){
+    $('#aisInfo').click(function(ev){
         var mmsi=$(this).attr('data-aismmsi');
         if (mmsi===undefined || mmsi == "") return;
-        ev.data.page.gui.showPage('aisinfopage',{returnpage:'navpage',mmsi:mmsi});
+        self.gui.showPage('aisinfopage',{mmsi:mmsi});
     });
     var self=this;
     $(this.waypointPopUp).find('input').on('change',function(ev){
@@ -248,7 +248,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
         }
     });
     $('#avi_route_info_navpage_inner').click({page:this},function(ev){
-        ev.data.page.gui.showPage('routepage',{returnpage:'navpage'});
+        ev.data.page.gui.showPage('routepage');
     });
     $('#avi_routeDisplay').click({page:this},function(ev){
         if (! self.routingVisible) {
@@ -376,7 +376,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         if (! aisparam) return;
         if (aisparam.mmsi){
             this.navobject.getAisData().setTrackedTarget(aisparam.mmsi);
-            this.gui.showPage('aisinfopage',{returnpage:'navpage',mmsi: aisparam.mmsi});
+            this.gui.showPage('aisinfopage',{mmsi: aisparam.mmsi});
         }
     }
 };
@@ -623,7 +623,7 @@ avnav.gui.Navpage.prototype.checkRouteWritable=function(){
     if (this.navobject.getRoutingData().isRouteWritable()) return true;
     var ok=confirm("you cannot edit this route as you are disconnected. OK to select a new name");
     if (ok){
-        this.gui.showPage('routepage',{returnpage:'navpage'});
+        this.gui.showPage('routepage');
     }
     return false;
 };

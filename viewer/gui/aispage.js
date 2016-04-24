@@ -89,7 +89,7 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         }
         var mmsi=$(this).attr('mmsi');
         self.aishandler.setTrackedTarget(mmsi);
-        self.gui.showPage('aisinfopage',{mmsi:mmsi,returnpage:self.name});
+        self.gui.showPage('aisinfopage',{mmsi:mmsi});
         /*
         var pos=self.aishandler.getAisPositionByMmsi(mmsi);
         if (pos)self.gui.map.setCenter(pos);
@@ -134,13 +134,13 @@ avnav.gui.Aispage.prototype.goBack=function(){
 
 avnav.gui.Aispage.prototype.btnAisNearest=function (button,ev){
     this.aishandler.setTrackedTarget(0);
-    this.gui.showPageOrReturn(this.returnpage,'navpage');
+    this.returnToLast();
     log("Nearest clicked");
 };
 
 avnav.gui.Aispage.prototype.btnAisCancel=function (button,ev){
     log("Cancel clicked");
-    this.gui.showPageOrReturn(this.returnpage,'navpage');
+    this.returnToLast();
 };
 /**
  * create the page instance
