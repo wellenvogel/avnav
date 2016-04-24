@@ -127,9 +127,7 @@ avnav.gui.Aispage.prototype.navEvent=function(ev){
         this.fillData(false);
     }
 };
-avnav.gui.Aispage.prototype.goBack=function(){
-    this.btnAisCancel();
-};
+
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Aispage.prototype.btnAisNearest=function (button,ev){
@@ -138,10 +136,6 @@ avnav.gui.Aispage.prototype.btnAisNearest=function (button,ev){
     log("Nearest clicked");
 };
 
-avnav.gui.Aispage.prototype.btnAisCancel=function (button,ev){
-    log("Cancel clicked");
-    this.returnToLast();
-};
 /**
  * create the page instance
  */

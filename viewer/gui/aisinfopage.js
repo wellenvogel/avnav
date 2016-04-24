@@ -110,9 +110,7 @@ avnav.gui.AisInfoPage.prototype.navEvent=function(ev){
         this.fillData(false);
     }
 };
-avnav.gui.AisInfoPage.prototype.goBack=function(){
-    this.btnAisInfoCancel();
-};
+
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.AisInfoPage.prototype.btnAisInfoNearest=function (button,ev){
@@ -123,10 +121,6 @@ avnav.gui.AisInfoPage.prototype.btnAisInfoNearest=function (button,ev){
     log("Nearest clicked");
 };
 
-avnav.gui.AisInfoPage.prototype.btnAisInfoCancel=function (button,ev){
-    log("Cancel clicked");
-    this.returnToLast();
-};
 avnav.gui.AisInfoPage.prototype.btnAisInfoList=function (button,ev){
     log("List clicked");
     this.aishandler.setTrackedTarget(this.mmsi);

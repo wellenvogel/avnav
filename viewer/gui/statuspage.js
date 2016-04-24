@@ -91,18 +91,8 @@ avnav.gui.Statuspage.prototype.statusTextToImageUrl=function(text){
 avnav.gui.Statuspage.prototype.localInit=function() {
 };
 
-avnav.gui.Statuspage.prototype.goBack=function() {
-    this.btnStatusCancel();
-};
 //-------------------------- Buttons ----------------------------------------
-/**
- * cancel status page (go back to main)
- * @private
- */
-avnav.gui.Statuspage.prototype.btnStatusCancel=function(button,ev){
-    log("StatusCancel clicked");
-    this.gui.showPage('mainpage');
-};
+
 avnav.gui.Statuspage.prototype.btnStatusWpa=function(button,ev){
     log("StatusWpa clicked");
     this.gui.showPage('wpapage');

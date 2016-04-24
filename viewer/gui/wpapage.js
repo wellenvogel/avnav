@@ -243,18 +243,8 @@ avnav.gui.Wpapage.prototype.localInit=function() {
     this.timeout=this.gui.properties.getProperties().wpaQueryTimeout;
 };
 
-avnav.gui.Wpapage.prototype.goBack=function() {
-    this.btnWpaCancel();
-};
 //-------------------------- Buttons ----------------------------------------
-/**
- * cancel page (go back to main)
- * @private
- */
-avnav.gui.Wpapage.prototype.btnWpaCancel=function(button,ev){
-    log("WpaCancel clicked");
-    this.gui.showPage('statuspage');
-};
+
 
 (function(){
     //create an instance of the status page handler

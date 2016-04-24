@@ -358,18 +358,9 @@ avnav.gui.Downloadpage.prototype.abortUpload=function(){
     }
     this.hideProgress();
 };
-avnav.gui.Downloadpage.prototype.goBack=function(){
-  this.btnDownloadPageCancel();
-};
+
 
 //-------------------------- Buttons ----------------------------------------
-
-
-avnav.gui.Downloadpage.prototype.btnDownloadPageCancel=function (button,ev){
-    log("Cancel clicked");
-    this.returnToLast();
-};
-
 
 
 avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){

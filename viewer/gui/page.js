@@ -167,21 +167,24 @@ avnav.gui.Page.prototype.returnToLast=function(){
 avnav.gui.Page.prototype.initButtons=function(){
     var page=this;
     var div=this.getDiv();
-    $(div).find('.avn_button').each(function (i, e) {
-        //$(e).html('<span class="avn_button_icon"></span>');
-        var id = $(e).attr('id');
-        if (id) {
-            id = id.replace(/^avb_/, '');
-            var proto=Object.getPrototypeOf(page);
-            var f=proto['btn'+id];
-            if (f) {
-                $(e).click(function (b) {
-                    f.call(page, this, b);
-                    log("clicked " + id + "at " + b);
-                    return false;
-                });
+    this.selectOnPage('.avn_button').each(function (i, e) {
+        var classList = $(e).attr('class').split(/\s+/);
+        $.each(classList, function(index, item) {
+            if (! item.match(/^avb_/)) return;
+            //$(e).html('<span class="avn_button_icon"></span>');
+            if (item) {
+                var id = item.replace(/^avb_/, '');
+                var proto = Object.getPrototypeOf(page);
+                var f = proto['btn' + id];
+                if (f) {
+                    $(e).click(function (b) {
+                        f.call(page, this, b);
+                        log("clicked " + id + "at " + b);
+                        return false;
+                    });
+                }
             }
-        }
+        });
         if ($(e).hasClass("avn_android") && avnav.android){
             $(e).show();
         }
@@ -316,4 +319,15 @@ avnav.gui.Page.prototype.updateMainPanelSize=function(mainid){
         });
         main.css(arg.main,nval);
     }
+};
+
+avnav.gui.Page.prototype.goBack=function(){
+    this.returnToLast();
+};
+
+/*-------------------------------------------------------
+   default button
+ */
+avnav.gui.Page.prototype.btnCancel=function(){
+  this.returnToLast();
 };

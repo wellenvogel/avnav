@@ -204,18 +204,8 @@ avnav.gui.Gpspage.prototype.navEvent=function(evt){
 
 };
 
-avnav.gui.Gpspage.prototype.goBack=function(){
-  this.btnGpsCancel();
-};
 //-------------------------- Buttons ----------------------------------------
-/**
- * cancel gps page (go back to main)
- * @private
- */
-avnav.gui.Gpspage.prototype.btnGpsCancel=function(button,ev){
-    log("GpsCancel clicked");
-    this.returnToLast();
-};
+
 
 (function(){
     //create an instance of the status page handler
