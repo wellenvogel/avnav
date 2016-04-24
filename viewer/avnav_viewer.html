@@ -298,6 +298,42 @@ all buttons with ids avb_... will call corresponding js functions
           </div>
           <div class="avn_panel avn_map">
               <div id='avi_navLeftContainer'>
+                  <div id='centerDisplay' class='avn_hidden avn_widget'>
+
+                      <div class="avn_widgetInfoLeft">Center</div>
+                      <div class="avd_centerPosition"></div>
+                      <div class="avn_table">
+                          <div class="avn_row">
+                              <div class="avn_label avn_marker"></div>
+                              <div class="avn_center_value">
+                                  <span class='avd_centerMarkerCourse'>000</span>
+                                  <span class="avn_unit">&#176</span>
+                              </div>
+                              <div class="avn_center_value">
+                                  /
+                              </div>
+                              <div class="avn_center_value">
+                                  <span class='avd_centerMarkerDistance'>000.0</span>
+                                  <span class="avn_unit">nm</span>
+                              </div>
+                          </div>
+                          <div class="avn_row">
+                              <div class="avn_label avn_boat"></div>
+                              <div class="avn_center_value">
+                                  <span class='avd_centerCourse'>000</span>
+                                  <span class="avn_unit">&#176</span>
+                              </div>
+                              <div class="avn_center_value">
+                                  /
+                              </div>
+                              <div class="avn_center_value">
+                                  <span class='avd_centerDistance'>000.0</span>
+                                  <span class="avn_unit">nm</span>
+
+                              </div>
+                          </div>
+                      </div>
+                  </div>
                   <div id='aisInfo' class='avn_widget avn_hidden'>
 
                       <div class="avn_widgetInfoLeft">AIS</div>
@@ -332,6 +368,7 @@ all buttons with ids avb_... will call corresponding js functions
                           <span id="avi_routeDisplay_next_course" class="avd_routeNextCourse"></span><span class='avn_unit'>&#176;</span>
                       </div>
                   </div>
+
               </div>
               <div id="avi_route_info_navpage" class="avn_panel avn_hidden avn_left">
                   <div id="avi_route_info_navpage_inner">
@@ -378,25 +415,7 @@ all buttons with ids avb_... will call corresponding js functions
           </div>
           <!-- measure to map center -->
           <div id="avi_nav_bottom" class="avn_panel avn_left_bottom">
-          <div id='centerDisplay' class='avn_hidden'>
-              <div id='centerInner'>
-                  fromMarker:
-                  <span id='centerMarkerCourse' class='avn_center avd_centerMarkerCourse'>000</span>
-                  &#176 &nbsp;
-                  <span id='centerMarkerDistance' class='avn_center avd_centerMarkerDistance'>000.0</span>
-                  nm &nbsp;
-                  +
-                  <span id='centerPosition' class='avn_center avd_centerPosition'>-----------------------</span>
-                  +
-                  &nbsp;fromBoat:
-                  <span id='centerBoatCourse' class='avn_center avd_centerCourse'>
-                      </span>
-                  &#176&nbsp;
-                  <span id='centerBoatDistance' class='avn_center avd_centerDistance'>000.0</span>
-                  nm &nbsp;
 
-              </div>
-          </div>
           <!-- the display at the bottom of the nav page -->
 
 

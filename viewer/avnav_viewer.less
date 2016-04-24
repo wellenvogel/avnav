@@ -212,11 +212,13 @@ html,body {
 @wLeftBottomSpeed: 3em; //bigFont
 @wLeftBottomBearing: 2.1em; //bigFont
 @wLeftBottomMarkerDistance: 3em; //bigFont
+@bottomWidgetsTiny: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed +  @wLeftBottomCourse + @wLeftBottomBearing + 1em ) * (@bottomBigFont/@bottomBaseFont) + 4 * unit(@wWidgetMargin) ;
 //small: without positions
-@bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 2.5em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
+@bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 1.3em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
 @bottomWidgetsSmall: ( @bottomWidgetsVerySmall + unit(4 * @wWidgetMargin + @wLeftBottomMarkerPos + @wLeftBottomPosition));
-@checkVerySmall: (@bottomWidgetsVerySmall  * @bottomBaseFont);
-@checkSmall: (@bottomWidgetsSmall  * @bottomBaseFont);
+@checkTiny: (@bottomWidgetsTiny * @bottomBaseFont + (@buttonSize + 10));
+@checkVerySmall: (@bottomWidgetsVerySmall  * @bottomBaseFont + (@buttonSize + 10));
+@checkSmall: (@bottomWidgetsSmall  * @bottomBaseFont + (@buttonSize + 10));
 .bottomhideverysmall{
   .hidemedia(0px,@checkVerySmall);
 }
@@ -523,7 +525,7 @@ html,body {
   font-size: ( @aisPanelWidth /8);
   background-color: #BFBFBF;
   z-index: 10;
-  @media(max-width: @checkVerySmall){
+  @media(max-width: @checkTiny){
     right:0;
     background-color: inherit;
     pointer-events: none;
@@ -536,11 +538,10 @@ html,body {
 -------------------------------------------------------------*/
 #aisInfo{
   background-color: @aisNormalColor;
-  max-width: @aisPanelWidth;
-  @media(max-width: @checkVerySmall){
-    position: absolute;
-    left: 0;
-    bottom: 0;
+  max-width: 9em;
+  @media(max-width: @checkTiny){
+    float: left;
+    height: 7em;
   }
 }
 #aisInfo when (@nightModePercent<100%){
@@ -577,9 +578,9 @@ html,body {
   padding-right: 0.2em;
   padding-left: 0.2em;
   padding-top: 1.2em;
-  max-width: @aisPanelWidth;
+  max-width: 9em;
   .nightColors();
-  @media (max-width: @checkVerySmall) {
+  @media (max-width: @checkTiny) {
     position: absolute;
     right: 0;
     bottom: 0;
@@ -611,6 +612,52 @@ html,body {
 .avn_route_display_approach when (@nightModePercent<100%) {
   background-color: #702620 !important
 }
+
+/*-------------------------------------------------------------
+   center display
+-------------------------------------------------------------*/
+#centerDisplay{
+  background-color: white;
+  .nightColors();
+  @media(max-width: @checkTiny){
+    float: left;
+    height: 7em;
+  }
+}
+#centerDisplay .avn_label{
+  display: table-cell;
+  opacity: 0.6;
+  margin-right: 0.2em;
+}
+#centerDisplay .avn_center_value{
+  display: table-cell;
+  text-align: end;
+  white-space: nowrap;
+}
+#centerDisplay .avd_centerPosition{
+  max-width: 6.5em;
+  margin-top:1em;
+}
+#centerDisplay .avn_table{
+  display: table;
+  font-size: 0.8em;
+}
+#centerDisplay .avn_row{
+  display: table-row;
+}
+#centerDisplay .avn_boat{
+  background-image: url(images/Sail-Boat-40.png);
+  background-size: 1em 1em;
+  background-repeat: no-repeat;
+  width: 1.5em;
+}
+#centerDisplay .avn_marker{
+  background-image: url(images/Marker1.png);
+  background-size: 1em 1em;
+  background-repeat: no-repeat;
+  width: 1.5em;
+}
+
 
 .avn_routeBtn{
   .avn_hidden();
@@ -1633,17 +1680,7 @@ button#avb_MainAndroid{
 
 
 
-#centerDisplay{
-	height: @centerDisplayHeight;
-    width:100%;
-	background-color: rgb(204, 204, 203);
-    z-index: 100;
-  overflow: hidden;
-}
-#centerDisplay when (@nightModePercent <100%) {
-    background-color: rgba(100, 100, 99, 1);
-}
- 
+
 .avn_float_left{
 	float: left;
 }
