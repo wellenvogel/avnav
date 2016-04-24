@@ -76,7 +76,7 @@ avnav.gui.Navpage=function(){
         self.updateMainPanelSize('#'+self.mapdom);
     });
     $(window).on('resize',function(){
-       self.handleRouteDisplay();
+       self.updateLayout();
     });
 
 };
@@ -250,7 +250,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $('#avi_route_info_navpage_inner').click({page:this},function(ev){
         ev.data.page.gui.showPage('routepage',{returnpage:'navpage'});
     });
-    $('#avi_route_display').click({page:this},function(ev){
+    $('#avi_routeDisplay').click({page:this},function(ev){
         if (! self.routingVisible) {
             self.showRouting();
             return;
@@ -275,12 +275,12 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
         $('#boatPositionStatus').attr('src',this.gui.properties.getProperties().statusErrorImage);
     }
     if (this.navobject.getRoutingData().getApproaching()){
-        $('#avi_route_display').addClass('avn_route_display_approach');
-        $('#avi_route_display_next').show();
+        $('#avi_routeDisplay').addClass('avn_route_display_approach');
+        $('#avi_routeDisplay_next').show();
     }
     else {
-        $('#avi_route_display').removeClass('avn_route_display_approach');
-        $('#avi_route_display_next').hide();
+        $('#avi_routeDisplay').removeClass('avn_route_display_approach');
+        $('#avi_routeDisplay_next').hide();
     }
     var route=this.navobject.getRoutingData().getEditingRoute();
     var routeTarget=this.navobject.getRoutingData().getCurrentLegTarget();
@@ -369,7 +369,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         this.overlay = this.getDiv().find('#centerDisplay');
         this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
         this.overlay.show();
-        this.handleRouteDisplay();
+        this.updateLayout();
     }
     if (evdata.type == avnav.map.EventType.SELECTAIS){
         var aisparam=evdata.parameter.aisparam;
@@ -389,7 +389,7 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
         this.overlay.hide();
         this.overlay=null;
         this.hidetime=0;
-        this.handleRouteDisplay();
+        this.updateLayout();
     }
 };
 avnav.gui.Navpage.prototype.toggleNextGoto=function(showNext){
@@ -461,13 +461,17 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
     if (! this.navobject) return;
     var routeActive=this.navobject.getRoutingData().hasActiveRoute();
     if (routeActive && (! this.routingVisible || this.gui.properties.getProperties().routeShowRteWhenEdit) ){
-        var rtop=$('#avi_nav_bottom').outerHeight();
-        $('#avi_route_display').css('bottom',rtop+"px");
-        $('#avi_route_display').show();
+        $('#avi_routeDisplay').show();
     }
     else {
-        $('#avi_route_display').hide();
+        $('#avi_routeDisplay').hide();
     }
+    this.updateLayout();
+};
+
+avnav.gui.Navpage.prototype.updateLayout=function(){
+    var rtop=$('#avi_nav_bottom').outerHeight();
+    $('#avi_navLeftContainer').css('bottom',rtop+"px");
 };
 
 avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
