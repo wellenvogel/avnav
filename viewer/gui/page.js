@@ -22,7 +22,6 @@ avnav.gui.Page=function(name,options){
     this.navobject=null;
     this.name=name;
     this.visible=false;
-    this.returnpage=undefined;
     this.options=options;
     var myself=this;
     /**
@@ -113,13 +112,6 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         //visibility changed
         this.visible=this.isVisible();
         if (this.visible){
-            if (evdata.options && evdata.options.returnpage){
-                this.returnpage=evdata.options.returnpage;
-            }
-            else {
-                if (!evdata.options || !evdata.options.returning)this.returnpage=undefined;
-                //keep returnpage unchanged if we return
-            }
             this.showPage(evdata.options);
             this.updateDisplayObjects();
         }

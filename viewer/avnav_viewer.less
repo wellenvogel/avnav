@@ -237,6 +237,56 @@ html,body {
   margin-left: 0.2em;
 }
 
+.avn_table{
+  display: table;
+}
+.avn_row{
+  display: table-row;
+}
+
+/*-------------------------------------------------------------
+    some classes for info pages
+--------------------------------------------------------------*/
+.avn_infopage_inner {
+  width: 100%;
+  margin: auto;
+  font-size: 1.5em;
+}
+
+.avn_infopage_inner .avn_Status{
+  background-color: inherit;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 3px;
+  text-align: right;
+  display: inline-block;
+  margin-right: 0.5em;
+  vertical-align: text-bottom;
+}
+
+.avn_infopage_inner h1{
+  text-align: center;
+}
+.avn_infopage_inner .avn_table {
+  width: 100%
+}
+
+.avn_infopage_inner .avn_label{
+  display: table-cell;
+  text-align: right;
+  padding-right: 1em;
+  opacity: 0.6;
+  padding-bottom: 0.7em;
+  width: 50%;
+}
+.avn_infopage_inner .avn_data{
+  display: table-cell;
+  border-bottom: inherit;
+  font-size: 1em;
+  width: 50%;
+}
+
+
 #avi_nav_bottom{
   bottom: 0;
   left: 0;
@@ -566,7 +616,6 @@ html,body {
   display: table-cell;
 }
 #aisInfo .avn_table{
-  display: table;
   margin-top: 1em;
 }
 #aisInfo .avn_row{
@@ -644,7 +693,6 @@ html,body {
   margin-top:1em;
 }
 #centerDisplay .avn_table{
-  display: table;
   font-size: 0.8em;
 }
 #centerDisplay .avn_row{
@@ -1071,46 +1119,12 @@ button.avb_AisNearest {
 /*-------------------------------------------------------------
    ais info page
 -------------------------------------------------------------*/
-#avi_ais_infopage_inner {
-  width: 100%;
+#avi_aisinfopage .avn_infopage_inner {
   max-width: 40em;
-  margin: auto;
-  font-size: 1.5em;
 }
-#avi_ais_infopage_inner .avn_aisStatus{
-  background-color: inherit;
-  width: 1.5em;
-  height: 1.5em;
-  border-radius: 3px;
-  text-align: right;
-  display: inline-block;
-  margin-right: 0.5em;
-  vertical-align: text-bottom;
-}
-#avi_ais_infopage_inner h1{
-  text-align: center;
-}
-#avi_ais_infopage_inner .avn_table {
-  display: table;
-  width: 100%
-}
-#avi_ais_infopage_inner .avn_row {
-  display: table-row;
-}
-#avi_ais_infopage_inner .avn_label{
-  display: table-cell;
-  text-align: right;
-  padding-right: 1em;
-  opacity: 0.6;
-  padding-bottom: 0.7em;
-  width: 50%;
-}
-#avi_ais_infopage_inner .avn_ais_data{
-  display: table-cell;
-  border-bottom: inherit;
-  font-size: 1em;
-  width: 50%;
-}
+
+
+
 #avi_ais_infopage_inner .avn_ais_warning{
   color: fade(@aisWarningColor,@nightModePercent * 1.5);
 }

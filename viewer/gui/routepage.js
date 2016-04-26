@@ -300,7 +300,6 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
                     function(route){
                         self.loadedRoute=route;
                         self.fillData(false);
-                        //self.gui.showPageOrReturn(this.returnpage,'navpage',{showRouting:true});
                     },
                     function(err){
                         alert("unable to load route "+name+": "+err);

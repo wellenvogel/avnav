@@ -89,13 +89,7 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         }
         var mmsi=$(this).attr('mmsi');
         self.aishandler.setTrackedTarget(mmsi);
-        self.gui.showPage('aisinfopage',{mmsi:mmsi});
-        /*
-        var pos=self.aishandler.getAisPositionByMmsi(mmsi);
-        if (pos)self.gui.map.setCenter(pos);
-        self.gui.map.setGpsLock(false);
-        self.gui.showPageOrReturn(ev.data.self.returnpage,'navpage');
-        */
+        self.gui.showPage('aisinfopage',{mmsi:mmsi,skipHistory: true});
     });
     if (initial){
         $(domid).scrollTop(0);
