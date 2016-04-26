@@ -89,6 +89,7 @@
         'gui/navpage.js',
         'gui/aispage.js',
         'gui/aisinfopage.js',
+        'gui/boatinfopage.js',
         'gui/settingspage.js',
         'gui/statuspage.js',
         'gui/gpspage.js',

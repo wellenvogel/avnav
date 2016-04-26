@@ -218,16 +218,10 @@ avnav.gui.Navpage.prototype.localInit=function(){
             navobject.getRoutingData().setEditingWp(routingTarget);
         }
     });
-    $('#leftBottomPositionCourse').click({page:this},function(ev){
-        ev.stopPropagation();
-        var gps=ev.data.page.navobject.getRawData(avnav.nav.NavEventType.GPS);
-        if (gps.valid) ev.data.page.gui.map.setCenter(gps);
-    });
     $('#leftBottomPosition').click({page:this},function(ev){
         ev.stopPropagation();
-        ev.data.page.gui.showPage('gpspage');
+        self.gui.showPage('boatinfopage');
     });
-
     $('#centerDisplay').click({page:this},function(ev){
        ev.data.page.hideOverlay();
     });

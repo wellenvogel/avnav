@@ -699,67 +699,43 @@ all buttons with ids avb_... will call corresponding js functions
               </div>
           </div>
 
-          <div  class="avn_panel avn_scrollable_page">
-              <div >
-                  <h1><div class='avn_Status'></div>Boat Info</h1>
+          <div class="avn_panel avn_scrollable_page">
+              <div class="avn_infopage_inner">
+                  <h1>
+                      <div class='avn_Status'></div>
+                      Boat Info
+                  </h1>
+
                   <div class="avn_table">
                       <div class="avn_row">
-                          <div class='avn_label '>MMSI</div>
-                          <div class='avn_data' data-name='aisMmsi'>000000</div>
+                          <div class='avn_label '>GPS Status</div>
+                          <img class='avn_status_image' src='images/GreyBubble40.png'/>
                       </div>
                       <div class="avn_row">
-                          <div class='avn_label '>Name</div>
-                          <div class='avn_data' data-name='aisName'>-------</div>
+                          <div class='avn_label '>LocalTime</div>
+                          <div class='avn_data avd_gpsTime'>-------</div>
                       </div>
                       <div class="avn_row">
-                          <div class='avn_label '>Callsign</div>
-                          <div class='avn_data' data-name='aisCallsign'>-------</div>
+                          <div class='avn_label '>Position</div>
+                          <div class='avn_data avd_gpsPosition'>-------</div>
                       </div>
                       <div class="avn_row">
-                          <div class='avn_label '>Distance(nm)</div>
-                          <div class='avn_data' data-name="aisDst">000.0</div>
+                          <div class='avn_label '>COG</div>
+                          <div class='avn_data'><span class='avd_gpsCourse'>000</span><span class="avn_unit">&#176</span><img class='avn_course_image' src="images/Boat1.png"/></div>
                       </div>
                       <div class="avn_row">
-                          <div class='avn_label '>HeadingTo</div>
-                          <div class='avn_data' data-name="aisHeading">000.0</div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>CPA(nm)</div>
-                          <div class='avn_data' data-name="aisCpa">000.0</div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>TCPA(min:sec)</div>
-                          <div class='avn_data' data-name='aisTcpa'>00:00</div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>Sog(kn)</div>
-                          <div class='avn_data' data-name="aisSog">000.0</div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>Cog</div>
-                          <div class='avn_data' data-name="aisCog">000.0</div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>Destination</div>
-                          <div class='avn_data' data-name='aisDestination'>-------</div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>Type</div>
-                          <div class='avn_data' data-name='aisShiptype'>-------</div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>we pass</div>
-                          <div class='avn_data avn_ais_front' data-name='aisFront'>-------</div>
+                          <div class='avn_label '>SOG</div>
+                          <div class='avn_data'><span class='avd_gpsSpeed'>000.0</span><span class="avn_unit">kn</span></div>
                       </div>
                   </div>
+
               </div>
           </div>
 
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button  type="button"  class="avb_AisInfoNearest avn_button"></button>
-          <button  type="button"  class="avb_AisInfoLocate avn_button"></button>
-          <button  type="button"  class="avb_AisInfoList avn_button"></button>
+          <button  type="button"  class="avb_BoatInfoLocate avn_button"></button>
+          <button  type="button"  class="avb_BoatInfoGps avn_button">000</button>
           <button  type="button"  class="avb_Cancel avn_button"></button>
       </div>
   </div>

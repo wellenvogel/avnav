@@ -286,6 +286,10 @@ html,body {
   width: 50%;
 }
 
+/*-------------------------------------------------------------
+  nav page
+  ------------------------------------------------------------*/
+
 
 #avi_nav_bottom{
   bottom: 0;
@@ -415,9 +419,6 @@ html,body {
 	text-align: center;
 }
 
-/*-------------------------------------------------------------
-  nav page
-  ------------------------------------------------------------*/
 
 #avi_second_buttons_navpage{
   top: 0px;
@@ -1128,9 +1129,7 @@ button.avb_AisNearest {
 #avi_ais_infopage_inner .avn_ais_warning{
   color: fade(@aisWarningColor,@nightModePercent * 1.5);
 }
-button.avb_AisInfoCancel{
-  .avn_button_icon_base('images/Cancel40.png');
-}
+
 button.avb_AisInfoNearest {
   .avn_button_icon_base('images/Ais-Up-40.png');
 }
@@ -1140,6 +1139,37 @@ button.avb_AisInfoLocate {
 button.avb_AisInfoList {
   .avn_button_icon_base('images/linedpaper32.png');
 }
+
+/*-------------------------------------------------------------
+   boat info page
+-------------------------------------------------------------*/
+#avi_boatinfopage .avn_infopage_inner {
+  max-width: 40em;
+  font-size: 2em;
+}
+#avi_boatinfopage .avn_Status{
+  background-image: url('images/Sail-Boat-256.png');
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+}
+#avi_boatinfopage .avn_status_image {
+  vertical-align: middle;
+  width: 2em;
+  height: 2em;
+}
+#avi_boatinfopage .avn_course_image{
+  width: 1.3em;
+  height: 1.3em;
+  transform: rotate(90deg);
+  vertical-align: middle;
+}
+#avi_boatinfopage .avn_unit{
+  margin-left: 0.5em;
+}
+button.avb_BoatInfoLocate {
+  .avn_button_icon_base('images/Marker2.png');
+}
+
 
 /*-------------------------------------------------------------
    status page

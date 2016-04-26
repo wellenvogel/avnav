@@ -42,7 +42,7 @@ avnav.gui.AisInfoPage.prototype.localInit=function(){
 };
 avnav.gui.AisInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;
-    this.mmsi=options.mmsi;
+    this.mmsi=options?options.mmsi:undefined;
     if (this.mmsi === undefined) {
         var current=this.aishandler.getNearestAisTarget();
         if (current) this.mmsi=current.mmsi;
