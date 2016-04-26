@@ -208,15 +208,7 @@ avnav.gui.Navpage.prototype.hidePage=function(){
 avnav.gui.Navpage.prototype.localInit=function(){
     var self=this;
     $('#leftBottomMarker').click({page:this},function(ev){
-        var navobject=ev.data.page.navobject;
-        var leg=navobject.getRawData(avnav.nav.NavEventType.ROUTE);
-        var marker=navobject.getRawData(avnav.nav.NavEventType.NAV).markerLatlon;
-        ev.data.page.gui.map.setCenter(marker);
-        //make the current WP the active again...
-        var routingTarget=navobject.getRoutingData().getCurrentLegTargetIdx();
-        if (routingTarget >= 0 && navobject.getRoutingData().isEditingActiveRoute()){
-            navobject.getRoutingData().setEditingWp(routingTarget);
-        }
+        self.gui.showPage('wpinfopage');
     });
     $('#leftBottomPosition').click({page:this},function(ev){
         ev.stopPropagation();
@@ -276,18 +268,6 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
         $('#avi_routeDisplay').removeClass('avn_route_display_approach');
         $('#avi_routeDisplay_next').hide();
     }
-    var route=this.navobject.getRoutingData().getEditingRoute();
-    var routeTarget=this.navobject.getRoutingData().getCurrentLegTarget();
-    var txt="Marker";
-    if (routeTarget){
-        txt=routeTarget.name;
-        if (! txt) {
-            var wpv=this.navobject.getRoutingData().getCurrentLegTargetIdx();
-            if (wpv < 0) txt="";
-            else txt=wpv+"";
-        }
-    }
-    $('#markerLabel').text(txt);
 };
 
 /**

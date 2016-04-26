@@ -285,6 +285,9 @@ html,body {
   font-size: 1em;
   width: 50%;
 }
+.avn_infopage_inner .avn_unit{
+  margin-left: 0.3em;
+}
 
 /*-------------------------------------------------------------
   nav page
@@ -321,7 +324,7 @@ html,body {
   text-align: center;
 }
 
-#markerLabel {
+#leftBottomMarker .avd_markerName {
   margin-top: 0.5em;
   text-align: center;
 }
@@ -1162,6 +1165,16 @@ button.avb_AisInfoList {
   height: 1.3em;
   transform: rotate(90deg);
   vertical-align: middle;
+  border: 1px solid;
+  border-color: rgba(0, 0, 0, 0.36);
+  border-radius: 50%;
+  margin-left: 0.5em;
+  padding: 0.3em;
+}
+#avi_boatinfopage .avd_gpsCourse {
+  width: 1.8em;
+  display: inline-block;
+  text-align: end;
 }
 #avi_boatinfopage .avn_unit{
   margin-left: 0.5em;
@@ -1170,7 +1183,28 @@ button.avb_BoatInfoLocate {
   .avn_button_icon_base('images/Marker2.png');
 }
 
+/*-------------------------------------------------------------
+   wp info page
+-------------------------------------------------------------*/
+#avi_wpinfopage .avn_infopage_inner {
+  max-width: 40em;
+  font-size: 2em;
 
+}
+#avi_wpinfopage .avn_boat{
+  background-image: url("images/Sail-Boat-40.png");
+  display: inline-block;
+  width:1em;
+  height: 1em;
+  background-size: 1em 1em;
+  margin-right: 0.5em;
+}
+button.avb_WpInfoLocate {
+  .avn_button_icon_base('images/Marker2.png');
+}
+button.avb_WpInfoRoute {
+  .avn_button_icon_base('images/RoutingButton40.png',( @buttonSize * 45 /60 ));
+}
 /*-------------------------------------------------------------
    status page
 -------------------------------------------------------------*/

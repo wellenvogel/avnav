@@ -434,7 +434,7 @@ all buttons with ids avb_... will call corresponding js functions
               <div id='leftBottomMarkerEta' class='avn_float_right avn_bottom_item avn_widget'>
                   <div class="avn_widgetInfoLeft">ETA</div>
                   <div class="avd_markerEta">00:00:00</div>
-                  <div id='markerLabel' >Marker</div>
+                  <div class="avd_markerName" >Marker</div>
               </div>
               <!-- marker eta-->
               <div id='leftBottomMarkerPos' class='avn_float_right avn_bottom_item avn_widget'>
@@ -740,6 +740,73 @@ all buttons with ids avb_... will call corresponding js functions
       </div>
   </div>
   <!-- end boatInfoPage-->
+
+  <!-- WpInfo -->
+  <div id="avi_wpinfopage" class="avn_page avn_hidden">
+      <div class='avn_panel avn_left_panel'>
+          <div class='avn_panel avn_left_top'>
+              <div class='avn_inner'>
+              </div>
+          </div>
+
+          <div class="avn_panel avn_scrollable_page">
+              <div class="avn_infopage_inner">
+                  <h1>
+                      <div class='avn_Status'></div>
+                      Waypoint Info
+                  </h1>
+
+                  <div class="avn_table">
+                      <div class="avn_row">
+                          <div class='avn_label '>Name</div>
+                          <div class='avn_data avd_markerName'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Position</div>
+                          <div class='avn_data avd_markerPosition'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>BRG(to Wp)</div>
+                          <div class='avn_data'><span class='avd_markerCourse'>000</span><span class="avn_unit">&#176</span></div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '><span class="avn_boat"></span>COG</div>
+                          <div class='avn_data'><span class='avd_gpsCourse'>000</span><span class="avn_unit">&#176</span></div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Distance</div>
+                          <div class='avn_data'><span class='avd_markerDistance'>000.0</span><span class="avn_unit">nm</span></div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>ETA</div>
+                          <div class='avn_data'><span class='avd_markerEta'>----</span></div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>XTE</div>
+                          <div class='avn_data'><span class='avd_routeXte'>000.0</span><span class="avn_unit">nm</span></div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>VMG</div>
+                          <div class='avn_data'><span class='avd_markerVmg'>000.0</span><span class="avn_unit">kn</span></div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '><span class="avn_boat"></span>SOG</div>
+                          <div class='avn_data'><span class='avd_gpsSpeed'>000.0</span><span class="avn_unit">kn</span></div>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+      </div>
+      <div class='avn_panel avn_right_panel'>
+          <button  type="button"  class="avb_WpInfoLocate avn_button"></button>
+          <button  type="button"  class="avb_WpInfoGps avn_button">000</button>
+          <button  type="button"  class="avb_WpInfoRoute avn_button"></button>
+          <button  type="button"  class="avb_Cancel avn_button"></button>
+      </div>
+  </div>
+  <!-- end WpInfoPage-->
 
   <!-- settingsPage -->
   <div id="avi_settingspage" class="avn_page avn_hidden">

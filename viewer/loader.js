@@ -90,6 +90,7 @@
         'gui/aispage.js',
         'gui/aisinfopage.js',
         'gui/boatinfopage.js',
+        'gui/wpinfopage.js',
         'gui/settingspage.js',
         'gui/statuspage.js',
         'gui/gpspage.js',

@@ -1068,13 +1068,27 @@ avnav.nav.RouteData.prototype.getCurrentLegTargetIdx=function(){
  * @returns {avnav.nav.navdata.WayPoint|undefined}
  */
 avnav.nav.RouteData.prototype.getCurrentLegTarget=function(){
-    return this.currentLeg.to;
+    var rt=avnav.nav.navdata.WayPoint.fromPlain(this.currentLeg.to);
+    if (! rt.name){
+        if (this.currentLeg.currentRoute){
+            rt.name=this.currentLeg.currentTarget+"";
+        }
+        else {
+            rt.name="Marker";
+        }
+    }
+    return rt;
 };
 
 avnav.nav.RouteData.prototype.getCurrentLegNextWp=function(){
     if (! this.currentLeg.currentRoute) return undefined;
     if (this.currentLeg.currentTarget >= (this.currentLeg.currentRoute.points.length-1)) return undefined;
-    return this.currentLeg.currentRoute.points[this.currentLeg.currentTarget+1];
+    var rt=avnav.nav.navdata.WayPoint.fromPlain(this.currentLeg.currentRoute.points[this.currentLeg.currentTarget+1]);
+    if (!rt.name) {
+        var num = this.currentLeg.currentTarget + 1;
+        rt.name = num + "";
+    }
+    return rt;
 };
 
 /**
