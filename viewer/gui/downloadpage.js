@@ -358,18 +358,9 @@ avnav.gui.Downloadpage.prototype.abortUpload=function(){
     }
     this.hideProgress();
 };
-avnav.gui.Downloadpage.prototype.goBack=function(){
-  this.btnDownloadPageCancel();
-};
+
 
 //-------------------------- Buttons ----------------------------------------
-
-
-avnav.gui.Downloadpage.prototype.btnDownloadPageCancel=function (button,ev){
-    log("Cancel clicked");
-    this.gui.showPageOrReturn(this.returnpage,'mainpage');
-};
-
 
 
 avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
@@ -381,7 +372,7 @@ avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
 };
 
 avnav.gui.Downloadpage.prototype.btnDownloadPageRoutes=function(button,ev){
-    this.gui.showPage('routepage',{fromdownload:true,returnpage:"mainpage"})
+    this.gui.showPage('routepage',{fromdownload:true})
 };
 avnav.gui.Downloadpage.prototype.btnDownloadPageTracks=function(button,ev){
     this.showPage({downloadtype:"track"});

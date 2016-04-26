@@ -78,6 +78,7 @@ avnav.gui.Handler = function (properties, navobject, map) {
      * @type {{}}
      */
     this.activeInputs = {};
+    this.history=[];
     this.lasth = $(window).height();
     this.lastw = $(window).width();
     $(window).on('resize', function () {
@@ -145,30 +146,42 @@ avnav.gui.Handler.prototype.removeAllActiveInputs = function () {
 /**
  * return to a page or show a new one if returnpage is not set
  * set the returning flag in options if we return
- * @param returnpage
- * @param pagefocus
  * @param opt_options
  * @returns {boolean|*}
  */
-avnav.gui.Handler.prototype.showPageOrReturn = function (returnpage, page, opt_options) {
-    var spage = page;
-    if (returnpage !== undefined) {
-        if (!opt_options) opt_options = {};
-        opt_options.returning = true;
-        spage = returnpage;
+avnav.gui.Handler.prototype.returnToLast = function (page, opt_options) {
+    var spage;
+    if (this.history.length == 0){
+        if (page) spage=page;
+        else spage="mainpage";
     }
+    else{
+        spage=this.history.pop();
+    }
+    if (!opt_options) opt_options = {};
+    opt_options.returning = true;
     return this.showPage(spage, opt_options);
 };
 /**
  * show a certain page
  * @param {String} name
  * @param {Object} options options to be send as options with the event
+ *                 if this contains a "returnpage" - set this as the new returnpage in the history
  * @returns {boolean}
  */
 
 avnav.gui.Handler.prototype.showPage = function (name, options) {
     if (!name) return false;
     if (name == this.page) return false;
+    if (name == "mainpage") this.history=[]; //empty history if we reach the mainpage
+    else  if (! options || ! options.returning) {
+        if (options && options.returnpage) this.history.push(options.returnpage);
+        else {
+            this.history.push(this.page);
+            if (! options)options={};
+            options.returnpage=this.page;
+        }
+    }
     this.removeAllActiveInputs();
     $('.avn_page').hide();
     $('#avi_' + name).show();

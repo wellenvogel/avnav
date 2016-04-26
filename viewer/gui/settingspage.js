@@ -166,20 +166,10 @@ avnav.gui.Settingspage.prototype.hidePage=function(){
 
 };
 
-avnav.gui.Settingspage.prototype.goBack=function(){
-    this.btnSettingsCancel();
-};
 
 
 //-------------------------- Buttons ----------------------------------------
-/**
- * cancel settings page (go back to main)
- * @private
- */
-avnav.gui.Settingspage.prototype.btnSettingsCancel=function(button,ev){
-    log("SettingsCancel clicked");
-    this.gui.showPage('mainpage');
-};
+
 
 /**
  * activate settings and go back to main

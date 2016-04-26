@@ -110,15 +110,15 @@ all buttons with ids avb_... will call corresponding js functions
           </div>
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button id="avb_ShowStatus" type="button" class="avn_button"></button>
-          <button id="avb_ShowSettings" type="button" class="avn_button"></button>
-          <button id="avb_ShowHelp" type="button"  class="avn_button"></button>
-          <button id="avb_ShowDownload" type="button"  class="avn_button"></button>
-          <button id="avb_Connected" type="button"  class="avn_button avn_toggleButton"></button>
-          <button id="avb_ShowGps" type="button"  class="avn_button">000</button>
-          <button id="avb_Night" type="button"  class="avn_button avn_toggleButton"></button>
-          <!--<button id="avb_MainAndroid" type="button"  class="avn_button avn_android avn_hidden"></button>-->
-          <button id="avb_MainCancel" type="button"  class="avn_button avn_android avn_hidden"></button>
+          <button  type="button"  class="avb_ShowStatus avn_button"></button>
+          <button  type="button"  class="avb_ShowSettings avn_button"></button>
+          <button  type="button"   class="avb_ShowHelp avn_button"></button>
+          <button  type="button"   class="avb_ShowDownload avn_button"></button>
+          <button  type="button"   class="avb_Connected avn_button avn_toggleButton"></button>
+          <button  type="button"   class="avb_ShowGps avn_button">000</button>
+          <button  type="button"   class="avb_Night avn_button avn_toggleButton"></button>
+          <!--<button  type="button"   class="avb_MainAndroid avn_button avn_android avn_hidden"></button>-->
+          <button  type="button"   class="avb_MainCancel avn_button avn_android avn_hidden"></button>
       </div>
   </div>
   <!-- end mainPage -->
@@ -142,10 +142,10 @@ all buttons with ids avb_... will call corresponding js functions
           </div>
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button id="avb_StatusUpdate" type="button" class="avn_button"></button>
-          <button id="avb_StatusCancel" type="button" class="avn_button"></button>
-          <button id="avb_StatusWpa" type="button" class="avn_button avn_no_android"></button>
-          <button id="avb_StatusAndroid" type="button" class="avn_button avn_hidden avn_android"></button>
+          <button  type="button"  class="avb_StatusUpdate avn_button"></button>
+          <button  type="button"  class="avb_Cancel avn_button"></button>
+          <button  type="button"  class="avb_StatusWpa avn_button avn_no_android"></button>
+          <button  type="button"  class="avb_StatusAndroid avn_button avn_hidden avn_android"></button>
       </div>
   </div>
   <!-- end statusPage-->
@@ -185,7 +185,7 @@ all buttons with ids avb_... will call corresponding js functions
           </div>
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button id="avb_WpaCancel" type="button" class="avn_button"></button>
+          <button  type="button"  class="avb_Cancel avn_button"></button>
       </div>
 
   </div>
@@ -274,7 +274,7 @@ all buttons with ids avb_... will call corresponding js functions
                           <div class='avn_gpsp_field_label'>AIS</div>
                           <div id="avi_gpsp_aisframe" class="avn_gpsp_value" avnrel="22">
                               <div id="avi_gpsp_ais_status"></div>
-                              <div id='avi_gpsp_ais' ></div>    <span id="avi_aisStatusText">
+                              <div id='avi_gpsp_ais' ></div>    <span id="avi_aisStatusText"></span>
                           </div>
                       </div>
 
@@ -284,7 +284,7 @@ all buttons with ids avb_... will call corresponding js functions
 
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button id="avb_GpsCancel" type="button" class="avn_button"></button>
+          <button  type="button"  class="avb_Cancel avn_button"></button>
       </div>
   </div>
   <!-- end gpsPage-->
@@ -296,44 +296,100 @@ all buttons with ids avb_... will call corresponding js functions
               <div class='avn_inner'>
               </div>
           </div>
-          <div class="avn_panel avn_main">
-              <div id='aisInfo' class='avn_aisInfo avn_panel avn_hidden avn_left'>
-                  <div id='aisInfoInner' class='avn_inner'>
-                      <div id='aisInfoHeadline' >AIS</div>
-                      <div id='aisDstLabel' class='avn_label '>Dst</div>
-                      <div id='aisDst' class='avn_ais_data avd_aisDst'>000.0</div>
-                      <div id='aisSogLabel' class='avn_label '>Sog</div>
-                      <div id='aisSog' class='avn_ais_data avd_aisSog'>000.0</div>
-                      <div id='aisCogLabel' class='avn_label '>Cog</div>
-                      <div id='aisCog' class='avn_ais_data avd_aisCog'>000.0</div>
-                      <div id='aisCpaLabel' class='avn_label '>CPA</div>
-                      <div id='aisCpa' class='avn_ais_data avd_aisCpa'>000.0</div>
-                      <div id='aisTcpaLabel' class='avn_label '>TCPA</div>
-                      <div id='aisTcpa' class='avn_ais_data avd_aisTcpa'>00:00</div>
-                      <div id='aisMmsiLabel' class='avn_label '>MMSI</div>
-                      <div id='aisMmsi' class='avn_ais_mmsi avd_aisMmsi'>000000</div>
-                      <div id='aisNameLabel' class='avn_label '>name</div>
-                      <div id='aisName' class='avn_ais_name avd_aisName'>-------</div>
-                      <div id='aisDestinationLabel' class='avn_label '>destination</div>
-                      <div id='aisDestination' class='avn_ais_name avd_aisDestination'>-------</div>
-                      <div id='aisShiptypeLabel' class='avn_label '>type</div>
-                      <div id='aisShiptype' class='avn_ais_name avd_aisShiptype'>-------</div>
-                      <div id='aisFrontLabel' class='avn_label '>we pass</div>
-                      <div id='aisFront' class='avn_ais_front avd_aisFront'>-------</div>
+          <div class="avn_panel avn_map">
+              <div id='avi_navLeftContainer'>
+                  <div id='centerDisplay' class='avn_hidden avn_widget'>
+
+                      <div class="avn_widgetInfoLeft">Center</div>
+                      <div class="avd_centerPosition"></div>
+                      <div class="avn_table">
+                          <div class="avn_row">
+                              <div class="avn_label avn_marker"></div>
+                              <div class="avn_center_value">
+                                  <span class='avd_centerMarkerCourse'>000</span>
+                                  <span class="avn_unit">&#176</span>
+                              </div>
+                              <div class="avn_center_value">
+                                  /
+                              </div>
+                              <div class="avn_center_value">
+                                  <span class='avd_centerMarkerDistance'>000.0</span>
+                                  <span class="avn_unit">nm</span>
+                              </div>
+                          </div>
+                          <div class="avn_row">
+                              <div class="avn_label avn_boat"></div>
+                              <div class="avn_center_value">
+                                  <span class='avd_centerCourse'>000</span>
+                                  <span class="avn_unit">&#176</span>
+                              </div>
+                              <div class="avn_center_value">
+                                  /
+                              </div>
+                              <div class="avn_center_value">
+                                  <span class='avd_centerDistance'>000.0</span>
+                                  <span class="avn_unit">nm</span>
+
+                              </div>
+                          </div>
+                      </div>
                   </div>
+                  <div id='aisInfo' class='avn_widget avn_hidden'>
+
+                      <div class="avn_widgetInfoLeft">AIS</div>
+                      <div class="avn_table">
+                          <div class="avn_row">
+                              <div class='avn_label '>D</div>
+                              <div class="avn_ais_data"><span class='avd_aisDst'>000.0</span><span
+                                      class="avn_unit">nm</span></div>
+                          </div>
+                          <div class="avn_row">
+                              <div class='avn_label '>C</div>
+                              <div class="avn_ais_data"><span class='avd_aisCpa'>000.0</span><span
+                                      class="avn_unit">nm</span></div>
+                          </div>
+                          <div class="avn_row">
+                              <div class='avn_label '>T</div>
+                              <div class="avn_ais_data"><span class='avd_aisTcpa'>00:00</span><span
+                                      class="avn_unit">h</span></div>
+                          </div>
+                          <div class="avn_row">
+                              <div class='avn_label '></div>
+                              <div class='avn_ais_front avn_ais_data avd_aisFront'>-</div>
+                          </div>
+                      </div>
+                  </div>
+                  <div id="avi_routeDisplay" class="avn_widget avn_hidden ">
+                      <div class="avn_widgetInfoLeft">RTE</div>
+                      <div id="avi_routeDisplay_name" class="avd_routeName"></div>
+                      <div><span id="avi_routeDisplay_remain" class="avd_routeRemain"></span><span class='avn_unit'>nm</span></div>
+                      <div id="avi_routeDisplay_eta" class="avd_routeEta"></div>
+                      <div id="avi_routeDisplay_next" class="avn_hidden">
+                          <span id="avi_routeDisplay_next_course" class="avd_routeNextCourse"></span><span class='avn_unit'>&#176;</span>
+                      </div>
+                  </div>
+
               </div>
               <div id="avi_route_info_navpage" class="avn_panel avn_hidden avn_left">
                   <div id="avi_route_info_navpage_inner">
-                      <div id="avi_route_info_heading">Route</div>
-                      <div id="avi_route_info_name" class="avn_routeInfo"></div>
-                      <div class="avn_route_label">Points:</div>
-                      <div id="avi_route_info_numPoints" class="avn_routeInfo avd_edRouteNumPoints"></div>
-                      <div class="avn_route_label">Length:</div>
-                      <div id="avi_route_info_length" class="avn_routeInfo avd_edRouteLen"></div>
-                      <div class="avn_route_label">toGo:</div>
-                      <div id="avi_route_info_remain" class="avn_routeInfo avd_edRouteRemain"></div>
-                      <div class="avn_route_label">ETA:</div>
-                      <div id="avi_route_info_eta" class="avn_routeInfo avd_edRouteEta"></div>
+                      <div id="avi_route_info_heading">RTE</div>
+                      <div id="avi_route_info_name"></div>
+                      <div class="avn_routeInfoLine">
+                          <span class="avn_route_label">PTS:</span>
+                          <span id="avi_route_info_numPoints" class="avn_routeInfo avd_edRouteNumPoints"></span>
+                      </div>
+                      <div class="avn_routeInfoLine">
+                          <span class="avn_route_label">DST:</span>
+                          <span id="avi_route_info_length" class="avn_routeInfo avd_edRouteLen"></span>
+                      </div>
+                      <div class="avn_routeInfoLine">
+                          <span class="avn_route_label">RTG:</span>
+                          <span id="avi_route_info_remain" class="avn_routeInfo avd_edRouteRemain"></span>
+                      </div>
+                      <div class="avn_routeInfoLine">
+                          <span class="avn_route_label">ETA:</span>
+                          <span id="avi_route_info_eta" class="avn_routeInfo avd_edRouteEta"></span>
+                      </div>
                   </div>
                   <div id='avi_route_info_list' >
                   </div>
@@ -347,107 +403,90 @@ all buttons with ids avb_... will call corresponding js functions
                             <div class="avn_route_point_course"></div>
                         </div>
                       <div id="avi_waypoint_popup_right">
-                          <button id="avb_WpPrevious" class="avn_button"></button>
-                          <button id="avb_WpNext" class="avn_button"></button>
-                          <button id="avb_WpDone" class="avn_button"></button>
+                          <button   class="avb_WpPrevious avn_button"></button>
+                          <button   class="avb_WpNext avn_button"></button>
+                          <button   class="avb_WpDone avn_button"></button>
                       </div>
                   </div>
-                  <div id="avi_route_display" class="avn_panel avn_hidden">
-                      <div id="avi_route_display_name" class="avd_routeName"></div>
-                      <div><span id="avi_route_display_remain" class="avd_routeRemain"></span>nm</div>
-                      <div id="avi_route_display_eta" class="avd_routeEta"></div>
-                      <div id="avi_route_display_next" class="avn_hidden">
-                          Next&nbsp;<span id="avi_route_display_next_course" class="avd_routeNextCourse"></span>&#176;
-                      </div>
-                  </div>
+
               </div>
-              <div id="avi_second_buttons_navpage" class="avn_panel avn_hidden">
-                  <button id="avb_NavAdd" type="button" class="avn_button"></button>
-                  <button id="avb_NavDelete" type="button" class="avn_button"></button>
-                  <button id="avb_NavToCenter" type="button" class="avn_button"></button>
-                  <button id="avb_NavGoto" type="button" class="avn_button"></button>
-                  <button id="avb_NavInvert" type="button" class="avn_button"></button>
-                  <button id="avb_NavDeleteAll" type="button" class="avn_button"></button>
-                  <button id="avb_NavWp" type="button"  class="avn_button avn_toggleButton"></button>
-              </div>
+
 
           </div>
           <!-- measure to map center -->
-          <div id='centerDisplay' class='avn_panel avn_hidden'>
-              <div id='centerInner'>
-                  fromMarker:
-                  <span id='centerMarkerCourse' class='avn_center avd_centerMarkerCourse'>000</span>
-                  &#176 &nbsp;
-                  <span id='centerMarkerDistance' class='avn_center avd_centerMarkerDistance'>000.0</span>
-                  nm &nbsp;
-                  +
-                  <span id='centerPosition' class='avn_center avd_centerPosition'>-----------------------</span>
-                  +
-                  &nbsp;fromBoat:
-                  <span id='centerBoatCourse' class='avn_center avd_centerCourse'>
-                      </span>
-                  &#176&nbsp;
-                  <span id='centerBoatDistance' class='avn_center avd_centerDistance'>000.0</span>
-                  nm &nbsp;
+          <div id="avi_nav_bottom" class="avn_panel avn_left_bottom">
 
-              </div>
-          </div>
           <!-- the display at the bottom of the nav page -->
-          <div id='leftBottomNavPage' class='avn_panel avn_left_bottom'>
-              <div id='leftBottomInner' class='avn_inner avn_panel'>
-                  <!-- the following additional div is needed for the text align...-->
-                  <div id='leftBottomInnerCenter'>
 
-                      <div id='leftBottomMarker' class='avn_float_left avn_markerPosition'>
-                          <div id='leftBottomMarkerBearing' class='avn_float_right'>
-                              <div id='bearing' class='avn_float_left avd_markerCourse'>000</div>
-                              <div class='avn_float_left'>&#176</div>
-                              <div id='distance' class='avn_float_left avd_markerDistance'>000,0</div>
-                              <div class='avn_float_left'>nm</div>
-                          </div>
-                          <!-- marker bearing-->
-                          <div id='leftBottomMarkerEta' class='avn_float_right'>
-                              <div id='eta' class="avd_markerEta">00:00:00</div>
-                              <div id='markerLabel' class='avn_label'>Marker</div>
-                          </div>
-                          <!-- marker eta-->
-                          <div id='leftBottomMarkerPos' class='avn_float_right'>
-                              <div id='markerPosition' class='avn_float_left avd_markerPosition'>0E,0N</div>
-                          </div>
-                          <!-- marker pos-->
-                      </div>
-                      <!-- end marker -->
-                      <div id='leftBottomPosition' class='avn_float_left avn_boatPosition'>
-                          <div id='leftBottomPositionCourse' class='avn_float_left'>
-                              <div id='boatCourse' class='avd_gpsCourse avn_float_left'>000</div>
-                              <div class='avn_float_left'>&#176</div>
-                              <div id='boatSpeed' class='avd_gpsSpeed avn_float_left'>00.0</div>
-                              <div class='avn_float_left'>kn</div>
-                          </div>
-                          <!-- leftBottomPositionPos -->
-                          <div id='leftBottomPositionStatus' class='avn_float_left'>
-                              <div id='boatLocalTime' class='avd_gpsTime avn_float_left'>00:00:00</div>
-                              <img id='boatPositionStatus' class='avn_status_image' src='images/GreyBubble40.png'/>
-                          </div>
-                          <div id='leftBottomPositionPos' class='avn_float_left'>
-                              <div id='boatPosition' class='avd_gpsPosition avn_float_left'>-------------</div>
-                          </div>
-                      </div>
 
+          <div id='leftBottomMarker'>
+              <div class='avn_float_right avn_bottom_item avn_widget'>
+                  <div class='avn_float_left avd_markerCourse'>000</div>
+                  <div class='avn_widgetInfoLeft'>BRG</div>
+                  <div class='avn_widgetInfoRight'>&#176</div>
+              </div>
+              <div id='leftBottomMarkerDistance' class='avn_float_right avn_bottom_item avn_widget'>
+                  <div class='avn_float_left avd_markerDistance'>000,0</div>
+                  <div class='avn_widgetInfoLeft'>DST</div>
+                  <div class='avn_widgetInfoRight'>nm</div>
+              </div>
+              <!-- marker bearing-->
+              <div id='leftBottomMarkerEta' class='avn_float_right avn_bottom_item avn_widget'>
+                  <div class="avn_widgetInfoLeft">ETA</div>
+                  <div class="avd_markerEta">00:00:00</div>
+                  <div id='markerLabel' >Marker</div>
+              </div>
+              <!-- marker eta-->
+              <div id='leftBottomMarkerPos' class='avn_float_right avn_bottom_item avn_widget'>
+                  <div class="avn_widgetInfoLeft">MRK</div>
+                  <div  class='avn_float_left avd_markerPosition'>0E,0N</div>
+              </div>
+              <!-- marker pos-->
+          </div>
+          <!-- end marker -->
+          <div id='leftBottomPosition'>
+              <div id='leftBottomPositionCourse' class='avn_float_left avn_bottom_item avn_widget'>
+                  <div class='avd_gpsCourse avn_float_left'>000</div>
+                  <div class='avn_widgetInfoLeft'>COG</div>
+                  <div class='avn_widgetInfoRight'>&#176</div>
+              </div>
+              <div class='avn_float_left avn_bottom_item avn_widget'>
+                  <div class='avd_gpsSpeed avn_float_left'>00.0</div>
+                  <div class='avn_widgetInfoLeft'>SOG</div>
+                  <div class='avn_widgetInfoRight'>kn</div>
+              </div>
+              <!-- leftBottomPositionPos -->
+              <div id='leftBottomPositionStatus' class='avn_float_left avn_bottom_item avn_widget'>
+                  <div class="avn_widgetInfoLeft">GPS</div>
+                  <div id="leftBottomPositionStatusImage">
+                      <img id='boatPositionStatus' class='avn_status_image' src='images/GreyBubble40.png'/>
                   </div>
-                  <!-- end position-->
-
+                  <div class='avd_gpsTime '>00:00:00</div>
+              </div>
+              <div id='leftBottomPositionPos' class='avn_float_left avn_bottom_item avn_widget'>
+                  <div class="avn_widgetInfoLeft">BOAT</div>
+                  <div id='boatPosition' class='avd_gpsPosition avn_float_left'>-------------</div>
               </div>
           </div>
+
+          <!-- end position-->
+      </div>
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button id="avb_ZoomIn" type="button"  class="avn_button"></button>
-          <button id="avb_ZoomOut" type="button"  class="avn_button"></button>
-          <button id="avb_LockPos" type="button"  class="avn_button avn_toggleButton"></button>
-          <button id="avb_LockMarker" type="button"  class="avn_button avn_toggleButton"></button>
-          <button id="avb_CourseUp" type="button"  class="avn_button avn_toggleButton"></button>
-          <button id="avb_ShowRoutePanel" type="button"  class="avn_button avn_toggleButton"></button>
-          <button id="avb_CancelNav" type="button"  class="avn_button"></button>
+          <button  type="button"   class="avb_ZoomIn avn_button"></button>
+          <button  type="button"   class="avb_ZoomOut avn_button"></button>
+          <button  type="button"   class="avb_LockPos avn_button avn_toggleButton avn_noRouteBtn"></button>
+          <button  type="button"   class="avb_LockMarker avn_button avn_toggleButton avn_noRouteBtn"></button>
+          <button  type="button"   class="avb_CourseUp avn_button avn_toggleButton avn_noRouteBtn"></button>
+          <button  type="button"  class="avb_ShowRoutePanel avn_button avn_toggleButton avn_noRouteBtn"></button>
+          <button  type="button"  class="avb_NavAdd avn_button avn_routeBtn"></button>
+          <button  type="button"  class="avb_NavDelete avn_button avn_routeBtn"></button>
+          <button  type="button"  class="avb_NavToCenter avn_button avn_routeBtn"></button>
+          <button  type="button"  class="avb_NavGoto avn_button avn_routeBtn"></button>
+          <button  type="button"  class="avb_NavNext avn_button avn_routeBtn"></button>
+          <button  type="button"  class="avb_NavInvert avn_button avn_routeBtn"></button>
+          <button  type="button"  class="avb_NavDeleteAll avn_button avn_routeBtn"></button>
+          <button  type="button"   class="avb_CancelNav avn_button"></button>
       </div>
   </div>
 
@@ -484,13 +523,13 @@ all buttons with ids avb_... will call corresponding js functions
 
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button id="avb_RoutePageCharts" type="button" class="avn_button avn_routepage_optional"></button>
-          <button id="avb_RoutePageTracks" type="button" class="avn_button avn_routepage_optional"></button>
-          <button id="avb_RoutePageRoutes" type="button" class="avn_button avn_routepage_optional"></button>
-          <button id="avb_RoutePageOk" type="button" class="avn_button"></button>
-          <button id="avb_RoutePageDownload" type="button" class="avn_button"></button>
-          <button id="avb_RoutePageUpload" type="button" class="avn_button"></button>
-          <button id="avb_RoutePageCancel" type="button" class="avn_button"></button>
+          <button  type="button"  class="avb_RoutePageCharts avn_button avn_routepage_optional"></button>
+          <button  type="button"  class="avb_RoutePageTracks avn_button avn_routepage_optional"></button>
+          <button  type="button"  class="avb_RoutePageRoutes avn_button avn_routepage_optional"></button>
+          <button  type="button"  class="avb_RoutePageOk avn_button"></button>
+          <button  type="button"  class="avb_RoutePageDownload avn_button"></button>
+          <button  type="button"  class="avb_RoutePageUpload avn_button"></button>
+          <button  type="button"  class="avb_RoutePageCancel avn_button"></button>
       </div>
       <form id="avi_route_downloadform" class="avn_hidden" method="post" >
           <input type="hidden" name="_json"/>
@@ -537,16 +576,16 @@ all buttons with ids avb_... will call corresponding js functions
               <div id="avi_download_progress_display" class="avn_progress_bar">
                   <div class="avn_progress_bar_done"></div>
               </div>
-              <button id="avb_DownloadPageUploadCancel" type="button" class="avn_button"></button>
+              <button  type="button"  class="avb_DownloadPageUploadCancel avn_button"></button>
           </div>
 
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button id="avb_DownloadPageCharts" type="button" class="avn_button"></button>
-          <button id="avb_DownloadPageTracks" type="button" class="avn_button"></button>
-          <button id="avb_DownloadPageRoutes" type="button" class="avn_button"></button>
-          <button id="avb_DownloadPageUpload" type="button" class="avn_button"></button>
-          <button id="avb_DownloadPageCancel" type="button" class="avn_button"></button>
+          <button  type="button"  class="avb_DownloadPageCharts avn_button"></button>
+          <button  type="button"  class="avb_DownloadPageTracks avn_button"></button>
+          <button  type="button"  class="avb_DownloadPageRoutes avn_button"></button>
+          <button  type="button"  class="avb_DownloadPageUpload avn_button"></button>
+          <button  type="button"  class="avb_Cancel avn_button"></button>
       </div>
       <form id="avi_download_downloadform" class="avn_hidden" method="get" >
           <input type="hidden" name="name"/>
@@ -560,6 +599,79 @@ all buttons with ids avb_... will call corresponding js functions
   </div>
   <!-- end download/upload Page-->
 
+  <!-- aisInfo -->
+  <div id="avi_aisinfopage" class="avn_page avn_hidden">
+      <div class='avn_panel avn_left_panel'>
+          <div class='avn_panel avn_left_top'>
+              <div class='avn_inner'>
+              </div>
+          </div>
+
+          <div  class="avn_panel avn_scrollable_page">
+              <div id='avi_ais_infopage_inner'>
+                  <h1><div class='avn_aisStatus'></div>AIS Info</h1>
+                  <div class="avn_table">
+                      <div class="avn_row">
+                          <div class='avn_label '>MMSI</div>
+                          <div class='avn_ais_data' data-name='aisMmsi'>000000</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Name</div>
+                          <div class='avn_ais_data' data-name='aisName'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Callsign</div>
+                          <div class='avn_ais_data' data-name='aisCallsign'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Distance(nm)</div>
+                          <div class='avn_ais_data' data-name="aisDst">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>HeadingTo</div>
+                          <div class='avn_ais_data' data-name="aisHeading">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>CPA(nm)</div>
+                          <div class='avn_ais_data' data-name="aisCpa">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>TCPA(min:sec)</div>
+                          <div class='avn_ais_data' data-name='aisTcpa'>00:00</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Sog(kn)</div>
+                          <div class='avn_ais_data' data-name="aisSog">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Cog</div>
+                          <div class='avn_ais_data' data-name="aisCog">000.0</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Destination</div>
+                          <div class='avn_ais_data' data-name='aisDestination'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Type</div>
+                          <div class='avn_ais_data' data-name='aisShiptype'>-------</div>
+                      </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>we pass</div>
+                          <div class='avn_ais_data avn_ais_front' data-name='aisFront'>-------</div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+      </div>
+      <div class='avn_panel avn_right_panel'>
+          <button  type="button"  class="avb_AisInfoNearest avn_button"></button>
+          <button  type="button"  class="avb_AisInfoLocate avn_button"></button>
+          <button  type="button"  class="avb_AisInfoList avn_button"></button>
+          <button  type="button"  class="avb_Cancel avn_button"></button>
+      </div>
+  </div>
+  <!-- end aisInfoPage-->
   <!-- aisPage -->
   <div id="avi_aispage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
@@ -574,8 +686,8 @@ all buttons with ids avb_... will call corresponding js functions
 
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button id="avb_AisNearest" type="button" class="avn_button"></button>
-          <button id="avb_AisCancel" type="button" class="avn_button"></button>
+          <button  type="button"  class="avb_AisNearest avn_button"></button>
+          <button  type="button"  class="avb_Cancel avn_button"></button>
       </div>
   </div>
   <!-- end aisPage-->
@@ -690,25 +802,7 @@ all buttons with ids avb_... will call corresponding js functions
                   <div class="avn_settings_line">
                       <div class="avn_setting" avn_name="bearingColor"></div>
                       <div class="avn_clear"></div>
-                  </div>.avn_toast{
-    width:50em;
-    height:2em;
-    height:auto;
-    position:absolute;
-    left:50%;
-    margin-left:-100px;
-    bottom:10px;
-    background-color: #383838;
-    color: #F0F0F0;
-    .nightColors();
-    font-size: 1.5em;
-    padding:1em;
-    text-align:center;
-    border-radius: 2px;
-    -webkit-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
-    -moz-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
-    box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
-}
+                  </div>
                   <div class="avn_settings_line">
                       <div class="avn_setting" avn_name="bearingWidth"></div>
                       <div class="avn_clear"></div>
@@ -801,10 +895,10 @@ all buttons with ids avb_... will call corresponding js functions
 
       </div>
       <div class='avn_panel avn_right_panel'>
-          <button id="avb_SettingsOK" type="button" class="avn_button"></button>
-          <button id="avb_SettingsCancel" type="button" class="avn_button"></button>
-          <button id="avb_SettingsDefaults" type="button" class="avn_button"></button>
-          <button id="avb_SettingsAndroid" type="button" class="avn_button avn_hidden avn_android"></button>
+          <button  type="button"  class="avb_SettingsOK avn_button"></button>
+          <button  type="button"  class="avb_Cancel avn_button"></button>
+          <button  type="button"  class="avb_SettingsDefaults avn_button"></button>
+          <button  type="button"  class="avb_SettingsAndroid avn_button avn_hidden avn_android"></button>
       </div>
   </div>
   <!-- end settingsPage-->

@@ -409,13 +409,13 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
             this.routingData.changeRouteName(name,!this.gui.properties.getProperties().connectedMode);
         }
     }
-    this.gui.showPageOrReturn(this.returnpage,'navpage',{showRouting:true});
+    this.gui.returnToLast('navpage', {showRouting: true});
     log("Route OK clicked");
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageCancel=function (button,ev){
     log("Cancel clicked");
-    this.gui.showPageOrReturn(this.returnpage,'navpage',{showRouting:true});
+    this.gui.returnToLast('navpage', {showRouting: true});
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){

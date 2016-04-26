@@ -74,10 +74,12 @@ button.avn_toggleButton{
 
 button.avn_buttonActive{
   border: 4px solid #1DB81D !important;
+  .nightOPacity();
 }
 
 button.avn_buttonActiveError{
   border: 4px solid #EC420C !important;
+  .nightOPacity();
 }
 
 button.avn_buttonInactive{
@@ -92,10 +94,16 @@ button.avn_buttonInactive{
   background-size: @innerWidth @innerWidth;
   background-repeat: no-repeat;
   text-decoration: none;
+  .nightOPacity2();
 }
 
 .avn_button_icon_base_toggle(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
   .avn_button_icon_base(@icon,@innerWidth);
+}
+
+button.avb_Cancel {
+  .avn_button_icon_base('images/Cancel40.png');
+
 }
 
 /*-------------------------------------------------------------
@@ -108,6 +116,9 @@ button.avn_buttonInactive{
 }
 .nightOPacity() when(@nightModePercent <100%){
   opacity: @nightModeValue;
+}
+.nightOPacity2() when(@nightModePercent <100%){
+  opacity: min(1,1 - (1 - @nightModeValue)*0.5);
 }
 
 input when (@nightModePercent<100%) {
@@ -125,6 +136,7 @@ html,body {
 	padding: 0;
 	font-family: Verdana,Arial,sans-serif;
 	font-size: 0.8em;
+  .border-box();
 }
 
 .avn_panel{
@@ -138,19 +150,9 @@ html,body {
 	color: white;
 }
 .avn_left_bottom {
-	
-	background-color: fade(rgb(222, 226, 207),@nightModePercent);
-	text-align: center;
+  background-color: #BFBFBF;
 }
 
-.avn_map{
-	border: 1px solid black;
-    top: 0px;
-    bottom: 0px;
-    left: 0;
-    right: 0;
-	
-}
 
 /*
   for a page that consumes the left side and is scrollable
@@ -168,155 +170,185 @@ html,body {
 .avn_inner{
 	display: inline-block;
 }
-.avn_label{
-	padding-left: 3px;
-	padding-right: 3px;
-}
 
-.avi_mainpage_leftbottominner .avn_label{
-	-webkit-margin-before: 0.5em;
-}
-.avn_position{
-	padding-left: 5px;
-	padding-right: 5px;
-}
+
+
 
 .avn_hidden{
 	display:none;
 }
 
 
-.avn_position{
-
-border-color: black;
-border-style: solid;
-border-width: 1px;
-background-color: white;
-font-size: ( @topPanelHeight - 2 );
-}
-
-.avn_left_bottom .avn_position{
-font-size: ( @bottomPanelHeight - 2 );
-}
-
 /*-------------------------------------------------------------
    bottom display
 -------------------------------------------------------------*/
-@bottomSmallFont: (( @bottomPanelHeight / 2 ) - 10 );
+.avn_widget{
+  position: relative;
+  border-radius: 0.2em;
+  z-index: 100;
+  padding: 0.3em;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+  0 1px 5px 0 rgba(0, 0, 0, 0.12),
+  0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
+  margin-left: @wWidgetMargin;
+  margin-bottom: 0.1em;
+  margin-top: 0.1em;
+  margin-right: @wWidgetMargin;
+  .border-box();
+  overflow: hidden;
+  pointer-events: all;
+}
+.avn_bottom_item{
+  height: @bottomPanelHeight;
+  background: white;
+  .nightColors();
+}
+@bottomBaseFont: ( @bottomPanelHeight / 5 );
+@bottomSmallFont: (@bottomPanelHeight/3.2);
 @bottomBigFont: ( @bottomPanelHeight  - 8 );
+
+//bottom widgets in bottomBase font units
+@wWidgetMargin: 0.15em;
+@wLeftBottomMarkerPos: 10.5em;
+@wLeftBottomMarkerEta: 9em;
+@wLeftBottomPosition: 10.5em;
+@wLeftBottomStatus: 9em;
+@wLeftBottomCourse: 2.1em; //bigFont
+@wLeftBottomSpeed: 3em; //bigFont
+@wLeftBottomBearing: 2.1em; //bigFont
+@wLeftBottomMarkerDistance: 3em; //bigFont
+@bottomWidgetsTiny: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed +  @wLeftBottomCourse + @wLeftBottomBearing + 1em ) * (@bottomBigFont/@bottomBaseFont) + 4 * unit(@wWidgetMargin) ;
+//small: without positions
+@bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 1.3em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
+@bottomWidgetsSmall: ( @bottomWidgetsVerySmall + unit(4 * @wWidgetMargin + @wLeftBottomMarkerPos + @wLeftBottomPosition));
+@checkTiny: (@bottomWidgetsTiny * @bottomBaseFont + (@buttonSize + 10));
+@checkVerySmall: (@bottomWidgetsVerySmall  * @bottomBaseFont + (@buttonSize + 10));
+@checkSmall: (@bottomWidgetsSmall  * @bottomBaseFont + (@buttonSize + 10));
 .bottomhideverysmall{
-  .hidemedia(0px,@bottomPanelHeight*14.5);
+  .hidemedia(0px,@checkVerySmall);
 }
 .bottomhidesmall{
-  .hidemedia(0px,@bottomPanelHeight*18.8);
+  .hidemedia(0px,@checkSmall);
 }
 
-.bottomMargins {
-	margin-left: ( @bottomPanelHeight / 12 );
-	margin-right: ( @bottomPanelHeight / 12 );
+.avn_unit{
+  font-size:0.7em;
+  opacity: 0.6;
+  margin-left: 0.2em;
 }
-.bottomInnerMargins{
-	margin-left: ( @bottomPanelHeight / 12 );
-}
-#leftBottomInner{
-	left:0;
-	right: 0;
 
+#avi_nav_bottom{
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
-#leftBottomInnerCenter{
-  display:  inline-block; //this sets the text align center as inherited
-  width: 100%;
-}
+
+
 
 #leftBottomMarker{
+  float: left;
   width: 50%;
+  font-size: @bottomBaseFont;
 }
-#leftBottomMarkerBearing{
-    .border-box();
-    height: @bottomPanelHeight;
-    border: 1px solid;
-    border-radius: 3px;
-    padding-right: 4px;
-}
-#leftBottomPositionCourse{
-  .border-box();
-  border: 1px solid;
-  border-radius: 3px;
-  height: @bottomPanelHeight;
-}
-#leftBottomMarker #leftBottomMarkerPos{
-	width: ( @bottomSmallFont * 7 );
-	.bottomMargins;
-	margin-top: ( @bottomSmallFont / 4 );
+
+
+#leftBottomMarkerPos{
+	width: @wLeftBottomMarkerPos;
 	.bottomhidesmall();
 
 }
 #leftBottomMarker #leftBottomMarkerEta{
-	margin-top: ( @bottomSmallFont / 4 );
-    margin-right: (@bottomSmallFont / 4);
+    width: @wLeftBottomMarkerEta;
     .bottomhideverysmall();
+}
+#leftBottomMarker .avd_markerEta{
+  font-size: @bottomSmallFont;
+  margin-top: 0.55em;
+  text-align: center;
 }
 
 #markerLabel {
-  max-width: 7em;
+  margin-top: 0.5em;
+  text-align: center;
 }
-#leftBottomMarker #leftBottomMarkerBearing{
-	//width: ( @bottomBigFont * 5.8 );
+
+#leftBottomMarker .avd_markerPosition{
+  font-size: @bottomSmallFont;
+  margin-top: 0.55em;
 }
-#leftBottomMarker #markerPosition{
-	font-size: @bottomSmallFont;
+
+#leftBottomMarker .avd_markerCourse{
+  font-size: @bottomBigFont;
+  width: @wLeftBottomBearing;
+  text-align: end;
+  padding-right: 0.1em;
+
 }
-#leftBottomMarker #eta{
-	font-size: @bottomSmallFont;
-}
-#leftBottomMarker #bearing{
-	font-size: @bottomBigFont;
-	.bottomInnerMargins;
-}
-#leftBottomMarker #distance{
-	font-size: @bottomBigFont;
-	.bottomInnerMargins;
-    border-left: 1px dotted;
-    padding-left: ( @bottomPanelHeight / 12 );
+#leftBottomMarker .avd_markerDistance{
+  font-size: @bottomBigFont;
+  width: @wLeftBottomMarkerDistance;
+  text-align: end;
+
 }
 
 #leftBottomPosition{
+  float: left;
   width: 50%;
+  font-size: @bottomBaseFont;
 }
 
-#leftBottomPosition #leftBottomPositionPos{
-	width: ( @bottomSmallFont * 7 );
-	margin-top: ( @bottomSmallFont / 4 );
+#leftBottomPositionPos{
+	width: @wLeftBottomPosition;
     .bottomhidesmall();
 }
-#leftBottomPosition #leftBottomPositionStatus{
-	width: ( @bottomSmallFont * 6 );
-	margin-top: ( @bottomSmallFont / 4 );
+#leftBottomPositionStatus{
+	width: @wLeftBottomStatus;
     .bottomhideverysmall();
-    padding-left: ( @bottomSmallFont / 4);
 }
-#leftBottomPosition #leftBottomPositionCourse{
-	//width: ( @bottomBigFont * 5 );
-  padding-left: 5px;
-  padding-right: 5px;
+#leftBottomPositionStatusImage{
+  text-align: center;
 }
-#leftBottomPosition #boatPosition{
+#boatPositionStatus{
+  width: (@bottomPanelHeight/2 );
+  height: (@bottomPanelHeight/2);
+}
+
+#boatPosition{
+  font-size: @bottomSmallFont;
+  margin-top: 0.55em;
+
+}
+#leftBottomPosition .avd_gpsTime{
 	font-size: @bottomSmallFont;
 
 }
-#leftBottomPosition #boatLocalTime{
-	font-size: @bottomSmallFont;
+#leftBottomPosition .avd_gpsCourse{
+  font-size: @bottomBigFont;
+  width: @wLeftBottomCourse;
+  text-align: end;
+  padding-right: 0.1em;
 
 }
-#leftBottomPosition #boatCourse{
-	font-size: @bottomBigFont;
-	.bottomInnerMargins;
+#leftBottomPosition .avd_gpsSpeed{
+  font-size: @bottomBigFont;
+  width: @wLeftBottomSpeed;
+  text-align: end;
 }
-#leftBottomPosition #boatSpeed{
-	font-size: @bottomBigFont;
-	.bottomInnerMargins;
-    border-left: 1px dotted;
-    padding-left: ( @bottomPanelHeight / 12 );
+
+.avn_widgetInfo{
+  font-size: @bottomBaseFont;
+  position: absolute;
+  top: 0;
+  opacity: 0.7;
+}
+
+.avn_widgetInfoRight{
+  .avn_widgetInfo();
+  right: 0.2em;
+}
+.avn_widgetInfoLeft{
+  .avn_widgetInfo();
+  left: 0.2em;
 }
 
 
@@ -376,31 +408,45 @@ font-size: ( @bottomPanelHeight - 2 );
     padding-left: 3px;
 }
 .avn_route_label{
-    .avn_route_base(10);
+  .avn_route_base(10);
+  padding-left: 0;
+  opacity: 0.6;
 }
-.avn_routeInfo{
+.avn_routeInfoLine{
   .avn_route_base(8);
-  border-bottom: 1px solid black;
-  margin-bottom: 5px;
+  margin-bottom: 0.3em;
 }
 #avi_route_info_heading{
     .avn_route_base(7);
 }
+#avi_route_info_navpage_inner{
+  font-size: ( @routeInfoFontBase / 9);
+  position: absolute;
+  top: 0;
+  height: 12em;
+  left: 0;
+  right: 0;
+}
+
 #avi_route_info_name{
-    .avn_route_base(10);
-    margin-top: 5px;
+  .avn_route_base(10);
+  padding-left: 3px;
+  margin-top: 0.5em;
+  padding-bottom: 0.5em;
+  margin-bottom: 0.5em;
+  border-bottom: 1px solid black;
 
 }
 #avi_route_info_list{
     @width: max(@aisPanelWidth,@routeInfoPanelWidth);
     font-size: ( @routeInfoFontBase / 9);
-    left:0;
-    right:0;
-    bottom: 0;
-    position: absolute;
-    top: (@routeInfoFontBase * 1.8);
     overflow-y: auto;
     overflow-x: hidden;
+  position: absolute;
+  top:12.5em;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 #avi_route_info_list input{
     @width: max(@aisPanelWidth,@routeInfoPanelWidth);
@@ -413,6 +459,8 @@ font-size: ( @bottomPanelHeight - 2 );
   padding-left: 2px;
   padding-right: 2px;
   padding-top: 1px;
+  margin-bottom: 5px;
+  padding-bottom: 2px;
 }
 .avn_route_info_active_point{
     background-color: @routeApproachingColor !important;
@@ -474,36 +522,92 @@ font-size: ( @bottomPanelHeight - 2 );
 }
 
 /*-------------------------------------------------------------
+   left widget container
+--------------------------------------------------------------*/
+#avi_navLeftContainer{
+  position: absolute;
+  left: 0;
+  font-size: ( @aisPanelWidth /8);
+  background-color: #BFBFBF;
+  z-index: 10;
+  @media(max-width: @checkTiny){
+    right:0;
+    background-color: inherit;
+    pointer-events: none;
+  }
+}
+
+
+/*-------------------------------------------------------------
+   AIS display
+-------------------------------------------------------------*/
+#aisInfo{
+  background-color: @aisNormalColor;
+  max-width: 9em;
+  @media(max-width: @checkTiny){
+    float: left;
+    height: 7em;
+  }
+}
+#aisInfo when (@nightModePercent<100%){
+  color: fade(white,@nightModePercent * 1.5);
+}
+
+
+#aisInfo .avn_ais_front {
+  font-size: 1.5em;
+}
+#aisInfo .avn_label {
+  opacity: 0.6;
+  display: table-cell;
+  padding-right: 0.2em;
+}
+#aisInfo .avn_ais_data{
+  display: table-cell;
+}
+#aisInfo .avn_table{
+  display: table;
+  margin-top: 1em;
+}
+#aisInfo .avn_row{
+  display: table-row;
+}
+
+
+
+/*-------------------------------------------------------------
    route display
 -------------------------------------------------------------*/
-#avi_route_display{
-    left: 0px;
-    bottom: 0px;
-    background-color: rgba(222, 226, 207, 0.92);
-    z-index: 90;
-    border-radius: 2px;
-    border: 1px solid;
-    padding-right: 8px;
-    padding-left: 3px;
-    .nightColors();
+#avi_routeDisplay {
+  background-color: white;
+  padding-right: 0.2em;
+  padding-left: 0.2em;
+  padding-top: 1.2em;
+  max-width: 9em;
+  .nightColors();
+  @media (max-width: @checkTiny) {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
 }
 
 
-#avi_route_display_remain{
-  font-size: (@routeInfoPanelWidth / 5.5);
+
+#avi_routeDisplay_remain{
   border-bottom: 0;
-  margin-top: 2px;
-  padding-right: 3px;
+  margin-top: 0.1em;
+  padding-right: 0.2em;
 }
-#avi_route_display_eta{
-  font-size: (@routeInfoPanelWidth / 5.5);
+#avi_routeDisplay_eta{
   border-bottom: 0;
 }
-#avi_route_display_next{
-  font-size: (@routeInfoPanelWidth / 5.5);
-  padding-left: 3px;
-  padding-bottom: 3px;
+#avi_routeDisplay_next{
+  padding-left: 0.2em;
+  padding-bottom: 0.2em;
   border-top: 1px solid;
+}
+#avi_routeDisplay_next_course{
 }
 
 .avn_route_display_approach{
@@ -513,65 +617,119 @@ font-size: ( @bottomPanelHeight - 2 );
 .avn_route_display_approach when (@nightModePercent<100%) {
   background-color: #702620 !important
 }
-button#avb_ZoomIn {
+
+/*-------------------------------------------------------------
+   center display
+-------------------------------------------------------------*/
+#centerDisplay{
+  background-color: white;
+  .nightColors();
+  @media(max-width: @checkTiny){
+    float: left;
+    height: 7em;
+  }
+}
+#centerDisplay .avn_label{
+  display: table-cell;
+  opacity: 0.6;
+  margin-right: 0.2em;
+}
+#centerDisplay .avn_center_value{
+  display: table-cell;
+  text-align: end;
+  white-space: nowrap;
+}
+#centerDisplay .avd_centerPosition{
+  max-width: 6.5em;
+  margin-top:1em;
+}
+#centerDisplay .avn_table{
+  display: table;
+  font-size: 0.8em;
+}
+#centerDisplay .avn_row{
+  display: table-row;
+}
+#centerDisplay .avn_boat{
+  background-image: url(images/Sail-Boat-40.png);
+  background-size: 1em 1em;
+  background-repeat: no-repeat;
+  width: 1.5em;
+}
+#centerDisplay .avn_marker{
+  background-image: url(images/Marker1.png);
+  background-size: 1em 1em;
+  background-repeat: no-repeat;
+  width: 1.5em;
+}
+
+
+.avn_routeBtn{
+  .avn_hidden();
+}
+button.avb_ZoomIn {
   .avn_button_icon_base('images/Plus40.png');
 }
-button#avb_ZoomOut {
+button.avb_ZoomOut {
   .avn_button_icon_base('images/Minus40.png');
 }
-button#avb_LockPos  {
+button.avb_LockPos  {
   .avn_button_icon_base_toggle('images/Sail-Boat-40.png');
 }
 
-button#avb_LockMarker {
+button.avb_LockMarker {
   .avn_button_icon_base_toggle('images/Marker1.png');
 }
 
-button#avb_CourseUp {
+button.avb_CourseUp {
   .avn_button_icon_base_toggle('images/nadel-2.png',( @buttonSize * 45 /60 ));
 }
-button#avb_ShowRoutePanel {
+button.avb_ShowRoutePanel {
   .avn_button_icon_base('images/RoutingButton40.png',( @buttonSize * 45 /60 ));
 }
 
 
-button#avb_CancelNav {
+button.avb_CancelNav {
   .avn_button_icon_base('images/Cancel40.png');
 
 }
 
 /*- nav page routing panel --*/
-button#avb_NavAdd {
+button.avb_NavAdd {
   .avn_button_icon_base('images/wpplus40.png',( @buttonSize * 45 /60 ));
 }
-button#avb_NavDelete {
+button.avb_NavDelete {
   .avn_button_icon_base('images/wpminus40.png',( @buttonSize * 45 /60 ));
 }
-button#avb_NavToCenter {
+button.avb_NavToCenter {
   .avn_button_icon_base('images/wpcenter60.png',( @buttonSize * 45 /60 ));
 }
-button#avb_NavGoto {
+button.avb_NavGoto {
   .avn_button_icon_base('images/wpgoto60.png',( @buttonSize * 45 /60 ));
 }
-button#avb_NavInvert {
+button.avb_NavInvert {
   .avn_button_icon_base('images/InvertRoute60.png',( @buttonSize * 45 /60 ));
 }
-button#avb_NavDeleteAll {
+button.avb_NavDeleteAll {
   .avn_button_icon_base('images/trash32.png');
 }
 
-button#avb_NavWp {
+button.avb_NavNext {
+  .avn_button_icon_base('images/arrowright32.png');
+}
+
+button.avb_NavWp {
   .avn_hidden();
   .avn_button_icon_base('images/YellowBubble40.png');
 }
 
-button#avb_WpDone{
+button.avb_WpDone{
   .avn_button_icon_base('images/check32.png');
 }
-button#avb_WpPrevious{
+button.avb_WpPrevious{
   .avn_button_icon_base('images/arrowleft32.png');
 }
-button#avb_WpNext{
+button.avb_WpNext{
   .avn_button_icon_base('images/arrowright32.png');
 }
 
@@ -689,28 +847,28 @@ button#avb_WpNext{
   background-image: url('images/RedBubble40.png');
 }
 
-button#avb_RoutePageOk{
+button.avb_RoutePageOk{
   .avn_button_icon_base('images/check32.png');
 }
-button#avb_RoutePageCancel{
+button.avb_RoutePageCancel{
   .avn_button_icon_base('images/Cancel40.png');
 }
-button#avb_RoutePageDownload{
+button.avb_RoutePageDownload{
   .avn_button_icon_base('images/download32.png');
 }
-button#avb_RoutePageUpload{
+button.avb_RoutePageUpload{
   .avn_button_icon_base('images/upload32.png');
 }
-button#avb_RoutePageDelete{
+button.avb_RoutePageDelete{
   .avn_button_icon_base('images/trash32.png');
 }
-button#avb_RoutePageRoutes{
+button.avb_RoutePageRoutes{
   .avn_button_icon_base('images/RoutingButton40.png');
 }
-button#avb_RoutePageCharts{
+button.avb_RoutePageCharts{
   .avn_button_icon_base_toggle('images/Chart60.png');
 }
-button#avb_RoutePageTracks{
+button.avb_RoutePageTracks{
   .avn_button_icon_base_toggle('images/TrackButton60.png');
 }
 .avn_route_btnDelete{
@@ -821,20 +979,20 @@ button#avb_RoutePageTracks{
   background-color: @nightColor;
 }
 
-button#avb_DownloadPageCancel{
+button.avb_DownloadPageCancel{
   .avn_button_icon_base('images/Cancel40.png');
 }
-button#avb_DownloadPageUpload{
+button.avb_DownloadPageUpload{
   .avn_button_icon_base('images/upload32.png');
 }
 
-button#avb_DownloadPageRoutes{
+button.avb_DownloadPageRoutes{
   .avn_button_icon_base('images/RoutingButton40.png');
 }
-button#avb_DownloadPageCharts{
+button.avb_DownloadPageCharts{
   .avn_button_icon_base_toggle('images/Chart60.png');
 }
-button#avb_DownloadPageTracks{
+button.avb_DownloadPageTracks{
   .avn_button_icon_base_toggle('images/TrackButton60.png');
 }
 .avn_download_btnDelete{
@@ -844,7 +1002,7 @@ button#avb_DownloadPageTracks{
   .avn_button_icon_base('images/download32.png',null,(@buttonSize *0.8) );
 }
 
-button#avb_DownloadPageUploadCancel{
+button.avb_DownloadPageUploadCancel{
   .avn_button_icon_base('images/Cancel40.png',null,(@buttonSize * 0.8) );
 }
 
@@ -896,38 +1054,6 @@ button#avb_DownloadPageUploadCancel{
 
 }
 
-/* AIS info box */
-#aisInfoInner{
-	margin-top: 2px;
-	position: absolute;
-	left: 0;
-	right: 0;
-}
-
-.avn_ais_base(@factor: 5) {
-	font-size: ( @aisPanelWidth / @factor );
-	margin-bottom: 5px;
-	border-bottom: 1px solid black;
-	padding-left: 3px;
-}
-
-.avn_ais_data {
-	.avn_ais_base(5);
-}
-.avn_ais_name {
-	.avn_ais_base(8);
-}
-.avn_ais_mmsi {
-	.avn_ais_base(7);
-}
-.avn_ais_front {
-	.avn_ais_base(3);
-}
-#aisInfoHeadline{
-	font-size: ( @aisPanelWidth / 3 );
-	padding-left: 3px;
-}
-
 .avn_ais_headline_elem{
   position: relative;
   top:0;
@@ -935,13 +1061,71 @@ button#avb_DownloadPageUploadCancel{
   .nightColors();
 }
 
-button#avb_AisCancel{
+
+button.avb_AisCancel{
   .avn_button_icon_base('images/Cancel40.png');
 }
-button#avb_AisNearest {
+button.avb_AisNearest {
   .avn_button_icon_base('images/Ais-Up-40.png');
 }
-
+/*-------------------------------------------------------------
+   ais info page
+-------------------------------------------------------------*/
+#avi_ais_infopage_inner {
+  width: 100%;
+  max-width: 40em;
+  margin: auto;
+  font-size: 1.5em;
+}
+#avi_ais_infopage_inner .avn_aisStatus{
+  background-color: inherit;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 3px;
+  text-align: right;
+  display: inline-block;
+  margin-right: 0.5em;
+  vertical-align: text-bottom;
+}
+#avi_ais_infopage_inner h1{
+  text-align: center;
+}
+#avi_ais_infopage_inner .avn_table {
+  display: table;
+  width: 100%
+}
+#avi_ais_infopage_inner .avn_row {
+  display: table-row;
+}
+#avi_ais_infopage_inner .avn_label{
+  display: table-cell;
+  text-align: right;
+  padding-right: 1em;
+  opacity: 0.6;
+  padding-bottom: 0.7em;
+  width: 50%;
+}
+#avi_ais_infopage_inner .avn_ais_data{
+  display: table-cell;
+  border-bottom: inherit;
+  font-size: 1em;
+  width: 50%;
+}
+#avi_ais_infopage_inner .avn_ais_warning{
+  color: fade(@aisWarningColor,@nightModePercent * 1.5);
+}
+button.avb_AisInfoCancel{
+  .avn_button_icon_base('images/Cancel40.png');
+}
+button.avb_AisInfoNearest {
+  .avn_button_icon_base('images/Ais-Up-40.png');
+}
+button.avb_AisInfoLocate {
+  .avn_button_icon_base('images/Marker2.png');
+}
+button.avb_AisInfoList {
+  .avn_button_icon_base('images/linedpaper32.png');
+}
 
 /*-------------------------------------------------------------
    status page
@@ -973,16 +1157,16 @@ button#avb_AisNearest {
 
 
 
-button#avb_StatusCancel {
+button.avb_StatusCancel {
   .avn_button_icon_base('images/Cancel40.png');
 }
-button#avb_StatusUpdate {
+button.avb_StatusUpdate {
   .avn_button_icon_base('images/exchange32.png');
 }
-button#avb_StatusWpa {
+button.avb_StatusWpa {
   .avn_button_icon_base('images/rss32.png');
 }
-button#avb_StatusAndroid{
+button.avb_StatusAndroid{
   .avn_button_icon_base('images/Android_Robot_100.png');
 }
 
@@ -1075,7 +1259,7 @@ button#avb_StatusAndroid{
 
 
 
-button#avb_WpaCancel {
+button.avb_WpaCancel {
   .avn_button_icon_base('images/Cancel40.png');
 }
 
@@ -1168,7 +1352,7 @@ button#avb_WpaCancel {
   display: block;
 }
 
-button#avb_GpsCancel{
+button.avb_GpsCancel{
   .avn_button_icon_base('images/Cancel40.png');
 }
 
@@ -1332,18 +1516,18 @@ button#avb_GpsCancel{
   border: 2px solid #6B6B6B;
 }
 
-button#avb_SettingsCancel{
+button.avb_SettingsCancel{
   .avn_button_icon_base('images/Cancel40.png');
 }
-button#avb_SettingsOK {
+button.avb_SettingsOK {
   .avn_button_icon_base('images/check32.png');
 }
 
-button#avb_SettingsDefaults{
+button.avb_SettingsDefaults{
   .avn_button_icon_base('images/trash32.png');
 }
 
-button#avb_SettingsAndroid{
+button.avb_SettingsAndroid{
   .avn_button_icon_base('images/Android_Robot_100.png');
 }
 /*-------------------------------------------------------------------------------
@@ -1398,7 +1582,6 @@ button#avb_SettingsAndroid{
   padding-left: 1em;
   padding-right: 1em;
   text-align: left;
-  background-color: fade(rgb(222, 226, 207),@nightModePercent);
   z-index: 10;
   white-space: nowrap;
 }
@@ -1406,33 +1589,42 @@ button#avb_SettingsAndroid{
 	display: inline-block;
 }
 
+#avi_mainpage .avn_left_bottom{
+  height: @bottomPanelHeight;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(216, 216, 213, 0.29);
+  .nightColors();
+}
 
 
-button#avb_ShowStatus {
+
+button.avb_ShowStatus {
   .avn_button_icon_base('images/bargraph32.png');
 }
-button#avb_ShowSettings {
+button.avb_ShowSettings {
   .avn_button_icon_base('images/spanner32.png');
 }
-button#avb_ShowHelp {
+button.avb_ShowHelp {
   .avn_button_icon_base('images/Question.png');
   .avn_hidden();
 }
 
-button#avb_Connected {
+button.avb_Connected {
   .avn_button_icon_base_toggle('images/plug32.png');
 }
 
-button#avb_Night {
+button.avb_Night {
   .avn_button_icon_base_toggle('images/Night60.png');
 }
-button#avb_ShowDownload {
+button.avb_ShowDownload {
   .avn_button_icon_base('images/download32.png');
 }
-button#avb_MainCancel{
+button.avb_MainCancel{
   .avn_button_icon_base('images/Cancel40.png');
 }
-button#avb_MainAndroid{
+button.avb_MainAndroid{
   .avn_button_icon_base('images/Android_Robot_100.png');
 }
 
@@ -1470,6 +1662,14 @@ button#avb_MainAndroid{
 	3. map
 */
 
+.avn_map {
+  top: @topPanelHeight;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+
+}
+
 .avn_main{
 	top: @topPanelHeight;
 	bottom: @bottomPanelHeight;
@@ -1482,42 +1682,16 @@ button#avb_MainAndroid{
 /*
 	4. bottom line  - see .avn_leftBottom
 */
-.avn_left_bottom{
-	
-   	bottom: 0px;
-	height: @bottomPanelHeight;
-	left: 0px;
-	right: 0px;
-}
+
 
 /*
         5. additional panels
 	   correcting the .avn_main position is done by javascript
 */
 
-#aisInfo{
-	bottom: 0px;
-	top: 0px;
-	left:	0px;
-	width:	@aisPanelWidth;
-	background-color: @aisNormalColor;
-}
-#aisInfo when (@nightModePercent<100%){
-    color: fade(white,@nightModePercent * 1.5);
-}
 
-#centerDisplay{
-	bottom: @bottomPanelHeight;
-	height: @centerDisplayHeight;
-	left:	0;
-	right:	0;
-	background-color: rgb(228, 228, 180);
-    z-index: 100;
-}
-#centerDisplay when (@nightModePercent <100%) {
-    background-color: rgba(100, 100, 99, 1);
-}
- 
+
+
 .avn_float_left{
 	float: left;
 }
@@ -1538,14 +1712,16 @@ button#avb_MainAndroid{
 }
 
 .avn_status_image{
-	width: 24px;
-	height: 24px;
+  width: 24px;
+  height: 24px;
+  .nightOPacity();
 }
 
 .avn_status_image_small{
   width: ( @bottomPanelHeight / 2.5 );
   height: ( @bottomPanelHeight / 2.5 );
   vertical-align: middle;
+  .nightOPacity();
 }
 
 
