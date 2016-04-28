@@ -617,13 +617,17 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
     log("LockPos clicked");
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
+    log("LockMarker clicked");
+    this.gui.showPage('wpinfopage');
+    return;
+    /*
     var nLock=! this.navobject.getRoutingData().getLock();
     if (! nLock) this.navobject.getRoutingData().routeOff();
     else this.navobject.getRoutingData().routeOn(avnav.nav.RoutingMode.CENTER);
     this.handleToggleButton(button,nLock);
     if (nLock) this.hideRouting();
     this.gui.map.triggerRender();
-    log("LockMarker clicked");
+    */
 };
 avnav.gui.Navpage.prototype.btnCourseUp=function (button,ev){
     var nLock=! this.gui.map.getCourseUp();

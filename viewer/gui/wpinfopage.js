@@ -75,6 +75,12 @@ avnav.gui.WpInfoPage.prototype.btnShowRoutePanel=function (button,ev){
 };
 avnav.gui.WpInfoPage.prototype.btnLockMarker=function (button,ev){
     log("lock marker clicked");
+    var nLock=! this.navobject.getRoutingData().getLock();
+    if (! nLock) this.navobject.getRoutingData().routeOff();
+    else this.navobject.getRoutingData().routeOn(avnav.nav.RoutingMode.CENTER);
+    this.handleToggleButton(button,nLock);
+    this.gui.map.triggerRender();
+    this.returnToLast();
 };
 /**
  * create the page instance
