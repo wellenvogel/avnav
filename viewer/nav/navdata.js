@@ -62,7 +62,16 @@ avnav.nav.navdata.Point.prototype.toCoord=function(){
  */
 avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
     avnav.nav.navdata.Point.call(this,lon,lat);
+    /**
+     * the name of the waypoint
+     * @type {string}
+     */
     this.name=opt_name;
+    /**
+     * if this waypoint is part of a route this is a unique identifier within the route
+     * @type {number}
+     */
+    this.id=undefined;
 };
 
 avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
@@ -76,9 +85,31 @@ avnav.nav.navdata.WayPoint.fromPlain=function(plain){
 };
 
 avnav.nav.navdata.WayPoint.clone=function(){
-    var rt=new avnav.nav.navdata.WayPoint(this.lon,this.lat,this.name);
+    var rt=new avnav.nav.navdata.WayPoint(this.lon,this.lat,this.name?this.name.slice(0):null);
+    rt.id=this.id;
     return rt;
 };
+/**
+ * update lat/lon/name/id of a wp, return true if the lat/lon/id has changed
+ * @param point
+ * @returns {boolean}
+ */
+avnav.nav.navdata.WayPoint.update=function(point){
+    var rt=false;
+    if (point.lon !== undefined){
+        if (point.lon != this.lon) rt=true;
+        this.lon=point.lon;
+    }
+    if (point.lat !== undefined){
+        if (point.lat != this.lat) rt=true;
+        this.lat=point.lat;
+    }
+    if (point.name !== undefined){
+        this.name=point.name.slice(0);
+    }
+    return rt;
+};
+
 /**
  * a track point
  * @param {number} lon

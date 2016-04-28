@@ -283,11 +283,11 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     }
     else {
         var edRoute=this.routeHandler.getEditingRoute();
-        this.data.edRouteRemain=0
+        this.data.edRouteRemain=0;
         this.data.edRouteEta=undefined;
-        this.data.edRouteName=edRoute.name;
-        this.data.edRouteNumPoints=edRoute.points.length;
-        this.data.edRouteLen=this.routeHandler.computeLength(0,edRoute);
+        this.data.edRouteName=edRoute?edRoute.name:undefined;
+        this.data.edRouteNumPoints=edRoute?edRoute.points.length:0;
+        this.data.edRouteLen=edRoute?this.routeHandler.computeLength(0,edRoute):0;
     }
 
     //now create text values

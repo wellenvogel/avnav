@@ -268,7 +268,7 @@ avnav.gui.Downloadpage.prototype.download=function(name,opt_url) {
 };
 
 avnav.gui.Downloadpage.prototype.directUpload=function(file) {
-    self=this;
+    var self=this;
     var url = self.gui.properties.getProperties().navUrl + "?request=upload&type="+this.type+"&filename=" + encodeURIComponent(file.name);
     self.showProgress();
     avnav.util.Helper.uploadFile(url, file, {

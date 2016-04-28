@@ -59,7 +59,6 @@ avnav.map.AisLayer=function(mapholder,navobject){
      */
     this.pixel=[];
 
-    var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });

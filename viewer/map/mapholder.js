@@ -29,7 +29,7 @@ avnav.map.EventType={
 
 /**
  *
- * @param {avnav.map.EventTypes} type
+ * @param {avnav.map.EventType} type
  * @param opt_parameter
  * @constructor
  */
@@ -50,7 +50,7 @@ avnav.map.MapEvent.EVENT_TYPE="mapevent";
 /**
  * the holder for our olmap
  * the holer remains alive all the time whereas the map could be recreated on demand
- * @param {avnav.properties.PropertyHandler} properties
+ * @param {avnav.util.PropertyHandler} properties
  * @param navobject
  * @constructor
  */
@@ -676,6 +676,7 @@ avnav.map.MapHolder.prototype.pointFromMap=function(point){
  * @param {avnav.nav.navdata.Point} point
  */
 avnav.map.MapHolder.prototype.setCenter=function(point){
+    if (! point) return;
     this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
 };
 
@@ -849,7 +850,7 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
 
 /**
  *
- * @param {oli.render.Event} evt
+ * @param {ol.render.Event} evt
  */
 avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     var newCenter=this.pointFromMap(evt.frameState.viewState.center);

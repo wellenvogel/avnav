@@ -163,7 +163,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     else {
         this.hideRouting();
     }
-    if (! this.routingVisible) this.navobject.getRoutingHandler().setActiveWpFromRoute();
+
 
 };
 /**
@@ -311,11 +311,6 @@ avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (evdata.type == avnav.nav.NavEventType.ROUTE){
         this.handleRouteDisplay();
         if (this.routingVisible)this.updateRoutePoints();
-        else{
-            //if the route info is not visible
-            //we always set the active wp to the routing target if we have one...
-            this.navobject.getRoutingHandler().setActiveWpFromRoute();
-        }
     }
     this.fillDisplayFromGps(evdata.changedNames);
 };
@@ -400,15 +395,14 @@ avnav.gui.Navpage.prototype.showRouting=function() {
 avnav.gui.Navpage.prototype.hideRouting=function() {
     var upd=false;
     //this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
-    $('#avi_navpage .avn_routeBtn').hide();
-    $('#avi_navpage .avn_noRouteBtn').show();
+    this.selectOnPage('.avn_routeBtn').hide();
+    this.selectOnPage('.avn_noRouteBtn').show();
     if (this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom)) upd=true;
     if (upd) this.gui.map.updateSize();
     this.routingVisible=false;
     this.handleToggleButton('.avb_ShowRoutePanel',false);
     this.gui.map.setRoutingActive(false);
     this.navobject.getRoutingHandler().resetToActive();
-    this.navobject.getRoutingHandler().setActiveWpFromRoute();
     this.handleRouteDisplay();
     $(this.waypointPopUp).hide();
     if (this.lastGpsLock) {
@@ -455,7 +449,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
         $('#avi_route_info_list').html("");
         return;
     }
-    var active=this.navobject.getRoutingHandler().getActiveWpIdx();
+    var active=this.navobject.getRoutingHandler().getEditingWpIdx();
     var i;
     var self=this;
     var curlen=$('#avi_route_info_list').find('.avn_route_info_point').length;
@@ -654,11 +648,11 @@ avnav.gui.Navpage.prototype.btnWpDone=function(button,ev){
     $(this.waypointPopUp).hide();
 };
 avnav.gui.Navpage.prototype.btnWpPrevious=function(button,ev){
-    this.navobject.getRoutingHandler().setEditingWp(this.navobject.getRoutingHandler().getActiveWpIdx()-1);
+    this.navobject.getRoutingHandler().moveEditingWp(-1);
     this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());
 };
 avnav.gui.Navpage.prototype.btnWpNext=function(button,ev){
-    this.navobject.getRoutingHandler().setEditingWp(this.navobject.getRoutingHandler().getActiveWpIdx()+1);
+    this.navobject.getRoutingHandler().moveEditingWp(1);
     this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());
 };
 
@@ -699,7 +693,7 @@ avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
 
 avnav.gui.Navpage.prototype.btnNavNext=function(button,ev){
     log("navNext clicked");
-    this.navobject.getRoutingHandler().setEditingWp(this.navobject.getRoutingHandler().getActiveWpIdx()+1);
+    this.navobject.getRoutingHandler().moveEditingWp(1);
     this.navobject.getRoutingHandler().routeOn(avnav.nav.RoutingMode.ROUTE);
     this.hideRouting();
 };

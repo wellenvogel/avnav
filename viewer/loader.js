@@ -71,6 +71,7 @@
         'util/helper.js',
         'util/overlay.js',
         'nav/navdata.js',
+        'nav/routeobjects.js',
         'nav/navcompute.js',
         'nav/navobject.js',
         'nav/trackdata.js',

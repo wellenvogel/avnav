@@ -51,7 +51,7 @@ avnav.gui.Wpapage.prototype.doQuery=function(){
             self.numErrors++;
             if (self.numErrors > 3) {
                 self.numErrors=0;
-                avnav.util.Overlay.Toast("Status query Error " + avnav.util.Helper.escapeHtml(error), this.timeout * 0.6)
+                avnav.util.Overlay.Toast("Status query Error " + avnav.util.Helper.escapeHtml(error), self.timeout * 0.6)
             }
             log("wpa query error");
         },

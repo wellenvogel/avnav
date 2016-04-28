@@ -94,8 +94,8 @@ avnav.map.Drawing.prototype.drawCircleToContext=function(center,other,opt_styles
 
 /**
  * @param {ol.Coordinate} point the position in map coordinates
- * @param {Image} the image to display (must be loaded - no check!)
- * @param {{}} opt_options handles the same properties like ol.style.Icon
+ * @param {image} the image to display (must be loaded - no check!)
+ * @param {Object} opt_options handles the same properties like ol.style.Icon
  *             currently supported:
  *             anchor[x,y] in pixels
  *             size[x,y]

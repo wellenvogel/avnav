@@ -164,7 +164,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
             drawing.drawLineToContext(line,this.dashedStyle);
         }
     }
-    var routeTarget=this.navobject.getRoutingHandler().getActiveWpIdx();
+    var routeTarget=this.navobject.getRoutingHandler().getEditingWpIdx();
     var routeActive=false;
     if (this.mapholder.getRoutingActive() || this.navobject.getRoutingHandler().hasActiveRoute()) {
         routeActive=true;
@@ -175,7 +175,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
             currentRoutePoints.push(p);
         }
         this.routePixel = drawing.drawLineToContext(currentRoutePoints, this.lineStyle);
-        var active = this.navobject.getRoutingHandler().getActiveWpIdx();
+        var active = this.navobject.getRoutingHandler().getEditingWpIdx();
         var i,style;
         for (i = 0; i < currentRoutePoints.length; i++) {
             style=this.normalWpStyle;

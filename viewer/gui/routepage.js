@@ -346,7 +346,7 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
 };
 
 avnav.gui.Routepage.prototype.directUpload=function(file) {
-    self=this;
+    var self=this;
     var url = self.gui.properties.getProperties().navUrl + "?request=upload&type=route&filename=" + encodeURIComponent(file.name);
     avnav.util.Helper.uploadFile(url, file, {
         self: self,
@@ -405,6 +405,9 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
     }
     else {
         if (name && name != "") {
+            if (name != this.currentName && this.routingData.isEditingActiveRoute()){
+                this.routingData.cloneActiveToEditing();
+            }
             this.routingData.changeRouteName(name,!this.gui.properties.getProperties().connectedMode);
         }
     }
