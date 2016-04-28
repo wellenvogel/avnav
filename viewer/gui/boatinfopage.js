@@ -38,7 +38,7 @@ avnav.gui.BoatInfoPage.prototype.showPage=function(options) {
 };
 
 avnav.gui.BoatInfoPage.prototype.fillData=function(initial){
-    var gpsStatus=this.gui.navobject.getRawData(avnav.nav.NavEventType.GPS).valid;
+    var gpsStatus=this.gui.navobject.getGpsHandler().getGpsData().valid;
     var newImage=gpsStatus?this.gui.properties.getProperties().statusOkImage:
         this.gui.properties.getProperties().statusErrorImage;
     if (newImage != this.lastStatus) {
@@ -65,7 +65,7 @@ avnav.gui.BoatInfoPage.prototype.btnBoatInfoGps=function (button,ev){
 };
 avnav.gui.BoatInfoPage.prototype.btnBoatInfoLocate=function (button,ev){
     log("Locate clicked");
-    var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var gps=this.navobject.getGpsHandler().getGpsData();
     if (gps.valid) this.gui.map.setCenter(gps);
     this.returnToLast();
 };

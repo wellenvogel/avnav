@@ -89,6 +89,10 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
     var self=this;
     if (! this.isInitialized){
         this.gui=evdata.gui;
+        /**
+         *
+         * @type {avnav.nav.NavObject}
+         */
         this.navobject=evdata.navobject;
         this.isInitialized=true;
         this.initButtons();

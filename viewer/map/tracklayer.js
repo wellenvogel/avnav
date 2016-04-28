@@ -77,7 +77,7 @@ avnav.map.TrackLayer.prototype.navEvent=function(evdata){
         return;
     }
     if (evdata.type == avnav.nav.NavEventType.TRACK){
-        var newTrack=this.navobject.getRawData(avnav.nav.NavEventType.TRACK);
+        var newTrack=this.navobject.getTrackHandler().getTrackData();
         if (newTrack.length < 2){
             this.currentTrack=[];
             this.trackPoints=[];

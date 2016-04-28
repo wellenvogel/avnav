@@ -76,7 +76,7 @@ avnav.nav.TrackData.prototype.handleTrackResponse=function(data){
     }
     //cleanup old track data
     var maxage=this.propertyHandler.getProperties().initialTrackLength*3600; //len is in h
-    var curgps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var curgps=this.navobject.getGpsHandler().getGpsData();
     var now=new Date();
     if (curgps.rtime){
         //if we have a valid GPS time we take this as our current time for the track...

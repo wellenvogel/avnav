@@ -420,7 +420,7 @@ avnav.map.MapHolder.prototype.getGpsLock=function(){
 avnav.map.MapHolder.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
     if (evdata.type == avnav.nav.NavEventType.GPS){
-        var gps=this.navobject.getRawData(evdata.type);
+        var gps=this.navobject.getGpsHandler().getGpsData();
         if (! gps.valid) return;
         this.navlayer.setBoatPosition(gps.toCoord(),gps.course);
         if (this.gpsLocked) {
@@ -723,7 +723,7 @@ avnav.map.MapHolder.prototype.setCourseUp=function(on){
     var old=this.courseUp;
     if (old == on) return on;
     if (on){
-        var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+        var gps=this.navobject.getGpsHandler().getGpsData();
         if (! gps.valid) return false;
         this.averageCourse=gps.course;
         this.setMapRotation(this.averageCourse);
@@ -739,7 +739,7 @@ avnav.map.MapHolder.prototype.setCourseUp=function(on){
 
 avnav.map.MapHolder.prototype.setGpsLock=function(lock){
     if (lock == this.gpsLocked) return;
-    var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var gps=this.navobject.getGpsHandler().getGpsData();
     if (! gps.valid && lock) return;
     //we do not lock if the nav layer is not visible
     if (! this.getProperties().getProperties().layers.boat && lock) return;

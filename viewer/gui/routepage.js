@@ -78,7 +78,7 @@ avnav.gui.Routepage.prototype.resetUpload=function(){
 };
 avnav.gui.Routepage.prototype.localInit=function(){
     if (! this.gui) return;
-    this.routingData=this.gui.navobject.getRoutingData();
+    this.routingData=this.gui.navobject.getRoutingHandler();
     var self=this;
     $('#avi_route_name').keypress(function( event ) {
         if (event.which == 13) {
@@ -235,7 +235,7 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
     $("."+this.visibleListEntryClass).remove();
     var activeName=undefined;
     if (this.routingData.hasActiveRoute()){
-        activeName=this.routingData.getRouteData().name;
+        activeName=this.routingData.getCurrentLeg().name;
     }
     var editingName=this.routingData.getEditingRoute().name;
     var id;
@@ -267,7 +267,7 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
                 var lid = ev.data.id;
                 var name = self.routes[lid].name;
                 //the current route could have changed...
-                if (self.routingData.hasActiveRoute() && self.routingData.getRouteData().name == name){
+                if (self.routingData.hasActiveRoute() && self.routingData.getCurrentLeg().name == name){
                     alert("cannot delete active route");
                     self.fillData(false);
                     return false;

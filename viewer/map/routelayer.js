@@ -27,7 +27,7 @@ avnav.map.RouteLayer=function(mapholder,navobject){
      * @private
      * @type {avnav.nav.RouteData}
      */
-    this.routingDate=this.navobject.getRoutingData();
+    this.routingDate=this.navobject.getRoutingHandler();
     /**
      * @private
      * @type {boolean}
@@ -144,13 +144,13 @@ avnav.map.RouteLayer.prototype.navEvent=function(evdata){
 avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     this.routePixel = [];
     if (!this.visible) return;
-    var leg=this.navobject.getRawData(avnav.nav.NavEventType.ROUTE);
-    var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var leg=this.navobject.getRoutingHandler().getCurrentLeg();
+    var gps=this.navobject.getGpsHandler().getGpsData();
     var to=leg.to?this.mapholder.pointToMap(leg.to.toCoord()):undefined;
     var from=leg.from?this.mapholder.pointToMap(leg.from.toCoord()):undefined;
     var prop=this.mapholder.getProperties().getProperties();
     var drawNav=prop.layers.boat&&prop.layers.nav;
-    var route=this.navobject.getRoutingData().getEditingRoute();
+    var route=this.navobject.getRoutingHandler().getEditingRoute();
     var text,wp;
     if (! drawNav || ! route) {
         this.routePixel=[];
@@ -164,9 +164,9 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
             drawing.drawLineToContext(line,this.dashedStyle);
         }
     }
-    var routeTarget=this.navobject.getRoutingData().getActiveWpIdx();
+    var routeTarget=this.navobject.getRoutingHandler().getActiveWpIdx();
     var routeActive=false;
-    if (this.mapholder.getRoutingActive() || this.navobject.getRoutingData().hasActiveRoute()) {
+    if (this.mapholder.getRoutingActive() || this.navobject.getRoutingHandler().hasActiveRoute()) {
         routeActive=true;
         var currentRoutePoints=[];
         var i;
@@ -175,7 +175,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
             currentRoutePoints.push(p);
         }
         this.routePixel = drawing.drawLineToContext(currentRoutePoints, this.lineStyle);
-        var active = this.navobject.getRoutingData().getActiveWpIdx();
+        var active = this.navobject.getRoutingHandler().getActiveWpIdx();
         var i,style;
         for (i = 0; i < currentRoutePoints.length; i++) {
             style=this.normalWpStyle;
@@ -210,7 +210,7 @@ avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     if (! this.routePixel) return undefined;
     var idx=this.mapholder.findTarget(pixel,this.routePixel,tolerance);
     if (idx >= 0){
-        this.navobject.getRoutingData().setEditingWp(idx);
+        this.navobject.getRoutingHandler().setEditingWp(idx);
     }
     return idx;
 };

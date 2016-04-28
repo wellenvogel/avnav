@@ -110,8 +110,8 @@ avnav.nav.NavObject=function(propertyHandler){
 
 
     /**
-     * our computed data...
-     * @type {{centerCourse: number, centerDistance: number, markerCourse: number, markerDistance: number}}
+     * our computed values
+     * @type {{centerCourse: number, centerDistance: number, centerMarkerCourse: number, centerMarkerDistance: number, markerCourse: number, markerDistance: number, markerVmg: number, markerEta: null, markerWp: avnav.nav.navdata.WayPoint, routeName: undefined, routeNumPoints: number, routeLen: number, routeRemain: number, routeEta: null, routeNextCourse: number, routeNextWp: undefined, routeXte: number, edRouteName: undefined, edRouteNumPoints: number, edRouteLen: number, edRouteRemain: number, edRouteEta: number}}
      */
     this.data={
         centerCourse:0,
@@ -209,7 +209,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
                 this.data.markerEta = null;
                 this.data.markerVmg=0;
             }
-            var rstart=this.routeHandler.getRouteData().from;
+            var rstart=this.routeHandler.getCurrentLeg().from;
             this.data.routeXte=avnav.nav.NavCompute.computeXte(rstart,this.data.markerWp,gps);
         }
         else {
@@ -236,7 +236,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.data.centerMarkerCourse=mcdst.course;
     this.data.centerMarkerDistance=mcdst.dtsnm;
     //route data
-    var curRoute=this.routeHandler.getRouteData().currentRoute;
+    var curRoute=this.routeHandler.getCurrentLeg().currentRoute;
     if (this.routeHandler.hasActiveRoute()) {
         this.data.routeName = curRoute.name;
         this.data.routeNumPoints = curRoute.points.length;
@@ -371,20 +371,15 @@ avnav.nav.NavObject.prototype.setAisCenterMode=function(mode){
 avnav.nav.NavObject.prototype.getFormattedNavValue=function(name){
     return this.formattedValues[name];
 };
-
-
 /**
- * get the raw data of the underlying object
- * @param {avnav.nav.NavEventType} type
+ * return the values that have been computed from others
+ * @returns {{centerCourse: number, centerDistance: number, centerMarkerCourse: number, centerMarkerDistance: number, markerCourse: number, markerDistance: number, markerVmg: number, markerEta: null, markerWp: avnav.nav.navdata.WayPoint, routeName: undefined, routeNumPoints: number, routeLen: number, routeRemain: number, routeEta: null, routeNextCourse: number, routeNextWp: undefined, routeXte: number, edRouteName: undefined, edRouteNumPoints: number, edRouteLen: number, edRouteRemain: number, edRouteEta: number}}
  */
-avnav.nav.NavObject.prototype.getRawData=function(type){
-    if (type == avnav.nav.NavEventType.GPS) return this.gpsdata.getGpsData();
-    if (type == avnav.nav.NavEventType.NAV) return this.data;
-    if (type == avnav.nav.NavEventType.TRACK) return this.trackHandler.getTrackData();
-    if (type == avnav.nav.NavEventType.AIS) return this.aisHandler.getAisData();
-    if (type == avnav.nav.NavEventType.ROUTE) return this.routeHandler.getRouteData();
-    return undefined;
+avnav.nav.NavObject.prototype.getComputedValues=function(){
+    return this.data;
 };
+
+
 /**
  * get the value of a display item
  * @param {string} name
@@ -405,13 +400,7 @@ avnav.nav.NavObject.prototype.getValueNames=function(){
     }
     return rt;
 };
-/**
- * get the AIS data handler
- * @returns {avnav.nav.AisData|*}
- */
-avnav.nav.NavObject.prototype.getAisData=function(){
-    return this.aisHandler;
-};
+
 /**
  * called back from gpshandler
  */
@@ -489,8 +478,30 @@ avnav.nav.NavObject.prototype.setMapCenter=function(lonlat){
  * get the routing handler
  * @returns {avnav.nav.RouteData|*}
  */
-avnav.nav.NavObject.prototype.getRoutingData=function(){
+avnav.nav.NavObject.prototype.getRoutingHandler=function(){
     return this.routeHandler;
+};
+
+/**
+ * get the gps data handler
+ * @returns {avnav.nav.GpsData}
+ */
+avnav.nav.NavObject.prototype.getGpsHandler=function(){
+    return this.gpsdata;
+};
+/**
+ * get the track handler
+ * @returns {avnav.nav.TrackData}
+ */
+avnav.nav.NavObject.prototype.getTrackHandler=function(){
+    return this.trackHandler;
+};
+/**
+ * get the AIS data handler
+ * @returns {avnav.nav.AisData|*}
+ */
+avnav.nav.NavObject.prototype.getAisHandler=function(){
+    return this.aisHandler;
 };
 
 avnav.nav.NavObject.prototype.resetTrack=function(){

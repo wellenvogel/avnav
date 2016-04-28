@@ -756,7 +756,7 @@ avnav.nav.RouteData.prototype.startQuery=function() {
  * return the current leg
  * @returns {avnav.nav.Leg}
  */
-avnav.nav.RouteData.prototype.getRouteData=function(){
+avnav.nav.RouteData.prototype.getCurrentLeg=function(){
     return this.currentLeg;
 };
 
@@ -961,7 +961,7 @@ avnav.nav.RouteData.prototype.routeOn=function(mode,opt_keep_from){
     this.currentLeg.approachDistance=this.propertyHandler.getProperties().routeApproach;
     this.currentLeg.active=true;
     var pfrom;
-    var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var gps=this.navobject.getGpsHandler().getGpsData();
     var center=this.navobject.getMapCenter();
     if (gps.valid){
         pfrom=new avnav.nav.navdata.WayPoint(gps.lon,gps.lat);
@@ -1432,7 +1432,7 @@ avnav.nav.RouteData.prototype.checkNextWp=function(){
         this.isApproaching=false;
         return;
     }
-    var boat=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var boat=this.navobject.getGpsHandler().getGpsData();
     //TODO: switch of routing?!
     if (! boat.valid) return;
     if (this.currentLeg.currentTarget >= (this.currentLeg.currentRoute.points-length-1)) return;

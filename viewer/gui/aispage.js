@@ -30,7 +30,7 @@ avnav.gui.Aispage=function(){
 avnav.inherits(avnav.gui.Aispage,avnav.gui.Page);
 
 avnav.gui.Aispage.prototype.localInit=function(){
-    this.aishandler=this.navobject.getAisData();
+    this.aishandler=this.navobject.getAisHandler();
     $('#avi_ais_page_inner').on('scroll',function(){
         $('.avn_ais_headline_elem').css('top',$('#avi_ais_page_inner').scrollTop()-2);
     });

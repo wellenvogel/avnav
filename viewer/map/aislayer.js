@@ -165,7 +165,7 @@ avnav.map.AisLayer.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) return;
     if (evdata.type == avnav.nav.NavEventType.AIS){
-        this.aisdata=this.navobject.getRawData(avnav.nav.NavEventType.AIS).slice(0);
+        this.aisdata=this.navobject.getAisHandler().getAisData().slice(0);
         this.pixel=[];
     }
     this.mapholder.triggerRender();

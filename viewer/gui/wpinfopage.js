@@ -34,7 +34,7 @@ avnav.gui.WpInfoPage.prototype.showPage=function(options) {
     this.updateButtons();
 };
 avnav.gui.WpInfoPage.prototype.updateButtons=function(){
-    var markerLock=this.navobject.getRoutingData().getLock(); //TODO: make this generic
+    var markerLock=this.navobject.getRoutingHandler().getLock(); //TODO: make this generic
     this.handleToggleButton('.avb_LockMarker',markerLock);
 };
 
@@ -59,13 +59,13 @@ avnav.gui.WpInfoPage.prototype.btnWpInfoGps=function (button,ev){
 avnav.gui.WpInfoPage.prototype.btnWpInfoLocate=function (button,ev){
     log("locate clicked");
     var navobject=this.navobject;
-    var leg=navobject.getRawData(avnav.nav.NavEventType.ROUTE);
-    var marker=navobject.getRawData(avnav.nav.NavEventType.NAV).markerWp;
+    var leg=navobject.getRoutingHandler().getCurrentLeg();
+    var marker=navobject.getComputedValues().markerWp;
     this.gui.map.setCenter(marker);
     //make the current WP the active again...
-    var routingTarget=navobject.getRoutingData().getCurrentLegTargetIdx();
-    if (routingTarget >= 0 && navobject.getRoutingData().isEditingActiveRoute()){
-        navobject.getRoutingData().setEditingWp(routingTarget);
+    var routingTarget=navobject.getRoutingHandler().getCurrentLegTargetIdx();
+    if (routingTarget >= 0 && navobject.getRoutingHandler().isEditingActiveRoute()){
+        navobject.getRoutingHandler().setEditingWp(routingTarget);
     }
     this.returnToLast();
 };
@@ -75,9 +75,9 @@ avnav.gui.WpInfoPage.prototype.btnShowRoutePanel=function (button,ev){
 };
 avnav.gui.WpInfoPage.prototype.btnLockMarker=function (button,ev){
     log("lock marker clicked");
-    var nLock=! this.navobject.getRoutingData().getLock();
-    if (! nLock) this.navobject.getRoutingData().routeOff();
-    else this.navobject.getRoutingData().routeOn(avnav.nav.RoutingMode.CENTER);
+    var nLock=! this.navobject.getRoutingHandler().getLock();
+    if (! nLock) this.navobject.getRoutingHandler().routeOff();
+    else this.navobject.getRoutingHandler().routeOn(avnav.nav.RoutingMode.CENTER);
     this.handleToggleButton(button,nLock);
     this.gui.map.triggerRender();
     this.returnToLast();
