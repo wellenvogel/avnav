@@ -595,7 +595,7 @@ html,body {
 /*-------------------------------------------------------------
    AIS display
 -------------------------------------------------------------*/
-#aisInfo{
+#avi_aisInfo {
   background-color: @aisNormalColor;
   max-width: 9em;
   @media(max-width: @checkTiny){
@@ -603,26 +603,26 @@ html,body {
     height: 7em;
   }
 }
-#aisInfo when (@nightModePercent<100%){
+#avi_aisInfo when (@nightModePercent<100%){
   color: fade(white,@nightModePercent * 1.5);
 }
 
 
-#aisInfo .avn_ais_front {
+#avi_aisInfo .avn_ais_front {
   font-size: 1.5em;
 }
-#aisInfo .avn_label {
+#avi_aisInfo .avn_label {
   opacity: 0.6;
   display: table-cell;
   padding-right: 0.2em;
 }
-#aisInfo .avn_ais_data{
+#avi_aisInfo .avn_ais_data{
   display: table-cell;
 }
-#aisInfo .avn_table{
+#avi_aisInfo .avn_table{
   margin-top: 1em;
 }
-#aisInfo .avn_row{
+#avi_aisInfo .avn_row{
   display: table-row;
 }
 
@@ -674,7 +674,7 @@ html,body {
 /*-------------------------------------------------------------
    center display
 -------------------------------------------------------------*/
-#centerDisplay{
+#avi_centerDisplay {
   background-color: white;
   .nightColors();
   @media(max-width: @checkTiny){
@@ -682,33 +682,33 @@ html,body {
     height: 7em;
   }
 }
-#centerDisplay .avn_label{
+#avi_centerDisplay .avn_label{
   display: table-cell;
   opacity: 0.6;
   margin-right: 0.2em;
 }
-#centerDisplay .avn_center_value{
+#avi_centerDisplay .avn_center_value{
   display: table-cell;
   text-align: end;
   white-space: nowrap;
 }
-#centerDisplay .avd_centerPosition{
+#avi_centerDisplay .avd_centerPosition{
   max-width: 6.5em;
   margin-top:1em;
 }
-#centerDisplay .avn_table{
+#avi_centerDisplay .avn_table{
   font-size: 0.8em;
 }
-#centerDisplay .avn_row{
+#avi_centerDisplay .avn_row{
   display: table-row;
 }
-#centerDisplay .avn_boat{
+#avi_centerDisplay .avn_boat{
   background-image: url(images/Sail-Boat-40.png);
   background-size: 1em 1em;
   background-repeat: no-repeat;
   width: 1.5em;
 }
-#centerDisplay .avn_marker{
+#avi_centerDisplay .avn_marker{
   background-image: url(images/Marker1.png);
   background-size: 1em 1em;
   background-repeat: no-repeat;

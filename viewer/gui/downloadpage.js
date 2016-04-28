@@ -119,19 +119,19 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
     }
     if (this.type == "chart"){
         $('#avi_download_page_listhead').text("Charts");
-        if (avnav.android||this.gui.properties.getProperties().onAndroid) $('#avb_DownloadPageUpload').hide();
-        else  $('#avb_DownloadPageUpload').show();
-        this.handleToggleButton('#avb_DownloadPageTracks',false);
-        this.handleToggleButton('#avb_DownloadPageCharts',true);
+        if (avnav.android||this.gui.properties.getProperties().onAndroid) this.selectOnPage('.avb_DownloadPageUpload').hide();
+        else  this.selectOnPage('.avb_DownloadPageUpload').show();
+        this.handleToggleButton('.avb_DownloadPageTracks',false);
+        this.handleToggleButton('.avb_DownloadPageCharts',true);
     }
     else {
         $('#avi_download_page_listhead').text("Tracks");
-        $('#avb_DownloadPageUpload').hide();
-        this.handleToggleButton('#avb_DownloadPageCharts',false);
-        this.handleToggleButton('#avb_DownloadPageTracks',true);
+        this.selectOnPage('.avb_DownloadPageUpload').hide();
+        this.handleToggleButton('.avb_DownloadPageCharts',false);
+        this.handleToggleButton('.avb_DownloadPageTracks',true);
     }
     if (!this.gui.properties.getProperties().connectedMode){
-        $('#avb_DownloadPageUpload').hide();
+        this.selectOnPage('.avb_DownloadPageUpload').hide();
     }
     this.fillData(true);
     this.hideProgress();

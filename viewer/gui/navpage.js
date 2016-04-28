@@ -15,11 +15,6 @@ avnav.gui.Navpage=function(){
     /** @private */
     this.options_=null;
     /**
-     * @private
-     * @type {number}
-     */
-    this.timer=0;
-    /**
      * the current visible overlay (jQuery object)
      * @type {null}
      */
@@ -149,11 +144,11 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     this.getMap().setBrightness(brightness);
     this.updateMainPanelSize('#'+this.mapdom);
     this.getMap().updateSize();
-    this.buttonUpdate(true);
+    this.buttonUpdate();
     if (!this.gui.properties.getProperties().layers.ais){
         //hide the AIS panel if switched off
         //showing will be done by the AIS event
-        if (this.showHideAdditionalPanel('#aisInfo', false, '#' + this.mapdom))
+        if (this.showHideAdditionalPanel('#avi_aisInfo', false, '#' + this.mapdom))
             this.gui.map.updateSize();
     }
     this.gui.navobject.setAisCenterMode(avnav.nav.AisCenterMode.MAP);
@@ -176,28 +171,24 @@ avnav.gui.Navpage.prototype.showPage=function(options){
  * update buttons and handle hiding of overlay
  * @param startTimer
  */
-avnav.gui.Navpage.prototype.buttonUpdate=function(startTimer){
+avnav.gui.Navpage.prototype.buttonUpdate=function(){
     //TODO: make this more generic
     var markerLock=this.navobject.getRoutingData().getLock();
-    this.handleToggleButton('#avb_LockMarker',markerLock);
+    this.handleToggleButton('.avb_LockMarker',markerLock);
     var gpsLock=this.gui.map.getGpsLock();
-    this.handleToggleButton('#avb_LockPos',gpsLock);
+    this.handleToggleButton('.avb_LockPos',gpsLock);
     var courseUp=this.gui.map.getCourseUp();
-    this.handleToggleButton('#avb_CourseUp',courseUp);
-    var self=this;
+    this.handleToggleButton('.avb_CourseUp',courseUp);
+};
+
+avnav.gui.Navpage.prototype.timerEvent=function(){
     if (this.hidetime >0 && this.hidetime <= new Date().getTime()|| gpsLock){
         this.hideOverlay();
         this.hidetime=0;
     }
-    if (startTimer) this.timer=window.setTimeout(function(){
-        self.buttonUpdate(true);
-        },
-        self.gui.properties.getProperties().buttonUpdateTime
-    );
+    this.buttonUpdate();
 };
-
 avnav.gui.Navpage.prototype.hidePage=function(){
-    if (this.timer) window.clearTimeout(this.timer);
     this.hideOverlay();
     this.hidetime=0;
     //this.hideRouting();
@@ -217,7 +208,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $('#centerDisplay').click({page:this},function(ev){
        ev.data.page.hideOverlay();
     });
-    $('#aisInfo').click(function(ev){
+    $('#avi_aisInfo').click(function(ev){
         var mmsi=$(this).attr('data-aismmsi');
         if (mmsi===undefined || mmsi == "") return;
         self.gui.showPage('aisinfopage',{mmsi:mmsi});
@@ -280,29 +271,29 @@ avnav.gui.Navpage.prototype.updateAisPanel=function() {
         var nearestTarget = this.navobject.getAisData().getNearestAisTarget();
         if (nearestTarget.mmsi) {
             //should show the AIS panel
-            if (this.showHideAdditionalPanel('#aisInfo', true, '#' + this.mapdom))
+            if (this.showHideAdditionalPanel('#avi_aisInfo', true, '#' + this.mapdom))
                 this.gui.map.updateSize();
             var displayClass = "avn_ais_info_first";
             var warningClass = "avn_ais_info_warning";
             var normalClass = 'avn_ais_info_normal';
-            $('#aisInfo').addClass(normalClass);
-            $('#aisInfo').attr('data-aismmsi',nearestTarget.mmsi);
+            $('#avi_aisInfo').addClass(normalClass);
+            $('#avi_aisInfo').attr('data-aismmsi',nearestTarget.mmsi);
             if (!nearestTarget.warning) {
-                $('#aisInfo').removeClass(warningClass);
+                $('#avi_aisInfo').removeClass(warningClass);
                 if (nearestTarget.nearest) {
-                    $('#aisInfo').addClass(displayClass);
-                    $('#aisInfo').removeClass(normalClass);
+                    $('#avi_aisInfo').addClass(displayClass);
+                    $('#avi_aisInfo').removeClass(normalClass);
                 }
-                else $('#aisInfo').removeClass(displayClass);
+                else $('#avi_aisInfo').removeClass(displayClass);
             }
             else {
-                $('#aisInfo').addClass(warningClass);
-                $('#aisInfo').removeClass(displayClass);
-                $('#aisInfo').removeClass(normalClass);
+                $('#avi_aisInfo').addClass(warningClass);
+                $('#avi_aisInfo').removeClass(displayClass);
+                $('#avi_aisInfo').removeClass(normalClass);
             }
         }
         else {
-            if (this.showHideAdditionalPanel('#aisInfo', false, '#' + this.mapdom))
+            if (this.showHideAdditionalPanel('#avi_aisInfo', false, '#' + this.mapdom))
                 this.gui.map.updateSize();
         }
     }
@@ -368,12 +359,12 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
 };
 avnav.gui.Navpage.prototype.toggleNextGoto=function(showNext){
     if (showNext) {
-        $('#avb_NavNext').show();
-        $('#avb_NavGoto').hide();
+        this.selectOnPage('.avb_NavNext').show();
+        this.selectOnPage('.avb_NavGoto').hide();
     }
     else {
-        $('#avb_NavNext').hide();
-        $('#avb_NavGoto').show();
+        this.selectOnPage('.avb_NavNext').hide();
+        this.selectOnPage('.avb_NavGoto').show();
     }
 };
 avnav.gui.Navpage.prototype.showRouting=function() {
@@ -382,13 +373,13 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     var upd=false;
     //this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
     var routeActive=this.navobject.getRoutingData().hasActiveRoute();
-    $('#avi_navpage .avn_routeBtn').show();
+    this.selectOnPage('.avn_routeBtn').show();
     this.toggleNextGoto(routeActive);
-    $('#avi_navpage .avn_noRouteBtn').hide();
+    this.selectOnPage('.avn_noRouteBtn').hide();
     if (this.showHideAdditionalPanel('#avi_route_info_navpage', true, '#' + this.mapdom)) upd=true;
     if (upd)this.gui.map.updateSize();
     this.routingVisible=true;
-    this.handleToggleButton('#avb_ShowRoutePanel',true);
+    this.handleToggleButton('.avb_ShowRoutePanel',true);
     this.gui.map.setRoutingActive(true);
     this.handleRouteDisplay();
     this.updateRoutePoints(true);
@@ -397,7 +388,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.lastGpsLock=nLock;
     if (nLock) {
         this.gui.map.setGpsLock(!nLock);
-        this.handleToggleButton('#avb_LockPos', !nLock);
+        this.handleToggleButton('.avb_LockPos', !nLock);
         this.gui.map.triggerRender();
     }
 
@@ -414,7 +405,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     if (this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom)) upd=true;
     if (upd) this.gui.map.updateSize();
     this.routingVisible=false;
-    this.handleToggleButton('#avb_ShowRoutePanel',false);
+    this.handleToggleButton('.avb_ShowRoutePanel',false);
     this.gui.map.setRoutingActive(false);
     this.navobject.getRoutingData().resetToActive();
     this.navobject.getRoutingData().setActiveWpFromRoute();

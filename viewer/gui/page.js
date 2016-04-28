@@ -52,6 +52,7 @@ avnav.gui.Page=function(name,options){
         }
 
     }
+    this.intervalTimer=-1;
 };
 
 /**
@@ -67,8 +68,7 @@ avnav.gui.Page.prototype.getDiv=function(){
  * @returns {*|jQuery|HTMLElement}
  */
 avnav.gui.Page.prototype.selectOnPage=function(selector){
-    var sel='#avi_'+this.name+' '+selector;
-    return $(sel);
+    return this.getDiv().find(selector);
 };
 
 
@@ -119,6 +119,40 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
             this.hidePage();
         }
     }
+};
+avnav.gui.Page.prototype._showPage=function(){
+    var self=this;
+    if (this.intervalTimer <=0 ){
+       this.intervalTimer=window.setInterval(function(){ self._timerEvent();},
+           self.gui.properties.getProperties().buttonUpdateTime);
+    }
+};
+avnav.gui.Page.prototype._hidePage=function(){
+    if (this.intervalTimer >= 0){
+        window.clearInterval(this.intervalTimer);
+        this.intervalTimer=-1;
+    }
+};
+/**
+ *
+ * @private
+ */
+avnav.gui.Page.prototype._timerEvent=function(){
+  if (this.isVisible()) {
+      this.timerEvent();
+  }
+  else{
+    if (this.intervalTimer >= 0){
+        window.clearInterval(this.intervalTimer);
+        this.intervalTimer=-1;
+    }
+  }
+};
+/**
+ * to be overloaded
+ */
+avnav.gui.Page.prototype.timerEvent=function(){
+
 };
 /**
  * initially fill the list of items that will be update on nav events
@@ -272,15 +306,15 @@ avnav.gui.Page.prototype.hidePage=function(){
 avnav.gui.Page.prototype.handleToggleButton=function(id,onoff,onClass){
     var oc=onClass || "avn_buttonActive";
     if (onoff){
-        $(id).removeClass("avn_buttonActive");
-        $(id).removeClass("avn_buttonActiveError");
-        $(id).addClass(oc);
-        $(id).removeClass("avn_buttonInactive");
+        this.selectOnPage(id).removeClass("avn_buttonActive");
+        this.selectOnPage(id).removeClass("avn_buttonActiveError");
+        this.selectOnPage(id).addClass(oc);
+        this.selectOnPage(id).removeClass("avn_buttonInactive");
     }
     else {
-        $(id).removeClass("avn_buttonActive");
-        $(id).removeClass("avn_buttonActiveError");
-        $(id).addClass("avn_buttonInactive");
+        this.selectOnPage(id).removeClass("avn_buttonActive");
+        this.selectOnPage(id).removeClass("avn_buttonActiveError");
+        this.selectOnPage(id).addClass("avn_buttonInactive");
     }
 };
 

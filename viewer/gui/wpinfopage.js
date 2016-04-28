@@ -31,8 +31,16 @@ avnav.gui.WpInfoPage.prototype.localInit=function(){
 avnav.gui.WpInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;
     this.fillData(true);
+    this.updateButtons();
+};
+avnav.gui.WpInfoPage.prototype.updateButtons=function(){
+    var markerLock=this.navobject.getRoutingData().getLock(); //TODO: make this generic
+    this.handleToggleButton('.avb_LockMarker',markerLock);
 };
 
+avnav.gui.WpInfoPage.prototype.timerEvent=function(){
+    this.updateButtons();
+};
 avnav.gui.WpInfoPage.prototype.fillData=function(initial){
 
     this.selectOnPage(".avn_infopage_inner").show();
@@ -61,9 +69,12 @@ avnav.gui.WpInfoPage.prototype.btnWpInfoLocate=function (button,ev){
     }
     this.returnToLast();
 };
-avnav.gui.WpInfoPage.prototype.btnWpInfoRoute=function (button,ev){
+avnav.gui.WpInfoPage.prototype.btnShowRoutePanel=function (button,ev){
     log("route clicked");
     this.gui.showPage('navpage',{showRouting: true})
+};
+avnav.gui.WpInfoPage.prototype.btnLockMarker=function (button,ev){
+    log("lock marker clicked");
 };
 /**
  * create the page instance

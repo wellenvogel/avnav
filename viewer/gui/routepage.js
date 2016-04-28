@@ -156,23 +156,23 @@ avnav.gui.Routepage.prototype.showPage=function(options) {
     this.fallbackUpload=false;
     if (! window.FileReader){
         if (!this.gui.properties.getProperties().connectedMode){
-            $('#avb_RoutePageUpload').hide();
+            this.selectOnPage('.avb_RoutePageUpload').hide();
         }
         else {
             this.fallbackUpload=true;
-            $('#avb_RoutePageUpload').show();
+            this.selectOnPage('.avb_RoutePageUpload').show();
         }
     }
     if (options && options.fromdownload){
         this.fromdownload=true;
-        this.getDiv().find(".avn_routepage_optional").show();
-        this.getDiv().find("#avb_RoutePageOk").hide();
-        this.handleToggleButton("#avb_RoutePageRoutes",true);
+        this.selectOnPage(".avn_routepage_optional").show();
+        this.selectOnPage(".avb_RoutePageOk").hide();
+        this.handleToggleButton(".avb_RoutePageRoutes",true);
     }
     else {
         this.fromdownload=false;
-        this.getDiv().find(".avn_routepage_optional").hide();
-        this.getDiv().find("#avb_RoutePageOk").show();
+        this.selectOnPage(".avn_routepage_optional").hide();
+        this.selectOnPage(".avb_RoutePageOk").show();
     }
     this.fillData(true);
 };
@@ -311,10 +311,10 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
         });
     }
     if (this.numLocalRoutes && this.gui.properties.getProperties().connectedMode){
-        $('#avb_RoutePageDelete').show();
+        this.selectOnPage('.avb_RoutePageDelete').show();
     }
     else {
-        $('#avb_RoutePageDelete').hide();
+        this.selectOnPage('avb_RoutePageDelete').hide();
     }
 };
 

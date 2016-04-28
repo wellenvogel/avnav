@@ -86,17 +86,17 @@ avnav.gui.Mainpage.prototype.fillList=function(){
 avnav.gui.Mainpage.prototype.showPage=function(options){
     if (!this.gui) return;
     var ncon=this.gui.properties.getProperties().connectedMode;
-    this.handleToggleButton('#avb_Connected',ncon);
+    this.handleToggleButton('.avb_Connected',ncon);
     ncon=this.gui.properties.getProperties().style.nightMode;
     var nightDim=this.gui.properties.getProperties().nightFade;
     if (ncon != 100 && ncon != nightDim){
         //could happen if we return from settings page
         this.changeDim(nightDim);
     }
-    this.handleToggleButton('#avb_Night',ncon!=100);
+    this.handleToggleButton('.avb_Night',ncon!=100);
     this.fillList();
     if (avnav.android || this.gui.properties.getProperties().readOnlyServer){
-        $('#avb_Connected').hide();
+        this.selectOnPage('.avb_Connected').hide();
     }
 
 };
@@ -169,7 +169,7 @@ avnav.gui.Mainpage.prototype.btnShowGps=function (button,ev){
 avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
     log("Connected clicked");
     var ncon=!this.gui.properties.getProperties().connectedMode;
-    this.handleToggleButton('#avb_Connected',ncon);
+    this.handleToggleButton('.avb_Connected',ncon);
     this.gui.properties.setValueByName('connectedMode',ncon);
     this.gui.properties.saveUserData();
     $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
@@ -183,7 +183,7 @@ avnav.gui.Mainpage.prototype.btnNight=function (button,ev){
         ncon=this.gui.properties.getProperties().nightFade;
     }
     else ncon=100;
-    this.handleToggleButton('#avb_Night',ncon!=100);
+    this.handleToggleButton('.avb_Night',ncon!=100);
     this.changeDim(ncon);
 };
 avnav.gui.Mainpage.prototype.btnShowDownload=function (button,ev) {
