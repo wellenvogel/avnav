@@ -326,7 +326,7 @@ avnav.nav.Route.prototype.getPointAtIndex=function(idx){
 avnav.nav.Route.prototype.getIndexFromPoint=function(point){
     if (! point || point.id === undefined) return -1;
     var i;
-    for (i in this.points){
+    for (i=0;i<this.points.length;i++){
         if (this.points[i].id == point.id) return i;
     }
     return -1;

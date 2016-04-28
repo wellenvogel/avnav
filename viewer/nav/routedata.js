@@ -399,7 +399,9 @@ avnav.nav.RouteData.prototype.getEditingRoute=function(){
     if (this.isEditingActiveRoute()){
         return this.currentLeg.currentRoute;
     }
-    if (! this.editingRoute) this.editingRoute=new avnav.nav.Route();
+    if (! this.editingRoute) {
+        this.editingRoute=this.loadRoute(this.DEFAULTROUTE);
+    }
     return this.editingRoute;
 };
 /**
@@ -721,6 +723,7 @@ avnav.nav.RouteData.prototype.getCurrentLegNextWp=function(){
  * @returns {avnav.nav.navdata.WayPoint}
  */
 avnav.nav.RouteData.prototype.getEditingWp=function(){
+    if (! this.editingWp && this.isEditingActiveRoute()) this.editingWp=this.currentLeg.to;
     return this.editingWp;
 };
 
