@@ -566,7 +566,7 @@ avnav.nav.RouteData.prototype.routeOn=function(mode,opt_keep_from){
     }
     if (! opt_keep_from) this.currentLeg.from=pfrom;
     if (mode == avnav.nav.RoutingMode.WP){
-        if ( this.standaloneWp) return;
+        if ( !this.standaloneWp) return;
         this.currentLeg.to=this.standaloneWp;
         this.currentLeg.name=undefined;
         this.currentLeg.currentRoute=undefined;

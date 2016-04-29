@@ -152,7 +152,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     var drawNav=prop.layers.boat&&prop.layers.nav;
     var route=this.navobject.getRoutingHandler().getEditingRoute();
     var text,wp;
-    if (! drawNav || ! route) {
+    if (! drawNav ) {
         this.routePixel=[];
         return;
     }
@@ -164,9 +164,10 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
             drawing.drawLineToContext(line,this.dashedStyle);
         }
     }
+
     var routeTarget=this.navobject.getRoutingHandler().getEditingWpIdx();
     var routeActive=false;
-    if (this.mapholder.getRoutingActive() || this.navobject.getRoutingHandler().hasActiveRoute()) {
+    if ((this.mapholder.getRoutingActive() || this.navobject.getRoutingHandler().hasActiveRoute()) && route) {
         routeActive=true;
         var currentRoutePoints=[];
         var i;
