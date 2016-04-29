@@ -181,36 +181,12 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     //copy the marker to data to make it available extern
     this.data.markerWp=this.routeHandler.getCurrentLegTarget();
     this.data.routeNextWp=this.routeHandler.getCurrentLegNextWp();
+    var rstart=this.routeHandler.getCurrentLeg().from;
     var vmgapp=0;
     if (gps.valid){
         if (this.routeHandler.getLock()) {
-            var markerdst = avnav.nav.NavCompute.computeDistance(gps, this.data.markerWp);
-            this.data.markerCourse = markerdst.course;
-            this.data.markerDistance = markerdst.dtsnm;
-            var coursediff = Math.min(Math.abs(markerdst.course - gps.course), Math.abs(markerdst.course + 360 - gps.course),
-                Math.abs(markerdst.course - (gps.course + 360)));
-            if (gps.rtime && coursediff <= 85) {
-                //TODO: is this really correct for VMG?
-                vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
-                //vmgapp is in kn
-                var targettime = gps.rtime.getTime();
-                this.data.markerVmg=vmgapp;
-                if (vmgapp > 0) {
-                    targettime += this.data.markerDistance / vmgapp * 3600 * 1000; //time in ms
-                    var targetDate = new Date(Math.round(targettime));
-                    this.data.markerEta = targetDate;
-                }
-                else {
-                    this.data.markerEta = null;
-                }
-
-            }
-            else  {
-                this.data.markerEta = null;
-                this.data.markerVmg=0;
-            }
-            var rstart=this.routeHandler.getCurrentLeg().from;
-            this.data.routeXte=avnav.nav.NavCompute.computeXte(rstart,this.data.markerWp,gps);
+            var legData=avnav.nav.NavCompute.computeLegInfo(this.data.markerWp,gps,rstart);
+            avnav.assign(this.data,legData);
         }
         else {
             this.data.markerCourse=undefined;
