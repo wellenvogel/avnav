@@ -63,10 +63,7 @@ avnav.gui.WpInfoPage.prototype.btnWpInfoLocate=function (button,ev){
     var marker=navobject.getComputedValues().markerWp;
     this.gui.map.setCenter(marker);
     //make the current WP the active again...
-    var routingTarget=navobject.getRoutingHandler().getCurrentLegTargetIdx();
-    if (routingTarget >= 0 && navobject.getRoutingHandler().isEditingActiveRoute()){
-        navobject.getRoutingHandler().setEditingWp(routingTarget);
-    }
+    this.navobject.getRoutingHandler().resetEditingWp();
     this.returnToLast();
 };
 avnav.gui.WpInfoPage.prototype.btnShowRoutePanel=function (button,ev){

@@ -143,7 +143,27 @@ avnav.nav.NavCompute.computeTarget=function(src,brg,dist){
     return rt;
 };
 
-
+/**
+ * compute the length of a route starting from the given index
+ * @param {Number} startIdx
+ * @param {avnav.nav.Route} route
+ * @returns {Number}
+ */
+avnav.nav.NavCompute.computeRouteLength=function(startIdx,route){
+    if (! route) return 0;
+    var rt=0;
+    if (startIdx < 0) startIdx=0;
+    if (route.points.length < (startIdx+2)) return rt;
+    var last=route.points[startIdx];
+    startIdx++;
+    for (;startIdx<route.points.length;startIdx++){
+        var next=route.points[startIdx];
+        var dst=avnav.nav.NavCompute.computeDistance(last,next);
+        rt+=dst.dtsnm;
+        last=next;
+    }
+    return rt;
+};
 
 
 

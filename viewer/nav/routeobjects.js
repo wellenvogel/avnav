@@ -105,6 +105,21 @@ avnav.nav.Leg.prototype.fromJson=function(raw){
         this.currentRoute.fromJson(raw.currentRoute);
         this.name=this.currentRoute.name;
     }
+    if (this.currentRoute){
+        if (raw.currentTarget !== undefined ){
+            var rp=this.currentRoute.getPointAtIndex(raw.currentTarget);
+            if (rp){
+                this.to=rp;
+            }
+            else{
+                //this is some error - set the to to be outside of the route...
+                this.to.id=this.currentRoute.findFreeId();
+            }
+        }
+    }
+    else{
+        this.to.id=undefined;
+    }
     return this;
 };
 
@@ -246,7 +261,7 @@ avnav.nav.Route.prototype.differsTo=function(route2){
         if (this.points[i].lon != route2.points[i].lon) return true;
         if (this.points[i].lat != route2.points[i].lat) return true;
         if (this.points[i].name != route2.points[i].name) return true;
-        //no need to compare the wp id here ??
+        if (this.points[i].id != route2.points[i].id) return true;
     }
     return false;
 };
@@ -331,36 +346,22 @@ avnav.nav.Route.prototype.getIndexFromPoint=function(point){
     }
     return -1;
 };
-avnav.nav.Route.prototype._findFreeId=function(){
+avnav.nav.Route.prototype.findFreeId=function(){
     var rt=0;
     var i;
-    for (i in this.points){
+    for (i=0;i< this.points.length;i++){
         if (this.points[i].id !== undefined && this.points[i].id > rt) rt=this.points[i].id;
     }
     return rt+1;
 };
 avnav.nav.Route.prototype.addPoint=function(idx,point){
-    var nid=this._findFreeId();
+    var nid=this.findFreeId();
     if (! (point instanceof avnav.nav.navdata.WayPoint)){
         point=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
     }
     var rp=point.clone();
-    if (! rp.name){
-        //find a free name
-        var highest=-1;
-        var p;
-        for (p=0;p<this.points.length;p++){
-            var cp=this.points[p];
-            if (cp.name && cp.name.match("^WP[0-9][0-9]")){
-                try {
-                    var v=parseInt(cp.name.substr(2));
-                    if (v>highest) highest=v;
-                } catch(e){}
-            }
-        }
-        rp.name="WP"+avnav.util.Formatter.prototype.formatDecimal(highest+1,2,0);
-    }
     rp.id=nid;
+    if (! rp.name) rp.name="WP"+avnav.util.Formatter.prototype.formatDecimal(rp.id+1,2,0);
     if (idx < 0 || idx >= (this.points.length-1)) {
         this.points.push(rp);
     }

@@ -75,6 +75,15 @@ avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
 };
 
 avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
+
+avnav.nav.navdata.WayPoint.compare=function(point){
+    var rt= avnav.nav.navdata.Point.compare.call(this,point);
+    if (! rt) return rt;
+    if (point instanceof avnav.nav.navdata.WayPoint ){
+        return this.id == point.id;
+    }
+    return true;
+};
 /**
  * create a waypoint from aplain (json) object
  * @param plain
