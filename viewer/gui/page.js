@@ -116,10 +116,12 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         //visibility changed
         this.visible=this.isVisible();
         if (this.visible){
+            this._showPage();
             this.showPage(evdata.options);
             this.updateDisplayObjects();
         }
         else {
+            this._hidePage();
             this.hidePage();
         }
     }

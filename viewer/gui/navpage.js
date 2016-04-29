@@ -182,7 +182,7 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(){
 };
 
 avnav.gui.Navpage.prototype.timerEvent=function(){
-    if (this.hidetime >0 && this.hidetime <= new Date().getTime()|| gpsLock){
+    if (this.hidetime >0 && this.hidetime <= new Date().getTime()|| this.gui.map.getGpsLock()){
         this.hideOverlay();
         this.hidetime=0;
     }
@@ -205,7 +205,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
         ev.stopPropagation();
         self.gui.showPage('boatinfopage');
     });
-    $('#centerDisplay').click({page:this},function(ev){
+    $('#avi_centerDisplay').click({page:this},function(ev){
        ev.data.page.hideOverlay();
     });
     $('#avi_aisInfo').click(function(ev){
@@ -326,7 +326,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
             this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
             return;
         }
-        this.overlay = this.getDiv().find('#centerDisplay');
+        this.overlay = this.getDiv().find('#avi_centerDisplay');
         this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
         this.overlay.show();
         this.updateLayout();
