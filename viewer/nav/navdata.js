@@ -76,7 +76,7 @@ avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
 
 avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
 
-avnav.nav.navdata.WayPoint.compare=function(point){
+avnav.nav.navdata.WayPoint.prototype.compare=function(point){
     var rt= avnav.nav.navdata.Point.compare.call(this,point);
     if (! rt) return rt;
     if (point instanceof avnav.nav.navdata.WayPoint ){
@@ -93,7 +93,7 @@ avnav.nav.navdata.WayPoint.fromPlain=function(plain){
     return new avnav.nav.navdata.WayPoint(plain.lon,plain.lat,plain.name);
 };
 
-avnav.nav.navdata.WayPoint.clone=function(){
+avnav.nav.navdata.WayPoint.prototype.clone=function(){
     var rt=new avnav.nav.navdata.WayPoint(this.lon,this.lat,this.name?this.name.slice(0):null);
     rt.id=this.id;
     return rt;
@@ -103,7 +103,7 @@ avnav.nav.navdata.WayPoint.clone=function(){
  * @param point
  * @returns {boolean}
  */
-avnav.nav.navdata.WayPoint.update=function(point){
+avnav.nav.navdata.WayPoint.prototype.update=function(point){
     var rt=false;
     if (point.lon !== undefined){
         if (point.lon != this.lon) rt=true;

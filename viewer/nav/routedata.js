@@ -79,6 +79,13 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
      */
     this.editingWp=this.currentLeg.to;
     /**
+     * the waypoint when no routing is acvtive
+     * @private
+     * @type {avnav.nav.navdata.WayPoint}
+     */
+    this.standaloneWp=this.currentLeg.to;
+    if (this.standaloneWp) this.standaloneWp.id=undefined;
+    /**
      * the current route that we edit
      * if undefined all functions will directly work on the active route
      * @private
@@ -222,9 +229,6 @@ avnav.nav.RouteData.prototype.getEditingRoute=function(){
     if (this.isEditingActiveRoute()){
         return this.currentLeg.currentRoute;
     }
-    if (! this.editingRoute) {
-        this.editingRoute=this._loadRoute(this.DEFAULTROUTE);
-    }
     return this.editingRoute;
 };
 /**
@@ -241,7 +245,7 @@ avnav.nav.RouteData.prototype.changeRouteName=function(name,setLocal){
         return;
     }
     if (! this.editingRoute){
-        this.editingRoute=new avnav.nav.Route();
+        return;
     }
     this.editingRoute.name=name;
     if (setLocal) this.editingRoute.server=false;
@@ -292,12 +296,14 @@ avnav.nav.RouteData.prototype.resetEditingWp=function(){
  */
 avnav.nav.RouteData.prototype.setEditingWp=function(id){
     var route=this.getEditingRoute();
+    if (! route) return;
     this.editingWp=route.getPointAtIndex(id);
     this.navobject.routeEvent();
 };
 
 avnav.nav.RouteData.prototype.moveEditingWp=function(diff){
     var route=this.getEditingRoute();
+    if (! route) return;
     var cur=route.getIndexFromPoint(this.editingWp);
     var next=cur+diff;
     if (next <0 || next >= route.points.length) return;
@@ -312,7 +318,9 @@ avnav.nav.RouteData.prototype.moveEditingWp=function(diff){
  * @returns {avnav.nav.navdata.WayPoint}
  */
 avnav.nav.RouteData.prototype.getEditingWp=function(){
-    if (! this.editingWp && this.isEditingActiveRoute()) this.editingWp=this.currentLeg.to;
+    if (! this.editingWp && this.isEditingActiveRoute()) {
+        this.editingWp=this.currentLeg.to;
+    }
     return this.editingWp;
 };
 
@@ -326,6 +334,7 @@ avnav.nav.RouteData.prototype.getEditingWpIdx=function(){
     if (wp.id === undefined ) -1;
     var i=0;
     var route=this.getEditingRoute();
+    if (! route) return -1;
     for (i in route.points){
         if (route.points[i].id == wp.id) return i;
     }
@@ -339,7 +348,9 @@ avnav.nav.RouteData.prototype.getEditingWpIdx=function(){
  */
 
 avnav.nav.RouteData.prototype.getWp=function(idx){
-    return this.getEditingRoute().getPointAtIndex(idx);
+    var route=this.getEditingRoute();
+    if (! route) return undefined;
+    return route.getPointAtIndex(idx);
 };
 
 /**
@@ -464,6 +475,43 @@ avnav.nav.RouteData.prototype.computeLength=function(startIdx,route){
     return avnav.nav.NavCompute.computeRouteLength(startIdx,route);
 };
 
+/**
+ * get the standalone wp
+ * @returns {avnav.nav.navdata.WayPoint}
+ */
+avnav.nav.RouteData.prototype.getStandaloneWp=function(){
+    return this.standaloneWp;
+};
+
+avnav.nav.RouteData.prototype.setStandaloneWp=function(wp){
+    if (wp instanceof avnav.nav.navdata.WayPoint) {
+        this.standaloneWp = wp.clone();
+        this.standaloneWp.id=undefined;
+    }
+    else{
+        this.standaloneWp=new avnav.nav.navdata.WayPoint(wp.lon,wp.lat,wp.name);
+    }
+};
+/**
+ * are we in route mode? (i.e. either we have an active route or we have an editing route)
+ * @returns {boolean}
+ */
+avnav.nav.RouteData.prototype.hasEditingRoute=function(){
+    if (this.getLock() || this.editingRoute) return true;
+    return false;
+};
+/**
+ * get the currently active waypoint
+ * @returns {avnav.nav.navdata.WayPoint}
+ */
+avnav.nav.RouteData.prototype.getActiveWp=function(){
+    if (this.hasEditingRoute()) {
+        var rt=this.getEditingWp();
+        if (rt) return rt.clone();
+        return rt;
+    }
+    return this.getStandaloneWp().clone();
+};
 
 
 /*---------------------------------------------------------
@@ -489,11 +537,10 @@ avnav.nav.RouteData.prototype.cloneActiveToEditing=function() {
 };
 
 /**
- * reset the editing route to the active route
- * also setting the active WP
+ * reset the editing route to the active route (or to none)
+ * also setting the editing WP
  */
 avnav.nav.RouteData.prototype.resetToActive=function(){
-    if (this.isEditingActiveRoute()) return;
     this.editingRoute=undefined;
     this.editingWp=this.currentLeg.to;
 };
@@ -518,12 +565,11 @@ avnav.nav.RouteData.prototype.routeOn=function(mode,opt_keep_from){
         center.assign(pfrom);
     }
     if (! opt_keep_from) this.currentLeg.from=pfrom;
-    if (mode == avnav.nav.RoutingMode.CENTER){
-        this.currentLeg.to=new avnav.nav.navdata.WayPoint();
-        center.assign(this.currentLeg.to);
+    if (mode == avnav.nav.RoutingMode.WP){
+        if ( this.standaloneWp) return;
+        this.currentLeg.to=this.standaloneWp;
         this.currentLeg.name=undefined;
         this.currentLeg.currentRoute=undefined;
-        this.currentLeg.currentTarget=0;
         this.currentLeg.active=true;
         this._legChanged();
         return true;

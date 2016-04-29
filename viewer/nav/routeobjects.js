@@ -8,7 +8,7 @@ avnav.provide('avnav.nav.RouteInfo');
 avnav.provide('avnav.nav.RoutingMode');
 
 avnav.nav.RoutingMode={
-    CENTER: 0,      //route to current map center
+    WP: 0,         //route to current standalone WP
     ROUTE:  1      //route to the currently selected Point of the route
 };
 
@@ -18,11 +18,15 @@ avnav.nav.Leg=function(from,to,active,opt_routeName){
      * @type {avnav.nav.navdata.WayPoint}
      */
     this.from=from|| new avnav.nav.navdata.WayPoint();
+    if (! (this.from instanceof avnav.nav.navdata.WayPoint))
+        this.from=avnav.nav.navdata.WayPoint.fromPlain(this.from);
     /**
      * current target waypoint
      * @type {avnav.nav.navdata.WayPoint}
      */
     this.to=to||new avnav.nav.navdata.WayPoint();
+    if (! (this.to instanceof avnav.nav.navdata.WayPoint))
+        this.to=avnav.nav.navdata.WayPoint.fromPlain(this.to);
     /**
      * is the leg active?
      * @type {boolean}
@@ -54,7 +58,7 @@ avnav.nav.Leg=function(from,to,active,opt_routeName){
 };
 
 avnav.nav.Leg.prototype.clone=function(){
-    var rt=new avnav.nav.Leg(avnav.clone(this.from),avnav.clone(this.to),this.active,
+    var rt=new avnav.nav.Leg(this.from.clone(),this.to.clone(),this.active,
         this.name?this.name.slice(0):undefined);
     rt.approach=false;
     rt.approachDistance=this.approachDistance;
@@ -226,6 +230,9 @@ avnav.nav.Route.prototype.fromJson=function(parsed) {
             wp=avnav.nav.navdata.WayPoint.fromPlain(parsed.points[i]);
             if (parsed.points[i].id !== undefined) wp.id=parsed.points[i].id;
             else wp.id=i;  //a simple id - only unique within the route
+            if (! wp.name){
+                wp.name="WP"+avnav.util.Formatter.prototype.formatDecimal(wp.id+1,2,0);
+            }
             this.points.push(wp);
         }
     }
@@ -294,6 +301,9 @@ avnav.nav.Route.prototype.fromXml=function(xml){
             pt.lat=parseFloat($(pel).attr('lat'));
             pt.name=$(pel).find('>name').text();
             pt.id=i;
+            if (! pt.name){
+                pt.name="WP"+avnav.util.Formatter.prototype.formatDecimal(pt.id+1,2,0);
+            }
             i++;
             self.points.push(pt);
         })

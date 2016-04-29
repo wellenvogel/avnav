@@ -375,6 +375,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     if (upd)this.gui.map.updateSize();
     this.routingVisible=true;
     this.handleToggleButton('.avb_ShowRoutePanel',true);
+    this.navobject.getRoutingHandler().resetToActive();
     this.gui.map.setRoutingActive(true);
     this.handleRouteDisplay();
     this.updateRoutePoints(true);
@@ -612,6 +613,14 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
     log("LockMarker clicked");
+    var isRouting=this.navobject.getRoutingHandler().getLock();
+    if (! isRouting){
+        var center=this.navobject.getMapCenter();
+        var wp=new avnav.nav.navdata.WayPoint();
+        center.assign(wp);
+        wp.name='Marker';
+        this.navobject.getRoutingHandler().setStandaloneWp(wp);
+    }
     this.gui.showPage('wpinfopage');
     return;
     /*

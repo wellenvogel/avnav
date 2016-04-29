@@ -42,8 +42,16 @@ avnav.gui.WpInfoPage.prototype.timerEvent=function(){
     this.updateButtons();
 };
 avnav.gui.WpInfoPage.prototype.fillData=function(initial){
-
+    var wp=this.navobject.getRoutingHandler().getActiveWp();
     this.selectOnPage(".avn_infopage_inner").show();
+    this.selectOnPage("[data-name]").each(function(idx,el){
+        var name=$(this).attr('data-name');
+        if (! name) return;
+        var val="---";
+        if (name =='markerName') val=wp.name;
+        $(this).text(val);
+    });
+
 };
 
 
@@ -74,7 +82,9 @@ avnav.gui.WpInfoPage.prototype.btnLockMarker=function (button,ev){
     log("lock marker clicked");
     var nLock=! this.navobject.getRoutingHandler().getLock();
     if (! nLock) this.navobject.getRoutingHandler().routeOff();
-    else this.navobject.getRoutingHandler().routeOn(avnav.nav.RoutingMode.CENTER);
+    else {
+        this.navobject.getRoutingHandler().routeOn(avnav.nav.RoutingMode.WP);
+    }
     this.handleToggleButton(button,nLock);
     this.gui.map.triggerRender();
     this.returnToLast();
