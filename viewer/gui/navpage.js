@@ -617,14 +617,20 @@ avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
     log("LockMarker clicked");
     var isRouting=this.navobject.getRoutingHandler().getLock();
     var options={};
-    if (! isRouting){
-        var center=this.navobject.getMapCenter();
-        var wp=new avnav.nav.navdata.WayPoint();
+    if (! isRouting) {
+        var center = this.navobject.getMapCenter();
+        var wp = new avnav.nav.navdata.WayPoint();
         center.assign(wp);
-        wp.name='Marker';
-        options.wp=wp;
+        wp.name = 'Marker';
+        options.wp = wp;
+        this.gui.showPage('wpinfopage', options);
     }
-    this.gui.showPage('wpinfopage',options);
+    else {
+        this.navobject.getRoutingHandler().routeOff();
+        this.handleToggleButton(button,false);
+        this.hideRouting();
+        this.gui.map.triggerRender();
+    }
     return;
     /*
     var nLock=! this.navobject.getRoutingData().getLock();
