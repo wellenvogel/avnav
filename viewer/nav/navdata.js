@@ -67,11 +67,7 @@ avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
      * @type {string}
      */
     this.name=opt_name;
-    /**
-     * if this waypoint is part of a route this is a unique identifier within the route
-     * @type {number}
-     */
-    this.id=undefined;
+
     /**
      * if this waypoint belongs to a route
      * this parameter will be set
@@ -86,7 +82,6 @@ avnav.nav.navdata.WayPoint.prototype.compare=function(point){
     var rt= this.super_.compare.call(this,point);
     if (! rt) return rt;
     if (point instanceof avnav.nav.navdata.WayPoint ){
-        if (this.id != point.id) return false;
         return this.routeName == point.routeName;
     }
     return true;
@@ -102,7 +97,6 @@ avnav.nav.navdata.WayPoint.fromPlain=function(plain){
 
 avnav.nav.navdata.WayPoint.prototype.clone=function(){
     var rt=new avnav.nav.navdata.WayPoint(this.lon,this.lat,this.name?this.name.slice(0):null);
-    rt.id=this.id;
     rt.routeName=(this.routeName!==undefined)?this.routeName.slice(0):undefined;
     return rt;
 };

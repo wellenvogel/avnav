@@ -1169,7 +1169,7 @@ avnav.nav.RouteData.prototype._legChanged=function(){
  * @private
  */
 avnav.nav.RouteData.prototype._checkCurrentTargetChanged=function(compareWp,newWp){
-    if (compareWp && this.currentLeg.to.id == compareWp.id){
+    if (compareWp && this.currentLeg.to.compare(compareWp)){
         //target changed
         if (newWp){
             this.currentLeg.to=newWp;

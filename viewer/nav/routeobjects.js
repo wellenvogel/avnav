@@ -124,23 +124,20 @@ avnav.nav.Leg.prototype.fromJson=function(raw){
                 this.currentRoute=undefined;
                 this.name=undefined;
                 this.to.routeName=undefined;
-                this.to.id=undefined;
             }
         }
         else{
-            if (raw.to.id !== undefined) this.to.id=raw.to.id;
             var idx=this.currentRoute.getIndexFromPoint(this.to);
             if (idx < 0){
                 console.log("invalid leg, to outside route, deleting route");
                 this.currentRoute=undefined;
                 this.name=undefined;
                 this.to.routeName=undefined;
-                this.to.id=undefined;
             }
         }
     }
     else{
-        this.to.id=undefined;
+        this.to.routeName=undefined;
     }
     return this;
 };
@@ -243,10 +240,8 @@ avnav.nav.Route.prototype.fromJson=function(parsed) {
     if (parsed.points){
         for (i=0;i<parsed.points.length;i++){
             wp=avnav.nav.navdata.WayPoint.fromPlain(parsed.points[i]);
-            if (parsed.points[i].id !== undefined) wp.id=parsed.points[i].id;
-            else wp.id=i;  //a simple id - only unique within the route
             if (! wp.name){
-                wp.name="WP"+avnav.util.Formatter.prototype.formatDecimal(wp.id+1,2,0);
+                wp.name=this.findFreeName();
             }
             wp.routeName=this.name.slice(0);
             this.points.push(wp);
@@ -286,7 +281,6 @@ avnav.nav.Route.prototype.differsTo=function(route2){
         if (this.points[i].lon != route2.points[i].lon) return true;
         if (this.points[i].lat != route2.points[i].lat) return true;
         if (this.points[i].name != route2.points[i].name) return true;
-        if (this.points[i].id != route2.points[i].id) return true;
     }
     return false;
 };
@@ -318,10 +312,9 @@ avnav.nav.Route.prototype.fromXml=function(xml){
             pt.lon=parseFloat($(pel).attr('lon'));
             pt.lat=parseFloat($(pel).attr('lat'));
             pt.name=$(pel).find('>name').text();
-            pt.id=i;
             pt.routeName=self.name.slice(0);
             if (! pt.name){
-                pt.name="WP"+avnav.util.Formatter.prototype.formatDecimal(pt.id+1,2,0);
+                pt.name=this.findFreeName();
             }
             i++;
             self.points.push(pt);
@@ -373,31 +366,65 @@ avnav.nav.Route.prototype.getPointAtIndex=function(idx){
  * @returns {number} - -1 if not found
  */
 avnav.nav.Route.prototype.getIndexFromPoint=function(point){
-    if (! point || point.id === undefined) return -1;
+    if (! point || point.name === undefined) return -1;
     if (point.routeName === undefined || point.routeName != this.name) return -1;
     var i;
     for (i=0;i<this.points.length;i++){
-        if (this.points[i].id == point.id) return i;
+        if (this.points[i].compare(point)) return i;
     }
     return -1;
 };
-avnav.nav.Route.prototype.findFreeId=function(){
-    var rt=0;
-    var i;
+/**
+ * check if a given name already exists in the route
+ * @param name
+ */
+avnav.nav.Route.prototype.checkName=function(name){
+    var i=0;
     for (i=0;i< this.points.length;i++){
-        if (this.points[i].id !== undefined && this.points[i].id > rt) rt=this.points[i].id;
+        if (this.points[i].name == name) return true;
     }
-    return rt+1;
+    return false;
+};
+
+avnav.nav.Route.prototype._createNameFromId=function(id){
+    return "WP"+avnav.util.Formatter.prototype.formatDecimal(id,2,0);
+};
+avnav.nav.Route.prototype.findFreeName=function(){
+    var i=this.points.length;
+    var j=0;
+    for (j=0;j< this.points.length;j++){
+        try {
+            if (this.points[j].name) {
+                var nameVal=this.points[j].name.replace(/^[^0-9]*/, "").replace(/ .*/,"");
+                var nameNum = parseInt(nameVal);
+                if (nameNum > i) i = nameNum;
+            }
+        }catch (e){}
+    }
+    i++;
+    for (j=0;j< this.points.length+1;j++){
+        var name=this._createNameFromId(i);
+        if (! this.checkName(name)) return name;
+        i++;
+    }
+    console.log("no free name found for wp");
+    return "no free name found";
 };
 avnav.nav.Route.prototype.addPoint=function(idx,point){
-    var nid=this.findFreeId();
     if (! (point instanceof avnav.nav.navdata.WayPoint)){
         point=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
     }
     var rp=point.clone();
-    rp.id=nid;
+    if (rp.name){
+        if (this.checkName(rp.name)){
+            console.log("name "+rp.name+" already exists in route, create a new one");
+            rp.name=undefined;
+        }
+    }
+    if (! rp.name){
+        rp.name=this.findFreeName();
+    }
     rp.routeName=this.name.slice(0);
-    if (! rp.name) rp.name="WP"+avnav.util.Formatter.prototype.formatDecimal(rp.id+1,2,0);
     if (idx < 0 || idx >= (this.points.length-1)) {
         this.points.push(rp);
     }
