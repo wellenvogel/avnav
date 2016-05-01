@@ -230,6 +230,7 @@ avnav.nav.RouteData.prototype.getApproaching=function(){
 avnav.nav.RouteData.prototype.isCurrentRoutingTarget=function(compare){
     if (! compare ) return false;
     if (! this.currentLeg.to) return false;
+    if (! this.currentLeg.active) return false;
     return this.currentLeg.to.compare(compare);
 };
 /*---------------------------------------------------------
@@ -363,14 +364,25 @@ avnav.nav.RouteData.prototype.getWp=function(idx){
     return route.getPointAtIndex(idx);
 };
 
+avnav.nav.RouteData.prototype.getIdForMinusOne=function(id){
+    if (id >= 0) return id;
+    if (this.isEditingActiveRoute()){
+        return this.currentLeg.currentRoute.getIndexFromPoint(this.getEditingWp());
+    }
+    if (! this.editingRoute) return -1;
+    return this.editingRoute.getIndexFromPoint(this.getEditingWp());
+};
 /**
  * delete a point from the current route
  * @param {number} id - the index, -1 for active
  */
 avnav.nav.RouteData.prototype.deleteWp=function(id){
+    id=this.getIdForMinusOne(id);
+    if (id < 0) return;
     if (this.isEditingActiveRoute()){
         var oldPoint=this.currentLeg.currentRoute.getPointAtIndex(id);
-        var newPoint=this.currentLeg.route.deletePoint(id);
+        var newPoint=this.currentLeg.currentRoute.deletePoint(id);
+        this.editingWp=newPoint;
         this._checkCurrentTargetChanged(oldPoint,newPoint);
         this._legChanged();
         return;
@@ -386,6 +398,9 @@ avnav.nav.RouteData.prototype.deleteWp=function(id){
  * @param {avnav.nav.navdata.Point|avnav.nav.navdata.WayPoint} point
  */
 avnav.nav.RouteData.prototype.changeWp=function(id,point){
+    if (id < 0 && this.editingWp) this.editingWp.update(point);
+    id=this.getIdForMinusOne(id);
+    if (id < 0) return;
     if (this.isEditingActiveRoute()){
         var oldWp=this.currentLeg.currentRoute.getPointAtIndex(id);
         if (! oldWp) return;
@@ -409,6 +424,7 @@ avnav.nav.RouteData.prototype.changeWp=function(id,point){
  * @param {avnav.nav.navdata.Point|avnav.nav.navdata.WayPoint} point
  */
 avnav.nav.RouteData.prototype.addWp=function(id,point){
+    id=this.getIdForMinusOne(id);
     if (this.isEditingActiveRoute()){
         this.editingWp=this.currentLeg.currentRoute.addPoint(id,point);
         this._legChanged();

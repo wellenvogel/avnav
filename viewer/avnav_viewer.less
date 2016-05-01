@@ -239,6 +239,7 @@ html,body {
 
 .avn_table{
   display: table;
+  border-collapse: collapse;
 }
 .avn_row{
   display: table-row;
@@ -1199,6 +1200,20 @@ button.avb_BoatInfoLocate {
   background-size: 1em 1em;
   margin-right: 0.5em;
 }
+#avi_wpinfopage .avn_FirstRouteInfo{
+  border-top: 1px solid hsla(0, 0%, 0%, 0.61);
+  line-height: 3em;
+}
+#avi_wpinfopage .avn_routingInactive{
+  background-color: fade(lightgray,@nightModePercent);
+}
+#avi_wpinfopage .avn_routingActive{
+  background-color: fade(#1DB81D,@nightModePercent);
+}
+#avi_wpinfopage .avn_routingApproach{
+  background-color: @routeApproachingColor;
+}
+
 button.avb_WpInfoLocate {
   .avn_button_icon_base('images/Marker2.png');
 }

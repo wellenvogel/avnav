@@ -112,6 +112,7 @@ avnav.nav.Leg.prototype.fromJson=function(raw){
         this.name=this.currentRoute.name;
     }
     if (this.currentRoute){
+        this.to.routeName=this.currentRoute.name.slice(0);
         if (raw.currentTarget !== undefined ){
             var rp=this.currentRoute.getPointAtIndex(raw.currentTarget);
             if (rp){
@@ -119,7 +120,22 @@ avnav.nav.Leg.prototype.fromJson=function(raw){
             }
             else{
                 //this is some error - set the to to be outside of the route...
-                this.to.id=this.currentRoute.findFreeId();
+                console.log("invalid leg with currentTarget, to outside route, deleting route");
+                this.currentRoute=undefined;
+                this.name=undefined;
+                this.to.routeName=undefined;
+                this.to.id=undefined;
+            }
+        }
+        else{
+            if (raw.to.id !== undefined) this.to.id=raw.to.id;
+            var idx=this.currentRoute.getIndexFromPoint(this.to);
+            if (idx < 0){
+                console.log("invalid leg, to outside route, deleting route");
+                this.currentRoute=undefined;
+                this.name=undefined;
+                this.to.routeName=undefined;
+                this.to.id=undefined;
             }
         }
     }
@@ -225,7 +241,7 @@ avnav.nav.Route.prototype.fromJson=function(parsed) {
     var i;
     var wp;
     if (parsed.points){
-        for (i in parsed.points){
+        for (i=0;i<parsed.points.length;i++){
             wp=avnav.nav.navdata.WayPoint.fromPlain(parsed.points[i]);
             if (parsed.points[i].id !== undefined) wp.id=parsed.points[i].id;
             else wp.id=i;  //a simple id - only unique within the route
@@ -336,7 +352,7 @@ avnav.nav.Route.prototype.toXml=function(noUtf8){
  */
 avnav.nav.Route.prototype.deletePoint=function(idx){
     if (idx <0 || idx >= this.points.length) return undefined;
-    this.points=this.points.splice(idx,1);
+    this.points.splice(idx,1);
     if (idx < this.points.length) return this.points[idx];
     return undefined;
 };
@@ -386,7 +402,7 @@ avnav.nav.Route.prototype.addPoint=function(idx,point){
         this.points.push(rp);
     }
     else{
-        this.points.splice(idx,0,rp);
+        this.points.splice(idx+1,0,rp);
     }
     return rp;
 };

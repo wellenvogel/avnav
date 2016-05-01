@@ -51,21 +51,44 @@ avnav.gui.WpInfoPage.prototype.timerEvent=function(){
 avnav.gui.WpInfoPage.prototype.fillData=function(initial){
     this.selectOnPage(".avn_infopage_inner").show();
     var wp=this.wp;
+    var router=this.navobject.getRoutingHandler();
     var gps=this.navobject.getGpsHandler().getGpsData();
-    var start=this.navobject.getRoutingHandler().getCurrentLegStartWp();
+    var start=router.getCurrentLegStartWp();
     var legData=avnav.nav.NavCompute.computeLegInfo(wp,gps,start);
     var formattedData=this.navobject.formatLegData(legData);
+    var isTarget=router.isCurrentRoutingTarget(wp);
+    var isApproaching=router.isApproaching;
     this.selectOnPage("[data-name]").each(function(idx,el){
         var name=$(this).attr('data-name');
         if (! name) return;
-        var val="---";
+        var val=undefined;
         if (name =='markerName') val=wp.name;
-        else{
+        if (name == 'routeName') val=wp.routeName;
+        if (val === undefined){
             val=formattedData[name];
-            if (val === undefined) val="---";
+            if (name == 'markerXte' && ! isTarget) val="---";//do not show any xte if we are not the target
         }
+        if (val === undefined) val="---";
         $(this).text(val);
     });
+    if (! isTarget){
+        this.selectOnPage('.avn_Status').removeClass('avn_routingActive avn_routingApproach').
+            addClass('avn_routingInactive');
+    }else{
+        if (isApproaching){
+            this.selectOnPage('.avn_Status').removeClass('avn_routingActive avn_routingInactíve').
+            addClass('avn_routingApproach');
+        }
+        else{
+            this.selectOnPage('.avn_Status').removeClass('avn_routingInactive avn_routingApproach').
+            addClass('avn_routingActive');
+        }
+    }
+    if (wp.routeName !== undefined){
+        this.selectOnPage('.avn_RouteInfo').show();
+    }else {
+        this.selectOnPage('.avn_RouteInfo').hide();
+    }
 
 };
 
