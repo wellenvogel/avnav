@@ -72,6 +72,12 @@ avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
      * @type {number}
      */
     this.id=undefined;
+    /**
+     * if this waypoint belongs to a route
+     * this parameter will be set
+     * @type {string}
+     */
+    this.routeName=undefined;
 };
 
 avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
@@ -80,7 +86,8 @@ avnav.nav.navdata.WayPoint.prototype.compare=function(point){
     var rt= avnav.nav.navdata.Point.compare.call(this,point);
     if (! rt) return rt;
     if (point instanceof avnav.nav.navdata.WayPoint ){
-        return this.id == point.id;
+        if (this.id != point.id) return false;
+        return this.routeName == point.routeName;
     }
     return true;
 };
@@ -96,6 +103,7 @@ avnav.nav.navdata.WayPoint.fromPlain=function(plain){
 avnav.nav.navdata.WayPoint.prototype.clone=function(){
     var rt=new avnav.nav.navdata.WayPoint(this.lon,this.lat,this.name?this.name.slice(0):null);
     rt.id=this.id;
+    rt.routeName=(this.routeName!==undefined)?this.routeName.slice(0):undefined;
     return rt;
 };
 /**
@@ -115,6 +123,9 @@ avnav.nav.navdata.WayPoint.prototype.update=function(point){
     }
     if (point.name !== undefined){
         this.name=point.name.slice(0);
+    }
+    if (point.routeName !== undefined){
+        this.routeName=point.routeName.slice(0);
     }
     return rt;
 };

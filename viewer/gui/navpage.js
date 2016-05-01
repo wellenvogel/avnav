@@ -232,7 +232,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
             self.showRouting();
             return;
         }
-       ev.data.page.navobject.getRoutingHandler().resetToActive(); //???
+       ev.data.page.navobject.getRoutingHandler().stopEditingRoute(); //???
     });
 
 };
@@ -375,7 +375,9 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     if (upd)this.gui.map.updateSize();
     this.routingVisible=true;
     this.handleToggleButton('.avb_ShowRoutePanel',true);
-    this.navobject.getRoutingHandler().resetToActive();
+    this.navobject.getRoutingHandler().stopEditingRoute(); //always reset to active route if any
+                                                           //TODO: should we keep the last edited route?
+    this.navobject.getRoutingHandler().startEditingRoute();
     this.gui.map.setRoutingActive(true);
     this.handleRouteDisplay();
     this.updateRoutePoints(true);
@@ -403,7 +405,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     this.routingVisible=false;
     this.handleToggleButton('.avb_ShowRoutePanel',false);
     this.gui.map.setRoutingActive(false);
-    this.navobject.getRoutingHandler().resetToActive();
+    this.navobject.getRoutingHandler().stopEditingRoute();
     this.handleRouteDisplay();
     $(this.waypointPopUp).hide();
     if (this.lastGpsLock) {
@@ -614,14 +616,15 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
     log("LockMarker clicked");
     var isRouting=this.navobject.getRoutingHandler().getLock();
+    var options={};
     if (! isRouting){
         var center=this.navobject.getMapCenter();
         var wp=new avnav.nav.navdata.WayPoint();
         center.assign(wp);
         wp.name='Marker';
-        this.navobject.getRoutingHandler().setStandaloneWp(wp);
+        options.wp=wp;
     }
-    this.gui.showPage('wpinfopage');
+    this.gui.showPage('wpinfopage',options);
     return;
     /*
     var nLock=! this.navobject.getRoutingData().getLock();
@@ -696,14 +699,14 @@ avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
     log("navGoto clicked");
-    this.navobject.getRoutingHandler().routeOn(avnav.nav.RoutingMode.ROUTE);
+    this.navobject.getRoutingHandler().routeOn();
     this.hideRouting();
 };
 
 avnav.gui.Navpage.prototype.btnNavNext=function(button,ev){
     log("navNext clicked");
     this.navobject.getRoutingHandler().moveEditingWp(1);
-    this.navobject.getRoutingHandler().routeOn(avnav.nav.RoutingMode.ROUTE);
+    this.navobject.getRoutingHandler().routeOn();
     this.hideRouting();
 };
 avnav.gui.Navpage.prototype.btnNavDeleteAll=function(button,ev){

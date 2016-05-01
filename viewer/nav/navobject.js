@@ -111,7 +111,7 @@ avnav.nav.NavObject=function(propertyHandler){
 
     /**
      * our computed values
-     * @type {{centerCourse: number, centerDistance: number, centerMarkerCourse: number, centerMarkerDistance: number, markerCourse: number, markerDistance: number, markerVmg: number, markerEta: null, markerWp: avnav.nav.navdata.WayPoint, routeName: undefined, routeNumPoints: number, routeLen: number, routeRemain: number, routeEta: null, routeNextCourse: number, routeNextWp: undefined, routeXte: number, edRouteName: undefined, edRouteNumPoints: number, edRouteLen: number, edRouteRemain: number, edRouteEta: number}}
+     * @type {{centerCourse: number, centerDistance: number, centerMarkerCourse: number, centerMarkerDistance: number, markerCourse: number, markerDistance: number, markerVmg: number, markerEta: null, markerWp: avnav.nav.navdata.WayPoint, routeName: undefined, routeNumPoints: number, routeLen: number, routeRemain: number, routeEta: null, routeNextCourse: number, routeNextWp: undefined, markerXte: number, edRouteName: undefined, edRouteNumPoints: number, edRouteLen: number, edRouteRemain: number, edRouteEta: number}}
      */
     this.data={
         centerCourse:0,
@@ -122,6 +122,7 @@ avnav.nav.NavObject=function(propertyHandler){
         markerDistance:0,
         markerVmg:0,
         markerEta:null,
+        markerXte: 0,
         markerWp:new avnav.nav.navdata.WayPoint(0,0,"Marker"),
         /* data for the active route */
         routeName: undefined,
@@ -131,7 +132,6 @@ avnav.nav.NavObject=function(propertyHandler){
         routeEta: null,
         routeNextCourse: 0,
         routeNextWp: undefined,
-        routeXte: 0,
         /* data for the route we are editing */
         edRouteName: undefined,
         edRouteNumPoints: 0,
@@ -146,6 +146,7 @@ avnav.nav.NavObject=function(propertyHandler){
         markerDistance:"--",
         markerPosition:"none",
         markerVmg: "--",
+        markerXte: "---",
         markerName: "--",
         centerCourse:"--",
         centerDistance:"--",
@@ -158,7 +159,6 @@ avnav.nav.NavObject=function(propertyHandler){
         routeRemain: "--",
         routeEta: "--:--:--",
         routeNextCourse: "---",
-        routeXte: "---",
         routeNextPosition: "---",
         routeNextName: "---",
         edRouteName: "default",
@@ -192,7 +192,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
             this.data.markerCourse=undefined;
             this.data.markerDistance=undefined;
             this.data.markerEta=undefined;
-            this.data.routeXte=undefined;
+            this.data.markerXte=undefined;
         }
         var centerdst=avnav.nav.NavCompute.computeDistance(gps,this.maplatlon);
         this.data.centerCourse=centerdst.course;
@@ -204,7 +204,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
         this.data.markerCourse=0;
         this.data.markerDistance=0;
         this.data.markerEta=null;
-        this.data.routeXte=undefined;
+        this.data.markerXte=undefined;
     }
 
     //distance between marker and center
@@ -267,17 +267,9 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     }
 
     //now create text values
-    this.formattedValues.markerEta=(this.data.markerEta)?
-        this.formatter.formatTime(this.data.markerEta):"--:--:--";
-    this.formattedValues.markerCourse=(this.data.markerCourse !== undefined)?this.formatter.formatDecimal(
-        this.data.markerCourse,3,0):'---';
-    this.formattedValues.markerDistance=(this.data.markerDistance !== undefined)?this.formatter.formatDecimal(
-        this.data.markerDistance,3,1):'----';
-    this.formattedValues.markerVmg=this.formatter.formatDecimal(
-        this.data.markerVmg,3,1);
-    this.formattedValues.markerPosition=this.formatter.formatLonLats(
-        this.data.markerWp
-    );
+    var legDataFormatted=this.formatLegData(this.data);
+    avnav.assign(this.formattedValues,legDataFormatted);
+
     this.formattedValues.markerName=this.data.markerWp.name||"Marker";
     this.formattedValues.centerCourse=this.formatter.formatDecimal(
         this.data.centerCourse,3,0
@@ -301,13 +293,30 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"--:--:--";
     this.formattedValues.routeNextCourse=(this.data.routeNextCourse !== undefined)?this.formatter.formatDecimal(this.data.routeNextCourse,3,0):"---";
     this.formattedValues.routeNextName=this.data.routeNextWp?this.data.routeNextWp.name:"???";
-    this.formattedValues.routeXte=(this.data.routeXte !== undefined)?this.formatter.formatDecimal(this.data.routeXte,2,2):"---";
 
     this.formattedValues.edRouteName=this.data.edRouteName||"default";
     this.formattedValues.edRouteNumPoints=this.formatter.formatDecimal(this.data.edRouteNumPoints,4,0);
     this.formattedValues.edRouteLen=this.formatter.formatDecimal(this.data.edRouteLen,4,1);
     this.formattedValues.edRouteRemain=this.formatter.formatDecimal(this.data.edRouteRemain,4,1);
     this.formattedValues.edRouteEta=this.data.edRouteEta?this.formatter.formatTime(this.data.edRouteEta):"--:--:--";
+};
+
+avnav.nav.NavObject.prototype.formatLegData=function(legInfo){
+    var rt={};
+    if (! legInfo) return rt;
+    rt.markerEta=(legInfo.markerEta)?
+        this.formatter.formatTime(legInfo.markerEta):"--:--:--";
+    rt.markerCourse=(legInfo.markerCourse !== undefined)?this.formatter.formatDecimal(
+        legInfo.markerCourse,3,0):'---';
+    rt.markerDistance=(legInfo.markerDistance !== undefined)?this.formatter.formatDecimal(
+        legInfo.markerDistance,3,1):'----';
+    rt.markerVmg=this.formatter.formatDecimal(
+        legInfo.markerVmg,3,1);
+    rt.markerPosition=this.formatter.formatLonLats(
+        legInfo.markerWp
+    );
+    rt.markerXte=(legInfo.markerXte !== undefined)?this.formatter.formatDecimal(legInfo.markerXte,2,2):"---";
+    return rt;
 };
 
 /**
@@ -349,7 +358,7 @@ avnav.nav.NavObject.prototype.getFormattedNavValue=function(name){
 };
 /**
  * return the values that have been computed from others
- * @returns {{centerCourse: number, centerDistance: number, centerMarkerCourse: number, centerMarkerDistance: number, markerCourse: number, markerDistance: number, markerVmg: number, markerEta: null, markerWp: avnav.nav.navdata.WayPoint, routeName: undefined, routeNumPoints: number, routeLen: number, routeRemain: number, routeEta: null, routeNextCourse: number, routeNextWp: undefined, routeXte: number, edRouteName: undefined, edRouteNumPoints: number, edRouteLen: number, edRouteRemain: number, edRouteEta: number}}
+ * @returns {{centerCourse: number, centerDistance: number, centerMarkerCourse: number, centerMarkerDistance: number, markerCourse: number, markerDistance: number, markerVmg: number, markerEta: null, markerWp: avnav.nav.navdata.WayPoint, routeName: undefined, routeNumPoints: number, routeLen: number, routeRemain: number, routeEta: null, routeNextCourse: number, routeNextWp: undefined, markerXte: number, edRouteName: undefined, edRouteNumPoints: number, edRouteLen: number, edRouteRemain: number, edRouteEta: number}}
  */
 avnav.nav.NavObject.prototype.getComputedValues=function(){
     return this.data;

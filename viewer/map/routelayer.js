@@ -166,9 +166,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     }
 
     var routeTarget=this.navobject.getRoutingHandler().getEditingWpIdx();
-    var routeActive=false;
-    if ((this.mapholder.getRoutingActive() || this.navobject.getRoutingHandler().hasActiveRoute()) && route) {
-        routeActive=true;
+    if ( route) {
         var currentRoutePoints=[];
         var i;
         for (i in route.points){
@@ -196,7 +194,8 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         this.routePixel=[];
 
     }
-    if (to && (! routeActive)){
+    if (to && (! route)){
+        //only draw the current target wp if we do not have a route
         drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
     }
 

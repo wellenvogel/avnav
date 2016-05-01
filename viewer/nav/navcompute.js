@@ -170,7 +170,7 @@ avnav.nav.NavCompute.computeRouteLength=function(startIdx,route){
  * @param {avnav.nav.navdata.Point} target the waypoint destination
  * @param {{valid:Boolean,speed:Number,lon:Number, lat: Number, course: Number,rtime: Date}}gps the current gps data
  * @param opt_start
- * @returns {{markerCourse: Number, markerDistance: Number, markerVmg: Number, markerEta: Date, routeXte: Number}}
+ * @returns {{markerCourse: Number, markerDistance: Number, markerVmg: Number, markerEta: Date, markerXte: Number}}
  */
 avnav.nav.NavCompute.computeLegInfo=function(target,gps,opt_start){
     var rt={
@@ -178,8 +178,9 @@ avnav.nav.NavCompute.computeLegInfo=function(target,gps,opt_start){
         markerDistance: undefined,
         markerVmg: undefined,
         markerEta: undefined,
-        routeXte: undefined
+        markerXte: undefined
     };
+    rt.markerWp=target;
     if (gps.valid) {
         var markerdst = avnav.nav.NavCompute.computeDistance(gps, target);
         rt.markerCourse = markerdst.course;
@@ -206,10 +207,10 @@ avnav.nav.NavCompute.computeLegInfo=function(target,gps,opt_start){
             rt.markerVmg = 0;
         }
         if (opt_start) {
-            rt.routeXte = avnav.nav.NavCompute.computeXte(opt_start,target, gps);
+            rt.markerXte = avnav.nav.NavCompute.computeXte(opt_start,target, gps);
         }
         else{
-            rt.routeXte=0;
+            rt.markerXte=0;
         }
     }
     return rt;

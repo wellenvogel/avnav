@@ -6,6 +6,8 @@ avnav.provide('avnav.nav.Route');
 avnav.provide('avnav.nav.Leg');
 avnav.provide('avnav.nav.RouteInfo');
 avnav.provide('avnav.nav.RoutingMode');
+avnav.provide('avnav.nav.WpInfo');
+
 
 avnav.nav.RoutingMode={
     WP: 0,         //route to current standalone WP
@@ -163,11 +165,8 @@ avnav.nav.Leg.prototype.differsTo=function(leg2){
  * @returns {*}
  */
 avnav.nav.Leg.prototype.getCurrentTargetIdx=function(){
-    if (this.to && this.to.id !== undefined && this.currentRoute && this.currentRoute.points){
-        var i=0;
-        for (i=0;i<= this.currentRoute.points.length;i++){
-            if (this.currentRoute.points[i].id == this.to.id) return i;
-        }
+    if (this.to && this.currentRoute ){
+        return this.currentRoute.getIndexFromPoint(this.to);
     }
     return -1;
 };
@@ -233,6 +232,7 @@ avnav.nav.Route.prototype.fromJson=function(parsed) {
             if (! wp.name){
                 wp.name="WP"+avnav.util.Formatter.prototype.formatDecimal(wp.id+1,2,0);
             }
+            wp.routeName=this.name.slice(0);
             this.points.push(wp);
         }
     }
@@ -246,7 +246,9 @@ avnav.nav.Route.prototype.toJson=function(){
     rt.points=[];
     var i;
     for (i in this.points){
-        rt.points.push(this.points[i]);
+        var rp=this.points[i].clone();
+        rp.routeName=undefined;
+        rt.points.push(rp);
     }
     return rt;
 };
@@ -301,6 +303,7 @@ avnav.nav.Route.prototype.fromXml=function(xml){
             pt.lat=parseFloat($(pel).attr('lat'));
             pt.name=$(pel).find('>name').text();
             pt.id=i;
+            pt.routeName=self.name.slice(0);
             if (! pt.name){
                 pt.name="WP"+avnav.util.Formatter.prototype.formatDecimal(pt.id+1,2,0);
             }
@@ -348,8 +351,14 @@ avnav.nav.Route.prototype.getPointAtIndex=function(idx){
     return this.points[idx];
 };
 
+/**
+ * get the index of a wp in the route
+ * @param {avnav.nav.navdata.WayPoint} point
+ * @returns {number} - -1 if not found
+ */
 avnav.nav.Route.prototype.getIndexFromPoint=function(point){
     if (! point || point.id === undefined) return -1;
+    if (point.routeName === undefined || point.routeName != this.name) return -1;
     var i;
     for (i=0;i<this.points.length;i++){
         if (this.points[i].id == point.id) return i;
@@ -371,6 +380,7 @@ avnav.nav.Route.prototype.addPoint=function(idx,point){
     }
     var rp=point.clone();
     rp.id=nid;
+    rp.routeName=this.name.slice(0);
     if (! rp.name) rp.name="WP"+avnav.util.Formatter.prototype.formatDecimal(rp.id+1,2,0);
     if (idx < 0 || idx >= (this.points.length-1)) {
         this.points.push(rp);
@@ -379,6 +389,11 @@ avnav.nav.Route.prototype.addPoint=function(idx,point){
         this.points.splice(idx,0,rp);
     }
     return rp;
+};
+
+avnav.nav.Route.prototype.setName=function(name){
+    this.name=name;
+    this.points.forEach(function(p){p.routeName=name.slice(0)})
 };
 
 /**
