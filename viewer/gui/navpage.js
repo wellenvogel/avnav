@@ -623,6 +623,7 @@ avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
         center.assign(wp);
         wp.name = 'Marker';
         options.wp = wp;
+        options.newWp=true;
         this.gui.showPage('wpinfopage', options);
     }
     else {

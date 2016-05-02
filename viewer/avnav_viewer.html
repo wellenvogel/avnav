@@ -753,7 +753,8 @@ all buttons with ids avb_... will call corresponding js functions
               <div class="avn_infopage_inner">
                   <h1>
                       <div class='avn_Status'></div>
-                      Waypoint Info
+                      <span class="avn_normalHeading">Waypoint Info</span>
+                      <span class="avn_newHeading avn_hidden">New Waypoint</span>
                   </h1>
 
                   <div class="avn_table">
@@ -798,6 +799,17 @@ all buttons with ids avb_... will call corresponding js functions
                           <div class='avn_label '>Route</div>
                           <div class='avn_data'><span data-name="routeName">---</span></div>
                       </div>
+                      <div class="avn_row avn_RouteInfo avn_NextLeg">
+                          <div class='avn_label '>Next Waypoint</div>
+                          <div class='avn_data'><span data-name="nextName">---</span></div>
+                      </div>
+                      <div class="avn_row avn_RouteInfo avn_NextLeg">
+                          <div class='avn_label '>Course/Distance</div>
+                          <div class='avn_data'>
+                              <span data-name="nextmarkerCourse">---</span><span class="avn_unit">&#176</span>/
+                              <span data-name="nextmarkerDistance">---</span><span class="avn_unit">nm</span>
+                          </div>
+                      </div>
 
                   </div>
 
@@ -808,8 +820,11 @@ all buttons with ids avb_... will call corresponding js functions
       <div class='avn_panel avn_right_panel'>
           <button  type="button"  class="avb_WpInfoLocate avn_button"></button>
           <button  type="button"  class="avb_WpInfoGps avn_button">000</button>
-          <button  type="button"  class="avb_ShowRoutePanel avn_button"></button>
+          <button  type="button"  class="avb_ShowRoutePanel avn_button avn_routeBtn"></button>
           <button  type="button"  class="avb_LockMarker avn_button"></button>
+          <button  type="button"  class="avb_NavGoto avn_button avn_routeBtn"></button>
+          <button  type="button"  class="avb_NavNext avn_button avn_routeBtn"></button>
+          <button  type="button"  class="avb_Ok avn_button"></button>
           <button  type="button"  class="avb_Cancel avn_button"></button>
       </div>
   </div>

@@ -106,6 +106,10 @@ button.avb_Cancel {
 
 }
 
+button.avb_Ok {
+  .avn_button_icon_base('images/check32.png');
+
+}
 /*-------------------------------------------------------------
    general settings
 -------------------------------------------------------------*/
@@ -1192,6 +1196,9 @@ button.avb_BoatInfoLocate {
   font-size: 2em;
 
 }
+#avi_wpinfopage .avn_Status{
+  opacity: 0.6;
+}
 #avi_wpinfopage .avn_boat{
   background-image: url("images/Sail-Boat-40.png");
   display: inline-block;
@@ -1202,7 +1209,9 @@ button.avb_BoatInfoLocate {
 }
 #avi_wpinfopage .avn_FirstRouteInfo{
   border-top: 1px solid hsla(0, 0%, 0%, 0.61);
-  line-height: 3em;
+}
+#avi_wpinfopage .avn_FirstRouteInfo div{
+  padding-top: 1em;
 }
 #avi_wpinfopage .avn_routingInactive{
   background-color: fade(lightgray,@nightModePercent);

@@ -568,6 +568,16 @@ avnav.nav.RouteData.prototype.wpOn=function(wp,opt_keep_from) {
     var stwp=new avnav.nav.navdata.WayPoint.fromPlain(wp);
     this._startRouting(avnav.nav.RoutingMode.WP,stwp,opt_keep_from);
 };
+
+/**
+ *
+ * @param {avnav.nav.navdata.WayPoint} wp
+ * @param opt_keep_from
+ */
+avnav.nav.RouteData.prototype.wpOnInactive=function(wp,opt_keep_from) {
+    var stwp=new avnav.nav.navdata.WayPoint.fromPlain(wp);
+    this._startRouting(avnav.nav.RoutingMode.WPINACTIVE,stwp,opt_keep_from);
+};
 /**
  * set the route active state
  * @param {boolean} opt_keep_from if set - do not change from
@@ -596,6 +606,14 @@ avnav.nav.RouteData.prototype._startRouting=function(mode,newWp,opt_keep_from){
         this.currentLeg.name=undefined;
         this.currentLeg.currentRoute=undefined;
         this.currentLeg.active=true;
+        this._legChanged();
+        return true;
+    }
+    if (mode == avnav.nav.RoutingMode.WPINACTIVE){
+        this.currentLeg.to=newWp;
+        this.currentLeg.name=undefined;
+        this.currentLeg.currentRoute=undefined;
+        this.currentLeg.active=false;
         this._legChanged();
         return true;
     }

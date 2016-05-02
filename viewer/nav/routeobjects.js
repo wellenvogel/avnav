@@ -11,7 +11,8 @@ avnav.provide('avnav.nav.WpInfo');
 
 avnav.nav.RoutingMode={
     WP: 0,         //route to current standalone WP
-    ROUTE:  1      //route to the currently selected Point of the route
+    ROUTE:  1,      //route to the currently selected Point of the route
+    WPINACTIVE: 2  //set the target waypoint but do not activate routing
 };
 
 avnav.nav.Leg=function(from,to,active,opt_routeName){
