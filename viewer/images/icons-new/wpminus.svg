@@ -12,7 +12,7 @@
    id="svg3336"
    version="1.1"
    inkscape:version="0.91 r"
-   sodipodi:docname="wpplus.svg">
+   sodipodi:docname="wpminus.svg">
   <metadata
      id="metadata3352">
     <rdf:RDF>
@@ -21,7 +21,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -48,7 +48,7 @@
      inkscape:snap-others="true"
      inkscape:snap-nodes="true"
      inkscape:zoom="1.6833333"
-     inkscape:cx="22.792069"
+     inkscape:cx="162.39603"
      inkscape:cy="103.47539"
      inkscape:window-x="0"
      inkscape:window-y="24"
@@ -173,14 +173,14 @@
   </g>
   <text
      xml:space="preserve"
-     style="font-style:normal;font-weight:normal;font-size:127.700737px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     x="14.447394"
-     y="169.43732"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:238.7552948px;line-height:125%;font-family:Sans;-inkscape-font-specification:'Sans, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="10.355704"
+     y="230.39656"
      id="text15995"
      sodipodi:linespacing="125%"
-     transform="scale(1.0007797,0.9992209)"><tspan
+     transform="scale(1.2755725,0.78396171)"><tspan
        sodipodi:role="line"
-       id="tspan15997"
-       x="14.447394"
-       y="169.43732">+</tspan></text>
+       id="tspan16065"
+       x="10.355704"
+       y="230.39656">-</tspan></text>
 </svg>

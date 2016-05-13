@@ -5,14 +5,15 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="256"
    height="256"
    id="svg3336"
    version="1.1"
-   inkscape:version="0.91 r13725"
-   sodipodi:docname="wpgoto6.svg">
+   inkscape:version="0.91 r"
+   sodipodi:docname="wpgoto.svg">
   <metadata
      id="metadata3352">
     <rdf:RDF>
@@ -21,7 +22,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -35,7 +36,7 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1920"
-     inkscape:window-height="1001"
+     inkscape:window-height="1006"
      id="namedview3350"
      showgrid="false"
      inkscape:snap-global="true"
@@ -45,15 +46,16 @@
      showguides="true"
      inkscape:guide-bbox="true"
      inkscape:snap-grids="false"
-     inkscape:snap-others="false"
-     inkscape:snap-nodes="false"
-     inkscape:zoom="2.3805928"
-     inkscape:cx="68.050495"
-     inkscape:cy="139.34292"
-     inkscape:window-x="-9"
-     inkscape:window-y="-9"
+     inkscape:snap-others="true"
+     inkscape:snap-nodes="true"
+     inkscape:zoom="1.6833333"
+     inkscape:cx="-118.8911"
+     inkscape:cy="103.47539"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg3336">
+     inkscape:current-layer="svg3336"
+     inkscape:snap-object-midpoints="true">
     <inkscape:grid
        type="xygrid"
        id="grid6139" />
@@ -144,18 +146,38 @@
          inkscape:connector-curvature="0"
          style="fill:#000000;stroke:#000000;stroke-width:10" />
     </marker>
+    <symbol
+       id="Arrow-3">
+      <path
+         style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;baseline-shift:baseline;text-anchor:start;white-space:normal;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         d="m 129.63459,31.4242 0,10 41.61719,0 0,-10 -41.61719,0 z"
+         id="path25306"
+         inkscape:connector-curvature="0" />
+      <path
+         inkscape:connector-curvature="0"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:4.86217194pt;stroke-opacity:1"
+         d="m 216.34843,36.4242 -42.05779,24.310862 0,-48.621724 42.05779,24.310862 z"
+         id="path25308" />
+    </symbol>
   </defs>
-  <circle
-     style="fill:none;stroke:#000000;stroke-width:15;stroke-miterlimit:4;stroke-dasharray:none"
-     stroke-linejoin="null"
-     stroke-linecap="null"
-     cx="174.40771"
-     cy="128"
-     id="svg_1"
-     r="42.857143" />
-  <path
-     style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:7;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutL)"
-     d="m 14.990818,128.0734 51.791716,0"
-     id="path4169"
-     inkscape:connector-curvature="0" />
+  <g
+     id="use11555"
+     transform="translate(46.653469,0)">
+    <circle
+       r="42.553192"
+       id="circle15946"
+       cy="128"
+       cx="128"
+       stroke-linecap="null"
+       stroke-linejoin="null"
+       style="fill:none;stroke:#000000;stroke-width:14.89361668;stroke-miterlimit:4;stroke-dasharray:none" />
+  </g>
+  <use
+     id="use15981"
+     xlink:href="#Arrow-3"
+     x="0"
+     y="0"
+     width="100%"
+     height="100%"
+     transform="translate(-106.52272,91.853025)" />
 </svg>
