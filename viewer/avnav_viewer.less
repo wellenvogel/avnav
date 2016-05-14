@@ -102,7 +102,7 @@ button.avn_buttonInactive{
 }
 
 button.avb_Cancel {
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 
 }
 
@@ -747,7 +747,7 @@ button.avb_ShowRoutePanel {
 
 
 button.avb_CancelNav {
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 
 }
 
@@ -908,16 +908,16 @@ button.avb_RoutePageOk{
   .avn_button_icon_base('images/check32.png');
 }
 button.avb_RoutePageCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_RoutePageDownload{
-  .avn_button_icon_base('images/download32.png');
+  .avn_button_icon_base('images/icons-new/ic_file_download.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_RoutePageUpload{
   .avn_button_icon_base('images/upload32.png');
 }
 button.avb_RoutePageDelete{
-  .avn_button_icon_base('images/trash32.png');
+  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_RoutePageRoutes{
   .avn_button_icon_base('images/RoutingButton40.png');
@@ -929,7 +929,7 @@ button.avb_RoutePageTracks{
   .avn_button_icon_base_toggle('images/TrackButton60.png');
 }
 .avn_route_btnDelete{
-  .avn_button_icon_base('images/trash32.png',null,(@buttonSize *0.8));
+  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 45 /60 ));
 }
 .avn_route_btnLoad{
   .avn_button_icon_base('images/check32.png',null,(@buttonSize *0.8));
@@ -1021,7 +1021,7 @@ button.avb_RoutePageTracks{
   right: 0px;
   text-align: center;
 }
-#avb_DownloadPageUploadCancel {
+.avb_DownloadPageUploadCancel {
   position: absolute;
   right: 15px;
   top: 7px;
@@ -1037,7 +1037,7 @@ button.avb_RoutePageTracks{
 }
 
 button.avb_DownloadPageCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_DownloadPageUpload{
   .avn_button_icon_base('images/upload32.png');
@@ -1053,14 +1053,14 @@ button.avb_DownloadPageTracks{
   .avn_button_icon_base_toggle('images/TrackButton60.png');
 }
 .avn_download_btnDelete{
-  .avn_button_icon_base('images/trash32.png',null,(@buttonSize *0.8) );
+  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 45 /60 ));
 }
 .avn_download_btnDownload{
-  .avn_button_icon_base('images/download32.png',null,(@buttonSize *0.8) );
+  .avn_button_icon_base('images/icons-new/ic_file_download.svg',( @buttonSize * 45 /60 ));
 }
 
 button.avb_DownloadPageUploadCancel{
-  .avn_button_icon_base('images/Cancel40.png',null,(@buttonSize * 0.8) );
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',null,( @buttonSize * 45 /60 ));
 }
 
 
@@ -1120,7 +1120,7 @@ button.avb_DownloadPageUploadCancel{
 
 
 button.avb_AisCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_AisNearest {
   .avn_button_icon_base('images/Ais-Up-40.png');
@@ -1260,7 +1260,7 @@ button.avb_WpInfoRoute {
 
 
 button.avb_StatusCancel {
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_StatusUpdate {
   .avn_button_icon_base('images/exchange32.png');
@@ -1362,7 +1362,7 @@ button.avb_StatusAndroid{
 
 
 button.avb_WpaCancel {
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 }
 
 
@@ -1455,7 +1455,7 @@ button.avb_WpaCancel {
 }
 
 button.avb_GpsCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 }
 
 /*-------------------------------------------------------------------------------
@@ -1608,8 +1608,7 @@ button.avb_GpsCancel{
 }
 
 .avn_settings_reset{
-  .avn_button_base(30px,30px);
-  .avn_button_icon_base('images/trash32.png',20px);
+  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 20 /60 ),@buttonSize * 30/60);
   margin-top: 5px;
   margin-left: 20px;
   float:left;
@@ -1619,14 +1618,14 @@ button.avb_GpsCancel{
 }
 
 button.avb_SettingsCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_SettingsOK {
   .avn_button_icon_base('images/check32.png');
 }
 
 button.avb_SettingsDefaults{
-  .avn_button_icon_base('images/trash32.png');
+  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 45 /60 ));
 }
 
 button.avb_SettingsAndroid{
@@ -1703,10 +1702,10 @@ button.avb_SettingsAndroid{
 
 
 button.avb_ShowStatus {
-  .avn_button_icon_base('images/bargraph32.png');
+  .avn_button_icon_base('images/icons-new/status.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_ShowSettings {
-  .avn_button_icon_base('images/spanner32.png');
+  .avn_button_icon_base('images/icons-new/ic_settings.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_ShowHelp {
   .avn_button_icon_base('images/Question.png');
@@ -1714,17 +1713,17 @@ button.avb_ShowHelp {
 }
 
 button.avb_Connected {
-  .avn_button_icon_base_toggle('images/plug32.png');
+  .avn_button_icon_base_toggle('images/icons-new/plug.svg',( @buttonSize * 45 /60 ));
 }
 
 button.avb_Night {
-  .avn_button_icon_base_toggle('images/Night60.png');
+  .avn_button_icon_base_toggle('images/icons-new/night.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_ShowDownload {
-  .avn_button_icon_base('images/download32.png');
+  .avn_button_icon_base('images/icons-new/ic_file_download.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_MainCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
 }
 button.avb_MainAndroid{
   .avn_button_icon_base('images/Android_Robot_100.png');
