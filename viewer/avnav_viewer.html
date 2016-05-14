@@ -164,7 +164,7 @@ all buttons with ids avb_... will call corresponding js functions
           <div id="avi_wpa_overlay" class="avn_overlay_cover avn_hidden">
 
           </div>
-          <div id="avi_wpa_box" class="avn_hidden">
+          <div id="avi_wpa_box" class="avn_hidden avn_dialog">
               <div id="avi_wpa_dialog">
                   <form>
                       <h3><span id="avi_wpa_form_ssid">SSID</span></h3>
@@ -821,8 +821,26 @@ all buttons with ids avb_... will call corresponding js functions
               </div>
           </div>
 
+          <div id="avi_wpinfo_overlay" class="avn_overlay_cover avn_hidden">
+
+          </div>
+          <div id="avi_wpinfo_box" class="avn_hidden avn_dialog">
+
+                  <form>
+                      <h3>Edit&nbsp;<span data-name="markerName"></span></h3>
+                      <div>
+                          <div class="avn_row"><label>Name <input type="text" name="name"/> </label></div>
+                          <div class="avn_row"><label>Lon<input type="text" name="lon"/></label></div>
+                          <div class="avn_row"><label>Lat<input type="text" name="lat"/></label></div>
+                      </div>
+                      <button name="ok">Ok</button>
+                      <button name="cancel">Cancel</button>
+                      <div class="avn_clear"></div>
+                  </form>
+          </div>
       </div>
       <div class='avn_panel avn_right_panel'>
+          <button  type="button"  class="avb_Edit avn_button"></button>
           <button  type="button"  class="avb_WpInfoLocate avn_button"></button>
           <button  type="button"  class="avb_WpInfoGps avn_button"></button>
           <button  type="button"  class="avb_ShowRoutePanel avn_button"></button>

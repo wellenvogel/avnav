@@ -375,6 +375,50 @@ avnav.nav.Route.prototype.getIndexFromPoint=function(point){
     }
     return -1;
 };
+
+/**
+ * change a waypoint in the route
+ * @param {avnav.nav.navdata.WayPoint} oldPoint
+ * @param {avnav.nav.navdata.WayPoint}newPoint
+ * @returns {avnav.nav.navdata.WayPoint|undefined} the old point or undefined if no change (e.g. name already exists or point not in route)
+ */
+avnav.nav.Route.prototype.changePoint=function(oldPoint,newPoint){
+    var idx=this.getIndexFromPoint(oldPoint);
+    return this.changePointAtIndex(idx,newPoint);
+};
+/**
+ * change a waypoint in the route
+ * @param {number} idx
+ * @param {avnav.nav.navdata.WayPoint}newPoint
+ * @returns {avnav.nav.navdata.WayPoint|undefined} the old point or undefined if no change (e.g. name already exists or point not in route)
+ */
+avnav.nav.Route.prototype.changePointAtIndex=function(idx,newPoint){
+    if (idx < 0 || idx >= this.points.length) return undefined;
+    var oldPoint=this.points[idx].clone();
+    if (newPoint.name && newPoint.name != oldPoint.name){
+        if (this.checkName(newPoint.name)) return undefined;
+    }
+    if (newPoint.routeName && newPoint.routeName != this.name) return undefined;
+    this.points[idx].update(newPoint);
+    return oldPoint;
+};
+/**
+ *
+ * @param idx
+ * @param {avnav.nav.navdata.WayPoint} newWp
+ * @returns {boolean}
+ */
+avnav.nav.Route.prototype.checkChangePossible=function(idx,newWp){
+    if (idx < 0 || idx > this.points.length) return false;
+    var current=this.points[idx];
+    if (current.name == newWp.name) return true;
+    var i=0;
+    for (i=0;i<this.points.length;i++){
+        if (i == idx ) continue;
+        if (this.points[i].name == newWp.name) return false;
+    }
+    return true;
+};
 /**
  * check if a given name already exists in the route
  * @param name

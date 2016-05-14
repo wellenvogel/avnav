@@ -79,6 +79,7 @@ avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
 avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
 
 avnav.nav.navdata.WayPoint.prototype.compare=function(point){
+    if (! point) return false;
     var rt= this.super_.compare.call(this,point);
     if (! rt) return rt;
     if (point instanceof avnav.nav.navdata.WayPoint ){

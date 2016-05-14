@@ -411,26 +411,52 @@ avnav.nav.RouteData.prototype.deleteWp=function(id){
  * @param {number} id the index, -1 for current
  * @param {avnav.nav.navdata.Point|avnav.nav.navdata.WayPoint} point
  */
-avnav.nav.RouteData.prototype.changeWp=function(id,point){
-    if (id < 0 && this.editingWp) this.editingWp.update(point);
+avnav.nav.RouteData.prototype.changeWpByIdx=function(id, point){
     id=this.getIdForMinusOne(id);
-    if (id < 0) return;
+    if (id < 0) return undefined;
     if (this.isEditingActiveRoute()){
-        var oldWp=this.currentLeg.currentRoute.getPointAtIndex(id);
-        if (! oldWp) return;
-        var changed=oldWp.update(point);
-        if (changed){
-            this._checkCurrentTargetChanged(oldWp,oldWp);
+        var oldWp=this.currentLeg.currentRoute.changePointAtIndex(id,point);
+        if (oldWp){
+            this._checkCurrentTargetChanged(oldWp,this.currentLeg.currentRoute.getPointAtIndex(id));
         }
         this._legChanged();
-        return;
+        return oldWp;
     }
-    if (! this.editingRoute) return;
-    var wp=this.editingRoute.getPointAtIndex(id);
-    if (! wp) return;
-    wp.update(point);
+    if (! this.editingRoute) return undefined;
+    var wp=this.editingRoute.changePointAtIndex(id);
+    if (! wp) return undefined;
     this.saveRoute(this.editingRoute);
+    this.editingWp.update(point);
     this.navobject.routeEvent();
+    return wp;
+};
+/**
+ * change a waypoint
+ * the old point can be:
+ *   - a point from the current (editing) route
+ *   - the currentLeg to point
+ * @param {avnav.nav.navdata.WayPoint} oldPoint
+ * @param {avnav.nav.navdata.WayPoint} point
+ * @returns undefined if the point cannot be changed
+ */
+avnav.nav.RouteData.prototype.changeWp=function(oldPoint, point){
+    if (oldPoint.routeName) {
+        var route = this.getEditingRoute();
+        if (route) {
+            var idx = route.getIndexFromPoint(oldPoint);
+            if (idx < 0) return undefined; //cannot find old point
+            return this.changeWpByIdx(idx,point);
+        }
+        return undefined; //old point is from a route - but we do not have one
+    }
+    else{
+        var ep=this.getEditingWp();
+        if (! ep || ! oldPoint.compare(ep)) return undefined;
+        var changingLeg=oldPoint.compare(this.currentLeg.to);
+        var changed=ep.update(point);
+        if (changed && changingLeg) this._legChanged();
+    }
+    return true;
 };
 /**
  * add a point to the route

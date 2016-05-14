@@ -231,7 +231,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
             wpid=parseInt(wpid);
             var point = self.navobject.getRoutingHandler().getWp(wpid);
             if (point) point.name = $(this).val();
-            self.navobject.getRoutingHandler().changeWp(wpid, point);
+            self.navobject.getRoutingHandler().changeWpByIdx(wpid, point);
         }
     });
     $('#avi_route_info_navpage_inner').click({page:this},function(ev){
@@ -540,7 +540,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
                     var point = self.navobject.getRoutingHandler().getWp(idx);
                     if (point) point.name = $(this).val();
                     if (!self.checkRouteWritable()) return false;
-                    self.navobject.getRoutingHandler().changeWp(idx, point);
+                    self.navobject.getRoutingHandler().changeWpByIdx(idx, point);
                 });
             }
             $(el).click(function (ev) {
@@ -711,7 +711,7 @@ avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
     log("navDelete clicked");
     if (!this.checkRouteWritable()) return false;
     var center=this.gui.map.getCenter();
-    this.navobject.getRoutingHandler().changeWp(
+    this.navobject.getRoutingHandler().changeWpByIdx(
         -1,center
     );
 };
