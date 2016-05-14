@@ -372,13 +372,13 @@ avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
 };
 
 avnav.gui.Downloadpage.prototype.btnDownloadPageRoutes=function(button,ev){
-    this.gui.showPage('routepage',{fromdownload:true})
+    this.gui.showPage('routepage',{fromdownload:true,skipHistory: true})
 };
 avnav.gui.Downloadpage.prototype.btnDownloadPageTracks=function(button,ev){
-    this.showPage({downloadtype:"track"});
+    this.showPage({downloadtype:"track",skipHistory: true});
 };
 avnav.gui.Downloadpage.prototype.btnDownloadPageCharts=function(button,ev){
-    this.showPage({downloadtype:"chart"});
+    this.showPage({downloadtype:"chart",skipHistory: true});
 };
 avnav.gui.Downloadpage.prototype.btnDownloadPageUploadCancel=function(button,ev){
     this.abortUpload();

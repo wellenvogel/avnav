@@ -96,6 +96,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (this.gui.properties.getProperties().style.nightMode < 100) {
         brightness=this.gui.properties.getProperties().nightChartFade/100;
     }
+    this.buttonUpdate();
     if (options && options.url) {
         newMap=true;
         if (this.options_){
@@ -144,7 +145,6 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     this.getMap().setBrightness(brightness);
     this.updateMainPanelSize('#'+this.mapdom);
     this.getMap().updateSize();
-    this.buttonUpdate();
     if (!this.gui.properties.getProperties().layers.ais){
         //hide the AIS panel if switched off
         //showing will be done by the AIS event
@@ -173,8 +173,13 @@ avnav.gui.Navpage.prototype.showPage=function(options){
  */
 avnav.gui.Navpage.prototype.buttonUpdate=function(){
     //TODO: make this more generic
-    var markerLock=this.navobject.getRoutingHandler().getLock();
+    var markerLock=this.navobject.getRoutingHandler().getLock()||false;
     this.handleToggleButton('.avb_LockMarker',markerLock);
+    if (markerLock) this.selectOnPage('.avb_LockMarker').hide();
+    else this.selectOnPage('.avb_LockMarker').show();
+    this.handleToggleButton('.avb_StopNav',markerLock);
+    if (!markerLock || this.routingVisible) this.selectOnPage('.avb_StopNav').hide();
+    else this.selectOnPage('.avb_StopNav').show();
     var gpsLock=this.gui.map.getGpsLock();
     this.handleToggleButton('.avb_LockPos',gpsLock);
     var courseUp=this.gui.map.getCourseUp();
@@ -199,7 +204,12 @@ avnav.gui.Navpage.prototype.hidePage=function(){
 avnav.gui.Navpage.prototype.localInit=function(){
     var self=this;
     $('#leftBottomMarker').click({page:this},function(ev){
-        self.gui.showPage('wpinfopage');
+        var wp=self.navobject.getRoutingHandler().getCurrentLegTarget();
+        var options={};
+        if (wp){
+            options.wp=wp;
+        }
+        self.gui.showPage('wpinfopage',options);
     });
     $('#leftBottomPosition').click({page:this},function(ev){
         ev.stopPropagation();
@@ -232,7 +242,6 @@ avnav.gui.Navpage.prototype.localInit=function(){
             self.showRouting();
             return;
         }
-       ev.data.page.navobject.getRoutingHandler().stopEditingRoute(); //???
     });
 
 };
@@ -337,6 +346,16 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         if (aisparam.mmsi){
             this.navobject.getAisHandler().setTrackedTarget(aisparam.mmsi);
             this.gui.showPage('aisinfopage',{mmsi: aisparam.mmsi});
+        }
+    }
+    if (evdata.type == avnav.map.EventType.SELECTWP){
+        var wp=evdata.parameter.wp;
+        if (! wp) return;
+        if (this.routingVisible){
+            this.navobject.getRoutingHandler().setEditingWp(wp);
+        }
+        else{
+            this.gui.showPage("wpinfopage",{wp:wp});
         }
     }
 };
@@ -531,7 +550,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
                 else{
                     $(self.waypointPopUp).hide();
                 }
-                self.navobject.getRoutingHandler().setEditingWp(idx);
+                self.navobject.getRoutingHandler().setEditingWpIdx(idx);
                 self.getMap().setCenter(self.navobject.getRoutingHandler().getEditingWp());
                 self.toggleNextGoto(false);
                 ev.preventDefault();
@@ -613,34 +632,26 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
     this.gui.map.triggerRender();
     log("LockPos clicked");
 };
-avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev){
+avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
     log("LockMarker clicked");
-    var isRouting=this.navobject.getRoutingHandler().getLock();
-    var options={};
-    if (! isRouting) {
-        var center = this.navobject.getMapCenter();
-        var wp = new avnav.nav.navdata.WayPoint();
-        center.assign(wp);
-        wp.name = 'Marker';
-        options.wp = wp;
-        options.newWp=true;
-        this.gui.showPage('wpinfopage', options);
-    }
-    else {
-        this.navobject.getRoutingHandler().routeOff();
-        this.handleToggleButton(button,false);
-        this.hideRouting();
-        this.gui.map.triggerRender();
-    }
-    return;
-    /*
-    var nLock=! this.navobject.getRoutingData().getLock();
-    if (! nLock) this.navobject.getRoutingData().routeOff();
-    else this.navobject.getRoutingData().routeOn(avnav.nav.RoutingMode.CENTER);
-    this.handleToggleButton(button,nLock);
-    if (nLock) this.hideRouting();
+    var options = {};
+    var center = this.navobject.getMapCenter();
+    var wp = new avnav.nav.navdata.WayPoint();
+    center.assign(wp);
+    wp.name = 'Marker';
+    options.wp = wp;
+    options.newWp = true;
+    this.gui.showPage('wpinfopage', options);
+
+};
+avnav.gui.Navpage.prototype.btnStopNav=function (button,ev) {
+    log("StopNav clicked");
+
+    this.navobject.getRoutingHandler().routeOff();
+    this.buttonUpdate();
+    this.hideRouting();
     this.gui.map.triggerRender();
-    */
+
 };
 avnav.gui.Navpage.prototype.btnCourseUp=function (button,ev){
     var nLock=! this.gui.map.getCourseUp();

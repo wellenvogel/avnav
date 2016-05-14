@@ -24,7 +24,8 @@ avnav.map.LayerTypes={
 
 avnav.map.EventType={
     MOVE:0,
-    SELECTAIS:1
+    SELECTAIS:1,
+    SELECTWP: 2
 };
 
 /**
@@ -753,7 +754,14 @@ avnav.map.MapHolder.prototype.setGpsLock=function(lock){
  * @param {ol.MapBrowserEvent} evt
  */
 avnav.map.MapHolder.prototype.onClick=function(evt){
-    this.routinglayer.findTarget(evt.pixel);
+    var wp=this.routinglayer.findTarget(evt.pixel);
+    if (wp){
+        setTimeout(function() {
+            $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
+                new avnav.map.MapEvent(avnav.map.EventType.SELECTWP, {wp: wp})
+            );
+        },0);
+    }
     evt.preventDefault();
     if (this.routingActive) return false;
     var aisparam=this.aislayer.findTarget(evt.pixel);

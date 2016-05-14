@@ -105,7 +105,7 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
     this.markerStyle={
         anchor: [20, 20],
         size: [40, 40],
-        src: 'images/Marker1.png',
+        src: 'images/MarkerOrange.png',
         image:  new Image()
     };
     this.markerStyle.image.src=this.markerStyle.src;
@@ -164,6 +164,10 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
             drawing.drawLineToContext(line,this.dashedStyle);
         }
     }
+    if (to ){
+        //only draw the current target wp if we do not have a route
+        drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
+    }
 
     var routeTarget=this.navobject.getRoutingHandler().getEditingWpIdx();
     if ( route) {
@@ -194,15 +198,13 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         this.routePixel=[];
 
     }
-    if (to && (! route)){
-        //only draw the current target wp if we do not have a route
-        drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
-    }
+
 
 };
 /**
  * find the waypoint that has been clicked and set this as active
  * @param pixel
+ * @returns {avnav.nav.navdata.WayPoint} or undefined
  */
 avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance
@@ -210,9 +212,9 @@ avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     if (! this.routePixel) return undefined;
     var idx=this.mapholder.findTarget(pixel,this.routePixel,tolerance);
     if (idx >= 0){
-        this.navobject.getRoutingHandler().setEditingWp(idx);
+            return this.navobject.getRoutingHandler().getWp(idx);
     }
-    return idx;
+    return undefined;
 };
 avnav.map.RouteLayer.prototype.propertyChange=function(evdata) {
     this.visible=this.mapholder.getProperties().getProperties().layers.nav;

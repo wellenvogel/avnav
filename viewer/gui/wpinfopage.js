@@ -41,18 +41,11 @@ avnav.gui.WpInfoPage.prototype.showPage=function(options) {
     }
     if (! this.wp) this.returnToLast();
     this.fillData(true);
-    this.updateButtons();
-};
-avnav.gui.WpInfoPage.prototype.updateButtons=function(){
-    var markerLock=this.navobject.getRoutingHandler().getLock(); //TODO: make this generic
-    this.handleToggleButton('.avb_LockMarker',markerLock);
 };
 
-avnav.gui.WpInfoPage.prototype.timerEvent=function(){
-    this.updateButtons();
-};
 avnav.gui.WpInfoPage.prototype.fillData=function(initial){
     this.selectOnPage(".avn_infopage_inner").show();
+    var wp=this.wp;
     if (this.newWp){
         this.selectOnPage('.avn_normalHeading').hide();
         this.selectOnPage('.avn_newHeading').show();
@@ -63,26 +56,27 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
         this.selectOnPage('.avn_newHeading').hide();
         this.selectOnPage('.avb_Ok').hide();
     }
-    var wp=this.wp;
-    if (wp.routeName !== undefined){
-        this.selectOnPage('.avn_RouteInfo').show();
-        this.selectOnPage('.avn_routeBtn').show();
-    }else {
-        this.selectOnPage('.avn_RouteInfo').hide();
-        this.selectOnPage('.avn_routeBtn').hide();
-    }
     var router=this.navobject.getRoutingHandler();
     var gps=this.navobject.getGpsHandler().getGpsData();
     var start=router.getCurrentLegStartWp();
     var legData=avnav.nav.NavCompute.computeLegInfo(wp,gps,start);
     var formattedData=this.navobject.formatLegData(legData);
+
+    var isApproaching=router.isApproaching;
     var isTarget=router.isCurrentRoutingTarget(wp);
-    if (isTarget){
+    var nextWp=router.getCurrentLegNextWp();
+    if (wp.routeName !== undefined){
+        this.selectOnPage('.avb_ShowRoutePanel').show();
+    }else {
+        this.selectOnPage('.avb_ShowRoutePanel').hide();
+    }
+    if (isTarget) {
         this.selectOnPage('.avb_NavGoto').hide();
     }
-    var isApproaching=router.isApproaching;
-    var nextWp=router.getCurrentLegNextWp();
-    if (nextWp){
+    else {
+        this.selectOnPage('.avb_NavGoto').show();
+    }
+    if (isTarget && nextWp){
         formattedData.nextName=nextWp.name;
         var nextLeg=avnav.nav.NavCompute.computeLegInfo(nextWp,gps,undefined);
         var nextFormatted=this.navobject.formatLegData(nextLeg);
@@ -123,8 +117,10 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
             addClass('avn_routingActive');
         }
     }
-
-
+    var markerLock=this.navobject.getRoutingHandler().getLock();
+    if (!markerLock) this.selectOnPage('.avb_StopNav').hide();
+    else this.selectOnPage('.avb_StopNav').show();
+    this.handleToggleButton('.avb_StopNav',markerLock);
 };
 
 
@@ -140,7 +136,6 @@ avnav.gui.WpInfoPage.prototype.btnWpInfoGps=function (button,ev){
 avnav.gui.WpInfoPage.prototype.btnWpInfoLocate=function (button,ev){
     log("locate clicked");
     var navobject=this.navobject;
-    var leg=navobject.getRoutingHandler().getCurrentLeg();
     var marker=navobject.getComputedValues().markerWp;
     this.gui.map.setCenter(marker);
     //make the current WP the active again...
@@ -151,15 +146,14 @@ avnav.gui.WpInfoPage.prototype.btnShowRoutePanel=function (button,ev){
     log("route clicked");
     this.gui.showPage('navpage',{showRouting: true})
 };
-avnav.gui.WpInfoPage.prototype.btnLockMarker=function (button,ev){
-    log("lock marker clicked");
-    var nLock=! this.navobject.getRoutingHandler().getLock();
-    if (! nLock) this.navobject.getRoutingHandler().routeOff();
-    else {
-        this.navobject.getRoutingHandler().wpOn(this.wp);
-    }
-    this.handleToggleButton(button,nLock);
-    this.gui.map.triggerRender();
+avnav.gui.WpInfoPage.prototype.btnStopNav=function (button,ev){
+    log("stopNav clicked");
+    this.navobject.getRoutingHandler().routeOff();
+    this.returnToLast();
+};
+avnav.gui.WpInfoPage.prototype.btnNavGoto=function (button,ev){
+    log("navGoto clicked");
+    this.navobject.getRoutingHandler().wpOn(this.wp);
     this.returnToLast();
 };
 

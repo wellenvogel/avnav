@@ -738,6 +738,9 @@ button.avb_LockMarker {
   .avn_button_icon_base_toggle('images/icons-new/waypoint.svg');
 }
 
+button.avb_StopNav {
+  .avn_button_icon_base_toggle('images/icons-new/stop-nav.svg');
+}
 button.avb_CourseUp {
   .avn_button_icon_base_toggle('images/icons-new/compass.svg');
 }
@@ -854,17 +857,18 @@ button.avb_WpNext{
 }
 .avn_route_listinfo{
   padding-left: 1.5em;
-  float: left;
+  display: inline-block;
+  margin-bottom: 0.5em;
+  margin-top: 0.5em;
 }
 .avn_route_listdate{
-  float: left;
-
+  display: inline-block;
+  width: 11.5em;
+  opacity: 0.6;
 }
 
 .avn_route_btnDelete{
-  position: absolute;
-  left: 3px;
-  top: 0;
+
 }
 
 
@@ -872,9 +876,7 @@ button.avb_WpNext{
 .avn_route_listrasimage{
   width: @listrasimagesize;
   height: @listrasimagesize;
-  position: absolute;
-  top: (( @buttonSize - @listrasimagesize ) / 2 );
-  right: 8px;
+  float: right;
   background-image: url('images/icons-new/plug.svg');
   background-size: contain;
 }
@@ -883,16 +885,13 @@ button.avb_WpNext{
   width: @listrasimagesize;
   height: @listrasimagesize;
   background-size: contain;
-  position: absolute;
-  top: (( @buttonSize - @listrasimagesize ) / 2 );
-  right: ( @listrasimagesize + 12);
+  float: right;
 }
 
 
 
 .avn_route_list_row{
-  margin-left: (@buttonSize + 10px);
-  margin-right: (2 * @listrasimagesize + 20px);
+
 }
 
 .avn_route_current{
@@ -927,7 +926,8 @@ button.avb_RoutePageTracks{
   .avn_button_icon_base_toggle('images/icons-new/track.svg');
 }
 .avn_route_btnDelete{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg');
+  .avn_button_icon_base('images/icons-new/ic_delete.svg',@buttonSize *30/60);
+  vertical-align: middle;
 }
 .avn_route_btnLoad{
   .avn_button_icon_base('images/icons-new/ic_done.svg');
