@@ -87,27 +87,27 @@ button.avn_buttonInactive{
 }
 
 
-.avn_button_icon_base(@icon,@innerWidth: ( @buttonSize * 30 / 60 ),@size: @buttonSize ){
+.avn_button_icon_base(@icon,@size: @buttonSize ){
   .avn_button_base(@size,@size);
   background-image: url(@icon);
   background-position: center center;
-  background-size: @innerWidth @innerWidth;
+  background-size: 80% 80%;
   background-repeat: no-repeat;
   text-decoration: none;
   .nightOPacity2();
 }
 
-.avn_button_icon_base_toggle(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
-  .avn_button_icon_base(@icon,@innerWidth);
+.avn_button_icon_base_toggle(@icon ){
+  .avn_button_icon_base(@icon);
 }
 
 button.avb_Cancel {
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 
 }
 
 button.avb_Ok {
-  .avn_button_icon_base('images/check32.png');
+  .avn_button_icon_base('images/icons-new/ic_done.svg');
 
 }
 /*-------------------------------------------------------------
@@ -708,13 +708,13 @@ html,body {
   display: table-row;
 }
 #avi_centerDisplay .avn_boat{
-  background-image: url(images/Sail-Boat-40.png);
+  background-image: url(images/icons-new/boat.svg);
   background-size: 1em 1em;
   background-repeat: no-repeat;
   width: 1.5em;
 }
 #avi_centerDisplay .avn_marker{
-  background-image: url(images/Marker1.png);
+  background-image: url(images/icons-new/waypoint.svg);
   background-size: 1em 1em;
   background-repeat: no-repeat;
   width: 1.5em;
@@ -725,69 +725,67 @@ html,body {
   .avn_hidden();
 }
 button.avb_ZoomIn {
-  .avn_button_icon_base('images/icons-new/ic_zoom_in.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_zoom_in.svg');
 }
 button.avb_ZoomOut {
-  .avn_button_icon_base('images/icons-new/ic_zoom_out.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_zoom_out.svg');
 }
 button.avb_LockPos  {
-  .avn_button_icon_base_toggle('images/Sail-Boat-40.png');
+  .avn_button_icon_base_toggle('images/icons-new/boat.svg');
 }
 
 button.avb_LockMarker {
-  .avn_button_icon_base_toggle('images/Marker1.png');
+  .avn_button_icon_base_toggle('images/icons-new/waypoint.svg');
 }
 
 button.avb_CourseUp {
-  .avn_button_icon_base_toggle('images/nadel-2.png',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base_toggle('images/icons-new/compass.svg');
 }
 button.avb_ShowRoutePanel {
-  .avn_button_icon_base('images/RoutingButton40.png',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/route.svg');
+}
+button.avb_ShowGps {
+  .avn_button_icon_base('images/icons-new/data.svg');
+
 }
 
-
 button.avb_CancelNav {
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 
 }
 
 /*- nav page routing panel --*/
 button.avb_NavAdd {
-  .avn_button_icon_base('images/icons-new/wpplus.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/wpplus.svg');
 }
 button.avb_NavDelete {
-  .avn_button_icon_base('images/icons-new/wpminus.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/wpminus.svg');
 }
 button.avb_NavToCenter {
-  .avn_button_icon_base('images/icons-new/wpcenter.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/wpcenter.svg');
 }
 button.avb_NavGoto {
-  .avn_button_icon_base('images/icons-new/wpgoto.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/wpgoto.svg');
 }
 button.avb_NavInvert {
-  .avn_button_icon_base('images/icons-new/invertroute.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/invertroute.svg');
 }
 button.avb_NavDeleteAll {
-  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_delete.svg');
 }
 
 button.avb_NavNext {
-  .avn_button_icon_base('images/arrowright32.png');
-}
-
-button.avb_NavWp {
-  .avn_hidden();
-  .avn_button_icon_base('images/YellowBubble40.png');
+  .avn_button_icon_base('images/icons-new/ic_arrow_forward.svg');
 }
 
 button.avb_WpDone{
-  .avn_button_icon_base('images/check32.png');
+  .avn_button_icon_base('images/icons-new/ic_done.svg');
 }
 button.avb_WpPrevious{
-  .avn_button_icon_base('images/arrowleft32.png');
+  .avn_button_icon_base('images/icons-new/ic_arrow_back.svg');
 }
 button.avb_WpNext{
-  .avn_button_icon_base('images/arrowright32.png');
+  .avn_button_icon_base('images/icons-new/ic_arrow_forward.svg');
 }
 
 
@@ -816,11 +814,11 @@ button.avb_WpNext{
   bottom: 0;
 }
 .avm_list_entry{
-  height: ( @buttonSize *0.8 + 5px);
   overflow: hidden;
   position: relative;
   border-bottom: 1px solid;
   padding-top: 5px;
+  margin-right: 1em;
 }
 /*-------------------------------------------------------------
    routes page
@@ -877,7 +875,7 @@ button.avb_WpNext{
   position: absolute;
   top: (( @buttonSize - @listrasimagesize ) / 2 );
   right: 8px;
-  background-image: url('images/plug32.png');
+  background-image: url('images/icons-new/plug.svg');
   background-size: contain;
 }
 
@@ -905,34 +903,34 @@ button.avb_WpNext{
 }
 
 button.avb_RoutePageOk{
-  .avn_button_icon_base('images/check32.png');
+  .avn_button_icon_base('images/icons-new/ic_done.svg');
 }
 button.avb_RoutePageCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 }
 button.avb_RoutePageDownload{
-  .avn_button_icon_base('images/icons-new/ic_file_download.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_file_download.svg');
 }
 button.avb_RoutePageUpload{
-  .avn_button_icon_base('images/upload32.png');
+  .avn_button_icon_base('images/icons-new/ic_file_upload.svg');
 }
 button.avb_RoutePageDelete{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_delete.svg');
 }
 button.avb_RoutePageRoutes{
-  .avn_button_icon_base('images/RoutingButton40.png');
+  .avn_button_icon_base('images/icons-new/route.svg');
 }
 button.avb_RoutePageCharts{
-  .avn_button_icon_base_toggle('images/Chart60.png');
+  .avn_button_icon_base_toggle('images/icons-new/map2.svg');
 }
 button.avb_RoutePageTracks{
-  .avn_button_icon_base_toggle('images/TrackButton60.png');
+  .avn_button_icon_base_toggle('images/icons-new/track.svg');
 }
 .avn_route_btnDelete{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_delete.svg');
 }
 .avn_route_btnLoad{
-  .avn_button_icon_base('images/check32.png',null,(@buttonSize *0.8));
+  .avn_button_icon_base('images/icons-new/ic_done.svg');
 }
 
 
@@ -963,30 +961,27 @@ button.avb_RoutePageTracks{
   .avm_list_entry();
 }
 .avn_download_listinfo{
-  padding-left: 1.5em;
-  float: left;
+  padding-left: 3em;
+  display: inline-block;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 .avn_download_listdate{
-  float: left;
-
+  display: inline-block;
+  margin-left: 0.5em;
+  width: 11.5em;
+  opacity: 0.6;
 }
 
 .avn_download_btnDelete{
-  position: absolute;
-  left: 3px;
-  top: 0;
+  vertical-align: middle;
 }
 
 .avn_download_btnDownload{
-  position: absolute;
-  right: 3px;
-  top: 0;
+  float: right;margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 
-.avn_download_list_row{
-  margin-left: (@buttonSize + 10px);
-  margin-right: (@buttonSize + 10px);
-}
 
 #avi_download_progress{
   position: absolute;
@@ -1037,30 +1032,30 @@ button.avb_RoutePageTracks{
 }
 
 button.avb_DownloadPageCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 }
 button.avb_DownloadPageUpload{
-  .avn_button_icon_base('images/upload32.png');
+  .avn_button_icon_base('images/icons-new/ic_file_upload.svg');
 }
 
 button.avb_DownloadPageRoutes{
-  .avn_button_icon_base('images/RoutingButton40.png');
+  .avn_button_icon_base('images/icons-new/route.svg');
 }
 button.avb_DownloadPageCharts{
-  .avn_button_icon_base_toggle('images/Chart60.png');
+  .avn_button_icon_base_toggle('images/icons-new/map2.svg');
 }
 button.avb_DownloadPageTracks{
-  .avn_button_icon_base_toggle('images/TrackButton60.png');
+  .avn_button_icon_base_toggle('images/icons-new/track.svg');
 }
 .avn_download_btnDelete{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_delete.svg',@buttonSize * 0.6);
 }
 .avn_download_btnDownload{
-  .avn_button_icon_base('images/icons-new/ic_file_download.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_file_download.svg',@buttonSize * 0.6);
 }
 
 button.avb_DownloadPageUploadCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',null,( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 }
 
 
@@ -1120,10 +1115,10 @@ button.avb_DownloadPageUploadCancel{
 
 
 button.avb_AisCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 }
 button.avb_AisNearest {
-  .avn_button_icon_base('images/Ais-Up-40.png');
+  .avn_button_icon_base('images/icons-new/ais-nearest.svg');
 }
 /*-------------------------------------------------------------
    ais info page
@@ -1139,13 +1134,13 @@ button.avb_AisNearest {
 }
 
 button.avb_AisInfoNearest {
-  .avn_button_icon_base('images/Ais-Up-40.png');
+  .avn_button_icon_base('images/icons-new/ais-nearest.svg');
 }
 button.avb_AisInfoLocate {
-  .avn_button_icon_base('images/Marker2.png');
+  .avn_button_icon_base('images/icons-new/center.svg');
 }
 button.avb_AisInfoList {
-  .avn_button_icon_base('images/linedpaper32.png');
+  .avn_button_icon_base('images/icons-new/ic_list.svg');
 }
 
 /*-------------------------------------------------------------
@@ -1156,7 +1151,7 @@ button.avb_AisInfoList {
   font-size: 2em;
 }
 #avi_boatinfopage .avn_Status{
-  background-image: url('images/Sail-Boat-256.png');
+  background-image: url('images/icons-new/boat.svg');
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
 }
@@ -1185,9 +1180,11 @@ button.avb_AisInfoList {
   margin-left: 0.5em;
 }
 button.avb_BoatInfoLocate {
-  .avn_button_icon_base('images/Marker2.png');
+  .avn_button_icon_base('images/icons-new/center.svg');
 }
-
+button.avb_BoatInfoGps {
+  .avn_button_icon_base('images/icons-new/data.svg');
+}
 /*-------------------------------------------------------------
    wp info page
 -------------------------------------------------------------*/
@@ -1200,7 +1197,7 @@ button.avb_BoatInfoLocate {
   opacity: 0.6;
 }
 #avi_wpinfopage .avn_boat{
-  background-image: url("images/Sail-Boat-40.png");
+  background-image: url("images/icons-new/boat.svg");
   display: inline-block;
   width:1em;
   height: 1em;
@@ -1224,10 +1221,13 @@ button.avb_BoatInfoLocate {
 }
 
 button.avb_WpInfoLocate {
-  .avn_button_icon_base('images/Marker2.png');
+  .avn_button_icon_base('images/icons-new/center.svg');
 }
 button.avb_WpInfoRoute {
-  .avn_button_icon_base('images/RoutingButton40.png',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/route.svg');
+}
+button.avb_WpInfoGps {
+  .avn_button_icon_base('images/icons-new/data.svg');
 }
 /*-------------------------------------------------------------
    status page
@@ -1260,16 +1260,13 @@ button.avb_WpInfoRoute {
 
 
 button.avb_StatusCancel {
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
-}
-button.avb_StatusUpdate {
-  .avn_button_icon_base('images/exchange32.png');
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 }
 button.avb_StatusWpa {
-  .avn_button_icon_base('images/rss32.png');
+  .avn_button_icon_base('images/icons-new/ic_rss_feed.svg');
 }
 button.avb_StatusAndroid{
-  .avn_button_icon_base('images/Android_Robot_100.png');
+  .avn_button_icon_base('images/icons-new/ic_android.svg');
 }
 
 
@@ -1362,7 +1359,7 @@ button.avb_StatusAndroid{
 
 
 button.avb_WpaCancel {
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 }
 
 
@@ -1455,7 +1452,7 @@ button.avb_WpaCancel {
 }
 
 button.avb_GpsCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 }
 
 /*-------------------------------------------------------------------------------
@@ -1608,7 +1605,7 @@ button.avb_GpsCancel{
 }
 
 .avn_settings_reset{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 20 /60 ),@buttonSize * 30/60);
+  .avn_button_icon_base('images/icons-new/ic_delete.svg',@buttonSize * 30/60);
   margin-top: 5px;
   margin-left: 20px;
   float:left;
@@ -1618,18 +1615,18 @@ button.avb_GpsCancel{
 }
 
 button.avb_SettingsCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 }
 button.avb_SettingsOK {
-  .avn_button_icon_base('images/check32.png');
+  .avn_button_icon_base('images/icons-new/ic_done.svg');
 }
 
 button.avb_SettingsDefaults{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_delete.svg');
 }
 
 button.avb_SettingsAndroid{
-  .avn_button_icon_base('images/Android_Robot_100.png');
+  .avn_button_icon_base('images/icons-new/ic_android.svg');
 }
 /*-------------------------------------------------------------------------------
     main page
@@ -1702,10 +1699,10 @@ button.avb_SettingsAndroid{
 
 
 button.avb_ShowStatus {
-  .avn_button_icon_base('images/icons-new/status.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/status.svg');
 }
 button.avb_ShowSettings {
-  .avn_button_icon_base('images/icons-new/ic_settings.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_settings.svg');
 }
 button.avb_ShowHelp {
   .avn_button_icon_base('images/Question.png');
@@ -1713,20 +1710,20 @@ button.avb_ShowHelp {
 }
 
 button.avb_Connected {
-  .avn_button_icon_base_toggle('images/icons-new/plug.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base_toggle('images/icons-new/plug.svg');
 }
 
 button.avb_Night {
-  .avn_button_icon_base_toggle('images/icons-new/night.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base_toggle('images/icons-new/night.svg');
 }
 button.avb_ShowDownload {
-  .avn_button_icon_base('images/icons-new/ic_file_download.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_file_download.svg');
 }
 button.avb_MainCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg',( @buttonSize * 45 /60 ));
+  .avn_button_icon_base('images/icons-new/ic_clear.svg');
 }
 button.avb_MainAndroid{
-  .avn_button_icon_base('images/Android_Robot_100.png');
+  .avn_button_icon_base('images/icons-new/ic_android.svg');
 }
 
 /*------------------------------------------------------------------------------- 
