@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="128"
+   height="128"
+   id="svg60966"
+   version="1.1"
+   inkscape:version="0.91 r"
+   sodipodi:docname="MarkerOrange.svg">
+  <metadata
+     id="metadata60981">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Marker1</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs60979" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1006"
+     id="namedview60977"
+     showgrid="false"
+     inkscape:zoom="1.84375"
+     inkscape:cx="62.915254"
+     inkscape:cy="64"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg60966" />
+  <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+  <title
+     id="title60968">Marker1</title>
+  <g
+     id="g60970">
+    <title
+       id="title60972">Layer 1</title>
+    <circle
+       id="svg_5"
+       r="23"
+       cy="64"
+       cx="64"
+       stroke-linecap="null"
+       stroke-linejoin="null"
+       stroke-dasharray="null"
+       stroke-width="3"
+       stroke="#000000"
+       fill="#ffff00"
+       style="fill:#ffcc00" />
+    <line
+       id="svg_10"
+       y2="64.25"
+       x2="127.75"
+       y1="64"
+       x1="0.25"
+       stroke-linecap="null"
+       stroke-linejoin="null"
+       stroke-dasharray="null"
+       stroke-width="2"
+       stroke="#000000"
+       fill="none" />
+    <line
+       id="svg_11"
+       y2="127.75"
+       x2="64"
+       y1="0.25"
+       x1="64"
+       stroke-linecap="null"
+       stroke-linejoin="null"
+       stroke-dasharray="null"
+       stroke-width="2"
+       stroke="#000000"
+       fill="none" />
+  </g>
+</svg>
