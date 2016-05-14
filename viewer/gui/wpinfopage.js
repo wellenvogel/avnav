@@ -238,6 +238,7 @@ avnav.gui.WpInfoPage.prototype._checkWpOk=function(){
     if (!isOk) {
         var self = this;
         window.setTimeout(function () {
+            if (! self.isVisible()) return;
             avnav.util.Overlay.Toast("waypoint is not valid any more", 5000);
             self.returnToLast();
         }, 0);

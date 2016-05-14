@@ -688,6 +688,7 @@ avnav.nav.RouteData.prototype.routeOff=function(){
     this.currentLeg.active=false;
     this.currentLeg.name=undefined;
     this.currentLeg.currentRoute=undefined;
+    this.currentLeg.to.routeName=undefined;
     this._legChanged(); //send deactivate
 };
 
