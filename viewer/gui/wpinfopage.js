@@ -24,10 +24,16 @@ avnav.gui.WpInfoPage=function(){
     this.statusItem='.avn_Status';
     this.wp=undefined;
     this.newWp=false;
+    /**
+     *
+     * @type {avnav.nav.RouteData}
+     */
+    this._router=undefined;
 };
 avnav.inherits(avnav.gui.WpInfoPage,avnav.gui.Page);
 
 avnav.gui.WpInfoPage.prototype.localInit=function(){
+    this._router=this.navobject.getRoutingHandler();
 };
 avnav.gui.WpInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;
@@ -36,7 +42,7 @@ avnav.gui.WpInfoPage.prototype.showPage=function(options) {
         this.newWp= options.newWp||false;
     }
     else {
-        this.wp=this.navobject.getRoutingHandler().getEditingWp();
+        this.wp=this._router.getEditingWp();
         this.newWp=false;
     }
     if (! this.wp) this.returnToLast();
@@ -56,19 +62,35 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
         this.selectOnPage('.avn_newHeading').hide();
         this.selectOnPage('.avb_Ok').hide();
     }
-    var router=this.navobject.getRoutingHandler();
+    var router=this._router;
     var gps=this.navobject.getGpsHandler().getGpsData();
     var start=router.getCurrentLegStartWp();
     var legData=avnav.nav.NavCompute.computeLegInfo(wp,gps,start);
     var formattedData=this.navobject.formatLegData(legData);
-
     var isApproaching=router.isApproaching;
     var isTarget=router.isCurrentRoutingTarget(wp);
     var nextWp=router.getCurrentLegNextWp();
+    var route=router.getEditingRoute();
+    if (route && wp.routeName){
+        var ownIdx=route.getIndexFromPoint(wp);
+        if (ownIdx >= 0) {
+            var numPoints = route.points.length;
+            if (ownIdx > 0) this.selectOnPage('.avb_Back').prop("disabled",false);
+            else this.selectOnPage('.avb_Back').prop('disabled',true);
+            if (ownIdx < (numPoints - 1)) this.selectOnPage('.avb_Forward').prop("disabled",false);
+            else this.selectOnPage('.avb_Forward').prop('disabled',true);
+            ownIdx++;
+            formattedData.routeIndex = ownIdx+"/"+numPoints;
+        }
+    }
     if (wp.routeName !== undefined){
         this.selectOnPage('.avb_ShowRoutePanel').show();
+        this.selectOnPage('.avb_Forward').show();
+        this.selectOnPage('.avb_Back').show();
     }else {
         this.selectOnPage('.avb_ShowRoutePanel').hide();
+        this.selectOnPage('.avb_Forward').hide();
+        this.selectOnPage('.avb_Back').hide();
     }
     if (isTarget) {
         this.selectOnPage('.avb_NavGoto').hide();
@@ -117,7 +139,7 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
             addClass('avn_routingActive');
         }
     }
-    var markerLock=this.navobject.getRoutingHandler().getLock();
+    var markerLock=this._router.getLock();
     if (!markerLock) this.selectOnPage('.avb_StopNav').hide();
     else this.selectOnPage('.avb_StopNav').show();
     this.handleToggleButton('.avb_StopNav',markerLock);
@@ -139,7 +161,7 @@ avnav.gui.WpInfoPage.prototype.btnWpInfoLocate=function (button,ev){
     var marker=navobject.getComputedValues().markerWp;
     this.gui.map.setCenter(marker);
     //make the current WP the active again...
-    this.navobject.getRoutingHandler().resetEditingWp();
+    this._router.resetEditingWp();
     this.returnToLast();
 };
 avnav.gui.WpInfoPage.prototype.btnShowRoutePanel=function (button,ev){
@@ -148,25 +170,35 @@ avnav.gui.WpInfoPage.prototype.btnShowRoutePanel=function (button,ev){
 };
 avnav.gui.WpInfoPage.prototype.btnStopNav=function (button,ev){
     log("stopNav clicked");
-    this.navobject.getRoutingHandler().routeOff();
+    this._router.routeOff();
     this.returnToLast();
 };
 avnav.gui.WpInfoPage.prototype.btnNavGoto=function (button,ev){
     log("navGoto clicked");
-    this.navobject.getRoutingHandler().wpOn(this.wp);
+    this._router.wpOn(this.wp);
     this.returnToLast();
 };
 
 avnav.gui.WpInfoPage.prototype.btnNavNext=function (button,ev) {
-    this.navobject.getRoutingHandler().moveEditingWp(1);
-    this.navobject.getRoutingHandler().routeOn();
+    this._router.moveEditingWp(1);
+    this._router.routeOn();
     this.returnToLast();
 };
 avnav.gui.WpInfoPage.prototype.btnOk=function (button,ev) {
     if (this.newWp) {
-        this.navobject.getRoutingHandler().wpOnInactive(this.wp);
+        this._router.wpOnInactive(this.wp);
     }
     this.returnToLast();
+};
+avnav.gui.WpInfoPage.prototype.btnForward=function (button,ev) {
+    this._router.moveEditingWp(1);
+    this.wp=this._router.getEditingWp();
+    this.fillData(false);
+};
+avnav.gui.WpInfoPage.prototype.btnBack=function (button,ev) {
+    this._router.moveEditingWp(-1);
+    this.wp=this._router.getEditingWp();
+    this.fillData(false);
 };
 /**
  * create the page instance
