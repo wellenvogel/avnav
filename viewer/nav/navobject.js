@@ -258,7 +258,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
         this.data.edRouteEta=this.data.routeEta;
     }
     else {
-        var edRoute=this.routeHandler.getEditingRoute();
+        var edRoute=this.routeHandler.getRoute();
         this.data.edRouteRemain=0;
         this.data.edRouteEta=undefined;
         this.data.edRouteName=edRoute?edRoute.name:undefined;

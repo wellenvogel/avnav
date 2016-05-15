@@ -375,6 +375,19 @@ avnav.nav.Route.prototype.getIndexFromPoint=function(point){
     }
     return -1;
 };
+/**
+ * return a point at a given offset to the current point
+ * @param {avnav.nav.navdata.WayPoint} point
+ * @param {number} offset
+ * @returns {avnav.nav.navdata.WayPoint}
+ */
+
+avnav.nav.Route.prototype.getPointAtOffset=function(point,offset){
+    var idx=this.getIndexFromPoint(point);
+    if (idx < 0) return undefined;
+    if ((idx+offset) < 0 || (idx+offset)>= this.points.length) return undefined;
+    return this.points[idx+offset];
+};
 
 /**
  * change a waypoint in the route

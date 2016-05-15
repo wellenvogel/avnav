@@ -237,7 +237,7 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
     if (this.routingData.hasActiveRoute()){
         activeName=this.routingData.getCurrentLeg().name;
     }
-    var editingName=this.routingData.getEditingRoute()?this.routingData.getEditingRoute().name:undefined;
+    var editingName=this.routingData.getRoute()?this.routingData.getRoute().name:undefined;
     var id;
     var routeInfos=this.routes;
     for (id=0;id<this.routes.length;id++){
@@ -325,7 +325,7 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
         this.currentName=this.loadedRoute.name;
     }
     else {
-        if (this.routingData.getEditingRoute()) this.currentName = this.routingData.getEditingRoute().name;
+        if (this.routingData.getRoute()) this.currentName = this.routingData.getRoute().name;
     }
     this.routes=[];
     var localRoutes=this.routingData.listRoutesLocal();
@@ -428,7 +428,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         route=this.loadedRoute.clone();
     }
     else {
-        route=this.routingData.getEditingRoute().clone();
+        route=this.routingData.getRoute().clone();
     }
     if (! route) return;
     var name=$('#avi_route_name').val();

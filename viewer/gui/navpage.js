@@ -461,7 +461,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
     $('#avi_route_info_navpage_inner').addClass(editingActiveRoute?"avn_activeRoute":"avn_otherRoute");
     var switchOffNext=! editingActiveRoute;
     var html="";
-    var route=this.navobject.getRoutingHandler().getEditingRoute();
+    var route=this.navobject.getRoutingHandler().getRoute();
     if (route) {
         var rname = route.name.substr(0, 14);
         if (route.name.length > 14) rname += "..";
@@ -717,14 +717,14 @@ avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
     log("navGoto clicked");
-    this.navobject.getRoutingHandler().routeOn();
+    this.navobject.getRoutingHandler().wpOn(this.navobject.getRoutingHandler().getEditingWp());
     this.hideRouting();
 };
 
 avnav.gui.Navpage.prototype.btnNavNext=function(button,ev){
     log("navNext clicked");
     this.navobject.getRoutingHandler().moveEditingWp(1);
-    this.navobject.getRoutingHandler().routeOn();
+    this.navobject.getRoutingHandler().wpOn(this.navobject.getRoutingHandler().getEditingWp());
     this.hideRouting();
 };
 avnav.gui.Navpage.prototype.btnNavDeleteAll=function(button,ev){

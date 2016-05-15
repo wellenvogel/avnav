@@ -42,6 +42,11 @@ avnav.map.RouteLayer=function(mapholder,navobject){
      * @type {Array}
      */
     this.routePixel=[];
+    /**
+     * @private
+     * @type {string}
+     */
+    this._routeName=undefined;
 
     /**
      * @private
@@ -150,7 +155,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     var from=leg.from?this.mapholder.pointToMap(leg.from.toCoord()):undefined;
     var prop=this.mapholder.getProperties().getProperties();
     var drawNav=prop.layers.boat&&prop.layers.nav;
-    var route=this.navobject.getRoutingHandler().getEditingRoute();
+    var route=this.navobject.getRoutingHandler().getRoute();
     var text,wp;
     if (! drawNav ) {
         this.routePixel=[];
@@ -169,12 +174,14 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
         drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
     }
 
-    var routeTarget=this.navobject.getRoutingHandler().getEditingWpIdx();
+    var routeTarget=-1;
     if ( route) {
+        this._routeName=route.name;
         var currentRoutePoints=[];
         var i;
         for (i in route.points){
             var p=this.mapholder.pointToMap(route.points[i].toCoord());
+            if (route.points[i].compare(leg.to)) routeTarget=i;
             currentRoutePoints.push(p);
         }
         this.routePixel = drawing.drawLineToContext(currentRoutePoints, this.lineStyle);
@@ -212,7 +219,9 @@ avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     if (! this.routePixel) return undefined;
     var idx=this.mapholder.findTarget(pixel,this.routePixel,tolerance);
     if (idx >= 0){
-            return this.navobject.getRoutingHandler().getWp(idx);
+        var rt=this.navobject.getRoutingHandler().getRouteByName(this._routeName);
+        if (! rt) return undefined;
+        return rt.getPointAtIndex(idx);
     }
     return undefined;
 };
