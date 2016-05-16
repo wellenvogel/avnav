@@ -427,9 +427,17 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
 };
 
 avnav.gui.Navpage.prototype.updateLayout=function(){
-    var rtop=$('#avi_nav_bottom').outerHeight();
-    $('#avi_navLeftContainer').css('bottom',rtop+"px");
-    $('#avi_route_info_navpage').css('bottom',rtop+"px");
+    if (this.gui.properties.getProperties().allowTwoWidgetRows){
+        $('#avi_nav_bottom').removeClass('avn_bottom_1rows').addClass('avn_bottom_2rows');
+    }
+    else{
+        $('#avi_nav_bottom').addClass('avn_bottom_1rows').removeClass('avn_bottom_2rows');
+    }
+    window.setTimeout(function(){
+        var rtop=$('#avi_nav_bottom').outerHeight();
+        $('#avi_navLeftContainer').css('bottom',rtop+"px");
+        $('#avi_route_info_navpage').css('bottom',rtop+"px");
+    },0);
 };
 
 

@@ -159,6 +159,7 @@ avnav.gui.Settingspage.prototype.readData=function(){
 avnav.gui.Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.readData();
+    this.selectOnPage('input[type="range"]').rangeslider('update', true);
 };
 
 

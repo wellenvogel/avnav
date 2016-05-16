@@ -192,15 +192,6 @@ avnav.gui.Handler.prototype.showPage = function (name, options) {
     ));
 
 };
-/**
- * check whether we are on mobile
- * @returns {boolean}
- */
-avnav.gui.Handler.prototype.isMobileBrowser = function () {
-    //return true;
-    return ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) ||
-        this.properties.getProperties().forceMobile;
-};
 
 avnav.gui.sendAndroidEvent = function (key, id) {
     log("android event key=" + key + ", id=" + id);

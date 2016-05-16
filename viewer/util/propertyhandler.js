@@ -257,6 +257,9 @@ avnav.util.PropertyHandler.prototype.updateLayout=function(){
         }
         less.modifyVars(lessparam);
     }
+    //set the font sizes
+    $('body').css('font-size',this.getValue(this.propertyDescriptions.baseFontSize)+"px");
+    $('.avn_widgetContainer').css('font-size',this.getValue(this.propertyDescriptions.widgetFontSize)+"px");
 };
 /**
  * filter out only the allowed user data
