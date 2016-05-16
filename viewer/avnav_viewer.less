@@ -1,19 +1,10 @@
 
 //variables will be overwritten by properties!
-@topPanelHeight:00px;
-@bottomPanelHeight:50px;
 @aisPanelWidth:90px;
-@routeInfoPanelWidth:90px; //the real with is the max of this and the AIS panel width
-@routeDisplayWidth: 90px;
 @buttonSize: 60px;
-@centerDisplayHeight: 30px;
-
-
 
 @checkTiny: 480px;
-@settingsFontSize: 16px;
 @widgetFontSize: 14px;
-@routeInfoFontBase: min(max(@aisPanelWidth,@routeInfoPanelWidth),120px);
 
 @nightMode: 100px;     //fade factor for night mode - if < 100 assume night mode
                       //we set this in px as this is the only value the js code can set
@@ -39,6 +30,9 @@
   }
 }
 
+*{
+  .border-box();
+}
 //have the border inside
 .border-box{
   -webkit-box-sizing: border-box;
@@ -152,7 +146,7 @@ html,body {
 	margin: 0;
 	padding: 0;
 	font-family: Verdana,Arial,sans-serif;
-	font-size: 0.8em;
+	font-size: 14px;
   .border-box();
 }
 
@@ -160,16 +154,6 @@ html,body {
 	position: absolute;
 	overflow: hidden;
 }
-
-
-
-#leftTop .avn_label {
-	color: white;
-}
-.avn_left_bottom {
-  background-color: #BFBFBF;
-}
-
 
 /*
   for a page that consumes the left side and is scrollable
@@ -207,6 +191,16 @@ html,body {
 }
 .avn_row{
   display: table-row;
+}
+
+.avn_more {
+  display: none;
+  float: right;
+  width: 1em;
+  height: 1em;
+  background-image: url('images/icons-new/ic_chevron_right.svg');
+  background-size: 100% 100%;
+  opacity: 0.6;
 }
 
 /*-------------------------------------------------------------
@@ -337,6 +331,8 @@ html,body {
   bottom: 0;
   left: 0;
   right: 0;
+  background-color: #BFBFBF;
+  .nightColors();
 }
 
 .avn_bottom_2rows{
@@ -350,7 +346,6 @@ html,body {
 #leftBottomMarker{
   float: left;
   width: 50%;
-  //font-size: @bottomBaseFont;
 }
 
 
@@ -386,7 +381,6 @@ html,body {
 #leftBottomPosition{
   float: left;
   width: 50%;
-  //font-size: @bottomBaseFont;
 }
 
 
@@ -420,34 +414,16 @@ html,body {
 }
 
 
-
 /*-------------------------------------------------------------
-   measure display (center)
+   route info
 -------------------------------------------------------------*/
 
-.avn_center {
-	padding-left: 3px;
-	font-size: ( @centerDisplayHeight * 0.8 );
-}
 
-#centerInner {
-	text-align: center;
-}
-
-
-#avi_second_buttons_navpage{
-  top: 0px;
-  bottom: 0px;
-  right: 0px;
-  width: (@buttonSize + 10);
-  padding-left: 3px;
-  background-color: rgba(109, 109, 109, 0.5);
-}
 #avi_route_info_navpage{
   top: 0px;
   left:0px;
   bottom: 0px;
-  width: max( @aisPanelWidth , @routeInfoPanelWidth );
+  width: 8.7em;
   background-color: fade(lightgrey,@nightModePercent);
   z-index: 200;
 }
@@ -455,23 +431,11 @@ html,body {
   background-color: rgba(31, 30, 30, 1);
 }
 
-#avi_route_info_navpage_inner {
-  //margin-left: 3px;
-  //margin-right: 3px;
-}
 #avi_route_info_navpage .avn_route_info_name{
   opacity: 0.6;
   display: inline-block;
 }
-#avi_route_info_navpage .avn_route_info_active_point .avn_more {
-  display: inline-block;
-  float: right;
-  width: 1em;
-  height: 1em;
-  background-image: url('images/icons-new/ic_chevron_right.svg');
-  background-size: 100% 100%;
-  opacity: 0.6;
-}
+
 /* we edit the current route */
 .avn_activeRoute{
   border: 3px solid fade(#fa584a,@nightModePercent);
@@ -479,36 +443,17 @@ html,body {
 .avn_otherRoute{
   border: 3px solid fade(#1DB81D,@nightModePercent)
 }
-/*-------------------------------------------------------------
-   route info
--------------------------------------------------------------*/
-.avn_route_base(@factor: 8){
-    font-size: ( @routeInfoFontBase / @factor );
-    padding-left: 3px;
-}
 .avn_route_label{
-  .avn_route_base(10);
   padding-left: 0;
   opacity: 0.6;
 }
 .avn_routeInfoLine{
-  .avn_route_base(8);
   margin-bottom: 0.3em;
 }
-#avi_route_info_heading{
-    .avn_route_base(7);
-}
-#avi_route_info_navpage_inner{
-  font-size: ( @routeInfoFontBase / 9);
-  position: absolute;
-  top: 0;
-  height: 12em;
-  left: 0;
-  right: 0;
-}
+
+
 
 #avi_route_info_name{
-  .avn_route_base(10);
   padding-left: 3px;
   margin-top: 0.5em;
   padding-bottom: 0.5em;
@@ -516,30 +461,28 @@ html,body {
   border-bottom: 1px solid black;
 
 }
-#avi_route_info_list{
-    @width: max(@aisPanelWidth,@routeInfoPanelWidth);
-    font-size: ( @routeInfoFontBase / 9);
-    overflow-y: auto;
-    overflow-x: hidden;
-  position: absolute;
-  top:12.5em;
-  bottom: 0;
-  left: 0;
-  right: 0;
+@routeInfoHeaderHeight: 12em;
+#avi_route_info_navpage_inner{
+  height: @routeInfoHeaderHeight;
+  padding-left: 0.2em;
 }
-#avi_route_info_list input{
-    @width: max(@aisPanelWidth,@routeInfoPanelWidth);
-    width: (@width - 10px);
-    font-size: ( @routeInfoFontBase / 8);
+#avi_route_info_list{
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  top: @routeInfoHeaderHeight;
+  right: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .avn_route_info_point{
   border-bottom: 1px solid black;
-  padding-left: 2px;
-  padding-right: 2px;
-  padding-top: 1px;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
+  padding-top: 0.1em;
   margin-bottom: 5px;
-  padding-bottom: 2px;
+  padding-bottom: 0.1em;
 }
 .avn_route_info_active_point{
     background-color: @routeApproachingColor !important;
@@ -548,57 +491,15 @@ html,body {
   background-color: #7A5957 !important;
 }
 
+#avi_route_info_list .avn_route_info_active_point .avn_more{
+  display:inline-block;
+}
+
 //no margin at last display of route head
 #avi_route_info_eta{
   margin-bottom: 0px;
 }
 
-
-#avi_waypoint_popup{
-    top: 0px;
-    left: 0px;
-    right:( @buttonSize + 10px );
-    z-index: 120; /* must be above route everything... */
-    background-color: @routeColor;
-    font-size: ( @routeInfoFontBase / 8);
-    border: 1px solid;
-    border-radius: 2px;
-    .nightColors();
-}
-
-#avi_waypoint_popup input{
-  font-size: ( @routeInfoFontBase / 5);
-  width: 100%;
-}
-
-
-/* make the waypoint popup 2 rows on small screen width */
-@wpsmall: ( 5.583 * @routeInfoFontBase );
-#avi_waypoint_popup_left{
-    float: left;
-    padding-top: 5px;
-    padding-left: 5px;
-    padding-bottom: 3px;
-  @media (min-width: @wpsmall) {
-    width: 100%;
-    box-sizing: border-box;
-    margin-right: -( 3 * @buttonSize + 47);
-    padding-right: ( 3 * @buttonSize + 47);
-  }
-  @media (max-width: ( @wpsmall - 1) ) {
-    padding-right: 10px;
-  }
-
-}
-#avi_waypoint_popup_left .avn_route_point_ll{
-  float: left;
-  margin-right: 1em;
-}
-#avi_waypoint_popup_right{
-    float:right;
-    margin-top: 5px;
-    margin-right: 8px;
-}
 
 /*-------------------------------------------------------------
    left widget container
@@ -607,6 +508,7 @@ html,body {
   position: absolute;
   left: 0;
   background-color: #BFBFBF;
+  .nightColors();
   z-index: 10;
   @media(max-width: @checkTiny){
     right:0;
@@ -818,7 +720,6 @@ button.avb_WpNext{
 .avm_listpage {
   padding-left: 10px;
   padding-right: 10px;
-  font-size: ( @routeInfoFontBase / 8);
   background-color: white;
   .nightColors();
 }
@@ -859,7 +760,6 @@ button.avb_WpNext{
 }
 #avi_route_name{
   width: 95%;
-  font-size: ( @routeInfoFontBase / 5);
 }
 #avi_route_listhead{
   margin-top: 10px;
@@ -1023,13 +923,11 @@ button.avb_RoutePageTracks{
   left: 20px;
   right: (@buttonSize + 30px);
   bottom: 15px;
-  top:  ( @routeInfoFontBase / 10 + 5px);
-  box-sizing: border-box;
+  top:  1.2em;
   border: 1px solid;
 }
 
 #avi_download_progress_info{
-  font-size: ( @routeInfoFontBase / 10);
   position: absolute;
   left:0px;
   right: 0px;
@@ -1083,25 +981,17 @@ button.avb_DownloadPageUploadCancel{
    AIS display
 -------------------------------------------------------------*/
 .avn_ais_infotable{
-	//display: table;
-	margin-left: 3px;
-	margin-right: 3px;
-	line-height: 22px;
-	font-size: 20px;
+  line-height: 1.6em;
+  border-collapse: collapse;
 }
-.avn_ais{
-	//display: table-row;
-		
-}
+
 .avn_aisparam{
 	//display: table-cell;
-	padding-left: 10px;
-	padding-right: 10px;
-	padding-bottom: 3px;
-	padding-top: 2px;
-	border-bottom: 1px solid black;
-	border-left: 1px solid black;
-	border-right: 1px solid black;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+  border-bottom: 1px solid black;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
 	
 }
 .avn_ais_info_first{
@@ -1502,9 +1392,8 @@ button.avb_GpsCancel{
 
 .avn_setting{
   float: left;
-  font-size: @settingsFontSize;
-  padding-left: ( @settingsFontSize * 10 / 16);
-  padding-right: ( @settingsFontSize * 10 / 16);
+  padding-left: 0.8em;
+  padding-right: 0.8em;
   padding-bottom: 6px;
 }
 .avn_settings_group{
@@ -1525,22 +1414,22 @@ button.avb_GpsCancel{
 }
 
 .avn_settings_line{
-  line-height: ( @settingsFontSize * 3 / 2 );
+  line-height: 2em;
   margin-bottom: 8px;
 }
 
 .avn_settings_line input[type="checkbox"]{
-  height: ( @settingsFontSize * 2 );
-  width: ( @settingsFontSize * 2 );
-  margin-left: ( @settingsFontSize );
+  height: 2em;
+  width: 2em;
+  margin-left: 1em;
   margin-right: 5px;
 }
 
 .avn_slider{
   float:left;
-  width:400px;
-  height:@settingsFontSize;
-  margin-left: 10px;
+  width:30em;
+  height:1em;
+  margin-left: 1em;
   margin-right: 10px;
   margin-bottom: 10px;
   margin-top: 10px;
@@ -1548,13 +1437,13 @@ button.avb_GpsCancel{
 
 .avn_slider_label{
   float:left;
-  width: ( @settingsFontSize * 12 );
+  width: 12em;
   margin-top: 10px;
 }
 
 .avn_slider_out{
   float:left;
-  width: ( @settingsFontSize * 8 );
+  width: 8em;
   margin-top: 10px;
 }
 .avn_rangeslider__handle {
@@ -1622,21 +1511,21 @@ button.avb_GpsCancel{
 .avn_color{
   float:left;
   width:150px;
-  height:@settingsFontSize;
-  margin-left: 10px;
-  margin-right: 10px;
+  height:1em;
+  margin-left: 1em;
+  margin-right: 1em;
   margin-bottom: 10px;
-  height: 30px;
+  height: 2em;
 }
 
 .avn_color_label{
   float:left;
-  width: ( @settingsFontSize * 12 );
+  width: 12em;
   margin-top: 10px;
 }
 .avn_color_out{
   float:left;
-  width: ( @settingsFontSize * 8 );
+  width: 8em;
   margin-top: 10px;
 }
 
@@ -1670,24 +1559,28 @@ button.avb_SettingsAndroid{
 */
 
 .avn_mainpage_select_item {
-	cursor: pointer;
-	float: left;
-	margin: 20px 20px 20px 20px;
-	padding: 10px 10px 10px 10px;
-	background-color: fade(grey,@nightModePercent);
-	color: white;
-	width: 60px;
-    height: 100px;
-	text-align: center;
-	border-radius: 8px;
+  cursor: pointer;
+  vertical-align: middle !important;
+  overflow: hidden;
+  width: 20em;
+  height: 2em;
+  display: inline-block;
+  margin-right: 3em;
+  padding: 1em;
+  line-height: 2em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  box-sizing: content-box;
 }
 .avn_mainpage_select_item when (@nightModePercent <100%) {
   color: @nightColor;
 }
 .avn_mainpage_select_item img{
     .nightOPacity();
-	margin-bottom: 10px;
-	border-radius: 8px;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  margin-right: 1em;
+  vertical-align: middle;
 }
 
 
@@ -1697,41 +1590,42 @@ button.avb_SettingsAndroid{
 }
 
 #avi_mainpage_link{
-  font-size: ( @bottomPanelHeight / 4 );
   text-align: right;
-  position: absolute;
-  right: 0;
-  bottom: 0;
   padding-right: 1em;
-  z-index: 0;
   white-space: nowrap;
-  .hidemedia(0px, ( @bottomPanelHeight * 16 ))
+  display: inline-block;
+  float: right;
 }
 #avi_mainpage_status {
-  font-size: ( @bottomPanelHeight / 4 );
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  margin-bottom: ( @bottomPanelHeight / 20 );
   padding-left: 1em;
   padding-right: 1em;
   text-align: left;
   z-index: 10;
   white-space: nowrap;
+  display: inline-block;
+
 }
 #avi_mainpage_selections {
 	display: inline-block;
 }
-
+#avi_mainpage_selections .avn_more{
+  display: inline-block;
+}
 #avi_mainpage .avn_left_bottom{
-  height: @bottomPanelHeight;
+  height: 3.3em;
   bottom: 0;
   left: 0;
   right: 0;
   background-color: rgba(216, 216, 213, 0.29);
   .nightColors();
 }
-
+#avi_mainpage .avn_main{
+  bottom: 3.3em;
+}
+#avi_mainpage_leftbottominner{
+  font-size: 0.8em;
+  padding-top: 0.8em;
+}
 
 
 button.avb_ShowStatus {
@@ -1775,29 +1669,11 @@ button.avb_MainAndroid{
 }
   
 /*
-    2. left top
-*/
-
-.avn_left_top{
-	left: 0px;
-	top: 0px;
-	right: 0px;
-	height: @topPanelHeight;
-    background-color: #1602FC;
-    text-align: center;
-}
-.avn_top_content{
-	float: left;
-	line-height: ( @topPanelHeight - 2 );
-}
-
-
-/*
 	3. map
 */
 
 .avn_map {
-  top: @topPanelHeight;
+  top: 0;
   left: 0px;
   right: 0px;
   bottom: 0px;
@@ -1805,10 +1681,10 @@ button.avb_MainAndroid{
 }
 
 .avn_main{
-	top: @topPanelHeight;
-	bottom: @bottomPanelHeight;
-	left: 0px;
-	right: 0px;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
 	
 }
     
@@ -1846,14 +1722,14 @@ button.avb_MainAndroid{
 }
 
 .avn_status_image{
-  width: 24px;
-  height: 24px;
+  width: 2em;
+  height: 2em;
   .nightOPacity();
 }
 
 .avn_status_image_small{
-  width: ( @bottomPanelHeight / 2.5 );
-  height: ( @bottomPanelHeight / 2.5 );
+  width: 1.5em;
+  height: 1.5em;
   vertical-align: middle;
   .nightOPacity();
 }
