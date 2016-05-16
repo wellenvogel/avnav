@@ -174,7 +174,7 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(){
     //TODO: make this more generic
     var markerLock=this.navobject.getRoutingHandler().getLock()||false;
     this.handleToggleButton('.avb_LockMarker',markerLock);
-    if (markerLock) this.selectOnPage('.avb_LockMarker').hide();
+    if (markerLock || this.routingVisible) this.selectOnPage('.avb_LockMarker').hide();
     else this.selectOnPage('.avb_LockMarker').show();
     this.handleToggleButton('.avb_StopNav',markerLock);
     if (!markerLock || this.routingVisible) this.selectOnPage('.avb_StopNav').hide();

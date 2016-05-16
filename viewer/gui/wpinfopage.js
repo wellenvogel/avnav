@@ -52,6 +52,10 @@ avnav.gui.WpInfoPage.prototype.localInit=function(){
     $('#avi_wpinfo_box').click(function(ev){
         return false;
     });
+    $('#avi_wpinfo_overlay').click(function(ev){
+        self._overlay.overlayClose();
+        return false;
+    });
 };
 avnav.gui.WpInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;

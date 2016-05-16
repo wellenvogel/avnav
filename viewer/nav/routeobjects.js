@@ -113,7 +113,7 @@ avnav.nav.Leg.prototype.fromJson=function(raw){
         this.name=this.currentRoute.name;
     }
     if (this.currentRoute){
-        this.to.routeName=this.currentRoute.name.slice(0);
+        this.to.routeName=this.currentRoute.name;
         if (raw.currentTarget !== undefined ){
             var rp=this.currentRoute.getPointAtIndex(raw.currentTarget);
             if (rp){
@@ -257,7 +257,7 @@ avnav.nav.Route.prototype.toJson=function(){
     rt.server=this.server;
     rt.points=[];
     var i;
-    for (i in this.points){
+    for (i=0;i<this.points.length;i++){
         var rp=this.points[i].clone();
         rp.routeName=undefined;
         rt.points.push(rp);
@@ -393,7 +393,7 @@ avnav.nav.Route.prototype.getPointAtOffset=function(point,offset){
  * change a waypoint in the route
  * @param {avnav.nav.navdata.WayPoint} oldPoint
  * @param {avnav.nav.navdata.WayPoint}newPoint
- * @returns {avnav.nav.navdata.WayPoint|undefined} the old point or undefined if no change (e.g. name already exists or point not in route)
+ * @returns {avnav.nav.navdata.WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
  */
 avnav.nav.Route.prototype.changePoint=function(oldPoint,newPoint){
     var idx=this.getIndexFromPoint(oldPoint);
@@ -403,17 +403,18 @@ avnav.nav.Route.prototype.changePoint=function(oldPoint,newPoint){
  * change a waypoint in the route
  * @param {number} idx
  * @param {avnav.nav.navdata.WayPoint}newPoint
- * @returns {avnav.nav.navdata.WayPoint|undefined} the old point or undefined if no change (e.g. name already exists or point not in route)
+ * @returns {avnav.nav.navdata.WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
  */
 avnav.nav.Route.prototype.changePointAtIndex=function(idx,newPoint){
     if (idx < 0 || idx >= this.points.length) return undefined;
+    newPoint=this._toWayPoint(newPoint);
     var oldPoint=this.points[idx].clone();
     if (newPoint.name && newPoint.name != oldPoint.name){
         if (this.checkName(newPoint.name)) return undefined;
     }
     if (newPoint.routeName && newPoint.routeName != this.name) return undefined;
     this.points[idx].update(newPoint);
-    return oldPoint;
+    return this.points[idx];
 };
 /**
  *
@@ -469,9 +470,7 @@ avnav.nav.Route.prototype.findFreeName=function(){
     return "no free name found";
 };
 avnav.nav.Route.prototype.addPoint=function(idx,point){
-    if (! (point instanceof avnav.nav.navdata.WayPoint)){
-        point=new avnav.nav.navdata.WayPoint(point.lon,point.lat);
-    }
+    point=this._toWayPoint(point);
     var rp=point.clone();
     if (rp.name){
         if (this.checkName(rp.name)){
@@ -509,6 +508,16 @@ avnav.nav.Route.prototype.swap=function() {
     }
 };
 
+/**
+ *
+ * @param {avnav.nav.navdata.Point} newPoint
+ * @returns {avnav.nav.navdata.WayPoint}
+ * @private
+ */
+avnav.nav.Route.prototype._toWayPoint=function(newPoint) {
+    if (!(newPoint instanceof avnav.nav.navdata.WayPoint)) newPoint = avnav.nav.navdata.WayPoint.fromPlain(newPoint);
+    return newPoint;
+};
 
 avnav.nav.RouteInfo=function(name,opt_server){
     /**

@@ -406,9 +406,11 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
     else {
         if (name && name != "") {
             if (name != this.currentName && this.routingData.isEditingActiveRoute()){
-                this.routingData.cloneActiveToEditing();
+                this.routingData.cloneActiveToEditing(name);
             }
-            this.routingData.changeRouteName(name,!this.gui.properties.getProperties().connectedMode);
+            else {
+                this.routingData.changeRouteName(name, !this.gui.properties.getProperties().connectedMode);
+            }
         }
     }
     this.gui.returnToLast('navpage', {showRouting: true});
