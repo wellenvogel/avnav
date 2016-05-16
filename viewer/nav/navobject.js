@@ -182,7 +182,6 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.data.markerWp=this.routeHandler.getCurrentLegTarget();
     this.data.routeNextWp=this.routeHandler.getCurrentLegNextWp();
     var rstart=this.routeHandler.getCurrentLeg().from;
-    var vmgapp=0;
     if (gps.valid){
         if (this.routeHandler.getLock()) {
             var legData=avnav.nav.NavCompute.computeLegInfo(this.data.markerWp,gps,rstart);
@@ -220,8 +219,8 @@ avnav.nav.NavObject.prototype.computeValues=function(){
         if (this.routeHandler.getLock()) {
             this.data.routeRemain = this.routeHandler.computeLength(-1,curRoute) + this.data.markerDistance;
             var routetime = gps.rtime ? gps.rtime.getTime() : 0;
-            if (vmgapp > 0) {
-                routetime += this.data.routeRemain / vmgapp * 3600 * 1000; //time in ms
+            if (this.data.markerVmg && this.data.markerVmg > 0) {
+                routetime += this.data.routeRemain / this.data.markerVmg * 3600 * 1000; //time in ms
                 var routeDate = new Date(Math.round(routetime));
                 this.data.routeEta = routeDate;
             }

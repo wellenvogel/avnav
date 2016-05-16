@@ -145,10 +145,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     this.updateMainPanelSize('#'+this.mapdom);
     this.getMap().updateSize();
     if (!this.gui.properties.getProperties().layers.ais){
-        //hide the AIS panel if switched off
-        //showing will be done by the AIS event
-        if (this.showHideAdditionalPanel('#avi_aisInfo', false, '#' + this.mapdom))
-            this.gui.map.updateSize();
+        $('#avi_aisInfo').hide();
     }
     this.gui.navobject.setAisCenterMode(avnav.nav.AisCenterMode.MAP);
     this.updateAisPanel();
@@ -260,36 +257,32 @@ avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
  */
 avnav.gui.Navpage.prototype.updateAisPanel=function() {
     if (!this.gui.properties.getProperties().layers.ais) return;
-    var aisPanel = this.getDiv().find('.avn_aisInfo');
-    if (aisPanel) {
-        var nearestTarget = this.navobject.getAisHandler().getNearestAisTarget();
-        if (nearestTarget.mmsi) {
-            //should show the AIS panel
-            if (this.showHideAdditionalPanel('#avi_aisInfo', true, '#' + this.mapdom))
-                this.gui.map.updateSize();
-            var displayClass = "avn_ais_info_first";
-            var warningClass = "avn_ais_info_warning";
-            var normalClass = 'avn_ais_info_normal';
-            $('#avi_aisInfo').addClass(normalClass);
-            $('#avi_aisInfo').attr('data-aismmsi',nearestTarget.mmsi);
-            if (!nearestTarget.warning) {
-                $('#avi_aisInfo').removeClass(warningClass);
-                if (nearestTarget.nearest) {
-                    $('#avi_aisInfo').addClass(displayClass);
-                    $('#avi_aisInfo').removeClass(normalClass);
-                }
-                else $('#avi_aisInfo').removeClass(displayClass);
-            }
-            else {
-                $('#avi_aisInfo').addClass(warningClass);
-                $('#avi_aisInfo').removeClass(displayClass);
+    var nearestTarget = this.navobject.getAisHandler().getNearestAisTarget();
+    if (nearestTarget.mmsi) {
+        var displayClass = "avn_ais_info_first";
+        var warningClass = "avn_ais_info_warning";
+        var normalClass = 'avn_ais_info_normal';
+        $('#avi_aisInfo').addClass(normalClass);
+        $('#avi_aisInfo').attr('data-aismmsi', nearestTarget.mmsi);
+        if (!nearestTarget.warning) {
+            $('#avi_aisInfo').removeClass(warningClass);
+            if (nearestTarget.nearest) {
+                $('#avi_aisInfo').addClass(displayClass);
                 $('#avi_aisInfo').removeClass(normalClass);
             }
+            else $('#avi_aisInfo').removeClass(displayClass);
         }
         else {
-            if (this.showHideAdditionalPanel('#avi_aisInfo', false, '#' + this.mapdom))
-                this.gui.map.updateSize();
+            $('#avi_aisInfo').addClass(warningClass);
+            $('#avi_aisInfo').removeClass(displayClass);
+            $('#avi_aisInfo').removeClass(normalClass);
         }
+    }
+    if (nearestTarget.mmsi && ! this.routingVisible) {
+        $('#avi_aisInfo').show();
+    }
+    else {
+        $('#avi_aisInfo').hide();
     }
 };
 
@@ -378,6 +371,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     this.navobject.getRoutingHandler().stopEditingRoute(); //always reset to active route if any
                                                            //TODO: should we keep the last edited route?
     this.navobject.getRoutingHandler().startEditingRoute();
+    this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());
     this.gui.map.setRoutingActive(true);
     this.handleRouteDisplay();
     this.updateRoutePoints(true);
@@ -390,7 +384,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
         this.gui.map.triggerRender();
     }
     this.updateLayout();
-
+    this.updateAisPanel();
 };
 
 /**
@@ -413,6 +407,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
         this.lastGpsLock=false;
     }
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
+    this.updateAisPanel();
 };
 
 /**
@@ -466,6 +461,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
             html+='<div class="avn_route_info_point ';
             html+='">';
             html+='<div class="avn_route_info_name" />';
+            html+='<span class="avn_more"></span>'
             if (this.gui.properties.getProperties().routeShowLL) {
                 html += '<div class="avn_route_point_ll">';
             }

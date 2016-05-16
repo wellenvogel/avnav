@@ -115,6 +115,9 @@ button.avb_Forward {
 button.avb_Back {
   .avn_button_icon_base('images/icons-new/ic_arrow_back.svg');
 }
+button.avb_Edit {
+  .avn_button_icon_base('images/icons-new/ic_edit.svg');
+}
 /*-------------------------------------------------------------
    general settings
 -------------------------------------------------------------*/
@@ -458,6 +461,16 @@ html,body {
   //margin-right: 3px;
 }
 #avi_route_info_navpage .avn_route_info_name{
+  opacity: 0.6;
+  display: inline-block;
+}
+#avi_route_info_navpage .avn_route_info_active_point .avn_more {
+  display: inline-block;
+  float: right;
+  width: 1em;
+  height: 1em;
+  background-image: url('images/icons-new/ic_chevron_right.svg');
+  background-size: 100% 100%;
   opacity: 0.6;
 }
 /* we edit the current route */
