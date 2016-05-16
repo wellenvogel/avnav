@@ -7,7 +7,12 @@
 @routeDisplayWidth: 90px;
 @buttonSize: 60px;
 @centerDisplayHeight: 30px;
+
+
+
+@checkTiny: 480px;
 @settingsFontSize: 16px;
+@widgetFontSize: 14px;
 @routeInfoFontBase: min(max(@aisPanelWidth,@routeInfoPanelWidth),120px);
 
 @nightMode: 100px;     //fade factor for night mode - if < 100 assume night mode
@@ -190,59 +195,6 @@ html,body {
 	display:none;
 }
 
-
-/*-------------------------------------------------------------
-   bottom display
--------------------------------------------------------------*/
-.avn_widget{
-  position: relative;
-  border-radius: 0.2em;
-  z-index: 100;
-  padding: 0.3em;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
-  0 1px 5px 0 rgba(0, 0, 0, 0.12),
-  0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
-  margin-left: @wWidgetMargin;
-  margin-bottom: 0.1em;
-  margin-top: 0.1em;
-  margin-right: @wWidgetMargin;
-  .border-box();
-  overflow: hidden;
-  pointer-events: all;
-}
-.avn_bottom_item{
-  height: @bottomPanelHeight;
-  background: white;
-  .nightColors();
-}
-@bottomBaseFont: ( @bottomPanelHeight / 5 );
-@bottomSmallFont: (@bottomPanelHeight/3.2);
-@bottomBigFont: ( @bottomPanelHeight  - 8 );
-
-//bottom widgets in bottomBase font units
-@wWidgetMargin: 0.15em;
-@wLeftBottomMarkerPos: 10.5em;
-@wLeftBottomMarkerEta: 9em;
-@wLeftBottomPosition: 10.5em;
-@wLeftBottomStatus: 9em;
-@wLeftBottomCourse: 2.1em; //bigFont
-@wLeftBottomSpeed: 3em; //bigFont
-@wLeftBottomBearing: 2.1em; //bigFont
-@wLeftBottomMarkerDistance: 3em; //bigFont
-@bottomWidgetsTiny: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed +  @wLeftBottomCourse + @wLeftBottomBearing + 1em ) * (@bottomBigFont/@bottomBaseFont) + 4 * unit(@wWidgetMargin) ;
-//small: without positions
-@bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 1.3em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
-@bottomWidgetsSmall: ( @bottomWidgetsVerySmall + unit(4 * @wWidgetMargin + @wLeftBottomMarkerPos + @wLeftBottomPosition));
-@checkTiny: (@bottomWidgetsTiny * @bottomBaseFont + (@buttonSize + 10));
-@checkVerySmall: (@bottomWidgetsVerySmall  * @bottomBaseFont + (@buttonSize + 10));
-@checkSmall: (@bottomWidgetsSmall  * @bottomBaseFont + (@buttonSize + 10));
-.bottomhideverysmall{
-  .hidemedia(0px,@checkVerySmall);
-}
-.bottomhidesmall{
-  .hidemedia(0px,@checkSmall);
-}
-
 .avn_unit{
   font-size:0.7em;
   opacity: 0.6;
@@ -256,6 +208,65 @@ html,body {
 .avn_row{
   display: table-row;
 }
+
+/*-------------------------------------------------------------
+   widgets
+-------------------------------------------------------------*/
+
+.avn_widget{
+  position: relative;
+  border-radius: 0.2em;
+  z-index: 100;
+  padding: 0.3em;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+  0 1px 5px 0 rgba(0, 0, 0, 0.12),
+  0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
+  margin-left: 0.15em;
+  margin-bottom: 0.1em;
+  margin-top: 0.1em;
+  margin-right: 0.15em;
+  .border-box();
+  overflow: hidden;
+  pointer-events: all;
+
+}
+
+.avn_widgetContainer{
+  font-size: @widgetFontSize;
+}
+
+.avn_widgetInfo{
+  font-size: @bottomBaseFont;
+  position: absolute;
+  top: 0;
+  opacity: 0.7;
+}
+
+.avn_widgetInfoRight{
+  .avn_widgetInfo();
+  right: 0.2em;
+}
+.avn_widgetInfoLeft{
+  .avn_widgetInfo();
+  left: 0.2em;
+}
+
+.avn_posWidget{
+  width: 10.5em;
+}
+.avn_courseWidget{
+  width: 7.2em;
+}
+.avn_distanceWidget{
+  width: 9.6em;
+}
+.avn_speedWidget{
+  width: 9.6em;
+}
+.avn_etaWidget{
+  width: 9em;
+}
+
 
 /*-------------------------------------------------------------
     some classes for info pages
@@ -306,6 +317,21 @@ html,body {
   nav page
   ------------------------------------------------------------*/
 
+/*-------------------------------------------------------------
+   bottom display
+-------------------------------------------------------------*/
+
+.avn_bottom_item{
+  height: 3.8em;
+  background: white;
+  .nightColors();
+}
+@bottomBaseFont: 0.71em;
+@bottomSmallFont: 1em;
+@bottomBigFont: 3em;
+
+
+
 
 #avi_nav_bottom{
   bottom: 0;
@@ -313,24 +339,21 @@ html,body {
   right: 0;
 }
 
+.avn_bottom_2rows{
+  max-height: 8em; //2xbottom_item
+}
+.avn_bottom_1rows{
+  max-height: 4em; //1xbottom_item
+}
 
 
 #leftBottomMarker{
   float: left;
   width: 50%;
-  font-size: @bottomBaseFont;
+  //font-size: @bottomBaseFont;
 }
 
 
-#leftBottomMarkerPos{
-	width: @wLeftBottomMarkerPos;
-	.bottomhidesmall();
-
-}
-#leftBottomMarker #leftBottomMarkerEta{
-    width: @wLeftBottomMarkerEta;
-    .bottomhideverysmall();
-}
 #leftBottomMarker .avd_markerEta{
   font-size: @bottomSmallFont;
   margin-top: 0.55em;
@@ -345,18 +368,17 @@ html,body {
 #leftBottomMarker .avd_markerPosition{
   font-size: @bottomSmallFont;
   margin-top: 0.55em;
+  text-align: center;
 }
 
 #leftBottomMarker .avd_markerCourse{
   font-size: @bottomBigFont;
-  width: @wLeftBottomBearing;
   text-align: end;
   padding-right: 0.1em;
 
 }
 #leftBottomMarker .avd_markerDistance{
   font-size: @bottomBigFont;
-  width: @wLeftBottomMarkerDistance;
   text-align: end;
 
 }
@@ -364,62 +386,39 @@ html,body {
 #leftBottomPosition{
   float: left;
   width: 50%;
-  font-size: @bottomBaseFont;
+  //font-size: @bottomBaseFont;
 }
 
-#leftBottomPositionPos{
-	width: @wLeftBottomPosition;
-    .bottomhidesmall();
-}
-#leftBottomPositionStatus{
-	width: @wLeftBottomStatus;
-    .bottomhideverysmall();
-}
+
 #leftBottomPositionStatusImage{
   text-align: center;
 }
 #boatPositionStatus{
-  width: (@bottomPanelHeight/2 );
-  height: (@bottomPanelHeight/2);
+  width: 1.8em;
+  height: 1.8em;
 }
 
-#boatPosition{
+#leftBottomPosition .avd_gpsPosition{
   font-size: @bottomSmallFont;
   margin-top: 0.55em;
-
+  text-align: center;
 }
 #leftBottomPosition .avd_gpsTime{
-	font-size: @bottomSmallFont;
+  font-size: @bottomSmallFont;
+  text-align: center;
 
 }
 #leftBottomPosition .avd_gpsCourse{
   font-size: @bottomBigFont;
-  width: @wLeftBottomCourse;
   text-align: end;
   padding-right: 0.1em;
 
 }
 #leftBottomPosition .avd_gpsSpeed{
   font-size: @bottomBigFont;
-  width: @wLeftBottomSpeed;
   text-align: end;
 }
 
-.avn_widgetInfo{
-  font-size: @bottomBaseFont;
-  position: absolute;
-  top: 0;
-  opacity: 0.7;
-}
-
-.avn_widgetInfoRight{
-  .avn_widgetInfo();
-  right: 0.2em;
-}
-.avn_widgetInfoLeft{
-  .avn_widgetInfo();
-  left: 0.2em;
-}
 
 
 /*-------------------------------------------------------------
@@ -607,7 +606,6 @@ html,body {
 #avi_navLeftContainer{
   position: absolute;
   left: 0;
-  font-size: ( @aisPanelWidth /8);
   background-color: #BFBFBF;
   z-index: 10;
   @media(max-width: @checkTiny){
