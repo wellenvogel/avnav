@@ -287,7 +287,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         if (layers.length > 0) {
             var view = this.getView();
             var lext=layers[0].avnavOptions.extent;
-            if (lext !== undefined) view.fitExtent(lext, this.olmap.getSize());
+            if (lext !== undefined) view.fit(lext, this.olmap.getSize());
             view.setZoom(this.minzoom);
             this.center=this.pointFromMap(view.getCenter());
             this.zoom=view.getZoom();
@@ -584,6 +584,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 var z = zxy[0];
                 var x = zxy[1];
                 var y = zxy[2];
+                y=-y-1; //change for ol3-151 - commit af319c259b349c86a4d164c42cc4eb5884f896fb
 
                 if (rt.zoomLayerBoundings) {
                     var found = false;
@@ -610,7 +611,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                     var origin=[-20037508.342789244,-20037508.342789244]; //unfortunately the ol3 stuff does not export this...
                     var resolution = grid.getResolution(z);
                     var tileSize = grid.getTileSize(z);
-                    y = (1 << z) - y - 1
+                    y = (1 << z) - y - 1;
                     var minX = origin[0] + x * tileSize * resolution;
                     var minY = origin[1] + y * tileSize * resolution;
                     var maxX = minX + tileSize * resolution;
