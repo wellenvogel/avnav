@@ -60,18 +60,7 @@ avnav.gui.Navpage=function(){
      * @type {avnav.util.Formatter}
      */
     this.formatter=new avnav.util.Formatter();
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
-       self.navEvent(evdata);
-    });
-    $(document).on(avnav.map.MapEvent.EVENT_TYPE, function(ev,evdata){
-        self.mapEvent(evdata);
-    });
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
-        self.updateMainPanelSize('#'+self.mapdom);
-    });
-    $(window).on('resize',function(){
-       self.updateLayout();
-    });
+
 
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
@@ -224,6 +213,18 @@ avnav.gui.Navpage.prototype.localInit=function(){
     });
     $('#avi_routeDisplay').click({page:this},function(ev){
         self.gui.showPage("wpinfopage",{wp:self.navobject.getRoutingHandler().getCurrentLegTarget()});
+    });
+    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+        self.navEvent(evdata);
+    });
+    $(document).on(avnav.map.MapEvent.EVENT_TYPE, function(ev,evdata){
+        self.mapEvent(evdata);
+    });
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
+        self.updateMainPanelSize('#'+self.mapdom);
+    });
+    $(window).on('resize',function(){
+        self.updateLayout();
     });
 
 };
