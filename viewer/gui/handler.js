@@ -122,8 +122,8 @@ avnav.gui.Handler.prototype.removeActiveInput = function (id) {
     //if we now removed focus from any input, we could resize
     //if the window size has changed
     //we delay a bit to give the on screen keyboard a chance to disappear
-    if (Object.keys(this.activeInputs).length == 0) {
-        setTimeout(function () {
+    setTimeout(function () {
+        if (Object.keys(self.activeInputs).length == 0) {
             var ch = $(window).height();
             var cw = $(window).width();
             if (ch != self.lasth || cw != self.lastw) {
@@ -132,8 +132,9 @@ avnav.gui.Handler.prototype.removeActiveInput = function (id) {
                 self.properties.updateLayout();
                 $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE, new avnav.util.PropertyChangeEvent(self.properties));
             }
-        }, 1000);
-    }
+        }
+    }, 1000);
+
 };
 
 avnav.gui.Handler.prototype.removeAllActiveInputs = function () {
