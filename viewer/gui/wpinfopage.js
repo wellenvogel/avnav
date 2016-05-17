@@ -124,6 +124,8 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
     else {
         this.selectOnPage('.avb_NavGoto').show();
     }
+    if (route) this.selectOnPage(".avn_RouteInfo").show();
+    else this.selectOnPage(".avn_RouteInfo").hide();
     if (isTarget && nextWp){
         formattedData.nextName=nextWp.name;
         var nextLeg=avnav.nav.NavCompute.computeLegInfo(nextWp,gps,undefined);
