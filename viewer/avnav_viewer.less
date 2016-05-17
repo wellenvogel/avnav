@@ -426,6 +426,9 @@ html,body {
 #avi_route_info_navpage .avn_route_info_name{
   opacity: 0.6;
   display: inline-block;
+  max-width: 6.7em;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 /* we edit the current route */
@@ -475,7 +478,9 @@ html,body {
   padding-top: 0.1em;
   margin-bottom: 5px;
   padding-bottom: 0.1em;
+  position: relative;
 }
+
 .avn_route_info_active_point{
     background-color: @routeApproachingColor !important;
 }
@@ -484,7 +489,10 @@ html,body {
 }
 
 #avi_route_info_list .avn_route_info_active_point .avn_more{
-  display:inline-block;
+  display:block;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 //no margin at last display of route head
@@ -1005,7 +1013,7 @@ button.avb_DownloadPageUploadCancel{
 }
 
 #avi_ais_page_inner{
-
+  font-size: 1.2em;
 }
 
 .avn_ais_headline_elem{
@@ -1578,8 +1586,9 @@ button.avb_SettingsAndroid{
 
 
 #avi_mainpage_inner_content {
-	width: 100%;
-	height: 100%;
+  width: 100%;
+  height: 100%;
+  font-size: 1.2em;
 }
 
 #avi_mainpage_link{
