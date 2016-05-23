@@ -71,6 +71,33 @@ avnav.gui.Page.prototype.selectOnPage=function(selector){
     return this.getDiv().find(selector);
 };
 
+/**
+ * show an element on the page
+ * @param selector
+ * @param cssclass ndefaults to inline-block
+ * @returns {*}
+ */
+avnav.gui.Page.prototype.show=function(selector,cssclass){
+    return this.selectOnPage(selector).css('display',cssclass?cssclass:"inline-block");
+};
+/**
+ * show an element on the page, css block
+ * @param selector
+ * @returns {*}
+ */
+avnav.gui.Page.prototype.showBlock=function(selector){
+    return this.selectOnPage(selector).css('display','block');
+};
+
+/**
+ * hide an element on the page
+ * @param selector
+ * @returns {*}
+ */
+avnav.gui.Page.prototype.hide=function(selector){
+    return this.selectOnPage(selector).hide();
+};
+
 
 /**
  * check if the page is visible

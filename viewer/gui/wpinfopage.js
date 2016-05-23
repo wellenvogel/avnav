@@ -78,7 +78,7 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
     if (this.newWp){
         this.selectOnPage('.avn_normalHeading').hide();
         this.selectOnPage('.avn_newHeading').show();
-        this.selectOnPage('.avb_Ok').show();
+        this.showBlock('.avb_Ok');
     }
     else{
         this.selectOnPage('.avn_normalHeading').show();
@@ -110,9 +110,9 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
         }
     }
     if (route ){
-        this.selectOnPage('.avb_ShowRoutePanel').show();
-        this.selectOnPage('.avb_Forward').show();
-        this.selectOnPage('.avb_Back').show();
+        this.showBlock('.avb_ShowRoutePanel');
+        this.showBlock('.avb_Forward');
+        this.showBlock('.avb_Back');
     }else {
         this.selectOnPage('.avb_ShowRoutePanel').hide();
         this.selectOnPage('.avb_Forward').hide();
@@ -122,7 +122,7 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
         this.selectOnPage('.avb_NavGoto').hide();
     }
     else {
-        this.selectOnPage('.avb_NavGoto').show();
+        this.showBlock('.avb_NavGoto');
     }
     if (route) this.selectOnPage(".avn_RouteInfo").show();
     else this.selectOnPage(".avn_RouteInfo").hide();
@@ -135,7 +135,7 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
             formattedData["next"+k]=nextFormatted[k];
         }
         this.selectOnPage(".avn_NextLeg").show();
-        this.selectOnPage(".avb_NavNext").show();
+        this.showBlock(".avb_NavNext");
     }
     else{
         this.selectOnPage(".avn_NextLeg").hide();
@@ -169,7 +169,7 @@ avnav.gui.WpInfoPage.prototype.fillData=function(initial){
     }
     var markerLock=this._router.getLock();
     if (!markerLock) this.selectOnPage('.avb_StopNav').hide();
-    else this.selectOnPage('.avb_StopNav').show();
+    else this.showBlock('.avb_StopNav');
     this.handleToggleButton('.avb_StopNav',markerLock);
 };
 
