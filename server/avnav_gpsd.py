@@ -216,6 +216,15 @@ class GpsdReader(threading.Thread):
     self.port=port
     self.infoHandler=infoHandler
     self.errorHandler=errorHandler
+    self.stop=False
+    self.session=None
+  def doStop(self):
+    self.stop=True
+    try:
+      if self.session is not None:
+        self.session.close()
+    except:
+      pass
   def run(self):
     infoName=self.name
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.name))
@@ -230,17 +239,26 @@ class GpsdReader(threading.Thread):
       while timeout > 0 and not connected:
         timeout-=1
         try:
-          session=gps.gps(port=self.port)
+          self.session=gps.gps(port=self.port)
           connected=True
         except:
           AVNLog.debug("gpsd reader open comm exception %s %s",traceback.format_exc(),("retrying" if timeout > 1 else ""))
           time.sleep(1)
+      if self.stop:
+        self.infoHandler.deleteInfo(infoName)
+        AVNLog.info("stopping gpsd reader")
+        return
       if not connected:
         raise Exception("unable to connect to gpsd within 10s")    
-      session.stream(gps.WATCH_ENABLE)
+      self.session.stream(gps.WATCH_ENABLE)
       hasNMEA=False
       self.infoHandler.setInfo(infoName,"start receiving",AVNWorker.Status.STARTED)
-      for report in session:
+      for report in self.session:
+        if (self.stop):
+          AVNLog.info("stopping gpsd reader")
+          self.infoHandler.deleteInfo(infoName)
+          self.session.close()
+          return
         AVNLog.debug("received gps data : %s",pprint.pformat(report))
         self.lasttime=time.time()
         #gpsd has an extremly broken interface - it has a dictwrapper that not really can act as a dict
@@ -255,6 +273,13 @@ class GpsdReader(threading.Thread):
           if not hasNMEA:
             self.infoHandler.setInfo(infoName,"receiving NMEA",AVNWorker.Status.NMEA)
             hasNMEA=True
+      if self.stop:
+        try:
+          AVNLog.info("stopping gpsd reader")
+          self.infoHandler.deleteInfo(infoName)
+          self.session.close()
+        except:
+          pass
     except:
       AVNLog.debug("gpsd reader exception %s",traceback.format_exc())
       pass
@@ -478,6 +503,7 @@ class AVNGpsdFeeder(AVNGpsd):
           except:
             pass
           time.sleep(self.getIntParam('timeout')/2)
+          reader.doStop()
           continue
         AVNLog.info("started gpsd with pid %d",self.gpsdproc.pid)
         self.setInfo('main', "gpsd running with command %s"%(gpsdcommand), AVNWorker.Status.RUNNING)
@@ -487,4 +513,9 @@ class AVNGpsdFeeder(AVNGpsd):
           self.gpsdproc.poll()
           if not self.gpsdproc.returncode is None:
             AVNLog.warn("gpsd terminated unexpectedly, retrying")
+            try:
+              self.gpsdproc.kill()
+            except:
+              pass
+            reader.doStop()
             break
