@@ -145,7 +145,12 @@ class AVNNavData():
       navEntry.timestamp=AVNUtil.utcnow()
     AVNLog.ld("AVNNavData add entry",navEntry)
     if navEntry.data['class'] == 'AIS':
-      if self.ownMMSI != '' and self.ownMMSI == navEntry.data['mmsi']:
+      mmsi=None
+      try:
+        mmsi=str(navEntry.data['mmsi'])
+      except:
+        pass
+      if self.ownMMSI != '' and mmsi is not None and self.ownMMSI == mmsi:
           AVNLog.debug("omitting own AIS message mmsi %s",self.ownMMSI)
           return
     self.listLock.acquire()
