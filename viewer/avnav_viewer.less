@@ -1,7 +1,9 @@
 
 //variables will be overwritten by properties!
 @aisPanelWidth:90px;
-@buttonSize: 60px;
+@buttonSize: 4em;
+@normalButtonFont: 14px;
+@smallButtonFont: 7px;
 
 @checkTiny: 480px;
 @widgetFontSize: 14px;
@@ -36,15 +38,32 @@
 /*-------------------------------------------------------------
    buttons
 -------------------------------------------------------------*/
+.avn_AllButtons{
+  margin: 0.2em 0.2em 0.2em 0.2em;
+  border-top-right-radius: 0.3em;
+  border-top-left-radius: 0.3em;
+  border-bottom-right-radius: 0.3em;
+  border-bottom-left-radius: 0.3em;
+  border: 1px solid #D3D3D3;
+  width: 4em;
+  height: 4em;
+  display: block;
+}
+.avn_button{
+  .avn_AllButtons();
+  font-size: @normalButtonFont;
+}
+.avn_smallButton{
+  .avn_AllButtons();
+  font-size: @smallButtonFont;
+}
 
-.avn_button_base(@bWitdh:@buttonSize,@bSize:@buttonSize){
-  width: @bWitdh;
-  height: @bSize;
-  margin: 3px 3px 3px 3px;
-  border-top-right-radius: 4px;
-  border-top-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  border-bottom-left-radius: 4px;
+.avn_button_base(){
+  margin: 0.2em 0.2em 0.2em 0.2em;
+  border-top-right-radius: 0.3em;
+  border-top-left-radius: 0.3em;
+  border-bottom-right-radius: 0.3em;
+  border-bottom-left-radius: 0.3em;
   border: 1px solid #D3D3D3;
   background: fade(#E6E6E6,@nightModePercent);
   //position: relative;
@@ -79,8 +98,8 @@ button.avn_buttonInactive{
 }
 
 
-.avn_button_icon_base(@icon,@size: @buttonSize ){
-  .avn_button_base(@size,@size);
+.avn_button_icon_base(@icon){
+  .avn_button_base();
   background-image: url(@icon);
   background-position: center center;
   background-size: 80% 80%;
@@ -846,7 +865,7 @@ button.avb_RoutePageTracks{
   .avn_button_icon_base_toggle('images/icons-new/track.svg');
 }
 .avn_route_btnDelete{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg',@buttonSize *30/60);
+  .avn_button_icon_base('images/icons-new/ic_delete.svg');
   vertical-align: middle;
 }
 .avn_route_btnLoad{
@@ -895,6 +914,8 @@ button.avb_RoutePageTracks{
 
 .avn_download_btnDelete{
   vertical-align: middle;
+  display: inline-block;
+  margin: 1em 1em 1em 1em;
 }
 
 .avn_download_btnDownload{
@@ -908,13 +929,13 @@ button.avb_RoutePageTracks{
   left: 0;
   right: 0;
   bottom: 0;
-  height: (@buttonSize + 20px);
+  //height: (@buttonSize + 20px);
   background-color: lightgrey;
   .nightColors();
 }
 
 #avi_download_page_inner.avn_downloadpage_progress_visible{
-  bottom:(@buttonSize + 20px);
+  //bottom:(@buttonSize + 20px);
 }
 
 
@@ -922,7 +943,7 @@ button.avb_RoutePageTracks{
 #avi_download_progress_display {
   position: absolute;
   left: 20px;
-  right: (@buttonSize + 30px);
+  //right: (@buttonSize + 30px);
   bottom: 15px;
   top:  1.2em;
   border: 1px solid;
@@ -966,10 +987,10 @@ button.avb_DownloadPageTracks{
   .avn_button_icon_base_toggle('images/icons-new/track.svg');
 }
 .avn_download_btnDelete{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg',@buttonSize * 0.6);
+  .avn_button_icon_base('images/icons-new/ic_delete.svg');
 }
 .avn_download_btnDownload{
-  .avn_button_icon_base('images/icons-new/ic_file_download.svg',@buttonSize * 0.6);
+  .avn_button_icon_base('images/icons-new/ic_file_download.svg');
 }
 
 button.avb_DownloadPageUploadCancel{
@@ -1256,10 +1277,10 @@ button.avb_StatusAndroid{
 
 .avn_dialog button{
   .avn_button_base();
-  margin-top: (@buttonSize / 5);
-  margin-left: (@buttonSize / 5);
-  margin-right: (@buttonSize / 10);
-  font-size: ( min(@buttonSize / 3,14px));
+  margin-top: 0.5em;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  font-size: @normalButtonFont;
   padding: 1em;
   width: inherit;
   .nightColors();
@@ -1531,7 +1552,7 @@ button.avb_GpsCancel{
 }
 
 .avn_settings_reset{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg',@buttonSize * 30/60);
+  .avn_button_icon_base('images/icons-new/ic_delete.svg');
   margin-top: 5px;
   margin-left: 20px;
   float:left;
@@ -1666,7 +1687,8 @@ button.avb_MainAndroid{
 	left: 0px;
 	top: 0px;
 	bottom: 0px;
-	right: (@buttonSize + 10 );      
+	//right: (@buttonSize + 10 );
+    right: 80px;
 	overflow: hidden;
 }
   
@@ -1719,7 +1741,6 @@ button.avb_MainAndroid{
 	top: 0px;
 	bottom: 0px;
 	right: 0px;
-	width: ( @buttonSize + 10 );
     background-color: fade(#6D6D6D,@nightModePercent);
 }
 
