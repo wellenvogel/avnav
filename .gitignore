@@ -4,3 +4,5 @@
 /viewer/avnav_combine.js
 *.pyc
 **/.idea/**
+*.iml
+*~
