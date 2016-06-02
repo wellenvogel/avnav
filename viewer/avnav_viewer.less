@@ -34,6 +34,20 @@
   box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
+.flexbox() {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+}
+.flex(@values) {
+  -webkit-box-flex: @values;
+  -moz-box-flex:  @values;
+  -webkit-flex:  @values;
+  -ms-flex:  @values;
+  flex:  @values;
+}
 
 /*-------------------------------------------------------------
    buttons
@@ -931,7 +945,11 @@ button.avb_RoutePageTracks{
   bottom: 0;
   //height: (@buttonSize + 20px);
   background-color: lightgrey;
+  .flexbox();
   .nightColors();
+}
+#avi_download_progress_container{
+  .flex(1);
 }
 
 #avi_download_page_inner.avn_downloadpage_progress_visible{
@@ -941,24 +959,20 @@ button.avb_RoutePageTracks{
 
 
 #avi_download_progress_display {
-  position: absolute;
-  left: 20px;
-  //right: (@buttonSize + 30px);
-  bottom: 15px;
-  top:  1.2em;
+  margin: 0.5em 0.5em 0.5em 0.5em;
+  height: 2em;
+  display: block;
   border: 1px solid;
+  margin-left: 1em;
+  margin-bottom: 1em;
+  margin-right: 1em;
 }
 
 #avi_download_progress_info{
-  position: absolute;
-  left:0px;
-  right: 0px;
+  display: block;
   text-align: center;
 }
 .avb_DownloadPageUploadCancel {
-  position: absolute;
-  right: 15px;
-  top: 7px;
 }
 .avn_progress_bar_done{
   height: 100%;
