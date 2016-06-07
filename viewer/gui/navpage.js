@@ -161,10 +161,10 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(){
     var markerLock=this.navobject.getRoutingHandler().getLock()||false;
     this.handleToggleButton('.avb_LockMarker',markerLock);
     if (markerLock || this.routingVisible) this.selectOnPage('.avb_LockMarker').hide();
-    else this.selectOnPage('.avb_LockMarker').show();
+    else this.showBlock('.avb_LockMarker');
     this.handleToggleButton('.avb_StopNav',markerLock);
     if (!markerLock || this.routingVisible) this.selectOnPage('.avb_StopNav').hide();
-    else this.selectOnPage('.avb_StopNav').show();
+    else this.showBlock('.avb_StopNav');
     var gpsLock=this.gui.map.getGpsLock();
     this.handleToggleButton('.avb_LockPos',gpsLock);
     var courseUp=this.gui.map.getCourseUp();
@@ -363,7 +363,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     var upd=false;
     //this.showHideAdditionalPanel('#avi_second_buttons_navpage', true, '#' + this.mapdom);
     var routeActive=this.navobject.getRoutingHandler().hasActiveRoute();
-    this.selectOnPage('.avn_routeBtn').show();
+    this.showBlock('.avn_routeBtn');
     this.selectOnPage('.avn_noRouteBtn').hide();
     if (this.showHideAdditionalPanel('#avi_route_info_navpage', true, '#' + this.mapdom)) upd=true;
     if (upd)this.gui.map.updateSize();
@@ -395,7 +395,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     var upd=false;
     //this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
     this.selectOnPage('.avn_routeBtn').hide();
-    this.selectOnPage('.avn_noRouteBtn').show();
+    this.showBlock('.avn_noRouteBtn');
     if (this.showHideAdditionalPanel('#avi_route_info_navpage', false, '#' + this.mapdom)) upd=true;
     if (upd) this.gui.map.updateSize();
     this.routingVisible=false;
