@@ -288,24 +288,33 @@ def createBoundingsXml(tileset):
   return boundingbox_xml % tileset.getBoundings()
   
 
-def createOverview(layerlist):
+def createTileMapForLayer(layer,name,zOffset,tileSize,zoomBoundings):
+  layerBoundings=""
+  if zoomBoundings is not None:
+    for z in zoomBoundings.keys():
+      zoomBoundingsString=""
+      for e in zoomBoundings[z]:
+        zoomBoundingsString+=zoom_boundings_entry % e
+      layerBoundings+=zoom_boundings_zoom % {'zoom':z,
+                                       'boundings':zoomBoundingsString
+                                       }
+  tilemap=overview_tilemap_xml % {
+            "profile": "zxy-mercator",
+            "title":name,
+            "url":layer.baseurl,
+            "minZoom":layer.minzoom,
+            "maxZoom":layer.maxzoom,
+            "bounding":createBoundingsXml(layer.getBoundingElement(False)),
+            "layerboundings":zoom_boundings%{'boundings':layerBoundings},
+            "tileSize":tileSize,
+            "zoomOffset":'zOffset="%d"'%(zOffset,)
+            }
+  return tilemap
+
+def createOverview(layerlist,zoomBoundings):
   tilemaps=""
   for layer in layerlist:
-    boundings=""
-    for ce in layer.getMaxZoomElements():
-      boundings+=createBoundingsXml(ce)
-    boundstr=boundings_xml % {"boundings": boundings}
-    tilemaps+=overview_tilemap_xml % {
-              "profile": "zxy-mercator",
-              "title":layer.name,
-              "url":layer.baseurl,
-              "minZoom":layer.minzoom,
-              "maxZoom":layer.maxzoom,
-              "bounding":createBoundingsXml(layer.getBoundingElement()),
-              "layerboundings":boundstr,
-              "tileSize":256,
-              "zoomOffset":""
-              }
+    tilemaps+=createTileMapForLayer(layer,layer.name,256,0,zoomBoundings)
   overviewstr=overview_xml % {
               "tilemaps":tilemaps,
                               }
@@ -320,28 +329,11 @@ def createOverviewSingleLayer(layer,zoomBoundings,options):
   tileSize=256
   layerBoundings=""
   numupzoom=upzoom
-  if options.get('upzoom') is not None:
+  if options is not None and options.get('upzoom') is not None:
     numupzoom=options['upzoom']
-  for z in zoomBoundings.keys():
-    zoomBoundingsString=""
-    for e in zoomBoundings[z]:
-      zoomBoundingsString+=zoom_boundings_entry % e
-    layerBoundings+=zoom_boundings_zoom % {'zoom':z,
-                                     'boundings':zoomBoundingsString
-                                     }
-  
   for idx in range(numupzoom+1):
-    tilemaps+=overview_tilemap_xml % {
-              "profile": "zxy-mercator",
-              "title":layer.name if idx == 0 else "%s-%d"%(layer.name,idx),
-              "url":layer.baseurl,
-              "minZoom":layer.minzoom,
-              "maxZoom":layer.maxzoom,
-              "bounding":createBoundingsXml(layer.getBoundingElement(False)),
-              "layerboundings":zoom_boundings%{'boundings':layerBoundings},
-              "tileSize":tileSize,
-              "zoomOffset":'zOffset="%d"'%(zOffset,)
-              }
+    tilemaps+=createTileMapForLayer(layer,layer.name if idx == 0 else "%s-%d"%(layer.name,idx),
+                                    zOffset,tileSize,zoomBoundings)
     zOffset+=1
     tileSize*=2
   overviewstr=overview_xml % {
@@ -350,7 +342,7 @@ def createOverviewSingleLayer(layer,zoomBoundings,options):
   return overviewstr
   
 def writeOverview(overviewfname,layerlist):
-  overviewstr=createOverview(layerlist)
+  overviewstr=createOverview(layerlist,None)
   with open(overviewfname,"w") as f:
     f.write(overviewstr)
   log(overviewfname+" written, successfully finished")
@@ -374,16 +366,31 @@ def getGemfInfo(data,options):
     log("creating multi source gemf overview (%d sources)"%(len(data),))
     for src in data:
       tilegroup=Tilegroup(src['name'])
+      zoomBoundings={}
       for rdata in src['ranges']:
+        zoom=rdata['zoom']
+        entry={"minx":rdata['xmin'],
+             "miny": rdata['ymin'],
+             "maxx":rdata['xmax'],
+             "maxy":rdata['ymax']}
+        if zoomBoundings.get(zoom) is None:
+          zoomBoundings[zoom]=[]
+        zoomBoundings[zoom].append(entry)
         tileset=Tileset("gemfrange",rdata['zoom'],rdata['xmin'],rdata['ymin'],rdata['xmax'],rdata['ymax'])
         tilegroup.addElement(tileset)
       layer=Layer(src['name'],tilegroup.minzoom,tilegroup.maxzoom,src['name'])
       layer.addEntry(tilegroup)
-      layerlist.append(layer)
+      layerlist.append({'layer':layer,'zoomBoundings':zoomBoundings})
     #sort layerlist (srclist) by maxzoom
-    layerlist.sort(key=lambda x: x.maxzoom,reverse=True)
-    rt=createOverview(layerlist)
-    return rt
+    layerlist.sort(key=lambda x: x['layer'].maxzoom,reverse=True)
+    tilemaps=""
+    for l in layerlist:
+      layer=l['layer']
+      zoomBoundings=l['zoomBoundings']
+      tilemaps+=createTileMapForLayer(layer,layer.name,0,256,zoomBoundings)
+    return overview_xml % {
+              "tilemaps":tilemaps,
+                              }
   else:
     #single layer
     log("creating single source gemf overview")
@@ -418,7 +425,7 @@ def parseXml(xmlfile,baseurl=""):
         layer.baseurl=baseurl
     log("created %d layers from %s"%(len(layerlist),xmlfile))
     layerlist.sort(key=lambda x: x.maxzoom,reverse=True)
-    return createOverview(layerlist)
+    return createOverview(layerlist,None)
   else:
     log("empty layerlist for %s"%(xmlfile,))
     return None
