@@ -1696,13 +1696,25 @@ button.avb_MainAndroid{
 /*------------------------------------------------------------------------------- 
 	element positioning
   -------------------------------------------------------------------------------
-	1. left panel */
+*/
+.avn_page{
+  .flexbox();
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+	/*1. left panel */
 .avn_left_panel{
+  .flex(1);
+  .flexbox(); //seems to be necessary for old WebKit
+  position: relative;
+  /*
 	left: 0px;
 	top: 0px;
 	bottom: 0px;
 	//right: (@buttonSize + 10 );
     right: 80px;
+    */
 	overflow: hidden;
 }
   
@@ -1752,9 +1764,13 @@ button.avb_MainAndroid{
 */
 
 .avn_right_panel{
+  display: block;
+  position: relative;
+  /*
 	top: 0px;
 	bottom: 0px;
 	right: 0px;
+	*/
     background-color: fade(#6D6D6D,@nightModePercent);
 }
 
