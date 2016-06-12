@@ -104,7 +104,7 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
         var html='<div class=""><div class="avn_color_label" >'+descr.label+'</div>';
         html+='<div class="avn_color_out avn_out">'+value+'</div>';
         html+='<input type="color" class="avn_color avn_setting" avn_name="'+descr.completeName+'"/>';
-        html+='<button class="avn_settings_reset"></button>';
+        html+='<button class="avn_settings_reset avn_smallButton"></button>';
         html+='<div class="avn_clear"/>';
         html+='</div>';
         this.allItems[descr.completeName]= {

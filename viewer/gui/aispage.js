@@ -55,22 +55,13 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
     var hasTracking=this.aishandler.getTrackedTarget();
     for( var aisidx in aisList){
         var ais=aisList[aisidx];
-        var addClass='';
-        if (ais.warning) addClass='avn_ais_warning';
-        else {
-            if (hasTracking){
-                if (ais.tracking) addClass='avn_ais_selected';
-                else {
-                    if (ais.nearest) addClass='avn_ais_info_first';
-                    else addClass='avn_ais_info_normal';
-                }
-            }
-            else {
-                if (ais.nearest) addClass='avn_ais_info_first';
-                else addClass='avn_ais_info_normal';
-            }
-        }
-        html+='<tr class="avn_ais '+addClass+' avn_ais_selector" mmsi="'+ais['mmsi']+'">';
+        var color=this.gui.properties.getAisColor({
+            nearest: ais.nearest,
+            warning: ais.warning,
+            tracking: hasTracking && ais.tracking
+        });
+
+        html+='<tr class="avn_ais avn_ais_selector" style="background-color:'+color+'" mmsi="'+ais['mmsi']+'">';
         for (var p in formatter){
             html+='<td class="avn_aisparam">'+formatter[p].format(ais)+'</td>';
         }
@@ -95,7 +86,7 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         $(domid).scrollTop(0);
         var topDom=$(domid+' .avn_ais_selected');
         var topElement;
-        if (! topDom)topDom=$(domid+' .avn_ais_warning');
+        if (! topDom)topDom=$(domid+' .avn_ais__info_warning');
         if (topDom) topElement=$(topDom).position();
         if (topElement){
             var scrollTop=topElement.top - $('.avn_ais_headline').height();

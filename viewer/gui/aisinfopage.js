@@ -65,20 +65,11 @@ avnav.gui.AisInfoPage.prototype.fillData=function(initial){
         this.returnToLast();
         return;
     }
-    if (currentObject.warning){
-        this.selectOnPage(this.statusItem).addClass('avn_ais_warning');
-    }
-    else{
-        this.selectOnPage(this.statusItem).removeClass('avn_ais_warning');
-        if (currentObject.nearest){
-            this.selectOnPage(this.statusItem).removeClass('avn_ais_info_normal');
-            this.selectOnPage(this.statusItem).addClass('avn_ais_info_first');
-        }
-        else{
-            this.selectOnPage(this.statusItem).addClass('avn_ais_info_normal');
-            this.selectOnPage(this.statusItem).removeClass('avn_ais_info_first');
-        }
-    }
+    var color=this.gui.properties.getAisColor({
+        warning: currentObject.warning,
+        nearest: currentObject.nearest
+    });
+    $(this.statusItem).css('background-color',color);
 
     var self=this;
     this.selectOnPage(".avn_infopage_inner").show();

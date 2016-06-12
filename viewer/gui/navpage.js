@@ -260,24 +260,12 @@ avnav.gui.Navpage.prototype.updateAisPanel=function() {
     if (!this.gui.properties.getProperties().layers.ais) return;
     var nearestTarget = this.navobject.getAisHandler().getNearestAisTarget();
     if (nearestTarget.mmsi) {
-        var displayClass = "avn_ais_info_first";
-        var warningClass = "avn_ais_info_warning";
-        var normalClass = 'avn_ais_info_normal';
-        $('#avi_aisInfo').addClass(normalClass);
         $('#avi_aisInfo').attr('data-aismmsi', nearestTarget.mmsi);
-        if (!nearestTarget.warning) {
-            $('#avi_aisInfo').removeClass(warningClass);
-            if (nearestTarget.nearest) {
-                $('#avi_aisInfo').addClass(displayClass);
-                $('#avi_aisInfo').removeClass(normalClass);
-            }
-            else $('#avi_aisInfo').removeClass(displayClass);
-        }
-        else {
-            $('#avi_aisInfo').addClass(warningClass);
-            $('#avi_aisInfo').removeClass(displayClass);
-            $('#avi_aisInfo').removeClass(normalClass);
-        }
+        var color=this.gui.properties.getAisColor({
+            warning: nearestTarget.warning,
+            nearest: nearestTarget.nearest
+        });
+        $('#avi_aisInfo').css('background-color',color);
     }
     if (nearestTarget.mmsi && ! this.routingVisible) {
         $('#avi_aisInfo').show();

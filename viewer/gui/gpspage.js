@@ -184,23 +184,20 @@ avnav.gui.Gpspage.prototype.navEvent=function(evt){
     var canvas=$('#avi_gpsp_xte')[0];
     this.drawXte(canvas.getContext("2d"));
     var nearestTarget = this.navobject.getAisHandler().getNearestAisTarget();
+    var color="";
     if (this.gui.properties.getProperties().layers.ais && nearestTarget.cpa ){
         var txt="CPA: "+this.navobject.getValue('aisCpa')+"nm&nbsp;TCPA: "+this.navobject.getValue('aisTcpa');
         $('#avi_gpsp_ais').html(txt);
-        if (nearestTarget.warning){
-            $('#avi_gpsp_ais_status').removeClass('avn_ais_info_first');
-            $('#avi_gpsp_ais_status').addClass('avn_ais_info_warning');
-        }
-        else {
-            $('#avi_gpsp_ais_status').addClass('avn_ais_info_first');
-            $('#avi_gpsp_ais_status').removeClass('avn_ais_info_warning');
-        }
+        color=this.gui.properties.getAisColor({
+            nearest: true,
+            warning: nearestTarget.warning
+        });
     }
     else {
         $('#avi_gpsp_ais').text("");
-        $('#avi_gpsp_ais_status').removeClass('avn_ais_info_first');
-        $('#avi_gpsp_ais_status').removeClass('avn_ais_info_warning');
+        color="";
     }
+    $('#avi_gpsp_ais_status').css('background-color',color);
 
 };
 
