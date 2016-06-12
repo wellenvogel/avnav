@@ -239,26 +239,31 @@ avnav.util.PropertyHandler.prototype.updateLayout=function(){
     var scale=buttonHeight/currentButtonHeight;
     if (scale > 1) scale=1;
     if (vars){
-        var lessparam={};
         //we rely on exactly one level below style
         for (var k in vars){
             var val=this.getValue(vars[k]);
             if (k == "buttonSize"){
-                //if (val > buttonHeight) val=Math.ceil(buttonHeight);
-            }
-            if (vars[k].type == avnav.util.PropertyType.RANGE) {
-                if (k != "nightMode") val=scale*val;
-                lessparam['@' + k] = "" + Math.ceil(val) + "px";
-            }
-            if (vars[k].type == avnav.util.PropertyType.COLOR) {
-                lessparam['@' + k] = "" + val;
+                if (val > buttonHeight) val=Math.ceil(buttonHeight);
+                var fontSize=val/4 ; //must match the settings in less
+                $(".avn_button").css('font-size',fontSize+"px");
+                $(".avn_dialog button").css('font-size',fontSize+"px");
             }
 
         }
-        //less.modifyVars(lessparam);
+    }
+    var nval = this.getValue(this.propertyDescriptions.nightMode);
+    if (!nval) {
+        $('html').removeClass('nightMode');
+        $('body').css('opacity', '1');
+    }
+    else {
+        $('html').addClass('nightMode');
+        $('body').css('opacity', this.getValue(this.propertyDescriptions.nightFade)/100)
     }
     //set the font sizes
-    $('body').css('font-size',this.getValue(this.propertyDescriptions.baseFontSize)+"px");
+    var baseFontSize=this.getValue(this.propertyDescriptions.baseFontSize);
+    $('body').css('font-size',baseFontSize+"px");
+    $(".avn_smallButton").css('font-size',baseFontSize+"px");
     $('.avn_widgetContainer').css('font-size',this.getValue(this.propertyDescriptions.widgetFontSize)+"px");
 };
 /**

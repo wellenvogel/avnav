@@ -81,7 +81,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     this.fillDisplayFromGps();
     var newMap=false;
     var brightness=1;
-    if (this.gui.properties.getProperties().style.nightMode < 100) {
+    if (this.gui.properties.getProperties().nightMode) {
         brightness=this.gui.properties.getProperties().nightChartFade/100;
     }
     this.buttonUpdate();

@@ -123,14 +123,14 @@ var propertyDefinitions=function(){
             NMEA: new avnav.util.Property(    "images/GreenBubble40.png"),
             ERROR: new avnav.util.Property(   "images/RedBubble40.png")
         },
-        nightFade:new avnav.util.Property( 15,"NightDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in px
+        nightFade:new avnav.util.Property( 50,"NightDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in px
         nightChartFade:new avnav.util.Property( 30,"NightChartDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in %
         baseFontSize:new avnav.util.Property( 14,"Base Font(px)",avnav.util.PropertyType.RANGE,[8,28]),
         widgetFontSize:new avnav.util.Property( 16,"Widget Base Font(px)",avnav.util.PropertyType.RANGE,[8,28]),
         allowTwoWidgetRows:new avnav.util.Property(true,"2 widget rows",avnav.util.PropertyType.CHECKBOX),
+        nightMode: new avnav.util.Property( 100,"NightMode",avnav.util.PropertyType.CHECKBOX),
         //all style members map to less variables
         style:{
-            nightMode: new avnav.util.Property( 100,"NightMode",avnav.util.PropertyType.RANGE,[0,100]),
             buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[35,100]),
             aisWarningColor: new avnav.util.Property( "#FA584A","Warning",avnav.util.PropertyType.COLOR),
             aisNormalColor: new avnav.util.Property( "#EBEB55","Normal",avnav.util.PropertyType.COLOR),

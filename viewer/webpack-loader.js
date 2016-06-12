@@ -32,21 +32,6 @@
 (function () {
     var i, pair;
 
-    var href = window.location.href, start, end, paramsString, pairs,
-        pageParams = {};
-    if (href.indexOf('?') > 0) {
-        start = href.indexOf('?') + 1;
-        end = href.indexOf('#') > 0 ? href.indexOf('#') : href.length;
-        paramsString = href.substring(start, end);
-        pairs = paramsString.split(/[&;]/);
-        for (i = 0; i < pairs.length; ++i) {
-            pair = pairs[i].split('=');
-            if (pair[0]) {
-                pageParams[decodeURIComponent(pair[0])] =
-                    decodeURIComponent(pair[1]);
-            }
-        }
-    }
     var scripts = [
         'libraries/jquery-1.11.0.min.js',
         'libraries/geo.js',
@@ -54,27 +39,10 @@
         'libraries/rangeslider.css',
         'libraries/rangeslider.js',
         'libraries/jscolor.js',
+        'libraries/ol.js',
         'avnav_min.js',
         'avnav_viewer.css'
     ];
-    //scripts used in debug mode
-    var debug_scripts = [
-        'libraries/ol-debug.js',
-    ];
-    //scripts in runmode
-    var run_scripts = [
-        'libraries/ol.js',
-    ];
-    var mode="";
-    if ('mode' in pageParams) {
-        mode = pageParams.mode.toLowerCase();
-    }
-    if (mode == "debug"){
-        scripts=scripts.concat(debug_scripts);
-    }
-    else {
-        scripts=scripts.concat(run_scripts);
-    }
     for (i in scripts) {
         var scriptname = scripts[i];
         if (scriptname.match(/\.css/)){

@@ -88,7 +88,7 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
             numdecimal=range[3];
         }
         html+='/></div>';
-        html+='<button class="avn_settings_reset"></button>';
+        html+='<button class="avn_settings_reset avn_smallButton"></button>';
         html+='<div class="avn_clear"/>';
         html+='</div>';
         this.allItems[descr.completeName]= {

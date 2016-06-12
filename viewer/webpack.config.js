@@ -23,6 +23,7 @@ var images=[
     'Chart60.png',
     'GreyBubble40.png',
     'GreenBubble40.png',
+    'YellowBubble40.png',
     'RedBubble40.png',
     'Boat1.png',
     'Marker2.png',
@@ -35,10 +36,10 @@ images.forEach(function(el){
    copyList.push({from: "./images/"+el,to:'images'});
 });
 if (process.env.NODE_ENV === 'production') {
-    copyList.push({from: '../libraries/ol3151/ol.js', to:'libraries'})
+    copyList.push({from: '../libraries/ol3151/ol.js', to:'libraries/ol.js'})
 }
 else{
-    copyList.push({from: '../libraries/ol3151/ol-debug.js', to: 'libraries'})
+    copyList.push({from: '../libraries/ol3151/ol-debug.js', to: 'libraries/ol.js'})
 }
 var devtool="eval";
 if (process.env.NODE_ENV === 'production') {
