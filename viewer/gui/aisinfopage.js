@@ -103,16 +103,16 @@ avnav.gui.AisInfoPage.prototype.btnAisInfoNearest=function (button,ev){
     var pos=this.aishandler.getAisPositionByMmsi(this.aishandler.getTrackedTarget());
     if (pos)this.gui.map.setCenter(pos);
     this.returnToLast();
-    log("Nearest clicked");
+    avnav.log("Nearest clicked");
 };
 
 avnav.gui.AisInfoPage.prototype.btnAisInfoList=function (button,ev){
-    log("List clicked");
+    avnav.log("List clicked");
     this.aishandler.setTrackedTarget(this.mmsi);
     this.gui.showPage('aispage',{skipHistory:true});
 };
 avnav.gui.AisInfoPage.prototype.btnAisInfoLocate=function (button,ev){
-    log("Locate clicked");
+    avnav.log("Locate clicked");
     if (this.mmsi === undefined) return;
     var pos=this.aishandler.getAisPositionByMmsi(this.mmsi);
     if (pos)this.gui.map.setCenter(pos);

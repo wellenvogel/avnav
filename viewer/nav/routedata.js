@@ -40,7 +40,7 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
             this.currentLeg.fromJsonString(raw);
         }
     }catch(e){
-        log("Exception reading currentLeg "+e);
+        avnav.log("Exception reading currentLeg "+e);
     }
     if (this.currentLeg.name && ! this.currentLeg.currentRoute){
         //migrate from old stuff
@@ -56,13 +56,13 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
     if (avnav.android){
         var data=avnav.android.getLeg();
         if (data && data != ""){
-            log("android: get leg from server");
+            avnav.log("android: get leg from server");
             try {
                 var nLeg = new avnav.nav.Leg();
                 nLeg.fromJsonString(data);
                 this.currentLeg=nLeg;
             }catch (e){
-                log("unable to get leg from server");
+                avnav.log("unable to get leg from server");
             }
         }
     }
@@ -317,7 +317,7 @@ avnav.nav.RouteData.prototype.changeRouteName=function(name,setLocal){
         return;
     }
     this.editingRoute.setName(name);
-    log("switch to new route "+name);
+    avnav.log("switch to new route "+name);
     if (setLocal) this.editingRoute.server=false;
     this._saveChanges(this.editingRoute.name);
 };
@@ -872,12 +872,12 @@ avnav.nav.RouteData.prototype._checkNextWp=function(){
                 if (this.isEditingActiveRoute()) {
                     this.editingWp = nextWp;
                 }
-                log("switching to next WP");
+                avnav.log("switching to next WP");
                 //TODO: should we fire a route event?
             }
             else {
                 this.routeOff();
-                log("end of route reached");
+                avnav.log("end of route reached");
             }
         }
         else{
@@ -1007,7 +1007,7 @@ avnav.nav.RouteData.prototype._remoteRouteOperation=function(operation, param) {
     }
     if(operation=="setroute"){
         if (avnav.android){
-            log("android: setRoute");
+            avnav.log("android: setRoute");
             var status=avnav.android.storeRoute(param.route.toJsonString());
             var jstatus=JSON.parse(status);
             if (jstatus.status == "OK" && param.okcallback){
@@ -1026,7 +1026,7 @@ avnav.nav.RouteData.prototype._remoteRouteOperation=function(operation, param) {
         data=param.route.toJsonString();
     }
     var responseType="json";
-    log("remoteRouteOperation, operation="+operation+", response="+responseType+", type="+type);
+    avnav.log("remoteRouteOperation, operation="+operation+", response="+responseType+", type="+type);
     param.operation=operation;
     $.ajax({
         url: url,
@@ -1038,7 +1038,7 @@ avnav.nav.RouteData.prototype._remoteRouteOperation=function(operation, param) {
         success: function (data, status) {
             if (responseType == "json" && data.status && data.status != "OK") {
                 //seems to be some error
-                log("query route error: " + data.status);
+                avnav.log("query route error: " + data.status);
                 if (param.errorcallback){
                     param.errorcallback(data.status,param);
                 }
@@ -1046,17 +1046,17 @@ avnav.nav.RouteData.prototype._remoteRouteOperation=function(operation, param) {
             }
             if (param.okcallback) {
                 if (responseType=="text" && operation=="getroute"){
-                    log("convert route from xml: "+data);
+                    avnav.log("convert route from xml: "+data);
                     var route=new avnav.nav.Route();
                     route.fromXml(data);
                     data=route.toJson();
-                    log("converted Route: "+route.toJsonString());
+                    avnav.log("converted Route: "+route.toJsonString());
                 }
                 param.okcallback(data, param);
             }
         },
         error: function (status, data, error) {
-            log("query route error");
+            avnav.log("query route error");
             if (param.errorcallback){
                 param.errorcallback(error,param);
             }
@@ -1086,16 +1086,16 @@ avnav.nav.RouteData.prototype._startQuery=function() {
             cache: false,
             success: function (data, status) {
                 var change = self._handleLegResponse(data);
-                log("leg data change=" + change);
+                avnav.log("leg data change=" + change);
                 self.timer = window.setTimeout(function () {
                     self._startQuery();
                 }, timeout);
             },
             error: function (status, data, error) {
-                log("query leg error");
+                avnav.log("query leg error");
                 this.routeErrors++;
                 if (this.routeErrors > 10) {
-                    log("lost route");
+                    avnav.log("lost route");
                     this.serverConnected = false;
                 }
                 self.timer = window.setTimeout(function () {
@@ -1116,7 +1116,7 @@ avnav.nav.RouteData.prototype._startQuery=function() {
                 var nRoute = new avnav.nav.Route();
                 nRoute.fromJson(data);
                 var change = nRoute.differsTo(self.serverRoute)
-                log("route data change=" + change);
+                avnav.log("route data change=" + change);
                 if (change) {
                     self.serverRoute = nRoute;
                     if (!self.isEditingActiveRoute() && self.editingRoute && self.editingRoute.differsTo(self.serverRoute)) {
@@ -1172,7 +1172,7 @@ avnav.nav.RouteData.prototype._loadRoute=function(name){
             raw=localStorage.getItem(this.FALLBACKROUTENAME);
         }
         if (raw) {
-            log("route "+name+" successfully loaded");
+            avnav.log("route "+name+" successfully loaded");
             rt.fromJsonString(raw);
             return rt;
         }
@@ -1227,7 +1227,7 @@ avnav.nav.RouteData.prototype._sendRoute=function(route, opt_callback){
         route:route,
         self:self,
         okcallback:function(data,param){
-            log("route sent to server");
+            avnav.log("route sent to server");
             if (opt_callback)opt_callback(true);
         },
         errorcallback:function(status,param){
@@ -1262,7 +1262,7 @@ avnav.nav.RouteData.prototype._legChanged=function(){
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             success: function(data){
-                log("new leg sent to server");
+                avnav.log("new leg sent to server");
             },
             error: function(errMsg,x) {
                 if (self.propertyHandler.getProperties().routingServerError) alert("unable to send leg to server:" +errMsg);

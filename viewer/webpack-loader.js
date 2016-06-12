@@ -29,8 +29,7 @@
  code is taken from the ol3 examples
  */
 
-(function() {
-
+(function () {
     var i, pair;
 
     var href = window.location.href, start, end, paramsString, pairs,
@@ -48,63 +47,23 @@
             }
         }
     }
-
     var scripts = [
-        '../libraries/jquery/jquery-1.11.0.min.js',
-        '../libraries/movable-type/geo.js',
-        '../libraries/movable-type/latlon.js',
-        '../libraries/less/less-1.7.3.min.js',
-        '../libraries/rangeslider/rangeslider.css',
-        '../libraries/rangeslider/rangeslider.js',
-        '../libraries/jscolor/jscolor.js'
+        'libraries/jquery-1.11.0.min.js',
+        'libraries/geo.js',
+        'libraries/latlon.js',
+        'libraries/rangeslider.css',
+        'libraries/rangeslider.js',
+        'libraries/jscolor.js',
+        'avnav_min.js',
+        'avnav_viewer.css'
     ];
     //scripts used in debug mode
     var debug_scripts = [
-        '../libraries/ol3151/ol-debug.js',
-        //all files have to be collected here (in correct order)
-        //the build script will pick them up between the tags...
-        //STARTFILES
-        'version.js',
-        'base.js',
-        'util/formatter.js',
-        'util/propertyhandler.js',
-        'util/helper.js',
-        'util/overlay.js',
-        'nav/navdata.js',
-        'nav/routeobjects.js',
-        'nav/navcompute.js',
-        'nav/navobject.js',
-        'nav/trackdata.js',
-        'nav/gpsdata.js',
-        'nav/aisdata.js',
-        'nav/routedata.js',
-        'map/drawing.js',
-        'map/mapholder.js',
-        'map/navlayer.js',
-        'map/aislayer.js',
-        'map/tracklayer.js',
-        'map/routelayer.js',
-        'gui/handler.js',
-        'gui/page.js',
-        'gui/mainpage.js',
-        'gui/navpage.js',
-        'gui/aispage.js',
-        'gui/aisinfopage.js',
-        'gui/boatinfopage.js',
-        'gui/wpinfopage.js',
-        'gui/settingspage.js',
-        'gui/statuspage.js',
-        'gui/gpspage.js',
-        'gui/routepage.js',
-        'gui/downloadpage.js',
-        'gui/wpapage.js',
-        'avnav_viewer.js'
-        //ENDFILES
+        'libraries/ol-debug.js',
     ];
     //scripts in runmode
     var run_scripts = [
-        '../libraries/ol3151/ol.js',
-        'avnav_min.js'
+        'libraries/ol.js',
     ];
     var mode="";
     if ('mode' in pageParams) {
@@ -125,7 +84,4 @@
             document.write('<scr' + 'ipt type="text/javascript" src="' + scriptname + '"></scr' + 'ipt>');
         }
     }
-    try {
-        require("./avnav_viewer.js");
-    }catch(e){}
 }());

@@ -131,7 +131,7 @@ avnav.map.AisLayer.prototype.createAllIcons=function(){
  * @param {ol.Coordinate} pixel the css pixel from the event
  */
 avnav.map.AisLayer.prototype.findTarget=function(pixel){
-    log("findAisTarget "+pixel[0]+","+pixel[1]);
+    avnav.log("findAisTarget "+pixel[0]+","+pixel[1]);
     var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
     var idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
     if (idx >=0) return this.pixel[idx].ais;

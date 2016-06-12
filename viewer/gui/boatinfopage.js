@@ -60,11 +60,11 @@ avnav.gui.BoatInfoPage.prototype.hidePage=function(){
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.BoatInfoPage.prototype.btnBoatInfoGps=function (button,ev){
-    log("gps clicked");
+    avnav.log("gps clicked");
     this.gui.showPage('gpspage',{skipHistory:true});
 };
 avnav.gui.BoatInfoPage.prototype.btnBoatInfoLocate=function (button,ev){
-    log("Locate clicked");
+    avnav.log("Locate clicked");
     var gps=this.navobject.getGpsHandler().getGpsData();
     if (gps.valid) this.gui.map.setCenter(gps);
     this.returnToLast();

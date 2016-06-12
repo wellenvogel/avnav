@@ -83,7 +83,7 @@ avnav.nav.TrackData.prototype.handleTrackResponse=function(data){
         now=curgps.rtime;
     }
     var oldest=now.getTime()/1000-maxage;
-    log("removing track data older then "+oldest);
+    avnav.log("removing track data older then "+oldest);
     while (this.currentTrack.length > 0){
         if (this.currentTrack[0].ts > oldest) break;
         this.currentTrack.shift();
@@ -124,14 +124,14 @@ avnav.nav.TrackData.prototype.startQuery=function() {
             }
             self.lastTrackQuery=new Date().getTime();
             self.handleTrackResponse(data);
-            log("trackdatadata");
+            avnav.log("trackdatadata");
             self.handleTrackStatus(true);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
             },timeout);
         },
         error: function(status,data,error){
-            log("query track error");
+            avnav.log("query track error");
             self.handleTrackStatus(false);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
@@ -150,7 +150,7 @@ avnav.nav.TrackData.prototype.handleTrackStatus=function(success){
     if (! success){
         this.trackErrors++;
         if (this.trackErrors > 10){
-            log("lost track");
+            avnav.log("lost track");
             this.trackValid=false;
             //continue to count errrors...
         }

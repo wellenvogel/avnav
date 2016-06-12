@@ -1,10 +1,6 @@
 
 //variables will be overwritten by properties!
-@aisPanelWidth:90px;
-@buttonSize: 4em;
 @normalButtonFont: 14px;
-@smallButtonFont: 7px;
-
 @checkTiny: 480px;
 @widgetFontSize: 14px;
 
@@ -22,7 +18,6 @@
 
 @nightColor: rgba(252, 11, 11, 0.49);
 
-@routeColor: rgba(222, 226, 207, 1);
 
 
 *{
@@ -50,120 +45,145 @@
 }
 
 /*-------------------------------------------------------------
-   buttons
+   night struff
+   night mode is activated by adding .nightMode to the body
 -------------------------------------------------------------*/
-.avn_AllButtons{
-  margin: 0.2em 0.2em 0.2em 0.2em;
-  border-top-right-radius: 0.3em;
-  border-top-left-radius: 0.3em;
-  border-bottom-right-radius: 0.3em;
-  border-bottom-left-radius: 0.3em;
-  border: 1px solid #D3D3D3;
-  width: 4em;
-  height: 4em;
-  display: block;
-}
-.avn_button{
-  .avn_AllButtons();
-  font-size: @normalButtonFont;
-}
-.avn_smallButton{
-  .avn_AllButtons();
-  font-size: @smallButtonFont;
+.nightColors() {
+  .nightMode & {
+    background-color: #000;
+    color: @nightColor;
+  }
 }
 
-.avn_button_base(){
+.nightForeColor(@normal,@night:@nightColor){
+  color: @normal;
+  .nightMode &{
+    color: @night;
+  }
+}
+.nightForeFade(@normal){
+  .nightForeColor(@normal,fade(@normal,@nightModePercent));
+}
+.nightBackColor(@normal,@night:#000){
+  background-color: @normal;
+  .nightMode &{
+    background-color: @night;
+  }
+}
+.nightBackFade(@normal){
+  .nightBackColor(@normal,fade(@normal,@nightModePercent));
+}
+
+.nightBorderColor(@normal,@night){
+  border-color: @normal;
+  .nightMode &{
+    border-color: @night;
+  }
+}
+.nightBorderFade(@normal){
+  .nightBorderColor(@normal,fade(@normal,@nightModePercent));
+}
+
+.nightOPacity() {
+  .nightMode & {
+    opacity: @nightModeValue;
+  }
+}
+.nightOPacity2() {
+  .nightMode & {
+    opacity: min(1,1 - (1 - @nightModeValue)*0.5);
+  }
+}
+
+
+/*-------------------------------------------------------------
+   buttons
+-------------------------------------------------------------*/
+.avn_buttonBase(){
   margin: 0.2em 0.2em 0.2em 0.2em;
   border-top-right-radius: 0.3em;
   border-top-left-radius: 0.3em;
   border-bottom-right-radius: 0.3em;
   border-bottom-left-radius: 0.3em;
-  border: 1px solid #D3D3D3;
-  background: fade(#E6E6E6,@nightModePercent);
+  border: 1px solid;
+  .nightBorderFade(#D3D3D3);
+  .nightBackFade(#E6E6E6);
   //position: relative;
   cursor: pointer;
   outline: none;
 
 }
-button.avn_button{
-  .avn_button_base;
-}
-
-.avn_button:active{
-  border: 2px solid #6B6B6B;
-}
-
-button.avn_toggleButton{
-  .avn_button_base;
-}
-
-button.avn_buttonActive{
-  border: 4px solid #1DB81D !important;
-  .nightOPacity();
-}
-
-button.avn_buttonActiveError{
-  border: 4px solid #EC420C !important;
-  .nightOPacity();
-}
-
-button.avn_buttonInactive{
-  border: 4px solid fade(#E6E6E6,@nightModePercent) !important;
-}
-
-
-.avn_button_icon_base(@icon){
-  .avn_button_base();
-  background-image: url(@icon);
+.avn_AllButtons(){
+  .avn_buttonBase();
   background-position: center center;
   background-size: 80% 80%;
   background-repeat: no-repeat;
   text-decoration: none;
-  .nightOPacity2();
+  border: 1px solid;
+  .nightBorderFade(#D3D3D3);
+  display: block;
+  cursor: pointer;
+  outline: none;
+}
+.avn_button{
+  .avn_AllButtons();
+  width: 4em;
+  height: 4em;
+  font-size: @normalButtonFont;
+}
+.avn_smallButton{
+  .avn_AllButtons();
+  width: 2em;
+  height: 2em;
+  font-size: @normalButtonFont;
 }
 
-.avn_button_icon_base_toggle(@icon ){
-  .avn_button_icon_base(@icon);
+
+.avn_buttonActive{
+  border: 4px solid ;
+  .nightBorderFade(#1DB81D);
+}
+
+.avn_buttonActiveError{
+  border: 4px solid ;
+  .nightBorderFade(#EC420C);
+}
+
+.avn_buttonInactive{
+  border: 4px solid ;
+  .nightBorderFade(#E6E6E6);
+}
+
+
+.avn_iconButton(@icon){
+  background-image: url(@icon);
 }
 
 button.avb_Cancel {
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 
 button.avb_Ok {
-  .avn_button_icon_base('images/icons-new/ic_done.svg');
+  .avn_iconButton('images/icons-new/ic_done.svg');
 
 }
 button.avb_Forward {
-  .avn_button_icon_base('images/icons-new/ic_arrow_forward.svg');
+  .avn_iconButton('images/icons-new/ic_arrow_forward.svg');
 }
 button.avb_Back {
-  .avn_button_icon_base('images/icons-new/ic_arrow_back.svg');
+  .avn_iconButton('images/icons-new/ic_arrow_back.svg');
 }
 button.avb_Edit {
-  .avn_button_icon_base('images/icons-new/ic_edit.svg');
+  .avn_iconButton('images/icons-new/ic_edit.svg');
 }
 /*-------------------------------------------------------------
    general settings
 -------------------------------------------------------------*/
 
-.nightColors() when ( @nightModePercent <100% ){
-  background-color: #000;
-  color: @nightColor;
-}
-.nightOPacity() when(@nightModePercent <100%){
-  opacity: @nightModeValue;
-}
-.nightOPacity2() when(@nightModePercent <100%){
-  opacity: min(1,1 - (1 - @nightModeValue)*0.5);
-}
-
-input when (@nightModePercent<100%) {
-  background-color: #646463;
-}
 
 input {
   border: 2px inset;
+  .nightBackColor(inherit,#646463)
 }
 html,body {
 	.nightColors();
@@ -449,11 +469,8 @@ html,body {
   left:0px;
   bottom: 0px;
   width: 8.7em;
-  background-color: fade(lightgrey,@nightModePercent);
   z-index: 200;
-}
-#avi_route_info_navpage when (@nightModePercent<100%) {
-  background-color: rgba(31, 30, 30, 1);
+  .nightColors();
 }
 
 #avi_route_info_navpage .avn_route_info_name{
@@ -466,10 +483,12 @@ html,body {
 
 /* we edit the current route */
 .avn_activeRoute{
-  border: 3px solid fade(#fa584a,@nightModePercent);
+  border: 3px solid #fa584a;
+  .nightOPacity();
 }
 .avn_otherRoute{
-  border: 3px solid fade(#1DB81D,@nightModePercent)
+  border: 3px solid #1DB81D;
+  .nightOPacity();
 }
 .avn_route_label{
   padding-left: 0;
@@ -517,9 +536,6 @@ html,body {
 .avn_route_info_active_point{
     background-color: @routeApproachingColor !important;
 }
-.avn_route_info_active_point when (@nightModePercent<100%){
-  background-color: #7A5957 !important;
-}
 
 #avi_route_info_list .avn_route_info_active_point .avn_more{
   display:block;
@@ -561,9 +577,7 @@ html,body {
     float: left;
     height: 7em;
   }
-}
-#avi_aisInfo when (@nightModePercent<100%){
-  color: fade(white,@nightModePercent * 1.5);
+  .nightColors();
 }
 
 
@@ -680,70 +694,70 @@ html,body {
   .avn_hidden();
 }
 button.avb_ZoomIn {
-  .avn_button_icon_base('images/icons-new/ic_zoom_in.svg');
+  .avn_iconButton('images/icons-new/ic_zoom_in.svg');
 }
 button.avb_ZoomOut {
-  .avn_button_icon_base('images/icons-new/ic_zoom_out.svg');
+  .avn_iconButton('images/icons-new/ic_zoom_out.svg');
 }
 button.avb_LockPos  {
-  .avn_button_icon_base_toggle('images/icons-new/boat.svg');
+  .avn_iconButton('images/icons-new/boat.svg');
 }
 
 button.avb_LockMarker {
-  .avn_button_icon_base_toggle('images/icons-new/waypoint.svg');
+  .avn_iconButton('images/icons-new/waypoint.svg');
 }
 
 button.avb_StopNav {
-  .avn_button_icon_base_toggle('images/icons-new/stop-nav.svg');
+  .avn_iconButton('images/icons-new/stop-nav.svg');
 }
 button.avb_CourseUp {
-  .avn_button_icon_base_toggle('images/icons-new/compass.svg');
+  .avn_iconButton('images/icons-new/compass.svg');
 }
 button.avb_ShowRoutePanel {
-  .avn_button_icon_base('images/icons-new/route.svg');
+  .avn_iconButton('images/icons-new/route.svg');
 }
 button.avb_ShowGps {
-  .avn_button_icon_base('images/icons-new/data.svg');
+  .avn_iconButton('images/icons-new/data.svg');
 
 }
 
 button.avb_CancelNav {
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 
 }
 
 /*- nav page routing panel --*/
 button.avb_NavAdd {
-  .avn_button_icon_base('images/icons-new/wpplus.svg');
+  .avn_iconButton('images/icons-new/wpplus.svg');
 }
 button.avb_NavDelete {
-  .avn_button_icon_base('images/icons-new/wpminus.svg');
+  .avn_iconButton('images/icons-new/wpminus.svg');
 }
 button.avb_NavToCenter {
-  .avn_button_icon_base('images/icons-new/wpcenter.svg');
+  .avn_iconButton('images/icons-new/wpcenter.svg');
 }
 button.avb_NavGoto {
-  .avn_button_icon_base('images/icons-new/wpgoto.svg');
+  .avn_iconButton('images/icons-new/wpgoto.svg');
 }
 button.avb_NavInvert {
-  .avn_button_icon_base('images/icons-new/invertroute.svg');
+  .avn_iconButton('images/icons-new/invertroute.svg');
 }
 button.avb_NavDeleteAll {
-  .avn_button_icon_base('images/icons-new/ic_delete.svg');
+  .avn_iconButton('images/icons-new/ic_delete.svg');
 }
 
 button.avb_NavNext {
-  .avn_button_icon_base('images/icons-new/nextwp.svg');
+  .avn_iconButton('images/icons-new/nextwp.svg');
 }
 
 button.avb_WpDone{
-  .avn_button_icon_base('images/icons-new/ic_done.svg');
+  .avn_iconButton('images/icons-new/ic_done.svg');
 }
 button.avb_WpPrevious{
-  .avn_button_icon_base('images/icons-new/ic_arrow_back.svg');
+  .avn_iconButton('images/icons-new/ic_arrow_back.svg');
 }
 button.avb_WpNext{
-  .avn_button_icon_base('images/icons-new/ic_arrow_forward.svg');
+  .avn_iconButton('images/icons-new/ic_arrow_forward.svg');
 }
 
 
@@ -855,35 +869,35 @@ button.avb_WpNext{
 }
 
 button.avb_RoutePageOk{
-  .avn_button_icon_base('images/icons-new/ic_done.svg');
+  .avn_iconButton('images/icons-new/ic_done.svg');
 }
 button.avb_RoutePageCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_RoutePageDownload{
-  .avn_button_icon_base('images/icons-new/ic_file_download.svg');
+  .avn_iconButton('images/icons-new/ic_file_download.svg');
 }
 button.avb_RoutePageUpload{
-  .avn_button_icon_base('images/icons-new/ic_file_upload.svg');
+  .avn_iconButton('images/icons-new/ic_file_upload.svg');
 }
 button.avb_RoutePageDelete{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg');
+  .avn_iconButton('images/icons-new/ic_delete.svg');
 }
 button.avb_RoutePageRoutes{
-  .avn_button_icon_base('images/icons-new/route.svg');
+  .avn_iconButton('images/icons-new/route.svg');
 }
 button.avb_RoutePageCharts{
-  .avn_button_icon_base_toggle('images/icons-new/map2.svg');
+  .avn_iconButton('images/icons-new/map2.svg');
 }
 button.avb_RoutePageTracks{
-  .avn_button_icon_base_toggle('images/icons-new/track.svg');
+  .avn_iconButton('images/icons-new/track.svg');
 }
 .avn_route_btnDelete{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg');
+  .avn_iconButton('images/icons-new/ic_delete.svg');
   vertical-align: middle;
 }
 .avn_route_btnLoad{
-  .avn_button_icon_base('images/icons-new/ic_done.svg');
+  .avn_iconButton('images/icons-new/ic_done.svg');
 }
 
 
@@ -943,7 +957,7 @@ button.avb_RoutePageTracks{
   left: 0;
   right: 0;
   bottom: 0;
-  //height: (@buttonSize + 20px);
+  padding: 1em 1em 1em 1em;
   background-color: lightgrey;
   .flexbox();
   .nightColors();
@@ -951,12 +965,6 @@ button.avb_RoutePageTracks{
 #avi_download_progress_container{
   .flex(1);
 }
-
-#avi_download_page_inner.avn_downloadpage_progress_visible{
-  //bottom:(@buttonSize + 20px);
-}
-
-
 
 #avi_download_progress_display {
   margin: 0.5em 0.5em 0.5em 0.5em;
@@ -985,30 +993,30 @@ button.avb_RoutePageTracks{
 }
 
 button.avb_DownloadPageCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_DownloadPageUpload{
-  .avn_button_icon_base('images/icons-new/ic_file_upload.svg');
+  .avn_iconButton('images/icons-new/ic_file_upload.svg');
 }
 
 button.avb_DownloadPageRoutes{
-  .avn_button_icon_base('images/icons-new/route.svg');
+  .avn_iconButton('images/icons-new/route.svg');
 }
 button.avb_DownloadPageCharts{
-  .avn_button_icon_base_toggle('images/icons-new/map2.svg');
+  .avn_iconButton('images/icons-new/map2.svg');
 }
 button.avb_DownloadPageTracks{
-  .avn_button_icon_base_toggle('images/icons-new/track.svg');
+  .avn_iconButton('images/icons-new/track.svg');
 }
 .avn_download_btnDelete{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg');
+  .avn_iconButton('images/icons-new/ic_delete.svg');
 }
 .avn_download_btnDownload{
-  .avn_button_icon_base('images/icons-new/ic_file_download.svg');
+  .avn_iconButton('images/icons-new/ic_file_download.svg');
 }
 
 button.avb_DownloadPageUploadCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 
 
@@ -1060,10 +1068,10 @@ button.avb_DownloadPageUploadCancel{
 
 
 button.avb_AisCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_AisNearest {
-  .avn_button_icon_base('images/icons-new/ais-nearest.svg');
+  .avn_iconButton('images/icons-new/ais-nearest.svg');
 }
 /*-------------------------------------------------------------
    ais info page
@@ -1079,13 +1087,13 @@ button.avb_AisNearest {
 }
 
 button.avb_AisInfoNearest {
-  .avn_button_icon_base('images/icons-new/ais-nearest.svg');
+  .avn_iconButton('images/icons-new/ais-nearest.svg');
 }
 button.avb_AisInfoLocate {
-  .avn_button_icon_base('images/icons-new/center.svg');
+  .avn_iconButton('images/icons-new/center.svg');
 }
 button.avb_AisInfoList {
-  .avn_button_icon_base('images/icons-new/ic_list.svg');
+  .avn_iconButton('images/icons-new/ic_list.svg');
 }
 
 /*-------------------------------------------------------------
@@ -1125,10 +1133,10 @@ button.avb_AisInfoList {
   margin-left: 0.5em;
 }
 button.avb_BoatInfoLocate {
-  .avn_button_icon_base('images/icons-new/center.svg');
+  .avn_iconButton('images/icons-new/center.svg');
 }
 button.avb_BoatInfoGps {
-  .avn_button_icon_base('images/icons-new/data.svg');
+  .avn_iconButton('images/icons-new/data.svg');
 }
 /*-------------------------------------------------------------
    wp info page
@@ -1183,13 +1191,13 @@ button.avb_BoatInfoGps {
 }
 
 button.avb_WpInfoLocate {
-  .avn_button_icon_base('images/icons-new/center.svg');
+  .avn_iconButton('images/icons-new/center.svg');
 }
 button.avb_WpInfoRoute {
-  .avn_button_icon_base('images/icons-new/route.svg');
+  .avn_iconButton('images/icons-new/route.svg');
 }
 button.avb_WpInfoGps {
-  .avn_button_icon_base('images/icons-new/data.svg');
+  .avn_iconButton('images/icons-new/data.svg');
 }
 /*-------------------------------------------------------------
    status page
@@ -1222,13 +1230,13 @@ button.avb_WpInfoGps {
 
 
 button.avb_StatusCancel {
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_StatusWpa {
-  .avn_button_icon_base('images/icons-new/ic_rss_feed.svg');
+  .avn_iconButton('images/icons-new/ic_rss_feed.svg');
 }
 button.avb_StatusAndroid{
-  .avn_button_icon_base('images/icons-new/ic_android.svg');
+  .avn_iconButton('images/icons-new/ic_android.svg');
 }
 
 
@@ -1284,13 +1292,13 @@ button.avb_StatusAndroid{
   .nightColors();
   font-size: 1.3em;
 }
-.avn__dialog input{
+.avn_dialog input{
   margin-top: 0.5em;
   margin-bottom: 0.5em;
 }
 
 .avn_dialog button{
-  .avn_button_base();
+  .avn_buttonBase();
   margin-top: 0.5em;
   margin-left: 0.5em;
   margin-right: 0.5em;
@@ -1321,7 +1329,7 @@ button.avb_StatusAndroid{
 
 
 button.avb_WpaCancel {
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 
 
@@ -1414,7 +1422,7 @@ button.avb_WpaCancel {
 }
 
 button.avb_GpsCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 
 /*-------------------------------------------------------------------------------
@@ -1566,7 +1574,7 @@ button.avb_GpsCancel{
 }
 
 .avn_settings_reset{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg');
+  .avn_iconButton('images/icons-new/ic_delete.svg');
   margin-top: 5px;
   margin-left: 20px;
   float:left;
@@ -1576,18 +1584,18 @@ button.avb_GpsCancel{
 }
 
 button.avb_SettingsCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_SettingsOK {
-  .avn_button_icon_base('images/icons-new/ic_done.svg');
+  .avn_iconButton('images/icons-new/ic_done.svg');
 }
 
 button.avb_SettingsDefaults{
-  .avn_button_icon_base('images/icons-new/ic_delete.svg');
+  .avn_iconButton('images/icons-new/ic_delete.svg');
 }
 
 button.avb_SettingsAndroid{
-  .avn_button_icon_base('images/icons-new/ic_android.svg');
+  .avn_iconButton('images/icons-new/ic_android.svg');
 }
 /*-------------------------------------------------------------------------------
     main page
@@ -1666,31 +1674,27 @@ button.avb_SettingsAndroid{
 
 
 button.avb_ShowStatus {
-  .avn_button_icon_base('images/icons-new/status.svg');
+  .avn_iconButton('images/icons-new/status.svg');
 }
 button.avb_ShowSettings {
-  .avn_button_icon_base('images/icons-new/ic_settings.svg');
-}
-button.avb_ShowHelp {
-  .avn_button_icon_base('images/Question.png');
-  .avn_hidden();
+  .avn_iconButton('images/icons-new/ic_settings.svg');
 }
 
 button.avb_Connected {
-  .avn_button_icon_base_toggle('images/icons-new/plug.svg');
+  .avn_iconButton('images/icons-new/plug.svg');
 }
 
 button.avb_Night {
-  .avn_button_icon_base_toggle('images/icons-new/night.svg');
+  .avn_iconButton('images/icons-new/night.svg');
 }
 button.avb_ShowDownload {
-  .avn_button_icon_base('images/icons-new/ic_file_download.svg');
+  .avn_iconButton('images/icons-new/ic_file_download.svg');
 }
 button.avb_MainCancel{
-  .avn_button_icon_base('images/icons-new/ic_clear.svg');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_MainAndroid{
-  .avn_button_icon_base('images/icons-new/ic_android.svg');
+  .avn_iconButton('images/icons-new/ic_android.svg');
 }
 
 /*------------------------------------------------------------------------------- 
@@ -1708,14 +1712,7 @@ button.avb_MainAndroid{
   .flex(1);
   .flexbox(); //seems to be necessary for old WebKit
   position: relative;
-  /*
-	left: 0px;
-	top: 0px;
-	bottom: 0px;
-	//right: (@buttonSize + 10 );
-    right: 80px;
-    */
-	overflow: hidden;
+  overflow: hidden;
 }
   
 /*

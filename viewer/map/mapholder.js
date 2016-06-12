@@ -793,7 +793,7 @@ avnav.map.MapHolder.prototype.onDoubleClick=function(evt){
  * @return {number} the matching index or -1
  */
 avnav.map.MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
-    log("findTarget "+pixel[0]+","+pixel[1]);
+    avnav.log("findTarget "+pixel[0]+","+pixel[1]);
     var tolerance=opt_tolerance||10;
     var xmin=pixel[0]-tolerance;
     var xmax=pixel[0]+tolerance;
@@ -831,7 +831,7 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     this.saveCenter();
 
 
-    log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
+    avnav.log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
 
 };
 

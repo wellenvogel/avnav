@@ -272,7 +272,7 @@ avnav.gui.Page.prototype.initButtons=function(){
                 if (f) {
                     $(e).click(function (b) {
                         f.call(page, this, b);
-                        log("clicked " + id + "at " + b);
+                        avnav.log("clicked " + id + "at " + b);
                         return false;
                     });
                 }

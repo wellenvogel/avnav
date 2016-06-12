@@ -84,7 +84,7 @@ avnav.gui.Handler = function (properties, navobject, map) {
     $(window).on('resize', function () {
         try {
             if (Object.keys(self.activeInputs).length > 0) {
-                log("resize skipped due to active input");
+                avnav.log("resize skipped due to active input");
                 return;
             }
         } catch (e) {
@@ -183,7 +183,7 @@ avnav.gui.Handler.prototype.showPage = function (name, options) {
     $('#avi_' + name).show();
     var oldname = this.page;
     this.page = name;
-    log("trigger page event");
+    avnav.log("trigger page event");
     $(document).trigger(avnav.gui.PageEvent.EVENT_TYPE, new avnav.gui.PageEvent(
         this,
         this.navobject,
@@ -195,7 +195,7 @@ avnav.gui.Handler.prototype.showPage = function (name, options) {
 };
 
 avnav.gui.sendAndroidEvent = function (key, id) {
-    log("android event key=" + key + ", id=" + id);
+    avnav.log("android event key=" + key + ", id=" + id);
     try {
         //inform the android part that we noticed the event
         avnav.android.acceptEvent(key, id);

@@ -102,7 +102,7 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
  * @param entry - the chart entry
  */
 avnav.gui.Mainpage.prototype.showNavpage=function(entry){
-    log("activating navpage with url "+entry.url);
+    avnav.log("activating navpage with url "+entry.url);
     this.gui.showPage('navpage',{url:entry.url,charturl:entry.charturl});
 
 };
@@ -147,23 +147,23 @@ avnav.gui.Mainpage.prototype.layout=function(){
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Mainpage.prototype.btnShowHelp=function (button,ev){
-    log("ShowHelp clicked");
+    avnav.log("ShowHelp clicked");
 };
 
 avnav.gui.Mainpage.prototype.btnShowStatus=function (button,ev){
-    log("ShowStatus clicked");
+    avnav.log("ShowStatus clicked");
     this.gui.showPage('statuspage');
 };
 avnav.gui.Mainpage.prototype.btnShowSettings=function (button,ev){
-    log("ShowSettings clicked");
+    avnav.log("ShowSettings clicked");
     this.gui.showPage('settingspage');
 };
 avnav.gui.Mainpage.prototype.btnShowGps=function (button,ev){
-    log("ShowGps clicked");
+    avnav.log("ShowGps clicked");
     this.gui.showPage('gpspage');
 };
 avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
-    log("Connected clicked");
+    avnav.log("Connected clicked");
     var ncon=!this.gui.properties.getProperties().connectedMode;
     this.handleToggleButton('.avb_Connected',ncon);
     this.gui.properties.setValueByName('connectedMode',ncon);
@@ -173,7 +173,7 @@ avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
 };
 
 avnav.gui.Mainpage.prototype.btnNight=function (button,ev){
-    log("Night clicked");
+    avnav.log("Night clicked");
     var ncon=this.gui.properties.getProperties().style.nightMode;
     if (ncon == 100){
         ncon=this.gui.properties.getProperties().nightFade;
@@ -183,15 +183,15 @@ avnav.gui.Mainpage.prototype.btnNight=function (button,ev){
     this.changeDim(ncon);
 };
 avnav.gui.Mainpage.prototype.btnShowDownload=function (button,ev) {
-    log("show download clicked");
+    avnav.log("show download clicked");
     this.gui.showPage('downloadpage');
 };
 avnav.gui.Mainpage.prototype.btnMainAndroid=function (button,ev) {
-    log("main android settings clicked");
+    avnav.log("main android settings clicked");
     avnav.android.showSettings();
 };
 avnav.gui.Mainpage.prototype.btnMainCancel=function (button,ev) {
-    log("main cancel clicked");
+    avnav.log("main cancel clicked");
     avnav.android.goBack();
 };
 /**

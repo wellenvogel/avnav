@@ -121,7 +121,7 @@ avnav.nav.Leg.prototype.fromJson=function(raw){
             }
             else{
                 //this is some error - set the to to be outside of the route...
-                console.log("invalid leg with currentTarget, to outside route, deleting route");
+                avnav.log("invalid leg with currentTarget, to outside route, deleting route");
                 this.currentRoute=undefined;
                 this.name=undefined;
                 this.to.routeName=undefined;
@@ -130,7 +130,7 @@ avnav.nav.Leg.prototype.fromJson=function(raw){
         else{
             var idx=this.currentRoute.getIndexFromPoint(this.to);
             if (idx < 0){
-                console.log("invalid leg, to outside route, deleting route");
+                avnav.log("invalid leg, to outside route, deleting route");
                 this.currentRoute=undefined;
                 this.name=undefined;
                 this.to.routeName=undefined;
@@ -466,7 +466,7 @@ avnav.nav.Route.prototype.findFreeName=function(){
         if (! this.checkName(name)) return name;
         i++;
     }
-    console.log("no free name found for wp");
+    avnav.log("no free name found for wp");
     return "no free name found";
 };
 avnav.nav.Route.prototype.addPoint=function(idx,point){
@@ -474,7 +474,7 @@ avnav.nav.Route.prototype.addPoint=function(idx,point){
     var rp=point.clone();
     if (rp.name){
         if (this.checkName(rp.name)){
-            console.log("name "+rp.name+" already exists in route, create a new one");
+            avnav.log("name "+rp.name+" already exists in route, create a new one");
             rp.name=undefined;
         }
     }

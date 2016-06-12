@@ -174,7 +174,7 @@ avnav.util.PropertyHandler.prototype.setUserDataByDescr=function(descr,value){
         }
         return true;
     }catch(e){
-        log("Exception when setting user data "+descr.completeName+": "+e);
+        avnav.log("Exception when setting user data "+descr.completeName+": "+e);
     }
     return false;
 };
@@ -255,7 +255,7 @@ avnav.util.PropertyHandler.prototype.updateLayout=function(){
             }
 
         }
-        less.modifyVars(lessparam);
+        //less.modifyVars(lessparam);
     }
     //set the font sizes
     $('body').css('font-size',this.getValue(this.propertyDescriptions.baseFontSize)+"px");

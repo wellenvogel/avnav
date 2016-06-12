@@ -236,26 +236,26 @@ avnav.gui.WpInfoPage.prototype._checkWpOk=function(){
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.WpInfoPage.prototype.btnWpInfoGps=function (button,ev){
-    log("gps clicked");
+    avnav.log("gps clicked");
     this.gui.showPage('gpspage',{skipHistory:true});
 };
 avnav.gui.WpInfoPage.prototype.btnWpInfoLocate=function (button,ev){
-    log("locate clicked");
+    avnav.log("locate clicked");
     this.gui.map.setCenter(this.wp);
     this._router.setEditingWp(this.wp);
     this.returnToLast();
 };
 avnav.gui.WpInfoPage.prototype.btnShowRoutePanel=function (button,ev){
-    log("route clicked");
+    avnav.log("route clicked");
     this.gui.showPage('navpage',{showRouting: true})
 };
 avnav.gui.WpInfoPage.prototype.btnStopNav=function (button,ev){
-    log("stopNav clicked");
+    avnav.log("stopNav clicked");
     this._router.routeOff();
     this.returnToLast();
 };
 avnav.gui.WpInfoPage.prototype.btnNavGoto=function (button,ev){
-    log("navGoto clicked");
+    avnav.log("navGoto clicked");
     this._router.wpOn(this.wp);
     this.returnToLast();
 };

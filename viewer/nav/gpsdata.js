@@ -106,7 +106,7 @@ avnav.nav.GpsData.prototype.startQuery=function(){
                 data.tag != null && data.lon != null && data.lat != null &&
                 data['mode'] != null && data['mode'] >=1){
                 self.handleGpsResponse(data,true);
-                log("gpsdata: "+self.formattedData.gpsPosition);
+                avnav.log("gpsdata: "+self.formattedData.gpsPosition);
                 self.handleGpsStatus(true);
             }
             else{
@@ -118,7 +118,7 @@ avnav.nav.GpsData.prototype.startQuery=function(){
             },timeout);
         },
         error: function(status,data,error){
-            log("query position error");
+            avnav.log("query position error");
             self.handleGpsStatus(false);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
@@ -137,7 +137,7 @@ avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
     if (! success){
         this.gpsErrors++;
         if (this.gpsErrors > this.propertyHandler.getProperties().maxGpsErrors){
-            log("lost gps");
+            avnav.log("lost gps");
             this.validPosition=false;
             this.gpsdata.valid=false;
 

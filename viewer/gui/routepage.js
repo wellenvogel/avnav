@@ -355,7 +355,7 @@ avnav.gui.Routepage.prototype.directUpload=function(file) {
         },
         progresshandler: function (param, ev) {
             if (ev.lengthComputable) {
-                log("progress called");
+                avnav.log("progress called");
             }
         },
         okhandler: function (param, data) {
@@ -414,16 +414,16 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
         }
     }
     this.gui.returnToLast('navpage', {showRouting: true});
-    log("Route OK clicked");
+    avnav.log("Route OK clicked");
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageCancel=function (button,ev){
-    log("Cancel clicked");
+    avnav.log("Cancel clicked");
     this.gui.returnToLast('navpage', {showRouting: true});
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
-    log("route download clicked");
+    avnav.log("route download clicked");
     var route;
     var self=this;
     if (this.loadedRoute){
@@ -445,7 +445,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         return false;
     }
     if (route.server){
-        log("route download server direct");
+        avnav.log("route download server direct");
         //nice simple case:
         //we can ask the server directly to send us the route
         //we assume that the route is always up to date at the server
@@ -461,7 +461,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
     if (this.gui.properties.getProperties().connectedMode && ! this.gui.properties.getProperties().readOnlyServer) {
         //just store the route first and afterwards download it from the server
         route.server=true;
-        log("route download server upload");
+        avnav.log("route download server upload");
         this.routingData.saveRoute(route,true, function(ok){
             self.fillData(false);
             if (! ok) return;
@@ -475,7 +475,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         });
     }
     else {
-        log("route download local");
+        avnav.log("route download local");
         //this local download is the last resort if it is neither a server route nor we are connected
         var xmlroute=route.toXml();
         var datauri="data:application/octet-stream;base64,"+btoa(xmlroute);
@@ -487,7 +487,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
-    log("route upload clicked");
+    avnav.log("route upload clicked");
     if (avnav.android){
         var routeXml=avnav.android.uploadRoute();
         return false;
@@ -500,12 +500,12 @@ avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
 
 
 avnav.gui.Routepage.prototype.btnRoutePageTracks=function(button,ev) {
-    log("route tracks clicked");
+    avnav.log("route tracks clicked");
     this.gui.showPage("downloadpage",{downloadtype:"track",skipHistory: true});
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageCharts=function(button,ev) {
-    log("route tracks clicked");
+    avnav.log("route tracks clicked");
     this.gui.showPage("downloadpage",{downloadtype:"chart",skipHistory: true});
 };
 /**

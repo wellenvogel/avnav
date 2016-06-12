@@ -53,7 +53,7 @@ avnav.gui.Wpapage.prototype.doQuery=function(){
                 self.numErrors=0;
                 avnav.util.Overlay.Toast("Status query Error " + avnav.util.Helper.escapeHtml(error), self.timeout * 0.6)
             }
-            log("wpa query error");
+            avnav.log("wpa query error");
         },
         timeout: this.timeout*0.9
     });
@@ -192,7 +192,7 @@ avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
         method: 'POST',
         data: param,
         success: function(data,status){
-            log("request "+request+" OK");
+            avnav.log("request "+request+" OK");
             var statusText=message;
             if (data.status && data.status == "OK") ;
             else {
@@ -202,7 +202,7 @@ avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
         },
         error: function(status,data,error){
             avnav.util.Overlay.Toast(message+"...Error",5000);
-            log("wpa request error: "+data);
+            avnav.log("wpa request error: "+data);
         },
         timeout: this.timeout*2
     });

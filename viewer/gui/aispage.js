@@ -83,7 +83,7 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         var clickDelay=self.gui.properties.getProperties().aisBrowserWorkaround;
         if (clickDelay> 0 ){
             if ((new Date()).getTime() < (self.showTime+clickDelay)){
-                log("ais page click delay");
+                avnav.log("ais page click delay");
                 return false;
             }
         }
@@ -100,7 +100,7 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         if (topElement){
             var scrollTop=topElement.top - $('.avn_ais_headline').height();
             var currentTop=$(domid).scrollTop();
-            log("aisPage scroll: elTop:"+topElement.top+",current="+currentTop+", scroll="+scrollTop+", mmsi="+$(topDom).attr('mmsi'));
+            avnav.log("aisPage scroll: elTop:"+topElement.top+",current="+currentTop+", scroll="+scrollTop+", mmsi="+$(topDom).attr('mmsi'));
             $(domid).scrollTop(scrollTop);
         }
     }
@@ -127,7 +127,7 @@ avnav.gui.Aispage.prototype.navEvent=function(ev){
 avnav.gui.Aispage.prototype.btnAisNearest=function (button,ev){
     this.aishandler.setTrackedTarget(0);
     this.returnToLast();
-    log("Nearest clicked");
+    avnav.log("Nearest clicked");
 };
 
 /**

@@ -113,7 +113,6 @@ all buttons with ids avb_... will call corresponding js functions
       <div class='avn_panel avn_right_panel'>
           <button  type="button"  class="avb_ShowStatus avn_button"></button>
           <button  type="button"  class="avb_ShowSettings avn_button"></button>
-          <button  type="button"   class="avb_ShowHelp avn_button"></button>
           <button  type="button"   class="avb_ShowDownload avn_button"></button>
           <button  type="button"   class="avb_Connected avn_button avn_toggleButton"></button>
           <button  type="button"   class="avb_ShowGps avn_button"></button>
@@ -579,7 +578,7 @@ all buttons with ids avb_... will call corresponding js functions
           <input type="hidden" name="request" value="download"/>
           <input type="hidden" name="type" value="track"/>
       </form>
-      <form id="avi_download_uploadform" class="" method="post">
+      <form id="avi_download_uploadform" class="avn_hidden" method="post">
           <input type="file" id="avi_download_uploadfile" name="file"/>
       </form>
   </div>

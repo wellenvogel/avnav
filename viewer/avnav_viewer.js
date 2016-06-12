@@ -42,10 +42,6 @@ avnav.provide('avnav.main');
 
 
 
-var debugMode=false;
-
-
-
 var propertyDefinitions=function(){
     return {
         layers:{
@@ -146,12 +142,6 @@ var propertyDefinitions=function(){
 
 
 
-function log(txt){
-    if (! debugMode) return;
-    try{
-        console.log(txt);
-    }catch(e){}
-}
 
 function getParam(key)
 {
@@ -168,10 +158,10 @@ function getParam(key)
  */
 avnav.main=function() {
     //some workaround for lees being broken on IOS browser
-    less.modifyVars();
+    //less.modifyVars();
     $("body").show();
 
-    if (getParam('log')) debugMode=true;
+    if (getParam('log')) avnav.debugMode=true;
     var propertyHandler=new avnav.util.PropertyHandler(propertyDefinitions(),{});
     propertyHandler.loadUserData();
     var navurl=getParam('navurl');
@@ -206,7 +196,7 @@ avnav.main=function() {
     }
     //make the android API available as avnav.android
     if (window.avnavAndroid){
-        log("android integration enabled");
+        avnav.log("android integration enabled");
         propertyHandler.setValueByName('onAndroid',true);
         avnav.android=window.avnavAndroid;
         propertyHandler.setValueByName('routingServerError',false);
@@ -220,6 +210,6 @@ avnav.main=function() {
         propertyHandler.updateLayout();
         $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(propertyHandler));
     },1000);
-    log("avnav loaded");
+    avnav.log("avnav loaded");
 };
 

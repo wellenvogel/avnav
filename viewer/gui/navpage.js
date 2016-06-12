@@ -545,12 +545,12 @@ avnav.gui.Navpage.prototype.goBack=function(){
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Navpage.prototype.btnZoomIn=function (button,ev){
-    log("ZoomIn clicked");
+    avnav.log("ZoomIn clicked");
     this.getMap().changeZoom(1);
 };
 
 avnav.gui.Navpage.prototype.btnZoomOut=function (button,ev){
-    log("ZoomOut clicked");
+    avnav.log("ZoomOut clicked");
     this.getMap().changeZoom(-1);
 };
 avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
@@ -559,10 +559,10 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
     this.handleToggleButton(button,nLock);
     if (nLock) this.hideOverlay();
     this.gui.map.triggerRender();
-    log("LockPos clicked");
+    avnav.log("LockPos clicked");
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
-    log("LockMarker clicked");
+    avnav.log("LockMarker clicked");
     var options = {};
     var center = this.navobject.getMapCenter();
     var wp = new avnav.nav.navdata.WayPoint();
@@ -574,7 +574,7 @@ avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
 
 };
 avnav.gui.Navpage.prototype.btnStopNav=function (button,ev) {
-    log("StopNav clicked");
+    avnav.log("StopNav clicked");
 
     this.navobject.getRoutingHandler().routeOff();
     this.buttonUpdate();
@@ -587,15 +587,15 @@ avnav.gui.Navpage.prototype.btnCourseUp=function (button,ev){
     nLock=this.gui.map.setCourseUp(nLock);
     this.handleToggleButton(button,nLock);
     this.gui.map.triggerRender();
-    log("courseUp clicked");
+    avnav.log("courseUp clicked");
 };
 avnav.gui.Navpage.prototype.btnShowRoutePanel=function (button,ev){
-    log("showRoutePanel clicked");
+    avnav.log("showRoutePanel clicked");
     if (! this.routingVisible) this.showRouting();
     else this.hideRouting();
 };
 avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
-    log("CancelNav clicked");
+    avnav.log("CancelNav clicked");
     if (this.routingVisible){
         this.hideRouting();
         return;
@@ -606,7 +606,7 @@ avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
 
 //-------------------------- Route ----------------------------------------
 avnav.gui.Navpage.prototype.btnNavAdd=function (button,ev){
-    log("navAdd clicked");
+    avnav.log("navAdd clicked");
     if (!this.checkRouteWritable()) return false;
     var center=this.gui.map.getCenter();
     var current=this.navobject.getRoutingHandler().getEditingWp();
@@ -621,12 +621,12 @@ avnav.gui.Navpage.prototype.btnNavAdd=function (button,ev){
 };
 
 avnav.gui.Navpage.prototype.btnNavDelete=function (button,ev){
-    log("navDelete clicked");this.checkRouteWritable();
+    avnav.log("navDelete clicked");this.checkRouteWritable();
     if (!this.checkRouteWritable()) return false;
     this.navobject.getRoutingHandler().deleteWp(-1);
 };
 avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
-    log("navDelete clicked");
+    avnav.log("navDelete clicked");
     if (!this.checkRouteWritable()) return false;
     var center=this.gui.map.getCenter();
     this.navobject.getRoutingHandler().changeWpByIdx(
@@ -634,19 +634,19 @@ avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
     );
 };
 avnav.gui.Navpage.prototype.btnNavGoto=function(button,ev){
-    log("navGoto clicked");
+    avnav.log("navGoto clicked");
     this.navobject.getRoutingHandler().wpOn(this.navobject.getRoutingHandler().getEditingWp());
     this.hideRouting();
 };
 
 avnav.gui.Navpage.prototype.btnNavDeleteAll=function(button,ev){
-    log("navDeletAll clicked");
+    avnav.log("navDeletAll clicked");
     if (!this.checkRouteWritable()) return false;
     this.navobject.getRoutingHandler().emptyRoute();
 };
 
 avnav.gui.Navpage.prototype.btnNavInvert=function(button,ev){
-    log("navInvert clicked");
+    avnav.log("navInvert clicked");
     if (!this.checkRouteWritable()) return false;
     this.navobject.getRoutingHandler().invertRoute();
 };

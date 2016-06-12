@@ -255,7 +255,7 @@ avnav.gui.Downloadpage.prototype.fillData=function(initial){
 };
 
 avnav.gui.Downloadpage.prototype.download=function(name,opt_url) {
-    log("download");
+    avnav.log("download");
     if (!name || name == "") return;
 
     var f = $('#avi_download_downloadform')
@@ -307,7 +307,8 @@ avnav.gui.Downloadpage.prototype.directUpload=function(file) {
 avnav.gui.Downloadpage.prototype.showProgress=function(size){
     $('#avi_download_progress').show();
     $('#avi_download_progress_info').text("0/"+size);
-    $('#avi_download_page_inner').addClass("avn_downloadpage_progress_visible");
+    var rtop=$('#avi_download_progress').outerHeight();
+    $('#avi_download_page_inner').css('bottom',rtop+"px");
 };
 /**
  * hide the progress bar
@@ -315,7 +316,7 @@ avnav.gui.Downloadpage.prototype.showProgress=function(size){
  */
 avnav.gui.Downloadpage.prototype.hideProgress=function() {
     $('#avi_download_progress').hide();
-    $('#avi_download_page_inner').removeClass("avn_downloadpage_prohidegress_visible");
+    $('#avi_download_page_inner').css('bottom','0px');
 };
 
 
@@ -364,7 +365,7 @@ avnav.gui.Downloadpage.prototype.abortUpload=function(){
 
 
 avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
-    log("upload clicked");
+    avnav.log("upload clicked");
     var i=$("#avi_download_uploadfile");
     $(i).click();
     return false;

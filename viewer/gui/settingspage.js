@@ -177,7 +177,7 @@ avnav.gui.Settingspage.prototype.hidePage=function(){
  * @private
  */
 avnav.gui.Settingspage.prototype.btnSettingsOK=function(button,ev){
-    log("SettingsOK clicked");
+    avnav.log("SettingsOK clicked");
     var txt="";
     for (var idx in this.allItems){
         var val=this.allItems[idx].read();
@@ -190,7 +190,7 @@ avnav.gui.Settingspage.prototype.btnSettingsOK=function(button,ev){
 };
 
 avnav.gui.Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
-    log("SettingsDefaults clicked");
+    avnav.log("SettingsDefaults clicked");
     for (var idx in this.allItems) {
         var val = this.gui.properties.getDescriptionByName(idx).defaultv;
         this.allItems[idx].write(val);
@@ -198,7 +198,7 @@ avnav.gui.Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
 };
 
 avnav.gui.Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
-    log("SettingsAndroid clicked");
+    avnav.log("SettingsAndroid clicked");
     this.gui.showPage('mainpage');
     avnav.android.showSettings();
 };

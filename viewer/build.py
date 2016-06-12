@@ -44,7 +44,7 @@ def runBuild(args):
     if len(args) > 1:
       version=args[1]
     base = os.path.dirname(os.path.realpath(__file__))
-    dn=os.path.join(base,"..")
+    dn=base
     files=readJsNames(os.path.join(dn,'loader.js'))
     tmpfname=os.path.join(dn,tmpname)
     fo=open(tmpfname,"w")
