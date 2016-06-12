@@ -310,14 +310,16 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
     if (! this.visible) return;
     if (evdata.type == avnav.map.EventType.MOVE) {
         //show the center display if not visible
-        if (this.overlay != null) {
+        if (! this.routingVisible) {
+            if (this.overlay != null) {
+                this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
+                return;
+            }
+            this.overlay = this.getDiv().find('#avi_centerDisplay');
             this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
-            return;
+            this.overlay.show();
+            this.updateLayout();
         }
-        this.overlay = this.getDiv().find('#avi_centerDisplay');
-        this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
-        this.overlay.show();
-        this.updateLayout();
     }
     if (evdata.type == avnav.map.EventType.SELECTAIS){
         var aisparam=evdata.parameter.aisparam;
@@ -384,7 +386,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
         this.handleToggleButton('.avb_LockPos', !nLock);
         this.gui.map.triggerRender();
     }
-    this.updateLayout();
+    this.hideOverlay();
     this.updateAisPanel();
 };
 
