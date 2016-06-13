@@ -4,8 +4,10 @@ var CopyWebpackPlugin= require('copy-webpack-plugin');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 var cssLoaderQuery="&localIdentName=[path][name]---[local]---[hash:base64:5]";
+var outDir="build/debug";
 if (process.env.NODE_ENV === 'production') {
     cssLoaderQuery="";
+    outDir="build/release";
 }
 
 var copyList=[
@@ -53,7 +55,7 @@ module.exports = {
     ]),
     //entry: './app/main.jsx',
     publicPath: 'http://localhost:8081/viewer',
-    output: { path: __dirname+"/build", filename: 'avnav_min.js' },
+    output: { path: __dirname+"/"+outDir, filename: 'avnav_min.js' },
     resolve: {
         extensions: ['', '.jsx', '.scss', '.js', '.json']
     },

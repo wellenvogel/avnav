@@ -1,0 +1,30 @@
+buildscript{
+	repositories{
+		mavenCentral()
+	}
+}
+
+repositories{
+	mavenCentral()
+}
+apply plugin: 'java'
+
+def taskgroup="avnav"
+task android(type: GradleBuild){
+    group taskgroup
+	setDir("android")
+	setTasks(["build"])
+}
+["debug","release","clean"].each { tt ->
+    def vt=tasks.create(name: "${tt}Viewer",type: GradleBuild) {
+        group taskgroup
+        setDir("viewer")
+        setTasks([tt])
+    }
+    if (tt == "clean"){
+        clean.dependsOn vt
+    }
+    else{
+        build.dependsOn vt
+    }
+}

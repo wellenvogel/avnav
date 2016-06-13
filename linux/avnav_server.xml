@@ -68,6 +68,7 @@
 <!-- chartbaseurl="http://$host/Karten/anav"> -->
 	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
 	<Directory urlpath="viewer" path="../viewer"></Directory>
+	<Directory urlpath="build" path="../viewer/build"></Directory>
 	<Directory urlpath="libraries" path="../libraries"></Directory>
 	<Directory urlpath="test" path="../../react-test/build"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
