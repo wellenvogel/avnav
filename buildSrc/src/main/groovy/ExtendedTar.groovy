@@ -2,6 +2,7 @@ import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.internal.file.copy.CopyAction
 import org.gradle.api.internal.file.copy.CopyActionProcessingStream
 import org.gradle.api.tasks.AbstractCopyTask
+import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.WorkResult
 import org.apache.commons.compress.archivers.tar.*;
 
@@ -55,6 +56,7 @@ class ExtendedTar extends AbstractCopyTask {
                         entry.setMode(0755);
                     }
                     if (addEntry) {
+                        logger.debug("$name: adding "+entry.getName())
                         tar.putArchiveEntry(entry)
                         if (hasSource && !details.getFile().isDirectory()) {
                             tar.write(details.open().getBytes())
@@ -64,6 +66,15 @@ class ExtendedTar extends AbstractCopyTask {
 
                 }
                 new WR(true)
+        }
+    }
+    @TaskAction
+    void exec(){
+        super.copy()
+        if (tar != null){
+            logger.debug("$name: closing archive "+ofile+" with "+tar.bytesWritten+" bytes written")
+            tar.close()
+            tar=null
         }
     }
 }
