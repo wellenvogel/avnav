@@ -10,11 +10,16 @@ repositories{
 apply plugin: 'java'
 
 def taskgroup="avnav"
-task android(type: GradleBuild){
-    group taskgroup
-	setDir("android")
-	setTasks(["build"])
+['build','clean'].each { tt ->
+    tasks.create(name:"${tt}Android",type: GradleBuild) {
+        group taskgroup
+        setDir("android")
+        setTasks([tt])
+    }
 }
+clean.dependsOn cleanAndroid
+build.dependsOn buildAndroid
+
 ["debug","release","clean"].each { tt ->
     def vt=tasks.create(name: "${tt}Viewer",type: GradleBuild) {
         group taskgroup
@@ -28,3 +33,5 @@ task android(type: GradleBuild){
         build.dependsOn vt
     }
 }
+
+
