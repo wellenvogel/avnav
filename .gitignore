@@ -6,3 +6,8 @@
 **/.idea/**
 *.iml
 *~
+**/build/
+**/.gradle/
+viewer/node_modules
+*.bak
+*.swp
