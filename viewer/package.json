@@ -6,7 +6,7 @@
   "scripts": {
     "watch": "webpack --progress --colors --watch",
     "debug": "webpack",
-    "production": "NODE_ENV=production webpack -p"
+    "production": "cross-env NODE_ENV=production webpack -p"
   },
   "repository": {
     "type": "git",
@@ -16,6 +16,7 @@
   "license": "MIT",
   "devDependencies": {
     "copy-webpack-plugin": "^3.0.1",
+    "cross-env": "^1.0.8",
     "css-loader": "^0.23.1",
     "css-selector-tokenizer": "^0.5.4",
     "cssnano": "^3.7.0",
