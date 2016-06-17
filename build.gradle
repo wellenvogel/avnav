@@ -48,7 +48,6 @@ task releaseTar(type: ExtendedTar){
     from ("viewer/build/release") {
         into "viewer"
     }
-
     from ("server"){
         into "server"
         include("*py")
