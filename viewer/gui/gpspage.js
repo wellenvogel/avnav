@@ -167,7 +167,7 @@ avnav.gui.Gpspage.prototype.drawXte=function(context){
     context.closePath();
     var curXte=this.navobject.getComputedValues();
     if (curXte === undefined) return;
-    var xtepos=curXte/xteMax;
+    var xtepos=curXte.markerXte/xteMax;
     if (xtepos < -1.1) xtepos=-1.1;
     if (xtepos > 1.1) xtepos=1.1;
     xtepos=xtepos*(right-left)/2+left+(right-left)/2;
