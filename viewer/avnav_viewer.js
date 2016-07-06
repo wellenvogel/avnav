@@ -128,7 +128,7 @@ var propertyDefinitions=function(){
         baseFontSize:new avnav.util.Property( 14,"Base Font(px)",avnav.util.PropertyType.RANGE,[8,28]),
         widgetFontSize:new avnav.util.Property( 16,"Widget Base Font(px)",avnav.util.PropertyType.RANGE,[8,28]),
         allowTwoWidgetRows:new avnav.util.Property(true,"2 widget rows",avnav.util.PropertyType.CHECKBOX),
-        nightMode: new avnav.util.Property( 100,"NightMode",avnav.util.PropertyType.CHECKBOX),
+        nightMode: new avnav.util.Property( false,"NightMode",avnav.util.PropertyType.CHECKBOX),
         nightColorDim:new avnav.util.Property( 60,"Night Dim for Colors",avnav.util.PropertyType.RANGE,[5,100]), //should match @nightModeVale in less
         //all style members map to less variables
         style:{
