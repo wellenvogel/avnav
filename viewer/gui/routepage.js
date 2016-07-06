@@ -175,22 +175,6 @@ avnav.gui.Routepage.prototype.showPage=function(options) {
         this.selectOnPage(".avb_RoutePageOk").show();
     }
     this.fillData(true);
-    this.showHideModifyButtons();
-};
-avnav.gui.Routepage.prototype.showHideModifyButtons=function(){
-    var show=true;
-    if (this.fromdownload) show=false;
-    if (show){
-        if (!this.routingData.isEditingRoute(this.currentName)) show=false;
-    }
-    if (show){
-        this.selectOnPage('.avb_NavInvert').show();
-        this.selectOnPage('.avb_NavDeleteAll').show();
-    }
-    else{
-        this.selectOnPage('.avb_NavInvert').hide()
-        this.selectOnPage('.avb_NavDeleteAll').hide();
-    }
 };
 /**
  * find a route info in the list and return the index
@@ -249,7 +233,6 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
     this.numLocalRoutes=0;
     $('#avi_route_name').val(this.currentName);
     $("."+this.visibleListEntryClass).remove();
-    this.showHideModifyButtons();
     var activeName=undefined;
     if (this.routingData.hasActiveRoute()){
         activeName=this.routingData.getCurrentLeg().name;
@@ -524,17 +507,6 @@ avnav.gui.Routepage.prototype.btnRoutePageTracks=function(button,ev) {
 avnav.gui.Routepage.prototype.btnRoutePageCharts=function(button,ev) {
     avnav.log("route tracks clicked");
     this.gui.showPage("downloadpage",{downloadtype:"chart",skipHistory: true});
-};
-avnav.gui.Routepage.prototype.btnNavDeleteAll=function(button,ev){
-    avnav.log("navDeletAll clicked");
-    this.routingData.emptyRoute();
-    this.fillData();
-};
-
-avnav.gui.Routepage.prototype.btnNavInvert=function(button,ev){
-    avnav.log("navInvert clicked");
-    this.routingData.invertRoute();
-    this.fillData();
 };
 /**
  * create the page instance

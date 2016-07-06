@@ -12,7 +12,6 @@ if (process.env.NODE_ENV === 'production') {
 
 var copyList=[
     {from: './avnav_viewer.html'},
-    {from: './manifest.json'},
     {from: './webpack-loader.js',to:'loader.js'},
     {from: './images/icons-new/*svg'},
     {from: '../libraries/jquery/jquery-1.11.0.min.js',to:'libraries'},
@@ -33,18 +32,16 @@ var images=[
     'MarkerOrange.png',
     'Boat2.png',
     'nadel_mit.png',
-    'WebIcon-512.png',
-    'WebIcon-128.png'
 
 ];
 images.forEach(function(el){
    copyList.push({from: "./images/"+el,to:'images'});
 });
 if (process.env.NODE_ENV === 'production') {
-    copyList.push({from: '../libraries/ol311/ol.js', to:'libraries/ol.js'})
+    copyList.push({from: '../libraries/ol3151/ol.js', to:'libraries/ol.js'})
 }
 else{
-    copyList.push({from: '../libraries/ol311/ol-debug.js', to: 'libraries/ol.js'})
+    copyList.push({from: '../libraries/ol3151/ol-debug.js', to: 'libraries/ol.js'})
 }
 var devtool="eval";
 if (process.env.NODE_ENV === 'production') {
