@@ -276,6 +276,7 @@ avnav.nav.Route.prototype.toJsonString=function(){
 avnav.nav.Route.prototype.differsTo=function(route2){
     if (! route2) return true;
     if (this.name != route2.name) return true;
+    if (this.server != route2.server) return true;
     if (this.points.length != route2.points.length) return true;
     var i;
     for (i=0;i<this.points.length;i++){
