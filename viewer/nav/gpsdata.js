@@ -28,7 +28,8 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
         nmeaStatusColor:"red",
         nmeaStatusText:"???",
         aisStatusColor: "red",
-        aisStatusText: "???"
+        aisStatusText: "???",
+        clock: "00:00"
     };
     /** {avnav.util.Formatter} @private */
     this.formatter=new avnav.util.Formatter();
@@ -69,6 +70,7 @@ avnav.nav.GpsData.prototype.handleGpsResponse=function(data, status){
         formattedData.gpsCourse = this.formatter.formatDecimal(gpsdata.course || 0, 3, 0);
         formattedData.gpsSpeed = this.formatter.formatDecimal(gpsdata.speed || 0, 2, 1);
         formattedData.gpsTime = this.formatter.formatTime(gpsdata.rtime || new Date());
+        formattedData.clock = this.formatter.formatClock(gpsdata.rtime || new Date());
     }
     formattedData.nmeaStatusColor="red";
     formattedData.nmeaStatusText="???"

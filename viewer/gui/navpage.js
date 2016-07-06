@@ -140,6 +140,8 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     this.updateAisPanel();
     this.fillDisplayFromGps();
     if (!this.gui.properties.getProperties().layers.nav) this.hideRouting();
+    if (this.gui.properties.getProperties().showClock) this.selectOnPage('#avi_navpage_clock').show();
+    else this.selectOnPage('#avi_navpage_clock').hide();
     this.handleRouteDisplay();
     this.updateRoutePoints(true);
     if (options && options.showRouting){
