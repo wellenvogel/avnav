@@ -378,6 +378,7 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     }
     this.hideOverlay();
     this.updateAisPanel();
+    this.selectOnPage('#avi_navpage_clock').hide();
 };
 
 /**
@@ -401,6 +402,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     }
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
     this.updateAisPanel();
+    if (this.gui.properties.getProperties().showClock) this.selectOnPage('#avi_navpage_clock').show();
 };
 
 /**
