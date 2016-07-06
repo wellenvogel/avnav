@@ -11,7 +11,7 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    id="svg29947"
    version="1.1"
-   inkscape:version="0.91 r"
+   inkscape:version="0.91 r13725"
    xml:space="preserve"
    width="256"
    height="256"
@@ -51,7 +51,7 @@
      id="namedview29949"
      showgrid="false"
      inkscape:zoom="2.5371819"
-     inkscape:cx="26.352372"
+     inkscape:cx="-47.548518"
      inkscape:cy="96.592597"
      inkscape:window-x="0"
      inkscape:window-y="24"
@@ -76,14 +76,15 @@
      transform="matrix(1.25,0,0,-1.25,0,255.99995)"
      style="display:inline"><g
        id="use60824"
-       transform="matrix(0.8,0,0,-0.8,0,204.79996)"><circle
+       transform="matrix(0.8,0,0,-0.8,0,204.79996)"
+       style="fill:#ff2a2a"><circle
          r="42.553192"
          id="circle60888"
          cy="128"
          cx="128"
          stroke-linecap="null"
          stroke-linejoin="null"
-         style="fill:none;stroke:#000000;stroke-width:14.89361668;stroke-miterlimit:4;stroke-dasharray:none" /></g><g
+         style="fill:#ff2a2a;stroke:#000000;stroke-width:14.89361668;stroke-miterlimit:4;stroke-dasharray:none" /></g><g
        id="g71234"><path
          style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;baseline-shift:baseline;text-anchor:start;white-space:normal;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:9.60000134;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
          d="m 18.132812,98.857422 0,4.800778 c -3e-6,44.41027 37.750027,80.28907 83.923828,80.28907 46.1738,0 83.92383,-35.8788 83.92383,-80.28907 l 0,-4.800778 -9.59961,0 0,4.800778 c 0,38.97221 -33.10028,70.6875 -74.32422,70.6875 -41.223936,0 -74.322268,-31.71529 -74.322265,-70.6875 l 0,-4.800778 -9.601563,0 z"

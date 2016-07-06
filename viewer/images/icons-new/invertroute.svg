@@ -12,7 +12,7 @@
    height="256"
    id="svg3336"
    version="1.1"
-   inkscape:version="0.91 r"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="invertroute.svg">
   <metadata
      id="metadata3352">
@@ -36,7 +36,7 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1920"
-     inkscape:window-height="1006"
+     inkscape:window-height="1001"
      id="namedview3350"
      showgrid="false"
      inkscape:snap-global="true"
@@ -49,10 +49,10 @@
      inkscape:snap-others="true"
      inkscape:snap-nodes="false"
      inkscape:zoom="1.9127791"
-     inkscape:cx="-43.213093"
+     inkscape:cx="-141.238"
      inkscape:cy="164.2117"
-     inkscape:window-x="0"
-     inkscape:window-y="24"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg3336"
      inkscape:snap-bbox-edge-midpoints="true"
@@ -412,7 +412,8 @@
   </defs>
   <g
      id="use15758"
-     transform="translate(-71,0)">
+     transform="translate(-71,0)"
+     style="fill:#ff2a2a">
     <circle
        r="42.553192"
        id="circle11804"
@@ -420,11 +421,12 @@
        cx="128"
        stroke-linecap="null"
        stroke-linejoin="null"
-       style="fill:none;stroke:#000000;stroke-width:14.89361668;stroke-miterlimit:4;stroke-dasharray:none" />
+       style="fill:#ff2a2a;stroke:#000000;stroke-width:14.89361668;stroke-miterlimit:4;stroke-dasharray:none" />
   </g>
   <g
      id="use15792"
-     transform="translate(71.709418,0)">
+     transform="translate(71.709418,0)"
+     style="fill:#ff2a2a">
     <circle
        r="42.553192"
        id="circle11808"
@@ -432,7 +434,7 @@
        cx="128"
        stroke-linecap="null"
        stroke-linejoin="null"
-       style="fill:none;stroke:#000000;stroke-width:14.89361668;stroke-miterlimit:4;stroke-dasharray:none" />
+       style="fill:#ff2a2a;stroke:#000000;stroke-width:14.89361668;stroke-miterlimit:4;stroke-dasharray:none" />
   </g>
   <use
      id="use11843"
