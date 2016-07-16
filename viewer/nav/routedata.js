@@ -33,6 +33,12 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
     this.DEFAULTROUTE="default";
     this.FALLBACKROUTENAME="avnav.defaultRoute"; //a fallback name for the default route
     this.currentLeg.approachDistance=this.propertyHandler.getProperties().routeApproach+0;
+    /**
+     * the name of the last route that we edited
+     * @private
+     * @type {string}
+     */
+    this.lastEditingName=this.DEFAULTROUTE;
 
     try {
         var raw=localStorage.getItem(this.propertyHandler.getProperties().routingDataName);
@@ -319,6 +325,7 @@ avnav.nav.RouteData.prototype.changeRouteName=function(name,setLocal){
     this.editingRoute.setName(name);
     avnav.log("switch to new route "+name);
     if (setLocal) this.editingRoute.server=false;
+    this.lastEditingName=this.editingRoute.name;
     this._saveChanges(this.editingRoute.name);
 };
 /**
@@ -492,6 +499,7 @@ avnav.nav.RouteData.prototype.setNewEditingRoute=function(route){
     this.editingRoute=route.clone();
     this._findBestMatchingPoint();
     this._saveChanges(this.editingRoute.name);
+    this.lastEditingName=this.editingRoute.name;
 };
 
 /**
@@ -553,9 +561,11 @@ avnav.nav.RouteData.prototype.cloneActiveToEditing=function(newName) {
     }
     else {
         this.editingRoute = this._loadRoute(newName);
+        this.serverRoute=this.editingRoute.clone(); // let the server overwrite ours
         this.editingWp = this.editingRoute.getPointAtIndex(0);
     }
     this.saveRoute();
+    this.lastEditingName=this.editingRoute.name;
     this.navobject.routeEvent();
 };
 
@@ -575,14 +585,18 @@ avnav.nav.RouteData.prototype.startEditingRoute=function(){
     if (this.hasActiveRoute()){
         this.editingWp=this.currentLeg.to.clone();
         this.editingRoute=this.currentLeg.currentRoute;
+        this.lastEditingName=this.editingRoute.name;
         return;
     }
     if (! this.editingRoute){
-        this.editingRoute=this._loadRoute(this.DEFAULTROUTE);
+        this.editingRoute=this._loadRoute(this.lastEditingName);
+        this.serverRoute=this.editingRoute.clone();
         this.editingWp=this.editingRoute.getPointAtIndex(0);
+        this.lastEditingName=this.editingRoute.name;
         return;
     }
     this.editingWp=this._findBestMatchingPoint();
+    this.lastEditingName=this.editingRoute.name;
 };
 /**
  *
@@ -1109,12 +1123,14 @@ avnav.nav.RouteData.prototype._startQuery=function() {
     if (! this.isEditingActiveRoute()) {
         if (! this.editingRoute) return;
         if (! this.connectMode) return;
-        if (! this.editingRoute.server) return;
+        //we always query the server to let him overwrite what we have...
+        //if (! this.editingRoute.server) return;
         this._remoteRouteOperation("getroute",{
             name:this.editingRoute.name,
             okcallback:function(data,param){
                 var nRoute = new avnav.nav.Route();
                 nRoute.fromJson(data);
+                nRoute.server=true;
                 var change = nRoute.differsTo(self.serverRoute)
                 avnav.log("route data change=" + change);
                 if (change) {
@@ -1149,10 +1165,8 @@ avnav.nav.RouteData.prototype._saveRouteLocal=function(opt_route, opt_keepTime) 
 
     }
     if (! opt_keepTime || ! route.time) route.time = new Date().getTime();
-    if (! route.server) {
-        var str = route.toJsonString();
-        localStorage.setItem(this.propertyHandler.getProperties().routeName + "." + route.name, str);
-    }
+    var str = route.toJsonString();
+    localStorage.setItem(this.propertyHandler.getProperties().routeName + "." + route.name, str);
     return route;
 };
 

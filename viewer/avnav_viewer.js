@@ -77,7 +77,6 @@ var propertyDefinitions=function(){
         routeWpSize:new avnav.util.Property( 7,"WPSize",avnav.util.PropertyType.RANGE,[5,30]),
         routeApproach: new avnav.util.Property( 200,"Approach(m)",avnav.util.PropertyType.RANGE,[20,2000]),
         routeShowLL: new avnav.util.Property(false,"showLatLon",avnav.util.PropertyType.CHECKBOX), //show latlon or leg course/len
-        routeShowRteWhenEdit: new avnav.util.Property(false,"showActive when Editing",avnav.util.PropertyType.CHECKBOX), //show active route in editor
         navCircleColor: new avnav.util.Property( "#D71038","Circle Color",avnav.util.PropertyType.COLOR),
         navCircleWidth: new avnav.util.Property( 1,"Circle Width",avnav.util.PropertyType.RANGE,[1,10]),
         navCircle1Radius: new avnav.util.Property( 300,"Circle 1 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),

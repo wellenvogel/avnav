@@ -412,7 +412,7 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
 avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
     if (! this.navobject) return;
     var routeActive=this.navobject.getRoutingHandler().hasActiveRoute();
-    if (routeActive && (! this.routingVisible || this.gui.properties.getProperties().routeShowRteWhenEdit) ){
+    if (routeActive && ! this.routingVisible  ){
         $('#avi_routeDisplay').show();
     }
     else {
