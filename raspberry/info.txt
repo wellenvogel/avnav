@@ -86,6 +86,11 @@ iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACC
 iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
 #the port forwarding from port 80 to our avnav port 8080
 iptables -t nat -A PREROUTING -p tcp --dport 80 -d 192.168.20.10 -j REDIRECT --to-port 8080
+#some security for our external wlan
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -i wlan-av1 -j REJECT
+iptables -A INPUT -j ACCEPT
+
 iptables-save > /etc/iptables.ipv4.nat
 
 
