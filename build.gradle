@@ -1,5 +1,7 @@
 
-import org.apache.commons.compress.archivers.tar.*;
+import org.apache.commons.compress.archivers.tar.*
+
+import java.text.SimpleDateFormat;
 
 buildscript{
 	repositories{
@@ -8,6 +10,7 @@ buildscript{
     dependencies{
         classpath localGroovy()
         classpath 'org.apache.commons:commons-compress:1.11'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.6.1'
     }
 }
 
@@ -15,7 +18,12 @@ repositories{
 	mavenCentral()
 }
 
+description="NMEA multiplexer and Browser based navigation"
 apply plugin: 'java'
+
+apply plugin: 'nebula.ospackage-base'
+
+
 
 def taskgroup="avnav"
 ['build','clean'].each { tt ->
@@ -70,4 +78,76 @@ task releaseTar(type: ExtendedTar){
     }
 }
 
+task pkgVersion<<{
+    if (! project.hasProperty('packageVersion')){
+        SimpleDateFormat f=new SimpleDateFormat('YMD')
+        ospackage.version f.format(new Date())
+    }
+    else{
+        ospackage.version=packageVersion
+    }
+    println "package version $ospackage.version"
+}
+
+ospackage {
+    //release='3'
+    os = LINUX // only applied to RPM
+    requires 'gpsd'
+    requires 'python-gps'
+    requires 'bluetooth'
+    requires 'python-bluez'
+    requires 'python-pyudev'
+    requires 'python-serial'
+    user='root'
+    into '/usr/lib/avnav'
+    from ('viewer/build/release') {
+        into 'viewer'
+    }
+    from ('server'){
+        include "*.py"
+        into "server"
+        fileMode 0755
+    }
+    from ('chartconvert'){
+        include "*.py"
+        into 'chartconvert'
+        fileMode 0755
+    }
+    from ('chartconvert/tiler_tools'){
+        include "*html"
+        include "*csv"
+        into 'chartconvert/tiler_tools'
+        fileMode 0644
+    }
+    from ('chartconvert/tiler_tools'){
+        include "*.py"
+        into 'chartconvert/tiler_tools'
+        fileMode 0755
+    }
+    from ('libraries'){
+        include 'gpxpy*/**'
+        into 'libraries'
+    }
+    from ('linux'){
+        include "avnav_template.xml"
+    }
+    from ('linux'){
+        include "avnav"
+        fileMode 0755
+    }
+
+    link('/usr/bin/avnav','/usr/lib/avnav/avnav')
+}
+
+
+task app1Rpm(type: Rpm) {
+    packageName = 'foo'
+    arch = I386
+    dependsOn pkgVersion
+}
+
+task releaseDeb(type: Deb) {
+    group taskgroup
+    dependsOn 'releaseViewer',pkgVersion
+}
 

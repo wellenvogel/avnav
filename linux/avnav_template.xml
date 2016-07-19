@@ -2,12 +2,12 @@
 <!-- configuration for avnav_server on windows
      we do not have a gpsd and we can only directly use serial readers -->
 <AVNServer>
-<AVNConfig loglevel="DEBUG"
-	logfile="../data_linux/avnav.log" 
+<AVNConfig loglevel="INFO"
+	logfile="BASEDIR/log/avnav.log" 
 	debugToLog="true"/>
 <Readers>
 <!--<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />-->
-<AVNGpsdFeeder useGpsd="true" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
+<AVNGpsdFeeder useGpsd="true" listenerPort="4020" port="2948" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
 <!-- <AVNSerialReader name="com4reader" port="3" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
 <!--<AVNSerialReader useFeeder="true" name="com8reader" port="7" baud="38400" minbaud="4800"/>-->
@@ -56,30 +56,27 @@
 
 
 <!-- for testing purposes: connect to a socket for reading NMEA data -->
-<!-- <AVNSocketReader host="avnav" port="34567"/> -->
-<AVNSocketReader host="localhost" port="34568"/>
+<!--<AVNSocketReader host="localhost" port="34568"/>-->
 	<AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
 </Readers>
 <!-- provide your data at this port for e.g. OpenCPN -->
 <AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="100"/>
-<AVNTrackWriter interval="10" distance="100" trackdir="../data_linux/tracks"/>
-<AVNHttpServer navurl="/viewer/avnav_navi.php" httpPort="8081" upzoom="0"
+<AVNTrackWriter interval="10" distance="100" trackdir="BASEDIR/tracks"/>
+<AVNHttpServer navurl="/viewer/avnav_navi.php" httpPort="8080" upzoom="0"
                chartbase="maps" empty="nonexistent">
 <!-- chartbaseurl="http://$host/Karten/anav"> -->
-	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
-	<Directory urlpath="viewer" path="../viewer"></Directory>
-	<Directory urlpath="build" path="../viewer/build"></Directory>
-	<Directory urlpath="libraries" path="../libraries"></Directory>
-	<Directory urlpath="test" path="../../leaflet-test"></Directory>
+	<Directory urlpath="maps" path="~/AvnavCharts/out"></Directory>
+	<Directory urlpath="viewer" path="AVNAVDIR/viewer"></Directory>
+	<Directory urlpath="libraries" path="AVNAVDIR/viewer/libraries"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
     <!--  routing handler -->
-<AVNRouter routesdir="../data_linux/routes"></AVNRouter>
+<AVNRouter routesdir="BASEDIR/routes"></AVNRouter>
 <!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
 <AVNNmeaLogger></AVNNmeaLogger>
-<AVNImporter importDir="../data_linux/import"></AVNImporter>
+<AVNImporter importDir="BASEDIR/import"></AVNImporter>
 <AVNWpaHandler></AVNWpaHandler>
 </AVNServer>

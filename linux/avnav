@@ -1,0 +1,85 @@
+#! /bin/sh
+
+avnavdir=`readlink -f $0`
+avnavdir=`dirname $avnavdir`
+
+dopt=""
+basedir=""
+chartdir=""
+xmlfile=""
+
+usage(){
+  echo "usage: $0 [-d] [-b basedir] [-c chartdir] [-x cfgfile]"
+}
+
+err(){
+  echo "ERROR: $*"
+  exit 1
+}
+
+
+while getopts dc:b:x: opt; do
+case $opt in
+  d)
+    dopt="-d"
+    ;;
+  c)
+    chartdir=$OPTARG
+    ;;
+  b)
+    basedir=$OPTARG
+    ;;
+  x)
+    xmlfile=$OPTARG
+    [ ! -f "$xmlfile" ] && err "config file $xmlfile not found"
+    ;;
+  \?)
+    echo "invalid option $opt"
+    usage
+    exit 1
+esac
+done
+shift $((OPTIND-1))
+
+startprog="$avnavdir/server/avnav_server.py"
+[ ! -x $startprog ] && err "$startprog not found"
+
+if [ "$basedir" = "" ] ; then
+  if [ "$HOME" = "" ] ; then
+    err "no parameter -b is set and environment HOME is unset"
+  fi
+  if [ "$chartdir" = "" ] ; then
+    #be compatible to the converter
+    chartdir="$HOME/AvNavCharts/out"
+  fi
+  basedir="$HOME/avnav"
+  if [ ! -d $basedir ] ; then
+    echo "creating $basedir"
+    mkdir -p $basedir || err "unable to create $basedir"
+  fi
+fi
+basedir=`readlink -f $basedir`
+for d in log charts routes tracks ; do
+  if [ ! -d "$basedir/$d" ] ; then
+    mkdir -p "$basedir/$d" || err "unable to create $basedir/$p"
+  fi
+done
+if [ "$chartdir" = "" ] ; then
+  chartdir="$basedir/charts"
+fi
+if [ ! -d "$chartdir" ] ; then
+  mkdir -p "$chartdir" || err "unable to create chart dir $chartdir"
+fi
+
+if [ "$xmlfile" = "" ] ; then
+  xmlfile=$basedir/avnav_server.xml
+  if [ ! -f "$xmlfile" ] ; then
+    echo "creating initial $xmlfile"
+    sed -e "s?BASEDIR?$basedir?" -e "s?AVNAVDIR?$avnavdir?" $avnavdir/avnav_template.xml > $xmlfile || err "unable to create $xmlfile"
+  fi
+fi
+
+echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
+exec $startprog -c "$chartdir" $dopt "$xmlfile"
+
+
