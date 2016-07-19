@@ -7,9 +7,11 @@ dopt=""
 basedir=""
 chartdir=""
 xmlfile=""
+silent=0
+gui=0
 
 usage(){
-  echo "usage: $0 [-d] [-b basedir] [-c chartdir] [-x cfgfile]"
+  echo "usage: $0 [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-g]"
 }
 
 err(){
@@ -18,7 +20,7 @@ err(){
 }
 
 
-while getopts dc:b:x: opt; do
+while getopts dc:b:x:qg opt; do
 case $opt in
   d)
     dopt="-d"
@@ -33,6 +35,12 @@ case $opt in
     xmlfile=$OPTARG
     [ ! -f "$xmlfile" ] && err "config file $xmlfile not found"
     ;;
+  q)
+    silent=1
+    ;;
+  g)
+    gui=1
+    ;;
   \?)
     echo "invalid option $opt"
     usage
@@ -41,8 +49,14 @@ esac
 done
 shift $((OPTIND-1))
 
+[ "$gui" != 0 -a "$chartdir" != "" ] && err "you cannot set the chartdir when running the gui"
+[ "$gui" != 0 -a "$xmlfile" != "" ] && err "you cannot set the config file when running the gui"
+
 startprog="$avnavdir/server/avnav_server.py"
 [ ! -x $startprog ] && err "$startprog not found"
+
+guiprog="$avnavdir/gui/avnav_gui.py"
+[ "$gui" != 0 -a ! -x $guiprog ] && err "the gui $guiprog is not installed"
 
 if [ "$basedir" = "" ] ; then
   if [ "$HOME" = "" ] ; then
@@ -79,7 +93,17 @@ if [ "$xmlfile" = "" ] ; then
   fi
 fi
 
-echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
-exec $startprog -c "$chartdir" $dopt "$xmlfile"
+if [ "$gui" != 0 ] ; then
+  python -c 'import wx' > /dev/null 2>&1
+  [ $? != 0 ] && err "missing package python-wxgtkn.n, please install a valid version of this package (e.g. python-wxgtk3.0)"
+  exec $guiprog -b "$basedir"
+else
+  echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
+  if [ "$silent" = 0 ] ; then
+    exec $startprog -c "$chartdir" $dopt "$xmlfile"
+  else
+    exec $startprog -c "$chartdir" $dopt "$xmlfile"  > /dev/null 2>&1
+  fi
+fi
 
 

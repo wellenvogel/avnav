@@ -98,6 +98,8 @@ ospackage {
     requires 'python-bluez'
     requires 'python-pyudev'
     requires 'python-serial'
+    requires 'python-gdal'
+    requires 'python-imaging'
     user='root'
     into '/usr/lib/avnav'
     from ('viewer/build/release') {
@@ -134,6 +136,11 @@ ospackage {
     from ('linux'){
         include "avnav"
         fileMode 0755
+    }
+    from ('linux'){
+        include "avnav_gui*"
+        fileMode 0755
+        into "gui"
     }
 
     link('/usr/bin/avnav','/usr/lib/avnav/avnav')
