@@ -142,10 +142,9 @@ class AVNChartHandler(AVNWorker):
     AVNLog.info("charthandler started")
     while True:
       try:
-        chartbase=server.getStringParam('chartbase')
-        osdir=server.handlePathmapping(chartbase)
+        osdir=server.getChartBaseDir()
         if osdir is None or not os.path.isdir(osdir):
-          AVNLog.error("unable to find a valid chart directory")
+          AVNLog.error("unable to find a valid chart directory %s"%(osdir))
         else:
           for cd in os.listdir(osdir):
             chartdir=os.path.join(osdir,cd)
@@ -241,6 +240,7 @@ def main(argv):
   signal.signal(signal.SIGINT, sighandler)
   signal.signal(signal.SIGTERM, sighandler)
   signal.signal(signal.SIGABRT, sighandler)
+  signal.signal(signal.SIGHUP, sighandler)
   try:
     for group in (1,2):
       for handler in allHandlers:

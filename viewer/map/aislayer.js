@@ -59,7 +59,6 @@ avnav.map.AisLayer=function(mapholder,navobject){
      */
     this.pixel=[];
 
-    var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
@@ -132,7 +131,7 @@ avnav.map.AisLayer.prototype.createAllIcons=function(){
  * @param {ol.Coordinate} pixel the css pixel from the event
  */
 avnav.map.AisLayer.prototype.findTarget=function(pixel){
-    log("findAisTarget "+pixel[0]+","+pixel[1]);
+    avnav.log("findAisTarget "+pixel[0]+","+pixel[1]);
     var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
     var idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
     if (idx >=0) return this.pixel[idx].ais;
@@ -165,7 +164,7 @@ avnav.map.AisLayer.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) return;
     if (evdata.type == avnav.nav.NavEventType.AIS){
-        this.aisdata=this.navobject.getRawData(avnav.nav.NavEventType.AIS).slice(0);
+        this.aisdata=this.navobject.getAisHandler().getAisData().slice(0);
         this.pixel=[];
     }
     this.mapholder.triggerRender();

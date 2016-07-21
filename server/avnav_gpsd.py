@@ -341,7 +341,7 @@ class AVNGpsdFeeder(AVNGpsd):
     else:
       self.setName(self.getConfigName())
     if not hasGpsd and self.getBoolParam('useGpsd'):
-      raise Exception("no gpsd installed, cannot run %s"%(cls.getConfigName()))
+      raise Exception("no gpsd installed, cannot run %s"%(self.getConfigName()))
     
   def getName(self):
     return self.name

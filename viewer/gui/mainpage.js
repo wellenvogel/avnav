@@ -28,8 +28,12 @@ avnav.gui.Mainpage=function(){
 };
 avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 
+/**
+ * changethe night mode
+ * @param {boolean} newDim
+ */
 avnav.gui.Mainpage.prototype.changeDim=function(newDim){
-    this.gui.properties.setValueByName('style.nightMode',newDim);
+    this.gui.properties.setValueByName('nightMode',newDim);
     this.gui.properties.saveUserData();
     this.gui.properties.updateLayout();
     $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
@@ -60,7 +64,6 @@ avnav.gui.Mainpage.prototype.fillList=function(){
             for (var e in data.data){
                 var chartEntry=data.data[e];
                 var domEntry=entryTemplate.clone();
-                //domEntry.attr('href',"javascript:handleNavPage('"+chartEntry.url+"','"+chartEntry.charturl+"')");
                 domEntry.on('click',
                     {
                         entry: avnav.clone(chartEntry),
@@ -69,11 +72,8 @@ avnav.gui.Mainpage.prototype.fillList=function(){
                     function(ev){
                         page.showNavpage(ev.data.entry);
                     });
-                var ehtml='<img src="';
-                if (chartEntry.icon) ehtml+=chartEntry.icon;
-                else ehtml+=entryTemplate.find('img').attr('src');
-                ehtml+='"/>'+chartEntry.name;
-                domEntry.html(ehtml);
+                domEntry.find('.avn_mainName').text(chartEntry.name);
+                if (chartEntry.icon) domEntry.find('.avn_mainIcon').attr('src',chartEntry.icon);
                 div.find('#avi_mainpage_selections').append(domEntry);
             }
             page.layout();
@@ -86,17 +86,12 @@ avnav.gui.Mainpage.prototype.fillList=function(){
 avnav.gui.Mainpage.prototype.showPage=function(options){
     if (!this.gui) return;
     var ncon=this.gui.properties.getProperties().connectedMode;
-    this.handleToggleButton('#avb_Connected',ncon);
-    ncon=this.gui.properties.getProperties().style.nightMode;
-    var nightDim=this.gui.properties.getProperties().nightFade;
-    if (ncon != 100 && ncon != nightDim){
-        //could happen if we return from settings page
-        this.changeDim(nightDim);
-    }
-    this.handleToggleButton('#avb_Night',ncon!=100);
+    this.handleToggleButton('.avb_Connected',ncon);
+    ncon=this.gui.properties.getProperties().nightMode;
+    this.handleToggleButton('.avb_Night',ncon);
     this.fillList();
     if (avnav.android || this.gui.properties.getProperties().readOnlyServer){
-        $('#avb_Connected').hide();
+        this.selectOnPage('.avb_Connected').hide();
     }
 
 };
@@ -106,7 +101,7 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
  * @param entry - the chart entry
  */
 avnav.gui.Mainpage.prototype.showNavpage=function(entry){
-    log("activating navpage with url "+entry.url);
+    avnav.log("activating navpage with url "+entry.url);
     this.gui.showPage('navpage',{url:entry.url,charturl:entry.charturl});
 
 };
@@ -151,25 +146,25 @@ avnav.gui.Mainpage.prototype.layout=function(){
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Mainpage.prototype.btnShowHelp=function (button,ev){
-    log("ShowHelp clicked");
+    avnav.log("ShowHelp clicked");
 };
 
 avnav.gui.Mainpage.prototype.btnShowStatus=function (button,ev){
-    log("ShowStatus clicked");
+    avnav.log("ShowStatus clicked");
     this.gui.showPage('statuspage');
 };
 avnav.gui.Mainpage.prototype.btnShowSettings=function (button,ev){
-    log("ShowSettings clicked");
+    avnav.log("ShowSettings clicked");
     this.gui.showPage('settingspage');
 };
 avnav.gui.Mainpage.prototype.btnShowGps=function (button,ev){
-    log("ShowGps clicked");
+    avnav.log("ShowGps clicked");
     this.gui.showPage('gpspage');
 };
 avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
-    log("Connected clicked");
+    avnav.log("Connected clicked");
     var ncon=!this.gui.properties.getProperties().connectedMode;
-    this.handleToggleButton('#avb_Connected',ncon);
+    this.handleToggleButton('.avb_Connected',ncon);
     this.gui.properties.setValueByName('connectedMode',ncon);
     this.gui.properties.saveUserData();
     $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
@@ -177,25 +172,21 @@ avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
 };
 
 avnav.gui.Mainpage.prototype.btnNight=function (button,ev){
-    log("Night clicked");
-    var ncon=this.gui.properties.getProperties().style.nightMode;
-    if (ncon == 100){
-        ncon=this.gui.properties.getProperties().nightFade;
-    }
-    else ncon=100;
-    this.handleToggleButton('#avb_Night',ncon!=100);
-    this.changeDim(ncon);
+    avnav.log("Night clicked");
+    var ncon=this.gui.properties.getProperties().nightMode;
+    this.handleToggleButton('.avb_Night',!ncon);
+    this.changeDim(!ncon);
 };
 avnav.gui.Mainpage.prototype.btnShowDownload=function (button,ev) {
-    log("show download clicked");
+    avnav.log("show download clicked");
     this.gui.showPage('downloadpage');
 };
 avnav.gui.Mainpage.prototype.btnMainAndroid=function (button,ev) {
-    log("main android settings clicked");
+    avnav.log("main android settings clicked");
     avnav.android.showSettings();
 };
 avnav.gui.Mainpage.prototype.btnMainCancel=function (button,ev) {
-    log("main cancel clicked");
+    avnav.log("main cancel clicked");
     avnav.android.goBack();
 };
 /**

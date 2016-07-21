@@ -40,7 +40,7 @@ avnav.gui.Statuspage.prototype.doQuery=function(){
             self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
         },
         error: function(status,data,error){
-            log("status query error");
+            avnav.log("status query error");
             if (this.sequence != this.self.statusQuery) return;
             var self=this.self;
             self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
@@ -94,11 +94,11 @@ avnav.gui.Statuspage.prototype.localInit=function() {
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Statuspage.prototype.btnStatusWpa=function(button,ev){
-    log("StatusWpa clicked");
+    avnav.log("StatusWpa clicked");
     this.gui.showPage('wpapage');
 };
 avnav.gui.Statuspage.prototype.btnStatusAndroid=function(button,ev) {
-    log("StatusAndroid clicked");
+    avnav.log("StatusAndroid clicked");
     avnav.android.showSettings();
 };
 

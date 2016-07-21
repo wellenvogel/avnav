@@ -27,23 +27,14 @@ avnav.map.RouteLayer=function(mapholder,navobject){
      * @private
      * @type {avnav.nav.RouteData}
      */
-    this.routingDate=this.navobject.getRoutingData();
+    this.routingDate=this.navobject.getRoutingHandler();
     /**
      * @private
      * @type {boolean}
      */
     this.visible=this.mapholder.getProperties().getProperties().layers.nav;
     var self=this;
-    /**
-     * the current route points
-     * @type {Array}
-     */
-    this.currentRoutePoints=[];
 
-    /**
-     * the current route
-     */
-    this.currentRoute={};
 
     /**
      * the pixel coordinates of the route points from the last draw
@@ -51,6 +42,11 @@ avnav.map.RouteLayer=function(mapholder,navobject){
      * @type {Array}
      */
     this.routePixel=[];
+    /**
+     * @private
+     * @type {string}
+     */
+    this._routeName=undefined;
 
     /**
      * @private
@@ -66,7 +62,6 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.dashedStyle={};
     this.setStyle();
     var self=this;
-    this.getRoute();
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
@@ -115,7 +110,7 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
     this.markerStyle={
         anchor: [20, 20],
         size: [40, 40],
-        src: 'images/Marker1.png',
+        src: 'images/MarkerOrange.png',
         image:  new Image()
     };
     this.markerStyle.image.src=this.markerStyle.src;
@@ -133,20 +128,7 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
     };
 
 };
-/**
- * read the route from the route data
- * @private
- */
-avnav.map.RouteLayer.prototype.getRoute=function(){
-    this.currentRoutePoints=[];
-    //for now only the points
-    this.currentRoute=this.routingDate.getEditingRoute().clone();
-    var i;
-    for (i in this.currentRoute.points){
-        var p=this.mapholder.pointToMap(this.currentRoute.points[i].toCoord());
-        this.currentRoutePoints.push(p);
-    }
-};
+
 /**
  * the handler for new data
  * @param evdata
@@ -154,11 +136,7 @@ avnav.map.RouteLayer.prototype.getRoute=function(){
 avnav.map.RouteLayer.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) {
-        this.currentRoutePoints=[];
         return;
-    }
-    if (evdata.type == avnav.nav.NavEventType.ROUTE) {
-        this.getRoute();
     }
     this.mapholder.triggerRender();
 };
@@ -171,15 +149,15 @@ avnav.map.RouteLayer.prototype.navEvent=function(evdata){
 avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     this.routePixel = [];
     if (!this.visible) return;
-    var leg=this.navobject.getRawData(avnav.nav.NavEventType.ROUTE);
-    var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var leg=this.navobject.getRoutingHandler().getCurrentLeg();
+    var gps=this.navobject.getGpsHandler().getGpsData();
     var to=leg.to?this.mapholder.pointToMap(leg.to.toCoord()):undefined;
     var from=leg.from?this.mapholder.pointToMap(leg.from.toCoord()):undefined;
     var prop=this.mapholder.getProperties().getProperties();
     var drawNav=prop.layers.boat&&prop.layers.nav;
-    var route=this.navobject.getRoutingData().getEditingRoute();
+    var route=this.navobject.getRoutingHandler().getRoute();
     var text,wp;
-    if (! drawNav || ! route) {
+    if (! drawNav ) {
         this.routePixel=[];
         return;
     }
@@ -191,39 +169,49 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
             drawing.drawLineToContext(line,this.dashedStyle);
         }
     }
-    var routeTarget=this.navobject.getRoutingData().getActiveWpIdx();
-    var routeActive=false;
-    if (this.mapholder.getRoutingActive() || this.navobject.getRoutingData().hasActiveRoute()) {
-        routeActive=true;
-        this.routePixel = drawing.drawLineToContext(this.currentRoutePoints, this.lineStyle);
-        var active = this.navobject.getRoutingData().getActiveWpIdx();
+    if (to ){
+        //only draw the current target wp if we do not have a route
+        drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
+    }
+
+    var routeTarget=-1;
+    if ( route) {
+        this._routeName=route.name;
+        var currentRoutePoints=[];
+        var i;
+        for (i in route.points){
+            var p=this.mapholder.pointToMap(route.points[i].toCoord());
+            if (route.points[i].compare(leg.to)) routeTarget=i;
+            currentRoutePoints.push(p);
+        }
+        this.routePixel = drawing.drawLineToContext(currentRoutePoints, this.lineStyle);
+        var active = this.navobject.getRoutingHandler().getEditingWpIdx();
         var i,style;
-        for (i = 0; i < this.currentRoutePoints.length; i++) {
+        for (i = 0; i < currentRoutePoints.length; i++) {
             style=this.normalWpStyle;
             if (i == active) style=this.activeWpStyle;
             else {
                 if (i == routeTarget) style=this.routeTargetStyle;
             }
-            drawing.drawBubbleToContext(this.currentRoutePoints[i], prop.routeWpSize,
+            drawing.drawBubbleToContext(currentRoutePoints[i], prop.routeWpSize,
                 style);
-            wp=this.navobject.getRoutingData().getWp(i);
+            wp=route.points[i];
             if (wp && wp.name) text=wp.name;
             else text=i+"";
-            drawing.drawTextToContext(this.currentRoutePoints[i],text,this.textStyle);
+            drawing.drawTextToContext(currentRoutePoints[i],text,this.textStyle);
         }
     }
     else {
         this.routePixel=[];
 
     }
-    if (to && (! routeActive)){
-        drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
-    }
+
 
 };
 /**
  * find the waypoint that has been clicked and set this as active
  * @param pixel
+ * @returns {avnav.nav.navdata.WayPoint} or undefined
  */
 avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance
@@ -231,13 +219,14 @@ avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     if (! this.routePixel) return undefined;
     var idx=this.mapholder.findTarget(pixel,this.routePixel,tolerance);
     if (idx >= 0){
-        this.navobject.getRoutingData().setEditingWp(idx);
+        var rt=this.navobject.getRoutingHandler().getRouteByName(this._routeName);
+        if (! rt) return undefined;
+        return rt.getPointAtIndex(idx);
     }
-    if (idx <= this.currentRoute.points.length) return this.currentRoute.points[idx];
     return undefined;
 };
 avnav.map.RouteLayer.prototype.propertyChange=function(evdata) {
     this.visible=this.mapholder.getProperties().getProperties().layers.nav;
     this.setStyle();
-    this.getRoute();
+    this.mapholder.triggerRender();
 };

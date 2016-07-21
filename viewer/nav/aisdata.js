@@ -199,7 +199,7 @@ avnav.nav.AisData=function(propertyHandler,navobject){
  */
 avnav.nav.AisData.prototype.handleAisData=function() {
     /** @type {avnav.nav.navdata.GpsInfo}*/
-    var boatPos = this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var boatPos = this.navobject.getGpsHandler().getGpsData();
     var properties=this.propertyHandler.getProperties();
     var trackedTarget=null; //ref to tracked target
     var aisWarningAis = null;
@@ -362,7 +362,7 @@ avnav.nav.AisData.prototype.startQuery=function() {
             self.timer=window.setTimeout(function(){self.startQuery();},timeout);
         },
         error: function(status,data,error){
-            log("query ais error");
+            avnav.log("query ais error");
             self.aisErrors+=1;
             if (self.aisErrors >= self.propertyHandler.getProperties().maxAisErrors){
                 self.currentAis=[];

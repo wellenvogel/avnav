@@ -88,7 +88,7 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
             numdecimal=range[3];
         }
         html+='/></div>';
-        html+='<button class="avn_settings_reset"></button>';
+        html+='<button class="avn_settings_reset avn_smallButton"></button>';
         html+='<div class="avn_clear"/>';
         html+='</div>';
         this.allItems[descr.completeName]= {
@@ -104,7 +104,7 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
         var html='<div class=""><div class="avn_color_label" >'+descr.label+'</div>';
         html+='<div class="avn_color_out avn_out">'+value+'</div>';
         html+='<input type="color" class="avn_color avn_setting" avn_name="'+descr.completeName+'"/>';
-        html+='<button class="avn_settings_reset"></button>';
+        html+='<button class="avn_settings_reset avn_smallButton"></button>';
         html+='<div class="avn_clear"/>';
         html+='</div>';
         this.allItems[descr.completeName]= {
@@ -159,6 +159,7 @@ avnav.gui.Settingspage.prototype.readData=function(){
 avnav.gui.Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.readData();
+    this.selectOnPage('input[type="range"]').rangeslider('update', true);
 };
 
 
@@ -176,7 +177,7 @@ avnav.gui.Settingspage.prototype.hidePage=function(){
  * @private
  */
 avnav.gui.Settingspage.prototype.btnSettingsOK=function(button,ev){
-    log("SettingsOK clicked");
+    avnav.log("SettingsOK clicked");
     var txt="";
     for (var idx in this.allItems){
         var val=this.allItems[idx].read();
@@ -189,7 +190,7 @@ avnav.gui.Settingspage.prototype.btnSettingsOK=function(button,ev){
 };
 
 avnav.gui.Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
-    log("SettingsDefaults clicked");
+    avnav.log("SettingsDefaults clicked");
     for (var idx in this.allItems) {
         var val = this.gui.properties.getDescriptionByName(idx).defaultv;
         this.allItems[idx].write(val);
@@ -197,7 +198,7 @@ avnav.gui.Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
 };
 
 avnav.gui.Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
-    log("SettingsAndroid clicked");
+    avnav.log("SettingsAndroid clicked");
     this.gui.showPage('mainpage');
     avnav.android.showSettings();
 };

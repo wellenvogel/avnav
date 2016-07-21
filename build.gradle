@@ -1,0 +1,170 @@
+
+import org.apache.commons.compress.archivers.tar.*
+
+import java.text.SimpleDateFormat;
+
+buildscript{
+	repositories{
+		mavenCentral()
+	}
+    dependencies{
+        classpath localGroovy()
+        classpath 'org.apache.commons:commons-compress:1.11'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.6.1'
+    }
+}
+
+repositories{
+	mavenCentral()
+}
+
+description="NMEA multiplexer and Browser based navigation"
+apply plugin: 'java'
+
+apply plugin: 'nebula.ospackage-base'
+
+
+
+def taskgroup="avnav"
+['build','clean'].each { tt ->
+    tasks.create(name:"${tt}Android",type: GradleBuild) {
+        group taskgroup
+        setDir("android")
+        setTasks([tt])
+    }
+}
+clean.dependsOn cleanAndroid
+build.dependsOn buildAndroid
+
+["debug","release","clean"].each { tt ->
+    def vt=tasks.create(name: "${tt}Viewer",type: GradleBuild) {
+        group taskgroup
+        setDir("viewer")
+        setTasks([tt])
+    }
+    if (tt == "clean"){
+        clean.dependsOn vt
+    }
+    else{
+        build.dependsOn vt
+    }
+}
+
+
+
+task releaseTar(type: ExtendedTar){
+    from ("viewer/build/release") {
+        into "viewer"
+    }
+    from ("server"){
+        into "server"
+        include("*py")
+    }
+    ofile="$buildDir/test.tar"
+    modifyEntry {
+        TarArchiveEntry entry, FileCopyDetails details ->
+            entry.setGroupId(1000)
+            entry.setUserId(1000)
+            def name=details.getName()
+            def isDir=details.isDirectory()
+            if (name.endsWith(".py") || name.endsWith(".sh") || isDir){
+                entry.setMode(0755)
+            }
+            else{
+                entry.setMode(0644)
+            }
+            println "adding "+entry.getName()
+            return true
+    }
+}
+
+task pkgVersion<<{
+    if (! project.hasProperty('packageVersion')){
+        SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
+        ospackage.version f.format(new Date())
+    }
+    else{
+        ospackage.version=packageVersion
+    }
+    println "package version $ospackage.version"
+}
+
+def emptyBase=new File(project.buildDir,"empty")
+ospackage {
+    //release='3'
+    os = LINUX // only applied to RPM
+    packageGroup='misc'
+    requires 'gpsd'
+    requires 'python-gps'
+    requires 'bluetooth'
+    requires 'python-bluez'
+    requires 'python-pyudev'
+    requires 'python-serial'
+    requires 'python-gdal'
+    requires 'python-imaging'
+    user='root'
+    into ('/usr/lib/avnav') {
+        from('viewer/build/release') {
+            into 'viewer'
+        }
+        from('server') {
+            include "*.py"
+            into "server"
+            fileMode 0755
+        }
+        from('chartconvert') {
+            include "*.py"
+            into 'chartconvert'
+            fileMode 0755
+        }
+        from('chartconvert/tiler_tools') {
+            include "*html"
+            include "*csv"
+            into 'chartconvert/tiler_tools'
+            fileMode 0644
+        }
+        from('chartconvert/tiler_tools') {
+            include "*.py"
+            into 'chartconvert/tiler_tools'
+            fileMode 0755
+        }
+        from('libraries') {
+            include 'gpxpy*/**'
+            into 'libraries'
+        }
+        from('linux') {
+            include "avnav_template.xml"
+        }
+        from('linux') {
+            include "avnav"
+            fileMode 0755
+        }
+        from('linux') {
+            include "avnav_gui*"
+            fileMode 0755
+            into "gui"
+        }
+    }
+    into ('/usr/lib/systemd/system'){
+        from('linux'){
+            include 'avnav.service'
+        }
+    }
+    postInstall file('linux/postinstall')
+
+    link('/usr/bin/avnav','/usr/lib/avnav/avnav')
+}
+
+
+
+
+task releaseRpm(type: Rpm) {
+    arch = I386
+    dependsOn pkgVersion
+}
+
+task releaseDeb(type: Deb) {
+    group taskgroup
+    dependsOn 'releaseViewer',pkgVersion
+}
+

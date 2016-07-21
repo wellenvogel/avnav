@@ -24,7 +24,7 @@ avnav.inherits(avnav.gui.Gpspage,avnav.gui.Page);
 avnav.gui.Gpspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.gui.navobject.setAisCenterMode(avnav.nav.AisCenterMode.GPS);
-    this.gui.navobject.getAisData().setTrackedTarget(0);
+    this.gui.navobject.getAisHandler().setTrackedTarget(0);
     this.computeLayout();
 };
 avnav.gui.Gpspage.prototype.localInit=function(){
@@ -165,9 +165,9 @@ avnav.gui.Gpspage.prototype.drawXte=function(context){
     context.lineTo(0.5*w,linebase+0.5*middleHeight);
     context.stroke();
     context.closePath();
-    var curXte=this.navobject.getRawData(avnav.nav.NavEventType.NAV).routeXte;
+    var curXte=this.navobject.getComputedValues();
     if (curXte === undefined) return;
-    var xtepos=curXte/xteMax;
+    var xtepos=curXte.markerXte/xteMax;
     if (xtepos < -1.1) xtepos=-1.1;
     if (xtepos > 1.1) xtepos=1.1;
     xtepos=xtepos*(right-left)/2+left+(right-left)/2;
@@ -183,24 +183,21 @@ avnav.gui.Gpspage.prototype.drawXte=function(context){
 avnav.gui.Gpspage.prototype.navEvent=function(evt){
     var canvas=$('#avi_gpsp_xte')[0];
     this.drawXte(canvas.getContext("2d"));
-    var nearestTarget = this.navobject.getAisData().getNearestAisTarget();
+    var nearestTarget = this.navobject.getAisHandler().getNearestAisTarget();
+    var color="";
     if (this.gui.properties.getProperties().layers.ais && nearestTarget.cpa ){
         var txt="CPA: "+this.navobject.getValue('aisCpa')+"nm&nbsp;TCPA: "+this.navobject.getValue('aisTcpa');
         $('#avi_gpsp_ais').html(txt);
-        if (nearestTarget.warning){
-            $('#avi_gpsp_ais_status').removeClass('avn_ais_info_first');
-            $('#avi_gpsp_ais_status').addClass('avn_ais_info_warning');
-        }
-        else {
-            $('#avi_gpsp_ais_status').addClass('avn_ais_info_first');
-            $('#avi_gpsp_ais_status').removeClass('avn_ais_info_warning');
-        }
+        color=this.gui.properties.getAisColor({
+            nearest: true,
+            warning: nearestTarget.warning
+        });
     }
     else {
         $('#avi_gpsp_ais').text("");
-        $('#avi_gpsp_ais_status').removeClass('avn_ais_info_first');
-        $('#avi_gpsp_ais_status').removeClass('avn_ais_info_warning');
+        color="";
     }
+    $('#avi_gpsp_ais_status').css('background-color',color);
 
 };
 

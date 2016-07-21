@@ -78,7 +78,7 @@ avnav.gui.Routepage.prototype.resetUpload=function(){
 };
 avnav.gui.Routepage.prototype.localInit=function(){
     if (! this.gui) return;
-    this.routingData=this.gui.navobject.getRoutingData();
+    this.routingData=this.gui.navobject.getRoutingHandler();
     var self=this;
     $('#avi_route_name').keypress(function( event ) {
         if (event.which == 13) {
@@ -156,25 +156,41 @@ avnav.gui.Routepage.prototype.showPage=function(options) {
     this.fallbackUpload=false;
     if (! window.FileReader){
         if (!this.gui.properties.getProperties().connectedMode){
-            $('#avb_RoutePageUpload').hide();
+            this.selectOnPage('.avb_RoutePageUpload').hide();
         }
         else {
             this.fallbackUpload=true;
-            $('#avb_RoutePageUpload').show();
+            this.selectOnPage('.avb_RoutePageUpload').show();
         }
     }
     if (options && options.fromdownload){
         this.fromdownload=true;
-        this.getDiv().find(".avn_routepage_optional").show();
-        this.getDiv().find("#avb_RoutePageOk").hide();
-        this.handleToggleButton("#avb_RoutePageRoutes",true);
+        this.selectOnPage(".avn_routepage_optional").show();
+        this.selectOnPage(".avb_RoutePageOk").hide();
+        this.handleToggleButton(".avb_RoutePageRoutes",true);
     }
     else {
         this.fromdownload=false;
-        this.getDiv().find(".avn_routepage_optional").hide();
-        this.getDiv().find("#avb_RoutePageOk").show();
+        this.selectOnPage(".avn_routepage_optional").hide();
+        this.selectOnPage(".avb_RoutePageOk").show();
     }
     this.fillData(true);
+    this.showHideModifyButtons();
+};
+avnav.gui.Routepage.prototype.showHideModifyButtons=function(){
+    var show=true;
+    if (this.fromdownload) show=false;
+    if (show){
+        if (!this.routingData.isEditingRoute(this.currentName)) show=false;
+    }
+    if (show){
+        this.selectOnPage('.avb_NavInvert').show();
+        this.selectOnPage('.avb_NavDeleteAll').show();
+    }
+    else{
+        this.selectOnPage('.avb_NavInvert').hide()
+        this.selectOnPage('.avb_NavDeleteAll').hide();
+    }
 };
 /**
  * find a route info in the list and return the index
@@ -233,11 +249,12 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
     this.numLocalRoutes=0;
     $('#avi_route_name').val(this.currentName);
     $("."+this.visibleListEntryClass).remove();
+    this.showHideModifyButtons();
     var activeName=undefined;
     if (this.routingData.hasActiveRoute()){
-        activeName=this.routingData.getRouteData().name;
+        activeName=this.routingData.getCurrentLeg().name;
     }
-    var editingName=this.routingData.getEditingRoute().name;
+    var editingName=this.routingData.getRoute()?this.routingData.getRoute().name:undefined;
     var id;
     var routeInfos=this.routes;
     for (id=0;id<this.routes.length;id++){
@@ -259,7 +276,7 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
             if (activeName && activeName == routeInfos[id].name) {
                 $('#routeInfo-' + id).find('.avn_route_liststatimage').addClass("avn_route_active").removeClass("avn_route_current");
             }
-            $('#routeInfo-' + id).find('.avn_route_btnDelete').hide();
+            $('#routeInfo-' + id).find('.avn_route_btnDelete').css('visibility','collapse');
         }
         else {
             $('#routeInfo-' + id).find('.avn_route_btnDelete').on('click', null, {id: id}, function (ev) {
@@ -267,7 +284,7 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
                 var lid = ev.data.id;
                 var name = self.routes[lid].name;
                 //the current route could have changed...
-                if (self.routingData.hasActiveRoute() && self.routingData.getRouteData().name == name){
+                if (self.routingData.hasActiveRoute() && self.routingData.getCurrentLeg().name == name){
                     alert("cannot delete active route");
                     self.fillData(false);
                     return false;
@@ -300,7 +317,6 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
                     function(route){
                         self.loadedRoute=route;
                         self.fillData(false);
-                        //self.gui.showPageOrReturn(this.returnpage,'navpage',{showRouting:true});
                     },
                     function(err){
                         alert("unable to load route "+name+": "+err);
@@ -312,10 +328,10 @@ avnav.gui.Routepage.prototype.updateDisplay=function(){
         });
     }
     if (this.numLocalRoutes && this.gui.properties.getProperties().connectedMode){
-        $('#avb_RoutePageDelete').show();
+        this.selectOnPage('.avb_RoutePageDelete').show();
     }
     else {
-        $('#avb_RoutePageDelete').hide();
+        this.selectOnPage('avb_RoutePageDelete').hide();
     }
 };
 
@@ -326,7 +342,7 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
         this.currentName=this.loadedRoute.name;
     }
     else {
-        if (this.routingData.getEditingRoute()) this.currentName = this.routingData.getEditingRoute().name;
+        if (this.routingData.getRoute()) this.currentName = this.routingData.getRoute().name;
     }
     this.routes=[];
     var localRoutes=this.routingData.listRoutesLocal();
@@ -347,7 +363,7 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
 };
 
 avnav.gui.Routepage.prototype.directUpload=function(file) {
-    self=this;
+    var self=this;
     var url = self.gui.properties.getProperties().navUrl + "?request=upload&type=route&filename=" + encodeURIComponent(file.name);
     avnav.util.Helper.uploadFile(url, file, {
         self: self,
@@ -356,7 +372,7 @@ avnav.gui.Routepage.prototype.directUpload=function(file) {
         },
         progresshandler: function (param, ev) {
             if (ev.lengthComputable) {
-                log("progress called");
+                avnav.log("progress called");
             }
         },
         okhandler: function (param, data) {
@@ -406,27 +422,32 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
     }
     else {
         if (name && name != "") {
-            this.routingData.changeRouteName(name,!this.gui.properties.getProperties().connectedMode);
+            if (name != this.currentName && this.routingData.isEditingActiveRoute()){
+                this.routingData.cloneActiveToEditing(name);
+            }
+            else {
+                this.routingData.changeRouteName(name, !this.gui.properties.getProperties().connectedMode);
+            }
         }
     }
     this.gui.returnToLast('navpage', {showRouting: true});
-    log("Route OK clicked");
+    avnav.log("Route OK clicked");
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageCancel=function (button,ev){
-    log("Cancel clicked");
+    avnav.log("Cancel clicked");
     this.gui.returnToLast('navpage', {showRouting: true});
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
-    log("route download clicked");
+    avnav.log("route download clicked");
     var route;
     var self=this;
     if (this.loadedRoute){
         route=this.loadedRoute.clone();
     }
     else {
-        route=this.routingData.getEditingRoute().clone();
+        route=this.routingData.getRoute().clone();
     }
     if (! route) return;
     var name=$('#avi_route_name').val();
@@ -441,7 +462,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         return false;
     }
     if (route.server){
-        log("route download server direct");
+        avnav.log("route download server direct");
         //nice simple case:
         //we can ask the server directly to send us the route
         //we assume that the route is always up to date at the server
@@ -457,7 +478,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
     if (this.gui.properties.getProperties().connectedMode && ! this.gui.properties.getProperties().readOnlyServer) {
         //just store the route first and afterwards download it from the server
         route.server=true;
-        log("route download server upload");
+        avnav.log("route download server upload");
         this.routingData.saveRoute(route,true, function(ok){
             self.fillData(false);
             if (! ok) return;
@@ -471,7 +492,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         });
     }
     else {
-        log("route download local");
+        avnav.log("route download local");
         //this local download is the last resort if it is neither a server route nor we are connected
         var xmlroute=route.toXml();
         var datauri="data:application/octet-stream;base64,"+btoa(xmlroute);
@@ -483,7 +504,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
-    log("route upload clicked");
+    avnav.log("route upload clicked");
     if (avnav.android){
         var routeXml=avnav.android.uploadRoute();
         return false;
@@ -496,13 +517,24 @@ avnav.gui.Routepage.prototype.btnRoutePageUpload=function(button,ev){
 
 
 avnav.gui.Routepage.prototype.btnRoutePageTracks=function(button,ev) {
-    log("route tracks clicked");
-    this.gui.showPage("downloadpage",{downloadtype:"track"});
+    avnav.log("route tracks clicked");
+    this.gui.showPage("downloadpage",{downloadtype:"track",skipHistory: true});
 };
 
 avnav.gui.Routepage.prototype.btnRoutePageCharts=function(button,ev) {
-    log("route tracks clicked");
-    this.gui.showPage("downloadpage",{downloadtype:"chart"});
+    avnav.log("route tracks clicked");
+    this.gui.showPage("downloadpage",{downloadtype:"chart",skipHistory: true});
+};
+avnav.gui.Routepage.prototype.btnNavDeleteAll=function(button,ev){
+    avnav.log("navDeletAll clicked");
+    this.routingData.emptyRoute();
+    this.fillData();
+};
+
+avnav.gui.Routepage.prototype.btnNavInvert=function(button,ev){
+    avnav.log("navInvert clicked");
+    this.routingData.invertRoute();
+    this.fillData();
 };
 /**
  * create the page instance

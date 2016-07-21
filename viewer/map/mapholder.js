@@ -24,12 +24,13 @@ avnav.map.LayerTypes={
 
 avnav.map.EventType={
     MOVE:0,
-    SELECTAIS:1
+    SELECTAIS:1,
+    SELECTWP: 2
 };
 
 /**
  *
- * @param {avnav.map.EventTypes} type
+ * @param {avnav.map.EventType} type
  * @param opt_parameter
  * @constructor
  */
@@ -50,7 +51,7 @@ avnav.map.MapEvent.EVENT_TYPE="mapevent";
 /**
  * the holder for our olmap
  * the holer remains alive all the time whereas the map could be recreated on demand
- * @param {avnav.properties.PropertyHandler} properties
+ * @param {avnav.util.PropertyHandler} properties
  * @param navobject
  * @constructor
  */
@@ -286,7 +287,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         if (layers.length > 0) {
             var view = this.getView();
             var lext=layers[0].avnavOptions.extent;
-            if (lext !== undefined) view.fitExtent(lext, this.olmap.getSize());
+            if (lext !== undefined) view.fit(lext, this.olmap.getSize());
             view.setZoom(this.minzoom);
             this.center=this.pointFromMap(view.getCenter());
             this.zoom=view.getZoom();
@@ -420,7 +421,7 @@ avnav.map.MapHolder.prototype.getGpsLock=function(){
 avnav.map.MapHolder.prototype.navEvent=function(evdata){
     if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
     if (evdata.type == avnav.nav.NavEventType.GPS){
-        var gps=this.navobject.getRawData(evdata.type);
+        var gps=this.navobject.getGpsHandler().getGpsData();
         if (! gps.valid) return;
         this.navlayer.setBoatPosition(gps.toCoord(),gps.course);
         if (this.gpsLocked) {
@@ -583,6 +584,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 var z = zxy[0];
                 var x = zxy[1];
                 var y = zxy[2];
+                y=-y-1; //change for ol3-151 - commit af319c259b349c86a4d164c42cc4eb5884f896fb
 
                 if (rt.zoomLayerBoundings) {
                     var found = false;
@@ -609,7 +611,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                     var origin=[-20037508.342789244,-20037508.342789244]; //unfortunately the ol3 stuff does not export this...
                     var resolution = grid.getResolution(z);
                     var tileSize = grid.getTileSize(z);
-                    y = (1 << z) - y - 1
+                    y = (1 << z) - y - 1;
                     var minX = origin[0] + x * tileSize * resolution;
                     var minY = origin[1] + y * tileSize * resolution;
                     var maxX = minX + tileSize * resolution;
@@ -676,6 +678,7 @@ avnav.map.MapHolder.prototype.pointFromMap=function(point){
  * @param {avnav.nav.navdata.Point} point
  */
 avnav.map.MapHolder.prototype.setCenter=function(point){
+    if (! point) return;
     this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
 };
 
@@ -723,7 +726,7 @@ avnav.map.MapHolder.prototype.setCourseUp=function(on){
     var old=this.courseUp;
     if (old == on) return on;
     if (on){
-        var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+        var gps=this.navobject.getGpsHandler().getGpsData();
         if (! gps.valid) return false;
         this.averageCourse=gps.course;
         this.setMapRotation(this.averageCourse);
@@ -739,7 +742,7 @@ avnav.map.MapHolder.prototype.setCourseUp=function(on){
 
 avnav.map.MapHolder.prototype.setGpsLock=function(lock){
     if (lock == this.gpsLocked) return;
-    var gps=this.navobject.getRawData(avnav.nav.NavEventType.GPS);
+    var gps=this.navobject.getGpsHandler().getGpsData();
     if (! gps.valid && lock) return;
     //we do not lock if the nav layer is not visible
     if (! this.getProperties().getProperties().layers.boat && lock) return;
@@ -752,7 +755,14 @@ avnav.map.MapHolder.prototype.setGpsLock=function(lock){
  * @param {ol.MapBrowserEvent} evt
  */
 avnav.map.MapHolder.prototype.onClick=function(evt){
-    this.routinglayer.findTarget(evt.pixel);
+    var wp=this.routinglayer.findTarget(evt.pixel);
+    if (wp){
+        setTimeout(function() {
+            $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
+                new avnav.map.MapEvent(avnav.map.EventType.SELECTWP, {wp: wp})
+            );
+        },0);
+    }
     evt.preventDefault();
     if (this.routingActive) return false;
     var aisparam=this.aislayer.findTarget(evt.pixel);
@@ -783,7 +793,7 @@ avnav.map.MapHolder.prototype.onDoubleClick=function(evt){
  * @return {number} the matching index or -1
  */
 avnav.map.MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
-    log("findTarget "+pixel[0]+","+pixel[1]);
+    avnav.log("findTarget "+pixel[0]+","+pixel[1]);
     var tolerance=opt_tolerance||10;
     var xmin=pixel[0]-tolerance;
     var xmax=pixel[0]+tolerance;
@@ -821,7 +831,7 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     this.saveCenter();
 
 
-    log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
+    avnav.log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
 
 };
 
@@ -849,7 +859,7 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
 
 /**
  *
- * @param {oli.render.Event} evt
+ * @param {ol.render.Event} evt
  */
 avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     var newCenter=this.pointFromMap(evt.frameState.viewState.center);

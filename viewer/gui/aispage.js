@@ -30,7 +30,7 @@ avnav.gui.Aispage=function(){
 avnav.inherits(avnav.gui.Aispage,avnav.gui.Page);
 
 avnav.gui.Aispage.prototype.localInit=function(){
-    this.aishandler=this.navobject.getAisData();
+    this.aishandler=this.navobject.getAisHandler();
     $('#avi_ais_page_inner').on('scroll',function(){
         $('.avn_ais_headline_elem').css('top',$('#avi_ais_page_inner').scrollTop()-2);
     });
@@ -55,22 +55,13 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
     var hasTracking=this.aishandler.getTrackedTarget();
     for( var aisidx in aisList){
         var ais=aisList[aisidx];
-        var addClass='';
-        if (ais.warning) addClass='avn_ais_warning';
-        else {
-            if (hasTracking){
-                if (ais.tracking) addClass='avn_ais_selected';
-                else {
-                    if (ais.nearest) addClass='avn_ais_info_first';
-                    else addClass='avn_ais_info_normal';
-                }
-            }
-            else {
-                if (ais.nearest) addClass='avn_ais_info_first';
-                else addClass='avn_ais_info_normal';
-            }
-        }
-        html+='<tr class="avn_ais '+addClass+' avn_ais_selector" mmsi="'+ais['mmsi']+'">';
+        var color=this.gui.properties.getAisColor({
+            nearest: ais.nearest,
+            warning: ais.warning,
+            tracking: hasTracking && ais.tracking
+        });
+
+        html+='<tr class="avn_ais avn_ais_selector" style="background-color:'+color+'" mmsi="'+ais['mmsi']+'">';
         for (var p in formatter){
             html+='<td class="avn_aisparam">'+formatter[p].format(ais)+'</td>';
         }
@@ -83,30 +74,24 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         var clickDelay=self.gui.properties.getProperties().aisBrowserWorkaround;
         if (clickDelay> 0 ){
             if ((new Date()).getTime() < (self.showTime+clickDelay)){
-                log("ais page click delay");
+                avnav.log("ais page click delay");
                 return false;
             }
         }
         var mmsi=$(this).attr('mmsi');
         self.aishandler.setTrackedTarget(mmsi);
-        self.gui.showPage('aisinfopage',{mmsi:mmsi});
-        /*
-        var pos=self.aishandler.getAisPositionByMmsi(mmsi);
-        if (pos)self.gui.map.setCenter(pos);
-        self.gui.map.setGpsLock(false);
-        self.gui.showPageOrReturn(ev.data.self.returnpage,'navpage');
-        */
+        self.gui.showPage('aisinfopage',{mmsi:mmsi,skipHistory: true});
     });
     if (initial){
         $(domid).scrollTop(0);
         var topDom=$(domid+' .avn_ais_selected');
         var topElement;
-        if (! topDom)topDom=$(domid+' .avn_ais_warning');
+        if (! topDom)topDom=$(domid+' .avn_ais__info_warning');
         if (topDom) topElement=$(topDom).position();
         if (topElement){
             var scrollTop=topElement.top - $('.avn_ais_headline').height();
             var currentTop=$(domid).scrollTop();
-            log("aisPage scroll: elTop:"+topElement.top+",current="+currentTop+", scroll="+scrollTop+", mmsi="+$(topDom).attr('mmsi'));
+            avnav.log("aisPage scroll: elTop:"+topElement.top+",current="+currentTop+", scroll="+scrollTop+", mmsi="+$(topDom).attr('mmsi'));
             $(domid).scrollTop(scrollTop);
         }
     }
@@ -133,7 +118,7 @@ avnav.gui.Aispage.prototype.navEvent=function(ev){
 avnav.gui.Aispage.prototype.btnAisNearest=function (button,ev){
     this.aishandler.setTrackedTarget(0);
     this.returnToLast();
-    log("Nearest clicked");
+    avnav.log("Nearest clicked");
 };
 
 /**

@@ -28,16 +28,21 @@ avnav.gui.AisInfoPage=function(){
      * @type {undefined}
      */
     this.mmsi=undefined;
+    /**
+     * private
+     * @type {string}
+     */
+    this.statusItem='.avn_Status';
 
 };
 avnav.inherits(avnav.gui.AisInfoPage,avnav.gui.Page);
 
 avnav.gui.AisInfoPage.prototype.localInit=function(){
-    this.aishandler=this.navobject.getAisData();
+    this.aishandler=this.navobject.getAisHandler();
 };
 avnav.gui.AisInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;
-    this.mmsi=options.mmsi;
+    this.mmsi=options?options.mmsi:undefined;
     if (this.mmsi === undefined) {
         var current=this.aishandler.getNearestAisTarget();
         if (current) this.mmsi=current.mmsi;
@@ -60,23 +65,14 @@ avnav.gui.AisInfoPage.prototype.fillData=function(initial){
         this.returnToLast();
         return;
     }
-    if (currentObject.warning){
-        this.selectOnPage('.avn_aisStatus').addClass('avn_ais_warning');
-    }
-    else{
-        this.selectOnPage('.avn_aisStatus').removeClass('avn_ais_warning');
-        if (currentObject.nearest){
-            this.selectOnPage('.avn_aisStatus').removeClass('avn_ais_info_normal');
-            this.selectOnPage('.avn_aisStatus').addClass('avn_ais_info_first');
-        }
-        else{
-            this.selectOnPage('.avn_aisStatus').addClass('avn_ais_info_normal');
-            this.selectOnPage('.avn_aisStatus').removeClass('avn_ais_info_first');
-        }
-    }
+    var color=this.gui.properties.getAisColor({
+        warning: currentObject.warning,
+        nearest: currentObject.nearest
+    });
+    $(this.statusItem).css('background-color',color);
 
     var self=this;
-    $("#avi_ais_infopage_inner").show();
+    this.selectOnPage(".avn_infopage_inner").show();
     this.selectOnPage(".avn_ais_data").each(function(idx,el){
         var name=$(this).attr('data-name');
         if (! name) return;
@@ -97,22 +93,22 @@ avnav.gui.AisInfoPage.prototype.btnAisInfoNearest=function (button,ev){
     this.aishandler.setTrackedTarget(0);
     var pos=this.aishandler.getAisPositionByMmsi(this.aishandler.getTrackedTarget());
     if (pos)this.gui.map.setCenter(pos);
-    this.gui.showPage('navpage');
-    log("Nearest clicked");
+    this.returnToLast();
+    avnav.log("Nearest clicked");
 };
 
 avnav.gui.AisInfoPage.prototype.btnAisInfoList=function (button,ev){
-    log("List clicked");
+    avnav.log("List clicked");
     this.aishandler.setTrackedTarget(this.mmsi);
-    this.gui.showPage('aispage',{returnpage:this.returnpage});
+    this.gui.showPage('aispage',{skipHistory:true});
 };
 avnav.gui.AisInfoPage.prototype.btnAisInfoLocate=function (button,ev){
-    log("Locate clicked");
+    avnav.log("Locate clicked");
     if (this.mmsi === undefined) return;
     var pos=this.aishandler.getAisPositionByMmsi(this.mmsi);
     if (pos)this.gui.map.setCenter(pos);
     this.gui.map.setGpsLock(false);
-    this.gui.showPage('navpage');
+    this.returnToLast();
 };
 /**
  * create the page instance

@@ -143,7 +143,78 @@ avnav.nav.NavCompute.computeTarget=function(src,brg,dist){
     return rt;
 };
 
+/**
+ * compute the length of a route starting from the given index
+ * @param {Number} startIdx
+ * @param {avnav.nav.Route} route
+ * @returns {Number}
+ */
+avnav.nav.NavCompute.computeRouteLength=function(startIdx,route){
+    if (! route) return 0;
+    var rt=0;
+    if (startIdx < 0) startIdx=0;
+    if (route.points.length < (startIdx+2)) return rt;
+    var last=route.points[startIdx];
+    startIdx++;
+    for (;startIdx<route.points.length;startIdx++){
+        var next=route.points[startIdx];
+        var dst=avnav.nav.NavCompute.computeDistance(last,next);
+        rt+=dst.dtsnm;
+        last=next;
+    }
+    return rt;
+};
 
+/**
+ * compute the data for a leg
+ * @param {avnav.nav.navdata.Point} target the waypoint destination
+ * @param {{valid:Boolean,speed:Number,lon:Number, lat: Number, course: Number,rtime: Date}}gps the current gps data
+ * @param opt_start
+ * @returns {{markerCourse: Number, markerDistance: Number, markerVmg: Number, markerEta: Date, markerXte: Number}}
+ */
+avnav.nav.NavCompute.computeLegInfo=function(target,gps,opt_start){
+    var rt={
+        markerCourse:undefined,
+        markerDistance: undefined,
+        markerVmg: undefined,
+        markerEta: undefined,
+        markerXte: undefined
+    };
+    rt.markerWp=target;
+    if (gps.valid) {
+        var markerdst = avnav.nav.NavCompute.computeDistance(gps, target);
+        rt.markerCourse = markerdst.course;
+        rt.markerDistance = markerdst.dtsnm;
+        var coursediff = Math.min(Math.abs(markerdst.course - gps.course), Math.abs(markerdst.course + 360 - gps.course),
+            Math.abs(markerdst.course - (gps.course + 360)));
+        if (gps.rtime && coursediff <= 85) {
+            //TODO: is this really correct for VMG?
+            vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
+            //vmgapp is in kn
+            var targettime = gps.rtime.getTime();
+            rt.markerVmg = vmgapp;
+            if (vmgapp > 0) {
+                targettime += rt.markerDistance / vmgapp * 3600 * 1000; //time in ms
+                var targetDate = new Date(Math.round(targettime));
+                rt.markerEta = targetDate;
+            }
+            else {
+                rt.markerEta = null;
+            }
+        }
+        else {
+            rt.markerEta = null;
+            rt.markerVmg = 0;
+        }
+        if (opt_start) {
+            rt.markerXte = avnav.nav.NavCompute.computeXte(opt_start,target, gps);
+        }
+        else{
+            rt.markerXte=0;
+        }
+    }
+    return rt;
+};
 
 
 

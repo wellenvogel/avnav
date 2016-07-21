@@ -74291,7 +74291,7 @@ ol.Map.prototype.getEventPixel = function(event) {
   // Use the offsetX and offsetY values if available.
   // See http://www.w3.org/TR/cssom-view/#dom-mouseevent-offsetx and
   // http://www.w3.org/TR/cssom-view/#dom-mouseevent-offsety
-  if (goog.isDef(event.offsetX) && goog.isDef(event.offsetY)) {
+  if (goog.isDef(event.offsetX) && goog.isDef(event.offsetY) && false) {
     return [event.offsetX, event.offsetY];
   } else if (goog.isDef(event.changedTouches)) {
     // offsetX and offsetY are not defined for Touch Event

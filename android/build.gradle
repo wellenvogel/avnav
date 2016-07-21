@@ -55,12 +55,21 @@ android {
     }
     signingConfigs {
 
+    def ks=System.getenv("ANDROID_KEYSTORE")
+    def kspw=System.getenv("ANDROID_KEYPASS")
+    def kalias=System.getenv("ANDROID_KEYALIAS")
+    def kpw= System.getenv("ANDROID_KEYPASS")
+    if (ks != null && ksp != null && kalias != null && kpwd != null) {
         config {
-            storeFile file(System.getenv("ANDROID_KEYSTORE"))
-            storePassword System.getenv("ANDROID_KEYPASS")
-            keyAlias System.getenv("ANDROID_KEYALIAS")
-            keyPassword System.getenv("ANDROID_KEYPASS")
+            storeFile file(ks)
+            storePassword kspw
+            keyAlias kalias
+            keyPassword kpw
         }
+    }
+    else{
+        logger.warn("no signing config set...")
+    }
     }
     //see http://stackoverflow.com/questions/18332474/how-to-set-versionname-in-apk-filename-using-gradle
     buildTypes {
@@ -80,78 +89,47 @@ android {
         }
     }
 }
-File viewerDir = new File(project.rootDir, ".." + File.separator + "viewer")
-File libraryDir = new File(project.rootDir, ".." + File.separator + "libraries")
-task buildViewer(type: org.gradle.api.tasks.Exec) {
+File viewerDir = new File(project.rootDir, ".." + File.separator + "viewer"+File.separator+"build")
+task buildViewerRelease(type: org.gradle.api.tasks.GradleBuild) {
     group = taskgroup
-    if (System.properties['os.name'].toLowerCase().contains('windows')) {
-        commandLine 'cmd', '/c', new File(viewerDir, "build" + File.separator + "build.py")
-    } else {
-        commandLine new File(viewerDir, "build" + File.separator + "build.py")
-    }
+    setDir "../viewer"
+    setTasks(["release"])
+}
+task buildViewerDebug(type: org.gradle.api.tasks.GradleBuild) {
+    group = taskgroup
+    setDir "../viewer"
+    setTasks(["debug"])
 }
 
-task copyToAssetsViewer(type: org.gradle.api.tasks.Copy) {
+task cleanViewer(type: GradleBuild){
     group = taskgroup
-    from(viewerDir) {
-        include 'loader.js'
-        include 'avnav_viewer.html'
-        include 'avnav_viewer.less'
-        include 'images' + File.separator + "*.png"
-    }
+    setDir "../viewer"
+    setTasks(["clean"])
+}
+
+task copyToAssetsViewerDebug(type: org.gradle.api.tasks.Copy) {
+    group = taskgroup
+    from("$viewerDir/debug")
     into new File(assetsDir, "viewer")
 }
-copyToAssetsViewer.dependsOn(buildViewer)
-
-
-
-
-task copyToAssetsLib(type: org.gradle.api.tasks.Copy) {
+copyToAssetsViewerDebug.dependsOn(buildViewerDebug)
+task copyToAssetsViewerRelease(type: org.gradle.api.tasks.Copy) {
     group = taskgroup
-    from(libraryDir) {
-        include 'rangeslider' + File.separator + '*'
-        include 'movable-type' + File.separator + '*'
-        include 'ol311' + File.separator + 'ol.js'
-        include 'less' + File.separator + 'less-1.7.3.min.js'
-        include 'jscolor' + File.separator + '*'
-        include 'jquery' + File.separator + '*.js'
-    }
-    into new File(assetsDir, "libraries")
-}
-
-task copyToAssets(type: org.gradle.api.Task) {
-    group = taskgroup
-    doFirst {
-        println "copy to assets done"
-    }
-}
-copyToAssets.dependsOn(copyToAssetsViewer, copyToAssetsLib)
-task copyDebugViewer(type: org.gradle.api.tasks.Copy) {
-    group = taskgroup
-    from(viewerDir) {
-        include 'avnav_combine.js'
-        rename 'avnav_combine.js', 'avnav_min.js'
-    }
+    from("$viewerDir/release")
     into new File(assetsDir, "viewer")
 }
-copyDebugViewer.dependsOn(copyToAssets)
+copyToAssetsViewerRelease.dependsOn(buildViewerRelease)
 
 
-task copyReleaseViewer(type: org.gradle.api.tasks.Copy) {
-    group = taskgroup
-    from(viewerDir) {
-        include 'avnav_min.js'
-    }
-    into new File(assetsDir, "viewer")
-}
-copyReleaseViewer.dependsOn(copyToAssets)
+
 afterEvaluate {
-    generateDebugAssets.dependsOn(copyDebugViewer)
-    generateReleaseAssets.dependsOn(copyReleaseViewer)
+    generateDebugAssets.dependsOn(copyToAssetsViewerDebug)
+    generateReleaseAssets.dependsOn(copyToAssetsViewerRelease)
 }
 
 
 clean.delete.add "assets/viewer"
+clean.dependsOn cleanViewer
 
 
 

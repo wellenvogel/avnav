@@ -42,10 +42,6 @@ avnav.provide('avnav.main');
 
 
 
-var debugMode=false;
-
-
-
 var propertyDefinitions=function(){
     return {
         layers:{
@@ -56,7 +52,6 @@ var propertyDefinitions=function(){
             grid: new avnav.util.Property(true,"Grid",avnav.util.PropertyType.CHECKBOX),
             compass: new avnav.util.Property(true,"Compass",avnav.util.PropertyType.CHECKBOX)
         },
-        forceMobile: new avnav.util.Property(false,"forceMobile",avnav.util.PropertyType.CHECKBOX),
         connectedMode:new avnav.util.Property(true,"connected",avnav.util.PropertyType.CHECKBOX),
         readOnlyServer: new avnav.util.Property(false),
         onAndroid:new avnav.util.Property(false),
@@ -71,7 +66,7 @@ var propertyDefinitions=function(){
         courseAverageTolerance: new avnav.util.Property(15,"Rotation Tolerance",avnav.util.PropertyType.RANGE,[1,30]), //tolerance for slow rotation
         minGridLedvel: new avnav.util.Property( 10),
         loggingEnabled: new avnav.util.Property( true),
-        maxButtons: new avnav.util.Property(9),
+        maxButtons: new avnav.util.Property(8),
         positionQueryTimeout: new avnav.util.Property( 1000,"Position",avnav.util.PropertyType.RANGE,[500,5000,10]), //1000ms
         trackQueryTimeout: new avnav.util.Property( 5000,"Track",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
         routeQueryTimeout: new avnav.util.Property( 1000,"Route",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
@@ -82,7 +77,6 @@ var propertyDefinitions=function(){
         routeWpSize:new avnav.util.Property( 7,"WPSize",avnav.util.PropertyType.RANGE,[5,30]),
         routeApproach: new avnav.util.Property( 200,"Approach(m)",avnav.util.PropertyType.RANGE,[20,2000]),
         routeShowLL: new avnav.util.Property(false,"showLatLon",avnav.util.PropertyType.CHECKBOX), //show latlon or leg course/len
-        routeShowRteWhenEdit: new avnav.util.Property(false,"showActive when Editing",avnav.util.PropertyType.CHECKBOX), //show active route in editor
         navCircleColor: new avnav.util.Property( "#D71038","Circle Color",avnav.util.PropertyType.COLOR),
         navCircleWidth: new avnav.util.Property( 1,"Circle Width",avnav.util.PropertyType.RANGE,[1,10]),
         navCircle1Radius: new avnav.util.Property( 300,"Circle 1 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
@@ -128,19 +122,21 @@ var propertyDefinitions=function(){
             NMEA: new avnav.util.Property(    "images/GreenBubble40.png"),
             ERROR: new avnav.util.Property(   "images/RedBubble40.png")
         },
-        nightFade:new avnav.util.Property( 15,"NightDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in px
+        nightFade:new avnav.util.Property( 50,"NightDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in px
         nightChartFade:new avnav.util.Property( 30,"NightChartDim(%)",avnav.util.PropertyType.RANGE,[1,99]), //in %
+        baseFontSize:new avnav.util.Property( 14,"Base Font(px)",avnav.util.PropertyType.RANGE,[8,28]),
+        widgetFontSize:new avnav.util.Property( 16,"Widget Base Font(px)",avnav.util.PropertyType.RANGE,[8,28]),
+        allowTwoWidgetRows:new avnav.util.Property(true,"2 widget rows",avnav.util.PropertyType.CHECKBOX),
+        showClock:new avnav.util.Property(true,"show clock",avnav.util.PropertyType.CHECKBOX),
+        nightMode: new avnav.util.Property( false,"NightMode",avnav.util.PropertyType.CHECKBOX),
+        nightColorDim:new avnav.util.Property( 60,"Night Dim for Colors",avnav.util.PropertyType.RANGE,[5,100]), //should match @nightModeVale in less
         //all style members map to less variables
         style:{
-            bottomPanelHeight: new avnav.util.Property( 50,"Bottom Height(px)",avnav.util.PropertyType.RANGE,[20,80]),
-            nightMode: new avnav.util.Property( 100,"NightMode",avnav.util.PropertyType.RANGE,[0,100]),
-            aisPanelWidth:new avnav.util.Property( 90,"AIS Width(px)",avnav.util.PropertyType.RANGE,[50,300]),
-            routeInfoPanelWidth:new avnav.util.Property( 120,"RoutePanel Width(px)",avnav.util.PropertyType.RANGE,[50,300]),
             buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[35,100]),
-            centerDisplayHeight:new avnav.util.Property( 30,"+ Display Height(px)",avnav.util.PropertyType.RANGE,[20,80]),
             aisWarningColor: new avnav.util.Property( "#FA584A","Warning",avnav.util.PropertyType.COLOR),
             aisNormalColor: new avnav.util.Property( "#EBEB55","Normal",avnav.util.PropertyType.COLOR),
             aisNearestColor: new avnav.util.Property( '#70F3AF',"Nearest",avnav.util.PropertyType.COLOR),
+            aisTrackingColor:new avnav.util.Property( '#CAD5BE',"Tracking",avnav.util.PropertyType.COLOR),
             routeApproachingColor: new avnav.util.Property( '#FA584A',"Approach",avnav.util.PropertyType.COLOR)
         }
     }
@@ -148,12 +144,6 @@ var propertyDefinitions=function(){
 
 
 
-function log(txt){
-    if (! debugMode) return;
-    try{
-        console.log(txt);
-    }catch(e){}
-}
 
 function getParam(key)
 {
@@ -170,10 +160,10 @@ function getParam(key)
  */
 avnav.main=function() {
     //some workaround for lees being broken on IOS browser
-    less.modifyVars();
+    //less.modifyVars();
     $("body").show();
 
-    if (getParam('log')) debugMode=true;
+    if (getParam('log')) avnav.debugMode=true;
     var propertyHandler=new avnav.util.PropertyHandler(propertyDefinitions(),{});
     propertyHandler.loadUserData();
     var navurl=getParam('navurl');
@@ -208,7 +198,7 @@ avnav.main=function() {
     }
     //make the android API available as avnav.android
     if (window.avnavAndroid){
-        log("android integration enabled");
+        avnav.log("android integration enabled");
         propertyHandler.setValueByName('onAndroid',true);
         avnav.android=window.avnavAndroid;
         propertyHandler.setValueByName('routingServerError',false);
@@ -222,6 +212,6 @@ avnav.main=function() {
         propertyHandler.updateLayout();
         $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(propertyHandler));
     },1000);
-    log("avnav loaded");
+    avnav.log("avnav loaded");
 };
 

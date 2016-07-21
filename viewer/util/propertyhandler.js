@@ -174,7 +174,7 @@ avnav.util.PropertyHandler.prototype.setUserDataByDescr=function(descr,value){
         }
         return true;
     }catch(e){
-        log("Exception when setting user data "+descr.completeName+": "+e);
+        avnav.log("Exception when setting user data "+descr.completeName+": "+e);
     }
     return false;
 };
@@ -237,26 +237,34 @@ avnav.util.PropertyHandler.prototype.updateLayout=function(){
     var buttonHeight=height/numButtons-8; //TODO: should we get this from CSS?
     var currentButtonHeight=this.getValue(this.propertyDescriptions.style.buttonSize);
     var scale=buttonHeight/currentButtonHeight;
+    var nightColorDim=this.getValue(this.propertyDescriptions.nightColorDim);
     if (scale > 1) scale=1;
     if (vars){
-        var lessparam={};
         //we rely on exactly one level below style
         for (var k in vars){
             var val=this.getValue(vars[k]);
             if (k == "buttonSize"){
-                //if (val > buttonHeight) val=Math.ceil(buttonHeight);
+                if (val > buttonHeight) val=Math.ceil(buttonHeight);
+                var fontSize=val/4 ; //must match the settings in less
+                $(".avn_button").css('font-size',fontSize+"px");
+                $(".avn_dialog button").css('font-size',fontSize+"px");
             }
-            if (vars[k].type == avnav.util.PropertyType.RANGE) {
-                if (k != "nightMode") val=scale*val;
-                lessparam['@' + k] = "" + Math.ceil(val) + "px";
-            }
-            if (vars[k].type == avnav.util.PropertyType.COLOR) {
-                lessparam['@' + k] = "" + val;
-            }
-
         }
-        less.modifyVars(lessparam);
     }
+    var nval = this.getValue(this.propertyDescriptions.nightMode);
+    if (!nval) {
+        $('html').removeClass('nightMode');
+        $('body').css('opacity', '1');
+    }
+    else {
+        $('html').addClass('nightMode');
+        $('body').css('opacity', this.getValue(this.propertyDescriptions.nightFade)/100)
+    }
+    //set the font sizes
+    var baseFontSize=this.getValue(this.propertyDescriptions.baseFontSize);
+    $('body').css('font-size',baseFontSize+"px");
+    $(".avn_smallButton").css('font-size',baseFontSize+"px");
+    $('.avn_widgetContainer').css('font-size',this.getValue(this.propertyDescriptions.widgetFontSize)+"px");
 };
 /**
  * filter out only the allowed user data
@@ -270,6 +278,51 @@ avnav.util.PropertyHandler.prototype.filterUserData=function(data){
         if (data[key]!== undefined)allowed[key] = data[key];
     }
     return allowed;
+};
+
+avnav.util.PropertyHandler.prototype.getColor=function(colorName,addNightFade){
+    var rt=this.getValueByName("style."+colorName);
+    if (rt === undefined){
+        rt=this.getValueByName(colorName);
+    }
+    if (rt === undefined) return rt;
+    if ((addNightFade === undefined || addNightFade) && this.getValue(this.propertyDescriptions.nightMode)){
+        var nf=this.getValue(this.propertyDescriptions.nightColorDim);
+        return this.hex2rgba(rt,nf/100);
+    }
+    return rt;
+};
+
+avnav.util.PropertyHandler.prototype.getAisColor=function(currentObject){
+    var color="";
+    if (currentObject.warning){
+        color=this.getColor('aisWarningColor');
+    }
+    else {
+        if (currentObject.tracking) {
+            color = this.getColor('aisTrackingColor');
+        }
+        else {
+            if (currentObject.nearest) {
+                color = this.getColor('aisNearestColor');
+            }
+            else {
+                color = this.getColor('aisNormalColor');
+            }
+        }
+    }
+    return color;
+};
+
+avnav.util.PropertyHandler.prototype.hex2rgba=function(hex, opacity)
+{
+    var patt = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+    var matches = patt.exec(hex);
+    var r = parseInt(matches[1], 16);
+    var g = parseInt(matches[2], 16);
+    var b = parseInt(matches[3], 16);
+    var rgba = "rgba(" + r + "," + g + "," + b + "," + opacity + ")";
+    return rgba;
 };
 
 

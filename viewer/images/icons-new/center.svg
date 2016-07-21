@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="256"
+   height="256"
+   id="svg3336"
+   version="1.1"
+   inkscape:version="0.91 r"
+   sodipodi:docname="center.svg">
+  <title
+     id="title51520">IconCenter</title>
+  <metadata
+     id="metadata3352">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>IconCenter</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1006"
+     id="namedview3350"
+     showgrid="false"
+     inkscape:snap-global="true"
+     inkscape:snap-midpoints="false"
+     inkscape:snap-bbox="true"
+     inkscape:snap-to-guides="true"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:snap-grids="false"
+     inkscape:snap-others="false"
+     inkscape:snap-nodes="false"
+     inkscape:zoom="2.3805928"
+     inkscape:cx="56.486713"
+     inkscape:cy="139.34292"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg3336"
+     inkscape:snap-bbox-edge-midpoints="true"
+     inkscape:bbox-nodes="true">
+    <inkscape:grid
+       type="xygrid"
+       id="grid6139" />
+    <sodipodi:guide
+       position="0,0"
+       orientation="0,256"
+       id="guide6141" />
+    <sodipodi:guide
+       position="256,0"
+       orientation="-256,0"
+       id="guide6143" />
+    <sodipodi:guide
+       position="256,256"
+       orientation="0,-256"
+       id="guide6145" />
+    <sodipodi:guide
+       position="0,256"
+       orientation="256,0"
+       id="guide6147" />
+    <sodipodi:guide
+       position="0,128"
+       orientation="0,1"
+       id="guide6149"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)" />
+  </sodipodi:namedview>
+  <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+  <defs
+     id="defs3338">
+    <symbol
+       id="Arrow-3">
+      <path
+         style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;baseline-shift:baseline;text-anchor:start;white-space:normal;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         d="m 129.63459,31.4242 0,10 41.61719,0 0,-10 -41.61719,0 z"
+         id="path25306"
+         inkscape:connector-curvature="0" />
+      <path
+         inkscape:connector-curvature="0"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:4.86217194pt;stroke-opacity:1"
+         d="m 216.34843,36.4242 -42.05779,24.310862 0,-48.621724 42.05779,24.310862 z"
+         id="path25308" />
+    </symbol>
+  </defs>
+  <use
+     id="use7474"
+     xlink:href="#Arrow-3"
+     x="0"
+     y="0"
+     width="100%"
+     height="100%"
+     transform="matrix(0,1.1584535,-1.0127203,0,164.26366,-150.17564)" />
+  <use
+     id="use7499"
+     xlink:href="#Arrow-3"
+     x="0"
+     y="0"
+     width="100%"
+     height="100%"
+     transform="matrix(1.166218,0,0,1.0129049,-151.18219,91.105749)" />
+  <use
+     id="use7534"
+     xlink:href="#Arrow-3"
+     x="0"
+     y="0"
+     width="100%"
+     height="100%"
+     transform="matrix(0,-1.1684586,1.0127203,0,90.908662,408.60892)" />
+  <use
+     id="use7569"
+     xlink:href="#Arrow-3"
+     x="0"
+     y="0"
+     width="100%"
+     height="100%"
+     transform="matrix(-1.1656979,0,0,-1.012536,408.23107,164.88081)" />
+</svg>

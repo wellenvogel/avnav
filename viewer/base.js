@@ -30,91 +30,131 @@
  * the base for our namespace
  * @type {{}}
  */
-if (! avnav) {
-    var avnav = {};
-
-
-    /**
-     * inherit (or better: proto delegation)
-     * @param child
-     * @param parent
-     */
-    avnav.inherits = function (child, parent) {
-        if (parent === undefined) {
-            throw ("parent is undefined for inherit to "+child);
-        }
-        child.prototype = Object.create(parent.prototype);
-        child.prototype.super_ = parent.prototype;
-        child.prototype.base_ = parent;
-    };
-    /**
-     *
-     * @param {string} name
-     */
-    avnav.provide = function (name) {
-        var names = name.split('.');
-        if (names[0] != 'avnav') throw "first part of namespace must be avnav";
-        var i;
-        var current = avnav;
-        var path = names[0];
-        for (i = 1; i < names.length - 1; i++) {
-            var cname = names[i];
-            if (!current[cname]) {
-                current[cname] = {};
-            }
-            else {
-                if (!current[cname] instanceof  Object) throw path + "." + cname + " exists but is no object";
-            }
-            current = current[cname];
-            path = path + "." + cname;
-        }
-        if (current[names[names.length - 1]]) throw "name " + name + " already defined";
-    };
-
-    /**
-     * one level clone
-     * @param obj
-     * @returns {{}}
-     */
-    avnav.clone=function(obj){
-            var res = {};
-            for (var key in obj) {
-                res[key] = obj[key];
-            }
-            return res;
-    };
-
-    avnav.assign=function(target,obj){
-        if (! target) target={};
-        for (var key in obj) {
-            target[key] = obj[key];
-        }
-        return target;
-    };
-    //see http://stackoverflow.com/questions/1909753/vertically-align-div-no-tables
-    (function ($) {
-        // VERTICALLY ALIGN FUNCTION
-        $.fn.vAlign = function() {
-            return this.each(function(i){
-                var ah = $(this).height();
-                var ph = $(this).parent().height();
-                var mh = (ph - ah) / 2;
-                if (mh < 0) mh=0;
-                $(this).css('margin-top', mh);
-            });
-        };
-    })(jQuery);
-    (function ($) {
-        // HORIZONTALLY ALIGN FUNCTION
-        $.fn.hAlign = function() {
-            return this.each(function(i){
-                var ah = $(this).width();
-                var ph = $(this).parent().width();
-                var mh = (ph - ah) / 2;
-                if (mh <0) mh=0;
-                $(this).css('margin-left', mh);
-            });
-        };
-    })(jQuery);
-
+if (window.avnav === undefined) {
+    window.avnav = {};
 }
+
+
+avnav.log=function(txt){
+    if (! avnav.debugMode) return;
+    try{
+        console.log(txt);
+    }catch(e){}
+};
+
+/**
+ * inherit (or better: proto delegation)
+ * @param child
+ * @param parent
+ */
+avnav.inherits = function (child, parent) {
+    if (parent === undefined) {
+        throw ("parent is undefined for inherit to " + child);
+    }
+    child.prototype = Object.create(parent.prototype);
+    child.prototype.super_ = parent.prototype;
+    child.prototype.base_ = parent;
+};
+/**
+ *
+ * @param {string} name
+ */
+avnav.provide = function (name) {
+    var names = name.split('.');
+    if (names[0] != 'avnav') throw "first part of namespace must be avnav";
+    var i;
+    var current = avnav;
+    var path = names[0];
+    for (i = 1; i < names.length - 1; i++) {
+        var cname = names[i];
+        if (!current[cname]) {
+            current[cname] = {};
+        }
+        else {
+            if (!current[cname] instanceof Object) throw path + "." + cname + " exists but is no object";
+        }
+        current = current[cname];
+        path = path + "." + cname;
+    }
+    if (current[names[names.length - 1]]) throw "name " + name + " already defined";
+};
+
+/**
+ * one level clone
+ * @param obj
+ * @returns {{}}
+ */
+avnav.clone = function (obj) {
+    var res = {};
+    for (var key in obj) {
+        res[key] = obj[key];
+    }
+    return res;
+};
+
+avnav.assign = function (target, obj) {
+    if (!target) target = {};
+    for (var key in obj) {
+        target[key] = obj[key];
+    }
+    return target;
+};
+//see http://stackoverflow.com/questions/1909753/vertically-align-div-no-tables
+(function ($) {
+    // VERTICALLY ALIGN FUNCTION
+    $.fn.vAlign = function () {
+        return this.each(function (i) {
+            var ah = $(this).height();
+            var ph = $(this).parent().height();
+            var mh = (ph - ah) / 2;
+            if (mh < 0) mh = 0;
+            $(this).css('margin-top', mh);
+        });
+    };
+})(jQuery);
+(function ($) {
+    // HORIZONTALLY ALIGN FUNCTION
+    $.fn.hAlign = function () {
+        return this.each(function (i) {
+            var ah = $(this).width();
+            var ph = $(this).parent().width();
+            var mh = (ph - ah) / 2;
+            if (mh < 0) mh = 0;
+            $(this).css('margin-left', mh);
+        });
+    };
+})(jQuery);
+
+// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+// http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+
+// requestAnimationFrame polyfill by Erik Möller. fixes from Paul Irish and Tino Zijdel
+// https://gist.github.com/paulirish/1579671
+// MIT license
+
+(function () {
+    var lastTime = 0;
+    var vendors = ['ms', 'moz', 'webkit', 'o'];
+    for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+        window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame']
+            || window[vendors[x] + 'CancelRequestAnimationFrame'];
+    }
+
+    if (!window.requestAnimationFrame)
+        window.requestAnimationFrame = function (callback, element) {
+            var currTime = new Date().getTime();
+            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+            var id = window.setTimeout(function () {
+                    callback(currTime + timeToCall);
+                },
+                timeToCall);
+            lastTime = currTime + timeToCall;
+            return id;
+        };
+
+    if (!window.cancelAnimationFrame)
+        window.cancelAnimationFrame = function (id) {
+            clearTimeout(id);
+        };
+}());

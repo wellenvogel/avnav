@@ -62,10 +62,31 @@ avnav.nav.navdata.Point.prototype.toCoord=function(){
  */
 avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
     avnav.nav.navdata.Point.call(this,lon,lat);
+    /**
+     * the name of the waypoint
+     * @type {string}
+     */
     this.name=opt_name;
+
+    /**
+     * if this waypoint belongs to a route
+     * this parameter will be set
+     * @type {string}
+     */
+    this.routeName=undefined;
 };
 
 avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
+
+avnav.nav.navdata.WayPoint.prototype.compare=function(point){
+    if (! point) return false;
+    var rt= this.super_.compare.call(this,point);
+    if (! rt) return rt;
+    if (point instanceof avnav.nav.navdata.WayPoint ){
+        return this.routeName == point.routeName;
+    }
+    return true;
+};
 /**
  * create a waypoint from aplain (json) object
  * @param plain
@@ -75,10 +96,35 @@ avnav.nav.navdata.WayPoint.fromPlain=function(plain){
     return new avnav.nav.navdata.WayPoint(plain.lon,plain.lat,plain.name);
 };
 
-avnav.nav.navdata.WayPoint.clone=function(){
-    var rt=new avnav.nav.navdata.WayPoint(this.lon,this.lat,this.name);
+avnav.nav.navdata.WayPoint.prototype.clone=function(){
+    var rt=new avnav.nav.navdata.WayPoint(this.lon,this.lat,this.name?this.name.slice(0):null);
+    rt.routeName=(this.routeName!==undefined)?this.routeName.slice(0):undefined;
     return rt;
 };
+/**
+ * update lat/lon/name/id of a wp, return true if the lat/lon/id has changed
+ * @param point
+ * @returns {boolean}
+ */
+avnav.nav.navdata.WayPoint.prototype.update=function(point){
+    var rt=false;
+    if (point.lon !== undefined){
+        if (point.lon != this.lon) rt=true;
+        this.lon=point.lon;
+    }
+    if (point.lat !== undefined){
+        if (point.lat != this.lat) rt=true;
+        this.lat=point.lat;
+    }
+    if (point.name !== undefined){
+        this.name=point.name.slice(0);
+    }
+    if (point.routeName !== undefined){
+        this.routeName=point.routeName.slice(0);
+    }
+    return rt;
+};
+
 /**
  * a track point
  * @param {number} lon

@@ -1,0 +1,16 @@
+#! /bin/sh
+x="`/usr/bin/getent passwd avnav`" || echo 'creating avnav user'
+if [ "$x" = "" ] ; then
+    useradd --system avnav
+else
+    echo "user avnav already exists"
+fi
+BASE=/var/lib/avnav
+if [ ! -d $BASE ] ; then
+    echo creating basedir $BASE
+    mkdir -p $BASE || exit
+    chown avnav $BASE || exit 1
+else
+    chown -R avnav $BASE
+fi
+exit 0

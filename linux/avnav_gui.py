@@ -23,6 +23,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 ###############################################################################
+import optparse
 import sys
 import os
 import wx
@@ -36,6 +37,7 @@ class  AvnavGui(Avnav):
     def __init__(self, *args, **kwds):
         Avnav.__init__(self, *args, **kwds)
         self.defaultOut=os.path.join(os.path.expanduser("~"),"AvNavCharts")
+        self.serverbase=os.path.join(os.path.expanduser("~"),"avnav")
         self.txLogfile.SetValue(os.path.join(self.defaultOut,"avnav-chartconvert.log"))
         self.outputDir.SetValue(self.defaultOut)
         self.server=None
@@ -45,6 +47,9 @@ class  AvnavGui(Avnav):
         self.Bind(wx.EVT_TIMER, self.OnTimer)
         self.timer.Start(500)
         pass
+
+    def setServerBase(self, base):
+        self.serverbase=base
 
     def btExitClicked(self, event):
         self.terminateServer()
@@ -58,7 +63,7 @@ class  AvnavGui(Avnav):
         if self.checkServerRunning():
             return
         script=os.path.join(self.getBaseDir(),"..","server","avnav_server.py")
-        args=["xterm","-hold","-e",sys.executable,script,"-c",os.path.join(self.outputDir.GetValue(),"out"),os.path.join(self.getBaseDir(),"avnav_server.xml")]
+        args=["xterm","-hold","-e",sys.executable,script,"-c",os.path.join(self.outputDir.GetValue(),"out"),os.path.join(self.serverbase,"avnav_server.xml")]
         self.server=subprocess.Popen(args,cwd=self.getBaseDir())
         self.checkServerRunning()
 
@@ -188,7 +193,18 @@ class  AvnavGui(Avnav):
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     #wx.InitAllImageHandlers()
+    argv=sys.argv
+    usage="usage: %s [-b basedir] " % (argv[0])
+    parser = optparse.OptionParser(
+        usage = usage,
+        version="1.0",
+        description='avnav_gui')
+
+    parser.add_option("-b", "--basedir", dest="basedir", help="set the basedir for the server")
+    (options, args) = parser.parse_args(argv[1:])
     frame_1 = AvnavGui(None, -1, "")
+    if not options.basedir is None:
+        frame_1.setServerBase(options.basedir)
     app.SetTopWindow(frame_1)
     frame_1.Show()
     app.MainLoop()

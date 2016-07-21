@@ -1,20 +1,11 @@
 
 //variables will be overwritten by properties!
-@topPanelHeight:00px;
-@bottomPanelHeight:50px;
-@aisPanelWidth:90px;
-@routeInfoPanelWidth:90px; //the real with is the max of this and the AIS panel width
-@routeDisplayWidth: 90px;
-@buttonSize: 60px;
-@centerDisplayHeight: 30px;
-@settingsFontSize: 16px;
-@routeInfoFontBase: min(max(@aisPanelWidth,@routeInfoPanelWidth),120px);
+@normalButtonFont: 14px;
+@checkTiny: 480px;
+@widgetFontSize: 14px;
 
-@nightMode: 100px;     //fade factor for night mode - if < 100 assume night mode
-                      //we set this in px as this is the only value the js code can set
-                      //later we convert this to %
-@nightModeValue: unit(@nightMode / 100px);
-@nightModePercent: percentage(@nightModeValue);
+@nightModeValue:60;
+@nightModePercent: 60%;
 
 @aisNormalColor: #EBEB55;
 @aisNearestColor: #70F3AF; //rgb(112, 243, 175);
@@ -22,111 +13,174 @@
 
 @routeApproachingColor: #FA584A;
 
-@nightColor: rgba(252, 11, 11, 0.49);
+@nightColor: rgba(252, 11, 11, 0.6);
 
-@routeColor: rgba(222, 226, 207, 1);
 
-//hide some content
 
-.hidemedia(@min:0px,@max:9999px){
-  @media (min-width:@min) and (max-width: @max){
-    display:none;
-  }
+*{
+  .border-box();
 }
-
 //have the border inside
 .border-box{
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
+.flexbox() {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+}
+.flex(@values) {
+  -webkit-box-flex: @values;
+  -moz-box-flex:  @values;
+  -webkit-flex:  @values;
+  -ms-flex:  @values;
+  flex:  @values;
+}
+
+/*-------------------------------------------------------------
+   night struff
+   night mode is activated by adding .nightMode to the body
+-------------------------------------------------------------*/
+.nightColors() {
+  .nightMode & {
+    background-color: #000;
+    color: @nightColor;
+  }
+}
+
+.nightForeColor(@normal,@night:@nightColor){
+  color: @normal;
+  .nightMode &{
+    color: @night;
+  }
+}
+.nightForeFade(@normal){
+  .nightForeColor(@normal,fade(@normal,@nightModePercent));
+}
+.nightBackColor(@normal,@night:#000){
+  background-color: @normal;
+  .nightMode &{
+    background-color: @night;
+  }
+}
+.nightBackFade(@normal){
+  .nightBackColor(@normal,fade(@normal,@nightModePercent));
+}
+
+.nightBorderColor(@normal,@night){
+  border-color: @normal;
+  .nightMode &{
+    border-color: @night;
+  }
+}
+.nightBorderFade(@normal){
+  .nightBorderColor(@normal,fade(@normal,@nightModePercent));
+}
+
+.nightOPacity() {
+  .nightMode & {
+    opacity: @nightModeValue;
+  }
+}
+.nightOPacity2() {
+  .nightMode & {
+    opacity: min(1,1 - (1 - @nightModeValue)*0.5);
+  }
+}
+
 
 /*-------------------------------------------------------------
    buttons
 -------------------------------------------------------------*/
-
-.avn_button_base(@bWitdh:@buttonSize,@bSize:@buttonSize){
-  width: @bWitdh;
-  height: @bSize;
-  margin: 3px 3px 3px 3px;
-  border-top-right-radius: 4px;
-  border-top-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  border-bottom-left-radius: 4px;
-  border: 1px solid #D3D3D3;
-  background: fade(#E6E6E6,@nightModePercent);
+.avn_buttonBase(){
+  margin: 0.2em 0.2em 0.2em 0.2em;
+  border-top-right-radius: 0.3em;
+  border-top-left-radius: 0.3em;
+  border-bottom-right-radius: 0.3em;
+  border-bottom-left-radius: 0.3em;
+  border: 1px solid;
+  .nightBorderFade(#D3D3D3);
+  .nightBackFade(#E6E6E6);
   //position: relative;
   cursor: pointer;
   outline: none;
 
 }
-button.avn_button{
-  .avn_button_base;
-}
-
-.avn_button:active{
-  border: 2px solid #6B6B6B;
-}
-
-button.avn_toggleButton{
-  .avn_button_base;
-}
-
-button.avn_buttonActive{
-  border: 4px solid #1DB81D !important;
-  .nightOPacity();
-}
-
-button.avn_buttonActiveError{
-  border: 4px solid #EC420C !important;
-  .nightOPacity();
-}
-
-button.avn_buttonInactive{
-  border: 4px solid fade(#E6E6E6,@nightModePercent) !important;
-}
-
-
-.avn_button_icon_base(@icon,@innerWidth: ( @buttonSize * 30 / 60 ),@size: @buttonSize ){
-  .avn_button_base(@size,@size);
-  background-image: url(@icon);
+.avn_AllButtons(){
+  .avn_buttonBase();
   background-position: center center;
-  background-size: @innerWidth @innerWidth;
+  background-size: 80% 80%;
   background-repeat: no-repeat;
   text-decoration: none;
-  .nightOPacity2();
+  border: 1px solid;
+  .nightBorderFade(#D3D3D3);
+  display: block;
+  cursor: pointer;
+  outline: none;
+}
+.avn_button{
+  .avn_AllButtons();
+  width: 4em;
+  height: 4em;
+  font-size: @normalButtonFont;
+}
+.avn_smallButton{
+  .avn_AllButtons();
+  width: 2em;
+  height: 2em;
+  font-size: @normalButtonFont;
 }
 
-.avn_button_icon_base_toggle(@icon,@innerWidth: ( @buttonSize * 30 / 60 ) ){
-  .avn_button_icon_base(@icon,@innerWidth);
+
+.avn_buttonActive{
+  border: 0.3em solid ;
+  .nightBorderFade(#1DB81D);
+}
+
+.avn_buttonActiveError{
+  border: 0.3em solid ;
+  .nightBorderFade(#EC420C);
+}
+
+.avn_buttonInactive{
+  border: 0.3em solid ;
+  .nightBorderFade(#E6E6E6);
+}
+
+
+.avn_iconButton(@icon){
+  background-image: url(@icon);
 }
 
 button.avb_Cancel {
-  .avn_button_icon_base('images/Cancel40.png');
-
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 
+button.avb_Ok {
+  .avn_iconButton('images/icons-new/ic_done.svg');
+
+}
+button.avb_Forward {
+  .avn_iconButton('images/icons-new/ic_arrow_forward.svg');
+}
+button.avb_Back {
+  .avn_iconButton('images/icons-new/ic_arrow_back.svg');
+}
+button.avb_Edit {
+  .avn_iconButton('images/icons-new/ic_edit.svg');
+}
 /*-------------------------------------------------------------
    general settings
 -------------------------------------------------------------*/
 
-.nightColors() when ( @nightModePercent <100% ){
-  background-color: #000;
-  color: @nightColor;
-}
-.nightOPacity() when(@nightModePercent <100%){
-  opacity: @nightModeValue;
-}
-.nightOPacity2() when(@nightModePercent <100%){
-  opacity: min(1,1 - (1 - @nightModeValue)*0.5);
-}
-
-input when (@nightModePercent<100%) {
-  background-color: #646463;
-}
 
 input {
   border: 2px inset;
+  .nightBackColor(inherit,#646463)
 }
 html,body {
 	.nightColors();
@@ -135,7 +189,7 @@ html,body {
 	margin: 0;
 	padding: 0;
 	font-family: Verdana,Arial,sans-serif;
-	font-size: 0.8em;
+	font-size: 14px;
   .border-box();
 }
 
@@ -143,16 +197,6 @@ html,body {
 	position: absolute;
 	overflow: hidden;
 }
-
-
-
-#leftTop .avn_label {
-	color: white;
-}
-.avn_left_bottom {
-  background-color: #BFBFBF;
-}
-
 
 /*
   for a page that consumes the left side and is scrollable
@@ -178,10 +222,34 @@ html,body {
 	display:none;
 }
 
+.avn_unit{
+  font-size:0.7em;
+  opacity: 0.6;
+  margin-left: 0.2em;
+}
+
+.avn_table{
+  display: table;
+  border-collapse: collapse;
+}
+.avn_row{
+  display: table-row;
+}
+
+.avn_more {
+  display: none;
+  float: right;
+  width: 1em;
+  height: 1em;
+  background-image: url('images/icons-new/ic_chevron_right.svg');
+  background-size: 100% 100%;
+  opacity: 0.6;
+}
 
 /*-------------------------------------------------------------
-   bottom display
+   widgets
 -------------------------------------------------------------*/
+
 .avn_widget{
   position: relative;
   border-radius: 0.2em;
@@ -190,149 +258,18 @@ html,body {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
   0 1px 5px 0 rgba(0, 0, 0, 0.12),
   0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
-  margin-left: @wWidgetMargin;
+  margin-left: 0.15em;
   margin-bottom: 0.1em;
   margin-top: 0.1em;
-  margin-right: @wWidgetMargin;
+  margin-right: 0.15em;
   .border-box();
   overflow: hidden;
   pointer-events: all;
-}
-.avn_bottom_item{
-  height: @bottomPanelHeight;
-  background: white;
-  .nightColors();
-}
-@bottomBaseFont: ( @bottomPanelHeight / 5 );
-@bottomSmallFont: (@bottomPanelHeight/3.2);
-@bottomBigFont: ( @bottomPanelHeight  - 8 );
-
-//bottom widgets in bottomBase font units
-@wWidgetMargin: 0.15em;
-@wLeftBottomMarkerPos: 10.5em;
-@wLeftBottomMarkerEta: 9em;
-@wLeftBottomPosition: 10.5em;
-@wLeftBottomStatus: 9em;
-@wLeftBottomCourse: 2.1em; //bigFont
-@wLeftBottomSpeed: 3em; //bigFont
-@wLeftBottomBearing: 2.1em; //bigFont
-@wLeftBottomMarkerDistance: 3em; //bigFont
-@bottomWidgetsTiny: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed +  @wLeftBottomCourse + @wLeftBottomBearing + 1em ) * (@bottomBigFont/@bottomBaseFont) + 4 * unit(@wWidgetMargin) ;
-//small: without positions
-@bottomWidgetsVerySmall: unit( @wLeftBottomMarkerDistance + @wLeftBottomSpeed + @wLeftBottomCourse + @wLeftBottomBearing + 1.3em ) * (@bottomBigFont/@bottomBaseFont) + unit( @wLeftBottomStatus + @wLeftBottomMarkerEta ) + 6 * unit(@wWidgetMargin) ;
-@bottomWidgetsSmall: ( @bottomWidgetsVerySmall + unit(4 * @wWidgetMargin + @wLeftBottomMarkerPos + @wLeftBottomPosition));
-@checkTiny: (@bottomWidgetsTiny * @bottomBaseFont + (@buttonSize + 10));
-@checkVerySmall: (@bottomWidgetsVerySmall  * @bottomBaseFont + (@buttonSize + 10));
-@checkSmall: (@bottomWidgetsSmall  * @bottomBaseFont + (@buttonSize + 10));
-.bottomhideverysmall{
-  .hidemedia(0px,@checkVerySmall);
-}
-.bottomhidesmall{
-  .hidemedia(0px,@checkSmall);
-}
-
-.avn_unit{
-  font-size:0.7em;
-  opacity: 0.6;
-  margin-left: 0.2em;
-}
-
-#avi_nav_bottom{
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
-
-
-
-#leftBottomMarker{
-  float: left;
-  width: 50%;
-  font-size: @bottomBaseFont;
-}
-
-
-#leftBottomMarkerPos{
-	width: @wLeftBottomMarkerPos;
-	.bottomhidesmall();
-
-}
-#leftBottomMarker #leftBottomMarkerEta{
-    width: @wLeftBottomMarkerEta;
-    .bottomhideverysmall();
-}
-#leftBottomMarker .avd_markerEta{
-  font-size: @bottomSmallFont;
-  margin-top: 0.55em;
-  text-align: center;
-}
-
-#markerLabel {
-  margin-top: 0.5em;
-  text-align: center;
-}
-
-#leftBottomMarker .avd_markerPosition{
-  font-size: @bottomSmallFont;
-  margin-top: 0.55em;
-}
-
-#leftBottomMarker .avd_markerCourse{
-  font-size: @bottomBigFont;
-  width: @wLeftBottomBearing;
-  text-align: end;
-  padding-right: 0.1em;
-
-}
-#leftBottomMarker .avd_markerDistance{
-  font-size: @bottomBigFont;
-  width: @wLeftBottomMarkerDistance;
-  text-align: end;
 
 }
 
-#leftBottomPosition{
-  float: left;
-  width: 50%;
-  font-size: @bottomBaseFont;
-}
-
-#leftBottomPositionPos{
-	width: @wLeftBottomPosition;
-    .bottomhidesmall();
-}
-#leftBottomPositionStatus{
-	width: @wLeftBottomStatus;
-    .bottomhideverysmall();
-}
-#leftBottomPositionStatusImage{
-  text-align: center;
-}
-#boatPositionStatus{
-  width: (@bottomPanelHeight/2 );
-  height: (@bottomPanelHeight/2);
-}
-
-#boatPosition{
-  font-size: @bottomSmallFont;
-  margin-top: 0.55em;
-
-}
-#leftBottomPosition .avd_gpsTime{
-	font-size: @bottomSmallFont;
-
-}
-#leftBottomPosition .avd_gpsCourse{
-  font-size: @bottomBigFont;
-  width: @wLeftBottomCourse;
-  text-align: end;
-  padding-right: 0.1em;
-
-}
-#leftBottomPosition .avd_gpsSpeed{
-  font-size: @bottomBigFont;
-  width: @wLeftBottomSpeed;
-  text-align: end;
+.avn_widgetContainer{
+  font-size: @widgetFontSize;
 }
 
 .avn_widgetInfo{
@@ -351,85 +288,230 @@ html,body {
   left: 0.2em;
 }
 
-
-/*-------------------------------------------------------------
-   measure display (center)
--------------------------------------------------------------*/
-
-.avn_center {
-	padding-left: 3px;
-	font-size: ( @centerDisplayHeight * 0.8 );
+.avn_posWidget{
+  width: 7.5em;
+}
+.avn_courseWidget{
+  width: 7.2em;
+}
+.avn_distanceWidget{
+  width: 9.6em;
+}
+.avn_speedWidget{
+  width: 9.6em;
+}
+.avn_etaWidget{
+  width: 6.5em;
 }
 
-#centerInner {
-	text-align: center;
+
+/*-------------------------------------------------------------
+    some classes for info pages
+--------------------------------------------------------------*/
+.avn_infopage_inner {
+  width: 100%;
+  margin: auto;
+}
+
+.avn_infopage_inner .avn_Status{
+  background-color: inherit;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 3px;
+  text-align: right;
+  display: inline-block;
+  margin-right: 0.5em;
+  vertical-align: text-bottom;
+}
+
+.avn_infopage_inner h1{
+  text-align: center;
+}
+.avn_infopage_inner .avn_table {
+  width: 100%
+}
+
+.avn_infopage_inner .avn_label{
+  display: table-cell;
+  text-align: right;
+  padding-right: 1em;
+  opacity: 0.6;
+  padding-bottom: 0.7em;
+  width: 50%;
+}
+.avn_infopage_inner .avn_data{
+  display: table-cell;
+  border-bottom: inherit;
+  font-size: 1em;
+  width: 50%;
+}
+.avn_infopage_inner .avn_unit{
+  margin-left: 0.3em;
 }
 
 /*-------------------------------------------------------------
   nav page
   ------------------------------------------------------------*/
-
-#avi_second_buttons_navpage{
-  top: 0px;
-  bottom: 0px;
+#avi_navpage_clock{
+  position: absolute;
+  top:0px;
   right: 0px;
-  width: (@buttonSize + 10);
-  padding-left: 3px;
-  background-color: rgba(109, 109, 109, 0.5);
+  background-color: white;
+  .nightColors();
 }
+#avi_navpage_clock .avn_widget{
+  background-color: white;
+  .nightColors();
+}
+#avi_navpage_clock .avd_clock{
+  font-size: 3em;
+}
+/*-------------------------------------------------------------
+   bottom display
+-------------------------------------------------------------*/
+
+.avn_bottom_item{
+  height: 3.8em;
+  background: white;
+  .nightColors();
+}
+@bottomBaseFont: 0.71em;
+@bottomSmallFont: 1em;
+@bottomBigFont: 3em;
+
+
+
+
+#avi_nav_bottom{
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #BFBFBF;
+  .nightColors();
+}
+
+.avn_bottom_2rows{
+  max-height: 8em; //2xbottom_item
+}
+.avn_bottom_1rows{
+  max-height: 4em; //1xbottom_item
+}
+
+
+#leftBottomMarker{
+  float: left;
+  width: 50%;
+}
+
+
+#leftBottomMarker .avd_markerEta{
+  font-size: @bottomSmallFont;
+  margin-top: 0.55em;
+  text-align: center;
+}
+
+#leftBottomMarker .avd_markerName {
+  margin-top: 0.5em;
+  text-align: center;
+}
+
+#leftBottomMarker .avd_markerPosition{
+  font-size: @bottomSmallFont;
+  margin-top: 0.55em;
+  text-align: center;
+}
+
+#leftBottomMarker .avd_markerCourse{
+  font-size: @bottomBigFont;
+  text-align: right;
+  padding-right: 0.1em;
+
+}
+#leftBottomMarker .avd_markerDistance{
+  font-size: @bottomBigFont;
+  text-align: right;
+
+}
+
+#leftBottomPosition{
+  float: left;
+  width: 50%;
+}
+
+
+#leftBottomPositionStatusImage{
+  text-align: center;
+}
+#boatPositionStatus{
+  width: 1.8em;
+  height: 1.8em;
+}
+
+#leftBottomPosition .avd_gpsPosition{
+  font-size: @bottomSmallFont;
+  margin-top: 0.55em;
+  text-align: center;
+}
+#leftBottomPosition .avd_gpsTime{
+  font-size: @bottomSmallFont;
+  text-align: center;
+
+}
+#leftBottomPosition .avd_gpsCourse{
+  font-size: @bottomBigFont;
+  text-align: right;
+  padding-right: 0.1em;
+
+}
+#leftBottomPosition .avd_gpsSpeed{
+  font-size: @bottomBigFont;
+  text-align: right;
+}
+
+
+/*-------------------------------------------------------------
+   route info
+-------------------------------------------------------------*/
+
+
 #avi_route_info_navpage{
   top: 0px;
   left:0px;
   bottom: 0px;
-  width: max( @aisPanelWidth , @routeInfoPanelWidth );
-  background-color: fade(lightgrey,@nightModePercent);
+  width: 8.7em;
   z-index: 200;
-}
-#avi_route_info_navpage when (@nightModePercent<100%) {
-  background-color: rgba(31, 30, 30, 1);
+  .nightBackFade(lightgrey);
+  .nightColors();
 }
 
-#avi_route_info_navpage_inner {
-  //margin-left: 3px;
-  //margin-right: 3px;
+#avi_route_info_navpage .avn_route_info_name{
+  opacity: 0.6;
+  display: inline-block;
+  max-width: 6.7em;
+  overflow: hidden;
+  white-space: nowrap;
 }
+
 /* we edit the current route */
 .avn_activeRoute{
-  border: 3px solid fade(#fa584a,@nightModePercent);
+  border: 3px solid #fa584a;
+  .nightOPacity();
 }
 .avn_otherRoute{
-  border: 3px solid fade(#1DB81D,@nightModePercent)
-}
-/*-------------------------------------------------------------
-   route info
--------------------------------------------------------------*/
-.avn_route_base(@factor: 8){
-    font-size: ( @routeInfoFontBase / @factor );
-    padding-left: 3px;
+  border: 3px solid #1DB81D;
+  .nightOPacity();
 }
 .avn_route_label{
-  .avn_route_base(10);
   padding-left: 0;
   opacity: 0.6;
 }
 .avn_routeInfoLine{
-  .avn_route_base(8);
   margin-bottom: 0.3em;
 }
-#avi_route_info_heading{
-    .avn_route_base(7);
-}
-#avi_route_info_navpage_inner{
-  font-size: ( @routeInfoFontBase / 9);
-  position: absolute;
-  top: 0;
-  height: 12em;
-  left: 0;
-  right: 0;
-}
+
+
 
 #avi_route_info_name{
-  .avn_route_base(10);
   padding-left: 3px;
   margin-top: 0.5em;
   padding-bottom: 0.5em;
@@ -437,36 +519,40 @@ html,body {
   border-bottom: 1px solid black;
 
 }
-#avi_route_info_list{
-    @width: max(@aisPanelWidth,@routeInfoPanelWidth);
-    font-size: ( @routeInfoFontBase / 9);
-    overflow-y: auto;
-    overflow-x: hidden;
-  position: absolute;
-  top:12.5em;
-  bottom: 0;
-  left: 0;
-  right: 0;
+@routeInfoHeaderHeight: 12em;
+#avi_route_info_navpage_inner{
+  height: @routeInfoHeaderHeight;
+  padding-left: 0.2em;
 }
-#avi_route_info_list input{
-    @width: max(@aisPanelWidth,@routeInfoPanelWidth);
-    width: (@width - 10px);
-    font-size: ( @routeInfoFontBase / 8);
+#avi_route_info_list{
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  top: @routeInfoHeaderHeight;
+  right: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .avn_route_info_point{
   border-bottom: 1px solid black;
-  padding-left: 2px;
-  padding-right: 2px;
-  padding-top: 1px;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
+  padding-top: 0.1em;
   margin-bottom: 5px;
-  padding-bottom: 2px;
+  padding-bottom: 0.1em;
+  position: relative;
 }
+
 .avn_route_info_active_point{
     background-color: @routeApproachingColor !important;
 }
-.avn_route_info_active_point when (@nightModePercent<100%){
-  background-color: #7A5957 !important;
+
+#avi_route_info_list .avn_route_info_active_point .avn_more{
+  display:block;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 //no margin at last display of route head
@@ -475,60 +561,14 @@ html,body {
 }
 
 
-#avi_waypoint_popup{
-    top: 0px;
-    left: 0px;
-    right:( @buttonSize + 10px );
-    z-index: 120; /* must be above route everything... */
-    background-color: @routeColor;
-    font-size: ( @routeInfoFontBase / 8);
-    border: 1px solid;
-    border-radius: 2px;
-    .nightColors();
-}
-
-#avi_waypoint_popup input{
-  font-size: ( @routeInfoFontBase / 5);
-  width: 100%;
-}
-
-
-/* make the waypoint popup 2 rows on small screen width */
-@wpsmall: ( 5.583 * @routeInfoFontBase );
-#avi_waypoint_popup_left{
-    float: left;
-    padding-top: 5px;
-    padding-left: 5px;
-    padding-bottom: 3px;
-  @media (min-width: @wpsmall) {
-    width: 100%;
-    box-sizing: border-box;
-    margin-right: -( 3 * @buttonSize + 47);
-    padding-right: ( 3 * @buttonSize + 47);
-  }
-  @media (max-width: ( @wpsmall - 1) ) {
-    padding-right: 10px;
-  }
-
-}
-#avi_waypoint_popup_left .avn_route_point_ll{
-  float: left;
-  margin-right: 1em;
-}
-#avi_waypoint_popup_right{
-    float:right;
-    margin-top: 5px;
-    margin-right: 8px;
-}
-
 /*-------------------------------------------------------------
    left widget container
 --------------------------------------------------------------*/
 #avi_navLeftContainer{
   position: absolute;
   left: 0;
-  font-size: ( @aisPanelWidth /8);
   background-color: #BFBFBF;
+  .nightColors();
   z-index: 10;
   @media(max-width: @checkTiny){
     right:0;
@@ -541,35 +581,31 @@ html,body {
 /*-------------------------------------------------------------
    AIS display
 -------------------------------------------------------------*/
-#aisInfo{
-  background-color: @aisNormalColor;
+#avi_aisInfo {
   max-width: 9em;
   @media(max-width: @checkTiny){
     float: left;
     height: 7em;
   }
-}
-#aisInfo when (@nightModePercent<100%){
-  color: fade(white,@nightModePercent * 1.5);
+  .nightColors();
 }
 
 
-#aisInfo .avn_ais_front {
+#avi_aisInfo .avn_ais_front {
   font-size: 1.5em;
 }
-#aisInfo .avn_label {
+#avi_aisInfo .avn_label {
   opacity: 0.6;
   display: table-cell;
   padding-right: 0.2em;
 }
-#aisInfo .avn_ais_data{
+#avi_aisInfo .avn_ais_data{
   display: table-cell;
 }
-#aisInfo .avn_table{
-  display: table;
+#avi_aisInfo .avn_table{
   margin-top: 1em;
 }
-#aisInfo .avn_row{
+#avi_aisInfo .avn_row{
   display: table-row;
 }
 
@@ -589,6 +625,7 @@ html,body {
     position: absolute;
     right: 0;
     bottom: 0;
+    height:7em;
   }
 }
 
@@ -611,17 +648,15 @@ html,body {
 }
 
 .avn_route_display_approach{
-    background-color: @routeApproachingColor !important;
+  .nightBackFade(@routeApproachingColor);
 
 }
-.avn_route_display_approach when (@nightModePercent<100%) {
-  background-color: #702620 !important
-}
+
 
 /*-------------------------------------------------------------
    center display
 -------------------------------------------------------------*/
-#centerDisplay{
+#avi_centerDisplay {
   background-color: white;
   .nightColors();
   @media(max-width: @checkTiny){
@@ -629,35 +664,34 @@ html,body {
     height: 7em;
   }
 }
-#centerDisplay .avn_label{
+#avi_centerDisplay .avn_label{
   display: table-cell;
   opacity: 0.6;
   margin-right: 0.2em;
 }
-#centerDisplay .avn_center_value{
+#avi_centerDisplay .avn_center_value{
   display: table-cell;
-  text-align: end;
+  text-align: right;
   white-space: nowrap;
 }
-#centerDisplay .avd_centerPosition{
+#avi_centerDisplay .avd_centerPosition{
   max-width: 6.5em;
   margin-top:1em;
 }
-#centerDisplay .avn_table{
-  display: table;
+#avi_centerDisplay .avn_table{
   font-size: 0.8em;
 }
-#centerDisplay .avn_row{
+#avi_centerDisplay .avn_row{
   display: table-row;
 }
-#centerDisplay .avn_boat{
-  background-image: url(images/Sail-Boat-40.png);
+#avi_centerDisplay .avn_boat{
+  background-image: url(images/icons-new/boat.svg);
   background-size: 1em 1em;
   background-repeat: no-repeat;
   width: 1.5em;
 }
-#centerDisplay .avn_marker{
-  background-image: url(images/Marker1.png);
+#avi_centerDisplay .avn_marker{
+  background-image: url(images/icons-new/waypoint.svg);
   background-size: 1em 1em;
   background-repeat: no-repeat;
   width: 1.5em;
@@ -668,69 +702,70 @@ html,body {
   .avn_hidden();
 }
 button.avb_ZoomIn {
-  .avn_button_icon_base('images/Plus40.png');
+  .avn_iconButton('images/icons-new/ic_zoom_in.svg');
 }
 button.avb_ZoomOut {
-  .avn_button_icon_base('images/Minus40.png');
+  .avn_iconButton('images/icons-new/ic_zoom_out.svg');
 }
 button.avb_LockPos  {
-  .avn_button_icon_base_toggle('images/Sail-Boat-40.png');
+  .avn_iconButton('images/icons-new/boat.svg');
 }
 
 button.avb_LockMarker {
-  .avn_button_icon_base_toggle('images/Marker1.png');
+  .avn_iconButton('images/icons-new/waypoint.svg');
 }
 
+button.avb_StopNav {
+  .avn_iconButton('images/icons-new/stop-nav.svg');
+}
 button.avb_CourseUp {
-  .avn_button_icon_base_toggle('images/nadel-2.png',( @buttonSize * 45 /60 ));
+  .avn_iconButton('images/icons-new/compass.svg');
 }
 button.avb_ShowRoutePanel {
-  .avn_button_icon_base('images/RoutingButton40.png',( @buttonSize * 45 /60 ));
+  .avn_iconButton('images/icons-new/route.svg');
+}
+button.avb_ShowGps {
+  .avn_iconButton('images/icons-new/data.svg');
+
 }
 
-
 button.avb_CancelNav {
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 
 }
 
 /*- nav page routing panel --*/
 button.avb_NavAdd {
-  .avn_button_icon_base('images/wpplus40.png',( @buttonSize * 45 /60 ));
+  .avn_iconButton('images/icons-new/wpplus.svg');
 }
 button.avb_NavDelete {
-  .avn_button_icon_base('images/wpminus40.png',( @buttonSize * 45 /60 ));
+  .avn_iconButton('images/icons-new/wpminus.svg');
 }
 button.avb_NavToCenter {
-  .avn_button_icon_base('images/wpcenter60.png',( @buttonSize * 45 /60 ));
+  .avn_iconButton('images/icons-new/wpcenter.svg');
 }
 button.avb_NavGoto {
-  .avn_button_icon_base('images/wpgoto60.png',( @buttonSize * 45 /60 ));
+  .avn_iconButton('images/icons-new/wpgoto.svg');
 }
 button.avb_NavInvert {
-  .avn_button_icon_base('images/InvertRoute60.png',( @buttonSize * 45 /60 ));
+  .avn_iconButton('images/icons-new/invertroute.svg');
 }
 button.avb_NavDeleteAll {
-  .avn_button_icon_base('images/trash32.png');
+  .avn_iconButton('images/icons-new/ic_delete.svg');
 }
 
 button.avb_NavNext {
-  .avn_button_icon_base('images/arrowright32.png');
-}
-
-button.avb_NavWp {
-  .avn_hidden();
-  .avn_button_icon_base('images/YellowBubble40.png');
+  .avn_iconButton('images/icons-new/nextwp.svg');
 }
 
 button.avb_WpDone{
-  .avn_button_icon_base('images/check32.png');
+  .avn_iconButton('images/icons-new/ic_done.svg');
 }
 button.avb_WpPrevious{
-  .avn_button_icon_base('images/arrowleft32.png');
+  .avn_iconButton('images/icons-new/ic_arrow_back.svg');
 }
 button.avb_WpNext{
-  .avn_button_icon_base('images/arrowright32.png');
+  .avn_iconButton('images/icons-new/ic_arrow_forward.svg');
 }
 
 
@@ -741,7 +776,6 @@ button.avb_WpNext{
 .avm_listpage {
   padding-left: 10px;
   padding-right: 10px;
-  font-size: ( @routeInfoFontBase / 8);
   background-color: white;
   .nightColors();
 }
@@ -759,11 +793,11 @@ button.avb_WpNext{
   bottom: 0;
 }
 .avm_list_entry{
-  height: ( @buttonSize *0.8 + 5px);
   overflow: hidden;
   position: relative;
   border-bottom: 1px solid;
   padding-top: 5px;
+  margin-right: 1em;
 }
 /*-------------------------------------------------------------
    routes page
@@ -782,7 +816,6 @@ button.avb_WpNext{
 }
 #avi_route_name{
   width: 95%;
-  font-size: ( @routeInfoFontBase / 5);
 }
 #avi_route_listhead{
   margin-top: 10px;
@@ -799,17 +832,18 @@ button.avb_WpNext{
 }
 .avn_route_listinfo{
   padding-left: 1.5em;
-  float: left;
+  display: inline-block;
+  margin-bottom: 0.5em;
+  margin-top: 0.5em;
 }
 .avn_route_listdate{
-  float: left;
-
+  display: inline-block;
+  width: 11.5em;
+  opacity: 0.6;
 }
 
 .avn_route_btnDelete{
-  position: absolute;
-  left: 3px;
-  top: 0;
+
 }
 
 
@@ -817,10 +851,8 @@ button.avb_WpNext{
 .avn_route_listrasimage{
   width: @listrasimagesize;
   height: @listrasimagesize;
-  position: absolute;
-  top: (( @buttonSize - @listrasimagesize ) / 2 );
-  right: 8px;
-  background-image: url('images/plug32.png');
+  float: right;
+  background-image: url('images/icons-new/plug.svg');
   background-size: contain;
 }
 
@@ -828,16 +860,13 @@ button.avb_WpNext{
   width: @listrasimagesize;
   height: @listrasimagesize;
   background-size: contain;
-  position: absolute;
-  top: (( @buttonSize - @listrasimagesize ) / 2 );
-  right: ( @listrasimagesize + 12);
+  float: right;
 }
 
 
 
 .avn_route_list_row{
-  margin-left: (@buttonSize + 10px);
-  margin-right: (2 * @listrasimagesize + 20px);
+
 }
 
 .avn_route_current{
@@ -848,34 +877,35 @@ button.avb_WpNext{
 }
 
 button.avb_RoutePageOk{
-  .avn_button_icon_base('images/check32.png');
+  .avn_iconButton('images/icons-new/ic_done.svg');
 }
 button.avb_RoutePageCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_RoutePageDownload{
-  .avn_button_icon_base('images/download32.png');
+  .avn_iconButton('images/icons-new/ic_file_download.svg');
 }
 button.avb_RoutePageUpload{
-  .avn_button_icon_base('images/upload32.png');
+  .avn_iconButton('images/icons-new/ic_file_upload.svg');
 }
 button.avb_RoutePageDelete{
-  .avn_button_icon_base('images/trash32.png');
+  .avn_iconButton('images/icons-new/ic_delete.svg');
 }
 button.avb_RoutePageRoutes{
-  .avn_button_icon_base('images/RoutingButton40.png');
+  .avn_iconButton('images/icons-new/route.svg');
 }
 button.avb_RoutePageCharts{
-  .avn_button_icon_base_toggle('images/Chart60.png');
+  .avn_iconButton('images/icons-new/map2.svg');
 }
 button.avb_RoutePageTracks{
-  .avn_button_icon_base_toggle('images/TrackButton60.png');
+  .avn_iconButton('images/icons-new/track.svg');
 }
 .avn_route_btnDelete{
-  .avn_button_icon_base('images/trash32.png',null,(@buttonSize *0.8));
+  .avn_iconButton('images/icons-new/ic_delete.svg');
+  vertical-align: middle;
 }
 .avn_route_btnLoad{
-  .avn_button_icon_base('images/check32.png',null,(@buttonSize *0.8));
+  .avn_iconButton('images/icons-new/ic_done.svg');
 }
 
 
@@ -906,104 +936,92 @@ button.avb_RoutePageTracks{
   .avm_list_entry();
 }
 .avn_download_listinfo{
-  padding-left: 1.5em;
-  float: left;
+  padding-left: 3em;
+  display: inline-block;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 .avn_download_listdate{
-  float: left;
-
+  display: inline-block;
+  margin-left: 0.5em;
+  width: 11.5em;
+  opacity: 0.6;
 }
 
 .avn_download_btnDelete{
-  position: absolute;
-  left: 3px;
-  top: 0;
+  vertical-align: middle;
+  display: inline-block;
+  margin: 1em 1em 1em 1em;
 }
 
 .avn_download_btnDownload{
-  position: absolute;
-  right: 3px;
-  top: 0;
+  float: right;margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 
-.avn_download_list_row{
-  margin-left: (@buttonSize + 10px);
-  margin-right: (@buttonSize + 10px);
-}
 
 #avi_download_progress{
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: (@buttonSize + 20px);
+  padding: 1em 1em 1em 1em;
   background-color: lightgrey;
+  .flexbox();
   .nightColors();
 }
-
-#avi_download_page_inner.avn_downloadpage_progress_visible{
-  bottom:(@buttonSize + 20px);
+#avi_download_progress_container{
+  .flex(1);
 }
 
-
-
 #avi_download_progress_display {
-  position: absolute;
-  left: 20px;
-  right: (@buttonSize + 30px);
-  bottom: 15px;
-  top:  ( @routeInfoFontBase / 10 + 5px);
-  box-sizing: border-box;
+  margin: 0.5em 0.5em 0.5em 0.5em;
+  height: 2em;
+  display: block;
   border: 1px solid;
+  margin-left: 1em;
+  margin-bottom: 1em;
+  margin-right: 1em;
 }
 
 #avi_download_progress_info{
-  font-size: ( @routeInfoFontBase / 10);
-  position: absolute;
-  left:0px;
-  right: 0px;
+  display: block;
   text-align: center;
 }
-#avb_DownloadPageUploadCancel {
-  position: absolute;
-  right: 15px;
-  top: 7px;
+.avb_DownloadPageUploadCancel {
 }
 .avn_progress_bar_done{
   height: 100%;
-  background-color: blue;
+  .nightBackColor(blue);
   width: 20%;
 }
 
-.avn_progress_bar_done when (@nightModePercent < 100){
-  background-color: @nightColor;
-}
 
 button.avb_DownloadPageCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_DownloadPageUpload{
-  .avn_button_icon_base('images/upload32.png');
+  .avn_iconButton('images/icons-new/ic_file_upload.svg');
 }
 
 button.avb_DownloadPageRoutes{
-  .avn_button_icon_base('images/RoutingButton40.png');
+  .avn_iconButton('images/icons-new/route.svg');
 }
 button.avb_DownloadPageCharts{
-  .avn_button_icon_base_toggle('images/Chart60.png');
+  .avn_iconButton('images/icons-new/map2.svg');
 }
 button.avb_DownloadPageTracks{
-  .avn_button_icon_base_toggle('images/TrackButton60.png');
+  .avn_iconButton('images/icons-new/track.svg');
 }
 .avn_download_btnDelete{
-  .avn_button_icon_base('images/trash32.png',null,(@buttonSize *0.8) );
+  .avn_iconButton('images/icons-new/ic_delete.svg');
 }
 .avn_download_btnDownload{
-  .avn_button_icon_base('images/download32.png',null,(@buttonSize *0.8) );
+  .avn_iconButton('images/icons-new/ic_file_download.svg');
 }
 
 button.avb_DownloadPageUploadCancel{
-  .avn_button_icon_base('images/Cancel40.png',null,(@buttonSize * 0.8) );
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 
 
@@ -1012,46 +1030,23 @@ button.avb_DownloadPageUploadCancel{
    AIS display
 -------------------------------------------------------------*/
 .avn_ais_infotable{
-	//display: table;
-	margin-left: 3px;
-	margin-right: 3px;
-	line-height: 22px;
-	font-size: 20px;
+  line-height: 1.6em;
+  border-collapse: collapse;
 }
-.avn_ais{
-	//display: table-row;
-		
-}
+
 .avn_aisparam{
 	//display: table-cell;
-	padding-left: 10px;
-	padding-right: 10px;
-	padding-bottom: 3px;
-	padding-top: 2px;
-	border-bottom: 1px solid black;
-	border-left: 1px solid black;
-	border-right: 1px solid black;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+  border-bottom: 1px solid black;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
 	
 }
-.avn_ais_info_first{
-	background-color: fade(@aisNearestColor,@nightModePercent * 1.5) !important;
-}
-.avn_ais_info_normal{
-  background-color: fade(@aisNormalColor,@nightModePercent * 1.5) !important;
-}
-.avn_ais_selected{
-	background-color: fade(rgb(202, 213, 190),@nightModePercent * 1.5);
-}
 
-.avn_ais_warning{
-	background-color: fade(@aisWarningColor,@nightModePercent * 1.5);
-}
-.avn_ais_info_warning{
-	background-color: fade(@aisWarningColor,@nightModePercent * 1.5) !important;
-}
 
 #avi_ais_page_inner{
-
+  font-size: 1.2em;
 }
 
 .avn_ais_headline_elem{
@@ -1063,70 +1058,139 @@ button.avb_DownloadPageUploadCancel{
 
 
 button.avb_AisCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_AisNearest {
-  .avn_button_icon_base('images/Ais-Up-40.png');
+  .avn_iconButton('images/icons-new/ais-nearest.svg');
 }
 /*-------------------------------------------------------------
    ais info page
 -------------------------------------------------------------*/
-#avi_ais_infopage_inner {
-  width: 100%;
-  max-width: 40em;
-  margin: auto;
-  font-size: 1.5em;
-}
-#avi_ais_infopage_inner .avn_aisStatus{
-  background-color: inherit;
-  width: 1.5em;
-  height: 1.5em;
-  border-radius: 3px;
-  text-align: right;
-  display: inline-block;
-  margin-right: 0.5em;
-  vertical-align: text-bottom;
-}
-#avi_ais_infopage_inner h1{
-  text-align: center;
-}
-#avi_ais_infopage_inner .avn_table {
-  display: table;
-  width: 100%
-}
-#avi_ais_infopage_inner .avn_row {
-  display: table-row;
-}
-#avi_ais_infopage_inner .avn_label{
-  display: table-cell;
-  text-align: right;
-  padding-right: 1em;
-  opacity: 0.6;
-  padding-bottom: 0.7em;
-  width: 50%;
-}
-#avi_ais_infopage_inner .avn_ais_data{
-  display: table-cell;
-  border-bottom: inherit;
-  font-size: 1em;
-  width: 50%;
-}
-#avi_ais_infopage_inner .avn_ais_warning{
-  color: fade(@aisWarningColor,@nightModePercent * 1.5);
-}
-button.avb_AisInfoCancel{
-  .avn_button_icon_base('images/Cancel40.png');
-}
-button.avb_AisInfoNearest {
-  .avn_button_icon_base('images/Ais-Up-40.png');
-}
-button.avb_AisInfoLocate {
-  .avn_button_icon_base('images/Marker2.png');
-}
-button.avb_AisInfoList {
-  .avn_button_icon_base('images/linedpaper32.png');
+#avi_aisinfopage .avn_infopage_inner {
+  max-width: 60em;
 }
 
+#avi_aisinfopage .avn_table{
+  font-size: 1.5em;
+}
+
+button.avb_AisInfoNearest {
+  .avn_iconButton('images/icons-new/ais-nearest.svg');
+}
+button.avb_AisInfoLocate {
+  .avn_iconButton('images/icons-new/center.svg');
+}
+button.avb_AisInfoList {
+  .avn_iconButton('images/icons-new/ic_list.svg');
+}
+
+/*-------------------------------------------------------------
+   boat info page
+-------------------------------------------------------------*/
+#avi_boatinfopage .avn_infopage_inner {
+  max-width: 60em;
+}
+#avi_boatinfopage .avn_table {
+  font-size: 2em;
+}
+
+#avi_boatinfopage .avn_Status{
+  background-image: url('images/icons-new/boat.svg');
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+}
+#avi_boatinfopage .avn_status_image {
+  vertical-align: middle;
+  width: 2em;
+  height: 2em;
+}
+#avi_boatinfopage .avn_course_image{
+  width: 1.3em;
+  height: 1.3em;
+  transform: rotate(90deg);
+  vertical-align: middle;
+  border: 1px solid;
+  border-color: rgba(0, 0, 0, 0.36);
+  border-radius: 50%;
+  margin-left: 0.5em;
+  padding: 0.3em;
+}
+#avi_boatinfopage .avd_gpsCourse {
+  width: 1.8em;
+  display: inline-block;
+  text-align: right;
+}
+#avi_boatinfopage .avn_unit{
+  margin-left: 0.5em;
+}
+button.avb_BoatInfoLocate {
+  .avn_iconButton('images/icons-new/center.svg');
+}
+button.avb_BoatInfoGps {
+  .avn_iconButton('images/icons-new/data.svg');
+}
+/*-------------------------------------------------------------
+   wp info page
+-------------------------------------------------------------*/
+#avi_wpinfopage .avn_infopage_inner {
+  max-width: 60em;
+}
+#avi_wpinfopage .avn_table {
+  font-size: 1.4em;
+}
+#avi_wpinfopage .avn_Status{
+  opacity: 0.6;
+}
+#avi_wpinfopage .avn_boat{
+  background-image: url("images/icons-new/boat.svg");
+  display: inline-block;
+  width:1em;
+  height: 1em;
+  background-size: 1em 1em;
+  margin-right: 0.5em;
+}
+#avi_wpinfopage .avn_FirstRouteInfo{
+  border-top: 1px solid hsla(0, 0%, 0%, 0.61);
+}
+#avi_wpinfopage .avn_FirstRouteInfo div{
+  padding-top: 1em;
+}
+#avi_wpinfopage .avn_routingInactive{
+  .nightBackFade(lightgray);
+}
+#avi_wpinfopage .avn_routingActive{
+  .nightBackFade(#1DB81D);
+}
+#avi_wpinfopage .avn_routingApproach{
+  .nightBackFade(@routeApproachingColor);
+}
+
+
+#avi_wpinfo_box button{
+  float: right;
+}
+#avi_wpinfo_box input{
+  display: table-cell;
+  font-size: inherit;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  margin-left: 1em;
+  width: 20em;
+}
+#avi_wpinfo_box label{
+  display: table-cell;
+  text-align: right;
+}
+
+button.avb_WpInfoLocate {
+  .avn_iconButton('images/icons-new/center.svg');
+}
+button.avb_WpInfoRoute {
+  .avn_iconButton('images/icons-new/route.svg');
+}
+button.avb_WpInfoGps {
+  .avn_iconButton('images/icons-new/data.svg');
+}
 /*-------------------------------------------------------------
    status page
 -------------------------------------------------------------*/
@@ -1158,16 +1222,13 @@ button.avb_AisInfoList {
 
 
 button.avb_StatusCancel {
-  .avn_button_icon_base('images/Cancel40.png');
-}
-button.avb_StatusUpdate {
-  .avn_button_icon_base('images/exchange32.png');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_StatusWpa {
-  .avn_button_icon_base('images/rss32.png');
+  .avn_iconButton('images/icons-new/ic_rss_feed.svg');
 }
 button.avb_StatusAndroid{
-  .avn_button_icon_base('images/Android_Robot_100.png');
+  .avn_iconButton('images/icons-new/ic_android.svg');
 }
 
 
@@ -1216,24 +1277,24 @@ button.avb_StatusAndroid{
   max-height: 99%;
 }
 
-#avi_wpa_dialog{
+.avn_dialog{
   padding: 1em;
   background-color: white;
   border-radius: 1em;
   .nightColors();
   font-size: 1.3em;
 }
-#avi_wpa_dialog input{
+.avn_dialog input{
   margin-top: 0.5em;
   margin-bottom: 0.5em;
 }
 
-#avi_wpa_dialog button{
-  .avn_button_base();
-  margin-top: (@buttonSize / 5);
-  margin-left: (@buttonSize / 5);
-  margin-right: (@buttonSize / 10);
-  font-size: ( min(@buttonSize / 3,14px));
+.avn_dialog button{
+  .avn_buttonBase();
+  margin-top: 0.5em;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  font-size: @normalButtonFont;
   padding: 1em;
   width: inherit;
   .nightColors();
@@ -1260,7 +1321,7 @@ button.avb_StatusAndroid{
 
 
 button.avb_WpaCancel {
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 
 
@@ -1300,7 +1361,7 @@ button.avb_WpaCancel {
   padding-left: 8px;
   border-bottom: 1px solid;
   border-top: 1px solid;
-  background-color: fade(#E2DFDF,@nightModePercent);
+  .nightBackFade(#E2DFDF);
 }
 .avn_gpsp_value{
   padding-left: 4px;
@@ -1353,7 +1414,7 @@ button.avb_WpaCancel {
 }
 
 button.avb_GpsCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 
 /*-------------------------------------------------------------------------------
@@ -1367,9 +1428,8 @@ button.avb_GpsCancel{
 
 .avn_setting{
   float: left;
-  font-size: @settingsFontSize;
-  padding-left: ( @settingsFontSize * 10 / 16);
-  padding-right: ( @settingsFontSize * 10 / 16);
+  padding-left: 0.8em;
+  padding-right: 0.8em;
   padding-bottom: 6px;
 }
 .avn_settings_group{
@@ -1385,27 +1445,31 @@ button.avb_GpsCancel{
   -webkit-border-radius: 5px;
 }
 
+.avn_settings_group h2{
+  font-size: 1em;
+}
+
 .avn_clear{
   clear: both;
 }
 
 .avn_settings_line{
-  line-height: ( @settingsFontSize * 3 / 2 );
+  line-height: 2em;
   margin-bottom: 8px;
 }
 
 .avn_settings_line input[type="checkbox"]{
-  height: ( @settingsFontSize * 2 );
-  width: ( @settingsFontSize * 2 );
-  margin-left: ( @settingsFontSize );
+  height: 2em;
+  width: 2em;
+  margin-left: 1em;
   margin-right: 5px;
 }
 
 .avn_slider{
   float:left;
-  width:400px;
-  height:@settingsFontSize;
-  margin-left: 10px;
+  width:30em;
+  height:1em;
+  margin-left: 1em;
   margin-right: 10px;
   margin-bottom: 10px;
   margin-top: 10px;
@@ -1413,13 +1477,13 @@ button.avb_GpsCancel{
 
 .avn_slider_label{
   float:left;
-  width: ( @settingsFontSize * 12 );
+  width: 12em;
   margin-top: 10px;
 }
 
 .avn_slider_out{
   float:left;
-  width: ( @settingsFontSize * 8 );
+  width: 8em;
   margin-top: 10px;
 }
 .avn_rangeslider__handle {
@@ -1487,27 +1551,26 @@ button.avb_GpsCancel{
 .avn_color{
   float:left;
   width:150px;
-  height:@settingsFontSize;
-  margin-left: 10px;
-  margin-right: 10px;
+  height:1em;
+  margin-left: 1em;
+  margin-right: 1em;
   margin-bottom: 10px;
-  height: 30px;
+  height: 2em;
 }
 
 .avn_color_label{
   float:left;
-  width: ( @settingsFontSize * 12 );
+  width: 12em;
   margin-top: 10px;
 }
 .avn_color_out{
   float:left;
-  width: ( @settingsFontSize * 8 );
+  width: 8em;
   margin-top: 10px;
 }
 
 .avn_settings_reset{
-  .avn_button_base(30px,30px);
-  .avn_button_icon_base('images/trash32.png',20px);
+  .avn_iconButton('images/icons-new/ic_delete.svg');
   margin-top: 5px;
   margin-left: 20px;
   float:left;
@@ -1517,18 +1580,18 @@ button.avb_GpsCancel{
 }
 
 button.avb_SettingsCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_SettingsOK {
-  .avn_button_icon_base('images/check32.png');
+  .avn_iconButton('images/icons-new/ic_done.svg');
 }
 
 button.avb_SettingsDefaults{
-  .avn_button_icon_base('images/trash32.png');
+  .avn_iconButton('images/icons-new/ic_delete.svg');
 }
 
 button.avb_SettingsAndroid{
-  .avn_button_icon_base('images/Android_Robot_100.png');
+  .avn_iconButton('images/icons-new/ic_android.svg');
 }
 /*-------------------------------------------------------------------------------
     main page
@@ -1536,134 +1599,123 @@ button.avb_SettingsAndroid{
 */
 
 .avn_mainpage_select_item {
-	cursor: pointer;
-	float: left;
-	margin: 20px 20px 20px 20px;
-	padding: 10px 10px 10px 10px;
-	background-color: fade(grey,@nightModePercent);
-	color: white;
-	width: 60px;
-    height: 100px;
-	text-align: center;
-	border-radius: 8px;
+  cursor: pointer;
+  vertical-align: middle !important;
+  overflow: hidden;
+  width: 20em;
+  height: 2em;
+  display: inline-block;
+  margin-right: 3em;
+  padding: 1em;
+  line-height: 2em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  box-sizing: content-box;
+  .nightColors();
 }
-.avn_mainpage_select_item when (@nightModePercent <100%) {
-  color: @nightColor;
-}
+
 .avn_mainpage_select_item img{
     .nightOPacity();
-	margin-bottom: 10px;
-	border-radius: 8px;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  margin-right: 1em;
+  vertical-align: middle;
 }
 
 
 #avi_mainpage_inner_content {
-	width: 100%;
-	height: 100%;
+  width: 100%;
+  height: 100%;
+  font-size: 1.2em;
 }
 
 #avi_mainpage_link{
-  font-size: ( @bottomPanelHeight / 4 );
   text-align: right;
-  position: absolute;
-  right: 0;
-  bottom: 0;
   padding-right: 1em;
-  z-index: 0;
   white-space: nowrap;
-  .hidemedia(0px, ( @bottomPanelHeight * 16 ))
+  display: inline-block;
+  float: right;
 }
 #avi_mainpage_status {
-  font-size: ( @bottomPanelHeight / 4 );
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  margin-bottom: ( @bottomPanelHeight / 20 );
   padding-left: 1em;
   padding-right: 1em;
   text-align: left;
   z-index: 10;
   white-space: nowrap;
+  display: inline-block;
+
 }
 #avi_mainpage_selections {
 	display: inline-block;
 }
-
+#avi_mainpage_selections .avn_more{
+  display: inline-block;
+}
 #avi_mainpage .avn_left_bottom{
-  height: @bottomPanelHeight;
+  height: 3.3em;
   bottom: 0;
   left: 0;
   right: 0;
   background-color: rgba(216, 216, 213, 0.29);
   .nightColors();
 }
-
+#avi_mainpage .avn_main{
+  bottom: 3.3em;
+}
+#avi_mainpage_leftbottominner{
+  font-size: 0.8em;
+  padding-top: 0.8em;
+}
 
 
 button.avb_ShowStatus {
-  .avn_button_icon_base('images/bargraph32.png');
+  .avn_iconButton('images/icons-new/status.svg');
 }
 button.avb_ShowSettings {
-  .avn_button_icon_base('images/spanner32.png');
-}
-button.avb_ShowHelp {
-  .avn_button_icon_base('images/Question.png');
-  .avn_hidden();
+  .avn_iconButton('images/icons-new/ic_settings.svg');
 }
 
 button.avb_Connected {
-  .avn_button_icon_base_toggle('images/plug32.png');
+  .avn_iconButton('images/icons-new/plug.svg');
 }
 
 button.avb_Night {
-  .avn_button_icon_base_toggle('images/Night60.png');
+  .avn_iconButton('images/icons-new/night.svg');
 }
 button.avb_ShowDownload {
-  .avn_button_icon_base('images/download32.png');
+  .avn_iconButton('images/icons-new/ic_file_download.svg');
 }
 button.avb_MainCancel{
-  .avn_button_icon_base('images/Cancel40.png');
+  .avn_iconButton('images/icons-new/ic_clear.svg');
 }
 button.avb_MainAndroid{
-  .avn_button_icon_base('images/Android_Robot_100.png');
+  .avn_iconButton('images/icons-new/ic_android.svg');
 }
 
 /*------------------------------------------------------------------------------- 
 	element positioning
   -------------------------------------------------------------------------------
-	1. left panel */
+*/
+.avn_page{
+  .flexbox();
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+	/*1. left panel */
 .avn_left_panel{
-	left: 0px;
-	top: 0px;
-	bottom: 0px;
-	right: (@buttonSize + 10 );      
-	overflow: hidden;
+  .flex(1);
+  .flexbox(); //seems to be necessary for old WebKit
+  position: relative;
+  overflow: hidden;
 }
   
-/*
-    2. left top
-*/
-
-.avn_left_top{
-	left: 0px;
-	top: 0px;
-	right: 0px;
-	height: @topPanelHeight;
-    background-color: #1602FC;
-    text-align: center;
-}
-.avn_top_content{
-	float: left;
-	line-height: ( @topPanelHeight - 2 );
-}
-
-
 /*
 	3. map
 */
 
 .avn_map {
-  top: @topPanelHeight;
+  top: 0;
   left: 0px;
   right: 0px;
   bottom: 0px;
@@ -1671,10 +1723,10 @@ button.avb_MainAndroid{
 }
 
 .avn_main{
-	top: @topPanelHeight;
-	bottom: @bottomPanelHeight;
-	left: 0px;
-	right: 0px;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
 	
 }
     
@@ -1704,22 +1756,20 @@ button.avb_MainAndroid{
 */
 
 .avn_right_panel{
-	top: 0px;
-	bottom: 0px;
-	right: 0px;
-	width: ( @buttonSize + 10 );
-    background-color: fade(#6D6D6D,@nightModePercent);
+  display: block;
+  position: relative;
+  .nightBackFade(#6D6D6D);
 }
 
 .avn_status_image{
-  width: 24px;
-  height: 24px;
+  width: 2em;
+  height: 2em;
   .nightOPacity();
 }
 
 .avn_status_image_small{
-  width: ( @bottomPanelHeight / 2.5 );
-  height: ( @bottomPanelHeight / 2.5 );
+  width: 1.5em;
+  height: 1.5em;
   vertical-align: middle;
   .nightOPacity();
 }
@@ -1759,4 +1809,5 @@ button.avb_MainAndroid{
   -webkit-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
   -moz-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
   box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+  z-index: 9999;
 }

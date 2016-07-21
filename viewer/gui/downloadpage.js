@@ -119,19 +119,19 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
     }
     if (this.type == "chart"){
         $('#avi_download_page_listhead').text("Charts");
-        if (avnav.android||this.gui.properties.getProperties().onAndroid) $('#avb_DownloadPageUpload').hide();
-        else  $('#avb_DownloadPageUpload').show();
-        this.handleToggleButton('#avb_DownloadPageTracks',false);
-        this.handleToggleButton('#avb_DownloadPageCharts',true);
+        if (avnav.android||this.gui.properties.getProperties().onAndroid) this.selectOnPage('.avb_DownloadPageUpload').hide();
+        else  this.selectOnPage('.avb_DownloadPageUpload').show();
+        this.handleToggleButton('.avb_DownloadPageTracks',false);
+        this.handleToggleButton('.avb_DownloadPageCharts',true);
     }
     else {
         $('#avi_download_page_listhead').text("Tracks");
-        $('#avb_DownloadPageUpload').hide();
-        this.handleToggleButton('#avb_DownloadPageCharts',false);
-        this.handleToggleButton('#avb_DownloadPageTracks',true);
+        this.selectOnPage('.avb_DownloadPageUpload').hide();
+        this.handleToggleButton('.avb_DownloadPageCharts',false);
+        this.handleToggleButton('.avb_DownloadPageTracks',true);
     }
     if (!this.gui.properties.getProperties().connectedMode){
-        $('#avb_DownloadPageUpload').hide();
+        this.selectOnPage('.avb_DownloadPageUpload').hide();
     }
     this.fillData(true);
     this.hideProgress();
@@ -255,7 +255,7 @@ avnav.gui.Downloadpage.prototype.fillData=function(initial){
 };
 
 avnav.gui.Downloadpage.prototype.download=function(name,opt_url) {
-    log("download");
+    avnav.log("download");
     if (!name || name == "") return;
 
     var f = $('#avi_download_downloadform')
@@ -268,7 +268,7 @@ avnav.gui.Downloadpage.prototype.download=function(name,opt_url) {
 };
 
 avnav.gui.Downloadpage.prototype.directUpload=function(file) {
-    self=this;
+    var self=this;
     var url = self.gui.properties.getProperties().navUrl + "?request=upload&type="+this.type+"&filename=" + encodeURIComponent(file.name);
     self.showProgress();
     avnav.util.Helper.uploadFile(url, file, {
@@ -307,7 +307,8 @@ avnav.gui.Downloadpage.prototype.directUpload=function(file) {
 avnav.gui.Downloadpage.prototype.showProgress=function(size){
     $('#avi_download_progress').show();
     $('#avi_download_progress_info').text("0/"+size);
-    $('#avi_download_page_inner').addClass("avn_downloadpage_progress_visible");
+    var rtop=$('#avi_download_progress').outerHeight();
+    $('#avi_download_page_inner').css('bottom',rtop+"px");
 };
 /**
  * hide the progress bar
@@ -315,7 +316,7 @@ avnav.gui.Downloadpage.prototype.showProgress=function(size){
  */
 avnav.gui.Downloadpage.prototype.hideProgress=function() {
     $('#avi_download_progress').hide();
-    $('#avi_download_page_inner').removeClass("avn_downloadpage_prohidegress_visible");
+    $('#avi_download_page_inner').css('bottom','0px');
 };
 
 
@@ -364,7 +365,7 @@ avnav.gui.Downloadpage.prototype.abortUpload=function(){
 
 
 avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
-    log("upload clicked");
+    avnav.log("upload clicked");
     var i=$("#avi_download_uploadfile");
     $(i).click();
     return false;
@@ -372,13 +373,13 @@ avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
 };
 
 avnav.gui.Downloadpage.prototype.btnDownloadPageRoutes=function(button,ev){
-    this.gui.showPage('routepage',{fromdownload:true})
+    this.gui.showPage('routepage',{fromdownload:true,skipHistory: true})
 };
 avnav.gui.Downloadpage.prototype.btnDownloadPageTracks=function(button,ev){
-    this.showPage({downloadtype:"track"});
+    this.showPage({downloadtype:"track",skipHistory: true});
 };
 avnav.gui.Downloadpage.prototype.btnDownloadPageCharts=function(button,ev){
-    this.showPage({downloadtype:"chart"});
+    this.showPage({downloadtype:"chart",skipHistory: true});
 };
 avnav.gui.Downloadpage.prototype.btnDownloadPageUploadCancel=function(button,ev){
     this.abortUpload();

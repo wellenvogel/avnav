@@ -84,7 +84,7 @@ avnav.gui.Handler = function (properties, navobject, map) {
     $(window).on('resize', function () {
         try {
             if (Object.keys(self.activeInputs).length > 0) {
-                log("resize skipped due to active input");
+                avnav.log("resize skipped due to active input");
                 return;
             }
         } catch (e) {
@@ -122,8 +122,8 @@ avnav.gui.Handler.prototype.removeActiveInput = function (id) {
     //if we now removed focus from any input, we could resize
     //if the window size has changed
     //we delay a bit to give the on screen keyboard a chance to disappear
-    if (Object.keys(this.activeInputs).length == 0) {
-        setTimeout(function () {
+    setTimeout(function () {
+        if (Object.keys(self.activeInputs).length == 0) {
             var ch = $(window).height();
             var cw = $(window).width();
             if (ch != self.lasth || cw != self.lastw) {
@@ -132,8 +132,9 @@ avnav.gui.Handler.prototype.removeActiveInput = function (id) {
                 self.properties.updateLayout();
                 $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE, new avnav.util.PropertyChangeEvent(self.properties));
             }
-        }, 1000);
-    }
+        }
+    }, 1000);
+
 };
 
 avnav.gui.Handler.prototype.removeAllActiveInputs = function () {
@@ -144,7 +145,7 @@ avnav.gui.Handler.prototype.removeAllActiveInputs = function () {
 
 
 /**
- * return to a page or show a new one if returnpage is not set
+ * return to a page
  * set the returning flag in options if we return
  * @param opt_options
  * @returns {boolean|*}
@@ -166,7 +167,7 @@ avnav.gui.Handler.prototype.returnToLast = function (page, opt_options) {
  * show a certain page
  * @param {String} name
  * @param {Object} options options to be send as options with the event
- *                 if this contains a "returnpage" - set this as the new returnpage in the history
+ *        if skipHistory is set or returning is set - do not push to history
  * @returns {boolean}
  */
 
@@ -174,20 +175,15 @@ avnav.gui.Handler.prototype.showPage = function (name, options) {
     if (!name) return false;
     if (name == this.page) return false;
     if (name == "mainpage") this.history=[]; //empty history if we reach the mainpage
-    else  if (! options || ! options.returning) {
-        if (options && options.returnpage) this.history.push(options.returnpage);
-        else {
+    else  if (! options || (! options.skipHistory && ! options.returning) ) {
             this.history.push(this.page);
-            if (! options)options={};
-            options.returnpage=this.page;
-        }
     }
     this.removeAllActiveInputs();
     $('.avn_page').hide();
     $('#avi_' + name).show();
     var oldname = this.page;
     this.page = name;
-    log("trigger page event");
+    avnav.log("trigger page event");
     $(document).trigger(avnav.gui.PageEvent.EVENT_TYPE, new avnav.gui.PageEvent(
         this,
         this.navobject,
@@ -197,18 +193,9 @@ avnav.gui.Handler.prototype.showPage = function (name, options) {
     ));
 
 };
-/**
- * check whether we are on mobile
- * @returns {boolean}
- */
-avnav.gui.Handler.prototype.isMobileBrowser = function () {
-    //return true;
-    return ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) ||
-        this.properties.getProperties().forceMobile;
-};
 
 avnav.gui.sendAndroidEvent = function (key, id) {
-    log("android event key=" + key + ", id=" + id);
+    avnav.log("android event key=" + key + ", id=" + id);
     try {
         //inform the android part that we noticed the event
         avnav.android.acceptEvent(key, id);

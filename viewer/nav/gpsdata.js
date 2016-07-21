@@ -28,7 +28,8 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
         nmeaStatusColor:"red",
         nmeaStatusText:"???",
         aisStatusColor: "red",
-        aisStatusText: "???"
+        aisStatusText: "???",
+        clock: "00:00"
     };
     /** {avnav.util.Formatter} @private */
     this.formatter=new avnav.util.Formatter();
@@ -69,6 +70,7 @@ avnav.nav.GpsData.prototype.handleGpsResponse=function(data, status){
         formattedData.gpsCourse = this.formatter.formatDecimal(gpsdata.course || 0, 3, 0);
         formattedData.gpsSpeed = this.formatter.formatDecimal(gpsdata.speed || 0, 2, 1);
         formattedData.gpsTime = this.formatter.formatTime(gpsdata.rtime || new Date());
+        formattedData.clock = this.formatter.formatClock(gpsdata.rtime || new Date());
     }
     formattedData.nmeaStatusColor="red";
     formattedData.nmeaStatusText="???"
@@ -106,7 +108,7 @@ avnav.nav.GpsData.prototype.startQuery=function(){
                 data.tag != null && data.lon != null && data.lat != null &&
                 data['mode'] != null && data['mode'] >=1){
                 self.handleGpsResponse(data,true);
-                log("gpsdata: "+self.formattedData.gpsPosition);
+                avnav.log("gpsdata: "+self.formattedData.gpsPosition);
                 self.handleGpsStatus(true);
             }
             else{
@@ -118,7 +120,7 @@ avnav.nav.GpsData.prototype.startQuery=function(){
             },timeout);
         },
         error: function(status,data,error){
-            log("query position error");
+            avnav.log("query position error");
             self.handleGpsStatus(false);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
@@ -137,7 +139,7 @@ avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
     if (! success){
         this.gpsErrors++;
         if (this.gpsErrors > this.propertyHandler.getProperties().maxGpsErrors){
-            log("lost gps");
+            avnav.log("lost gps");
             this.validPosition=false;
             this.gpsdata.valid=false;
 
