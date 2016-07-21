@@ -1,5 +1,5 @@
 #! /bin/sh
-systemctl enable avnav-check-wlan
+#systemctl enable avnav-check-wlan
 systemctl enable avnav-check-parts
 systemctl enable avnav
 echo stopping and disabling gpsd
