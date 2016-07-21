@@ -165,12 +165,7 @@ else
 fi
 
 wlog "avnav partition setup finished"
-wlog "enabling avnav service"
-update-rc.d avnav defaults
-systemctl enable avnav
-/etc/init.d/avnav start
 
-wlog "disable myself"
 echo "#run already finished" > $CONFIG
 
 

@@ -1,7 +1,4 @@
-
-import org.apache.commons.compress.archivers.tar.*
-
-import java.text.SimpleDateFormat;
+import java.text.SimpleDateFormat
 
 buildscript{
 	repositories{
@@ -9,7 +6,6 @@ buildscript{
 	}
     dependencies{
         classpath localGroovy()
-        classpath 'org.apache.commons:commons-compress:1.11'
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.6.1'
     }
 }
@@ -51,33 +47,6 @@ build.dependsOn buildAndroid
 }
 
 
-
-task releaseTar(type: ExtendedTar){
-    from ("viewer/build/release") {
-        into "viewer"
-    }
-    from ("server"){
-        into "server"
-        include("*py")
-    }
-    ofile="$buildDir/test.tar"
-    modifyEntry {
-        TarArchiveEntry entry, FileCopyDetails details ->
-            entry.setGroupId(1000)
-            entry.setUserId(1000)
-            def name=details.getName()
-            def isDir=details.isDirectory()
-            if (name.endsWith(".py") || name.endsWith(".sh") || isDir){
-                entry.setMode(0755)
-            }
-            else{
-                entry.setMode(0644)
-            }
-            println "adding "+entry.getName()
-            return true
-    }
-}
-
 task pkgVersion<<{
     if (! project.hasProperty('packageVersion')){
         SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
@@ -94,6 +63,7 @@ ospackage {
     //release='3'
     os = LINUX // only applied to RPM
     packageGroup='misc'
+    packageName='avnav'
     requires 'gpsd'
     requires 'python-gps'
     requires 'bluetooth'
@@ -156,6 +126,11 @@ ospackage {
 }
 
 
+task raspiDeb(type: GradleBuild){
+    buildFile="rasp.gradle"
+    tasks=['raspiDeb']
+}
+
 
 
 task releaseRpm(type: Rpm) {
@@ -166,5 +141,12 @@ task releaseRpm(type: Rpm) {
 task releaseDeb(type: Deb) {
     group taskgroup
     dependsOn 'releaseViewer',pkgVersion
+}
+
+task release{
+    doLast {
+        println "all release packages have been build"
+    }
+    dependsOn releaseRpm, releaseDeb,buildAndroid
 }
 

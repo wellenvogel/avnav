@@ -1,0 +1,88 @@
+
+import java.text.SimpleDateFormat;
+def taskgroup="avnav"
+
+buildscript{
+	repositories{
+		mavenCentral()
+	}
+    dependencies{
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.6.1'
+    }
+}
+
+repositories{
+	mavenCentral()
+}
+
+description="Raspberry specfic stuff for avnav"
+apply plugin: 'java'
+
+apply plugin: 'nebula.ospackage-base'
+
+task pkgVersion<<{
+    if (! project.hasProperty('packageVersion')){
+        SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
+        ospackage.version f.format(new Date())
+    }
+    else{
+        ospackage.version=packageVersion
+    }
+    println "package version $ospackage.version"
+}
+
+ospackage {
+    //release='3'
+    os = LINUX // only applied to RPM
+    packageGroup='misc'
+    requires 'avnav'
+    requires 'parted'
+    packageName='avnav-raspi'
+    user='root'
+    into ('/usr/lib/avnav/raspberry') {
+        from('raspberry'){
+            fileMode 0755
+            include 'check_parts'
+            include 'check_wlan'
+            include 'hostapd'
+        }
+        from('raspberry') {
+            include 'avnav_server.xml'
+            fileMode 0644
+        }
+    }
+    into('/usr/lib/systemd/system/avnav.service.d'){
+        from('raspberry'){
+            include "raspberry.conf"
+        }
+    }
+    into('/usr/lib/systemd/system'){
+        from('raspberry'){
+            include('avnav-check-wlan.service')
+            include('avnav-check-parts.service')
+        }
+    }
+    into('/etc/network/interfaces.d'){
+        from('raspberry'){
+            include('wlan0')
+        }
+    }
+    into('/etc/hostapd'){
+        from('raspberry'){
+            include('wlan0.conf')
+        }
+    }
+    postInstall file('raspberry/postinstall')
+
+}
+
+
+
+
+
+task raspiDeb(type: Deb) {
+    group taskgroup
+    dependsOn pkgVersion
+}
+
+

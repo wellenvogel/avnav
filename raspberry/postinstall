@@ -1,0 +1,8 @@
+#! /bin/sh
+systemctl enable avnav-check-wlan
+systemctl enable avnav-check-parts
+systemctl enable avnav
+echo stopping and disabling gpsd
+systemctl disable gpsd || echo ' ' > /dev/null
+systemctl stop gpsd || echo '' > /dev/null
+exit 0

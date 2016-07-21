@@ -9,9 +9,10 @@ chartdir=""
 xmlfile=""
 silent=0
 gui=0
+template="$avnavdir/avnav_template.xml"
 
 usage(){
-  echo "usage: $0 [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-g]"
+  echo "usage: $0 [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-t template] [-g]"
 }
 
 err(){
@@ -20,7 +21,7 @@ err(){
 }
 
 
-while getopts dc:b:x:qg opt; do
+while getopts dc:b:x:qgt: opt; do
 case $opt in
   d)
     dopt="-d"
@@ -40,6 +41,10 @@ case $opt in
     ;;
   g)
     gui=1
+    ;;
+  t)
+    template="$OPTARG"
+    [ ! -f "$template" ] && err "template $template not found"
     ;;
   \?)
     echo "invalid option $opt"
@@ -89,7 +94,7 @@ if [ "$xmlfile" = "" ] ; then
   xmlfile=$basedir/avnav_server.xml
   if [ ! -f "$xmlfile" ] ; then
     echo "creating initial $xmlfile"
-    sed -e "s?BASEDIR?$basedir?" -e "s?AVNAVDIR?$avnavdir?" $avnavdir/avnav_template.xml > $xmlfile || err "unable to create $xmlfile"
+    sed -e "s?BASEDIR?$basedir?" -e "s?AVNAVDIR?$avnavdir?" "$template" > $xmlfile || err "unable to create $xmlfile"
   fi
 fi
 

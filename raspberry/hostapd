@@ -1,0 +1,34 @@
+#! /bin/sh
+#small wrapper around hostapd
+HOSTAPD=/usr/sbin/hostapd
+HOSTAPD_EDI=/usr/sbin/hostapd.edimax
+prfx="avnav-hostapd"
+logger -t $prfx "avnav hostapd wrapper started"
+if [ $# != 3 ] ; then
+    logger -t $prfx "ERROR: invalid number of parameters, 3 expected"
+    exit 1
+fi
+net=$1
+if [ ! -e /sys/class/net/$net ]; then
+  logger -t $prfx "ERROR: network interface $net not found, cannot start hostapd"
+  exit 1
+fi
+drv=`cat /sys/class/net/$if/device/uevent | grep DRIVER | grep rtl81`
+if [ "$drv" != "" ] ; then
+    logger -t $prfx "rtl81xx driver detected"
+    if [ -x $HOSTAPD_EDI ] ; then
+        logger -t $prfx "using $HOSTAPD.EDI"
+        tmpf=/etc/hostapd/$net.edi.conf
+        rm -f $tmpf
+        sed -e 's/.*driver *=/driver=rtl871xdrv/' -e "s/.*interface *=/interface=$net/" $3 > $tmpf
+        $HOSTAPD.EDI -B -P $2 $tmpf
+        exit $?
+    else
+        logger -t "$HOSTPAD_EDI not found, starting normal hostapd"
+    fi
+fi
+tmpf=/etc/hostapd/$net.conf
+rm -f $tmpf
+sed "s/.*interface *=/interface=$net/" $3 > $tmpf
+$HOSTAPD -B -P $2 $tmpf
+

@@ -47,7 +47,7 @@ CONFIG=/etc/default/check_wlan
 [ -f $CONFIG ] && . $CONFIG
 
 NAME=`basename $0`
-INTERFACES="wlan0"
+[ "$AVINTERFACES" = "" ] && AVINTERFACES="wlan0"
 HOSTAPDCONF=/etc/hostapd/hostapd.conf
 
 case "$1" in
@@ -108,7 +108,7 @@ checkHostapd(){
     if [ "$needSwitch" != "" ] ; then
       wlog "switch hostapd"
       if [ "$needStart" != 2 ] ; then
-        service hostapd stop
+        systemctl stop hostapd
       fi
       cd /usr/sbin && rm hostapd && ln -s hostapd.edimax hostapd
       sed -i -e 's/^[#][#]*driver=rtl/driver=rtl/' -e 's/driver=nl80/#driver=nl80/' $HOSTAPDCONF
@@ -120,7 +120,7 @@ checkHostapd(){
     if [ "$needSwitch" = "" -o "$2" = "forceNormal" ] ; then
       wlog "switch hostapd"
       if [ "$needStart" != 2 ] ; then
-        service hostapd stop
+        systemctl stop hostapd
       fi
       cd /usr/sbin && rm hostapd && ln -s hostapd.ori hostapd
       sed -i -e 's/^ *[#][#]*driver=nl80/driver=nl80/' -e 's/driver=rtl/#driver=rtl/' $HOSTAPDCONF
@@ -129,18 +129,18 @@ checkHostapd(){
   fi
   if [ "$needStart" != "" ] ; then
     systemctl daemon-reload
-    service hostapd start
+    systemctl start hostapd
   fi
 }
 
 wlog "avnav wlan check started with pid $$"
-service hostapd stop
+systemctl stop hostapd
 checkHostapd 1 forceNormal
 first=1
 firstNoUsb=1
 while [ 1 = 1 ] 
 do
-	for if in `echo $INTERFACES`
+	for if in `echo $AVINTERFACES`
 	do
 		addr=`LANG=C ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
                 if [ ! -e /sys/class/net/$if ] ; then
@@ -161,11 +161,11 @@ do
                   first=1
                   if [ "$doCheck" = 1 ] ; then
                     if [ "$addr" = "" ] ; then
-                          service hostapd stop
+                          systemctl stop hostapd
                           errlog "interface $if has no address, trying to restart"
                           ifdown $if
                           sleep 5
-                          service hostapd start
+                          systemctl stop hostapd
                           sleep 5
                           addr2=`LANG=C ifconfig $if | awk '/inet addr/{sub("addr:","",$2);print $2;}'`
                           if [ "$addr2" != "" ] ; then
