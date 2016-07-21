@@ -80,7 +80,7 @@ task releaseTar(type: ExtendedTar){
 
 task pkgVersion<<{
     if (! project.hasProperty('packageVersion')){
-        SimpleDateFormat f=new SimpleDateFormat('YMD')
+        SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
         ospackage.version f.format(new Date())
     }
     else{
@@ -89,9 +89,11 @@ task pkgVersion<<{
     println "package version $ospackage.version"
 }
 
+def emptyBase=new File(project.buildDir,"empty")
 ospackage {
     //release='3'
     os = LINUX // only applied to RPM
+    packageGroup='misc'
     requires 'gpsd'
     requires 'python-gps'
     requires 'bluetooth'
@@ -101,54 +103,62 @@ ospackage {
     requires 'python-gdal'
     requires 'python-imaging'
     user='root'
-    into '/usr/lib/avnav'
-    from ('viewer/build/release') {
-        into 'viewer'
+    into ('/usr/lib/avnav') {
+        from('viewer/build/release') {
+            into 'viewer'
+        }
+        from('server') {
+            include "*.py"
+            into "server"
+            fileMode 0755
+        }
+        from('chartconvert') {
+            include "*.py"
+            into 'chartconvert'
+            fileMode 0755
+        }
+        from('chartconvert/tiler_tools') {
+            include "*html"
+            include "*csv"
+            into 'chartconvert/tiler_tools'
+            fileMode 0644
+        }
+        from('chartconvert/tiler_tools') {
+            include "*.py"
+            into 'chartconvert/tiler_tools'
+            fileMode 0755
+        }
+        from('libraries') {
+            include 'gpxpy*/**'
+            into 'libraries'
+        }
+        from('linux') {
+            include "avnav_template.xml"
+        }
+        from('linux') {
+            include "avnav"
+            fileMode 0755
+        }
+        from('linux') {
+            include "avnav_gui*"
+            fileMode 0755
+            into "gui"
+        }
     }
-    from ('server'){
-        include "*.py"
-        into "server"
-        fileMode 0755
+    into ('/usr/lib/systemd/system'){
+        from('linux'){
+            include 'avnav.service'
+        }
     }
-    from ('chartconvert'){
-        include "*.py"
-        into 'chartconvert'
-        fileMode 0755
-    }
-    from ('chartconvert/tiler_tools'){
-        include "*html"
-        include "*csv"
-        into 'chartconvert/tiler_tools'
-        fileMode 0644
-    }
-    from ('chartconvert/tiler_tools'){
-        include "*.py"
-        into 'chartconvert/tiler_tools'
-        fileMode 0755
-    }
-    from ('libraries'){
-        include 'gpxpy*/**'
-        into 'libraries'
-    }
-    from ('linux'){
-        include "avnav_template.xml"
-    }
-    from ('linux'){
-        include "avnav"
-        fileMode 0755
-    }
-    from ('linux'){
-        include "avnav_gui*"
-        fileMode 0755
-        into "gui"
-    }
+    postInstall file('linux/postinstall')
 
     link('/usr/bin/avnav','/usr/lib/avnav/avnav')
 }
 
 
-task app1Rpm(type: Rpm) {
-    packageName = 'foo'
+
+
+task releaseRpm(type: Rpm) {
     arch = I386
     dependsOn pkgVersion
 }
