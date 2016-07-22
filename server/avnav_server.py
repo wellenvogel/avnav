@@ -261,8 +261,8 @@ def main(argv):
     while True:
       time.sleep(3)
       #query the data to get old entries being removed 
-      curutc=datetime.datetime.utcnow();
-      delta=curutc-lastutc;
+      curutc=datetime.datetime.utcnow()
+      delta=curutc-lastutc
       allowedBackTime=baseConfig.getIntParam('maxtimeback')
       if AVNUtil.total_seconds(delta) < -allowedBackTime and allowedBackTime != 0:
         AVNLog.warn("time shift backward (%d seconds) detected, deleting all entries ",AVNUtil.total_seconds(delta))
