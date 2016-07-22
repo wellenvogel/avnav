@@ -2,28 +2,77 @@
 #small wrapper around hostapd
 HOSTAPD=/usr/sbin/hostapd
 HOSTAPD_EDI=/usr/sbin/hostapd.edimax
+CONFIG=/etc/hostapd/hostapd.conf
 prfx="avnav-hostapd"
-if [ $# != 3 ] ; then
+
+if [ "$1" = "-r" ] ; then
+  logger -t $prfx "hostapd supervisor started with $*"
+  shift
+  while [ 1 = 1 ]
+  do
+    #first write our own pid - so we can be stopped too
+    echo $$ > $2
+    $1 $3
+    if [ "$4" != "" ] ; then
+            if ! ip link show $4 up > /dev/null 2>&1 ; then
+                logger -t $prfx "interface $4 not visible any more, exiting"
+                exit 0
+            fi
+    fi
+    logger -t $prfx "hostapd stopped, restarting $*"
+    sleep 2
+  done
+  exit 0
+fi
+if [ "$1" = "-s" ] ; then
+    if [ "$2" = "" ] ; then
+        logger -t $prfx "ERROR: missing parameter net"
+        exit 1
+    fi
+    pidfile=/run/hostapd.$2.pid
+    if [ ! -f $pidfile ] ; then
+        logger -t $prfx "ERROR: pidfile $pidfile not found, unable to stop"
+        exit 1
+    fi
+    pid=`cat $pidfile`
+    if [ "$pid" = "" ] ; then
+        logger -t $prfx "ERROR: no pid in $pidfile, unable to stop"
+        exit 1
+    fi
+    logger -t $prfx "stopping hostapd $pid"
+    for cpid in `pgrep -P $pid`
+    do
+        logger -t $prfx "stopping hostapd child $cpid"
+        kill $cpid
+    done
+    kill $pid
+    exit 0
+fi
+if [ $# != 1 ] ; then
     logger -t $prfx "ERROR: invalid number of parameters, 3 expected"
     exit 1
 fi
 net=$1
 logger -t $prfx "avnav hostapd wrapper started for interface $net"
+if [ ! -f $CONFIG ] ; then
+  logger -t $prfx "ERROR: config file $CONFIG not found, cannot start hostapd"
+fi
 if [ ! -e /sys/class/net/$net ]; then
   logger -t $prfx "ERROR: network interface $net not found, cannot start hostapd"
   exit 1
 fi
+pidfile=/run/hostapd.$net.pid
 drv=`cat /sys/class/net/$net/device/uevent | grep DRIVER `
 hasrtl=`echo $drv | grep rtl81`
 logger -t $prfx "detected driver $drv"
 if [ "$hasrtl" != "" ] ; then
     logger -t $prfx "rtl81xx driver detected"
     if [ -x $HOSTAPD_EDI ] ; then
-        logger -t $prfx "using $HOSTAPD.EDI"
+        logger -t $prfx "using $HOSTAPD_EDI"
         tmpf=/etc/hostapd/$net.edi.conf
         rm -f $tmpf
-        sed -e 's/.*driver *=.*/driver=rtl871xdrv/' -e "s/.*interface *=.*/interface=$net/" $3 > $tmpf
-        $HOSTAPD_EDI -B -P $2 $tmpf
+        sed -e 's/.*driver *=.*/driver=rtl871xdrv/' -e "s/.*interface *=.*/interface=$net/" $CONFIG > $tmpf
+        $0 -r $HOSTAPD_EDI $pidfile $tmpf $net &
         exit $?
     else
         logger -t $prfx "$HOSTAPD_EDI not found, starting normal hostapd"
@@ -31,7 +80,8 @@ if [ "$hasrtl" != "" ] ; then
 fi
 tmpf=/etc/hostapd/$net.conf
 rm -f $tmpf
-sed "s/.*interface *=.*/interface=$net/" $3 > $tmpf
-logger -t "starting normal hostapd"
-$HOSTAPD -B -P $2 $tmpf
+sed "s/.*interface *=.*/interface=$net/" $CONFIG > $tmpf
+logger -t $prfx "starting normal hostapd"
+$0 -r $HOSTAPD $pidfile $tmpf $net &
+
 
