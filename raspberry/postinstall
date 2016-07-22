@@ -23,4 +23,24 @@ if [ -f $CONFIG ] ; then
 else
     echo "no old config $CONFIG found to migrate"
 fi
+grep "^ *FSCKFIX *= *yes" /etc/default/rcS > /dev/null || ( echo "configure FSCKFIX=yes"; echo 'FSCKFIX=yes' >> /etc/default/rcS)
+
+#remove dhcp server ntp conf
+DHCONF=/var/lib/ntp/ntp.conf.dhcp
+if [ -f $DHCONF ] ; then
+    echo "removing $DHCONF"
+    rm -f $DHCONF
+fi
+HOOK=/etc/dhcp/dhclient-exit-hooks.d/ntp
+if [ -f $HOOK ] ; then
+    echo "moving $HOOK into /etc/dhcp/save"
+    [ ! -d /etc/dhcp/save ] && mkdir /etc/dhcp/save
+    mv $HOOK /etc/dhcp/save
+fi
+systemctl daemon-reload
+systemctl restart dnsmasq
+#systemctl start avnav-check-parts
+#TODO:
+#ntp setup
+#sudo setup
 exit 0

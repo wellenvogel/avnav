@@ -1,0 +1,4 @@
+#hostname to be provided by dnsmasq
+192.168.20.10 avnav
+192.168.20.10 avnav.avnav
+192.168.20.10 avnav.avnav.de
