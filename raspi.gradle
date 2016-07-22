@@ -48,6 +48,8 @@ ospackage {
             include 'check_parts'
             include 'check_wlan'
             include 'hostapd'
+            include 'settime.sh'
+            include 'shutdown.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'

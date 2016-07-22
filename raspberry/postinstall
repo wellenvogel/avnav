@@ -20,6 +20,8 @@ if [ -f $CONFIG ] ; then
         chown pi $CONFIG.save
     fi
     sed -i -e 's?.*Directory *urlpath="viewer".*?<Directory urlpath="viewer" path="/usr/lib/avnav/viewer"></Directory>'? $CONFIG
+    sed -i -e 's? *shutdowncmd *= *"[^"]*"? ?' $CONFIG
+    sed -i -e 's?settimecmd *= *"[^"]*"?settimecmd="/usr/lib/avnav/raspberry/settime.sh" shutdowncmd="/usr/lib/avnav/raspberry/shutdown.sh"?' $CONFIG
 else
     echo "no old config $CONFIG found to migrate"
 fi

@@ -13,7 +13,7 @@
 	logfile="/home/pi/avnav/data/log/avnav.log" 
 	debugToLog="true"
 	maxtimeback="5"
-	settimecmd="/home/pi/avnav/program/raspberry/settime"
+	settimecmd="/usr/lib/avnav/raspberry/settime.sh"
     systimediff="5"
     settimeperiod="3600"/>
 <!-- the workers section -->
