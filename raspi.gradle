@@ -54,6 +54,7 @@ ospackage {
         from('raspberry') {
             include 'avnav_server.xml'
             include 'hosts'
+            include 'ntp.conf'
             fileMode 0644
         }
     }
@@ -103,6 +104,11 @@ ospackage {
     into('/etc/dnsmasq.d'){
         from('raspberry'){
             include('avnav-dnsmasq.conf')
+        }
+    }
+    into('/etc'){
+        from('raspberry'){
+            include('dhcpcd.enter-hook')
         }
     }
 

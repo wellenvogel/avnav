@@ -1,0 +1,3 @@
+#! /bin/sh
+
+rm -f /var/lib/ntp/ntp.conf.dhcp

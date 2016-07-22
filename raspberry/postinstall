@@ -7,7 +7,8 @@ rm -f /etc/init.d/check_wlan
 rm -f /etc/init.d/check_parts
 systemctl daemon-reload
 #systemctl enable avnav-check-wlan
-systemctl enable avnav-check-parts
+#check-parts should not be necessary any more as we do not have small files - and it resizes anyway?!
+#systemctl enable avnav-check-parts
 systemctl enable avnav
 echo stopping and disabling gpsd
 systemctl disable gpsd || echo ' ' > /dev/null
@@ -33,15 +34,21 @@ if [ -f $DHCONF ] ; then
     echo "removing $DHCONF"
     rm -f $DHCONF
 fi
+[ ! -d var/lib/ntp/ ] && mkdir -p var/lib/ntp/
+#a bit dirty trick to force ntpd to use our config file
+cp /usr/lib/avnav/raspberry/ntp.conf $DHCONF
 HOOK=/etc/dhcp/dhclient-exit-hooks.d/ntp
 if [ -f $HOOK ] ; then
     echo "moving $HOOK into /etc/dhcp/save"
     [ ! -d /etc/dhcp/save ] && mkdir /etc/dhcp/save
     mv $HOOK /etc/dhcp/save
 fi
+
 systemctl daemon-reload
 systemctl restart dnsmasq
+systemctl restart ntp
 #systemctl start avnav-check-parts
+systemctl restart avnav
 #TODO:
 #ntp setup
 #sudo setup

@@ -1,0 +1,4 @@
+logger -t avnav-dhcpcd 'prevent ntp setup'
+skip_hooks="50-ntp.conf $skip_hooks"
+export skip_hooks
+
