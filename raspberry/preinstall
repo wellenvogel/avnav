@@ -1,0 +1,2 @@
+#! /bin/sh
+getent passwd pi > /dev/null || (echo "user pi not available, cannot install " ; exit 1)

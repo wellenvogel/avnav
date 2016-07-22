@@ -72,7 +72,13 @@ ospackage {
             include('hostapd.conf')
         }
     }
+    into('/etc'){
+        from('raspberry'){
+            include('iptables.ipv4.nat')
+        }
+    }
     postInstall file('raspberry/postinstall')
+    preInstall file('raspberry/preinstall')
 
 }
 

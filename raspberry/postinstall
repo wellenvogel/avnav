@@ -1,8 +1,26 @@
 #! /bin/sh
+systemctl stop avnav || echo "avnav not running"
+systemctl stop check_parts || echo "check_parts not running"
+systemctl stop check_wlan || echo "check_wlan not running"
+rm -f /etc/init.d/avnav
+rm -f /etc/init.d/check_wlan
+rm -f /etc/init.d/check_parts
+systemctl daemon-reload
 #systemctl enable avnav-check-wlan
 systemctl enable avnav-check-parts
 systemctl enable avnav
 echo stopping and disabling gpsd
 systemctl disable gpsd || echo ' ' > /dev/null
 systemctl stop gpsd || echo '' > /dev/null
+CONFIG=/home/pi/avnav/data/avnav_server.xml
+if [ -f $CONFIG ] ; then
+    echo "migrating old config $CONFIG"
+    if [ ! -f $CONFIG.save ] ; then
+        cp $CONFIG $CONFIG.save
+        chown pi $CONFIG.save
+    fi
+    sed -i -e 's?.*Directory *urlpath="viewer".*?<Directory urlpath="viewer" path="/usr/lib/avnav/viewer"></Directory>'? $CONFIG
+else
+    echo "no old config $CONFIG found to migrate"
+fi
 exit 0

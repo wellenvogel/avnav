@@ -72,9 +72,14 @@ if [ "$basedir" = "" ] ; then
     chartdir="$HOME/AvNavCharts/out"
   fi
   basedir="$HOME/avnav"
-  if [ ! -d $basedir ] ; then
-    echo "creating $basedir"
-    mkdir -p $basedir || err "unable to create $basedir"
+  if [ -d $basedir/data ] ; then
+    basedir=$basedir/data
+    echo "using old style basedir $basedir"
+  else
+    if [ ! -d $basedir ] ; then
+        echo "creating $basedir"
+        mkdir -p $basedir || err "unable to create $basedir"
+    fi
   fi
 fi
 basedir=`readlink -f $basedir`

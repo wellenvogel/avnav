@@ -127,13 +127,15 @@ ospackage {
 
 
 task raspiDeb(type: GradleBuild){
-    buildFile="rasp.gradle"
+    group taskgroup
+    buildFile="raspi.gradle"
     tasks=['raspiDeb']
 }
 
 
 
 task releaseRpm(type: Rpm) {
+    group taskgroup
     arch = I386
     dependsOn pkgVersion
 }
@@ -144,9 +146,11 @@ task releaseDeb(type: Deb) {
 }
 
 task release{
+    group taskgroup
+    description "build all avnav release stuff"
     doLast {
         println "all release packages have been build"
     }
-    dependsOn releaseRpm, releaseDeb,buildAndroid
+    dependsOn releaseRpm, releaseDeb,raspiDeb,buildAndroid
 }
 
