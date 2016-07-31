@@ -188,8 +188,8 @@ def main(argv):
         const=logging.DEBUG, dest="verbose")
   parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
   parser.add_option("-c", "--chartbase", dest="chartbase", help="if set, overwrite the chart base dir from the HTTPServer")
-  parser.add_option("-v", "--viewer", dest="viewerpath",
-                    help="if set, overwrite the url for the viewer from the HTTPServer")
+  parser.add_option("-u", "--urlmap", dest="urlmap",
+                    help="provide mappinsg in the form url=path,...")
   (options, args) = parser.parse_args(argv[1:])
   if len(args) < 1:
     cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
@@ -217,8 +217,14 @@ def main(argv):
     mapurl=httpServer.getStringParam('chartbase')
     if mapurl is not None and mapurl != '':
       httpServer.pathmappings[mapurl]=options.chartbase
-  if httpServer is not None and options.viewerpath is not None:
-    httpServer.pathmappings['viewer'] = options.viewerpath
+  if httpServer is not None and options.urlmap is not None:
+    for mapping in re.split("\s*,\s*",options.urlmap):
+      try:
+        url,path=re.split("\s*=\s*",mapping,2)
+        httpServer.pathmappings[url] = path
+        AVNLog.info("set url mapping %s=%s"%(url,path))
+      except:
+        pass
   navData=AVNNavData(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
   level=logging.INFO
   filename=os.path.join(os.path.dirname(argv[0]),"log","avnav.log")
@@ -230,7 +236,7 @@ def main(argv):
   AVNLog.ld("baseconfig",baseConfig.param)
   if not baseConfig.param.get("logfile") == "":
     filename=os.path.expanduser(baseConfig.param.get("logfile"))
-  AVNLog.info("####start processing (logging to %s)####",filename)
+  AVNLog.info("####start processing (logging to %s, parameters=%s)####",filename," ".join(argv))
   if not os.path.exists(os.path.dirname(filename)):
     os.makedirs(os.path.dirname(filename), 0777)
   AVNLog.initLoggingSecond(level, filename,baseConfig.getParam()['debugToLog'].upper()=='TRUE') 
