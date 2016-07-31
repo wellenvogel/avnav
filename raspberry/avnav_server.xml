@@ -152,7 +152,6 @@
 -->
 <AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080">
 	<Directory urlpath="maps" path="/home/pi/avnav/data/charts"></Directory>
-	<Directory urlpath="viewer" path="/usr/lib/avnav/viewer"></Directory>
 	<Directory urlpath="log" path="/home/pi/avnav/data/log"></Directory>
 	<Directory urlpath="tracks" path="/home/pi/avnav/data/tracks"></Directory>
 	<Directory urlpath="routes" path="/home/pi/avnav/data/routes"></Directory>

@@ -66,8 +66,6 @@
                chartbase="maps" empty="nonexistent">
 <!-- chartbaseurl="http://$host/Karten/anav"> -->
 	<Directory urlpath="maps" path="~/AvnavCharts/out"></Directory>
-	<Directory urlpath="viewer" path="AVNAVDIR/viewer"></Directory>
-	<Directory urlpath="libraries" path="AVNAVDIR/viewer/libraries"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 </AVNHttpServer>
