@@ -188,6 +188,8 @@ def main(argv):
         const=logging.DEBUG, dest="verbose")
   parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
   parser.add_option("-c", "--chartbase", dest="chartbase", help="if set, overwrite the chart base dir from the HTTPServer")
+  parser.add_option("-v", "--viewer", dest="viewerpath",
+                    help="if set, overwrite the url for the viewer from the HTTPServer")
   (options, args) = parser.parse_args(argv[1:])
   if len(args) < 1:
     cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
@@ -215,6 +217,8 @@ def main(argv):
     mapurl=httpServer.getStringParam('chartbase')
     if mapurl is not None and mapurl != '':
       httpServer.pathmappings[mapurl]=options.chartbase
+  if httpServer is not None and options.viewerpath is not None:
+    httpServer.pathmappings['viewer'] = options.viewerpath
   navData=AVNNavData(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
   level=logging.INFO
   filename=os.path.join(os.path.dirname(argv[0]),"log","avnav.log")

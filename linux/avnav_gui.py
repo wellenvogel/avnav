@@ -46,10 +46,14 @@ class  AvnavGui(Avnav):
         self.timer=wx.Timer(self,1)
         self.Bind(wx.EVT_TIMER, self.OnTimer)
         self.timer.Start(500)
+        self.viewerbase=None
         pass
 
     def setServerBase(self, base):
         self.serverbase=base
+
+    def setViewerBase(self, base):
+        self.viewerbase = base
 
     def btExitClicked(self, event):
         self.terminateServer()
@@ -63,7 +67,11 @@ class  AvnavGui(Avnav):
         if self.checkServerRunning():
             return
         script=os.path.join(self.getBaseDir(),"..","server","avnav_server.py")
-        args=["xterm","-hold","-e",sys.executable,script,"-c",os.path.join(self.outputDir.GetValue(),"out"),os.path.join(self.serverbase,"avnav_server.xml")]
+        args=["xterm","-hold","-e",sys.executable,script,"-c",os.path.join(self.outputDir.GetValue(),"out")]
+        if self.viewerbase is not None:
+            args.append("-v")
+            args.append(self.viewerbase)
+        args.append(os.path.join(self.serverbase,"avnav_server.xml"))
         self.server=subprocess.Popen(args,cwd=self.getBaseDir())
         self.checkServerRunning()
 
@@ -194,17 +202,20 @@ if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     #wx.InitAllImageHandlers()
     argv=sys.argv
-    usage="usage: %s [-b basedir] " % (argv[0])
+    usage="usage: %s [-b basedir] [-v viewerbase] " % (argv[0])
     parser = optparse.OptionParser(
         usage = usage,
         version="1.0",
         description='avnav_gui')
 
     parser.add_option("-b", "--basedir", dest="basedir", help="set the basedir for the server")
+    parser.add_option("-v", "--viewer", dest="viewerpath", help="set the viewerpath for the server")
     (options, args) = parser.parse_args(argv[1:])
     frame_1 = AvnavGui(None, -1, "")
     if not options.basedir is None:
         frame_1.setServerBase(options.basedir)
+    if not options.viewerbase is None:
+        frame_1.setViewerBase(options.viewerbase)
     app.SetTopWindow(frame_1)
     frame_1.Show()
     app.MainLoop()

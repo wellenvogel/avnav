@@ -5,6 +5,7 @@ systemctl stop check_wlan || echo "check_wlan not running"
 rm -f /etc/init.d/avnav
 rm -f /etc/init.d/check_wlan
 rm -f /etc/init.d/check_parts
+. /usr/lib/avnav/raspberry/raspi.version
 systemctl daemon-reload
 #systemctl enable avnav-check-wlan
 #check-parts should not be necessary any more as we do not have small files - and it resizes anyway?!
