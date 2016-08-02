@@ -455,7 +455,38 @@ apt-get install rpi-update
 BRANCH=next rpi-update
 reboot
 
+========== new install with packages =============================
+The software now is delivered as 2 debian packages:
+avnav_xxx_all.deb	- the software - can be run as any user
+avnav-raspi_xxx_all.deb	- all the raspberry pi specific stuff
+Updates will now only be delivered as new packages.
+1. Install both packages (avnav/avnav-raspi)
+sudo dpkg -i avnav_xxx_all.deb avnav-raspi_xxx_all.deb
+if there are some complains about missing packages:
+sudo apt-get update 
+sudo apt-get install -f
+(needs internet connection)
+If you have been coming from an older image, the old software has been disabled, the settings are saved in /home/pi/avnav/data/avmav_server.xml.save.
+The software now is located at /usr/lib/avnav.
+For testing your software (especially after changes in avnav_server.xml) you can now easily do the following (as user pi):
+sudo systemctl stop avnav
+avnav #you can add -d to get debug outout
+#check the output and the log at /data/avnav/log/avnav.log
+^C
+sudo systemctl start avnav
+ 
 
+2. Fallback
+If you already have been on packages - just install the old packages again.
+If you have been on an older image:
+sudo systemctl stop avnav
+sudo dpkg -r avnav avnav-raspi
+cd /home/pi/avnav
+mv data/avnav_server.xml data/avnav_server.xml.new
+mv data/avnav_server.xml.save data/avnav_server.xml
+sudo ./setup.sh nopart
+sudo systemctl start avnav
+ 
 
 
 
