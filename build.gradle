@@ -14,6 +14,12 @@ repositories{
 	mavenCentral()
 }
 
+boolean onWindows=false
+if (System.properties['os.name'].toLowerCase().contains('windows')) {
+    println "running on Windows"
+    onWindows = true
+}
+
 description="NMEA multiplexer and Browser based navigation"
 apply plugin: 'java'
 
@@ -68,6 +74,16 @@ task pkgVersion<<{
     }
 }
 
+task windowsBuild(type: org.gradle.api.tasks.GradleBuild){
+    dir="windows"
+    tasks=["release"]
+    doFirst{
+        assert onWindows,"we cannot run the windowsBuild task ase we are not on windows"
+    }
+}
+task noWindowsBuild<<{
+    println "###unable to build the windows installer as we are not running on windows###"
+}
 def emptyBase=new File(project.buildDir,"empty")
 ospackage {
     //release='3'
@@ -170,6 +186,12 @@ task release{
         println "all release packages have been build"
     }
     dependsOn releaseRpm, releaseDeb,raspiDeb,buildAndroid
+    if (onWindows){
+        dependsOn windowsBuild
+    }
+    else{
+        dependsOn noWindowsBuild
+    }
 }
 
 afterEvaluate{
