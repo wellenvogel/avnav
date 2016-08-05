@@ -20,24 +20,6 @@ apply plugin: 'java'
 
 apply plugin: 'nebula.ospackage-base'
 
-task pkgVersion{
-    group taskgroup
-    def outFile=new File(project.buildDir,"raspi.version")
-    doFirst {
-        if (!project.hasProperty('packageVersion')) {
-            SimpleDateFormat f = new SimpleDateFormat('YYYYMMdd')
-            ospackage.version f.format(new Date())
-        } else {
-            ospackage.version = packageVersion
-        }
-        println "package version $ospackage.version"
-        def odir=outFile.getParentFile()
-        if (! odir.isDirectory()) odir.mkdirs()
-        outFile.withWriter {
-            it.println("AVNAV_RASPI_VERSION=$ospackage.version")
-        }
-    }
-}
 
 ospackage {
     //release='3'
@@ -133,10 +115,12 @@ ospackage {
 
 
 
-
+assert project.hasProperty('packageVersion'),"please provide the package version via -PpackageVersion=xxx"
 task raspiDeb(type: Deb) {
     group taskgroup
-    dependsOn pkgVersion
+    doFirst{
+        version=project.packageVersion
+    }
 }
 
 

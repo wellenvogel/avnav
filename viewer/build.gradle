@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 buildscript {
     repositories {
         maven {
@@ -12,12 +14,32 @@ buildscript {
 
 apply plugin: 'com.moowork.node'
 apply plugin: 'java'
+project.ext.avnavVersion=null
+File versionFile=new File(project.buildDir,"version.js")
+task pkgVersion<< {
+    if (!project.hasProperty('packageVersion')) {
+        SimpleDateFormat f = new SimpleDateFormat('YYYYMMdd')
+        project.avnavVersion=f.format(new Date())
+    } else {
+        project.avnavVersion = packageVersion
+    }
+    if (! versionFile.getParentFile().isDirectory()) versionFile.getParentFile().mkdirs()
+    versionFile.withWriter {wr->
+        wr.println("avnav_version=\"$project.avnavVersion\";")
+    }
+}
 
 task release(type: NpmTask){
 	args=["run","production"]
-	dependsOn npmInstall
+    setExecOverrides({
+        it.environment.put('AVNAV_VERSION_FILE',versionFile.getCanonicalPath())
+    })
+	dependsOn npmInstall,pkgVersion
 }
 task debug(type: NpmTask){
 	args=["run","debug"]
-	dependsOn npmInstall
+    setExecOverrides({
+        it.environment.put('AVNAV_VERSION_FILE',versionFile.getCanonicalPath())
+    })
+	dependsOn npmInstall,pkgVersion
 }

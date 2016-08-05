@@ -50,7 +50,11 @@ try:
 except:
   pass
 import glob
-
+AVNAV_VERSION="development"
+try:
+  from avnav_server_version import AVNAV_VERSION
+except:
+  pass
 from avnav_util import *
 from avnav_config import *
 from avnav_worker import *
@@ -180,7 +184,7 @@ def main(argv):
   usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
         usage = usage,
-        version="1.0",
+        version=AVNAV_VERSION,
         description='av navserver')
   parser.add_option("-q", "--quiet", action="store_const", 
         const=100, default=logging.INFO, dest="verbose")
@@ -236,11 +240,11 @@ def main(argv):
   AVNLog.ld("baseconfig",baseConfig.param)
   if not baseConfig.param.get("logfile") == "":
     filename=os.path.expanduser(baseConfig.param.get("logfile"))
-  AVNLog.info("####start processing (logging to %s, parameters=%s)####",filename," ".join(argv))
+  AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####",AVNAV_VERSION,filename," ".join(argv))
   if not os.path.exists(os.path.dirname(filename)):
     os.makedirs(os.path.dirname(filename), 0777)
   AVNLog.initLoggingSecond(level, filename,baseConfig.getParam()['debugToLog'].upper()=='TRUE') 
-  AVNLog.info("#### avnserver pid=%d start processing ####",os.getpid())
+  AVNLog.info("#### avnserver pid=%d,version=%s,parameters=%s start processing ####",os.getpid(),AVNAV_VERSION," ".join(argv))
   if options.pidfile is not None:
     f=open(options.pidfile,"w")
     if f is not None:

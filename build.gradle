@@ -33,10 +33,11 @@ clean.dependsOn cleanAndroid
 build.dependsOn buildAndroid
 
 ["debug","release","clean"].each { tt ->
-    def vt=tasks.create(name: "${tt}Viewer",type: GradleBuild) {
-        group taskgroup
-        setDir("viewer")
-        setTasks([tt])
+    def vt=tasks.create(name: "${tt}Viewer",type: GradleBuild) { GradleBuild b->
+        b.group taskgroup
+        b.setDir("viewer")
+        b.setTasks([tt])
+
     }
     if (tt == "clean"){
         clean.dependsOn vt
@@ -45,6 +46,9 @@ build.dependsOn buildAndroid
         build.dependsOn vt
     }
 }
+
+def guiVersionFile=new File(project.buildDir,"avnav_gui_version.py")
+def serverVersionFile=new File(project.buildDir,"avnav_server_version.py")
 
 
 task pkgVersion<<{
@@ -56,6 +60,12 @@ task pkgVersion<<{
         ospackage.version=packageVersion
     }
     println "package version $ospackage.version"
+    [guiVersionFile,serverVersionFile].each{
+        if (! it.getParentFile().isDirectory()) it.getParentFile().mkdirs()
+        it.withWriter {wr->
+            wr.println("AVNAV_VERSION=\"$ospackage.version\"")
+        }
+    }
 }
 
 def emptyBase=new File(project.buildDir,"empty")
@@ -114,6 +124,14 @@ ospackage {
             fileMode 0755
             into "gui"
         }
+        from(guiVersionFile.getParentFile()){
+            into "gui"
+            include guiVersionFile.getName()
+        }
+        from(serverVersionFile.getParentFile()){
+            into "server"
+            include serverVersionFile.getName()
+        }
     }
     into ('/usr/lib/systemd/system'){
         from('linux'){
@@ -153,4 +171,14 @@ task release{
     }
     dependsOn releaseRpm, releaseDeb,raspiDeb,buildAndroid
 }
+
+afterEvaluate{
+    tasks.withType(org.gradle.api.tasks.GradleBuild.class){GradleBuild b->
+        b.dependsOn pkgVersion
+        b.doFirst{
+            startParameter.projectProperties.put('packageVersion',ospackage.version)
+        }
+    }
+}
+
 

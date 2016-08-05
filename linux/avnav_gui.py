@@ -28,6 +28,11 @@ import sys
 import os
 import wx
 from avnav_gui_design import *
+AVNAV_VERSION="development"
+try:
+    from avnav_gui_version import AVNAV_VERSION
+except:
+    pass
 import subprocess
 import re
 __author__ = 'andreas'
@@ -47,6 +52,7 @@ class  AvnavGui(Avnav):
         self.Bind(wx.EVT_TIMER, self.OnTimer)
         self.timer.Start(500)
         self.urlmap=None
+        self.SetTitle("Avnav - %s"%(AVNAV_VERSION))
         pass
 
     def setServerBase(self, base):

@@ -47,6 +47,14 @@ var devtool="eval";
 if (process.env.NODE_ENV === 'production') {
     devtool="";
 }
+
+var plugins=[
+            new CopyWebpackPlugin(copyList),
+            new ExtractTextPlugin("avnav_viewer.css",{ allChunks: true }),
+            ];
+if (process.env.AVNAV_VERSION_FILE){
+    plugins.push(new webpack.NormalModuleReplacementPlugin(/version\.js/,process.env.AVNAV_VERSION_FILE));
+}
 module.exports = {
     //see http://humaan.com/getting-started-with-webpack-and-react-es6-style/
     entry: getEntrySources([
@@ -109,12 +117,8 @@ module.exports = {
 
         ]
     },
-    plugins:[
-
-        new CopyWebpackPlugin(copyList),
-        new ExtractTextPlugin("avnav_viewer.css",{ allChunks: true })
-    ],
-    devtool:devtool
+    plugins:plugins,
+    devtool:devtool,
 };
 
 function getEntrySources(sources) {
