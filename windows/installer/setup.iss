@@ -40,7 +40,6 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-;OutputDir=C:\Users\andreas\Documents\GitHub\avnav\windows\installer
 OutputBaseFilename=AvNavSetup-{#MyAppVersionMinus}
 Compression=lzma
 SolidCompression=yes
@@ -66,14 +65,8 @@ Source: "library\{#GdalMSI}"; DestDir: "{tmp}"
 Source: "library\{#GdalPythonMSI}"; DestDir: "{tmp}"
 Source: "library\{#PillowWhl}"; DestDir: "{tmp}"
 Source: "library\{#PySerial}"; DestDir: "{tmp}"
-Source: "..\..\viewer\avnav_min.js"; DestDir: "{app}\viewer"
-Source: "..\..\viewer\loader.js"; DestDir: "{app}\viewer"
-Source: "..\..\viewer\version.js"; DestDir: "{app}\viewer"
-Source: "..\..\viewer\avnav_viewer.html"; DestDir: "{app}\viewer"
-Source: "..\..\viewer\avnav_viewer.less"; DestDir: "{app}\viewer"
-Source: "..\..\viewer\base.js"; DestDir: "{app}\viewer"
-Source: "..\..\viewer\images\*.png"; DestDir: "{app}\viewer\images"
-Source: "..\..\libraries\*"; DestDir: "{app}\libraries"; Flags: recursesubdirs; Excludes: "*.pyc,*debug.js"
+Source: "..\..\viewer\build\release\*"; DestDir: "{app}\viewer"; Flags: recursesubdirs;
+Source: "..\..\libraries\gpxpy098\*"; DestDir: "{app}\libraries\gpxpy098"; Flags: recursesubdirs; Excludes: "*.pyc,*debug.js"
 Source: "..\..\test\nmea-20130630-3.log"; DestDir: "{app}\test"
 
 [Icons]

@@ -254,7 +254,10 @@ def main(argv):
   signal.signal(signal.SIGINT, sighandler)
   signal.signal(signal.SIGTERM, sighandler)
   signal.signal(signal.SIGABRT, sighandler)
-  signal.signal(signal.SIGHUP, sighandler)
+  try:
+    signal.signal(signal.SIGHUP, sighandler)
+  except:
+    pass
   try:
     for group in (1,2):
       for handler in allHandlers:
