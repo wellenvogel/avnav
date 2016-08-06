@@ -200,19 +200,105 @@ task release{
 }
 
 class UploadTask extends DefaultTask{
+
+    protected createdDirs=[]
     private void checkReply(FTPClient ftp){
         if (! FTPReply.isPositiveCompletion(ftp.getReplyCode())){
             throw Exception("negative ftp reply: "+ftp.getReplyString())
         }
     }
+
+    private void removeRemoteDir(FTPClient ftpClient, String dirToList) {
+        logger.info("delete remote dir $dirToList")
+        FTPFile[] subFiles = ftpClient.listFiles(dirToList);
+        if (subFiles != null && subFiles.length > 0) {
+            for (FTPFile aFile : subFiles) {
+                String currentFileName = aFile.getName();
+                if (currentFileName.equals(".") || currentFileName.equals("..")) {
+                    // skip parent directory and the directory itself
+                    continue;
+                }
+                String filePath = dirToList + "/"+currentFileName
+                if (aFile.isDirectory()) {
+                    // remove the sub directory
+                    removeRemoteDir(ftpClient, filePath);
+                } else {
+                    // delete the file
+                    boolean deleted = ftpClient.deleteFile(filePath);
+                }
+            }
+
+            // finally, remove the directory itself
+            boolean removed = ftpClient.removeDirectory(dirToList);
+        }
+    }
+    /**
+     * create a remote dir and change to it
+     * @param client
+     * @param path
+     */
+    private void createRemoteDir(FTPClient client,String path){
+        if (createdDirs.contains(path)) return
+        boolean abs=false
+        if (path.startsWith("/")){
+            abs=true
+            path=path.substring(1)
+        }
+        def dirs=path.split(/\//)
+        def curpath=""
+        if (abs){
+            boolean res=client.changeWorkingDirectory("/")
+            if (! res){
+                String wd=client.printWorkingDirectory()
+                logger.info("current working dir=$wd")
+                if (wd == "/") res=true
+            }
+            assert res,"unable to change to ftp root dir"
+            curpath="/"
+        }
+        dirs.each{ String dir->
+
+            org.apache.commons.net.ftp.FTPFile [] subFiles=client.listDirectories()
+            boolean res=false
+            curpath+="$dir/"
+            if (subFiles != null && subFiles.contains(dir)){
+                logger.info("directory $curpath/$dir already exists")
+                res=client.changeWorkingDirectory(dir)
+            }
+            else{
+                client.makeDirectory(dir)
+                res=client.changeWorkingDirectory(dir)
+            }
+            assert res,"unable to change to ftp directory $curpath"
+        }
+        createdDirs.add(path)
+    }
+
+    protected void uploadFile(FTPClient ftp,String dir,File ifile){
+        createRemoteDir(ftp,dir)
+        ftp.setFileType(FTP.BINARY_FILE_TYPE)
+        FileInputStream is=new FileInputStream(ifile)
+        logger.lifecycle("uploading $ifile to $dir")
+        try {
+            ftp.storeFile(ifile.getName(), is)
+        }catch (Exception e){
+            logger.error("Exception while uploading: ",e)
+            e.printStackTrace()
+            throw e
+        }
+        logger.lifecycle("upload of $ifile complete")
+    }
     def server="www.wellenvogel.net"
     def baseDir="/www/software/avnav/downloads"
-    @InputFile
+    def subDir=project.avnavVersion
+
     File inputFile
+
+    FileTree inputFiles
+    boolean deleteTargetDir=false
     @TaskAction
     public void exec(){
-        assert inputFile!=null,"missing task parameter inputFile"
-        assert inputFile.exists(),"input file $inputFile does not exist"
+        assert (inputFile!=null || inputFiles!=null),"missing task parameter inputFile(s)"
         assert project.hasProperty("avnavVersion")
         logger.info("uploading to $server")
         def ftp=new FTPClient();
@@ -223,25 +309,21 @@ class UploadTask extends DefaultTask{
         ftp.connect(server)
         ftp.login(user,passwd)
         checkReply(ftp)
-        def dir=baseDir+"/"+project.avnavVersion
-        boolean exists=ftp.changeWorkingDirectory(dir)
-        if (! exists){
-            logger.lifecycle("creating directory $dir")
-            assert ftp.changeWorkingDirectory(baseDir)
-            assert ftp.makeDirectory(project.avnavVersion)
-            assert ftp.changeWorkingDirectory(dir)
+        def dir=baseDir
+        if (inputFile != null){
+            assert inputFile.exists(),"input file $inputFile does not exist"
+            if (deleteTargetDir) removeRemoteDir(ftp,dir+"/"+subDir)
+            uploadFile(ftp,dir+"/"+subDir,inputFile)
         }
-        FileInputStream is=new FileInputStream(inputFile)
-        //ftp.setControlKeepAliveTimeout(30)
-        logger.lifecycle("uploading $inputFile to $dir")
-        try {
-            ftp.storeFile(inputFile.getName(), is)
-        }catch (Exception e){
-            logger.error("Exception while uploading: ",e)
-            e.printStackTrace()
-            throw e
+        else{
+            if (deleteTargetDir) removeRemoteDir(ftp,dir)
+            inputFiles.visit {FileVisitDetails element->
+                if (!element.isDirectory()) {
+                    String dirname = (dir + "/" + element.relativePath.getPathString()).replaceAll('/[^/]*$', '')
+                    uploadFile(ftp, dirname, element.getFile())
+                }
+            }
         }
-        logger.lifecycle("upload of $inputFile complete")
         checkReply(ftp)
         ftp.disconnect()
     }
@@ -270,12 +352,27 @@ task uploadAndroid(type: UploadTask){
     dependsOn buildAndroid
 }
 
+task uploadViewer(type: UploadTask){
+    inputFiles=fileTree(dir:"viewer/build/release")
+    inputFiles+=fileTree("viewer/demo",{
+        include "demo-osm/**"
+    })
+    inputFiles+=fileTree("viewer/demo",{
+        include "demo-eniro/**"
+    })
+    inputFiles+=fileTree("viewer/demo",{
+        include "demo-bsh/**"
+    })
+    baseDir="/www/software/avnav/viewern"
+    //deleteTargetDir=true
+    dependsOn releaseViewer
+}
 
 task upload{
     doLast {
         println "###uploaded artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadAndroid
+    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadAndroid,uploadViewer
     if (onWindows){
         dependsOn uploadWindows
     }
