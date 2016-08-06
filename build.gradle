@@ -1,5 +1,5 @@
 import java.text.SimpleDateFormat
-
+import org.apache.commons.net.ftp.*
 buildscript{
 	repositories{
 		mavenCentral()
@@ -7,11 +7,22 @@ buildscript{
     dependencies{
         classpath localGroovy()
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.6.1'
+        classpath 'commons-net:commons-net:3.3'
     }
 }
 
 repositories{
 	mavenCentral()
+}
+
+
+
+if (! project.hasProperty('packageVersion')){
+    SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
+    project.ext.avnavVersion=f.format(new Date())
+}
+else{
+    project.ext.avnavVersion=project.packageVersion
 }
 
 boolean onWindows=false
@@ -58,13 +69,7 @@ def serverVersionFile=new File(project.buildDir,"avnav_server_version.py")
 
 
 task pkgVersion<<{
-    if (! project.hasProperty('packageVersion')){
-        SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
-        ospackage.version f.format(new Date())
-    }
-    else{
-        ospackage.version=packageVersion
-    }
+    ospackage.version=project.avnavVersion
     println "package version $ospackage.version"
     [guiVersionFile,serverVersionFile].each{
         if (! it.getParentFile().isDirectory()) it.getParentFile().mkdirs()
@@ -78,7 +83,7 @@ task windowsBuild(type: org.gradle.api.tasks.GradleBuild){
     dir="windows"
     tasks=["release"]
     doFirst{
-        assert onWindows,"we cannot run the windowsBuild task ase we are not on windows"
+        assert onWindows,"we cannot run the windowsBuild task as we are not on windows"
     }
 }
 task noWindowsBuild<<{
@@ -194,11 +199,94 @@ task release{
     }
 }
 
+class UploadTask extends DefaultTask{
+    private void checkReply(FTPClient ftp){
+        if (! FTPReply.isPositiveCompletion(ftp.getReplyCode())){
+            throw Exception("negative ftp reply: "+ftp.getReplyString())
+        }
+    }
+    def server="www.wellenvogel.net"
+    def baseDir="/www/software/avnav/downloads"
+    @InputFile
+    File inputFile
+    @TaskAction
+    public void exec(){
+        assert inputFile!=null,"missing task parameter inputFile"
+        assert inputFile.exists(),"input file $inputFile does not exist"
+        assert project.hasProperty("avnavVersion")
+        logger.info("uploading to $server")
+        def ftp=new FTPClient();
+        def user=System.getenv("AVNAV_REPO_USER")
+        assert user!=null,"missing environment variable AVNAV_REPO_USER"
+        def passwd=System.getenv("AVNAV_REPO_PASSWD")
+        assert passwd !=null,"missing environemt variable AVNAV_REPO_PASSWD"
+        ftp.connect(server)
+        ftp.login(user,passwd)
+        checkReply(ftp)
+        def dir=baseDir+"/"+project.avnavVersion
+        boolean exists=ftp.changeWorkingDirectory(dir)
+        if (! exists){
+            logger.lifecycle("creating directory $dir")
+            assert ftp.changeWorkingDirectory(baseDir)
+            assert ftp.makeDirectory(project.avnavVersion)
+            assert ftp.changeWorkingDirectory(dir)
+        }
+        FileInputStream is=new FileInputStream(inputFile)
+        //ftp.setControlKeepAliveTimeout(30)
+        logger.lifecycle("uploading $inputFile to $dir")
+        try {
+            ftp.storeFile(inputFile.getName(), is)
+        }catch (Exception e){
+            logger.error("Exception while uploading: ",e)
+            e.printStackTrace()
+            throw e
+        }
+        logger.lifecycle("upload of $inputFile complete")
+        checkReply(ftp)
+        ftp.disconnect()
+    }
+}
+
+task uploadDeb(type: UploadTask){
+    inputFile=file("$buildDir/distributions/avnav_${project.avnavVersion}_all.deb")
+    dependsOn releaseDeb
+}
+task uploadRaspi(type: UploadTask){
+    inputFile=file("$buildDir/distributions/avnav-raspi_${project.avnavVersion}_all.deb")
+    dependsOn raspiDeb
+}
+task uploadRpm(type: UploadTask){
+    inputFile=file("$buildDir/distributions/avnav-${project.avnavVersion}.i386.rpm")
+    dependsOn releaseRpm
+}
+task uploadWindows(type: UploadTask){
+    def windowsVersion=project.avnavVersion.replaceAll(/(....)(..)(..)/,'$1-$2-$3').replaceAll(/-0([^-])/,'-$1')
+    inputFile=file("windows/build/AvNavSetup-${windowsVersion}-0.exe")
+    dependsOn windowsBuild
+}
+task uploadAndroid(type: UploadTask){
+    //TODO: version handling for android
+    inputFile=file("android/build/outputs/apk/avNav-1.0.0.apk")
+    dependsOn buildAndroid
+}
+
+
+task upload{
+    doLast {
+        println "###uploaded artifacts to version dir $project.avnavVersion###"
+    }
+    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadAndroid
+    if (onWindows){
+        dependsOn uploadWindows
+    }
+}
+
+
 afterEvaluate{
     tasks.withType(org.gradle.api.tasks.GradleBuild.class){GradleBuild b->
         b.dependsOn pkgVersion
         b.doFirst{
-            startParameter.projectProperties.put('packageVersion',ospackage.version)
+            startParameter.projectProperties.put('packageVersion',project.avnavVersion)
         }
     }
 }
