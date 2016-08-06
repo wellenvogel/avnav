@@ -54,6 +54,7 @@ namespace AvChartConvert
         string serverconfigtemplate;
         string scriptpath ;
         string serverpath;
+        string viewerpath ;
         string testdir;
         string servermode="test";
         Process serverProcess = null;
@@ -71,12 +72,14 @@ namespace AvChartConvert
             scriptpath = Path.Combine(myPath, "scripts");
             serverpath = scriptpath;
             testdir = Path.Combine(myPath, "test");
+            viewerpath = Path.Combine(myPath, "viewer");
             if (!Directory.Exists(scriptpath))
             {
                 //dev env
                 scriptpath = Path.Combine(myPath, "..", "chartconvert");
                 serverpath = Path.Combine(myPath, "..", "server");
                 testdir = Path.Combine(myPath, "..", "test");
+                viewerpath = Path.Combine(myPath, "..", "viewer", "build", "release");
             }
             string outdir = (string)Properties.Settings.Default["OutDir"];
             if (outdir == null || outdir == "") outdir = defaultOut;
@@ -541,6 +544,7 @@ namespace AvChartConvert
             
             info = new ProcessStartInfo(cmd);
             args += " -c \"" + Path.Combine(textOutdir.Text,"out") + "\" ";
+            args += " -u \"viewer=" + viewerpath + "\"";
             args += " \"" + configfile+"\""; 
             info.Arguments = args;
             info.RedirectStandardInput = false;
