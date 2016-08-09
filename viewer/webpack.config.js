@@ -43,7 +43,7 @@ if (process.env.NODE_ENV === 'production') {
 else{
     copyList.push({from: '../libraries/ol311/ol-debug.js', to: 'libraries/ol.js'})
 }
-var devtool="eval";
+var devtool="inline-source-map";
 if (process.env.NODE_ENV === 'production') {
     devtool="";
 }
