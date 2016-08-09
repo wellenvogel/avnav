@@ -158,3 +158,5 @@ avnav.assign = function (target, obj) {
             clearTimeout(id);
         };
 }());
+
+ol.DEFAULT_TILE_CACHE_HIGH_WATER_MARK=256;
