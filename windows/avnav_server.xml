@@ -22,10 +22,8 @@
 <!--<AVNSocketReader host="192.168.20.10" port="34567"/>-->
 <AVNHttpServer navurl="/viewer/avnav_navi.php" chartbase="maps" upzoom="0" empty="nonexist">
 	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
-	<Directory urlpath="viewer" path="..\viewer"></Directory>
-	<Directory urlpath="master" path="..\..\..\avnav-master\viewer"></Directory>
+	<Directory urlpath="viewer" path="..\viewer\build\debug"></Directory>
 	<Directory urlpath="libraries" path="..\libraries"></Directory>
-	<Directory urlpath="test" path="..\..\react-playground\build"></Directory>
 	<Directory urlpath="tracks" path="..\data_windows\tracks"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
