@@ -227,7 +227,7 @@ avnav.util.PropertyHandler.prototype.loadUserData=function(){
 
 };
 /**
- * update the layout (recompile less)
+ * update the layout
  */
 avnav.util.PropertyHandler.prototype.updateLayout=function(){
     var vars=this.propertyDescriptions.style;
