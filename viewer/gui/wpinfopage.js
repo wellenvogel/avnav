@@ -183,22 +183,39 @@ avnav.gui.WpInfoPage.prototype.hidePage=function(){
 };
 avnav.gui.WpInfoPage.prototype._editWp=function(){
     this.selectOnPage('input[name=name]').val(this.wp.name);
-    this.selectOnPage('input[name=lon]').val(this.wp.lon);
-    this.selectOnPage('input[name=lat]').val(this.wp.lat);
+    this.selectOnPage('input[name=lon]').val(Geo.toLon(this.wp.lon,'dm',4));
+    this.selectOnPage('input[name=lat]').val(Geo.toLat(this.wp.lat,'dm',4));
     this._overlay.showOverlayBox();
 };
 avnav.gui.WpInfoPage.prototype._updateWpFromEdit=function(){
     if (! this._checkWpOk()) return;
     var wp=this.wp.clone();
     wp.name=this.selectOnPage('input[name=name]').val();
-    wp.lon=parseFloat(this.selectOnPage('input[name=lon]').val());
-    wp.lat=parseFloat(this.selectOnPage('input[name=lat]').val());
+    var doChange=true;
+    try {
+        var lonstr=this.selectOnPage('input[name=lon]').val();
+        wp.lon = Geo.parseDMS(lonstr.replace(/o/i, 'e')); //convert o(german) to e(east)
+        //wp.lon = parseFloat(this.selectOnPage('input[name=lon]').val());
+        if (isNaN(wp.lon)){
+            avnav.util.Overlay.Toast("invalid lon, cannot convert "+lonstr, 5000);
+            doChange=false;
+        }
+        var latstr=this.selectOnPage('input[name=lat]').val();
+        wp.lat=Geo.parseDMS(latstr);
+        if (isNaN(wp.lat)){
+            avnav.util.Overlay.Toast("invalid lat, cannot convert "+latstr, 5000);
+            doChange=false;
+        }
+        //wp.lat = parseFloat(this.selectOnPage('input[name=lat]').val());
+    }catch (e){
+        avnav.util.Overlay.Toast("invalid coordinate, cannot convert", 5000);
+        doChange=false;
+    }
     if (this.newWp){
         this.wp=wp;
     }
     else {
         var ok=undefined;
-        var doChange=true;
         if (this.wp.routeName) {
             var rt = this._router.getRouteByName(this.wp.routeName);
             if (rt) {
