@@ -289,7 +289,7 @@ class UploadTask extends DefaultTask{
         logger.lifecycle("upload of $ifile complete")
     }
     def server="www.wellenvogel.net"
-    def baseDir="/www/software/avnav/downloads"
+    def baseDir="/www/software/avnav/downloads/daily"
     def subDir=project.avnavVersion
 
     File inputFile
