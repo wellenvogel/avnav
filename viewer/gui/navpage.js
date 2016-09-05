@@ -61,7 +61,7 @@ avnav.gui.Navpage=function(){
      */
     this.formatter=new avnav.util.Formatter();
 
-
+    this.showRouteOnReturn=false;
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
@@ -144,11 +144,15 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     else this.selectOnPage('#avi_navpage_clock').hide();
     this.handleRouteDisplay();
     this.updateRoutePoints(true);
-    if (options && options.showRouting){
-        this.showRouting();
+    var showRouting=options && options.showRouting;
+    if (! showRouting ){
+        showRouting=options && options.returning && this.showRouteOnReturn;
+    }
+    if (showRouting){
+        this.showRouting(options && options.returning);
     }
     else {
-        if (! options || ! options.returning) this.hideRouting();
+        this.hideRouting();
     }
 
 
@@ -183,6 +187,8 @@ avnav.gui.Navpage.prototype.timerEvent=function(){
 avnav.gui.Navpage.prototype.hidePage=function(){
     this.hideOverlay();
     this.hidetime=0;
+    this.showRouteOnReturn=this.routingVisible;
+    this.hideRouting(true);
 };
 /**
  *
@@ -348,8 +354,11 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
         this.updateLayout();
     }
 };
-
-avnav.gui.Navpage.prototype.showRouting=function() {
+/**
+ * show the route editing part
+ * @param {boolean} opt_returning
+ */
+avnav.gui.Navpage.prototype.showRouting=function(opt_returning) {
     if (this.routingVisible) return;
     if (!this.gui.properties.getProperties().layers.nav) return;
     var upd=false;
@@ -361,13 +370,21 @@ avnav.gui.Navpage.prototype.showRouting=function() {
     if (upd)this.gui.map.updateSize();
     this.routingVisible=true;
     this.handleToggleButton('.avb_ShowRoutePanel',true);
-    this.navobject.getRoutingHandler().stopEditingRoute(); //always reset to active route if any
-                                                           //TODO: should we keep the last edited route?
-    this.navobject.getRoutingHandler().startEditingRoute();
-    this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());
+    var isReactivating=false;
+    if (opt_returning ){
+        //first try to reactivate the las editing route
+        if (this.navobject.getRoutingHandler().getEditingRoute()){
+            isReactivating=true;
+        }
+    }
+    if (! isReactivating) {
+        this.navobject.getRoutingHandler().stopEditingRoute(); //always reset to active route if any
+                                                               //TODO: should we keep the last edited route?
+        this.navobject.getRoutingHandler().startEditingRoute();
+    }
     this.gui.map.setRoutingActive(true);
     this.handleRouteDisplay();
-    this.updateRoutePoints(true);
+    this.updateRoutePoints(true,isReactivating);
     //if (this.gui.isMobileBrowser()) this.showWpPopUp(this.navobject.getRoutingData().getActiveWpIdx());
     var nLock=this.gui.map.getGpsLock();
     this.lastGpsLock=nLock;
@@ -383,8 +400,9 @@ avnav.gui.Navpage.prototype.showRouting=function() {
 
 /**
  * @private
+ * @param {boolean} opt_noStop - do not stop editing
  */
-avnav.gui.Navpage.prototype.hideRouting=function() {
+avnav.gui.Navpage.prototype.hideRouting=function(opt_noStop) {
     var upd=false;
     //this.showHideAdditionalPanel('#avi_second_buttons_navpage', false, '#' + this.mapdom);
     this.selectOnPage('.avn_routeBtn').hide();
@@ -393,8 +411,10 @@ avnav.gui.Navpage.prototype.hideRouting=function() {
     if (upd) this.gui.map.updateSize();
     this.routingVisible=false;
     this.handleToggleButton('.avb_ShowRoutePanel',false);
-    this.gui.map.setRoutingActive(false);
-    this.navobject.getRoutingHandler().stopEditingRoute();
+    if (! opt_noStop) {
+        this.gui.map.setRoutingActive(false);
+        this.navobject.getRoutingHandler().stopEditingRoute();
+    }
     this.handleRouteDisplay();
     if (this.lastGpsLock) {
         this.gui.map.setGpsLock(true);
@@ -436,7 +456,7 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
 };
 
 
-avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
+avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActive){
     var editingActiveRoute=this.navobject.getRoutingHandler().isEditingActiveRoute();
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
     $('#avi_route_info_navpage_inner').addClass(editingActiveRoute?"avn_activeRoute":"avn_otherRoute");
@@ -495,8 +515,15 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
                 if (eltop < 0)el.scrollIntoView(true);
                 if ((eltop + eh) > (ph)) el.scrollIntoView(false);
             }
+            if (opt_centerActive){
+                self.getMap().setCenter(self.navobject.getRoutingHandler().getEditingWp());
+                $(el).addClass('avn_route_info_centered');
+            }
         }
-        else $(el).removeClass('avn_route_info_active_point');
+        else {
+            $(el).removeClass('avn_route_info_active_point');
+            $(el).removeClass('avn_route_info_centered');
+        }
         $(el).find('.avn_route_info_name').text(txt);
         $(el).find('.avn_route_point_ll').html(self.formatter.formatLonLats(route.points[i]));
         var courseLen="--- &#176;/ ---- nm";
@@ -510,9 +537,13 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force){
         if (rebuild) {
             $(el).click(function (ev) {
                 var isActive=( $(this).hasClass('avn_route_info_active_point'));
+                var isCentered=$(this).hasClass('avn_route_info_centered');
                 self.navobject.getRoutingHandler().setEditingWpIdx(idx);
-                self.getMap().setCenter(self.navobject.getRoutingHandler().getEditingWp());
-                if (isActive){
+                if (! isCentered) {
+                    self.getMap().setCenter(self.navobject.getRoutingHandler().getEditingWp());
+                    $(this).addClass('avn_route_info_centered');
+                }
+                if (isActive && isCentered){
                     self.gui.showPage("wpinfopage",{wp:self.navobject.getRoutingHandler().getEditingWp()});
                 }
                 ev.preventDefault();
@@ -618,6 +649,7 @@ avnav.gui.Navpage.prototype.btnNavDelete=function (button,ev){
     avnav.log("navDelete clicked");this.checkRouteWritable();
     if (!this.checkRouteWritable()) return false;
     this.navobject.getRoutingHandler().deleteWp(-1);
+    this.updateRoutePoints(false,true);
 };
 avnav.gui.Navpage.prototype.btnNavToCenter=function (button,ev){
     avnav.log("navDelete clicked");

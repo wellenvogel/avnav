@@ -570,6 +570,13 @@ avnav.nav.RouteData.prototype.cloneActiveToEditing=function(newName) {
 };
 
 /**
+ * get the currently editing route, undefined if none
+ * @returns {avnav.nav.Route|*}
+ */
+avnav.nav.RouteData.prototype.getEditingRoute=function(){
+    return this.editingRoute;
+};
+/**
  * stop the route editing mode (throw away the editing route)
  * also setting the editing WP
  */
@@ -597,6 +604,7 @@ avnav.nav.RouteData.prototype.startEditingRoute=function(){
     }
     this.editingWp=this._findBestMatchingPoint();
     this.lastEditingName=this.editingRoute.name;
+    return;
 };
 /**
  *
@@ -1175,9 +1183,10 @@ avnav.nav.RouteData.prototype._saveRouteLocal=function(opt_route, opt_keepTime) 
  * load a locally stored route
  * @private
  * @param name
+ * @param opt_returnUndef - if set, return undef instead of an empty route if not found
  * @returns {avnav.nav.Route}
  */
-avnav.nav.RouteData.prototype._loadRoute=function(name){
+avnav.nav.RouteData.prototype._loadRoute=function(name,opt_returnUndef){
     var rt=new avnav.nav.Route(name);
     try{
         var raw=localStorage.getItem(this.propertyHandler.getProperties().routeName+"."+name);
@@ -1190,7 +1199,12 @@ avnav.nav.RouteData.prototype._loadRoute=function(name){
             rt.fromJsonString(raw);
             return rt;
         }
-    }catch(ex){}
+        if (opt_returnUndef){
+            return undefined;
+        }
+    }catch(ex){
+        if (opt_returnUndef) return undefined;
+    }
     return rt;
 };
 
