@@ -56,6 +56,10 @@ avnav.gui.WpInfoPage.prototype.localInit=function(){
         self._overlay.overlayClose();
         return false;
     });
+    this.selectOnPage('.avn_RouteInfo').bind('click',function(){
+        self.gui.showPage('navpage',{showRouting: true});
+        return false;
+    });
 };
 avnav.gui.WpInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;
@@ -245,10 +249,7 @@ avnav.gui.WpInfoPage.prototype.btnWpInfoLocate=function (button,ev){
     this._router.setEditingWp(this.wp);
     this.returnToLast();
 };
-avnav.gui.WpInfoPage.prototype.btnShowRoutePanel=function (button,ev){
-    avnav.log("route clicked");
-    this.gui.showPage('navpage',{showRouting: true})
-};
+
 avnav.gui.WpInfoPage.prototype.btnStopNav=function (button,ev){
     avnav.log("stopNav clicked");
     this._router.routeOff();
