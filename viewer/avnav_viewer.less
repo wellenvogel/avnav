@@ -697,6 +697,11 @@ html,body {
   width: 1.5em;
 }
 
+#avi_navpage_wpbuttons{
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
 
 .avn_routeBtn{
   .avn_hidden();
@@ -768,7 +773,12 @@ button.avb_WpNext{
   .avn_iconButton('images/icons-new/ic_arrow_forward.svg');
 }
 
-
+button.avb_WpGoto {
+  .avn_iconButton('images/icons-new/wpgoto.svg');
+}
+button.avb_WpInfo {
+  .avn_iconButton('images/icons-new/info.svg');
+}
 
 
 /* some settings for pages that have lists */
@@ -1084,51 +1094,7 @@ button.avb_AisInfoList {
   .avn_iconButton('images/icons-new/ic_list.svg');
 }
 
-/*-------------------------------------------------------------
-   boat info page
--------------------------------------------------------------*/
-#avi_boatinfopage .avn_infopage_inner {
-  max-width: 60em;
-}
-#avi_boatinfopage .avn_table {
-  font-size: 2em;
-}
 
-#avi_boatinfopage .avn_Status{
-  background-image: url('images/icons-new/boat.svg');
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-}
-#avi_boatinfopage .avn_status_image {
-  vertical-align: middle;
-  width: 2em;
-  height: 2em;
-}
-#avi_boatinfopage .avn_course_image{
-  width: 1.3em;
-  height: 1.3em;
-  transform: rotate(90deg);
-  vertical-align: middle;
-  border: 1px solid;
-  border-color: rgba(0, 0, 0, 0.36);
-  border-radius: 50%;
-  margin-left: 0.5em;
-  padding: 0.3em;
-}
-#avi_boatinfopage .avd_gpsCourse {
-  width: 1.8em;
-  display: inline-block;
-  text-align: right;
-}
-#avi_boatinfopage .avn_unit{
-  margin-left: 0.5em;
-}
-button.avb_BoatInfoLocate {
-  .avn_iconButton('images/icons-new/center.svg');
-}
-button.avb_BoatInfoGps {
-  .avn_iconButton('images/icons-new/data.svg');
-}
 /*-------------------------------------------------------------
    wp info page
 -------------------------------------------------------------*/

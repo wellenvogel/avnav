@@ -25,8 +25,7 @@
  #  DEALINGS IN THE SOFTWARE.
  ###############################################################################
 
- Load all the necessary js files
- code is taken from the ol3 examples
+
  */
 
 window.avnav={};
@@ -57,7 +56,6 @@ window.avnav={};
     require('./gui/navpage.js');
     require('./gui/aispage.js');
     require('./gui/aisinfopage.js');
-    require('./gui/boatinfopage.js');
     require('./gui/wpinfopage.js');
     require('./gui/settingspage.js');
     require('./gui/statuspage.js');
