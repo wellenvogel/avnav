@@ -36,6 +36,18 @@ avnav.gui.Navpage=function(){
      * @type {boolean}
      */
     this.routingVisible=false;
+
+    /**
+     * @private
+     * @type {avnav.nav.navdata.WayPoint}
+     */
+    this.selectedWp=undefined;
+    /**
+     * the time (in ms) when the wp buttons should be hidden
+     * @type {number}
+     */
+    this.wpHidetime=0;
+
     /**
      * keep the lock mode when showing routing
      * @private
@@ -61,6 +73,7 @@ avnav.gui.Navpage=function(){
      */
     this.formatter=new avnav.util.Formatter();
 
+
     this.showRouteOnReturn=false;
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
@@ -78,6 +91,7 @@ avnav.gui.Navpage.prototype.getMap=function(){
 
 avnav.gui.Navpage.prototype.showPage=function(options){
     if (!this.gui) return;
+    this.hideWpButtons();
     this.fillDisplayFromGps();
     var newMap=false;
     var brightness=1;
@@ -175,6 +189,26 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(){
     this.handleToggleButton('.avb_LockPos',gpsLock);
     var courseUp=this.gui.map.getCourseUp();
     this.handleToggleButton('.avb_CourseUp',courseUp);
+    if (this.selectedWp){
+        var router=this.navobject.getRoutingHandler();
+        if (router.isCurrentRoutingTarget(this.selectedWp)){
+            this.selectOnPage('.avb_WpGoto').hide();
+            this.selectOnPage('.avb_NavNext').show();
+        }
+        else{
+            this.selectOnPage('.avb_WpGoto').show();
+            this.selectOnPage('.avb_NavNext').hide();
+        }
+        if (this.selectedWp.routeName){
+            this.selectOnPage('.avb_WpNext').show();
+            this.selectOnPage('.avb_WpPrevious').show();
+        }
+        else{
+            this.selectOnPage('.avb_WpNext').hide();
+            this.selectOnPage('.avb_WpPrevious').hide();
+            this.selectOnPage('.avb_NavNext').hide();
+        }
+    }
 };
 
 avnav.gui.Navpage.prototype.timerEvent=function(){
@@ -182,10 +216,14 @@ avnav.gui.Navpage.prototype.timerEvent=function(){
         this.hideOverlay();
         this.hidetime=0;
     }
+    if (this.wpHidetime > 0 && this.wpHidetime <= new Date().getTime()){
+        this.hideWpButtons();
+    }
     this.buttonUpdate();
 };
 avnav.gui.Navpage.prototype.hidePage=function(){
     this.hideOverlay();
+    this.hideWpButtons();
     this.hidetime=0;
     this.showRouteOnReturn=this.routingVisible;
     this.hideRouting(true);
@@ -197,15 +235,17 @@ avnav.gui.Navpage.prototype.localInit=function(){
     var self=this;
     $('#leftBottomMarker').click({page:this},function(ev){
         var wp=self.navobject.getRoutingHandler().getCurrentLegTarget();
-        var options={};
         if (wp){
-            options.wp=wp;
+            if (self.routingVisible) {
+                self.gui.map.setCenter(wp);
+                return;
+            }
+            self.showWpButtons(wp);
         }
-        self.gui.showPage('wpinfopage',options);
     });
     $('#leftBottomPosition').click({page:this},function(ev){
         ev.stopPropagation();
-        self.gui.showPage('boatinfopage');
+        self.gui.showPage('gpspage');
     });
     $('#avi_centerDisplay').click({page:this},function(ev){
        ev.data.page.hideOverlay();
@@ -359,6 +399,7 @@ avnav.gui.Navpage.prototype.hideOverlay=function(){
  * @param {boolean} opt_returning
  */
 avnav.gui.Navpage.prototype.showRouting=function(opt_returning) {
+    this.hideWpButtons();
     if (this.routingVisible) return;
     if (!this.gui.properties.getProperties().layers.nav) return;
     var upd=false;
@@ -451,6 +492,7 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
     window.setTimeout(function(){
         var rtop=$('#avi_nav_bottom').outerHeight();
         $('#avi_navLeftContainer').css('bottom',rtop+"px");
+        $('#avi_navpage_wpbuttons').css('bottom',rtop+"px");
         $('#avi_route_info_navpage').css('bottom',rtop+"px");
     },0);
 };
@@ -563,6 +605,23 @@ avnav.gui.Navpage.prototype.checkRouteWritable=function(){
     return false;
 };
 
+avnav.gui.Navpage.prototype.showWpButtons=function(waypoint){
+    this.gui.map.setCenter(waypoint);
+    this.selectOnPage('#avi_navpage_wpbuttons').show();
+    this.selectedWp=waypoint;
+    this.wpHidetime=new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
+    this.gui.map.setGpsLock(false);
+    this.buttonUpdate();
+    this.gui.map.triggerRender();
+};
+
+avnav.gui.Navpage.prototype.hideWpButtons=function(){
+    if (!this.selectedWp) return;
+    this.selectOnPage('#avi_navpage_wpbuttons').hide();
+    this.selectedWp=undefined;
+    this.wpHidetime=0;
+};
+
 avnav.gui.Navpage.prototype.goBack=function(){
     this.btnCancelNav();
 };
@@ -579,6 +638,7 @@ avnav.gui.Navpage.prototype.btnZoomOut=function (button,ev){
     this.getMap().changeZoom(-1);
 };
 avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
+    this.hideWpButtons();
     var nLock=! this.gui.map.getGpsLock();
     this.gui.map.setGpsLock(nLock);
     this.handleToggleButton(button,nLock);
@@ -588,6 +648,7 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
     avnav.log("LockMarker clicked");
+    this.hideWpButtons();
     var options = {};
     var center = this.navobject.getMapCenter();
     var wp = new avnav.nav.navdata.WayPoint();
@@ -600,7 +661,7 @@ avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
 };
 avnav.gui.Navpage.prototype.btnStopNav=function (button,ev) {
     avnav.log("StopNav clicked");
-
+    this.hideWpButtons();
     this.navobject.getRoutingHandler().routeOff();
     this.buttonUpdate();
     this.hideRouting();
@@ -616,11 +677,13 @@ avnav.gui.Navpage.prototype.btnCourseUp=function (button,ev){
 };
 avnav.gui.Navpage.prototype.btnShowRoutePanel=function (button,ev){
     avnav.log("showRoutePanel clicked");
+    this.hideWpButtons();
     if (! this.routingVisible) this.showRouting();
     else this.hideRouting();
 };
 avnav.gui.Navpage.prototype.btnCancelNav=function (button,ev){
     avnav.log("CancelNav clicked");
+    this.hideWpButtons();
     if (this.routingVisible){
         this.hideRouting();
         return;
@@ -676,6 +739,54 @@ avnav.gui.Navpage.prototype.btnNavInvert=function(button,ev){
     if (!this.checkRouteWritable()) return false;
     this.navobject.getRoutingHandler().invertRoute();
 };
+
+//-------------------------- WP ----------------------------------------
+avnav.gui.Navpage.prototype.btnWpInfo=function(button,ev) {
+    avnav.log("Edit clicked");
+    this.gui.showPage('wpinfopage');
+};
+
+avnav.gui.Navpage.prototype.btnWpGoto=function(button,ev) {
+    avnav.log("Goto clicked");
+    var wp=this.selectedWp;
+    this.hideWpButtons();
+    if (! wp) {
+        return;
+    }
+    this.navobject.getRoutingHandler().wpOn(wp);
+};
+avnav.gui.Navpage.prototype.btnNavNext=function(button,ev) {
+    avnav.log("NavNext clicked");
+    var wp=this.selectedWp;
+    this.hideWpButtons();
+    if (! wp) {
+        return;
+    }
+    var router=this.navobject.getRoutingHandler();
+    if (! router.isCurrentRoutingTarget(wp)) return;
+    var next=router.getPointAtOffset(wp,1);
+    if (! next ) return;
+    router.wpOn(next);
+};
+avnav.gui.Navpage.prototype.btnWpNext=function(button,ev) {
+    avnav.log("WpNext clicked");
+    if (! this.selectedWp) return;
+    var router=this.navobject.getRoutingHandler();
+    var next=router.getPointAtOffset(this.selectedWp,1);
+    if (! next) return;
+    this.showWpButtons(next);
+};
+
+avnav.gui.Navpage.prototype.btnWpPrevious=function(button,ev) {
+    avnav.log("WpPrevious clicked");
+    if (! this.selectedWp) return;
+    var router=this.navobject.getRoutingHandler();
+    var next=router.getPointAtOffset(this.selectedWp,-1);
+    if (! next) return;
+    this.showWpButtons(next);
+};
+
+
 /**
  * create the page instance
  */

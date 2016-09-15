@@ -32,6 +32,7 @@ var images=[
     'MarkerOrange.png',
     'Boat2.png',
     'nadel_mit.png',
+    'WebIcon-512.png'
 
 ];
 images.forEach(function(el){
