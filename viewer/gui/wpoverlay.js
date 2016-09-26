@@ -37,6 +37,7 @@ wpOverlay.prototype._bindButtons=function(){
             doClose=self._cancelCallback();
         }
         if (doClose) self._overlay.overlayClose();
+        return false;
     });
     if (! this._okCallback){
         this._overlay.select('button[name=ok]').hide();
@@ -47,6 +48,7 @@ wpOverlay.prototype._bindButtons=function(){
             var doClose=true;
             doClose=self._okCallback();
             if (doClose) self._overlay.overlayClose();
+            return false;
         });
     }
 };
@@ -130,7 +132,7 @@ wpOverlay.prototype.updateWp=function(showErrors,router,opt_oldWp){
         }
     }
     if (doChange) {
-        ok = router.changeWp(opt_oldWp, wp);
+        ok = router.changeWp(oldWp, wp);
         if (ok) {
             return wp;
         }

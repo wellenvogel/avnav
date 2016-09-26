@@ -1,6 +1,7 @@
 /**
  * Created by andreas on 02.05.14.
  */
+var WpOverlay=require('./wpoverlay.js');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -227,6 +228,7 @@ avnav.gui.Navpage.prototype.hidePage=function(){
     this.hidetime=0;
     this.showRouteOnReturn=this.routingVisible;
     this.hideRouting(true);
+    this._wpOverlay.overlayClose();
 };
 /**
  *
@@ -273,6 +275,12 @@ avnav.gui.Navpage.prototype.localInit=function(){
     });
     $(window).on('resize',function(){
         self.updateLayout();
+    });
+    this._wpOverlay=new WpOverlay(this.getSelectOnPageString('.avn_overlay_cover'),{
+        okCallback:function(){
+            var close=self._updateWpFromEdit();
+            return close;
+        }
     });
 
 };
@@ -622,6 +630,12 @@ avnav.gui.Navpage.prototype.hideWpButtons=function(){
     this.wpHidetime=0;
 };
 
+avnav.gui.Navpage.prototype._updateWpFromEdit=function(){
+    var nwp=this._wpOverlay.updateWp(true,this.navobject.getRoutingHandler());
+    if (nwp) this.selectedWp=nwp;
+    return (nwp !== undefined);
+};
+
 avnav.gui.Navpage.prototype.goBack=function(){
     this.btnCancelNav();
 };
@@ -741,9 +755,10 @@ avnav.gui.Navpage.prototype.btnNavInvert=function(button,ev){
 };
 
 //-------------------------- WP ----------------------------------------
-avnav.gui.Navpage.prototype.btnWpInfo=function(button,ev) {
+avnav.gui.Navpage.prototype.btnWpEdit=function(button,ev) {
     avnav.log("Edit clicked");
-    this.gui.showPage('wpinfopage');
+    if (! this.selectedWp) return;
+    this._wpOverlay.show(this.selectedWp);
 };
 
 avnav.gui.Navpage.prototype.btnWpGoto=function(button,ev) {

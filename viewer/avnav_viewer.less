@@ -776,8 +776,8 @@ button.avb_WpNext{
 button.avb_WpGoto {
   .avn_iconButton('images/icons-new/wpgoto.svg');
 }
-button.avb_WpInfo {
-  .avn_iconButton('images/icons-new/info.svg');
+button.avb_WpEdit {
+  .avn_iconButton('images/icons-new/ic_edit.svg');
 }
 
 
@@ -1131,6 +1131,9 @@ button.avb_AisInfoList {
   .nightBackFade(@routeApproachingColor);
 }
 
+#avi_wpinfo_box{
+  z-index: 121;
+}
 
 #avi_wpinfo_box button{
   float: right;
@@ -1750,7 +1753,9 @@ button.avb_MainAndroid{
   right: 0;
   bottom: 0;
   display:none;
-  overflow:hidden }
+  overflow:hidden;
+  z-index: 120;
+}
 .avn_overlay_cover_active {
   background-color: #000;
   opacity: 0.8;
