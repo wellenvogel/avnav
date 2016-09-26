@@ -71,6 +71,10 @@ avnav.gui.Page.prototype.selectOnPage=function(selector){
     return this.getDiv().find(selector);
 };
 
+avnav.gui.Page.prototype.getSelectOnPageString=function(selector){
+    return '#avi_'+this.name+" "+selector;
+};
+
 /**
  * show an element on the page
  * @param selector

@@ -31,7 +31,7 @@ avnav.gui.WpInfoPage=function(){
     this._router=undefined;
 
     var self=this;
-    this._overlay=new WpOverlay('#avi_wpinfo_overlay',{
+    this._overlay=new WpOverlay(this.getSelectOnPageString('.avn_overlay_cover'),{
        okCallback:function(){
            var close=self._updateWpFromEdit();
            return close;
