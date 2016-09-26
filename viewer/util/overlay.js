@@ -24,6 +24,9 @@ avnav.util.Overlay.prototype.showOverlayBox=function(){
     $(window).bind('resize',self.updateOverlayCb);
     this.updateOverlay();
 };
+avnav.util.Overlay.prototype.select=function(query){
+  return $(this.box).find(query);
+};
 
 avnav.util.Overlay.prototype.updateOverlay=function() {
     if( this.isOpen == false ) return;
