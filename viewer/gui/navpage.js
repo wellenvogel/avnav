@@ -663,14 +663,11 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
     avnav.log("LockMarker clicked");
     this.hideWpButtons();
-    var options = {};
     var center = this.navobject.getMapCenter();
     var wp = new avnav.nav.navdata.WayPoint();
     center.assign(wp);
     wp.name = 'Marker';
-    options.wp = wp;
-    options.newWp = true;
-    this.gui.showPage('wpinfopage', options);
+    this.navobject.getRoutingHandler().wpOn(wp);
 
 };
 avnav.gui.Navpage.prototype.btnStopNav=function (button,ev) {
