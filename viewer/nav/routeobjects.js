@@ -520,6 +520,7 @@ avnav.nav.Route.prototype._toWayPoint=function(newPoint) {
 };
 
 avnav.nav.RouteInfo=function(name,opt_server){
+    this.type="route";
     /**
      * the name of the route
      * @type {string}

@@ -507,7 +507,7 @@ all buttons with ids avb_... will call corresponding js functions
                   <div id="avi_route_info"></div>
               </div>
               <div id="avi_route_listhead">Other Routes (select to edit)</div>
-              <div id="avi_route_listcontainer" class="">
+              <div id="avi_route_listcontainer" class="avn_listcontainer">
                   <div class="avn_route_list_entry avn_hidden" id="avi_route_list_template">
                       <button class="avn_route_btnDelete avn_smallButton"></button>
                       <div class="avn_route_liststatimage"></div>
@@ -546,6 +546,47 @@ all buttons with ids avb_... will call corresponding js functions
       </div>
   </div>
   <!-- end route list Page-->
+  <!-- route edit Page -->
+  <div id="avi_routeeditpage" class="avn_page avn_hidden">
+      <div class='avn_panel avn_left_panel'>
+          <div class='avn_panel avn_left_top'>
+              <div class='avn_inner'>
+              </div>
+          </div>
+
+          <div class="avn_inner avn_panel avn_scrollable_page">
+              <div class="avn_headline">Routes</div>
+              <div class="avn_route_current">
+                  <label>Name (change to save as new)</label>
+                  <form>
+                      <input type="text" id="avi_route_edit_name"/>
+                  </form>
+                  <div class="avn_route_info"></div>
+              </div>
+              <div >Waypoints</div>
+              <div class="avn_listcontainer" >
+                  <div class="avn_list_entry avn_hidden avn_template" >
+                      <button class="avn_route_btnDelete avn_smallButton"></button>
+                      <div class="avn_route_liststatimage"></div>
+                      <div class="avn_route_listrasimage"></div>
+                      <div class="avn_route_listdate">22.07.2014</div>
+                      <div class="avn_route_listinfo">Greiswald-Ruden,17sm,20 Points</div>
+
+
+                  </div>
+              </div>
+          </div>
+
+      </div>
+      <div class='avn_panel avn_right_panel'>
+          <button  type="button"  class="avb_RoutePageOk avn_button"></button>
+          <button  type="button"  class="avb_RoutePageDownload avn_button"></button>
+          <button  type="button"  class="avb_NavInvert avn_button"></button>
+          <button  type="button"  class="avb_NavDeleteAll avn_button"></button>
+          <button  type="button"  class="avb_RoutePageCancel avn_button"></button>
+      </div>
+  </div>
+  <!-- end route edit Page-->
 
   <!-- download/upload Page -->
   <div id="avi_downloadpage" class="avn_page avn_hidden">
@@ -561,7 +602,7 @@ all buttons with ids avb_... will call corresponding js functions
               </div>
 
               <div id="avi_download_page_listhead">Tracks</div>
-              <div id="avi_download_page_listcontainer" class="">
+              <div id="avi_download_page_listcontainer" class="avn_listcontainer">
                   <div class="avn_download_list_entry avn_hidden" id="avi_download_list_template">
                       <button class="avn_download_btnDelete avn_smallButton"></button>
                       <button class="avn_download_btnDownload avn_smallButton"></button>

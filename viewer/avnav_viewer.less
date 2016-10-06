@@ -809,6 +809,7 @@ button.avb_WpEdit {
   padding-top: 5px;
   margin-right: 1em;
 }
+
 /*-------------------------------------------------------------
    routes page
 -------------------------------------------------------------*/
@@ -832,7 +833,7 @@ button.avb_WpEdit {
   border-bottom: 1px solid;
 }
 
-#avi_route_listcontainer {
+#avi_route_page .avn_listcontainer {
   .avm_listcontainer();
   top: 8.3em;
 
@@ -938,7 +939,7 @@ button.avb_RoutePageTracks{
   .avm_listhead();
 }
 
-#avi_download_page_listcontainer {
+#avi_download_page .avn_listcontainer {
   .avm_listcontainer();
   top: 3em;
 }
@@ -1006,6 +1007,13 @@ button.avb_RoutePageTracks{
   width: 20%;
 }
 
+.avn_download_active_entry{
+  .nightBackColor(rgba(128, 128, 128, 0.21));
+}
+
+.avn_download_active_entry .avn_download_btnDelete{
+  visibility: hidden;
+}
 
 button.avb_DownloadPageCancel{
   .avn_iconButton('images/icons-new/ic_clear.svg');

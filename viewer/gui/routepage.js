@@ -244,7 +244,7 @@ avnav.gui.Routepage.prototype.addRoutes=function(routeInfos){
     }
     this.routes.sort(this.sort);
 };
-avnav.gui.Routepage.prototype.updateDisplay=function(){
+avnav.gui.Routepage.prototype._updateDisplay=function(){
     var self=this;
     this.numLocalRoutes=0;
     $('#avi_route_name').val(this.currentName);
@@ -347,12 +347,12 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
     this.routes=[];
     var localRoutes=this.routingData.listRoutesLocal();
     this.addRoutes(localRoutes);
-    this.updateDisplay();
+    this._updateDisplay();
     if (! this.gui.properties.getProperties().readOnlyServer) {
         this.routingData.listRoutesServer(
             function (routingInfos, param) {
                 param.self.addRoutes(routingInfos);
-                param.self.updateDisplay();
+                param.self._updateDisplay();
             },
             function (err, param) {
                 alert("unable to load routes from server: " + err);
