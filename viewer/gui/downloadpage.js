@@ -265,12 +265,15 @@ avnav.gui.Downloadpage.prototype.displayInfo=function(id,info){
     }
     $('#'+this.idPrefix+id).find('.avn_download_listdate').text(timeText);
     var infoText=info.name;
+    var showRas=false;
     if (info.type == "route"){
         infoText+=","+this.formatter.formatDecimal(info.length,4,2)+
             " nm, "+info.numpoints+" points";
+        if (info.server) showRas=true;
     }
     $('#'+this.idPrefix+id).find('.avn_download_listinfo').text(infoText);
-
+    if (showRas) $('#'+this.idPrefix+id).find('.avn_download_listrasimage').show();
+    else  $('#'+this.idPrefix+id).find('.avn_download_listrasimage').hide();
 };
 
 avnav.gui.Downloadpage.prototype.sort = function (a, b) {
@@ -351,19 +354,28 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                     if (avnav.android){
                         if (info.type=="track") avnav.android.downloadTrack(info.name);
                         if (info.type == "route"){
-                            var route=self.routingData.getRouteByName(info.name);
-                            if (! route){
+                            self.routingData.fetchRoute(info.name,true,function(data){
+                                    avnav.android.downloadRoute(data.toJsonString());
+                            },
+                            function(err){
                                 avnav.util.Overlay.Toast("unable to get route "+info.name,5000);
-                            }
-                            else{
-                                avnav.android.downloadRoute(route.toJsonString());
-                            }
+                            });
                         }
                     }
                     else {
                         if (info.type == "track") self.download(info.url ? info.url : info.name);
                         else {
-                            if (info.type == "route") self.download(info.name);
+                            if (info.type == "route") {
+                                if (info.server) self.download(info.name);
+                                else{
+                                    self.routingData.fetchRoute(info.name,true,function(data){
+                                            self.download(info.name,undefined,data.toJsonString());
+                                        },
+                                        function(err){
+                                            avnav.util.Overlay.Toast("unable to get route "+info.name,5000);
+                                        });
+                                }
+                            }
                             else self.download(info.name + ".gemf", info.url);
                         }
                     }
@@ -463,16 +475,17 @@ avnav.gui.Downloadpage.prototype.fillDataRoutes=function(initial){
 };
 
 
-avnav.gui.Downloadpage.prototype.download=function(name,opt_url) {
+avnav.gui.Downloadpage.prototype.download=function(name,opt_url,opt_json) {
     avnav.log("download");
     if (!name || name == "") return;
     var filename=name;
     if (this.type == "route") filename+=".gpx";
     var f = $('#avi_download_downloadform')
         .attr('action', this.gui.properties.getProperties().navUrl + "/" + encodeURIComponent(filename));
-    $(f).find('input[name="name"]').val(name);
+    $(f).find('input[name="name"]').val(opt_json?"":name);
     $(f).find('input[name="url"]').val(opt_url || "");
     $(f).find('input[name="type"]').val(this.type);
+    $(f).find('input[name="_json"]').val(opt_json?opt_json:"");
     $(f).submit();
 
 };
