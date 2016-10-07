@@ -230,8 +230,20 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
  * @param {avnav.gui.FileInfo} info
  */
 avnav.gui.Downloadpage.prototype.displayInfo=function(id,info){
-    $('#'+this.idPrefix+id).find('.avn_download_listdate').text(this.formatter.formatDateTime(new Date(info.time*1000)));
-    $('#'+this.idPrefix+id).find('.avn_download_listinfo').text(info.name);
+    var timeText;
+    if (info.type == "route"){
+        timeText=this.formatter.formatDateTime(new Date(info.time));
+    }
+    else{
+        timeText=this.formatter.formatDateTime(new Date(info.time*1000));
+    }
+    $('#'+this.idPrefix+id).find('.avn_download_listdate').text(timeText);
+    var infoText=info.name;
+    if (info.type == "route"){
+        infoText+=","+this.formatter.formatDecimal(info.length,4,2)+
+            " nm, "+info.numpoints+" points";
+    }
+    $('#'+this.idPrefix+id).find('.avn_download_listinfo').text(infoText);
 
 };
 
