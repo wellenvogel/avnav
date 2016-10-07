@@ -489,65 +489,9 @@ all buttons with ids avb_... will call corresponding js functions
       </div>
   </div>
 
-  <!-- route list Page -->
+
+  <!-- route Page -->
   <div id="avi_routepage" class="avn_page avn_hidden">
-      <div class='avn_panel avn_left_panel'>
-          <div class='avn_panel avn_left_top'>
-              <div class='avn_inner'>
-              </div>
-          </div>
-
-          <div id='avi_route_page_inner' class="avn_panel avn_scrollable_page">
-              <div id="avi_routes_headline">Routes</div>
-              <div id="avi_route_current">
-                  <label>Name (change to save as new)</label>
-                  <form>
-                      <input type="text" id="avi_route_name"/>
-                  </form>
-                  <div id="avi_route_info"></div>
-              </div>
-              <div id="avi_route_listhead">Other Routes (select to edit)</div>
-              <div id="avi_route_listcontainer" class="avn_listcontainer">
-                  <div class="avn_route_list_entry avn_hidden" id="avi_route_list_template">
-                      <button class="avn_route_btnDelete avn_smallButton"></button>
-                      <div class="avn_route_liststatimage"></div>
-                      <div class="avn_route_listrasimage"></div>
-                      <div class="avn_route_listdate">22.07.2014</div>
-                      <div class="avn_route_listinfo">Greiswald-Ruden,17sm,20 Points</div>
-
-
-                  </div>
-              </div>
-          </div>
-
-      </div>
-      <div class='avn_panel avn_right_panel'>
-          <button  type="button"  class="avb_RoutePageCharts avn_button avn_routepage_optional"></button>
-          <button  type="button"  class="avb_RoutePageTracks avn_button avn_routepage_optional"></button>
-          <button  type="button"  class="avb_RoutePageRoutes avn_button avn_routepage_optional"></button>
-          <button  type="button"  class="avb_RoutePageOk avn_button"></button>
-          <button  type="button"  class="avb_RoutePageDownload avn_button"></button>
-          <button  type="button"  class="avb_RoutePageUpload avn_button"></button>
-          <button  type="button"  class="avb_NavInvert avn_button"></button>
-          <button  type="button"  class="avb_NavDeleteAll avn_button"></button>
-          <button  type="button"  class="avb_RoutePageCancel avn_button"></button>
-      </div>
-      <form id="avi_route_downloadform" class="avn_hidden" method="post" >
-          <input type="hidden" name="_json"/>
-          <input type="hidden" name="name"/>
-          <input type="hidden" name="request" value="download"/>
-          <input type="hidden" name="type" value="route"/>
-      </form>
-      <form id="avi_route_uploadform" class="avn_hidden" method="post">
-          <input type="file" id="avi_route_uploadfile" name="routefile"/>
-      </form>
-      <div class="avn_hidden">
-          <a href="" id="avi_route_localdownload" target="_blank"><span></span></a>
-      </div>
-  </div>
-  <!-- end route list Page-->
-  <!-- route edit Page -->
-  <div id="avi_routeeditpage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
           <div class='avn_panel avn_left_top'>
               <div class='avn_inner'>
@@ -565,13 +509,10 @@ all buttons with ids avb_... will call corresponding js functions
               </div>
               <div >Waypoints</div>
               <div class="avn_listcontainer" >
-                  <div class="avn_list_entry avn_hidden avn_template" >
+                  <div class="avn_list_entry avn_hidden avn_template" id="avi_route_list_template">
                       <button class="avn_route_btnDelete avn_smallButton"></button>
-                      <div class="avn_route_liststatimage"></div>
-                      <div class="avn_route_listrasimage"></div>
                       <div class="avn_route_listname">Wp1</div>
                       <div class="avn_route_listinfo">---</div>
-
 
                   </div>
               </div>
@@ -586,7 +527,7 @@ all buttons with ids avb_... will call corresponding js functions
           <button  type="button"  class="avb_RoutePageCancel avn_button"></button>
       </div>
   </div>
-  <!-- end route edit Page-->
+  <!-- end route Page-->
 
   <!-- download/upload Page -->
   <div id="avi_downloadpage" class="avn_page avn_hidden">
