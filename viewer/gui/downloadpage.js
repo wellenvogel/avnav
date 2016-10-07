@@ -79,6 +79,20 @@ avnav.gui.Downloadpage=function(){
      * @type {avnav.nav.RouteData}
      */
     this.routingData=undefined;
+    /**
+     * allow to change the type of data we show
+     * @private
+     * @type {boolean}
+     */
+    this.allowChange=true;
+
+    /**
+     * set a callback that should be executed when selecting an item
+     * parameter will be the item info
+     * @private
+     * @type {function}
+     */
+    this.selectItemCallback=undefined;
 
 };
 avnav.inherits(avnav.gui.Downloadpage,avnav.gui.Page);
@@ -197,6 +211,12 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
     if(options && options.downloadtype){
         this.type=options.downloadtype;
     }
+    if(options && options.allowChange !== undefined){
+        this.allowChange=options.allowChange;
+    }
+    if(options && options.selectItemCallback !== undefined){
+        this.selectItemCallback=options.selectItemCallback;
+    }
     $('#avi_download_page_listhead').text(this.headlines[this.type]);
     if (this.type == "chart"){
         if (avnav.android||this.gui.properties.getProperties().onAndroid) this.selectOnPage('.avb_DownloadPageUpload').hide();
@@ -217,8 +237,14 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
         this.handleToggleButton('.avb_DownloadPageTracks',false);
         this.handleToggleButton('.avb_DownloadPageRoutes',true);
     }
-    if (!this.gui.properties.getProperties().connectedMode){
+    if (!this.gui.properties.getProperties().connectedMode && this.type != "route"){
         this.selectOnPage('.avb_DownloadPageUpload').hide();
+    }
+    if ( this.allowChange){
+        this.selectOnPage('.avn_changeDownload').show();
+    }
+    else{
+        this.selectOnPage('.avn_changeDownload').show();
     }
     this.fillData(true);
     this.hideProgress();
@@ -347,6 +373,11 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
         }
         else {
             $('#' + this.idPrefix + id).find('.avn_download_btnDownload').hide();
+        }
+        if (self.selectItemCallback){
+            $('#' + this.idPrefix + id).on('click',null,{item:self.files[id]},function(ev){
+                self.selectItemCallback(ev.data.item);
+            });
         }
     }
 
