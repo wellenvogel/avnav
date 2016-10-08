@@ -95,7 +95,7 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
             .attr("wpidx",id)
             .addClass(this.visibleListEntryClass)
             .show()
-            .insertAfter('#avi_routepage .avn_list_entry:last');
+            .insertAfter('#avi_routepage .avn_route_list_entry:last');
         this.displayInfo(id,wp);
         $('#routeInfo-' + id).find('.avn_route_btnDelete').on('click', null, {id: id}, function (ev) {
             ev.preventDefault();
@@ -118,8 +118,9 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
 
 avnav.gui.Routepage.prototype.fillData=function(initial){
     if (initial) {
-        this.currentRoute = this.routingData.getEditingRoute();
+        this.currentRoute = this.routingData.getEditingRoute().clone();
         this.initialName = this.currentRoute.name;
+        $('#avi_route_edit_name').val(this.initialName);
     }
     this._updateDisplay();
 };
@@ -146,7 +147,11 @@ avnav.gui.Routepage.prototype.goBack=function(){
 
 avnav.gui.Routepage.prototype.storeRoute=function(){
     if (! this.currentRoute) return;
-    this.routingData.saveRoute(this.currentRoute);
+    if ( this.currentRoute.name != this.initialName){
+        this.routingData.changeRouteName(this.currentRoute.name);
+    }
+    this.routingData.setNewEditingRoute(this.currentRoute);
+    this.initialName=this.currentRoute.name;
 };
 //-------------------------- Buttons ----------------------------------------
 
@@ -159,12 +164,13 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
         //check if a route with this name already exists
         this.routingData.fetchRoute(this.currentRoute.name,false,
         function(data){
-            avnav.util.Overlay.Toast("route with name "+info.name+" already exists",5000);
+            avnav.util.Overlay.Toast("route with name "+name+" already exists",5000);
         },
         function(er){
             self.storeRoute();
             self.gui.returnToLast();
         });
+        return;
     }
     this.storeRoute();
     this.gui.returnToLast();
