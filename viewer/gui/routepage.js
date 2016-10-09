@@ -87,6 +87,12 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
     $('#avi_route_name').val("");
     $("."+this.visibleListEntryClass).remove();
     if (! this.currentRoute) return;
+    if (this.routingData.isActiveRoute(this.currentRoute.name)){
+        $('#avi_routes_headline').text("Edit Active Route").addClass('avn_active_route');
+    }
+    else{
+        $('#avi_routes_headline').text("Edit Inactive Route").removeClass('avn_active_route');
+    }
     $('#avi_route_name').val(this.currentRoute.name);
     for (id=0;id<this.currentRoute.points.length;id++){
         var wp=this.currentRoute.getPointAtIndex(id);
@@ -121,6 +127,7 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
         this.currentRoute = this.routingData.getEditingRoute().clone();
         this.initialName = this.currentRoute.name;
         $('#avi_route_edit_name').val(this.initialName);
+
     }
     this._updateDisplay();
 };

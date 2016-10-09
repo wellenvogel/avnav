@@ -822,6 +822,9 @@ button.avb_WpEdit {
   padding-top: 0.3em;
   padding-bottom: 0.3em;
 }
+.avn_active_route{
+  .nightForeColor(@routeApproachingColor);
+}
 #avi_route_current label{
   font-size: 0.8em;
 }
@@ -861,17 +864,6 @@ button.avb_WpEdit {
 }
 
 
-
-@listrasimagesize: 20px;
-.avn_route_liststatimage{
-  width: @listrasimagesize;
-  height: @listrasimagesize;
-  background-size: contain;
-  float: right;
-}
-
-
-
 .avn_route_list_row{
 
 }
@@ -892,21 +884,7 @@ button.avb_RoutePageCancel{
 button.avb_RoutePageDownload{
   .avn_iconButton('images/icons-new/ic_file_download.svg');
 }
-button.avb_RoutePageUpload{
-  .avn_iconButton('images/icons-new/ic_file_upload.svg');
-}
-button.avb_RoutePageDelete{
-  .avn_iconButton('images/icons-new/ic_delete.svg');
-}
-button.avb_RoutePageRoutes{
-  .avn_iconButton('images/icons-new/route.svg');
-}
-button.avb_RoutePageCharts{
-  .avn_iconButton('images/icons-new/map2.svg');
-}
-button.avb_RoutePageTracks{
-  .avn_iconButton('images/icons-new/track.svg');
-}
+
 .avn_route_btnDelete{
   .avn_iconButton('images/icons-new/ic_delete.svg');
   vertical-align: middle;

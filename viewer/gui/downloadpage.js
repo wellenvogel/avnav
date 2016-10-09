@@ -244,7 +244,7 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
         this.selectOnPage('.avn_changeDownload').show();
     }
     else{
-        this.selectOnPage('.avn_changeDownload').show();
+        this.selectOnPage('.avn_changeDownload').hide();
     }
     this.fillData(true);
     this.hideProgress();
