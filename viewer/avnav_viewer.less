@@ -41,10 +41,7 @@
   flex:  @values;
 }
 
-.reactContainer{
-  width: 100%;
-  height: 100%;
-}
+
 
 /*-------------------------------------------------------------
    night struff
@@ -535,10 +532,16 @@ html,body {
   bottom: 0;
   top: @routeInfoHeaderHeight;
   right: 0;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
 }
 
+#avi_route_info_list .reactContainer{
+  width: 100%;
+  height:100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 .avn_route_info_point{
   border-bottom: 1px solid black;
   padding-left: 0.1em;
