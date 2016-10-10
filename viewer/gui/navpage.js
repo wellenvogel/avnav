@@ -394,6 +394,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
             else {
                 this.navobject.getRoutingHandler().setEditingWp(wp);
             }
+            this.updateRoutePoints();
         }
         else{
             this.gui.showPage("wpinfopage",{wp:wp});
@@ -559,6 +560,10 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
         });
     }
     else {
+        this.waypointList.setState({
+            selectedIdx: active,
+            showLatLon: this.gui.properties.getProperties().routeShowLL
+        });
         //update
     }
     $('#avi_route_info_list').find('.avn_route_info_point').each(function(i,el){

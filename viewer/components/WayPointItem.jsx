@@ -10,10 +10,9 @@ module.exports=React.createClass({
         latlon: React.PropTypes.string,
         course: React.PropTypes.string,
         distance: React.PropTypes.string,
+        addClass: React.PropTypes.string,
         showLatLon: React.PropTypes.bool,
-        onClick:    React.PropTypes.func.isRequired,
-        centered: React.PropTypes.bool,
-        selected: React.PropTypes.bool
+        onClick:    React.PropTypes.func.isRequired
     },
     getDefaultProps(){
         return{
@@ -28,19 +27,13 @@ module.exports=React.createClass({
             info=<div className="avn_route_point_course">{this.props.course}&#176;/{this.props.distance}nm</div>;
         }
         var classNames="avn_route_info_point "+this.props.addClass||"";
-        if (this.props.centered)classNames+=" avn_route_info_centered";
-        if (this.props.selected)classNames+=" avn_route_info_active_point";
         return(
-        <div className={classNames} onClick={this.clickHandler} data-waypoint-idx={this.props.idx}>
+        <div className={classNames} onClick={this.props.onClick} data-waypoint-idx={this.props.idx}>
             <div className="avn_route_info_name">{this.props.name}</div>
             <span className="avn_more"></span>
             {info}
         </div>
         );
 
-    },
-    clickHandler: function(event){
-        event.preventDefault();
-        return this.props.onClick(event);
     }
 });

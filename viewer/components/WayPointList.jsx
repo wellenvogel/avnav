@@ -21,12 +21,16 @@ module.exports=React.createClass({
         var waypoints=this.state.waypoints||[];
         var self=this;
         return(
-            <div>
+            <div className="reactContainer">
                 { waypoints.map(function (entry) {
                     var selected=entry.idx == self.state.selectedIdx;
                     var centered=entry.idx == self.state.centeredIdx;
+                    var addClass="";
+                    if (selected) addClass+=" avn_route_info_active_point";
+                    if (centered) addClass+=" avn_route_info_centered";
                     if (self.state.showLatLon) entry.showLatLon=true;
                     var clickHandler=function(ev){
+                        ev.preventDefault();
                         self.props.onClick(entry.idx,{
                             centered:centered,
                             selected: selected
@@ -36,8 +40,7 @@ module.exports=React.createClass({
 
                     return <Item {...entry}
                         onClick={clickHandler}
-                        selected={selected}
-                        centered={selected}
+                        addClass={addClass}
                     ></Item>;
                 })}
             </div>
