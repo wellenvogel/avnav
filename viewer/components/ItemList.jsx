@@ -11,6 +11,7 @@ module.exports=React.createClass({
     propTypes:{
         onClick:    React.PropTypes.func.isRequired,
         itemClass:  React.PropTypes.func.isRequired,
+        updateCallback: React.PropTypes.func,
         selectors:  React.PropTypes.object
     },
     getInitialState: function(){
@@ -64,13 +65,18 @@ module.exports=React.createClass({
         );
 
     },
+    componentDidUpdate: function(prevProp,prevState){
+        if (this.props.updateCallback){
+            this.props.updateCallback();
+        }
+    },
     /**
      * be sure to call this only once before an new render has been done
      * @param idx
      * @param selector
      * @returns {boolean}
      */
-    selectItem: function(idx: Number,selectors: Array){
+    setSelectors: function(idx: Number, selectors: Array){
         if (! selectors) return;
         var nsel=avnav.clone(this.state.selectors);
         for (var i=0;i<selectors.length;i++) {
