@@ -86,8 +86,10 @@ avnav.provide = function (name) {
  */
 avnav.clone = function (obj) {
     var res = {};
-    for (var key in obj) {
-        res[key] = obj[key];
+    if (obj) {
+        for (var key in obj) {
+            res[key] = obj[key];
+        }
     }
     return res;
 };

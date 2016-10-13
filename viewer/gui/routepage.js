@@ -94,7 +94,7 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
         $('#avi_routes_headline').text("Edit Inactive Route").removeClass('avn_active_route');
     }
     $('#avi_route_name').val(this.currentRoute.name);
-    for (id=0;id<this.currentRoute.points.length;id++){
+    for (var id=0;id<this.currentRoute.points.length;id++){
         var wp=this.currentRoute.getPointAtIndex(id);
         $('#avi_route_list_template').clone()
             .attr("id","routeInfo-"+id)

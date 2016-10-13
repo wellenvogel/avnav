@@ -11,8 +11,7 @@ module.exports=React.createClass({
         course: React.PropTypes.string,
         distance: React.PropTypes.string,
         addClass: React.PropTypes.string,
-        onClick:    React.PropTypes.func.isRequired,
-        onDeleteClick: React.PropTypes.func.isRequired
+        onClick:    React.PropTypes.func.isRequired
     },
     getDefaultProps(){
         return{
@@ -20,10 +19,12 @@ module.exports=React.createClass({
     },
     render: function(){
         var info;
+        var self=this;
         var classNames="avn_route_list_entry "+this.props.addClass||"";
         return(
         <div className={classNames} onClick={this.props.onClick} data-waypoint-idx={this.props.idx}>
-            <button className="avn_route_btnDelete avn_smallButton" onClick={this.props.onDeleteClick}></button>
+            <button className="avn_route_btnDelete avn_smallButton"
+                    onClick={function(ev){self.props.onClick(ev,'btnDelete');}}></button>
             <div className="avn_route_listname">{this.props.name}</div>
             <div class="avn_route_listinfo">{this.props.latlon},{this.props.course}}&#176;/{this.props.distance}nm</div>
         </div>

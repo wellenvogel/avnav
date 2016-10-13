@@ -5,6 +5,7 @@ var WpOverlay=require('./wpoverlay.js');
 var React=require('react');
 var ReactDOM=require('react-dom');
 var WaypointList=require('../components/WayPointList.jsx');
+var WaypointItem=require('../components/WayPointItem.jsx');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -288,8 +289,13 @@ avnav.gui.Navpage.prototype.localInit=function(){
         }
     });
     var list=React.createElement(WaypointList, {
-        onClick:function(idx,ev){
-            self.waypointClicked(idx,ev);
+        onClick:function(idx,opt_data){
+            self.waypointClicked(idx,opt_data);
+        },
+        itemClass:WaypointItem,
+        selectors:{
+            selected: 'avn_route_info_active_point',
+            centered: 'avn_route_info_centered'
         }
     });
     this.waypointList=ReactDOM.render(list,document.getElementById('avi_route_info_list'));
@@ -517,18 +523,17 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
 };
 
 avnav.gui.Navpage.prototype.waypointClicked=function(idx,options){
+    if (options.item && options.item != 'main') return;
     this.navobject.getRoutingHandler().setEditingWpIdx(idx);
-    var update={
-        selectedIdx:idx
-    };
+    var selectors=['selected'];
     if (! options.centered) {
         this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());
-        update.centeredIdx=idx;
+        selectors.push('centered');
     }
     if (options.selected && options.centered){
         this.gui.showPage("wpinfopage",{wp:this.navobject.getRoutingHandler().getEditingWp()});
     }
-    this.waypointList.setState(update);
+    this.waypointList.selectItem(idx,selectors);
 };
 
 avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActive){
@@ -554,18 +559,17 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
     if (rebuild){
         var waypoints=route.getFormattedPoints();
         this.waypointList.setState({
-            waypoints:waypoints,
-            selectedIdx: active,
-            showLatLon: this.gui.properties.getProperties().routeShowLL
+            itemList:waypoints,
+            options: {showLatLon: this.gui.properties.getProperties().routeShowLL}
         });
     }
     else {
         this.waypointList.setState({
-            selectedIdx: active,
-            showLatLon: this.gui.properties.getProperties().routeShowLL
+            options:{showLatLon: this.gui.properties.getProperties().routeShowLL}
         });
         //update
     }
+    this.waypointList.selectItem(active,'selected');
     $('#avi_route_info_list').find('.avn_route_info_point').each(function(i,el){
         var txt=route.points[i].name?route.points[i].name:i+"";
         if (i == active) {
