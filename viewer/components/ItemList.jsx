@@ -52,6 +52,7 @@ module.exports=React.createClass({
                     }
                     var clickHandler=function(ev,opt_item){
                         ev.preventDefault();
+                        ev.stopPropagation();
                         var clOpts=avnav.clone(opts);
                         if (opt_item) clOpts.item=opt_item;
                         self.props.onClick(entry.idx,clOpts);
