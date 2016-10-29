@@ -21,6 +21,7 @@ apply plugin: 'java'
 apply plugin: 'nebula.ospackage-base'
 
 
+def versionFileName="raspi.version"
 ospackage {
     //release='3'
     os = LINUX // only applied to RPM
@@ -50,7 +51,7 @@ ospackage {
     }
     into ('/usr/lib/avnav/raspberry') {
         from(project.buildDir){
-            include "raspi.version"
+            include versionFileName
         }
     }
     into('/usr/lib/systemd/system/avnav.service.d'){
@@ -120,6 +121,10 @@ task raspiDeb(type: Deb) {
     group taskgroup
     doFirst{
         version=project.packageVersion
+        def vFile=file("$buildDir/$versionFileName")
+        vFile.withWriter {wr->
+            wr.println "AVNAV_VERSION=\"$version\""
+        }
     }
 }
 
