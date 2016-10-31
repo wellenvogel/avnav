@@ -109,6 +109,11 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
         $('#avi_routes_headline').text("Edit Inactive Route").removeClass('avn_active_route');
     }
     $('#avi_route_name').val(this.currentRoute.name);
+    var info="";
+    var len=avnav.nav.NavCompute.computeRouteLength(0,this.currentRoute);
+    info=this.formatter.formatDecimal(this.currentRoute.points.length,2,0)+
+            " Points, "+this.formatter.formatDecimal(len,6,2)+" nm";
+    this.selectOnPage('.avn_route_info').text(info);
     var waypoints=this.currentRoute.getFormattedPoints();
     var active=this.navobject.getRoutingHandler().getEditingWpIdx();
     this.waypointList.setState({

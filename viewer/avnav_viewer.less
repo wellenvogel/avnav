@@ -814,12 +814,13 @@ button.avb_WpEdit {
   overflow: hidden;
   position: relative;
   border-bottom: 1px solid;
-  padding-top: 5px;
   margin-right: 1em;
+  padding-bottom: 0.5em;
+  padding-top: 0.5em;
 }
 
 /*-------------------------------------------------------------
-   routes page
+   route page
 -------------------------------------------------------------*/
 #avi_route_page_inner{
   .avm_listpage();
@@ -853,26 +854,39 @@ button.avb_WpEdit {
 
 #avi_routepage .avn_listcontainer {
   .avm_listcontainer();
-  top: 8.3em;
+  top: 9.6em;
   border-top: 1px solid;
 
 }
 
+#avi_routepage .avn_route_info{
+  margin-top: 0.3em;
+}
 #avi_routepage .avn_route_info_active_point{
   .nightBackColor(rgba(0, 0, 0, 0.25));
 }
+
+#avi_route_current label{
+  display: block;
+  margin-bottom: 0.5em;
+}
+#avi_route_current input{
+  width: 70%;
+}
+
 .avn_route_list_entry{
   .avm_list_entry();
+
 }
 .avn_route_listinfo{
   padding-left: 1.5em;
   display: inline-block;
-  margin-bottom: 0.5em;
-  margin-top: 0.5em;
+
 }
 .avn_route_listname{
   display: inline-block;
   width: 11.5em;
+  margin-left: 1em;
   opacity: 0.6;
 }
 
@@ -940,12 +954,10 @@ button.avb_RoutePageDownload{
 .avn_download_listinfo{
   padding-left: 3em;
   display: inline-block;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
 }
 .avn_download_listdate{
   display: inline-block;
-  margin-left: 0.5em;
+  margin-left: 1em;
   width: 11.5em;
   opacity: 0.6;
 }
@@ -953,7 +965,6 @@ button.avb_RoutePageDownload{
 .avn_download_btnDelete{
   vertical-align: middle;
   display: inline-block;
-  margin: 1em 1em 1em 1em;
 }
 
 .avn_download_btnDownload{

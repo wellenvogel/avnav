@@ -26,7 +26,7 @@ module.exports=React.createClass({
             <button className="avn_route_btnDelete avn_smallButton"
                     onClick={function(ev){self.props.onClick(ev,'btnDelete');}}></button>
             <div className="avn_route_listname">{this.props.name}</div>
-            <div className="avn_route_listinfo">{this.props.latlon},{this.props.course}&#176;/{this.props.distance}nm</div>
+            <div className="avn_route_listinfo">{this.props.latlon},&nbsp;>{this.props.course}&#176;/{this.props.distance}nm</div>
         </div>
         );
     }
