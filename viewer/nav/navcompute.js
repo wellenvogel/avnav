@@ -189,7 +189,7 @@ avnav.nav.NavCompute.computeLegInfo=function(target,gps,opt_start){
             Math.abs(markerdst.course - (gps.course + 360)));
         if (gps.rtime && coursediff <= 85) {
             //TODO: is this really correct for VMG?
-            vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
+            var vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
             //vmgapp is in kn
             var targettime = gps.rtime.getTime();
             rt.markerVmg = vmgapp;
