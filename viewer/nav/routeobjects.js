@@ -547,4 +547,35 @@ avnav.nav.RouteInfo=function(name,opt_server){
      */
     this.time=0;
 };
+avnav.nav.FormattedPoint=function(){
+    this.idx=0;
+    this.name="";
+    this.latlon="---";
+    this.course="---";
+    this.distance="---";
+};
+/**
+ * get a list of formatted waypoint info
+ * @returns {avnav.nav.FormattedPoint[]}
+ */
+avnav.nav.Route.prototype.getFormattedPoints=function(){
+    var rt=[];
+    var i=0;
+    var formatter=new avnav.util.Formatter();
+    for (i=0;i<this.points.length;i++){
+        var formatted=new avnav.nav.FormattedPoint();
+        formatted.idx=i;
+        formatted.name=this.points[i].name?this.points[i].name:i+"";
+        formatted.course="---";
+        formatted.distance="---";
+        formatted.latlon=formatter.formatLonLats(this.points[i]);
+        if (i>0) {
+            var dst=avnav.nav.NavCompute.computeDistance(this.points[i-1],this.points[i]);
+            formatted.course=formatter.formatDecimal(dst.course,3,0);
+            formatted.distance=formatter.formatDecimal(dst.dtsnm,3,1);
+        }
+        rt.push(formatted);
+    }
+    return rt;
+};
 

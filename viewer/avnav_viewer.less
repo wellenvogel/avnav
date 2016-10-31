@@ -41,6 +41,8 @@
   flex:  @values;
 }
 
+
+
 /*-------------------------------------------------------------
    night struff
    night mode is activated by adding .nightMode to the body
@@ -530,10 +532,16 @@ html,body {
   bottom: 0;
   top: @routeInfoHeaderHeight;
   right: 0;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
 }
 
+#avi_route_info_list .avn_listContainer {
+  width: 100%;
+  height:100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 .avn_route_info_point{
   border-bottom: 1px solid black;
   padding-left: 0.1em;
@@ -545,7 +553,7 @@ html,body {
 }
 
 .avn_route_info_active_point{
-    background-color: @routeApproachingColor !important;
+    .nightBackFade(@routeApproachingColor );
 }
 
 #avi_route_info_list .avn_route_info_centered .avn_more{
@@ -806,15 +814,20 @@ button.avb_WpEdit {
   overflow: hidden;
   position: relative;
   border-bottom: 1px solid;
-  padding-top: 5px;
   margin-right: 1em;
+  padding-bottom: 0.5em;
+  padding-top: 0.5em;
 }
 
 /*-------------------------------------------------------------
-   routes page
+   route page
 -------------------------------------------------------------*/
 #avi_route_page_inner{
   .avm_listpage();
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 #avi_routes_headline{
   font-size: 1.2em;
@@ -836,26 +849,44 @@ button.avb_WpEdit {
 }
 #avi_route_listhead{
   margin-top: 10px;
-  border-bottom: 1px solid;
+
 }
 
-#avi_route_page .avn_listcontainer {
+#avi_routepage .avn_listcontainer {
   .avm_listcontainer();
-  top: 8.3em;
+  top: 9.6em;
+  border-top: 1px solid;
 
 }
+
+#avi_routepage .avn_route_info{
+  margin-top: 0.3em;
+}
+#avi_routepage .avn_route_info_active_point{
+  .nightBackColor(rgba(0, 0, 0, 0.25));
+}
+
+#avi_route_current label{
+  display: block;
+  margin-bottom: 0.5em;
+}
+#avi_route_current input{
+  width: 70%;
+}
+
 .avn_route_list_entry{
   .avm_list_entry();
+
 }
 .avn_route_listinfo{
   padding-left: 1.5em;
   display: inline-block;
-  margin-bottom: 0.5em;
-  margin-top: 0.5em;
+
 }
 .avn_route_listname{
   display: inline-block;
   width: 11.5em;
+  margin-left: 1em;
   opacity: 0.6;
 }
 
@@ -923,12 +954,10 @@ button.avb_RoutePageDownload{
 .avn_download_listinfo{
   padding-left: 3em;
   display: inline-block;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
 }
 .avn_download_listdate{
   display: inline-block;
-  margin-left: 0.5em;
+  margin-left: 1em;
   width: 11.5em;
   opacity: 0.6;
 }
@@ -936,7 +965,6 @@ button.avb_RoutePageDownload{
 .avn_download_btnDelete{
   vertical-align: middle;
   display: inline-block;
-  margin: 1em 1em 1em 1em;
 }
 
 .avn_download_btnDownload{
@@ -1737,21 +1765,18 @@ button.avb_MainAndroid{
 
 
 /*------- simple modal -----------------------*/
-.avn_overlay_cover {
-  background:#000;
+
+.avn_overlay_cover_active {
+  background-color: #000;
+  opacity: 0.8;
+  display: block;
   position:absolute;
   left:0;
   top:0;
   right: 0;
   bottom: 0;
-  display:none;
   overflow:hidden;
   z-index: 120;
-}
-.avn_overlay_cover_active {
-  background-color: #000;
-  opacity: 0.8;
-  display: block;
 }
 
 .avn_toast {

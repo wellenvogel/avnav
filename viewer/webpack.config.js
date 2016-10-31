@@ -70,7 +70,7 @@ module.exports = {
     },
     module: {
         loaders: [
-            /*
+
             {
                 test: /.jsx$|.js$/,
                 exclude: /node_modules/,
@@ -80,7 +80,7 @@ module.exports = {
                 }
 
             },
-            */
+
             {
                 test: /\.css$/,
                 loader: ExtractTextPlugin.extract("style-loader","css-loader")

@@ -31,18 +31,19 @@ avnav.gui.WpInfoPage=function(){
     this._router=undefined;
 
     var self=this;
-    this._overlay=new WpOverlay(this.getSelectOnPageString('.avn_overlay_cover'),{
-       okCallback:function(){
-           var close=self._updateWpFromEdit();
-           return close;
-       }
-    });
+    this._overlay=undefined;
 };
 avnav.inherits(avnav.gui.WpInfoPage,avnav.gui.Page);
 
 avnav.gui.WpInfoPage.prototype.localInit=function(){
     var self=this;
     this._router=this.navobject.getRoutingHandler();
+    this._overlay=new WpOverlay(this.selectOnPage('.avn_left_panel'),{
+        okCallback:function(){
+            var close=self._updateWpFromEdit();
+            return close;
+        }
+    });
     $('#avi_wpinfo_box').click(function(ev){
         return false;
     });

@@ -2,6 +2,10 @@
  * Created by andreas on 02.05.14.
  */
 var WpOverlay=require('./wpoverlay.js');
+var React=require('react');
+var ReactDOM=require('react-dom');
+var WaypointList=require('../components/ItemList.jsx');
+var WaypointItem=require('../components/WayPointItem.jsx');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -76,6 +80,8 @@ avnav.gui.Navpage=function(){
 
 
     this.showRouteOnReturn=false;
+
+    this.waypointList=undefined;
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
@@ -282,7 +288,20 @@ avnav.gui.Navpage.prototype.localInit=function(){
             return close;
         }
     });
-
+    var list=React.createElement(WaypointList, {
+        onClick:function(idx,opt_data){
+            self.waypointClicked(idx,opt_data);
+        },
+        itemClass:WaypointItem,
+        selectors:{
+            selected: 'avn_route_info_active_point',
+            centered: 'avn_route_info_centered'
+        },
+        updateCallback: function(){
+            self.scrollRoutePoints();
+        }
+    });
+    this.waypointList=ReactDOM.render(list,document.getElementById('avi_route_info_list'));
 };
 
 
@@ -384,6 +403,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
             else {
                 this.navobject.getRoutingHandler().setEditingWp(wp);
             }
+            this.updateRoutePoints();
         }
         else{
             this.gui.showPage("wpinfopage",{wp:wp});
@@ -497,15 +517,42 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
     else{
         $('#avi_nav_bottom').addClass('avn_bottom_1rows').removeClass('avn_bottom_2rows');
     }
+    var self=this;
     window.setTimeout(function(){
         var rtop=$('#avi_nav_bottom').outerHeight();
         $('#avi_navLeftContainer').css('bottom',rtop+"px");
         $('#avi_navpage_wpbuttons').css('bottom',rtop+"px");
         $('#avi_route_info_navpage').css('bottom',rtop+"px");
+        self.scrollRoutePoints();
     },0);
 };
 
+avnav.gui.Navpage.prototype.waypointClicked=function(idx,options){
+    if (options.item && options.item != 'main') return;
+    this.navobject.getRoutingHandler().setEditingWpIdx(idx);
+    var selectors=['selected'];
+    if (! options.centered) {
+        this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());
+        selectors.push('centered');
+    }
+    if (options.selected && options.centered){
+        this.gui.showPage("wpinfopage",{wp:this.navobject.getRoutingHandler().getEditingWp()});
+    }
+    this.waypointList.setSelectors(idx,selectors);
+};
 
+avnav.gui.Navpage.prototype.scrollRoutePoints=function(){
+    $('#avi_route_info_list').find('.avn_route_info_point').each(function(i,el){
+        if ($(el).hasClass('avn_route_info_active_point')) {
+            //ensure element is visible
+            var eltop = $(el).position().top;
+            var ph = $('#avi_route_info_list').height();
+            var eh = $(el).height();
+            if (eltop < 0)el.scrollIntoView(true);
+            if ((eltop + eh) > (ph)) el.scrollIntoView(false);
+        }
+    });
+};
 avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActive){
     var editingActiveRoute=this.navobject.getRoutingHandler().isEditingActiveRoute();
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
@@ -522,84 +569,24 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
         return;
     }
     var active=this.navobject.getRoutingHandler().getEditingWpIdx();
-    var i;
     var self=this;
-    var curlen=$('#avi_route_info_list').find('.avn_route_info_point').length;
     var rebuild=opt_force||false;
     if (! rebuild) rebuild=this.lastRoute.differsTo(route);
     this.lastRoute=route.clone();
     if (rebuild){
-        //rebuild
-        for (i=0;i<route.points.length;i++){
-            html+='<div class="avn_route_info_point ';
-            html+='">';
-            html+='<div class="avn_route_info_name" />';
-            html+='<span class="avn_more"></span>'
-            if (this.gui.properties.getProperties().routeShowLL) {
-                html += '<div class="avn_route_point_ll">';
-            }
-            else{
-                html += '<div class="avn_route_point_course">';
-            }
-            html+='</div>';
-            html+='</div>';
-        }
-        $('#avi_route_info_list').html(html);
-        rebuild=true;
+        var waypoints=route.getFormattedPoints();
+        this.waypointList.setState({
+            itemList:waypoints,
+            options: {showLatLon: this.gui.properties.getProperties().routeShowLL}
+        });
     }
     else {
+        this.waypointList.setState({
+            options:{showLatLon: this.gui.properties.getProperties().routeShowLL}
+        });
         //update
     }
-    $('#avi_route_info_list').find('.avn_route_info_point').each(function(i,el){
-        var txt=route.points[i].name?route.points[i].name:i+"";
-        if (i == active) {
-            $(el).addClass('avn_route_info_active_point');
-            if (rebuild){
-                el.scrollIntoView();
-            }
-            else {
-                //ensure element is visible
-                var eltop = $(el).position().top;
-                var ph = $('#avi_route_info_list').height();
-                var eh = $(el).height();
-                if (eltop < 0)el.scrollIntoView(true);
-                if ((eltop + eh) > (ph)) el.scrollIntoView(false);
-            }
-            if (opt_centerActive){
-                self.getMap().setCenter(self.navobject.getRoutingHandler().getEditingWp());
-                $(el).addClass('avn_route_info_centered');
-            }
-        }
-        else {
-            $(el).removeClass('avn_route_info_active_point');
-            $(el).removeClass('avn_route_info_centered');
-        }
-        $(el).find('.avn_route_info_name').text(txt);
-        $(el).find('.avn_route_point_ll').html(self.formatter.formatLonLats(route.points[i]));
-        var courseLen="--- &#176;/ ---- nm";
-        if (i>0) {
-            var dst=avnav.nav.NavCompute.computeDistance(route.points[i-1],route.points[i]);
-            courseLen=self.formatter.formatDecimal(dst.course,3,0)+" &#176;/ ";
-            courseLen+=self.formatter.formatDecimal(dst.dtsnm,3,1)+" nm";
-        }
-        $(el).find('.avn_route_point_course').html(courseLen);
-        var idx=i;
-        if (rebuild) {
-            $(el).click(function (ev) {
-                var isActive=( $(this).hasClass('avn_route_info_active_point'));
-                var isCentered=$(this).hasClass('avn_route_info_centered');
-                self.navobject.getRoutingHandler().setEditingWpIdx(idx);
-                if (! isCentered) {
-                    self.getMap().setCenter(self.navobject.getRoutingHandler().getEditingWp());
-                    $(this).addClass('avn_route_info_centered');
-                }
-                if (isActive && isCentered){
-                    self.gui.showPage("wpinfopage",{wp:self.navobject.getRoutingHandler().getEditingWp()});
-                }
-                ev.preventDefault();
-            });
-        }
-    });
+    this.waypointList.setSelectors(active,['selected']);
 };
 
 

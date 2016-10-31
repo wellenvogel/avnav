@@ -15,7 +15,7 @@ avnav.gui.Wpapage=function(){
     this.indexMap={}; //map an index to ssid
     this.overlay=new avnav.util.Overlay({
         box: '#avi_wpa_box',
-        cover: '#avi_wpa_overlay'
+        cover: '#avi_wpa_page_inner'
     });
     this.timeout=4000;
     this.numErrors=0;

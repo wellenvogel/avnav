@@ -2,6 +2,11 @@
  * Created by andreas on 02.05.14.
  */
 avnav.provide('avnav.gui.Routepage');
+var React=require('react');
+var ReactDOM=require('react-dom');
+var WaypointList=require('../components/ItemList.jsx');
+var WaypointItem=require('../components/WayPointListItem.jsx');
+var EditOverlay=require('./wpoverlay');
 
 
 
@@ -45,7 +50,8 @@ avnav.gui.Routepage=function(){
      * @type {undefined}
      */
     this.initialName=undefined;
-
+    this.waypointList=undefined;
+    this.editOverlay=undefined;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -63,12 +69,28 @@ avnav.gui.Routepage.prototype.localInit=function(){
     if (! this.gui) return;
     this.routingData=this.gui.navobject.getRoutingHandler();
     var self=this;
+    this.editOverlay=new EditOverlay($('#avi_route_page_inner'),{
+        okCallback:function(){
+            return self._waypointChanged()
+        },
+        cancelCallback: function(){return true;}
+    });
     $('#avi_route_name').keypress(function( event ) {
         if (event.which == 13) {
             event.preventDefault();
             self.btnRoutePageOk();
         }
     });
+    var list=React.createElement(WaypointList, {
+        onClick:function(idx,opt_data){
+            self.waypointClicked(idx,opt_data);
+        },
+        itemClass:WaypointItem,
+        selectors:{
+            selected: 'avn_route_info_active_point'
+        }
+    });
+    this.waypointList=ReactDOM.render(list,document.getElementById('avi_routepage_wplist'));
 };
 avnav.gui.Routepage.prototype.showPage=function(options) {
     if (!this.gui) return;
@@ -81,7 +103,14 @@ avnav.gui.Routepage.prototype.displayInfo=function(id,info){
     $('#routeInfo-'+id).find('.avn_route_listinfo').text("todo");
 };
 
-
+avnav.gui.Routepage.prototype._waypointChanged=function(){
+    var changedWp=this.editOverlay.updateWp(true);
+    if (changedWp) {
+        this.currentRoute.changePoint(this.editOverlay.getOldWp(),changedWp);
+        this._updateDisplay();
+        return true;
+    }
+};
 avnav.gui.Routepage.prototype._updateDisplay=function(){
     var self=this;
     $('#avi_route_name').val("");
@@ -94,34 +123,31 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
         $('#avi_routes_headline').text("Edit Inactive Route").removeClass('avn_active_route');
     }
     $('#avi_route_name').val(this.currentRoute.name);
-    for (id=0;id<this.currentRoute.points.length;id++){
-        var wp=this.currentRoute.getPointAtIndex(id);
-        $('#avi_route_list_template').clone()
-            .attr("id","routeInfo-"+id)
-            .attr("wpidx",id)
-            .addClass(this.visibleListEntryClass)
-            .show()
-            .insertAfter('#avi_routepage .avn_route_list_entry:last');
-        this.displayInfo(id,wp);
-        $('#routeInfo-' + id).find('.avn_route_btnDelete').on('click', null, {id: id}, function (ev) {
-            ev.preventDefault();
-            var lid = ev.data.id;
-            if (!self.currentRoute) return;
-            self.currentRoute.deletePoint(idx);
-            self._updateDisplay();
-        });
-
-        $('#routeInfo-'+id).on('click',null,{id:id},function(ev){
-            ev.preventDefault();
-            var lid=ev.data.id;
-            if (! self.currentRoute) return;
-            //TODO: edit wp
-            var wp=self.currentRoute.getPointAtIndex(lid);
-            alert("edit wp "+wp.name);
-        });
-    }
+    var info="";
+    var len=avnav.nav.NavCompute.computeRouteLength(0,this.currentRoute);
+    info=this.formatter.formatDecimal(this.currentRoute.points.length,2,0)+
+            " Points, "+this.formatter.formatDecimal(len,6,2)+" nm";
+    this.selectOnPage('.avn_route_info').text(info);
+    var waypoints=this.currentRoute.getFormattedPoints();
+    var active=this.navobject.getRoutingHandler().getEditingWpIdx();
+    this.waypointList.setState({
+        itemList:waypoints,
+        options: {showLatLon: this.gui.properties.getProperties().routeShowLL}
+    });
+    this.waypointList.setSelectors(active,['selected']);
 };
 
+avnav.gui.Routepage.prototype.waypointClicked=function(idx,opt_param){
+    if (opt_param && opt_param.item=='btnDelete'){
+        if (!this.currentRoute) return;
+        this.currentRoute.deletePoint(idx);
+        this._updateDisplay();
+        return;
+    }
+    if (! this.currentRoute) return;
+    var wp=this.currentRoute.getPointAtIndex(idx);
+    this.editOverlay.show(wp);
+};
 avnav.gui.Routepage.prototype.fillData=function(initial){
     if (initial) {
         this.currentRoute = this.routingData.getEditingRoute().clone();
@@ -135,7 +161,7 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
 
 
 avnav.gui.Routepage.prototype.hidePage=function(){
-
+    if (this.editOverlay) this.editOverlay.overlayClose();
 };
 /**
  *

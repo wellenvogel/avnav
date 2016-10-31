@@ -75,6 +75,8 @@ wpOverlay.prototype.getData=function(){
             lat: Geo.parseDMS(this._overlay.select('input[name=lat]').val()),
             lon: Geo.parseDMS(this._overlay.select('input[name=lon]').val().replace(/o/i, 'e'))
         };
+        if (data.lat < -180 || data.lat > 180) delete data.lat;
+        if (data.lon < -90 || data.lon > 90) delete data.lon;
     }catch(e){}
     return data;
 };
@@ -99,12 +101,12 @@ wpOverlay.prototype.updateWp=function(showErrors,router,opt_oldWp){
     try {
         wp.lon = data.lon;
         if (isNaN(wp.lon)|| wp.lon === undefined){
-            if (showErrors)avnav.util.Overlay.Toast("invalid lon, cannot convert "+lonstr, 5000);
+            if (showErrors)avnav.util.Overlay.Toast("invalid lon, cannot convert ", 5000);
             doChange=false;
         }
         wp.lat=data.lat;
         if (isNaN(wp.lat)|| wp.lat === undefined){
-            if (showErrors)avnav.util.Overlay.Toast("invalid lat, cannot convert "+latstr, 5000);
+            if (showErrors)avnav.util.Overlay.Toast("invalid lat, cannot convert ", 5000);
             doChange=false;
         }
     }catch (e){
@@ -141,6 +143,14 @@ wpOverlay.prototype.updateWp=function(showErrors,router,opt_oldWp){
             return;
         }
     }
+};
+
+/**
+ * return the old (unchanged) waypoint from the last show call
+ * @returns {undefined|*|avnav.nav.navdata.WayPoint}
+ */
+wpOverlay.prototype.getOldWp=function(){
+    return this._currentWp;
 };
 
 module.exports=wpOverlay;
