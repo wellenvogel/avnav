@@ -6,6 +6,7 @@ var React=require('react');
 var ReactDOM=require('react-dom');
 var WaypointList=require('../components/ItemList.jsx');
 var WaypointItem=require('../components/WayPointListItem.jsx');
+var EditOverlay=require('./wpoverlay');
 
 
 
@@ -50,7 +51,7 @@ avnav.gui.Routepage=function(){
      */
     this.initialName=undefined;
     this.waypointList=undefined;
-
+    this.editOverlay=undefined;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -68,6 +69,12 @@ avnav.gui.Routepage.prototype.localInit=function(){
     if (! this.gui) return;
     this.routingData=this.gui.navobject.getRoutingHandler();
     var self=this;
+    this.editOverlay=new EditOverlay($('#avi_route_page_inner'),{
+        okCallback:function(){
+            return self._waypointChanged()
+        },
+        cancelCallback: function(){return true;}
+    });
     $('#avi_route_name').keypress(function( event ) {
         if (event.which == 13) {
             event.preventDefault();
@@ -96,7 +103,14 @@ avnav.gui.Routepage.prototype.displayInfo=function(id,info){
     $('#routeInfo-'+id).find('.avn_route_listinfo').text("todo");
 };
 
-
+avnav.gui.Routepage.prototype._waypointChanged=function(){
+    var changedWp=this.editOverlay.updateWp(true);
+    if (changedWp) {
+        this.currentRoute.changePoint(this.editOverlay.getOldWp(),changedWp);
+        this._updateDisplay();
+        return true;
+    }
+};
 avnav.gui.Routepage.prototype._updateDisplay=function(){
     var self=this;
     $('#avi_route_name').val("");
@@ -131,9 +145,8 @@ avnav.gui.Routepage.prototype.waypointClicked=function(idx,opt_param){
         return;
     }
     if (! this.currentRoute) return;
-    //TODO: edit wp
     var wp=this.currentRoute.getPointAtIndex(idx);
-    alert("edit wp "+wp.name);
+    this.editOverlay.show(wp);
 };
 avnav.gui.Routepage.prototype.fillData=function(initial){
     if (initial) {
@@ -148,7 +161,7 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
 
 
 avnav.gui.Routepage.prototype.hidePage=function(){
-
+    if (this.editOverlay) this.editOverlay.overlayClose();
 };
 /**
  *

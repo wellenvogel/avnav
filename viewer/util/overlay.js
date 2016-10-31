@@ -50,7 +50,7 @@ avnav.util.Overlay.prototype.updateOverlay=function() {
         });
     },1);
     // set the window background for the overlay. i.e the body becomes darker
-    $(this.cover).addClass('avn_overlay_cover_active');
+    $(this.cover).append('<div class="avn_overlay_cover avn_overlay_cover_active"></div>');
 };
 
 avnav.util.Overlay.prototype.overlayClose=function() {
@@ -62,7 +62,7 @@ avnav.util.Overlay.prototype.overlayClose=function() {
     $(this.box).css( 'display', 'none' );
     // now animate the background to fade out to opacity 0
     // and then hide it after the animation is complete.
-    $(this.cover).removeClass('avn_overlay_cover_active');
+    $(this.cover).find('.avn_overlay_cover_active').remove();
 };
 
 avnav.util.Overlay.Toast=function(html,time){
