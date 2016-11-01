@@ -177,7 +177,7 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
         this.currentRoute = this.routingData.getEditingRoute().clone();
         this.initialName = this.currentRoute.name;
         this._editingWaypoint=this.routingData.getEditingWp();
-        this._selectedWaypoint=this._editingWaypoint.clone();
+        this._selectedWaypoint=this._editingWaypoint?this._editingWaypoint.clone():undefined;
 
     }
     $('#avi_route_edit_name').val(this.currentRoute.name);

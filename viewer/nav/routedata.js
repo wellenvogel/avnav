@@ -606,6 +606,7 @@ avnav.nav.RouteData.prototype.startEditingRoute=function(){
  * @param opt_keep_from
  */
 avnav.nav.RouteData.prototype.wpOn=function(wp,opt_keep_from) {
+    if (! wp) return;
     var stwp=new avnav.nav.navdata.WayPoint.fromPlain(wp);
     if (wp.routeName){
         //if the waypoint seems to be part of a route
