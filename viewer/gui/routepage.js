@@ -94,7 +94,9 @@ avnav.gui.Routepage.prototype.localInit=function(){
 };
 avnav.gui.Routepage.prototype.showPage=function(options) {
     if (!this.gui) return;
-    this.fillData(true);
+    var initial=true;
+    if (options && options.returning) initial=false;
+    this.fillData(initial);
 };
 
 
@@ -152,9 +154,9 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
     if (initial) {
         this.currentRoute = this.routingData.getEditingRoute().clone();
         this.initialName = this.currentRoute.name;
-        $('#avi_route_edit_name').val(this.initialName);
 
     }
+    $('#avi_route_edit_name').val(this.currentRoute.name);
     this._updateDisplay();
 };
 
@@ -180,9 +182,6 @@ avnav.gui.Routepage.prototype.goBack=function(){
 
 avnav.gui.Routepage.prototype.storeRoute=function(){
     if (! this.currentRoute) return;
-    if ( this.currentRoute.name != this.initialName){
-        this.routingData.changeRouteName(this.currentRoute.name);
-    }
     this.routingData.setNewEditingRoute(this.currentRoute);
     this.initialName=this.currentRoute.name;
 };
@@ -224,7 +223,8 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         selectItemCallback: function(item){
             this.routingData.fetchRoute(item.name,false,
                 function(route){
-                    self.routingData.setNewEditingRoute(route);
+                    self.currentRoute=route;
+                    self.initialName=route.name;
                     self.gui.returnToLast();
                 },
                 function(err){

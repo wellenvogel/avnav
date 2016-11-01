@@ -565,7 +565,10 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
         $('#avi_route_info_name').text(rname);
     }
     else {
-        $('#avi_route_info_list').html("");
+        this.waypointList.setState({
+            itemList:[],
+            options: {showLatLon: this.gui.properties.getProperties().routeShowLL}
+        });
         return;
     }
     var active=this.navobject.getRoutingHandler().getEditingWpIdx();

@@ -50,7 +50,7 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
     }
     if (this.currentLeg.name && ! this.currentLeg.currentRoute){
         //migrate from old stuff
-        var route=this._loadRoute(this.currentLeg.name);
+        var route=this._loadRoute(this.currentLeg.name,true);
         if (route){
             this.currentLeg.currentRoute=route;
             this.currentLeg.name=route.name;
@@ -77,6 +77,14 @@ avnav.nav.RouteData=function(propertyHandler,navobject){
      * @type {boolean}
      */
     this.connectMode=this.propertyHandler.getProperties().connectedMode;
+
+    /**
+     * if set all routes are not from the server....
+     * @private
+     * @type {boolean}
+     */
+
+    this.readOnlyServer=this.propertyHandler.getProperties().readOnlyServer;
 
     /**
      * the current coordinates of the active WP (if set)
@@ -313,21 +321,7 @@ avnav.nav.RouteData.prototype.isEditingRoute=function(name){
   editing functions - only if editingRoute is set
  ----------------------------------------------------------*/
 
-/**
- * change the name of the route
- * @param name {string}
- * @param setLocal {boolean} if set make the route a local route
- */
-avnav.nav.RouteData.prototype.changeRouteName=function(name,setLocal){
-    if (! this.editingRoute){
-        return;
-    }
-    this.editingRoute.setName(name);
-    avnav.log("switch to new route "+name);
-    if (setLocal) this.editingRoute.server=false;
-    this.lastEditingName=this.editingRoute.name;
-    this._saveChanges(this.editingRoute.name);
-};
+
 /**
  * save the route (locally and on the server)
  * @param {avnav.nav.Route} rte
@@ -796,11 +790,17 @@ avnav.nav.RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_error
         }
     }
 };
-
+/**
+ *
+ * @param name
+ * @param localOnly - force local only access even if we are connected
+ * @param okcallback
+ * @param opt_errorcallback
+ */
 avnav.nav.RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallback){
     var route;
-    if (localOnly){
-        route=this._loadRoute(name);
+    if (localOnly || ! this.connectMode){
+        route=this._loadRoute(name,true);
         if (route){
             setTimeout(function(){
                 okcallback(route);
@@ -1197,6 +1197,7 @@ avnav.nav.RouteData.prototype._loadRoute=function(name,opt_returnUndef){
         if (raw) {
             avnav.log("route "+name+" successfully loaded");
             rt.fromJsonString(raw);
+            if (this.readOnlyServer) rt.server=false;
             return rt;
         }
         if (opt_returnUndef){
@@ -1308,6 +1309,7 @@ avnav.nav.RouteData.prototype._legChanged=function(){
 avnav.nav.RouteData.prototype._propertyChange=function(evdata) {
     var oldcon=this.connectMode;
     this.connectMode=this.propertyHandler.getProperties().connectedMode;
+    this.readOnlyServer=this.propertyHandler.getProperties().readOnlyServer;
     if (oldcon != this.connectMode && this.connectMode){
         //newly connected
         var oldActive;
