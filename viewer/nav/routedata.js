@@ -772,6 +772,15 @@ avnav.nav.RouteData.prototype.listRoutesLocal=function(){
  * @param opt_errorcallback
  */
 avnav.nav.RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,opt_localonly){
+    var rt=this._loadRoute(name,true);
+    if ((! rt || rt.server) && ! (this.connectMode && ! opt_localonly)){
+        if (opt_errorcallback){
+            setTimeout(function(){
+                opt_errorcallback("server route and we are disconnected");
+            },0);
+        }
+        return false;
+    }
     try{
         localStorage.removeItem(this.propertyHandler.getProperties().routeName+"."+name);
     }catch(e){}

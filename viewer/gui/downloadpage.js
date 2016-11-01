@@ -308,7 +308,7 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
             .show()
             .insertAfter('.avn_download_list_entry:last');
         this.displayInfo(id,infos[id]);
-        if (this.gui.properties.getProperties().connectedMode || this.type == "route") {
+        if (this.gui.properties.getProperties().connectedMode || (this.type == "route" && ! infos[id].server)) {
             $('#' + this.idPrefix + id).find('.avn_download_btnDelete').on('click', null, {id: id}, function (ev) {
                 ev.preventDefault();
                 var lid = ev.data.id;
@@ -326,7 +326,7 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                         self.routingData.deleteRoute(self.files[lid].name,
                             function(data){self.fillData(false);},
                             function(info){
-                                avnav.util.Overlay.Toast("unable to delete route "+info,5000);
+                                avnav.util.Overlay.Toast("unable to delete route: "+info,5000);
                                 self.fillData(false);
                             }
                         );
@@ -334,10 +334,10 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                     self.fillData(false);
                 }
                 return false;
-            });
+            }).css('visibility','');
         }
         else {
-            $('#' + this.idPrefix + id).find('.avn_download_btnDelete').hide();
+            $('#' + this.idPrefix + id).find('.avn_download_btnDelete').css('visibility','hidden');
         }
 
         if (self.type == "track" || self.type == "route" || (infos[id].url && infos[id].url.match("^/gemf") && ! avnav.android) ) {
