@@ -164,7 +164,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (this.gui.properties.getProperties().showClock) this.selectOnPage('#avi_navpage_clock').show();
     else this.selectOnPage('#avi_navpage_clock').hide();
     this.handleRouteDisplay();
-    this.updateRoutePoints(true);
+    this.updateRoutePoints(true,options && options.returning);
     var showRouting=options && options.showRouting;
     if (! showRouting ){
         showRouting=options && options.returning && this.showRouteOnReturn;
@@ -542,16 +542,7 @@ avnav.gui.Navpage.prototype.waypointClicked=function(idx,options){
 };
 
 avnav.gui.Navpage.prototype.scrollRoutePoints=function(){
-    $('#avi_route_info_list').find('.avn_route_info_point').each(function(i,el){
-        if ($(el).hasClass('avn_route_info_active_point')) {
-            //ensure element is visible
-            var eltop = $(el).position().top;
-            var ph = $('#avi_route_info_list').height();
-            var eh = $(el).height();
-            if (eltop < 0)el.scrollIntoView(true);
-            if ((eltop + eh) > (ph)) el.scrollIntoView(false);
-        }
-    });
+    avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_route_info_list');
 };
 avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActive){
     var editingActiveRoute=this.navobject.getRoutingHandler().isEditingActiveRoute();
@@ -589,7 +580,13 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
         });
         //update
     }
-    this.waypointList.setSelectors(active,['selected']);
+    var selectors=['selected'];
+    var activeWp=route.getPointAtIndex(active);
+    if (opt_centerActive && activeWp){
+        this.gui.map.setCenter(activeWp);
+        selectors.push('centered')
+    }
+    this.waypointList.setSelectors(active,selectors);
 };
 
 

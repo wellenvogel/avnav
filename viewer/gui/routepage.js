@@ -52,6 +52,18 @@ avnav.gui.Routepage=function(){
     this.initialName=undefined;
     this.waypointList=undefined;
     this.editOverlay=undefined;
+    /**
+     * the waypoint that is currently active at the routing handler
+     * @type {avnav.nav.navdata.WayPoint}
+     * @private
+     */
+    this._editingWaypoint=undefined;
+    /**
+     * the current active waypoint
+     * @type {undefined|avnav.nav.navdata.WayPoint}
+     * @private
+     */
+    this._selectedWaypoint=undefined;
     var self=this;
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -87,7 +99,11 @@ avnav.gui.Routepage.prototype.localInit=function(){
         },
         itemClass:WaypointItem,
         selectors:{
-            selected: 'avn_route_info_active_point'
+            selected: 'avn_route_info_active_point',
+            editing: 'avn_route_info_editing_point'
+        },
+        updateCallback: function(){
+            avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_routepage_wplist')
         }
     });
     this.waypointList=ReactDOM.render(list,document.getElementById('avi_routepage_wplist'));
@@ -131,22 +147,28 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
             " Points, "+this.formatter.formatDecimal(len,6,2)+" nm";
     this.selectOnPage('.avn_route_info').text(info);
     var waypoints=this.currentRoute.getFormattedPoints();
-    var active=this.navobject.getRoutingHandler().getEditingWpIdx();
+    var active=this.currentRoute.getIndexFromPoint(this._editingWaypoint);
+    var selected=this.currentRoute.getIndexFromPoint(this._selectedWaypoint);
     this.waypointList.setState({
         itemList:waypoints,
-        options: {showLatLon: this.gui.properties.getProperties().routeShowLL}
+        options: {showLatLon: this.gui.properties.getProperties().routeShowLL},
+        selectors: {editing:active,selected:selected}
     });
-    this.waypointList.setSelectors(active,['selected']);
 };
 
-avnav.gui.Routepage.prototype.waypointClicked=function(idx,opt_param){
-    if (opt_param && opt_param.item=='btnDelete'){
+avnav.gui.Routepage.prototype.waypointClicked=function(idx,param){
+    if (param.item && param.item=='btnDelete'){
         if (!this.currentRoute) return;
         this.currentRoute.deletePoint(idx);
         this._updateDisplay();
         return;
     }
     if (! this.currentRoute) return;
+    if (! param || ! param.selected){
+        this._selectedWaypoint=this.currentRoute.getPointAtIndex(idx);
+        this._updateDisplay();
+        return;
+    }
     var wp=this.currentRoute.getPointAtIndex(idx);
     this.editOverlay.show(wp);
 };
@@ -154,6 +176,8 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
     if (initial) {
         this.currentRoute = this.routingData.getEditingRoute().clone();
         this.initialName = this.currentRoute.name;
+        this._editingWaypoint=this.routingData.getEditingWp();
+        this._selectedWaypoint=this._editingWaypoint.clone();
 
     }
     $('#avi_route_edit_name').val(this.currentRoute.name);
@@ -183,6 +207,8 @@ avnav.gui.Routepage.prototype.goBack=function(){
 avnav.gui.Routepage.prototype.storeRoute=function(){
     if (! this.currentRoute) return;
     this.routingData.setNewEditingRoute(this.currentRoute);
+    this.routingData.setEditingWpIdx(this.currentRoute.getIndexFromPoint(this._selectedWaypoint));
+    this._editingWaypoint=this._selectedWaypoint;
     this.initialName=this.currentRoute.name;
 };
 //-------------------------- Buttons ----------------------------------------
@@ -225,6 +251,8 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
                 function(route){
                     self.currentRoute=route;
                     self.initialName=route.name;
+                    self._editingWaypoint=self.currentRoute.getPointAtIndex(0);
+                    self._selectedWaypoint=self.currentRoute.getPointAtIndex(0);
                     self.gui.returnToLast();
                 },
                 function(err){
@@ -239,6 +267,8 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
 avnav.gui.Routepage.prototype.btnNavDeleteAll=function(button,ev){
     avnav.log("navDeletAll clicked");
     this.currentRoute.points=[];
+    this._editingWaypoint=undefined;
+    this._selectedWaypoint=undefined;
     this._updateDisplay();
 };
 
