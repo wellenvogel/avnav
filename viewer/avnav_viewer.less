@@ -79,6 +79,10 @@
     border-color: @night;
   }
 }
+
+.nightBorderColorGR(@op:60){
+  .nightBorderColor(fade(rgba(0, 0, 0,1),@op),fade(@nightColor,( 0.6 * @op)));
+}
 .nightBorderFade(@normal){
   .nightBorderColor(@normal,fade(@normal,@nightModePercent));
 }
@@ -94,6 +98,38 @@
   }
 }
 
+
+/*-------------------------------------------------------------
+   shadows and similar
+-------------------------------------------------------------*/
+
+.mdShadow1(){
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+.mdShadow2(){
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+.mdText2(){
+  opacity: 0.6;
+}
+.mdInput{
+  outline: none;
+  border: none;
+  border-bottom: 1px solid;
+  .nightBorderColorGR();
+}
+
+
+.mdLabel {
+  .mdText2();
+}
+
+.mdCard1{
+  .mdShadow1();
+  padding: 1em;
+}
 
 /*-------------------------------------------------------------
    buttons
@@ -792,21 +828,20 @@ button.avb_WpEdit {
 /* some settings for pages that have lists */
 
 .avm_listpage {
-  padding-left: 10px;
-  padding-right: 10px;
   background-color: white;
   .nightColors();
 }
 
 .avm_listhead{
-  margin-top: 10px;
+  padding: 0.5em;
   border-bottom: 1px solid;
+  .nightBorderColorGR();
 }
 
 .avm_listcontainer {
   position: absolute;
-  left: 5px;
-  right: 0;
+  left: 0.5em;
+  right: 0.5em;
   overflow: auto;
   bottom: 0;
 }
@@ -814,9 +849,9 @@ button.avb_WpEdit {
   overflow: hidden;
   position: relative;
   border-bottom: 1px solid;
-  margin-right: 1em;
   padding-bottom: 0.5em;
   padding-top: 0.5em;
+  .nightBorderColorGR(30);
 }
 
 /*-------------------------------------------------------------
@@ -838,29 +873,34 @@ button.avb_WpEdit {
 .avn_active_route{
   .nightForeColor(@routeApproachingColor);
 }
+#avi_route_current{
+  margin: 0.5em;
+}
+#avi_route_current .avn_route_info{
+  .mdText2();
+}
 #avi_route_current label{
   font-size: 0.8em;
+  display: block;
+  margin-bottom: 0.3em;
+  margin-top: 0.5em;
 }
 #avi_route_current input{
-  font-size: 1.5em;
+  font-size: 1.2em;
+  padding-bottom: 0.2em;
 }
 #avi_route_name{
   width: 95%;
 }
-#avi_route_listhead{
-  margin-top: 10px;
 
-}
 
 #avi_routepage .avn_listcontainer {
   .avm_listcontainer();
-  top: 9.6em;
-  border-top: 1px solid;
-
+  top: 10.3em;
 }
 
 #avi_routepage .avn_route_info{
-  margin-top: 0.3em;
+  margin-top: 0.7em;
 }
 #avi_routepage .avn_route_info_active_point{
   .nightBackColor(rgba(0, 0, 0, 0.25));
@@ -881,13 +921,13 @@ button.avb_WpEdit {
 .avn_route_listinfo{
   padding-left: 1.5em;
   display: inline-block;
+  .mdText2();
 
 }
 .avn_route_listname{
   display: inline-block;
   width: 11.5em;
   margin-left: 1em;
-  opacity: 0.6;
 }
 
 .avn_route_btnDelete{
@@ -933,18 +973,14 @@ button.avb_RoutePageDownload{
   .avm_listpage();
 }
 
-#avi_download_page__headline{
-  font-size: 1.2em;
-  font-weight: bold;
-  padding-top: 0.3em;
-  padding-bottom: 0.3em;
-}
+
 
 #avi_download_page_listhead{
   .avm_listhead();
+  margin: 0.5em;
 }
 
-#avi_download_page .avn_listcontainer {
+#avi_downloadpage .avn_listcontainer {
   .avm_listcontainer();
   top: 3em;
 }
@@ -1616,6 +1652,8 @@ button.avb_SettingsAndroid{
   width: 100%;
   height: 100%;
   font-size: 1.2em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
 }
 
 #avi_mainpage_link{
