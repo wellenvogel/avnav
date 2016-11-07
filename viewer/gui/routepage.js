@@ -141,11 +141,11 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
     if (! this.currentRoute) return;
     if (this.routingData.isActiveRoute(this.currentRoute.name)){
         $('#avi_routes_headline').text("Active Route");
-        this.selectOnPage('.avn_left_top').addClass('.avn_active_headline');
+        this.selectOnPage('.avn_left_top').addClass('avn_active_headline');
     }
     else{
         $('#avi_routes_headline').text("Inactive Route");
-        this.selectOnPage('.avn_left_top').removeClass('.avn_active_headline');
+        this.selectOnPage('.avn_left_top').removeClass('avn_active_headline');
     }
     $('#avi_route_name').text(this.currentRoute.name);
     var info="";

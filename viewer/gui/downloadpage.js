@@ -220,7 +220,7 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
     $('#avi_download_page_listhead').text(this.headlines[this.type]);
     if (this.type == "chart"){
         if (avnav.android||this.gui.properties.getProperties().onAndroid) this.selectOnPage('.avb_DownloadPageUpload').hide();
-        else  this.selectOnPage('.avb_DownloadPageUpload').show();
+        else  this.showBlock('.avb_DownloadPageUpload');
         this.handleToggleButton('.avb_DownloadPageTracks',false);
         this.handleToggleButton('.avb_DownloadPageCharts',true);
         this.handleToggleButton('.avb_DownloadPageRoutes',false);
@@ -232,7 +232,7 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
         this.handleToggleButton('.avb_DownloadPageRoutes',false);
     }
     if (this.type == "route") {
-        this.selectOnPage('.avb_DownloadPageUpload').show();
+        this.showBlock('.avb_DownloadPageUpload');
         this.handleToggleButton('.avb_DownloadPageCharts',false);
         this.handleToggleButton('.avb_DownloadPageTracks',false);
         this.handleToggleButton('.avb_DownloadPageRoutes',true);
@@ -241,7 +241,7 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
         this.selectOnPage('.avb_DownloadPageUpload').hide();
     }
     if ( this.allowChange){
-        this.selectOnPage('.avn_changeDownload').show();
+        this.showBlock('.avn_changeDownload');
     }
     else{
         this.selectOnPage('.avn_changeDownload').hide();

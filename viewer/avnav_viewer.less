@@ -254,10 +254,18 @@ html,body {
   height: @headlineHeight;
   padding: 1em;
   .nightBackFade(@colorMain);
-  .nightForeColor(white,@nightColor)
+  .nightForeColor(white,@nightColor);
+  font-weight: bold;
+
 }
-.avn_left_top .avn_active_headline{
+.avn_left_top div, .avn_left_top span{
+  font-size: 1.2em;
+}
+.avn_left_top.avn_active_headline{
   .nightBackFade(@colorRed);
+}
+.avn_left_inner{
+  top: @headlineHeight !important;
 }
 
 /*
@@ -593,10 +601,10 @@ html,body {
 }
 #avi_route_info_list{
   position: absolute;
-  left: 0.2em;
+  left: 0;
   bottom: 0;
   top: @routeInfoHeaderHeight;
-  right: 0.2em;
+  right: 0;
   overflow-y: hidden;
   overflow-x: hidden;
 }
@@ -611,7 +619,7 @@ html,body {
   border-bottom: 1px solid;
   .nightBorderColorGR();
   padding-left: 0.1em;
-  padding-right: 0.1em;
+  padding-right: 0.3em;
   padding-top: 0.1em;
   margin-bottom: 5px;
   padding-bottom: 0.1em;
@@ -874,6 +882,7 @@ button.avb_WpEdit {
   right: 0;
   overflow: auto;
   bottom: 0;
+  top:0;
 }
 .avm_list_entry{
   overflow: hidden;
@@ -893,12 +902,7 @@ button.avb_WpEdit {
   left: 0;
   right: 0;
 }
-#avi_routes_headline{
-  font-size: 1.2em;
-  font-weight: bold;
-  padding-top: 0.3em;
-  padding-bottom: 0.3em;
-}
+
 .avn_active_route{
   .nightForeColor(@routeApproachingColor);
 }
@@ -956,12 +960,16 @@ button.avb_WpEdit {
   padding-left: 1.5em;
   display: inline-block;
   .mdText2();
+  vertical-align: middle;
 
 }
 .avn_route_listname{
   display: inline-block;
   width: 11.5em;
   margin-left: 1em;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .avn_route_btnDelete{
@@ -1010,13 +1018,10 @@ button.avb_RoutePageDownload{
 
 
 #avi_download_page_listhead{
-  .avm_listhead();
-  margin: 0.5em;
 }
 
 #avi_downloadpage .avn_listcontainer {
   .avm_listcontainer();
-  top: 3em;
 }
 .avn_download_list_entry{
   .avm_list_entry();
@@ -1189,6 +1194,7 @@ button.avb_AisInfoList {
 /*-------------------------------------------------------------
    wp info page
 -------------------------------------------------------------*/
+
 #avi_wpinfopage .avn_infopage_inner {
   max-width: 60em;
 }
@@ -1240,17 +1246,18 @@ button.avb_WpInfoGps {
 .avn_status{
 	border-top: 1px solid;
     .nightBorderColorGR();
-	margin-left: 10px;
+	padding-left: 1em;
 	margin-top: 5px;
-	line-height: 20px;
+	line-height: 2em;
 }
 .avn_child_status{
-	margin-left: 20px;
+	padding-left: 3em;
 	margin-top: 3px;
+  .mdText2();
 }
 .avn_child_status img{
-	width: 20px;
-	height: 20px;
+	width: 1em;
+	height: 1em;
 }
 .avn_status_name{
 	padding-left: 3px;
@@ -1259,9 +1266,7 @@ button.avb_WpInfoGps {
 	padding-left: 3px;
 }
 
-#avi_status_page_inner{
-  padding-left: 8px;
-}
+
 
 
 
@@ -1325,13 +1330,20 @@ button.avb_StatusAndroid{
 .avn_dialog{
   padding: 1em;
   background-color: white;
-  border-radius: 0.5em;
+  border-radius: 3px;
   .nightColors();
   font-size: 1.3em;
 }
 .avn_dialog input{
   margin-top: 0.5em;
   margin-bottom: 0.5em;
+  border: none;
+  border-bottom: 1px solid;
+  .nightBorderColorGR();
+}
+
+.avn_dialog label{
+  .mdText2();
 }
 
 .avn_dialog button{
@@ -1343,6 +1355,9 @@ button.avb_StatusAndroid{
   padding: 1em;
   width: inherit;
   .nightColors();
+  background-color: rgba(255, 255, 255, 0.0);
+  border: none;
+  .nightForeColor(@colorMain,@nightColor);
 }
 
 #avi_wpa_dialog button[name=cancel]{
@@ -1836,7 +1851,7 @@ button.avb_MainAndroid{
 
 .avn_overlay_cover_active {
   background-color: #000;
-  opacity: 0.8;
+  opacity: 0.4;
   display: block;
   position:absolute;
   left:0;
@@ -1875,6 +1890,7 @@ button.avb_MainAndroid{
 
 .avn_dialog{
   z-index: 121;
+  .mdShadow2();
 }
 
 .avn_dialog button{

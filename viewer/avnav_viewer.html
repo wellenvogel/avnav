@@ -126,12 +126,11 @@ all buttons with ids avb_... will call corresponding js functions
   <div id="avi_statuspage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
           <div class='avn_panel avn_left_top'>
-              <div class='avn_inner'>
+              <div>Server Status
               </div>
           </div>
 
-          <div id='avi_status_page_inner' class="avn_panel avn_scrollable_page">
-              <h1>Server Status</h1>
+          <div id='avi_status_page_inner' class="avn_panel avn_scrollable_page avn_left_inner">
 
               <div id='avi_statusTemplate' class='avn_status avn_hidden'>
               </div>
@@ -152,12 +151,11 @@ all buttons with ids avb_... will call corresponding js functions
   <div id="avi_wpapage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
           <div class='avn_panel avn_left_top'>
-              <div class='avn_inner'>
+              <div >Wifi Client connection
               </div>
           </div>
 
-          <div id='avi_wpa_page_inner' class="avn_panel avn_scrollable_page">
-              <h1>Wifi Client connection</h1>
+          <div id='avi_wpa_page_inner' class="avn_panel avn_scrollable_page avn_left_inner">
               <div id="avi_wpa_interface"></div>
               <ul id="avi_wpa_list"></ul>
           </div>
@@ -521,12 +519,11 @@ all buttons with ids avb_... will call corresponding js functions
   <div id="avi_downloadpage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
           <div class='avn_panel avn_left_top'>
-              <div class='avn_inner'>
-              </div>
+              <div id="avi_download_page_listhead">Tracks</div>
+
           </div>
 
-          <div id='avi_download_page_inner' class="avn_panel avn_scrollable_page">
-              <div id="avi_download_page_listhead">Tracks</div>
+          <div id='avi_download_page_inner' class="avn_panel avn_scrollable_page avn_left_inner">
               <div id="avi_download_page_listcontainer" class="avn_listcontainer">
                   <div class="avn_download_list_entry avn_hidden" id="avi_download_list_template">
                       <button class="avn_download_btnDelete avn_smallButton"></button>
@@ -573,13 +570,13 @@ all buttons with ids avb_... will call corresponding js functions
   <div id="avi_aisinfopage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
           <div class='avn_panel avn_left_top'>
-              <div class='avn_inner'>
+              <div >AIS Info
               </div>
           </div>
 
-          <div  class="avn_panel avn_scrollable_page">
+          <div  class="avn_panel avn_scrollable_page avn_left_inner">
               <div class='avn_infopage_inner'>
-                  <h1><div class='avn_Status'></div>AIS Info</h1>
+                  <div class='avn_Status'></div>
                   <div class="avn_table">
                       <div class="avn_row">
                           <div class='avn_label '>MMSI</div>
@@ -646,12 +643,12 @@ all buttons with ids avb_... will call corresponding js functions
   <div id="avi_aispage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
           <div class='avn_panel avn_left_top'>
-              <div class='avn_inner'>
+              <div >AIS
               </div>
           </div>
 
           <div id='avi_ais_page_inner' class="avn_panel avn_scrollable_page">
-              <h1>AIS</h1>
+
           </div>
 
       </div>
@@ -666,16 +663,14 @@ all buttons with ids avb_... will call corresponding js functions
   <div id="avi_wpinfopage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
           <div class='avn_panel avn_left_top'>
-              <div class='avn_inner'>
-              </div>
+              <span class="avn_normalHeading">Waypoint Info</span>
+              <span class="avn_newHeading avn_hidden">New Waypoint</span>
           </div>
 
-          <div class="avn_panel avn_scrollable_page">
+          <div class="avn_panel avn_scrollable_page avn_left_inner">
               <div class="avn_infopage_inner">
                   <h1>
                       <div class='avn_Status'></div>
-                      <span class="avn_normalHeading">Waypoint Info</span>
-                      <span class="avn_newHeading avn_hidden">New Waypoint</span>
                   </h1>
 
                   <div class="avn_table">
@@ -764,12 +759,11 @@ all buttons with ids avb_... will call corresponding js functions
   <div id="avi_settingspage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
           <div class='avn_panel avn_left_top'>
-              <div class='avn_inner'>
+              <div >Settings
               </div>
           </div>
 
-          <div id='avi_settings_page_inner' class="avn_panel avn_scrollable_page">
-              <h1>Settings</h1>
+          <div id='avi_settings_page_inner' class="avn_panel avn_scrollable_page avn_left_inner">
               <div class="avn_settings_group" id="avi_settings_layer">
                   <h2 class="avn_settings_headline">Layer</h2>
                   <div class="avn_settings_line" id="avi_settings_layer1">
@@ -978,9 +972,9 @@ all buttons with ids avb_... will call corresponding js functions
       <form>
           <h3>Edit&nbsp;Waypoint</h3>
           <div>
-              <div class="avn_row"><label>Name <input type="text" name="name"/> </label></div>
-              <div class="avn_row"><label>Lon<input type="text" name="lon"/></label></div>
-              <div class="avn_row"><label>Lat<input type="text" name="lat"/></label></div>
+              <div class="avn_row"><label>Name</label><input type="text" name="name"/></div>
+              <div class="avn_row"><label>Lon</label><input type="text" name="lon"/></div>
+              <div class="avn_row"><label>Lat</label><input type="text" name="lat"/></div>
           </div>
           <button name="ok">Ok</button>
           <button name="cancel">Cancel</button>
