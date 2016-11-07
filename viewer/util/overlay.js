@@ -33,16 +33,20 @@ avnav.util.Overlay.prototype.updateOverlay=function() {
     if( this.isOpen == false ) return;
     this.isOpen=true;
     // set the properties of the overlay box, the left and top positions
+    var self=this;
     $(this.box).css({
         display:'block',
         position:'absolute',
-        opacity: 0
+        opacity: 0,
+        'max-width': $(self.cover).width()+"px",
+        'max-height':$(self.cover).height()+"px"
+
+
     });
-    var self=this;
     window.setTimeout(function() {
-        var left=( $(self.cover).width() - $(self.box).width() ) / 2;
+        var left=( $(self.cover).width() - $(self.box).outerWidth() ) / 2;
         if (left < 0) left=0;
-        var top=( $(self.cover).height() - $(self.box).height() ) / 2;
+        var top=( $(self.cover).height() - $(self.box).outerHeight() ) / 2;
         if (top < 0) top=0;
         $(self.box).css({
             left: left,
@@ -51,7 +55,10 @@ avnav.util.Overlay.prototype.updateOverlay=function() {
         });
     },1);
     // set the window background for the overlay. i.e the body becomes darker
-    if (! this._coverShown) $(this.cover).append('<div class="avn_overlay_cover avn_overlay_cover_active"></div>');
+    if (! this._coverShown) {
+        $(this.cover).append('<div class="avn_overlay_cover avn_overlay_cover_active"></div>');
+        this._coverShown=true;
+    }
 };
 
 avnav.util.Overlay.prototype.overlayClose=function() {
