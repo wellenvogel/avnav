@@ -116,10 +116,14 @@ wpOverlay.prototype.updateWp=function(showErrors,router,opt_oldWp){
     if (! doChange) return ;
     if (! router) return wp;
     var ok = false;
-    if (wp.routeName) {
-        var rt = router.getRouteByName(wp.routeName);
+    if (wp.routeName && wp.routeName != oldWp.routeName){
+        if (showErrors)avnav.util.Overlay.Toast("internal error, route name changed", 5000);
+        doChange=false;
+    }
+    if (wp.routeName && doChange) {
+        var rt = router.getRouteByName(oldWp.routeName);
         if (rt) {
-            var idx = rt.getIndexFromPoint(wp);
+            var idx = rt.getIndexFromPoint(oldWp);
             if (idx < 0) {
                 if (showErrors)avnav.util.Overlay.Toast("internal error, cannot find waypoint", 5000);
                 doChange = false;

@@ -282,12 +282,6 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $(window).on('resize',function(){
         self.updateLayout();
     });
-    this._wpOverlay=new WpOverlay(this.getSelectOnPageString('.avn_overlay_cover'),{
-        okCallback:function(){
-            var close=self._updateWpFromEdit();
-            return close;
-        }
-    });
     var list=React.createElement(WaypointList, {
         onClick:function(idx,opt_data){
             self.waypointClicked(idx,opt_data);
@@ -302,6 +296,13 @@ avnav.gui.Navpage.prototype.localInit=function(){
         }
     });
     this.waypointList=ReactDOM.render(list,document.getElementById('avi_route_info_list'));
+    this._wpOverlay=new WpOverlay(this.selectOnPage('.avn_left_panel'),{
+        okCallback:function(){
+            var close=self._updateWpFromEdit();
+            return close;
+        },
+        cancelCallback: function(){return true;}
+    });
 };
 
 
