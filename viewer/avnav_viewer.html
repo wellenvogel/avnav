@@ -492,24 +492,17 @@ all buttons with ids avb_... will call corresponding js functions
   <div id="avi_routepage" class="avn_page avn_hidden">
       <div class='avn_panel avn_left_panel'>
           <div class='avn_panel avn_left_top'>
-              <div class='avn_inner'>
-              </div>
+              <div id="avi_routes_headline">Edit Route</div>
           </div>
 
-          <div id="avi_route_page_inner" class="avn_panel avn_scrollable_page">
-              <div id="avi_route_current" class="mdCard1">
-                  <div id="avi_routes_headline">Edit Route</div>
-                  <label class="mdLabel">Name (change to save as new)</label>
-                  <input type="text" id="avi_route_edit_name" class="mdInput"/>
+          <div id="avi_route_page_inner" class="avn_panel">
+              <div id="avi_route_current" >
+                  <div id="avi_route_name"></div>
                   <div class="avn_route_info"></div>
+                  <span class="avn_more"></span>
               </div>
               <div class="avn_listcontainer" id="avi_routepage_wplist">
-                  <div class="avn_route_list_entry avn_hidden avn_template" id="avi_route_list_template">
-                      <button class="avn_route_btnDelete avn_smallButton"></button>
-                      <div class="avn_route_listname">Wp1</div>
-                      <div class="avn_route_listinfo">---</div>
 
-                  </div>
               </div>
           </div>
 
@@ -988,6 +981,18 @@ all buttons with ids avb_... will call corresponding js functions
               <div class="avn_row"><label>Name <input type="text" name="name"/> </label></div>
               <div class="avn_row"><label>Lon<input type="text" name="lon"/></label></div>
               <div class="avn_row"><label>Lat<input type="text" name="lat"/></label></div>
+          </div>
+          <button name="ok">Ok</button>
+          <button name="cancel">Cancel</button>
+          <div class="avn_clear"></div>
+      </form>
+  </div>
+  <div id="avi_simple_input" class="avn_hidden avn_dialog">
+
+      <form>
+          <h3 class="avn_dialogTitle">Input</h3>
+          <div>
+              <div class="avn_row"><label>Name</label><input type="text" name="value"/></div>
           </div>
           <button name="ok">Ok</button>
           <button name="cancel">Cancel</button>

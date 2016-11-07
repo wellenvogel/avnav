@@ -16,6 +16,7 @@ avnav.util.Overlay=function(opt_options){
     var self=this;
     // if window is resized then reposition the overlay box
     this.updateOverlayCb=this.updateOverlay.bind(this);
+    this._coverShown=false;
 };
 
 avnav.util.Overlay.prototype.showOverlayBox=function(){
@@ -50,7 +51,7 @@ avnav.util.Overlay.prototype.updateOverlay=function() {
         });
     },1);
     // set the window background for the overlay. i.e the body becomes darker
-    $(this.cover).append('<div class="avn_overlay_cover avn_overlay_cover_active"></div>');
+    if (! this._coverShown) $(this.cover).append('<div class="avn_overlay_cover avn_overlay_cover_active"></div>');
 };
 
 avnav.util.Overlay.prototype.overlayClose=function() {
@@ -63,6 +64,7 @@ avnav.util.Overlay.prototype.overlayClose=function() {
     // now animate the background to fade out to opacity 0
     // and then hide it after the animation is complete.
     $(this.cover).find('.avn_overlay_cover_active').remove();
+    this._coverShown=false;
 };
 
 avnav.util.Overlay.Toast=function(html,time){

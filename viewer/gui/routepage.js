@@ -7,6 +7,7 @@ var ReactDOM=require('react-dom');
 var WaypointList=require('../components/ItemList.jsx');
 var WaypointItem=require('../components/WayPointListItem.jsx');
 var EditOverlay=require('./wpoverlay');
+var SimpleDialog=require('./simpledialog');
 
 
 
@@ -52,6 +53,7 @@ avnav.gui.Routepage=function(){
     this.initialName=undefined;
     this.waypointList=undefined;
     this.editOverlay=undefined;
+    this.editNameOverlay=undefined;
     /**
      * the waypoint that is currently active at the routing handler
      * @type {avnav.nav.navdata.WayPoint}
@@ -81,18 +83,19 @@ avnav.gui.Routepage.prototype.localInit=function(){
     if (! this.gui) return;
     this.routingData=this.gui.navobject.getRoutingHandler();
     var self=this;
-    this.editOverlay=new EditOverlay($('#avi_route_page_inner'),{
+    this.editOverlay=new EditOverlay(this.selectOnPage('.avn_left_panel'),{
         okCallback:function(){
             return self._waypointChanged()
         },
         cancelCallback: function(){return true;}
     });
-    $('#avi_route_name').keypress(function( event ) {
-        if (event.which == 13) {
-            event.preventDefault();
-            self.btnRoutePageOk();
-        }
+    this.editNameOverlay=new SimpleDialog(this.selectOnPage('.avn_left_panel'),{
+       okCallback: function(){
+           return self._nameChanged();
+       },
+       cancelCallback: function(){return true;}
     });
+
     var list=React.createElement(WaypointList, {
         onClick:function(idx,opt_data){
             self.waypointClicked(idx,opt_data);
@@ -107,6 +110,9 @@ avnav.gui.Routepage.prototype.localInit=function(){
         }
     });
     this.waypointList=ReactDOM.render(list,document.getElementById('avi_routepage_wplist'));
+    this.selectOnPage('#avi_route_current').on('click',function(){
+       self.editNameOverlay.show("Edit Route Name","Name",self.currentRoute.name);
+    });
 };
 avnav.gui.Routepage.prototype.showPage=function(options) {
     if (!this.gui) return;
@@ -131,16 +137,17 @@ avnav.gui.Routepage.prototype._waypointChanged=function(){
 };
 avnav.gui.Routepage.prototype._updateDisplay=function(){
     var self=this;
-    $('#avi_route_name').val("");
-    $("."+this.visibleListEntryClass).remove();
+    $('#avi_route_name').text("");
     if (! this.currentRoute) return;
     if (this.routingData.isActiveRoute(this.currentRoute.name)){
-        $('#avi_routes_headline').text("Edit Active Route").addClass('avn_active_route');
+        $('#avi_routes_headline').text("Active Route");
+        this.selectOnPage('.avn_left_top').addClass('.avn_active_headline');
     }
     else{
-        $('#avi_routes_headline').text("Edit Inactive Route").removeClass('avn_active_route');
+        $('#avi_routes_headline').text("Inactive Route");
+        this.selectOnPage('.avn_left_top').removeClass('.avn_active_headline');
     }
-    $('#avi_route_name').val(this.currentRoute.name);
+    $('#avi_route_name').text(this.currentRoute.name);
     var info="";
     var len=avnav.nav.NavCompute.computeRouteLength(0,this.currentRoute);
     info=this.formatter.formatDecimal(this.currentRoute.points.length,2,0)+
@@ -180,7 +187,6 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
         this._selectedWaypoint=this._editingWaypoint?this._editingWaypoint.clone():undefined;
 
     }
-    $('#avi_route_edit_name').val(this.currentRoute.name);
     this._updateDisplay();
 };
 
@@ -188,6 +194,30 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
 
 avnav.gui.Routepage.prototype.hidePage=function(){
     if (this.editOverlay) this.editOverlay.overlayClose();
+    if (this.editNameOverlay) this.editNameOverlay.overlayClose();
+};
+
+avnav.gui.Routepage.prototype._nameChanged=function() {
+    var self=this;
+    var data = this.editNameOverlay.getData();
+    if (data.value && data.value != "") {
+        var name=data.value;
+        if (name != this.initialName) {
+            //check if a route with this name already exists
+            this.routingData.fetchRoute(name, false,
+                function (data) {
+                    avnav.util.Overlay.Toast("route with name " + name + " already exists", 5000);
+                },
+                function (er) {
+                    self.editNameOverlay.overlayClose();
+                    self.currentRoute.name=name;
+                    self._updateDisplay();
+                });
+            return false;
+        }
+    }
+    this._updateDisplay();
+    return true;
 };
 /**
  *
@@ -214,15 +244,13 @@ avnav.gui.Routepage.prototype.storeRoute=function(){
 //-------------------------- Buttons ----------------------------------------
 
 avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
-    var name=$('#avi_route_edit_name').val();
     if (! this.currentRoute) this.gui.returnToLast();
-    this.currentRoute.name=name;
     var self=this;
     if (this.currentRoute.name != this.initialName ){
         //check if a route with this name already exists
         this.routingData.fetchRoute(this.currentRoute.name,false,
         function(data){
-            avnav.util.Overlay.Toast("route with name "+name+" already exists",5000);
+            avnav.util.Overlay.Toast("route with name "+this.currentRoute.name+" already exists",5000);
         },
         function(er){
             self.storeRoute();
