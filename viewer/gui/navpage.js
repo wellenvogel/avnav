@@ -82,6 +82,18 @@ avnav.gui.Navpage=function(){
     this.showRouteOnReturn=false;
 
     this.waypointList=undefined;
+
+    this.bottomContainers=[
+        {
+            selector:'#leftBottomMarker',
+            direction: 1
+        },
+        {
+            selector:'#leftBottomPosition',
+            direction: -1
+        }
+    ];
+    this.widgets=[];
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
@@ -98,6 +110,7 @@ avnav.gui.Navpage.prototype.getMap=function(){
 
 avnav.gui.Navpage.prototype.showPage=function(options){
     if (!this.gui) return;
+    var self = this;
     this.hideWpButtons();
     this.fillDisplayFromGps();
     var newMap=false;
@@ -136,7 +149,6 @@ avnav.gui.Navpage.prototype.showPage=function(options){
             }
         }
         var url = list + "/avnav.xml";
-        var self = this;
         $.ajax({
             url: url,
             dataType: 'xml',
@@ -175,6 +187,9 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     else {
         this.hideRouting();
     }
+    window.setTimeout(function(){
+        self.updateLayout();
+    },100);
 
 
 };
@@ -302,6 +317,16 @@ avnav.gui.Navpage.prototype.localInit=function(){
             return close;
         },
         cancelCallback: function(){return true;}
+    });
+    this.bottomContainers.forEach(function(el){
+        $(el.selector+" .avn_widget").each(function(idx,widget){
+           self.widgets.push({
+               element: widget,
+               outerWidth: $(widget).outerWidth(true),
+               margin: $(widget).outerWidth(true)-$(widget).outerWidth(false),
+               selector: el.selector
+           }) ;
+        });
     });
 };
 
@@ -511,6 +536,38 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
     this.updateLayout();
 };
 
+avnav.gui.Navpage.prototype.updateBottomLayout=function(selector,direction,outerElementSize){
+    if (direction == 0) return;
+    var maxWidth=$(selector).width();
+    var accuWidth=0;
+    var i=0;
+    var visibleWidgets=[];
+    var cssProp=direction< 0?"right":"left";
+    for (; i < this.widgets.length ;i++){
+        var w=this.widgets[i];
+        if (w.selector != selector) continue;
+        if ((accuWidth+ w.outerWidth) > maxWidth){
+            //TODO: second row
+            $(w.element).css('opacity',0);
+            continue;
+        }
+        var nWidth=w.outerWidth;
+        accuWidth+=nWidth;
+        visibleWidgets.push(w);
+    }
+    if (outerElementSize > 0) accuWidth-=visibleWidgets[visibleWidgets.length-1].outerWidth;
+    var factor=(accuWidth>0)?(maxWidth-outerElementSize-visibleWidgets[visibleWidgets.length-1].margin/2)/(accuWidth):1;
+    if (factor < 0) factor=1;
+    var pos=0;
+    var first=outerElementSize?true:false;
+    for (i=visibleWidgets.length-1;i>=0;i--){
+        var w=visibleWidgets[i];
+        var nWidth=first?outerElementSize: w.outerWidth*factor- w.margin;
+        first=false;
+        $(w.element).css('position','absolute').css(cssProp,pos+"px").css('width',nWidth).css('opacity',1);
+        pos+=nWidth+ w.margin;
+    };
+};
 avnav.gui.Navpage.prototype.updateLayout=function(){
     if (this.gui.properties.getProperties().allowTwoWidgetRows){
         $('#avi_nav_bottom').removeClass('avn_bottom_1rows').addClass('avn_bottom_2rows');
@@ -526,7 +583,6 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
         $('#avi_route_info_navpage').css('bottom',rtop+"px");
         self.scrollRoutePoints();
     },0);
-    return;
     /**layout for the bottom part:
      * we determine which elements will be visible in the top row
      * the left most will be set to the width of the left container, the others will be stretched
@@ -535,39 +591,11 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
      * - compute visibility and current width
      * - set new width
      */
-    $('#avi_nav_bottom .avn_widget').css('width','');
-    window.setTimeout(function(){
-        var bHeight=$('#avi_nav_bottom').height();
-        //consider top pos > 1/2 height to be invisible (or second row)
-        var numVisible=0;
-        var visibleElements=[];
-        var originalWidthes=[];
-        var margins=[];
-        var accuWidth=0;
-        $('#leftBottomMarker .avn_widget').each(function(idx,el){
-            if ($(el).position().top > bHeight/2) return;
-            visibleElements.push(el);
-            originalWidthes.push($(el).outerWidth(true));
-            margins.push(originalWidthes[numVisible]-$(el).outerWidth(false));
-            accuWidth+=$(el).outerWidth(true);
-            numVisible++;
-        });
-        var leftWidth=$('#avi_navLeftContainer').outerWidth(true);
-        if (numVisible < 1) return;
-        if (numVisible < 2) return;
-        if (accuWidth == 0) return;
-        var newAccuWidth=$('#leftBottomMarker').width()-leftWidth;
-        accuWidth-=leftWidth;
-        //set new elem width
-        $(visibleElements[visibleElements.length-1]).outerWidth(leftWidth);
-        var factor = newAccuWidth / accuWidth;
-        var i = visibleElements.length - 2;
-        for (; i >= 0; i--) {
-            var el = $(visibleElements[i]);
-            el.outerWidth(originalWidthes[i]*factor-margins[i]);
-        }
-
-    },0);
+    this.bottomContainers.forEach(function(container){
+        var outerElWidth=$('#avi_navLeftContainer').width();
+        if (outerElWidth > self.selectOnPage('.avn_left_panel').width()/2) outerElWidth=0;
+        self.updateBottomLayout(container.selector,container.direction,outerElWidth);
+    });
 
 
 };

@@ -328,10 +328,10 @@ html,body {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
   0 1px 5px 0 rgba(0, 0, 0, 0.12),
   0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
-  margin-left: 0.07em;
+  margin-left: 0.15em;
   margin-bottom: 0.07em;
   margin-top: 0.07em;
-  margin-right: 0.07em;
+  margin-right: 0.15em;
   .border-box();
   overflow: hidden;
   pointer-events: all;
@@ -451,28 +451,24 @@ html,body {
   background-color: @colorMain;
   .nightColors();
 }
-#leftBottomPosition .avn_widget:last-of-type{
-  width:@navLeftWidgetWidth;
-  margin-right: 0;
-  padding-right: 0;
-}
 
-#leftBottomMarker .avn_widget:last-of-type{
-  width:@navLeftWidgetWidth;
-  margin-left: 0;
-  padding-left: 0;
-}
 .avn_bottom_2rows{
-  max-height: 8.3em; //2xbottom_item
+  height: 8.3em; //2xbottom_item
 }
 .avn_bottom_1rows{
-  max-height: 4.3em; //1xbottom_item
+  height: 4.3em; //1xbottom_item
 }
 
 
 #leftBottomMarker{
   float: left;
   width: 50%;
+  height: 1em; //must give it any height
+  position: relative;
+}
+
+#leftBottomMarker .avn_widget{
+  margin-left: 0;
 }
 
 
@@ -508,8 +504,12 @@ html,body {
 #leftBottomPosition{
   float: left;
   width: 50%;
+  position: relative;
 }
 
+#leftBottomPosition .avn_widget{
+  margin-right: 0;
+}
 
 #leftBottomPositionStatusImage{
   text-align: center;
@@ -663,8 +663,11 @@ html,body {
   margin-left: 0;
   margin-right: 0;
   margin-top: 0;
-  margin-bottom: 0.3em;
+  margin-bottom: 0.15em;
   width:@navLeftWidgetWidth
+}
+#avi_navLeftContainer .avn_widget:last-of-type{
+  margin-bottom: 0;
 }
 
 #avi_navpage_clock{
