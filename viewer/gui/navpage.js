@@ -526,6 +526,50 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
         $('#avi_route_info_navpage').css('bottom',rtop+"px");
         self.scrollRoutePoints();
     },0);
+    return;
+    /**layout for the bottom part:
+     * we determine which elements will be visible in the top row
+     * the left most will be set to the width of the left container, the others will be stretched
+     * 3 steps:
+     * - remove all width stuff
+     * - compute visibility and current width
+     * - set new width
+     */
+    $('#avi_nav_bottom .avn_widget').css('width','');
+    window.setTimeout(function(){
+        var bHeight=$('#avi_nav_bottom').height();
+        //consider top pos > 1/2 height to be invisible (or second row)
+        var numVisible=0;
+        var visibleElements=[];
+        var originalWidthes=[];
+        var margins=[];
+        var accuWidth=0;
+        $('#leftBottomMarker .avn_widget').each(function(idx,el){
+            if ($(el).position().top > bHeight/2) return;
+            visibleElements.push(el);
+            originalWidthes.push($(el).outerWidth(true));
+            margins.push(originalWidthes[numVisible]-$(el).outerWidth(false));
+            accuWidth+=$(el).outerWidth(true);
+            numVisible++;
+        });
+        var leftWidth=$('#avi_navLeftContainer').outerWidth(true);
+        if (numVisible < 1) return;
+        if (numVisible < 2) return;
+        if (accuWidth == 0) return;
+        var newAccuWidth=$('#leftBottomMarker').width()-leftWidth;
+        accuWidth-=leftWidth;
+        //set new elem width
+        $(visibleElements[visibleElements.length-1]).outerWidth(leftWidth);
+        var factor = newAccuWidth / accuWidth;
+        var i = visibleElements.length - 2;
+        for (; i >= 0; i--) {
+            var el = $(visibleElements[i]);
+            el.outerWidth(originalWidthes[i]*factor-margins[i]);
+        }
+
+    },0);
+
+
 };
 
 avnav.gui.Navpage.prototype.waypointClicked=function(idx,options){

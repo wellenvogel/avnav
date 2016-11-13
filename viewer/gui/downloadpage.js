@@ -214,6 +214,9 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
     if(options && options.allowChange !== undefined){
         this.allowChange=options.allowChange;
     }
+    else{
+        this.allowChange=true;
+    }
     if(options && options.selectItemCallback !== undefined){
         this.selectItemCallback=options.selectItemCallback;
     }

@@ -3,6 +3,7 @@
 @normalButtonFont: 14px;
 @checkTiny: 480px;
 @widgetFontSize: 14px;
+@navLeftWidgetWidth: 8.8em;
 
 @nightModeValue:60;
 @nightModePercent: 60%;
@@ -322,16 +323,15 @@ html,body {
 
 .avn_widget{
   position: relative;
-  border-radius: 0.2em;
   z-index: 100;
   padding: 0.3em;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
   0 1px 5px 0 rgba(0, 0, 0, 0.12),
   0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
-  margin-left: 0.15em;
-  margin-bottom: 0.1em;
-  margin-top: 0.1em;
-  margin-right: 0.15em;
+  margin-left: 0.07em;
+  margin-bottom: 0.07em;
+  margin-top: 0.07em;
+  margin-right: 0.07em;
   .border-box();
   overflow: hidden;
   pointer-events: all;
@@ -425,20 +425,8 @@ html,body {
 #avi_navpage .avn_left_top{
   display: none;
 }
-#avi_navpage_clock{
-  position: absolute;
-  top:0px;
-  right: 0px;
-  background-color: white;
-  .nightColors();
-}
-#avi_navpage_clock .avn_widget{
-  background-color: white;
-  .nightColors();
-}
-#avi_navpage_clock .avd_clock{
-  font-size: 3em;
-}
+
+
 /*-------------------------------------------------------------
    bottom display
 -------------------------------------------------------------*/
@@ -459,15 +447,26 @@ html,body {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: @colorSecond;
+  padding-top: 0.3em;
+  background-color: @colorMain;
   .nightColors();
 }
+#leftBottomPosition .avn_widget:last-of-type{
+  width:@navLeftWidgetWidth;
+  margin-right: 0;
+  padding-right: 0;
+}
 
+#leftBottomMarker .avn_widget:last-of-type{
+  width:@navLeftWidgetWidth;
+  margin-left: 0;
+  padding-left: 0;
+}
 .avn_bottom_2rows{
-  max-height: 8em; //2xbottom_item
+  max-height: 8.3em; //2xbottom_item
 }
 .avn_bottom_1rows{
-  max-height: 4em; //1xbottom_item
+  max-height: 4.3em; //1xbottom_item
 }
 
 
@@ -649,9 +648,10 @@ html,body {
 #avi_navLeftContainer{
   position: absolute;
   left: 0;
-  background-color: #BFBFBF;
+  background-color: @colorMain;
   .nightColors();
   z-index: 10;
+  bottom: 0;
   @media(max-width: @checkTiny){
     right:0;
     background-color: inherit;
@@ -659,6 +659,29 @@ html,body {
   }
 }
 
+#avi_navLeftContainer .avn_widget{
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 0;
+  margin-bottom: 0.3em;
+  width:@navLeftWidgetWidth
+}
+
+#avi_navpage_clock{
+  @media(max-width: @checkTiny){
+    position: absolute;
+    left: 0;
+    top: -4em;
+  }
+}
+
+#avi_navpage_clock {
+  background-color: white;
+  .nightColors();
+}
+#avi_navpage_clock .avd_clock{
+  font-size: 2.6em;
+}
 
 /*-------------------------------------------------------------
    AIS display
