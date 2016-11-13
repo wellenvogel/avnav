@@ -543,18 +543,21 @@ avnav.gui.Navpage.prototype.updateBottomLayout=function(selector,direction,outer
     var i=0;
     var visibleWidgets=[];
     var cssProp=direction< 0?"right":"left";
+    var overflow=false;
     for (; i < this.widgets.length ;i++){
         var w=this.widgets[i];
         if (w.selector != selector) continue;
-        if ((accuWidth+ w.outerWidth) > maxWidth){
+        if ((accuWidth+ w.outerWidth) > maxWidth || overflow){
             //TODO: second row
             $(w.element).css('opacity',0);
+            overflow=true;
             continue;
         }
         var nWidth=w.outerWidth;
         accuWidth+=nWidth;
         visibleWidgets.push(w);
     }
+    if (visibleWidgets.length < 2) outerElementSize=0;
     if (outerElementSize > 0) accuWidth-=visibleWidgets[visibleWidgets.length-1].outerWidth;
     var factor=(accuWidth>0)?(maxWidth-outerElementSize-visibleWidgets[visibleWidgets.length-1].margin/2)/(accuWidth):1;
     if (factor < 0) factor=1;
@@ -566,7 +569,7 @@ avnav.gui.Navpage.prototype.updateBottomLayout=function(selector,direction,outer
         first=false;
         $(w.element).css('position','absolute').css(cssProp,pos+"px").css('width',nWidth).css('opacity',1);
         pos+=nWidth+ w.margin;
-    };
+    }
 };
 avnav.gui.Navpage.prototype.updateLayout=function(){
     if (this.gui.properties.getProperties().allowTwoWidgetRows){
