@@ -549,47 +549,43 @@ avnav.gui.Navpage.prototype.updateBottomLayout=function(selector,direction,outer
     var lastVisible=-1;
     var visibleWidgets=[];
     var cssProp=direction< 0?"right":"left";
-    var overflow=false;
     var rowIndex=0;
     var MAX_ROWS=(allowSecond?2:1);
     $(selector).removeClass(secondRowClass);
     for (;rowIndex < MAX_ROWS && lastVisible < (selectedWidgets.length -1);rowIndex++) {
         visibleWidgets=[];
-        overflow=false;
         accuWidth=0;
         for (i=lastVisible+1; i < selectedWidgets.length; i++) {
             var w = selectedWidgets[i];
             if (w.selector != selector) continue;
-            if ((accuWidth + w.outerWidth) > maxWidth || overflow) {
-                //TODO: second row
-                $(w.element).css('opacity', 0);
-                overflow = true;
-                continue;
+            if ((accuWidth + w.outerWidth) > maxWidth ) {
+                break;
             }
             lastVisible=i;
             accuWidth += w.outerWidth;
             visibleWidgets.push(w);
         }
+        var usableOuterElementSize=(visibleWidgets.length > 1)?outerElementSize:0;
+        if (visibleWidgets.length < 1) continue;
         if (rowIndex > 0 && allowSecond) $(selector).addClass(secondRowClass);
-        if (visibleWidgets.length <= 2) outerElementSize = 0;
-        if (outerElementSize > 0) accuWidth -= visibleWidgets[visibleWidgets.length - 1].outerWidth;
-        var factor = (accuWidth > 0) ? (maxWidth - outerElementSize - visibleWidgets[visibleWidgets.length - 1].margin / 2) / (accuWidth) : 1;
+        if (usableOuterElementSize > 0 ) accuWidth -= visibleWidgets[visibleWidgets.length - 1].outerWidth;
+        var factor = (accuWidth > 0) ? (maxWidth - usableOuterElementSize - visibleWidgets[visibleWidgets.length - 1].margin / 2) / (accuWidth) : 1;
         if (factor < 0) factor = 1;
         var pos = 0;
-        var first = outerElementSize ? true : false;
+        var first = usableOuterElementSize ? true : false;
         var topPos=rowIndex*rowHeight;
         for (i = visibleWidgets.length - 1; i >= 0; i--) {
             var wi = visibleWidgets[i];
-            var niWidth = first ? outerElementSize : wi.outerWidth * factor - wi.margin;
+            var niWidth = first ? usableOuterElementSize : wi.outerWidth * factor - wi.margin;
             first = false;
             $(wi.element).css('position', 'absolute')
                 .css(cssProp, pos + "px").css('width', niWidth)
-                .css('opacity', 1).css('top',topPos+"px");
+                .show().css('top',topPos+"px");
             pos += niWidth + wi.margin;
         }
     }
     for (i=lastVisible+1; i < selectedWidgets.length; i++) {
-        $(selectedWidgets[i].element).css('opacity', 0);
+        $(selectedWidgets[i].element).hide();
     }
 };
 avnav.gui.Navpage.prototype.updateLayout=function(){
