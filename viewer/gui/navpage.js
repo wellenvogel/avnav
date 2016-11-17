@@ -6,6 +6,8 @@ var React=require('react');
 var ReactDOM=require('react-dom');
 var WaypointList=require('../components/ItemList.jsx');
 var WaypointItem=require('../components/WayPointItem.jsx');
+/** @type {RowLayout} */
+var RowLayout=require('../util/rowlayout');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -82,18 +84,24 @@ avnav.gui.Navpage=function(){
     this.showRouteOnReturn=false;
 
     this.waypointList=undefined;
+    /**
+     * @private
+     * @type {RowLayout[]}
+     */
+    this.layoutContainers=[];
 
     this.bottomContainers=[
         {
             selector:'#leftBottomMarker',
-            direction: 1
+            inverted: false,
+            direction: 'left'
         },
         {
             selector:'#leftBottomPosition',
-            direction: -1
+            inverted: false,
+            direction: 'right'
         }
     ];
-    this.widgets=[];
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
@@ -319,14 +327,14 @@ avnav.gui.Navpage.prototype.localInit=function(){
         cancelCallback: function(){return true;}
     });
     this.bottomContainers.forEach(function(el){
-        $(el.selector+" .avn_widget").each(function(idx,widget){
-           self.widgets.push({
-               element: widget,
-               outerWidth: $(widget).outerWidth(true),
-               margin: $(widget).outerWidth(true)-$(widget).outerWidth(false),
-               selector: el.selector
-           }) ;
+        var rowLayout=new RowLayout(el.selector,'.avn_widget',{
+            inverted:el.inverted,
+            direction:el.direction,
+            marginLocation:1
         });
+        rowLayout.init();
+        self.layoutContainers.push(rowLayout);
+
     });
 };
 
@@ -536,58 +544,7 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
     this.updateLayout();
 };
 
-avnav.gui.Navpage.prototype.updateBottomLayout=function(selector,direction,outerElementSize,secondRowClass,allowSecond){
-    if (direction == 0) return;
-    var maxWidth=$(selector).width();
-    var i=0;
-    var selectedWidgets=[];
-    for (i=0;i<this.widgets.length;i++){
-        if (this.widgets[i].selector == selector) selectedWidgets.push(this.widgets[i]);
-    }
-    var rowHeight=selectedWidgets.length?$(selectedWidgets[0].element).outerHeight(true):0;
-    var accuWidth=0;
-    var lastVisible=-1;
-    var visibleWidgets=[];
-    var cssProp=direction< 0?"right":"left";
-    var rowIndex=0;
-    var MAX_ROWS=(allowSecond?2:1);
-    $(selector).removeClass(secondRowClass);
-    for (;rowIndex < MAX_ROWS && lastVisible < (selectedWidgets.length -1);rowIndex++) {
-        visibleWidgets=[];
-        accuWidth=0;
-        for (i=lastVisible+1; i < selectedWidgets.length; i++) {
-            var w = selectedWidgets[i];
-            if (w.selector != selector) continue;
-            if ((accuWidth + w.outerWidth) > maxWidth ) {
-                break;
-            }
-            lastVisible=i;
-            accuWidth += w.outerWidth;
-            visibleWidgets.push(w);
-        }
-        var usableOuterElementSize=(visibleWidgets.length > 1)?outerElementSize:0;
-        if (visibleWidgets.length < 1) continue;
-        if (rowIndex > 0 && allowSecond) $(selector).addClass(secondRowClass);
-        if (usableOuterElementSize > 0 ) accuWidth -= visibleWidgets[visibleWidgets.length - 1].outerWidth;
-        var factor = (accuWidth > 0) ? (maxWidth - usableOuterElementSize - visibleWidgets[visibleWidgets.length - 1].margin / 2) / (accuWidth) : 1;
-        if (factor < 0) factor = 1;
-        var pos = 0;
-        var first = usableOuterElementSize ? true : false;
-        var topPos=rowIndex*rowHeight;
-        for (i = visibleWidgets.length - 1; i >= 0; i--) {
-            var wi = visibleWidgets[i];
-            var niWidth = first ? usableOuterElementSize : wi.outerWidth * factor - wi.margin;
-            first = false;
-            $(wi.element).css('position', 'absolute')
-                .css(cssProp, pos + "px").css('width', niWidth)
-                .show().css('top',topPos+"px");
-            pos += niWidth + wi.margin;
-        }
-    }
-    for (i=lastVisible+1; i < selectedWidgets.length; i++) {
-        $(selectedWidgets[i].element).hide();
-    }
-};
+
 avnav.gui.Navpage.prototype.updateLayout=function(){
     var self=this;
     window.setTimeout(function(){
@@ -605,14 +562,13 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
      * - compute visibility and current width
      * - set new width
      */
-    this.bottomContainers.forEach(function(container){
-        var outerElWidth=$('#avi_navLeftContainer').width();
-        if (outerElWidth > self.selectOnPage('.avn_left_panel').width()/2) outerElWidth=0;
-        self.updateBottomLayout(container.selector,container.direction,outerElWidth,
-            'avn_bottom_2rows',self.gui.properties.getProperties().allowTwoWidgetRows);
+    var outerElWidth=$('#avi_navLeftContainer').width();
+    this.layoutContainers.forEach(function(rowLayout){
+       rowLayout.layout({
+           maxRows:self.gui.properties.getProperties().allowTwoWidgetRows?2:1,
+           outerSize: outerElWidth
+       })
     });
-
-
 };
 
 avnav.gui.Navpage.prototype.waypointClicked=function(idx,options){

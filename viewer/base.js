@@ -96,6 +96,7 @@ avnav.clone = function (obj) {
 
 avnav.assign = function (target, obj) {
     if (!target) target = {};
+    if (! obj) return target;
     for (var key in obj) {
         target[key] = obj[key];
     }
