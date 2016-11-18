@@ -195,10 +195,15 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     else {
         this.hideRouting();
     }
+    self.layoutContainers.forEach(function(layout){
+        layout.reset();
+    });
     window.setTimeout(function(){
+        self.layoutContainers.forEach(function(layout){
+            layout.init()
+        });
         self.updateLayout();
-    },100);
-
+    },0);
 
 };
 /**
@@ -326,6 +331,15 @@ avnav.gui.Navpage.prototype.localInit=function(){
         },
         cancelCallback: function(){return true;}
     });
+    this.readLayout();
+};
+
+/**
+ * read the elements to be layouted
+ * @private
+ */
+avnav.gui.Navpage.prototype.readLayout=function(){
+    var self=this;
     this.bottomContainers.forEach(function(el){
         var rowLayout=new RowLayout(el.selector,'.avn_widget',{
             inverted:el.inverted,
@@ -334,7 +348,6 @@ avnav.gui.Navpage.prototype.localInit=function(){
         });
         rowLayout.init();
         self.layoutContainers.push(rowLayout);
-
     });
 };
 

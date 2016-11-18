@@ -31,7 +31,12 @@ var rowLayout=function(selector,itemSelector,opt_parameters){
     this._selector=selector;
     this._itemSelector=itemSelector;
     this._initialized=false;
-    this._options=opt_parameters||{};
+    this._options=avnav.assign({
+        maxRows:1,
+        direction:'left',
+        inverted:false,
+        outerSize:0
+    },opt_parameters);
     /**@type {ItemDescription[]} */
     this._items=[];
 };
@@ -72,6 +77,11 @@ rowLayout.prototype.init=function(){
  */
 rowLayout.prototype.reset=function(){
     if (! this._initialized) return;
+    var self=this;
+    this._items.forEach(function(item){
+        $(item.item).css(self._options.direction, '').css('width', '')
+            .css('top','').css('opacity',0);
+    });
     this._items=[];
     this._initialized=false;
 };
@@ -89,9 +99,9 @@ rowLayout.prototype.layout=function(parameters) {
     avnav.assign(options,parameters);
     if (! this._initialized) return;
     if (!this._items.length) return;
-    var maxRows=options.maxRows||1;
-    var direction=options.direction||'left';
-    var inverted=options.inverted||false;
+    var maxRows=options.maxRows;
+    var direction=options.direction;
+    var inverted=options.inverted;
     var rowIndex,accumulatedWidth,rowHeight;
     var lastVisible=inverted?this._items.length:-1;
     var topPosition=0;
@@ -118,15 +128,13 @@ rowLayout.prototype.layout=function(parameters) {
         }
         if (visibleItems.length < 1) continue;
         var vLen=visibleItems.length;
-        var first=(options.outerSize && visibleItems.length > 1);
+        var first=(options.outerSize && visibleItems.length > 1 && options.outerSize < maxWidth/2);
         var usableOuterElementSize=first?options.outerSize:0;
         //if we resize the outer element - remove the outer one from the width for the factor
         var factor=1;
         if (usableOuterElementSize > 0 ) {
             accumulatedWidth -= visibleItems[vLen-1].width;
             //all elements without the last (but with the margin of the last) must fit into maxWidth-usableOuterElementSize
-            var allMargins=0;
-            for (i=0;i<(visibleItems.length-1);i++) allMargins+=visibleItems[i].margin;
             factor = (accumulatedWidth > 0) ? (maxWidth - usableOuterElementSize - visibleItems[vLen-1].margin ) / (accumulatedWidth) : 1;
         }
         else {
@@ -139,7 +147,7 @@ rowLayout.prototype.layout=function(parameters) {
             var niWidth=first?usableOuterElementSize:(item.width*factor-item.margin);
             $(item.item).css('position', 'absolute')
                 .css(direction, elementPosition + "px").css('width', niWidth)
-                .show().css('top',topPosition+"px");
+                .show().css('top',topPosition+"px").css('opacity',1);
             first=false;
             elementPosition += niWidth + item.margin;
         }
