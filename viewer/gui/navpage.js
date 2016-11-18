@@ -6,8 +6,8 @@ var React=require('react');
 var ReactDOM=require('react-dom');
 var WaypointList=require('../components/ItemList.jsx');
 var WaypointItem=require('../components/WayPointItem.jsx');
-/** @type {RowLayout} */
-var RowLayout=require('../util/rowlayout');
+/** @type {DynLayout} */
+var DynLayout=require('../util/dynlayout');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -86,9 +86,9 @@ avnav.gui.Navpage=function(){
     this.waypointList=undefined;
     /**
      * @private
-     * @type {RowLayout[]}
+     * @type {DynLayout[]}
      */
-    this.layoutContainers=[];
+    this.bottomLayoutContainers=[];
 
     this.bottomContainers=[
         {
@@ -102,6 +102,11 @@ avnav.gui.Navpage=function(){
             direction: 'right'
         }
     ];
+    /**
+     * @private
+     * @type {DynLayout[]}
+     */
+    this.sideLayoutContainers=[];
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
@@ -195,11 +200,11 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     else {
         this.hideRouting();
     }
-    self.layoutContainers.forEach(function(layout){
+    self.bottomLayoutContainers.forEach(function(layout){
         layout.reset();
     });
     window.setTimeout(function(){
-        self.layoutContainers.forEach(function(layout){
+        self.bottomLayoutContainers.forEach(function(layout){
             layout.init()
         });
         self.updateLayout();
@@ -341,14 +346,21 @@ avnav.gui.Navpage.prototype.localInit=function(){
 avnav.gui.Navpage.prototype.readLayout=function(){
     var self=this;
     this.bottomContainers.forEach(function(el){
-        var rowLayout=new RowLayout(el.selector,'.avn_widget',{
+        var rowLayout=new DynLayout(el.selector,'.avn_widget',{
             inverted:el.inverted,
             direction:el.direction,
             marginLocation:1
         });
         rowLayout.init();
-        self.layoutContainers.push(rowLayout);
+        self.bottomLayoutContainers.push(rowLayout);
     });
+    var sideLayout=new DynLayout('#avi_navLeftContainer','.avn_widget',{
+        inverted: false,
+        direction: 'bottom',
+        scale: false
+    });
+    sideLayout.init();
+    this.sideLayoutContainers.push(sideLayout);
 };
 
 
@@ -389,11 +401,14 @@ avnav.gui.Navpage.prototype.updateAisPanel=function() {
         });
         $('#avi_aisInfo').css('background-color',color);
     }
+    var isHidden=$('#avi_aisInfo').is(':hidden');
     if (nearestTarget.mmsi && ! this.routingVisible) {
         $('#avi_aisInfo').show();
+        if (isHidden) this.updateLayout();
     }
     else {
         $('#avi_aisInfo').hide();
+        if (! isHidden) this.updateLayout();
     }
 };
 
@@ -511,7 +526,7 @@ avnav.gui.Navpage.prototype.showRouting=function(opt_returning) {
     }
     this.hideOverlay();
     this.updateAisPanel();
-    this.selectOnPage('#avi_navpage_clock').hide();
+    this.selectOnPage('#avi_navLeftContainer').css('opacity',0);
 };
 
 /**
@@ -538,7 +553,7 @@ avnav.gui.Navpage.prototype.hideRouting=function(opt_noStop) {
     }
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
     this.updateAisPanel();
-    if (this.gui.properties.getProperties().showClock) this.selectOnPage('#avi_navpage_clock').show();
+    this.selectOnPage('#avi_navLeftContainer').css('opacity',1);
 };
 
 /**
@@ -557,7 +572,24 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
     this.updateLayout();
 };
 
-
+/**
+ * @private
+ */
+avnav.gui.Navpage.prototype.updateSideContainers=function() {
+    var self=this;
+    var reset=$(window).width() <= 480; //TODO: get this from CSS???
+    this.sideLayoutContainers.forEach(function (container) {
+        if (reset){
+            container.reset();
+        }
+        else {
+            container.layout({
+                maxSize: self.selectOnPage('.avn_left_panel').height() - $('#avi_nav_bottom').outerHeight()
+            });
+        }
+    });
+};
+/** @private */
 avnav.gui.Navpage.prototype.updateLayout=function(){
     var self=this;
     window.setTimeout(function(){
@@ -566,6 +598,7 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
         $('#avi_navpage_wpbuttons').css('bottom',rtop+"px");
         $('#avi_route_info_navpage').css('bottom',rtop+"px");
         self.scrollRoutePoints();
+        self.updateSideContainers();
     },0);
     /**layout for the bottom part:
      * we determine which elements will be visible in the top row
@@ -576,9 +609,9 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
      * - set new width
      */
     var outerElWidth=$('#avi_navLeftContainer').width();
-    this.layoutContainers.forEach(function(rowLayout){
+    this.bottomLayoutContainers.forEach(function(rowLayout){
        rowLayout.layout({
-           maxRows:self.gui.properties.getProperties().allowTwoWidgetRows?2:1,
+           maxRowCol:self.gui.properties.getProperties().allowTwoWidgetRows?2:1,
            outerSize: outerElWidth
        })
     });

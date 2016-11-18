@@ -1,0 +1,110 @@
+//from https://gist.github.com/kalley/5639596
+// flexbox
+.flex-display(@inline:false) {
+
+  @box-display: ~`"@{inline}" === 'inline' ? 'box-inline' : 'box'`;
+  @flex-display: ~`"@{inline}" === 'inline' ? 'inline-flex' : 'flex'`;
+
+  display: ~"-webkit-@{box-display}";
+  display: ~"-moz-@{box-display}";
+  display: ~"-ms-@{flex-display}box";
+  display: ~"-webkit-@{flex-display}";
+  display: @flex-display;
+}
+// row, column
+// true, false
+.flex-direction(@direction:row) {
+
+  @old-value: ~`"@{direction}".split('-')[0] === 'column' ? 'vertical' : 'horizontal'`;
+  @reverse: ~`"@{direction}".indexOf('-') > -1 ? 'reverse' : false `;
+
+  .box-direction(@reverse) when (@reverse = reverse) {
+    -webkit-box-direction: reverse;
+    -moz-box-direction: reverse;
+  };
+
+  -webkit-box-orient: @old-value;
+  -moz-box-orient: @old-value;
+  -ms-flex-direction: @direction;
+  -webkit-flex-direction: @direction;
+  flex-direction: @direction;
+
+  .box-direction(@reverse);
+}
+// flex-start, flex-end, center, baseline, stretch
+.flex-align-items(@style:stretch) {
+
+  @old-style: ~`(function() { var style = "@{style}"; return style.indexOf('-') > -1 ? style.split('-')[1] : style; })()`;
+
+  -webkit-box-align: @old-style;
+  -moz-box-align: @old-style;
+  -ms-flex-align: @old-style;
+  -webkit-align-items: @style;
+  align-items: @style;
+}
+// flex-start, flex-end, center, space-between, space-around
+.flex-justify-content(@justify:flex-start) {
+
+  @ms-justify: ~`(function() { var justify = "@{justify}"; switch(justify) { case 'flex-start': return 'start'; case 'flex-end': return 'end'; case 'space-between': return 'justify'; case 'space-around': return 'distribute'; } return justify; })()`;
+  @old-justify: ~`"@{ms-justify}" === 'distribute' ? 'justify' : "@{ms-justify}"`;
+
+  -webkit-box-pack:@old-justify;
+  -moz-box-pack:@old-justify;
+  -ms-flex-pack:@ms-justify;
+  -webkit-justify-content: @justify;
+  justify-content: @justify;
+}
+// nowrap, wrap, wrap-reverse
+.flex-wrap(@wrap:nowrap) {
+
+  @old-wrap: ~`"@{wrap}" === 'wrap' ? 'multiple' : 'single'`;
+
+  -webkit-box-lines: @old-wrap;
+  -moz-box-lines: @old-wrap;
+  -ms-flex-wrap:@wrap;
+  -webkit-flex-wrap:@wrap;
+  flex-wrap:@wrap;
+}
+// stretch, flex-start, flex-end, center, space-between, space-around
+.flex-align-content(@align:stretch) {
+
+  @ms-align: ~`(function() { var justify = "@{align}"; switch(justify) { case 'flex-start': return 'start'; case 'flex-end': return 'end'; case 'space-between': return 'justify'; case 'space-around': return 'distribute'; } return justify; })()`;
+
+  -ms-flex-line-pack: @ms-align;
+  -webkit-align-content: @align;
+  align-content: @align;
+}
+
+// This is only a shortcut for the new syntax. We’re expanding it here for ease.
+.flex-flow(@direction:row, @wrap:nowrap) {
+
+  .flex-direction(@direction);
+  .flex-wrap(@wrap);
+}
+
+.flex-order(@order:0) {
+  -webkit-box-ordinal-group: @order;
+  -moz-box-ordinal-group: @order;
+  -ms-flex-order: @order;
+  -webkit-order: @order;
+  order: @order;
+}
+// flex-start, flex-end, center, baseline, stretch, auto
+.flex-align-self(@style:stretch) {
+
+  @old-style: ~`(function() { var style = "@{style}"; return style.indexOf('-') > -1 ? style.split('-')[1] : style; })()`;
+
+  -webkit-box-align: @old-style;
+  -moz-box-align: @old-style;
+  -ms-flex-item-align: @old-style;
+  -webkit-align-self: @style;
+  align-self: @style;
+}
+
+.flex(@number:initial) {
+  -webkit-box-flex:@number;
+  -moz-box-flex:@number;
+  -webkit-flex:@number;
+  -ms-flex:@number;
+  flex:@number;
+}

@@ -1,4 +1,4 @@
-
+@import "flexbox.less";
 //variables will be overwritten by properties!
 @normalButtonFont: 14px;
 @checkTiny: 480px;
@@ -39,12 +39,14 @@
   -moz-box-sizing: border-box;
 }
 .flexbox() {
-  display: -webkit-box;
+  .flex-display();
+  /*display: -webkit-box;
   display: -moz-box;
   display: -ms-flexbox;
   display: -webkit-flex;
-  display: flex;
+  display: flex;*/
 }
+/*
 .flex(@values) {
   -webkit-box-flex: @values;
   -moz-box-flex:  @values;
@@ -52,6 +54,7 @@
   -ms-flex:  @values;
   flex:  @values;
 }
+*/
 
 
 
@@ -465,6 +468,7 @@ html,body {
   width: 50%;
   position: relative;
   margin-right: -0.075em; //must be half of the widget margin
+  bottom: 0;
 }
 
 #leftBottomMarker .avn_bottom_2rows{
@@ -510,6 +514,7 @@ html,body {
   width: 50%;
   position: relative;
   margin-left: -0.075em; //must be half of the widget margin
+  bottom: 0;
 }
 
 #leftBottomPosition .avn_widget{
@@ -653,6 +658,7 @@ html,body {
 #avi_navLeftContainer{
   position: absolute;
   left: 0;
+  overflow: hidden;
   background-color: @colorMain;
   .nightColors();
   z-index: 10;
@@ -669,7 +675,9 @@ html,body {
   margin-right: 0;
   margin-top: 0;
   margin-bottom: 0.15em;
-  width:@navLeftWidgetWidth
+  width:@navLeftWidgetWidth;
+  //.flex(1);
+
 }
 #avi_navLeftContainer .avn_widget:last-of-type{
   margin-bottom: 0;
