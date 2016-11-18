@@ -577,7 +577,7 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
  */
 avnav.gui.Navpage.prototype.updateSideContainers=function() {
     var self=this;
-    var reset=$(window).width() <= 480; //TODO: get this from CSS???
+    var reset=$(window).width() <= this.gui.properties.getProperties().smallBreak;
     this.sideLayoutContainers.forEach(function (container) {
         if (reset){
             container.reset();
