@@ -210,3 +210,18 @@ avnav.map.AisLayer.prototype.propertyChange=function(evdata){
     this.createAllIcons();
     this.setStyles();
 };
+/**
+ * get an AIS icon as data url
+ * @param {string} type: nearest,warning,normal
+ * @returns {string} the icon as a data url
+ */
+avnav.map.AisLayer.prototype.getAisIcon=function(type){
+    var style=this.mapholder.getProperties().getProperties().style;
+    if (type == 'nearest'){
+        return this.createIcon(style.aisNearestColor);
+    }
+    if (type == 'warning'){
+        return this.createIcon(style.aisWarningColor);
+    }
+    return this.createIcon(style.aisNormalColor);
+};

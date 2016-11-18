@@ -189,7 +189,6 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (this.gui.properties.getProperties().showClock) this.selectOnPage('#avi_navpage_clock').show();
     else this.selectOnPage('#avi_navpage_clock').hide();
     this.handleRouteDisplay();
-    this.updateRoutePoints(true,options && options.returning);
     var showRouting=options && options.showRouting;
     if (! showRouting ){
         showRouting=options && options.returning && this.showRouteOnReturn;
@@ -200,6 +199,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     else {
         this.hideRouting();
     }
+    this.updateRoutePoints(true,showRouting);
     self.bottomLayoutContainers.forEach(function(layout){
         layout.reset();
     });

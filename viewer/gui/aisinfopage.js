@@ -34,6 +34,7 @@ avnav.gui.AisInfoPage=function(){
      */
     this.statusItem='.avn_Status';
 
+    this.currentStatus=undefined;
 };
 avnav.inherits(avnav.gui.AisInfoPage,avnav.gui.Page);
 
@@ -65,11 +66,18 @@ avnav.gui.AisInfoPage.prototype.fillData=function(initial){
         this.returnToLast();
         return;
     }
-    var color=this.gui.properties.getAisColor({
-        warning: currentObject.warning,
-        nearest: currentObject.nearest
-    });
-    $(this.statusItem).css('background-color',color);
+    var status='normal';
+    if (currentObject.warning){
+        status='warning';
+    }
+    else{
+        if (currentObject.nearest) status='nearest';
+    }
+    if (status != this.currentStatus) {
+        this.selectOnPage(this.statusItem).attr('src',this.gui.map.getAisIcon(status));
+        this.currentStatus=status;
+    }
+    this.selectOnPage(this.statusItem).css('transform','rotate('+currentObject.course+'deg)');
 
     var self=this;
     this.selectOnPage(".avn_infopage_inner").show();
