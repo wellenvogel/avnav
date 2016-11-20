@@ -459,6 +459,38 @@ html,body {
   }
 }
 
+.avn_centerWidget{
+  .avn_centerPosition{
+    max-width: 6.5em;
+    margin-top:1em;
+  }
+  .avn_label{
+    display: table-cell;
+    opacity: 0.6;
+    margin-right: 0.2em;
+  }
+  .avn_center_value{
+    display: table-cell;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .avn_table{
+    font-size: 0.8em;
+  }
+  .avn_boat{
+    background-image: url(images/icons-new/boat.svg);
+    background-size: 1em 1em;
+    background-repeat: no-repeat;
+    width: 1.5em;
+  }
+  .avn_marker{
+    background-image: url(images/icons-new/waypoint.svg);
+    background-size: 1em 1em;
+    background-repeat: no-repeat;
+    width: 1.5em;
+  }
+
+}
 /*-------------------------------------------------------------
     some classes for info pages
 --------------------------------------------------------------*/
@@ -706,87 +738,20 @@ html,body {
   }
 }
 
-
-
-/*-------------------------------------------------------------
-   route display
--------------------------------------------------------------*/
-#avi_routeDisplay {
-  background-color: white;
-  padding-right: 0.2em;
-  padding-left: 0.2em;
-  padding-top: 1.2em;
-  max-width: 9em;
-  .nightColors();
-
-}
-
-
-
-#avi_routeDisplay_remain{
-  border-bottom: 0;
-  margin-top: 0.1em;
-  padding-right: 0.2em;
-}
-#avi_routeDisplay_eta{
-  border-bottom: 0;
-}
-#avi_routeDisplay_next{
-  padding-left: 0.2em;
-  padding-bottom: 0.2em;
-  border-top: 1px solid;
-}
-#avi_routeDisplay_next_course{
-}
-
-.avn_route_display_approach{
-  .nightBackFade(@routeApproachingColor) !important;
-
-}
-
-
-/*-------------------------------------------------------------
-   center display
--------------------------------------------------------------*/
-#avi_centerDisplay {
-  background-color: white;
-  .nightColors();
+#avi_navLeftContainer .avn_centerWidget{
   @media(max-width: @checkTiny){
     float: left;
     height: 7em;
   }
 }
-#avi_centerDisplay .avn_label{
-  display: table-cell;
-  opacity: 0.6;
-  margin-right: 0.2em;
-}
-#avi_centerDisplay .avn_center_value{
-  display: table-cell;
-  text-align: right;
-  white-space: nowrap;
-}
-#avi_centerDisplay .avd_centerPosition{
-  max-width: 6.5em;
-  margin-top:1em;
-}
-#avi_centerDisplay .avn_table{
-  font-size: 0.8em;
-}
-#avi_centerDisplay .avn_row{
-  display: table-row;
-}
-#avi_centerDisplay .avn_boat{
-  background-image: url(images/icons-new/boat.svg);
-  background-size: 1em 1em;
-  background-repeat: no-repeat;
-  width: 1.5em;
-}
-#avi_centerDisplay .avn_marker{
-  background-image: url(images/icons-new/waypoint.svg);
-  background-size: 1em 1em;
-  background-repeat: no-repeat;
-  width: 1.5em;
+
+/*-------------------------------------------------------------
+   route display
+-------------------------------------------------------------*/
+
+.avn_route_display_approach{
+  .nightBackFade(@routeApproachingColor) !important;
+
 }
 
 #avi_navpage_wpbuttons{

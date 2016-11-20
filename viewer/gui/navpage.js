@@ -23,11 +23,6 @@ avnav.gui.Navpage=function(){
     /** @private */
     this.options_=null;
     /**
-     * the current visible overlay (jQuery object)
-     * @type {null}
-     */
-    this.overlay=null;
-    /**
      * the time (in ms) when the current overlay should be hidden
      * @type {number}
      */
@@ -184,7 +179,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
         this.hideRouting();
     }
     this.updateRoutePoints(true,showRouting);
-
+    this.widgetVisibility();
     window.setTimeout(function(){
         self.updateLayout();
     },0);
@@ -199,12 +194,16 @@ avnav.gui.Navpage.prototype.widgetVisibility=function(){
     }
     var routeVisible=this.gui.properties.getProperties().layers.nav;
     if (routeVisible) routeVisible=this.navobject.getRoutingHandler().hasActiveRoute();
-    var centerVisible=false;
+    var centerVisible=true;
+    if (this.hidetime <=0 || this.hidetime <= new Date().getTime()|| this.gui.map.getGpsLock()){
+        centerVisible=false;
+    }
     var clockVisible=this.gui.properties.getProperties().showClock;
     this.leftContainer.setVisibility({
         'AisTarget':aisVisible,
         'ActiveRoute':routeVisible,
-        'LargeTime':clockVisible
+        'LargeTime':clockVisible,
+        'CenterDisplay':centerVisible
     });
 };
 /**
@@ -248,10 +247,6 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(){
 };
 
 avnav.gui.Navpage.prototype.timerEvent=function(){
-    if (this.hidetime >0 && this.hidetime <= new Date().getTime()|| this.gui.map.getGpsLock()){
-        this.hideOverlay();
-        this.hidetime=0;
-    }
     if (this.wpHidetime > 0 && this.wpHidetime <= new Date().getTime()){
         this.hideWpButtons();
     }
@@ -259,7 +254,6 @@ avnav.gui.Navpage.prototype.timerEvent=function(){
     this.widgetVisibility();
 };
 avnav.gui.Navpage.prototype.hidePage=function(){
-    this.hideOverlay();
     this.hideWpButtons();
     this.hidetime=0;
     this.showRouteOnReturn=this.routingVisible;
@@ -284,9 +278,6 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $('#leftBottomPosition').click({page:this},function(ev){
         ev.stopPropagation();
         self.gui.showPage('gpspage');
-    });
-    $('#avi_centerDisplay').click({page:this},function(ev){
-       ev.data.page.hideOverlay();
     });
 
     $('#avi_route_info_navpage_inner').click({page:this},function(ev){
@@ -330,7 +321,8 @@ avnav.gui.Navpage.prototype.localInit=function(){
             direction: 'right',
             layoutParameterCallback: function(handler){
                 return {
-                    outerSize:$('#avi_navLeftContainer').width()
+                    outerSize:$('#avi_navLeftContainer').width(),
+                    maxRowCol: self.gui.properties.getProperties().allowTwoWidgetRows?2:1
                 }
             }
         })
@@ -348,7 +340,8 @@ avnav.gui.Navpage.prototype.localInit=function(){
             direction: 'left',
             layoutParameterCallback: function(handler){
                 return {
-                    outerSize:$('#avi_navLeftContainer').width()
+                    outerSize:$('#avi_navLeftContainer').width(),
+                    maxRowCol: self.gui.properties.getProperties().allowTwoWidgetRows?2:1
                 }
             }
         })
@@ -357,7 +350,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
     this.widgetContainers.push(container);
     container=new WidgetContainer({
         onClick: self.widgetClick,
-        items: ['AisTarget','ActiveRoute','LargeTime'],
+        items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         store: self.navobject,
         propertyHandler: self.gui.properties
         },
@@ -395,6 +388,10 @@ avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription,data){
         this.navobject.getRoutingHandler().startEditingRoute();
         this.gui.showPage("routepage");
     }
+    if (widgetDescription.name == "CenterDisplay"){
+        this.hidetime=0;
+        this.widgetVisibility();
+    }
 };
 
 
@@ -417,15 +414,11 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
     if (! this.visible) return;
     if (evdata.type == avnav.map.EventType.MOVE) {
         //show the center display if not visible
-        if (! this.routingVisible) {
-            if (this.overlay != null) {
-                this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
-                return;
-            }
-            this.overlay = this.getDiv().find('#avi_centerDisplay');
+        if (!this.routingVisible) {
             this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
-            this.overlay.show();
-            this.updateLayout();
+            this.widgetVisibility();
+            return;
+
         }
     }
     if (evdata.type == avnav.map.EventType.SELECTAIS){
@@ -455,17 +448,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
     }
 };
 
-/**
- * hide the center overlay
- */
-avnav.gui.Navpage.prototype.hideOverlay=function(){
-    if (this.overlay != null){
-        this.overlay.hide();
-        this.overlay=null;
-        this.hidetime=0;
-        this.updateLayout();
-    }
-};
+
 /**
  * show the route editing part
  * @param {boolean} opt_returning
@@ -506,7 +489,7 @@ avnav.gui.Navpage.prototype.showRouting=function(opt_returning) {
         this.handleToggleButton('.avb_LockPos', !nLock);
         this.gui.map.triggerRender();
     }
-    this.hideOverlay();
+    this.hidetime=0;
     this.selectOnPage('#avi_navLeftContainer').css('opacity',0);
 };
 
@@ -685,8 +668,8 @@ avnav.gui.Navpage.prototype.btnLockPos=function (button,ev){
     var nLock=! this.gui.map.getGpsLock();
     this.gui.map.setGpsLock(nLock);
     this.handleToggleButton(button,nLock);
-    if (nLock) this.hideOverlay();
     this.gui.map.triggerRender();
+    this.widgetVisibility();
     avnav.log("LockPos clicked");
 };
 avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
