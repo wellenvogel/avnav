@@ -44,7 +44,10 @@ var Widget=React.createClass({
         <div className={classes} onClick={this.props.click}>
             <div className='avn_widgetData'>{this.state.val}</div>
             <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
-            <div className='avn_widgetInfoRight'>{this.props.unit}</div>
+            {this.props.unit !== undefined?
+                <div className='avn_widgetInfoRight'>{this.props.unit}</div>
+                :<div className='avn_widgetInfoRight'></div>
+            }
         </div>
         );
     }

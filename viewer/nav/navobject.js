@@ -297,7 +297,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.routeRemain=this.formatter.formatDecimal(this.data.routeRemain,4,1);
     this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"--:--:--";
     this.formattedValues.routeNextCourse=(this.data.routeNextCourse !== undefined)?this.formatter.formatDecimal(this.data.routeNextCourse,3,0):"---";
-    this.formattedValues.routeNextName=this.data.routeNextWp?this.data.routeNextWp.name:"???";
+    this.formattedValues.routeNextName=this.data.routeNextWp?this.data.routeNextWp.name:"";
 
     this.formattedValues.edRouteName=this.data.edRouteName||"default";
     this.formattedValues.edRouteNumPoints=this.formatter.formatDecimal(this.data.edRouteNumPoints,4,0);

@@ -426,6 +426,38 @@ html,body {
   }
 }
 
+.avn_timeWidget{
+  .avn_widgetData{
+    font-size: 2.6em;
+  }
+}
+
+.avn_activeRouteWidget{
+  .avn_routeName{
+    margin-top: 0.8em;
+    margin-right: 0.2em;
+    .mdText2();
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
+.avn_aisTargetWidget{
+  .avn_ais_front{
+    font-size: 1.5em;
+    display: inline-block;
+  }
+  .avn_widgetDataFirst{
+    margin-top:0.8em;
+  }
+  .avn_widgetData{
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .avn_label{
+    margin-right: 0.2em;
+  }
+}
 
 /*-------------------------------------------------------------
     some classes for info pages
@@ -646,58 +678,32 @@ html,body {
   margin-top: 0;
   margin-bottom: 0.15em;
   width:@navLeftWidgetWidth;
-  //.flex(1);
 
 }
 #avi_navLeftContainer .avn_widget:last-of-type{
   margin-bottom: 0;
 }
 
-#avi_navpage_clock{
+#avi_navLeftContainer .avn_timeWidget{
   @media(max-width: @checkTiny){
     position: absolute;
     left: 0;
     top: -4em;
   }
 }
-
-#avi_navpage_clock {
-  background-color: white;
-  .nightColors();
+#avi_navLeftContainer .avn_activeRouteWidgett {
+  @media (max-width: @checkTiny) {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 7em;
+  }
 }
-#avi_navpage_clock .avd_clock{
-  font-size: 2.6em;
-}
-
-/*-------------------------------------------------------------
-   AIS display
--------------------------------------------------------------*/
-#avi_aisInfo {
-  max-width: 9em;
+#avi_navLeftContainer .avn_aisTargetWidget{
   @media(max-width: @checkTiny){
     float: left;
     height: 7em;
   }
-  .nightColors();
-}
-
-
-#avi_aisInfo .avn_ais_front {
-  font-size: 1.5em;
-}
-#avi_aisInfo .avn_label {
-  opacity: 0.6;
-  display: table-cell;
-  padding-right: 0.2em;
-}
-#avi_aisInfo .avn_ais_data{
-  display: table-cell;
-}
-#avi_aisInfo .avn_table{
-  margin-top: 1em;
-}
-#avi_aisInfo .avn_row{
-  display: table-row;
 }
 
 
@@ -712,12 +718,7 @@ html,body {
   padding-top: 1.2em;
   max-width: 9em;
   .nightColors();
-  @media (max-width: @checkTiny) {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    height:7em;
-  }
+
 }
 
 

@@ -22,7 +22,7 @@ module.exports=React.createClass({
         );
     },
     widgetClicked: function(widgetName){
-        this.props.onClick(widgetName);
+        this.props.onClick(Factory.findWidget(widgetName));
     },
     componentDidMount: function(){
         if (this.props.updateCallback){

@@ -4,6 +4,8 @@
 var Widget=require('./Widget.jsx');
 var EtaWidget=require('./EtaWidget.jsx');
 var TimeStatusWidget=require('./TimeStatusWidget.jsx');
+var AisTargetWidget=require('./AisTargetWidget.jsx');
+var ActiveRouteWidget=require('./ActiveRouteWidget.jsx');
 var Formatter=require('../util/formatter');
 var widgetList=[
     {
@@ -69,6 +71,14 @@ var widgetList=[
         dataKey: 'markerCourse'
     },
     {
+        name: 'LargeTime',
+        max: "99:99",
+        caption: 'Time',
+        wclass: Widget,
+        classes: 'avn_timeWidget',
+        dataKey: 'clock'
+    },
+    {
         name: 'WpPosition',
         max: "-------------",
         caption: 'MRK',
@@ -77,6 +87,16 @@ var widgetList=[
         classes: 'avn_posWidget',
         dataKey: 'markerPosition'
 
+    },
+    {
+        name: 'AisTarget',
+        caption: 'AIS',
+        wclass: AisTargetWidget
+    },
+    {
+        name: 'ActiveRoute',
+        caption: 'RTE',
+        wclass: ActiveRouteWidget
     },
 ];
 

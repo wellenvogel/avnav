@@ -354,6 +354,19 @@ avnav.gui.Navpage.prototype.localInit=function(){
         store: self.navobject
     });
     ReactDOM.render(markerWidgets,document.getElementById('leftBottomMarker'));
+    var leftWidgets=React.createElement(WidgetContainer,{
+        onClick: function(widgetDescription){
+            if (widgetDescription.name == "AisTarget"){
+
+            }
+        },
+        updateCallback: function(){
+            self.updateSideContainers();
+        },
+        items: ['AisTarget','ActiveRoute','LargeTime'],
+        store: self.navobject
+    });
+    ReactDOM.render(leftWidgets,document.getElementById('avi_navLeftContainer'));
     this._wpOverlay=new WpOverlay(this.selectOnPage('.avn_left_panel'),{
         okCallback:function(){
             var close=self._updateWpFromEdit();
