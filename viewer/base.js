@@ -110,10 +110,12 @@ avnav.clone = function (obj) {
 
 avnav.assign = function (target, obj) {
     if (!target) target = {};
-    if (! obj) return target;
-    for (var key in obj) {
-        target[key] = obj[key];
-    }
+    Array.prototype.slice.call(arguments,1).forEach(function(arg) {
+        if (!arg) return ;
+        for (var key in arg) {
+            target[key] = arg[key];
+        }
+    });
     return target;
 };
 //see http://stackoverflow.com/questions/1909753/vertically-align-div-no-tables

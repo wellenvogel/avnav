@@ -108,6 +108,7 @@ avnav.gui.Navpage=function(){
      * @type {DynLayout[]}
      */
     this.sideLayoutContainers=[];
+    this.widgetClick=this.widgetClick.bind(this);
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
@@ -333,38 +334,33 @@ avnav.gui.Navpage.prototype.localInit=function(){
     this.waypointList=ReactDOM.render(list,document.getElementById('avi_route_info_list'));
 
     var boatWidgets=React.createElement(WidgetContainer,{
-        onClick: function(widgetDescription){
-
-        },
+        onClick: self.widgetClick,
         updateCallback: function(){
             self.updateLayout();
         },
         items: ['COG','SOG','TimeStatus','Position'],
-        store: self.navobject
+        store: self.navobject,
+        propertyHandler: self.gui.properties
     });
     ReactDOM.render(boatWidgets,document.getElementById('leftBottomPosition'));
     var markerWidgets=React.createElement(WidgetContainer,{
-        onClick: function(widgetDescription){
-
-        },
+        onClick: self.widgetClick,
         updateCallback: function(){
             self.updateLayout();
         },
         items: ['BRG','DST','ETA','WpPosition'],
-        store: self.navobject
+        store: self.navobject,
+        propertyHandler: self.gui.properties
     });
     ReactDOM.render(markerWidgets,document.getElementById('leftBottomMarker'));
     var leftWidgets=React.createElement(WidgetContainer,{
-        onClick: function(widgetDescription){
-            if (widgetDescription.name == "AisTarget"){
-
-            }
-        },
+        onClick: self.widgetClick,
         updateCallback: function(){
             self.updateSideContainers();
         },
         items: ['AisTarget','ActiveRoute','LargeTime'],
-        store: self.navobject
+        store: self.navobject,
+        propertyHandler: self.gui.properties
     });
     ReactDOM.render(leftWidgets,document.getElementById('avi_navLeftContainer'));
     this._wpOverlay=new WpOverlay(this.selectOnPage('.avn_left_panel'),{
@@ -375,6 +371,12 @@ avnav.gui.Navpage.prototype.localInit=function(){
         cancelCallback: function(){return true;}
     });
     this.readLayout();
+};
+
+avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription,data){
+    if (widgetDescription.name == "AisTarget" && data && data.mmsi){
+        this.gui.showPage("aisinfopage",{mmsi:data.mmsi});
+    }
 };
 
 /**

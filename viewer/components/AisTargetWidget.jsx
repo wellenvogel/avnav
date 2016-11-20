@@ -9,16 +9,27 @@ var AisTargetWidget=React.createClass({
         //formatter: React.PropTypes.func,
         click: React.PropTypes.func,
         store: React.PropTypes.object.isRequired,
+        propertyHandler: React.PropTypes.object.isRequired,
         classes: React.PropTypes.string
     },
     _getValues:function(){
+        var aisTarget=this.props.store.getAisHandler().getNearestAisTarget();
+        var color;
+        if (aisTarget && aisTarget.mmsi){
+            color=this.props.propertyHandler.getAisColor(aisTarget);
+        }
+        else{
+            color=this.props.propertyHandler.getAisColor({});
+        }
         var front=this.props.store.getValue('aisFront');
         if (front == "" || front == " ") front="X";
         return{
             dst:this.props.store.getValue('aisDst'),
             cpa:this.props.store.getValue('aisCpa'),
             tcpa:this.props.store.getValue('aisTcpa'),
-            front:front
+            front:front,
+            color: color,
+            mmsi:aisTarget?aisTarget.mmsi:undefined
         };
     },
     getInitialState: function(){
@@ -42,7 +53,7 @@ var AisTargetWidget=React.createClass({
         var classes="avn_widget avn_aisTargetWidget "+this.props.classes||"";
         var imgSrc=this.state.statusUrl;
         return (
-            <div className={classes} onClick={this.props.click}>
+            <div className={classes} style={{backgroundColor:this.state.color}} onClick={this.click}>
                 <div className="avn_widgetInfoLeft">AIS</div>
                 <div className="avn_widgetData avn_widgetDataFirst">
                     <span className='avn_label '>D</span>
@@ -64,6 +75,9 @@ var AisTargetWidget=React.createClass({
                 </div>
             </div>
         );
+    },
+    click:function(){
+        this.props.click({mmsi:this.state.mmsi});
     }
 
 });

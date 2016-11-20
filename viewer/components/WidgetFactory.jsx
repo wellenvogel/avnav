@@ -37,13 +37,12 @@ class WidgetFactory{
         }
         return -1;
     }
-    createWidget(name: String, store: Object,click: Function){
+    createWidget(name: String, properties: Object,click: Function){
         var e=this.findWidget(name);
         if (e) {
-            var props=avnav.assign({},e);
-            props.click=function(){click();};
+            var props=avnav.assign({},e,properties);
+            props.click=click;
             props.ref=e.name;
-            props.store=store;
             return React.createElement(e.wclass, props);
         }
         return React.createElement("div",{},"widget "+name+" not found");
