@@ -115,6 +115,7 @@ var propertyDefinitions=function(){
         statusErrorImage: new avnav.util.Property( "images/RedBubble40.png"),
         statusOkImage: new avnav.util.Property( "images/GreenBubble40.png"),
         statusYellowImage: new avnav.util.Property( "images/YellowBubble40.png"),
+        statusUnknownImage: new avnav.util.Property( "images/GreyBubble40.png"),
         statusIcons: {
             INACTIVE: new avnav.util.Property( "images/GreyBubble40.png"),
             STARTED: new avnav.util.Property(  "images/YellowBubble40.png"),

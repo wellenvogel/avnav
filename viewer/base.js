@@ -55,17 +55,20 @@ avnav.inherits = function (child, parent) {
     child.prototype.super_ = parent.prototype;
     child.prototype.base_ = parent;
 };
+
 /**
  *
- * @param {string} name
+ * @param {string|string[]} name
  */
-avnav.provide = function (name) {
-    var names = name.split('.');
+avnav.ensurePath = function (name) {
+    var names;
+    if (name instanceof Array) names=name;
+    else names= name.split('.');
     if (names[0] != 'avnav') throw "first part of namespace must be avnav";
     var i;
     var current = avnav;
     var path = names[0];
-    for (i = 1; i < names.length - 1; i++) {
+    for (i = 1; i < names.length; i++) {
         var cname = names[i];
         if (!current[cname]) {
             current[cname] = {};
@@ -76,6 +79,17 @@ avnav.provide = function (name) {
         current = current[cname];
         path = path + "." + cname;
     }
+    return current;
+};
+/**
+ *
+ * @param {string} name
+ */
+avnav.provide = function (name) {
+    var names = name.split('.');
+    if (names[0] != 'avnav') throw "first part of namespace must be avnav";
+    var i;
+    var current = avnav.ensurePath(names.slice(0,names.length-1));
     if (current[names[names.length - 1]]) throw "name " + name + " already defined";
 };
 

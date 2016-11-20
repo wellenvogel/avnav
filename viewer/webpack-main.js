@@ -32,7 +32,8 @@ window.avnav={};
 (function () {
     require('./version.js');
     require('./base.js');
-    require('./util/formatter.js');
+    avnav.ensurePath('avnav.util');
+    avnav.util.Formatter=require('./util/formatter.js');
     require('./util/propertyhandler.js');
     require('./util/helper.js');
     require('./util/overlay.js');

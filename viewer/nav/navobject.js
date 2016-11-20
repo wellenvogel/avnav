@@ -168,7 +168,8 @@ avnav.nav.NavObject=function(propertyHandler){
         edRouteNumPoints: "--",
         edRouteLen: "--",
         edRouteRemain: "--",
-        edRouteEta: "--:--:--"
+        edRouteEta: "--:--:--",
+        statusImageUrl: this.propertyHandler.getProperties().statusUnknownImage
     };
     for (var k in this.formattedValues){
         this.registerValueProvider(k,this,this.getFormattedNavValue);
@@ -303,6 +304,7 @@ avnav.nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.edRouteLen=this.formatter.formatDecimal(this.data.edRouteLen,4,1);
     this.formattedValues.edRouteRemain=this.formatter.formatDecimal(this.data.edRouteRemain,4,1);
     this.formattedValues.edRouteEta=this.data.edRouteEta?this.formatter.formatTime(this.data.edRouteEta):"--:--:--";
+    this.formattedValues.statusImageUrl=gps.valid?this.propertyHandler.getProperties().statusOkImage:this.propertyHandler.getProperties().statusErrorImage;
 };
 
 avnav.nav.NavObject.prototype.formatLegData=function(legInfo){

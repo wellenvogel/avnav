@@ -8,6 +8,7 @@ var WaypointList=require('../components/ItemList.jsx');
 var WaypointItem=require('../components/WayPointItem.jsx');
 /** @type {DynLayout} */
 var DynLayout=require('../util/dynlayout');
+var WidgetContainer=require('../components/WidgetContainer.jsx');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -329,6 +330,29 @@ avnav.gui.Navpage.prototype.localInit=function(){
         }
     });
     this.waypointList=ReactDOM.render(list,document.getElementById('avi_route_info_list'));
+
+    var boatWidgets=React.createElement(WidgetContainer,{
+        onWidgetClick: function(widgetDescription){
+
+        },
+        updateCallback: function(){
+            self.updateLayout();
+        },
+        items: ['COG','SOG','TimeStatus','Position'],
+        store: self.navobject
+    });
+    ReactDOM.render(boatWidgets,document.getElementById('leftBottomPosition'));
+    var markerWidgets=React.createElement(WidgetContainer,{
+        onWidgetClick: function(widgetDescription){
+
+        },
+        updateCallback: function(){
+            self.updateLayout();
+        },
+        items: ['BRG','DST','ETA','WpPosition'],
+        store: self.navobject
+    });
+    ReactDOM.render(markerWidgets,document.getElementById('leftBottomMarker'));
     this._wpOverlay=new WpOverlay(this.selectOnPage('.avn_left_panel'),{
         okCallback:function(){
             var close=self._updateWpFromEdit();
@@ -371,12 +395,6 @@ avnav.gui.Navpage.prototype.readLayout=function(){
  */
 avnav.gui.Navpage.prototype.fillDisplayFromGps=function(opt_names){
     if (! this.navobject) return;
-    if (this.navobject.getGpsHandler().getGpsData().valid){
-        $('#boatPositionStatus').attr('src',this.gui.properties.getProperties().statusOkImage);
-    }
-    else {
-        $('#boatPositionStatus').attr('src',this.gui.properties.getProperties().statusErrorImage);
-    }
     if (this.navobject.getRoutingHandler().getApproaching()){
         $('#avi_routeDisplay').addClass('avn_route_display_approach');
         $('#avi_routeDisplay_next').show();

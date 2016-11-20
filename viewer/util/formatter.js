@@ -1,14 +1,13 @@
 /**
  * Created by andreas on 04.05.14.
  */
-avnav.provide('avnav.util.Formatter');
 
 
 /**
  *
  * @constructor
  */
-avnav.util.Formatter=function(){};
+var Formatter=function(){};
 
 /**
  *
@@ -16,7 +15,7 @@ avnav.util.Formatter=function(){};
  * @param axis
  * @returns {string}
  */
-avnav.util.Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
+Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
     coordinate = (coordinate+540)%360 - 180; // normalize for sphere being round
 
     var abscoordinate = Math.abs(coordinate);
@@ -54,7 +53,7 @@ avnav.util.Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
  * @param {avnav.nav.navdata.Point} lonlat
  * @returns {string}
  */
-avnav.util.Formatter.prototype.formatLonLats=function(lonlat){
+Formatter.prototype.formatLonLats=function(lonlat){
     if (isNaN(lonlat.lat) || isNaN(lonlat.lon)){
         return "-----";
     }
@@ -72,7 +71,7 @@ avnav.util.Formatter.prototype.formatLonLats=function(lonlat){
  * @returns {string}
  */
 
-avnav.util.Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace){
+Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace){
     var sign="";
     number=parseFloat(number);
     if (isNaN(number)){
@@ -106,7 +105,7 @@ avnav.util.Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace)
  * @param {Date} curDate
  * @returns {string}
  */
-avnav.util.Formatter.prototype.formatTime=function(curDate){
+Formatter.prototype.formatTime=function(curDate){
     var datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
@@ -118,7 +117,7 @@ avnav.util.Formatter.prototype.formatTime=function(curDate){
  * @param {Date} curDate
  * @returns {string} hh:mm
  */
-avnav.util.Formatter.prototype.formatClock=function(curDate){
+Formatter.prototype.formatClock=function(curDate){
     var datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0");
     return datestr;
@@ -128,7 +127,7 @@ avnav.util.Formatter.prototype.formatClock=function(curDate){
  * @param {Date} curDate
  * @returns {string}
  */
-avnav.util.Formatter.prototype.formatDateTime=function(curDate){
+Formatter.prototype.formatDateTime=function(curDate){
     var datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
         this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
         this.formatDecimal(curDate.getDate(),2,0)+" "+
@@ -137,3 +136,5 @@ avnav.util.Formatter.prototype.formatDateTime=function(curDate){
         this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
     return datestr;
 };
+
+module.exports=Formatter;
