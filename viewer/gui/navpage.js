@@ -86,6 +86,11 @@ avnav.gui.Navpage=function(){
 
     this.waypointList=undefined;
 
+    /**
+     * @private
+     * @type {undefined|WidgetContainer}
+     */
+    this.leftContainer=undefined;
     this.widgetClick=this.widgetClick.bind(this);
     /**
      * @private
@@ -163,9 +168,6 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     this.getMap().setBrightness(brightness);
     this.updateMainPanelSize('#'+this.mapdom);
     this.getMap().updateSize();
-    if (!this.gui.properties.getProperties().layers.ais){
-        $('#avi_aisInfo').hide();
-    }
     this.gui.navobject.setAisCenterMode(avnav.nav.AisCenterMode.MAP);
     if (!this.gui.properties.getProperties().layers.nav) this.hideRouting();
     if (this.gui.properties.getProperties().showClock) this.selectOnPage('#avi_navpage_clock').show();
@@ -187,6 +189,23 @@ avnav.gui.Navpage.prototype.showPage=function(options){
         self.updateLayout();
     },0);
 
+};
+
+avnav.gui.Navpage.prototype.widgetVisibility=function(){
+    var aisVisible=this.gui.properties.getProperties().layers.ais;
+    if (aisVisible) {
+        var aisTarget=this.navobject.getAisHandler().getNearestAisTarget();
+        aisVisible=(aisTarget && aisTarget.mmsi);
+    }
+    var routeVisible=this.gui.properties.getProperties().layers.nav;
+    if (routeVisible) routeVisible=this.navobject.getRoutingHandler().hasActiveRoute();
+    var centerVisible=false;
+    var clockVisible=this.gui.properties.getProperties().showClock;
+    this.leftContainer.setVisibility({
+        'AisTarget':aisVisible,
+        'ActiveRoute':routeVisible,
+        'LargeTime':clockVisible
+    });
 };
 /**
  * the periodic timer call
@@ -237,6 +256,7 @@ avnav.gui.Navpage.prototype.timerEvent=function(){
         this.hideWpButtons();
     }
     this.buttonUpdate();
+    this.widgetVisibility();
 };
 avnav.gui.Navpage.prototype.hidePage=function(){
     this.hideOverlay();
@@ -354,6 +374,8 @@ avnav.gui.Navpage.prototype.localInit=function(){
         })
     );
     container.render();
+    container.setVisibility({'AisTarget':false,'ActiveRoute':false});
+    this.leftContainer=container;
     this.widgetContainers.push(container);
     this._wpOverlay=new WpOverlay(this.selectOnPage('.avn_left_panel'),{
         okCallback:function(){

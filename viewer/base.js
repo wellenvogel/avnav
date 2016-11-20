@@ -118,6 +118,9 @@ avnav.assign = function (target, obj) {
     });
     return target;
 };
+avnav.isString=function(x){
+    return (x instanceof String || typeof(x) === 'string');
+};
 //see http://stackoverflow.com/questions/1909753/vertically-align-div-no-tables
 (function ($) {
     // VERTICALLY ALIGN FUNCTION
