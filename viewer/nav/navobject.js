@@ -5,6 +5,8 @@ avnav.provide('avnav.nav.NavObject');
 avnav.provide('avnav.nav.NavEvent');
 avnav.provide('avnav.nav.NavEventSource');
 
+var Store=require('../util/store');
+
 /**
  * the navevent type
  * @enum {number}
@@ -74,6 +76,7 @@ avnav.nav.NavEvent.EVENT_TYPE="navevent";
  * @constructor
  */
 avnav.nav.NavObject=function(propertyHandler){
+    this.base_.apply(this,arguments);
     /** @private */
     this.propertyHandler=propertyHandler;
 
@@ -171,6 +174,8 @@ avnav.nav.NavObject=function(propertyHandler){
         this.registerValueProvider(k,this,this.getFormattedNavValue);
     }
 };
+
+avnav.inherits(avnav.nav.NavObject,Store);
 
 /**
  * compute the raw and formtted valued
@@ -390,6 +395,7 @@ avnav.nav.NavObject.prototype.getValueNames=function(){
  */
 avnav.nav.NavObject.prototype.gpsEvent=function(){
     this.computeValues();
+    this.callCallbacks();
     $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,new avnav.nav.NavEvent (
         avnav.nav.NavEventType.GPS,
         this.getValueNames(),
@@ -402,6 +408,7 @@ avnav.nav.NavObject.prototype.gpsEvent=function(){
  * called back from trackhandler
  */
 avnav.nav.NavObject.prototype.trackEvent=function(){
+    this.callCallbacks();
     $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,new avnav.nav.NavEvent (
         avnav.nav.NavEventType.TRACK,
         [],
@@ -414,6 +421,7 @@ avnav.nav.NavObject.prototype.trackEvent=function(){
  * called back from aishandler
  */
 avnav.nav.NavObject.prototype.aisEvent=function(){
+    this.callCallbacks();
     $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,new avnav.nav.NavEvent (
         avnav.nav.NavEventType.AIS,
         [],
@@ -497,6 +505,7 @@ avnav.nav.NavObject.prototype.resetTrack=function(){
  * @param {avnav.nav.NavEventSource} source
  */
 avnav.nav.NavObject.prototype.triggerUpdateEvent=function(source){
+    this.callCallbacks();
     $(document).trigger(avnav.nav.NavEvent.EVENT_TYPE,
         new avnav.nav.NavEvent(avnav.nav.NavEventType.GPS,this.getValueNames(),source,this)
     );
