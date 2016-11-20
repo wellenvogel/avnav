@@ -45,6 +45,7 @@ ItemDescription.prototype.getMargin=function(opt_other){
  *     direction: left|right - default left
  *     inverted: true|false - use the elements in inverse order - default false
  *     scale: true|false - expand elements default true
+ *     layoutParameterCallback: function that will return layout parameter
  */
 var rowLayout=function(selector,itemSelector,opt_parameters){
     /** @private */
@@ -139,6 +140,9 @@ rowLayout.prototype.reset=function(){
 rowLayout.prototype.layout=function(parameters) {
     var options=avnav.assign({},this._options);
     avnav.assign(options,parameters);
+    if (options.layoutParameterCallback){
+        avnav.assign(options,options.layoutParameterCallback(this));
+    }
     if (! this._options.scale){
         //if we do not scale we can rescan each time
         this.init();

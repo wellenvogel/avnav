@@ -12,12 +12,14 @@ var ActiveRouteWidget=React.createClass({
         classes: React.PropTypes.string
     },
     _getValues:function(){
+        var approaching=this.props.store.getRoutingHandler().getApproaching();
         return{
             name:this.props.store.getValue('routeName'),
             remain:this.props.store.getValue('routeRemain'),
             eta:this.props.store.getValue('routeEta'),
             next:this.props.store.getValue('routeNextCourse'),
-            nextName: this.props.store.getValue('routeNextName') //if empty: do not show...
+            nextName: this.props.store.getValue('routeNextName'), //if empty: do not show...
+            isApproaching: approaching
         };
     },
     getInitialState: function(){
@@ -39,7 +41,7 @@ var ActiveRouteWidget=React.createClass({
     render: function(){
         var self=this;
         var classes="avn_widget avn_activeRouteWidget "+this.props.classes||"";
-        if (this.state.nextName != "") classes +="avn_route_display_approach ";
+        if (this.state.isApproaching) classes +=" avn_route_display_approach ";
         return (
         <div className={classes}>
             <div className="avn_widgetInfoLeft">RTE</div>
@@ -49,7 +51,7 @@ var ActiveRouteWidget=React.createClass({
                 <span className='avn_unit'>nm</span>
             </div>
             <div className="avn_routeEta">{this.state.eta}</div>
-            { this.state.nextName != "" ?
+            { this.state.isApproaching ?
                 <div className="avn_routeNext">
                     <span class="avn_routeNextCourse">{this.state.next}</span>
                     <span class='avn_unit'>&#176;</span>
