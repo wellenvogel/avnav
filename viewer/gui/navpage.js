@@ -302,7 +302,8 @@ avnav.gui.Navpage.prototype.localInit=function(){
         ev.data.page.gui.showPage('routepage');
     });
     $('#avi_routeDisplay').click({page:this},function(ev){
-        self.gui.showPage("wpinfopage",{wp:self.navobject.getRoutingHandler().getCurrentLegTarget()});
+        self.navobject.getRoutingHandler().startEditingRoute();
+        self.gui.showPage("routepage");
     });
     $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -332,7 +333,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
     this.waypointList=ReactDOM.render(list,document.getElementById('avi_route_info_list'));
 
     var boatWidgets=React.createElement(WidgetContainer,{
-        onWidgetClick: function(widgetDescription){
+        onClick: function(widgetDescription){
 
         },
         updateCallback: function(){
@@ -343,7 +344,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
     });
     ReactDOM.render(boatWidgets,document.getElementById('leftBottomPosition'));
     var markerWidgets=React.createElement(WidgetContainer,{
-        onWidgetClick: function(widgetDescription){
+        onClick: function(widgetDescription){
 
         },
         updateCallback: function(){
@@ -478,7 +479,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         var currentEditing=this.navobject.getRoutingHandler().getEditingWp();
         if (this.routingVisible){
             if (currentEditing && currentEditing.compare(wp)){
-                this.gui.showPage("wpinfopage",{wp:wp});
+                this._wpOverlay.show(wp);
             }
             else {
                 this.navobject.getRoutingHandler().setEditingWp(wp);
@@ -486,7 +487,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
             this.updateRoutePoints();
         }
         else{
-            this.gui.showPage("wpinfopage",{wp:wp});
+            this._wpOverlay.show(wp);
         }
     }
 };
@@ -572,6 +573,7 @@ avnav.gui.Navpage.prototype.hideRouting=function(opt_noStop) {
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
     this.updateAisPanel();
     this.selectOnPage('#avi_navLeftContainer').css('opacity',1);
+    this._wpOverlay.overlayClose();
 };
 
 /**
@@ -644,7 +646,7 @@ avnav.gui.Navpage.prototype.waypointClicked=function(idx,options){
         selectors.push('centered');
     }
     if (options.selected && options.centered){
-        this.gui.showPage("wpinfopage",{wp:this.navobject.getRoutingHandler().getEditingWp()});
+        this._wpOverlay.show(this.navobject.getRoutingHandler().getEditingWp());
     }
     this.waypointList.setSelectors(idx,selectors);
 };

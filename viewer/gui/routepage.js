@@ -8,6 +8,7 @@ var WaypointList=require('../components/ItemList.jsx');
 var WaypointItem=require('../components/WayPointListItem.jsx');
 var EditOverlay=require('./wpoverlay');
 var SimpleDialog=require('./simpledialog');
+var Formatter=require('../util/formatter');
 
 
 
@@ -20,11 +21,6 @@ avnav.gui.Routepage=function(){
     avnav.gui.Page.call(this,'routepage');
     this.MAXUPLOADSIZE=100000;
     /**
-     * the class that is assigned to visible routing entries
-     * @type {string}
-     */
-    this.visibleListEntryClass="avn_route_visible_entry";
-    /**
      * @private
      * @type {avnav.nav.RouteData}
      */
@@ -33,7 +29,7 @@ avnav.gui.Routepage=function(){
      * @private
      * @type {avnav.util.Formatter}
      */
-    this.formatter=new avnav.util.Formatter();
+    this.formatter=new Formatter();
     /**
      *
      * @type {Array:avnav.nav.navdata.WayPoint}
@@ -103,7 +99,8 @@ avnav.gui.Routepage.prototype.localInit=function(){
         itemClass:WaypointItem,
         selectors:{
             selected: 'avn_route_info_active_point',
-            editing: 'avn_route_info_editing_point'
+            editing: 'avn_route_info_editing_point',
+            target: 'avn_route_info_target'
         },
         updateCallback: function(){
             avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_routepage_wplist')
@@ -119,12 +116,6 @@ avnav.gui.Routepage.prototype.showPage=function(options) {
     var initial=true;
     if (options && options.returning) initial=false;
     this.fillData(initial);
-};
-
-
-avnav.gui.Routepage.prototype.displayInfo=function(id,info){
-    $('#routeInfo-'+id).find('.avn_route_listname').text(info.name);
-    $('#routeInfo-'+id).find('.avn_route_listinfo').text("todo");
 };
 
 avnav.gui.Routepage.prototype._waypointChanged=function(){
@@ -156,10 +147,11 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
     var waypoints=this.currentRoute.getFormattedPoints();
     var active=this.currentRoute.getIndexFromPoint(this._editingWaypoint);
     var selected=this.currentRoute.getIndexFromPoint(this._selectedWaypoint);
+    var active=this.currentRoute.getIndexFromPoint(this.routingData.getCurrentLegTarget());
     this.waypointList.setState({
         itemList:waypoints,
         options: {showLatLon: this.gui.properties.getProperties().routeShowLL},
-        selectors: {editing:active,selected:selected}
+        selectors: {editing:active,selected:selected,target:active}
     });
 };
 
