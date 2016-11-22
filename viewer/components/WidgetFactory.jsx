@@ -1,4 +1,4 @@
-var Widget=require("./Widget.jsx");
+var WidgetUpdater=require("./WidgetUpdater.jsx");
 var Formatter=require('../util/formatter');
 var React=require("react");
 var assign=require("object-assign");
@@ -43,7 +43,7 @@ class WidgetFactory{
             var props=avnav.assign({},e,properties);
             props.click=click;
             props.ref=e.name;
-            return React.createElement(e.wclass, props);
+            return React.createElement(WidgetUpdater(e.wclass), props);
         }
         return React.createElement("div",{},"widget "+name+" not found");
     }

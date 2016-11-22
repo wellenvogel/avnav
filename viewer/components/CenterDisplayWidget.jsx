@@ -26,16 +26,6 @@ var CenterDisplayWidget=React.createClass({
     componentWillReceiveProps: function(nextProps) {
         this.setState(this._getValues());
     },
-    dataChanged: function(){
-        var v=this._getValues();
-        this.setState(v);
-    },
-    componentWillMount: function(){
-        this.props.store.register(this);
-    },
-    componentWillUnmount: function(){
-        this.props.store.deregister(this);
-    },
     render: function(){
         var self=this;
         var classes="avn_widget avn_centerWidget "+this.props.classes||"";

@@ -3,24 +3,26 @@
  */
 
 var React=require("react");
+var NavObject=avnav.nav.NavObject;
 
 var AisTargetWidget=React.createClass({
     propTypes:{
         //formatter: React.PropTypes.func,
         click: React.PropTypes.func,
-        store: React.PropTypes.object.isRequired,
+        store: React.PropTypes.instanceOf(NavObject).isRequired,
         propertyHandler: React.PropTypes.object.isRequired,
-        classes: React.PropTypes.string
+        classes: React.PropTypes.string,
+        layoutUpdate: React.PropTypes.func
     },
     _getValues:function(){
         var aisTarget=this.props.store.getAisHandler().getNearestAisTarget();
         var color;
+        var aisProperties={};
         if (aisTarget && aisTarget.mmsi){
-            color=this.props.propertyHandler.getAisColor(aisTarget);
+            aisProperties.warning=aisTarget.warning;
+            if (aisTarget.nearest) aisProperties.nearest=true;
         }
-        else{
-            color=this.props.propertyHandler.getAisColor({});
-        }
+        color=this.props.propertyHandler.getAisColor(aisProperties);
         var front=this.props.store.getValue('aisFront');
         if (front == "" || front == " ") front="X";
         return{
@@ -38,21 +40,17 @@ var AisTargetWidget=React.createClass({
     componentWillReceiveProps: function(nextProps) {
         this.setState(this._getValues());
     },
-    dataChanged: function(){
-        var v=this._getValues();
-        this.setState(v);
-    },
-    componentWillMount: function(){
-        this.props.store.register(this);
-    },
-    componentWillUnmount: function(){
-        this.props.store.deregister(this);
+    componentDidUpdate: function(){
+        if (this.props.layoutUpdate){
+            this.props.layoutUpdate();
+        }
     },
     render: function(){
         var self=this;
         var classes="avn_widget avn_aisTargetWidget "+this.props.classes||"";
         var imgSrc=this.state.statusUrl;
         return (
+            (this.state.mmsi !== undefined)?
             <div className={classes} style={{backgroundColor:this.state.color}} onClick={this.click}>
                 <div className="avn_widgetInfoLeft">AIS</div>
                 <div className="avn_widgetData avn_widgetDataFirst">
@@ -73,7 +71,8 @@ var AisTargetWidget=React.createClass({
                 <div className="avn_widgetData">
                     <span className='avn_ais_front avn_ais_data'>{this.state.front}</span>
                 </div>
-            </div>
+            </div>:
+                null
         );
     },
     click:function(){

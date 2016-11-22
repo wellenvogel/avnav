@@ -192,6 +192,7 @@ avnav.gui.Navpage.prototype.widgetVisibility=function(){
         var aisTarget=this.navobject.getAisHandler().getNearestAisTarget();
         aisVisible=(aisTarget && aisTarget.mmsi);
     }
+    aisVisible=true;
     var routeVisible=this.gui.properties.getProperties().layers.nav;
     if (routeVisible) routeVisible=this.navobject.getRoutingHandler().hasActiveRoute();
     var centerVisible=true;

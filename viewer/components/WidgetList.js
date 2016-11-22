@@ -11,7 +11,7 @@ var Formatter=require('../util/formatter');
 var widgetList=[
     {
         name: 'SOG',
-        max: "100.0",
+        default: "0.0",
         unit: "kn",
         caption: 'SOG',
         //formatter: function(val){ return Formatter.formatDecimal(val,4,1);},
@@ -21,7 +21,7 @@ var widgetList=[
     },
     {
         name: 'COG',
-        max: "999",
+        default: "---",
         unit: "\u00b0",
         caption: 'COG',
         //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
@@ -32,7 +32,7 @@ var widgetList=[
     },
     {
         name: 'Position',
-        max: "-------------",
+        default: "-------------",
         caption: 'BOAT',
         //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
         wclass: Widget,
@@ -53,7 +53,7 @@ var widgetList=[
     },
     {
         name: 'DST',
-        max: "99999.0",
+        default: "----",
         unit: "nm",
         caption: 'DST',
         //formatter: function(val){ return Formatter.formatDecimal(val,4,1);},
@@ -63,7 +63,7 @@ var widgetList=[
     },
     {
         name: 'BRG',
-        max: "999",
+        default: "---",
         unit: "\u00b0",
         caption: 'BRG',
         //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
@@ -73,7 +73,7 @@ var widgetList=[
     },
     {
         name: 'LargeTime',
-        max: "99:99",
+        default: "--:--",
         caption: 'Time',
         wclass: Widget,
         classes: 'avn_timeWidget',
@@ -81,7 +81,7 @@ var widgetList=[
     },
     {
         name: 'WpPosition',
-        max: "-------------",
+        default: "-------------",
         caption: 'MRK',
         //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
         wclass: Widget,

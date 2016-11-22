@@ -28,15 +28,10 @@ var ActiveRouteWidget=React.createClass({
     componentWillReceiveProps: function(nextProps) {
         this.setState(this._getValues());
     },
-    dataChanged: function(){
-        var v=this._getValues();
-        this.setState(v);
-    },
-    componentWillMount: function(){
-        this.props.store.register(this);
-    },
-    componentWillUnmount: function(){
-        this.props.store.deregister(this);
+    componentDidUpdate: function(){
+        if (this.props.layoutUpdate){
+            this.props.layoutUpdate();
+        }
     },
     render: function(){
         var self=this;

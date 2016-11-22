@@ -3,12 +3,11 @@
  */
 
 var React=require("react");
-
+var NavObject=avnav.nav.NavObject;
 var TimeStatusWidget=React.createClass({
     propTypes:{
-        //formatter: React.PropTypes.func,
         click: React.PropTypes.func,
-        store: React.PropTypes.object.isRequired,
+        store: React.PropTypes.instanceOf(NavObject).isRequired,
         classes: React.PropTypes.string
     },
     _getValues:function(){
@@ -22,18 +21,6 @@ var TimeStatusWidget=React.createClass({
     },
     componentWillReceiveProps: function(nextProps) {
         this.setState(this._getValues());
-    },
-    dataChanged: function(){
-        var v=this._getValues();
-        if (v.time != this.state.time || v.statusUrl != this.state.statusUrl){
-            this.setState(v);
-        }
-    },
-    componentWillMount: function(){
-        this.props.store.register(this);
-    },
-    componentWillUnmount: function(){
-        this.props.store.deregister(this);
     },
     render: function(){
         var self=this;

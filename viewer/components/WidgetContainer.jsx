@@ -8,6 +8,7 @@ var DynLayout=require('../util/dynlayout');
 
 var WidgetContainer=function(reactProperties: Object,domId: String,opt_layoutHandler: DynLayout) {
     var self=this;
+    var container=this;
     /**
      * the react properties
      * @type {Object}
@@ -54,7 +55,8 @@ var WidgetContainer=function(reactProperties: Object,domId: String,opt_layoutHan
                         if (self.state.visibility[item]) {
                             var widget = Factory.createWidget(item, {
                                 store: self.props.store,
-                                propertyHandler: self.props.propertyHandler
+                                propertyHandler: self.props.propertyHandler,
+                                layoutUpdate: container.layout
                             }, function (data) {
                                 self.widgetClicked(item, data);
                             });
@@ -112,6 +114,7 @@ var WidgetContainer=function(reactProperties: Object,domId: String,opt_layoutHan
 
     });
     this._instance=undefined;
+    this.layout=this.layout.bind(this);
 };
 WidgetContainer.prototype.render=function(){
     var container=React.createElement(this._reactFactory,this._reactProperties);
