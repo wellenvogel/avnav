@@ -6,6 +6,7 @@ avnav.provide('avnav.map.LayerTypes');
 avnav.provide('avnav.map.MapEvent');
 
 var navdata=require('../nav/navdata');
+var NavObject=require('../nav/navobject');
 
 
 
@@ -63,7 +64,7 @@ avnav.map.MapHolder=function(properties,navobject){
      * */
     this.olmap=null;
     /** @private
-     * @type {avnav.nav.NavObject}
+     * @type {NavObject}
      * */
     this.navobject=navobject;
     /** @private
@@ -147,7 +148,7 @@ avnav.map.MapHolder=function(properties,navobject){
      */
     this.lastOpacity=-1;
     var self=this;
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
 
@@ -415,7 +416,7 @@ avnav.map.MapHolder.prototype.getGpsLock=function(){
 
 /**
  * called with updates from nav
- * @param {avnav.nav.NavEvent} evdata
+ * @param {navdata.NavEvent} evdata
  * @constructor
  */
 avnav.map.MapHolder.prototype.navEvent=function(evdata){

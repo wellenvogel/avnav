@@ -66,7 +66,7 @@ avnav.gui.Routepage=function(){
      */
     this._selectedWaypoint=undefined;
     var self=this;
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,function(ev,evdata){
@@ -216,7 +216,7 @@ avnav.gui.Routepage.prototype._nameChanged=function() {
 };
 /**
  *
- * @param {avnav.nav.NavEvent} ev
+ * @param {navdata.NavEvent} ev
  */
 avnav.gui.Routepage.prototype.navEvent=function(ev){
     if (! this.visible) return;

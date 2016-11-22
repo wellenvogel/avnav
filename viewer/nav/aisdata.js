@@ -5,12 +5,13 @@ var AisTarget=require('./navdata').Ais;
 var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
 var navdata=require('../nav/navdata');
+var NavObject=require('../nav/navobject');
 
 /**
  * the handler for the ais data
  * query the server...
  * @param {avnav.util.PropertyHandler} propertyHandler
- * @param {avnav.nav.NavObject} navobject
+ * @param {NavObject} navobject
  * @constructor
  */
 var AisData=function(propertyHandler,navobject){

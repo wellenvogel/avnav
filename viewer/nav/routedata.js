@@ -4,7 +4,7 @@
 
 var routeobjects=require('./routeobjects');
 var navdata=require('./navdata');
-var NavObject=require('./navobject').NavObject;
+var NavObject=require('./navobject');
 var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
 

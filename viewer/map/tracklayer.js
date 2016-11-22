@@ -4,12 +4,13 @@
 
 avnav.provide('avnav.map.TrackLayer');
 var navdata=require('../nav/navdata');
+var NavObject=require('../nav/navobject');
 
 
 /**
  * a cover for the layer that the track
  * @param {avnav.map.MapHolder} mapholder
- * @param {avnav.nav.NavObject} navobject
+ * @param {NavObject} navobject
  * @constructor
  */
 avnav.map.TrackLayer=function(mapholder,navobject){
@@ -20,7 +21,7 @@ avnav.map.TrackLayer=function(mapholder,navobject){
     this.mapholder=mapholder;
     /**
      * @private
-     * @type {avnav.nav.NavObject}
+     * @type {NavObject}
      */
     this.navobject=navobject;
     /**
@@ -46,7 +47,7 @@ avnav.map.TrackLayer=function(mapholder,navobject){
     this.lineStyle={};
     this.setStyle();
     var self=this;
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){

@@ -5,13 +5,14 @@
 avnav.provide('avnav.map.NavLayer');
 var NavCompute=require('../nav/navcompute');
 var navdata=require('../nav/navdata');
+var NavObject=require('../nav/navobject');
 
 
 
 /**
  * a cover for the layer that contaisn the booat, the current wp and the route between them
  * @param {avnav.map.MapHolder} mapholder
- * @param {avnav.nav.NavObject} navobject
+ * @param {NavObject} navobject
  * @constructor
  */
 avnav.map.NavLayer=function(mapholder,navobject){
@@ -23,7 +24,7 @@ avnav.map.NavLayer=function(mapholder,navobject){
     this.mapholder=mapholder;
     /**
      * @private
-     * @type {avnav.nav.NavObject}
+     * @type {NavObject}
      */
     this.navobject=navobject;
 

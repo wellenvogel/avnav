@@ -36,6 +36,40 @@ navdata.AisCenterMode={
     MAP:2
 };
 
+
+
+
+/**
+ *
+ * @param {navdata.NavEventType} type
+ * @param {Array.<string>} changedNames the display names that have changed data
+ * @param {navdata.NavEventSource} source
+ * @param {NavObject} navobject
+ * @constructor
+ */
+navdata.NavEvent=function(type,changedNames,source,navobject){
+    /**
+     * @type {navdata.NavEventType}
+     */
+    this.type=type;
+    /**
+     * the list of changed display elements
+     * @type {Array.<string>}
+     */
+    this.changedNames=changedNames;
+    /**
+     * @type {navdata.NavEventSource}
+     */
+    this.source=source;
+    /**
+     * @type {NavObject}
+     */
+    this.navobject=navobject;
+};
+
+navdata.NavEvent.EVENT_TYPE="navevent";
+
+
 /**
  * a point lon,lat
  * @param lon

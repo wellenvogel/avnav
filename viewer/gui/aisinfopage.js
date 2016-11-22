@@ -3,7 +3,7 @@
  */
 avnav.provide('avnav.gui.AisInfoPage');
 
-
+var navdata=require('../nav/navdata');
 
 
 /**
@@ -13,7 +13,7 @@ avnav.provide('avnav.gui.AisInfoPage');
 avnav.gui.AisInfoPage=function(){
     avnav.gui.Page.call(this,'aisinfopage',
         {
-            eventlist:[avnav.nav.NavEvent.EVENT_TYPE],
+            eventlist:[navdata.NavEvent.EVENT_TYPE],
             returnOnClick: true
         }
     );

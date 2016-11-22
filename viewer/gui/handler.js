@@ -5,10 +5,11 @@
 avnav.provide('avnav.gui.Handler');
 avnav.provide('avnav.gui.PageEvent');
 avnav.provide('avnav.gui.AndroidEvent');
+var NavObject=require('../nav/navobject');
 /**
  * the page change event
  * @param {avnav.gui.Handler} gui
- * @param {avnav.nav.NavObject} navobject
+ * @param {NavObject} navobject
  * @param {string} oldpage
  * @param {string} newpage
  * @param {object} opt_options
@@ -55,14 +56,14 @@ avnav.gui.BackEvent.EVENT_TYPE = "avnback";
 /**
  *
  * @param {avnav.util.PropertyHandler} properties
- * @param {avnav.nav.NavObject} navobject
+ * @param {NavObject} navobject
  * @param {ol.Map} map
  * @constructor
  */
 avnav.gui.Handler = function (properties, navobject, map) {
     /** {avnav.util.PropertyHandler} */
     this.properties = properties;
-    /** {avnav.nav.NavObject} */
+    /** {NavObject} */
     this.navobject = navobject;
     /** {avnav.map.MapHolder} */
     this.map = map;

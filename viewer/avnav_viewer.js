@@ -31,6 +31,7 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
 
 avnav.provide('avnav.main');
 
+var NavObject=require('./nav/navobject');
 
 
 
@@ -176,7 +177,7 @@ avnav.main=function() {
     else {
         propertyHandler.setValueByName('routingServerError',true);
     }
-    var navobject=new avnav.nav.NavObject(propertyHandler);
+    var navobject=new NavObject(propertyHandler);
     var mapholder=new avnav.map.MapHolder(propertyHandler,navobject);
     var gui=new avnav.gui.Handler(propertyHandler,navobject,mapholder);
 

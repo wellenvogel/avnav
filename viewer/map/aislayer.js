@@ -4,12 +4,13 @@
 
 avnav.provide('avnav.map.AisLayer');
 var navdata=require('../nav/navdata');
+var NavObject=require('../nav/navobject');
 
 
 /**
  * a cover for the layer with the AIS display
  * @param {avnav.map.MapHolder} mapholder
- * @param {avnav.nav.NavObject} navobject
+ * @param {NavObject} navobject
  * @constructor
  */
 avnav.map.AisLayer=function(mapholder,navobject){
@@ -20,7 +21,7 @@ avnav.map.AisLayer=function(mapholder,navobject){
     this.mapholder=mapholder;
     /**
      * @private
-     * @type {avnav.nav.NavObject}
+     * @type {NavObject}
      */
     this.navobject=navobject;
     var self=this;
@@ -59,7 +60,7 @@ avnav.map.AisLayer=function(mapholder,navobject){
      */
     this.pixel=[];
 
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     /**

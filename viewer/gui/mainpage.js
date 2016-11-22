@@ -16,7 +16,7 @@ avnav.gui.Mainpage=function(){
     var self=this;
     this.lastNmeaStatus=null;
     this.lastAisStatus=null;
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     $(window).on('resize', function () {
@@ -121,7 +121,7 @@ avnav.gui.Mainpage.prototype.setImageColor=function(imageId,color){
 
 /**
  *
- * @param {avnav.nav.NavEvent} evdata
+ * @param {navdata.NavEvent} evdata
  */
 avnav.gui.Mainpage.prototype.navEvent=function(evdata) {
     if (!this.visible) return;

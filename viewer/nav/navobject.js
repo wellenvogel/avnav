@@ -10,47 +10,14 @@ var RouteData=require('./routedata');
 var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
 var navdata=require('./navdata');
-var nav={};
 
-
-
-
-/**
- *
- * @param {navdata.NavEventType} type
- * @param {Array.<string>} changedNames the display names that have changed data
- * @param {navdata.NavEventSource} source
- * @param {nav.NavObject} navobject
- * @constructor
- */
-nav.NavEvent=function(type,changedNames,source,navobject){
-    /**
-     * @type {navdata.NavEventType}
-     */
-    this.type=type;
-    /**
-     * the list of changed display elements
-     * @type {Array.<string>}
-     */
-    this.changedNames=changedNames;
-    /**
-     * @type {navdata.NavEventSource}
-     */
-    this.source=source;
-    /**
-     * @type {nav.NavObject}
-     */
-    this.navobject=navobject;
-};
-
-nav.NavEvent.EVENT_TYPE="navevent";
 
 /**
  *
  * @param {avnav.util.PropertyHandler} propertyHandler
  * @constructor
  */
-nav.NavObject=function(propertyHandler){
+var NavObject=function(propertyHandler){
     this.base_.apply(this,arguments);
     /** @private */
     this.propertyHandler=propertyHandler;
@@ -153,13 +120,13 @@ nav.NavObject=function(propertyHandler){
     }
 };
 
-avnav.inherits(nav.NavObject,Store);
+avnav.inherits(NavObject,Store);
 
 /**
  * compute the raw and formtted valued
  * @private
  */
-nav.NavObject.prototype.computeValues=function(){
+NavObject.prototype.computeValues=function(){
     var gps=this.gpsdata.getGpsData();
     //copy the marker to data to make it available extern
     this.data.markerWp=this.routeHandler.getCurrentLegTarget();
@@ -284,7 +251,7 @@ nav.NavObject.prototype.computeValues=function(){
     this.formattedValues.statusImageUrl=gps.valid?this.propertyHandler.getProperties().statusOkImage:this.propertyHandler.getProperties().statusErrorImage;
 };
 
-nav.NavObject.prototype.formatLegData=function(legInfo){
+NavObject.prototype.formatLegData=function(legInfo){
     var rt={};
     if (! legInfo) return rt;
     rt.markerEta=(legInfo.markerEta)?
@@ -306,15 +273,15 @@ nav.NavObject.prototype.formatLegData=function(legInfo){
  * get the current map center (lon/lat)
  * @returns {navdata.Point}
  */
-nav.NavObject.prototype.getMapCenter=function(){
+NavObject.prototype.getMapCenter=function(){
     return this.maplatlon;
 };
 
 /**
  * get the center for AIS queries
- * @returns {navdata.Point|nav.NavObject.maplatlon|*}
+ * @returns {navdata.Point|NavObject.maplatlon|*}
  */
-nav.NavObject.prototype.getAisCenter=function(){
+NavObject.prototype.getAisCenter=function(){
     if (this.aisMode == navdata.AisCenterMode.NONE) return undefined;
     if (this.aisMode == navdata.AisCenterMode.GPS) {
         var data=this.gpsdata.getGpsData();
@@ -328,7 +295,7 @@ nav.NavObject.prototype.getAisCenter=function(){
  * set the mode for the AIS query
  * @param {navdata.AisCenterMode} mode
  */
-nav.NavObject.prototype.setAisCenterMode=function(mode){
+NavObject.prototype.setAisCenterMode=function(mode){
     this.aisMode=mode;
 };
 /**
@@ -336,14 +303,14 @@ nav.NavObject.prototype.setAisCenterMode=function(mode){
  * @param name
  * @returns {*}
  */
-nav.NavObject.prototype.getFormattedNavValue=function(name){
+NavObject.prototype.getFormattedNavValue=function(name){
     return this.formattedValues[name];
 };
 /**
  * return the values that have been computed from others
  * @returns {{centerCourse: number, centerDistance: number, centerMarkerCourse: number, centerMarkerDistance: number, markerCourse: number, markerDistance: number, markerVmg: number, markerEta: null, markerWp: navdata.WayPoint, routeName: undefined, routeNumPoints: number, routeLen: number, routeRemain: number, routeEta: null, routeNextCourse: number, routeNextWp: undefined, markerXte: number, edRouteName: undefined, edRouteNumPoints: number, edRouteLen: number, edRouteRemain: number, edRouteEta: number}}
  */
-nav.NavObject.prototype.getComputedValues=function(){
+NavObject.prototype.getComputedValues=function(){
     return this.data;
 };
 
@@ -353,7 +320,7 @@ nav.NavObject.prototype.getComputedValues=function(){
  * @param {string} name
  * @returns {string}
  */
-nav.NavObject.prototype.getValue=function(name){
+NavObject.prototype.getValue=function(name){
     var handler=this.valueMap[name];
     if(handler) return handler.provider.call(handler.context,name);
     return "undef";
@@ -361,7 +328,7 @@ nav.NavObject.prototype.getValue=function(name){
 /**
  * get a list of known display names
  */
-nav.NavObject.prototype.getValueNames=function(){
+NavObject.prototype.getValueNames=function(){
     var rt=[];
     for (var k in this.valueMap){
         rt.push(k);
@@ -372,10 +339,10 @@ nav.NavObject.prototype.getValueNames=function(){
 /**
  * called back from gpshandler
  */
-nav.NavObject.prototype.gpsEvent=function(){
+NavObject.prototype.gpsEvent=function(){
     this.computeValues();
     this.callCallbacks();
-    $(document).trigger(nav.NavEvent.EVENT_TYPE,new nav.NavEvent (
+    $(document).trigger(navdata.NavEvent.EVENT_TYPE,new navdata.NavEvent (
         navdata.NavEventType.GPS,
         this.getValueNames(),
         navdata.NavEventSource.NAV,
@@ -386,9 +353,9 @@ nav.NavObject.prototype.gpsEvent=function(){
 /**
  * called back from trackhandler
  */
-nav.NavObject.prototype.trackEvent=function(){
+NavObject.prototype.trackEvent=function(){
     this.callCallbacks();
-    $(document).trigger(nav.NavEvent.EVENT_TYPE,new nav.NavEvent (
+    $(document).trigger(navdata.NavEvent.EVENT_TYPE,new navdata.NavEvent (
         navdata.NavEventType.TRACK,
         [],
         navdata.NavEventSource.NAV,
@@ -399,9 +366,9 @@ nav.NavObject.prototype.trackEvent=function(){
 /**
  * called back from aishandler
  */
-nav.NavObject.prototype.aisEvent=function(){
+NavObject.prototype.aisEvent=function(){
     this.callCallbacks();
-    $(document).trigger(nav.NavEvent.EVENT_TYPE,new nav.NavEvent (
+    $(document).trigger(navdata.NavEvent.EVENT_TYPE,new navdata.NavEvent (
         navdata.NavEventType.AIS,
         [],
         navdata.NavEventSource.NAV,
@@ -412,9 +379,9 @@ nav.NavObject.prototype.aisEvent=function(){
 /**
  * called back from routeHandler
  */
-nav.NavObject.prototype.routeEvent=function(){
+NavObject.prototype.routeEvent=function(){
     this.computeValues();
-    $(document).trigger(nav.NavEvent.EVENT_TYPE,new nav.NavEvent (
+    $(document).trigger(navdata.NavEvent.EVENT_TYPE,new navdata.NavEvent (
         navdata.NavEventType.ROUTE,
         [],
         navdata.NavEventSource.NAV,
@@ -428,7 +395,7 @@ nav.NavObject.prototype.routeEvent=function(){
  * @param {object} providerContext
  * @param {function} provider
  */
-nav.NavObject.prototype.registerValueProvider=function(name,providerContext,provider){
+NavObject.prototype.registerValueProvider=function(name,providerContext,provider){
     this.valueMap[name]={provider:provider,context:providerContext};
 };
 
@@ -436,7 +403,7 @@ nav.NavObject.prototype.registerValueProvider=function(name,providerContext,prov
  * set the current map center position
  * @param {Array.<number>} lonlat
  */
-nav.NavObject.prototype.setMapCenter=function(lonlat){
+NavObject.prototype.setMapCenter=function(lonlat){
     var p=new navdata.Point();
     p.fromCoord(lonlat);
     if (p.compare(this.maplatlon)) return;
@@ -449,7 +416,7 @@ nav.NavObject.prototype.setMapCenter=function(lonlat){
  * get the routing handler
  * @returns {RouteData|*}
  */
-nav.NavObject.prototype.getRoutingHandler=function(){
+NavObject.prototype.getRoutingHandler=function(){
     return this.routeHandler;
 };
 
@@ -457,25 +424,25 @@ nav.NavObject.prototype.getRoutingHandler=function(){
  * get the gps data handler
  * @returns {GpsData}
  */
-nav.NavObject.prototype.getGpsHandler=function(){
+NavObject.prototype.getGpsHandler=function(){
     return this.gpsdata;
 };
 /**
  * get the track handler
  * @returns {TrackData}
  */
-nav.NavObject.prototype.getTrackHandler=function(){
+NavObject.prototype.getTrackHandler=function(){
     return this.trackHandler;
 };
 /**
  * get the AIS data handler
  * @returns {AisData|*}
  */
-nav.NavObject.prototype.getAisHandler=function(){
+NavObject.prototype.getAisHandler=function(){
     return this.aisHandler;
 };
 
-nav.NavObject.prototype.resetTrack=function(){
+NavObject.prototype.resetTrack=function(){
     return this.trackHandler.resetTrack();
 };
 
@@ -483,14 +450,14 @@ nav.NavObject.prototype.resetTrack=function(){
  * send out an update event
  * @param {navdata.NavEventSource} source
  */
-nav.NavObject.prototype.triggerUpdateEvent=function(source){
+NavObject.prototype.triggerUpdateEvent=function(source){
     this.callCallbacks();
-    $(document).trigger(nav.NavEvent.EVENT_TYPE,
-        new nav.NavEvent(navdata.NavEventType.GPS,this.getValueNames(),source,this)
+    $(document).trigger(navdata.NavEvent.EVENT_TYPE,
+        new navdata.NavEvent(navdata.NavEventType.GPS,this.getValueNames(),source,this)
     );
 };
 
-module.exports=nav;
+module.exports=NavObject;
 
 
 

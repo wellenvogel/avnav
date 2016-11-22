@@ -40,7 +40,7 @@ avnav.gui.Gpspage.prototype.localInit=function(){
         evt.stopPropagation();
         self.gui.showPage('aisinfopage');
     });
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
 

@@ -24,7 +24,7 @@ avnav.gui.Aispage=function(){
      */
     this.showTime=(new Date()).getTime();
     var self=this;
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
 };
@@ -105,7 +105,7 @@ avnav.gui.Aispage.prototype.hidePage=function(){
 };
 /**
  *
- * @param {avnav.nav.NavEvent} ev
+ * @param {navdata.NavEvent} ev
  */
 avnav.gui.Aispage.prototype.navEvent=function(ev){
     if (! this.visible) return;

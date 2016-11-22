@@ -2,13 +2,14 @@
  * Created by andreas on 04.05.14.
  */
 var navdata=require('../nav/navdata');
+var NavObject=require('../nav/navobject');
 
 
 /**
  * the handler for the gps data
  * query the server...
  * @param {avnav.util.PropertyHandler} propertyHandler
- * @param {avnav.nav.NavObject} navobject
+ * @param {NavObject} navobject
  * @constructor
  */
 var GpsData=function(propertyHandler,navobject){

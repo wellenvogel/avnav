@@ -286,7 +286,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $('#avi_route_info_navpage_inner').click({page:this},function(ev){
         ev.data.page.gui.showPage('routepage');
     });
-    $(document).on(avnav.nav.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     $(document).on(avnav.map.MapEvent.EVENT_TYPE, function(ev,evdata){
@@ -414,7 +414,7 @@ avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription,data){
 
 /**
  *
- * @param {avnav.nav.NavEvent} evdata
+ * @param {navdata.NavEvent} evdata
  */
 avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
