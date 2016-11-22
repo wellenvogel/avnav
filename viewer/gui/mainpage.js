@@ -3,6 +3,7 @@
  */
 avnav.provide('avnav.gui.Mainpage');
 
+var navdata=require('../nav/navdata');
 
 
 
@@ -124,7 +125,7 @@ avnav.gui.Mainpage.prototype.setImageColor=function(imageId,color){
  */
 avnav.gui.Mainpage.prototype.navEvent=function(evdata) {
     if (!this.visible) return;
-    if (evdata.type == avnav.nav.NavEventType.GPS){
+    if (evdata.type == navdata.NavEventType.GPS){
         var status=this.navobject.getValue("aisStatusColor");
         if (status != this.lastAisStatus) {
             this.setImageColor('#avi_mainAisStatusImage',status);

@@ -11,50 +11,21 @@ var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
 var navdata=require('./navdata');
 var nav={};
-/**
- * the navevent type
- * @enum {number}
- */
-nav.NavEventType={
-    GPS:0,
-    AIS:1,
-    TRACK:2,
-    NAV:3,
-    ROUTE: 4
-};
 
-/**
- * a definition of the source that caused an event
- * to avoid endless loops
- * @enum {number}
- */
-nav.NavEventSource={
-    NAV:0,
-    GUI:1,
-    MAP:2
-};
 
-/**
- * the center mode for ais
- * @type {{NONE: number, GPS: number, MAP: number}}
- */
-nav.AisCenterMode={
-    NONE:0,
-    GPS:1,
-    MAP:2
-};
+
 
 /**
  *
- * @param {nav.NavEventType} type
+ * @param {navdata.NavEventType} type
  * @param {Array.<string>} changedNames the display names that have changed data
- * @param {nav.NavEventSource} source
+ * @param {navdata.NavEventSource} source
  * @param {nav.NavObject} navobject
  * @constructor
  */
 nav.NavEvent=function(type,changedNames,source,navobject){
     /**
-     * @type {nav.NavEventType}
+     * @type {navdata.NavEventType}
      */
     this.type=type;
     /**
@@ -63,7 +34,7 @@ nav.NavEvent=function(type,changedNames,source,navobject){
      */
     this.changedNames=changedNames;
     /**
-     * @type {nav.NavEventSource}
+     * @type {navdata.NavEventSource}
      */
     this.source=source;
     /**
@@ -115,7 +86,7 @@ nav.NavObject=function(propertyHandler){
      */
     this.maplatlon=new navdata.Point(0,0);
 
-    this.aisMode=nav.AisCenterMode.NONE;
+    this.aisMode=navdata.AisCenterMode.NONE;
 
 
     /**
@@ -344,8 +315,8 @@ nav.NavObject.prototype.getMapCenter=function(){
  * @returns {navdata.Point|nav.NavObject.maplatlon|*}
  */
 nav.NavObject.prototype.getAisCenter=function(){
-    if (this.aisMode == nav.AisCenterMode.NONE) return undefined;
-    if (this.aisMode == nav.AisCenterMode.GPS) {
+    if (this.aisMode == navdata.AisCenterMode.NONE) return undefined;
+    if (this.aisMode == navdata.AisCenterMode.GPS) {
         var data=this.gpsdata.getGpsData();
         if (data.valid) return data;
         return undefined;
@@ -355,7 +326,7 @@ nav.NavObject.prototype.getAisCenter=function(){
 
 /**
  * set the mode for the AIS query
- * @param {nav.AisCenterMode} mode
+ * @param {navdata.AisCenterMode} mode
  */
 nav.NavObject.prototype.setAisCenterMode=function(mode){
     this.aisMode=mode;
@@ -405,9 +376,9 @@ nav.NavObject.prototype.gpsEvent=function(){
     this.computeValues();
     this.callCallbacks();
     $(document).trigger(nav.NavEvent.EVENT_TYPE,new nav.NavEvent (
-        nav.NavEventType.GPS,
+        navdata.NavEventType.GPS,
         this.getValueNames(),
-        nav.NavEventSource.NAV,
+        navdata.NavEventSource.NAV,
         this
     ));
 };
@@ -418,9 +389,9 @@ nav.NavObject.prototype.gpsEvent=function(){
 nav.NavObject.prototype.trackEvent=function(){
     this.callCallbacks();
     $(document).trigger(nav.NavEvent.EVENT_TYPE,new nav.NavEvent (
-        nav.NavEventType.TRACK,
+        navdata.NavEventType.TRACK,
         [],
-        nav.NavEventSource.NAV,
+        navdata.NavEventSource.NAV,
         this
     ));
 };
@@ -431,9 +402,9 @@ nav.NavObject.prototype.trackEvent=function(){
 nav.NavObject.prototype.aisEvent=function(){
     this.callCallbacks();
     $(document).trigger(nav.NavEvent.EVENT_TYPE,new nav.NavEvent (
-        nav.NavEventType.AIS,
+        navdata.NavEventType.AIS,
         [],
-        nav.NavEventSource.NAV,
+        navdata.NavEventSource.NAV,
         this
     ));
 };
@@ -444,12 +415,12 @@ nav.NavObject.prototype.aisEvent=function(){
 nav.NavObject.prototype.routeEvent=function(){
     this.computeValues();
     $(document).trigger(nav.NavEvent.EVENT_TYPE,new nav.NavEvent (
-        nav.NavEventType.ROUTE,
+        navdata.NavEventType.ROUTE,
         [],
-        nav.NavEventSource.NAV,
+        navdata.NavEventSource.NAV,
         this
     ));
-    this.triggerUpdateEvent(nav.NavEventSource.NAV);
+    this.triggerUpdateEvent(navdata.NavEventSource.NAV);
 };
 /**
  * register the provider of a display value
@@ -471,7 +442,7 @@ nav.NavObject.prototype.setMapCenter=function(lonlat){
     if (p.compare(this.maplatlon)) return;
     p.assign(this.maplatlon);
     this.computeValues();
-    this.triggerUpdateEvent(nav.NavEventSource.MAP);
+    this.triggerUpdateEvent(navdata.NavEventSource.MAP);
 };
 
 /**
@@ -510,12 +481,12 @@ nav.NavObject.prototype.resetTrack=function(){
 
 /**
  * send out an update event
- * @param {nav.NavEventSource} source
+ * @param {navdata.NavEventSource} source
  */
 nav.NavObject.prototype.triggerUpdateEvent=function(source){
     this.callCallbacks();
     $(document).trigger(nav.NavEvent.EVENT_TYPE,
-        new nav.NavEvent(nav.NavEventType.GPS,this.getValueNames(),source,this)
+        new nav.NavEvent(navdata.NavEventType.GPS,this.getValueNames(),source,this)
     );
 };
 

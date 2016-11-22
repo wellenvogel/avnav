@@ -2,6 +2,40 @@
  * Created by Andreas on 14.05.2014.
  */
 var navdata={};
+
+/**
+ * the navevent type
+ * @enum {number}
+ */
+navdata.NavEventType={
+    GPS:0,
+    AIS:1,
+    TRACK:2,
+    NAV:3,
+    ROUTE: 4
+};
+
+
+/**
+ * a definition of the source that caused an event
+ * to avoid endless loops
+ * @enum {number}
+ */
+navdata.NavEventSource={
+    NAV:0,
+    GUI:1,
+    MAP:2
+};
+/**
+ * the center mode for ais
+ * @type {{NONE: number, GPS: number, MAP: number}}
+ */
+navdata.AisCenterMode={
+    NONE:0,
+    GPS:1,
+    MAP:2
+};
+
 /**
  * a point lon,lat
  * @param lon

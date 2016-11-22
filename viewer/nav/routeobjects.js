@@ -576,5 +576,24 @@ routeobjects.Route.prototype.getFormattedPoints=function(){
     }
     return rt;
 };
+/**
+ * compute the length
+ * @param {number} startIdx - the point to start from
+ * @returns {number}
+ */
+routeobjects.Route.prototype.computeLength=function(startIdx){
+    var rt=0;
+    if (startIdx < 0) startIdx=0;
+    if (this.points.length < (startIdx+2)) return rt;
+    var last=this.points[startIdx];
+    startIdx++;
+    for (;startIdx<this.points.length;startIdx++){
+        var next=this.points[startIdx];
+        var dst=NavCompute.computeDistance(last,next);
+        rt+=dst.dtsnm;
+        last=next;
+    }
+    return rt;
+};
 
 module.exports=routeobjects;

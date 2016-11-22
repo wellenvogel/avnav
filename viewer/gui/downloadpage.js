@@ -3,6 +3,7 @@
  */
 avnav.provide('avnav.gui.Downloadpage');
 avnav.provide('avnav.gui.FileInfo');
+var routeobjects=require('../nav/routeobjects');
 
 
 avnav.gui.FileInfo=function(name,type,time){
@@ -161,7 +162,7 @@ avnav.gui.Downloadpage.prototype.uploadRoute=function(fileObject){
             }
             var route = undefined;
             try {
-                route = new avnav.nav.Route("");
+                route = new routeobjects.Route("");
                 route.fromXml(xml);
             } catch (e) {
                 alert("unable to parse route from " + file.name + ", error: " + e);

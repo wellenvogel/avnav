@@ -2,6 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 avnav.provide('avnav.gui.Aispage');
+var navdata=require('../nav/navdata');
 
 
 
@@ -108,7 +109,7 @@ avnav.gui.Aispage.prototype.hidePage=function(){
  */
 avnav.gui.Aispage.prototype.navEvent=function(ev){
     if (! this.visible) return;
-    if (ev.type==avnav.nav.NavEventType.AIS){
+    if (ev.type==navdata.NavEventType.AIS){
         this.fillData(false);
     }
 };

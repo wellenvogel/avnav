@@ -11,6 +11,7 @@ var SimpleDialog=require('./simpledialog');
 var Formatter=require('../util/formatter');
 var NavCompute=require('../nav/navcompute');
 var navdata=require('../nav/navdata');
+var routeobjects=require('../nav/routeobjects');
 
 
 
@@ -24,7 +25,7 @@ avnav.gui.Routepage=function(){
     this.MAXUPLOADSIZE=100000;
     /**
      * @private
-     * @type {avnav.nav.RouteData}
+     * @type {routeobjects.RouteData}
      */
     this.routingData=undefined;
     /**
@@ -41,7 +42,7 @@ avnav.gui.Routepage=function(){
     /**
      * if we loaded a route we will keep it here and set this as editing
      * when we leave
-     * @type {avnav.nav.Route}
+     * @type {routeobjects.Route}
      */
     this.currentRoute=undefined;
     /**
@@ -142,7 +143,7 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
     }
     $('#avi_route_name').text(this.currentRoute.name);
     var info="";
-    var len=NavCompute.computeRouteLength(0,this.currentRoute);
+    var len=this.currentRoute.computeLength(0);
     info=this.formatter.formatDecimal(this.currentRoute.points.length,2,0)+
             " Points, "+this.formatter.formatDecimal(len,6,2)+" nm";
     this.selectOnPage('.avn_route_info').text(info);

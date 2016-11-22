@@ -10,6 +10,7 @@ var WaypointItem=require('../components/WayPointItem.jsx');
 var DynLayout=require('../util/dynlayout');
 var WidgetContainer=require('../components/WidgetContainer.jsx');
 var navdata=require('../nav/navdata');
+var routeobjects=require('../nav/routeobjects');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -68,9 +69,9 @@ avnav.gui.Navpage=function(){
 
     /**
      * @private
-     * @type {avnav.nav.Route}
+     * @type {routeobjects.Route}
      */
-    this.lastRoute=new avnav.nav.Route("");
+    this.lastRoute=new routeobjects.Route("");
     /**
      * @private
      * @type {avnav.util.Formatter}
@@ -164,7 +165,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     this.getMap().setBrightness(brightness);
     this.updateMainPanelSize('#'+this.mapdom);
     this.getMap().updateSize();
-    this.gui.navobject.setAisCenterMode(avnav.nav.AisCenterMode.MAP);
+    this.gui.navobject.setAisCenterMode(navdata.AisCenterMode.MAP);
     if (!this.gui.properties.getProperties().layers.nav) this.hideRouting();
     if (this.gui.properties.getProperties().showClock) this.selectOnPage('#avi_navpage_clock').show();
     else this.selectOnPage('#avi_navpage_clock').hide();
@@ -417,7 +418,7 @@ avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription,data){
  */
 avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
-    if (evdata.type == avnav.nav.NavEventType.ROUTE){
+    if (evdata.type == navdata.NavEventType.ROUTE){
         this.handleRouteDisplay();
         if (this.routingVisible)this.updateRoutePoints();
     }

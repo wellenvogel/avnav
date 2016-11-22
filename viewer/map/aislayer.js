@@ -161,9 +161,9 @@ avnav.map.AisLayer.prototype.setStyles=function(){
  * @param evdata
  */
 avnav.map.AisLayer.prototype.navEvent=function(evdata){
-    if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
+    if (evdata.source == navdata.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) return;
-    if (evdata.type == avnav.nav.NavEventType.AIS){
+    if (evdata.type == navdata.NavEventType.AIS){
         this.aisdata=this.navobject.getAisHandler().getAisData().slice(0);
         this.pixel=[];
     }

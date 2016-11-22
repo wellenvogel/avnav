@@ -419,8 +419,8 @@ avnav.map.MapHolder.prototype.getGpsLock=function(){
  * @constructor
  */
 avnav.map.MapHolder.prototype.navEvent=function(evdata){
-    if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
-    if (evdata.type == avnav.nav.NavEventType.GPS){
+    if (evdata.source == navdata.NavEventSource.MAP) return; //avoid endless loop
+    if (evdata.type == navdata.NavEventType.GPS){
         var gps=this.navobject.getGpsHandler().getGpsData();
         if (! gps.valid) return;
         this.navlayer.setBoatPosition(gps.toCoord(),gps.course);

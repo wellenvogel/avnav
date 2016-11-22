@@ -3,6 +3,7 @@
  */
 
 avnav.provide('avnav.map.TrackLayer');
+var navdata=require('../nav/navdata');
 
 
 /**
@@ -70,13 +71,13 @@ avnav.map.TrackLayer.prototype.setStyle=function() {
  * @param evdata
  */
 avnav.map.TrackLayer.prototype.navEvent=function(evdata){
-    if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
+    if (evdata.source == navdata.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) {
         this.currentTrack=[];
         this.trackPoints=[];
         return;
     }
-    if (evdata.type == avnav.nav.NavEventType.TRACK){
+    if (evdata.type == navdata.NavEventType.TRACK){
         var newTrack=this.navobject.getTrackHandler().getTrackData();
         if (newTrack.length < 2){
             this.currentTrack=[];

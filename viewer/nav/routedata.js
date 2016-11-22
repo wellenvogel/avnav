@@ -220,7 +220,7 @@ RouteData.prototype.getCurrentLegStartWp=function(){
 RouteData.prototype.getRemain=function(){
     if (this.hasActiveRoute()) return 0;
     var startIdx=this.currentLeg.getCurrentTargetIdx();
-    return NavCompute.computeRouteLength(startIdx,this.currentLeg.currentRoute);
+    return this.currentLeg.currentRoute.computeLength(startIdx);
 };
 
 RouteData.prototype.getApproaching=function(){
@@ -301,7 +301,8 @@ RouteData.prototype.checkWp=function(wp){
  */
 RouteData.prototype.computeLength=function(startIdx,route){
     if (startIdx == -1) startIdx=this.currentLeg.getCurrentTargetIdx();
-    return NavCompute.computeRouteLength(startIdx,route);
+    if (! route) return 0;
+    return route.computeLength(startIdx);
 };
 /**
  * check if a route is the current active one

@@ -134,7 +134,7 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
  * @param evdata
  */
 avnav.map.RouteLayer.prototype.navEvent=function(evdata){
-    if (evdata.source == avnav.nav.NavEventSource.MAP) return; //avoid endless loop
+    if (evdata.source == navdata.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) {
         return;
     }
