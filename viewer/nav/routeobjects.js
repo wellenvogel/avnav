@@ -2,7 +2,7 @@
  * Created by andreas on 28.04.16.
  */
 
-var navdata=require('./navdata');
+var navobjects=require('./navobjects');
 var NavCompute=require('./navcompute');
 var routeobjects={};
 
@@ -16,18 +16,18 @@ routeobjects.RoutingMode={
 routeobjects.Leg=function(from, to, active, opt_routeName){
     /**
      * start of leg
-     * @type {navdata.WayPoint}
+     * @type {navobjects.WayPoint}
      */
-    this.from=from|| new navdata.WayPoint();
-    if (! (this.from instanceof navdata.WayPoint))
-        this.from=navdata.WayPoint.fromPlain(this.from);
+    this.from=from|| new navobjects.WayPoint();
+    if (! (this.from instanceof navobjects.WayPoint))
+        this.from=navobjects.WayPoint.fromPlain(this.from);
     /**
      * current target waypoint
-     * @type {navdata.WayPoint}
+     * @type {navobjects.WayPoint}
      */
-    this.to=to||new navdata.WayPoint();
-    if (! (this.to instanceof navdata.WayPoint))
-        this.to=navdata.WayPoint.fromPlain(this.to);
+    this.to=to||new navobjects.WayPoint();
+    if (! (this.to instanceof navobjects.WayPoint))
+        this.to=navobjects.WayPoint.fromPlain(this.to);
     /**
      * is the leg active?
      * @type {boolean}
@@ -99,8 +99,8 @@ routeobjects.Leg.prototype.fromJsonString=function(jsonString) {
  * @returns {routeobjects.Leg}
  */
 routeobjects.Leg.prototype.fromJson=function(raw){
-    this.from=navdata.WayPoint.fromPlain(raw.from);
-    this.to=navdata.WayPoint.fromPlain(raw.to);
+    this.from=navobjects.WayPoint.fromPlain(raw.from);
+    this.to=navobjects.WayPoint.fromPlain(raw.to);
     this.active=raw.active||false;
     this.name=raw.name;
     this.approach=raw.approach;
@@ -187,7 +187,7 @@ routeobjects.Leg.prototype.getCurrentTargetIdx=function(){
 /**
  *
  * @param {string} name
- * @param {Array.<navdata.WayPoint>} opt_points
+ * @param {Array.<navobjects.WayPoint>} opt_points
  * @constructor
  */
 routeobjects.Route=function(name, opt_points){
@@ -201,7 +201,7 @@ routeobjects.Route=function(name, opt_points){
 
     /**
      * the route points
-     * @type {Array.<navdata.WayPoint>|Array}
+     * @type {Array.<navobjects.WayPoint>|Array}
      */
     this.points=opt_points||[];
     /**
@@ -238,7 +238,7 @@ routeobjects.Route.prototype.fromJson=function(parsed) {
     var wp;
     if (parsed.points){
         for (i=0;i<parsed.points.length;i++){
-            wp=navdata.WayPoint.fromPlain(parsed.points[i]);
+            wp=navobjects.WayPoint.fromPlain(parsed.points[i]);
             if (! wp.name){
                 wp.name=this.findFreeName();
             }
@@ -307,7 +307,7 @@ routeobjects.Route.prototype.fromXml=function(xml){
     $(doc).find('rte:first').each(function(id,el){
         self.name=$(el).find('>name').text();
         $(el).find('rtept').each(function(pid,pel){
-            var pt=new navdata.WayPoint(0,0);
+            var pt=new navobjects.WayPoint(0,0);
             pt.lon=parseFloat($(pel).attr('lon'));
             pt.lat=parseFloat($(pel).attr('lat'));
             pt.name=$(pel).find('>name').text();
@@ -361,7 +361,7 @@ routeobjects.Route.prototype.getPointAtIndex=function(idx){
 
 /**
  * get the index of a wp in the route
- * @param {navdata.WayPoint} point
+ * @param {navobjects.WayPoint} point
  * @returns {number} - -1 if not found
  */
 routeobjects.Route.prototype.getIndexFromPoint=function(point){
@@ -375,9 +375,9 @@ routeobjects.Route.prototype.getIndexFromPoint=function(point){
 };
 /**
  * return a point at a given offset to the current point
- * @param {navdata.WayPoint} point
+ * @param {navobjects.WayPoint} point
  * @param {number} offset
- * @returns {navdata.WayPoint}
+ * @returns {navobjects.WayPoint}
  */
 
 routeobjects.Route.prototype.getPointAtOffset=function(point, offset){
@@ -389,9 +389,9 @@ routeobjects.Route.prototype.getPointAtOffset=function(point, offset){
 
 /**
  * change a waypoint in the route
- * @param {navdata.WayPoint} oldPoint
- * @param {navdata.WayPoint}newPoint
- * @returns {navdata.WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
+ * @param {navobjects.WayPoint} oldPoint
+ * @param {navobjects.WayPoint}newPoint
+ * @returns {navobjects.WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
  */
 routeobjects.Route.prototype.changePoint=function(oldPoint, newPoint){
     var idx=this.getIndexFromPoint(oldPoint);
@@ -400,8 +400,8 @@ routeobjects.Route.prototype.changePoint=function(oldPoint, newPoint){
 /**
  * change a waypoint in the route
  * @param {number} idx
- * @param {navdata.WayPoint}newPoint
- * @returns {navdata.WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
+ * @param {navobjects.WayPoint}newPoint
+ * @returns {navobjects.WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
  */
 routeobjects.Route.prototype.changePointAtIndex=function(idx, newPoint){
     if (idx < 0 || idx >= this.points.length) return undefined;
@@ -417,7 +417,7 @@ routeobjects.Route.prototype.changePointAtIndex=function(idx, newPoint){
 /**
  *
  * @param idx
- * @param {navdata.WayPoint} newWp
+ * @param {navobjects.WayPoint} newWp
  * @returns {boolean}
  */
 routeobjects.Route.prototype.checkChangePossible=function(idx, newWp){
@@ -508,12 +508,12 @@ routeobjects.Route.prototype.swap=function() {
 
 /**
  *
- * @param {navdata.Point} newPoint
- * @returns {navdata.WayPoint}
+ * @param {navobjects.Point} newPoint
+ * @returns {navobjects.WayPoint}
  * @private
  */
 routeobjects.Route.prototype._toWayPoint=function(newPoint) {
-    if (!(newPoint instanceof navdata.WayPoint)) newPoint = navdata.WayPoint.fromPlain(newPoint);
+    if (!(newPoint instanceof navobjects.WayPoint)) newPoint = navobjects.WayPoint.fromPlain(newPoint);
     return newPoint;
 };
 

@@ -3,8 +3,8 @@
  */
 
 avnav.provide('avnav.gui.Page');
-var navdata=require('../nav/navdata');
-var NavObject=require('../nav/navobject');
+var navobjects=require('../nav/navobjects');
+var NavData=require('../nav/navdata');
 
 
 /**
@@ -19,7 +19,7 @@ avnav.gui.Page=function(name,options){
     this.isInitialized=false;
     /** @type{avnav.gui.Handler} */
     this.gui=null;
-    /** @type{NavObject} */
+    /** @type{NavData} */
     this.navobject=null;
     this.name=name;
     this.visible=false;
@@ -39,7 +39,7 @@ avnav.gui.Page=function(name,options){
         }
         myself.handlePage(evdata);
     });
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         myself.updateDisplayObjects();
     });
     if (this.options) {
@@ -123,7 +123,7 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         this.gui=evdata.gui;
         /**
          *
-         * @type {NavObject}
+         * @type {NavData}
          */
         this.navobject=evdata.navobject;
         this.isInitialized=true;

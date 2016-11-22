@@ -3,13 +3,14 @@
  */
 
 avnav.provide('avnav.map.RouteLayer');
-var navdata=require('../nav/navdata');
-var NavObject=require('../nav/navobject');
+var navobjects=require('../nav/navobjects');
+var NavData=require('../nav/navdata');
+var RouteHandler=require('../nav/routedata');
 
 /**
  * a cover for the layer with routing data
  * @param {avnav.map.MapHolder} mapholder
- * @param {NavObject} navobject
+ * @param {NavData} navobject
  * @constructor
  */
 avnav.map.RouteLayer=function(mapholder,navobject){
@@ -20,13 +21,13 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.mapholder=mapholder;
     /**
      * @private
-     * @type {NavObject}
+     * @type {NavData}
      */
     this.navobject=navobject;
 
     /**
      * @private
-     * @type {avnav.nav.RouteData}
+     * @type {RouteHandler}
      */
     this.routingDate=this.navobject.getRoutingHandler();
     /**
@@ -63,7 +64,7 @@ avnav.map.RouteLayer=function(mapholder,navobject){
     this.dashedStyle={};
     this.setStyle();
     var self=this;
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
@@ -135,7 +136,7 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
  * @param evdata
  */
 avnav.map.RouteLayer.prototype.navEvent=function(evdata){
-    if (evdata.source == navdata.NavEventSource.MAP) return; //avoid endless loop
+    if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) {
         return;
     }
@@ -212,7 +213,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
 /**
  * find the waypoint that has been clicked and set this as active
  * @param pixel
- * @returns {navdata.WayPoint} or undefined
+ * @returns {navobjects.WayPoint} or undefined
  */
 avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance

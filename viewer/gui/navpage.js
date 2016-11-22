@@ -9,7 +9,7 @@ var WaypointItem=require('../components/WayPointItem.jsx');
 /** @type {DynLayout} */
 var DynLayout=require('../util/dynlayout');
 var WidgetContainer=require('../components/WidgetContainer.jsx');
-var navdata=require('../nav/navdata');
+var navobjects=require('../nav/navobjects');
 var routeobjects=require('../nav/routeobjects');
 avnav.provide('avnav.gui.Navpage');
 
@@ -44,7 +44,7 @@ avnav.gui.Navpage=function(){
 
     /**
      * @private
-     * @type {navdata.WayPoint}
+     * @type {navobjects.WayPoint}
      */
     this.selectedWp=undefined;
     /**
@@ -165,7 +165,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     this.getMap().setBrightness(brightness);
     this.updateMainPanelSize('#'+this.mapdom);
     this.getMap().updateSize();
-    this.gui.navobject.setAisCenterMode(navdata.AisCenterMode.MAP);
+    this.gui.navobject.setAisCenterMode(navobjects.AisCenterMode.MAP);
     if (!this.gui.properties.getProperties().layers.nav) this.hideRouting();
     if (this.gui.properties.getProperties().showClock) this.selectOnPage('#avi_navpage_clock').show();
     else this.selectOnPage('#avi_navpage_clock').hide();
@@ -286,7 +286,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $('#avi_route_info_navpage_inner').click({page:this},function(ev){
         ev.data.page.gui.showPage('routepage');
     });
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     $(document).on(avnav.map.MapEvent.EVENT_TYPE, function(ev,evdata){
@@ -414,11 +414,11 @@ avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription,data){
 
 /**
  *
- * @param {navdata.NavEvent} evdata
+ * @param {navobjects.NavEvent} evdata
  */
 avnav.gui.Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
-    if (evdata.type == navdata.NavEventType.ROUTE){
+    if (evdata.type == navobjects.NavEventType.ROUTE){
         this.handleRouteDisplay();
         if (this.routingVisible)this.updateRoutePoints();
     }
@@ -701,7 +701,7 @@ avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
     avnav.log("LockMarker clicked");
     this.hideWpButtons();
     var center = this.navobject.getMapCenter();
-    var wp = new navdata.WayPoint();
+    var wp = new navobjects.WayPoint();
     center.assign(wp);
     wp.name = 'Marker';
     this.navobject.getRoutingHandler().wpOn(wp);

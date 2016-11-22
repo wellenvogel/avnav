@@ -2,7 +2,8 @@
  * Created by andreas on 02.05.14.
  */
 avnav.provide('avnav.gui.Aispage');
-var navdata=require('../nav/navdata');
+var navobjects=require('../nav/navobjects');
+var AisHandler=require('../nav/aisdata');
 
 
 
@@ -15,7 +16,7 @@ avnav.gui.Aispage=function(){
     avnav.gui.Page.call(this,'aispage');
     /**
      * @private
-     * @type {avnav.nav.AisData}
+     * @type {AisHandler}
      */
     this.aishandler=null;
     /**
@@ -24,7 +25,7 @@ avnav.gui.Aispage=function(){
      */
     this.showTime=(new Date()).getTime();
     var self=this;
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
 };
@@ -105,11 +106,11 @@ avnav.gui.Aispage.prototype.hidePage=function(){
 };
 /**
  *
- * @param {navdata.NavEvent} ev
+ * @param {navobjects.NavEvent} ev
  */
 avnav.gui.Aispage.prototype.navEvent=function(ev){
     if (! this.visible) return;
-    if (ev.type==navdata.NavEventType.AIS){
+    if (ev.type==navobjects.NavEventType.AIS){
         this.fillData(false);
     }
 };

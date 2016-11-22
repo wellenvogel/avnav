@@ -5,8 +5,8 @@ avnav.provide('avnav.map.MapHolder');
 avnav.provide('avnav.map.LayerTypes');
 avnav.provide('avnav.map.MapEvent');
 
-var navdata=require('../nav/navdata');
-var NavObject=require('../nav/navobject');
+var navobjects=require('../nav/navobjects');
+var NavData=require('../nav/navdata');
 
 
 
@@ -64,7 +64,7 @@ avnav.map.MapHolder=function(properties,navobject){
      * */
     this.olmap=null;
     /** @private
-     * @type {NavObject}
+     * @type {NavData}
      * */
     this.navobject=navobject;
     /** @private
@@ -148,7 +148,7 @@ avnav.map.MapHolder=function(properties,navobject){
      */
     this.lastOpacity=-1;
     var self=this;
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
 
@@ -416,12 +416,12 @@ avnav.map.MapHolder.prototype.getGpsLock=function(){
 
 /**
  * called with updates from nav
- * @param {navdata.NavEvent} evdata
+ * @param {navobjects.NavEvent} evdata
  * @constructor
  */
 avnav.map.MapHolder.prototype.navEvent=function(evdata){
-    if (evdata.source == navdata.NavEventSource.MAP) return; //avoid endless loop
-    if (evdata.type == navdata.NavEventType.GPS){
+    if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
+    if (evdata.type == navobjects.NavEventType.GPS){
         var gps=this.navobject.getGpsHandler().getGpsData();
         if (! gps.valid) return;
         this.navlayer.setBoatPosition(gps.toCoord(),gps.course);
@@ -676,7 +676,7 @@ avnav.map.MapHolder.prototype.pointFromMap=function(point){
 
 /**
  * set the map center
- * @param {navdata.Point} point
+ * @param {navobjects.Point} point
  */
 avnav.map.MapHolder.prototype.setCenter=function(point){
     if (! point) return;
@@ -685,17 +685,17 @@ avnav.map.MapHolder.prototype.setCenter=function(point){
 
 /**
  * get the current center in lat/lon
- * @returns {navdata.Point}
+ * @returns {navobjects.Point}
  */
 avnav.map.MapHolder.prototype.getCenter=function(){
-    var rt=new navdata.Point();
+    var rt=new navobjects.Point();
     rt.fromCoord(this.pointFromMap(this.getView().getCenter()));
     return rt;
 };
 /**
  * get the distance in css pixel for 2 points
- * @param {navdata.Point}point1
- * @param {navdata.Point}point2
+ * @param {navobjects.Point}point1
+ * @param {navobjects.Point}point2
  */
 avnav.map.MapHolder.prototype.pixelDistance=function(point1,point2){
     if (! this.olmap) return 0;

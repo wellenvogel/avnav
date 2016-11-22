@@ -4,6 +4,7 @@
 avnav.provide('avnav.gui.Downloadpage');
 avnav.provide('avnav.gui.FileInfo');
 var routeobjects=require('../nav/routeobjects');
+var RouteHandler=require('../nav/routedata');
 
 
 avnav.gui.FileInfo=function(name,type,time){
@@ -77,9 +78,9 @@ avnav.gui.Downloadpage=function(){
     this.xhdr=undefined;
     /**
      * @private
-     * @type {avnav.nav.RouteData}
+     * @type {RouteHandler}
      */
-    this.routingData=undefined;
+    this.routingHandler=undefined;
     /**
      * allow to change the type of data we show
      * @private
@@ -177,7 +178,7 @@ avnav.gui.Downloadpage.prototype.uploadRoute=function(fileObject){
                 return false;
             }
             if (self.gui.properties.getProperties().connectedMode) route.server = true;
-            self.routingData.saveRoute(route, function () {
+            self.routingHandler.saveRoute(route, function () {
                 self.fillData(false);
             });
 
@@ -188,7 +189,7 @@ avnav.gui.Downloadpage.prototype.uploadRoute=function(fileObject){
 
 avnav.gui.Downloadpage.prototype.localInit=function(){
     if (! this.gui) return;
-    this.routingData=this.gui.navobject.getRoutingHandler();
+    this.routingHandler=this.gui.navobject.getRoutingHandler();
     var self=this;
 
     $('#avi_download_uploadform').submit(function(form){
@@ -292,7 +293,7 @@ avnav.gui.Downloadpage.prototype.sort = function (a, b) {
 
 avnav.gui.Downloadpage.prototype._isActiveRoute=function(info){
     if (! info.type || info.type != "route") return false;
-    var activeRoute=this.routingData.getRoute();
+    var activeRoute=this.routingHandler.getRoute();
     if (!activeRoute) return false;
     return activeRoute.name == info.name;
 };
@@ -327,7 +328,7 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                             avnav.util.Overlay.Toast("unable to delete active route",5000);
                             return false;
                         }
-                        self.routingData.deleteRoute(self.files[lid].name,
+                        self.routingHandler.deleteRoute(self.files[lid].name,
                             function(data){self.fillData(false);},
                             function(info){
                                 avnav.util.Overlay.Toast("unable to delete route: "+info,5000);
@@ -358,7 +359,7 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                     if (avnav.android){
                         if (info.type=="track") avnav.android.downloadTrack(info.name);
                         if (info.type == "route"){
-                            self.routingData.fetchRoute(info.name,true,function(data){
+                            self.routingHandler.fetchRoute(info.name,true,function(data){
                                     avnav.android.downloadRoute(data.toJsonString());
                             },
                             function(err){
@@ -372,7 +373,7 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                             if (info.type == "route") {
                                 if (info.server) self.download(info.name);
                                 else{
-                                    self.routingData.fetchRoute(info.name,true,function(data){
+                                    self.routingHandler.fetchRoute(info.name,true,function(data){
                                             self.download(info.name,undefined,data.toJsonString());
                                         },
                                         function(err){
@@ -461,11 +462,11 @@ avnav.gui.Downloadpage.prototype.addRoutes = function (routeInfos) {
 };
 avnav.gui.Downloadpage.prototype.fillDataRoutes=function(initial){
     this.files=[];
-    var localRoutes=this.routingData.listRoutesLocal();
+    var localRoutes=this.routingHandler.listRoutesLocal();
     this.addRoutes(localRoutes);
     this._updateDisplay();
     if (! this.gui.properties.getProperties().readOnlyServer) {
-        this.routingData.listRoutesServer(
+        this.routingHandler.listRoutesServer(
             function (routingInfos, param) {
                 param.self.addRoutes(routingInfos);
                 param.self._updateDisplay();

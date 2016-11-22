@@ -1,24 +1,24 @@
 /**
  * Created by andreas on 04.05.14.
  */
-var AisTarget=require('./navdata').Ais;
+var AisTarget=require('./navobjects').Ais;
 var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
-var navdata=require('../nav/navdata');
-var NavObject=require('../nav/navobject');
+var navobjects=require('./navobjects');
+var NavData=require('./navdata');
 
 /**
  * the handler for the ais data
  * query the server...
  * @param {avnav.util.PropertyHandler} propertyHandler
- * @param {NavObject} navobject
+ * @param {NavData} navdata
  * @constructor
  */
-var AisData=function(propertyHandler,navobject){
+var AisData=function(propertyHandler,navdata){
     /** @private */
     this.propertyHandler=propertyHandler;
     /** @private */
-    this.navobject=navobject;
+    this.navobject=navdata;
     /** @private
      * @type {Array.<AisTarget>}
      * */
@@ -200,7 +200,7 @@ var AisData=function(propertyHandler,navobject){
  * @private
  */
 AisData.prototype.handleAisData=function() {
-    /** @type {navdata.GpsInfo}*/
+    /** @type {navobjects.GpsInfo}*/
     var boatPos = this.navobject.getGpsHandler().getGpsData();
     var properties=this.propertyHandler.getProperties();
     var trackedTarget=null; //ref to tracked target
@@ -212,7 +212,7 @@ AisData.prototype.handleAisData=function() {
             ais.warning=false;
             ais.tracking=false;
             ais.nearest=false;
-            var dst = NavCompute.computeDistance(boatPos, new navdata.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
+            var dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
             var cpadata = NavCompute.computeCpa({
                     lon: boatPos.lon,
                     lat: boatPos.lat,
@@ -408,7 +408,7 @@ AisData.prototype.getAisByMmsi=function(mmsi){
 AisData.prototype.getAisPositionByMmsi=function(mmsi){
     var ais=this.getAisByMmsi(mmsi);
     if (! ais) return undefined;
-    return new navdata.Point(parseFloat(ais.lon||0),parseFloat(ais.lat||0));
+    return new navobjects.Point(parseFloat(ais.lon||0),parseFloat(ais.lat||0));
 };
 
 /**

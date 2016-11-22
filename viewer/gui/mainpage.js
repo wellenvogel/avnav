@@ -3,7 +3,7 @@
  */
 avnav.provide('avnav.gui.Mainpage');
 
-var navdata=require('../nav/navdata');
+var navobjects=require('../nav/navobjects');
 
 
 
@@ -16,7 +16,7 @@ avnav.gui.Mainpage=function(){
     var self=this;
     this.lastNmeaStatus=null;
     this.lastAisStatus=null;
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     $(window).on('resize', function () {
@@ -121,11 +121,11 @@ avnav.gui.Mainpage.prototype.setImageColor=function(imageId,color){
 
 /**
  *
- * @param {navdata.NavEvent} evdata
+ * @param {navobjects.NavEvent} evdata
  */
 avnav.gui.Mainpage.prototype.navEvent=function(evdata) {
     if (!this.visible) return;
-    if (evdata.type == navdata.NavEventType.GPS){
+    if (evdata.type == navobjects.NavEventType.GPS){
         var status=this.navobject.getValue("aisStatusColor");
         if (status != this.lastAisStatus) {
             this.setImageColor('#avi_mainAisStatusImage',status);

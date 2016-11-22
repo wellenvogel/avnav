@@ -3,8 +3,8 @@
  */
 
 var routeobjects=require('./routeobjects');
-var navdata=require('./navdata');
-var NavObject=require('./navobject');
+var navobjects=require('./navobjects');
+var NavData=require('./navobjects');
 var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
 
@@ -15,7 +15,7 @@ var NavCompute=require('./navcompute');
  * active route mode - the currentleg and the editingRoute will kept in sync
  * editing mode      - the editing route is different from the one in the leg
  * @param {avnav.util.PropertyHandler} propertyHandler
- * @param {NavObject} navobject
+ * @param {NavData} navobject
  * @constructor
  */
 var RouteData=function(propertyHandler,navobject){
@@ -28,8 +28,8 @@ var RouteData=function(propertyHandler,navobject){
      * */
     this.serverLeg=new routeobjects.Leg();
     this.currentLeg=new routeobjects.Leg(
-            new navdata.WayPoint(0,0),
-            new navdata.WayPoint(0,0),
+            new navobjects.WayPoint(0,0),
+            new navobjects.WayPoint(0,0),
             false);
     /**
      * name of the default route
@@ -94,7 +94,7 @@ var RouteData=function(propertyHandler,navobject){
     /**
      * the current coordinates of the active WP (if set)
      * @private
-     * @type {navdata.WayPoint}
+     * @type {navobjects.WayPoint}
      */
     this.editingWp=this.currentLeg.to;
 
@@ -189,14 +189,14 @@ RouteData.prototype.hasActiveRoute=function(){
 
 /**
  * get the current route target wp (or undefined)
- * @returns {navdata.WayPoint|undefined}
+ * @returns {navobjects.WayPoint|undefined}
  */
 RouteData.prototype.getCurrentLegTarget=function(){
     return this.currentLeg.to;
 };
 /**
  * get the next wp if there is one
- * @returns {navdata.WayPoint|undefined}
+ * @returns {navobjects.WayPoint|undefined}
  */
 RouteData.prototype.getCurrentLegNextWp=function(){
     if (! this.currentLeg.currentRoute) return undefined;
@@ -205,7 +205,7 @@ RouteData.prototype.getCurrentLegNextWp=function(){
 
 /**
  * get the start wp of the current leg (if any)
- * @returns {navdata.WayPoint}
+ * @returns {navobjects.WayPoint}
  */
 RouteData.prototype.getCurrentLegStartWp=function(){
     if (! this.currentLeg) return undefined;
@@ -229,7 +229,7 @@ RouteData.prototype.getApproaching=function(){
 
 /**
  * check if a waypoint is the current target
- * @param {navdata.WayPoint} compare
+ * @param {navobjects.WayPoint} compare
  * @returns {boolean}
  */
 RouteData.prototype.isCurrentRoutingTarget=function(compare){
@@ -241,9 +241,9 @@ RouteData.prototype.isCurrentRoutingTarget=function(compare){
 
 /**
  * get a waypoint at a given offset to the point (if it belongs to a route)
- * @param {navdata.WayPoint} wp
+ * @param {navobjects.WayPoint} wp
  * @param {number }offset
- * @returns {navdata.WayPoint|undefined}
+ * @returns {navobjects.WayPoint|undefined}
  */
 RouteData.prototype.getPointAtOffset=function(wp,offset){
     var rn=wp.routeName;
@@ -282,7 +282,7 @@ RouteData.prototype.getRouteByName=function(name){
  * check if the waypoint is still valid
  * either it is the current target
  * or it belongs to either the active or the editing route
- * @param {navdata.WayPoint} wp
+ * @param {navobjects.WayPoint} wp
  * @returns {boolean}
  */
 RouteData.prototype.checkWp=function(wp){
@@ -371,7 +371,7 @@ RouteData.prototype.setEditingWpIdx=function(id){
 /**
  * set the editing waypoint
  * TODO: currently no check if it matches the route
- * @param {navdata.WayPoint} wp
+ * @param {navobjects.WayPoint} wp
  */
 RouteData.prototype.setEditingWp=function(wp){
     this.editingWp=wp;
@@ -388,7 +388,7 @@ RouteData.prototype.moveEditingWp=function(diff){
 
 /**
  * get the active wp
- * @returns {navdata.WayPoint}
+ * @returns {navobjects.WayPoint}
  */
 RouteData.prototype.getEditingWp=function(){
     return this.editingWp;
@@ -409,7 +409,7 @@ RouteData.prototype.getEditingWpIdx=function(){
 /**
  * returns the waypoint with the given index from the editing route
  * @param {number} idx
- * @returns {navdata.WayPoint}
+ * @returns {navobjects.WayPoint}
  */
 
 RouteData.prototype.getWp=function(idx){
@@ -444,7 +444,7 @@ RouteData.prototype.deleteWp=function(id){
 /**
  * change a point in the route
  * @param {number} id the index, -1 for current
- * @param {navdata.Point|navdata.WayPoint} point
+ * @param {navobjects.Point|navobjects.WayPoint} point
  */
 RouteData.prototype.changeWpByIdx=function(id, point){
     id=this.getIdForMinusOne(id);
@@ -463,7 +463,7 @@ RouteData.prototype.changeWpByIdx=function(id, point){
 /**
  * add a point to the route
  * @param {number} id the index, -1 for current - point is added after
- * @param {navdata.Point|navdata.WayPoint} point
+ * @param {navobjects.Point|navobjects.WayPoint} point
  */
 RouteData.prototype.addWp=function(id,point){
     id=this.getIdForMinusOne(id);
@@ -521,8 +521,8 @@ RouteData.prototype.isRouteWritable=function(){
  * the old point can be:
  *   - a point from the current (editing) route
  *   - the currentLeg to point
- * @param {navdata.WayPoint} oldPoint
- * @param {navdata.WayPoint} point
+ * @param {navobjects.WayPoint} oldPoint
+ * @param {navobjects.WayPoint} point
  * @returns undefined if the point cannot be changed
  */
 RouteData.prototype.changeWp=function(oldPoint, point){
@@ -608,12 +608,12 @@ RouteData.prototype.startEditingRoute=function(){
 };
 /**
  *
- * @param {navdata.WayPoint} wp
+ * @param {navobjects.WayPoint} wp
  * @param opt_keep_from
  */
 RouteData.prototype.wpOn=function(wp,opt_keep_from) {
     if (! wp) return;
-    var stwp=new navdata.WayPoint.fromPlain(wp);
+    var stwp=new navobjects.WayPoint.fromPlain(wp);
     if (wp.routeName){
         //if the waypoint seems to be part of a route
         //check if this is our current active/editing one - if yes, start routing mode
@@ -634,17 +634,17 @@ RouteData.prototype.wpOn=function(wp,opt_keep_from) {
 
 /**
  *
- * @param {navdata.WayPoint} wp
+ * @param {navobjects.WayPoint} wp
  * @param opt_keep_from
  */
 RouteData.prototype.wpOnInactive=function(wp,opt_keep_from) {
-    var stwp=new navdata.WayPoint.fromPlain(wp);
+    var stwp=new navobjects.WayPoint.fromPlain(wp);
     this._startRouting(routeobjects.RoutingMode.WPINACTIVE,stwp,opt_keep_from);
 };
 /**
  *
  * @param mode
- * @param {navdata.WayPoint} newWp
+ * @param {navobjects.WayPoint} newWp
  * @param {boolean} opt_keep_from
  * @returns {boolean}
  * @private
@@ -656,10 +656,10 @@ RouteData.prototype._startRouting=function(mode,newWp,opt_keep_from){
     var gps=this.navobject.getGpsHandler().getGpsData();
     var center=this.navobject.getMapCenter();
     if (gps.valid){
-        pfrom=new navdata.WayPoint(gps.lon,gps.lat);
+        pfrom=new navobjects.WayPoint(gps.lon,gps.lat);
     }
     else{
-        pfrom=new navdata.WayPoint();
+        pfrom=new navobjects.WayPoint();
         center.assign(pfrom);
     }
     if (! opt_keep_from) this.currentLeg.from=pfrom;
@@ -878,7 +878,7 @@ RouteData.prototype._checkNextWp=function(){
         if (dst.dts <= approach){
             this.isApproaching=true;
             this.currentLeg.approach=true;
-            var nextDst=new navdata.Distance();
+            var nextDst=new navobjects.Distance();
             if (nextWp){
                 nextDst=NavCompute.computeDistance(boat, nextWp);
             }
@@ -932,8 +932,8 @@ RouteData.prototype._checkNextWp=function(){
 /**
  * save the changes we did - either to the current leg or to the editing route
  * @param {string} routeName - is set - this is the route we are changing
- * @param {navdata.WayPoint} oldWp - if set - compare this to the current "to" and set a new destination (new WP) if equal
- * @param {navdata.WayPoint} newWp - ifavnav set make this the new routing target
+ * @param {navobjects.WayPoint} oldWp - if set - compare this to the current "to" and set a new destination (new WP) if equal
+ * @param {navobjects.WayPoint} newWp - ifavnav set make this the new routing target
  * @returns {boolean} true if we already saved, otherwise saveRoute must be called
  * @private
  */

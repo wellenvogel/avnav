@@ -10,7 +10,7 @@ var EditOverlay=require('./wpoverlay');
 var SimpleDialog=require('./simpledialog');
 var Formatter=require('../util/formatter');
 var NavCompute=require('../nav/navcompute');
-var navdata=require('../nav/navdata');
+var navobjects=require('../nav/navobjects');
 var routeobjects=require('../nav/routeobjects');
 
 
@@ -27,7 +27,7 @@ avnav.gui.Routepage=function(){
      * @private
      * @type {routeobjects.RouteData}
      */
-    this.routingData=undefined;
+    this.routingHandler=undefined;
     /**
      * @private
      * @type {avnav.util.Formatter}
@@ -35,7 +35,7 @@ avnav.gui.Routepage=function(){
     this.formatter=new Formatter();
     /**
      *
-     * @type {Array:navdata.WayPoint}
+     * @type {Array:navobjects.WayPoint}
      */
     this.waypoints=[];
 
@@ -55,18 +55,18 @@ avnav.gui.Routepage=function(){
     this.editNameOverlay=undefined;
     /**
      * the waypoint that is currently active at the routing handler
-     * @type {navdata.WayPoint}
+     * @type {navobjects.WayPoint}
      * @private
      */
     this._editingWaypoint=undefined;
     /**
      * the current active waypoint
-     * @type {undefined|navdata.WayPoint}
+     * @type {undefined|navobjects.WayPoint}
      * @private
      */
     this._selectedWaypoint=undefined;
     var self=this;
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,function(ev,evdata){
@@ -80,7 +80,7 @@ avnav.inherits(avnav.gui.Routepage,avnav.gui.Page);
 
 avnav.gui.Routepage.prototype.localInit=function(){
     if (! this.gui) return;
-    this.routingData=this.gui.navobject.getRoutingHandler();
+    this.routingHandler=this.gui.navobject.getRoutingHandler();
     var self=this;
     this.editOverlay=new EditOverlay(this.selectOnPage('.avn_left_panel'),{
         okCallback:function(){
@@ -133,7 +133,7 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
     var self=this;
     $('#avi_route_name').text("");
     if (! this.currentRoute) return;
-    if (this.routingData.isActiveRoute(this.currentRoute.name)){
+    if (this.routingHandler.isActiveRoute(this.currentRoute.name)){
         $('#avi_routes_headline').text("Active Route");
         this.selectOnPage('.avn_left_top').addClass('avn_active_headline');
     }
@@ -150,7 +150,7 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
     var waypoints=this.currentRoute.getFormattedPoints();
     var active=this.currentRoute.getIndexFromPoint(this._editingWaypoint);
     var selected=this.currentRoute.getIndexFromPoint(this._selectedWaypoint);
-    var active=this.currentRoute.getIndexFromPoint(this.routingData.getCurrentLegTarget());
+    var active=this.currentRoute.getIndexFromPoint(this.routingHandler.getCurrentLegTarget());
     this.waypointList.setState({
         itemList:waypoints,
         options: {showLatLon: this.gui.properties.getProperties().routeShowLL},
@@ -176,9 +176,9 @@ avnav.gui.Routepage.prototype.waypointClicked=function(idx,param){
 };
 avnav.gui.Routepage.prototype.fillData=function(initial){
     if (initial) {
-        this.currentRoute = this.routingData.getEditingRoute().clone();
+        this.currentRoute = this.routingHandler.getEditingRoute().clone();
         this.initialName = this.currentRoute.name;
-        this._editingWaypoint=this.routingData.getEditingWp();
+        this._editingWaypoint=this.routingHandler.getEditingWp();
         this._selectedWaypoint=this._editingWaypoint?this._editingWaypoint.clone():undefined;
 
     }
@@ -199,7 +199,7 @@ avnav.gui.Routepage.prototype._nameChanged=function() {
         var name=data.value;
         if (name != this.initialName) {
             //check if a route with this name already exists
-            this.routingData.fetchRoute(name, false,
+            this.routingHandler.fetchRoute(name, false,
                 function (data) {
                     avnav.util.Overlay.Toast("route with name " + name + " already exists", 5000);
                 },
@@ -216,7 +216,7 @@ avnav.gui.Routepage.prototype._nameChanged=function() {
 };
 /**
  *
- * @param {navdata.NavEvent} ev
+ * @param {navobjects.NavEvent} ev
  */
 avnav.gui.Routepage.prototype.navEvent=function(ev){
     if (! this.visible) return;
@@ -231,8 +231,8 @@ avnav.gui.Routepage.prototype.goBack=function(){
 
 avnav.gui.Routepage.prototype.storeRoute=function(){
     if (! this.currentRoute) return;
-    this.routingData.setNewEditingRoute(this.currentRoute);
-    this.routingData.setEditingWpIdx(this.currentRoute.getIndexFromPoint(this._selectedWaypoint));
+    this.routingHandler.setNewEditingRoute(this.currentRoute);
+    this.routingHandler.setEditingWpIdx(this.currentRoute.getIndexFromPoint(this._selectedWaypoint));
     this._editingWaypoint=this._selectedWaypoint;
     this.initialName=this.currentRoute.name;
 };
@@ -243,7 +243,7 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
     var self=this;
     if (this.currentRoute.name != this.initialName ){
         //check if a route with this name already exists
-        this.routingData.fetchRoute(this.currentRoute.name,false,
+        this.routingHandler.fetchRoute(this.currentRoute.name,false,
         function(data){
             avnav.util.Overlay.Toast("route with name "+this.currentRoute.name+" already exists",5000);
         },
@@ -270,7 +270,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
         downloadtype:'route',
         allowChange: false,
         selectItemCallback: function(item){
-            this.routingData.fetchRoute(item.name,false,
+            this.routingHandler.fetchRoute(item.name,false,
                 function(route){
                     self.currentRoute=route;
                     self.initialName=route.name;

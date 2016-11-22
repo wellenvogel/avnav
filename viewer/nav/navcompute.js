@@ -1,21 +1,21 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-var navdata=require('../nav/navdata');
+var navobjects=require('./navobjects');
 var NavCompute={
 };
 
 
 /**
  * compute the distances between 2 points
- * @param {navdata.Point} src
- * @param {navdata.Point} dst
- * @returns {navdata.Distance}
+ * @param {navobjects.Point} src
+ * @param {navobjects.Point} dst
+ * @returns {navobjects.Distance}
  */
 NavCompute.computeDistance=function(src,dst){
     var srcll=src;
     var dstll=dst;
-    var rt=new navdata.Distance();
+    var rt=new navobjects.Distance();
     //use the movable type stuff for computations
     var llsrc=new LatLon(srcll.lat,srcll.lon);
     var lldst=new LatLon(dstll.lat,dstll.lon);
@@ -42,11 +42,11 @@ NavCompute.computeXte=function(start,destination,current){
  * we still have to check if the computed tm is bigger then our configured one
  * @param src
  * @param dst
- * @returns {navdata.Cpa}
+ * @returns {navobjects.Cpa}
  */
 NavCompute.computeCpa=function(src,dst,properties){
     var NM=properties.NM;
-    var rt = new navdata.Cpa();
+    var rt = new navobjects.Cpa();
     var llsrc = new LatLon(src.lat, src.lon);
     var lldst = new LatLon(dst.lat, dst.lon);
     var curdistance=llsrc.distanceTo(lldst,5)*1000; //m
@@ -127,14 +127,14 @@ NavCompute.computeTPA=function(a,da,db,va,vb){
 };
 /**
  * compute a new point (in lon/lat) traveling from a given point
- * @param {navdata.Point} src
+ * @param {navobjects.Point} src
  * @param {number} brg in degrees
  * @param {number} dist in m
 */
 NavCompute.computeTarget=function(src,brg,dist){
     var llsrc = new LatLon(src.lat, src.lon);
     var llrt=llsrc.destinationPoint(brg,dist/1000);
-    var rt=new navdata.Point(llrt.lon(),llrt.lat());
+    var rt=new navobjects.Point(llrt.lon(),llrt.lat());
     return rt;
 };
 
@@ -142,7 +142,7 @@ NavCompute.computeTarget=function(src,brg,dist){
 
 /**
  * compute the data for a leg
- * @param {navdata.Point} target the waypoint destination
+ * @param {navobjects.Point} target the waypoint destination
  * @param {{valid:Boolean,speed:Number,lon:Number, lat: Number, course: Number,rtime: Date}}gps the current gps data
  * @param opt_start
  * @returns {{markerCourse: Number, markerDistance: Number, markerVmg: Number, markerEta: Date, markerXte: Number}}

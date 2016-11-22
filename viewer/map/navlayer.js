@@ -4,15 +4,15 @@
 
 avnav.provide('avnav.map.NavLayer');
 var NavCompute=require('../nav/navcompute');
-var navdata=require('../nav/navdata');
-var NavObject=require('../nav/navobject');
+var navobjects=require('../nav/navobjects');
+var NavData=require('../nav/navobjects');
 
 
 
 /**
  * a cover for the layer that contaisn the booat, the current wp and the route between them
  * @param {avnav.map.MapHolder} mapholder
- * @param {NavObject} navobject
+ * @param {NavData} navobject
  * @constructor
  */
 avnav.map.NavLayer=function(mapholder,navobject){
@@ -24,7 +24,7 @@ avnav.map.NavLayer=function(mapholder,navobject){
     this.mapholder=mapholder;
     /**
      * @private
-     * @type {NavObject}
+     * @type {NavData}
      */
     this.navobject=navobject;
 
@@ -136,7 +136,7 @@ avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
  * @param {number} dist in m
  */
 avnav.map.NavLayer.prototype.computeTarget=function(pos,course,dist){
-    var point=new navdata.Point();
+    var point=new navobjects.Point();
     point.fromCoord(this.mapholder.transformFromMap(pos));
     var tp=NavCompute.computeTarget(point,course,dist);
     var tpmap=this.mapholder.transformToMap(tp.toCoord());

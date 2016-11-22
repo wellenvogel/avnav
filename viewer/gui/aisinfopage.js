@@ -3,7 +3,8 @@
  */
 avnav.provide('avnav.gui.AisInfoPage');
 
-var navdata=require('../nav/navdata');
+var navobjects=require('../nav/navobjects');
+var AisHandler=require('../nav/aisdata');
 
 
 /**
@@ -13,13 +14,13 @@ var navdata=require('../nav/navdata');
 avnav.gui.AisInfoPage=function(){
     avnav.gui.Page.call(this,'aisinfopage',
         {
-            eventlist:[navdata.NavEvent.EVENT_TYPE],
+            eventlist:[navobjects.NavEvent.EVENT_TYPE],
             returnOnClick: true
         }
     );
     /**
      * @private
-     * @type {avnav.nav.AisData}
+     * @type {AisHandler}
      */
     this.aishandler=null;
 

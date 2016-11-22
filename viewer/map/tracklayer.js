@@ -3,14 +3,14 @@
  */
 
 avnav.provide('avnav.map.TrackLayer');
-var navdata=require('../nav/navdata');
-var NavObject=require('../nav/navobject');
+var navobjects=require('../nav/navobjects');
+var NavData=require('../nav/navdata');
 
 
 /**
  * a cover for the layer that the track
  * @param {avnav.map.MapHolder} mapholder
- * @param {NavObject} navobject
+ * @param {NavData} navobject
  * @constructor
  */
 avnav.map.TrackLayer=function(mapholder,navobject){
@@ -21,7 +21,7 @@ avnav.map.TrackLayer=function(mapholder,navobject){
     this.mapholder=mapholder;
     /**
      * @private
-     * @type {NavObject}
+     * @type {NavData}
      */
     this.navobject=navobject;
     /**
@@ -47,7 +47,7 @@ avnav.map.TrackLayer=function(mapholder,navobject){
     this.lineStyle={};
     this.setStyle();
     var self=this;
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
@@ -72,13 +72,13 @@ avnav.map.TrackLayer.prototype.setStyle=function() {
  * @param evdata
  */
 avnav.map.TrackLayer.prototype.navEvent=function(evdata){
-    if (evdata.source == navdata.NavEventSource.MAP) return; //avoid endless loop
+    if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) {
         this.currentTrack=[];
         this.trackPoints=[];
         return;
     }
-    if (evdata.type == navdata.NavEventType.TRACK){
+    if (evdata.type == navobjects.NavEventType.TRACK){
         var newTrack=this.navobject.getTrackHandler().getTrackData();
         if (newTrack.length < 2){
             this.currentTrack=[];

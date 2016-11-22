@@ -1,15 +1,15 @@
 /**
  * Created by andreas on 04.05.14.
  */
-var navdata=require('../nav/navdata');
-var NavObject=require('../nav/navobject');
+var navobjects=require('./navobjects');
+var NavData=require('./navdata');
 
 
 /**
  * the handler for the gps data
  * query the server...
  * @param {avnav.util.PropertyHandler} propertyHandler
- * @param {NavObject} navobject
+ * @param {NavData} navobject
  * @constructor
  */
 var GpsData=function(propertyHandler,navobject){
@@ -18,7 +18,7 @@ var GpsData=function(propertyHandler,navobject){
     /** @private */
     this.navobject=navobject;
     /** @private */
-    this.gpsdata=new navdata.GpsInfo();
+    this.gpsdata=new navobjects.GpsInfo();
     /** @private */
     this.formattedData= {
         gpsPosition:"NO FIX",
@@ -50,7 +50,7 @@ var GpsData=function(propertyHandler,navobject){
  * @private
  */
 GpsData.prototype.handleGpsResponse=function(data, status){
-    var gpsdata=new navdata.GpsInfo();
+    var gpsdata=new navobjects.GpsInfo();
     gpsdata.valid=false;
     if (status) {
         gpsdata.rtime = null;
@@ -158,7 +158,7 @@ GpsData.prototype.handleGpsStatus=function(success){
 
 /**
  * return the current gpsdata
- * @returns {navdata.GpsInfo}
+ * @returns {navobjects.GpsInfo}
  */
 GpsData.prototype.getGpsData=function(){
     return this.gpsdata;

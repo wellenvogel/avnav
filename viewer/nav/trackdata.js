@@ -1,12 +1,12 @@
 
-var navdata=require('./navdata');
+var navobjects=require('./navobjects');
 
 
 /**
  * the handler for the track data
  * query the server...
  * @param {avnav.util.PropertyHandler} propertyHandler
- * @param {NavObject} navobject
+ * @param {NavData} navobject
  * @constructor
  */
 var TrackData=function(propertyHandler,navobject){
@@ -15,7 +15,7 @@ var TrackData=function(propertyHandler,navobject){
     /** @private */
     this.navobject=navobject;
     /** @private
-     * @type {Array.<navdata.TrackPoint>}
+     * @type {Array.<navobjects.TrackPoint>}
      * */
     this.currentTrack=[];
     /**
@@ -68,7 +68,7 @@ TrackData.prototype.handleTrackResponse=function(data){
     for (var i=0;i<data.length;i++){
         var cur=data[i];
         if (data[i].ts <= lastts) continue;
-        this.currentTrack.push(new navdata.TrackPoint(cur.lon,cur.lat,cur.ts)); //we could add course,speed...
+        this.currentTrack.push(new navobjects.TrackPoint(cur.lon,cur.lat,cur.ts)); //we could add course,speed...
         num++;
     }
     //cleanup old track data
@@ -164,7 +164,7 @@ TrackData.prototype.handleTrackStatus=function(success){
 
 /**
  * return the current trackData
- * @returns {Array.<navdata.TrackPoint>}
+ * @returns {Array.<navobjects.TrackPoint>}
  */
 TrackData.prototype.getTrackData=function(){
     return this.currentTrack;

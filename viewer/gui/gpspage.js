@@ -2,7 +2,7 @@
  * Created by Andreas on 27.04.2014.
  */
 avnav.provide('avnav.gui.Gpspage');
-var navdata=require('../nav/navdata');
+var navobjects=require('../nav/navobjects');
 
 
 
@@ -24,7 +24,7 @@ avnav.inherits(avnav.gui.Gpspage,avnav.gui.Page);
 
 avnav.gui.Gpspage.prototype.showPage=function(options){
     if (!this.gui) return;
-    this.gui.navobject.setAisCenterMode(navdata.AisCenterMode.GPS);
+    this.gui.navobject.setAisCenterMode(navobjects.AisCenterMode.GPS);
     this.gui.navobject.getAisHandler().setTrackedTarget(0);
     this.computeLayout();
 };
@@ -40,7 +40,7 @@ avnav.gui.Gpspage.prototype.localInit=function(){
         evt.stopPropagation();
         self.gui.showPage('aisinfopage');
     });
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
 

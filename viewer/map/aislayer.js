@@ -3,14 +3,14 @@
  */
 
 avnav.provide('avnav.map.AisLayer');
-var navdata=require('../nav/navdata');
-var NavObject=require('../nav/navobject');
+var navobjects=require('../nav/navobjects');
+var NavData=require('../nav/navobjects');
 
 
 /**
  * a cover for the layer with the AIS display
  * @param {avnav.map.MapHolder} mapholder
- * @param {NavObject} navobject
+ * @param {NavData} navobject
  * @constructor
  */
 avnav.map.AisLayer=function(mapholder,navobject){
@@ -21,7 +21,7 @@ avnav.map.AisLayer=function(mapholder,navobject){
     this.mapholder=mapholder;
     /**
      * @private
-     * @type {NavObject}
+     * @type {NavData}
      */
     this.navobject=navobject;
     var self=this;
@@ -60,7 +60,7 @@ avnav.map.AisLayer=function(mapholder,navobject){
      */
     this.pixel=[];
 
-    $(document).on(navdata.NavEvent.EVENT_TYPE, function(ev,evdata){
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     /**
@@ -162,9 +162,9 @@ avnav.map.AisLayer.prototype.setStyles=function(){
  * @param evdata
  */
 avnav.map.AisLayer.prototype.navEvent=function(evdata){
-    if (evdata.source == navdata.NavEventSource.MAP) return; //avoid endless loop
+    if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) return;
-    if (evdata.type == navdata.NavEventType.AIS){
+    if (evdata.type == navobjects.NavEventType.AIS){
         this.aisdata=this.navobject.getAisHandler().getAisData().slice(0);
         this.pixel=[];
     }
@@ -184,7 +184,7 @@ avnav.map.AisLayer.prototype.onPostCompose=function(center,drawing){
         var current=this.aisdata[i];
         var pos=current.mapPos;
         if (! pos){
-            pos=this.mapholder.pointToMap((new navdata.Point(current.lon,current.lat)).toCoord());
+            pos=this.mapholder.pointToMap((new navobjects.Point(current.lon,current.lat)).toCoord());
             current.mapPos=pos;
         }
         var rotation=current.course||0;
