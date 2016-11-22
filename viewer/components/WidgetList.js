@@ -22,7 +22,7 @@ var widgetList=[
     {
         name: 'COG',
         max: "999",
-        unit: "°",
+        unit: "\u00b0",
         caption: 'COG',
         //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
         wclass: Widget,
@@ -64,7 +64,7 @@ var widgetList=[
     {
         name: 'BRG',
         max: "999",
-        unit: "°",
+        unit: "\u00b0",
         caption: 'BRG',
         //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
         wclass: Widget,

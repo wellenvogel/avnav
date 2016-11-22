@@ -360,8 +360,19 @@ avnav.gui.Navpage.prototype.localInit=function(){
             direction: 'bottom',
             scale: false,
             layoutParameterCallback: function(handler){
+                var w=$(window).width();
+                var direction='bottom';
+                var inverseAlignment=false;
+                var maxSize=self.selectOnPage('.avn_left_panel').height() - $('#avi_nav_bottom').outerHeight();
+                if ( w<= self.gui.properties.getProperties().smallBreak){
+                    direction='left';
+                    maxSize=self.selectOnPage('.avn_left_panel').width();
+                    inverseAlignment=true;
+                }
                 return {
-                    maxSize: self.selectOnPage('.avn_left_panel').height() - $('#avi_nav_bottom').outerHeight()
+                    maxSize:maxSize,
+                    direction: direction,
+                    inverseAlignment:inverseAlignment
                 };
             }
         })
@@ -546,6 +557,14 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
         $('#avi_navpage_wpbuttons').css('bottom',rtop+"px");
         $('#avi_route_info_navpage').css('bottom',rtop+"px");
         self.scrollRoutePoints();
+        var w=$(window).width();
+        /*
+        if ( w<= self.gui.properties.getProperties().smallBreak){
+            self.leftContainer.getLayout().reset();
+        }
+        else{
+            self.leftContainer.getLayout().init();
+        }*/
         self.widgetContainers.forEach(function(container){
            container.layout();
         });

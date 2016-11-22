@@ -693,15 +693,12 @@ html,body {
   position: absolute;
   left: 0;
   overflow: hidden;
-  background-color: @colorMain;
+  //background-color: @colorMain;
   .nightColors();
   z-index: 10;
   bottom: 0;
-  @media(max-width: @checkTiny){
-    right:0;
-    background-color: inherit;
-    pointer-events: none;
-  }
+  pointer-events: none;
+  background-color: inherit;
 }
 
 #avi_navLeftContainer .avn_widget{
@@ -712,38 +709,7 @@ html,body {
   width:@navLeftWidgetWidth;
 
 }
-#avi_navLeftContainer .avn_widget:last-of-type{
-  margin-bottom: 0;
-}
 
-#avi_navLeftContainer .avn_timeWidget{
-  @media(max-width: @checkTiny){
-    position: absolute;
-    left: 0;
-    top: -4em;
-  }
-}
-#avi_navLeftContainer .avn_activeRouteWidgett {
-  @media (max-width: @checkTiny) {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    height: 7em;
-  }
-}
-#avi_navLeftContainer .avn_aisTargetWidget{
-  @media(max-width: @checkTiny){
-    float: left;
-    height: 7em;
-  }
-}
-
-#avi_navLeftContainer .avn_centerWidget{
-  @media(max-width: @checkTiny){
-    float: left;
-    height: 7em;
-  }
-}
 
 /*-------------------------------------------------------------
    route display

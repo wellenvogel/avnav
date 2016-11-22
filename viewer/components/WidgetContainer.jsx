@@ -172,4 +172,11 @@ WidgetContainer.prototype.setVisibility=function(newVisibility){
     if (! this._instance) return;
     this._instance.setVisibility(newVisibility);
 };
+/**
+ *
+ * @returns {DynLayout}
+ */
+WidgetContainer.prototype.getLayout=function(){
+    return this._layoutHandler;
+};
 module.exports=WidgetContainer;
