@@ -595,5 +595,26 @@ routeobjects.Route.prototype.computeLength=function(startIdx){
     }
     return rt;
 };
+/**
+ * find the point that is closest to the provided point
+ *
+ * @param {navobjects.Point} point
+ * @returns {number} -1 if there are no points in the route
+ */
+routeobjects.Route.prototype.findBestMatchingIdx=function(point){
+    var idx;
+    var mindistance=undefined;
+    var bestPoint=-1;
+    if (! point) return bestPoint;
+    var dst;
+    for (idx=0;idx<this.points.length;idx++){
+        dst=NavCompute.computeDistance(point,this.points[idx]);
+        if (bestPoint == -1 || dst.dts<mindistance){
+            bestPoint=idx;
+            mindistance=dst.dts;
+        }
+    }
+    return bestPoint;
+};
 
 module.exports=routeobjects;

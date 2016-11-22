@@ -1242,18 +1242,8 @@ RouteData.prototype._saveLegLocal=function(){
 RouteData.prototype._findBestMatchingPoint=function(){
     if (! this.editingRoute) return;
     if (! this.editingWp) return;
-    var idx;
-    var mindistance=undefined;
-    var bestPoint=undefined;
-    var dst;
-    for (idx=0;idx<this.editingRoute.points.length;idx++){
-        dst=NavCompute.computeDistance(this.editingWp,this.editingRoute.points[idx]);
-        if (bestPoint === undefined || dst.dts<mindistance){
-            bestPoint=this.editingRoute.points[idx];
-            mindistance=dst.dts;
-        }
-    }
-    this.editingWp=bestPoint;
+    var idx=this.editingRoute.findBestMatchingIdx(this.editingWp);
+    this.editingWp=this.editingRoute.getPointAtIndex(idx);
 };
 
 

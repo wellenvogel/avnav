@@ -3,7 +3,7 @@
  */
 
 var React=require("react");
-var NavObject=avnav.nav.NavObject;
+var NavData=require('../nav/navdata');
 
 var WidgetUpdater=function(Widget){
     return React.createClass({
@@ -13,7 +13,7 @@ var WidgetUpdater=function(Widget){
             caption: React.PropTypes.string,
             dataKey:React.PropTypes.string,
             click: React.PropTypes.func,
-            store: React.PropTypes.instanceOf(NavObject).isRequired,
+            store: React.PropTypes.instanceOf(NavData).isRequired,
             classes: React.PropTypes.string
         },
         getInitialState: function(){

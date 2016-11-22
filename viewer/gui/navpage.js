@@ -271,8 +271,8 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $('#leftBottomMarker').click({page:this},function(ev){
         var wp=self.navobject.getRoutingHandler().getCurrentLegTarget();
         if (wp){
+            self.gui.map.setCenter(wp);
             if (self.routingVisible) {
-                self.gui.map.setCenter(wp);
                 return;
             }
             self.showWpButtons(wp);
@@ -460,7 +460,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
             this.updateRoutePoints();
         }
         else{
-            this._wpOverlay.show(wp);
+            this.showWpButtons(wp);
         }
     }
 };

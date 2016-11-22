@@ -3,13 +3,13 @@
  */
 
 var React=require("react");
-var NavObject=avnav.nav.NavObject;
+var NavData=require('../nav/navdata');
 
 var AisTargetWidget=React.createClass({
     propTypes:{
         //formatter: React.PropTypes.func,
         click: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(NavObject).isRequired,
+        store: React.PropTypes.instanceOf(NavData).isRequired,
         propertyHandler: React.PropTypes.object.isRequired,
         classes: React.PropTypes.string,
         layoutUpdate: React.PropTypes.func

@@ -3,11 +3,11 @@
  */
 
 var React=require("react");
-var NavObject=avnav.nav.NavObject;
+var NavData=require('../nav/navdata');
 var TimeStatusWidget=React.createClass({
     propTypes:{
         click: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(NavObject).isRequired,
+        store: React.PropTypes.instanceOf(NavData).isRequired,
         classes: React.PropTypes.string
     },
     _getValues:function(){
