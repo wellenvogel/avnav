@@ -1,24 +1,21 @@
-/**
- * Created by andreas on 04.05.14.
- */
-avnav.provide('avnav.nav.TrackData');
 
+var navdata=require('./navdata');
 
 
 /**
  * the handler for the track data
  * query the server...
  * @param {avnav.util.PropertyHandler} propertyHandler
- * @param {avnav.nav.NavObject} navobject
+ * @param {NavObject} navobject
  * @constructor
  */
-avnav.nav.TrackData=function(propertyHandler,navobject){
+var TrackData=function(propertyHandler,navobject){
     /** @private */
     this.propertyHandler=propertyHandler;
     /** @private */
     this.navobject=navobject;
     /** @private
-     * @type {Array.<avnav.nav.navdata.TrackPoint>}
+     * @type {Array.<navdata.TrackPoint>}
      * */
     this.currentTrack=[];
     /**
@@ -62,7 +59,7 @@ avnav.nav.TrackData=function(propertyHandler,navobject){
  * @param data
  * @private
  */
-avnav.nav.TrackData.prototype.handleTrackResponse=function(data){
+TrackData.prototype.handleTrackResponse=function(data){
     var lastts=0;
     if (this.currentTrack.length>0){
         lastts=this.currentTrack[this.currentTrack.length-1].ts;
@@ -71,7 +68,7 @@ avnav.nav.TrackData.prototype.handleTrackResponse=function(data){
     for (var i=0;i<data.length;i++){
         var cur=data[i];
         if (data[i].ts <= lastts) continue;
-        this.currentTrack.push(new avnav.nav.navdata.TrackPoint(cur.lon,cur.lat,cur.ts)); //we could add course,speed...
+        this.currentTrack.push(new navdata.TrackPoint(cur.lon,cur.lat,cur.ts)); //we could add course,speed...
         num++;
     }
     //cleanup old track data
@@ -93,7 +90,7 @@ avnav.nav.TrackData.prototype.handleTrackResponse=function(data){
 /**
  * @private
  */
-avnav.nav.TrackData.prototype.startQuery=function() {
+TrackData.prototype.startQuery=function() {
     var url = this.propertyHandler.getProperties().navUrl+"?request=track";
     var timeout = this.propertyHandler.getProperties().trackQueryTimeout; //in ms!
     var interval=this.propertyHandler.getProperties().trackInterval; //in seconds
@@ -146,7 +143,7 @@ avnav.nav.TrackData.prototype.startQuery=function() {
  * handle the status and trigger the FPS event
  * @param success
  */
-avnav.nav.TrackData.prototype.handleTrackStatus=function(success){
+TrackData.prototype.handleTrackStatus=function(success){
     if (! success){
         this.trackErrors++;
         if (this.trackErrors > 10){
@@ -167,9 +164,9 @@ avnav.nav.TrackData.prototype.handleTrackStatus=function(success){
 
 /**
  * return the current trackData
- * @returns {Array.<avnav.nav.navdata.TrackPoint>}
+ * @returns {Array.<navdata.TrackPoint>}
  */
-avnav.nav.TrackData.prototype.getTrackData=function(){
+TrackData.prototype.getTrackData=function(){
     return this.currentTrack;
 };
 
@@ -177,14 +174,15 @@ avnav.nav.TrackData.prototype.getTrackData=function(){
  * delete the current track and re-query
  * @param evdata
  */
-avnav.nav.TrackData.prototype.propertyChange=function(evdata) {
+TrackData.prototype.propertyChange=function(evdata) {
     this.resetTrack();
 };
 /**
  * reset the current track (trigger reload)
  */
-avnav.nav.TrackData.prototype.resetTrack=function(){
+TrackData.prototype.resetTrack=function(){
     self.trackRequestSequence++;
     this.currentTrack=[]
 };
 
+module.exports=TrackData;

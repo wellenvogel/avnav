@@ -1,13 +1,8 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-avnav.provide('avnav.nav.NavCompute');
 
-
-
-
-
-avnav.nav.NavCompute=function(){
+var NavCompute=function(){
 };
 
 
@@ -17,7 +12,7 @@ avnav.nav.NavCompute=function(){
  * @param {avnav.nav.navdata.Point} dst
  * @returns {avnav.nav.navdata.Distance}
  */
-avnav.nav.NavCompute.computeDistance=function(src,dst){
+NavCompute.computeDistance=function(src,dst){
     var srcll=src;
     var dstll=dst;
     var rt=new avnav.nav.navdata.Distance();
@@ -30,7 +25,7 @@ avnav.nav.NavCompute.computeDistance=function(src,dst){
     return rt;
 };
 
-avnav.nav.NavCompute.computeXte=function(start,destination,current){
+NavCompute.computeXte=function(start,destination,current){
     //use the movable type stuff for computations
     var llsrc=new LatLon(start.lat,start.lon);
     var lldst=new LatLon(destination.lat,destination.lon);
@@ -49,7 +44,7 @@ avnav.nav.NavCompute.computeXte=function(start,destination,current){
  * @param dst
  * @returns {avnav.nav.navdata.Cpa}
  */
-avnav.nav.NavCompute.computeCpa=function(src,dst,properties){
+NavCompute.computeCpa=function(src,dst,properties){
     var NM=properties.NM;
     var rt = new avnav.nav.navdata.Cpa();
     var llsrc = new LatLon(src.lat, src.lon);
@@ -82,7 +77,7 @@ avnav.nav.NavCompute.computeCpa=function(src,dst,properties){
     var a = (src.course - dst.course) * Math.PI / 180;
     var va = src.speed * NM; //m/h
     var vb = dst.speed * NM;
-    var tm = avnav.nav.NavCompute.computeTPA(a, da, db, va, vb); //tm in h
+    var tm = NavCompute.computeTPA(a, da, db, va, vb); //tm in h
     if (tm < 0) return rt;
     var cpasrc = llsrc.destinationPoint(src.course, src.speed * NM / 1000 * tm);
     var cpadst = lldst.destinationPoint(dst.course, dst.speed * NM / 1000 * tm);
@@ -124,7 +119,7 @@ avnav.nav.NavCompute.computeCpa=function(src,dst,properties){
  we return -1 if no meaningfull tpa
  @private
  */
-avnav.nav.NavCompute.computeTPA=function(a,da,db,va,vb){
+NavCompute.computeTPA=function(a,da,db,va,vb){
     var n=va*va+vb*vb-2*va*vb*Math.cos(a);
     if (n < 1e-6 && n > -1e-6) return -1;
     var tm=((va*da+vb*db)-Math.cos(a)*(va*db+vb*da))/n;
@@ -136,7 +131,7 @@ avnav.nav.NavCompute.computeTPA=function(a,da,db,va,vb){
  * @param {number} brg in degrees
  * @param {number} dist in m
 */
-avnav.nav.NavCompute.computeTarget=function(src,brg,dist){
+NavCompute.computeTarget=function(src,brg,dist){
     var llsrc = new LatLon(src.lat, src.lon);
     var llrt=llsrc.destinationPoint(brg,dist/1000);
     var rt=new avnav.nav.navdata.Point(llrt.lon(),llrt.lat());
@@ -149,7 +144,7 @@ avnav.nav.NavCompute.computeTarget=function(src,brg,dist){
  * @param {avnav.nav.Route} route
  * @returns {Number}
  */
-avnav.nav.NavCompute.computeRouteLength=function(startIdx,route){
+NavCompute.computeRouteLength=function(startIdx,route){
     if (! route) return 0;
     var rt=0;
     if (startIdx < 0) startIdx=0;
@@ -158,7 +153,7 @@ avnav.nav.NavCompute.computeRouteLength=function(startIdx,route){
     startIdx++;
     for (;startIdx<route.points.length;startIdx++){
         var next=route.points[startIdx];
-        var dst=avnav.nav.NavCompute.computeDistance(last,next);
+        var dst=NavCompute.computeDistance(last,next);
         rt+=dst.dtsnm;
         last=next;
     }
@@ -172,7 +167,7 @@ avnav.nav.NavCompute.computeRouteLength=function(startIdx,route){
  * @param opt_start
  * @returns {{markerCourse: Number, markerDistance: Number, markerVmg: Number, markerEta: Date, markerXte: Number}}
  */
-avnav.nav.NavCompute.computeLegInfo=function(target,gps,opt_start){
+NavCompute.computeLegInfo=function(target,gps,opt_start){
     var rt={
         markerCourse:undefined,
         markerDistance: undefined,
@@ -182,7 +177,7 @@ avnav.nav.NavCompute.computeLegInfo=function(target,gps,opt_start){
     };
     rt.markerWp=target;
     if (gps.valid) {
-        var markerdst = avnav.nav.NavCompute.computeDistance(gps, target);
+        var markerdst = NavCompute.computeDistance(gps, target);
         rt.markerCourse = markerdst.course;
         rt.markerDistance = markerdst.dtsnm;
         var coursediff = Math.min(Math.abs(markerdst.course - gps.course), Math.abs(markerdst.course + 360 - gps.course),
@@ -207,7 +202,7 @@ avnav.nav.NavCompute.computeLegInfo=function(target,gps,opt_start){
             rt.markerVmg = 0;
         }
         if (opt_start) {
-            rt.markerXte = avnav.nav.NavCompute.computeXte(opt_start,target, gps);
+            rt.markerXte = NavCompute.computeXte(opt_start,target, gps);
         }
         else{
             rt.markerXte=0;
@@ -216,5 +211,6 @@ avnav.nav.NavCompute.computeLegInfo=function(target,gps,opt_start){
     return rt;
 };
 
+module.exports=NavCompute;
 
 

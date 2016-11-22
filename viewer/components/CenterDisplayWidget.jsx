@@ -6,7 +6,6 @@ var React=require("react");
 
 var CenterDisplayWidget=React.createClass({
     propTypes:{
-        //formatter: React.PropTypes.func,
         click: React.PropTypes.func,
         store: React.PropTypes.object.isRequired,
         classes: React.PropTypes.string

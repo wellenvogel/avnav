@@ -1,29 +1,23 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-avnav.provide('avnav.nav.navdata.Distance');
-avnav.provide('avnav.nav.navdata.Point');
-avnav.provide('avnav.nav.navdata.WayPoint');
-avnav.provide('avnav.nav.navdata.TrackPoint');
-avnav.provide('avnav.nav.navdata.Cpa');
-avnav.provide('avnav.nav.navdata.GpsInfo');
-
+var navdata={};
 /**
  * a point lon,lat
  * @param lon
  * @param lat
  * @constructor
  */
-avnav.nav.navdata.Point=function(lon,lat){
+navdata.Point=function(lon,lat){
     this.lon=lon;
     this.lat=lat;
 };
 /**
  * convert ol3 coordinates to a point
  * @param coord
- * @returns {avnav.nav.navdata.Point}
+ * @returns {navdata.Point}
  */
-avnav.nav.navdata.Point.prototype.fromCoord=function(coord){
+navdata.Point.prototype.fromCoord=function(coord){
     this.lon=coord[0];
     this.lat=coord[1];
     return this;
@@ -33,13 +27,13 @@ avnav.nav.navdata.Point.prototype.fromCoord=function(coord){
  * @param point
  * @returns {*}
  */
-avnav.nav.navdata.Point.prototype.assign=function(point){
+navdata.Point.prototype.assign=function(point){
     point.lon=this.lon;
     point.lat=this.lat;
     return point;
 };
 
-avnav.nav.navdata.Point.prototype.compare=function(point){
+navdata.Point.prototype.compare=function(point){
     if (! point) return false;
     if (point.lon == this.lon && point.lat == this.lat)return true;
     return false;
@@ -49,7 +43,7 @@ avnav.nav.navdata.Point.prototype.compare=function(point){
  * convert to ol3 coordinates
  * @returns {*[]}
  */
-avnav.nav.navdata.Point.prototype.toCoord=function(){
+navdata.Point.prototype.toCoord=function(){
     var rt=[this.lon,this.lat];
     return rt;
 };
@@ -60,8 +54,8 @@ avnav.nav.navdata.Point.prototype.toCoord=function(){
  * @param {string} opt_name
  * @constructor
  */
-avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
-    avnav.nav.navdata.Point.call(this,lon,lat);
+navdata.WayPoint=function(lon,lat,opt_name){
+    navdata.Point.call(this,lon,lat);
     /**
      * the name of the waypoint
      * @type {string}
@@ -76,13 +70,13 @@ avnav.nav.navdata.WayPoint=function(lon,lat,opt_name){
     this.routeName=undefined;
 };
 
-avnav.inherits(avnav.nav.navdata.WayPoint,avnav.nav.navdata.Point);
+avnav.inherits(navdata.WayPoint,navdata.Point);
 
-avnav.nav.navdata.WayPoint.prototype.compare=function(point){
+navdata.WayPoint.prototype.compare=function(point){
     if (! point) return false;
     var rt= this.super_.compare.call(this,point);
     if (! rt) return rt;
-    if (point instanceof avnav.nav.navdata.WayPoint ){
+    if (point instanceof navdata.WayPoint ){
         return this.routeName == point.routeName;
     }
     return true;
@@ -90,14 +84,14 @@ avnav.nav.navdata.WayPoint.prototype.compare=function(point){
 /**
  * create a waypoint from aplain (json) object
  * @param plain
- * @returns {avnav.nav.navdata.WayPoint}
+ * @returns {navdata.WayPoint}
  */
-avnav.nav.navdata.WayPoint.fromPlain=function(plain){
-    return new avnav.nav.navdata.WayPoint(plain.lon,plain.lat,plain.name);
+navdata.WayPoint.fromPlain=function(plain){
+    return new navdata.WayPoint(plain.lon,plain.lat,plain.name);
 };
 
-avnav.nav.navdata.WayPoint.prototype.clone=function(){
-    var rt=new avnav.nav.navdata.WayPoint(this.lon,this.lat,this.name?this.name.slice(0):null);
+navdata.WayPoint.prototype.clone=function(){
+    var rt=new navdata.WayPoint(this.lon,this.lat,this.name?this.name.slice(0):null);
     rt.routeName=(this.routeName!==undefined)?this.routeName.slice(0):undefined;
     return rt;
 };
@@ -106,7 +100,7 @@ avnav.nav.navdata.WayPoint.prototype.clone=function(){
  * @param point
  * @returns {boolean}
  */
-avnav.nav.navdata.WayPoint.prototype.update=function(point){
+navdata.WayPoint.prototype.update=function(point){
     var rt=false;
     if (point.lon !== undefined){
         if (point.lon != this.lon) rt=true;
@@ -134,13 +128,13 @@ avnav.nav.navdata.WayPoint.prototype.update=function(point){
  * @param opt_course
  * @constructor
  */
-avnav.nav.navdata.TrackPoint=function(lon,lat,ts,opt_speed,opt_course){
-    avnav.nav.navdata.Point.call(this,lon,lat);
+navdata.TrackPoint=function(lon,lat,ts,opt_speed,opt_course){
+    navdata.Point.call(this,lon,lat);
     this.ts=ts;
     this.speed=opt_speed||0;
     this.opt_course=opt_course||0;
 };
-avnav.inherits(avnav.nav.navdata.TrackPoint,avnav.nav.navdata.Point);
+avnav.inherits(navdata.TrackPoint,navdata.Point);
 
 
 /**
@@ -148,7 +142,7 @@ avnav.inherits(avnav.nav.navdata.TrackPoint,avnav.nav.navdata.Point);
  * @constructor
  */
 
-avnav.nav.navdata.Distance=function(){
+navdata.Distance=function(){
     /**
      * the distance in meters
      * @type {number}
@@ -169,10 +163,10 @@ avnav.nav.navdata.Distance=function(){
 /**
  *
  * @constructor
- * @extends {avnav.nav.navdata.Point}
+ * @extends {navdata.Point}
  */
-avnav.nav.navdata.GpsInfo=function(){
-    avnav.nav.navdata.Point.call(this,0,0);
+navdata.GpsInfo=function(){
+    navdata.Point.call(this,0,0);
     /**
      * speed in NM/H (kn)
      * @type {number}
@@ -199,25 +193,25 @@ avnav.nav.navdata.GpsInfo=function(){
      */
     this.raw=null;
 };
-avnav.inherits(avnav.nav.navdata.GpsInfo,avnav.nav.navdata.Point);
+avnav.inherits(navdata.GpsInfo,navdata.Point);
 
 /**
  * a CPA point for AIS data, contains the point + the time and the info whether we pass front or back
  * @constructor
  *
  */
-avnav.nav.navdata.Cpa=function(){
+navdata.Cpa=function(){
 
     /**
      * the source position at CPA
-     * @type {avnav.nav.navdata.Point}
+     * @type {navdata.Point}
      */
-    this.src=new avnav.nav.navdata.Point(0,0);
+    this.src=new navdata.Point(0,0);
     /**
      * the destination position at CPA
-     * @type {avnav.nav.navdata.Point}
+     * @type {navdata.Point}
      */
-    this.dst=new avnav.nav.navdata.Point(0,0);
+    this.dst=new navdata.Point(0,0);
     /**
      * distance in m
      * @type {number}
@@ -240,6 +234,8 @@ avnav.nav.navdata.Cpa=function(){
     this.front=false;
 };
 
-avnav.nav.navdata.Ais=function(){
+navdata.Ais=function(){
 
 };
+
+module.exports=navdata;

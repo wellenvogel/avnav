@@ -3,6 +3,7 @@
  */
 
 var React=require("react");
+var NavObject=avnav.nav.NavObject;
 
 var ActiveRouteWidget=React.createClass({
     propTypes:{

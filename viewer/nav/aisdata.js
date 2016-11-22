@@ -1,9 +1,8 @@
 /**
  * Created by andreas on 04.05.14.
  */
-avnav.provide('avnav.nav.AisData');
-
-
+var AisTarget=require('./navdata').Ais;
+var Formatter=require('../util/formatter');
 
 /**
  * the handler for the ais data
@@ -12,13 +11,13 @@ avnav.provide('avnav.nav.AisData');
  * @param {avnav.nav.NavObject} navobject
  * @constructor
  */
-avnav.nav.AisData=function(propertyHandler,navobject){
+var AisData=function(propertyHandler,navobject){
     /** @private */
     this.propertyHandler=propertyHandler;
     /** @private */
     this.navobject=navobject;
     /** @private
-     * @type {Array.<avnav.nav.navdata.Ais>}
+     * @type {Array.<AisTarget>}
      * */
     this.currentAis=[];
 
@@ -78,7 +77,7 @@ avnav.nav.AisData=function(propertyHandler,navobject){
     /**
      * the nearest target - being returned when values are queried
      *
-     * @type {avnav.nav.navdata.Ais}
+     * @type {AisTarget}
      */
     this.nearestAisTarget={};
     var self=this;
@@ -187,9 +186,9 @@ avnav.nav.AisData=function(propertyHandler,navobject){
 
     /**
      * @private
-     * @type {avnav.util.Formatter}
+     * @type {Formatter}
      */
-    this.formatter=new avnav.util.Formatter();
+    this.formatter=new Formatter();
     this.startQuery();
 };
 
@@ -197,7 +196,7 @@ avnav.nav.AisData=function(propertyHandler,navobject){
  * compute all the cpa data...
  * @private
  */
-avnav.nav.AisData.prototype.handleAisData=function() {
+AisData.prototype.handleAisData=function() {
     /** @type {avnav.nav.navdata.GpsInfo}*/
     var boatPos = this.navobject.getGpsHandler().getGpsData();
     var properties=this.propertyHandler.getProperties();
@@ -284,7 +283,7 @@ avnav.nav.AisData.prototype.handleAisData=function() {
  * @param b
  * @returns {number}
  */
-avnav.nav.AisData.prototype.aisSort=function(a,b) {
+AisData.prototype.aisSort=function(a,b) {
     try {
         if (a.distance == b.distance) return 0;
         if (a.distance < b.distance) return -1;
@@ -297,7 +296,7 @@ avnav.nav.AisData.prototype.aisSort=function(a,b) {
  * get the formatter for AIS data
  * @returns {{distance: {headline: string, format: format}, speed: {headline: string, format: format}, course: {headline: string, format: format}, cpa: {headline: string, format: format}, tcpa: {headline: string, format: format}, passFront: {headline: string, format: format}, shipname: {headline: string, format: format}, callsign: {headline: string, format: format}, mmsi: {headline: string, format: format}, shiptype: {headline: string, format: format}, position: {headline: string, format: format}, destination: {headline: string, format: format}}}
  */
-avnav.nav.AisData.prototype.getAisFormatter=function(){
+AisData.prototype.getAisFormatter=function(){
     return this.aisparam;
 };
 /**
@@ -305,7 +304,7 @@ avnav.nav.AisData.prototype.getAisFormatter=function(){
  * @param dname
  * @returns {string}
  */
-avnav.nav.AisData.prototype.getFormattedAisValue=function(dname){
+AisData.prototype.getFormattedAisValue=function(dname){
     return this.formatAisValue(dname,this.nearestAisTarget);
 };
 
@@ -315,7 +314,7 @@ avnav.nav.AisData.prototype.getFormattedAisValue=function(dname){
  * @param aisobject an AIS entry like returned by getAisByMMsi
  * @returns {string}
  */
-avnav.nav.AisData.prototype.formatAisValue=function(dname,aisobject){
+AisData.prototype.formatAisValue=function(dname,aisobject){
     var key=this.formattedDataDescription[dname];
     if (! key) return "";
     if (aisobject === undefined) return "";
@@ -327,7 +326,7 @@ avnav.nav.AisData.prototype.formatAisValue=function(dname,aisobject){
 /**
  * @private
  */
-avnav.nav.AisData.prototype.startQuery=function() {
+AisData.prototype.startQuery=function() {
     var url = this.propertyHandler.getProperties().navUrl+"?request=ais";
     var timeout = this.propertyHandler.getProperties().aisQueryTimeout; //in ms
     var center=this.navobject.getAisCenter();
@@ -378,9 +377,9 @@ avnav.nav.AisData.prototype.startQuery=function() {
 
 /**
  * return the current aisData
- * @returns {Array.<avnav.nav.navdata.Ais>}
+ * @returns {Array.<AisTarget>}
  */
-avnav.nav.AisData.prototype.getAisData=function(){
+AisData.prototype.getAisData=function(){
     return this.currentAis;
 };
 
@@ -389,7 +388,7 @@ avnav.nav.AisData.prototype.getAisData=function(){
  * @param mmsi
  * @returns {*}
  */
-avnav.nav.AisData.prototype.getAisByMmsi=function(mmsi){
+AisData.prototype.getAisByMmsi=function(mmsi){
     if (mmsi == 0 || mmsi == null){
         return this.nearestAisTarget;
     }
@@ -403,7 +402,7 @@ avnav.nav.AisData.prototype.getAisByMmsi=function(mmsi){
  * @param mmsi
  * @returns {*}
  */
-avnav.nav.AisData.prototype.getAisPositionByMmsi=function(mmsi){
+AisData.prototype.getAisPositionByMmsi=function(mmsi){
     var ais=this.getAisByMmsi(mmsi);
     if (! ais) return undefined;
     return new avnav.nav.navdata.Point(parseFloat(ais.lon||0),parseFloat(ais.lat||0));
@@ -411,9 +410,9 @@ avnav.nav.AisData.prototype.getAisPositionByMmsi=function(mmsi){
 
 /**
  * get the raw data for the currently tracked target
- * @returns {avnav.nav.navdata.Ais}
+ * @returns {AisTarget}
  */
-avnav.nav.AisData.prototype.getNearestAisTarget=function(){
+AisData.prototype.getNearestAisTarget=function(){
     return this.nearestAisTarget;
 };
 
@@ -421,15 +420,17 @@ avnav.nav.AisData.prototype.getNearestAisTarget=function(){
  * return the mmsi of the tracked target or 0
  * @returns {number}
  */
-avnav.nav.AisData.prototype.getTrackedTarget=function(){
+AisData.prototype.getTrackedTarget=function(){
     return this.trackedAIStarget;
 };
 /**
  * set the target to be tracked, 0 to use nearest
  * @param {number} mmsi
  */
-avnav.nav.AisData.prototype.setTrackedTarget=function(mmsi){
+AisData.prototype.setTrackedTarget=function(mmsi){
     if (this.trackedAIStarget == mmsi) return;
     this.trackedAIStarget=mmsi;
     this.handleAisData();
 };
+
+module.exports=AisData;

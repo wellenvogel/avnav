@@ -1,7 +1,6 @@
 /**
  * Created by andreas on 04.05.14.
  */
-avnav.provide('avnav.nav.GpsData');
 
 
 
@@ -12,7 +11,7 @@ avnav.provide('avnav.nav.GpsData');
  * @param {avnav.nav.NavObject} navobject
  * @constructor
  */
-avnav.nav.GpsData=function(propertyHandler,navobject){
+var GpsData=function(propertyHandler,navobject){
     /** @private */
     this.propertyHandler=propertyHandler;
     /** @private */
@@ -49,7 +48,7 @@ avnav.nav.GpsData=function(propertyHandler,navobject){
  * @param data
  * @private
  */
-avnav.nav.GpsData.prototype.handleGpsResponse=function(data, status){
+GpsData.prototype.handleGpsResponse=function(data, status){
     var gpsdata=new avnav.nav.navdata.GpsInfo();
     gpsdata.valid=false;
     if (status) {
@@ -95,7 +94,7 @@ avnav.nav.GpsData.prototype.handleGpsResponse=function(data, status){
 /**
  * @private
  */
-avnav.nav.GpsData.prototype.startQuery=function(){
+GpsData.prototype.startQuery=function(){
     var url=this.propertyHandler.getProperties().navUrl;
     var timeout=this.propertyHandler.getProperties().positionQueryTimeout;
     var self=this;
@@ -135,7 +134,7 @@ avnav.nav.GpsData.prototype.startQuery=function(){
  * handle the status and trigger the FPS event
  * @param success
  */
-avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
+GpsData.prototype.handleGpsStatus=function(success){
     if (! success){
         this.gpsErrors++;
         if (this.gpsErrors > this.propertyHandler.getProperties().maxGpsErrors){
@@ -160,7 +159,7 @@ avnav.nav.GpsData.prototype.handleGpsStatus=function(success){
  * return the current gpsdata
  * @returns {avnav.nav.navdata.GpsInfo}
  */
-avnav.nav.GpsData.prototype.getGpsData=function(){
+GpsData.prototype.getGpsData=function(){
     return this.gpsdata;
 };
 
@@ -170,7 +169,7 @@ avnav.nav.GpsData.prototype.getGpsData=function(){
  * @param name
  * @returns {*}
  */
-avnav.nav.GpsData.prototype.getFormattedGpsValue=function(name){
+GpsData.prototype.getFormattedGpsValue=function(name){
     return this.formattedData[name];
 };
 
@@ -178,7 +177,7 @@ avnav.nav.GpsData.prototype.getFormattedGpsValue=function(name){
  * get the currently defined names for formatted data
  * @returns {Array}
  */
-avnav.nav.GpsData.prototype.getValueNames=function(){
+GpsData.prototype.getValueNames=function(){
     var rt=new Array();
     for (var k in this.formattedData){
         rt.push(k);
@@ -186,4 +185,4 @@ avnav.nav.GpsData.prototype.getValueNames=function(){
     return rt;
 };
 
-
+module.exports=GpsData;
