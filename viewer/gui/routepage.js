@@ -9,6 +9,8 @@ var WaypointItem=require('../components/WayPointListItem.jsx');
 var EditOverlay=require('./wpoverlay');
 var SimpleDialog=require('./simpledialog');
 var Formatter=require('../util/formatter');
+var NavCompute=require('../nav/navcompute');
+var navdata=require('../nav/navdata');
 
 
 
@@ -32,7 +34,7 @@ avnav.gui.Routepage=function(){
     this.formatter=new Formatter();
     /**
      *
-     * @type {Array:avnav.nav.navdata.WayPoint}
+     * @type {Array:navdata.WayPoint}
      */
     this.waypoints=[];
 
@@ -52,13 +54,13 @@ avnav.gui.Routepage=function(){
     this.editNameOverlay=undefined;
     /**
      * the waypoint that is currently active at the routing handler
-     * @type {avnav.nav.navdata.WayPoint}
+     * @type {navdata.WayPoint}
      * @private
      */
     this._editingWaypoint=undefined;
     /**
      * the current active waypoint
-     * @type {undefined|avnav.nav.navdata.WayPoint}
+     * @type {undefined|navdata.WayPoint}
      * @private
      */
     this._selectedWaypoint=undefined;
@@ -140,7 +142,7 @@ avnav.gui.Routepage.prototype._updateDisplay=function(){
     }
     $('#avi_route_name').text(this.currentRoute.name);
     var info="";
-    var len=avnav.nav.NavCompute.computeRouteLength(0,this.currentRoute);
+    var len=NavCompute.computeRouteLength(0,this.currentRoute);
     info=this.formatter.formatDecimal(this.currentRoute.points.length,2,0)+
             " Points, "+this.formatter.formatDecimal(len,6,2)+" nm";
     this.selectOnPage('.avn_route_info').text(info);

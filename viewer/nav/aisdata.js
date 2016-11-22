@@ -3,6 +3,8 @@
  */
 var AisTarget=require('./navdata').Ais;
 var Formatter=require('../util/formatter');
+var NavCompute=require('./navcompute');
+var navdata=require('../nav/navdata');
 
 /**
  * the handler for the ais data
@@ -197,7 +199,7 @@ var AisData=function(propertyHandler,navobject){
  * @private
  */
 AisData.prototype.handleAisData=function() {
-    /** @type {avnav.nav.navdata.GpsInfo}*/
+    /** @type {navdata.GpsInfo}*/
     var boatPos = this.navobject.getGpsHandler().getGpsData();
     var properties=this.propertyHandler.getProperties();
     var trackedTarget=null; //ref to tracked target
@@ -209,8 +211,8 @@ AisData.prototype.handleAisData=function() {
             ais.warning=false;
             ais.tracking=false;
             ais.nearest=false;
-            var dst = avnav.nav.NavCompute.computeDistance(boatPos, new avnav.nav.navdata.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
-            var cpadata = avnav.nav.NavCompute.computeCpa({
+            var dst = NavCompute.computeDistance(boatPos, new navdata.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
+            var cpadata = NavCompute.computeCpa({
                     lon: boatPos.lon,
                     lat: boatPos.lat,
                     course: boatPos.course || 0,
@@ -405,7 +407,7 @@ AisData.prototype.getAisByMmsi=function(mmsi){
 AisData.prototype.getAisPositionByMmsi=function(mmsi){
     var ais=this.getAisByMmsi(mmsi);
     if (! ais) return undefined;
-    return new avnav.nav.navdata.Point(parseFloat(ais.lon||0),parseFloat(ais.lat||0));
+    return new navdata.Point(parseFloat(ais.lon||0),parseFloat(ais.lat||0));
 };
 
 /**

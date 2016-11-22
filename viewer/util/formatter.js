@@ -2,6 +2,7 @@
  * Created by andreas on 04.05.14.
  */
 
+var navdata=require('../nav/navdata');
 
 /**
  *
@@ -50,7 +51,7 @@ Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
 
 /**
  *
- * @param {avnav.nav.navdata.Point} lonlat
+ * @param {navdata.Point} lonlat
  * @returns {string}
  */
 Formatter.prototype.formatLonLats=function(lonlat){

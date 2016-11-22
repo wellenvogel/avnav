@@ -1,7 +1,7 @@
 /**
  * Created by andreas on 04.05.14.
  */
-
+var navdata=require('../nav/navdata');
 
 
 /**
@@ -17,7 +17,7 @@ var GpsData=function(propertyHandler,navobject){
     /** @private */
     this.navobject=navobject;
     /** @private */
-    this.gpsdata=new avnav.nav.navdata.GpsInfo();
+    this.gpsdata=new navdata.GpsInfo();
     /** @private */
     this.formattedData= {
         gpsPosition:"NO FIX",
@@ -49,7 +49,7 @@ var GpsData=function(propertyHandler,navobject){
  * @private
  */
 GpsData.prototype.handleGpsResponse=function(data, status){
-    var gpsdata=new avnav.nav.navdata.GpsInfo();
+    var gpsdata=new navdata.GpsInfo();
     gpsdata.valid=false;
     if (status) {
         gpsdata.rtime = null;
@@ -157,7 +157,7 @@ GpsData.prototype.handleGpsStatus=function(success){
 
 /**
  * return the current gpsdata
- * @returns {avnav.nav.navdata.GpsInfo}
+ * @returns {navdata.GpsInfo}
  */
 GpsData.prototype.getGpsData=function(){
     return this.gpsdata;

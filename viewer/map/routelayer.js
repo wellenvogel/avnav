@@ -3,7 +3,7 @@
  */
 
 avnav.provide('avnav.map.RouteLayer');
-
+var navdata=require('../nav/navdata');
 
 /**
  * a cover for the layer with routing data
@@ -211,7 +211,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
 /**
  * find the waypoint that has been clicked and set this as active
  * @param pixel
- * @returns {avnav.nav.navdata.WayPoint} or undefined
+ * @returns {navdata.WayPoint} or undefined
  */
 avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance

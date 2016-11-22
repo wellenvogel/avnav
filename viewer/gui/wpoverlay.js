@@ -3,6 +3,7 @@
  * show a waypoint overlay
  * you can edit the waypoint data here
  */
+var navdata=require('../nav/navdata');
 /**
  *
  * @param {String} container
@@ -55,7 +56,7 @@ wpOverlay.prototype._bindButtons=function(){
 
 /**
  *
- * @param {avnav.nav.navdata.WayPoint} wp
+ * @param {navdata.WayPoint} wp
  */
 wpOverlay.prototype.show=function(wp){
     if (! wp) return;
@@ -88,8 +89,8 @@ wpOverlay.prototype.overlayClose=function(){
  * update the waypoint at the router
  * @param {boolean} showErrors show error infos (using toast)
  * @param {avnav.nav.RouteData} router if undefined - do not update there
- * @param {avnav.nav.navdata.WayPoint} opt_oldWp - if given use this as the old waypoint
- * @returns {avnav.nav.navdata.WayPoint} the changed wp or undefined if no change
+ * @param {navdata.WayPoint} opt_oldWp - if given use this as the old waypoint
+ * @returns {navdata.WayPoint} the changed wp or undefined if no change
  */
 wpOverlay.prototype.updateWp=function(showErrors,router,opt_oldWp){
     var oldWp=opt_oldWp||this._currentWp;
@@ -151,7 +152,7 @@ wpOverlay.prototype.updateWp=function(showErrors,router,opt_oldWp){
 
 /**
  * return the old (unchanged) waypoint from the last show call
- * @returns {undefined|*|avnav.nav.navdata.WayPoint}
+ * @returns {undefined|*|navdata.WayPoint}
  */
 wpOverlay.prototype.getOldWp=function(){
     return this._currentWp;

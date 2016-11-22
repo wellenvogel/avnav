@@ -3,7 +3,7 @@
  */
 
 avnav.provide('avnav.map.AisLayer');
-
+var navdata=require('../nav/navdata');
 
 
 /**
@@ -183,7 +183,7 @@ avnav.map.AisLayer.prototype.onPostCompose=function(center,drawing){
         var current=this.aisdata[i];
         var pos=current.mapPos;
         if (! pos){
-            pos=this.mapholder.pointToMap((new avnav.nav.navdata.Point(current.lon,current.lat)).toCoord());
+            pos=this.mapholder.pointToMap((new navdata.Point(current.lon,current.lat)).toCoord());
             current.mapPos=pos;
         }
         var rotation=current.course||0;

@@ -9,6 +9,7 @@ var WaypointItem=require('../components/WayPointItem.jsx');
 /** @type {DynLayout} */
 var DynLayout=require('../util/dynlayout');
 var WidgetContainer=require('../components/WidgetContainer.jsx');
+var navdata=require('../nav/navdata');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -42,7 +43,7 @@ avnav.gui.Navpage=function(){
 
     /**
      * @private
-     * @type {avnav.nav.navdata.WayPoint}
+     * @type {navdata.WayPoint}
      */
     this.selectedWp=undefined;
     /**
@@ -699,7 +700,7 @@ avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
     avnav.log("LockMarker clicked");
     this.hideWpButtons();
     var center = this.navobject.getMapCenter();
-    var wp = new avnav.nav.navdata.WayPoint();
+    var wp = new navdata.WayPoint();
     center.assign(wp);
     wp.name = 'Marker';
     this.navobject.getRoutingHandler().wpOn(wp);

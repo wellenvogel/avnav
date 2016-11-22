@@ -3,8 +3,8 @@
  */
 
 avnav.provide('avnav.map.NavLayer');
-
-
+var NavCompute=require('../nav/navcompute');
+var navdata=require('../nav/navdata');
 
 
 
@@ -135,9 +135,9 @@ avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
  * @param {number} dist in m
  */
 avnav.map.NavLayer.prototype.computeTarget=function(pos,course,dist){
-    var point=new avnav.nav.navdata.Point();
+    var point=new navdata.Point();
     point.fromCoord(this.mapholder.transformFromMap(pos));
-    var tp=avnav.nav.NavCompute.computeTarget(point,course,dist);
+    var tp=NavCompute.computeTarget(point,course,dist);
     var tpmap=this.mapholder.transformToMap(tp.toCoord());
     return tpmap;
 };

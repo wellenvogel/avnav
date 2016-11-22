@@ -5,7 +5,7 @@ avnav.provide('avnav.map.MapHolder');
 avnav.provide('avnav.map.LayerTypes');
 avnav.provide('avnav.map.MapEvent');
 
-
+var navdata=require('../nav/navdata');
 
 
 
@@ -675,7 +675,7 @@ avnav.map.MapHolder.prototype.pointFromMap=function(point){
 
 /**
  * set the map center
- * @param {avnav.nav.navdata.Point} point
+ * @param {navdata.Point} point
  */
 avnav.map.MapHolder.prototype.setCenter=function(point){
     if (! point) return;
@@ -684,17 +684,17 @@ avnav.map.MapHolder.prototype.setCenter=function(point){
 
 /**
  * get the current center in lat/lon
- * @returns {avnav.nav.navdata.Point}
+ * @returns {navdata.Point}
  */
 avnav.map.MapHolder.prototype.getCenter=function(){
-    var rt=new avnav.nav.navdata.Point();
+    var rt=new navdata.Point();
     rt.fromCoord(this.pointFromMap(this.getView().getCenter()));
     return rt;
 };
 /**
  * get the distance in css pixel for 2 points
- * @param {avnav.nav.navdata.Point}point1
- * @param {avnav.nav.navdata.Point}point2
+ * @param {navdata.Point}point1
+ * @param {navdata.Point}point2
  */
 avnav.map.MapHolder.prototype.pixelDistance=function(point1,point2){
     if (! this.olmap) return 0;
