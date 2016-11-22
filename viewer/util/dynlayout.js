@@ -124,6 +124,12 @@ var DynLayout=function(selector, itemSelector, opt_parameters){
      * @private
      **/
     this._items=[];
+    /**
+     * remember classes we added during layout to remove them
+     * @type {string}
+     * @private
+     */
+    this._assignedContainerClasses='';
 };
 
 DynLayout.prototype._getParameter=function(options){
@@ -189,6 +195,7 @@ DynLayout.prototype.reset=function(){
  *     outerSize: the width of the outer element
  *     maxSize: if set use this instead of the container size
  *     inverseAlignment: align to bottom instead of top, right instead of left
+ *     containerClass: classes to be added to the container
  */
 DynLayout.prototype.layout=function(parameters) {
     if (! this._initialized) return;
@@ -272,6 +279,9 @@ DynLayout.prototype.layout=function(parameters) {
         topLeftPosition+=rowHeightWidth;
     }
     $(this._selector).css(layoutParameter.containerDimensionProperties(topLeftPosition,accumulatedWidthHeight));
+    $(this._selector).removeClass(this._assignedContainerClasses);
+    this._assignedContainerClasses=options.containerClass||"";
+    $(this._selector).addClass(this._assignedContainerClasses);
     for (i=lastVisible+increment; i < this._items.length && i >= 0; i+=increment) {
         $(this._items[i].item).css('opacity',0);
     }

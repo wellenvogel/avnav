@@ -363,16 +363,19 @@ avnav.gui.Navpage.prototype.localInit=function(){
                 var w=$(window).width();
                 var direction='bottom';
                 var inverseAlignment=false;
+                var containerClass='';
                 var maxSize=self.selectOnPage('.avn_left_panel').height() - $('#avi_nav_bottom').outerHeight();
                 if ( w<= self.gui.properties.getProperties().smallBreak){
                     direction='left';
                     maxSize=self.selectOnPage('.avn_left_panel').width();
                     inverseAlignment=true;
+                    containerClass='smallBreak';
                 }
                 return {
                     maxSize:maxSize,
                     direction: direction,
-                    inverseAlignment:inverseAlignment
+                    inverseAlignment:inverseAlignment,
+                    containerClass: containerClass
                 };
             }
         })
