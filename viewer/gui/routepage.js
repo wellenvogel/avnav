@@ -209,7 +209,7 @@ avnav.gui.Routepage.prototype._nameChanged=function() {
             //check if a route with this name already exists
             this.routingHandler.fetchRoute(name, false,
                 function (data) {
-                    avnav.util.Overlay.Toast("route with name " + name + " already exists", 5000);
+                    self.toast("route with name " + name + " already exists",true);
                 },
                 function (er) {
                     self.editNameOverlay.overlayClose();
@@ -278,7 +278,7 @@ avnav.gui.Routepage.prototype.btnRoutePageOk=function (button,ev){
         //check if a route with this name already exists
         this.routingHandler.fetchRoute(this.currentRoute.name,false,
         function(data){
-            avnav.util.Overlay.Toast("route with name "+this.currentRoute.name+" already exists",5000);
+            self.toast("route with name "+this.currentRoute.name+" already exists",true);
         },
         function(er){
             self.storeRoute();
@@ -297,7 +297,7 @@ avnav.gui.Routepage.prototype.btnNavGoto=function (button,ev){
         //check if a route with this name already exists
         this.routingHandler.fetchRoute(this.currentRoute.name,false,
             function(data){
-                avnav.util.Overlay.Toast("route with name "+this.currentRoute.name+" already exists",5000);
+                self.toast("route with name "+this.currentRoute.name+" already exists",true);
             },
             function(er){
                 self.storeRoute(true);
@@ -332,7 +332,7 @@ avnav.gui.Routepage.prototype.btnRoutePageDownload=function(button,ev){
                     self.gui.returnToLast();
                 },
                 function(err){
-                    avnav.util.Overlay.Toast("unable to load route",5000);
+                    self.toast("unable to load route",true);
                 }
             );
         }

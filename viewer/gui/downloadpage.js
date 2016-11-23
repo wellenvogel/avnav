@@ -325,13 +325,13 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                     }
                     else{
                         if (self._isActiveRoute(self.files[lid])){
-                            avnav.util.Overlay.Toast("unable to delete active route",5000);
+                            self.toast("unable to delete active route",true);
                             return false;
                         }
                         self.routingHandler.deleteRoute(self.files[lid].name,
                             function(data){self.fillData(false);},
                             function(info){
-                                avnav.util.Overlay.Toast("unable to delete route: "+info,5000);
+                                self.toast("unable to delete route: "+info,true);
                                 self.fillData(false);
                             }
                         );
@@ -363,7 +363,7 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                                     avnav.android.downloadRoute(data.toJsonString());
                             },
                             function(err){
-                                avnav.util.Overlay.Toast("unable to get route "+info.name,5000);
+                                self.toast("unable to get route "+info.name,true);
                             });
                         }
                     }
@@ -377,7 +377,7 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                                             self.download(info.name,undefined,data.toJsonString());
                                         },
                                         function(err){
-                                            avnav.util.Overlay.Toast("unable to get route "+info.name,5000);
+                                            self.toast("unable to get route "+info.name,true);
                                         });
                                 }
                             }

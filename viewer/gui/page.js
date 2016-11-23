@@ -5,6 +5,7 @@
 avnav.provide('avnav.gui.Page');
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
+var Overlay=require('../util/overlay');
 
 
 /**
@@ -24,6 +25,12 @@ avnav.gui.Page=function(name,options){
     this.name=name;
     this.visible=false;
     this.options=options;
+    /**
+     * should we hide the toast when leaving?
+     * @type {boolean}
+     * @private
+     */
+    this._hideToast=false;
     var myself=this;
     /**
      * a list of items with class avd_ - key are the names, values the jQuery dom objects
@@ -164,12 +171,14 @@ avnav.gui.Page.prototype._showPage=function(){
        this.intervalTimer=window.setInterval(function(){ self._timerEvent();},
            self.gui.properties.getProperties().buttonUpdateTime);
     }
+    this._hideToast=false;
 };
 avnav.gui.Page.prototype._hidePage=function(){
     if (this.intervalTimer >= 0){
         window.clearInterval(this.intervalTimer);
         this.intervalTimer=-1;
     }
+    if (this._hideToast) Overlay.hideToast();
 };
 /**
  *
@@ -421,6 +430,11 @@ avnav.gui.Page.prototype.updateMainPanelSize=function(mainid){
 
 avnav.gui.Page.prototype.goBack=function(){
     this.returnToLast();
+};
+
+avnav.gui.Page.prototype.toast=function(html,opt_hide){
+    Overlay.Toast(html);
+    this._hideToast=opt_hide||false;
 };
 
 /*-------------------------------------------------------

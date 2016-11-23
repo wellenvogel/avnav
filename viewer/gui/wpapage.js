@@ -51,7 +51,7 @@ avnav.gui.Wpapage.prototype.doQuery=function(){
             self.numErrors++;
             if (self.numErrors > 3) {
                 self.numErrors=0;
-                avnav.util.Overlay.Toast("Status query Error " + avnav.util.Helper.escapeHtml(error), self.timeout * 0.6)
+                self.toast("Status query Error " + avnav.util.Helper.escapeHtml(error), true)
             }
             avnav.log("wpa query error");
         },
@@ -182,8 +182,8 @@ avnav.gui.Wpapage.prototype.statusTextToImageUrl=function(text){
     return rt;
 };
 avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
-    avnav.util.Overlay.Toast("sending "+message,this.timeout*2);
     var self=this;
+    self.toast("sending "+message,true);
     var url=this.gui.properties.getProperties().navUrl+"?request=wpa&command="+request;
     $.ajax({
         url: url,
@@ -198,10 +198,10 @@ avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
             else {
                 statusText+="...Error";
             }
-            avnav.util.Overlay.Toast(statusText,5000);
+            self.toast(statusText,true);
         },
         error: function(status,data,error){
-            avnav.util.Overlay.Toast(message+"...Error",5000);
+            self.toast(message+"...Error",true);
             avnav.log("wpa request error: "+data);
         },
         timeout: this.timeout*2

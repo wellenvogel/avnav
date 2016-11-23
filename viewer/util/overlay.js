@@ -1,14 +1,12 @@
 /**
  * Created by andreas on 04.05.14.
  */
-avnav.provide('avnav.util.Overlay');
-
-
+var Overlay={};
 /**
  *
  * @constructor
  */
-avnav.util.Overlay=function(opt_options){
+Overlay=function(opt_options){
     this.isOpen=false;
     if (! opt_options) opt_options={};
     this.box=opt_options.box||'.avn_overlay_box';
@@ -19,17 +17,17 @@ avnav.util.Overlay=function(opt_options){
     this._coverShown=false;
 };
 
-avnav.util.Overlay.prototype.showOverlayBox=function(){
+Overlay.prototype.showOverlayBox=function(){
     this.isOpen=true;
     var self=this;
     $(window).bind('resize',self.updateOverlayCb);
     this.updateOverlay();
 };
-avnav.util.Overlay.prototype.select=function(query){
+Overlay.prototype.select=function(query){
   return $(this.box).find(query);
 };
 
-avnav.util.Overlay.prototype.updateOverlay=function() {
+Overlay.prototype.updateOverlay=function() {
     if( this.isOpen == false ) return;
     this.isOpen=true;
     // set the properties of the overlay box, the left and top positions
@@ -61,7 +59,7 @@ avnav.util.Overlay.prototype.updateOverlay=function() {
     }
 };
 
-avnav.util.Overlay.prototype.overlayClose=function() {
+Overlay.prototype.overlayClose=function() {
     if (! this.isOpen) return;
     var self=this;
     $(window).unbind('resize',self.updateOverlayCb);
@@ -74,7 +72,8 @@ avnav.util.Overlay.prototype.overlayClose=function() {
     this._coverShown=false;
 };
 
-avnav.util.Overlay.Toast=function(html,time){
+Overlay.Toast=function(html,time){
+    if (! time) time=5000;
     $('#avi_toast').finish();
     $('#avi_toast').unbind('click');
     $('#avi_toast').html(html);
@@ -84,3 +83,8 @@ avnav.util.Overlay.Toast=function(html,time){
     });
     $('#avi_toast').fadeIn(400).delay(time).fadeOut(400);
 };
+Overlay.hideToast=function(){
+    $('#avi_toast').stop().fadeOut(1);
+};
+
+module.exports=Overlay;
