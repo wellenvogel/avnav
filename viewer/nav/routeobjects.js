@@ -201,7 +201,7 @@ routeobjects.Route=function(name, opt_points){
 
     /**
      * the route points
-     * @type {Array.<navobjects.WayPoint>|Array}
+     * @type {navobjects.WayPoint[]}
      */
     this.points=opt_points||[];
     /**
@@ -504,6 +504,21 @@ routeobjects.Route.prototype.swap=function() {
         this.points[i] = this.points[swap];
         this.points[swap] = old;
     }
+};
+/**
+ * replace a route in place by another route
+ * @param {routeobjects.Route} other
+ * @returns {boolean}
+ */
+routeobjects.Route.prototype.assignFrom=function(other){
+    if (! other) return false;
+    this.name=other.name;
+    this.server=other.server;
+    this.points=[];
+    for (var i=0;i<other.points.length;i++){
+        this.points.push(other.points[i].clone());
+    }
+    return true;
 };
 
 /**
