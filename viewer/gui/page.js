@@ -6,6 +6,7 @@ avnav.provide('avnav.gui.Page');
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 var Overlay=require('../util/overlay');
+var SimpleDialog=require('./simpledialog');
 
 
 /**
@@ -179,6 +180,8 @@ avnav.gui.Page.prototype._hidePage=function(){
         this.intervalTimer=-1;
     }
     if (this._hideToast) Overlay.hideToast();
+    SimpleDialog.removeAllDialogs();
+
 };
 /**
  *
