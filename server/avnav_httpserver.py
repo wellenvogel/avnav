@@ -114,7 +114,8 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.pathmappings=pathmappings
     self.navurl=cfgparam['navurl']
     self.overwrite_map=({
-                              '.png': 'image/png'
+                              '.png': 'image/png',
+                              '.js': 'text/javascript; charset=utf-8'
                               })
     mtypes=cfgparam.get('MimeType')
     if mtypes is not None:
