@@ -170,8 +170,8 @@ var OverlayDialog=React.createClass({
             return new Promise(function (resolve, reject) {
                 var id;
                 var okFunction=function(el){
+                    resolve(1);
                     OverlayDialogListInstance.hide(id);
-                    resolve();
                 };
                 var cancelFunction=function(el){
                     OverlayDialogListInstance.hide(id);

@@ -1,7 +1,7 @@
 /**
  * Created by andreas on 02.05.14.
  */
-var WpOverlay=require('./wpoverlay.js');
+
 var React=require('react');
 var ReactDOM=require('react-dom');
 var WaypointList=require('../components/ItemList.jsx');
@@ -262,7 +262,6 @@ avnav.gui.Navpage.prototype.hidePage=function(){
     this.hidetime=0;
     this.showRouteOnReturn=this.routingVisible;
     this.hideRouting(true);
-    this._wpOverlay.overlayClose();
 };
 /**
  *
@@ -388,14 +387,6 @@ avnav.gui.Navpage.prototype.localInit=function(){
     container.setVisibility({'AisTarget':false,'ActiveRoute':false});
     this.leftContainer=container;
     this.widgetContainers.push(container);
-    this._wpOverlay=new WpOverlay(this.selectOnPage('.avn_left_panel'),{
-        okCallback:function(){
-            var close=self._updateWpFromEdit();
-            return close;
-        },
-        cancelCallback: function(){return true;}
-    });
-    //this.readLayout();
 };
 
 avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription,data){

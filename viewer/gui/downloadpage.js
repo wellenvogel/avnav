@@ -5,7 +5,8 @@ avnav.provide('avnav.gui.Downloadpage');
 avnav.provide('avnav.gui.FileInfo');
 var routeobjects=require('../nav/routeobjects');
 var RouteHandler=require('../nav/routedata');
-var SimpleDialog=require('./simpledialog');
+var OverlayDialog=require('../components/OverlayDialog.jsx');
+
 
 
 avnav.gui.FileInfo=function(name,type,time){
@@ -319,8 +320,8 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                 ev.preventDefault();
                 var lid = ev.data.id;
                 var name = self.files[lid].name;
-                var ok = SimpleDialog.confirm("delete " + self.files[lid].type + " " + name + "?",self.selectOnPage('.avn_left_panel'));
-                ok.done(function() {
+                var ok = OverlayDialog.confirm("delete " + self.files[lid].type + " " + name + "?",self.getDialogContainer());
+                ok.then(function() {
                     if (self.type != "route") {
                         self.sendDelete(self.files[lid]);
                     }
@@ -338,6 +339,9 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                         );
                     }
                     self.fillData(false);
+                });
+                ok.catch(function(err){
+                   avnav.log("delete canceled");
                 });
                 return false;
             }).css('visibility','');
