@@ -6,13 +6,13 @@ var React=require('react');
 var ReactDOM=require('react-dom');
 var WaypointList=require('../components/ItemList.jsx');
 var WaypointItem=require('../components/WayPointListItem.jsx');
-var EditOverlay=require('./wpoverlay');
 var SimpleDialog=require('./simpledialog');
 var Formatter=require('../util/formatter');
 var NavCompute=require('../nav/navcompute');
 var navobjects=require('../nav/navobjects');
 var routeobjects=require('../nav/routeobjects');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
+var WayPointDialog=require('../components/WaypointDialog.jsx');
 
 
 
@@ -52,8 +52,6 @@ avnav.gui.Routepage=function(){
      */
     this.initialName=undefined;
     this.waypointList=undefined;
-    this.editOverlay=undefined;
-    this.editNameOverlay=undefined;
     /**
      * the waypoint that is currently active at the routing handler
      * @type {navobjects.WayPoint}
@@ -89,19 +87,6 @@ avnav.gui.Routepage.prototype.localInit=function(){
     if (! this.gui) return;
     this.routingHandler=this.gui.navobject.getRoutingHandler();
     var self=this;
-    this.editOverlay=new EditOverlay(this.selectOnPage('.avn_left_panel'),{
-        okCallback:function(){
-            return self._waypointChanged()
-        },
-        cancelCallback: function(){return true;}
-    });
-    this.editNameOverlay=new SimpleDialog(this.selectOnPage('.avn_left_panel'),{
-       okCallback: function(){
-           return self._nameChanged();
-       },
-       cancelCallback: function(){return true;}
-    });
-
     var list=React.createElement(WaypointList, {
         onClick:function(idx,opt_data){
             self.waypointClicked(idx,opt_data);
@@ -127,7 +112,6 @@ avnav.gui.Routepage.prototype.localInit=function(){
                         self.toast("route with name " + name + " already exists",true);
                     },
                     function (er) {
-                        self.editNameOverlay.overlayClose();
                         OverlayDialog.hide(dialog);
                         self.currentRoute.setName(name);
                         self._updateDisplay();
@@ -137,10 +121,9 @@ avnav.gui.Routepage.prototype.localInit=function(){
             return true;
         };
         dialog=OverlayDialog.valueDialog("Edit Route Name",self.currentRoute.name,
-            okCallback,self.getDialogContainer(),'','Name'
+            okCallback,self.getDialogContainer(),'Name'
         );
 
-       //self.editNameOverlay.show("Edit Route Name","Name",self.currentRoute.name);
     });
 };
 avnav.gui.Routepage.prototype.showPage=function(options) {
@@ -151,14 +134,7 @@ avnav.gui.Routepage.prototype.showPage=function(options) {
 
 };
 
-avnav.gui.Routepage.prototype._waypointChanged=function(){
-    var changedWp=this.editOverlay.updateWp(true);
-    if (changedWp) {
-        this.currentRoute.changePoint(this.editOverlay.getOldWp(),changedWp);
-        this._updateDisplay();
-        return true;
-    }
-};
+
 avnav.gui.Routepage.prototype._updateDisplay=function(){
     var self=this;
     $('#avi_route_name').text("");
@@ -202,8 +178,24 @@ avnav.gui.Routepage.prototype.waypointClicked=function(idx,param){
         this._updateDisplay();
         return;
     }
+    var self=this;
     var wp=this.currentRoute.getPointAtIndex(idx);
-    this.editOverlay.show(wp);
+    var dialog;
+    var wpChanged=function(newWp){
+        var changedWp=WayPointDialog.updateWaypoint(wp,newWp,function(err){
+            self.toast(avnav.util.Helper.escapeHtml(err));
+        });
+        if (changedWp) {
+            if (!self.currentRoute.changePoint(wp,changedWp)){
+                self.toast("unable to set waypoint, already exists");
+                return false;
+            }
+            self._updateDisplay();
+            return true;
+        }
+        return false;
+    };
+    dialog=WayPointDialog.showWaypointDialog(wp,wpChanged,this.getDialogContainer());
 };
 avnav.gui.Routepage.prototype.fillData=function(initial){
     if (initial) {
@@ -219,32 +211,8 @@ avnav.gui.Routepage.prototype.fillData=function(initial){
 
 
 avnav.gui.Routepage.prototype.hidePage=function(){
-    if (this.editOverlay) this.editOverlay.overlayClose();
-    if (this.editNameOverlay) this.editNameOverlay.overlayClose();
 };
 
-avnav.gui.Routepage.prototype._nameChanged=function() {
-    var self=this;
-    var data = this.editNameOverlay.getData();
-    if (data.value && data.value != "") {
-        var name=data.value;
-        if (name != this.initialName) {
-            //check if a route with this name already exists
-            this.routingHandler.fetchRoute(name, false,
-                function (data) {
-                    self.toast("route with name " + name + " already exists",true);
-                },
-                function (er) {
-                    self.editNameOverlay.overlayClose();
-                    self.currentRoute.setName(name);
-                    self._updateDisplay();
-                });
-            return false;
-        }
-    }
-    this._updateDisplay();
-    return true;
-};
 /**
  *
  * @param {navobjects.NavEvent} ev

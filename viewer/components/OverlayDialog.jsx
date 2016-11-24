@@ -38,7 +38,7 @@ var OverlayDialog=React.createClass({
      */
     show: function(content,properties){
         var id=getNextId();
-        this.setState(Object.assign({},this.props,properties||{},{content:content,_contentId:id}));
+        this.setState(avnav.assign({},this.props,properties||{},{content:content,_contentId:id}));
         if (properties.timeout){
             window.setTimeout(hide,properties.timeout);
         }
@@ -74,7 +74,7 @@ var OverlayDialog=React.createClass({
     },
     componentDidUpdate: function(){
         if (! this.state.content) return;
-        var props=Object.assign({},this.props,this.state);
+        var props=avnav.assign({},this.props,this.state);
         if (props.positionCallback){
             props.positionCallback(this.refs.container,this.refs.box);
         }
@@ -84,12 +84,12 @@ var OverlayDialog=React.createClass({
                 try {
                     //expected to be a dom element
                     var containerRect = props.parent.getBoundingClientRect();
-                    Object.assign(this.refs.container.style, {
+                    avnav.assign(this.refs.container.style, {
                         position: "fixed",
                         top: containerRect.top + "px",
                         left: containerRect.left + "px",
-                        right: containerRect.right + "px",
-                        bottom: containerRect.bottom + "px"
+                        width: containerRect.width + "px",
+                        height: containerRect.height + "px"
                     });
                     assingToViewport = false;
                 }catch(e){
@@ -97,7 +97,7 @@ var OverlayDialog=React.createClass({
                 }
             }
             if (assingToViewport){
-                Object.assign(this.refs.container.style, {
+                avnav.assign(this.refs.container.style, {
                     position: "fixed",
                     top: 0,
                     left: 0,
@@ -106,16 +106,17 @@ var OverlayDialog=React.createClass({
                 });
             }
             var rect=this.refs.container.getBoundingClientRect();
-            Object.assign(this.refs.box.style,{
+            avnav.assign(this.refs.box.style,{
                 maxWidth: rect.width+"px",
                 maxHeight: rect.height+"px",
                 display: 'block',
-                position: 'fixed'
+                position: 'fixed',
+                opacity: 0
             });
             var self=this;
             window.setTimeout(function(){
                 var boxRect=self.refs.box.getBoundingClientRect();
-                Object.assign(self.refs.box.style,{
+                avnav.assign(self.refs.box.style,{
                     left: (rect.width-boxRect.width)/2+"px",
                     top: (rect.height-boxRect.height)/2+"px",
                     opacity: 1
@@ -201,16 +202,15 @@ var OverlayDialog=React.createClass({
         },
         /**
          * a simpel input value dialog
-         * @param {string} text the text to be displayed
+         * @param {string} title the title text to be displayed
          * @param {string} value the initial value
          * @param {function} okCallback the callback when OK is clicked, value as parameter
          *                   return false to keep the dialog open
          * @param opt_parent if set the parent HTML element
-         * @param opt_title if set the dialog title
          * @param opt_label if set an additional label
          * @returns {*|OverlayDialog}
          */
-        valueDialog: function(text,value,okCallback,opt_parent,opt_title,opt_label){
+        valueDialog: function(title,value,okCallback,opt_parent,opt_label){
             if (OverlayDialogListInstance == null) {
                 throw new Error("not initialzed");
             }
@@ -232,7 +232,7 @@ var OverlayDialog=React.createClass({
                 render: function() {
                     var html = (
                         <div>
-                            <h3 className="avn_dialogTitle">{opt_title || 'Input'}</h3>
+                            <h3 className="avn_dialogTitle">{title || 'Input'}</h3>
                             <div>
                                 <div className="avn_row"><label>{opt_label || ''}</label>
                                     <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/></div>
@@ -259,7 +259,7 @@ var OverlayDialog=React.createClass({
             if (OverlayDialogListInstance == null) {
                 throw new Error("not initialzed");
             }
-            var options=Object.assign({},opt_options||{},{parent:opt_parent});
+            var options=avnav.assign({},opt_options||{},{parent:opt_parent});
             return OverlayDialogListInstance.show(html,options);
         },
         /**

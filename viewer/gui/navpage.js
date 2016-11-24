@@ -11,6 +11,7 @@ var DynLayout=require('../util/dynlayout');
 var WidgetContainer=require('../components/WidgetContainer.jsx');
 var navobjects=require('../nav/navobjects');
 var routeobjects=require('../nav/routeobjects');
+var WaypointDialog=require('../components/WaypointDialog.jsx');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -428,6 +429,7 @@ avnav.gui.Navpage.prototype.navEvent=function(evdata){
  * @param {avnav.map.MapEvent} evdata
  */
 avnav.gui.Navpage.prototype.mapEvent=function(evdata){
+    var self=this;
     if (! this.visible) return;
     if (evdata.type == avnav.map.EventType.MOVE) {
         //show the center display if not visible
@@ -452,7 +454,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         var currentEditing=this.navobject.getRoutingHandler().getEditingWp();
         if (this.routingVisible){
             if (currentEditing && currentEditing.compare(wp)){
-                this._wpOverlay.show(wp);
+                self.showWaypointDialog(wp);
             }
             else {
                 this.navobject.getRoutingHandler().setEditingWp(wp);
@@ -534,7 +536,6 @@ avnav.gui.Navpage.prototype.hideRouting=function(opt_noStop) {
     }
     $('#avi_route_info_navpage_inner').removeClass("avn_activeRoute avn_otherRoute");
     this.selectOnPage('#avi_navLeftContainer').css('opacity',1);
-    this._wpOverlay.overlayClose();
 };
 
 /**
@@ -578,6 +579,7 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
 };
 
 avnav.gui.Navpage.prototype.waypointClicked=function(idx,options){
+    var self=this;
     if (options.item && options.item != 'main') return;
     this.navobject.getRoutingHandler().setEditingWpIdx(idx);
     var selectors=['selected'];
@@ -586,7 +588,8 @@ avnav.gui.Navpage.prototype.waypointClicked=function(idx,options){
         selectors.push('centered');
     }
     if (options.selected && options.centered){
-        this._wpOverlay.show(this.navobject.getRoutingHandler().getEditingWp());
+        var wp=this.navobject.getRoutingHandler().getEditingWp();
+        self.showWaypointDialog(wp);
     }
     this.waypointList.setSelectors(idx,selectors);
 };
@@ -667,11 +670,24 @@ avnav.gui.Navpage.prototype.hideWpButtons=function(){
     this.wpHidetime=0;
 };
 
-avnav.gui.Navpage.prototype._updateWpFromEdit=function(){
-    var nwp=this._wpOverlay.updateWp(true,this.navobject.getRoutingHandler());
-    if (nwp) this.selectedWp=nwp;
-    return (nwp !== undefined);
+
+avnav.gui.Navpage.prototype.showWaypointDialog=function(wp){
+    var id;
+    var self=this;
+    var ok=function(newWp)
+    {
+        var nwp=WaypointDialog.updateWaypoint(wp,newWp,function(error){
+                self.toast(avnav.util.Helper.escapeHtml(error));
+            },
+            self.navobject.getRoutingHandler());
+        if (nwp) {
+            self.selectedWp=nwp;
+        }
+        return (nwp !== undefined);
+    };
+    id=WaypointDialog.showWaypointDialog(wp,ok,self.getDialogContainer());
 };
+
 
 avnav.gui.Navpage.prototype.goBack=function(){
     this.btnCancelNav();
@@ -792,7 +808,7 @@ avnav.gui.Navpage.prototype.btnNavInvert=function(button,ev){
 avnav.gui.Navpage.prototype.btnWpEdit=function(button,ev) {
     avnav.log("Edit clicked");
     if (! this.selectedWp) return;
-    this._wpOverlay.show(this.selectedWp);
+    this.showWaypointDialog(this.selectedWp);
 };
 
 avnav.gui.Navpage.prototype.btnWpGoto=function(button,ev) {

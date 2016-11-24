@@ -442,8 +442,7 @@ avnav.gui.Page.prototype.toast=function(html,opt_hide){
     this._hideToast=opt_hide||false;
 };
 avnav.gui.Page.prototype.getDialogContainer=function(){
-    var leftPanel=this.selectOnPage('._avn_left_panel');
-    if (leftPanel && leftPanel.length > 0) return leftPanel[0];
+    return this.selectOnPage('.avn_left_panel')[0];
 };
 
 /*-------------------------------------------------------
