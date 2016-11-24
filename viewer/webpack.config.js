@@ -45,8 +45,13 @@ else{
     copyList.push({from: '../libraries/ol311/ol-debug.js', to: 'libraries/ol.js'})
 }
 var devtool="inline-source-map";
+var resolveAlias={
+
+};
 if (process.env.NODE_ENV === 'production') {
     devtool="";
+    resolveAlias['react$']=__dirname+"/node_modules/react/dist/react.min.js";
+    resolveAlias['react-dom$']=__dirname+"/node_modules/react-dom/dist/react-dom.min.js";
 }
 
 var plugins=[
@@ -56,6 +61,7 @@ var plugins=[
 if (process.env.AVNAV_VERSION_FILE){
     plugins.push(new webpack.NormalModuleReplacementPlugin(/version\.js/,process.env.AVNAV_VERSION_FILE));
 }
+
 module.exports = {
     //see http://humaan.com/getting-started-with-webpack-and-react-es6-style/
     entry: getEntrySources([
@@ -66,7 +72,8 @@ module.exports = {
     publicPath: 'http://localhost:8081/viewer',
     output: { path: __dirname+"/"+outDir, filename: 'avnav_min.js' },
     resolve: {
-        extensions: ['', '.jsx', '.scss', '.js', '.json']
+        extensions: ['', '.jsx', '.scss', '.js', '.json'],
+        alias: resolveAlias
     },
     module: {
         loaders: [
