@@ -32,6 +32,9 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
 avnav.provide('avnav.main');
 
 var NavData=require('./nav/navdata');
+var React=require('react');
+var ReactDOM=require('react-dom');
+var OverlayDialog=require('./components/OverlayDialog.jsx');
 
 
 
@@ -209,6 +212,7 @@ avnav.main=function() {
         $('#avi_mainpage_version').text(avnav.android.getVersion());
         avnav.android.applicationStarted();
     }
+    ReactDOM.render(React.createElement(OverlayDialog),document.getElementById('avi_dialog_container'));
     gui.showPage("mainpage");
     //ios browser sometimes has issues with less...
     setTimeout(function(){

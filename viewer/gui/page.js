@@ -7,6 +7,7 @@ var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 var Overlay=require('../util/overlay');
 var SimpleDialog=require('./simpledialog');
+var OverlayDialog=require('../components/OverlayDialog.jsx');
 
 
 /**
@@ -181,6 +182,7 @@ avnav.gui.Page.prototype._hidePage=function(){
     }
     if (this._hideToast) Overlay.hideToast();
     SimpleDialog.removeAllDialogs();
+    OverlayDialog.hide();
 
 };
 /**
@@ -438,6 +440,10 @@ avnav.gui.Page.prototype.goBack=function(){
 avnav.gui.Page.prototype.toast=function(html,opt_hide){
     Overlay.Toast(html);
     this._hideToast=opt_hide||false;
+};
+avnav.gui.Page.prototype.getDialogContainer=function(){
+    var leftPanel=this.selectOnPage('._avn_left_panel');
+    if (leftPanel && leftPanel.length > 0) return leftPanel[0];
 };
 
 /*-------------------------------------------------------

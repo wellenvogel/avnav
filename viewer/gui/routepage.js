@@ -12,6 +12,7 @@ var Formatter=require('../util/formatter');
 var NavCompute=require('../nav/navcompute');
 var navobjects=require('../nav/navobjects');
 var routeobjects=require('../nav/routeobjects');
+var OverlayDialog=require('../components/OverlayDialog.jsx');
 
 
 
@@ -117,7 +118,29 @@ avnav.gui.Routepage.prototype.localInit=function(){
     });
     this.waypointList=ReactDOM.render(list,document.getElementById('avi_routepage_wplist'));
     this.selectOnPage('#avi_route_current').on('click',function(){
-       self.editNameOverlay.show("Edit Route Name","Name",self.currentRoute.name);
+        var dialog;
+        var okCallback=function(name){
+            if (name != self.initialName) {
+                //check if a route with this name already exists
+                self.routingHandler.fetchRoute(name, false,
+                    function (data) {
+                        self.toast("route with name " + name + " already exists",true);
+                    },
+                    function (er) {
+                        self.editNameOverlay.overlayClose();
+                        OverlayDialog.hide(dialog);
+                        self.currentRoute.setName(name);
+                        self._updateDisplay();
+                    });
+                return false;
+            }
+            return true;
+        };
+        dialog=OverlayDialog.valueDialog("Edit Route Name",self.currentRoute.name,
+            okCallback,self.getDialogContainer(),'','Name'
+        );
+
+       //self.editNameOverlay.show("Edit Route Name","Name",self.currentRoute.name);
     });
 };
 avnav.gui.Routepage.prototype.showPage=function(options) {
