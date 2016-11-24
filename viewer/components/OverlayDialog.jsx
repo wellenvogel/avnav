@@ -64,15 +64,20 @@ var OverlayDialog=React.createClass({
     },
     componentDidMount: function(){
         OverlayDialogListInstance=this;
+        window.addEventListener('resize',this.updateDimensions);
     },
     componentWillUnmount: function(){
         var oldState=this.state;
         if (oldState.cancelCallback){
             oldState.cancelCallback();
         }
+        windown.removeEventListener('resize',this.updateDimensions);
         OverlayDialogListInstance=undefined;
     },
     componentDidUpdate: function(){
+        this.updateDimensions();
+    },
+    updateDimensions: function(){
         if (! this.state.content) return;
         var props=avnav.assign({},this.props,this.state);
         if (props.positionCallback){
