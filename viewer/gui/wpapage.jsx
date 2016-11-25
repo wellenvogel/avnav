@@ -2,7 +2,9 @@
  * Created by Andreas on 27.04.2014.
  */
 var React=require('react');
+var ReactDOM=require('react-dom');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
+var ItemList=require('../components/ItemList.jsx');
 
 
 /**
@@ -19,6 +21,46 @@ var Wpapage=function(){
     });
     this.timeout=4000;
     this.numErrors=0;
+    this.listEntryClass=React.createClass({
+        propTypes:{
+            wpaClickHandler: React.PropTypes.func.isRequired,
+            ssid: React.PropTypes.string.isRequired,
+            level:React.PropTypes.string,
+            id: React.PropTypes.any.isRequired,
+            flags: React.PropTypes.string.isRequired,
+            activeItem: React.PropTypes.bool
+        },
+        onClick: function(ev){
+            this.props.wpaClickHandler(this.props);
+        },
+        render: function(){
+            var level=this.props.level;
+            try {
+                level = parseInt(level);
+            }catch(e){}
+            if (level >= 0) level=level+"%";
+            else level=level+"dBm";
+            var disabled=(this.props.flags !== undefined && this.props.flags.match(/DISABLED/));
+            var addClass=this.props.activeItem?'avn_wpa_active_item':'';
+            return(
+                <div className={'avn_wpa_item '+addClass} onClick={this.onClick}>
+                    <span className='avn_wpa_ssid'>{this.props.ssid}</span>
+                    <div className='avn_wpa_item_details_container'>
+                        <span className='avn_wpa_item_detail'>Signal:{level}</span>
+                        <span className='avn_wpa_item_detail'>{this.props.id >=0?'configured':''}</span>
+                        { disabled && <span className='avn_wpa_item_detail'>disabled</span>}
+                        { this.props.activeItem  && <span className='avn_wpa_item_detail'>active</span>}
+                    </div>
+                </div>
+            );
+        }
+
+    });
+    /**
+     * the list of items
+     * @type {undefined}
+     */
+    this.itemList=undefined;
 };
 avnav.inherits(Wpapage,avnav.gui.Page);
 
@@ -32,7 +74,7 @@ Wpapage.prototype.showPage=function(options){
     },this.timeout);
     this.indexMap={};
     $('#avi_wpa_interface').html("Query Status");
-    $('#avi_wpa_list').html("");
+    this.itemList.setItems([]);
     this.doQuery();
 };
 
@@ -86,89 +128,29 @@ Wpapage.prototype.showWpaData=function(data){
     var self=this;
     $('#avi_wpa_interface').html(this.formatInterfaceState(data.status));
     var i;
-    var listHtml="<ul>";
-    var index=0;
-    var lindex=0;
-    //find free index
-    for (i in this.indexMap){
-        if (this.indexMap[i]> index) index=this.indexMap[i];
-    }
-    index++;
-    var seenItems={};
+    var itemList=[];
     for (i in data.list){
         var item=data.list[i];
         var ssid=item.ssid;
         if (ssid === undefined) continue;
-        lindex=this.indexMap[ssid];
-        if (lindex === undefined){
-            //add entry
-            this.addEntry(item,index);
-            this.indexMap[ssid]=index;
-            seenItems[index]=1;
-            lindex=index;
-            index++;
+        var displayItem={};
+        displayItem.ssid=item.ssid;
+        displayItem.id=item['network id'];
+        displayItem.level=item['signal level'];
+        displayItem.flags=item.flags+' '+item['network flags'];
+        if (displayItem.id === undefined) displayItem.id=-1;
+        if (data.status.ssid && item.ssid == data.status.ssid) {
+            displayItem.activeItem=true;
         }
-        else{
-            var self=this;
-            var netid=item['network id'];
-            $('#avi_wpa_item'+lindex+' .avn_wpa_item_details_container').html(self.formatItemDetails(item));
-            $('#avi_wpa_item'+lindex).attr('data-id',netid ===undefined?-1:netid);
-            seenItems[lindex]=1;
-        }
-        if (data.status.ssid && item.ssid == data.status.ssid){
-            $('#avi_wpa_item'+lindex).addClass("avn_wpa_active_item");
-        }
-        else{
-            $('#avi_wpa_item'+lindex).removeClass("avn_wpa_active_item");
-        }
+        displayItem.key=ssid;
+        displayItem.wpaClickHandler= function(itemProperties){
+            self.showWpaDialog(itemProperties.ssid,itemProperties.id);
+        };
+        itemList.push(displayItem);
     }
-    for (i in this.indexMap){
-        lindex=this.indexMap[i];
-        if (! seenItems[lindex]){
-            delete this.indexMap[i];
-            $('#avi_wpa_item'+lindex).remove();
-        }
-    }
+    this.itemList.setItems(itemList);
 };
 
-Wpapage.prototype.addEntry=function(item,index){
-    var self=this;
-    var ssid=item.ssid;
-    var netid=item['network id'];
-    if (netid === undefined) netid=-1;
-    var ehtml="<li class='avn_wpa_item' id='avi_wpa_item"+index+"' data-id='"+netid+"'><span class='avn_wpa_ssid'>"+avnav.util.Helper.escapeHtml(item.ssid)+"</span>";
-    ehtml+="<div class='avn_wpa_item_details_container'>"+this.formatItemDetails(item)+"</div>";
-    $('#avi_wpa_list').append(ehtml);
-    $('#avi_wpa_item'+index).bind('click',function(){
-        self.showWpaDialog(ssid,$(this).attr('data-id'));
-    });
-};
-
-Wpapage.prototype.formatItemDetails=function(item){
-    var ehtml='';
-    var level=item['signal level'];
-    if (avnav.isString(level)) level=parseInt(level);
-    //seems to be strange as some drivers seem to report in %
-    if ( level >= 0){
-        ehtml+="<span class='avn_wpa_item_detail'>Signal:"+level+"%</span>";
-    }
-    else{
-        ehtml+="<span class='avn_wpa_item_detail'>"+level+"dBm</span>";
-    }
-    if (item['network id'] !== undefined){
-        ehtml+="<span class='avn_wpa_item_detail'>configured</span>";
-    }
-    if (item['network flags'] !== undefined && item['network flags'].match(/DISABLED/)){
-        ehtml+="<span class='avn_wpa_item_detail'>disabled</span>";
-    }
-    return ehtml;
-};
-
-Wpapage.prototype.statusTextToImageUrl=function(text){
-    var rt=this.gui.properties.getProperties().statusIcons[text];
-    if (! rt) rt=this.gui.properties.getProperties().statusIcons.INACTIVE;
-    return rt;
-};
 Wpapage.prototype.sendRequest=function(request,message,param){
     var self=this;
     self.toast("sending "+message,true);
@@ -199,6 +181,10 @@ Wpapage.prototype.sendRequest=function(request,message,param){
 Wpapage.prototype.localInit=function() {
     var self=this;
     this.timeout=this.gui.properties.getProperties().wpaQueryTimeout;
+    var list=React.createElement(ItemList,{
+        itemClass:self.listEntryClass
+    });
+    this.itemList=ReactDOM.render(list,this.selectOnPage('#avi_wpa_list')[0]);
 };
 
 Wpapage.prototype.showWpaDialog=function(ssid,id){

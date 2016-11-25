@@ -1,15 +1,16 @@
 /**
  * Created by andreas on 10.10.16.
+ * an itemlist to display items of a common type
+ * it is able to handle a couple of selectors to add classes to the items
  */
 
 var React=require('react');
-var Item=require('./WayPointItem.jsx');
-var update=require('react-addons-update');
+
 
 
 module.exports=React.createClass({
     propTypes:{
-        onClick:    React.PropTypes.func.isRequired,
+        onClick:    React.PropTypes.func,
         itemClass:  React.PropTypes.func.isRequired,
         updateCallback: React.PropTypes.func,
         selectors:  React.PropTypes.object
@@ -44,13 +45,9 @@ module.exports=React.createClass({
                             if (isSet) addClass+=" "+self.props.selectors[k];
                         }
                     }
-                    var prop=avnav.clone(entry);
-                    if (self.state.options){
-                        for (k in self.state.options){
-                            prop[k]=self.state.options[k];
-                        }
-                    }
+                    var prop=avnav.assign({},entry,self.state.options||{});
                     var clickHandler=function(ev,opt_item){
+                        if (! self.props.onClick) return;
                         ev.preventDefault();
                         ev.stopPropagation();
                         var clOpts=avnav.clone(opts);
@@ -89,5 +86,14 @@ module.exports=React.createClass({
             selectors: nsel
         });
 
+    },
+    /**
+     * set the new list of items
+     * @param items
+     */
+    setItems: function(items){
+        this.setState({
+           itemList: items
+        });
     }
 });
