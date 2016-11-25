@@ -16,7 +16,6 @@ var itemUpdater=React.createClass({
     propTypes:{
         store: React.PropTypes.instanceOf(Store).isRequired,
         storeKey: React.PropTypes.string.isRequired,
-        child: React.PropTypes.func.isRequired
     },
     getInitialState: function(){
         var st=this.props.store.getData(this.props.storeKey);
@@ -36,7 +35,12 @@ var itemUpdater=React.createClass({
     },
     render:function(){
         var props=avnav.assign({},this.props,this.state);
-        return React.createElement(this.props.child,props);
+        var children=React.Children.map(this.props.children,function(child){
+            return React.cloneElement(child,props);
+        });
+        if (children.length > 1) throw new Error("item updater only supports one child element");
+        if (children.length == 0) throw new Error("item updater needs exactly one child element");
+        return children[0];
     }
 });
 

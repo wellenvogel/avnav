@@ -17,11 +17,6 @@ var ItemUpdater=require('../components/ItemUpdater.jsx');
 var Wpapage=function(){
     avnav.gui.Page.call(this,'wpapage');
     this.statusQuery=0; //sequence handler
-    this.indexMap={}; //map an index to ssid
-    this.overlay=new avnav.util.Overlay({
-        box: '#avi_wpa_box',
-        cover: '#avi_wpa_page_inner'
-    });
     this.timeout=4000;
     this.numErrors=0;
     /**
@@ -44,7 +39,6 @@ Wpapage.prototype.showPage=function(options){
     this.statusQuery=window.setInterval(function(){
         self.doQuery();
     },this.timeout);
-    this.indexMap={};
     this.store.resetData();
     this.doQuery();
 };
@@ -75,7 +69,6 @@ Wpapage.prototype.doQuery=function(){
 
 Wpapage.prototype.hidePage=function(){
     window.clearInterval(this.statusQuery);
-    this.overlay.overlayClose();
 };
 
 
@@ -168,19 +161,10 @@ Wpapage.prototype.localInit=function() {
         }
 
     });
-    var listHandler=React.createElement(ItemUpdater,{
-        child: ItemList,
-        itemClass:listEntryClass,
-        store: this.store,
-        storeKey: this.itemListKey,
-        childProperties: {
-            wpaClickHandler: function(item){
-                self.showWpaDialog(item.ssid,item.id);
-            }
-        }
-    });
-    ReactDOM.render(listHandler,this.selectOnPage('#avi_wpa_list')[0]);
-    var headerClass=React.createClass({
+    var wpaClickHandler=function(item){
+        self.showWpaDialog(item.ssid,item.id);
+    };
+    var HeaderClass=React.createClass({
         propTypes:{
             status: React.PropTypes.object
         },
@@ -195,7 +179,7 @@ Wpapage.prototype.localInit=function() {
             if (status.ip_address) info+=", IP: "+status.ip_address;
             else status+=" waiting for IP...";
             return (
-                <div>
+                <div className="avn_wpa_interface">
                     <div>Interface: {status["wpa_state"]}</div>
                     { (status.wpa_state == "COMPLETED") &&
                         <div className='avn_wpa_interface_detail'>{info}</div>
@@ -204,12 +188,26 @@ Wpapage.prototype.localInit=function() {
             );
         }
     });
-    var headerHandler=React.createElement(ItemUpdater,{
-        child: headerClass,
-        store: this.store,
-        storeKey: this.interfaceKey
-    });
-    ReactDOM.render(headerHandler,this.selectOnPage('#avi_wpa_interface')[0]);
+
+    var leftPanel=(
+        <div className="avn_panel_fill">
+            <div className='avn_panel avn_left_top'>
+                <div >Wifi Client connection
+                </div>
+            </div>
+
+            <div className="avn_panel avn_scrollable_page avn_left_inner">
+                <ItemUpdater store={this.store} storeKey={this.interfaceKey}>
+                    <HeaderClass></HeaderClass>
+                </ItemUpdater>
+                <ItemUpdater store={this.store} storeKey={this.itemListKey}>
+                    <ItemList itemClass={listEntryClass} childProperties={{wpaClickHandler:wpaClickHandler}}>
+                    </ItemList>
+                </ItemUpdater>
+            </div>
+        </div>
+    );
+    ReactDOM.render(leftPanel,this.selectOnPage('.avn_left_panel')[0]);
 };
 
 Wpapage.prototype.showWpaDialog=function(ssid,id){
@@ -245,8 +243,8 @@ Wpapage.prototype.showWpaDialog=function(ssid,id){
                                 </label>
                             </div>
                             {id >=0 && <button name="remove" onClick={this.buttonClick}>Remove</button>}
-                            <button name="connect" onClick={this.buttonClick}>Connect</button>
                             <button name="cancel" onClick={this.buttonClick}>Cancel</button>
+                            <button name="connect" onClick={this.buttonClick}>Connect</button>
                             {id >= 0 && <button name="enable" onClick={this.buttonClick}>Enable</button>}
                             {id >= 0 && <button name="disable" onClick={this.buttonClick}>Disable</button>}
                             <div className="avn_clear"></div>
