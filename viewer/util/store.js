@@ -34,6 +34,12 @@ var Store=function(){
      * @type {CallbackDescriptor[]}
      */
     this.callbacks=[];
+    /**
+     * the data we store for each key
+     * @private
+     * @type {{}}
+     */
+    this.data={};
 };
 /**
  * find a callback in the list of registered callbacks
@@ -119,8 +125,31 @@ Store.prototype.callCallbacks=function(keys){
        }
     });
 };
+/**
+ * store a data item for a key and trigger the registered callbacks
+ * @param key
+ * @param data
+ */
+Store.prototype.storeData=function(key,data){
+    this.data[key]=data;
+    //this could be improved by checking for changes...
+    this.callCallbacks([key]);
+};
+/**
+ * retrieve the data for a certain key
+ * if no data is there undefined is returned
+ * @param key
+ * @returns {*}
+ */
+Store.prototype.getData=function(key){
+    return this.data[key];
+};
 Store.prototype.reset=function(){
     this.callbacks=[];
+    this.data={};
+};
+Store.prototype.resetData=function(){
+    this.data={};
 };
 
 module.exports=Store;

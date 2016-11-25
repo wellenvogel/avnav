@@ -5,6 +5,9 @@ var React=require('react');
 var ReactDOM=require('react-dom');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
 var ItemList=require('../components/ItemList.jsx');
+var Store=require('../util/store');
+var ItemUpdater=require('../components/ItemUpdater.jsx');
+
 
 
 /**
@@ -22,10 +25,14 @@ var Wpapage=function(){
     this.timeout=4000;
     this.numErrors=0;
     /**
-     * the list of items
-     * @type {undefined}
+     * the store that feeds the GUI
+     * @private
+     * @type {Store|exports|module.exports}
      */
-    this.itemList=undefined;
+    this.store=new Store();
+    //store keys
+    this.itemListKey='wpaItemns';
+    this.interfaceKey='interface'
 };
 avnav.inherits(Wpapage,avnav.gui.Page);
 
@@ -38,8 +45,7 @@ Wpapage.prototype.showPage=function(options){
         self.doQuery();
     },this.timeout);
     this.indexMap={};
-    this.interfaceInfo.setStatus({});
-    this.itemList.setItems([]);
+    this.store.resetData();
     this.doQuery();
 };
 
@@ -75,7 +81,7 @@ Wpapage.prototype.hidePage=function(){
 
 Wpapage.prototype.showWpaData=function(data){
     var self=this;
-    this.interfaceInfo.setStatus(data.status);
+    this.store.storeData(this.interfaceKey,{status:data.status});
     var i;
     var itemList=[];
     for (i in data.list){
@@ -92,12 +98,9 @@ Wpapage.prototype.showWpaData=function(data){
             displayItem.activeItem=true;
         }
         displayItem.key=ssid;
-        displayItem.wpaClickHandler= function(itemProperties){
-            self.showWpaDialog(itemProperties.ssid,itemProperties.id);
-        };
         itemList.push(displayItem);
     }
-    this.itemList.setItems(itemList);
+    this.store.storeData(this.itemListKey,{itemList:itemList});
 };
 
 Wpapage.prototype.sendRequest=function(request,message,param){
@@ -140,7 +143,7 @@ Wpapage.prototype.localInit=function() {
             activeItem: React.PropTypes.bool
         },
         onClick: function(ev){
-            this.props.wpaClickHandler(this.props);
+            if (this.props.wpaClickHandler) this.props.wpaClickHandler(this.props);
         },
         render: function(){
             var level=this.props.level;
@@ -165,21 +168,24 @@ Wpapage.prototype.localInit=function() {
         }
 
     });
-    var list=React.createElement(ItemList,{
-        itemClass:listEntryClass
+    var listHandler=React.createElement(ItemUpdater,{
+        child: ItemList,
+        itemClass:listEntryClass,
+        store: this.store,
+        storeKey: this.itemListKey,
+        childProperties: {
+            wpaClickHandler: function(item){
+                self.showWpaDialog(item.ssid,item.id);
+            }
+        }
     });
-    this.itemList=ReactDOM.render(list,this.selectOnPage('#avi_wpa_list')[0]);
+    ReactDOM.render(listHandler,this.selectOnPage('#avi_wpa_list')[0]);
     var headerClass=React.createClass({
         propTypes:{
-
-        },
-        getInitialState: function(){
-            return{
-                status:{}
-            };
+            status: React.PropTypes.object
         },
         render: function(){
-            var status=this.state.status;
+            var status=this.props.status||{};
             if (!status.wpa_state){
                 return(
                   <div>Waiting for interface...</div>
@@ -196,14 +202,14 @@ Wpapage.prototype.localInit=function() {
                     }
                 </div>
             );
-        },
-        setStatus: function(status){
-            this.setState({
-                status:status
-            });
         }
     });
-    this.interfaceInfo=ReactDOM.render(React.createElement(headerClass),this.selectOnPage('#avi_wpa_interface')[0]);
+    var headerHandler=React.createElement(ItemUpdater,{
+        child: headerClass,
+        store: this.store,
+        storeKey: this.interfaceKey
+    });
+    ReactDOM.render(headerHandler,this.selectOnPage('#avi_wpa_interface')[0]);
 };
 
 Wpapage.prototype.showWpaDialog=function(ssid,id){

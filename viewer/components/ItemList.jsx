@@ -14,11 +14,12 @@ module.exports=React.createClass({
         itemClass:  React.PropTypes.func.isRequired,
         updateCallback: React.PropTypes.func,
         selectors:  React.PropTypes.object,
-        initialList: React.PropTypes.array
+        itemList: React.PropTypes.array,
+        childProperties: React.PropTypes.object
     },
     getInitialState: function(){
         var itemList=[];
-        if (this.props.initialList) itemList=this.props.initialList;
+        if (this.props.itemList) itemList=this.props.itemList;
         var st= {
             itemList: itemList,
             options: {}
@@ -30,6 +31,13 @@ module.exports=React.createClass({
             }
         }
         return st;
+    },
+    componentWillReceiveProps:function(nextProps){
+        if (nextProps.itemList) {
+            this.setState({
+                itemList: nextProps.itemList
+            });
+        }
     },
     render: function(){
         var items=this.state.itemList||[];
@@ -48,7 +56,7 @@ module.exports=React.createClass({
                             if (isSet) addClass+=" "+self.props.selectors[k];
                         }
                     }
-                    var prop=avnav.assign({},entry,self.state.options||{});
+                    var prop=avnav.assign({},entry,self.props.childProperties,self.state.options);
                     var clickHandler=function(ev,opt_item){
                         if (! self.props.onClick) return;
                         ev.preventDefault();
