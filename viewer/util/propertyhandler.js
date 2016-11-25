@@ -213,7 +213,7 @@ avnav.util.PropertyHandler.prototype.saveUserData=function(){
  */
 avnav.util.PropertyHandler.prototype.loadUserData=function(){
     if (! window.localStorage){
-        alert("local storage is not available, seems that your browser is not HTML5... - application will not work");
+        avnav.util.overlay.Toast("local storage is not available, seems that your browser is not HTML5... - application will not work");
         return;
     }
     var rawdata=localStorage.getItem(this.currentProperties.settingsName);

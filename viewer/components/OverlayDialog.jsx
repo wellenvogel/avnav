@@ -39,8 +39,8 @@ var OverlayDialog=React.createClass({
             self.hide(id);
         };
         var props=avnav.assign({},this.state,{closeCallback:hide});
-        delete props.content;
-        delete props._contentId;
+        props.content=undefined;
+        props._contentId=undefined;
         return(
             <div ref="container" className="avn_overlay_cover_active">
                 <div ref="box" className="avn_dialog">{React.createElement(this.state.content,props)}</div>
@@ -58,7 +58,7 @@ var OverlayDialog=React.createClass({
         var id=getNextId();
         this.setState(avnav.assign({},this.props,properties||{},{content:content,_contentId:id}));
         if (properties.timeout){
-            window.setTimeout(hide,properties.timeout);
+            window.setTimeout(this.hide,properties.timeout);
         }
         return id;
     },
@@ -71,12 +71,12 @@ var OverlayDialog=React.createClass({
         //only hide if this is either called globally or if
         //we still show the object that we should hide
         if (oldState._contentId && opt_id !== undefined && oldState._contentId != opt_id ) return;
-        if (oldState.cancelCallback){
+        if (oldState.cancelCallback && oldState._contentId){
             oldState.cancelCallback();
         }
         var newState={};
         for (var k in oldState){
-            newState[k]=null;
+            newState[k]=undefined;
         }
         this.setState(newState);
     },
@@ -170,7 +170,7 @@ var OverlayDialog=React.createClass({
                             <div>
                                 <h3 className="avn_dialogTitle">Alert</h3>
                                 <div className="avn_dialogText">{text}</div>
-                                <button name="ok" onClick={okFunction}>Ok</button>
+                                <button name="ok" onClick={this.okFunction}>Ok</button>
                                 <div className="avn_clear"></div>
                             </div>
                         );
@@ -216,8 +216,8 @@ var OverlayDialog=React.createClass({
                             <div>
                                 <h3 className="avn_dialogTitle">{opt_title||'Confirm'}</h3>
                                 <div className="avn_dialogText">{text}</div>
-                                <button name="ok" onClick={okFunction}>Ok</button>
-                                <button name="cancel" onClick={cancelFunction}>Cancel</button>
+                                <button name="ok" onClick={this.okFunction}>Ok</button>
+                                <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
                                 <div className="avn_clear"></div>
                             </div>
                         );

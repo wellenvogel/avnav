@@ -7,6 +7,7 @@ avnav.provide('avnav.map.MapEvent');
 
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
+var OverlayDialog=require('../components/OverlayDialog.jsx');
 
 
 
@@ -262,9 +263,10 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         });
     }
     var recenter=true;
+    var view;
     if (this.center && this.zoom >0){
         //if we load a new map - try to restore old center and zoom
-        var view=this.getView();
+        view=this.getView();
         view.setCenter(this.pointToMap(this.center));
         if (this.zoom < this.minzoom) this.zoom=this.minzoom;
         if (this.zoom > (this.maxzoom + this.properties.getProperties().maxUpscale))
@@ -275,19 +277,34 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         }
         view.setZoom(this.zoom);
         recenter=false;
+        var lext;
         if (layers.length > 0) {
-            var lext=layers[0].avnavOptions.extent;
+            lext=layers[0].avnavOptions.extent;
             if (lext !== undefined && !ol.extent.containsCoordinate(lext,this.pointToMap(this.center))){
-                if (window.confirm("Position outside map, center to map now?")){
-                    recenter=true;
-                }
+                var container=$('.avn_page:visible').find('.avn_left_panel')[0];
+                var ok=OverlayDialog.confirm("Position outside map, center to map now?",container);
+                ok.then(function(){
+                    if (layers.length > 0) {
+                        var view = self.getView();
+                        var lext = layers[0].avnavOptions.extent;
+                        if (lext !== undefined) view.fitExtent(lext, self.olmap.getSize());
+                        view.setZoom(self.minzoom);
+                        self.center = self.pointFromMap(view.getCenter());
+                        self.zoom = view.getZoom();
+
+
+                    }
+                    self.saveCenter();
+                    var newCenter = self.pointFromMap(self.getView().getCenter());
+                    self.setCenterFromMove(newCenter, true);
+                });
             }
         }
     }
     if (recenter) {
         if (layers.length > 0) {
-            var view = this.getView();
-            var lext=layers[0].avnavOptions.extent;
+            view = this.getView();
+            lext=layers[0].avnavOptions.extent;
             if (lext !== undefined) view.fitExtent(lext, this.olmap.getSize());
             view.setZoom(this.minzoom);
             this.center=this.pointFromMap(view.getCenter());
@@ -459,7 +476,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         var layer_profile=$(tm).attr('profile');
         if (layer_profile) {
             if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator' && layer_profile != 'wms') {
-                alert('unsupported profile in tilemap.xml ' + layer_profile);
+                avnav.util.overlay.Toast('unsupported profile in tilemap.xml ' + layer_profile);
                 return null;
             }
             if (layer_profile == 'global-mercator'){
@@ -535,7 +552,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         //now we have all our options - just create the layer from them
         var layerurl="";
         if (rt.url === undefined){
-            alert("missing href in layer");
+            avnav.util.overlay.Toast("missing href in layer");
             return null;
         }
         if (! rt.url.match(/^https*:/)){

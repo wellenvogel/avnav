@@ -66,7 +66,7 @@ avnav.util.Helper.uploadFile=function(url,file,param){
             }
         });
     }catch (e){
-        alert("upload error: "+e);
+        avnav.util.overlay.Toast("upload error: "+e);
     }
 };
 

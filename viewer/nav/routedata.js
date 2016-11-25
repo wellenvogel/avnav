@@ -1266,7 +1266,7 @@ RouteData.prototype._sendRoute=function(route, opt_callback){
             if (opt_callback)opt_callback(true);
         },
         errorcallback:function(status,param){
-            if (param.self.propertyHandler.getProperties().routingServerError) alert("unable to send route to server:" + errMsg);
+            if (param.self.propertyHandler.getProperties().routingServerError) avnav.util.overlay.Toast("unable to send route to server:" + errMsg);
             if (opt_callback) opt_callback(false);
         }
     });
@@ -1300,7 +1300,7 @@ RouteData.prototype._legChanged=function(){
                 avnav.log("new leg sent to server");
             },
             error: function(errMsg,x) {
-                if (self.propertyHandler.getProperties().routingServerError) alert("unable to send leg to server:" +errMsg);
+                if (self.propertyHandler.getProperties().routingServerError) avnav.util.overlay.Toast("unable to send leg to server:" +errMsg);
             }
         });
     }

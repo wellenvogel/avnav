@@ -129,7 +129,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     }
     else {
         if (! this.options_){
-            alert("invalid navpage call - no chart selected");
+            self.toast("invalid navpage call - no chart selected");
             return;
         }
     }
@@ -159,7 +159,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
                 self.getMap().setBrightness(brightness);
             },
             error: function (ev) {
-                alert("unable to load charts " + ev.responseText);
+                self.toast("unable to load charts " + ev.responseText);
             }
         });
     }
@@ -638,10 +638,10 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
 
 avnav.gui.Navpage.prototype.checkRouteWritable=function(){
     if (this.navobject.getRoutingHandler().isRouteWritable()) return true;
-    var ok=confirm("you cannot edit this route as you are disconnected. OK to select a new name");
-    if (ok){
+    var ok=OverlayDialog.confirm("you cannot edit this route as you are disconnected. OK to select a new name",this.getDialogContainer());
+    ok.then(function(){
         this.gui.showPage('routepage');
-    }
+    });
     return false;
 };
 

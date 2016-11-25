@@ -51,11 +51,11 @@ avnav.gui.Mainpage.prototype.fillList=function(){
         dataType: 'json',
         cache: false,
         error: function(ev){
-            alert("unable to read chart list: "+ev.responseText);
+            page.toast("unable to read chart list: "+ev.responseText);
         },
         success: function(data){
             if (data.status != 'OK'){
-                alert("reading chartlist failed: "+data.info);
+                page.toast("reading chartlist failed: "+data.info);
                 return;
             }
             var div=page.getDiv();
