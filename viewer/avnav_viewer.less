@@ -1262,9 +1262,12 @@ button.avb_StatusAndroid{
 }
 #avi_wpa_interface{
   font-size: 1.5em;
+  margin-top: 0.5em;
 }
 .avn_wpa_interface_detail{
   font-size: 0.8em;
+  .mdText2();
+  margin-top: 0.2em;
 }
 #avi_wpa_list {
   padding: 0;
@@ -1286,6 +1289,7 @@ button.avb_StatusAndroid{
 }
 .avn_wpa_item_detail{
   margin-right: 1em;
+  .mdText2();
 }
 
 .avn_wpa_active_item{
@@ -1330,20 +1334,20 @@ button.avb_StatusAndroid{
   .nightForeColor(@colorMain,@nightColor);
 }
 
-#avi_wpa_dialog button[name=cancel]{
+.avi_wpa_dialog button[name=cancel]{
   float: right;
 }
-#avi_wpa_dialog button[name=connect]{
+.avi_wpa_dialog button[name=connect]{
   float: right;
 }
-#avi_wpa_dialog button[name=disable]{
+.avi_wpa_dialog button[name=disable]{
   float: right;
 }
-#avi_wpa_dialog button[name=remove]{
+.avi_wpa_dialog button[name=remove]{
   float: left;
 }
 
-#avi_wpa_password{
+.avi_wpa_password{
   width: 28em;
   max-width: 90%;
 }

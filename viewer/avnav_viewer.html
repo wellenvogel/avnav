@@ -161,24 +161,6 @@ all buttons with ids avb_... will call corresponding js functions
               <ul id="avi_wpa_list"></ul>
           </div>
 
-          <div id="avi_wpa_box" class="avn_hidden avn_dialog">
-              <div id="avi_wpa_dialog">
-                  <form>
-                      <h3><span id="avi_wpa_form_ssid">SSID</span></h3>
-                      <div>
-                          <label for="avi_wpa_password">Password</label>
-                          <input id="avi_wpa_password" type="password" name="psk"/>
-                          <input type="hidden" name="ssid"/>
-                          <input type="hidden" name="id"/>
-                      </div>
-                      <button name="remove">Remove</button>
-                      <button name="connect">Connect</button>
-                      <button name="cancel">Cancel</button>
-                      <button name="disable">Disable</button>
-                      <div class="avn_clear"></div>
-                  </form>
-              </div>
-          </div>
       </div>
       <div class='avn_panel avn_right_panel'>
           <button  type="button"  class="avb_Cancel avn_button"></button>
@@ -842,51 +824,6 @@ all buttons with ids avb_... will call corresponding js functions
   <!-- helpers -->
   <div id="avi_toast" class="avn_toast avn_hidden"></div>
   <div id="avi_msg_overlay" class="avn_overlay_cover avn_hidden">
-
-  </div>
-  <div id="avi_msg_box" class="avn_hidden">
-      <div id="avi_msg_dialog">
-          <form>
-              <div id="avi_msg_content"></div>
-              <button name="cancel">Cancel</button>
-              <button name="ok">OK</button>
-              <div class="avn_clear"></div>
-          </form>
-      </div>
-  </div>
-  <div id="avi_wpinfo_box" class="avn_hidden avn_dialog">
-
-      <form>
-          <h3>Edit&nbsp;Waypoint</h3>
-          <div>
-              <div class="avn_row"><label>Name</label><input type="text" name="name"/></div>
-              <div class="avn_row"><label>Lon</label><input type="text" name="lon"/></div>
-              <div class="avn_row"><label>Lat</label><input type="text" name="lat"/></div>
-          </div>
-          <button name="ok">Ok</button>
-          <button name="cancel">Cancel</button>
-          <div class="avn_clear"></div>
-      </form>
-  </div>
-  <div id="avi_simple_input" class="avn_hidden avn_dialog">
-      <form>
-          <h3 class="avn_dialogTitle">Input</h3>
-          <div>
-              <div class="avn_row"><label></label><input type="text" name="value"/></div>
-          </div>
-          <button name="ok">Ok</button>
-          <button name="cancel">Cancel</button>
-          <div class="avn_clear"></div>
-      </form>
-  </div>
-  <div id="avi_simple_confirm" class="avn_hidden avn_dialog">
-      <div>
-          <h3 class="avn_dialogTitle">Input</h3>
-          <div class="avn_dialogText"></div>
-          <button name="ok">Ok</button>
-          <button name="cancel">Cancel</button>
-          <div class="avn_clear"></div>
-      </div>
   </div>
   <div id="avi_dialog_container"></div>
   </body>

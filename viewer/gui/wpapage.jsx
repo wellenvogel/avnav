@@ -1,15 +1,15 @@
 /**
  * Created by Andreas on 27.04.2014.
  */
-avnav.provide('avnav.gui.Wpapage');
-
+var React=require('react');
+var OverlayDialog=require('../components/OverlayDialog.jsx');
 
 
 /**
  *
  * @constructor
  */
-avnav.gui.Wpapage=function(){
+var Wpapage=function(){
     avnav.gui.Page.call(this,'wpapage');
     this.statusQuery=0; //sequence handler
     this.indexMap={}; //map an index to ssid
@@ -20,11 +20,11 @@ avnav.gui.Wpapage=function(){
     this.timeout=4000;
     this.numErrors=0;
 };
-avnav.inherits(avnav.gui.Wpapage,avnav.gui.Page);
+avnav.inherits(Wpapage,avnav.gui.Page);
 
 
 
-avnav.gui.Wpapage.prototype.showPage=function(options){
+Wpapage.prototype.showPage=function(options){
     if (!this.gui) return;
     var self=this;
     this.statusQuery=window.setInterval(function(){
@@ -36,7 +36,7 @@ avnav.gui.Wpapage.prototype.showPage=function(options){
     this.doQuery();
 };
 
-avnav.gui.Wpapage.prototype.doQuery=function(){
+Wpapage.prototype.doQuery=function(){
     var self=this;
     var url=this.gui.properties.getProperties().navUrl+"?request=wpa&command=all";
     $.ajax({
@@ -60,12 +60,12 @@ avnav.gui.Wpapage.prototype.doQuery=function(){
 
 };
 
-avnav.gui.Wpapage.prototype.hidePage=function(){
+Wpapage.prototype.hidePage=function(){
     window.clearInterval(this.statusQuery);
     this.overlay.overlayClose();
 };
 
-avnav.gui.Wpapage.prototype.formatInterfaceState=function(status){
+Wpapage.prototype.formatInterfaceState=function(status){
     var html="<div>Interface: "+status["wpa_state"]+"</div>";
     if (status.wpa_state == "COMPLETED"){
         html+="<div class='avn_wpa_interface_detail'>";
@@ -82,7 +82,7 @@ avnav.gui.Wpapage.prototype.formatInterfaceState=function(status){
     }
     return html;
 };
-avnav.gui.Wpapage.prototype.showWpaData=function(data){
+Wpapage.prototype.showWpaData=function(data){
     var self=this;
     $('#avi_wpa_interface').html(this.formatInterfaceState(data.status));
     var i;
@@ -131,7 +131,7 @@ avnav.gui.Wpapage.prototype.showWpaData=function(data){
     }
 };
 
-avnav.gui.Wpapage.prototype.addEntry=function(item,index){
+Wpapage.prototype.addEntry=function(item,index){
     var self=this;
     var ssid=item.ssid;
     var netid=item['network id'];
@@ -140,17 +140,20 @@ avnav.gui.Wpapage.prototype.addEntry=function(item,index){
     ehtml+="<div class='avn_wpa_item_details_container'>"+this.formatItemDetails(item)+"</div>";
     $('#avi_wpa_list').append(ehtml);
     $('#avi_wpa_item'+index).bind('click',function(){
-        self.handleNet(ssid,$(this).attr('data-id'));
+        self.showWpaDialog(ssid,$(this).attr('data-id'));
     });
 };
 
-avnav.gui.Wpapage.prototype.formatItemDetails=function(item){
+Wpapage.prototype.formatItemDetails=function(item){
     var ehtml='';
-    if (item['signal level'] >= 0){
-        ehtml+="<span class='avn_wpa_item_detail'>Signal:"+item['signal level']+"%</span>";
+    var level=item['signal level'];
+    if (avnav.isString(level)) level=parseInt(level);
+    //seems to be strange as some drivers seem to report in %
+    if ( level >= 0){
+        ehtml+="<span class='avn_wpa_item_detail'>Signal:"+level+"%</span>";
     }
     else{
-        ehtml+="<span class='avn_wpa_item_detail'>not in range</span>";
+        ehtml+="<span class='avn_wpa_item_detail'>"+level+"dBm</span>";
     }
     if (item['network id'] !== undefined){
         ehtml+="<span class='avn_wpa_item_detail'>configured</span>";
@@ -161,27 +164,12 @@ avnav.gui.Wpapage.prototype.formatItemDetails=function(item){
     return ehtml;
 };
 
-avnav.gui.Wpapage.prototype.handleNet=function(ssid,netid){
-    $('#avi_wpa_form_ssid').text(ssid);
-    $('#avi_wpa_dialog input[name=ssid]').val(ssid);
-    $('#avi_wpa_dialog input[name=id]').val(netid);
-    $('#avi_wpa_dialog input[name=psk]').val("");
-    if (netid === undefined || netid < 0){
-        $('#avi_wpa_dialog button[name=remove]').css('visibility','hidden');
-        $('#avi_wpa_dialog button[name=disable]').css('visibility','hidden');
-    }
-    else{
-        $('#avi_wpa_dialog button[name=remove]').css('visibility','normal');
-        $('#avi_wpa_dialog button[name=disable]').css('visibility','normal');
-    }
-    this.overlay.showOverlayBox();
-};
-avnav.gui.Wpapage.prototype.statusTextToImageUrl=function(text){
+Wpapage.prototype.statusTextToImageUrl=function(text){
     var rt=this.gui.properties.getProperties().statusIcons[text];
     if (! rt) rt=this.gui.properties.getProperties().statusIcons.INACTIVE;
     return rt;
 };
-avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
+Wpapage.prototype.sendRequest=function(request,message,param){
     var self=this;
     self.toast("sending "+message,true);
     var url=this.gui.properties.getProperties().navUrl+"?request=wpa&command="+request;
@@ -194,7 +182,7 @@ avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
         success: function(data,status){
             avnav.log("request "+request+" OK");
             var statusText=message;
-            if (data.status && data.status == "OK") ;
+            if (data.status && data.status == "OK") {;}
             else {
                 statusText+="...Error";
             }
@@ -207,40 +195,73 @@ avnav.gui.Wpapage.prototype.sendRequest=function(request,message,param){
         timeout: this.timeout*2
     });
 };
-avnav.gui.Wpapage.prototype.getFormData=function(addPsk){
-    var rt={};
-    rt.ssid=$('#avi_wpa_dialog input[name=ssid]').val();
-    rt.id=$('#avi_wpa_dialog input[name=id]').val();
-    if (! addPsk) return rt;
-    var psk=$('#avi_wpa_dialog input[name=psk]').val();
-    if (psk != '') rt.psk=psk;
-    return rt;
-};
-avnav.gui.Wpapage.prototype.localInit=function() {
+
+Wpapage.prototype.localInit=function() {
     var self=this;
-    $('#avi_wpa_dialog button[name=cancel]').bind('click',function(){
-        self.overlay.overlayClose();
-        return false;
-    });
-    $('#avi_wpa_dialog button[name=connect]').bind('click',function(){
-        self.overlay.overlayClose();
-        var data=self.getFormData(true);
-        self.sendRequest('connect','connect to '+avnav.util.Helper.escapeHtml(data.ssid),data);
-        return false;
-    });
-    $('#avi_wpa_dialog button[name=remove]').bind('click',function(){
-        self.overlay.overlayClose();
-        var data=self.getFormData(true);
-        self.sendRequest('remove','remove '+avnav.util.Helper.escapeHtml(data.ssid),data);
-        return false;
-    });
-    $('#avi_wpa_dialog button[name=disable]').bind('click',function(){
-        self.overlay.overlayClose();
-        var data=self.getFormData(true);
-        self.sendRequest('disable','disable '+avnav.util.Helper.escapeHtml(data.ssid),data);
-        return false;
-    });
     this.timeout=this.gui.properties.getProperties().wpaQueryTimeout;
+};
+
+Wpapage.prototype.showWpaDialog=function(ssid,id){
+    var Dialog=React.createClass({
+        propTypes:{
+            closeCallback:React.PropTypes.func.isRequired,
+            resultCallback: React.PropTypes.func.isRequired
+
+        },
+        getInitialState: function(){
+            return{
+                psk: ''
+            }
+        },
+        valueChange: function(event){
+            this.setState({
+                psk: event.target.value
+            }) ;
+        },
+        buttonClick: function(event){
+            var button=event.target.name;
+            this.props.closeCallback();
+            if (button != "cancel")  this.props.resultCallback(button,this.state.psk);
+        },
+        render: function(){
+            return (
+                    <div className="avi_wpa_dialog">
+                        <div>
+                            <h3><span >{ssid}</span></h3>
+                            <div>
+                                <label >Password
+                                <input type="password" name="psk" onChange={this.valueChange} value={this.state.psk}/>
+                                </label>
+                            </div>
+                            {id >=0 && <button name="remove" onClick={this.buttonClick}>Remove</button>}
+                            <button name="connect" onClick={this.buttonClick}>Connect</button>
+                            <button name="cancel" onClick={this.buttonClick}>Cancel</button>
+                            {id >= 0 && <button name="enable" onClick={this.buttonClick}>Enable</button>}
+                            {id >= 0 && <button name="disable" onClick={this.buttonClick}>Disable</button>}
+                            <div className="avn_clear"></div>
+                        </div>
+                    </div>
+            );
+        }
+    });
+    var self=this;
+    OverlayDialog.dialog(Dialog,this.getDialogContainer(),{
+       resultCallback: function(type,psk){
+           var data={
+               id: id,
+               ssid: ssid
+           };
+           if (type== 'connect') {
+               data.psk=psk;
+               self.sendRequest('connect', 'connect to ' + avnav.util.Helper.escapeHtml(data.ssid), data);
+               return;
+           }
+           if (type == 'remove' || type == 'disable'|| type == 'enable'){
+               self.sendRequest(type,type+' '+avnav.util.Helper.escapeHtml(data.ssid),data);
+               return;
+           }
+       }
+    });
 };
 
 //-------------------------- Buttons ----------------------------------------
@@ -248,7 +269,7 @@ avnav.gui.Wpapage.prototype.localInit=function() {
 
 (function(){
     //create an instance of the status page handler
-    var page=new avnav.gui.Wpapage();
+    var page=new Wpapage();
 }());
 
 
