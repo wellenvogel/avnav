@@ -12,6 +12,7 @@ var WidgetContainer=require('../components/WidgetContainer.jsx');
 var navobjects=require('../nav/navobjects');
 var routeobjects=require('../nav/routeobjects');
 var WaypointDialog=require('../components/WaypointDialog.jsx');
+var OverlayDialog=require('../components/OverlayDialog.jsx');
 avnav.provide('avnav.gui.Navpage');
 
 
@@ -663,9 +664,8 @@ avnav.gui.Navpage.prototype.hideWpButtons=function(){
 
 
 avnav.gui.Navpage.prototype.showWaypointDialog=function(wp){
-    var id;
     var self=this;
-    var ok=function(newWp)
+    var ok=function(newWp,closeFunction)
     {
         var nwp=WaypointDialog.updateWaypoint(wp,newWp,function(error){
                 self.toast(avnav.util.Helper.escapeHtml(error));
@@ -676,7 +676,10 @@ avnav.gui.Navpage.prototype.showWaypointDialog=function(wp){
         }
         return (nwp !== undefined);
     };
-    id=WaypointDialog.showWaypointDialog(wp,ok,self.getDialogContainer());
+    OverlayDialog.dialog(WaypointDialog,self.getDialogContainer(),{
+        waypoint:wp,
+        okCallback: ok
+    });
 };
 
 

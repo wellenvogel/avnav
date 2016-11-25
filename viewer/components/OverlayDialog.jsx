@@ -15,17 +15,35 @@ var getNextId=function(){
     return id;
 };
 var OverlayDialogListInstance=undefined;
+var dialogInstanceId='###overlayDialog###'; //will be used to store this as
+                                            //"active input" to prevent resizes
 var OverlayDialog=React.createClass({
+    propTypes:{
+        showCallback: React.PropTypes.func,
+        hideCallback: React.PropTypes.func
+    },
     getInitialState: function(){
         return {
 
         };
     },
     render: function(){
-        if (! this.state.content) return null;
+        if (! this.state.content) {
+            if (this.props.hideCallback) this.props.hideCallback(dialogInstanceId);
+            return null;
+        }
+        if (this.props.showCallback) this.props.showCallback(dialogInstanceId);
+        var id=this.state._contentId;
+        var self=this;
+        var hide=function(){
+            self.hide(id);
+        };
+        var props=avnav.assign({},this.state,{closeCallback:hide});
+        delete props.content;
+        delete props._contentId;
         return(
             <div ref="container" className="avn_overlay_cover_active">
-                <div ref="box" className="avn_dialog">{this.state.content}</div>
+                <div ref="box" className="avn_dialog">{React.createElement(this.state.content,props)}</div>
             </div>
         );
     },
@@ -71,7 +89,8 @@ var OverlayDialog=React.createClass({
         if (oldState.cancelCallback){
             oldState.cancelCallback();
         }
-        windown.removeEventListener('resize',this.updateDimensions);
+        window.removeEventListener('resize',this.updateDimensions);
+        if (this.props.hideCallback) this.props.hideCallback(dialogInstanceId);
         OverlayDialogListInstance=undefined;
     },
     componentDidUpdate: function(){
@@ -138,18 +157,25 @@ var OverlayDialog=React.createClass({
          */
         alert:function(text,opt_parent){
             return new Promise(function (resolve, reject) {
-                var okFunction=function(el){
-                    OverlayDialogListInstance.hide(html);
-                    resolve();
-                };
-                var html=(
-                    <div>
-                        <h3 className="avn_dialogTitle">Alert</h3>
-                        <div className="avn_dialogText">{text}</div>
-                        <button name="ok" onClick={okFunction}>Ok</button>
-                        <div className="avn_clear"></div>
-                    </div>
-                );
+                var html = React.createClass({
+                    propTypes: {
+                        closeCallback: React.PropTypes.func
+                    },
+                    okFunction:function(el){
+                        if (this.props.closeCallback) this.props.closeCallback();
+                        resolve();
+                    },
+                    render: function () {
+                        return (
+                            <div>
+                                <h3 className="avn_dialogTitle">Alert</h3>
+                                <div className="avn_dialogText">{text}</div>
+                                <button name="ok" onClick={okFunction}>Ok</button>
+                                <div className="avn_clear"></div>
+                            </div>
+                        );
+                    }
+                });
                 if (OverlayDialogListInstance == null) {
                     reject(new Error("not initialzed"));
                     return;
@@ -173,29 +199,35 @@ var OverlayDialog=React.createClass({
          */
         confirm: function(text,opt_parent,opt_title){
             return new Promise(function (resolve, reject) {
-                var id;
-                var okFunction=function(el){
-                    resolve(1);
-                    OverlayDialogListInstance.hide(id);
-                };
-                var cancelFunction=function(el){
-                    OverlayDialogListInstance.hide(id);
-                    reject();
-                };
-                var html=(
-                    <div>
-                        <h3 className="avn_dialogTitle">{opt_title||'Confirm'}</h3>
-                        <div className="avn_dialogText">{text}</div>
-                        <button name="ok" onClick={okFunction}>Ok</button>
-                        <button name="cancel" onClick={cancelFunction}>Cancel</button>
-                        <div className="avn_clear"></div>
-                    </div>
-                );
+                var html=React.createClass({
+                    propTypes: {
+                        closeCallback: React.PropTypes.func
+                    },
+                    okFunction:function(el){
+                        resolve(1);
+                        if (this.props.closeCallback) this.props.closeCallback();
+                    },
+                    cancelFunction:function(el){
+                        if (this.props.closeCallback) this.props.closeCallback();
+                        reject();
+                    },
+                    render: function(){
+                        return (
+                            <div>
+                                <h3 className="avn_dialogTitle">{opt_title||'Confirm'}</h3>
+                                <div className="avn_dialogText">{text}</div>
+                                <button name="ok" onClick={okFunction}>Ok</button>
+                                <button name="cancel" onClick={cancelFunction}>Cancel</button>
+                                <div className="avn_clear"></div>
+                            </div>
+                        );
+                    }
+                });
                 if (OverlayDialogListInstance == null) {
                     reject(new Error("not initialzed"));
                     return;
                 }
-                id=OverlayDialogListInstance.show(html,
+                OverlayDialogListInstance.show(html,
                     {
                         cancelCallback: function(){
                             reject();
@@ -211,51 +243,46 @@ var OverlayDialog=React.createClass({
          * @param {string} value the initial value
          * @param {function} okCallback the callback when OK is clicked, value as parameter
          *                   return false to keep the dialog open
+         *                   the callback will receive an asynchronous close function as
+         *                   second parameter
          * @param opt_parent if set the parent HTML element
          * @param opt_label if set an additional label
+         * @param opt_cancelCallback - if set a callback function being invoked on cancel
          * @returns {*|OverlayDialog}
          */
-        valueDialog: function(title,value,okCallback,opt_parent,opt_label){
+        valueDialog: function(title,value,okCallback,opt_parent,opt_label,opt_cancelCallback){
             if (OverlayDialogListInstance == null) {
                 throw new Error("not initialzed");
             }
             var id;
-            var Dialog=React.createClass({
-                getInitialState: function(){
-                    return {value:value};
-                },
-                valueChanged:   function (event) {
-                    this.setState({value:event.target.value});
-                },
-                okFunction: function (event) {
-                    var rt = okCallback(this.state.value);
-                    if (rt) OverlayDialogListInstance.hide(id);
-                },
-                cancelFunction:function (event) {
-                    OverlayDialogListInstance.hide(id);
-                },
-                render: function() {
-                    var html = (
-                        <div>
-                            <h3 className="avn_dialogTitle">{title || 'Input'}</h3>
-                            <div>
-                                <div className="avn_row"><label>{opt_label || ''}</label>
-                                    <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/></div>
-                            </div>
-                            <button name="ok" onClick={this.okFunction}>Ok</button>
-                            <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
-                            <div className="avn_clear"></div>
-                        </div>
-                    );
-                    return html;
-                }
-        });
-            id=OverlayDialog.dialog(<Dialog/>,opt_parent);
+            var Dialog=createValueDialog(title,value,okCallback,opt_label,opt_cancelCallback);
+            id=OverlayDialog.dialog(Dialog,opt_parent);
             return id;
         },
         /**
+         * create a value dialog as a promise
+         * this will always fullfill if the user clicks ok
+         * to implement checking and asynchronous close use the valueDialog method
+         * @param title
+         * @param value
+         * @param opt_parent
+         * @param opt_label
+         * @returns {Promise}
+         */
+        valueDialogPromise: function(title,value,opt_parent,opt_label){
+            return new Promise(function(resolve,reject){
+                var Dialog=createValueDialog(title,value,function(value){
+                    resolve(value);
+                    return true;
+                },opt_label,function(){
+                    reject();
+                });
+                OverlayDialog.dialog(Dialog,opt_parent);
+            })
+        },
+        /**
          * create an arbitrary dialog
-         * @param html the react element to show
+         * @param html the react class to show (or the html string)
          * @param opt_parent
          * @param opt_options
          * @returns {object} the react element that we are showing - use this for hiding
@@ -276,6 +303,49 @@ var OverlayDialog=React.createClass({
     }
 });
 
-
+var createValueDialog=function(title,value,okCallback,opt_label,opt_cancelCallback) {
+    if (OverlayDialogListInstance == null) {
+        throw new Error("not initialzed");
+    }
+    var Dialog = React.createClass({
+        propTypes: {
+            closeCallback: React.PropTypes.func
+        },
+        getInitialState: function () {
+            return {value: value};
+        },
+        valueChanged: function (event) {
+            this.setState({value: event.target.value});
+        },
+        closeFunction: function (opt_skip) {
+            if (this.props.closeCallback) this.props.closeCallback();
+            if (! opt_skip && opt_cancelCallback) opt_cancelCallback();
+        },
+        okFunction: function (event) {
+            var rt = okCallback(this.state.value, this.closeFunction);
+            if (rt && this.props.closeCallback) this.props.closeCallback();
+        },
+        cancelFunction: function (event) {
+            this.closeFunction();
+        },
+        render: function () {
+            var html = (
+                <div>
+                    <h3 className="avn_dialogTitle">{title || 'Input'}</h3>
+                    <div>
+                        <div className="avn_row"><label>{opt_label || ''}</label>
+                            <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
+                        </div>
+                    </div>
+                    <button name="ok" onClick={this.okFunction}>Ok</button>
+                    <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
+                    <div className="avn_clear"></div>
+                </div>
+            );
+            return html;
+        }
+    });
+    return Dialog;
+}
 
 module.exports= OverlayDialog;

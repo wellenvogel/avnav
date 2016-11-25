@@ -102,8 +102,7 @@ avnav.gui.Routepage.prototype.localInit=function(){
     });
     this.waypointList=ReactDOM.render(list,document.getElementById('avi_routepage_wplist'));
     this.selectOnPage('#avi_route_current').on('click',function(){
-        var dialog;
-        var okCallback=function(name){
+        var okCallback=function(name,closeFunction){
             if (name != self.initialName) {
                 //check if a route with this name already exists
                 self.routingHandler.fetchRoute(name, false,
@@ -111,7 +110,7 @@ avnav.gui.Routepage.prototype.localInit=function(){
                         self.toast("route with name " + name + " already exists",true);
                     },
                     function (er) {
-                        OverlayDialog.hide(dialog);
+                        closeFunction();
                         self.currentRoute.setName(name);
                         self._updateDisplay();
                     });
@@ -119,7 +118,7 @@ avnav.gui.Routepage.prototype.localInit=function(){
             }
             return true;
         };
-        dialog=OverlayDialog.valueDialog("Edit Route Name",self.currentRoute.name,
+        OverlayDialog.valueDialog("Edit Route Name",self.currentRoute.name,
             okCallback,self.getDialogContainer(),'Name'
         );
 
@@ -179,8 +178,7 @@ avnav.gui.Routepage.prototype.waypointClicked=function(idx,param){
     }
     var self=this;
     var wp=this.currentRoute.getPointAtIndex(idx);
-    var dialog;
-    var wpChanged=function(newWp){
+    var wpChanged=function(newWp,close){
         var changedWp=WayPointDialog.updateWaypoint(wp,newWp,function(err){
             self.toast(avnav.util.Helper.escapeHtml(err));
         });
@@ -194,7 +192,10 @@ avnav.gui.Routepage.prototype.waypointClicked=function(idx,param){
         }
         return false;
     };
-    dialog=WayPointDialog.showWaypointDialog(wp,wpChanged,this.getDialogContainer());
+    OverlayDialog.dialog(WayPointDialog,this.getDialogContainer(),{
+        waypoint:wp,
+        okCallback:wpChanged
+    });
 };
 avnav.gui.Routepage.prototype.fillData=function(initial){
     if (initial) {

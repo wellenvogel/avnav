@@ -212,7 +212,11 @@ avnav.main=function() {
         $('#avi_mainpage_version').text(avnav.android.getVersion());
         avnav.android.applicationStarted();
     }
-    ReactDOM.render(React.createElement(OverlayDialog),document.getElementById('avi_dialog_container'));
+    ReactDOM.render(React.createElement(OverlayDialog,{
+            showCallback: function(id){gui.addActiveInput(id);},
+            hideCallback: function(id){gui.removeActiveInput(id);}
+        }),
+        document.getElementById('avi_dialog_container'));
     gui.showPage("mainpage");
     //ios browser sometimes has issues with less...
     setTimeout(function(){

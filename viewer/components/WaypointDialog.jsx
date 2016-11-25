@@ -4,7 +4,6 @@
  */
 
 var React=require('react');
-var OverlayDialog=require('./OverlayDialog.jsx');
 var navobjects=require('../nav/navobjects');
 
 /**
@@ -17,7 +16,8 @@ var WaypointDialog = React.createClass({
     propTypes: {
         waypoint: React.PropTypes.instanceOf(navobjects.WayPoint).isRequired,
         okCallback: React.PropTypes.func.isRequired,
-        hideCallback: React.PropTypes.func
+        closeCallback:React.PropTypes.func
+
     },
     getInitialState: function () {
         return {
@@ -33,6 +33,10 @@ var WaypointDialog = React.createClass({
         nState[name] = event.target.value;
         this.setState(nState);
     },
+    closeFunction: function(){
+        this.setState({show: false});
+        if (this.props.closeCallback) this.props.closeCallback();
+    },
     okFunction: function (event) {
         var data = {
             name: this.state.name,
@@ -43,17 +47,13 @@ var WaypointDialog = React.createClass({
         if (data.lon < -90 || data.lon > 90) delete data.lon;
         var wp = this.props.waypoint.clone();
         avnav.assign(wp,data);
-        var rt = this.props.okCallback(wp);
+        var rt = this.props.okCallback(wp,this.closeFunction);
         if (rt ) {
-            this.setState({show: false});
-            if (this.props.hideCallback) this.props.hideCallback();
+            this.closeFunction();
         }
     },
     cancelFunction: function (event) {
-        this.setState({show: false});
-        if (this.props.hideCallback) {
-            this.props.hideCallback();
-        }
+        this.closeFunction();
     },
     render: function () {
         if (!this.state.show) return null;
@@ -134,26 +134,6 @@ var WaypointDialog = React.createClass({
                     return;
                 }
             }
-        },
-        /**
-         * show a waypoint dialog
-         * @param waypoint
-         * @param okCallback
-         * @param opt_parent
-         * @returns {*|Object}
-         */
-        showWaypointDialog: function (waypoint, okCallback, opt_parent) {
-            var id;
-            var hideCallback = function () {
-                OverlayDialog.hide(id);
-            };
-            id = OverlayDialog.dialog(<WaypointDialog waypoint={waypoint} okCallback={okCallback}
-                                                      hideCallback={hideCallback}/>,
-                opt_parent);
-            return id;
-        },
-        hideWaypointDialog: function (id) {
-            OverlayDialog.hide(id);
         }
     }
 });
