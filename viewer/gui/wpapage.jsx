@@ -21,41 +21,6 @@ var Wpapage=function(){
     });
     this.timeout=4000;
     this.numErrors=0;
-    this.listEntryClass=React.createClass({
-        propTypes:{
-            wpaClickHandler: React.PropTypes.func.isRequired,
-            ssid: React.PropTypes.string.isRequired,
-            level:React.PropTypes.string,
-            id: React.PropTypes.any.isRequired,
-            flags: React.PropTypes.string.isRequired,
-            activeItem: React.PropTypes.bool
-        },
-        onClick: function(ev){
-            this.props.wpaClickHandler(this.props);
-        },
-        render: function(){
-            var level=this.props.level;
-            try {
-                level = parseInt(level);
-            }catch(e){}
-            if (level >= 0) level=level+"%";
-            else level=level+"dBm";
-            var disabled=(this.props.flags !== undefined && this.props.flags.match(/DISABLED/));
-            var addClass=this.props.activeItem?'avn_wpa_active_item':'';
-            return(
-                <div className={'avn_wpa_item '+addClass} onClick={this.onClick}>
-                    <span className='avn_wpa_ssid'>{this.props.ssid}</span>
-                    <div className='avn_wpa_item_details_container'>
-                        <span className='avn_wpa_item_detail'>Signal:{level}</span>
-                        <span className='avn_wpa_item_detail'>{this.props.id >=0?'configured':''}</span>
-                        { disabled && <span className='avn_wpa_item_detail'>disabled</span>}
-                        { this.props.activeItem  && <span className='avn_wpa_item_detail'>active</span>}
-                    </div>
-                </div>
-            );
-        }
-
-    });
     /**
      * the list of items
      * @type {undefined}
@@ -73,7 +38,7 @@ Wpapage.prototype.showPage=function(options){
         self.doQuery();
     },this.timeout);
     this.indexMap={};
-    $('#avi_wpa_interface').html("Query Status");
+    this.interfaceInfo.setStatus({});
     this.itemList.setItems([]);
     this.doQuery();
 };
@@ -107,26 +72,10 @@ Wpapage.prototype.hidePage=function(){
     this.overlay.overlayClose();
 };
 
-Wpapage.prototype.formatInterfaceState=function(status){
-    var html="<div>Interface: "+status["wpa_state"]+"</div>";
-    if (status.wpa_state == "COMPLETED"){
-        html+="<div class='avn_wpa_interface_detail'>";
-        if (status.ssid){
-            html+="&nbsp;["+avnav.util.Helper.escapeHtml(status.ssid)+"]&nbsp;"
-        }
-        if (status.ip_address){
-            html+="IP: "+avnav.util.Helper.escapeHtml(status.ip_address);
-        }
-        else{
-            html+="waiting for IP...";
-        }
-        html+="</div>"
-    }
-    return html;
-};
+
 Wpapage.prototype.showWpaData=function(data){
     var self=this;
-    $('#avi_wpa_interface').html(this.formatInterfaceState(data.status));
+    this.interfaceInfo.setStatus(data.status);
     var i;
     var itemList=[];
     for (i in data.list){
@@ -181,10 +130,80 @@ Wpapage.prototype.sendRequest=function(request,message,param){
 Wpapage.prototype.localInit=function() {
     var self=this;
     this.timeout=this.gui.properties.getProperties().wpaQueryTimeout;
+    var listEntryClass=React.createClass({
+        propTypes:{
+            wpaClickHandler: React.PropTypes.func.isRequired,
+            ssid: React.PropTypes.string.isRequired,
+            level:React.PropTypes.string,
+            id: React.PropTypes.any.isRequired,
+            flags: React.PropTypes.string.isRequired,
+            activeItem: React.PropTypes.bool
+        },
+        onClick: function(ev){
+            this.props.wpaClickHandler(this.props);
+        },
+        render: function(){
+            var level=this.props.level;
+            try {
+                level = parseInt(level);
+            }catch(e){}
+            if (level >= 0) level=level+"%";
+            else level=level+"dBm";
+            var disabled=(this.props.flags !== undefined && this.props.flags.match(/DISABLED/));
+            var addClass=this.props.activeItem?'avn_wpa_active_item':'';
+            return(
+                <div className={'avn_wpa_item '+addClass} onClick={this.onClick}>
+                    <span className='avn_wpa_ssid'>{this.props.ssid}</span>
+                    <div className='avn_wpa_item_details_container'>
+                        <span className='avn_wpa_item_detail'>Signal:{level}</span>
+                        <span className='avn_wpa_item_detail'>{this.props.id >=0?'configured':''}</span>
+                        { disabled && <span className='avn_wpa_item_detail'>disabled</span>}
+                        { this.props.activeItem  && <span className='avn_wpa_item_detail'>active</span>}
+                    </div>
+                </div>
+            );
+        }
+
+    });
     var list=React.createElement(ItemList,{
-        itemClass:self.listEntryClass
+        itemClass:listEntryClass
     });
     this.itemList=ReactDOM.render(list,this.selectOnPage('#avi_wpa_list')[0]);
+    var headerClass=React.createClass({
+        propTypes:{
+
+        },
+        getInitialState: function(){
+            return{
+                status:{}
+            };
+        },
+        render: function(){
+            var status=this.state.status;
+            if (!status.wpa_state){
+                return(
+                  <div>Waiting for interface...</div>
+                );
+            }
+            var info=status.ssid?"["+status.ssid+"]":"";
+            if (status.ip_address) info+=", IP: "+status.ip_address;
+            else status+=" waiting for IP...";
+            return (
+                <div>
+                    <div>Interface: {status["wpa_state"]}</div>
+                    { (status.wpa_state == "COMPLETED") &&
+                        <div className='avn_wpa_interface_detail'>{info}</div>
+                    }
+                </div>
+            );
+        },
+        setStatus: function(status){
+            this.setState({
+                status:status
+            });
+        }
+    });
+    this.interfaceInfo=ReactDOM.render(React.createElement(headerClass),this.selectOnPage('#avi_wpa_interface')[0]);
 };
 
 Wpapage.prototype.showWpaDialog=function(ssid,id){

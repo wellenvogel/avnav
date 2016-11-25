@@ -13,11 +13,14 @@ module.exports=React.createClass({
         onClick:    React.PropTypes.func,
         itemClass:  React.PropTypes.func.isRequired,
         updateCallback: React.PropTypes.func,
-        selectors:  React.PropTypes.object
+        selectors:  React.PropTypes.object,
+        initialList: React.PropTypes.array
     },
     getInitialState: function(){
+        var itemList=[];
+        if (this.props.initialList) itemList=this.props.initialList;
         var st= {
-            itemList: [],
+            itemList: itemList,
             options: {}
         };
         if (this.props.selectors){
