@@ -136,6 +136,53 @@ Store.prototype.storeData=function(key,data){
     this.callCallbacks([key]);
 };
 /**
+ * update data in the store
+ * the data needs to be an object!
+ * @param key
+ * @param {*} data either an object to be merged
+ *            or a function that is called with the old data and should return the new
+ * @param {string} opt_subkey if set - only update this data
+ */
+Store.prototype.updateData=function(key,data,opt_subkey){
+    var oldData=this.data[key];
+    if (opt_subkey){
+        if (! this.data[key]) this.data[key]={};
+        if (! (this.data[key] instanceof Object)) throw new Error("data for key "+key+" must be an object for subkey handling");
+        oldData=this.data[key][opt_subkey];
+    }
+    var newData;
+    if (typeof(data) === 'function'){
+        newData=data(oldData);
+    }
+    else {
+        if (!oldData) newData = data;
+        else newData=avnav.assign({},oldData, data);
+    }
+    if (opt_subkey){
+        this.data[key][opt_subkey]=newData;
+    }
+    else{
+        this.data[key]=newData;
+    }
+    //this could be improved by checking for changes...
+    this.callCallbacks([key]);
+};
+/**
+ * update a value inside an object
+ * @param key
+ * @param opt_subkey
+ * @param itemKey
+ * @param value
+ */
+Store.prototype.updateSubItem=function(key,itemKey,value,opt_subkey){
+    var val={};
+    val[itemKey]=value;
+    this.updateData(key,function(oldData){
+        if (oldData && ! (oldData instanceof Object)) throw new Error("item "+key+" needs to be an object");
+        return avnav.assign({},oldData,val);
+    },opt_subkey);
+};
+/**
  * retrieve the data for a certain key
  * if no data is there undefined is returned
  * @param key

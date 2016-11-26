@@ -12,11 +12,14 @@ module.exports=React.createClass({
         distance: React.PropTypes.string,
         addClass: React.PropTypes.string,
         showLatLon: React.PropTypes.bool,
-        onClick:    React.PropTypes.func.isRequired
+        onItemClick:    React.PropTypes.func.isRequired
     },
     getDefaultProps(){
         return{
         };
+    },
+    onClick: function(){
+      if (this.props.onItemClick) this.props.onItemClick(this.props);
     },
     render: function(){
         var info;
@@ -28,7 +31,7 @@ module.exports=React.createClass({
         }
         var classNames="avn_route_info_point "+this.props.addClass||"";
         return(
-        <div className={classNames} onClick={this.props.onClick} data-waypoint-idx={this.props.idx}>
+        <div className={classNames} onClick={this.onClick} data-waypoint-idx={this.props.idx}>
             <div className="avn_route_info_name">{this.props.name}</div>
             <span className="avn_more"></span>
             {info}

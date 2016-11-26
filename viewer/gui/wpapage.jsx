@@ -8,7 +8,10 @@ var ItemList=require('../components/ItemList.jsx');
 var Store=require('../util/store');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 
-
+var keys={
+    itemListKey:'wpaItemns',
+    interfaceKey:'interface'
+};
 
 /**
  *
@@ -25,9 +28,6 @@ var Wpapage=function(){
      * @type {Store|exports|module.exports}
      */
     this.store=new Store();
-    //store keys
-    this.itemListKey='wpaItemns';
-    this.interfaceKey='interface'
 };
 avnav.inherits(Wpapage,avnav.gui.Page);
 
@@ -74,7 +74,7 @@ Wpapage.prototype.hidePage=function(){
 
 Wpapage.prototype.showWpaData=function(data){
     var self=this;
-    this.store.storeData(this.interfaceKey,{status:data.status});
+    this.store.storeData(keys.interfaceKey,{status:data.status});
     var i;
     var itemList=[];
     for (i in data.list){
@@ -93,7 +93,7 @@ Wpapage.prototype.showWpaData=function(data){
         displayItem.key=ssid;
         itemList.push(displayItem);
     }
-    this.store.storeData(this.itemListKey,{itemList:itemList});
+    this.store.storeData(keys.itemListKey,{itemList:itemList});
 };
 
 Wpapage.prototype.sendRequest=function(request,message,param){
@@ -126,9 +126,11 @@ Wpapage.prototype.sendRequest=function(request,message,param){
 Wpapage.prototype.localInit=function() {
     var self=this;
     this.timeout=this.gui.properties.getProperties().wpaQueryTimeout;
+    var wpaClickHandler=function(item){
+        self.showWpaDialog(item.ssid,item.id);
+    };
     var listEntryClass=React.createClass({
         propTypes:{
-            wpaClickHandler: React.PropTypes.func.isRequired,
             ssid: React.PropTypes.string.isRequired,
             level:React.PropTypes.string,
             id: React.PropTypes.any.isRequired,
@@ -136,7 +138,7 @@ Wpapage.prototype.localInit=function() {
             activeItem: React.PropTypes.bool
         },
         onClick: function(ev){
-            if (this.props.wpaClickHandler) this.props.wpaClickHandler(this.props);
+            wpaClickHandler(this.props);
         },
         render: function(){
             var level=this.props.level;
@@ -161,10 +163,7 @@ Wpapage.prototype.localInit=function() {
         }
 
     });
-    var wpaClickHandler=function(item){
-        self.showWpaDialog(item.ssid,item.id);
-    };
-    var HeaderClass=React.createClass({
+    var HeaderClass=ItemUpdater(React.createClass({
         propTypes:{
             status: React.PropTypes.object
         },
@@ -180,14 +179,16 @@ Wpapage.prototype.localInit=function() {
             else status+=" waiting for IP...";
             return (
                 <div className="avn_wpa_interface">
-                    <div>Interface: {status["wpa_state"]}</div>
+                    <div>Interface: {status.wpa_state}</div>
                     { (status.wpa_state == "COMPLETED") &&
                         <div className='avn_wpa_interface_detail'>{info}</div>
                     }
                 </div>
             );
         }
-    });
+    }),this.store,keys.interfaceKey);
+
+    var NetworkList=ItemUpdater(ItemList,this.store,keys.itemListKey);
 
     var leftPanel=(
         <div className="avn_panel_fill">
@@ -197,13 +198,9 @@ Wpapage.prototype.localInit=function() {
             </div>
 
             <div className="avn_panel avn_scrollable_page avn_left_inner">
-                <ItemUpdater store={this.store} storeKey={this.interfaceKey}>
-                    <HeaderClass></HeaderClass>
-                </ItemUpdater>
-                <ItemUpdater store={this.store} storeKey={this.itemListKey}>
-                    <ItemList itemClass={listEntryClass} childProperties={{wpaClickHandler:wpaClickHandler}}>
-                    </ItemList>
-                </ItemUpdater>
+                <HeaderClass></HeaderClass>
+                <NetworkList itemClass={listEntryClass}>
+                </NetworkList>
             </div>
         </div>
     );

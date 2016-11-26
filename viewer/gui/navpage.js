@@ -13,9 +13,18 @@ var navobjects=require('../nav/navobjects');
 var routeobjects=require('../nav/routeobjects');
 var WaypointDialog=require('../components/WaypointDialog.jsx');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
+var Store=require('../util/store');
+var ItemUpdater=require('../components/ItemUpdater.jsx');
 avnav.provide('avnav.gui.Navpage');
 
-
+var keys={
+    waypointList: 'waypointList',
+    waypointSelections: 'selections'
+};
+var selectors={
+    selected: 'avn_route_info_active_point',
+    centered: 'avn_route_info_centered'
+};
 
 /**
  *
@@ -83,7 +92,6 @@ avnav.gui.Navpage=function(){
 
     this.showRouteOnReturn=false;
 
-    this.waypointList=undefined;
 
     /**
      * @private
@@ -96,6 +104,7 @@ avnav.gui.Navpage=function(){
      * @type {WidgetContainer[]}
      */
     this.widgetContainers=[];
+    this.store=new Store();
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
@@ -182,6 +191,9 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     else {
         this.hideRouting();
     }
+    if (! options || ! options.returning){
+        this.store.resetData();
+    }
     this.updateRoutePoints(true,showRouting);
     this.widgetVisibility();
     window.setTimeout(function(){
@@ -196,7 +208,7 @@ avnav.gui.Navpage.prototype.widgetVisibility=function(){
         var aisTarget=this.navobject.getAisHandler().getNearestAisTarget();
         aisVisible=(aisTarget && aisTarget.mmsi);
     }
-    aisVisible=true;
+    //aisVisible=true;
     var routeVisible=this.gui.properties.getProperties().layers.nav;
     if (routeVisible) routeVisible=this.navobject.getRoutingHandler().hasActiveRoute();
     var centerVisible=true;
@@ -299,20 +311,18 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $(window).on('resize',function(){
         self.updateLayout();
     });
-    var list=React.createElement(WaypointList, {
-        onClick:function(idx,opt_data){
-            self.waypointClicked(idx,opt_data);
+    var list=React.createElement(
+        ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]),
+        {
+        onItemClick:function(item,opt_data){
+            self.waypointClicked(item,opt_data);
         },
         itemClass:WaypointItem,
-        selectors:{
-            selected: 'avn_route_info_active_point',
-            centered: 'avn_route_info_centered'
-        },
         updateCallback: function(){
             self.scrollRoutePoints();
         }
     });
-    this.waypointList=ReactDOM.render(list,document.getElementById('avi_route_info_list'));
+    ReactDOM.render(list,document.getElementById('avi_route_info_list'));
 
     var container=new WidgetContainer({
         onClick: self.widgetClick,
@@ -569,21 +579,23 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
         });
     },0);
 };
+avnav.gui.Navpage.prototype.updateWaypointSelections=function(key,value){
 
-avnav.gui.Navpage.prototype.waypointClicked=function(idx,options){
+};
+avnav.gui.Navpage.prototype.waypointClicked=function(item,options){
     var self=this;
-    if (options.item && options.item != 'main') return;
-    this.navobject.getRoutingHandler().setEditingWpIdx(idx);
-    var selectors=['selected'];
-    if (! options.centered) {
+    if (options && options != 'main') return;
+    this.navobject.getRoutingHandler().setEditingWpIdx(item.idx);
+    var selectorState=item.selectorState;
+    this.store.updateSubItem(keys.waypointSelections,selectors.selected,item.idx,'selectors');
+    if (! selectorState || ! selectorState[selectors.centered]) {
         this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());
-        selectors.push('centered');
+        this.store.updateSubItem(keys.waypointSelections,selectors.centered,item.idx,'selectors');
     }
-    if (options.selected && options.centered){
+    if (selectorState && selectorState[selectors.selected] && selectorState[selectors.centered]){
         var wp=this.navobject.getRoutingHandler().getEditingWp();
         self.showWaypointDialog(wp);
     }
-    this.waypointList.setSelectors(idx,selectors);
 };
 
 avnav.gui.Navpage.prototype.scrollRoutePoints=function(){
@@ -601,7 +613,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
         $('#avi_route_info_name').text(rname);
     }
     else {
-        this.waypointList.setState({
+        this.store.storeData(keys.waypointList,{
             itemList:[],
             options: {showLatLon: this.gui.properties.getProperties().routeShowLL}
         });
@@ -614,24 +626,23 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
     this.lastRoute=route.clone();
     if (rebuild){
         var waypoints=route.getFormattedPoints();
-        this.waypointList.setState({
+        waypoints.forEach(function(waypoint){
+           waypoint.key=waypoint.idx;
+        });
+        this.store.storeData(keys.waypointList,{
             itemList:waypoints,
             options: {showLatLon: this.gui.properties.getProperties().routeShowLL}
         });
     }
     else {
-        this.waypointList.setState({
-            options:{showLatLon: this.gui.properties.getProperties().routeShowLL}
-        });
-        //update
+        this.store.updateData(keys.waypointList,
+            {showLatLon: this.gui.properties.getProperties().routeShowLL},'options');
     }
-    var selectors=['selected'];
     var activeWp=route.getPointAtIndex(active);
     if (opt_centerActive && activeWp){
         this.gui.map.setCenter(activeWp);
-        selectors.push('centered')
+        this.store.updateSubItem(keys.waypointSelections,selectors.centered,activeWp,'selectors');
     }
-    this.waypointList.setSelectors(active,selectors);
 };
 
 

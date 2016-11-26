@@ -2,6 +2,8 @@
  * Created by andreas on 10.10.16.
  * an itemlist to display items of a common type
  * it is able to handle a couple of selectors to add classes to the items
+ * the itemClick callback will have the item from the list + an added selectorState object
+ * that has a "true" value for each selector where the item key is the value in the property "selectors"
  */
 
 var React=require('react');
@@ -10,10 +12,11 @@ var React=require('react');
 
 module.exports=React.createClass({
     propTypes:{
-        onClick:    React.PropTypes.func,
+        onItemClick:    React.PropTypes.func,
         itemClass:  React.PropTypes.func.isRequired,
         updateCallback: React.PropTypes.func,
-        selectors:  React.PropTypes.object,
+        selectors:  React.PropTypes.object, //if a value from this object matches an item key
+                                            //the key will be added as an additional class
         itemList: React.PropTypes.array,
         childProperties: React.PropTypes.object
     },
@@ -22,22 +25,21 @@ module.exports=React.createClass({
         if (this.props.itemList) itemList=this.props.itemList;
         var st= {
             itemList: itemList,
-            options: {}
         };
         if (this.props.selectors){
-            st.selectors={};
-            for (var k in this.props.selectors){
-                st.selectors[k]=-1;
-            }
+            st.selectors=this.props.selectors;
         }
         return st;
     },
     componentWillReceiveProps:function(nextProps){
+        var nstate={};
         if (nextProps.itemList) {
-            this.setState({
-                itemList: nextProps.itemList
-            });
+            nstate.itemList=nextProps.itemList;
         }
+        if (nextProps.selectors){
+            nstate.selectors=nextProps.selectors;
+        }
+        this.setState(nstate);
     },
     render: function(){
         var items=this.state.itemList||[];
@@ -45,28 +47,35 @@ module.exports=React.createClass({
         return(
             <div className="avn_listContainer">
                 { items.map(function (entry) {
-                    var opts={};
-                    var addClass="";
-                    var isSet=false;
+                    var opts = {};
+                    var addClass = "";
+                    var isSet = false;
                     var k;
-                    if (self.props.selectors){
-                        for (k in self.props.selectors){
-                            isSet=self.state.selectors[k]==entry.idx;
-                            opts[k]=isSet;
-                            if (isSet) addClass+=" "+self.props.selectors[k];
+                    var key = entry.key;
+                    var selectorState={};
+                    if (key !== undefined) {
+                        if (self.state.selectors) {
+                            for (k in self.state.selectors) {
+                                isSet = self.state.selectors[k] == entry.key;
+                                if (isSet) {
+                                    addClass += " " + k;
+                                    selectorState[k]=true;
+                                }
+                            }
                         }
                     }
-                    var prop=avnav.assign({},entry,self.props.childProperties,self.state.options);
-                    var clickHandler=function(ev,opt_item){
-                        if (! self.props.onClick) return;
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        var clOpts=avnav.clone(opts);
-                        if (opt_item) clOpts.item=opt_item;
-                        self.props.onClick(entry.idx,clOpts);
+                    var prop=avnav.assign({},entry,self.props.childProperties,{selectorState:selectorState});
+                    var clickHandler=function(opt_item,opt_data){
+                        if (! self.props.onItemClick) return;
+                        if (!opt_item) opt_item=prop;
+                        self.props.onItemClick(opt_item,opt_data);
                         return false;
                     };
-                    prop.onClick=clickHandler;
+                    prop.onClick=function(ev){
+                        ev.preventDefault();
+                        clickHandler();
+                    };
+                    prop.onItemClick=clickHandler;
                     prop.addClass=addClass;
                     return React.createElement(self.props.itemClass,prop);
                 })}
@@ -78,33 +87,5 @@ module.exports=React.createClass({
         if (this.props.updateCallback){
             this.props.updateCallback();
         }
-    },
-    /**
-     * be sure to call this only once before an new render has been done
-     * @param idx
-     * @param selector
-     * @returns {boolean}
-     */
-    setSelectors: function(idx: Number, selectors: Array){
-        if (! selectors) return;
-        var nsel=avnav.clone(this.state.selectors);
-        for (var i=0;i<selectors.length;i++) {
-            if (this.props.selectors && this.props.selectors[selectors[i]]){
-                nsel[selectors[i]]=idx;
-            }
-        }
-        this.setState({
-            selectors: nsel
-        });
-
-    },
-    /**
-     * set the new list of items
-     * @param items
-     */
-    setItems: function(items){
-        this.setState({
-           itemList: items
-        });
     }
 });
