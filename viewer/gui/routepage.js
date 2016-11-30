@@ -165,10 +165,9 @@ Routepage.prototype.waypointClicked=function(item,param){
         return;
     }
     if (! this.currentRoute) return;
-    var selectorState=item.selectorState;
-    if (! selectorState || ! selectorState[selectors.selected]){
+    var currentSelectors=this.store.getData(keys.waypointSelections,{}).selectors;
+    if (! currentSelectors || currentSelectors[selectors.selected] != item.key){
         this.updateSelection(selectors.selected,item.key);
-        this._updateDisplay();
         return;
     }
     var self=this;

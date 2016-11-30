@@ -586,7 +586,7 @@ avnav.gui.Navpage.prototype.waypointClicked=function(item,options){
     var self=this;
     if (options && options != 'main') return;
     this.navobject.getRoutingHandler().setEditingWpIdx(item.idx);
-    var selectorState=item.selectorState;
+    var selectorState=this.store.getData(keys.waypointSelections,{}).selectors;
     this.store.updateSubItem(keys.waypointSelections,selectors.selected,item.idx,'selectors');
     if (! selectorState || ! selectorState[selectors.centered]) {
         this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());

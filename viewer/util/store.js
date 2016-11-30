@@ -186,10 +186,13 @@ Store.prototype.updateSubItem=function(key,itemKey,value,opt_subkey){
  * retrieve the data for a certain key
  * if no data is there undefined is returned
  * @param key
+ * @param opt_default an optional default value
  * @returns {*}
  */
-Store.prototype.getData=function(key){
-    return this.data[key];
+Store.prototype.getData=function(key,opt_default){
+    var rt=this.data[key];
+    if (rt !== undefined) return rt;
+    return opt_default;
 };
 Store.prototype.reset=function(){
     this.callbacks=[];

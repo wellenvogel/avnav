@@ -52,19 +52,17 @@ module.exports=React.createClass({
                     var isSet = false;
                     var k;
                     var key = entry.key;
-                    var selectorState={};
                     if (key !== undefined) {
                         if (self.state.selectors) {
                             for (k in self.state.selectors) {
                                 isSet = self.state.selectors[k] == entry.key;
                                 if (isSet) {
                                     addClass += " " + k;
-                                    selectorState[k]=true;
                                 }
                             }
                         }
                     }
-                    var prop=avnav.assign({},entry,self.props.childProperties,{selectorState:selectorState});
+                    var prop=avnav.assign({},entry,self.props.childProperties);
                     var clickHandler=function(opt_item,opt_data){
                         if (! self.props.onItemClick) return;
                         if (!opt_item) opt_item=prop;
