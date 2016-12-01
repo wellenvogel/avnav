@@ -71,9 +71,9 @@ var propertyDefinitions=function(){
         minGridLedvel: new avnav.util.Property( 10),
         loggingEnabled: new avnav.util.Property( true),
         maxButtons: new avnav.util.Property(8),
-        positionQueryTimeout: new avnav.util.Property( 1000,"Position",avnav.util.PropertyType.RANGE,[500,5000,10]), //1000ms
-        trackQueryTimeout: new avnav.util.Property( 5000,"Track",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
-        routeQueryTimeout: new avnav.util.Property( 1000,"Route",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
+        positionQueryTimeout: new avnav.util.Property( 1000,"Position (ms)",avnav.util.PropertyType.RANGE,[500,5000,10]), //1000ms
+        trackQueryTimeout: new avnav.util.Property( 5000,"Track (ms)",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
+        routeQueryTimeout: new avnav.util.Property( 1000,"Route (ms)",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
         bearingColor: new avnav.util.Property( "#DDA01F","Color",avnav.util.PropertyType.COLOR),
         bearingWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         routeColor: new avnav.util.Property( "#27413B","Color",avnav.util.PropertyType.COLOR),
@@ -91,7 +91,7 @@ var propertyDefinitions=function(){
         trackWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         trackInterval: new avnav.util.Property( 30,"Point Dist.(s)",avnav.util.PropertyType.RANGE,[5,300]), //seconds
         initialTrackLength: new avnav.util.Property( 24,"Length(h)",avnav.util.PropertyType.RANGE,[1,48]), //in h
-        aisQueryTimeout: new avnav.util.Property( 5000,"AIS",avnav.util.PropertyType.RANGE,[1000,10000,10]), //ms
+        aisQueryTimeout: new avnav.util.Property( 5000,"AIS (ms)",avnav.util.PropertyType.RANGE,[1000,10000,10]), //ms
         aisDistance: new avnav.util.Property( 20,"AIS-Range(nm)",avnav.util.PropertyType.RANGE,[1,100]), //distance for AIS query in nm
         aisClickTolerance: new avnav.util.Property( 80,"Click Tolerance",avnav.util.PropertyType.RANGE,[10,100]),
         maxAisErrors: new avnav.util.Property( 3), //after that many errors AIS display will be switched off

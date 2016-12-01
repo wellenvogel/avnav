@@ -6,11 +6,13 @@ var React=require('react');
 var ReactDOM=require('react-dom');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ItemList=require("../components/ItemList.jsx");
+var OverlayDialog=require('../components/OverlayDialog.jsx');
 
 var keys={
     panelVisibility: 'panelVisibility', //header|items|both
     sectionItems: 'sectionItems',
-    activeItems: 'activeItems'
+    activeItems: 'activeItems',
+    currentValues: 'currentValues'
 };
 
 var settingsSections={
@@ -40,7 +42,7 @@ var Settingspage=function(){
     this.sectionItems=[];
 
     avnav.gui.Page.call(this,'settingspage');
-    this.store.register(this,keys.sectionItems);
+    this.store.register(this,keys.sectionItems,keys.currentValues);
 };
 avnav.inherits(Settingspage,avnav.gui.Page);
 
@@ -59,7 +61,27 @@ Settingspage.prototype.localInit=function(){
         return <div className={properties.addClass+ " avn_list_entry"} onClick={properties.onClick}>{properties.name}</div>
     };
     var SettingsItem=function(properties){
-        return <div className={properties.addClass+ " avn_list_entry"} onClick={properties.onClick}>{properties.name}</div>
+        if (properties.type == avnav.util.PropertyType.CHECKBOX) {
+            return <div className={properties.addClass+ " avn_list_entry"}>
+                <label>{properties.label}</label>
+                <input type="checkbox" checked={properties.value?true:false}
+                       onChange={function(ev){
+                        self.store.updateSubItem(keys.currentValues,properties.name,ev.target.checked)}
+                        }/>
+            </div>
+        }
+        if(properties.type == avnav.util.PropertyType.RANGE){
+            return <div className={properties.addClass+ " avn_list_entry"}
+                        onClick={function(ev){
+                            self.rangeItemDialog(properties);
+                        }}>
+                    <div className="avn_description">{properties.label}</div>
+                    <div className="avn_value">{properties.value}</div>
+                </div>;
+        }
+        else{
+            return(<div className={properties.addClass+ " avn_list_entry"}>{properties.label}</div>);
+        }
     };
     var sectionClick=function(item){
         var current=self.store.getData(keys.sectionItems,{}).selectors;
@@ -113,6 +135,59 @@ Settingspage.prototype.localInit=function(){
         }) ;
     });
 
+};
+
+Settingspage.prototype.rangeItemDialog=function(item){
+    var self=this;
+    var Dialog=React.createClass({
+        valueChange: function(ev){
+            this.setState({value: ev.target.value});
+        },
+        getInitialState: function(){
+            return({
+                value: item.value
+            });
+        },
+        buttonClick:function(ev){
+            var button=ev.target.name;
+            if (button == 'ok'){
+                if (this.state.value < item.values[0]|| this.state.value > item.values[1]){
+                    self.toast("item out of range");
+                    return;
+                }
+                self.store.updateSubItem(keys.currentValues,item.name,this.state.value);
+            }
+            if (button == 'reset'){
+                this.setState({
+                    value: self.gui.properties.getValueByName(item.name)
+                });
+                return;
+            }
+            self.hideToast();
+            this.props.closeCallback();
+        },
+        render:function() {
+            var range=item.values[0]+"..."+item.values[1];
+            return(
+                    <div className="avn_settingsDialog">
+                        <h3><span >{item.label}</span></h3>
+                        <div className="avn_settingsRange">Range: {range}</div>
+                        <div>
+                            <label >Value
+                                <input type="text" name="value" onChange={this.valueChange} value={this.state.value}/>
+                            </label>
+                        </div>
+                        <button name="ok" onClick={this.buttonClick}>OK</button>
+                        <button name="cancel" onClick={this.buttonClick}>Cancel</button>
+                        <button name="reset" onClick={this.buttonClick}>Reset</button>
+                        <div className="avn_clear"></div>
+                    </div>
+            );
+        }
+    });
+    OverlayDialog.dialog(Dialog,this.getDialogContainer(),{
+
+    });
 };
 /**
  * create the html for a settings item
@@ -223,11 +298,29 @@ Settingspage.prototype.readData=function(){
 
 Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
+    var self=this;
     this.readData();
     this.selectOnPage('input[type="range"]').rangeslider('update', true);
     this.store.resetData();
     this.store.updateSubItem(keys.sectionItems,sectionSelectors.selected,0,'selectors');
+    this.resetValues();
 
+};
+
+Settingspage.prototype.resetValues=function(opt_defaults){
+    var self=this;
+    var newValues={};
+    for (var section in settingsSections){
+        var items=settingsSections[section];
+        items.forEach(function(item){
+            var description=self.gui.properties.getDescriptionByName(item);
+            var value;
+            if (! opt_defaults)value =self.gui.properties.getValue(description);
+            else value= description.defaultv;
+            newValues[item]=value;
+        })
+    }
+    this.store.storeData(keys.currentValues,newValues);
 };
 /**
  * called when the section selection has changed
@@ -238,10 +331,15 @@ Settingspage.prototype.dataChanged=function(){
     this.createItemList(this.sectionItems[selectedIndex].name);
 };
 Settingspage.prototype.createItemList=function(sectionName){
+    var self=this;
+    var values=this.store.getData(keys.currentValues,{});
     var items=settingsSections[sectionName]||[];
     var newItemList=[];
+    var description;
     items.forEach(function(item){
-       newItemList.push({name:item})
+        description=self.gui.properties.getDescriptionByName(item);
+        newItemList.push(avnav.assign({},{
+            name:item},description,{value:values[item]}));
     });
     this.store.updateSubItem(keys.activeItems,'itemList',newItemList);
 };
@@ -262,9 +360,9 @@ Settingspage.prototype.hidePage=function(){
  */
 Settingspage.prototype.btnSettingsOK=function(button,ev){
     avnav.log("SettingsOK clicked");
-    var txt="";
-    for (var idx in this.allItems){
-        var val=this.allItems[idx].read();
+    var currentData=this.store.getData(keys.currentValues);
+    for (var idx in currentData){
+        var val=currentData[idx];
         this.gui.properties.setValueByName(idx,val);
     }
     this.gui.properties.saveUserData(); //write changes to cookie
@@ -275,10 +373,7 @@ Settingspage.prototype.btnSettingsOK=function(button,ev){
 
 Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
     avnav.log("SettingsDefaults clicked");
-    for (var idx in this.allItems) {
-        var val = this.gui.properties.getDescriptionByName(idx).defaultv;
-        this.allItems[idx].write(val);
-    }
+    this.resetValues(true);
 };
 
 Settingspage.prototype.btnSettingsAndroid=function(button,ev) {

@@ -439,6 +439,9 @@ avnav.gui.Page.prototype.toast=function(html,opt_hide){
     Overlay.Toast(html);
     this._hideToast=opt_hide||false;
 };
+avnav.gui.Page.prototype.hideToast=function(){
+    Overlay.hideToast();
+}
 avnav.gui.Page.prototype.getDialogContainer=function(){
     return this.selectOnPage('.avn_left_panel')[0];
 };
