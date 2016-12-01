@@ -18,7 +18,8 @@ module.exports=React.createClass({
         selectors:  React.PropTypes.object, //if a value from this object matches an item key
                                             //the key will be added as an additional class
         itemList: React.PropTypes.array,
-        childProperties: React.PropTypes.object
+        childProperties: React.PropTypes.object,
+        className: React.PropTypes.string
     },
     getInitialState: function(){
         var itemList=[];
@@ -44,8 +45,10 @@ module.exports=React.createClass({
     render: function(){
         var items=this.state.itemList||[];
         var self=this;
+        var className="avn_listContainer";
+        if (this.props.className) className+=" "+this.props.className;
         return(
-            <div className="avn_listContainer">
+            <div className={className}>
                 { items.map(function (entry) {
                     var opts = {};
                     var addClass = "";
@@ -75,6 +78,7 @@ module.exports=React.createClass({
                     };
                     prop.onItemClick=clickHandler;
                     prop.addClass=addClass;
+                    prop.className=addClass;
                     return React.createElement(self.props.itemClass,prop);
                 })}
             </div>

@@ -847,6 +847,10 @@ button.avb_WpEdit {
   .nightBorderColorGR(30);
 }
 
+.avn_list_entry{
+  .avm_list_entry();
+}
+
 /*-------------------------------------------------------------
    route page
 -------------------------------------------------------------*/
@@ -1465,8 +1469,31 @@ button.avb_GpsCancel{
   -------------------------------------------------------------------------------
 */
 
-#avi_settings_page_inner{
-  padding-left: 8px;
+
+
+#avi_settingspage .avn_left_panel{
+  .avm_listpage();
+}
+#avi_settingspage .avn_leftSection{
+  width: 15em;
+  float: left;
+  margin-right: 1em;
+  height: 100%;
+}
+#avi_settingspage .avn_selectedItem{
+  .nightBackFade(@colorSelection );
+}
+
+#avi_settingspage .avn_rightSection {
+  width: auto;
+  overflow: hidden;
+  height: 100%;
+}
+
+#avi_settingspage .avn_scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .avn_setting{

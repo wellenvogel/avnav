@@ -14,6 +14,18 @@ UpdateCallback.prototype.dataChanged=function(store){
     throw new Error("dataChanged not implemented");
 };
 
+/** @interface */
+var DataProvider=function(){
+
+};
+/**
+ *
+ * @param {string} key
+ */
+DataProvider.prototype.getData=function(key){
+    throw new Error("getData not implemented");
+};
+
  /**
  * a callback description
  * @param {UpdateCallback} callback the object having a "dataChanged" function
@@ -40,6 +52,14 @@ var Store=function(){
      * @type {{}}
      */
     this.data={};
+    /**
+     * registered data provider
+     * they will be called if no data is found internally
+     * @private
+     * @type {{}}
+     */
+
+    this.dataProvider={}
 };
 /**
  * find a callback in the list of registered callbacks
@@ -192,6 +212,10 @@ Store.prototype.updateSubItem=function(key,itemKey,value,opt_subkey){
 Store.prototype.getData=function(key,opt_default){
     var rt=this.data[key];
     if (rt !== undefined) return rt;
+    for (provider in this.dataProvider){
+        rt=provider.getData(key);
+        if (rt !== undefined) return rt;
+    }
     return opt_default;
 };
 Store.prototype.reset=function(){
@@ -201,5 +225,17 @@ Store.prototype.reset=function(){
 Store.prototype.resetData=function(){
     this.data={};
 };
+
+/**
+ * register a data provider
+ * @param {DataProvider} provider
+ */
+Store.prototype.registerDataProvider=function(provider){
+    this.dataProvider[provider]=true;
+};
+Store.prototype.deregisterDataProvider=function(provider){
+    this.dataProvider[provider]=undefined;
+};
+
 
 module.exports=Store;

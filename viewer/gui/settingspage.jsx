@@ -1,16 +1,32 @@
 /**
  * Created by Andreas on 01.06.2014.
  */
-avnav.provide('avnav.gui.Settingspage');
+var Store=require('../util/store');
+var React=require('react');
+var ReactDOM=require('react-dom');
+var ItemUpdater=require('../components/ItemUpdater.jsx');
+var ItemList=require("../components/ItemList.jsx");
 
+var keys={
+    panelVisibility: 'panelVisibility', //header|items|both
+    sectionItems: 'sectionItems',
+    activeItems: 'activeItems'
+};
 
+var settingsSections={
+    Layer: ["layers.ais","layers.track","layers.nav","layers.boat","layers.grid","layers.compass"],
+    UpdateTimes: ["positionQueryTimeout","trackQueryTimeout","aisQueryTimeout" ]
+};
 
+var sectionSelectors={
+    selected: 'avn_selectedItem'
+};
 
 /**
  *
  * @constructor
  */
-avnav.gui.Settingspage=function(){
+var Settingspage=function(){
     //a collection of all items, key is the name, value a function to get the current value
     this.allItems={};
     /**
@@ -19,15 +35,64 @@ avnav.gui.Settingspage=function(){
      */
     this.formatter=new avnav.util.Formatter();
 
+    this.store=new Store();
+
+    this.sectionItems=[];
+
     avnav.gui.Page.call(this,'settingspage');
+    this.store.register(this,keys.sectionItems);
 };
-avnav.inherits(avnav.gui.Settingspage,avnav.gui.Page);
+avnav.inherits(Settingspage,avnav.gui.Page);
 
 /**
  * the local init called from the base class when the page is instantiated
  */
-avnav.gui.Settingspage.prototype.localInit=function(){
+Settingspage.prototype.localInit=function(){
     var self=this;
+    this.sectionItems=[];
+    var idx=0;
+    for (var section in settingsSections){
+        this.sectionItems.push({name:section,key:idx,data:settingsSections[section]});
+        idx++;
+    }
+    var SectionItem=function(properties){
+        return <div className={properties.addClass+ " avn_list_entry"} onClick={properties.onClick}>{properties.name}</div>
+    };
+    var SettingsItem=function(properties){
+        return <div className={properties.addClass+ " avn_list_entry"} onClick={properties.onClick}>{properties.name}</div>
+    };
+    var sectionClick=function(item){
+        var current=self.store.getData(keys.sectionItems,{}).selectors;
+        if (current && current[sectionSelectors.selected] == item.key) return;
+        self.store.updateSubItem(keys.sectionItems,sectionSelectors.selected,item.key,'selectors');
+    };
+    var settingsClick=function(item){
+        self.toast(item.name+" clicked");
+    };
+    var SectionList=ItemUpdater(ItemList,this.store,keys.sectionItems);
+    var SettingsList=ItemUpdater(ItemList,this.store,keys.activeItems);
+    var Settings=ItemUpdater(React.createClass({
+        render: function(){
+            var leftVisibile=true;
+            var rightVisible=true;
+            return (
+                <div className="avn_panel_fill">
+                    { leftVisibile && <div className="avn_leftSection"><SectionList
+                        className="avn_scroll"
+                        itemClass={SectionItem}
+                        onItemClick={sectionClick}
+                        itemList={self.sectionItems}
+                                 /></div>}
+                    {rightVisible && <div className="avn_rightSection"><SettingsList
+                        className="avn_scroll"
+                        itemClass={SettingsItem}
+                        onItemClick={settingsClick}
+                    /></div>}
+                </div>
+            );
+        }
+    }),this.store,keys.panelVisibility);
+    ReactDOM.render(React.createElement(Settings,{}),this.selectOnPage('.avn_left_inner')[0]);
     $('.avn_setting').each(function(idx,el){
         var name=$(el).attr('avn_name');
         self.createSettingHtml(self.gui.properties.getDescriptionByName(name),el);
@@ -55,7 +120,7 @@ avnav.gui.Settingspage.prototype.localInit=function(){
  * @param {avnav.util.Property} descr
  * @param el
  */
-avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
+Settingspage.prototype.createSettingHtml=function(descr,el){
     if (!(descr instanceof avnav.util.Property)) return;
     var self=this;
     var numdigits=0;
@@ -149,21 +214,40 @@ avnav.gui.Settingspage.prototype.createSettingHtml=function(descr,el){
  * @private
  * read all data and update the elements
  */
-avnav.gui.Settingspage.prototype.readData=function(){
+Settingspage.prototype.readData=function(){
     for (var idx in this.allItems){
         var value=this.gui.properties.getValueByName(idx);
         this.allItems[idx].write(value);
     }
 };
 
-avnav.gui.Settingspage.prototype.showPage=function(options){
+Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.readData();
     this.selectOnPage('input[type="range"]').rangeslider('update', true);
+    this.store.resetData();
+    this.store.updateSubItem(keys.sectionItems,sectionSelectors.selected,0,'selectors');
+
+};
+/**
+ * called when the section selection has changed
+ */
+Settingspage.prototype.dataChanged=function(){
+    var selectedSection=this.store.getData(keys.sectionItems,{}).selectors;
+    var selectedIndex=selectedSection?selectedSection[sectionSelectors.selected]:0;
+    this.createItemList(this.sectionItems[selectedIndex].name);
+};
+Settingspage.prototype.createItemList=function(sectionName){
+    var items=settingsSections[sectionName]||[];
+    var newItemList=[];
+    items.forEach(function(item){
+       newItemList.push({name:item})
+    });
+    this.store.updateSubItem(keys.activeItems,'itemList',newItemList);
 };
 
 
-avnav.gui.Settingspage.prototype.hidePage=function(){
+Settingspage.prototype.hidePage=function(){
 
 };
 
@@ -176,7 +260,7 @@ avnav.gui.Settingspage.prototype.hidePage=function(){
  * activate settings and go back to main
  * @private
  */
-avnav.gui.Settingspage.prototype.btnSettingsOK=function(button,ev){
+Settingspage.prototype.btnSettingsOK=function(button,ev){
     avnav.log("SettingsOK clicked");
     var txt="";
     for (var idx in this.allItems){
@@ -189,7 +273,7 @@ avnav.gui.Settingspage.prototype.btnSettingsOK=function(button,ev){
     this.gui.showPage('mainpage');
 };
 
-avnav.gui.Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
+Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
     avnav.log("SettingsDefaults clicked");
     for (var idx in this.allItems) {
         var val = this.gui.properties.getDescriptionByName(idx).defaultv;
@@ -197,7 +281,7 @@ avnav.gui.Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
     }
 };
 
-avnav.gui.Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
+Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
     avnav.log("SettingsAndroid clicked");
     this.gui.showPage('mainpage');
     avnav.android.showSettings();
@@ -206,7 +290,7 @@ avnav.gui.Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
 
 (function(){
     //create an instance of the status page handler
-    var page=new avnav.gui.Settingspage();
+    var page=new Settingspage();
 }());
 
 

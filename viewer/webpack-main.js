@@ -49,7 +49,7 @@ window.avnav={};
     require('./gui/navpage.js');
     require('./gui/aispage.js');
     require('./gui/aisinfopage.js');
-    require('./gui/settingspage.js');
+    require('./gui/settingspage.jsx');
     require('./gui/statuspage.js');
     require('./gui/gpspage.js');
     require('./gui/routepage.js');
