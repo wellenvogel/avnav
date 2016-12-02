@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 def taskgroup = 'avnav'
 buildscript {
     repositories {
@@ -17,8 +19,22 @@ dependencies {
 
 File srcBase = new File(project.rootDir, "src" + File.separator + "main")
 File assetsDir = new File(project.rootDir, "assets")
+if (! project.hasProperty('packageVersion')){
+    SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
+    project.ext.avnavVersion=f.format(new Date())
+}
+else{
+    project.ext.avnavVersion=project.packageVersion
+}
+
 
 android {
+    defaultConfig{
+        applicationId "de.wellenvogel.avnav.main"
+        versionName "avnav-$avnavVersion"
+        versionCode Integer.parseInt(project.avnavVersion)
+        manifestPlaceholders(['label':'avNav'])
+    }
     lintOptions {
         abortOnError false
     }
@@ -77,18 +93,37 @@ android {
             if (System.getenv("ANDROID_KEYSTORE") != null) {
                 signingConfig signingConfigs.config
             }
-            applicationVariants.all { variant ->
-                println "Variant: " + variant.getName()
-                def manifestParser = new com.android.builder.core.DefaultManifestParser()
-                def version = manifestParser.getVersionName(android.sourceSets.main.manifest.srcFile)
-                variant.outputs.each { output ->
-                    if (!output.outputFile.name.matches('.*debug.*'))
-                        output.outputFile = new File(output.outputFile.parent, output.outputFile.name.replace("android-release.apk", "avNav-" + version + ".apk"))
-                }
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            manifestPlaceholders( ['label':'avNav-debug'])
+        }
+        beta {
+            if (System.getenv("ANDROID_KEYSTORE") != null) {
+                signingConfig signingConfigs.config
             }
+            else{
+                signingConfig buildTypes.debug.signingConfig
+            }
+            applicationIdSuffix ".beta"
+            debuggable true
+            manifestPlaceholders(['label':'avNav-beta'])
+        }
+    }
+    applicationVariants.all { variant ->
+        project.logger.lifecycle("Variant: " + variant.getName())
+        def vname=variant.getName()
+        def version=defaultConfig.versionCode
+        variant.outputs.each { output ->
+            File oldFile=output.outputFile
+            def sign=""
+            if (oldFile.name.matches(/.*unsigned.*/)) sign="-unsigned"
+            output.outputFile = new File(output.outputFile.parent, "avnav-$vname$sign-${version}.apk")
+            logger.lifecycle("rename Outfile $oldFile to $output.outputFile")
         }
     }
 }
+
 File viewerDir = new File(project.rootDir, ".." + File.separator + "viewer"+File.separator+"build")
 task buildViewerRelease(type: org.gradle.api.tasks.GradleBuild) {
     group = taskgroup
@@ -125,6 +160,7 @@ copyToAssetsViewerRelease.dependsOn(buildViewerRelease)
 afterEvaluate {
     generateDebugAssets.dependsOn(copyToAssetsViewerDebug)
     generateReleaseAssets.dependsOn(copyToAssetsViewerRelease)
+    generateBetaAssets.dependsOn(copyToAssetsViewerRelease)
 }
 
 

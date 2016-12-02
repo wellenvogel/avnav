@@ -26,12 +26,12 @@
         android:name=".AvNavApp"
         android:hardwareAccelerated="true"
         android:icon="@drawable/sailboatr"
-        android:label="@string/appName">
+        android:label="${label}">
         <activity
 
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/appName"
+            android:label="${label}"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:windowSoftInputMode="stateHidden">
             >

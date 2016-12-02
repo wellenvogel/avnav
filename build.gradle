@@ -39,7 +39,7 @@ apply plugin: 'nebula.ospackage-base'
 
 
 def taskgroup="avnav"
-['build','clean'].each { tt ->
+['assembleRelease','assembleDebug','assembleBeta','clean'].each { tt ->
     tasks.create(name:"${tt}Android",type: GradleBuild) {
         group taskgroup
         setDir("android")
@@ -47,7 +47,7 @@ def taskgroup="avnav"
     }
 }
 clean.dependsOn cleanAndroid
-build.dependsOn buildAndroid
+build.dependsOn assembleReleaseAndroid
 
 ["debug","release","clean"].each { tt ->
     def vt=tasks.create(name: "${tt}Viewer",type: GradleBuild) { GradleBuild b->
@@ -190,7 +190,7 @@ task release{
     doLast {
         println "all release packages have been build"
     }
-    dependsOn releaseRpm, releaseDeb,raspiDeb,buildAndroid
+    dependsOn releaseRpm, releaseDeb,raspiDeb,assembleReleaseAndroid
     if (onWindows){
         dependsOn windowsBuild
     }
@@ -198,6 +198,21 @@ task release{
         dependsOn noWindowsBuild
     }
 }
+task beta{
+    group taskgroup
+    description "build all avnav beta stuff"
+    doLast {
+        println "all beta packages have been build"
+    }
+    dependsOn releaseRpm, releaseDeb,raspiDeb,assembleBetaAndroid
+    if (onWindows){
+        dependsOn windowsBuild
+    }
+    else{
+        dependsOn noWindowsBuild
+    }
+}
+
 
 class UploadTask extends DefaultTask{
 
@@ -346,10 +361,16 @@ task uploadWindows(type: UploadTask){
     inputFile=file("windows/build/AvNavSetup-${windowsVersion}-0.exe")
     dependsOn windowsBuild
 }
-task uploadAndroid(type: UploadTask){
-    //TODO: version handling for android
-    inputFile=file("android/build/outputs/apk/avNav-1.0.0.apk")
-    dependsOn buildAndroid
+def ks=System.getenv("ANDROID_KEYSTORE")
+def sign="-unsigned"
+if (ks) sign=""
+task uploadAndroidRelease(type: UploadTask){
+    inputFile=file("android/build/outputs/apk/avnav-release$sign-${avnavVersion}.apk")
+    dependsOn assembleReleaseAndroid
+}
+task uploadAndroidBeta(type: UploadTask){
+    inputFile=file("android/build/outputs/apk/avnav-beta$sign-${avnavVersion}.apk")
+    dependsOn assembleBetaAndroid
 }
 
 task uploadViewer(type: UploadTask){
@@ -372,7 +393,7 @@ task upload{
     doLast {
         println "###uploaded artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadAndroid,uploadViewer
+    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadAndroidBeta,uploadViewer
     if (onWindows){
         dependsOn uploadWindows
     }
