@@ -7,6 +7,8 @@ var ReactDOM=require('react-dom');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ItemList=require("../components/ItemList.jsx");
 var OverlayDialog=require('../components/OverlayDialog.jsx');
+var ColorPicker=require('react-color-picker').default;
+require('react-color-picker/index.css');
 
 var keys={
     panelVisibility: 'panelVisibility', //header|items|both
@@ -16,8 +18,13 @@ var keys={
 };
 
 var settingsSections={
-    Layer: ["layers.ais","layers.track","layers.nav","layers.boat","layers.grid","layers.compass"],
-    UpdateTimes: ["positionQueryTimeout","trackQueryTimeout","aisQueryTimeout" ]
+    Layer:      ["layers.ais","layers.track","layers.nav","layers.boat","layers.grid","layers.compass"],
+    UpdateTimes:["positionQueryTimeout","trackQueryTimeout","aisQueryTimeout" ],
+    Layout:     ["baseFontSize","widgetFontSize","allowTwoWidgetRows","showClock","style.buttonSize","nightFade","nightChartFade"],
+    AIS:        ["aisDistance","aisWarningCpa","aisWarningTpa","aisTextSize","style.aisNormalColor","style.aisNearestColor","style.aisWarningColor","aisBrowserWorkaround"],
+    Navigation: ["bearingColor","bearingWidth","navCircleColor","navCircleWidth","navCircle1Radius","navCircle2Radius","navCircle3Radius","courseAverageTolerance","gpsXteMax"],
+    Track:      ["trackColor","trackWidth","trackInterval","initialTrackLength"],
+    Route:      ["routeColor","routeWidth","routingTextSize","routeApproach","routeShowLL"]
 };
 
 var sectionSelectors={
@@ -29,13 +36,6 @@ var sectionSelectors={
  * @constructor
  */
 var Settingspage=function(){
-    //a collection of all items, key is the name, value a function to get the current value
-    this.allItems={};
-    /**
-     * @private
-     * @type {avnav.util.Formatter}
-     */
-    this.formatter=new avnav.util.Formatter();
 
     this.store=new Store();
 
@@ -79,6 +79,19 @@ Settingspage.prototype.localInit=function(){
                     <div className="avn_value">{properties.value}</div>
                 </div>;
         }
+        if(properties.type == avnav.util.PropertyType.COLOR){
+            var style={
+                backgroundColor: properties.value
+            };
+
+            return <div className={properties.addClass+ " avn_list_entry avn_colorSelector"}
+                        onClick={function(ev){
+                            self.colorItemDialog(properties);
+                        }}>
+                <div className="avn_description">{properties.label}</div>
+                <div className="avn_value" style={style}>{properties.value}</div>
+            </div>;
+        }
         else{
             return(<div className={properties.addClass+ " avn_list_entry"}>{properties.label}</div>);
         }
@@ -87,9 +100,6 @@ Settingspage.prototype.localInit=function(){
         var current=self.store.getData(keys.sectionItems,{}).selectors;
         if (current && current[sectionSelectors.selected] == item.key) return;
         self.store.updateSubItem(keys.sectionItems,sectionSelectors.selected,item.key,'selectors');
-    };
-    var settingsClick=function(item){
-        self.toast(item.name+" clicked");
     };
     var SectionList=ItemUpdater(ItemList,this.store,keys.sectionItems);
     var SettingsList=ItemUpdater(ItemList,this.store,keys.activeItems);
@@ -108,33 +118,12 @@ Settingspage.prototype.localInit=function(){
                     {rightVisible && <div className="avn_rightSection"><SettingsList
                         className="avn_scroll"
                         itemClass={SettingsItem}
-                        onItemClick={settingsClick}
                     /></div>}
                 </div>
             );
         }
     }),this.store,keys.panelVisibility);
     ReactDOM.render(React.createElement(Settings,{}),this.selectOnPage('.avn_left_inner')[0]);
-    $('.avn_setting').each(function(idx,el){
-        var name=$(el).attr('avn_name');
-        self.createSettingHtml(self.gui.properties.getDescriptionByName(name),el);
-    });
-    //globally activate the reset handlers
-    //they will reset all settings below their parent
-    $(this.getDiv()).find('.avn_settings_reset').on('click',function(evt){
-        var p=$(this).parent();
-        p.find('.avn_setting').each(function(idx,el){
-            var name=$(el).attr('avn_name');
-            if (name){
-                var descr=self.gui.properties.getDescriptionByName(name);
-                if (! descr) return;
-                var val = descr.defaultv;
-                var handler=self.allItems[name];
-                if (handler) handler.write(val);
-            }
-        }) ;
-    });
-
 };
 
 Settingspage.prototype.rangeItemDialog=function(item){
@@ -189,118 +178,67 @@ Settingspage.prototype.rangeItemDialog=function(item){
 
     });
 };
-/**
- * create the html for a settings item
- * @private
- * @param {avnav.util.Property} descr
- * @param el
- */
-Settingspage.prototype.createSettingHtml=function(descr,el){
-    if (!(descr instanceof avnav.util.Property)) return;
+
+Settingspage.prototype.colorItemDialog=function(item){
     var self=this;
-    var numdigits=0;
-    var numdecimal=0;
-    var value=this.gui.properties.getValue(descr);
-    if (descr.type == avnav.util.PropertyType.CHECKBOX){
-        var html='<label>'+descr.label;
-        html+='<input type="checkbox" class="avn_settings_checkbox avn_setting" avn_name="'+descr.completeName+'"';
-        if (value) html+="checked";
-        html+='></input></label>';
-        this.allItems[descr.completeName]= {
-            read: function () {
-                return $(el).find('input').is(':checked');
-            },
-            write: function (value) {
-                $(el).find('input').prop('checked', value);
+    var colorDialogInstance;
+    var Dialog=React.createClass({
+        valueChange: function(ev){
+            this.setState({value: ev.target.value});
+        },
+        getInitialState: function(){
+            return({
+                value: item.value
+            });
+        },
+        buttonClick:function(ev){
+            var button=ev.target.name;
+            if (button == 'ok'){
+                self.store.updateSubItem(keys.currentValues,item.name,this.state.value);
             }
-        };
-    }
-    if (descr.type == avnav.util.PropertyType.RANGE){
-        var html='<div class=""><div class="avn_slider_label" >'+descr.label+'</div>';
-        html+='<div class="avn_slider_out avn_out">'+value+'</div>';
-        var range=descr.values;
-        numdigits=Math.ceil(Math.log(range[1])/Math.log(10));
-        html+='<div class="avn_slider" ><input class="avn_setting" type="range" min="'+range[0]+'" max="'+range[1]+'" avn_name="'+descr.completeName+'" value="'+value+'"';
-        if (range[2]) {
-            html+=' step="'+range[2]+'"';
-        }
-        if (range[3]){
-            numdecimal=range[3];
-        }
-        html+='/></div>';
-        html+='<button class="avn_settings_reset avn_smallButton"></button>';
-        html+='<div class="avn_clear"/>';
-        html+='</div>';
-        this.allItems[descr.completeName]= {
-            read: function () {
-                return parseFloat($(el).find('input').val());
-            },
-            write: function (value) {
-                $(el).find('input').val(value).change();
-            }
-        };
-    }
-    if (descr.type == avnav.util.PropertyType.COLOR){
-        var html='<div class=""><div class="avn_color_label" >'+descr.label+'</div>';
-        html+='<div class="avn_color_out avn_out">'+value+'</div>';
-        html+='<input type="color" class="avn_color avn_setting" avn_name="'+descr.completeName+'"/>';
-        html+='<button class="avn_settings_reset avn_smallButton"></button>';
-        html+='<div class="avn_clear"/>';
-        html+='</div>';
-        this.allItems[descr.completeName]= {
-            read: function () {
-                return $(el).find('input').val();
-            },
-            write: function (value) {
-                $(el).find('input').val(value).change();
-            }
-        };
-    }
-    $(el).html(html);
-    $(el).find('input[type="range"]').rangeslider({
-            polyfill: false,
-            onSlide: function(pos,val){
-                val=self.formatter.formatDecimal(val,numdigits,numdecimal);
-                $(el).find('.avn_out').text(val);
-            },
-            fillClass: 'avn_rangeslider__fill',
-            handleClass: 'avn_rangeslider__handle'
-        });
-    $(el).find('input[type="color"]').each(function(idx,elx){
-            if (elx.type === 'text'){
-                //fallback if the browser does not support color input
-                var cp=new jscolor.color(elx,{
-                    hash:true,
-                    pickerClosable:true
+            if (button == 'reset'){
+                this.setState({
+                    value: self.gui.properties.getValueByName(item.name)
                 });
-                cp.fromString(value.replace(/^#/,''));
-                $(elx).css('background-color',value);
-                self.allItems[descr.completeName].write=function(val){
-                    $(el).find('input').val(value).change();
-                    $(elx).css('background-color',val);
-                    cp.fromString(val.replace(/^#/,''));
-                }
+                return;
             }
+            this.props.closeCallback();
+        },
+        onDrag: function(color,c){
+            this.setState({
+                value: color
+            })
+        },
+        render:function() {
+            var style={
+                backgroundColor:this.state.value
+            };
+            return (
+                <div className="avn_settingsDialog avn_colorDialog">
+                    <h3><span >{item.label}</span></h3>
+                    <ColorPicker value={this.state.value} onDrag={this.onDrag}/>
+                    <div style={style} className="avn_value">
+                        {this.state.value}
+                    </div>
+
+                    <button name="ok" onClick={this.buttonClick}>OK</button>
+                    <button name="cancel" onClick={this.buttonClick}>Cancel</button>
+                    <button name="reset" onClick={this.buttonClick}>Reset</button>
+                    <div className="avn_clear"></div>
+                </div>
+            );
+        }
+
     });
-
+    OverlayDialog.dialog(Dialog,this.getDialogContainer());
 };
 
-/**
- * @private
- * read all data and update the elements
- */
-Settingspage.prototype.readData=function(){
-    for (var idx in this.allItems){
-        var value=this.gui.properties.getValueByName(idx);
-        this.allItems[idx].write(value);
-    }
-};
+
+
 
 Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
     var self=this;
-    this.readData();
-    this.selectOnPage('input[type="range"]').rangeslider('update', true);
     this.store.resetData();
     this.store.updateSubItem(keys.sectionItems,sectionSelectors.selected,0,'selectors');
     this.resetValues();
