@@ -43,6 +43,7 @@ var Settingspage=function(){
 
     avnav.gui.Page.call(this,'settingspage');
     this.store.register(this,keys.sectionItems,keys.currentValues);
+    this.hasChanges=false;
 };
 avnav.inherits(Settingspage,avnav.gui.Page);
 
@@ -66,7 +67,7 @@ Settingspage.prototype.localInit=function(){
                 <label>{properties.label}</label>
                 <input type="checkbox" checked={properties.value?true:false}
                        onChange={function(ev){
-                        self.store.updateSubItem(keys.currentValues,properties.name,ev.target.checked)}
+                        self.changeValue(properties.name,ev.target.checked);}
                         }/>
             </div>
         }
@@ -144,7 +145,7 @@ Settingspage.prototype.rangeItemDialog=function(item){
                     self.toast("out of range");
                     return;
                 }
-                self.store.updateSubItem(keys.currentValues,item.name,this.state.value);
+                self.changeValue(item.name,this.state.value);
             }
             if (button == 'reset'){
                 this.setState({
@@ -179,6 +180,12 @@ Settingspage.prototype.rangeItemDialog=function(item){
     });
 };
 
+Settingspage.prototype.changeValue=function(name,value){
+    var oldValue=this.store.getData(keys.currentValues,{})[name];
+    if (oldValue && oldValue == value) return;
+    this.hasChanges=true;
+    this.store.updateSubItem(keys.currentValues,name,value);
+};
 Settingspage.prototype.colorItemDialog=function(item){
     var self=this;
     var colorDialogInstance;
@@ -194,7 +201,7 @@ Settingspage.prototype.colorItemDialog=function(item){
         buttonClick:function(ev){
             var button=ev.target.name;
             if (button == 'ok'){
-                self.store.updateSubItem(keys.currentValues,item.name,this.state.value);
+                self.changeValue(item.name,this.state.value);
             }
             if (button == 'reset'){
                 this.setState({
@@ -256,7 +263,6 @@ Settingspage.prototype.showPage=function(options){
     this.store.resetData();
     this.store.updateSubItem(keys.sectionItems,sectionSelectors.selected,0,'selectors');
     this.resetValues();
-
 };
 
 Settingspage.prototype.resetValues=function(opt_defaults){
@@ -273,6 +279,7 @@ Settingspage.prototype.resetValues=function(opt_defaults){
         })
     }
     this.store.storeData(keys.currentValues,newValues);
+    this.hasChanges=opt_defaults?true:false;
 };
 /**
  * called when the section selection has changed
@@ -325,13 +332,36 @@ Settingspage.prototype.btnSettingsOK=function(button,ev){
 
 Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
     avnav.log("SettingsDefaults clicked");
-    this.resetValues(true);
+    var self=this;
+    OverlayDialog.confirm("reset all settings?",this.getDialogContainer()).then(function() {
+        self.resetValues(true);
+    });
 };
 
 Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
     avnav.log("SettingsAndroid clicked");
-    this.gui.showPage('mainpage');
-    avnav.android.showSettings();
+    var self=this;
+    if (this.hasChanges) {
+        this.gui.showPage('mainpage');
+        avnav.android.showSettings();
+    }
+    else{
+        OverlayDialog.confirm("discard changes?",this.getDialogContainer()).then(function() {
+            self.gui.showPage('mainpage');
+            avnav.android.showSettings();
+        });
+    }
+};
+
+Settingspage.prototype.btnCancel=function(button,ev) {
+    if (! this.hasChanges) {
+        this.returnToLast();
+        return;
+    }
+    var self=this;
+    OverlayDialog.confirm("discard changes?",this.getDialogContainer()).then(function() {
+        self.returnToLast();
+    });
 };
 
 
