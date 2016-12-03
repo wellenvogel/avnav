@@ -1477,8 +1477,10 @@ button.avb_GpsCancel{
 #avi_settingspage .avn_leftSection{
   width: 10em;
   float: left;
-  margin-right: 3em;
   height: 100%;
+  border-right: 1px solid ;
+  margin-right: 2em;
+  .nightBorderColorGR();
 }
 #avi_settingspage .avn_selectedItem{
   .nightBackFade(@colorSelection );
@@ -1488,6 +1490,9 @@ button.avb_GpsCancel{
   width: auto;
   overflow: hidden;
   height: 100%;
+  .avn_list_entry{
+    .nightBorderColorGR(10);
+  }
 }
 #avi_settingspage .avn_rightSection label{
   width: 8em;
@@ -1504,23 +1509,39 @@ button.avb_GpsCancel{
   .mdText2();
 }
 
-#avi_settingspage .avn_colorSelector .avn_value{
-  margin-top: 0.3em;
-  width: 8em;
-  border: none;
-  height: 2em;
-  opacity: 1;
+#avi_settingspage .avn_colorSelector {
+  .avn_colorValue {
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 1em;
+  }
+  .avn_value{
+    display: inline-block;
+  }
 }
 
-.avn_colorDialog .avn_value {
-  margin-top: 1em;
+.avn_colorDialog {
+  .avn_value {
+    margin-top: 1em;
+  }
+  .avn_colorValue {
+    width: 50px;
+    height: 50px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .avn_colorFrame {
+    margin-top: 1em;
+  }
 }
 
-.avn_settingsDialog input{
-    width: 10em !important;
+.avn_settingsDialog input {
+  width: 10em !important;
 }
 
-#avi_settingspage .avn_list_entry{
+#avi_settingspage .avn_list_entry {
   line-height: 1.5em;
 }
 
@@ -1529,22 +1550,25 @@ button.avb_GpsCancel{
   overflow-y: auto;
   height: 100%;
 }
-.avn_settingsDialog button[name=reset]{
+
+.avn_settingsDialog button[name=reset] {
   float: left;
 }
-.avn_settingsDialog .avn_settingsRange{
+
+.avn_settingsDialog .avn_settingsRange {
   margin-bottom: 1em;
   font-size: 0.8em;
   .mdText2();
 }
 
-.avn_setting{
+.avn_setting {
   float: left;
   padding-left: 0.8em;
   padding-right: 0.8em;
   padding-bottom: 6px;
 }
-.avn_settings_group{
+
+.avn_settings_group {
   background-color: @colorSecond;
   padding-left: 8px;
   padding-top: 2px;
@@ -1557,50 +1581,51 @@ button.avb_GpsCancel{
   -webkit-border-radius: 5px;
 }
 
-.avn_settings_group h2{
+.avn_settings_group h2 {
   font-size: 1em;
 }
 
-.avn_clear{
+.avn_clear {
   clear: both;
 }
 
-.avn_settings_line{
+.avn_settings_line {
   line-height: 2em;
   margin-bottom: 8px;
 }
 
-.avn_settings_line input[type="checkbox"]{
+.avn_settings_line input[type="checkbox"] {
   height: 2em;
   width: 2em;
   margin-left: 1em;
   margin-right: 5px;
 }
 
-.avn_slider{
-  float:left;
-  width:30em;
-  height:1em;
+.avn_slider {
+  float: left;
+  width: 30em;
+  height: 1em;
   margin-left: 1em;
   margin-right: 10px;
   margin-bottom: 10px;
   margin-top: 10px;
 }
 
-.avn_slider_label{
-  float:left;
+.avn_slider_label {
+  float: left;
   width: 12em;
   margin-top: 10px;
 }
 
-.avn_slider_out{
-  float:left;
+.avn_slider_out {
+  float: left;
   width: 8em;
   margin-top: 10px;
 }
+
 .avn_rangeslider__handle {
   background: white;
-  border: 1px solid ;
+  border: 1px solid;
   .nightBorderFade(#ccc);
   cursor: pointer;
   display: inline-block;
@@ -1622,6 +1647,7 @@ button.avb_GpsCancel{
   height: 20px;
   //top: -5px;
 }
+
 .avn_rangeslider__handle:after {
   content: "";
   display: block;
@@ -1644,6 +1670,7 @@ button.avb_GpsCancel{
   -o-border-radius: 50%;
   border-radius: 50%;
 }
+
 .avn_rangeslider__fill {
   background: #298FC9;
   position: absolute;
@@ -1661,57 +1688,61 @@ button.avb_GpsCancel{
   height: 20px;
 }
 
-.avn_color{
-  float:left;
-  width:150px;
+.avn_color {
+  float: left;
+  width: 150px;
   margin-left: 1em;
   margin-right: 1em;
   margin-bottom: 10px;
   height: 2em;
 }
 
-.avn_color_label{
-  float:left;
+.avn_color_label {
+  float: left;
   width: 12em;
   margin-top: 10px;
 }
-.avn_color_out{
-  float:left;
+
+.avn_color_out {
+  float: left;
   width: 8em;
   margin-top: 10px;
 }
 
-.avn_settings_reset{
+.avn_settings_reset {
   .avn_iconButton('images/icons-new/ic_delete.svg');
   margin-top: 5px;
   margin-left: 20px;
-  float:left;
+  float: left;
 }
-.avn_settings_reset:active{
-  border: 2px solid ;
+
+.avn_settings_reset:active {
+  border: 2px solid;
   .nightBorderFade(#6B6B6B);
 }
 
-button.avb_SettingsCancel{
+button.avb_SettingsCancel {
   .avn_iconButton('images/icons-new/ic_clear.svg');
 }
+
 button.avb_SettingsOK {
   .avn_iconButton('images/icons-new/ic_done.svg');
 }
 
-button.avb_SettingsDefaults{
+button.avb_SettingsDefaults {
   .avn_iconButton('images/icons-new/ic_delete.svg');
 }
 
-button.avb_SettingsAndroid{
+button.avb_SettingsAndroid {
   .avn_iconButton('images/icons-new/ic_android.svg');
 }
+
 /*-------------------------------------------------------------------------------
     main page
   -------------------------------------------------------------------------------
 */
 
-#avi_mainpage .avn_left_top{
+#avi_mainpage .avn_left_top {
   display: none;
 }
 
@@ -1731,15 +1762,14 @@ button.avb_SettingsAndroid{
   .nightColors();
 }
 
-.avn_mainpage_select_item img{
-    .nightOPacity();
+.avn_mainpage_select_item img {
+  .nightOPacity();
   width: 1em;
   height: 1em;
   border-radius: 50%;
   margin-right: 1em;
   vertical-align: middle;
 }
-
 
 #avi_mainpage_inner_content {
   width: 100%;
@@ -1749,13 +1779,14 @@ button.avb_SettingsAndroid{
   padding-right: 0.5em;
 }
 
-#avi_mainpage_link{
+#avi_mainpage_link {
   text-align: right;
   padding-right: 1em;
   white-space: nowrap;
   display: inline-block;
   float: right;
 }
+
 #avi_mainpage_status {
   padding-left: 1em;
   padding-right: 1em;
@@ -1765,13 +1796,16 @@ button.avb_SettingsAndroid{
   display: inline-block;
 
 }
+
 #avi_mainpage_selections {
-	display: inline-block;
-}
-#avi_mainpage_selections .avn_more{
   display: inline-block;
 }
-#avi_mainpage .avn_left_bottom{
+
+#avi_mainpage_selections .avn_more {
+  display: inline-block;
+}
+
+#avi_mainpage .avn_left_bottom {
   height: 3.3em;
   bottom: 0;
   left: 0;
@@ -1779,18 +1813,20 @@ button.avb_SettingsAndroid{
   background-color: @colorSecond;
   .nightColors();
 }
-#avi_mainpage .avn_main{
+
+#avi_mainpage .avn_main {
   bottom: 3.3em;
 }
-#avi_mainpage_leftbottominner{
+
+#avi_mainpage_leftbottominner {
   font-size: 0.8em;
   padding-top: 0.8em;
 }
 
-
 button.avb_ShowStatus {
   .avn_iconButton('images/icons-new/status.svg');
 }
+
 button.avb_ShowSettings {
   .avn_iconButton('images/icons-new/ic_settings.svg');
 }
@@ -1802,36 +1838,40 @@ button.avb_Connected {
 button.avb_Night {
   .avn_iconButton('images/icons-new/night.svg');
 }
+
 button.avb_ShowDownload {
   .avn_iconButton('images/icons-new/ic_file_download.svg');
 }
-button.avb_MainCancel{
+
+button.avb_MainCancel {
   .avn_iconButton('images/icons-new/ic_clear.svg');
 }
-button.avb_MainAndroid{
+
+button.avb_MainAndroid {
   .avn_iconButton('images/icons-new/ic_android.svg');
 }
 
-/*------------------------------------------------------------------------------- 
-	element positioning
+/*-------------------------------------------------------------------------------
+    element positioning
   -------------------------------------------------------------------------------
 */
-.avn_page{
+.avn_page {
   .flexbox();
   height: 100%;
   width: 100%;
   position: relative;
 }
-	/*1. left panel */
-.avn_left_panel{
+
+/*1. left panel */
+.avn_left_panel {
   .flex(1);
   .flexbox(); //seems to be necessary for old WebKit
   position: relative;
   overflow: hidden;
 }
-  
+
 /*
-	3. map
+    3. map
 */
 
 .avn_map {
@@ -1842,74 +1882,69 @@ button.avb_MainAndroid{
 
 }
 
-.avn_main{
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	
-}
-    
-  
-/*
-	4. bottom line  - see .avn_leftBottom
-*/
+.avn_main {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 
+}
+
+/*
+    4. bottom line  - see .avn_leftBottom
+*/
 
 /*
         5. additional panels
-	   correcting the .avn_main position is done by javascript
+       correcting the .avn_main position is done by javascript
 */
 
-
-
-
-.avn_float_left{
-	float: left;
+.avn_float_left {
+  float: left;
 }
-.avn_float_right{
-	float: right;
+
+.avn_float_right {
+  float: right;
 }
 
 /*
-	5. right panel
+    5. right panel
 */
 
-.avn_right_panel{
+.avn_right_panel {
   display: block;
   position: relative;
   .nightBackFade(@colorMain);
 }
 
-.avn_status_image{
+.avn_status_image {
   width: 2em;
   height: 2em;
   .nightOPacity();
 }
 
-.avn_status_image_small{
+.avn_status_image_small {
   width: 1.5em;
   height: 1.5em;
   vertical-align: middle;
   .nightOPacity();
 }
 
-
 /*------- simple modal -----------------------*/
 
 .avn_overlay_cover_active {
   background-color: rgba(0, 0, 0, 0.35);
   display: block;
-  position:absolute;
-  left:0;
-  top:0;
+  position: absolute;
+  left: 0;
+  top: 0;
   right: 0;
   bottom: 0;
-  overflow:hidden;
+  overflow: hidden;
   z-index: 120;
 }
 
-.avn_overlay_box{
+.avn_overlay_box {
   z-index: 140;
 }
 
@@ -1932,20 +1967,21 @@ button.avb_MainAndroid{
 }
 
 /*-------------------------------------------------------------------------------
-	dialogs
+    dialogs
   -------------------------------------------------------------------------------
 */
 
-.avn_dialog{
+.avn_dialog {
   z-index: 121;
   overflow: hidden;
   .mdShadow2();
 }
 
-.avn_dialog button{
+.avn_dialog button {
   float: right;
 }
-.avn_dialog input{
+
+.avn_dialog input {
   display: table-cell;
   font-size: inherit;
   margin-top: 0.5em;
@@ -1953,7 +1989,9 @@ button.avb_MainAndroid{
   margin-left: 1em;
   width: 20em;
 }
-.avn_dialog label{
+
+.avn_dialog label {
   display: table-cell;
   text-align: right;
 }
+

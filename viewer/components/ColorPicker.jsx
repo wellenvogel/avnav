@@ -13,7 +13,7 @@ var toStringValue=require('../node_modules/react-color-picker/lib/utils/toString
 
 var HueSpectrum= require('react-color-picker').HueSpectrum;
 var SaturationSpectrum = require('react-color-picker').SaturationSpectrum;
-var Swipe=require('react-easy-swipe').default;
+var Swipe=require('../components/Swipe.jsx').default;
 
 var toHsv = colorUtils.toHsv;
 
@@ -106,42 +106,51 @@ var RESULT = React.createClass({
 
         return ( <div{...props}>
             <Swipe className="avn_inner"
-                onSwipeStart={this.onSwipeStart}
+                onSwipeStart={this.onSatSwipeStart}
                 onSwipeMove={this.onSatSwipeMove}>
                 <SaturationSpectrum {...saturationConfig}/>
             </Swipe>
             <Swipe className="avn_inner"
-                onSwipeStart={this.onSwipeStart}
+                onSwipeStart={this.onHueSwipeStart}
                 onSwipeMove={this.onHueSwipeMove}>
                 <HueSpectrum {...hueConfig} />
             </Swipe>
         </div>);
     },
-    onSwipeStart: function(o){
+    /*
+        normally all the swipe handling should go directly into the sub comps
+        but to avoid copying them all, we leave them here.
+     */
+    onHueSwipeStart: function(abs){
         this.swipe=this.toColorValue(this.props.value);
         avnav.log("swipe start");
-        return true;
+        return this.onSwipeH(abs.y);
     },
-    onHueSwipeMove: function(o){
+    onSatSwipeStart: function(abs){
+        this.swipe=this.toColorValue(this.props.value);
+        avnav.log("swipe start");
+        return this.onSwipeSV(abs.x,abs.y);
+    },
+    onSwipeH:function(newY){
         if (! this.swipe) return;
-        avnav.log("hue swipe "+o.x+","+o.y+", oldh="+this.swipe.h);
-        var hdiff=o.y*360/(this.props.hueHeight||this.props.saturationHeight);
+        avnav.log("swipeH y="+newY+", oldh="+this.swipe.h);
+        var h=newY*360/(this.props.hueHeight||this.props.saturationHeight);
         var hsv=avnav.assign({},this.swipe);
-        hsv.h+=hdiff;
+        hsv.h=h;
         if (hsv.h > 359) hsv.h=359;
         if (hsv.h < 0) hsv.h=0;
         avnav.log("new h="+hsv.h);
         this.handleDrag(hsv);
         return true;
     },
-    onSatSwipeMove: function(o){
+    onSwipeSV:function(newX,newY){
         if (! this.swipe) return;
-        avnav.log("Satswipe "+o.x+","+o.y+", olds="+this.swipe.s+",oldv="+this.swipe.v);
-        var sdiff=o.x/this.props.saturationWidth;
-        var vdiff=-o.y/this.props.saturationHeight;
+        avnav.log("Satswipe "+newX+","+newY+", olds="+this.swipe.s+",oldv="+this.swipe.v);
+        var s=newX/this.props.saturationWidth;
+        var v=(this.props.saturationHeight-newY)/this.props.saturationHeight;
         var hsv=avnav.assign({},this.swipe);
-        hsv.s+=sdiff;
-        hsv.v+=vdiff;
+        hsv.s=s;
+        hsv.v=v;
         if (hsv.v > 1) hsv.v=1;
         if (hsv.v < 0) hsv.v=0;
         if (hsv.s > 1) hsv.s=1;
@@ -149,6 +158,12 @@ var RESULT = React.createClass({
         avnav.log("new s="+hsv.s+", newv="+hsv.v);
         this.handleDrag(hsv);
         return true;
+    },
+    onHueSwipeMove: function(o,abs){
+        return this.onSwipeH(abs.y);
+    },
+    onSatSwipeMove: function(o,abs){
+        return this.onSwipeSV(abs.x,abs.y);
     },
 
     toColorValue: function(value){

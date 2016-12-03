@@ -89,7 +89,7 @@ Settingspage.prototype.localInit=function(){
                             self.colorItemDialog(properties);
                         }}>
                 <div className="avn_description">{properties.label}</div>
-                <div className="avn_value" style={style}>{properties.value}</div>
+                <div className="avn_colorValue" style={style}></div><div className="avn_value">{properties.value}</div>
             </div>;
         }
         else{
@@ -141,7 +141,7 @@ Settingspage.prototype.rangeItemDialog=function(item){
             var button=ev.target.name;
             if (button == 'ok'){
                 if (this.state.value < item.values[0]|| this.state.value > item.values[1]){
-                    self.toast("item out of range");
+                    self.toast("out of range");
                     return;
                 }
                 self.store.updateSubItem(keys.currentValues,item.name,this.state.value);
@@ -209,18 +209,32 @@ Settingspage.prototype.colorItemDialog=function(item){
                 value: color
             })
         },
+        colorInput: function(ev){
+            this.setState({
+                value:ev.target.value
+            })
+        },
         render:function() {
             var style={
-                backgroundColor:this.state.value
+                backgroundColor:this.state.value,
+                width: 30,
+                height: 30
+            };
+            var pickerProperties={
+                saturationWidth: 250,
+                saturationHeight: 250,
+                hueWidth: 30
             };
             return (
                 <div className="avn_settingsDialog avn_colorDialog">
                     <h3><span >{item.label}</span></h3>
-                    <ColorPicker value={this.state.value} onDrag={this.onDrag}/>
-                    <div style={style} className="avn_value">
-                        {this.state.value}
+                    <ColorPicker value={this.state.value} onDrag={this.onDrag} {...pickerProperties}/>
+                    <div className="avn_colorFrame">
+                        <div style={style} className="avn_colorValue"></div>
+                        <input className="avn_colorName"
+                               onChange={this.colorInput}
+                               value={this.state.value}/>
                     </div>
-
                     <button name="ok" onClick={this.buttonClick}>OK</button>
                     <button name="cancel" onClick={this.buttonClick}>Cancel</button>
                     <button name="reset" onClick={this.buttonClick}>Reset</button>
