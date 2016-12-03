@@ -42,6 +42,7 @@
     "react-addons-update": "^15.3.2",
     "react-color-picker": "^4.0.2",
     "react-dom": "^15.3.2",
+    "react-easy-swipe": "0.0.5",
     "style-loader": "^0.13.1",
     "webpack": "^1.13.1"
   },

@@ -11,8 +11,9 @@ var colorUtils = require('../node_modules/react-color-picker/lib/utils/color').d
 var defaultColor = require('../node_modules/react-color-picker/lib/defaultColor').default;
 var toStringValue=require('../node_modules/react-color-picker/lib/utils/toStringValue').default;
 
-var HueSpectrum        = require('react-color-picker').HueSpectrum;
+var HueSpectrum= require('react-color-picker').HueSpectrum;
 var SaturationSpectrum = require('react-color-picker').SaturationSpectrum;
+var Swipe=require('react-easy-swipe').default;
 
 var toHsv = colorUtils.toHsv;
 
@@ -28,7 +29,7 @@ var RESULT = React.createClass({
             saturationWidth : 300,
             saturationHeight: 300,
             hueHeight       : null,
-            hueWidth        : 30,
+            hueWidth        : 50,
             hueMargin       : 10
         }
     },
@@ -103,11 +104,51 @@ var RESULT = React.createClass({
             hueConfig.defaultValue = assign({}, defaultValue)
         }
 
-        return React.DOM.div(
-            props,
-            React.createElement(SaturationSpectrum,saturationConfig),
-            React.createElement(HueSpectrum,hueConfig)
-        )
+        return ( <div{...props}>
+            <Swipe className="avn_inner"
+                onSwipeStart={this.onSwipeStart}
+                onSwipeMove={this.onSatSwipeMove}>
+                <SaturationSpectrum {...saturationConfig}/>
+            </Swipe>
+            <Swipe className="avn_inner"
+                onSwipeStart={this.onSwipeStart}
+                onSwipeMove={this.onHueSwipeMove}>
+                <HueSpectrum {...hueConfig} />
+            </Swipe>
+        </div>);
+    },
+    onSwipeStart: function(o){
+        this.swipe=this.toColorValue(this.props.value);
+        avnav.log("swipe start");
+        return true;
+    },
+    onHueSwipeMove: function(o){
+        if (! this.swipe) return;
+        avnav.log("hue swipe "+o.x+","+o.y+", oldh="+this.swipe.h);
+        var hdiff=o.y*360/(this.props.hueHeight||this.props.saturationHeight);
+        var hsv=avnav.assign({},this.swipe);
+        hsv.h+=hdiff;
+        if (hsv.h > 359) hsv.h=359;
+        if (hsv.h < 0) hsv.h=0;
+        avnav.log("new h="+hsv.h);
+        this.handleDrag(hsv);
+        return true;
+    },
+    onSatSwipeMove: function(o){
+        if (! this.swipe) return;
+        avnav.log("Satswipe "+o.x+","+o.y+", olds="+this.swipe.s+",oldv="+this.swipe.v);
+        var sdiff=o.x/this.props.saturationWidth;
+        var vdiff=-o.y/this.props.saturationHeight;
+        var hsv=avnav.assign({},this.swipe);
+        hsv.s+=sdiff;
+        hsv.v+=vdiff;
+        if (hsv.v > 1) hsv.v=1;
+        if (hsv.v < 0) hsv.v=0;
+        if (hsv.s > 1) hsv.s=1;
+        if (hsv.s < 0) hsv.s=0;
+        avnav.log("new s="+hsv.s+", newv="+hsv.v);
+        this.handleDrag(hsv);
+        return true;
     },
 
     toColorValue: function(value){
