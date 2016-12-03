@@ -214,7 +214,7 @@ var OverlayDialog=React.createClass({
                     render: function(){
                         return (
                             <div>
-                                <h3 className="avn_dialogTitle">{opt_title||'Confirm'}</h3>
+                                <h3 className="avn_dialogTitle">{opt_title||''}</h3>
                                 <div className="avn_dialogText">{text}</div>
                                 <button name="ok" onClick={this.okFunction}>Ok</button>
                                 <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
