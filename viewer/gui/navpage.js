@@ -211,7 +211,7 @@ avnav.gui.Navpage.prototype.widgetVisibility=function(){
     //aisVisible=true;
     var routeVisible=this.gui.properties.getProperties().layers.nav;
     if (routeVisible) routeVisible=this.navobject.getRoutingHandler().hasActiveRoute();
-    var centerVisible=true;
+    var centerVisible=this.gui.properties.getProperties().layers.measures;
     if (this.hidetime <=0 || this.hidetime <= new Date().getTime()|| this.gui.map.getGpsLock()){
         centerVisible=false;
     }

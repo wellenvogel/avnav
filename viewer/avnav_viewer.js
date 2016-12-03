@@ -54,7 +54,8 @@ var propertyDefinitions=function(){
             nav: new avnav.util.Property(true,"Navigation",avnav.util.PropertyType.CHECKBOX),
             boat: new avnav.util.Property(true,"Boat",avnav.util.PropertyType.CHECKBOX),
             grid: new avnav.util.Property(true,"Grid",avnav.util.PropertyType.CHECKBOX),
-            compass: new avnav.util.Property(true,"Compass",avnav.util.PropertyType.CHECKBOX)
+            compass: new avnav.util.Property(true,"Compass",avnav.util.PropertyType.CHECKBOX),
+            measures: new avnav.util.Property(true,"Measures",avnav.util.PropertyType.CHECKBOX)
         },
         connectedMode:new avnav.util.Property(true,"connected",avnav.util.PropertyType.CHECKBOX),
         readOnlyServer: new avnav.util.Property(false),

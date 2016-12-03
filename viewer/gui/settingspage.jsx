@@ -18,7 +18,7 @@ var keys={
 };
 
 var settingsSections={
-    Layer:      ["layers.ais","layers.track","layers.nav","layers.boat","layers.grid","layers.compass"],
+    Layer:      ["layers.ais","layers.track","layers.nav","layers.boat","layers.grid","layers.compass","layers.measures"],
     UpdateTimes:["positionQueryTimeout","trackQueryTimeout","aisQueryTimeout" ],
     Layout:     ["baseFontSize","widgetFontSize","allowTwoWidgetRows","showClock","style.buttonSize","nightFade","nightChartFade"],
     AIS:        ["aisDistance","aisWarningCpa","aisWarningTpa","aisTextSize","style.aisNormalColor","style.aisNearestColor","style.aisWarningColor","aisBrowserWorkaround"],
@@ -164,7 +164,11 @@ Settingspage.prototype.rangeItemDialog=function(item){
                         <div className="avn_settingsRange">Range: {range}</div>
                         <div>
                             <label >Value
-                                <input type="text" name="value" onChange={this.valueChange} value={this.state.value}/>
+                                <input type="number"
+                                       min={item.values[0]}
+                                       max={item.values[1]}
+                                       step={item.values[2]||1}
+                                       name="value" onChange={this.valueChange} value={this.state.value}/>
                             </label>
                         </div>
                         <button name="ok" onClick={this.buttonClick}>OK</button>
