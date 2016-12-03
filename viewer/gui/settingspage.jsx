@@ -7,7 +7,7 @@ var ReactDOM=require('react-dom');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ItemList=require("../components/ItemList.jsx");
 var OverlayDialog=require('../components/OverlayDialog.jsx');
-var ColorPicker=require('react-color-picker').default;
+var ColorPicker=require('../components/ColorPicker.jsx');
 require('react-color-picker/index.css');
 
 var keys={
