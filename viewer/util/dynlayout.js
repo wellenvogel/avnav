@@ -269,7 +269,7 @@ DynLayout.prototype.layout=function(parameters) {
             var niWidthHeight=first?usableOuterElementSize:(item.getValue(layoutParameter.scalingProperty)*factor-item.getMargin());
             $(item.item).css('position', 'absolute')
                 .css(layoutParameter.positionProperties(elementPosition,topLeftPosition))
-                .css('opacity',1);
+                .css('opacity',1).css('z-index',2);
             if (this._options.scale){
                 $(item.item).css(layoutParameter.scaleProperties(niWidthHeight));
             }
@@ -283,7 +283,7 @@ DynLayout.prototype.layout=function(parameters) {
     this._assignedContainerClasses=options.containerClass||"";
     $(this._selector).addClass(this._assignedContainerClasses);
     for (i=lastVisible+increment; i < this._items.length && i >= 0; i+=increment) {
-        $(this._items[i].item).css('opacity',0);
+        $(this._items[i].item).css('opacity',0).css('z-index',1);
     }
 };
 

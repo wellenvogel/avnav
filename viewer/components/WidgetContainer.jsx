@@ -62,7 +62,7 @@ var WidgetContainer=function(reactProperties: Object,domId: String,opt_layoutHan
                             });
                             return widget;
                         }
-                        return <div></div>
+                        return <div key={name}></div>
                     })}
                 </div>
             );

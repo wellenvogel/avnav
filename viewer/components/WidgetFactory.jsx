@@ -43,6 +43,7 @@ class WidgetFactory{
             var props=avnav.assign({},e,properties);
             props.click=click;
             props.ref=e.name;
+            props.key=name;
             return React.createElement(WidgetUpdater(e.wclass), props);
         }
         return React.createElement("div",{},"widget "+name+" not found");

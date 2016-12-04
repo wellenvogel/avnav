@@ -579,23 +579,20 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
         });
     },0);
 };
-avnav.gui.Navpage.prototype.updateWaypointSelections=function(key,value){
 
-};
 avnav.gui.Navpage.prototype.waypointClicked=function(item,options){
     var self=this;
     if (options && options != 'main') return;
     this.navobject.getRoutingHandler().setEditingWpIdx(item.idx);
     var selectorState=this.store.getData(keys.waypointSelections,{}).selectors;
     this.store.updateSubItem(keys.waypointSelections,selectors.selected,item.idx,'selectors');
-    if (! selectorState || ! selectorState[selectors.centered]) {
+    if (! selectorState || selectorState[selectors.centered] != item.idx) {
         this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());
         this.store.updateSubItem(keys.waypointSelections,selectors.centered,item.idx,'selectors');
+        return;
     }
-    if (selectorState && selectorState[selectors.selected] && selectorState[selectors.centered]){
-        var wp=this.navobject.getRoutingHandler().getEditingWp();
-        self.showWaypointDialog(wp);
-    }
+    var wp=this.navobject.getRoutingHandler().getEditingWp();
+    self.showWaypointDialog(wp);
 };
 
 avnav.gui.Navpage.prototype.scrollRoutePoints=function(){
@@ -641,7 +638,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
     var activeWp=route.getPointAtIndex(active);
     if (opt_centerActive && activeWp){
         this.gui.map.setCenter(activeWp);
-        this.store.updateSubItem(keys.waypointSelections,selectors.centered,activeWp,'selectors');
+        this.store.updateSubItem(keys.waypointSelections,selectors.centered,active,'selectors');
     }
 };
 
