@@ -97,6 +97,12 @@ avnav.gui.Downloadpage=function(){
      * @type {function}
      */
     this.selectItemCallback=undefined;
+    var self=this;
+    $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,function(ev,evdata){
+        if (evdata.key && avnav.util.Helper.startsWith(evdata.key,"route")){
+            self._updateDisplay();
+        }
+    });
 
 };
 avnav.inherits(avnav.gui.Downloadpage,avnav.gui.Page);
@@ -601,6 +607,12 @@ avnav.gui.Downloadpage.prototype.abortUpload=function(){
 
 avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
     avnav.log("upload clicked");
+    if (this.type == 'route'){
+        if (avnav.android){
+            avnav.android.uploadRoute();
+            return false;
+        }
+    }
     var i=$("#avi_download_uploadfile");
     $(i).click();
     return false;

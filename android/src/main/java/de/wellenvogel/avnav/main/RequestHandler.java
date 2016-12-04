@@ -781,8 +781,7 @@ public class RequestHandler {
 
     void saveRoute(Uri returnUri) {
 
-        String name=returnUri.getLastPathSegment();
-        name=name.replaceAll("\\.gpx$","");
+
         try {
             AvnLog.i("importing route: "+returnUri);
             ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(returnUri, "r");
@@ -796,9 +795,9 @@ public class RequestHandler {
             getRouteHandler().saveRoute(new FileInputStream(pfd.getFileDescriptor()), false);
             activity.sendEventToJs("routeImported", 1);
         } catch (Exception e) {
-            Toast.makeText(activity.getApplicationContext(), "unable save route file "+name+": "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(activity.getApplicationContext(), "unable save route: "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
-            Log.e(Constants.LOGPRFX, "File not found.");
+            Log.e(Constants.LOGPRFX, "unable to save route: "+e.getLocalizedMessage());
             return;
         }
     }

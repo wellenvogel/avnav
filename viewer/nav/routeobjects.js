@@ -313,7 +313,7 @@ routeobjects.Route.prototype.fromXml=function(xml){
             pt.name=$(pel).find('>name').text();
             pt.routeName=self.name.slice(0);
             if (! pt.name){
-                pt.name=this.findFreeName();
+                pt.name=self.findFreeName();
             }
             i++;
             self.points.push(pt);

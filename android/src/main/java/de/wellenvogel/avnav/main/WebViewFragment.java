@@ -12,6 +12,8 @@ import android.view.WindowManager;
 import android.webkit.*;
 import android.widget.Toast;
 
+import java.lang.reflect.Method;
+
 import de.wellenvogel.avnav.util.AvnLog;
 
 /**
@@ -43,11 +45,14 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
         webView = new WebView(inflater.getContext());
         webView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         webView.getSettings().setJavaScriptEnabled(true);
-        /*
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            WebView.setWebContentsDebuggingEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && BuildConfig.DEBUG) {
+            try {
+                Method m=WebView.class.getDeclaredMethod("setWebContentsDebuggingEnabled",boolean.class);
+                m.setAccessible(true);
+                m.invoke(webView,true);
+            } catch (Exception e) {
+            }
         }
-        */
         String htmlPage = getRequestHandler().getStartPage();
         webView.setWebViewClient(new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
@@ -78,6 +83,7 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
         });
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
+        webView.getSettings().setAllowFileAccess(true);
         String databasePath = webView.getContext().getDir("databases",
                 Context.MODE_PRIVATE).getPath();
         webView.getSettings().setDatabasePath(databasePath);
