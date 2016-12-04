@@ -278,6 +278,7 @@ html,body {
   .nightBackFade(@colorRed);
 }
 .avn_left_inner{
+  .avn_panel_fill();
   top: @headlineHeight !important;
 }
 
@@ -865,52 +866,39 @@ button.avb_WpEdit {
 .avn_active_route{
   .nightForeColor(@routeApproachingColor);
 }
-#avi_route_current{
+.avn_routeCurrent{
   .nightBackFade(@colorSecond);
   padding: 1em;
   padding-right: 1.5em;
+  height: 5.2em;
   .mdShadow1();
+  .avn_routeInfo{
+    .mdText2();
+    margin-top: 0.7em;
+  }
+  .avn_more{
+    display: inline-block;
+    position: absolute;
+    right: 0;
+    top: 1em;
+    height: 2em;
+    width: 2em;
+  }
+  .avn_routeName{
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .avn_listContainer {
+    .avm_listcontainer();
+    top: 5.3em;
+  }
+
+
 }
 
-#avi_route_current .avn_route_info{
-  .mdText2();
-}
-#avi_route_current .avn_more{
-  display: inline-block;
-  position: absolute;
-  right: 0;
-  top: 1em;
-  height: 2em;
-  width: 2em;
-}
-
-
-#avi_route_name{
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-
-#avi_routepage .avn_listcontainer {
-  .avm_listcontainer();
-  top: 5.3em;
-}
-
-#avi_routepage .avn_route_info{
-  margin-top: 0.7em;
-}
 #avi_routepage .avn_route_info_active_point{
   .nightBackColor(rgba(0, 0, 0, 0.25));
 }
-
-#avi_route_current label{
-  display: block;
-  margin-bottom: 0.5em;
-}
-#avi_route_current input{
-  width: 70%;
-}
-
 .avn_route_list_entry{
   .avm_list_entry();
 

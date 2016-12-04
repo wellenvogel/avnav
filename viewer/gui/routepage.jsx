@@ -34,7 +34,7 @@ var Routepage=function(){
     this.MAXUPLOADSIZE=100000;
     /**
      * @private
-     * @type {routeobjects.RouteData}
+     * @type {Object}
      */
     this.routingHandler=undefined;
     /**
@@ -78,6 +78,39 @@ Routepage.prototype.localInit=function(){
     if (! this.gui) return;
     this.routingHandler=this.gui.navobject.getRoutingHandler();
     var self=this;
+    var heading = React.createElement(ItemUpdater(React.createClass({
+        render: function(){
+            return (
+                <div className="avn_routeCurrent" onClick={this.props.onClick}>
+                <div className="avn_routeName">{this.props.name||''}</div>
+                <div className="avn_routeInfo">{this.props.numPoints||0}Points,{this.props.len||0}nm</div>
+                <span className="avn_more"> </span>
+                </div>
+            );
+        }
+    }), this.store, keys.routeInfo), {
+        onClick: function () {
+            var okCallback = function (name, closeFunction) {
+                if (name != self.initialName) {
+                    //check if a route with this name already exists
+                    self.routingHandler.fetchRoute(name, false,
+                        function (data) {
+                            self.toast("route with name " + name + " already exists", true);
+                        },
+                        function (er) {
+                            closeFunction();
+                            self.currentRoute.setName(name);
+                            self._updateDisplay();
+                        });
+                    return false;
+                }
+                return true;
+            };
+            OverlayDialog.valueDialog("Edit Route Name", self.currentRoute.name,
+                okCallback, self.getDialogContainer(), 'Name'
+            );
+        }
+    });
     var list=React.createElement(ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]), {
         onItemClick:function(item,opt_data){
             self.waypointClicked(item,opt_data);
@@ -88,7 +121,8 @@ Routepage.prototype.localInit=function(){
             avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_routepage_wplist')
         }
     });
-    ReactDOM.render(list,document.getElementById('avi_routepage_wplist'));
+    var routePageContent=React.createElement("div",{},heading,list);
+    ReactDOM.render(routePageContent,this.selectOnPage('.avn_left_inner')[0]);
     this.selectOnPage('#avi_route_current').on('click',function(){
         var okCallback=function(name,closeFunction){
             if (name != self.initialName) {
@@ -124,10 +158,10 @@ Routepage.prototype.showPage=function(options) {
 
 Routepage.prototype._updateDisplay=function(){
     var self=this;
-    $('#avi_route_name').text("");
     if (! this.currentRoute) {
         this.store.storeData(keys.waypointList,{itemList:[]});
         this.store.storeData(keys.waypointSelections,{selectors:{}});
+        this.store.storeData(keys.routeInfo,{});
         return;
     }
     var targetIdx=-1;
@@ -140,12 +174,11 @@ Routepage.prototype._updateDisplay=function(){
         $('#avi_routes_headline').text("Inactive Route");
         this.selectOnPage('.avn_left_top').removeClass('avn_active_headline');
     }
-    $('#avi_route_name').text(this.currentRoute.name);
-    var info="";
+    var info={name: this.currentRoute.name};
     var len=this.currentRoute.computeLength(0);
-    info=this.formatter.formatDecimal(this.currentRoute.points.length,2,0)+
-            " Points, "+this.formatter.formatDecimal(len,6,2)+" nm";
-    this.selectOnPage('.avn_route_info').text(info);
+    info.len=this.formatter.formatDecimal(len,6,2);
+    info.numPoints=this.formatter.formatDecimal(this.currentRoute.points.length,2,0);
+    this.store.storeData(keys.routeInfo,info);
     var waypoints=this.currentRoute.getFormattedPoints();
     waypoints.forEach(function(waypoint){
        waypoint.key=waypoint.idx; 
@@ -237,15 +270,18 @@ Routepage.prototype.goBack=function(){
  */
 Routepage.prototype.storeRoute=function(opt_targetSelected){
     if (! this.currentRoute) return;
-    this.routingHandler.setNewEditingRoute(this.currentRoute);
-    this.routingHandler.setEditingWpIdx(this.currentRoute.getIndexFromPoint(this._selectedWaypoint));
+    var selectedWaypoint=this.store.getData(keys.waypointSelections,{selectors:{}}).selectors[selectors.selected];
+    this.routingHandler.setNewEditingRoute(this.currentRoute, this._isEditingActive);
+    if (selectedWaypoint !== undefined) {
+        this.routingHandler.setEditingWpIdx(selectedWaypoint);
+    }
     this.initialName=this.currentRoute.name;
     var targetWp;
     if (this._isEditingActive) {
         targetWp = this.currentRoute.getPointAtIndex(this.currentRoute.findBestMatchingIdx(this.routingHandler.getCurrentLegTarget()));
     }
-    if (opt_targetSelected) {
-        targetWp = this.currentRoute.getPointAtIndex(this.currentRoute.getIndexFromPoint(this._selectedWaypoint));
+    if (opt_targetSelected && selectedWaypoint !== undefined) {
+        targetWp = this.currentRoute.getPointAtIndex(selectedWaypoint);
     }
     if (targetWp) {
         this.routingHandler.wpOn(targetWp, !opt_targetSelected);
