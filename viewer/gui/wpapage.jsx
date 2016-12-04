@@ -176,7 +176,7 @@ Wpapage.prototype.localInit=function() {
             }
             var info=status.ssid?"["+status.ssid+"]":"";
             if (status.ip_address) info+=", IP: "+status.ip_address;
-            else status+=" waiting for IP...";
+            else info+=" waiting for IP...";
             return (
                 <div className="avn_wpa_interface">
                     <div>Interface: {status.wpa_state}</div>
