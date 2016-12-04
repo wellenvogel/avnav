@@ -345,7 +345,7 @@ Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
 Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
     avnav.log("SettingsAndroid clicked");
     var self=this;
-    if (this.hasChanges) {
+    if (!this.hasChanges) {
         this.gui.showPage('mainpage');
         avnav.android.showSettings();
     }
