@@ -26,13 +26,13 @@
         android:name=".AvNavApp"
         android:hardwareAccelerated="true"
         android:icon="@drawable/sailboatr"
+        android:theme="@style/AppTheme"
         android:label="${label}">
         <activity
 
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
             android:label="${label}"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:windowSoftInputMode="stateHidden">
             >
             <intent-filter>
@@ -43,7 +43,8 @@
         </activity>
         <activity
             android:name=".Info"
-            android:label="Info" />
+            android:label="Info"
+            android:theme="@style/AppTheme.ActionBar"/>
         <activity android:name=".Dummy">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -51,7 +52,9 @@
         </activity>
         <activity
             android:name="de.wellenvogel.avnav.settings.SettingsActivity"
-            android:label="@string/labelSettingsActivity" />
+            android:label="@string/labelSettingsActivity"
+            android:theme="@style/AppTheme.ActionBar"
+            />
 
         <service
             android:name="de.wellenvogel.avnav.gps.GpsService"

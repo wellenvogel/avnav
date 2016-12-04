@@ -11,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.*;
+import android.support.v7.widget.Toolbar;
+
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -36,7 +38,6 @@ public class SettingsActivity extends PreferenceActivity {
 
     private List<Header> headers=null;
     private static final int currentapiVersion = android.os.Build.VERSION.SDK_INT;
-
 
 
     @Override

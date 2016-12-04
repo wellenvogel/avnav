@@ -8,4 +8,16 @@
         <item name="android:scrollbarDefaultDelayBeforeFade">1000</item>
         <item name="android:scrollbarStyle">insideInset</item>
     </style>
+    <style name="AppTheme" parent="@android:style/Theme.Holo.Light">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+    <style name="AppTheme.ActionBar" parent="AppTheme">
+        <item name="android:windowNoTitle">false</item>
+        <item name="android:windowActionBar">true</item>
+        <item name="android:actionBarStyle">@style/MyActionBarTheme</item>
+    </style>
+    <style name="MyActionBarTheme" parent="@android:style/Widget.Holo.Light.ActionBar">
+        <item name="android:icon">@android:color/transparent</item>
+    </style>
 </resources>
