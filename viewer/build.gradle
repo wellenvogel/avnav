@@ -1,12 +1,11 @@
 import java.text.SimpleDateFormat
-
+import com.moowork.gradle.node.task.*
 buildscript {
     repositories {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
     }
-
     dependencies {
         classpath "com.moowork.gradle:gradle-node-plugin:0.12"
     }
@@ -14,6 +13,24 @@ buildscript {
 
 apply plugin: 'com.moowork.node'
 apply plugin: 'java'
+
+class MyNpm extends NpmTask{
+    @InputFiles
+    def getInputFiles(){
+        logger.debug "getInputFiles called"
+        return project.fileTree(project.projectDir,{
+            exclude "build/**"
+            exclude ".gradle/**"
+        })
+    }
+    @OutputFiles
+    def getOutputFiles(){
+        logger.debug "getOutputFiles called"
+        return project.fileTree(project.projectDir,{
+            include "build/**"
+        })
+    }
+}
 project.ext.avnavVersion=null
 File versionFile=new File(project.buildDir,"version.js")
 task pkgVersion<< {
@@ -29,14 +46,14 @@ task pkgVersion<< {
     }
 }
 
-task release(type: NpmTask){
+task release(type: MyNpm){
 	args=["run","production"]
     setExecOverrides({
         it.environment.put('AVNAV_VERSION_FILE',versionFile.getCanonicalPath())
     })
 	dependsOn npmInstall,pkgVersion
 }
-task debug(type: NpmTask){
+task debug(type: MyNpm){
 	args=["run","debug"]
     setExecOverrides({
         it.environment.put('AVNAV_VERSION_FILE',versionFile.getCanonicalPath())
