@@ -16,8 +16,21 @@
         <item name="android:windowNoTitle">false</item>
         <item name="android:windowActionBar">true</item>
         <item name="android:actionBarStyle">@style/MyActionBarTheme</item>
+        <item name="android:listViewStyle">@style/MyListViewStyle</item>
     </style>
     <style name="MyActionBarTheme" parent="@android:style/Widget.Holo.Light.ActionBar">
         <item name="android:icon">@android:color/transparent</item>
+        <item name="android:background">@color/colorMain</item>
+        <item name="android:backgroundStacked">@color/colorMain</item>
+        <item name="android:titleTextStyle">@style/MyActionText</item>
+        <item name="android:subtitleTextStyle">@style/MyActionText</item>
+
+    </style>
+    <style name="MyActionText" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/colorTextWhite</item>
+    </style>
+    <style name="MyListViewStyle" parent="@android:style/Widget.Holo.Light.ListView">
+        <!--<item name="android:background">@android:color/holo_green_dark</item>-->
+        <item name="android:listSelector">@color/colorSelection</item>
     </style>
 </resources>
