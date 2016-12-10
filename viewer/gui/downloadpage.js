@@ -371,7 +371,7 @@ avnav.gui.Downloadpage.prototype._updateDisplay=function(){
                     if (avnav.android){
                         if (info.type=="track") avnav.android.downloadTrack(info.name);
                         if (info.type == "route"){
-                            self.routingHandler.fetchRoute(info.name,true,function(data){
+                            self.routingHandler.fetchRoute(info.name,!info.server,function(data){
                                     avnav.android.downloadRoute(data.toJsonString());
                             },
                             function(err){
