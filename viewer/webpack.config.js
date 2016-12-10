@@ -16,10 +16,7 @@ var copyList=[
     {from: './images/icons-new/*svg'},
     {from: '../libraries/jquery/jquery-1.11.0.min.js',to:'libraries'},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
-    {from: '../libraries/movable-type/latlon.js',to: 'libraries'},
-    {from: '../libraries/rangeslider/rangeslider.css', to:'libraries'},
-    {from: '../libraries/rangeslider/rangeslider.js', to: 'libraries'},
-    {from: '../libraries/jscolor/jscolor.js', to: 'libraries'}
+    {from: '../libraries/movable-type/latlon.js',to: 'libraries'}
     ];
 var images=[
     'Chart60.png',
