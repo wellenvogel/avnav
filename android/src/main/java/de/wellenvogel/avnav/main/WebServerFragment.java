@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
@@ -102,6 +103,9 @@ public class WebServerFragment extends Fragment {
         timerSequence++;
         runnable=new TimerRunnable(timerSequence);
         handler.postDelayed(runnable,100);
+        getActivity().getActionBar().show();
+        getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+        setHasOptionsMenu(true);
         return rt;
 
     }
@@ -237,6 +241,15 @@ public class WebServerFragment extends Fragment {
 
     private void exitApp(){
         ((MainActivity)getActivity()).goBack();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home){
+            ((MainActivity) getActivity()).showSettings();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 }

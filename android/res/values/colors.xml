@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- the colors here should match the less -->
-    <color name="editBackground">#93afafb8</color>
     <color name="colorMain">#546E7A</color>
     <color name="colorSecond">#CFD8DC</color>
     <color name="colorSelection">#ECEFF1</color>
     <color name="colorTextWhite">#FFFFFF</color>
+    <color name="colorBackground">#FFFFFF</color>
+    <color name="colorText">#000000</color>
+    <color name="colorTextSecondary">#80000000</color>
 </resources>

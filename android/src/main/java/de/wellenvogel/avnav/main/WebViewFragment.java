@@ -28,6 +28,7 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
 
         super.onCreate(savedInstanceState);
         pd = ProgressDialog.show(getActivity(), "", getString(R.string.loading), true);
+        getActivity().getActionBar().hide();
     }
 
     private MainActivity getMainActivity(){

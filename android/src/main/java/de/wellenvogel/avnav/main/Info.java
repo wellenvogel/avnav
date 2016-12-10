@@ -52,6 +52,7 @@ public class Info extends Activity {
         });
         TextView view=(TextView)findViewById(R.id.txInfo);
         view.setMovementMethod(LinkMovementMethod.getInstance());
+        getActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     private void setText(String fname,int id ){

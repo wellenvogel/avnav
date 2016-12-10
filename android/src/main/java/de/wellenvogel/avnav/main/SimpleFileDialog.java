@@ -353,10 +353,9 @@ public class SimpleFileDialog
         ////////////////////////////////////////////////
         // Create title text showing file select type //
         ////////////////////////////////////////////////
-        m_titleView1 = new TextView(m_context);
+        m_titleView1 = new TextView(m_context,null,R.attr.dialogHeader);
         m_titleView1.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        //m_titleView1.setTextAppearance(m_context, android.R.style.TextAppearance_Large);
-        //m_titleView1.setTextColor( m_context.getResources().getColor(android.R.color.black) );
+        //m_titleView1.setTextAppearance(m_context, R.style.DialogTitle);
         if (dialogTitle != null){
             m_titleView1.setText(dialogTitle);
         }
@@ -368,18 +367,13 @@ public class SimpleFileDialog
 
         //need to make this a variable Save as, Open, Select Directory
         m_titleView1.setGravity(Gravity.CENTER_VERTICAL);
-        m_titleView1.setBackgroundColor(dialogBuilder.getContext().getResources().getColor(android.R.color.background_dark));
-        m_titleView1.setTextColor( m_context.getResources().getColor(android.R.color.white) );
-
         // Create custom view for AlertDialog title
         LinearLayout titleLayout1 = new LinearLayout(m_context);
         titleLayout1.setOrientation(LinearLayout.VERTICAL);
         titleLayout1.addView(m_titleView1);
 
-        m_titleView = new TextView(m_context);
+        m_titleView = new TextView(m_context,null,R.attr.dialogSubHeader);
         m_titleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        m_titleView.setBackgroundColor(dialogBuilder.getContext().getResources().getColor(android.R.color.background_dark));
-        m_titleView.setTextColor( m_context.getResources().getColor(android.R.color.white) );
         m_titleView.setGravity(Gravity.CENTER_VERTICAL);
         m_titleView.setText(title);
 
@@ -459,14 +453,14 @@ public class SimpleFileDialog
                     String txt=getItem(position).fileName;
                     if (getItem(position).isDir) txt+="/";
                     if (!getItem(position).isWritable){
-                        tv.setTextColor(0xFFC0C0C0);
+                        tv.setTextColor(m_context.getResources().getColor(R.color.colorTextSecondary));
                         //txt="*"+txt;
                     }
                     else {
-                        tv.setTextColor(m_context.getResources().getColor(android.R.color.white));
+                        tv.setTextColor(m_context.getResources().getColor(R.color.colorText));
                     }
                     tv.setText(txt);
-                    tv.setBackgroundColor(tv.getContext().getResources().getColor(android.R.color.background_dark));
+                    //tv.setBackgroundColor(tv.getContext().getResources().getColor(android.R.color.background_dark));
                 }
                 return v;
             }
