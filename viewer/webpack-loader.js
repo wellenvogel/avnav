@@ -36,9 +36,6 @@
         'libraries/jquery-1.11.0.min.js',
         'libraries/geo.js',
         'libraries/latlon.js',
-        'libraries/rangeslider.css',
-        'libraries/rangeslider.js',
-        'libraries/jscolor.js',
         'libraries/ol.js',
         'avnav_min.js',
         'avnav_viewer.css'
