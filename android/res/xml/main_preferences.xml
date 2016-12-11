@@ -5,14 +5,14 @@
         android:key="runmode"
         android:title="@string/runMode">
     </ListPreference>
-    <EditTextPreference
+    <de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference
         android:key="workdir"
         android:title="@string/selectDirLabel">
-    </EditTextPreference>
-    <EditTextPreference
+    </de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference>
+    <de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference
         android:key="chartdir"
         android:title="@string/selectChartDirLabel">
-    </EditTextPreference>
+    </de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference>
     <CheckBoxPreference
         android:key="showdemo"
         android:title="@string/enableDemoLabel">

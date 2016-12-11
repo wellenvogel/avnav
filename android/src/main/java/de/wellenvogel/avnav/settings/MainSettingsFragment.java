@@ -29,7 +29,6 @@ public class MainSettingsFragment extends SettingsFragment {
             myPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 public boolean onPreferenceClick(final Preference preference) {
                     //open browser or intent here
-                    ((DialogPreference)preference).getDialog().dismiss();
                     SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(getActivity(), SimpleFileDialog.FolderChooseWrite,
                             new SimpleFileDialog.SimpleFileDialogListener() {
                                 @Override
@@ -60,7 +59,6 @@ public class MainSettingsFragment extends SettingsFragment {
             myChartPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 public boolean onPreferenceClick(final Preference preference) {
                     //open browser or intent here
-                    ((DialogPreference)preference).getDialog().dismiss();
                     SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(getActivity(), SimpleFileDialog.FolderChoose,
                             new SimpleFileDialog.SimpleFileDialogListener() {
                                 @Override
