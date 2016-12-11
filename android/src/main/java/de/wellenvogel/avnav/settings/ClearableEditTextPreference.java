@@ -11,7 +11,7 @@ import de.wellenvogel.avnav.main.R;
 /**
  * Created by andreas on 29.11.15.
  */
-public class ClearableEditTextPreference extends EditTextPreference {
+public class ClearableEditTextPreference extends OwnDialogEditTextPreference {
 
     public ClearableEditTextPreference(Context context) {
         super(context);
@@ -28,6 +28,7 @@ public class ClearableEditTextPreference extends EditTextPreference {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 ClearableEditTextPreference.this.setText("");
+                ClearableEditTextPreference.super.onClick(dialog,which);
             }
         });
     }

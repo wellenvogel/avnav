@@ -11,7 +11,7 @@ import de.wellenvogel.avnav.main.R;
 /**
  * Created by andreas on 29.11.15.
  */
-public class DefaultsEditTextPreference extends EditTextPreference {
+public class DefaultsEditTextPreference extends OwnDialogEditTextPreference {
 
     private String defaultValue;
 
@@ -31,6 +31,7 @@ public class DefaultsEditTextPreference extends EditTextPreference {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     DefaultsEditTextPreference.this.setText(defaultValue);
+                    DefaultsEditTextPreference.super.onClick(dialog,which);
                 }
             });
         }

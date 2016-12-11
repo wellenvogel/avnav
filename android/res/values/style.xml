@@ -39,7 +39,7 @@
         <item name="android:windowTitleStyle">@style/DialogTitle</item>
     </style>
     <style name="DialogTitle" parent="@android:style/TextAppearance.Holo.DialogWindowTitle">
-        <!--<item name="android:textColor">@color/colorText</item>-->
+        <item name="android:textColor">@color/colorText</item>
     </style>
     <!-- some styles for the file dialog -->
     <style name="DialogHeader" parent="@android:style/Widget.TextView">
@@ -52,6 +52,7 @@
         <item name="android:textAppearance">@style/DialogSecond</item>
     </style>
     <style name="DialogSecond" parent="@android:style/TextAppearance.Holo.Medium">
+        <item name="android:textColor">@color/colorTextSecondary</item>
     </style>
 
 </resources>

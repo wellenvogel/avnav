@@ -1,12 +1,15 @@
 package de.wellenvogel.avnav.settings;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import de.wellenvogel.avnav.main.R;
 
@@ -33,16 +36,17 @@ public class CheckEditTextPreference extends DefaultsEditTextPreference {
         }
     }
 
+
     @Override
     protected void showDialog(Bundle state) {
         super.showDialog(state);
+        AlertDialog dialog=getAlertDialog();
         if (checker != null) {
-            AlertDialog dialog = (AlertDialog) getDialog();
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(
                     new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            String newVal = CheckEditTextPreference.this.getEditText().getText().toString();
+                            String newVal = getEditText().getText().toString();
                             String etxt = checker.checkValue(newVal);
                             if (etxt == null) {
                                 setText(newVal);

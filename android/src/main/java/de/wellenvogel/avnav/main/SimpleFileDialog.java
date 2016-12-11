@@ -383,8 +383,8 @@ public class SimpleFileDialog
         /////////////////////////////////////////////////////
         // Create View with folder path and entry text box //
         /////////////////////////////////////////////////////
-        LinearLayout titleLayout = new LinearLayout(m_context);
-        titleLayout.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout contentLayout = new LinearLayout(m_context);
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
 
 
 
@@ -392,7 +392,7 @@ public class SimpleFileDialog
         {
             input_text = new EditText(m_context);
             input_text.setText(Default_File_Name);
-            titleLayout.addView(input_text);
+            contentLayout.addView(input_text);
         }
         if (Select_type == FolderChoose || Select_type == FolderChooseWrite|| Select_type == FileSave)
         {
@@ -409,12 +409,12 @@ public class SimpleFileDialog
                                                 }
                                             }
             );
-            titleLayout.addView(newDirButton);
+            contentLayout.addView(newDirButton);
         }
         //////////////////////////////////////////
         // Set Views and Finish Dialog builder  //
         //////////////////////////////////////////
-        dialogBuilder.setView(titleLayout);
+        dialogBuilder.setView(contentLayout);
         dialogBuilder.setCustomTitle(titleLayout1);
         m_listAdapter = createListAdapter(listItems);
         dialogBuilder.setSingleChoiceItems(m_listAdapter, -1, onClickListener);

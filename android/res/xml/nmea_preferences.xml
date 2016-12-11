@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="@string/labelSettingsNmea">
-    <ListPreference
+    <de.wellenvogel.avnav.settings.OwnDialogListPreference
         android:title="@string/labelSettingsNmeaInput"
         android:key="nmeaInput"
         android:persistent="false">
-    </ListPreference>
-    <ListPreference
+    </de.wellenvogel.avnav.settings.OwnDialogListPreference>
+    <de.wellenvogel.avnav.settings.OwnDialogListPreference
         android:title="@string/labelSettingsAisInput"
         android:key="aisInput"
         android:persistent="false">
-    </ListPreference>
+    </de.wellenvogel.avnav.settings.OwnDialogListPreference>
     <de.wellenvogel.avnav.settings.CheckEditTextPreference
         android:key="ip.addr"
         android:title="@string/labelSettingsIpAddress"></de.wellenvogel.avnav.settings.CheckEditTextPreference>
