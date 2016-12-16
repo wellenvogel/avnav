@@ -19,15 +19,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="48dp"
-    android:layout_marginBottom="48dp"
+    android:padding="24dp"
     android:overScrollMode="ifContentScrolls">
 
     <LinearLayout
         android:id="@+id/edittext_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dip"
         android:orientation="vertical">
 
         <TextView
@@ -37,10 +35,10 @@
             android:id="@+id/title"
             android:textAppearance="@style/DialogTitle"
             android:textAlignment="textStart"
-            android:paddingBottom="20dip" />
+            android:paddingBottom="20dp" />
 
         <EditText android:id="@+id/value"
-            android:layout_marginBottom="48dp"
+            android:layout_marginBottom="24dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/DialogSecond"

@@ -2,13 +2,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="10dp"
-    android:paddingTop="10dp">
+    >
 
-    <CheckedTextView
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56sp"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
         android:id="@+id/checkedTextView"
         android:textAppearance="@style/DialogSecond"
-        android:checkMark="?android:attr/listChoiceIndicatorSingle" />
+        android:background="@drawable/list_selector"
+        android:gravity="left|center_vertical" />
+    <!--android:checkMark="?android:attr/listChoiceIndicatorSingle" -->
 </LinearLayout>

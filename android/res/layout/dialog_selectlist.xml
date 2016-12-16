@@ -20,13 +20,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="10dip">
+    android:padding="24dp"
+    android:background="?android:windowBackground">
 
     <TextView
         android:id="@+id/list_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="20dip"
+        android:paddingBottom="20dp"
         android:textAlignment="textStart"
         android:textAppearance="@style/DialogTitle" />
 
@@ -34,7 +35,7 @@
         android:id="@+id/list_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="48dp"
+        android:layout_marginBottom="24dp"
         android:textAppearance="@style/DialogSecond"
         android:choiceMode="singleChoice"/>
 

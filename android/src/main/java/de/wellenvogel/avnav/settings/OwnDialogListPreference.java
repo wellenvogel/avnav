@@ -50,11 +50,11 @@ public class OwnDialogListPreference extends ListPreference {
         @Override
         public View getView(final int position, View view, ViewGroup parent) {
             view = inflater.inflate(R.layout.list_item, null);
-            final CheckedTextView simpleCheckedTextView = (CheckedTextView) view.findViewById(R.id.checkedTextView);
+            final TextView simpleCheckedTextView = (TextView) view.findViewById(R.id.checkedTextView);
             simpleCheckedTextView.setText(mEntryNames[position]);
-            if (position == mClickedDialogEntryIndex) simpleCheckedTextView.setChecked(true);
+            if (position == mClickedDialogEntryIndex) simpleCheckedTextView.setSelected(true);
             // perform on Click Event Listener on CheckedTextView
-            simpleCheckedTextView.setOnClickListener(new View.OnClickListener() {
+            view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     selectItemClicked(position);
