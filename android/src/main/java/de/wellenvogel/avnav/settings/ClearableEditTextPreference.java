@@ -22,14 +22,13 @@ public class ClearableEditTextPreference extends OwnDialogEditTextPreference {
     }
 
     @Override
-    protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
-        super.onPrepareDialogBuilder(builder);
-        builder.setNeutralButton(R.string.clear, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                ClearableEditTextPreference.this.setText("");
-                ClearableEditTextPreference.super.onClick(dialog,which);
-            }
-        });
+    protected void onShowDialog(DialogBuilder b) {
+        super.onShowDialog(b);
+        b.setButton(R.id.edpButton3,R.string.clear,DialogInterface.BUTTON_NEUTRAL);
+    }
+    @Override
+    public void onClick(DialogInterface dialog, int which) {
+        if (which == DialogInterface.BUTTON_NEUTRAL) setText("");
+        super.onClick(dialog, which);
     }
 }

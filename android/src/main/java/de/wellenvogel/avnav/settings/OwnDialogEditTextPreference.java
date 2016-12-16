@@ -9,10 +9,14 @@ import android.preference.EditTextPreference;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.HashMap;
+
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 11.12.16.
@@ -32,8 +36,10 @@ public class OwnDialogEditTextPreference extends EditTextPreference {
     }
 
 
+
     private EditText mEditText;
-    private AlertDialog mDialog;
+    private DialogBuilder mDialogBuilder;
+    private View mView;
     @Override
     public EditText getEditText() {
         return mEditText;
@@ -47,34 +53,36 @@ public class OwnDialogEditTextPreference extends EditTextPreference {
             }
         }
     }
+
+
     @Override
     protected void showDialog(Bundle state) {
-        Context context = getContext();
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                .setTitle(null)
-                .setPositiveButton(R.string.ok, this)
-                .setNegativeButton(R.string.cancel, this);
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View v = inflater.inflate(R.layout.dialog_edittext, null);
-        TextView title = (TextView) v.findViewById(R.id.title);
-        if (title != null) title.setText(getTitle());
-        mEditText = (EditText) v.findViewById(R.id.value);
+        if (mDialogBuilder == null) {
+            mDialogBuilder=new DialogBuilder(getContext(),R.layout.dialog_edittext);
+        }
+        mDialogBuilder.setTitle(getTitle());
+        mDialogBuilder.createDialog();
+        mEditText = (EditText) mDialogBuilder.getContentView().findViewById(R.id.value);
         mEditText.setText(getText());
-        builder.setView(v);
-        onPrepareDialogBuilder(builder);
-        final AlertDialog dialog = builder.create();
-        dialog.setOnDismissListener(this);
-        dialog.show();
-        mDialog=dialog;
+        mDialogBuilder.getDialog().setOnDismissListener(this);
+        mDialogBuilder.setButton(R.id.edpButton1,R.string.ok,DialogInterface.BUTTON_POSITIVE);
+        mDialogBuilder.setButton(R.id.edpButton2,R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
+        mDialogBuilder.hideButton(R.id.edpButton3);
+        mDialogBuilder.setOnClickListener(this);
+        onShowDialog(mDialogBuilder);
+        mDialogBuilder.show();
     }
 
     @Override
     public Dialog getDialog() {
-        return mDialog;
+        return mDialogBuilder.getDialog();
     }
 
-    public AlertDialog getAlertDialog(){
-        return mDialog;
+    protected AlertDialog getAlertDialog(){
+        return mDialogBuilder.getDialog();
+    }
+    protected DialogBuilder getDialogBuilder(){return mDialogBuilder;}
+    protected void onShowDialog(DialogBuilder b){
+        return;
     }
 }

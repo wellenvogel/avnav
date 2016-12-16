@@ -45,6 +45,46 @@
             android:text="someValue"
             android:background="@drawable/edit_text_background" />
 
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/edpButtonContainer"
+            android:gravity="right"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="left"
+                android:layout_weight="1">
+                <Button
+                    android:text="@string/reset"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edpButton3"
+                    style="@style/FlatButton"
+                    android:visibility="visible" />
+            </LinearLayout>
+
+            <Button
+                android:text="@string/cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/edpButton2"
+                style="@style/FlatButton"
+                android:visibility="visible" />
+            <Button
+                android:text="@string/ok"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/edpButton1"
+                style="@style/FlatButton"
+                android:visibility="visible"/>
+        </LinearLayout>
+
     </LinearLayout>
 
 </ScrollView>

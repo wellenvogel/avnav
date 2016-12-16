@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import de.wellenvogel.avnav.main.R;
 
@@ -28,43 +29,24 @@ public class CheckEditTextPreference extends DefaultsEditTextPreference {
         super(context, attrs);
     }
 
-    @Override
-    protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
-        super.onPrepareDialogBuilder(builder);
-        if (checker != null){
-            builder.setPositiveButton(android.R.string.ok,null);
-        }
-    }
-
 
     @Override
-    protected void showDialog(Bundle state) {
-        super.showDialog(state);
-        AlertDialog dialog=getAlertDialog();
-        if (checker != null) {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(
-                    new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            String newVal = getEditText().getText().toString();
-                            String etxt = checker.checkValue(newVal);
-                            if (etxt == null) {
-                                setText(newVal);
-                                getDialog().dismiss();
-                                return;
-                            }
-                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                            builder.setPositiveButton(android.R.string.ok,
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int id) {
-                                        }
-                                    });
-                            String title = getContext().getString(R.string.invalidParameterValue) + ": " + newVal;
-                            builder.setTitle(title).setMessage(etxt);
-                            builder.create().show();
-                        }
-                    });
-        }
+    protected void onShowDialog(DialogBuilder builder) {
+        super.onShowDialog(builder);
+        if (checker ==  null) return;
+        builder.setButton(R.id.edpButton1,R.string.ok,DialogInterface.BUTTON_POSITIVE,new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String newVal = getEditText().getText().toString();
+                String etxt = checker.checkValue(newVal);
+                if (etxt == null) {
+                    setText(newVal);
+                    getDialog().dismiss();
+                    return;
+                }
+                Toast.makeText(getContext(),getContext().getResources().getString(R.string.invalidParameterValue)+":"+newVal,Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     public void setChecker(ISettingsChecker checker){

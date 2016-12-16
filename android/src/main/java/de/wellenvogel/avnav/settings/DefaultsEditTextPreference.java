@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.preference.EditTextPreference;
 import android.util.AttributeSet;
+import android.widget.Button;
 
 import de.wellenvogel.avnav.main.R;
 
@@ -24,17 +25,19 @@ public class DefaultsEditTextPreference extends OwnDialogEditTextPreference {
     }
 
     @Override
-    protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
-        super.onPrepareDialogBuilder(builder);
+    protected void onShowDialog(DialogBuilder builder) {
+        super.onShowDialog(builder);
         if (defaultValue != null) {
-            builder.setNeutralButton(R.string.setDefault, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    DefaultsEditTextPreference.this.setText(defaultValue);
-                    DefaultsEditTextPreference.super.onClick(dialog,which);
-                }
-            });
+            builder.setButton(R.id.edpButton3,R.string.setDefault, DialogInterface.BUTTON_NEUTRAL);
         }
+    }
+
+    @Override
+    public void onClick(DialogInterface dialog, int which) {
+        if (which == DialogInterface.BUTTON_NEUTRAL) {
+            setText(defaultValue);
+        }
+        super.onClick(dialog,which);
     }
     public void setDefaultValue(String defaultValue){
         this.defaultValue=defaultValue;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- the colors here should match the less -->
-    <color name="colorMain">#546E7A</color>
+    <color name="colorMain">#546e7a</color>
     <color name="colorSecond">#CFD8DC</color>
     <color name="colorSelection">#ECEFF1</color>
     <color name="colorTextWhite">#FFFFFF</color>
