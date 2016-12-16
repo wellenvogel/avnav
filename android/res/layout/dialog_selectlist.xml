@@ -24,7 +24,7 @@
     android:background="?android:windowBackground">
 
     <TextView
-        android:id="@+id/list_title"
+        android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="20dp"
@@ -38,6 +38,22 @@
         android:layout_marginBottom="24dp"
         android:textAppearance="@style/DialogSecond"
         android:choiceMode="singleChoice"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/lspButtonContainer"
+        android:gravity="right"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+        <Button
+            android:text="@string/cancel"
+            android:layout_width="wrap_content"
+            android:id="@+id/lspButton2"
+            style="@style/FlatButton"
+            android:visibility="visible" />
+    </LinearLayout>
 
 </LinearLayout>
 

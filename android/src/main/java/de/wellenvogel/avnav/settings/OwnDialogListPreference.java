@@ -74,12 +74,12 @@ public class OwnDialogListPreference extends ListPreference {
 
     private void selectItemClicked(int idx){
         mClickedDialogEntryIndex=idx;
-        onClick(mDialog, DialogInterface.BUTTON_POSITIVE);
-        mDialog.dismiss();
+        onClick(mDialogBuilder.getDialog(), DialogInterface.BUTTON_POSITIVE);
+        mDialogBuilder.getDialog().dismiss();
     }
 
 
-    private AlertDialog mDialog;
+    private DialogBuilder mDialogBuilder;
     private CharSequence[] mEntryValues;
     private CharSequence[] mEntryNames;
     private int mClickedDialogEntryIndex=0;
@@ -107,31 +107,27 @@ public class OwnDialogListPreference extends ListPreference {
     @Override
     protected void showDialog(Bundle state) {
         Context context = getContext();
+        if (mDialogBuilder == null){
+            mDialogBuilder=new DialogBuilder(context,R.layout.dialog_selectlist);
+        }
         mEntryValues=getEntryValues();
         mEntryNames=getEntries();
         mClickedDialogEntryIndex=findIndexOf(getValue());
-        AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                .setTitle(null)
-                .setNegativeButton(R.string.cancel, this);
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View v = inflater.inflate(R.layout.dialog_selectlist, null);
-        TextView title = (TextView) v.findViewById(R.id.list_title);
-        if (title != null) title.setText(getTitle());
-        ListView lv=(ListView)v.findViewById(R.id.list_value);
+        mDialogBuilder.setTitle(getTitle());
+        AlertDialog dialog=mDialogBuilder.createDialog();
+        ListView lv=(ListView)mDialogBuilder.getContentView().findViewById(R.id.list_value);
         lv.setAdapter(new CustomAdapter());
-        builder.setView(v);
-        final AlertDialog dialog = builder.create();
         dialog.setOnDismissListener(this);
+        mDialogBuilder.setButton(R.id.lspButton2,R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
         dialog.show();
-        mDialog=dialog;
     }
 
     @Override
     public Dialog getDialog() {
-        return mDialog;
+        return mDialogBuilder.getDialog();
     }
 
     public AlertDialog getAlertDialog(){
-        return mDialog;
+        return mDialogBuilder.getDialog();
     }
 }
