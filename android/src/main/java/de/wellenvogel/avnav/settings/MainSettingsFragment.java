@@ -45,8 +45,6 @@ public class MainSettingsFragment extends SettingsFragment {
                             });
                     FolderChooseDialog.Default_File_Name="avnav";
                     FolderChooseDialog.dialogTitle=getString(R.string.selectWorkDir);
-                    FolderChooseDialog.okButtonText=getString(R.string.ok);
-                    FolderChooseDialog.cancelButtonText=getString(R.string.cancel);
                     FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
                     FolderChooseDialog.newFolderText=getString(R.string.createFolder);
                     FolderChooseDialog.chooseFile_or_Dir(myPref.getText());
@@ -75,8 +73,6 @@ public class MainSettingsFragment extends SettingsFragment {
                             });
                     FolderChooseDialog.Default_File_Name="avnav";
                     FolderChooseDialog.dialogTitle=getString(R.string.selectChartDir);
-                    FolderChooseDialog.okButtonText=getString(R.string.ok);
-                    FolderChooseDialog.cancelButtonText=getString(R.string.cancel);
                     FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
                     FolderChooseDialog.newFolderText=getString(R.string.createFolder);
                     FolderChooseDialog.chooseFile_or_Dir(myChartPref.getText());

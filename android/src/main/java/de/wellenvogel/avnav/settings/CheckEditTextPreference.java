@@ -1,18 +1,12 @@
 package de.wellenvogel.avnav.settings;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.Bundle;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
  * Created by andreas on 29.11.15.
@@ -34,7 +28,7 @@ public class CheckEditTextPreference extends DefaultsEditTextPreference {
     protected void onShowDialog(DialogBuilder builder) {
         super.onShowDialog(builder);
         if (checker ==  null) return;
-        builder.setButton(R.id.edpButton1,R.string.ok,DialogInterface.BUTTON_POSITIVE,new DialogInterface.OnClickListener() {
+        builder.setButton(R.string.ok,DialogInterface.BUTTON_POSITIVE,new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String newVal = getEditText().getText().toString();

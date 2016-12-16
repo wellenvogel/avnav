@@ -5,19 +5,17 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.CheckedTextView;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
  * Created by andreas on 11.12.16.
@@ -118,7 +116,7 @@ public class OwnDialogListPreference extends ListPreference {
         ListView lv=(ListView)mDialogBuilder.getContentView().findViewById(R.id.list_value);
         lv.setAdapter(new CustomAdapter());
         dialog.setOnDismissListener(this);
-        mDialogBuilder.setButton(R.id.lspButton2,R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
+        mDialogBuilder.setButton(R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
         dialog.show();
     }
 

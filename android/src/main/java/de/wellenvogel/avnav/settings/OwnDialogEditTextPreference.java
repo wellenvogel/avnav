@@ -7,16 +7,11 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
-
-import java.util.HashMap;
 
 import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
  * Created by andreas on 11.12.16.
@@ -65,9 +60,9 @@ public class OwnDialogEditTextPreference extends EditTextPreference {
         mEditText = (EditText) mDialogBuilder.getContentView().findViewById(R.id.value);
         mEditText.setText(getText());
         mDialogBuilder.getDialog().setOnDismissListener(this);
-        mDialogBuilder.setButton(R.id.edpButton1,R.string.ok,DialogInterface.BUTTON_POSITIVE);
-        mDialogBuilder.setButton(R.id.edpButton2,R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
-        mDialogBuilder.hideButton(R.id.edpButton3);
+        mDialogBuilder.setButton(R.string.ok,DialogInterface.BUTTON_POSITIVE);
+        mDialogBuilder.setButton(R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
+        mDialogBuilder.hideButton(R.id.Button3);
         mDialogBuilder.setOnClickListener(this);
         onShowDialog(mDialogBuilder);
         mDialogBuilder.show();

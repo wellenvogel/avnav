@@ -1,12 +1,11 @@
 package de.wellenvogel.avnav.settings;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.preference.EditTextPreference;
 import android.util.AttributeSet;
 
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
  * Created by andreas on 29.11.15.
@@ -24,7 +23,7 @@ public class ClearableEditTextPreference extends OwnDialogEditTextPreference {
     @Override
     protected void onShowDialog(DialogBuilder b) {
         super.onShowDialog(b);
-        b.setButton(R.id.edpButton3,R.string.clear,DialogInterface.BUTTON_NEUTRAL);
+        b.setButton(R.string.clear,DialogInterface.BUTTON_NEUTRAL);
     }
     @Override
     public void onClick(DialogInterface dialog, int which) {

@@ -1,13 +1,11 @@
 package de.wellenvogel.avnav.settings;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.preference.EditTextPreference;
 import android.util.AttributeSet;
-import android.widget.Button;
 
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
  * Created by andreas on 29.11.15.
@@ -28,7 +26,7 @@ public class DefaultsEditTextPreference extends OwnDialogEditTextPreference {
     protected void onShowDialog(DialogBuilder builder) {
         super.onShowDialog(builder);
         if (defaultValue != null) {
-            builder.setButton(R.id.edpButton3,R.string.setDefault, DialogInterface.BUTTON_NEUTRAL);
+            builder.setButton(R.string.setDefault, DialogInterface.BUTTON_NEUTRAL);
         }
     }
 

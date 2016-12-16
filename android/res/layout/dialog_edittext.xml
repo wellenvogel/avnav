@@ -64,23 +64,23 @@
                     android:text="@string/reset"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/edpButton3"
+                    android:id="@+id/Button3"
                     style="@style/FlatButton"
-                    android:visibility="visible" />
+                    android:visibility="invisible" />
             </LinearLayout>
 
             <Button
                 android:text="@string/cancel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/edpButton2"
+                android:id="@+id/Button2"
                 style="@style/FlatButton"
                 android:visibility="visible" />
             <Button
                 android:text="@string/ok"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/edpButton1"
+                android:id="@+id/Button1"
                 style="@style/FlatButton"
                 android:visibility="visible"/>
         </LinearLayout>

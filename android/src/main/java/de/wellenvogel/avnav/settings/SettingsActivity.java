@@ -168,8 +168,8 @@ public class SettingsActivity extends PreferenceActivity {
                     });
             FolderChooseDialog.Default_File_Name="avnav";
             FolderChooseDialog.dialogTitle=activity.getString(R.string.selectWorkDirWritable);
-            FolderChooseDialog.okButtonText=activity.getString(R.string.ok);
-            FolderChooseDialog.cancelButtonText=activity.getString(R.string.cancel);
+            FolderChooseDialog.okButtonText=R.string.ok;
+            FolderChooseDialog.cancelButtonText=R.string.cancel;
             FolderChooseDialog.newFolderNameText=activity.getString(R.string.newFolderName);
             FolderChooseDialog.newFolderText=activity.getString(R.string.createFolder);
             File wdf=new File(Environment.getExternalStorageDirectory(),"avnav");
