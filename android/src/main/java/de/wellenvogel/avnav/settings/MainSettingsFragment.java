@@ -9,6 +9,9 @@ import android.preference.DialogPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.widget.Toast;
+
+import java.io.File;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
@@ -35,6 +38,11 @@ public class MainSettingsFragment extends SettingsFragment {
                                 public void onChosenDir(String chosenDir) {
                                     // The code in this function will be executed when the dialog OK button is pushed
                                     ((EditTextPreference)preference).setText(chosenDir);
+                                    try {
+                                        SettingsActivity.createWorkingDir(getActivity(), new File(chosenDir));
+                                    } catch (Exception ex) {
+                                        Toast.makeText(getActivity(), ex.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
                                     AvnLog.i(Constants.LOGPRFX, "select work directory " + chosenDir);
                                 }
 
