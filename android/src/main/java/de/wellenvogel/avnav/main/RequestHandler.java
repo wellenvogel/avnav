@@ -632,14 +632,9 @@ public class RequestHandler {
             }catch (JSONException i){}
             return o.toString();
         }
-        private Resources getAppResources(){
-            Resources rt=null;
-            try {
-                rt = activity.getPackageManager().getResourcesForApplication(Constants.OWN_PACKAGE);
-            } catch (PackageManager.NameNotFoundException e) {
-                Log.e(AvnLog.LOGPREFIX,"own package "+ Constants.OWN_PACKAGE+" not found");
-                rt=activity.getResources();
-            }
+        private Resources getAppResources() {
+            Resources rt = null;
+            rt = activity.getResources();
             return rt;
         }
         @JavascriptInterface

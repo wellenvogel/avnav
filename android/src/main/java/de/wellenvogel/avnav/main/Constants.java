@@ -42,7 +42,6 @@ public class Constants {
     public static final String XWALKORIG="org.xwalk.core";
     public static final String XWALKAPP="de.wellenvogel.xwalk";
     public static final String XWALKVERSION="10.39.235.16";
-    public static final String OWN_PACKAGE="de.wellenvogel.avnav.main";
     public static final String LOGPRFX="avnav";
     public static final int    OSVERSION_XWALK=19;  //if below this version we should have xwalk
     public static final int ROUTE_OPEN_REQUEST=0;
