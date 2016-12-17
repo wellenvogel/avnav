@@ -97,7 +97,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getPreferenceManager().setSharedPreferencesName(Constants.PREFNAME);
-        getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     public void onResume() {
@@ -105,7 +104,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         getPreferenceScreen().getSharedPreferences()
                 .registerOnSharedPreferenceChangeListener(this);
         updateTextSummaries(getPreferenceScreen());
-        getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 
     }
 

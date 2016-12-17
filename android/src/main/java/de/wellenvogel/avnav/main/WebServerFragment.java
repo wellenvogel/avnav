@@ -103,8 +103,7 @@ public class WebServerFragment extends Fragment {
         timerSequence++;
         runnable=new TimerRunnable(timerSequence);
         handler.postDelayed(runnable,100);
-        getActivity().getActionBar().show();
-        getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).getToolbar().show().setOnMenuItemClickListener(this).setTitle(R.string.webserver);
         setHasOptionsMenu(true);
         return rt;
 
@@ -137,6 +136,7 @@ public class WebServerFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        ((MainActivity)getActivity()).getToolbar().show().setOnMenuItemClickListener(this).setTitle(R.string.webserver);
         String port=((MainActivity)getActivity()).sharedPrefs.getString(Constants.WEBSERVERPORT,"34567");
         try {
             int portnum = Integer.parseInt(port);
@@ -247,6 +247,11 @@ public class WebServerFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home){
             ((MainActivity) getActivity()).showSettings();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_about){
+            Intent intent = new Intent(getActivity(), Info.class);
+            startActivity(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);

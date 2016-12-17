@@ -8,7 +8,7 @@
         <item name="android:scrollbarDefaultDelayBeforeFade">1000</item>
         <item name="android:scrollbarStyle">insideInset</item>
     </style>
-    <style name="AppTheme" parent="@android:style/Theme.Holo.Light">
+    <style name="AppTheme" parent="@android:style/Theme.Holo.Light.NoActionBar">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@color/colorBackground</item>
@@ -24,13 +24,12 @@
         <item name="dialogHeader">@style/DialogHeader</item>
         <item name="dialogSubHeader">@style/DialogSubHeader</item>
     </style>
-    <style name="MyActionBarTheme" parent="@android:style/Widget.Holo.Light.ActionBar">
+    <style name="MyActionBarTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
         <item name="android:icon">@android:color/transparent</item>
         <item name="android:background">@color/colorMain</item>
         <item name="android:backgroundStacked">@color/colorMain</item>
         <item name="android:titleTextStyle">@style/MyActionText</item>
         <item name="android:subtitleTextStyle">@style/MyActionText</item>
-
     </style>
     <style name="MyActionText" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
         <item name="android:textColor">@color/colorTextWhite</item>

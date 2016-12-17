@@ -22,7 +22,9 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -35,6 +37,7 @@ import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.settings.SettingsActivity;
+import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.DialogBuilder;
 
@@ -51,6 +54,10 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     private File workBase;
     GpsService gpsService=null;
     int goBackSequence;
+    private ActionBarHandler mToolbar;
+    public ActionBarHandler getToolbar(){
+        return mToolbar;
+    }
     private IJsEventHandler jsEventHandler;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
@@ -282,6 +289,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.viewcontainer);
+        mToolbar=new ActionBarHandler(this,R.menu.main_activity_actions);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.expert_preferences, false);
         workdir=sharedPrefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath() + "/avnav");

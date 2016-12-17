@@ -17,6 +17,9 @@ import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.io.File;
@@ -28,6 +31,7 @@ import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.main.SimpleFileDialog;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
+import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 
 /**
@@ -38,12 +42,29 @@ public class SettingsActivity extends PreferenceActivity {
 
     private List<Header> headers=null;
     private static final int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+    private ActionBarHandler mToolbar;
 
+    public ActionBarHandler getToolbar(){
+        if (mToolbar != null) return mToolbar;
+        View tbv=findViewById(R.id.toolbar);
+        mToolbar=new ActionBarHandler(this,R.menu.settings_activity_actions);
+        return mToolbar;
+    }
+
+    private void injectToolbar(){
+        ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
+        LinearLayout content = (LinearLayout) root.getChildAt(0);
+        LinearLayout toolbarContainer = (LinearLayout) View.inflate(this, R.layout.settings, null);
+        root.removeAllViews();
+        toolbarContainer.addView(content);
+        root.addView(toolbarContainer);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        injectToolbar();
+        getToolbar().setOnMenuItemClickListener(this);
         //handleInitialSettings(this, true);
         updateHeaderSummaries(true);
 
@@ -242,6 +263,9 @@ public class SettingsActivity extends PreferenceActivity {
 
     @Override
     protected void onResume() {
+        View toolbar=findViewById(R.id.toolbar);
+        if (toolbar == null) injectToolbar();
+        getToolbar().setOnMenuItemClickListener(this);
         updateHeaderSummaries(true);
         super.onResume();
 
@@ -277,6 +301,17 @@ public class SettingsActivity extends PreferenceActivity {
             }
         }
         if (hasChanged && allowInvalidate) invalidateHeaders();
+    }
+
+    @Override
+    protected void onTitleChanged(CharSequence title, int color) {
+        super.onTitleChanged(title, color);
+        if (onIsMultiPane()) {
+            if (mToolbar != null) mToolbar.setTitle(R.string.androidSettings);
+        }
+        else {
+            if (mToolbar != null) mToolbar.setTitle(title);
+        }
     }
 }
 

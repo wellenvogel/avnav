@@ -17,6 +17,7 @@ import android.widget.TextView;
 import java.io.InputStream;
 
 import de.wellenvogel.avnav.settings.SettingsActivity;
+import de.wellenvogel.avnav.util.ActionBarHandler;
 
 /**
  * Created by andreas on 30.12.14.
@@ -52,7 +53,8 @@ public class Info extends Activity {
         });
         TextView view=(TextView)findViewById(R.id.txInfo);
         view.setMovementMethod(LinkMovementMethod.getInstance());
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        ActionBarHandler toolbar=new ActionBarHandler(this,R.menu.info_activity_actions);
+        toolbar.show().setOnMenuItemClickListener(this);
     }
 
     private void setText(String fname,int id ){

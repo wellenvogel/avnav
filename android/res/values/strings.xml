@@ -9,6 +9,7 @@
     <string name="noLocation">No GPS found, enable now?</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="back">Back</string>
     <string name="selectWorkDir">select working Dir</string>
     <string name="selectWorkDirWritable">Your old workdir ist not writable, select a new one</string>
     <string name="selectChartDir">select additional chart dir</string>
@@ -56,6 +57,7 @@
     <string name="selectBlueTooth">Bluetooth Device</string>
     <string name="noSuchBluetoothDevice">No such bluetooth device</string>
     <string name="settings">Settings</string>
+    <string name="androidSettings">Android Settings</string>
     <string name="labelSettingsIpAddress">IP Address</string>
     <string name="labelSettingsIpPort">IP Port</string>
     <string name="labelSettingsNmea">NMEA</string>
@@ -97,5 +99,6 @@
     <string name="loading">AvNav is loading...</string>
     <string name="labelSettingsServerPort">port for external browser mode</string>
     <string name="reset">Reset</string>
+    <string name="webserver">AvNav Server</string>
 
 </resources>
