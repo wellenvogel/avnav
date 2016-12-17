@@ -1,7 +1,6 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,6 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import de.wellenvogel.avnav.util.AvnDialogHandler;
+import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
  * Created by andreas on 10.01.15.
@@ -21,9 +21,9 @@ public class XwalkDownloadHandler {
         this.handler=new AvnDialogHandler(activity);
         this.activity = activity;
     }
-    private AlertDialog alertDialog;
-    public void showDownloadDialog(String title, String message,final boolean finishOnCancel) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+
+    public void showDownloadDialog(String title, String message, final boolean finishOnCancel) {
+        DialogBuilder builder = new DialogBuilder(this.activity, R.layout.dialog_confirm);
         builder.setNegativeButton(android.R.string.cancel,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
@@ -36,14 +36,13 @@ public class XwalkDownloadHandler {
             builder.setNeutralButton(R.string.xwalkDownloadFromUrl,
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            if (! handler.onNeutral(DIALOGID)) return;
+                            if (!handler.onNeutral(DIALOGID)) return;
                             Intent goDownload = new Intent(Intent.ACTION_VIEW);
                             goDownload.setData(Uri.parse(downloadUrl));
                             try {
                                 activity.startActivity(goDownload);
                             } catch (Exception e) {
                                 Toast.makeText(activity, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                                return;
                             }
                         }
                     });
@@ -51,36 +50,22 @@ public class XwalkDownloadHandler {
         builder.setPositiveButton(R.string.xwalkDownloadFromPlaystore,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        if (! handler.onOk(DIALOGID)) return;
+                        if (!handler.onOk(DIALOGID)) return;
                         Intent goToMarket = new Intent(Intent.ACTION_VIEW);
                         goToMarket.setData(Uri.parse(
                                 "market://details?id=" + Constants.XWALKAPP));
                         try {
                             activity.startActivity(goToMarket);
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             Toast.makeText(activity, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                            return;
                         }
                     }
                 });
 
-            builder.setTitle(title).setMessage(message);
-
-            alertDialog = builder.create();
-            alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    alertDialog = null;
-                }
-            });
-            alertDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    alertDialog = null;
-                }
-            });
-            alertDialog.show();
-        }
+        builder.setTitle(title);
+        builder.setText(R.id.question, message);
+        builder.show();
+    }
 
     public String getLibraryApkDownloadUrl() {
         String arch = System.getProperty("os.arch").toUpperCase();

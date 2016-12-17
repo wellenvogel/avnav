@@ -17,9 +17,9 @@
     <de.wellenvogel.avnav.settings.CheckEditTextPreference
         android:key="ip.port"
         android:title="@string/labelSettingsIpPort"></de.wellenvogel.avnav.settings.CheckEditTextPreference>
-    <EditTextPreference
+    <de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference
         android:title="@string/selectBlueTooth"
-        android:key="bt.device"></EditTextPreference>
+        android:key="bt.device"></de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference>
     <de.wellenvogel.avnav.settings.ClearableEditTextPreference
         android:key="ais.own"
         android:numeric="integer"

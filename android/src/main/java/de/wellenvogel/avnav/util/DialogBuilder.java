@@ -33,6 +33,32 @@ public class DialogBuilder {
         idMap.put(DialogInterface.BUTTON_POSITIVE,R.id.Button1);
     }
 
+    public void setText(int viewId,int text){
+        createDialog();
+        if (text == 0){
+            setText(viewId,null);
+            return;
+        }
+        CharSequence ctext= mContext.getResources().getString(text);
+        setText(viewId,ctext);
+    }
+    public void setText(int viewId,CharSequence text){
+        createDialog();
+        if (mView == null) return;
+        TextView tv=null;
+        try {
+            tv = (TextView) mView.findViewById(viewId);
+        } catch (Exception e){}
+        if (tv == null) return;
+        if (text == null){
+            tv.setVisibility(View.INVISIBLE);
+        }
+        else{
+            tv.setVisibility(View.VISIBLE);
+            tv.setText(text);
+        }
+    }
+
 
     public DialogBuilder setButton(int text, final int buttonId){
         setButton(text, buttonId, new DialogInterface.OnClickListener() {
@@ -46,10 +72,7 @@ public class DialogBuilder {
     }
 
     public DialogBuilder setButton(int text, final int buttonId, final DialogInterface.OnClickListener listener){
-        if (mView == null) {
-            AvnLog.e("view not set for DialogBuilder in set button");
-            return this;
-        }
+        createDialog();
         Integer layoutId=idMap.get(buttonId);
         if (layoutId == null){
             return this;
@@ -68,12 +91,36 @@ public class DialogBuilder {
         });
         return this;
     }
+    public DialogBuilder setPositiveButton(int text, final DialogInterface.OnClickListener listener){
+        return setButton(text, DialogInterface.BUTTON_POSITIVE, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                listener.onClick(dialog,which);
+                dialog.dismiss();
+            }
+        });
+    }
+    public DialogBuilder setNegativeButton(int text, final DialogInterface.OnClickListener listener){
+        return setButton(text, DialogInterface.BUTTON_NEGATIVE, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                listener.onClick(dialog,which);
+                dialog.dismiss();
+            }
+        });
+    }
+    public DialogBuilder setNeutralButton(int text, final DialogInterface.OnClickListener listener){
+        return setButton(text, DialogInterface.BUTTON_NEUTRAL, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                listener.onClick(dialog,which);
+                dialog.dismiss();
+            }
+        });
+    }
 
     public DialogBuilder hideButton(final int id) {
-        if (mView == null) {
-            AvnLog.e("view not set for DialogBuilder in set button");
-            return this;
-        }
+        createDialog();
         Integer layoutId=idMap.get(id);
         if (layoutId == null) return this;
         Button b = (Button) mView.findViewById(layoutId);
@@ -90,36 +137,91 @@ public class DialogBuilder {
                 .setTitle(null);
         LayoutInflater inflater = LayoutInflater.from(mContext);
         mView = inflater.inflate(mLayout, null);
-        if (getTitle() != null) {
-            TextView title = (TextView) mView.findViewById(R.id.title);
-            if (title != null) title.setText(getTitle());
-        }
         builder.setView(mView);
         mDialog = builder.create();
+        setText(R.id.title,getTitle());
         return mDialog;
     }
     public void show(){
-        if (mDialog == null) throw new RuntimeException("alert dialog not created for show");
+        createDialog();
         mDialog.show();
+    }
+    public void dismiss(){
+        if (mDialog == null) return;
+        mDialog.dismiss();
     }
 
     public CharSequence getTitle() {
         return mTitle;
     }
     public View getContentView(){
+        createDialog();
         return mView;
     }
     public AlertDialog getDialog(){
+        createDialog();
         return mDialog;
     }
     public void setOnClickListener(DialogInterface.OnClickListener listener){
         mOnClickListener=listener;
     }
+    public void setTitle(int title){
+        setTitle((title != 0)?mContext.getResources().getString(title):null);
+    }
     public void setTitle(CharSequence title){
         mTitle=title;
-        if (mView != null){
-            TextView titleView = (TextView) mView.findViewById(R.id.title);
-            titleView.setText(title);
-        }
+        setText(R.id.title,title);
+    }
+
+    /**
+     * show a simple confirm dialog
+     * @param context
+     * @param title the title if any (0 otherwise)
+     * @param info the text to be dsiplayed
+     * @param listener the dialog listener
+     * @return the created builder
+     */
+    public static DialogBuilder confirmDialog(Context context, int title, int info, final DialogInterface.OnClickListener listener){
+        DialogBuilder builder=new DialogBuilder(context,R.layout.dialog_confirm);
+        builder.createDialog();
+        builder.setText(R.id.title,title);
+        builder.setText(R.id.question,info);
+        builder.setButton(R.string.ok,DialogInterface.BUTTON_POSITIVE);
+        builder.setButton(R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
+        builder.setOnClickListener(new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                listener.onClick(dialog,which);
+            }
+        });
+        builder.show();
+        return builder;
+    }
+
+    /**
+     * show a simple alert with only an OK button
+     * @param context
+     * @param title the title if any, 0 otherwise
+     * @param info the text to be displayed
+     * @param listener the dialog listener
+     * @return
+     */
+    public static DialogBuilder alertDialog(Context context, int title, int info, final DialogInterface.OnClickListener listener){
+        DialogBuilder builder=new DialogBuilder(context,R.layout.dialog_confirm);
+        builder.createDialog();
+        builder.setText(R.id.title,title);
+        builder.setText(R.id.question,info);
+        builder.setButton(R.string.ok,DialogInterface.BUTTON_POSITIVE);
+        builder.setOnClickListener(new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                listener.onClick(dialog,which);
+            }
+        });
+        builder.hideButton(R.id.Button2);
+        builder.show();
+        return builder;
     }
 }

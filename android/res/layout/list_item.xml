@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
 
-    <TextView
+
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="56sp"
         android:paddingLeft="12dp"
         android:paddingRight="12dp"
         android:id="@+id/checkedTextView"
         android:textAppearance="@style/DialogSecond"
         android:background="@drawable/list_selector"
-        android:gravity="left|center_vertical" />
+        android:gravity="left|center_vertical"
+        android:layout_height="56dp"
+        android:minHeight="56sp"
+        android:text="lala" />
     <!--android:checkMark="?android:attr/listChoiceIndicatorSingle" -->
-</LinearLayout>

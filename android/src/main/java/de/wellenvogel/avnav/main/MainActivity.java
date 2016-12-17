@@ -1,33 +1,42 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.content.*;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.*;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import org.xwalk.core.XWalkActivity;
+
+import java.io.File;
+import java.net.InetSocketAddress;
+
 import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
-
-import org.xwalk.core.XWalkActivity;
-
-import java.io.*;
-import java.net.InetSocketAddress;
+import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
  * Created by andreas on 06.01.15.
@@ -133,23 +142,15 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             // Better solution would be to display a dialog and suggesting to
             // go to the settings
             if (!enabled) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage(R.string.noLocation);
-                builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        // User clicked OK button
-                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                        startActivity(intent);
+                DialogBuilder.confirmDialog(this, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == DialogInterface.BUTTON_POSITIVE){
+                            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(intent);
+                        }
                     }
                 });
-                builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        // User cancelled the dialog
-                    }
-                });
-                AlertDialog dialog = builder.create();
-                dialog.show();
-
             }
         }
         File trackDir=new File(sharedPrefs.getString(Constants.WORKDIR,""),"tracks");
@@ -215,18 +216,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     //to be called e.g. from js
     void goBack(){
         try {
-            //TODO: add dialog
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setPositiveButton(android.R.string.ok,
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            MainActivity.this.endApp();
-                        }
-                    });
-            builder.setNegativeButton(android.R.string.cancel,null);
-            builder.setMessage(R.string.endApplication);
-            AlertDialog alertDialog = builder.create();
-            alertDialog.show();
+            DialogBuilder.confirmDialog(this, 0, R.string.endApplication, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (which == DialogInterface.BUTTON_POSITIVE){
+                        endApp();
+                    }
+                }
+            });
         } catch(Throwable i){
             //sometime a second call (e.g. when the JS code was too slow) will throw an exception
             Log.e(AvnLog.LOGPREFIX,"exception in goBack:"+i.getLocalizedMessage());
@@ -346,21 +343,23 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
         if (mode.isEmpty() || startPendig) {
             startSomething=false;
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setPositiveButton(android.R.string.ok,
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            handleRestart(true,false);
-                        }
-                    });
-
+            int title;
+            int message;
             if (startPendig) {
-                builder.setTitle(R.string.somethingWrong).setMessage(R.string.somethingWrongMessage);
+                title=R.string.somethingWrong;
+                message=R.string.somethingWrongMessage;
             } else {
-                builder.setTitle(R.string.firstStart).setMessage(R.string.firstStartMessage);
+                title=R.string.firstStart;
+                message=R.string.firstStartMessage;
             }
-            AlertDialog alertDialog = builder.create();
-            alertDialog.show();
+            DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (which == DialogInterface.BUTTON_POSITIVE){
+                        handleRestart(true,false);
+                    }
+                }
+            });
             if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
         }
         try {
@@ -376,10 +375,10 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                 if (lastVersion == 0 ){
                     sharedPrefs.edit().putInt(Constants.VERSION,version).commit();
                     startSomething=false;
-                    AlertDialog.Builder builder=new AlertDialog.Builder(this);
+                    DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
                     builder.setTitle(R.string.newVersionTitle);
-                    builder.setMessage(R.string.newVersionMessage);
-                    builder.setNeutralButton(R.string.settings, new DialogInterface.OnClickListener() {
+                    builder.setText(R.id.question,R.string.newVersionMessage);
+                    builder.setNegativeButton(R.string.settings, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             handleRestart(true,false);
@@ -391,7 +390,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                             handleRestart(false,false);
                         }
                     });
-                    builder.create().show();
+                    builder.show();
                 }
             }catch (Exception e){}
         }

@@ -1,7 +1,6 @@
 package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
@@ -16,16 +15,17 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.provider.Settings;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Set;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
  * Created by andreas on 24.10.15.
@@ -83,30 +83,41 @@ public class NmeaSettingsFragment extends SettingsFragment {
                 blueToothDevice.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        blueToothDevice.getDialog().dismiss();
                         if (bluetoothAdapter != null && ! bluetoothAdapter.isEnabled()){
                             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                             startActivityForResult(enableBtIntent, 1);
                             return false;
                         }
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                        final DialogBuilder builder=new DialogBuilder(getActivity(),R.layout.dialog_selectlist);
                         builder.setTitle(R.string.selectBlueTooth);
                         final ArrayList<String> items=getBlueToothDevices();
-                        ArrayAdapter<String> adapter=new ArrayAdapter<String>(getActivity(),android.R.layout.simple_list_item_1,items);
-                        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+                        ArrayAdapter<String> adapter=new ArrayAdapter<String>(getActivity(),R.layout.list_item,items);
+                        ListView lv=(ListView)builder.getContentView().findViewById(R.id.list_value);
+                        lv.setAdapter(adapter);
+                        String current=blueToothDevice.getText();
+                        if (current != null && ! current.isEmpty()){
+                            for (int i=0;i<items.size();i++){
+                                if (items.get(i).equals(current)){
+                                    lv.setItemChecked(i,true);
+                                    break;
+                                }
+                            }
+                        }
+                        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String name=items.get(which);
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                String name=items.get(position);
                                 blueToothDevice.setText(name);
+                                builder.dismiss();
                             }
                         });
                         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
+
                             }
                         });
-                        builder.create().show();
+                        builder.show();
                         return false;
                     }
                 });
@@ -132,7 +143,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
         checkGpsEnabled(getActivity(),false);
     }
 
-    public static void checkGpsEnabled(Activity activity,boolean force) {
+    public static void checkGpsEnabled(final Activity activity, boolean force) {
         if (! force) {
             SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
             String nmeaMode = getNmeaMode(prefs);
@@ -144,23 +155,15 @@ public class NmeaSettingsFragment extends SettingsFragment {
         // Better solution would be to display a dialog and suggesting to
         // go to the settings
         if (!enabled) {
-            final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-            builder.setMessage(R.string.noLocation);
-            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User clicked OK button
-                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    builder.getContext().startActivity(intent);
+            DialogBuilder.confirmDialog(activity, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (which == DialogInterface.BUTTON_POSITIVE){
+                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        activity.startActivity(intent);
+                    }
                 }
             });
-            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User cancelled the dialog
-                }
-            });
-            AlertDialog dialog = builder.create();
-            dialog.show();
-
         }
     }
 
