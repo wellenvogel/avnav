@@ -222,9 +222,32 @@ button.avb_Edit {
   .avn_iconButton('images/icons-new/ic_edit.svg');
 }
 /*-------------------------------------------------------------
+   checkbox
+-------------------------------------------------------------*/
+input[type=checkbox].avnPretty + label{
+  position: relative;
+  left:-27px;
+  top:0;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-image: url('images/icons-new/ic_checkbox_blank_outline_black_24dp.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  pointer-events: none;
+}
+input[type=checkbox].avnPretty{
+  opacity: 0;
+  width:24px;
+  height: 24px;
+}
+input[type=checkbox]:checked.avnPretty + label{
+  background-image: url('images/icons-new/ic_checkbox_marked_outline_black_24dp.png');
+}
+
+/*-------------------------------------------------------------
    general settings
 -------------------------------------------------------------*/
-
 
 input {
   border: 2px inset;
@@ -1478,13 +1501,14 @@ button.avb_GpsCancel{
     .nightBorderColorGR(10);
   }
 }
-#avi_settingspage .avn_rightSection label{
+#avi_settingspage .avn_rightSection .avn_settingsLabel{
   width: 8em;
   display: inline-block;
 }
 #avi_settingspage .avn_rightSection input[type=checkbox]{
-  width: 1.3em;
-  height: 1.3em;
+  vertical-align: middle;
+}
+#avi_settingspage .avn_rightSection label{
   vertical-align: middle;
 }
 

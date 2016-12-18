@@ -64,11 +64,11 @@ Settingspage.prototype.localInit=function(){
     var SettingsItem=function(properties){
         if (properties.type == avnav.util.PropertyType.CHECKBOX) {
             return <div className={properties.addClass+ " avn_list_entry"}>
-                <label>{properties.label}</label>
+                <div className="avn_settingsLabel">{properties.label}</div>
                 <input type="checkbox" checked={properties.value?true:false}
                        onChange={function(ev){
                         self.changeValue(properties.name,ev.target.checked);}
-                        }/>
+                        } className="avnPretty"/><label/>
             </div>
         }
         if(properties.type == avnav.util.PropertyType.RANGE){

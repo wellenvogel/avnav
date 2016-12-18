@@ -14,6 +14,7 @@ var copyList=[
     {from: './avnav_viewer.html'},
     {from: './webpack-loader.js',to:'loader.js'},
     {from: './images/icons-new/*svg'},
+    {from: './images/icons-new/ic_*png'},
     {from: '../libraries/jquery/jquery-1.11.0.min.js',to:'libraries'},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
     {from: '../libraries/movable-type/latlon.js',to: 'libraries'}
