@@ -15,6 +15,7 @@
     </de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference>
     <CheckBoxPreference
         android:key="showdemo"
-        android:title="@string/enableDemoLabel">
+        android:title="@string/enableDemoLabel"
+        android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
 </PreferenceScreen>

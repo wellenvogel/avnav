@@ -13,32 +13,34 @@
     </de.wellenvogel.avnav.settings.OwnDialogListPreference>
     <de.wellenvogel.avnav.settings.CheckEditTextPreference
         android:key="ip.addr"
-        android:title="@string/labelSettingsIpAddress"></de.wellenvogel.avnav.settings.CheckEditTextPreference>
+        android:title="@string/labelSettingsIpAddress"/>
     <de.wellenvogel.avnav.settings.CheckEditTextPreference
         android:key="ip.port"
-        android:title="@string/labelSettingsIpPort"></de.wellenvogel.avnav.settings.CheckEditTextPreference>
+        android:title="@string/labelSettingsIpPort"/>
     <de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference
         android:title="@string/selectBlueTooth"
-        android:key="bt.device"></de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference>
+        android:key="bt.device"/>
     <de.wellenvogel.avnav.settings.ClearableEditTextPreference
         android:key="ais.own"
         android:numeric="integer"
-        android:title="@string/labelSettingsOwnMMSI"></de.wellenvogel.avnav.settings.ClearableEditTextPreference>
+        android:title="@string/labelSettingsOwnMMSI"/>
     <de.wellenvogel.avnav.settings.ClearableEditTextPreference
         android:key="gps.filter"
         android:defaultValue=""
-        android:title="@string/labelSettingsNmeaFilter"></de.wellenvogel.avnav.settings.ClearableEditTextPreference>
+        android:title="@string/labelSettingsNmeaFilter"/>
     <CheckBoxPreference
         android:key="gps.logNmea"
         android:defaultValue="false"
-        android:title="@string/labelSettingsNmeaLog"></CheckBoxPreference>
+        android:title="@string/labelSettingsNmeaLog"
+        android:widgetLayout="@layout/preference_checkbox"/>
     <CheckBoxPreference
         android:key="gps.logAis"
         android:defaultValue="false"
-        android:title="@string/labelSettingsAisLog"></CheckBoxPreference>
+        android:title="@string/labelSettingsAisLog"
+        android:widgetLayout="@layout/preference_checkbox"/>
     <de.wellenvogel.avnav.settings.ClearableEditTextPreference
         android:key="gps.logFilter"
         android:defaultValue=""
-        android:title="@string/labelSettingsNmeaLogFilter"></de.wellenvogel.avnav.settings.ClearableEditTextPreference>
+        android:title="@string/labelSettingsNmeaLogFilter"/>
 
 </PreferenceScreen>

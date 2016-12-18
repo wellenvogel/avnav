@@ -1,0 +1,8 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/ic_checkbox_blank_black_24dp"
+        android:state_pressed="true"/>
+    <item android:drawable="@drawable/ic_checkbox_marked_outline_black_24dp"
+        android:state_checked="true"/>
+    <item android:drawable="@drawable/ic_checkbox_blank_outline_black_24dp" />
+
+</selector>
