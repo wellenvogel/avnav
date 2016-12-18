@@ -8,6 +8,6 @@
           local:showAsAction="always" />
     <item android:id="@+id/action_ok"
         android:icon="@drawable/ic_done_white_48dp"
-        android:title="@string/action_about"
+        android:title="@string/ok"
         local:showAsAction="always" />
 </menu>

@@ -14,42 +14,18 @@
         <item name="android:windowBackground">@color/colorBackground</item>
         <item name="android:textColorPrimary">@color/colorText</item>
         <item name="android:textColorSecondary">@color/colorTextSecondary</item>
-    </style>
-    <style name="AppTheme.ActionBar" parent="AppTheme">
-        <item name="android:windowNoTitle">false</item>
-        <item name="android:windowActionBar">true</item>
-        <item name="android:actionBarStyle">@style/MyActionBarTheme</item>
         <item name="android:activatedBackgroundIndicator">@drawable/list_selector</item>
-        <item name="android:homeAsUpIndicator">@drawable/ic_ab_back_holo_dark</item>
-        <item name="dialogHeader">@style/DialogHeader</item>
-        <item name="dialogSubHeader">@style/DialogSubHeader</item>
+
+
     </style>
-    <style name="MyActionBarTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
-        <item name="android:icon">@android:color/transparent</item>
-        <item name="android:background">@color/colorMain</item>
-        <item name="android:backgroundStacked">@color/colorMain</item>
-        <item name="android:titleTextStyle">@style/MyActionText</item>
-        <item name="android:subtitleTextStyle">@style/MyActionText</item>
-    </style>
+
     <style name="MyActionText" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
         <item name="android:textColor">@color/colorTextWhite</item>
-    </style>
-    <style name="DialogStyle" parent="@android:style/Theme.Holo.Light.Dialog">
-        <item name="android:windowTitleStyle">@style/DialogTitle</item>
     </style>
     <style name="DialogTitle" parent="@android:style/TextAppearance.Holo.DialogWindowTitle">
         <item name="android:textColor">@color/colorText</item>
     </style>
-    <!-- some styles for the file dialog -->
-    <style name="DialogHeader" parent="@android:style/Widget.TextView">
-        <item name="android:padding">8dip</item>
-        <item name="android:paddingBottom">16dip</item>
-        <item name="android:textAppearance">@style/DialogTitle</item>
-    </style>
-    <style name="DialogSubHeader" parent="@android:style/Widget.TextView">
-        <item name="android:padding">8dip</item>
-        <item name="android:textAppearance">@style/DialogSecond</item>
-    </style>
+
     <style name="DialogSecond" parent="@android:style/TextAppearance.Holo.Medium">
         <item name="android:textColor">@color/colorTextSecondary</item>
     </style>

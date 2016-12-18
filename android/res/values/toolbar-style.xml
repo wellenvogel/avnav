@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="MyActionBarTheme" >
+        <item name="navigationIcon">@drawable/ic_ab_back_holo_dark</item>
+        <item name="android:icon">@android:color/transparent</item>
+        <item name="android:background">@color/colorMain</item>
+        <item name="android:backgroundStacked">@color/colorMain</item>
+        <item name="titleTextStyle">@style/MyActionText</item>
+        <item name="titleTextAppearance">@style/MyActionText</item>
+        <item name="subtitleTextStyle">@style/MyActionText</item>
+        <item name="actionMenuTextColor">@color/colorTextWhite</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+    </style>
+</resources>
