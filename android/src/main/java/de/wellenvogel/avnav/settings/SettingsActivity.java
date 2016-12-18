@@ -306,12 +306,18 @@ public class SettingsActivity extends PreferenceActivity {
     @Override
     protected void onTitleChanged(CharSequence title, int color) {
         super.onTitleChanged(title, color);
-        if (onIsMultiPane()) {
+        if (!onIsHidingHeaders()) {
             if (mToolbar != null) mToolbar.setTitle(R.string.androidSettings);
         }
         else {
             if (mToolbar != null) mToolbar.setTitle(title);
         }
+    }
+
+    @Override
+    public void showBreadCrumbs(CharSequence title, CharSequence shortTitle) {
+        super.showBreadCrumbs(title,shortTitle);
+        setTitle(title);
     }
 }
 
