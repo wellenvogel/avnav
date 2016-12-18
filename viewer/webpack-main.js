@@ -45,7 +45,7 @@ window.avnav={};
     require('./map/routelayer.js');
     require('./gui/handler.js');
     require('./gui/page.js');
-    require('./gui/mainpage.js');
+    require('./gui/mainpage.jsx');
     require('./gui/navpage.js');
     require('./gui/aispage.js');
     require('./gui/aisinfopage.js');

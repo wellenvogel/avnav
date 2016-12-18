@@ -4,8 +4,14 @@
 avnav.provide('avnav.gui.Mainpage');
 
 var navobjects=require('../nav/navobjects');
-
-
+var Store=require('../util/store');
+var ItemUpdater=require('../components/ItemUpdater.jsx');
+var ItemList=require("../components/ItemList.jsx");
+var ReactDOM=require("react-dom");
+var React=require("react");
+var keys={
+    chartlist:'charts'
+};
 
 /**
  *
@@ -26,6 +32,7 @@ avnav.gui.Mainpage=function(){
         self.layout();
         self.fillList();
     });
+    this.store=new Store();
 };
 avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
 
@@ -41,7 +48,31 @@ avnav.gui.Mainpage.prototype.changeDim=function(newDim){
 };
 
 avnav.gui.Mainpage.prototype.localInit=function(){
-
+    var self=this;
+    var chartSelected=function(item){
+        self.showNavpage(item);
+    };
+    var ChartItem=function(props){
+        return (
+            <div className="avn_mainpage_select_item" onClick={props.onClick}>
+                <img src="images/Chart60.png"/>
+                <span className="avn_mainName">{props.name}</span>
+                <span className="avn_more"/>
+            </div>
+        );
+    };
+    var ChartList=ItemUpdater(ItemList,this.store,keys.chartlist);
+    ReactDOM.render(
+        <ChartList
+            itemClass={ChartItem}
+            onItemClick={chartSelected}
+            className=""
+            itemList={[]}
+            updateCallback={function(){
+                self.layout();
+            }}
+        />,
+        this.selectOnPage('.avn_left_inner')[0]);
 };
 avnav.gui.Mainpage.prototype.fillList=function(){
     var page=this;
@@ -58,28 +89,18 @@ avnav.gui.Mainpage.prototype.fillList=function(){
                 page.toast("reading chartlist failed: "+data.info);
                 return;
             }
-            var div=page.getDiv();
-            var entryTemplate=div.find('#avi_mainpage_default_entry:first').clone();
-            div.find('#avi_mainpage_selections div').remove();
-
+            var items=[];
             for (var e in data.data){
                 var chartEntry=data.data[e];
-                var domEntry=entryTemplate.clone();
-                domEntry.on('click',
-                    {
-                        entry: avnav.clone(chartEntry),
-                        page:page
-                    },
-                    function(ev){
-                        page.showNavpage(ev.data.entry);
-                    });
-                domEntry.find('.avn_mainName').text(chartEntry.name);
-                if (chartEntry.icon) domEntry.find('.avn_mainIcon').attr('src',chartEntry.icon);
-                div.find('#avi_mainpage_selections').append(domEntry);
+                var listEntry={
+                    key: chartEntry.name,
+                    name: chartEntry.name,
+                    url: chartEntry.url,
+                    charturl: chartEntry.charturl
+                };
+                items.push(listEntry);
             }
-            page.layout();
-
-
+            page.store.storeData(keys.chartlist,{itemList: items});
         }
 
     });
@@ -140,8 +161,7 @@ avnav.gui.Mainpage.prototype.navEvent=function(evdata) {
 };
 
 avnav.gui.Mainpage.prototype.layout=function(){
-    $('#avi_mainpage_selections').vAlign();
-    $('#avi_mainpage_selections').hAlign();
+    this.selectOnPage('.avn_listContainer').vAlign().hAlign();
 };
 
 //-------------------------- Buttons ----------------------------------------
