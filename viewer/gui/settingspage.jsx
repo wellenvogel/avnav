@@ -63,12 +63,10 @@ Settingspage.prototype.localInit=function(){
     };
     var SettingsItem=function(properties){
         if (properties.type == avnav.util.PropertyType.CHECKBOX) {
-            return <div className={properties.addClass+ " avn_list_entry"}>
+            return <div className={properties.addClass+ " avn_list_entry"}
+                        onClick={function(){self.changeValue(properties.name,!properties.value);}}>
                 <div className="avn_settingsLabel">{properties.label}</div>
-                <input type="checkbox" checked={properties.value?true:false}
-                       onChange={function(ev){
-                        self.changeValue(properties.name,ev.target.checked);}
-                        } className="avnPretty"/><label/>
+                <span className={'avnCheckbox'+(properties.value?' checked':'')}/>
             </div>
         }
         if(properties.type == avnav.util.PropertyType.RANGE){
@@ -149,7 +147,7 @@ Settingspage.prototype.rangeItemDialog=function(item){
             }
             if (button == 'reset'){
                 this.setState({
-                    value: self.gui.properties.getValueByName(item.name)
+                    value: self.gui.properties.getDescriptionByName(item.name).defaultv
                 });
                 return;
             }
@@ -209,7 +207,7 @@ Settingspage.prototype.colorItemDialog=function(item){
             }
             if (button == 'reset'){
                 this.setState({
-                    value: self.gui.properties.getValueByName(item.name)
+                    value: self.gui.properties.getDescriptionByName(item.name).defaultv
                 });
                 return;
             }
