@@ -74,10 +74,13 @@ avnav.gui.Aispage.prototype.localInit=function(){
     var self=this;
 
     var AisItem=function(props){
-        var fb="X";
         var fmt=self.aisFormatter;
+        var fb=fmt.passFront.format(props);
+        var style={
+            color:props.color
+        };
         return ( <div className="avn_aisListItem" onClick={props.onClick}>
-                <div className="avn_aisItemFB">
+                <div className="avn_aisItemFB" style={style}>
                     <span className="avn_fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
                 </div>
                 <div className="avn_aisData">
@@ -121,7 +124,6 @@ avnav.gui.Aispage.prototype.showPage=function(options) {
 };
 
 avnav.gui.Aispage.prototype.fillData=function(initial){
-    if (! initial) return;
     var aisList=this.aishandler.getAisData();
     var hasTracking=this.aishandler.getTrackedTarget();
     var items=[];
@@ -130,7 +132,7 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         var color=this.gui.properties.getAisColor({
             nearest: ais.nearest,
             warning: ais.warning,
-            tracking: hasTracking && ais.tracking
+            //tracking: hasTracking && ais.tracking
         });
         var item=avnav.assign({},ais,{color:color,key:ais.mmsi});
         items.push(item);
