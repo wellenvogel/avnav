@@ -49,14 +49,14 @@ avnav.inherits(avnav.gui.Aispage,avnav.gui.Page);
 
 var aisInfos=[
     [
-        {name:'distance',label:'Dst'},
-        {name:'cpa',label:'Cpa'},
-        {name:'tcpa',label:'Tcpa'}
+        {name:'distance',label:'Dst',unit:'nm'},
+        {name:'cpa',label:'Cpa',unit:'nm'},
+        {name:'tcpa',label:'Tcpa',unit:'h'}
     ],
     [
-        {name:'course',label:'Cog'},
-        {name:'speed',label:'Sog'},
-        {name:'heading',label:'Hdg'}
+        {name:'course',label:'Cog',unit:'°'},
+        {name:'speed',label:'Sog',unit:'kn'},
+        {name:'heading',label:'Hdg',unit:'°'}
     ],
     [
         {name:'shiptype',label:'Type'},
@@ -91,7 +91,7 @@ avnav.gui.Aispage.prototype.localInit=function(){
                                         return (
                                             <span className="avn_aisInfoElement">
                                                 <span className="avn_aisLabel">{info.label}: </span>
-                                                <span className="avn_aisData">{fmt[info.name].format(props)}</span>
+                                                <span className="avn_aisData">{fmt[info.name].format(props)}{info.unit !== undefined && info.unit}</span>
                                             </span>
                                         );
                                     })
