@@ -470,6 +470,10 @@ all buttons with ids avb_... will call corresponding js functions
                           <div class='avn_label '>we pass</div>
                           <div class='avn_ais_data avn_ais_front' data-name='aisFront'>-------</div>
                       </div>
+                      <div class="avn_row">
+                          <div class='avn_label '>Position</div>
+                          <div class='avn_ais_data' data-name='aisPosition'>-------</div>
+                      </div>
                   </div>
               </div>
           </div>
@@ -503,101 +507,6 @@ all buttons with ids avb_... will call corresponding js functions
   </div>
   <!-- end aisPage-->
 
-  <!-- WpInfo -->
-  <div id="avi_wpinfopage" class="avn_page avn_hidden">
-      <div class='avn_panel avn_left_panel'>
-          <div class='avn_panel avn_left_top'>
-              <span class="avn_normalHeading">Waypoint Info</span>
-              <span class="avn_newHeading avn_hidden">New Waypoint</span>
-          </div>
-
-          <div class="avn_panel avn_scrollable_page avn_left_inner">
-              <div class="avn_infopage_inner">
-                  <h1>
-                      <div class='avn_Status'></div>
-                  </h1>
-
-                  <div class="avn_table">
-                      <div class="avn_row">
-                          <div class='avn_label '>Name</div>
-                          <div class='avn_data ' data-name="markerName">-------</div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>Position</div>
-                          <div class='avn_data' data-name='markerPosition'>-------</div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>BRG(to Wp)</div>
-                          <div class='avn_data'><span data-name='markerCourse'>000</span><span class="avn_unit">&#176</span></div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '><span class="avn_boat"></span>COG</div>
-                          <div class='avn_data'><span class='avd_gpsCourse'>000</span><span class="avn_unit">&#176</span></div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>Distance</div>
-                          <div class='avn_data'><span data-name='markerDistance'>000.0</span><span class="avn_unit">nm</span></div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>ETA</div>
-                          <div class='avn_data'><span data-name='markerEta'>----</span></div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>XTE</div>
-                          <div class='avn_data'><span data-name='markerXte'>000.0</span><span class="avn_unit">nm</span></div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '>VMG</div>
-                          <div class='avn_data'><span data-name='markerVmg'>000.0</span><span class="avn_unit">kn</span></div>
-                      </div>
-                      <div class="avn_row">
-                          <div class='avn_label '><span class="avn_boat"></span>SOG</div>
-                          <div class='avn_data'><span class='avd_gpsSpeed'>000.0</span><span class="avn_unit">kn</span></div>
-                      </div>
-
-                      <div class="avn_row avn_RouteInfo avn_FirstRouteInfo">
-                          <div class='avn_label '>Route</div>
-                          <div class='avn_data'><span data-name="routeName">---</span></div>
-                      </div>
-                      <div class="avn_row avn_RouteInfo ">
-                          <div class='avn_label '>Point</div>
-                          <div class='avn_data'>
-                              <span data-name="routeIndex">---</span>
-                          </div>
-                      </div>
-                      <div class="avn_row avn_RouteInfo avn_NextLeg">
-                          <div class='avn_label '>Next Waypoint</div>
-                          <div class='avn_data'><span data-name="nextName">---</span></div>
-                      </div>
-                      <div class="avn_row avn_RouteInfo avn_NextLeg">
-                          <div class='avn_label '>Course/Distance</div>
-                          <div class='avn_data'>
-                              <span data-name="nextmarkerCourse">---</span><span class="avn_unit">&#176</span>/
-                              <span data-name="nextmarkerDistance">---</span><span class="avn_unit">nm</span>
-                          </div>
-                      </div>
-
-                  </div>
-
-              </div>
-          </div>
-
-
-      </div>
-      <div class='avn_panel avn_right_panel'>
-          <button  type="button"  class="avb_Edit avn_button"></button>
-          <button  type="button"  class="avb_WpInfoLocate avn_button"></button>
-          <button  type="button"  class="avb_WpInfoGps avn_button"></button>
-          <button  type="button"  class="avb_StopNav avn_button"></button>
-          <button  type="button"  class="avb_NavGoto avn_button"></button>
-          <button  type="button"  class="avb_NavNext avn_button"></button>
-          <button  type="button"  class="avb_Forward avn_button"></button>
-          <button  type="button"  class="avb_Back avn_button"></button>
-          <button  type="button"  class="avb_Ok avn_button"></button>
-          <button  type="button"  class="avb_Cancel avn_button"></button>
-      </div>
-  </div>
-  <!-- end WpInfoPage-->
 
   <!-- settingsPage -->
   <div id="avi_settingspage" class="avn_page avn_hidden">
