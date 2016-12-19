@@ -38,11 +38,7 @@ avnav.gui.Aispage=function(){
      * @type {undefined}
      */
     this.aisFormatter=undefined;
-    /**
-     * private
-     * @type {number}
-     */
-    this.showTime=(new Date()).getTime();
+
     this.store=new Store();
     var self=this;
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
@@ -79,7 +75,7 @@ avnav.gui.Aispage.prototype.localInit=function(){
         var style={
             color:props.color
         };
-        return ( <div className="avn_aisListItem" onClick={props.onClick}>
+        return ( <div className={"avn_aisListItem "+props.addClass} onClick={props.onClick}>
                 <div className="avn_aisItemFB" style={style}>
                     <span className="avn_fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
                 </div>
@@ -120,15 +116,16 @@ avnav.gui.Aispage.prototype.localInit=function(){
 avnav.gui.Aispage.prototype.showPage=function(options) {
     if (!this.gui) return;
     this.fillData(true);
-    this.showTime=(new Date()).getTime();
+    avnav.util.Helper.scrollItemIntoView('.avn_selectedItem','#avi_ais_page_inner');
 };
 
 avnav.gui.Aispage.prototype.fillData=function(initial){
     var aisList=this.aishandler.getAisData();
-    var hasTracking=this.aishandler.getTrackedTarget();
+    var trackingTarget=this.aishandler.getTrackedTarget();
     var items=[];
     for( var aisidx in aisList){
         var ais=aisList[aisidx];
+        if (! ais.mmsi) continue;
         var color=this.gui.properties.getAisColor({
             nearest: ais.nearest,
             warning: ais.warning,
@@ -137,7 +134,9 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         var item=avnav.assign({},ais,{color:color,key:ais.mmsi});
         items.push(item);
     }
-    this.store.storeData(keys.aisTargets,{itemList:items});
+    var nsel={};
+    nsel[selections.selected]=trackingTarget;
+    this.store.storeData(keys.aisTargets,{itemList:items,selectors:nsel});
 };
 
 
