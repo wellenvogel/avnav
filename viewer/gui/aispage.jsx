@@ -1,7 +1,6 @@
 /**
  * Created by andreas on 02.05.14.
  */
-avnav.provide('avnav.gui.Aispage');
 var navobjects=require('../nav/navobjects');
 var AisHandler=require('../nav/aisdata');
 var Store=require('../util/store');
@@ -9,6 +8,7 @@ var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ItemList=require('../components/ItemList.jsx');
 var ReactDOM=require('react-dom');
 var React=require('react');
+var OverlayDialog=require('../components/OverlayDialog.jsx');
 
 var keys={
     aisTargets: 'ais',
@@ -27,7 +27,7 @@ var selections={
  *
  * @constructor
  */
-avnav.gui.Aispage=function(){
+var Aispage=function(){
     avnav.gui.Page.call(this,'aispage');
     /**
      * @private
@@ -42,11 +42,13 @@ avnav.gui.Aispage=function(){
 
     this.store=new Store();
     var self=this;
+    this.sortField='cpa';
+    this.sort=this.sort.bind(this);
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
 };
-avnav.inherits(avnav.gui.Aispage,avnav.gui.Page);
+avnav.inherits(Aispage,avnav.gui.Page);
 
 var aisInfos=[
     [
@@ -65,7 +67,7 @@ var aisInfos=[
         {name:'destination',label:'Dest'}
     ]
 ];
-avnav.gui.Aispage.prototype.localInit=function(){
+Aispage.prototype.localInit=function(){
     this.aishandler=this.navobject.getAisHandler();
     this.aisFormatter=this.aishandler.getAisFormatter();
     var self=this;
@@ -117,6 +119,7 @@ avnav.gui.Aispage.prototype.localInit=function(){
                         onClick={function(){
                             avnav.util.Helper.scrollItemIntoView('.avn_aisWarning','#avi_ais_page_inner');
                         }}/>}
+                <span>sorted by {self.fieldToLabel(self.sortField)}</span>
             </div>
         );
     },this.store,keys.summary);
@@ -135,17 +138,34 @@ avnav.gui.Aispage.prototype.localInit=function(){
         </div>,
         this.selectOnPage('.avn_left_inner')[0]);
 };
-avnav.gui.Aispage.prototype.showPage=function(options) {
+Aispage.prototype.showPage=function(options) {
     if (!this.gui) return;
     this.fillData(true);
     avnav.util.Helper.scrollItemIntoView('.avn_selectedItem','#avi_ais_page_inner');
 };
 
-avnav.gui.Aispage.prototype.fillData=function(initial){
+Aispage.prototype.fieldToLabel=function(field){
+    var rt;
+    aisInfos.map(function(l1){
+        l1.map(function(l2){
+            if (l2.name == field) rt=l2.label;
+        })
+    });
+    return rt||field;
+};
+Aispage.prototype.sort=function(a,b){
+    var fa=a[this.sortField];
+    var fb=b[this.sortField];
+    if (fa < fb) return -1;
+    if (fa > fb) return 1;
+    if (fa == fb) return 0;
+};
+Aispage.prototype.fillData=function(initial){
     var aisList=this.aishandler.getAisData();
     var trackingTarget=this.aishandler.getTrackedTarget();
     var items=[];
     var summary={};
+    aisList.sort(this.sort);
     for( var aisidx in aisList){
         var ais=aisList[aisidx];
         if (! ais.mmsi) continue;
@@ -168,14 +188,14 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
 };
 
 
-avnav.gui.Aispage.prototype.hidePage=function(){
+Aispage.prototype.hidePage=function(){
 
 };
 /**
  *
  * @param {navobjects.NavEvent} ev
  */
-avnav.gui.Aispage.prototype.navEvent=function(ev){
+Aispage.prototype.navEvent=function(ev){
     if (! this.visible) return;
     if (ev.type==navobjects.NavEventType.AIS){
         this.fillData(false);
@@ -184,10 +204,28 @@ avnav.gui.Aispage.prototype.navEvent=function(ev){
 
 //-------------------------- Buttons ----------------------------------------
 
-avnav.gui.Aispage.prototype.btnAisNearest=function (button,ev){
+Aispage.prototype.btnAisNearest=function (button,ev){
     this.aishandler.setTrackedTarget(0);
     this.returnToLast();
     avnav.log("Nearest clicked");
+};
+
+Aispage.prototype.btnAisSort=function (button,ev){
+    avnav.log("Sort clicked");
+    var list=[
+        {label:'CPA', value:'cpa'},
+        {label:'TCPA',value:'tcpa'},
+        {label:'DST',value:'distance'}
+    ];
+    for (var i in list){
+        if (list[i].value == this.sortField) list[i].selected=true;
+    }
+    var p=OverlayDialog.selectDialogPromise('Sort Order',list,this.getDialogContainer());
+    var self=this;
+    p.then(function(selected){
+        self.sortField=selected.value;
+        self.fillData();
+    })
 };
 
 /**
@@ -195,6 +233,6 @@ avnav.gui.Aispage.prototype.btnAisNearest=function (button,ev){
  */
 (function(){
     //create an instance of the status page handler
-    var page=new avnav.gui.Aispage();
+    var page=new Aispage();
 }());
 

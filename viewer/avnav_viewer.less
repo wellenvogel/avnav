@@ -146,6 +146,40 @@
   padding: 1em;
 }
 
+/* some settings for pages that have lists */
+
+.avm_listpage {
+  background-color: white;
+  .nightColors();
+}
+
+.avm_listhead{
+  padding: 0.5em;
+  border-bottom: 1px solid;
+  .nightBorderColorGR();
+}
+
+.avm_listcontainer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: auto;
+  bottom: 0;
+  top:0;
+}
+.avm_list_entry{
+  overflow: hidden;
+  position: relative;
+  border-bottom: 1px solid;
+  padding: 1em;
+  .nightBorderColorGR(30);
+}
+
+.avn_list_entry{
+  .avm_list_entry();
+}
+
+
 /*-------------------------------------------------------------
    buttons
 -------------------------------------------------------------*/
@@ -835,38 +869,6 @@ button.avb_WpEdit {
 }
 
 
-/* some settings for pages that have lists */
-
-.avm_listpage {
-  background-color: white;
-  .nightColors();
-}
-
-.avm_listhead{
-  padding: 0.5em;
-  border-bottom: 1px solid;
-  .nightBorderColorGR();
-}
-
-.avm_listcontainer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  overflow: auto;
-  bottom: 0;
-  top:0;
-}
-.avm_list_entry{
-  overflow: hidden;
-  position: relative;
-  border-bottom: 1px solid;
-  padding: 1em;
-  .nightBorderColorGR(30);
-}
-
-.avn_list_entry{
-  .avm_list_entry();
-}
 
 /*-------------------------------------------------------------
    route page
@@ -1118,15 +1120,16 @@ button.avb_DownloadPageUploadCancel{
   padding-top: 0.5em;
   padding-left: 1em;
   padding-bottom: 0.5em;
-  .avn_aisNumTargets{
+  span{
     display: inline-block;
     vertical-align: middle;
+    margin-right: 1em;
   }
   .avn_aisWarning{
     display: inline-block;
     width: 1.8em;
     height: 1.8em;
-    margin-left: 1em;
+    margin-right: 1em;
     vertical-align: middle;
   }
 }
@@ -1181,6 +1184,9 @@ button.avb_AisCancel{
 }
 button.avb_AisNearest {
   .avn_iconButton('images/icons-new/ais-nearest.svg');
+}
+button.avb_AisSort {
+  .avn_iconButton('images/icons-new/sort.svg');
 }
 /*-------------------------------------------------------------
    ais info page
@@ -2018,5 +2024,22 @@ button.avb_MainAndroid {
 .avn_dialog label {
   display: table-cell;
   text-align: right;
+}
+
+.avn_selectDialog{
+  .flex-display();
+  .flex-direction(column);
+  overflow: hidden;
+  max-height: inherit;
+  padding-bottom: 1em;
+  .avn_selectList{
+    .flex(1);
+    overflow: auto;
+  }
+  .avn_row{
+  }
+  .avn_selectedItem {
+    .nightBackFade(@colorSelection);
+  }
 }
 

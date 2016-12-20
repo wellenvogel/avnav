@@ -238,7 +238,7 @@ var OverlayDialog=React.createClass({
             });
         },
         /**
-         * a simpel input value dialog
+         * a simple input value dialog
          * @param {string} title the title text to be displayed
          * @param {string} value the initial value
          * @param {function} okCallback the callback when OK is clicked, value as parameter
@@ -275,6 +275,26 @@ var OverlayDialog=React.createClass({
                     resolve(value);
                     return true;
                 },opt_label,function(){
+                    reject();
+                });
+                OverlayDialog.dialog(Dialog,opt_parent);
+            })
+        },
+        /**
+         * create a value dialog as a promise
+         * this will always fullfill if the user clicks ok
+         * to implement checking and asynchronous close use the valueDialog method
+         * @param title
+         * @param list
+         * @param opt_parent
+         * @returns {Promise}
+         */
+        selectDialogPromise: function(title,list,opt_parent){
+            return new Promise(function(resolve,reject){
+                var Dialog=createSelectDialog(title,list,function(value){
+                    resolve(value);
+                    return true;
+                },function(){
                     reject();
                 });
                 OverlayDialog.dialog(Dialog,opt_parent);
@@ -346,6 +366,48 @@ var createValueDialog=function(title,value,okCallback,opt_label,opt_cancelCallba
         }
     });
     return Dialog;
-}
+};
 
+var createSelectDialog=function(title,list,okCallback,opt_cancelCallback) {
+    if (OverlayDialogListInstance == null) {
+        throw new Error("not initialzed");
+    }
+    var Dialog = React.createClass({
+        propTypes: {
+            closeCallback: React.PropTypes.func
+        },
+        closeFunction: function (opt_skip) {
+            if (this.props.closeCallback) this.props.closeCallback();
+            if (! opt_skip && opt_cancelCallback) opt_cancelCallback();
+        },
+        okFunction: function (item) {
+            var rt = okCallback(item, this.closeFunction);
+            if (rt && this.props.closeCallback) this.props.closeCallback();
+        },
+        cancelFunction: function () {
+            this.closeFunction();
+        },
+        render: function () {
+            var self=this;
+            return (
+                <div className="avn_selectDialog">
+                    <h3 className="avn_dialogTitle">{title || ''}</h3>
+                    <div className="avn_selectList">
+                        {list.map(function(elem){
+                            return(
+                            <div className={"avn_list_entry "+(elem.selected && 'avn_selectedItem')} onClick={function(){
+                                self.okFunction(elem);
+                            }}>{elem.label}</div>);
+                        })}
+                    </div>
+                    <div className="avn_buttons">
+                        <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
+                        <div className="avn_clear"></div>
+                     </div>
+                </div>
+            );
+        }
+    });
+    return Dialog;
+};
 module.exports= OverlayDialog;
