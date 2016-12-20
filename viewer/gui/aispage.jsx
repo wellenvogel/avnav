@@ -115,7 +115,7 @@ Aispage.prototype.localInit=function(){
         return (
             <div className="avn_aisSummary">
                 <span className="avn_aisNumTargets">{props.numTargets} Targets</span>
-                {(props.warning !== undefined) && <span className="avn_aisWarning" style={{backgroundColor:color}}
+                {(props.warning) && <span className="avn_aisWarning" style={{backgroundColor:color}}
                         onClick={function(){
                             avnav.util.Helper.scrollItemIntoView('.avn_aisWarning','#avi_ais_page_inner');
                         }}/>}
@@ -164,7 +164,9 @@ Aispage.prototype.fillData=function(initial){
     var aisList=this.aishandler.getAisData();
     var trackingTarget=this.aishandler.getTrackedTarget();
     var items=[];
-    var summary={};
+    var summary={
+        warning:null
+    };
     aisList.sort(this.sort);
     for( var aisidx in aisList){
         var ais=aisList[aisidx];
