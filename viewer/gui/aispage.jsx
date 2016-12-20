@@ -11,7 +11,8 @@ var ReactDOM=require('react-dom');
 var React=require('react');
 
 var keys={
-    aisTargets: 'ais'
+    aisTargets: 'ais',
+    summary: 'summary'
 };
 
 var selections={
@@ -75,7 +76,9 @@ avnav.gui.Aispage.prototype.localInit=function(){
         var style={
             color:props.color
         };
-        return ( <div className={"avn_aisListItem "+props.addClass} onClick={props.onClick}>
+        var cl=props.addClass;
+        if (props.warning) cl+=" avn_aisWarning";
+        return ( <div className={"avn_aisListItem "+cl} onClick={props.onClick}>
                 <div className="avn_aisItemFB" style={style}>
                     <span className="avn_fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
                 </div>
@@ -103,14 +106,33 @@ avnav.gui.Aispage.prototype.localInit=function(){
             </div>
         );
     };
+    var Summary=ItemUpdater(function(props){
+        var color=self.gui.properties.getAisColor({
+            warning: true
+        });
+        return (
+            <div className="avn_aisSummary">
+                <span className="avn_aisNumTargets">{props.numTargets} Targets</span>
+                {(props.warning !== undefined) && <span className="avn_aisWarning" style={{backgroundColor:color}}
+                        onClick={function(){
+                            avnav.util.Helper.scrollItemIntoView('.avn_aisWarning','#avi_ais_page_inner');
+                        }}/>}
+            </div>
+        );
+    },this.store,keys.summary);
     var AisList=ItemUpdater(ItemList,this.store,keys.aisTargets);
-    ReactDOM.render(<AisList
-        itemClass={AisItem}
-        onItemClick={function(item){
-            self.aishandler.setTrackedTarget(item.mmsi);
-            self.gui.showPage('aisinfopage',{mmsi:item.mmsi,skipHistory: true});
-        }}
-        />,
+    ReactDOM.render(
+        <div className="avn_panel_fill_flex">
+            <Summary numTargets={0}/>
+            <AisList
+                itemClass={AisItem}
+                onItemClick={function(item){
+                    self.aishandler.setTrackedTarget(item.mmsi);
+                    self.gui.showPage('aisinfopage',{mmsi:item.mmsi,skipHistory: true});
+                }}
+                className="avn_scrollable_page avn_aisList"
+            />
+        </div>,
         this.selectOnPage('.avn_left_inner')[0]);
 };
 avnav.gui.Aispage.prototype.showPage=function(options) {
@@ -123,9 +145,13 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
     var aisList=this.aishandler.getAisData();
     var trackingTarget=this.aishandler.getTrackedTarget();
     var items=[];
+    var summary={};
     for( var aisidx in aisList){
         var ais=aisList[aisidx];
         if (! ais.mmsi) continue;
+        if (ais.warning ){
+            summary.warning=ais.mmsi;
+        }
         var color=this.gui.properties.getAisColor({
             nearest: ais.nearest,
             warning: ais.warning,
@@ -134,9 +160,11 @@ avnav.gui.Aispage.prototype.fillData=function(initial){
         var item=avnav.assign({},ais,{color:color,key:ais.mmsi});
         items.push(item);
     }
+    summary.numTargets=items.length;
     var nsel={};
     nsel[selections.selected]=trackingTarget;
     this.store.storeData(keys.aisTargets,{itemList:items,selectors:nsel});
+    this.store.storeData(keys.summary,summary);
 };
 
 

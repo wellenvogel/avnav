@@ -267,7 +267,12 @@ html,body {
   left:0;
   right:0;
   bottom: 0;
+}
 
+.avn_panel_fill_flex{
+  .avn_panel_fill();
+  .flex-display();
+  .flex-direction(column);
 }
 
 .avn_left_top{
@@ -1108,6 +1113,28 @@ button.avb_DownloadPageUploadCancel{
    AIS display
 -------------------------------------------------------------*/
 
+.avn_aisSummary {
+  .nightBackFade(@colorSecond);
+  padding-top: 0.5em;
+  padding-left: 1em;
+  padding-bottom: 0.5em;
+  .avn_aisNumTargets{
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .avn_aisWarning{
+    display: inline-block;
+    width: 1.8em;
+    height: 1.8em;
+    margin-left: 1em;
+    vertical-align: middle;
+  }
+}
+
+.avn_aisList{
+  .flex(1);
+}
+
 .avn_aisItemFB{
   width:4em;
   min-width: 4em;
@@ -1146,29 +1173,7 @@ button.avb_DownloadPageUploadCancel{
 .avn_aisListItem.avn_selectedItem{
   .nightBackFade(@colorSelection );
 }
-.avn_ais_infotable{
-  line-height: 1.6em;
-  border-collapse: collapse;
-}
 
-
-.avn_aisparam{
-	//display: table-cell;
-  padding-left: 0.3em;
-  padding-right: 0.3em;
-  .nightBorderColorGR();
-  border-bottom: 1px solid;
-  border-left: 1px solid;
-  border-right: 1px solid;
-	
-}
-
-.avn_ais_headline_elem{
-  position: relative;
-  top:0;
-  background-color: white;
-  .nightColors();
-}
 
 
 button.avb_AisCancel{
