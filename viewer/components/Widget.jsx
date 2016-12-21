@@ -33,8 +33,9 @@ var Widget=React.createClass({
         if (val === undefined || val == "") {
             val=this.props.default||"";
         }
+        var style=this.props.style||{};
         return (
-        <div className={classes} onClick={this.props.click}>
+        <div className={classes} onClick={this.props.click} style={style}>
             <div className='avn_widgetData'>{val}</div>
             <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
             {this.props.unit !== undefined?

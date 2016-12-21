@@ -3,6 +3,7 @@ var Formatter=require('../util/formatter');
 var React=require("react");
 var assign=require("object-assign");
 var widgetList=require('./WidgetList');
+var LayoutMonitor=require('./LayoutMonitor.jsx');
 
 
 class WidgetFactory{
@@ -37,14 +38,14 @@ class WidgetFactory{
         }
         return -1;
     }
-    createWidget(name: String, properties: Object,click: Function){
+    createWidget(name: String, properties: Object,click: Function,update: Function){
         var e=this.findWidget(name);
         if (e) {
             var props=avnav.assign({},e,properties);
             props.click=click;
             props.ref=e.name;
             props.key=name;
-            return React.createElement(WidgetUpdater(e.wclass), props);
+            return React.createElement(LayoutMonitor(WidgetUpdater(e.wclass),update), props);
         }
         return React.createElement("div",{},"widget "+name+" not found");
     }

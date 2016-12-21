@@ -333,10 +333,14 @@ avnav.gui.Navpage.prototype.localInit=function(){
         new DynLayout('#leftBottomPosition','.avn_widget',{
             inverted: false,
             direction: 'right',
+            //scale: false,
+            mainMargin: 3,
+            otherMargin: 3,
             layoutParameterCallback: function(handler){
                 return {
                     outerSize:$('#avi_navLeftContainer').width(),
-                    maxRowCol: self.gui.properties.getProperties().allowTwoWidgetRows?2:1
+                    maxRowCol: self.gui.properties.getProperties().allowTwoWidgetRows?2:1,
+                    maxSize:$('#leftBottomPosition').width()
                 }
             }
         })
@@ -351,11 +355,15 @@ avnav.gui.Navpage.prototype.localInit=function(){
         },'leftBottomMarker',
         new DynLayout('#leftBottomMarker','.avn_widget',{
             inverted: false,
+            //scale: false,
             direction: 'left',
+            mainMargin: 3,
+            otherMargin: 3,
             layoutParameterCallback: function(handler){
                 return {
                     outerSize:$('#avi_navLeftContainer').width(),
-                    maxRowCol: self.gui.properties.getProperties().allowTwoWidgetRows?2:1
+                    maxRowCol: self.gui.properties.getProperties().allowTwoWidgetRows?2:1,
+                    maxSize:$('#leftBottomMarker').width()
                 }
             }
         })
@@ -373,6 +381,8 @@ avnav.gui.Navpage.prototype.localInit=function(){
             inverted: false,
             direction: 'bottom',
             scale: false,
+            mainMargin: 3,
+            otherMargin: 3,
             layoutParameterCallback: function(handler){
                 var w=$(window).width();
                 var direction='bottom';

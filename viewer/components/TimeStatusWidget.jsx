@@ -27,7 +27,7 @@ var TimeStatusWidget=React.createClass({
         var classes="avn_widget avn_timeStatusWidget "+this.props.classes||"";
         var imgSrc=this.state.statusUrl;
         return (
-        <div className={classes} onClick={this.props.click}>
+        <div className={classes} onClick={this.props.click} style={this.props.style||{}}>
             <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
             <img className="avn_boatPositionStatus" src={imgSrc}/>
             <div className="avn_widgetData avn_gpsTime">{this.state.time}</div>

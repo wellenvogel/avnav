@@ -29,7 +29,7 @@ var CenterDisplayWidget=React.createClass({
         var self=this;
         var classes="avn_widget avn_centerWidget "+this.props.classes||"";
         return (
-        <div className={classes} onClick={this.props.click}>
+        <div className={classes} onClick={this.props.click} style={this.props.style||{}}>
                 <div className="avn_widgetInfoLeft">Center</div>
                 <div className="avn_centerPosition">{this.state.centerPosition}</div>
                 <div className="avn_table">

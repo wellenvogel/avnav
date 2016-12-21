@@ -51,7 +51,7 @@ var AisTargetWidget=React.createClass({
         var imgSrc=this.state.statusUrl;
         return (
             (this.state.mmsi !== undefined)?
-            <div className={classes} style={{backgroundColor:this.state.color}} onClick={this.click}>
+            <div className={classes} style={avnav.assign({},this.props.style,{backgroundColor:this.state.color})} onClick={this.click}>
                 <div className="avn_widgetInfoLeft">AIS</div>
                 <div className="avn_widgetData avn_widgetDataFirst">
                     <span className='avn_label '>D</span>

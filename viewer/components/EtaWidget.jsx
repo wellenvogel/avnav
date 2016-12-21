@@ -27,7 +27,7 @@ var EtaWidget=React.createClass({
         var self=this;
         var classes="avn_widget avn_etaWidget "+this.props.classes||"";
         return (
-        <div className={classes} onClick={this.props.click}>
+        <div className={classes} onClick={this.props.click} style={this.props.style||{}}>
             <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
             <div className="avn_widgetData avn_markerEta">{this.state.eta}</div>
             <div className="avn_widgetData avn_markerName" >{this.state.name}</div>
