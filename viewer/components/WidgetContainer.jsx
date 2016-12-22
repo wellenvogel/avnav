@@ -211,6 +211,11 @@ var WidgetContainer=React.createClass({
         },
         updateItemInfo:function(key,data,opt_force){
             if (! this.itemInfo) this.itemInfo={};
+            if (this.itemInfo[key] == null){
+                this.itemInfo[key]=data;
+                this.checkUnlayouted();
+                return;
+            }
             if (! this.itemInfo[key] || opt_force) {
                 this.itemInfo[key]=data;
                 this.checkUnlayouted();
@@ -300,7 +305,7 @@ var WidgetContainer=React.createClass({
                 if (key && (! this.layouts || ! this.layouts[key] )) {
                     //we have items that currently hav no dom with itemInfo null
                     //we simply rely on some state to change...
-                    if (! this.itemInfo[key] == null) {
+                    if (! (this.itemInfo[key] == null)) {
                         hasUnlayouted=true;
                     }
                 }
