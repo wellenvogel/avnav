@@ -16,11 +16,15 @@ var ReactDOM=require('react-dom');
  */
 var Monitor=function(Item,updateCallback) {
     var itemMonitor = React.createClass({
+        propTypes:{
+            updateCallback: React.PropTypes.func.isRequired,
+            renewSequence: React.PropTypes.number
+        },
         componentDidMount: function () {
             this.element=ReactDOM.findDOMNode(this.refs.item);
             this.rectangle=this.getItemRect();
             if (updateCallback && this.rectangle){
-                this.hasNotified=true;
+                this.hasNotified=this.props.renewSequence||0;
                 updateCallback(this.rectangle);
             }
             else{
@@ -28,10 +32,11 @@ var Monitor=function(Item,updateCallback) {
             }
         },
         componentDidUpdate: function () {
-            if (!this.hasNotified){
+            if (this.hasNotified != (this.props.renewSequence||0)){
+                this.element=ReactDOM.findDOMNode(this.refs.item);
                 this.rectangle=this.getItemRect();
                 if (updateCallback && this.rectangle){
-                    this.hasNotified=true;
+                    this.hasNotified=this.props.renewSequence||0;
                     updateCallback(this.rectangle);
                 }
                 else{

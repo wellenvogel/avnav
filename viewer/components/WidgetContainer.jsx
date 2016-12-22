@@ -201,7 +201,8 @@ var WidgetContainer=React.createClass({
             layoutParameter: React.PropTypes.object,
             store: React.PropTypes.object.isRequired,
             propertyHandler: React.PropTypes.object.isRequired,
-            dummy: React.PropTypes.any
+            dummy: React.PropTypes.any,
+            renewSequence: React.PropTypes.number
         },
         getInitialState: function(){
             this.itemInfo={};
@@ -209,12 +210,26 @@ var WidgetContainer=React.createClass({
             this.renderedItems=[];
             return {};
         },
+        componentWillReceiveProps:function(nextProps){
+            if (nextProps.renewSequence !== undefined && nextProps.renewSequence != this.props.renewSequence){
+                this.itemInfo={};
+                this.layouts={};
+            }
+        },
         updateItemInfo:function(key,data,opt_force){
             if (! this.itemInfo) this.itemInfo={};
             if (this.itemInfo[key] == null){
                 this.itemInfo[key]=data;
                 this.checkUnlayouted();
                 return;
+            }
+            if (opt_force){
+                if (this.itemInfo[key] != null && data == null){
+                    this.itemInfo[key]=data;
+                    delete this.layouts[key];
+                    this.checkUnlayouted(true);
+                    return;
+                }
             }
             if (! this.itemInfo[key] || opt_force) {
                 this.itemInfo[key]=data;
@@ -274,7 +289,8 @@ var WidgetContainer=React.createClass({
                             style: style,
                             onClick: function (data) {
                                 self.widgetClicked(item,data);
-                            }
+                            },
+                            renewSequence: self.props.renewSequence||0
                         }));
                         return element;
                     })}
@@ -296,7 +312,7 @@ var WidgetContainer=React.createClass({
             */
             this.componentDidUpdate();
         },
-        checkUnlayouted:function(){
+        checkUnlayouted:function(opt_nullAsUnlayouted){
             var self=this;
             var hasUnlayouted=false;
             if (! this.renderedItems) return;
@@ -305,7 +321,7 @@ var WidgetContainer=React.createClass({
                 if (key && (! this.layouts || ! this.layouts[key] )) {
                     //we have items that currently hav no dom with itemInfo null
                     //we simply rely on some state to change...
-                    if (! (this.itemInfo[key] == null)) {
+                    if (! (this.itemInfo[key] == null) || opt_nullAsUnlayouted) {
                         hasUnlayouted=true;
                     }
                 }

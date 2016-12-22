@@ -122,8 +122,7 @@ avnav.gui.Navpage=function(){
         {key:4,name:'Position'}
     ];
     this.lastOtherLeft=0;
-    this.lastOtherBottomLeft=0;
-    this.lastOtherBottomRight=0;
+
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
 
@@ -142,8 +141,6 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (!this.gui) return;
     //recompute layouts
     this.lastOtherLeft=0;
-    this.lastOtherBottomLeft=0;
-    this.lastOtherBottomRight=0;
     var self = this;
     this.hideWpButtons();
     var newMap=false;
@@ -218,6 +215,7 @@ avnav.gui.Navpage.prototype.showPage=function(options){
         this.store.resetData();
     }
     this.updateRoutePoints(true,showRouting);
+    this.resetWidgetLayouts();
     this.widgetVisibility();
     window.setTimeout(function(){
         self.updateLayout();
@@ -333,6 +331,17 @@ avnav.gui.Navpage.prototype.hidePage=function(){
     this.showRouteOnReturn=this.routingVisible;
     this.hideRouting(true);
 };
+
+avnav.gui.Navpage.prototype.resetWidgetLayouts=function() {
+    var self=this;
+    var widgetKeys=[keys.leftWidgets, keys.bottomLeftWidgets, keys.bottomRightWidgets];
+    for (var i in widgetKeys) {
+        var key=widgetKeys[i];
+        //re-layout all widgets
+        var oldSeq = self.store.getData(key, {}).renewSequence || 0;
+        self.store.replaceSubKey(key, oldSeq + 1, 'renewSequence');
+    }
+};
 /**
  *
  */
@@ -364,11 +373,12 @@ avnav.gui.Navpage.prototype.localInit=function(){
     });
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
         self.updateMainPanelSize('#'+self.mapdom);
+        self.resetWidgetLayouts();
     });
     $(window).on('resize',function(){
         self.updateLayout();
     });
-
+    this.resetWidgetLayouts();
     this.computeLayoutParam(); //initially fill the stores
     var list=React.createElement(
         ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]),
@@ -390,12 +400,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
         itemList: [],
         updateCallback:function(container){
             $('#leftBottomPosition').height(container.other+"px");
-            if (container.other != self.lastOtherBottomRight){
-                self.lastOtherBottomRight=container.other;
-                window.setTimeout(function(){
-                    self.computeLayoutParam();
-                },10);
-            }
+            $('#avi_navLeftContainer').css('bottom',(container.other+3)+"px");
         }
         });
     ReactDOM.render(container,$('#leftBottomPosition')[0]);
@@ -406,12 +411,8 @@ avnav.gui.Navpage.prototype.localInit=function(){
         propertyHandler: self.gui.properties,
         updateCallback:function(container){
             $('#leftBottomMarker').height(container.other+"px");
-            if (container.other != self.lastOtherBottomLeft){
-                self.lastOtherBottomLeft=container.other;
-                window.setTimeout(function(){
-                    self.computeLayoutParam();
-                },10);
-            }
+            $('#avi_navLeftContainer').css('bottom',(container.other+3)+"px");
+
         }
     });
     ReactDOM.render(container,$('#leftBottomMarker')[0]);
