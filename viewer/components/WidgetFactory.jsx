@@ -3,10 +3,12 @@ var Formatter=require('../util/formatter');
 var React=require("react");
 var assign=require("object-assign");
 var widgetList=require('./WidgetList');
-var LayoutMonitor=require('./LayoutMonitor.jsx');
 
 
 class WidgetFactory{
+    constructor(){
+        this.createWidget=this.createWidget.bind(this);
+    }
     /**
      * find a complete widget description
      * @param widget - either a name or a widget description with a name field
@@ -38,16 +40,15 @@ class WidgetFactory{
         }
         return -1;
     }
-    createWidget(name: String, properties: Object,click: Function,update: Function){
-        var e=this.findWidget(name);
+    createWidget(props: Object){
+        if (! props.name) return;
+        var e=this.findWidget(props.name);
         if (e) {
-            var props=avnav.assign({},e,properties);
-            props.click=click;
-            props.ref=e.name;
-            props.key=name;
-            return React.createElement(LayoutMonitor(WidgetUpdater(e.wclass),update), props);
+            var rt={};
+            rt.props=avnav.assign({},e,props);
+            rt.element=WidgetUpdater(e.wclass);
+            return rt;
         }
-        return React.createElement("div",{},"widget "+name+" not found");
     }
     getWidget(index: Number){
         if (index < 0 || index >= widgetList.length) return undefined;

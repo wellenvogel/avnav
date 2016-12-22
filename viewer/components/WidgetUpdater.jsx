@@ -8,13 +8,7 @@ var NavData=require('../nav/navdata');
 var WidgetUpdater=function(Widget){
     return React.createClass({
         propTypes:{
-            name: React.PropTypes.string,
-            unit: React.PropTypes.string,
-            caption: React.PropTypes.string,
-            dataKey:React.PropTypes.string,
-            click: React.PropTypes.func,
-            store: React.PropTypes.instanceOf(NavData).isRequired,
-            classes: React.PropTypes.string
+            store: React.PropTypes.instanceOf(NavData).isRequired
         },
         getInitialState: function(){
             return{
@@ -36,7 +30,7 @@ var WidgetUpdater=function(Widget){
             this.props.store.deregister(this);
         },
         render: function(){
-            return <Widget {...this.props}></Widget>;
+            return <Widget {...this.props}/>;
         }
 
     });

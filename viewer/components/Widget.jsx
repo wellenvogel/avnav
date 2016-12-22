@@ -12,7 +12,7 @@ var Widget=React.createClass({
         caption: React.PropTypes.string,
         dataKey:React.PropTypes.string,
         //formatter: React.PropTypes.func,
-        click: React.PropTypes.func,
+        onClick: React.PropTypes.func,
         store: React.PropTypes.instanceOf(NavData).isRequired,
         classes: React.PropTypes.string
     },
@@ -35,7 +35,7 @@ var Widget=React.createClass({
         }
         var style=this.props.style||{};
         return (
-        <div className={classes} onClick={this.props.click} style={style}>
+        <div className={classes} onClick={this.props.onClick} style={style}>
             <div className='avn_widgetData'>{val}</div>
             <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
             {this.props.unit !== undefined?

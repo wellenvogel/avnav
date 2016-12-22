@@ -8,7 +8,7 @@ var NavData=require('../nav/navdata');
 var ActiveRouteWidget=React.createClass({
     propTypes:{
         //formatter: React.PropTypes.func,
-        click: React.PropTypes.func,
+        onClick: React.PropTypes.func,
         store: React.PropTypes.object.isRequired,
         classes: React.PropTypes.string
     },
@@ -39,7 +39,7 @@ var ActiveRouteWidget=React.createClass({
         var classes="avn_widget avn_activeRouteWidget "+this.props.classes||"";
         if (this.state.isApproaching) classes +=" avn_route_display_approach ";
         return (
-        <div className={classes} onClick={this.props.click}>
+        <div className={classes} onClick={this.props.onClick}>
             <div className="avn_widgetInfoLeft">RTE</div>
             <div className="avn_routeName">{this.state.name}</div>
             <div>

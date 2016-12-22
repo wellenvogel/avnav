@@ -19,7 +19,25 @@ var Monitor=function(Item,updateCallback) {
         componentDidMount: function () {
             this.element=ReactDOM.findDOMNode(this.refs.item);
             this.rectangle=this.getItemRect();
-            if (updateCallback)updateCallback(true,this.rectangle);
+            if (updateCallback && this.rectangle){
+                this.hasNotified=true;
+                updateCallback(this.rectangle);
+            }
+            else{
+                if (updateCallback) updateCallback(null);
+            }
+        },
+        componentDidUpdate: function () {
+            if (!this.hasNotified){
+                this.rectangle=this.getItemRect();
+                if (updateCallback && this.rectangle){
+                    this.hasNotified=true;
+                    updateCallback(this.rectangle);
+                }
+                else{
+                    if (updateCallback) updateCallback(null);
+                }
+            }
         },
         getItemRect:function(){
             if (! this.element) return;
@@ -27,12 +45,17 @@ var Monitor=function(Item,updateCallback) {
             return rect;
         },
         componentWillUnmount: function () {
-            if (updateCallback)updateCallback(false,this.rectangle);
         },
         itemUpdate: function(){
             //TODO: check for changes
+            this.element=ReactDOM.findDOMNode(this.refs.item);
             this.rectangle=this.getItemRect();
-            if(updateCallback) updateCallback(this.element,this.rectangle);
+            if(updateCallback && this.rectangle) {
+                updateCallback(this.rectangle,true);
+            }
+            else{
+                if (updateCallback) updateCallback(null,true);
+            }
         },
         render: function () {
             var props = avnav.assign({}, this.props, {updateCallback: this.itemUpdate});

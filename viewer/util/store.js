@@ -176,7 +176,9 @@ Store.prototype.updateData=function(key,data,opt_subkey){
     }
     else {
         if (!oldData) newData = data;
-        else newData=avnav.assign({},oldData, data);
+        else {
+            newData=avnav.assign({},oldData, data);
+        }
     }
     if (opt_subkey){
         this.data[key][opt_subkey]=newData;
@@ -185,6 +187,20 @@ Store.prototype.updateData=function(key,data,opt_subkey){
         this.data[key]=newData;
     }
     //this could be improved by checking for changes...
+    this.callCallbacks([key]);
+};
+/**
+ * replace a subkey of an object
+ * @param key
+ * @param data
+ * @param subKey
+ */
+Store.prototype.replaceSubKey=function(key,data,subKey){
+    var oldData=this.data[key];
+    if (oldData && ! (oldData instanceof Object)) throw new Error("can only update objects, key="+key);
+    if (! oldData) oldData={};
+    oldData[subKey]=data;
+    this.data[key]=oldData;
     this.callCallbacks([key]);
 };
 /**

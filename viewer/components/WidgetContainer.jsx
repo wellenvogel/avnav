@@ -2,9 +2,7 @@
  * Created by andreas on 20.11.16.
  */
 var React=require('react');
-var ReactDom=require('react-dom');
-var Factory=require('./WidgetFactory.jsx');
-var DynLayout=require('../util/dynlayout');
+var LayoutMonitor=require('./LayoutMonitor.jsx');
 
 var LayoutParameters=function(options){
     this.scale=options.scale;
@@ -55,15 +53,15 @@ LayoutParameters.prototype.containerResetProperties=function(){
     return rt;
 };
 
-var rectWrapper=function(rect,index){
+var ItemWrapper=function(rect,item){
     this.rect=rect;
-    this.index=index;
+    this.item=item;
 };
-rectWrapper.prototype.getValue=function(what,opt_other){
+ItemWrapper.prototype.getValue=function(what,opt_other){
     if (! this.rect) return 0;
-    return this.rect[this.getKey(what,opt_other)];
+    return this.rect[this.getIndex(what,opt_other)];
 };
-rectWrapper.prototype.getKey=function(what,opt_swap){
+ItemWrapper.prototype.getIndex=function(what,opt_swap){
     if (! opt_swap) return what;
     var swp={
         width:'height',
@@ -71,35 +69,38 @@ rectWrapper.prototype.getKey=function(what,opt_swap){
     };
     return swp[what];
 };
-
-var getValue=function(rect,v){
-    return rect[v];
+ItemWrapper.prototype.getKey=function(){
+    return this.item.key;
 };
+
+
 /**
  *
- * @param itemList a list of boundingRects - object with keys...
+ * @param {ItemWrapper[]} itemList an array of objects to be rendered - object with keys...
  * @param {object} parameters the layout parameters
  *     direction: left|right - default left
  *     inverted: true|false - use the elements in inverse order - default false
  *     maxRowCol: 1...n the number of allowed rows, default 1
  *     outerSize: the width of the outer element
- *     maxSize: if set use this instead of the container size
+ *     maxSize: if set use this for computing scaling
  *     inverseAlignment: align to bottom instead of top, right instead of left
  *     containerClass: classes to be added to the container
  *     mainMargin: margin in px for main direction
  *     otherMargin: margin in px for other direction
+ *     scale: if set - scale items
+ * @returns and object with container: main,other and styles - an object of element styles
  */
-var layout=function(items,parameters) {
+var layout=function(itemList,parameters) {
     var styles={};
     var options=avnav.assign({},parameters);
-    if (options.layoutParameterCallback){
-        avnav.assign(options,options.layoutParameterCallback(this));
-    }
     var layoutParameter=new LayoutParameters(options);
-    var numItems = 0;
-    for (var k in items) if (items.hasOwnProperty(k)) ++numItems;
-    if (!numItems) return styles;
+    var numItems = itemList.length;
+    if (!numItems) return {
+        container: { main:0,other:0},
+        styles: styles
+    };
     var maxRowCol=options.maxRowCol;
+    if (maxRowCol === undefined) maxRowCol=1;
     var direction=options.direction;
     var inverted=options.inverted;
     var rowColIndex,accumulatedWidthHeight,rowHeightWidth;
@@ -112,39 +113,46 @@ var layout=function(items,parameters) {
     var maxWidthHeight=options.maxSize;
     var item;
     var visibleItems;
+    var mainMargin=options.mainMargin||0;
+    var otherMargin=options.otherMargin||0;
+    var containerMain=undefined;
     for (rowColIndex=0;rowColIndex<maxRowCol;rowColIndex++){
         visibleItems=[];
         rowHeightWidth=0;
         elementPosition=0;
         accumulatedWidthHeight=0;
         for(i=lastVisible+increment;i>=0 && i < numItems;i+=increment){
-            item=new rectWrapper(items[i],i);
-            if ((item.getValue(layoutParameter.scalingProperty)+accumulatedWidthHeight +(options.mainMargin||0)/2)> maxWidthHeight){
+            item=itemList[i];
+            if ((item.getValue(layoutParameter.scalingProperty)+accumulatedWidthHeight +mainMargin)> maxWidthHeight &&
+                maxWidthHeight >0){
                 break;
             }
             lastVisible=i;
             accumulatedWidthHeight+=item.getValue(layoutParameter.scalingProperty);
-            accumulatedWidthHeight+=options.mainMargin||0;
+            accumulatedWidthHeight+=mainMargin;
             if (item.getValue(layoutParameter.scalingProperty, true) > rowHeightWidth)
                 rowHeightWidth=item.getValue(layoutParameter.scalingProperty, true);
             visibleItems.push(item);
         }
-        if (accumulatedWidthHeight >= (options.mainMargin||0)/2) accumulatedWidthHeight-=options.mainMargin||0/2;
+        if (containerMain === undefined || accumulatedWidthHeight > containerMain) containerMain=accumulatedWidthHeight;
         if (visibleItems.length < 1) continue;
         var vLen=visibleItems.length;
-        var first=(options.outerSize && visibleItems.length > 1 && options.outerSize < maxWidthHeight/2);
+        var first=(options.outerSize && visibleItems.length > 1 && options.outerSize < maxWidthHeight/2 && options.scale);
         var usableOuterElementSize=first?options.outerSize:0;
         //if we resize the outer element - remove the outer one from the width for the factor
         var factor=1;
         if (options.scale) {
+            //scale handling: as we do not scale margins, we have to subtract n times margin from both
+            //the other size and the computed size
+            var scaleMaxSize=maxWidthHeight-vLen*mainMargin;
+            accumulatedWidthHeight-=vLen*mainMargin;
             if (usableOuterElementSize > 0) {
                 accumulatedWidthHeight -= visibleItems[vLen - 1].getValue(layoutParameter.scalingProperty);
-                //all elements without the last (but with the margin of the last) must fit into maxWidth-usableOuterElementSize
-                factor = (accumulatedWidthHeight > 0) ? (maxWidthHeight - usableOuterElementSize -
-                options.mainMargin||0 ) / (accumulatedWidthHeight) : 1;
+                //all elements without the last must fit into maxWidth-usableOuterElementSize
+                factor = (accumulatedWidthHeight > 0) ? ((scaleMaxSize - usableOuterElementSize)  / accumulatedWidthHeight) : 1;
             }
             else {
-                factor = (accumulatedWidthHeight > 0) ? (maxWidthHeight) / (accumulatedWidthHeight) : 1;
+                factor = (accumulatedWidthHeight > 0) ? (scaleMaxSize) / (accumulatedWidthHeight) : 1;
             }
             if (factor < 0) factor = 1
         }
@@ -152,142 +160,129 @@ var layout=function(items,parameters) {
         for (i=vLen-1;i>=0;i--){
             item=visibleItems[i];
             var niWidthHeight=first?usableOuterElementSize:(item.getValue(layoutParameter.scalingProperty)*factor);
-            styles[item.index]={
+            styles[item.getKey()]={
                 position:'absolute',
                 opacity:1,
                 zIndex:2
             };
-            var style=styles[item.index];
+            var style=styles[item.getKey()];
             avnav.assign(style,layoutParameter.positionProperties(elementPosition,topLeftPosition));
             if (options.scale){
                 avnav.assign(style,layoutParameter.scaleProperties(niWidthHeight));
             }
             first=false;
-            elementPosition += niWidthHeight +options.mainMargin||0;
+            elementPosition += niWidthHeight +mainMargin;
         }
-        topLeftPosition+=rowHeightWidth+options.otherMargin||0;
+        topLeftPosition+=rowHeightWidth+otherMargin;
     }
     for (i=lastVisible+increment; i < numItems && i >= 0; i+=increment) {
-        styles[i]={
+        styles[itemList[i].getKey()]={
             opacity:0,
             zIndex:1
         };
     }
-    return styles;
+    return {
+        container:{ other: topLeftPosition,main:containerMain},
+        styles:styles
+    };
 };
 
 
-var WidgetContainer=function(reactProperties: Object,domId: String,opt_layoutHandler: DynLayout) {
-    var self=this;
-    var container=this;
-    /**
-     * the react properties
-     * @type {Object}
-     * @private
-     */
-    this._reactProperties = reactProperties;
-    /**
-     * the dom id where we render to
-     * @type {String}
-     * @private
-     */
-    this._domId = domId;
-    /**
-     * the layout handler assigned
-     * @type {DynLayout}
-     */
-    this._layoutHandler = opt_layoutHandler;
-    /**
-     * @private
-     */
-    this._reactFactory = React.createClass({
+var WidgetContainer=React.createClass({
         propTypes: {
             onClick: React.PropTypes.func.isRequired,
-            items: React.PropTypes.array.isRequired,
+            /**
+             * a list of item properties
+             * must contain: key
+             */
+            itemList: React.PropTypes.array.isRequired,
+            itemCreator: React.PropTypes.func.isRequired,
             updateCallback: React.PropTypes.func,
-            layoutParameterCallback: React.PropTypes.func,
+            layoutParameter: React.PropTypes.object,
             store: React.PropTypes.object.isRequired,
-            propertyHandler: React.PropTypes.object.isRequired
+            propertyHandler: React.PropTypes.object.isRequired,
+            dummy: React.PropTypes.any
         },
         getInitialState: function(){
             this.itemInfo={};
             this.layouts={};
-            var visible={};
-            this.props.items.forEach(function(item){
-                visible[item]=true;
-            });
-            return{
-                items:this.props.items,
-                visibility: visible,
-                dummy:1
+            this.renderedItems=[];
+            return {};
+        },
+        updateItemInfo:function(key,data,opt_force){
+            if (! this.itemInfo) this.itemInfo={};
+            if (! this.itemInfo[key] || opt_force) {
+                this.itemInfo[key]=data;
+                this.checkUnlayouted();
             }
         },
-        updateItemInfo:function(key,data){
-            if (! this.itemInfo) this.itemInfo={};
-            if (! this.itemInfo[key]) this.itemInfo[key]=data;
-        },
         removeItemInfo:function(key){
-            /*
-            if (! this.itemInfo) this.itemInfo={};
-            delete this.itemInfo[key];
-            if (! this.layouts) return;
-            delete this.layouts[key];
-            */
         },
         computeStyles:function(){
             var layoutParam={};
-            if (this.props.layoutParameterCallback){
-                layoutParam=this.props.layoutParameterCallback();
+            if (this.props.layoutParameter){
+                layoutParam=this.props.layoutParameter;
             }
-            if (self._layoutHandler._options.layoutParameterCallback){
-                layoutParam=avnav.assign({},self._layoutHandler._options,self._layoutHandler._options.layoutParameterCallback());
+            var items=[];
+            this.renderedItems=[];
+            if (! this.props.itemList){
+                this.renderedItems=[];
+                this.layouts={};
+                return;
             }
-            this.layouts=layout(this.itemInfo,layoutParam);
-            return this.layouts;
+            for (var i in this.props.itemList){
+                var item=this.props.itemList[i];
+                if (! item.key){
+                    avnav.log("missing item key");
+                    continue;
+                }
+                var rect=this.itemInfo[item.key];
+                this.renderedItems.push(item);
+                if (rect) items.push(new ItemWrapper(rect,item))
+            }
+            var layouts=layout(items,layoutParam);
+            this.layouts=layouts.styles;
+            this.container=layouts.container;
         },
         render: function () {
             var self = this;
-            var styles=this.computeStyles();
-            var key=0;
+            this.computeStyles();
+            var styles=this.layouts;
             var rt= (
                 <div>
-                    {this.state.items.map(function (item) {
-                        var itemKey=key;
-                        key++;
+                    {this.renderedItems.map(function (item) {
+                        var itemKey=item.key;
                         var style=styles[itemKey];
                         if (! style){
                             style={
-                                opacity: 0.5,
-                                backgroundColor: 'grey'
+                                opacity: 0,
+                                backgroundColor: 'grey',
+                                zIndex:1
                             }
                         }
-                        if (self.state.visibility[item]) {
-                            var widget = Factory.createWidget(item, {
-                                store: self.props.store,
-                                propertyHandler: self.props.propertyHandler,
-                                layoutUpdate: container.layout,
-                                style: style
-                            }, function (data) {
-                                self.widgetClicked(item, data);
-                            }, function(create,rect){
-                                if (create) self.updateItemInfo(itemKey,rect);
-                                else self.removeItemInfo(itemKey);
+                        var renderItem=self.props.itemCreator(item);
+                        var element=React.createElement(LayoutMonitor(renderItem.element,function(rect,opt_force){
+                                self.updateItemInfo(itemKey, rect, opt_force);
+                        }),avnav.assign({},renderItem.props, {
+                            store: self.props.store,
+                            propertyHandler: self.props.propertyHandler,
+                            style: style,
+                            onClick: function (data) {
+                                self.widgetClicked(item,data);
                             }
-                            );
-                            return widget;
-                        }
-                        return <div key={name}></div>
+                        }));
+                        return element;
                     })}
                 </div>
             );
             return rt;
         },
-        widgetClicked: function (widgetName, data) {
-            this.props.onClick(Factory.findWidget(widgetName), data);
+        widgetClicked: function (item, data) {
+            this.props.onClick(item, data);
         },
         componentDidMount: function () {
-            if (this.props.updateCallback) {
-                this.props.updateCallback();
+            if (this.props.updateCallback && this.container) {
+                this.props.updateCallback(this.container);
             }
             /*
             if (self._layoutHandler){
@@ -299,13 +294,20 @@ var WidgetContainer=function(reactProperties: Object,domId: String,opt_layoutHan
         checkUnlayouted:function(){
             var self=this;
             var hasUnlayouted=false;
-            if (! this.itemInfo) this.itemInfo={};
-            if (! this.layouts) this.layouts={};
-            for (var i in this.itemInfo){
-                if (! this.layouts[i]) hasUnlayouted=true;
+            if (! this.renderedItems) return;
+            for (var i in this.renderedItems){
+                var key=this.renderedItems[i].key;
+                if (key && (! this.layouts || ! this.layouts[key] )) {
+                    //we have items that currently hav no dom with itemInfo null
+                    //we simply rely on some state to change...
+                    if (! this.itemInfo[key] == null) {
+                        hasUnlayouted=true;
+                    }
+                }
             }
-            if (hasUnlayouted){
-                window.setTimeout(function(){
+            if (hasUnlayouted && ! this.delayedUpdate){
+                this.delayedUpdate=window.setTimeout(function(){
+                    self.delayedUpdate=undefined;
                     self.setState({
                         dummy:1
                     })
@@ -313,116 +315,10 @@ var WidgetContainer=function(reactProperties: Object,domId: String,opt_layoutHan
             }
         },
         componentDidUpdate:function(){
-
-            /*
-            if (self._layoutHandler){
-                self._layoutHandler.layout();
-            }
-            */
             this.checkUnlayouted();
-        },
-        setItems:function(newItems){
-            var visibility={};
-            newItems.forEach(function(item){
-               visibility[item]=true;
-            });
-            this.setState({
-                items: newItems,
-                visibility: visibility
-            });
-        },
-        setVisibility:function(newVisibility){
-            var current=avnav.assign({},this.state.visibility,newVisibility);
-            var changed=false;
-            var k;
-            for (k in current){
-                if (this.state.visibility[k] != current[k]){
-                    changed=true;
-                    break;
-                }
+            if (this.container && this.props.updateCallback){
+                this.props.updateCallback(this.container);
             }
-            if (! changed) return;
-            this.setState({
-                visibility: current
-            });
         }
-
-
-
     });
-    this._instance=undefined;
-    this.layout=this.layout.bind(this);
-};
-WidgetContainer.prototype.render=function(){
-    var container=React.createElement(this._reactFactory,this._reactProperties);
-    var dom=avnav.isString(this._domId)?document.getElementById(this._domId):this._domId;
-    this._instance=ReactDom.render(container,dom);
-    return this._instance;
-};
-WidgetContainer.prototype.layout=function(param){
-    //if (this._layoutHandler) this._layoutHandler.layout(param);
-    if (this._instance){
-        this._instance.setState({
-            dummy:1
-        });
-    }
-};
-
-WidgetContainer.prototype.getItems=function(){
-  return this._reactProperties.items;
-};
-
-WidgetContainer.prototype.setItems=function(newItems){
-    if (! newItems) newItems=[];
-    if (this._instance) {
-        this._reactProperties.items=newItems;
-        this._instance.setItems(newItems);
-        return this._instance;
-    }
-    this._reactProperties=newItems;
-    return this.render();
-};
-WidgetContainer.prototype.removeItem=function(item){
-    if (! item) return;
-    var i=0;
-    var items=this._reactProperties.items.slice(0);
-    for (i=0;i<items.length;i++){
-        if (items[i] == item){
-            return this.setItems(items.splice(i,1));
-        }
-    }
-};
-
-WidgetContainer.prototype.insertAfter=function(after,item){
-    if (! item) return;
-    var i=0;
-    var items=this._reactProperties.items.slice(0);
-    if (after) {
-        for (i = 0; i < items.length; i++) {
-            if (items[i] == after) {
-                return this.setItems(items.splice(i, 1, item));
-            }
-        }
-        items.push(item);
-    }
-    else{
-        items.unshift(item);
-    }
-    return this.setItems(items);
-};
-/**
- * change the visibility of an item
- * @param {object} newVisibility
- */
-WidgetContainer.prototype.setVisibility=function(newVisibility){
-    if (! this._instance) return;
-    this._instance.setVisibility(newVisibility);
-};
-/**
- *
- * @returns {DynLayout}
- */
-WidgetContainer.prototype.getLayout=function(){
-    return this._layoutHandler;
-};
 module.exports=WidgetContainer;

@@ -6,7 +6,7 @@ var React=require("react");
 
 var CenterDisplayWidget=React.createClass({
     propTypes:{
-        click: React.PropTypes.func,
+        onClick: React.PropTypes.func,
         store: React.PropTypes.object.isRequired,
         classes: React.PropTypes.string
     },
@@ -29,7 +29,7 @@ var CenterDisplayWidget=React.createClass({
         var self=this;
         var classes="avn_widget avn_centerWidget "+this.props.classes||"";
         return (
-        <div className={classes} onClick={this.props.click} style={this.props.style||{}}>
+        <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
                 <div className="avn_widgetInfoLeft">Center</div>
                 <div className="avn_centerPosition">{this.state.centerPosition}</div>
                 <div className="avn_table">
