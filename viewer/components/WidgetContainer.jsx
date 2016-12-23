@@ -232,6 +232,12 @@ var WidgetContainer=React.createClass({
                     this.checkUnlayouted(true);
                     return;
                 }
+                if (this.itemInfo[key] != null && this.itemInfo[key] !== undefined) {
+                    if (this.props.layoutParameter && this.props.layoutParameter.scale){
+                        //never update if we are scaling
+                        return;
+                    }
+                }
             }
             if (! this.itemInfo[key] || opt_force) {
                 this.itemInfo[key]=data;
