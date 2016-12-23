@@ -136,10 +136,9 @@ var layout=function(itemList,parameters) {
                 rowHeightWidth=item.getValue(layoutParameter.scalingProperty, true);
             visibleItems.push(item);
         }
-        if (containerMain === undefined || accumulatedWidthHeight > containerMain) containerMain=accumulatedWidthHeight;
         if (visibleItems.length < 1) continue;
         var vLen=visibleItems.length;
-        var first=(options.outerSize && visibleItems.length > 1 && options.outerSize < maxWidthHeight/2 && options.scale);
+        var first=(options.outerSize > 0 && visibleItems.length > 1 && options.outerSize < maxWidthHeight/2 && options.scale);
         var usableOuterElementSize=first?options.outerSize:0;
         //if we resize the outer element - remove the outer one from the width for the factor
         var factor=1;
@@ -175,6 +174,7 @@ var layout=function(itemList,parameters) {
             first=false;
             elementPosition += niWidthHeight +mainMargin;
         }
+        if (containerMain === undefined || elementPosition > containerMain) containerMain=elementPosition;
         topLeftPosition+=rowHeightWidth+otherMargin;
     }
     for (i=lastVisible+increment; i < numItems && i >= 0; i+=increment) {

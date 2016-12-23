@@ -121,7 +121,7 @@ Routepage.prototype.localInit=function(){
             avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_routepage_wplist')
         }
     });
-    var routePageContent=React.createElement("div",{},heading,list);
+    var routePageContent=React.createElement("div",{className:"avn_panel_fill_flex"},heading,list);
     ReactDOM.render(routePageContent,this.selectOnPage('.avn_left_inner')[0]);
     this.selectOnPage('#avi_route_current').on('click',function(){
         var okCallback=function(name,closeFunction){

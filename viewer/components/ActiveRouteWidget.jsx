@@ -39,7 +39,7 @@ var ActiveRouteWidget=React.createClass({
         var classes="avn_widget avn_activeRouteWidget "+this.props.classes||"";
         if (this.state.isApproaching) classes +=" avn_route_display_approach ";
         return (
-        <div className={classes} onClick={this.props.onClick}>
+        <div className={classes} onClick={this.props.onClick} style={this.props.style}>
             <div className="avn_widgetInfoLeft">RTE</div>
             <div className="avn_routeName">{this.state.name}</div>
             <div>

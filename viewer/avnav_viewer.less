@@ -553,6 +553,37 @@ html,body {
   }
 
 }
+
+.avn_editingRouteWidget{
+
+  .avn_routeName{
+    opacity: 0.6;
+    display: inline-block;
+    max-width: 6.7em;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-top: 0.8em;
+  }
+  &.avn_activeRoute{
+    border: 3px solid;
+    .nightBorderFade(@colorRed);
+    .nightOPacity();
+  }
+  &.avn_otherRoute{
+    border: 3px solid ;
+    .nightBorderFade(@colorGreen);
+    .nightOPacity();
+  }
+  .avn_route_label{
+    padding-left: 0;
+    opacity: 0.6;
+  }
+  .avn_routeInfoLine{
+    margin-bottom: 0.3em;
+  }
+
+}
+
 /*-------------------------------------------------------------
     some classes for info pages
 --------------------------------------------------------------*/
@@ -612,7 +643,20 @@ html,body {
   .nightBackFade(@colorMain);
   position: absolute;
   right: 0;
-  z-index: 1
+  z-index: 1;
+  .avn_editingRouteWidget{
+    .avn_routeInfoLine{
+      display: inline-block;
+      margin-left: 0.3em;
+      margin-right: 0.3em;
+    }
+    .avn_routeName{
+      margin-top: 0;
+      margin-left: 2em;
+      display: block;
+      overflow: hidden;
+    }
+  }
 }
 
 
@@ -664,47 +708,30 @@ html,body {
   bottom: 0px;
   width: 8.7em;
   z-index: 100;
-  .nightColors();
-}
-
-#avi_route_info_navpage .avn_route_info_name{
-  opacity: 0.6;
-  display: inline-block;
-  max-width: 6.7em;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-/* we edit the current route */
-.avn_activeRoute{
-  border: 3px solid;
-  .nightBorderFade(@colorRed);
-  .nightOPacity();
-}
-.avn_otherRoute{
-  border: 3px solid ;
-  .nightBorderFade(@colorGreen);
-  .nightOPacity();
-}
-.avn_route_label{
-  padding-left: 0;
-  opacity: 0.6;
-}
-.avn_routeInfoLine{
-  margin-bottom: 0.3em;
+  pointer-events: none;
+  .flex-display();
+  .flex-direction(column);
+  .avn_routeDisplay{
+    pointer-events: all;
+    .flex(1);
+    .nightBackFade(white);
+    overflow: hidden;
+    .flex-display();
+    .flex-direction(column);
+  }
+  .avn_listContainer{
+    .flex(1);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 }
 
 
 
-#avi_route_info_name{
-  padding-left: 3px;
-  margin-top: 0.5em;
-  padding-bottom: 0.5em;
-  margin-bottom: 0.5em;
-  border-bottom: 1px solid;
-  .nightBorderColorGR();
 
-}
+
+
+
 @routeInfoHeaderHeight: 12em;
 #avi_route_info_navpage_inner{
   height: @routeInfoHeaderHeight;
@@ -924,6 +951,11 @@ button.avb_WpEdit {
 
 #avi_routepage .avn_route_info_active_point{
   .nightBackColor(rgba(0, 0, 0, 0.25));
+}
+
+#avi_routepage .avn_listContainer{
+  .flex(1);
+  overflow: auto;
 }
 .avn_route_list_entry{
   .avm_list_entry();

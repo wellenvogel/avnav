@@ -6,6 +6,7 @@ var EtaWidget=require('./EtaWidget.jsx');
 var TimeStatusWidget=require('./TimeStatusWidget.jsx');
 var AisTargetWidget=require('./AisTargetWidget.jsx');
 var ActiveRouteWidget=require('./ActiveRouteWidget.jsx');
+var EditRouteWidget=require('./EditRouteWidget.jsx');
 var CenterDisplayWidget=require('./CenterDisplayWidget.jsx');
 var Formatter=require('../util/formatter');
 var widgetList=[
@@ -98,6 +99,11 @@ var widgetList=[
         name: 'ActiveRoute',
         caption: 'RTE',
         wclass: ActiveRouteWidget
+    },
+    {
+        name: 'EditRoute',
+        caption: 'EDRTE',
+        wclass: EditRouteWidget
     },
     {
         name: 'CenterDisplay',

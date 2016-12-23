@@ -46,7 +46,7 @@ window.avnav={};
     require('./gui/handler.js');
     require('./gui/page.js');
     require('./gui/mainpage.jsx');
-    require('./gui/navpage.js');
+    require('./gui/navpage.jsx');
     require('./gui/aispage.jsx');
     require('./gui/aisinfopage.js');
     require('./gui/settingspage.jsx');
