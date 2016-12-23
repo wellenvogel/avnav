@@ -54,6 +54,7 @@ var AisTargetWidget=React.createClass({
         var self=this;
         var classes="avn_widget avn_aisTargetWidget "+this.props.classes||"";
         var imgSrc=this.state.statusUrl;
+        var small = (this.props.mode == "small");
         if (this.state.mmsi !== undefined) {
             this.lastRendered=1;
             return (
@@ -62,16 +63,17 @@ var AisTargetWidget=React.createClass({
                      style={avnav.assign({},this.props.style,{backgroundColor:this.state.color})}
                      onClick={this.click}>
                     <div className="avn_widgetInfoLeft">AIS</div>
-                    <div className="avn_widgetData avn_widgetDataFirst">
+
+                    { ! small && <div className="avn_widgetData avn_widgetDataFirst">
                         <span className='avn_label '>D</span>
                         <span className="avn_ais_data">{this.state.dst}</span>
                         <span className="avn_unit">nm</span>
-                    </div>
-                    <div className="avn_widgetData">
+                    </div> }
+                    { ! small && <div className="avn_widgetData">
                         <span className='avn_label '>C</span>
                         <span className="avn_ais_data">{this.state.cpa}</span>
                         <span className="avn_unit">nm</span>
-                    </div>
+                    </div> }
                     <div className="avn_widgetData">
                         <span className='avn_label '>T</span>
                         <span className="avn_ais_data">{this.state.tcpa}</span>

@@ -148,6 +148,7 @@ avnav.map.MapHolder=function(properties,navobject){
      * @type {number}
      */
     this.lastOpacity=-1;
+    this.compassOffset=0;
     var self=this;
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -396,7 +397,7 @@ avnav.map.MapHolder.prototype.drawNorth=function() {
     if (!this.olmap) return;
     this.drawing.drawImageToContext([0,0],this.northImage, {
         fixX: 45, //this.drawing.getContext().canvas.width-120,
-        fixY: 45, //this.drawing.getContext().canvas.height-120,
+        fixY: 45+this.compassOffset, //this.drawing.getContext().canvas.height-120,
         rotateWithView: true,
         size: [80,80],
         anchor: [40,40],
@@ -979,4 +980,7 @@ avnav.map.MapHolder.prototype.getAisIcon=function(type){
     return this.aislayer.getAisIcon(type);
 };
 
+avnav.map.MapHolder.prototype.setCompassOffset=function(y){
+   this.compassOffset=y;
+};
 

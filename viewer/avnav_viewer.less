@@ -394,10 +394,6 @@ html,body {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
   0 1px 5px 0 rgba(0, 0, 0, 0.12),
   0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
-  margin-left: 0.15em;
-  margin-bottom: 0.07em;
-  margin-top: 0.07em;
-  margin-right: 0.15em;
   .border-box();
   overflow: hidden;
   pointer-events: all;
@@ -507,8 +503,11 @@ html,body {
     font-size: 1.5em;
     display: inline-block;
   }
-  .avn_widgetDataFirst{
+  > .avn_widgetData{
     margin-top:0.8em;
+  }
+  > .avn_widgetData ~ .avn_widgetData{
+    margin-top: 0;
   }
   .avn_widgetData{
     overflow: hidden;
@@ -523,6 +522,9 @@ html,body {
   .avn_centerPosition{
     max-width: 6.5em;
     margin-top:1em;
+  }
+  .avn_widgetDataFirst{
+    margin-top: 0.8em;
   }
   .avn_label{
     display: table-cell;
@@ -602,6 +604,17 @@ html,body {
   display: none;
 }
 
+#avi_navpage .avn_topRightWidgets{
+  .avn_widget{
+    height: 4em;
+    width: 8em;
+  }
+  .nightBackFade(@colorMain);
+  position: absolute;
+  right: 0;
+  z-index: 1
+}
+
 
 /*-------------------------------------------------------------
    bottom display
@@ -611,7 +624,6 @@ html,body {
   bottom: 0;
   left: 0;
   right: 0;
-  padding-top: 0.3em;
   background-color: @colorMain;
   .nightColors();
 }
@@ -624,9 +636,7 @@ html,body {
   float: left;
   width: 50%;
   position: relative;
-  //margin-right: -0.075em; //must be half of the widget margin
   bottom: 0;
-  height: 3.8em; /*TODO:*/
 }
 
 
@@ -638,13 +648,10 @@ html,body {
   float: left;
   width: 50%;
   position: relative;
-  //margin-left: -0.075em; //must be half of the widget margin
   bottom: 0;
 }
 
-#leftBottomPosition .avn_widget{
-  margin-right: 0;
-}
+
 
 /*-------------------------------------------------------------
    route info

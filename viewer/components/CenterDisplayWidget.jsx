@@ -28,11 +28,14 @@ var CenterDisplayWidget=React.createClass({
     render: function(){
         var self=this;
         var classes="avn_widget avn_centerWidget "+this.props.classes||"";
+        var small = (this.props.mode == "small");
+        var tableClass="";
+        if (small) tableClass="avn_widgetDataFirst";
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
                 <div className="avn_widgetInfoLeft">Center</div>
-                <div className="avn_centerPosition">{this.state.centerPosition}</div>
-                <div className="avn_table">
+            { ! small && <div className="avn_centerPosition">{this.state.centerPosition}</div>}
+                <div className={"avn_table "+tableClass}>
                     <div className="avn_row">
                         <div className="avn_label avn_marker"></div>
                         <div className="avn_center_value">

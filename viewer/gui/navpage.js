@@ -22,6 +22,7 @@ var keys={
     waypointList: 'waypointList',
     waypointSelections: 'selections',
     leftWidgets: 'leftWidgets',
+    topWidgets: 'topWidgets',
     bottomLeftWidgets: 'bottomLeft',
     bottomRightWidgets: 'bottomRight'
 };
@@ -105,6 +106,12 @@ avnav.gui.Navpage=function(){
         {key:1,name:'CenterDisplay'},
         {key:2,name:'AisTarget'},
         {key:3,name:'ActiveRoute'},
+        {key:4,name:'LargeTime'}
+    ];
+    this.widgetLists[keys.topWidgets]=[
+        //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
+        {key:1,name:'CenterDisplay',mode:'small'},
+        {key:2,name:'AisTarget',mode:'small'},
         {key:4,name:'LargeTime'}
     ];
     this.widgetLists[keys.bottomLeftWidgets]=[
@@ -234,7 +241,7 @@ avnav.gui.Navpage.prototype.updateWidgetLists=function(){
         if (current) current=current.itemList;
         var doUpdate=false;
         if (!current && visibleList.length) doUpdate=true;
-        if (! doUpdate){
+        if (! doUpdate && current && visibleList){
             if (current.length != visibleList.length) doUpdate=true;
         };
         if (! doUpdate){
@@ -259,12 +266,24 @@ avnav.gui.Navpage.prototype.setWidgetVisibility=function(key,listName,visible){
     }
 };
 avnav.gui.Navpage.prototype.widgetVisibility=function(){
+    var isSmall=false;
+    var w=$(window).width();
+    if ( w<= this.gui.properties.getProperties().smallBreak){
+        isSmall=true; //hide left widgets, display top
+    }
+    if (isSmall){
+        this.gui.map.setCompassOffset(this.gui.properties.getProperties().widgetFontSize*5);
+    }
+    else{
+        this.gui.map.setCompassOffset(0);
+    }
     var aisVisible=this.gui.properties.getProperties().layers.ais;
     if (aisVisible) {
         var aisTarget=this.navobject.getAisHandler().getNearestAisTarget();
         aisVisible=(aisTarget && aisTarget.mmsi);
     }
-    this.setWidgetVisibility(keys.leftWidgets,'AisTarget',aisVisible);
+    this.setWidgetVisibility(keys.leftWidgets,'AisTarget',aisVisible && ! isSmall);
+    this.setWidgetVisibility(keys.topWidgets,'AisTarget',aisVisible && isSmall);
     //aisVisible=true;
     var routeVisible=this.gui.properties.getProperties().layers.nav;
     if (routeVisible) routeVisible=this.navobject.getRoutingHandler().hasActiveRoute();
@@ -273,9 +292,11 @@ avnav.gui.Navpage.prototype.widgetVisibility=function(){
     if (this.hidetime <=0 || this.hidetime <= new Date().getTime()|| this.gui.map.getGpsLock()){
         centerVisible=false;
     }
-    this.setWidgetVisibility(keys.leftWidgets,'CenterDisplay',centerVisible);
+    this.setWidgetVisibility(keys.leftWidgets,'CenterDisplay',centerVisible && ! isSmall);
+    this.setWidgetVisibility(keys.topWidgets,'CenterDisplay',centerVisible && isSmall);
     var clockVisible=this.gui.properties.getProperties().showClock;
-    this.setWidgetVisibility(keys.leftWidgets,'LargeTime',clockVisible);
+    this.setWidgetVisibility(keys.leftWidgets,'LargeTime',clockVisible && ! isSmall);
+    this.setWidgetVisibility(keys.topWidgets,'LargeTime',clockVisible && isSmall);
     this.updateWidgetLists();
 };
 /**
@@ -399,23 +420,23 @@ avnav.gui.Navpage.prototype.localInit=function(){
         itemCreator: WidgetFactory.createWidget,
         itemList: [],
         updateCallback:function(container){
-            $('#leftBottomPosition').height(container.other+"px");
-            $('#avi_navLeftContainer').css('bottom',(container.other+3)+"px");
+            $('#leftBottomMarker').css('height',container.other+"px").css('margin-top',container.otherMargin+"px");
+            $('#avi_navLeftContainer').css('bottom',(container.other+container.otherMargin)+"px");
         }
         });
-    ReactDOM.render(container,$('#leftBottomPosition')[0]);
+    ReactDOM.render(container,$('#leftBottomMarker')[0]);
     container=React.createElement(ItemUpdater(WidgetContainer,this.store,keys.bottomRightWidgets),{
         onClick: self.widgetClick,
         store: self.navobject,
         itemCreator: WidgetFactory.createWidget,
         propertyHandler: self.gui.properties,
         updateCallback:function(container){
-            $('#leftBottomMarker').height(container.other+"px");
-            $('#avi_navLeftContainer').css('bottom',(container.other+3)+"px");
+            $('#leftBottomPosition').css('height',container.other+"px").css('margin-top',container.otherMargin+"px");
+            $('#avi_navLeftContainer').css('bottom',(container.other+container.otherMargin)+"px");
 
         }
     });
-    ReactDOM.render(container,$('#leftBottomMarker')[0]);
+    ReactDOM.render(container,$('#leftBottomPosition')[0]);
     container=React.createElement(ItemUpdater(WidgetContainer,this.store,keys.leftWidgets),{
         onClick: self.widgetClick,
         itemList:[],
@@ -434,6 +455,17 @@ avnav.gui.Navpage.prototype.localInit=function(){
         }
         });
     ReactDOM.render(container,$('#avi_navLeftContainer')[0]);
+    container=React.createElement(ItemUpdater(WidgetContainer,this.store,keys.topWidgets),{
+        onClick: self.widgetClick,
+        itemList:[],
+        store: self.navobject,
+        itemCreator: WidgetFactory.createWidget,
+        propertyHandler: self.gui.properties,
+        updateCallback:function(container){
+            self.selectOnPage('.avn_topRightWidgets').css('height',container.other+"px").css('width',container.main+"px");
+        }
+    });
+    ReactDOM.render(container,this.selectOnPage('.avn_topRightWidgets')[0]);
 };
 
 avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription,data){
@@ -594,47 +626,53 @@ avnav.gui.Navpage.prototype.handleRouteDisplay=function() {
 
 avnav.gui.Navpage.prototype.computeLayoutParam=function(){
     //TODO: optimize to decide if we need to change
-    var widgetMargin=3;
+    var w=$(window).width();
+    var isSmall=false;
+    if ( w<= this.gui.properties.getProperties().smallBreak){
+        isSmall=true;
+    }
+    var widgetMargin=this.gui.properties.getProperties().style.widgetMargin;
     this.store.replaceSubKey(keys.bottomLeftWidgets,{
         inverted: false,
-        direction: 'right',
+        direction: 'left',
         scale: true,
         mainMargin: widgetMargin,
         otherMargin: widgetMargin,
-        outerSize: $('#avi_navLeftContainer').width()-widgetMargin,
+        startMargin: 0,
+        outerSize: isSmall?0:$('#avi_navLeftContainer').width()-widgetMargin,
         maxRowCol: this.gui.properties.getProperties().allowTwoWidgetRows?2:1,
         maxSize:$('#leftBottomPosition').width()+widgetMargin/2
     },'layoutParameter');
     this.store.replaceSubKey(keys.bottomRightWidgets,{
         inverted: false,
         scale: true,
-        direction: 'left',
+        direction: 'right',
         mainMargin: widgetMargin,
         otherMargin: widgetMargin,
-        outerSize: $('#avi_navLeftContainer').width()-widgetMargin,
+        startMargin: 0,
+        outerSize: isSmall?0:$('#avi_navLeftContainer').width()-widgetMargin,
         maxRowCol: this.gui.properties.getProperties().allowTwoWidgetRows ? 2 : 1,
         maxSize: $('#leftBottomMarker').width()+widgetMargin/2
     },'layoutParameter');
-    var w=$(window).width();
-    var direction='bottom';
-    var inverseAlignment=false;
-    var containerClass='';
-    var maxSize=this.selectOnPage('.avn_left_panel').height() - $('#avi_nav_bottom').outerHeight();
-    if ( w<= this.gui.properties.getProperties().smallBreak){
-        direction='left';
-        maxSize=this.selectOnPage('.avn_left_panel').width();
-        inverseAlignment=true;
-        containerClass='smallBreak';
-    }
+    this.store.replaceSubKey(keys.topWidgets,{
+        inverted: false,
+        scale: false,
+        direction: 'right',
+        mainMargin: widgetMargin,
+        otherMargin: widgetMargin,
+        startMargin: 0,
+        outerSize: 0,
+        maxRowCol: 1,
+        maxSize: this.selectOnPage('.avn_left_panel').width()
+    },'layoutParameter');
     this.store.replaceSubKey(keys.leftWidgets, {
         inverted: false,
         scale: false,
         mainMargin: widgetMargin,
         otherMargin: widgetMargin,
-        maxSize: maxSize,
-        direction: direction,
-        inverseAlignment: inverseAlignment,
-        containerClass: containerClass
+        maxSize: 0,
+        direction: 'bottom',
+        inverseAlignment: false
     }, 'layoutParameter');
 
 };

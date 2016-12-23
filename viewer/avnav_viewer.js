@@ -137,14 +137,15 @@ var propertyDefinitions=function(){
         nightMode: new avnav.util.Property( false,"NightMode",avnav.util.PropertyType.CHECKBOX),
         nightColorDim:new avnav.util.Property( 60,"Night Dim for Colors",avnav.util.PropertyType.RANGE,[5,100]), //should match @nightModeVale in less
         smallBreak:new avnav.util.Property( 480,"break for small devices",avnav.util.PropertyType.RANGE,[200,600]), //must match less definition!
-        //all style members map to less variables
+
         style:{
             buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[35,100]),
             aisWarningColor: new avnav.util.Property( "#FA584A","Warning",avnav.util.PropertyType.COLOR),
             aisNormalColor: new avnav.util.Property( "#EBEB55","Normal",avnav.util.PropertyType.COLOR),
             aisNearestColor: new avnav.util.Property( '#70F3AF',"Nearest",avnav.util.PropertyType.COLOR),
             aisTrackingColor:new avnav.util.Property( '#CAD5BE',"Tracking",avnav.util.PropertyType.COLOR),
-            routeApproachingColor: new avnav.util.Property( '#FA584A',"Approach",avnav.util.PropertyType.COLOR)
+            routeApproachingColor: new avnav.util.Property( '#FA584A',"Approach",avnav.util.PropertyType.COLOR),
+            widgetMargin:new avnav.util.Property( 3,"Widget Margin(px)",avnav.util.PropertyType.RANGE,[1,20])
         }
     }
 };

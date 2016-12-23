@@ -87,6 +87,7 @@ ItemWrapper.prototype.getKey=function(){
  *     containerClass: classes to be added to the container
  *     mainMargin: margin in px for main direction
  *     otherMargin: margin in px for other direction
+ *     startMargin: margin in px for the main start
  *     scale: if set - scale items
  * @returns and object with container: main,other and styles - an object of element styles
  */
@@ -115,12 +116,13 @@ var layout=function(itemList,parameters) {
     var visibleItems;
     var mainMargin=options.mainMargin||0;
     var otherMargin=options.otherMargin||0;
+    var startMargin=options.startMargin||0;
     var containerMain=undefined;
     for (rowColIndex=0;rowColIndex<maxRowCol;rowColIndex++){
         visibleItems=[];
         rowHeightWidth=0;
         elementPosition=0;
-        accumulatedWidthHeight=0;
+        accumulatedWidthHeight=startMargin;
         for(i=lastVisible+increment;i>=0 && i < numItems;i+=increment){
             item=itemList[i];
             if ((item.getValue(layoutParameter.scalingProperty)+accumulatedWidthHeight +mainMargin)> maxWidthHeight &&
@@ -144,8 +146,8 @@ var layout=function(itemList,parameters) {
         if (options.scale) {
             //scale handling: as we do not scale margins, we have to subtract n times margin from both
             //the other size and the computed size
-            var scaleMaxSize=maxWidthHeight-vLen*mainMargin;
-            accumulatedWidthHeight-=vLen*mainMargin;
+            var scaleMaxSize=maxWidthHeight-vLen*mainMargin-startMargin;
+            accumulatedWidthHeight-=vLen*mainMargin+startMargin;
             if (usableOuterElementSize > 0) {
                 accumulatedWidthHeight -= visibleItems[vLen - 1].getValue(layoutParameter.scalingProperty);
                 //all elements without the last must fit into maxWidth-usableOuterElementSize
@@ -156,7 +158,7 @@ var layout=function(itemList,parameters) {
             }
             if (factor < 0) factor = 1
         }
-        var elementPosition=0;
+        var elementPosition=startMargin;
         for (i=vLen-1;i>=0;i--){
             item=visibleItems[i];
             var niWidthHeight=first?usableOuterElementSize:(item.getValue(layoutParameter.scalingProperty)*factor);
@@ -182,7 +184,7 @@ var layout=function(itemList,parameters) {
         };
     }
     return {
-        container:{ other: topLeftPosition,main:containerMain},
+        container:{ other: topLeftPosition,main:containerMain,otherMargin: otherMargin,mainMargin:mainMargin},
         styles:styles
     };
 };
