@@ -92,7 +92,7 @@ var AisTargetWidget=React.createClass({
 
     },
     click:function(){
-        this.props.onClick({mmsi:this.state.mmsi});
+        this.props.onClick(avnav.assign({},this.props,this.state));
     }
 
 });

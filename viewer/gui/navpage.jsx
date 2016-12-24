@@ -405,6 +405,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
     $(window).on('resize',function(){
         self.updateLayout();
     });
+    var widgetCreator=function(widget){
+        return WidgetFactory.createWidget(widget,self.navobject,{propertyHandler:self.gui.properties});
+    };
     this.resetWidgetLayouts();
     this.computeLayoutParam(); //initially fill the stores
     var RoutePoints=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);
@@ -431,10 +434,8 @@ avnav.gui.Navpage.prototype.localInit=function(){
     };
     ReactDOM.render(React.createElement(ItemUpdater(list,this.store,[keys.routingVisible]),{}),document.getElementById('avi_route_info_navpage'));
     var container=React.createElement(ItemUpdater(WidgetContainer,this.store,keys.bottomLeftWidgets),{
-        onClick: self.widgetClick,
-        store: self.navobject,
-        propertyHandler: self.gui.properties,
-        itemCreator: WidgetFactory.createWidget,
+        onItemClick: self.widgetClick,
+        itemCreator: widgetCreator,
         itemList: [],
         updateCallback:function(container){
             $('#leftBottomMarker').css('height',container.other+"px").css('margin-top',container.otherMargin+"px");
@@ -445,10 +446,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
         });
     ReactDOM.render(container,$('#leftBottomMarker')[0]);
     container=React.createElement(ItemUpdater(WidgetContainer,this.store,keys.bottomRightWidgets),{
-        onClick: self.widgetClick,
-        store: self.navobject,
-        itemCreator: WidgetFactory.createWidget,
-        propertyHandler: self.gui.properties,
+        onItemClick: self.widgetClick,
+        itemList:[],
+        itemCreator: widgetCreator,
         updateCallback:function(container){
             $('#leftBottomPosition').css('height',container.other+"px").css('margin-top',container.otherMargin+"px");
             $('#avi_navLeftContainer').css('bottom',(container.other+container.otherMargin)+"px");
@@ -457,11 +457,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
     });
     ReactDOM.render(container,$('#leftBottomPosition')[0]);
     container=React.createElement(ItemUpdater(WidgetContainer,this.store,keys.leftWidgets),{
-        onClick: self.widgetClick,
+        onItemClick: self.widgetClick,
         itemList:[],
-        store: self.navobject,
-        itemCreator: WidgetFactory.createWidget,
-        propertyHandler: self.gui.properties,
+        itemCreator: widgetCreator,
         updateCallback:function(container){
             $('#avi_navLeftContainer').height(container.main+"px");
             $('#avi_navLeftContainer').width(container.other+"px");
@@ -475,11 +473,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
         });
     ReactDOM.render(container,$('#avi_navLeftContainer')[0]);
     container=React.createElement(ItemUpdater(WidgetContainer,this.store,keys.topWidgets),{
-        onClick: self.widgetClick,
+        onItemClick: self.widgetClick,
         itemList:[],
-        store: self.navobject,
-        itemCreator: WidgetFactory.createWidget,
-        propertyHandler: self.gui.properties,
+        itemCreator: widgetCreator,
         updateCallback:function(container){
             self.selectOnPage('.avn_topRightWidgets').css('height',container.other+"px").css('width',container.main+"px");
         }
@@ -487,9 +483,9 @@ avnav.gui.Navpage.prototype.localInit=function(){
     ReactDOM.render(container,this.selectOnPage('.avn_topRightWidgets')[0]);
 };
 
-avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription,data){
-    if (widgetDescription.name == "AisTarget" && data && data.mmsi){
-        this.gui.showPage("aisinfopage",{mmsi:data.mmsi});
+avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription){
+    if (widgetDescription.name == "AisTarget" && widgetDescription.mmsi){
+        this.gui.showPage("aisinfopage",{mmsi:widgetDescription.mmsi});
     }
     if (widgetDescription.name == "ActiveRoute"){
         this.navobject.getRoutingHandler().startEditingRoute();

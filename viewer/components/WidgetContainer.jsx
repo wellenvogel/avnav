@@ -3,6 +3,7 @@
  */
 var React=require('react');
 var LayoutMonitor=require('./LayoutMonitor.jsx');
+var ItemList=require('./ItemList.jsx');
 
 var LayoutParameters=function(options){
     this.scale=options.scale;
@@ -192,7 +193,7 @@ var layout=function(itemList,parameters) {
 
 var WidgetContainer=React.createClass({
         propTypes: {
-            onClick: React.PropTypes.func.isRequired,
+            onItemClick: React.PropTypes.func.isRequired,
             /**
              * a list of item properties
              * must contain: key
@@ -201,8 +202,6 @@ var WidgetContainer=React.createClass({
             itemCreator: React.PropTypes.func.isRequired,
             updateCallback: React.PropTypes.func,
             layoutParameter: React.PropTypes.object,
-            store: React.PropTypes.object.isRequired,
-            propertyHandler: React.PropTypes.object.isRequired,
             dummy: React.PropTypes.any,
             renewSequence: React.PropTypes.number
         },
@@ -276,36 +275,33 @@ var WidgetContainer=React.createClass({
             var self = this;
             this.computeStyles();
             var styles=this.layouts;
-            var rt= (
-                <div>
-                    {this.renderedItems.map(function (item) {
-                        var itemKey=item.key;
-                        var style=styles[itemKey];
-                        if (! style){
-                            style={
-                                opacity: 0,
-                                backgroundColor: 'grey',
-                                zIndex:1
-                            }
+            var listProps={
+                onItemClick: this.props.onItemClick,
+                itemList: this.renderedItems,
+                itemCreator: function(item){
+                    var itemKey=item.key;
+                    var style=styles[itemKey];
+                    if (! style){
+                        style={
+                            opacity: 0,
+                            backgroundColor: 'grey',
+                            zIndex:1
                         }
-                        var element=React.createElement(LayoutMonitor(self.props.itemCreator(item,self.props.store),function(rect,opt_force){
-                                self.updateItemInfo(itemKey, rect, opt_force);
-                        }), {
-                            store: self.props.store,
-                            propertyHandler: self.props.propertyHandler,
-                            style: style,
-                            onClick: function (data) {
-                                self.widgetClicked(item,data);
-                            },
-                        });
-                        return element;
-                    })}
-                </div>
+                    };
+                    var itemProperties={
+                        style: style
+                    };
+                    var props=avnav.assign({},item,itemProperties);
+                    return LayoutMonitor(self.props.itemCreator(props,self.props.store),
+                        function(rect,opt_force){
+                        self.updateItemInfo(itemKey, rect, opt_force);});
+                }
+            };
+            var rt=(
+                <ItemList {...listProps}
+                    />
             );
             return rt;
-        },
-        widgetClicked: function (item, data) {
-            this.props.onClick(item, data);
         },
         componentDidMount: function () {
             if (this.props.updateCallback && this.container) {

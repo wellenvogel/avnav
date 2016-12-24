@@ -73,16 +73,23 @@ module.exports=React.createClass({
                         self.props.onItemClick(opt_item,opt_data);
                         return false;
                     };
-                    prop.onClick=function(ev){
-                        ev.preventDefault();
-                        clickHandler();
+                    prop.onClick=function(data){
+                        if (data.preventDefault){
+                            data.preventDefault();
+                            clickHandler();
+                        }
+                        else{
+                            clickHandler(data);
+                        }
                     };
                     prop.onItemClick=clickHandler;
                     prop.addClass=addClass;
                     prop.className=addClass;
                     var itemClass;
                     if (self.props.itemCreator){
-                        itemClass=self.props.itemCreator(entry);
+                        //give the creator the chance to finally control all properties
+                        itemClass=self.props.itemCreator(prop);
+                        return React.createElement(itemClass,prop);
                     }
                     else{
                         itemClass=self.props.itemClass;

@@ -40,7 +40,7 @@ class WidgetFactory{
         }
         return -1;
     }
-    createWidget(props: Object,opt_store: Object){
+    createWidget(props: Object,opt_store: Object,opt_properties: Object){
         if (! props.name) return;
         var e=this.findWidget(props.name);
         var RenderWidget=e.wclass||Widget;
@@ -50,7 +50,7 @@ class WidgetFactory{
         if (e) {
             return React.createClass({
                 render: function(){
-                    var wprops=assign({},e,props,this.props);
+                    var wprops=assign({store:opt_store},e,props,opt_properties,this.props);
                     return <RenderWidget {...wprops}/>
                 }
             });
