@@ -18,52 +18,27 @@ var Monitor=function(Item,updateCallback) {
     var itemMonitor = React.createClass({
         propTypes:{
             updateCallback: React.PropTypes.func.isRequired,
-            renewSequence: React.PropTypes.number
         },
         componentDidMount: function () {
-            this.element=ReactDOM.findDOMNode(this.refs.item);
-            this.rectangle=this.getItemRect();
-            if (updateCallback && this.rectangle){
-                this.hasNotified=this.props.renewSequence||0;
-                updateCallback(this.rectangle);
-            }
-            else{
-                if (updateCallback) updateCallback(null);
-            }
+            this.itemUpdate();
         },
         componentDidUpdate: function () {
-            if (this.hasNotified != (this.props.renewSequence||0)){
-                this.element=ReactDOM.findDOMNode(this.refs.item);
-                this.rectangle=this.getItemRect();
-                if (updateCallback && this.rectangle){
-                    this.hasNotified=this.props.renewSequence||0;
-                    updateCallback(this.rectangle);
-                }
-                else{
-                    if (updateCallback) updateCallback(null);
-                }
-            }
-        },
-        getItemRect:function(){
-            if (! this.element) return;
-            var rect=this.element.getBoundingClientRect();
-            return rect;
+            this.itemUpdate();
         },
         componentWillUnmount: function () {
+            if (updateCallback){
+                updateCallback(null);
+            }
         },
-        itemUpdate: function(){
-            //TODO: check for changes
-            this.element=ReactDOM.findDOMNode(this.refs.item);
-            this.rectangle=this.getItemRect();
-            if(updateCallback && this.rectangle) {
-                updateCallback(this.rectangle,true);
-            }
-            else{
-                if (updateCallback) updateCallback(null,true);
-            }
+        itemUpdate: function(opt_force){
+            if (! updateCallback) return;
+            var element=ReactDOM.findDOMNode(this.refs.item);
+            var rectangle=element?element.getBoundingClientRect():null;
+            updateCallback(rectangle,opt_force);
         },
         render: function () {
-            var props = avnav.assign({}, this.props, {updateCallback: this.itemUpdate});
+            var self=this;
+            var props = avnav.assign({}, this.props, {updateCallback: function(){self.itemUpdate(true);}});
             return <Item {...props} ref="item"/>
         }
     });

@@ -16,7 +16,6 @@ var OverlayDialog=require('../components/OverlayDialog.jsx');
 var Store=require('../util/store');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var WidgetFactory=require('../components/WidgetFactory.jsx');
-var WidgetUpdater=require('../components/WidgetUpdater.jsx');
 var EditRouteWidget=require('../components/EditRouteWidget.jsx');
 avnav.provide('avnav.gui.Navpage');
 
@@ -409,7 +408,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
     this.resetWidgetLayouts();
     this.computeLayoutParam(); //initially fill the stores
     var RoutePoints=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);
-    var RouteInfo=WidgetUpdater(EditRouteWidget);
+    var RouteInfo=ItemUpdater(EditRouteWidget,self.navobject);
     var list = function (props) {
         if (!props.routingVisible) return null;
         return (

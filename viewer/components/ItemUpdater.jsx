@@ -10,18 +10,20 @@ var React=require('react');
  * all properties are forwarded to the children, mixed with the values fetched from the store
  * @param {*} Item the item (html or react class) that should be wrapped
  * @param {Store} store the store
- * @param {string||string[]} storeKey the key(s) to register at the store and fetch data
+ * @param {string||string[]} opt_storeKey the key(s) to register at the store and fetch data
  * @returns {*} the wrapped react class
  * @constructor
  */
-var Updater=function(Item,store,storeKey) {
+var Updater=function(Item,store,opt_storeKey) {
     var getStoreKeys=function(){
-        if (storeKey instanceof Array) return storeKey;
-        else return [storeKey]
+        if (opt_storeKey === undefined) return;
+        if (opt_storeKey instanceof Array) return opt_storeKey;
+        else return [opt_storeKey]
     };
     var itemUpdater = React.createClass({
         getInitialState: function () {
             var st={};
+            if (! opt_storeKey) return {update:1};
             getStoreKeys().forEach(function(key){
                 avnav.assign(st,store.getData(key));
             });
@@ -29,13 +31,17 @@ var Updater=function(Item,store,storeKey) {
         },
         dataChanged: function () {
             var st={};
+            if (! opt_storeKey) {
+                this.setState({update:1});
+                return;
+            }
             getStoreKeys().forEach(function(key){
                 avnav.assign(st,store.getData(key));
             });
             this.setState(st);
         },
         componentDidMount: function () {
-            store.register(this, storeKey);
+            store.register(this, opt_storeKey);
         },
         componentWillUnmount: function () {
             store.deregister(this);

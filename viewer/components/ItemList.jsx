@@ -13,7 +13,8 @@ var React=require('react');
 module.exports=React.createClass({
     propTypes:{
         onItemClick:    React.PropTypes.func,
-        itemClass:  React.PropTypes.func.isRequired,
+        itemClass:  React.PropTypes.func, //one of itemClass or itemCreator must be set
+        itemCreator:React.PropTypes.func,
         updateCallback: React.PropTypes.func,
         selectors:  React.PropTypes.object, //if a value from this object matches an item key
                                             //the key will be added as an additional class
@@ -79,7 +80,14 @@ module.exports=React.createClass({
                     prop.onItemClick=clickHandler;
                     prop.addClass=addClass;
                     prop.className=addClass;
-                    return React.createElement(self.props.itemClass,prop);
+                    var itemClass;
+                    if (self.props.itemCreator){
+                        itemClass=self.props.itemCreator(entry);
+                    }
+                    else{
+                        itemClass=self.props.itemClass;
+                    }
+                    return React.createElement(itemClass,prop);
                 })}
             </div>
         );

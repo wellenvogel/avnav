@@ -288,18 +288,16 @@ var WidgetContainer=React.createClass({
                                 zIndex:1
                             }
                         }
-                        var renderItem=self.props.itemCreator(item);
-                        var element=React.createElement(LayoutMonitor(renderItem.element,function(rect,opt_force){
+                        var element=React.createElement(LayoutMonitor(self.props.itemCreator(item,self.props.store),function(rect,opt_force){
                                 self.updateItemInfo(itemKey, rect, opt_force);
-                        }),avnav.assign({},renderItem.props, {
+                        }), {
                             store: self.props.store,
                             propertyHandler: self.props.propertyHandler,
                             style: style,
                             onClick: function (data) {
                                 self.widgetClicked(item,data);
                             },
-                            renewSequence: self.props.renewSequence||0
-                        }));
+                        });
                         return element;
                     })}
                 </div>

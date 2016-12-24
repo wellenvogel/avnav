@@ -1,8 +1,8 @@
-var WidgetUpdater=require("./WidgetUpdater.jsx");
-var Formatter=require('../util/formatter');
 var React=require("react");
 var assign=require("object-assign");
 var widgetList=require('./WidgetList');
+var Widget=require('./Widget.jsx');
+var ItemUpdater=require('./ItemUpdater.jsx');
 
 
 class WidgetFactory{
@@ -40,14 +40,20 @@ class WidgetFactory{
         }
         return -1;
     }
-    createWidget(props: Object){
+    createWidget(props: Object,opt_store: Object){
         if (! props.name) return;
         var e=this.findWidget(props.name);
+        var RenderWidget=e.wclass||Widget;
+        if (opt_store){
+            RenderWidget=ItemUpdater(RenderWidget,opt_store);
+        }
         if (e) {
-            var rt={};
-            rt.props=avnav.assign({},e,props);
-            rt.element=WidgetUpdater(e.wclass);
-            return rt;
+            return React.createClass({
+                render: function(){
+                    var wprops=assign({},e,props,this.props);
+                    return <RenderWidget {...wprops}/>
+                }
+            });
         }
     }
     getWidget(index: Number){
