@@ -148,4 +148,3 @@ avnav.isString=function(x){
 })(jQuery);
 
 
-ol.DEFAULT_TILE_CACHE_HIGH_WATER_MARK=256;

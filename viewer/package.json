@@ -34,6 +34,7 @@
     "loader-utils": "^0.2.15",
     "lodash.camelcase": "^4.1.1",
     "object-assign": "^4.1.0",
+    "openlayers": "^3.20.1",
     "postcss": "^5.0.21",
     "postcss-modules-extract-imports": "^1.0.1",
     "postcss-modules-local-by-default": "^1.0.1",

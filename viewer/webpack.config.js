@@ -36,12 +36,14 @@ var images=[
 images.forEach(function(el){
    copyList.push({from: "./images/"+el,to:'images'});
 });
+/*
 if (process.env.NODE_ENV === 'production') {
     copyList.push({from: '../libraries/ol3201/ol.js', to:'libraries/ol.js'})
 }
 else{
     copyList.push({from: '../libraries/ol3201/ol-debug.js', to: 'libraries/ol.js'})
 }
+*/
 var devtool="inline-source-map";
 var resolveAlias={
 
@@ -50,6 +52,9 @@ if (process.env.NODE_ENV === 'production') {
     devtool="";
     resolveAlias['react$']=__dirname+"/node_modules/react/dist/react.min.js";
     resolveAlias['react-dom$']=__dirname+"/node_modules/react-dom/dist/react-dom.min.js";
+}
+if (process.env.NODE_ENV !== 'production') {
+    resolveAlias['openlayers$']=__dirname+"/node_modules/openlayers/dist/ol-debug.js";
 }
 
 var plugins=[
