@@ -118,7 +118,7 @@ Routepage.prototype.localInit=function(){
         itemClass:WaypointItem,
         selectors:selectors,
         updateCallback: function(){
-            avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_routepage_wplist')
+            avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_routepage .avn_listContainer')
         }
     });
     var routePageContent=React.createElement("div",{className:"avn_panel_fill_flex"},heading,list);
@@ -272,9 +272,6 @@ Routepage.prototype.storeRoute=function(opt_targetSelected){
     if (! this.currentRoute) return;
     var selectedWaypoint=this.store.getData(keys.waypointSelections,{selectors:{}}).selectors[selectors.selected];
     this.routingHandler.setNewEditingRoute(this.currentRoute, this._isEditingActive);
-    if (selectedWaypoint !== undefined) {
-        this.routingHandler.setEditingWpIdx(selectedWaypoint);
-    }
     this.initialName=this.currentRoute.name;
     var targetWp;
     if (this._isEditingActive) {
@@ -290,6 +287,9 @@ Routepage.prototype.storeRoute=function(opt_targetSelected){
         if (this._isEditingActive){
             this.routingHandler.routeOff();
         }
+    }
+    if (selectedWaypoint !== undefined) {
+        this.routingHandler.setEditingWpIdx(selectedWaypoint);
     }
 
 };

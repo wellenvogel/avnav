@@ -223,7 +223,6 @@ avnav.gui.Navpage.prototype.showPage=function(options){
     if (! options || ! options.returning){
         this.store.resetData();
     }
-    this.updateRoutePoints(true,showRouting);
     this.widgetVisibility();
     this.resetWidgetLayouts();
     window.setTimeout(function(){
@@ -351,7 +350,7 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(){
 
 avnav.gui.Navpage.prototype.timerEvent=function(){
     if (this.wpHidetime > 0 && this.wpHidetime <= new Date().getTime()){
-        this.hideWpButtons();
+        if (! (this.isSmall() && this.routingVisible))this.hideWpButtons();
     }
     this.buttonUpdate();
     this.widgetVisibility();
@@ -381,7 +380,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
         var wp=self.navobject.getRoutingHandler().getCurrentLegTarget();
         if (wp){
             self.gui.map.setCenter(wp);
-            if (self.routingVisible) {
+            if (self.routingVisible && ! self.isSmall()) {
                 return;
             }
             self.showWpButtons(wp);
@@ -452,6 +451,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
         updateCallback:function(container){
             $('#leftBottomPosition').css('height',container.other+"px").css('margin-top',container.otherMargin+"px");
             $('#avi_navLeftContainer').css('bottom',(container.other+container.otherMargin)+"px");
+            $('#avi_navpage_wpbuttons').css('bottom',(container.other+container.otherMargin)+"px");
 
         }
     });
@@ -548,7 +548,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
             }
             this.updateRoutePoints();
         }
-        else{
+        if (! this.routingVisible || this.isSmall()){
             this.showWpButtons(wp);
         }
     }
@@ -560,7 +560,8 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
  * @param {boolean} opt_returning
  */
 avnav.gui.Navpage.prototype.showRouting=function(opt_returning) {
-    this.hideWpButtons();
+    var isSmall=this.isSmall();
+    if (! isSmall) this.hideWpButtons();
     if (this.routingVisible) return;
     if (!this.gui.properties.getProperties().layers.nav) return;
     var upd=false;
@@ -591,7 +592,9 @@ avnav.gui.Navpage.prototype.showRouting=function(opt_returning) {
         this.handleToggleButton('.avb_LockPos', !nLock);
         this.gui.map.triggerRender();
     }
+    this.updateRoutePoints(true,false);
     this.hidetime=0;
+    if (isSmall) this.showWpButtons(this.navobject.getRoutingHandler().getEditingWp(),true);
 };
 
 /**
@@ -605,6 +608,7 @@ avnav.gui.Navpage.prototype.hideRouting=function(opt_noStop) {
     this.routingVisible=false;
     this.store.storeData(keys.routingVisible,{routingVisible:false});
     this.widgetVisibility();
+    this.hideWpButtons();
     this.handleToggleButton('.avb_ShowRoutePanel',false);
     if (! opt_noStop) {
         this.gui.map.setRoutingActive(false);
@@ -677,6 +681,10 @@ avnav.gui.Navpage.prototype.updateLayout=function(){
         self.scrollRoutePoints();
         var w=$(window).width();
         self.computeLayoutParam();
+        if (self.routingVisible) {
+            if (!self.isSmall()) self.hideWpButtons();
+            else self.showWpButtons(self.navobject.getRoutingHandler().getEditingWp());
+        }
     },0);
 };
 
@@ -689,6 +697,7 @@ avnav.gui.Navpage.prototype.waypointClicked=function(item,options){
     if (! selectorState || selectorState[selectors.centered] != item.idx) {
         this.getMap().setCenter(this.navobject.getRoutingHandler().getEditingWp());
         this.store.updateSubItem(keys.waypointSelections,selectors.centered,item.idx,'selectors');
+        if (self.isSmall()) self.showWpButtons(this.navobject.getRoutingHandler().getEditingWp());
         return;
     }
     var wp=this.navobject.getRoutingHandler().getEditingWp();
@@ -698,7 +707,7 @@ avnav.gui.Navpage.prototype.waypointClicked=function(item,options){
 avnav.gui.Navpage.prototype.scrollRoutePoints=function(){
     avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_route_info_navpage .avn_listContainer');
 };
-avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActive){
+avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_initial,opt_centerActive){
     var editingActiveRoute=this.navobject.getRoutingHandler().isEditingActiveRoute();
     var route=this.navobject.getRoutingHandler().getRoute();
     if (! route) {
@@ -710,7 +719,7 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
     }
     var active=this.navobject.getRoutingHandler().getEditingWpIdx();
     var self=this;
-    var rebuild=opt_force||false;
+    var rebuild=opt_initial||false;
     if (! rebuild) rebuild=this.lastRoute.differsTo(route);
     this.lastRoute=route.clone();
     if (rebuild){
@@ -728,10 +737,23 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_force,opt_centerActiv
             {showLatLon: this.gui.properties.getProperties().routeShowLL},'options');
     }
     var activeWp=route.getPointAtIndex(active);
-    if (opt_centerActive && activeWp){
+    if (opt_initial && activeWp){
+        var sel={};
+        sel[selectors.selected]=active;
+        if (opt_centerActive) {
+            sel[selectors.centered] = active;
+            this.gui.map.setCenter(activeWp);
+        }
+        else{
+            sel[selectors.centered]=-1; //no waypoint centered yet
+        }
+        this.store.replaceSubKey(keys.waypointSelections,sel,'selectors');
+    };
+    if (! opt_initial && opt_centerActive && activeWp){
         this.gui.map.setCenter(activeWp);
-        this.store.updateSubItem(keys.waypointSelections,selectors.centered,active,'selectors');
-    }
+        this.store.updateSubItem(keys.waypointSelections, selectors.centered, active, 'selectors');
+
+    };
 };
 
 
@@ -745,8 +767,8 @@ avnav.gui.Navpage.prototype.checkRouteWritable=function(){
     return false;
 };
 
-avnav.gui.Navpage.prototype.showWpButtons=function(waypoint){
-    this.gui.map.setCenter(waypoint);
+avnav.gui.Navpage.prototype.showWpButtons=function(waypoint,opt_nocenter){
+    if (!opt_nocenter) this.gui.map.setCenter(waypoint);
     this.selectOnPage('#avi_navpage_wpbuttons').show();
     this.selectedWp=waypoint;
     this.wpHidetime=new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
@@ -905,10 +927,18 @@ avnav.gui.Navpage.prototype.btnWpEdit=function(button,ev) {
     this.showWaypointDialog(this.selectedWp);
 };
 
+avnav.gui.Navpage.prototype.btnWpLocate=function(button,ev) {
+    avnav.log("locate clicked");
+    if (! this.selectedWp) return;
+    this.gui.map.setCenter(this.selectedWp);
+    this.gui.map.triggerRender();
+};
+
 avnav.gui.Navpage.prototype.btnWpGoto=function(button,ev) {
     avnav.log("Goto clicked");
     var wp=this.selectedWp;
     this.hideWpButtons();
+    if (this.routingVisible) this.hideRouting();
     if (! wp) {
         return;
     }
@@ -933,6 +963,7 @@ avnav.gui.Navpage.prototype.btnWpNext=function(button,ev) {
     var router=this.navobject.getRoutingHandler();
     var next=router.getPointAtOffset(this.selectedWp,1);
     if (! next) return;
+    if (this.routingVisible) router.setEditingWp(next);
     this.showWpButtons(next);
 };
 
@@ -942,6 +973,7 @@ avnav.gui.Navpage.prototype.btnWpPrevious=function(button,ev) {
     var router=this.navobject.getRoutingHandler();
     var next=router.getPointAtOffset(this.selectedWp,-1);
     if (! next) return;
+    if (this.routingVisible) router.setEditingWp(next);
     this.showWpButtons(next);
 };
 

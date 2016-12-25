@@ -769,16 +769,11 @@ html,body {
     .nightBackFade(@colorSelection );
 }
 
-#avi_route_info_list .avn_route_info_centered .avn_more{
+#avi_navpage .avn_route_info_centered .avn_more{
   display:block;
   position: absolute;
   right: 0;
   top: 0;
-}
-
-//no margin at last display of route head
-#avi_route_info_eta{
-  margin-bottom: 0px;
 }
 
 
@@ -887,8 +882,8 @@ button.avb_NavNext {
   .avn_iconButton('images/icons-new/nextwp.svg');
 }
 
-button.avb_WpDone{
-  .avn_iconButton('images/icons-new/ic_done.svg');
+button.avb_WpLocate{
+  .avn_iconButton('images/icons-new/center.svg');
 }
 button.avb_WpPrevious{
   .avn_iconButton('images/icons-new/ic_arrow_back.svg');
@@ -1260,55 +1255,7 @@ button.avb_AisInfoList {
 }
 
 
-/*-------------------------------------------------------------
-   wp info page
--------------------------------------------------------------*/
 
-#avi_wpinfopage .avn_infopage_inner {
-  max-width: 60em;
-}
-#avi_wpinfopage .avn_table {
-  font-size: 1.4em;
-}
-#avi_wpinfopage .avn_Status{
-  opacity: 0.6;
-}
-#avi_wpinfopage .avn_boat{
-  background-image: url("images/icons-new/boat.svg");
-  display: inline-block;
-  width:1em;
-  height: 1em;
-  background-size: 1em 1em;
-  margin-right: 0.5em;
-}
-#avi_wpinfopage .avn_FirstRouteInfo{
-  border-top: 1px solid ;
-  .nightBorderColorGR();
-}
-#avi_wpinfopage .avn_FirstRouteInfo div{
-  padding-top: 1em;
-}
-#avi_wpinfopage .avn_routingInactive{
-  .nightBackFade(@colorSecond);
-}
-#avi_wpinfopage .avn_routingActive{
-  .nightBackFade(@colorGreen);
-}
-#avi_wpinfopage .avn_routingApproach{
-  .nightBackFade(@routeApproachingColor);
-}
-
-
-
-button.avb_WpInfoLocate {
-  .avn_iconButton('images/icons-new/center.svg');
-}
-button.avb_WpInfoRoute {
-  .avn_iconButton('images/icons-new/route.svg');
-}
-button.avb_WpInfoGps {
-  .avn_iconButton('images/icons-new/data.svg');
-}
 /*-------------------------------------------------------------
    status page
 -------------------------------------------------------------*/
