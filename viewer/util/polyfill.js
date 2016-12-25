@@ -8,6 +8,7 @@
  * - performance.now, License: CC0 (required by "requestAnimationFrame")
  * - requestAnimationFrame, License: MIT */
 //https://cdn.polyfill.io/v2/polyfill.js?features=requestAnimationFrame&ua=dummy&unknown=polyfill&flags=gated
+//and modified to avoid performance.now that is reset somehow...
 (function(undefined) {
 if (!('Date' in this && 'now' in this.Date && 'getTime' in this.Date.prototype)) {
 
@@ -18,31 +19,17 @@ Date.now = function now() {
 
 }
 
-if (!('performance' in this && 'now' in this.performance)) {
 
-// performance.now
-(function (global) {
-
-var
-startTime = Date.now();
-
-if (!global.performance) {
-    global.performance = {};
-}
-
-global.performance.now = function () {
-    return Date.now() - startTime;
-};
-
-}(this));
-
-}
 
 if (!('requestAnimationFrame' in this)) {
 
 // requestAnimationFrame
 (function (global) {
 	var rafPrefix;
+	var emulatePerformanceNow;
+	if (!('performance' in this && 'now' in this.performance)) {
+		emulatePerformanceNow=Date.now();
+	}
 
 	if ('mozRequestAnimationFrame' in global) {
 		rafPrefix = 'moz';
@@ -55,7 +42,7 @@ if (!('requestAnimationFrame' in this)) {
 	if (rafPrefix) {
 		global.requestAnimationFrame = function (callback) {
 		    return global[rafPrefix + 'RequestAnimationFrame'](function () {
-		        callback(performance.now());
+		        callback(emulatePerformanceNow?(Date.now()-emulatePerformanceNow):performance.now());
 		    });
 		};
 		global.cancelAnimationFrame = global[rafPrefix + 'CancelAnimationFrame'];
@@ -81,7 +68,7 @@ if (!('requestAnimationFrame' in this)) {
 			return setTimeout(function () {
 				lastTime = Date.now();
 
-				callback(performance.now());
+				callback(emulatePerformanceNow?(Date.now()-emulatePerformanceNow):performance.now());
 			}, delay);
 		};
 

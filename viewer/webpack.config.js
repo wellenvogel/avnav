@@ -13,6 +13,7 @@ if (process.env.NODE_ENV === 'production') {
 var copyList=[
     {from: './avnav_viewer.html'},
     {from: './webpack-loader.js',to:'loader.js'},
+    {from: './util/polyfill.js',to:'polyfill.js'},
     {from: './images/icons-new/*svg'},
     {from: './images/icons-new/ic_*png'},
     {from: '../libraries/jquery/jquery-1.11.0.min.js',to:'libraries'},
@@ -36,14 +37,14 @@ var images=[
 images.forEach(function(el){
    copyList.push({from: "./images/"+el,to:'images'});
 });
-/*
+
 if (process.env.NODE_ENV === 'production') {
     copyList.push({from: '../libraries/ol3201/ol.js', to:'libraries/ol.js'})
 }
 else{
     copyList.push({from: '../libraries/ol3201/ol-debug.js', to: 'libraries/ol.js'})
 }
-*/
+
 var devtool="inline-source-map";
 var resolveAlias={
 

@@ -288,7 +288,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
                     if (layers.length > 0) {
                         var view = self.getView();
                         var lext = layers[0].avnavOptions.extent;
-                        if (lext !== undefined) view.fitExtent(lext, self.olmap.getSize());
+                        if (lext !== undefined) view.fit(lext);
                         view.setZoom(self.minzoom);
                         self.center = self.pointFromMap(view.getCenter());
                         self.zoom = view.getZoom();
@@ -306,7 +306,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         if (layers.length > 0) {
             view = this.getView();
             lext=layers[0].avnavOptions.extent;
-            if (lext !== undefined) view.fitExtent(lext, this.olmap.getSize());
+            if (lext !== undefined) view.fit(lext);
             view.setZoom(this.minzoom);
             this.center=this.pointFromMap(view.getCenter());
             this.zoom=view.getZoom();
