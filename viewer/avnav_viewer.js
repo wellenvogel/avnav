@@ -36,6 +36,7 @@ var React=require('react');
 var ReactDOM=require('react-dom');
 var OverlayDialog=require('./components/OverlayDialog.jsx');
 window.ol=require('openlayers');
+var polyfill=require('./util/polyfill');
 ol.DEFAULT_TILE_CACHE_HIGH_WATER_MARK=256;
 
 
