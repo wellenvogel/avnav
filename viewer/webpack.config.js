@@ -37,10 +37,10 @@ images.forEach(function(el){
    copyList.push({from: "./images/"+el,to:'images'});
 });
 if (process.env.NODE_ENV === 'production') {
-    copyList.push({from: '../libraries/ol311/ol.js', to:'libraries/ol.js'})
+    copyList.push({from: '../libraries/ol3201/ol.js', to:'libraries/ol.js'})
 }
 else{
-    copyList.push({from: '../libraries/ol311/ol-debug.js', to: 'libraries/ol.js'})
+    copyList.push({from: '../libraries/ol3201/ol-debug.js', to: 'libraries/ol.js'})
 }
 var devtool="inline-source-map";
 var resolveAlias={

@@ -603,7 +603,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 var z = zxy[0];
                 var x = zxy[1];
                 var y = zxy[2];
-                //y=-y-1; //change for ol3-151 - commit af319c259b349c86a4d164c42cc4eb5884f896fb
+                y=-y-1; //change for ol3-151 - commit af319c259b349c86a4d164c42cc4eb5884f896fb
 
                 if (rt.zoomLayerBoundings) {
                     var found = false;
