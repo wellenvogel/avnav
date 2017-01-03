@@ -17,7 +17,8 @@ var ItemUpdater=require('../components/ItemUpdater.jsx');
 var keys={
     waypointList:'waypointList',
     waypointSelections: 'waypointSelections',
-    routeInfo: 'routeInfo'
+    routeInfo: 'routeInfo',
+    editingActive: 'editingActive'
 };
 
 var selectors={
@@ -60,7 +61,6 @@ var Routepage=function(){
      * @private
      */
     this._isEditingActive=false;
-    this.store=new Store();
     var self=this;
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
@@ -73,22 +73,29 @@ var Routepage=function(){
 };
 avnav.inherits(Routepage,avnav.gui.Page);
 
-
-Routepage.prototype.localInit=function(){
-    if (! this.gui) return;
-    this.routingHandler=this.gui.navobject.getRoutingHandler();
+Routepage.prototype.getPageContent=function(){
+    var buttons=[
+        {key:'RoutePageOk'},
+        {key:'NavGoto'},
+        {key:'NavInvert'},
+        {key:'NavDeleteAll'},
+        {key:'RoutePageDownload'},
+        {key:'RoutePageCancel'}
+    ];
+    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
     var self=this;
-    var heading = React.createElement(ItemUpdater(React.createClass({
+    var Heading = ItemUpdater(React.createClass({
         render: function(){
             return (
                 <div className="avn_routeCurrent" onClick={this.props.onClick}>
-                <div className="avn_routeName">{this.props.name||''}</div>
-                <div className="avn_routeInfo">{this.props.numPoints||0}Points,{this.props.len||0}nm</div>
-                <span className="avn_more"> </span>
+                    <div className="avn_routeName">{this.props.name||''}</div>
+                    <div className="avn_routeInfo">{this.props.numPoints||0}Points,{this.props.len||0}nm</div>
+                    <span className="avn_more"> </span>
                 </div>
             );
         }
-    }), this.store, keys.routeInfo), {
+    }), this.store, keys.routeInfo);
+    var headingProperties={
         onClick: function () {
             var okCallback = function (name, closeFunction) {
                 if (name != self.initialName) {
@@ -110,47 +117,50 @@ Routepage.prototype.localInit=function(){
                 okCallback, self.getDialogContainer(), 'Name'
             );
         }
-    });
-    var list=React.createElement(ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]), {
+    };
+    var List=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);
+    var listProperties={
         onItemClick:function(item,opt_data){
             self.waypointClicked(item,opt_data);
         },
         itemClass:WaypointItem,
         selectors:selectors,
         updateCallback: function(){
-            avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_routepage .avn_listContainer')
+            avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_routepage .avn_left_panel .avn_listContainer')
         }
-    });
-    var routePageContent=React.createElement("div",{className:"avn_panel_fill_flex"},heading,list);
-    ReactDOM.render(routePageContent,this.selectOnPage('.avn_left_inner')[0]);
-    this.selectOnPage('#avi_route_current').on('click',function(){
-        var okCallback=function(name,closeFunction){
-            if (name != self.initialName) {
-                //check if a route with this name already exists
-                self.routingHandler.fetchRoute(name, false,
-                    function (data) {
-                        self.toast("route with name " + name + " already exists",true);
-                    },
-                    function (er) {
-                        closeFunction();
-                        self.currentRoute.setName(name);
-                        self._updateDisplay();
-                    });
-                return false;
+    };
+    var HeadLine=ItemUpdater(React.createClass({
+        render: function(){
+            if (this.props.editingActive){
+                return <div className="avn_active_headline avn_left_top"><div>Active Route</div></div>
             }
-            return true;
-        };
-        OverlayDialog.valueDialog("Edit Route Name",self.currentRoute.name,
-            okCallback,self.getDialogContainer(),'Name'
-        );
-
-    });
+            else{
+                return <div className="avn_left_top"><div>Inactive Route</div></div>
+            }
+        }
+    }),this.store,keys.editingActive);
+    return React.createClass({
+            render: function () {
+                return(
+                <div className="avn_panel_fill_flex">
+                    <HeadLine/>
+                    <div className="avn_left_inner">
+                        <Heading {...headingProperties}/>
+                        <List {...listProperties}/>
+                    </div>
+                </div>
+                );
+            }
+        });
+};
+Routepage.prototype.localInit=function(){
+    if (! this.gui) return;
+    this.routingHandler=this.gui.navobject.getRoutingHandler();
 };
 Routepage.prototype.showPage=function(options) {
     if (!this.gui) return;
     var initial=true;
     if (options && options.returning) initial=false;
-    this.store.resetData();
     this.fillData(initial);
 
 };
@@ -165,15 +175,10 @@ Routepage.prototype._updateDisplay=function(){
         return;
     }
     var targetIdx=-1;
-    if (this._isEditingActive){
-        $('#avi_routes_headline').text("Active Route");
-        this.selectOnPage('.avn_left_top').addClass('avn_active_headline');
-        targetIdx=this.currentRoute.findBestMatchingIdx(this.routingHandler.getCurrentLegTarget());
+    if (this._isEditingActive) {
+        targetIdx = this.currentRoute.findBestMatchingIdx(this.routingHandler.getCurrentLegTarget());
     }
-    else{
-        $('#avi_routes_headline').text("Inactive Route");
-        this.selectOnPage('.avn_left_top').removeClass('avn_active_headline');
-    }
+    this.store.storeData(keys.editingActive,{editingActive:this._isEditingActive});
     var info={name: this.currentRoute.name};
     var len=this.currentRoute.computeLength(0);
     info.len=this.formatter.formatDecimal(len,6,2);

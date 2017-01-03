@@ -903,12 +903,15 @@ button.avb_WpEdit {
 /*-------------------------------------------------------------
    route page
 -------------------------------------------------------------*/
-#avi_route_page_inner{
+#avi_routepage .avn_left_panel .avn_listContainer{
   .avm_listpage();
   top: @headlineHeight;
   bottom: 0;
   left: 0;
   right: 0;
+  .flex(1);
+  overflow: auto;
+  top: 5.3em;
 }
 
 .avn_active_route{
@@ -936,10 +939,6 @@ button.avb_WpEdit {
     white-space: nowrap;
     overflow: hidden;
   }
-  .avn_listContainer {
-    .avm_listcontainer();
-    top: 5.3em;
-  }
 
 
 }
@@ -948,7 +947,7 @@ button.avb_WpEdit {
   .nightBackColor(rgba(0, 0, 0, 0.25));
 }
 
-#avi_routepage .avn_listContainer{
+#avi_routepage .avn_left_panel .avn_listContainer{
   .flex(1);
   overflow: auto;
 }
