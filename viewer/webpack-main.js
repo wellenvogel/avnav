@@ -44,7 +44,7 @@ window.avnav={};
     require('./map/tracklayer.js');
     require('./map/routelayer.js');
     require('./gui/handler.js');
-    require('./gui/page.js');
+    require('./gui/page.jsx');
     require('./gui/mainpage.jsx');
     require('./gui/navpage.jsx');
     require('./gui/aispage.jsx');

@@ -13,7 +13,7 @@ var React=require('react');
 module.exports=React.createClass({
     propTypes:{
         onItemClick:    React.PropTypes.func,
-        itemClass:  React.PropTypes.func, //one of itemClass or itemCreator must be set
+        itemClass:  React.PropTypes.any, //one of itemClass or itemCreator must be set
         itemCreator:React.PropTypes.func,
         updateCallback: React.PropTypes.func,
         selectors:  React.PropTypes.object, //if a value from this object matches an item key
@@ -58,7 +58,8 @@ module.exports=React.createClass({
             <div className={className}>
                 { items.map(function (entry) {
                     var opts = {};
-                    var addClass = "";
+                    var addClass = entry.addClass||"";
+                    addClass+=" ";
                     var isSet = false;
                     var k;
                     var key = entry.key;

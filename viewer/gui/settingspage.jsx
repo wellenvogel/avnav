@@ -1,13 +1,13 @@
 /**
  * Created by Andreas on 01.06.2014.
  */
-var Store=require('../util/store');
 var React=require('react');
 var ReactDOM=require('react-dom');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ItemList=require("../components/ItemList.jsx");
 var OverlayDialog=require('../components/OverlayDialog.jsx');
 var ColorPicker=require('../components/ColorPicker.jsx');
+var ButtonList=require('../components/ButtonList.jsx');
 require('react-color-picker/index.css');
 
 var keys={
@@ -36,11 +36,7 @@ var sectionSelectors={
  * @constructor
  */
 var Settingspage=function(){
-
-    this.store=new Store();
-
     this.sectionItems=[];
-
     avnav.gui.Page.call(this,'settingspage');
     this.store.register(this,keys.sectionItems,keys.currentValues);
     this.hasChanges=false;
@@ -51,6 +47,17 @@ avnav.inherits(Settingspage,avnav.gui.Page);
  * the local init called from the base class when the page is instantiated
  */
 Settingspage.prototype.localInit=function(){
+
+};
+
+Settingspage.prototype.getPageContent=function(){
+    var buttonList=[
+        {key:'SettingsOK'},
+        {key:'Cancel'},
+        {key: 'SettingsDefaults'},
+        {key:'SettingsAndroid',android: true}
+    ];
+    this.store.storeData(this.globalKeys.buttons,{itemList:buttonList});
     var self=this;
     this.sectionItems=[];
     var idx=0;
@@ -74,9 +81,9 @@ Settingspage.prototype.localInit=function(){
                         onClick={function(ev){
                             self.rangeItemDialog(properties);
                         }}>
-                    <div className="avn_description">{properties.label}</div>
-                    <div className="avn_value">{properties.value}</div>
-                </div>;
+                <div className="avn_description">{properties.label}</div>
+                <div className="avn_value">{properties.value}</div>
+            </div>;
         }
         if(properties.type == avnav.util.PropertyType.COLOR){
             var style={
@@ -108,21 +115,26 @@ Settingspage.prototype.localInit=function(){
             var rightVisible=true;
             return (
                 <div className="avn_panel_fill">
-                    { leftVisibile && <div className="avn_leftSection"><SectionList
-                        className="avn_scroll"
-                        itemClass={SectionItem}
-                        onItemClick={sectionClick}
-                        itemList={self.sectionItems}
-                                 /></div>}
-                    {rightVisible && <div className="avn_rightSection"><SettingsList
-                        className="avn_scroll"
-                        itemClass={SettingsItem}
-                    /></div>}
+                    <div className="avn_left_top">
+                        <div>Settings</div>
+                    </div>
+                    <div className="avn_left_inner avn_panel">
+                        { leftVisibile && <div className="avn_leftSection"><SectionList
+                            className="avn_scroll"
+                            itemClass={SectionItem}
+                            onItemClick={sectionClick}
+                            itemList={self.sectionItems}
+                        /></div>}
+                        {rightVisible && <div className="avn_rightSection"><SettingsList
+                            className="avn_scroll"
+                            itemClass={SettingsItem}
+                        /></div>}
+                    </div>
                 </div>
             );
         }
     }),this.store,keys.panelVisibility);
-    ReactDOM.render(React.createElement(Settings,{}),this.selectOnPage('.avn_left_inner')[0]);
+    return Settings;
 };
 
 Settingspage.prototype.rangeItemDialog=function(item){
@@ -262,7 +274,6 @@ Settingspage.prototype.colorItemDialog=function(item){
 Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
     var self=this;
-    this.store.resetData();
     this.store.updateSubItem(keys.sectionItems,sectionSelectors.selected,0,'selectors');
     this.resetValues();
 };

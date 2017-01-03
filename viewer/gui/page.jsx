@@ -11,6 +11,7 @@ var Store=require('../util/store');
 var React=require('react');
 var ReactDOM=require('react-dom');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
+var ButtonList=require('../components/ButtonList.jsx');
 
 
 /**
@@ -134,16 +135,26 @@ avnav.gui.Page.prototype.isVisible=function(){
 };
 
 avnav.gui.Page.prototype._initPage=function(){
-    var content=this.getPageContent();
-    if (! content) return;
+    var self=this;
+    var Content=this.getPageContent();
+    if (! Content) return;
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
-    var pageData=ItemUpdater(React.createClass({
+    var Buttons=ItemUpdater(ButtonList,this.store,this.globalKeys.buttons);
+    var PageData=ItemUpdater(React.createClass({
         render: function(){
             if (!this.props.visible) return null;
-            return React.createElement(content,{});
+            return(
+                <div className="avn_page">
+                    <div className="avn_left_panel">
+                        <Content/>
+                    </div>
+                    <Buttons className="avn_right_panel" buttonHandler={self} visibilityFlags={{android: avnav.android?true:false}}/>
+                </div>
+            );
         }
     }),this.store,this.globalKeys.pageVisible);
-    ReactDOM.render(React.createElement(pageData,{}),this.getDiv()[0])
+    ReactDOM.render(React.createElement(PageData,{}),this.getDiv()[0])
+    return true;
     
 };
 /**
@@ -162,6 +173,7 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         this.navobject=evdata.navobject;
         this.isInitialized=true;
         this.initButtons();
+        this._initPage();
         this.localInit();
         this.initDisplayObjects();
         this.initFocusHandler();
@@ -237,6 +249,7 @@ avnav.gui.Page.prototype.timerEvent=function(){
  * get the content to be displayed on the page
  * the return value must be a reactClass or another type that can be used in a React.createElement
  * it will be called once when initially being displayed (before localInit)
+ * when this function returns data buttons will be created using the button list in the store
  */
 avnav.gui.Page.prototype.getPageContent=function(){
     
