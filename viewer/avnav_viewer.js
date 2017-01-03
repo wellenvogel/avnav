@@ -136,7 +136,7 @@ var propertyDefinitions=function(){
         showClock:new avnav.util.Property(true,"show clock",avnav.util.PropertyType.CHECKBOX),
         nightMode: new avnav.util.Property( false,"NightMode",avnav.util.PropertyType.CHECKBOX),
         nightColorDim:new avnav.util.Property( 60,"Night Dim for Colors",avnav.util.PropertyType.RANGE,[5,100]), //should match @nightModeVale in less
-        smallBreak:new avnav.util.Property( 480,"break for small devices",avnav.util.PropertyType.RANGE,[200,600]), //must match less definition!
+        smallBreak:new avnav.util.Property( 480,"portrait layout below (px)",avnav.util.PropertyType.RANGE,[200,9999]), 
 
         style:{
             buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[35,100]),
