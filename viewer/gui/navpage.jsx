@@ -240,11 +240,7 @@ avnav.gui.Navpage.prototype.isSmall=function(){
 };
 avnav.gui.Navpage.prototype.updateWidgetLists=function(){
     for (var key in this.widgetLists){
-        var list=this.widgetLists[key];
-        var visibleList=[];
-        for (var i in list){
-            if (list[i].visible === undefined || list[i].visible) visibleList.push(list[i]);
-        }
+        var visibleList=avnav.arrayClone(this.widgetLists[key]);
         var current=this.store.getData(key);
         if (current) current=current.itemList;
         var doUpdate=false;
@@ -254,7 +250,7 @@ avnav.gui.Navpage.prototype.updateWidgetLists=function(){
         };
         if (! doUpdate){
             for (var i=0; i< visibleList.length;i++){
-                if (current[i].key != visibleList[i].key){
+                if (current[i].key != visibleList[i].key || current[i].visible != visibleList[i].visible){
                     //TODO: check other parameters?
                     doUpdate=true;
                     break;

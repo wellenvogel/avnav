@@ -44,10 +44,16 @@ module.exports=React.createClass({
         this.setState(nstate);
     },
     render: function(){
-        var items=this.state.itemList||[];
+        var allitems=this.state.itemList||[];
         var self=this;
         var className="avn_listContainer";
         if (this.props.className) className+=" "+this.props.className;
+        var items=[];
+        for (var idx in allitems){
+            if (allitems[idx].visible === undefined || allitems[idx].visible){
+                items.push(allitems[idx]);
+            }
+        }
         return(
             <div className={className}>
                 { items.map(function (entry) {

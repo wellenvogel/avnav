@@ -118,6 +118,19 @@ avnav.assign = function (target, obj) {
     });
     return target;
 };
+avnav.arrayClone=function(arr){
+    var rt=[];
+    for (var i in arr){
+        var old=arr[i];
+        if (old instanceof Object){
+            rt.push(avnav.assign({},old));
+        }
+        else{
+            rt.push(old);
+        }
+    };
+    return rt;
+};
 avnav.isString=function(x){
     return (x instanceof String || typeof(x) === 'string');
 };

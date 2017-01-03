@@ -7,6 +7,10 @@ var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 var Overlay=require('../util/overlay');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
+var Store=require('../util/store');
+var React=require('react');
+var ReactDOM=require('react-dom');
+var ItemUpdater=require('../components/ItemUpdater.jsx');
 
 
 /**
@@ -40,6 +44,15 @@ avnav.gui.Page=function(name,options){
      * @type {{}}
      */
     this.displayItems={};
+    /**
+     * the store used by this page
+     * @type {Store}
+     */
+    this.store=new Store();
+    this.globalKeys={
+        pageVisible: 'visible',
+        buttons: 'buttons'
+    };
     $(document).on(avnav.gui.PageEvent.EVENT_TYPE, function(ev,evdata){
 
         if (evdata.oldpage != myself.name && evdata.newpage != myself.name){
@@ -120,6 +133,19 @@ avnav.gui.Page.prototype.isVisible=function(){
     return rt;
 };
 
+avnav.gui.Page.prototype._initPage=function(){
+    var content=this.getPageContent();
+    if (! content) return;
+    this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
+    var pageData=ItemUpdater(React.createClass({
+        render: function(){
+            if (!this.props.visible) return null;
+            return React.createElement(content,{});
+        }
+    }),this.store,this.globalKeys.pageVisible);
+    ReactDOM.render(React.createElement(pageData,{}),this.getDiv()[0])
+    
+};
 /**
  * event handler that is called by the page event
  * @param {avnav.gui.PageEvent} evdata
@@ -173,6 +199,7 @@ avnav.gui.Page.prototype._showPage=function(){
            self.gui.properties.getProperties().buttonUpdateTime);
     }
     this._hideToast=false;
+    this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
 };
 avnav.gui.Page.prototype._hidePage=function(){
     if (this.intervalTimer >= 0){
@@ -181,6 +208,7 @@ avnav.gui.Page.prototype._hidePage=function(){
     }
     if (this._hideToast) Overlay.hideToast();
     OverlayDialog.hide();
+    this.store.replaceSubKey(this.globalKeys.pageVisible,false,'visible');
 
 };
 /**
@@ -203,6 +231,15 @@ avnav.gui.Page.prototype._timerEvent=function(){
  */
 avnav.gui.Page.prototype.timerEvent=function(){
 
+};
+
+/**
+ * get the content to be displayed on the page
+ * the return value must be a reactClass or another type that can be used in a React.createElement
+ * it will be called once when initially being displayed (before localInit)
+ */
+avnav.gui.Page.prototype.getPageContent=function(){
+    
 };
 /**
  * initially fill the list of items that will be update on nav events

@@ -243,8 +243,6 @@ var WidgetContainer=React.createClass({
                 this.checkUnlayouted();
             }
         },
-        removeItemInfo:function(key){
-        },
         computeStyles:function(){
             var layoutParam={};
             if (this.props.layoutParameter){
@@ -261,6 +259,9 @@ var WidgetContainer=React.createClass({
                 var item=this.props.itemList[i];
                 if (! item.key){
                     avnav.log("missing item key");
+                    continue;
+                }
+                if (item.visible !== undefined && ! item.visible) {
                     continue;
                 }
                 var rect=this.itemInfo[item.key];
@@ -334,7 +335,7 @@ var WidgetContainer=React.createClass({
                     self.setState({
                         dummy:1
                     })
-                },0)
+                },50)
             }
         },
         componentDidUpdate:function(){
