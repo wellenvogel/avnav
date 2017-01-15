@@ -266,6 +266,17 @@ avnav.util.PropertyHandler.prototype.updateLayout=function(){
     $(".avn_smallButton").css('font-size',baseFontSize+"px");
     $('.avn_widgetContainer').css('font-size',this.getValue(this.propertyDescriptions.widgetFontSize)+"px");
 };
+avnav.util.PropertyHandler.prototype.getButtonFontSize=function(){
+    var height=$(window).height();
+    var numButtons=this.getValue(this.propertyDescriptions.maxButtons);
+    var buttonHeight=height/numButtons-8; //TODO: should we get this from CSS?
+    var currentButtonHeight=this.getValue(this.propertyDescriptions.style.buttonSize);
+    var scale=buttonHeight/currentButtonHeight;
+    var nightColorDim=this.getValue(this.propertyDescriptions.nightColorDim);
+    if (scale > 1) scale=1;
+    return currentButtonHeight * scale/4;
+
+};
 /**
  * filter out only the allowed user data
  * this filters only one level (for "old style" setUserData)

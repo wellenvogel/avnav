@@ -18,7 +18,8 @@ var ButtonList= React.createClass({
     propTypes: {
         itemList: React.PropTypes.array.isRequired,
         buttonHandler: React.PropTypes.object.isRequired,
-        visibilityFlags: React.PropTypes.object //each key given will be compared with the item keys to decide the visibility
+        visibilityFlags: React.PropTypes.object, //each key given will be compared with the item keys to decide the visibility
+        fontSize: React.PropTypes.number.isRequired
     },
     onItemClick: function(item){
         if (! this.props.buttonHandler) return;
@@ -58,7 +59,7 @@ var ButtonList= React.createClass({
     },
     render: function () {
         var props=this.computeButtonList(this.props);
-        return <ItemList {...props}/>
+        return <ItemList {...props} childProperties={{style:{fontSize:this.props.fontSize}}}/>
     }
 });
 

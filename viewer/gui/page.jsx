@@ -140,6 +140,7 @@ avnav.gui.Page.prototype._initPage=function(){
     if (! Content) return;
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
     var Buttons=ItemUpdater(ButtonList,this.store,this.globalKeys.buttons);
+    var buttonFontSize=this.gui.properties.getButtonFontSize();
     var PageData=ItemUpdater(React.createClass({
         render: function(){
             if (!this.props.visible) return null;
@@ -148,7 +149,7 @@ avnav.gui.Page.prototype._initPage=function(){
                     <div className="avn_left_panel">
                         <Content/>
                     </div>
-                    <Buttons className="avn_right_panel" buttonHandler={self} visibilityFlags={{android: avnav.android?true:false}}/>
+                    <Buttons className="avn_right_panel" buttonHandler={self} fontSize={buttonFontSize} visibilityFlags={{android: avnav.android?true:false}}/>
                 </div>
             );
         }
