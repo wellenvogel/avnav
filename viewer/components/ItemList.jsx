@@ -111,5 +111,10 @@ module.exports=React.createClass({
         if (this.props.updateCallback){
             this.props.updateCallback();
         }
+    },
+    componentDidMount: function(prevProp,prevState){
+        if (this.props.updateCallback){
+            this.props.updateCallback();
+        }
     }
 });
