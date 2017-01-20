@@ -7,10 +7,11 @@ var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ItemList=require("../components/ItemList.jsx");
 var OverlayDialog=require('../components/OverlayDialog.jsx');
 var ColorPicker=require('../components/ColorPicker.jsx');
+var Page=require('./page.jsx');
 require('react-color-picker/index.css');
 
 var keys={
-    panelVisibility: 'panelVisibility', //header|items|both
+    panelState: 'panelState', //{leftPanelVisible,rightPanelVisible,headline}
     sectionItems: 'sectionItems',
     activeItems: 'activeItems',
     currentValues: 'currentValues'
@@ -40,15 +41,24 @@ var Settingspage=function(){
     this.store.register(this,keys.sectionItems,keys.currentValues);
     this.hasChanges=false;
 };
-avnav.inherits(Settingspage,avnav.gui.Page);
+avnav.inherits(Settingspage,Page);
 
 /**
  * the local init called from the base class when the page is instantiated
  */
 Settingspage.prototype.localInit=function(){
-
+    var self=this;
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
+        var leftVisible=self.isLeftVisible();
+        self.handlePanels(leftVisible?undefined:self.getcurrentSectionName());
+    });
 };
 
+
+Settingspage.prototype.isLeftVisible=function(){
+    var panelState=this.store.getData(keys.panelState,{});
+    return panelState.leftPanelVisible;
+};
 Settingspage.prototype.getPageContent=function(){
     var buttonList=[
         {key:'SettingsOK'},
@@ -57,6 +67,7 @@ Settingspage.prototype.getPageContent=function(){
         {key:'SettingsAndroid',android: true}
     ];
     this.store.storeData(this.globalKeys.buttons,{itemList:buttonList});
+    this.handlePanels(undefined);
     var self=this;
     this.sectionItems=[];
     var idx=0;
@@ -103,22 +114,26 @@ Settingspage.prototype.getPageContent=function(){
     };
     var sectionClick=function(item){
         var current=self.store.getData(keys.sectionItems,{}).selectors;
-        if (current && current[sectionSelectors.selected] == item.key) return;
-        self.store.updateSubItem(keys.sectionItems,sectionSelectors.selected,item.key,'selectors');
+        if (!current || current[sectionSelectors.selected] != item.key) {
+            self.store.updateSubItem(keys.sectionItems, sectionSelectors.selected, item.key, 'selectors');
+        }
+        self.handlePanels(self.getcurrentSectionName());
     };
     var SectionList=ItemUpdater(ItemList,this.store,keys.sectionItems);
     var SettingsList=ItemUpdater(ItemList,this.store,keys.activeItems);
     var Settings=ItemUpdater(React.createClass({
         render: function(){
-            var leftVisibile=true;
-            var rightVisible=true;
+            var leftVisibile=this.props.leftPanelVisible;
+            var rightVisible=this.props.rightPanelVisible;
+            var leftClass="avn_leftSection";
+            if (! rightVisible) leftClass+=" avn_expand";
             return (
                 <div className="avn_panel_fill">
                     <div className="avn_left_top">
-                        <div>Settings</div>
+                        <div>{this.props.headline}</div>
                     </div>
                     <div className="avn_left_inner avn_panel">
-                        { leftVisibile && <div className="avn_leftSection"><SectionList
+                        { leftVisibile && <div className={leftClass}><SectionList
                             className="avn_scroll"
                             itemClass={SectionItem}
                             onItemClick={sectionClick}
@@ -132,7 +147,7 @@ Settingspage.prototype.getPageContent=function(){
                 </div>
             );
         }
-    }),this.store,keys.panelVisibility);
+    }),this.store,keys.panelState);
     return Settings;
 };
 
@@ -260,7 +275,7 @@ Settingspage.prototype.colorItemDialog=function(item){
                     <button name="reset" onClick={this.buttonClick}>Reset</button>
                     <div className="avn_clear"></div>
                 </div>
-            );
+            );this.sectionItems[selectedIndex].name
         }
 
     });
@@ -273,14 +288,20 @@ Settingspage.prototype.colorItemDialog=function(item){
 Settingspage.prototype.showPage=function(options){
     if (!this.gui) return;
     var self=this;
+    this.handlePanels(undefined);
     this.store.updateSubItem(keys.sectionItems,sectionSelectors.selected,0,'selectors');
     this.resetValues();
 };
 
 Settingspage.prototype.resetValues=function(opt_defaults){
     var self=this;
-    var newValues={};
-    for (var section in settingsSections){
+    var newValues=avnav.assign({},this.store.getData(keys.currentValues));
+    var sectionList=settingsSections;
+    if (! this.isLeftVisible()){
+        sectionList={};
+        sectionList[this.getcurrentSectionName()]='dummy'; //we only need the keys
+    }
+    for (var section in sectionList){
         var items=settingsSections[section];
         items.forEach(function(item){
             var description=self.gui.properties.getDescriptionByName(item);
@@ -293,13 +314,34 @@ Settingspage.prototype.resetValues=function(opt_defaults){
     this.store.storeData(keys.currentValues,newValues);
     this.hasChanges=opt_defaults?true:false;
 };
+Settingspage.prototype.handlePanels=function(sectionName){
+    var small=this.isSmall();
+    var panelState=this.store.getData(keys.panelState,{});
+    panelState.leftPanelVisible=false;
+    panelState.rightPanelVisible=false;
+    if (!small || !sectionName){
+        panelState.headline="Settings";
+        panelState.leftPanelVisible=true;
+    }
+    else{
+        panelState.headline="Settings "+sectionName;
+        panelState.rightPanelVisible=true;
+    }
+    if (! small){
+        panelState.rightPanelVisible=true;
+    }
+    this.store.updateData(keys.panelState,panelState);
+};
 /**
  * called when the section selection has changed
  */
 Settingspage.prototype.dataChanged=function(){
+    this.createItemList(this.getcurrentSectionName());
+};
+Settingspage.prototype.getcurrentSectionName=function(){
     var selectedSection=this.store.getData(keys.sectionItems,{}).selectors;
     var selectedIndex=selectedSection?selectedSection[sectionSelectors.selected]:0;
-    this.createItemList(this.sectionItems[selectedIndex].name);
+    return this.sectionItems[selectedIndex].name;
 };
 Settingspage.prototype.createItemList=function(sectionName){
     var self=this;
@@ -320,7 +362,20 @@ Settingspage.prototype.hidePage=function(){
 
 };
 
-
+Settingspage.prototype.goBack=function(){
+    if (! this.isLeftVisible()){
+        this.handlePanels(undefined);
+        return;
+    }
+    if (! this.hasChanges) {
+        this.returnToLast();
+        return;
+    }
+    var self=this;
+    OverlayDialog.confirm("discard changes?",this.getDialogContainer()).then(function() {
+        self.returnToLast();
+    });
+};
 
 //-------------------------- Buttons ----------------------------------------
 
@@ -331,6 +386,10 @@ Settingspage.prototype.hidePage=function(){
  */
 Settingspage.prototype.btnSettingsOK=function(button,ev){
     avnav.log("SettingsOK clicked");
+    if (! this.isLeftVisible()){
+        this.handlePanels(undefined);
+        return;
+    }
     var currentData=this.store.getData(keys.currentValues);
     for (var idx in currentData){
         var val=currentData[idx];
@@ -345,7 +404,11 @@ Settingspage.prototype.btnSettingsOK=function(button,ev){
 Settingspage.prototype.btnSettingsDefaults=function(button,ev) {
     avnav.log("SettingsDefaults clicked");
     var self=this;
-    OverlayDialog.confirm("reset all settings?",this.getDialogContainer()).then(function() {
+    var query="reset all settings?";
+    if (! this.isLeftVisible()){
+        query="reset "+this.getcurrentSectionName()+" settings?"
+    }
+    OverlayDialog.confirm(query,this.getDialogContainer()).then(function() {
         self.resetValues(true);
     });
 };
@@ -366,6 +429,10 @@ Settingspage.prototype.btnSettingsAndroid=function(button,ev) {
 };
 
 Settingspage.prototype.btnCancel=function(button,ev) {
+    if (! this.isLeftVisible()){
+        this.handlePanels(undefined);
+        return;
+    }
     if (! this.hasChanges) {
         this.returnToLast();
         return;

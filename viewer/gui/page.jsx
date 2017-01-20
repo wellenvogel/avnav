@@ -2,7 +2,6 @@
  * Created by andreas on 02.05.14.
  */
 
-avnav.provide('avnav.gui.Page');
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 var Overlay=require('../util/overlay');
@@ -22,7 +21,7 @@ var ButtonList=require('../components/ButtonList.jsx');
  *          returnOnClick: if set to true return on click on leftPanel
  * @constructor
  */
-avnav.gui.Page=function(name,options){
+var Page=function(name,options){
     this.isInitialized=false;
     /** @type{avnav.gui.Handler} */
     this.gui=null;
@@ -81,7 +80,7 @@ avnav.gui.Page=function(name,options){
 /**
  * get the page div (jQuery object)
  */
-avnav.gui.Page.prototype.getDiv=function(){
+Page.prototype.getDiv=function(){
     var div=$('#avi_'+this.name);
     return div;
 };
@@ -90,11 +89,11 @@ avnav.gui.Page.prototype.getDiv=function(){
  * @param selector the jquery selector, will be prepended by #avi_pagename
  * @returns {*|jQuery|HTMLElement}
  */
-avnav.gui.Page.prototype.selectOnPage=function(selector){
+Page.prototype.selectOnPage=function(selector){
     return this.getDiv().find(selector);
 };
 
-avnav.gui.Page.prototype.getSelectOnPageString=function(selector){
+Page.prototype.getSelectOnPageString=function(selector){
     return '#avi_'+this.name+" "+selector;
 };
 
@@ -104,7 +103,7 @@ avnav.gui.Page.prototype.getSelectOnPageString=function(selector){
  * @param cssclass ndefaults to inline-block
  * @returns {*}
  */
-avnav.gui.Page.prototype.show=function(selector,cssclass){
+Page.prototype.show=function(selector,cssclass){
     return this.selectOnPage(selector).css('display',cssclass?cssclass:"inline-block");
 };
 /**
@@ -112,7 +111,7 @@ avnav.gui.Page.prototype.show=function(selector,cssclass){
  * @param selector
  * @returns {*}
  */
-avnav.gui.Page.prototype.showBlock=function(selector){
+Page.prototype.showBlock=function(selector){
     return this.selectOnPage(selector).css('display','block');
 };
 
@@ -121,7 +120,7 @@ avnav.gui.Page.prototype.showBlock=function(selector){
  * @param selector
  * @returns {*}
  */
-avnav.gui.Page.prototype.hide=function(selector){
+Page.prototype.hide=function(selector){
     return this.selectOnPage(selector).hide();
 };
 
@@ -129,12 +128,12 @@ avnav.gui.Page.prototype.hide=function(selector){
 /**
  * check if the page is visible
  */
-avnav.gui.Page.prototype.isVisible=function(){
+Page.prototype.isVisible=function(){
     var rt=this.getDiv().is(':visible');
     return rt;
 };
 
-avnav.gui.Page.prototype._initPage=function(){
+Page.prototype._initPage=function(){
     var self=this;
     var Content=this.getPageContent();
     if (! Content) return;
@@ -161,10 +160,10 @@ avnav.gui.Page.prototype._initPage=function(){
 };
 /**
  * event handler that is called by the page event
- * @param {avnav.gui.PageEvent} evdata
+ * @param {PageEvent} evdata
  * @private
  */
-avnav.gui.Page.prototype.handlePage=function(evdata){
+Page.prototype.handlePage=function(evdata){
     var self=this;
     if (! this.isInitialized){
         this.gui=evdata.gui;
@@ -210,7 +209,7 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
         }
     }
 };
-avnav.gui.Page.prototype._showPage=function(){
+Page.prototype._showPage=function(){
     var self=this;
     if (this.intervalTimer <=0 ){
        this.intervalTimer=window.setInterval(function(){ self._timerEvent();},
@@ -219,7 +218,7 @@ avnav.gui.Page.prototype._showPage=function(){
     this._hideToast=false;
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
 };
-avnav.gui.Page.prototype._hidePage=function(){
+Page.prototype._hidePage=function(){
     if (this.intervalTimer >= 0){
         window.clearInterval(this.intervalTimer);
         this.intervalTimer=-1;
@@ -233,7 +232,7 @@ avnav.gui.Page.prototype._hidePage=function(){
  *
  * @private
  */
-avnav.gui.Page.prototype._timerEvent=function(){
+Page.prototype._timerEvent=function(){
   if (this.isVisible()) {
       this.timerEvent();
   }
@@ -247,7 +246,7 @@ avnav.gui.Page.prototype._timerEvent=function(){
 /**
  * to be overloaded
  */
-avnav.gui.Page.prototype.timerEvent=function(){
+Page.prototype.timerEvent=function(){
 
 };
 
@@ -257,13 +256,13 @@ avnav.gui.Page.prototype.timerEvent=function(){
  * it will be called once when initially being displayed (before localInit)
  * when this function returns data buttons will be created using the button list in the store
  */
-avnav.gui.Page.prototype.getPageContent=function(){
+Page.prototype.getPageContent=function(){
     
 };
 /**
  * initially fill the list of items that will be update on nav events
  */
-avnav.gui.Page.prototype.initDisplayObjects=function(){
+Page.prototype.initDisplayObjects=function(){
     var names=this.navobject.getValueNames();
     var self=this;
     for (var i=0;i< names.length;i++){
@@ -279,7 +278,7 @@ avnav.gui.Page.prototype.initDisplayObjects=function(){
 /**
  * update all display items from navobject
  */
-avnav.gui.Page.prototype.updateDisplayObjects=function(){
+Page.prototype.updateDisplayObjects=function(){
     var name;
     for (name in this.displayItems){
         var ellist=this.displayItems[name];
@@ -295,7 +294,7 @@ avnav.gui.Page.prototype.updateDisplayObjects=function(){
  * init function called after receiving the first event
  * intended to be overloaded by subclasses
  */
-avnav.gui.Page.prototype.localInit=function(){
+Page.prototype.localInit=function(){
 
 };
 
@@ -303,14 +302,14 @@ avnav.gui.Page.prototype.localInit=function(){
  * function to handle back-keys
  * intended to be overloaded by subclasses
  */
-avnav.gui.Page.prototype.goBack=function(){
+Page.prototype.goBack=function(){
     this.returnToLast();
 };
 
 /**
  * return to the last page in the history stack
  */
-avnav.gui.Page.prototype.returnToLast=function(){
+Page.prototype.returnToLast=function(){
     if (! this.gui) return;
     this.gui.returnToLast();
 };
@@ -319,7 +318,7 @@ avnav.gui.Page.prototype.returnToLast=function(){
  * to be overloaded by pages
  * @param initial
  */
-avnav.gui.Page.prototype.fillData=function(initial){
+Page.prototype.fillData=function(initial){
 
 };
 
@@ -330,7 +329,7 @@ avnav.gui.Page.prototype.fillData=function(initial){
  * @private
  *
  */
-avnav.gui.Page.prototype.initButtons=function(){
+Page.prototype.initButtons=function(){
     var page=this;
     var div=this.getDiv();
     this.selectOnPage('.avn_button').each(function (i, e) {
@@ -361,7 +360,7 @@ avnav.gui.Page.prototype.initButtons=function(){
 
 };
 
-avnav.gui.Page.prototype.initFocusHandler=function() {
+Page.prototype.initFocusHandler=function() {
     var page = this;
     var div = this.getDiv();
     var num=0;
@@ -371,15 +370,15 @@ avnav.gui.Page.prototype.initFocusHandler=function() {
             page.gui.addActiveInput(id);
         });
         $(el).on('blur', function () {
-            page.gui.removeActiveInput(id);
+            page.gui.removeActiveInpPut(id);
         });
         num++;
     });
 };
 /**
- * @private
+ * @privateP
  */
-avnav.gui.Page.prototype.initExternalLinks=function(){
+Page.prototype.initExternalLinks=function(){
     if (! avnav.android) return;
     var self=this;
     $('.avn_extlink').on('click',function(ev){
@@ -393,13 +392,13 @@ avnav.gui.Page.prototype.initExternalLinks=function(){
 /**
  * function to be overloaded by pages
  */
-avnav.gui.Page.prototype.showPage=function(){
+Page.prototype.showPage=function(){
 
 };
 /**
  * function to be overloaded by pages
  */
-avnav.gui.Page.prototype.hidePage=function(){
+Page.prototype.hidePage=function(){
 
 };
 
@@ -409,7 +408,7 @@ avnav.gui.Page.prototype.hidePage=function(){
  * @param onoff
  * @param onClass
  */
-avnav.gui.Page.prototype.handleToggleButton=function(id,onoff,onClass){
+Page.prototype.handleToggleButton=function(id,onoff,onClass){
     var oc=onClass || "avn_buttonActive";
     if (onoff){
         this.selectOnPage(id).removeClass("avn_buttonActive");
@@ -432,7 +431,7 @@ avnav.gui.Page.prototype.handleToggleButton=function(id,onoff,onClass){
  *               anv_left|right|top|bottom it is resized...
  * @returns {boolean} - true when mainid something changed
  */
-avnav.gui.Page.prototype.showHideAdditionalPanel=function(id,show,mainid){
+Page.prototype.showHideAdditionalPanel=function(id,show,mainid){
     var updateSize=false;
     if (show){
         if (!$(id).is(':visible')) {
@@ -460,7 +459,7 @@ avnav.gui.Page.prototype.showHideAdditionalPanel=function(id,show,mainid){
     return false;
 };
 
-avnav.gui.Page.prototype.updateMainPanelSize=function(mainid){
+Page.prototype.updateMainPanelSize=function(mainid){
     var main=$(mainid);
     if (! main) return;
     var args=[
@@ -487,24 +486,34 @@ avnav.gui.Page.prototype.updateMainPanelSize=function(mainid){
     }
 };
 
-avnav.gui.Page.prototype.goBack=function(){
+Page.prototype.goBack=function(){
     this.returnToLast();
 };
 
-avnav.gui.Page.prototype.toast=function(html,opt_hide){
+Page.prototype.toast=function(html,opt_hide){
     Overlay.Toast(html);
     this._hideToast=opt_hide||false;
 };
-avnav.gui.Page.prototype.hideToast=function(){
+Page.prototype.hideToast=function(){
     Overlay.hideToast();
 }
-avnav.gui.Page.prototype.getDialogContainer=function(){
+Page.prototype.getDialogContainer=function(){
     return this.selectOnPage('.avn_left_panel')[0];
+};
+
+Page.prototype.isSmall=function(){
+    var w=$(window).width();
+    if ( w<= this.gui.properties.getProperties().smallBreak){
+        return true; //hide left widgets, display top
+    }
+    return false;
 };
 
 /*-------------------------------------------------------
    default button
  */
-avnav.gui.Page.prototype.btnCancel=function(){
+Page.prototype.btnCancel=function(){
   this.returnToLast();
 };
+
+module.exports=Page;

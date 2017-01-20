@@ -231,13 +231,6 @@ avnav.gui.Navpage.prototype.showPage=function(options){
 
 };
 
-avnav.gui.Navpage.prototype.isSmall=function(){
-    var w=$(window).width();
-    if ( w<= this.gui.properties.getProperties().smallBreak){
-        return true; //hide left widgets, display top
-    }
-    return false;
-};
 avnav.gui.Navpage.prototype.updateWidgetLists=function(){
     for (var key in this.widgetLists){
         var visibleList=avnav.arrayClone(this.widgetLists[key]);
