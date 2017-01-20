@@ -139,8 +139,9 @@ avnav.gui.Page.prototype._initPage=function(){
     var Content=this.getPageContent();
     if (! Content) return;
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
-    var Buttons=ItemUpdater(ButtonList,this.store,this.globalKeys.buttons);
     var buttonFontSize=this.gui.properties.getButtonFontSize();
+    this.store.replaceSubKey(this.globalKeys.buttons,buttonFontSize,'fontSize');
+    var Buttons=ItemUpdater(ButtonList,this.store,this.globalKeys.buttons);
     var PageData=ItemUpdater(React.createClass({
         render: function(){
             if (!this.props.visible) return null;
@@ -149,7 +150,7 @@ avnav.gui.Page.prototype._initPage=function(){
                     <div className="avn_left_panel">
                         <Content/>
                     </div>
-                    <Buttons className="avn_right_panel" buttonHandler={self} fontSize={buttonFontSize} visibilityFlags={{android: avnav.android?true:false}}/>
+                    <Buttons className="avn_right_panel" buttonHandler={self}  visibilityFlags={{android: avnav.android?true:false}}/>
                 </div>
             );
         }
@@ -189,6 +190,10 @@ avnav.gui.Page.prototype.handlePage=function(evdata){
            if (evdata.name && evdata.name==self.name){
                self.goBack();
            }
+        });
+        $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
+            var buttonFontSize=self.gui.properties.getButtonFontSize();
+            self.store.replaceSubKey(self.globalKeys.buttons,buttonFontSize,'fontSize');
         });
     }
     if (this.visible != this.isVisible()){
