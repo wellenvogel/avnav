@@ -1550,20 +1550,20 @@ button.avb_GpsCancel{
 }
 
 #avi_settingspage .avn_value{
-  margin-top: 0.3em;
+  .avm_listEntryItem();
+  margin-left: 1em;
   .mdText2();
 }
 
+#avi_settingspage .avn_description{
+  .avm_listEntryItem();
+}
 #avi_settingspage .avn_colorSelector {
   .avn_colorValue {
     width: 1.5em;
     height: 1.5em;
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 1em;
-  }
-  .avn_value{
-    display: inline-block;
+    margin-left: 1em;
+    .avm_listEntryItem();
   }
 }
 
@@ -1588,6 +1588,7 @@ button.avb_GpsCancel{
 
 #avi_settingspage .avn_list_entry {
   line-height: 1.5em;
+  .avm_list_entry();
 }
 
 #avi_settingspage .avn_scroll {
@@ -1606,29 +1607,8 @@ button.avb_GpsCancel{
   .mdText2();
 }
 
-.avn_setting {
-  float: left;
-  padding-left: 0.8em;
-  padding-right: 0.8em;
-  padding-bottom: 6px;
-}
 
-.avn_settings_group {
-  background-color: @colorSecond;
-  padding-left: 8px;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  margin-bottom: 8px;
-  margin-right: 5px;
-  color: #FFF;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-}
 
-.avn_settings_group h2 {
-  font-size: 1em;
-}
 
 .avn_clear {
   clear: both;
