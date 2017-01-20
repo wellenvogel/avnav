@@ -263,7 +263,6 @@ avnav.util.PropertyHandler.prototype.updateLayout=function(){
     //set the font sizes
     var baseFontSize=this.getValue(this.propertyDescriptions.baseFontSize);
     $('body').css('font-size',baseFontSize+"px");
-    $(".avn_smallButton").css('font-size',baseFontSize+"px");
     $('.avn_widgetContainer').css('font-size',this.getValue(this.propertyDescriptions.widgetFontSize)+"px");
 };
 avnav.util.PropertyHandler.prototype.getButtonFontSize=function(){

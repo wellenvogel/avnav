@@ -159,6 +159,22 @@ Page.prototype._initPage=function(){
     
 };
 /**
+ * show or hide a button
+ * @param key the button key
+ * @param display true|false
+ */
+Page.prototype.changeButtonDisplay=function(key,display){
+    var buttons=this.store.getData(this.globalKeys.buttons,{});
+    if (! buttons.itemList) return;
+    buttons=buttons.itemList;
+    for (var i in buttons){
+        if (buttons[i].key == key){
+            buttons[i]=avnav.assign({},buttons[i],{visible:display?true:false});
+            this.store.replaceSubKey(this.globalKeys.buttons,buttons,'itemList')
+        }
+    }
+};
+/**
  * event handler that is called by the page event
  * @param {PageEvent} evdata
  * @private

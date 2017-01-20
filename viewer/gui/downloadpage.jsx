@@ -1,15 +1,17 @@
 /**
  * Created by andreas on 02.05.14.
  */
-avnav.provide('avnav.gui.Downloadpage');
-avnav.provide('avnav.gui.FileInfo');
+
 var routeobjects=require('../nav/routeobjects');
 var RouteHandler=require('../nav/routedata');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
+var ItemUpdater=require('../components/ItemUpdater.jsx');
+var ItemList=require('../components/ItemList.jsx');
+var React=require('react');
 
 
 
-avnav.gui.FileInfo=function(name,type,time){
+var FileInfo=function(name,type,time){
     /**
      * @type {String}
      */
@@ -26,12 +28,20 @@ avnav.gui.FileInfo=function(name,type,time){
 
 };
 
+var keys={
+    type: 'type', //{value}
+    downloadList: 'list', //{itemList,selectors}]
+    upload: 'upload' //{upload:true|false,total,loaded}
+};
+var selectors={
+    active:'avn_download_active_entry'
+};
 
 /**
  *
  * @constructor
  */
-avnav.gui.Downloadpage=function(){
+var Downloadpage=function(){
     avnav.gui.Page.call(this,'downloadpage');
     this.MAXUPLOADSIZE=100000; //for tracks and routes
     /**
@@ -42,19 +52,13 @@ avnav.gui.Downloadpage=function(){
     this.activeListEntryClass="avn_download_active_entry";
 
     /**
-     *
-     * @type {string}
-     */
-    this.idPrefix="avi_downloadInfo";
-
-    /**
      * @private
      * @type {avnav.util.Formatter}
      */
     this.formatter=new avnav.util.Formatter();
     /**
      *
-     * @type {Array:avnav.gui.FileInfo}
+     * @type {Array:FileInfo}
      */
     this.files=[];
     /**
@@ -105,13 +109,13 @@ avnav.gui.Downloadpage=function(){
     });
 
 };
-avnav.inherits(avnav.gui.Downloadpage,avnav.gui.Page);
+avnav.inherits(Downloadpage,avnav.gui.Page);
 
-avnav.gui.Downloadpage.prototype.resetUpload=function(){
-    $('#avi_download_uploadfile').replaceWith($('#avi_download_uploadfile').clone(true));
+Downloadpage.prototype.resetUpload=function(){
+    $('#avi_download_downloadform')[0].reset();
 };
 
-avnav.gui.Downloadpage.prototype.uploadChart=function(fileObject){
+Downloadpage.prototype.uploadChart=function(fileObject){
     var self=this;
     if (fileObject.files && fileObject.files.length > 0) {
         var file = fileObject.files[0];
@@ -139,7 +143,7 @@ avnav.gui.Downloadpage.prototype.uploadChart=function(fileObject){
  * @param fileObject
  * @returns {boolean}
  */
-avnav.gui.Downloadpage.prototype.uploadRoute=function(fileObject){
+Downloadpage.prototype.uploadRoute=function(fileObject){
     var self=this;
     if (fileObject.files && fileObject.files.length > 0) {
         var file = fileObject.files[0];
@@ -196,7 +200,7 @@ avnav.gui.Downloadpage.prototype.uploadRoute=function(fileObject){
     }
 };
 
-avnav.gui.Downloadpage.prototype.localInit=function(){
+Downloadpage.prototype.localInit=function(){
     if (! this.gui) return;
     this.routingHandler=this.gui.navobject.getRoutingHandler();
     var self=this;
@@ -204,20 +208,135 @@ avnav.gui.Downloadpage.prototype.localInit=function(){
     $('#avi_download_uploadform').submit(function(form){
        self.toast("upload file");
     });
-    $('#avi_download_uploadfile').on('change',function(ev){
-        ev.preventDefault();
-        if (self.type == "route"){
-            self.uploadRoute(this);
-            return false;
+};
+
+Downloadpage.prototype.startUpload=function(ev){
+    ev.preventDefault();
+    if (this.type == "route"){
+        this.uploadRoute(ev.target);
+        return false;
+    }
+    if (this.type == "chart"){
+        this.uploadChart(ev.target);
+        return false;
+    }
+};
+
+Downloadpage.prototype.getPageContent=function(){
+    var self=this;
+    var buttons=[
+        {key:'DownloadPageCharts'},
+        {key:'DownloadPageTracks'},
+        {key:'DownloadPageRoutes'},
+        {key:'DownloadPageUpload'},
+        {key:'Cancel'}
+    ];
+    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    var HeadLine=ItemUpdater(React.createClass({
+        render: function(){
+                return <div className="avn_left_top"><div>{this.props.value}</div></div>
         }
-        if (self.type == "chart"){
-            self.uploadChart(this);
-            return false;
+    }),this.store,keys.type);
+    //TODO: handle if (this.gui.properties.getProperties().connectedMode || (this.type == "route" && ! infos[id].server)) {
+    var DownloadItem=function(props){
+        var dp={};
+        if (props.type == "route"){
+            dp.timeText=self.formatter.formatDateTime(new Date(props.time));
+        }
+        else{
+            dp.timeText=self.formatter.formatDateTime(new Date(props.time*1000));
+        }
+        dp.infoText=props.name;
+        var showRas=false;
+        if (props.type == "route"){
+            dp.infoText+=","+self.formatter.formatDecimal(props.length,4,2)+
+                " nm, "+props.numpoints+" points";
+            if (props.server) showRas=true;
+        }
+        var showDownload=false;
+        if (self.type == "track" || self.type == "route" || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
+            showDownload=true;
+        }
+        var cls="avn_download_list_entry";
+        if (props.active){
+            cls+=" avn_download_active_entry";
+        }
+        return(
+        <div className={cls} onClick={function(ev){
+            if (self.selectItemCallback){
+               self.selectItemCallback(props);
+            }
+        }}>
+            {! props.active &&<button className="avn_download_btnDelete avn_smallButton" onClick={function(ev){
+                ev.preventDefault();
+                ev.stopPropagation();
+                self.deleteItem(props);
+            }}/>}
+            <div className="avn_download_listdate">{dp.timeText}</div>
+            <div className="avn_download_listinfo">{dp.infoText}</div>
+            {showRas && <div className="avn_download_listrasimage"></div>}
+            { showDownload && <button className="avn_download_btnDownload avn_smallButton" onClick={
+                function(ev){
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    self.downloadItem(props);
+                }
+            }/>}
+        </div>
+        );
+    };
+    var List=ItemUpdater(ItemList,this.store,keys.downloadList);
+    var listProperties={
+        onItemClick:function(item,opt_data){
+
+        },
+        itemClass:DownloadItem
+    };
+    var UploadIndicator=ItemUpdater(function(props){
+        var percentComplete = props.total?100*props.loaded / props.total:0;
+        if (! props.upload) return null;
+        var doneStyle={
+            width:percentComplete+"%"
+        };
+        return(
+            <div className="avn_download_progress">
+                <div className="avn_download_progress_container">
+                    <div className="avn_download_progress_info">{props.loaded+"/"+props.total}</div>
+                    <div className="avn_download_progress_display" >
+                        <div className="avn_progress_bar_done" style={doneStyle}></div>
+                    </div>
+                </div>
+                <button  className="avb_DownloadPageUploadCancel avn_button" onClick={function(){self.abortUpload();}}/>
+            </div>
+        );
+    },this.store,keys.upload);
+    return React.createClass({
+        render: function () {
+            return(
+                <div className="avn_panel_fill_flex">
+                    <HeadLine/>
+                    <div className="avn_left_inner">
+                        <List {...listProperties}/>
+                    </div>
+                    <form id="avi_download_downloadform" className="avn_hidden" method="get" >
+                        <input type="hidden" name="name"/>
+                        <input type="hidden" name="url"/>
+                        <input type="hidden" name="request" value="download"/>
+                        <input type="hidden" name="type" value="track"/>
+                        <input type="hidden" name="_json" value=""/>
+                    </form>
+                    <form id="avi_download_uploadform" className="avn_hidden" method="post">
+                        <input type="file" id="avi_download_uploadfile" name="file" onChange={function(ev){
+                            self.startUpload(ev);
+                        }}/>
+                    </form>
+                    <UploadIndicator/>
+                </div>
+            );
         }
     });
-
 };
-avnav.gui.Downloadpage.prototype.showPage=function(options) {
+Downloadpage.prototype.showPage=function(options) {
     if (!this.gui) return;
     if(options && options.downloadtype){
         this.type=options.downloadtype;
@@ -231,66 +350,39 @@ avnav.gui.Downloadpage.prototype.showPage=function(options) {
     if(options && options.selectItemCallback !== undefined){
         this.selectItemCallback=options.selectItemCallback;
     }
-    $('#avi_download_page_listhead').text(this.headlines[this.type]);
+    this.store.storeData(keys.type,{value:this.headlines[this.type]});
+    this.changeButtonDisplay('DownloadPageCharts',this.allowChange);
+    this.changeButtonDisplay('DownloadPageTracks',this.allowChange);
+    this.changeButtonDisplay('DownloadPageRoutes',this.allowChange);
     if (this.type == "chart"){
-        if (avnav.android||this.gui.properties.getProperties().onAndroid) this.selectOnPage('.avb_DownloadPageUpload').hide();
-        else  this.showBlock('.avb_DownloadPageUpload');
+        if (avnav.android||this.gui.properties.getProperties().onAndroid) this.changeButtonDisplay('DownloadPageUpload',false);
+        this.changeButtonDisplay('DownloadPageUpload',true);
         this.handleToggleButton('.avb_DownloadPageTracks',false);
         this.handleToggleButton('.avb_DownloadPageCharts',true);
         this.handleToggleButton('.avb_DownloadPageRoutes',false);
     }
     if (this.type == "track") {
-        this.selectOnPage('.avb_DownloadPageUpload').hide();
+        this.changeButtonDisplay('DownloadPageUpload',false);
         this.handleToggleButton('.avb_DownloadPageCharts',false);
         this.handleToggleButton('.avb_DownloadPageTracks',true);
         this.handleToggleButton('.avb_DownloadPageRoutes',false);
     }
     if (this.type == "route") {
-        this.showBlock('.avb_DownloadPageUpload');
+        this.changeButtonDisplay('DownloadPageUpload',true);
         this.handleToggleButton('.avb_DownloadPageCharts',false);
         this.handleToggleButton('.avb_DownloadPageTracks',false);
         this.handleToggleButton('.avb_DownloadPageRoutes',true);
     }
     if (!this.gui.properties.getProperties().connectedMode && this.type != "route"){
-        this.selectOnPage('.avb_DownloadPageUpload').hide();
-    }
-    if ( this.allowChange){
-        this.showBlock('.avn_changeDownload');
-    }
-    else{
-        this.selectOnPage('.avn_changeDownload').hide();
+        this.changeButtonDisplay('DownloadPageUpload',false);
     }
     this.fillData(true);
     this.hideProgress();
 };
 
-/**
- *
- * @param id
- * @param {avnav.gui.FileInfo} info
- */
-avnav.gui.Downloadpage.prototype.displayInfo=function(id,info){
-    var timeText;
-    if (info.type == "route"){
-        timeText=this.formatter.formatDateTime(new Date(info.time));
-    }
-    else{
-        timeText=this.formatter.formatDateTime(new Date(info.time*1000));
-    }
-    $('#'+this.idPrefix+id).find('.avn_download_listdate').text(timeText);
-    var infoText=info.name;
-    var showRas=false;
-    if (info.type == "route"){
-        infoText+=","+this.formatter.formatDecimal(info.length,4,2)+
-            " nm, "+info.numpoints+" points";
-        if (info.server) showRas=true;
-    }
-    $('#'+this.idPrefix+id).find('.avn_download_listinfo').text(infoText);
-    if (showRas) $('#'+this.idPrefix+id).find('.avn_download_listrasimage').show();
-    else  $('#'+this.idPrefix+id).find('.avn_download_listrasimage').hide();
-};
 
-avnav.gui.Downloadpage.prototype.sort = function (a, b) {
+
+Downloadpage.prototype.sort = function (a, b) {
     try {
         if (a.time == b.time) return 0;
         if (a.time < b.time) return 1;
@@ -300,123 +392,92 @@ avnav.gui.Downloadpage.prototype.sort = function (a, b) {
     }
 };
 
-avnav.gui.Downloadpage.prototype._isActiveRoute=function(info){
+Downloadpage.prototype.deleteItem=function(info){
+    var self=this;
+    var ok = OverlayDialog.confirm("delete " + info.type + " " + info.name + "?",self.getDialogContainer());
+    ok.then(function() {
+        if (info.type != "route") {
+            self.sendDelete(info);
+        }
+        else{
+            if (self._isActiveRoute(info)){
+                self.toast("unable to delete active route",true);
+                return false;
+            }
+            self.routingHandler.deleteRoute(info.name,
+                function(data){self.fillData(false);},
+                function(rinfo){
+                    self.toast("unable to delete route: "+rinfo,true);
+                    self.fillData(false);
+                }
+            );
+        }
+        self.fillData(false);
+    });
+    ok.catch(function(err){
+        avnav.log("delete canceled");
+    });
+};
+
+Downloadpage.prototype.downloadItem=function(info){
+    var self=this;
+    if (info) {
+        if (avnav.android) {
+            if (info.type == "track") avnav.android.downloadTrack(info.name);
+            if (info.type == "route") {
+                self.routingHandler.fetchRoute(info.name, !info.server, function (data) {
+                        avnav.android.downloadRoute(data.toJsonString());
+                    },
+                    function (err) {
+                        self.toast("unable to get route " + info.name, true);
+                    });
+            }
+        }
+        else {
+            if (info.type == "track") self.download(info.url ? info.url : info.name);
+            else {
+                if (info.type == "route") {
+                    if (info.server) self.download(info.name);
+                    else {
+                        self.routingHandler.fetchRoute(info.name, true, function (data) {
+                                self.download(info.name, undefined, data.toJsonString());
+                            },
+                            function (err) {
+                                self.toast("unable to get route " + info.name, true);
+                            });
+                    }
+                }
+                else self.download(info.name + ".gemf", info.url);
+            }
+        }
+    }
+};
+
+Downloadpage.prototype._isActiveRoute=function(info){
     if (! info.type || info.type != "route") return false;
     var activeRoute=this.routingHandler.getRoute();
     if (!activeRoute) return false;
     return activeRoute.name == info.name;
 };
-avnav.gui.Downloadpage.prototype._updateDisplay=function(){
+Downloadpage.prototype._updateDisplay=function(){
     var self=this;
-    $("."+this.visibleListEntryClass).remove();
     var id;
     var infos=this.files;
     infos.sort(this.sort);
+    var itemList=[];
     for (id=0;id<infos.length;id++){
         var isActive=this._isActiveRoute(infos[id]);
-        $('#avi_download_list_template').clone()
-            .attr("downloadId",id)
-            .attr("id",this.idPrefix+id)
-            .addClass(this.visibleListEntryClass)
-            .addClass(isActive?this.activeListEntryClass:"")
-            .show()
-            .insertAfter('.avn_download_list_entry:last');
-        this.displayInfo(id,infos[id]);
-        if (this.gui.properties.getProperties().connectedMode || (this.type == "route" && ! infos[id].server)) {
-            $('#' + this.idPrefix + id).find('.avn_download_btnDelete').on('click', null, {id: id}, function (ev) {
-                ev.preventDefault();
-                var lid = ev.data.id;
-                var name = self.files[lid].name;
-                var ok = OverlayDialog.confirm("delete " + self.files[lid].type + " " + name + "?",self.getDialogContainer());
-                ok.then(function() {
-                    if (self.type != "route") {
-                        self.sendDelete(self.files[lid]);
-                    }
-                    else{
-                        if (self._isActiveRoute(self.files[lid])){
-                            self.toast("unable to delete active route",true);
-                            return false;
-                        }
-                        self.routingHandler.deleteRoute(self.files[lid].name,
-                            function(data){self.fillData(false);},
-                            function(info){
-                                self.toast("unable to delete route: "+info,true);
-                                self.fillData(false);
-                            }
-                        );
-                    }
-                    self.fillData(false);
-                });
-                ok.catch(function(err){
-                   avnav.log("delete canceled");
-                });
-                return false;
-            }).css('visibility','');
-        }
-        else {
-            $('#' + this.idPrefix + id).find('.avn_download_btnDelete').css('visibility','hidden');
-        }
-
-        if (self.type == "track" || self.type == "route" || (infos[id].url && infos[id].url.match("^/gemf") && ! avnav.android) ) {
-            $('#' + this.idPrefix + id).find('.avn_download_btnDownload').show();
-            $('#' + this.idPrefix + id).find('.avn_download_btnDownload').on('click', null, {id: id}, function (ev) {
-                ev.preventDefault();
-                var lid = ev.data.id;
-                var info = undefined;
-                try {
-                    info = self.files[lid];
-                } catch (e) {
-                }
-                if (info) {
-                    if (avnav.android){
-                        if (info.type=="track") avnav.android.downloadTrack(info.name);
-                        if (info.type == "route"){
-                            self.routingHandler.fetchRoute(info.name,!info.server,function(data){
-                                    avnav.android.downloadRoute(data.toJsonString());
-                            },
-                            function(err){
-                                self.toast("unable to get route "+info.name,true);
-                            });
-                        }
-                    }
-                    else {
-                        if (info.type == "track") self.download(info.url ? info.url : info.name);
-                        else {
-                            if (info.type == "route") {
-                                if (info.server) self.download(info.name);
-                                else{
-                                    self.routingHandler.fetchRoute(info.name,true,function(data){
-                                            self.download(info.name,undefined,data.toJsonString());
-                                        },
-                                        function(err){
-                                            self.toast("unable to get route "+info.name,true);
-                                        });
-                                }
-                            }
-                            else self.download(info.name + ".gemf", info.url);
-                        }
-                    }
-                }
-
-            });
-        }
-        else {
-            $('#' + this.idPrefix + id).find('.avn_download_btnDownload').hide();
-        }
-        if (self.selectItemCallback){
-            $('#' + this.idPrefix + id).on('click',null,{item:self.files[id]},function(ev){
-                self.selectItemCallback(ev.data.item);
-            });
-        }
+        var item=avnav.assign({},infos[id],{active:isActive,key:infos[id].name});
+        itemList.push(item);
     }
-
+    self.store.replaceSubKey(keys.downloadList,itemList,'itemList');
 };
 
-avnav.gui.Downloadpage.prototype.fillData=function(initial){
+Downloadpage.prototype.fillData=function(initial){
     if (this.type != "route") return this.fillDataServer(initial);
     return this.fillDataRoutes(initial);
 };
-avnav.gui.Downloadpage.prototype.fillDataServer=function(initial){
+Downloadpage.prototype.fillDataServer=function(initial){
     var self=this;
     this.files=[];
     var url = self.gui.properties.getProperties().navUrl + "?request=listdir&type="+this.type;
@@ -436,7 +497,7 @@ avnav.gui.Downloadpage.prototype.fillDataServer=function(initial){
             self.files=[];
             var i;
             for (i=0;i<data.items.length;i++){
-                var fi=new avnav.gui.FileInfo();
+                var fi=new FileInfo();
                 avnav.assign(fi,data.items[i]);
                 fi.type=self.type;
                 self.files.push(fi);
@@ -451,7 +512,7 @@ avnav.gui.Downloadpage.prototype.fillDataServer=function(initial){
     });
 
 };
-avnav.gui.Downloadpage.prototype.findFileInfo=function(info){
+Downloadpage.prototype.findFileInfo=function(info){
     var i;
     for (i=0;i<this.files.length;i++){
         if (this.files[i].name == info.name) return i;
@@ -459,7 +520,7 @@ avnav.gui.Downloadpage.prototype.findFileInfo=function(info){
     return -1;
 };
 
-avnav.gui.Downloadpage.prototype.addRoutes = function (routeInfos) {
+Downloadpage.prototype.addRoutes = function (routeInfos) {
         var i, curid;
         var self = this;
         for (i = 0; i < routeInfos.length; i++) {
@@ -472,7 +533,7 @@ avnav.gui.Downloadpage.prototype.addRoutes = function (routeInfos) {
             this.files.push(routeInfos[i]);
         }
 };
-avnav.gui.Downloadpage.prototype.fillDataRoutes=function(initial){
+Downloadpage.prototype.fillDataRoutes=function(initial){
     var self=this;
     this.files=[];
     var localRoutes=this.routingHandler.listRoutesLocal();
@@ -493,7 +554,7 @@ avnav.gui.Downloadpage.prototype.fillDataRoutes=function(initial){
 };
 
 
-avnav.gui.Downloadpage.prototype.download=function(name,opt_url,opt_json) {
+Downloadpage.prototype.download=function(name,opt_url,opt_json) {
     avnav.log("download");
     if (!name || name == "") return;
     var filename=name;
@@ -508,7 +569,7 @@ avnav.gui.Downloadpage.prototype.download=function(name,opt_url,opt_json) {
 
 };
 
-avnav.gui.Downloadpage.prototype.directUpload=function(file) {
+Downloadpage.prototype.directUpload=function(file) {
     var self=this;
     var url = self.gui.properties.getProperties().navUrl + "?request=upload&type="+this.type+"&filename=" + encodeURIComponent(file.name);
     self.showProgress();
@@ -524,10 +585,11 @@ avnav.gui.Downloadpage.prototype.directUpload=function(file) {
         },
         progresshandler: function (param, ev) {
             if (ev.lengthComputable) {
-                var percentComplete = 100*ev.loaded / ev.total;
-                $('#avi_download_progress_info').text(ev.loaded+"/"+ev.total);
-                self.getDiv().find('.avn_progress_bar_done').css('width',percentComplete+"%");
-
+                self.store.storeData(keys.upload,avnav.assign({},self.store.getData(keys.upload),{
+                    upload:true,
+                    total:ev.total,
+                    loaded: ev.loaded
+                }));
             }
         },
         okhandler: function (param, data) {
@@ -545,23 +607,19 @@ avnav.gui.Downloadpage.prototype.directUpload=function(file) {
  * @private
  * @param size
  */
-avnav.gui.Downloadpage.prototype.showProgress=function(size){
-    $('#avi_download_progress').show();
-    $('#avi_download_progress_info').text("0/"+size);
-    var rtop=$('#avi_download_progress').outerHeight();
-    $('#avi_download_page_inner').css('bottom',rtop+"px");
+Downloadpage.prototype.showProgress=function(size){
+    this.store.storeData(keys.upload,{upload:true,total:size,loaded:0});
 };
 /**
  * hide the progress bar
  * @private
  */
-avnav.gui.Downloadpage.prototype.hideProgress=function() {
-    $('#avi_download_progress').hide();
-    $('#avi_download_page_inner').css('bottom','0px');
+Downloadpage.prototype.hideProgress=function() {
+   this.store.storeData(keys.upload,{upload:false});
 };
 
 
-avnav.gui.Downloadpage.prototype.sendDelete=function(info){
+Downloadpage.prototype.sendDelete=function(info){
     var rname=info.name;
     var self=this;
     var url = self.gui.properties.getProperties().navUrl + "?request=delete&type="+self.type;
@@ -590,11 +648,11 @@ avnav.gui.Downloadpage.prototype.sendDelete=function(info){
     });
 };
 
-avnav.gui.Downloadpage.prototype.hidePage=function(){
+Downloadpage.prototype.hidePage=function(){
     this.abortUpload();
 };
 
-avnav.gui.Downloadpage.prototype.abortUpload=function(){
+Downloadpage.prototype.abortUpload=function(){
     if (this.xhdr){
         this.xhdr.abort();
     }
@@ -605,7 +663,7 @@ avnav.gui.Downloadpage.prototype.abortUpload=function(){
 //-------------------------- Buttons ----------------------------------------
 
 
-avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
+Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
     avnav.log("upload clicked");
     if (this.type == 'route'){
         if (avnav.android){
@@ -619,17 +677,14 @@ avnav.gui.Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
 
 };
 
-avnav.gui.Downloadpage.prototype.btnDownloadPageRoutes=function(button,ev){
+Downloadpage.prototype.btnDownloadPageRoutes=function(button,ev){
     this.showPage({downloadtype:"route",skipHistory: true});
 };
-avnav.gui.Downloadpage.prototype.btnDownloadPageTracks=function(button,ev){
+Downloadpage.prototype.btnDownloadPageTracks=function(button,ev){
     this.showPage({downloadtype:"track",skipHistory: true});
 };
-avnav.gui.Downloadpage.prototype.btnDownloadPageCharts=function(button,ev){
+Downloadpage.prototype.btnDownloadPageCharts=function(button,ev){
     this.showPage({downloadtype:"chart",skipHistory: true});
-};
-avnav.gui.Downloadpage.prototype.btnDownloadPageUploadCancel=function(button,ev){
-    this.abortUpload();
 };
 
 
@@ -638,6 +693,6 @@ avnav.gui.Downloadpage.prototype.btnDownloadPageUploadCancel=function(button,ev)
  */
 (function(){
     //create an instance of the status page handler
-    var page=new avnav.gui.Downloadpage();
+    var page=new Downloadpage();
 }());
 

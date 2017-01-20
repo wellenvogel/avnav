@@ -174,6 +174,22 @@
   .nightBorderColorGR(30);
   .flex-display();
 }
+.avm_listEntryItem{
+  display: inline-block;
+  margin-bottom: auto;
+  margin-top: auto;
+  overflow: hidden;
+}
+
+.fwidth(@w){
+  width: @w;
+  min-width: @w;
+}
+
+.fheight(@h){
+  height: @h;
+  min-height: @h;
+}
 
 .avn_list_entry{
   .avm_list_entry();
@@ -217,11 +233,9 @@
 }
 .avn_smallButton{
   .avn_AllButtons();
-  width: 2em;
-  height: 2em;
-  min-width: 2em;
-  min-height: 2em;
-  font-size: @normalButtonFont;
+  .fwidth(2em);
+  .fheight(2em);
+  font-size: 1rem; //base this on the body font size
 }
 
 
@@ -959,34 +973,22 @@ button.avb_WpEdit {
 
 }
 .avn_route_listinfo{
-  padding-left: 1.5em;
-  display: inline-block;
+  .avm_listEntryItem();
   .mdText2();
-  margin-top:auto;
-  margin-bottom: auto;
   .flex(1);
 
 }
 .avn_route_listname{
-  display: inline-block;
-  width: 8em;
-  min-width: 8em;
+  .avm_listEntryItem();
+  .fwidth(8em);
   margin-left: 1em;
-  overflow: hidden;
   white-space: nowrap;
-  vertical-align: middle;
   margin-right: 1em;
-  margin-top: auto;
-  margin-bottom: auto;
 }
 .avn_route_targetImage{
-  display: inline-block;
-  height: 2.5em;
-  width: 2.5em;
-  min-width: 2.5em;
-  min-height: 2.5em;
-  margin-top: auto;
-  margin-bottom: auto;
+  .fheight(2.5em);
+  .fwidth(2.5em);
+  .avm_listEntryItem();
   background-image: url(images/icons-new/wpgoto.svg);
   background-size: contain;
   background-repeat: no-repeat;
@@ -997,9 +999,7 @@ button.avb_WpEdit {
   opacity: 1;
 }
 .avn_route_btnDelete{
-  display: inline-block;
-  margin-top: auto;
-  margin-bottom: auto;
+  .avm_listEntryItem();
 }
 
 
@@ -1034,44 +1034,45 @@ button.avb_RoutePageDownload{
 /*-------------------------------------------------------------
    download/upload page
 -------------------------------------------------------------*/
-#avi_download_page_inner{
+#avi_downloadpage .avn_left_inner{
   .avm_listpage();
+  .flex-display();
 }
 
 
-
-#avi_download_page_listhead{
-}
-
-#avi_downloadpage .avn_listcontainer {
+#avi_downloadpage .avn_left_inner .avn_listContainer {
   .avm_listcontainer();
+  .flex(1);
+  width: 100%;
+  overflow-y: auto;
 }
 .avn_download_list_entry{
   .avm_list_entry();
 }
 .avn_download_listinfo{
-  padding-left: 3em;
-  display: inline-block;
+  .avm_listEntryItem();
+  .flex(1);
 }
 .avn_download_listdate{
-  display: inline-block;
+  .mdText2();
+  .avm_listEntryItem();
   margin-left: 1em;
   width: 11.5em;
-  opacity: 0.6;
+}
+.avn_download_active_entry .avn_download_listdate{
+  margin-left: 3.7em; //room for the delete button
 }
 
 .avn_download_btnDelete{
-  vertical-align: middle;
-  display: inline-block;
+  .avm_listEntryItem();
 }
 
 .avn_download_btnDownload{
-  float: right;margin-top: 0.5em;
-  margin-bottom: 0.5em;
+  .avm_listEntryItem();
 }
 
 
-#avi_download_progress{
+.avn_download_progress{
   position: absolute;
   left: 0;
   right: 0;
@@ -1080,27 +1081,29 @@ button.avb_RoutePageDownload{
   background-color: lightgrey;
   .flexbox();
   .nightColors();
-}
-#avi_download_progress_container{
-  .flex(1);
+  & .avn_download_progress_container{
+    .flex(1);
+  }
+  & .avn_download_progress_display {
+    margin: 0.5em 0.5em 0.5em 0.5em;
+    height: 2em;
+    display: block;
+    border: 1px solid;
+    margin-left: 1em;
+    margin-bottom: 1em;
+    margin-right: 1em;
+  }
+  & .avn_download_progress_info{
+    display: block;
+    text-align: center;
+  }
 }
 
-#avi_download_progress_display {
-  margin: 0.5em 0.5em 0.5em 0.5em;
-  height: 2em;
-  display: block;
-  border: 1px solid;
-  margin-left: 1em;
-  margin-bottom: 1em;
-  margin-right: 1em;
-}
 
-#avi_download_progress_info{
-  display: block;
-  text-align: center;
-}
-.avb_DownloadPageUploadCancel {
-}
+
+
+
+
 .avn_progress_bar_done{
   height: 100%;
   .nightBackColor(blue);
@@ -1108,7 +1111,7 @@ button.avb_RoutePageDownload{
 }
 
 .avn_download_active_entry{
-  .nightBackColor(rgba(128, 128, 128, 0.21));
+  .nightBackColor(@colorSelection);
 }
 
 .avn_download_active_entry .avn_download_btnDelete{
@@ -1116,9 +1119,9 @@ button.avb_RoutePageDownload{
 }
 
 .avn_download_listrasimage{
-  width: 2em;
-  height: 2em;
-  float: right;
+  .avm_listEntryItem();
+  .fwidth(2em);
+  .fheight(2em);
   background-image: url(images/icons-new/plug.svg);
   background-size: contain;
   margin-right: 0.5em;
