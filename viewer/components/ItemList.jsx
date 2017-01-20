@@ -2,8 +2,12 @@
  * Created by andreas on 10.10.16.
  * an itemlist to display items of a common type
  * it is able to handle a couple of selectors to add classes to the items
- * the itemClick callback will have the item from the list + an added selectorState object
+ * the itemClick callback will have the item from the list
  * that has a "true" value for each selector where the item key is the value in the property "selectors"
+ * child items will have an onClick and an onItemClick
+ * the onClick will insert the current item properties as first parameter and pass the provided parameter
+ *             (if not being the event object) as second
+ * ths onIemClick will directly pass through
  */
 
 var React=require('react');
@@ -83,10 +87,10 @@ module.exports=React.createClass({
                     prop.onClick=function(data){
                         if (data.preventDefault){
                             data.preventDefault();
-                            clickHandler();
+                            clickHandler(prop);
                         }
                         else{
-                            clickHandler(data);
+                            clickHandler(prop,data);
                         }
                     };
                     prop.onItemClick=clickHandler;

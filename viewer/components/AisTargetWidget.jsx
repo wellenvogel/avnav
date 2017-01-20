@@ -8,7 +8,7 @@ var NavData=require('../nav/navdata');
 var AisTargetWidget=React.createClass({
     propTypes:{
         //formatter: React.PropTypes.func,
-        onClick: React.PropTypes.func,
+        onItemClick: React.PropTypes.func,
         store: React.PropTypes.instanceOf(NavData).isRequired,
         propertyHandler: React.PropTypes.object.isRequired,
         classes: React.PropTypes.string,
@@ -92,7 +92,7 @@ var AisTargetWidget=React.createClass({
 
     },
     click:function(){
-        this.props.onClick(avnav.assign({},this.props,this.state));
+        this.props.onItemClick(avnav.assign({},this.props,this.state));
     }
 
 });
