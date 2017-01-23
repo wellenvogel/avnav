@@ -18,7 +18,7 @@ class MyNpm extends NpmTask{
     def subDir
     @InputFiles
     def getInputFiles(){
-        logger.debug "getInputFiles called"
+        logger.debug "getInputFiles called for $name"
         return project.fileTree(project.projectDir,{
             exclude "build/**"
             exclude ".gradle/**"
@@ -26,10 +26,22 @@ class MyNpm extends NpmTask{
     }
     @OutputFiles
     def getOutputFiles(){
-        logger.debug "getOutputFiles called"
+        logger.debug "getOutputFiles called for $name"
         return project.fileTree(project.projectDir,{
             include "build/$subDir/**"
         })
+    }
+    @OutputDirectory
+    def getOutDir(){
+        return project.file("build/$subDir")
+    }
+    public MyNpm(){
+        outputs.upToDateWhen{
+            def od=getOutDir()
+            logger.debug "checking $od"
+            if (! od.exists()) return false;
+            return true
+        }
     }
 }
 project.ext.avnavVersion=null
@@ -48,7 +60,7 @@ task pkgVersion<< {
 }
 
 task release(type: MyNpm){
-    subDir="production"
+    subDir="release"
 	args=["run","production"]
     setExecOverrides({
         it.environment.put('AVNAV_VERSION_FILE',versionFile.getCanonicalPath())
