@@ -203,7 +203,14 @@ avnav.gui.Gpspage.prototype.navEvent=function(evt){
 };
 
 //-------------------------- Buttons ----------------------------------------
-
+avnav.gui.Gpspage.prototype.btnGpsCenter=function (button,ev){
+    avnav.log("Center clicked");
+    var pos=this.gui.navobject.getGpsHandler().getGpsData();
+    if (pos.valid){
+        this.gui.map.setCenter(pos);
+    }
+    this.returnToLast();
+};
 
 (function(){
     //create an instance of the status page handler

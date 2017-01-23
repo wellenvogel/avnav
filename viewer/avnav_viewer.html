@@ -237,6 +237,7 @@ all buttons with ids avb_... will call corresponding js functions
 
       </div>
       <div class='avn_panel avn_right_panel'>
+          <button  type="button"  class="avb_GpsCenter avn_button"></button>
           <button  type="button"  class="avb_Cancel avn_button"></button>
       </div>
   </div>
@@ -320,52 +321,7 @@ all buttons with ids avb_... will call corresponding js functions
 
   <!-- download/upload Page -->
   <div id="avi_downloadpage" class="avn_page avn_hidden">
-      <div class='avn_panel avn_left_panel'>
-          <div class='avn_panel avn_left_top'>
-              <div id="avi_download_page_listhead">Tracks</div>
 
-          </div>
-
-          <div id='avi_download_page_inner' class="avn_panel avn_scrollable_page avn_left_inner">
-              <div id="avi_download_page_listcontainer" class="avn_listcontainer">
-                  <div class="avn_download_list_entry avn_hidden" id="avi_download_list_template">
-                      <button class="avn_download_btnDelete avn_smallButton"></button>
-                      <button class="avn_download_btnDownload avn_smallButton"></button>
-                      <div class="avn_download_listdate">22.07.2014</div>
-                      <div class="avn_download_listinfo">Greiswald-Ruden,17sm,20 Points</div>
-                      <div class="avn_download_listrasimage"></div>
-
-                  </div>
-              </div>
-          </div>
-          <div id="avi_download_progress" class="avn_hidden">
-              <div id="avi_download_progress_container">
-                  <div id="avi_download_progress_info">10/100</div>
-                  <div id="avi_download_progress_display" class="avn_progress_bar">
-                      <div class="avn_progress_bar_done"></div>
-                  </div>
-              </div>
-              <button  type="button"  class="avb_DownloadPageUploadCancel avn_button"></button>
-          </div>
-
-      </div>
-      <div class='avn_panel avn_right_panel'>
-          <button  type="button"  class="avb_DownloadPageCharts avn_button avn_changeDownload"></button>
-          <button  type="button"  class="avb_DownloadPageTracks avn_button avn_changeDownload"></button>
-          <button  type="button"  class="avb_DownloadPageRoutes avn_button avn_changeDownload"></button>
-          <button  type="button"  class="avb_DownloadPageUpload avn_button"></button>
-          <button  type="button"  class="avb_Cancel avn_button"></button>
-      </div>
-      <form id="avi_download_downloadform" class="avn_hidden" method="get" >
-          <input type="hidden" name="name"/>
-          <input type="hidden" name="url"/>
-          <input type="hidden" name="request" value="download"/>
-          <input type="hidden" name="type" value="track"/>
-          <input type="hidden" name="_json" value=""/>
-      </form>
-      <form id="avi_download_uploadform" class="avn_hidden" method="post">
-          <input type="file" id="avi_download_uploadfile" name="file"/>
-      </form>
   </div>
   <!-- end download/upload Page-->
 
