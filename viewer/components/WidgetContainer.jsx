@@ -59,7 +59,9 @@ var ItemWrapper=function(rect,item){
     this.item=item;
 };
 ItemWrapper.prototype.getValue=function(what,opt_other){
-    if (! this.rect) return 0;
+    if (! this.rect) {
+        return 0;
+    }
     return this.rect[this.getIndex(what,opt_other)];
 };
 ItemWrapper.prototype.getIndex=function(what,opt_swap){
@@ -119,6 +121,7 @@ var layout=function(itemList,parameters) {
     var otherMargin=options.otherMargin||0;
     var startMargin=options.startMargin||0;
     var containerMain=undefined;
+    var accumulatedMargin=startMargin;
     for (rowColIndex=0;rowColIndex<maxRowCol;rowColIndex++){
         visibleItems=[];
         rowHeightWidth=0;
@@ -131,8 +134,12 @@ var layout=function(itemList,parameters) {
                 break;
             }
             lastVisible=i;
-            accumulatedWidthHeight+=item.getValue(layoutParameter.scalingProperty);
-            accumulatedWidthHeight+=mainMargin;
+            var mainSize=item.getValue(layoutParameter.scalingProperty);
+            accumulatedWidthHeight+=mainSize;
+            if (mainSize) {
+                accumulatedWidthHeight+=mainMargin;
+                accumulatedMargin+=mainMargin;
+            }
             if (item.getValue(layoutParameter.scalingProperty, true) > rowHeightWidth)
                 rowHeightWidth=item.getValue(layoutParameter.scalingProperty, true);
             visibleItems.push(item);
@@ -146,8 +153,8 @@ var layout=function(itemList,parameters) {
         if (options.scale) {
             //scale handling: as we do not scale margins, we have to subtract n times margin from both
             //the other size and the computed size
-            var scaleMaxSize=maxWidthHeight-vLen*mainMargin-startMargin;
-            accumulatedWidthHeight-=vLen*mainMargin+startMargin;
+            var scaleMaxSize=maxWidthHeight-accumulatedMargin;
+            accumulatedWidthHeight-=accumulatedMargin;
             if (usableOuterElementSize > 0) {
                 accumulatedWidthHeight -= visibleItems[vLen - 1].getValue(layoutParameter.scalingProperty);
                 //all elements without the last must fit into maxWidth-usableOuterElementSize
@@ -173,7 +180,7 @@ var layout=function(itemList,parameters) {
                 avnav.assign(style,layoutParameter.scaleProperties(niWidthHeight));
             }
             first=false;
-            elementPosition += niWidthHeight +mainMargin;
+            elementPosition += niWidthHeight +(niWidthHeight>0?mainMargin:0);
         }
         if (containerMain === undefined || elementPosition > containerMain) containerMain=elementPosition;
         topLeftPosition+=rowHeightWidth+otherMargin;
@@ -219,26 +226,28 @@ var WidgetContainer=React.createClass({
         },
         updateItemInfo:function(key,data,opt_force){
             if (! this.itemInfo) this.itemInfo={};
-            if (this.itemInfo[key] == null){
+            if (!this.itemInfo[key]  && data != null){
                 this.itemInfo[key]=data;
                 this.checkUnlayouted();
                 return;
             }
-            if (opt_force){
-                if (this.itemInfo[key] != null && data == null){
-                    this.itemInfo[key]=data;
-                    delete this.layouts[key];
-                    this.checkUnlayouted(true);
-                    return;
-                }
+            if (this.itemInfo[key] && data === null){
+                this.itemInfo[key]=data;
+                delete this.layouts[key];
+                this.checkUnlayouted();
+                return;
+            }
+            if (opt_force ){
+                if (data === null && this.itemInfo[key] === null ) return;
                 if (this.itemInfo[key] != null && this.itemInfo[key] !== undefined) {
                     if (this.props.layoutParameter && this.props.layoutParameter.scale){
                         //never update if we are scaling
                         return;
                     }
+                    if (data && this.itemInfo[key].width == data.width &&
+                        this.itemInfo[key].height == data.height) return;
                 }
-            }
-            if (! this.itemInfo[key] || opt_force) {
+                delete this.layouts[key];
                 this.itemInfo[key]=data;
                 this.checkUnlayouted();
             }
@@ -266,7 +275,7 @@ var WidgetContainer=React.createClass({
                 }
                 var rect=this.itemInfo[item.key];
                 this.renderedItems.push(item);
-                if (rect) items.push(new ItemWrapper(rect,item))
+                if (rect !== undefined) items.push(new ItemWrapper(rect,item))
             }
             var layouts=layout(items,layoutParam);
             this.layouts=layouts.styles;
@@ -315,7 +324,7 @@ var WidgetContainer=React.createClass({
             */
             this.componentDidUpdate();
         },
-        checkUnlayouted:function(opt_nullAsUnlayouted){
+        checkUnlayouted:function(){
             var self=this;
             var hasUnlayouted=false;
             if (! this.renderedItems) return;
@@ -324,9 +333,7 @@ var WidgetContainer=React.createClass({
                 if (key && (! this.layouts || ! this.layouts[key] )) {
                     //we have items that currently hav no dom with itemInfo null
                     //we simply rely on some state to change...
-                    if (! (this.itemInfo[key] == null) || opt_nullAsUnlayouted) {
-                        hasUnlayouted=true;
-                    }
+                    hasUnlayouted=true;
                 }
             }
             if (hasUnlayouted && ! this.delayedUpdate){

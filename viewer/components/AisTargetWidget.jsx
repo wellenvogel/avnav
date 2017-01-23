@@ -35,9 +35,10 @@ var AisTargetWidget=React.createClass({
         };
     },
     getInitialState: function(){
-        return this._getValues();
         this.lastRendered=0;
         this.lastNotified=-1;
+        return this._getValues();
+
     },
     componentWillReceiveProps: function(nextProps) {
         this.setState(this._getValues());
@@ -53,7 +54,6 @@ var AisTargetWidget=React.createClass({
     render: function(){
         var self=this;
         var classes="avn_widget avn_aisTargetWidget "+this.props.classes||"";
-        var imgSrc=this.state.statusUrl;
         var small = (this.props.mode == "small");
         if (this.state.mmsi !== undefined) {
             this.lastRendered=1;

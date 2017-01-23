@@ -25,6 +25,7 @@ var ActiveRouteWidget=React.createClass({
         };
     },
     getInitialState: function(){
+        //this.doLayoutUpdate=true;
         return this._getValues();
     },
     componentWillReceiveProps: function(nextProps) {
@@ -32,13 +33,19 @@ var ActiveRouteWidget=React.createClass({
         if (this.state.isApproaching != nextState.isApproaching){
             this.doLayoutUpdate=true;
         }
-        this.setState();
+        this.setState(nextState);
     },
     componentDidUpdate: function(){
         if (this.props.updateCallback && this.doLayoutUpdate){
             this.doLayoutUpdate=false;
             this.props.updateCallback();
         }
+    },
+    componentDidMount: function(){
+        avnav.log("mount ActiveRouteWidget")
+    },
+    componentWillUnmount: function(){
+        avnav.log("unmount ActiveRouteWidget")
     },
     render: function(){
         var self=this;
@@ -55,8 +62,8 @@ var ActiveRouteWidget=React.createClass({
             <div className="avn_routeEta">{this.state.eta}</div>
             { this.state.isApproaching ?
                 <div className="avn_routeNext">
-                    <span class="avn_routeNextCourse">{this.state.next}</span>
-                    <span class='avn_unit'>&#176;</span>
+                    <span className="avn_routeNextCourse">{this.state.next}</span>
+                    <span className='avn_unit'>&#176;</span>
                 </div>
                 : <div></div>
             }

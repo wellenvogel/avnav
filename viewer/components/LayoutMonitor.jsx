@@ -26,9 +26,6 @@ var Monitor=function(Item,updateCallback) {
             this.itemUpdate();
         },
         componentWillUnmount: function () {
-            if (updateCallback){
-                updateCallback(null);
-            }
         },
         itemUpdate: function(opt_force){
             if (! updateCallback) return;
