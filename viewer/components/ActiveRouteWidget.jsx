@@ -10,7 +10,8 @@ var ActiveRouteWidget=React.createClass({
         //formatter: React.PropTypes.func,
         onClick: React.PropTypes.func,
         store: React.PropTypes.object.isRequired,
-        classes: React.PropTypes.string
+        classes: React.PropTypes.string,
+        updateCallback: React.PropTypes.func
     },
     _getValues:function(){
         var approaching=this.props.store.getRoutingHandler().getApproaching();
@@ -27,11 +28,16 @@ var ActiveRouteWidget=React.createClass({
         return this._getValues();
     },
     componentWillReceiveProps: function(nextProps) {
-        this.setState(this._getValues());
+        var nextState=this._getValues();
+        if (this.state.isApproaching != nextState.isApproaching){
+            this.doLayoutUpdate=true;
+        }
+        this.setState();
     },
     componentDidUpdate: function(){
-        if (this.props.layoutUpdate){
-            this.props.layoutUpdate();
+        if (this.props.updateCallback && this.doLayoutUpdate){
+            this.doLayoutUpdate=false;
+            this.props.updateCallback();
         }
     },
     render: function(){
