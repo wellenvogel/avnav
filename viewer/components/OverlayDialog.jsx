@@ -139,6 +139,7 @@ var OverlayDialog=React.createClass({
             });
             var self=this;
             window.setTimeout(function(){
+                if (! self.refs.box) return; //could have become invisible...
                 var boxRect=self.refs.box.getBoundingClientRect();
                 avnav.assign(self.refs.box.style,{
                     left: (rect.width-boxRect.width)/2+"px",
