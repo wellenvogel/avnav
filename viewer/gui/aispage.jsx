@@ -67,10 +67,16 @@ var aisInfos=[
         {name:'destination',label:'Dest'}
     ]
 ];
-Aispage.prototype.localInit=function(){
+Aispage.prototype.getPageContent=function(){
     this.aishandler=this.navobject.getAisHandler();
     this.aisFormatter=this.aishandler.getAisFormatter();
     var self=this;
+    var buttons=[
+        {key:"AisNearest"},
+        {key:"AisSort"},
+        {key:"Cancel"}
+    ];
+    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
 
     var AisItem=function(props){
         var fmt=self.aisFormatter;
@@ -91,16 +97,16 @@ Aispage.prototype.localInit=function(){
                     </div>
                     { aisInfos.map(function(info1){
                         return <div className="avn_infoLine">
-                                {
-                                    info1.map(function(info) {
-                                        return (
-                                            <span className="avn_aisInfoElement">
+                            {
+                                info1.map(function(info) {
+                                    return (
+                                        <span className="avn_aisInfoElement">
                                                 <span className="avn_aisLabel">{info.label}: </span>
                                                 <span className="avn_aisData">{fmt[info.name].format(props)}{info.unit !== undefined && info.unit}</span>
                                             </span>
-                                        );
-                                    })
-                                }
+                                    );
+                                })
+                            }
                         </div>
                     })}
 
@@ -113,10 +119,10 @@ Aispage.prototype.localInit=function(){
             warning: true
         });
         return (
-            <div className="avn_aisSummary">
+            <div className="avn_aisSummary" onClick={function(){self.sortDialog()}}>
                 <span className="avn_aisNumTargets">{props.numTargets} Targets</span>
                 {(props.warning) && <span className="avn_aisWarning" style={{backgroundColor:color}}
-                        onClick={function(){
+                                          onClick={function(){
                             avnav.util.Helper.scrollItemIntoView('.avn_aisWarning','#avi_ais_page_inner');
                         }}/>}
                 <span>sorted by {self.fieldToLabel(self.sortField)}</span>
@@ -124,19 +130,30 @@ Aispage.prototype.localInit=function(){
         );
     },this.store,keys.summary);
     var AisList=ItemUpdater(ItemList,this.store,keys.aisTargets);
-    ReactDOM.render(
-        <div className="avn_panel_fill_flex">
-            <Summary numTargets={0}/>
-            <AisList
-                itemClass={AisItem}
-                onItemClick={function(item){
-                    self.aishandler.setTrackedTarget(item.mmsi);
-                    self.gui.showPage('aisinfopage',{mmsi:item.mmsi,skipHistory: true});
-                }}
-                className="avn_scrollable_page avn_aisList"
-            />
-        </div>,
-        this.selectOnPage('.avn_left_inner')[0]);
+    return React.createClass({
+        render: function() {
+            return (
+                <div className="avn_panel_fill_flex">
+                    <div className="avn_left_top">
+                        <div>Ais</div>
+                    </div>
+                    <div className="avn_left_inner_flex">
+                        <Summary numTargets={0} />
+                        <AisList
+                            itemClass={AisItem}
+                            onItemClick={function(item){
+                            self.aishandler.setTrackedTarget(item.mmsi);
+                            self.gui.showPage('aisinfopage',{mmsi:item.mmsi,skipHistory: true});
+                            }}
+                            className="avn_scrollable_page avn_aisList"
+                        />
+                    </div>
+                </div>);
+        }
+    });
+};
+Aispage.prototype.localInit=function(){
+
 };
 Aispage.prototype.showPage=function(options) {
     if (!this.gui) return;
@@ -204,16 +221,7 @@ Aispage.prototype.navEvent=function(ev){
     }
 };
 
-//-------------------------- Buttons ----------------------------------------
-
-Aispage.prototype.btnAisNearest=function (button,ev){
-    this.aishandler.setTrackedTarget(0);
-    this.returnToLast();
-    avnav.log("Nearest clicked");
-};
-
-Aispage.prototype.btnAisSort=function (button,ev){
-    avnav.log("Sort clicked");
+Aispage.prototype.sortDialog=function(){
     var list=[
         {label:'CPA', value:'cpa'},
         {label:'TCPA',value:'tcpa'},
@@ -227,7 +235,20 @@ Aispage.prototype.btnAisSort=function (button,ev){
     p.then(function(selected){
         self.sortField=selected.value;
         self.fillData();
-    })
+    });
+};
+
+//-------------------------- Buttons ----------------------------------------
+
+Aispage.prototype.btnAisNearest=function (button,ev){
+    this.aishandler.setTrackedTarget(0);
+    this.returnToLast();
+    avnav.log("Nearest clicked");
+};
+
+Aispage.prototype.btnAisSort=function (button,ev){
+    avnav.log("Sort clicked");
+    this.sortDialog();
 };
 
 /**
