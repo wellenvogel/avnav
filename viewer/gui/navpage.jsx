@@ -528,14 +528,19 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
         var wp=evdata.parameter.wp;
         if (! wp) return;
         var currentEditing=this.navobject.getRoutingHandler().getEditingWp();
-        if (this.routingVisible){
+        if (this.routingVisible && wp.routeName ){
             if (currentEditing && currentEditing.compare(wp)){
                 self.showWaypointDialog(wp);
             }
             else {
                 this.navobject.getRoutingHandler().setEditingWp(wp);
             }
-            this.updateRoutePoints();
+            this.updateRoutePoints(true);
+            return;
+        }
+        if (! wp.routeName){
+            this.showWaypointDialog(wp);
+            return;
         }
         if (! this.routingVisible || this.isSmall()){
             this.showWpButtons(wp);
@@ -822,9 +827,17 @@ avnav.gui.Navpage.prototype.btnLockMarker=function (button,ev) {
     avnav.log("LockMarker clicked");
     this.hideWpButtons();
     var center = this.navobject.getMapCenter();
-    var wp = new navobjects.WayPoint();
+    var currentLeg=this.navobject.getRoutingHandler().getCurrentLeg();
+    var wp=new navobjects.WayPoint();
+    //take over the wp name if this was a normal wp with a name
+    //but do not take over if this was part of a route
+    if (currentLeg && currentLeg.to && currentLeg.to.name && ! currentLeg.to.routeName){
+        wp.name=currentLeg.to.name;
+    }
+    else{
+        wp.name = 'Marker';
+    }
     center.assign(wp);
-    wp.name = 'Marker';
     this.navobject.getRoutingHandler().wpOn(wp);
 
 };

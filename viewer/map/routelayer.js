@@ -45,6 +45,12 @@ avnav.map.RouteLayer=function(mapholder,navobject){
      */
     this.routePixel=[];
     /**
+     * the list of pixel coordinates for waypoints
+     * currently only one element
+     * @type {Array}
+     */
+    this.wpPixel=[];
+    /**
      * @private
      * @type {string}
      */
@@ -150,6 +156,7 @@ avnav.map.RouteLayer.prototype.navEvent=function(evdata){
  */
 avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     this.routePixel = [];
+    this.wpPixel=[];
     if (!this.visible) return;
     var leg=this.navobject.getRoutingHandler().getCurrentLeg();
     var gps=this.navobject.getGpsHandler().getGpsData();
@@ -173,7 +180,10 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
     }
     if (to ){
         //only draw the current target wp if we do not have a route
-        drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle);
+        this.wpPixel.push(drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle));
+        if (leg.to.name){
+            drawing.drawTextToContext(to,leg.to.name,this.textStyle);
+        }
     }
 
     var routeTarget=-1;
@@ -224,6 +234,14 @@ avnav.map.RouteLayer.prototype.findTarget=function(pixel){
         var rt=this.navobject.getRoutingHandler().getRouteByName(this._routeName);
         if (! rt) return undefined;
         return rt.getPointAtIndex(idx);
+    }
+    idx=this.mapholder.findTarget(pixel,this.wpPixel,tolerance);
+    if (idx == 0){
+        //only one wp...
+        var leg=this.navobject.getRoutingHandler().getCurrentLeg();
+        if (leg && leg.to){
+            return leg.to;
+        }
     }
     return undefined;
 };

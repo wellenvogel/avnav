@@ -783,7 +783,7 @@ avnav.map.MapHolder.prototype.onClick=function(evt){
         },0);
     }
     evt.preventDefault();
-    if (this.routingActive) return false;
+    if (this.routingActive || wp) return false;
     var aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
         setTimeout(function() {
