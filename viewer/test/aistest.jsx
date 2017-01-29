@@ -4,6 +4,9 @@ var assign=require('object-assign');
 require('../base.js');
 var NavCompute=require('../nav/navcompute');
 
+var XCOLOR='rgb(206, 46, 46)';
+var YCOLOR='rgb(72, 142, 30)';
+
 var items=[];
 var itemHandler=undefined;
 
@@ -65,47 +68,49 @@ var Ship=React.createClass({
         valueChanged: React.PropTypes.func,
         x: React.PropTypes.any,
         y: React.PropTypes.any,
-        course: React.PropTypes.any
+        course: React.PropTypes.any,
+        speed: React.PropTypes.any,
+        color: React.PropTypes.string
     },
     getInitialState: function(){
         return{
             x:this.props.x||0,
             y:this.props.y||0,
-            course:this.props.course||0
+            course:this.props.course||0,
+            speed: this.props.speed||0
         }
     },
     render: function(){
         return(
             <div className="ship">
-                X:<input type="text" className="xValue" value={this.state.x} onChange={this.setX}/>
+                <div>X:<span className="shipColor" style={{backgroundColor:this.props.color}}/></div>
+                <input type="text" className="xValue" value={this.state.x} onChange={this.setX}/>
                 Y:<input type="text" className="yValue" value={this.state.y} onChange={this.setY}/>
                 Course:<input type="text" className="courseValue" value={this.state.course} onChange={this.setCourse}/>
+                Speed:<input type="text" className="speedValue" value={this.state.speed} onChange={this.setSpeed}/>
             </div>
         );
     },
-    setX:function(ev){
+    setValue:function(index,value){
         var old=this.state;
-        var newX=ev.target.value;
-        this.setState({x:newX});
+        var nState={};
+        nState[index]=value;
+        this.setState(nState);
         if (this.props.valueChanged){
-            this.props.valueChanged(assign({},old,{x:newX}))
+            this.props.valueChanged(assign({},old,nState))
         }
+    },
+    setX:function(ev){
+        this.setValue('x',ev.target.value);
     },
     setY:function(ev){
-        var old=this.state;
-        var newY=ev.target.value;
-        this.setState({y:newY});
-        if (this.props.valueChanged){
-            this.props.valueChanged(assign({},old,{y:newY}))
-        }
+        this.setValue('y',ev.target.value);
     },
     setCourse:function(ev){
-        var old=this.state;
-        var newCourse=ev.target.value;
-        this.setState({course:newCourse});
-        if (this.props.valueChanged){
-            this.props.valueChanged(assign({},old,{course:newCourse}))
-        }
+        this.setValue('course',ev.target.value);
+    },
+    setSpeed: function(ev){
+        this.setValue('speed',ev.target.value);
     },
     componentWillMount:function(){
         if (this.props.valueChanged){
@@ -114,6 +119,43 @@ var Ship=React.createClass({
     }
 
 });
+
+var Drawer=function(ctx,width,height){
+    /**
+     * @type {CanvasRenderingContext2D}
+     */
+    this.ctx=ctx;
+    this.height=height;
+    this.width=width;
+
+};
+
+Drawer.prototype.clear=function(){
+    this.ctx.clearRect(0,0,this.width,this.height);
+};
+Drawer.prototype.drawShip=function(ship,color){
+    var max=Math.max(this.width,this.height)*1.5;
+    var ctx=this.ctx;
+    ctx.fillStyle = color;
+    ctx.strokeStyle=color;
+    ctx.save();
+    ctx.translate(ship.x,ship.y);
+    ctx.beginPath();
+    ctx.arc(0,0,5,0,2*Math.PI);
+    ctx.fill();
+    ctx.closePath();
+    ctx.rotate((ship.course-90)/180*Math.PI);
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(max,0);
+    ctx.lineTo(-max,0);
+    ctx.moveTo(30,0);
+    ctx.lineTo(25,5);
+    ctx.moveTo(30,0);
+    ctx.lineTo(25,-5);
+    ctx.stroke();
+    ctx.restore();
+};
 
 var SingleItem=React.createClass({
     propTypes:{
@@ -131,12 +173,14 @@ var SingleItem=React.createClass({
                 0: {
                     x:10,
                     y:20,
-                    course: 90
+                    course: 90,
+                    speed: 1
                 },
                 1:{
                     x:30,
                     y:40,
-                    course:60
+                    course:60,
+                    speed: 2
                 }
             }
         }
@@ -154,11 +198,9 @@ var SingleItem=React.createClass({
                         <div>Scenario#{this.props.id}</div>
                     </div>
                     <div className="ships">
-                        <Ship key="x" className="shipX" valueChanged={function(val){self.valueChanged(0,val);}} x={X.x}
-                              y={X.y} course={X.course}>
+                        <Ship key="x" className="shipX" valueChanged={function(val){self.valueChanged(0,val);}} {...X} color={XCOLOR}>
                         </Ship>
-                        <Ship key="y" className="shipY" valueChanged={function(val){self.valueChanged(1,val);}} x={Y.x}
-                              y={Y.y} course={Y.course}>
+                        <Ship key="y" className="shipY" valueChanged={function(val){self.valueChanged(1,val);}} {...Y} color={YCOLOR}  >
                         </Ship>
                     </div>
                     <div className="results">
@@ -190,27 +232,25 @@ var SingleItem=React.createClass({
         if (!this.refs.canvas) return;
         //alert("draw");
         var cdom=ReactDOM.findDOMNode(this.refs.canvas);
+        if (! cdom){
+            alert("canvas not found");
+        }
+        var width=cdom.width;
+        var height=cdom.height;
         var ctx=cdom.getContext('2d');
         if (! ctx) {
             alert("no context");
             return;
         }
-        ctx.clearRect(0,0,cdom.width,cdom.height);
+        var drawer=new Drawer(ctx,width,height);
+        drawer.clear();
         var X=this.getValues(0);
-        ctx.fillStyle = 'rgb(206, 46, 46)';
-        ctx.beginPath();
-        ctx.arc(X.x,X.y,5,0,2*Math.PI);
-        ctx.fill();
-        ctx.closePath();
+        drawer.drawShip(X,XCOLOR);
         var Y=this.getValues(1);
-        ctx.fillStyle = 'rgb(72, 142, 30)';
-        ctx.beginPath();
-        ctx.arc(Y.x,Y.y,5,0,2*Math.PI);
-        ctx.fill();
-        ctx.closePath();
+        drawer.drawShip(Y,YCOLOR);
     },
     getValues:function(index){
-        var rt={x:0,y:0,course:0};
+        var rt={x:0,y:0,course:0,speed:0};
         if (this.values && this.values[index]){
             rt=this.values[index];
         }
@@ -220,7 +260,8 @@ var SingleItem=React.createClass({
         return{
             x: parseFloat(rt.x),
             y: parseFloat(rt.y),
-            course: newCourse
+            course: newCourse,
+            speed: parseFloat(rt.speed)
         }
     }
 
