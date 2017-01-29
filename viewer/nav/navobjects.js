@@ -281,6 +281,11 @@ navobjects.Cpa=function(){
      */
     this.dst=new navobjects.Point(0,0);
     /**
+     *
+     * @type {undefined|navobjects.Point}
+     */
+    this.crosspoint=undefined;
+    /**
      * distance in m
      * @type {number}
      */
@@ -297,9 +302,9 @@ navobjects.Cpa=function(){
     this.tcpa=-1;
     /**
      *
-     * @type {boolean}
+     * @type {number|undefined}: 0-back,1-front,-1 parallel,undefined-parallel crossed
      */
-    this.front=false;
+    this.front=undefined;
 };
 
 navobjects.Ais=function(){

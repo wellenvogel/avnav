@@ -35,17 +35,35 @@ NavCompute.computeXte=function(start,destination,current){
 };
 
 /**
+ * check if a course is closer to our own course or to ownCourse + 180
+ * return 1 if closer to own or -1 if closer to +180
+ * @param myCourse
+ * @param otherCourse
+ */
+NavCompute.checkInverseCourse=function(myCourse,otherCourse){
+    var inversCourse=(myCourse+180) % 360;
+    if (Math.abs(otherCourse-myCourse) < Math.abs(otherCourse-inversCourse)) return 1;
+    return -1;
+};
+
+/**
  * compute the CPA point
  * returns src.lon,src.lat,dst.lon,dst.lat,cpa(m),cpanm(nm),tcpa(s),front (true if src reaches intersect point first)
  * each of the objects must have: lon,lat,course,speed
  * lon/lat in decimal degrees, speed in kn
  * we still have to check if the computed tm is bigger then our configured one
+ * //update
+ * if one of the partners has no real speed minAISSpeed
+ * we need to change the computation - just compute the orthogonal distance of the point to the other
+ * course line
  * @param src
  * @param dst
+ * @param properties - settings
  * @returns {navobjects.Cpa}
  */
 NavCompute.computeCpa=function(src,dst,properties){
     var NM=properties.NM;
+    var msFactor=NM/3600.0;
     var rt = new navobjects.Cpa();
     var llsrc = new LatLon(src.lat, src.lon);
     var lldst = new LatLon(dst.lat, dst.lon);
@@ -53,78 +71,73 @@ NavCompute.computeCpa=function(src,dst,properties){
     if (curdistance < 0.1){
         var x=curdistance;
     }
+    var courseToTarget=llsrc.bearingTo(lldst); //in deg
     //default to our current distance
     rt.tcpa=0;
     rt.cpa=curdistance;
     rt.cpanm=rt.cpa/NM;
-    if (dst.speed < properties.minAISspeed) {
-        //TODO: compute cpa correctly if the target does not move
-        //for now assume current distance
+    //courses
+    var ca=(courseToTarget-src.course)/180*Math.PI; //rad
+    var cb=(courseToTarget-dst.course)/180*Math.PI;
+    var cosa=Math.cos(ca);
+    var sina=Math.sin(ca);
+    var cosb=Math.cos(cb);
+    var sinb=Math.sin(cb);
+    var td=undefined;
+    var ts=undefined;
+    if (dst.speed > properties.minAISspeed && src.speed > properties.minAISspeed && Math.abs(src.course-dst.course)> 5){
+        //compute crossing
+        try {
+            td = curdistance / (dst.speed * msFactor * (cosa / sina * sinb - cosb));
+            ts=curdistance/(src.speed*msFactor*(cosa-sina*cosb/sinb));
+        }catch(e){
+            //TODO: exception handling
+        }
+        if (td !== undefined && ts !== undefined){
+            var da=src.speed*msFactor*ts; //in m
+            var db=dst.speed*msFactor*td; //in m
+            var xpoint = llsrc.destinationPoint(src.course, da/1000);
+            rt.crosspoint=new navobjects.Point(xpoint._lon,xpoint._lat);
+        }
+    }
+    var quot=msFactor*msFactor*(src.speed*src.speed+dst.speed*dst.speed-2*src.speed*dst.speed*(cosa*cosb+sina*sinb));
+    if (quot < 1e-6 && quot > -1e-6){
+        rt.tcpa=0; //better undefined
+        rt.cpa=curdistance;
+        rt.cpanm = rt.cpa / NM;
+        rt.front=undefined;
         return rt;
     }
-    var intersect = LatLon.intersection(llsrc, src.course, lldst, dst.course);
-    if (!intersect) {
-
-        return rt;
-    }
-    var da = llsrc.distanceTo(intersect, 5) * 1000; //m
-    var timeIntersectSrc = 0;
-    if (src.speed) timeIntersectSrc = da / src.speed; //strange unit: m/nm*h -> does not matter as we only compare
-    var db = lldst.distanceTo(intersect, 5) * 1000; //m
-    var timeIntersectDest = 0;
-    if (dst.speed) timeIntersectDest = db / dst.speed; //strange unit: m/nm*h -> does not matter as we only compare
-    if (timeIntersectSrc < timeIntersectDest) rt.front = true;
-    var a = (src.course - dst.course) * Math.PI / 180;
-    var va = src.speed * NM; //m/h
-    var vb = dst.speed * NM;
-    var tm = NavCompute.computeTPA(a, da, db, va, vb); //tm in h
-    if (tm < 0) return rt;
-    var cpasrc = llsrc.destinationPoint(src.course, src.speed * NM / 1000 * tm);
-    var cpadst = lldst.destinationPoint(dst.course, dst.speed * NM / 1000 * tm);
-    rt.tcpa = tm * 3600;
+    var tm=curdistance*msFactor*(cosa*src.speed-cosb*dst.speed)/quot; //in s
+    var dma=src.speed*msFactor*tm;
+    var dmb=dst.speed*msFactor*tm;
+    var cpasrc = llsrc.destinationPoint(src.course, dma/1000);
+    var cpadst = lldst.destinationPoint(dst.course, dmb/1000);
+    rt.src.lon=cpasrc._lon;
+    rt.src.lat=cpasrc._lat;
+    rt.dst.lon=cpadst._lon;
+    rt.dst.lat=cpadst._lat;
     rt.cpa = cpasrc.distanceTo(cpadst, 5) * 1000;
-    if (rt.cpa > curdistance) {
+    rt.tcpa = tm;
+    if (rt.cpa > curdistance || tm < 0){
         rt.cpa=curdistance;
         rt.tcpa=0;
     }
+    if (rt.cpa < 200){
+        x=rt.cpa;
+    }
     rt.cpanm = rt.cpa / NM;
-    rt.src.lon = cpasrc._lon;
-    rt.src.lat = cpasrc._lat;
-    rt.dst.lon = cpadst._lon;
-    rt.dst.lat = cpadst._lat;
+    if (td !==undefined && ts!==undefined){
+        rt.front=(ts<td)?0:1;
+    }
+    else{
+        if (tm >0) rt.front=-1;
+        else rt.front=undefined;
+    }
     return rt;
 };
 
-/**
- * cpa/tcpa computation
- hard to find some sources - best at
- https://www.google.de/url?sa=t&rct=j&q=&esrc=s&source=web&cd=12&ved=0CDgQFjABOAo&url=http%3A%2F%2Forin.kaist.ac.kr%2Fboard%2Fdownload.php%3Fboard%3Dpublications%26no%3D32%26file_no%3D130&ei=2yaqUbb5GJPV4ASm9oDoBg&usg=AFQjCNFZA1OZGnJvY4USs5buqe8-BCsAiQ&sig2=fbsksaJ3sYIIO3intM-iZw&cad=rja
- basically assume courses being straight lines (should be fine enough for our 20nm....)
- if we have the intersection point, we have:
- a=angle between courses,
- da=initial distance from ship a to intersect
- db=initial distance from ship b to intersect
- va=speed a
- vb=speed b
- we can now simply use a coord system having the origin at current b position , x pointing towards the intersect
- xa=(da-va*t)*cos(a)
- ya=(da-va*t)*sin(a)
- xb=(db-vb*t)
- yb=0
- For the distance we get:
- s=sqrt((xa-xb)^^2+(ya-yb)^^2))
- with inserting and differentiating against t + finding null (tm being the time with minimal s)
- tm=((va*da+vb*db)-cos(a)*(va*db+vb*da))/(va^^2+vb^^2-2*va*vb*cos(a))
- we need to consider some limits...
- we return -1 if no meaningfull tpa
- @private
- */
-NavCompute.computeTPA=function(a,da,db,va,vb){
-    var n=va*va+vb*vb-2*va*vb*Math.cos(a);
-    if (n < 1e-6 && n > -1e-6) return -1;
-    var tm=((va*da+vb*db)-Math.cos(a)*(va*db+vb*da))/n;
-    return tm;
-};
+
 /**
  * compute a new point (in lon/lat) traveling from a given point
  * @param {navobjects.Point} src
