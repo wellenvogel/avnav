@@ -112,14 +112,14 @@ var AisData=function(propertyHandler,navdata){
             format: function(v){
                 var tval=parseFloat(v.tcpa||0);
                 //no cpa if tcpa < 0
-                if (tval < 0) return "-----";
+                //if (tval < 0) return "-----";
                 return self.formatter.formatDecimal(parseFloat(v.cpa||0),3,2);}
         },
         tcpa:{
             headline: 'tcpa',
             format: function(v){
                 var tval=parseFloat(v.tcpa||0);
-                if (tval < 0) return "--:--:--";
+                //if (tval < 0) return "--:--:--";
                 var h=Math.floor(tval/3600);
                 var m=Math.floor((tval-h*3600)/60);
                 var s=tval-3600*h-60*m;
@@ -229,7 +229,7 @@ AisData.prototype.handleAisData=function() {
             );
             ais.distance = dst.dtsnm;
             ais.headingTo = dst.course;
-            if (cpadata.tcpa >=0) {
+            if (cpadata.tcpa !== undefined && cpadata.cpanm !== undefined) {
                 ais.cpa = cpadata.cpanm;
                 ais.tcpa = cpadata.tcpa;
             }

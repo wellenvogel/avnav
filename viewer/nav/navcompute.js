@@ -76,67 +76,94 @@ NavCompute.computeCpa=function(src,dst,properties){
     rt.tcpa=0;
     rt.cpa=curdistance;
     rt.cpanm=rt.cpa/NM;
-    //courses
-    var ca=(courseToTarget-src.course)/180*Math.PI; //rad
-    var cb=(courseToTarget-dst.course)/180*Math.PI;
-    var cosa=Math.cos(ca);
-    var sina=Math.sin(ca);
-    var cosb=Math.cos(cb);
-    var sinb=Math.sin(cb);
-    var td=undefined;
-    var ts=undefined;
-    if (dst.speed > properties.minAISspeed && src.speed > properties.minAISspeed && Math.abs(src.course-dst.course)> 5){
-        //compute crossing
-        try {
-            td = curdistance / (dst.speed * msFactor * (cosa / sina * sinb - cosb));
-            ts=curdistance/(src.speed*msFactor*(cosa-sina*cosb/sinb));
-        }catch(e){
-            //TODO: exception handling
-        }
-        if (td !== undefined && ts !== undefined){
-            var da=src.speed*msFactor*ts; //in m
-            var db=dst.speed*msFactor*td; //in m
-            var xpoint = llsrc.destinationPoint(src.course, da/1000);
-            rt.crosspoint=new navobjects.Point(xpoint._lon,xpoint._lat);
-        }
+    var appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed*msFactor,dst.course,dst.speed*msFactor,properties.minAISspeed*msFactor);
+    if (appr.dd !== undefined && appr.ds !== undefined) {
+        var xpoint = llsrc.destinationPoint(src.course, appr.dd / 1000);
+        rt.crosspoint = new navobjects.Point(xpoint._lon, xpoint._lat);
     }
-    var quot=msFactor*msFactor*(src.speed*src.speed+dst.speed*dst.speed-2*src.speed*dst.speed*(cosa*cosb+sina*sinb));
-    if (quot < 1e-6 && quot > -1e-6){
+    if (appr.tcpa == 0){
         rt.tcpa=0; //better undefined
         rt.cpa=curdistance;
         rt.cpanm = rt.cpa / NM;
         rt.front=undefined;
         return rt;
     }
-    var tm=curdistance*msFactor*(cosa*src.speed-cosb*dst.speed)/quot; //in s
-    var dma=src.speed*msFactor*tm;
-    var dmb=dst.speed*msFactor*tm;
-    var cpasrc = llsrc.destinationPoint(src.course, dma/1000);
-    var cpadst = lldst.destinationPoint(dst.course, dmb/1000);
+    var cpasrc = llsrc.destinationPoint(src.course, appr.dms/1000);
+    var cpadst = lldst.destinationPoint(dst.course, appr.dmd/1000);
     rt.src.lon=cpasrc._lon;
     rt.src.lat=cpasrc._lat;
     rt.dst.lon=cpadst._lon;
     rt.dst.lat=cpadst._lat;
     rt.cpa = cpasrc.distanceTo(cpadst, 5) * 1000;
-    rt.tcpa = tm;
-    if (rt.cpa > curdistance || tm < 0){
+    rt.tcpa = appr.tm;
+    if (rt.cpa > curdistance || appr.tm < 0){
         rt.cpa=curdistance;
-        rt.tcpa=0;
-    }
-    if (rt.cpa < 200){
-        x=rt.cpa;
+        //rt.tcpa=0;
     }
     rt.cpanm = rt.cpa / NM;
-    if (td !==undefined && ts!==undefined){
-        rt.front=(ts<td)?0:1;
+    if (appr.td !==undefined && appr.ts!==undefined){
+        rt.front=(appr.ts<appr.td)?0:1;
     }
     else{
-        if (tm >0) rt.front=-1;
+        if (appr.tm >0) rt.front=-1;
         else rt.front=undefined;
     }
     return rt;
 };
 
+/**
+ * do the computation of the cross point and the closest approach
+ * all units are Si units (m, s,...), angles in degrees
+ * @param courseToTarget
+ * @param curdistance
+ * @param srcCourse
+ * @param srcSpeed
+ * @param dstCourse
+ * @param dstSpeed
+ * @param minAisSpeed - minimal speed we allow for crossing computation
+ * @returns {object} an object with the properties
+ *        td - time dest to crosspoint (if crossing)
+ *        ts - time src to crosspoint (if crossing)
+ *        dd - distance destination to crosspoint
+ *        ds - distance src to crosspoint
+ *        tm - TCPA
+ *        cpa - computed cpa (or currentDistance if this is lower)
+ *        dms - distance src to cpa point
+ *        dmd - distance dest to cpa point
+ */
+NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpeed,dstCourse,dstSpeed,minAisSpeed){
+    //courses
+    var rt={};
+    var ca=(courseToTarget-srcCourse)/180*Math.PI; //rad
+    var cb=(courseToTarget-dstCourse)/180*Math.PI;
+    var cosa=Math.cos(ca);
+    var sina=Math.sin(ca);
+    var cosb=Math.cos(cb);
+    var sinb=Math.sin(cb);
+    if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed && Math.abs(srcCourse-dstCourse)> 5){
+        //compute crossing
+        try {
+            rt.td = curdistance / (dst.speed * msFactor * (cosa / sina * sinb - cosb));
+            rt.ts=curdistance/(src.speed*msFactor*(cosa-sina*cosb/sinb));
+        }catch(e){
+            //TODO: exception handling
+        }
+        if (rt.td !== undefined && rt.ts !== undefined){
+            rt.ds=srcSpeed*rt.ts; //in m
+            rt.dd=dstSpeed*rt.td; //in m
+        }
+    }
+    var quot=(srcSpeed*srcSpeed+dstSpeed*dstSpeed-2*srcSpeed*dstSpeed*(cosa*cosb+sina*sinb));
+    if (quot < 1e-6 && quot > -1e-6){
+        rt.tcpa=0; //better undefined
+        rt.cpa=curdistance;
+        return rt;
+    }
+    rt.tm=curdistance*(cosa*srcSpeed-cosb*dstSpeed)/quot;
+    rt.dms=srcSpeed*rt.tm;
+    rt.dmd=dstSpeed*rt.tm;
+    return rt;
+};
 
 /**
  * compute a new point (in lon/lat) traveling from a given point
