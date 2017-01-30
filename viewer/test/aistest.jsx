@@ -3,9 +3,13 @@ var ReactDOM=require('react-dom');
 var assign=require('object-assign');
 require('../base.js');
 var NavCompute=require('../nav/navcompute');
+var Formatter=require('../util/formatter');
+
+var formatter=new Formatter();
 
 var XCOLOR='rgb(206, 46, 46)';
 var YCOLOR='rgb(72, 142, 30)';
+var ACOLOR='rgb(60, 64, 58)';
 
 var items=[];
 var itemHandler=undefined;
@@ -127,6 +131,7 @@ var Drawer=function(ctx,width,height){
     this.ctx=ctx;
     this.height=height;
     this.width=width;
+    this.max=Math.max(this.width,this.height)*1.5;
 
 };
 
@@ -134,7 +139,6 @@ Drawer.prototype.clear=function(){
     this.ctx.clearRect(0,0,this.width,this.height);
 };
 Drawer.prototype.drawShip=function(ship,color){
-    var max=Math.max(this.width,this.height)*1.5;
     var ctx=this.ctx;
     ctx.fillStyle = color;
     ctx.strokeStyle=color;
@@ -147,13 +151,26 @@ Drawer.prototype.drawShip=function(ship,color){
     ctx.rotate((ship.course-90)/180*Math.PI);
     ctx.beginPath();
     ctx.moveTo(0,0);
-    ctx.lineTo(max,0);
-    ctx.lineTo(-max,0);
+    ctx.lineTo(this.max,0);
+    ctx.lineTo(-this.max,0);
     ctx.moveTo(30,0);
     ctx.lineTo(25,5);
     ctx.moveTo(30,0);
     ctx.lineTo(25,-5);
     ctx.stroke();
+    ctx.restore();
+};
+Drawer.prototype.drawPointAtOffset=function(ship,offset,color){
+    var ctx=this.ctx;
+    ctx.fillStyle = color;
+    ctx.strokeStyle=color;
+    ctx.save();
+    ctx.translate(ship.x,ship.y);
+    ctx.rotate((ship.course-90)/180*Math.PI);
+    ctx.beginPath();
+    ctx.arc(offset,0,5,0,2*Math.PI);
+    ctx.fill();
+    ctx.closePath();
     ctx.restore();
 };
 
@@ -184,7 +201,7 @@ var SingleItem=React.createClass({
                 }
             }
         }
-        return null;
+        return {};
     },
     render:function(){
         var self=this;
@@ -204,6 +221,15 @@ var SingleItem=React.createClass({
                         </Ship>
                     </div>
                     <div className="results">
+                        <span className="courseTarget">cTarget={formatter.formatDecimal(this.state.courseTarget,4,2)}</span>
+                        <span className="distTarget">dTarget={formatter.formatDecimal(this.state.curdistance,4,2)}</span>
+                        <span className="ts">ts={formatter.formatDecimal(this.state.ts,4,2)}</span>
+                        <span className="ds">ds={formatter.formatDecimal(this.state.ds,4,2)}</span>
+                        <span className="td">td={formatter.formatDecimal(this.state.td,4,2)}</span>
+                        <span className="dd">dd={formatter.formatDecimal(this.state.dd,4,2)}</span>
+                        <span className="tm">tm={formatter.formatDecimal(this.state.tm,4,2)}</span>
+                        <span className="dms">dms={formatter.formatDecimal(this.state.dms,4,2)}</span>
+                        <span className="dmd">dmd={formatter.formatDecimal(this.state.dmd,4,2)}</span>
                     </div>
                 </div>
                 <div className="buttons">
@@ -248,6 +274,18 @@ var SingleItem=React.createClass({
         drawer.drawShip(X,XCOLOR);
         var Y=this.getValues(1);
         drawer.drawShip(Y,YCOLOR);
+        var dx=Y.x-X.x;
+        var dy=Y.y-X.y;
+        var courseTarget=180-Math.atan(dy/dx)*180/Math.PI+90; //we have our system rotated by 90 (i.e. east is 0)
+        var curdistance=Math.sqrt(dy*dy+dx*dx);
+        var approach=NavCompute.computeApproach(courseTarget,curdistance,X.course,X.speed,Y.course,Y.speed,0.01);
+        approach.curdistance=curdistance;
+        approach.courseTarget=courseTarget;
+        if (approach.ds !== undefined) drawer.drawPointAtOffset(X,approach.ds,XCOLOR);
+        if (approach.dms !== undefined) drawer.drawPointAtOffset(X,approach.dms,ACOLOR);
+        if (approach.dd !== undefined) drawer.drawPointAtOffset(Y,approach.dd,YCOLOR);
+        if (approach.dmd !== undefined) drawer.drawPointAtOffset(Y,approach.dmd,ACOLOR);
+        this.setState(approach);
     },
     getValues:function(index){
         var rt={x:0,y:0,course:0,speed:0};

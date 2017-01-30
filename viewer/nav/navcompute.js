@@ -143,8 +143,8 @@ NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpee
     if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed && Math.abs(srcCourse-dstCourse)> 5){
         //compute crossing
         try {
-            rt.td = curdistance / (dst.speed * msFactor * (cosa / sina * sinb - cosb));
-            rt.ts=curdistance/(src.speed*msFactor*(cosa-sina*cosb/sinb));
+            rt.td = curdistance / (dstSpeed * (cosa / sina * sinb - cosb));
+            rt.ts=curdistance/(srcSpeed*(cosa-sina*cosb/sinb));
         }catch(e){
             //TODO: exception handling
         }
