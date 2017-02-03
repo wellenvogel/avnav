@@ -4,30 +4,40 @@ var assign=require('object-assign');
 require('../base.js');
 var NavCompute=require('../nav/navcompute');
 var Formatter=require('../util/formatter');
+var Store=require('../util/store');
 
 var formatter=new Formatter();
 
 var XCOLOR='rgb(206, 46, 46)';
 var YCOLOR='rgb(72, 142, 30)';
 var ACOLOR='rgb(60, 64, 58)';
+var MCOLOR='rgb(6, 106, 236)';
 
-var items=[];
-var itemHandler=undefined;
+
+var store=new Store();
+var keys={
+    items: 'items',
+    mouse: 'mouse'
+};
+
+store.storeData(keys.items,[]);
 
 function addItem(){
     var id=0;
+    var items=store.getData(keys.items);
     for (var i=0;i<items.length;i++){
         if(items[i]>id) id=items[i];
     }
     id++;
     items.push(id);
-    if (itemHandler) itemHandler(items);
+    store.storeData(keys.items,items);
 }
 function removeItem(id){
+    var items=store.getData(keys.items);
     for (var i=0;i<items.length;i++){
         if (items[i] == id){
             items.splice(i,1);
-            if (itemHandler) itemHandler(items);
+            store.storeData(keys.items,items);
             return;
         }
     }
@@ -47,12 +57,16 @@ var Main=React.createClass({
 
 var List=React.createClass({
     getInitialState: function(){
-        return {list:[]};
+        return {list:store.getData(keys.items)};
     },
-    componentWillMount: function(){
-        itemHandler=this.listChanged;
+    componentDidMount: function(){
+        store.register(this,keys.items)
     },
-    listChanged:function(items) {
+    componentWillUnmount: function(){
+        store.deregister(this);
+    },
+    dataChanged:function() {
+        var items=store.getData(keys.items);
         this.setState({list:items});
     },
     render: function(){
@@ -173,6 +187,47 @@ Drawer.prototype.drawPointAtOffset=function(ship,offset,color){
     ctx.closePath();
     ctx.restore();
 };
+Drawer.prototype.drawPoint=function(xy,color){
+    this.ctx.fillStyle = color;
+    this.ctx.beginPath();
+    this.ctx.arc(xy.x,xy.y,5,0,2*Math.PI);
+    this.ctx.fill();
+    this.ctx.closePath();
+};
+
+
+var MousePositionHandler=React.createClass({
+    propTypes:{
+        index: React.PropTypes.number.isRequired
+    },
+    getInitialState:function(){
+        return store.getData(keys.mouse+this.props.index,{});
+    },
+    componentDidMount:function(){
+        store.register(this,keys.mouse+this.props.index);
+    },
+    componentWillUnmount:function(){
+        store.deregister(this);
+    },
+    dataChanged:function(){
+        this.setState(store.getData(keys.mouse+this.props.index));
+    },
+    render: function(){
+        var dx=(this.state.x||0) - (this.state.clickX||0);
+        var dy=(this.state.y||0) - (this.state.clickY||0);
+        var dist=Math.sqrt(dx*dx+dy*dy);
+        return(
+            <div className="mouse">
+                <span>PX={this.state.clickX}</span>
+                <span>PY={this.state.clickY}</span>
+                <span>X={this.state.x}</span>
+                <span>Y={this.state.y}</span>
+                <span>D={formatter.formatDecimal(dist,4,2)}</span>
+            </div>
+        );
+    }
+
+});
 
 var SingleItem=React.createClass({
     propTypes:{
@@ -204,12 +259,17 @@ var SingleItem=React.createClass({
         return {};
     },
     render:function(){
+        this.drawer=undefined;
+        this.mouseDrawer=undefined;
         var self=this;
         var X=this.getValues(0);
         var Y=this.getValues(1);
         return(
             <div className="item">
-                <canvas width="250" height="250" className="itemCanvas" ref="canvas"/>
+                <div className="canvasFrame">
+                <canvas width="250" height="250" className="itemCanvas" ref="canvas" />
+                <canvas width="250" height="250" className="mouseCanvas" onClick={this.canvasClick} onMouseMove={this.canvasMove}/>
+                </div>
                 <div className="itemData" >
                     <div className="Info">
                         <div>Scenario#{this.props.id}</div>
@@ -231,6 +291,7 @@ var SingleItem=React.createClass({
                         <span className="dms">dms={formatter.formatDecimal(this.state.dms,4,2)}</span>
                         <span className="dmd">dmd={formatter.formatDecimal(this.state.dmd,4,2)}</span>
                     </div>
+                    <MousePositionHandler index={this.props.id}/>
                 </div>
                 <div className="buttons">
                     <button className="drawButton" onClick={this.drawFunction}>draw</button>
@@ -254,21 +315,48 @@ var SingleItem=React.createClass({
     saveValues:function(){
         window.localStorage.setItem("aistest"+this.props.id,JSON.stringify(this.values))
     },
+    getDrawer: function(){
+        if (!this.refs.canvas) return;
+        if (! this.drawer) {
+            //alert("draw");
+            var cdom = ReactDOM.findDOMNode(this.refs.canvas);
+            if (!cdom) {
+                alert("canvas not found");
+                return;
+            }
+            var width = cdom.width;
+            var height = cdom.height;
+            var ctx = cdom.getContext('2d');
+            if (!ctx) {
+                alert("no context");
+                return;
+            }
+            this.drawer = new Drawer(ctx, width, height);
+        }
+        return this.drawer;
+    },
+    getMouseDrawer: function(element){
+        if (! this.mouseDrawer) {
+            //alert("draw");
+            var cdom = ReactDOM.findDOMNode(element);
+            if (!cdom) {
+                alert("canvas not found");
+                return;
+            }
+            var width = cdom.width;
+            var height = cdom.height;
+            var ctx = cdom.getContext('2d');
+            if (!ctx) {
+                alert("no context");
+                return;
+            }
+            this.mouseDrawer = new Drawer(ctx, width, height);
+        }
+        return this.mouseDrawer;
+    },
     drawFunction: function(){
         if (!this.refs.canvas) return;
-        //alert("draw");
-        var cdom=ReactDOM.findDOMNode(this.refs.canvas);
-        if (! cdom){
-            alert("canvas not found");
-        }
-        var width=cdom.width;
-        var height=cdom.height;
-        var ctx=cdom.getContext('2d');
-        if (! ctx) {
-            alert("no context");
-            return;
-        }
-        var drawer=new Drawer(ctx,width,height);
+        var drawer=this.getDrawer();
         drawer.clear();
         var X=this.getValues(0);
         drawer.drawShip(X,XCOLOR);
@@ -276,7 +364,7 @@ var SingleItem=React.createClass({
         drawer.drawShip(Y,YCOLOR);
         var dx=Y.x-X.x;
         var dy=Y.y-X.y;
-        var courseTarget=180-Math.atan(dy/dx)*180/Math.PI+90; //we have our system rotated by 90 (i.e. east is 0)
+        var courseTarget=180-Math.atan(dx/dy)*180/Math.PI; //we have our system rotated by 90 (i.e. east is 0)
         var curdistance=Math.sqrt(dy*dy+dx*dx);
         var approach=NavCompute.computeApproach(courseTarget,curdistance,X.course,X.speed,Y.course,Y.speed,0.01);
         approach.curdistance=curdistance;
@@ -301,7 +389,34 @@ var SingleItem=React.createClass({
             course: newCourse,
             speed: parseFloat(rt.speed)
         }
+    },
+    canvasClick:function(ev){
+        var m=store.getData(keys.mouse+this.props.id,{});
+        var drawer=this.getMouseDrawer(ev.target);
+        var rect=ev.target.getBoundingClientRect();
+        var x=ev.clientX-rect.left;
+        var y=ev.clientY-rect.top;
+        m.clickX=x;
+        m.clickY=y;
+        m.x=x;
+        m.y=y;
+        if (drawer) {
+            drawer.clear();
+            drawer.drawPoint({x:m.clickX,y:m.clickY},MCOLOR);
+        }
+        store.storeData(keys.mouse+this.props.id,m);
+    },
+    canvasMove: function(ev){
+        var m=store.getData(keys.mouse+this.props.id,{});
+        var rect=ev.target.getBoundingClientRect();
+        var x=ev.clientX-rect.left;
+        var y=ev.clientY-rect.top;
+        if (m.x == x && m.y == y) return;
+        m.x=x;
+        m.y=y;
+        store.storeData(keys.mouse+this.props.id,m);
     }
+
 
 });
 

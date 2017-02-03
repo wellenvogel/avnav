@@ -5,6 +5,27 @@
   padding-bottom: 10px;
 }
 
+.canvasFrame{
+  width: 250px;
+  height: 250px;
+  position: relative;
+  border: 0;
+  box-sizing: border-box;
+}
+canvas{
+  position: absolute;
+  left:0;
+  right:0;
+  top:0;
+  bottom: 0;
+  border: 0;
+  box-sizing: border-box;
+}
+
+.mouseCanvas{
+  z-index: 2;
+}
+
 .itemData{
   margin: auto;
   display: flex;
@@ -42,6 +63,13 @@
   margin: 0.5em;
 }
 .results span{
+  margin-right: 0.5em;
+  display: inline-block;
+}
+.mouse{
+  margin-left: 0.5em;
+}
+.mouse span{
   margin-right: 0.5em;
   display: inline-block;
 }
