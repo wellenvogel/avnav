@@ -252,8 +252,8 @@ var getCourseXY=function(X,Y){
     }
     else{
         //dx < 0, courses from 180...360
-        if (courseRad > 0) courseRad=Math.PI*2-courseRad;
-        else courseRad=Math.PI-courseRad;
+        if (courseRad < 0) courseRad=Math.PI*2+courseRad;
+        else courseRad=Math.PI+courseRad;
     }
     var courseTarget=courseRad*180/Math.PI;
     return courseTarget;
