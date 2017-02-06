@@ -22,14 +22,29 @@ var keys={
 
 store.storeData(keys.items,[]);
 
-var addItem=function(){
+var addItem=function(opt_after,opt_data){
     var id=0;
+    var i=0;
     var items=store.getData(keys.items);
-    for (var i=0;i<items.length;i++){
+    for (i=0;i<items.length;i++){
         if(items[i]>id) id=items[i];
     }
     id++;
-    items.push(id);
+    if (! opt_after) items.push(id);
+    else{
+        var found=false;
+        for (i=0;i<items.length;i++){
+            if(items[i] == opt_after){
+                if (i < (items.length -1)) {
+                    items.splice(i+1, 0, id);
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (! found)items.push(id);
+    }
+    if (opt_data) saveData(id,opt_data);
     store.storeData(keys.items,items);
 };
 var removeItem=function(id){
@@ -37,6 +52,7 @@ var removeItem=function(id){
     for (var i=0;i<items.length;i++){
         if (items[i] == id){
             items.splice(i,1);
+            saveData(id,undefined);
             store.storeData(keys.items,items);
             return;
         }
@@ -59,7 +75,8 @@ var getData=function(){
 };
 var saveData=function(idx,data){
     var current=getData();
-    current[idx]=data;
+    if (data)  current[idx]=data;
+    else delete current[idx];
     window.localStorage.setItem("aistest",JSON.stringify(current));
 };
 var Main=React.createClass({
@@ -314,6 +331,7 @@ var SingleItem=React.createClass({
     render:function(){
         this.drawer=undefined;
         this.mouseDrawer=undefined;
+        var state=this.state.approach||{};
         var self=this;
         var X=this.getValues(0);
         var Y=this.getValues(1);
@@ -334,21 +352,22 @@ var SingleItem=React.createClass({
                         </Ship>
                     </div>
                     <div className="results">
-                        <span className="courseTarget">cTarget={formatter.formatDecimal(this.state.courseTarget,4,2)}</span>
-                        <span className="distTarget">dTarget={formatter.formatDecimal(this.state.curdistance,4,2)}</span>
-                        <span className="ts">ts={formatter.formatDecimal(this.state.ts,4,2)}</span>
-                        <span className="ds">ds={formatter.formatDecimal(this.state.ds,4,2)}</span>
-                        <span className="td">td={formatter.formatDecimal(this.state.td,4,2)}</span>
-                        <span className="dd">dd={formatter.formatDecimal(this.state.dd,4,2)}</span>
-                        <span className="tm">tm={formatter.formatDecimal(this.state.tm,4,2)}</span>
-                        <span className="dms">dms={formatter.formatDecimal(this.state.dms,4,2)}</span>
-                        <span className="dmd">dmd={formatter.formatDecimal(this.state.dmd,4,2)}</span>
+                        <span className="courseTarget">cTarget={formatter.formatDecimal(state.courseTarget,4,2)}</span>
+                        <span className="distTarget">dTarget={formatter.formatDecimal(state.curdistance,4,2)}</span>
+                        <span className="ts">ts={formatter.formatDecimal(state.ts,4,2)}</span>
+                        <span className="ds">ds={formatter.formatDecimal(state.ds,4,2)}</span>
+                        <span className="td">td={formatter.formatDecimal(state.td,4,2)}</span>
+                        <span className="dd">dd={formatter.formatDecimal(state.dd,4,2)}</span>
+                        <span className="tm">tm={formatter.formatDecimal(state.tm,4,2)}</span>
+                        <span className="dms">dms={formatter.formatDecimal(state.dms,4,2)}</span>
+                        <span className="dmd">dmd={formatter.formatDecimal(state.dmd,4,2)}</span>
                     </div>
                     <MousePositionHandler index={this.props.id}/>
                 </div>
                 <div className="buttons">
                     <button className="drawButton" onClick={this.drawFunction}>draw</button>
                     <button className="saveButton" onClick={this.saveValues}>save</button>
+                    <button className="copyButton" onClick={this.copy}>copy</button>
                     <button className="removeButton" onClick={this.removeFunction}>Remove</button>
                 </div>
             </div>
@@ -424,7 +443,7 @@ var SingleItem=React.createClass({
         if (approach.dms !== undefined) drawer.drawPointAtOffset(X,approach.dms,ACOLOR);
         if (approach.dd !== undefined) drawer.drawPointAtOffset(Y,approach.dd,YCOLOR);
         if (approach.dmd !== undefined) drawer.drawPointAtOffset(Y,approach.dmd,ACOLOR);
-        this.setState(approach);
+        this.setState({approach:approach});
     },
     getValues:function(index){
         var rt={x:0,y:0,course:0,speed:0};
@@ -466,6 +485,14 @@ var SingleItem=React.createClass({
         m.x=x;
         m.y=y;
         store.storeData(keys.mouse+this.props.id,m);
+    },
+    copy: function(){
+        var data=this.values;
+        if (! data) return;
+        addItem(this.props.id,data);
+    },
+    componentDidMount: function(){
+        window.setTimeout(this.drawFunction,100);
     }
 
 
