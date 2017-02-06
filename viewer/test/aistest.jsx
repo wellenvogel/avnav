@@ -22,7 +22,7 @@ var keys={
 
 store.storeData(keys.items,[]);
 
-function addItem(){
+var addItem=function(){
     var id=0;
     var items=store.getData(keys.items);
     for (var i=0;i<items.length;i++){
@@ -31,8 +31,8 @@ function addItem(){
     id++;
     items.push(id);
     store.storeData(keys.items,items);
-}
-function removeItem(id){
+};
+var removeItem=function(id){
     var items=store.getData(keys.items);
     for (var i=0;i<items.length;i++){
         if (items[i] == id){
@@ -41,12 +41,33 @@ function removeItem(id){
             return;
         }
     }
-}
+};
+
+var loadAll=function(){
+    var currentData=getData();
+    var items=[];
+    for (var idx in currentData){
+        items.push(idx);
+    }
+    store.storeData(keys.items,items);
+};
+
+var getData=function(){
+    var currentString=window.localStorage.getItem("aistest");
+    if (! currentString) return {};
+    return JSON.parse(currentString);
+};
+var saveData=function(idx,data){
+    var current=getData();
+    current[idx]=data;
+    window.localStorage.setItem("aistest",JSON.stringify(current));
+};
 var Main=React.createClass({
     render: function(){
         return(
             <div className="main">
                 <h1>AIS Test</h1>
+                <button className="loadButton" onClick={loadAll}>Load All</button>
                 <List/>
                 <button className="addButton" onClick={addItem}>Add</button>
             </div>
@@ -267,9 +288,9 @@ var SingleItem=React.createClass({
         removeHandler: React.PropTypes.func
     },
     getInitialState: function(){
-        var saved=window.localStorage.getItem("aistest"+this.props.id);
+        var saved=getData()[this.props.id];
         if (saved) {
-            this.values = JSON.parse(saved);
+            this.values = saved;
             //we do not handle any state but load initially...
         }
         else{
@@ -345,7 +366,7 @@ var SingleItem=React.createClass({
         }
     },
     saveValues:function(){
-        window.localStorage.setItem("aistest"+this.props.id,JSON.stringify(this.values))
+        saveData(this.props.id,this.values);
     },
     getDrawer: function(){
         if (!this.refs.canvas) return;
