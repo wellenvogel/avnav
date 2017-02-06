@@ -194,7 +194,39 @@ Drawer.prototype.drawPoint=function(xy,color){
     this.ctx.fill();
     this.ctx.closePath();
 };
+/**
+ * we have our coordinate system rotated by 90° and y inverted
+ * so tan(90°-a)=-dy/dx -> cot(a)=-dy/dx or tan(a)=-dx/dy
+ * @param X
+ * @param Y
+ */
+var getCourseXY=function(X,Y){
+    var dx=Y.x-X.x;
+    var dy=Y.y-X.y;
+    if (dx == 0 && dy == 0) return 0;
+    if (dx == 0 ){
+        return (dy > 0)?180:0;
+    }
+    var courseRad=Math.atan2(-dx,dy);
+    if (dx > 0) {
+        //courses from 0...180
+        if (courseRad < 0) courseRad = Math.PI + courseRad;
+    }
+    else{
+        //dx < 0, courses from 180...360
+        if (courseRad > 0) courseRad=Math.PI*2-courseRad;
+        else courseRad=Math.PI-courseRad;
+    }
+    var courseTarget=courseRad*180/Math.PI;
+    return courseTarget;
+};
 
+var getDistanceXY=function(X,Y) {
+    var dx = Y.x - X.x;
+    var dy = Y.y - X.y;
+    var curdistance = Math.sqrt(dy * dy + dx * dx);
+    return curdistance;
+};
 
 var MousePositionHandler=React.createClass({
     propTypes:{
@@ -362,10 +394,8 @@ var SingleItem=React.createClass({
         drawer.drawShip(X,XCOLOR);
         var Y=this.getValues(1);
         drawer.drawShip(Y,YCOLOR);
-        var dx=Y.x-X.x;
-        var dy=Y.y-X.y;
-        var courseTarget=180-Math.atan(dx/dy)*180/Math.PI; //we have our system rotated by 90 (i.e. east is 0)
-        var curdistance=Math.sqrt(dy*dy+dx*dx);
+        var courseTarget=getCourseXY(X,Y);
+        var curdistance=getDistanceXY(X,Y);
         var approach=NavCompute.computeApproach(courseTarget,curdistance,X.course,X.speed,Y.course,Y.speed,0.01);
         approach.curdistance=curdistance;
         approach.courseTarget=courseTarget;
