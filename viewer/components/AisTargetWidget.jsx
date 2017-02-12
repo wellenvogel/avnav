@@ -56,11 +56,17 @@ var AisTargetWidget=React.createClass({
         var classes="avn_widget avn_aisTargetWidget "+this.props.classes||"";
         var small = (this.props.mode == "small");
         if (this.state.mmsi !== undefined) {
+            var style=avnav.assign({},this.props.style,{backgroundColor:this.state.color});
+            if (this.lastRendered != 1){
+              //if we did not render the last time, we always render without any with/height
+                delete style.width;
+                delete style.height;
+            }
             this.lastRendered=1;
             return (
 
                 <div className={classes}
-                     style={avnav.assign({},this.props.style,{backgroundColor:this.state.color})}
+                     style={style}
                      onClick={this.click}>
                     <div className="avn_widgetInfoLeft">AIS</div>
 

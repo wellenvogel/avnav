@@ -227,6 +227,7 @@ var WidgetContainer=React.createClass({
         updateItemInfo:function(key,data,opt_force){
             if (! this.itemInfo) this.itemInfo={};
             if (!this.itemInfo[key]  && data != null){
+                delete this.layouts[key];
                 this.itemInfo[key]=data;
                 this.checkUnlayouted();
                 return;
