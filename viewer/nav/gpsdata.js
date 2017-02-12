@@ -22,8 +22,11 @@ var GpsData=function(propertyHandler,navobject){
     /** @private */
     this.formattedData= {
         gpsPosition:"NO FIX",
+        gpsPositionAverage:false,
         gpsCourse:"0",
+        gpsCourseAverage:false,
         gpsSpeed:"0",
+        gpsSpeedAverage: false,
         gpsTime:"---",
         nmeaStatusColor:"red",
         nmeaStatusText:"???",
@@ -38,12 +41,46 @@ var GpsData=function(propertyHandler,navobject){
     this.validPosition=false;
     this.gpsErrors=0;
     this.NM=this.propertyHandler.getProperties().NM;
+    this.courseAverageData=[];
+    this.speedAverageData=[];
+    this.latAverageData=[];
+    this.lonAverageData=[];
     this.startQuery();
     for (var k in this.formattedData){
         this.navobject.registerValueProvider(k,this,this.getFormattedGpsValue);
     }
 };
 
+GpsData.prototype.average=function(gpsdata){
+    var rt=avnav.assign({},gpsdata);
+    var av;
+    var i;
+    var self=this;
+    ['course','speed','lat','lon'].forEach(function(type) {
+        var key=type;
+        if (type == 'lat' || type == 'lon'){
+            key='position';
+        }
+        var avData=self[type+"AverageData"];
+        av=self.propertyHandler.getProperties()[key+"AverageInterval"];
+        rt[key+"Average"]=(av>0);
+        if (av) {
+            avData.push(gpsdata[type]);
+            if (avData.length > av) {
+                avData.shift();
+            }
+            if (avData.length > 0) {
+                var nv=0;
+                for (i = 0; i < avData.length; i++) {
+                     nv+= avData[i];
+                }
+                nv = nv / avData.length;
+                rt[type]=nv;
+            }
+        }
+    });
+    return rt;
+};
 /**
  *
  * @param data
@@ -53,14 +90,22 @@ GpsData.prototype.handleGpsResponse=function(data, status){
     var gpsdata=new navobjects.GpsInfo();
     gpsdata.valid=false;
     if (status) {
-        gpsdata.rtime = null;
+        gpsdata.rtime = null;this.latAverageData=[];
         if (data.time != null) gpsdata.rtime = new Date(data.time);
         gpsdata.lon = data.lon;
         gpsdata.lat = data.lat;
         gpsdata.course = data.course;
         if (gpsdata.course === undefined) gpsdata.course = data.track;
         gpsdata.speed = data.speed * 3600 / this.NM;
+        gpsdata=this.average(gpsdata);
         gpsdata.valid = true;
+    }
+    else{
+        //clean average data
+        this.speedAverageData=[];
+        this.courseAverageData=[];
+        this.latAverageData=[];
+        this.lonAverageData=[];
     }
     gpsdata.raw=data.raw;
     this.gpsdata=gpsdata;
@@ -71,9 +116,12 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         formattedData.gpsSpeed = this.formatter.formatDecimal(gpsdata.speed || 0, 2, 1);
         formattedData.gpsTime = this.formatter.formatTime(gpsdata.rtime || new Date());
         formattedData.clock = this.formatter.formatClock(gpsdata.rtime || new Date());
+        formattedData.gpsCourseAverage=gpsdata.courseAverage;
+        formattedData.gpsSpeedAverage=gpsdata.speedAverage;
+        formattedData.gpsPositionAverage=gpsdata.positionAverage;
     }
     formattedData.nmeaStatusColor="red";
-    formattedData.nmeaStatusText="???"
+    formattedData.nmeaStatusText="???";
     try {
         if (data.raw && data.raw.status && data.raw.status.nmea){
             formattedData.nmeaStatusColor = data.raw.status.nmea.status;
@@ -81,7 +129,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         }
     }catch(e){}
     formattedData.aisStatusColor="red";
-    formattedData.aisStatusText="???"
+    formattedData.aisStatusText="???";
     try {
         if (data.raw && data.raw.status && data.raw.status.ais){
             formattedData.aisStatusColor = data.raw.status.ais.status;

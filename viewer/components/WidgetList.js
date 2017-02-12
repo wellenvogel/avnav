@@ -18,7 +18,8 @@ var widgetList=[
         //formatter: function(val){ return Formatter.formatDecimal(val,4,1);},
         wclass: Widget,
         classes: 'avn_speedWidget',
-        dataKey: 'gpsSpeed'
+        dataKey: 'gpsSpeed',
+        averageKey: 'gpsSpeedAverage'
     },
     {
         name: 'COG',
@@ -28,7 +29,8 @@ var widgetList=[
         //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
         wclass: Widget,
         classes: 'avn_courseWidget',
-        dataKey: 'gpsCourse'
+        dataKey: 'gpsCourse',
+        averageKey: 'gpsCourseAverage'
 
     },
     {
@@ -38,7 +40,8 @@ var widgetList=[
         //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
         wclass: Widget,
         classes: 'avn_posWidget',
-        dataKey: 'gpsPosition'
+        dataKey: 'gpsPosition',
+        averageKey: 'gpsPositionAverage'
 
     },
     {

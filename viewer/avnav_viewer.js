@@ -75,6 +75,9 @@ var propertyDefinitions=function(){
         positionQueryTimeout: new avnav.util.Property( 1000,"Position (ms)",avnav.util.PropertyType.RANGE,[500,5000,10]), //1000ms
         trackQueryTimeout: new avnav.util.Property( 5000,"Track (ms)",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
         routeQueryTimeout: new avnav.util.Property( 1000,"Route (ms)",avnav.util.PropertyType.RANGE,[500,10000,10]), //5s in ms
+        courseAverageInterval: new avnav.util.Property( 0,"Course average",avnav.util.PropertyType.RANGE,[0,20,1]), //unit: query interval
+        speedAverageInterval: new avnav.util.Property( 0,"Speed average",avnav.util.PropertyType.RANGE,[0,20,1]), //unit: query interval
+        positionAverageInterval: new avnav.util.Property( 0,"Position average",avnav.util.PropertyType.RANGE,[0,20,1]), //unit: query interval
         bearingColor: new avnav.util.Property( "#DDA01F","Color",avnav.util.PropertyType.COLOR),
         bearingWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),
         routeColor: new avnav.util.Property( "#27413B","Color",avnav.util.PropertyType.COLOR),

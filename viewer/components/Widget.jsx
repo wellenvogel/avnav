@@ -11,6 +11,7 @@ var Widget=React.createClass({
         unit: React.PropTypes.string,
         caption: React.PropTypes.string,
         dataKey:React.PropTypes.string,
+        averageKey: React.PropTypes.string,
         //formatter: React.PropTypes.func,
         onClick: React.PropTypes.func,
         store: React.PropTypes.instanceOf(NavData).isRequired,
@@ -18,17 +19,20 @@ var Widget=React.createClass({
     },
     getInitialState: function(){
         return{
-            val:this.props.store.getValue(this.props.dataKey)
+            val:this.props.store.getValue(this.props.dataKey),
+            average:this.props.averageKey?this.props.store.getValue(this.props.averageKey):false
         };
     },
     componentWillReceiveProps: function(nextProps) {
         this.setState({
-            val:this.props.store.getValue(nextProps.dataKey)
+            val:this.props.store.getValue(nextProps.dataKey),
+            average:nextProps.averageKey?this.props.store.getValue(nextProps.averageKey):false
         });
     },
     render: function(){
         var self=this;
         var classes="avn_widget "+this.props.classes||"";
+        if (this.state.average) classes+=" avn_average";
         var val=this.state.val;
         if (val === undefined || val == "") {
             val=this.props.default||"";
