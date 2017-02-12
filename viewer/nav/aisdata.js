@@ -259,9 +259,14 @@ AisData.prototype.handleAisData=function() {
             var ais = this.currentAis[aisidx];
             this._computeAisTarget(boatPos,ais,properties);
             var warningCpa=properties.aisWarningCpa/this.NM;
-            if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && ais.tcpa < properties.aisWarningTpa) {
+            if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && Math.abs(ais.tcpa) < properties.aisWarningTpa) {
                 if (aisWarningAis) {
-                    if (aisWarningAis.tcpa > ais.tcpa) aisWarningAis = ais;
+                    if (ais.tcpa >=0) {
+                        if (aisWarningAis.tcpa > ais.tcpa || aisWarningAis.tcpa < 0) aisWarningAis = ais;
+                    }
+                    else{
+                        if (aisWarningAis.tcpa < 0 && aisWarningAis.tcpa < ais.tcpa) aisWarningAis=ais;
+                    }
                 }
                 else aisWarningAis = ais;
             }
