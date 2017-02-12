@@ -126,7 +126,8 @@ var Ship=React.createClass({
         y: React.PropTypes.any,
         course: React.PropTypes.any,
         speed: React.PropTypes.any,
-        color: React.PropTypes.string
+        color: React.PropTypes.string,
+        info: React.PropTypes.string
     },
     getInitialState: function(){
         return{
@@ -139,7 +140,7 @@ var Ship=React.createClass({
     render: function(){
         return(
             <div className="ship">
-                <div>X:<span className="shipColor" style={{backgroundColor:this.props.color}}/></div>
+                <div>X:<span className="shipColor" style={{backgroundColor:this.props.color}}/><span className="shipInfo">{this.props.info}</span></div>
                 <input type="text" className="xValue" value={this.state.x} onChange={this.setX}/>
                 Y:<input type="text" className="yValue" value={this.state.y} onChange={this.setY}/>
                 Course:<input type="text" className="courseValue" value={this.state.course} onChange={this.setCourse}/>
@@ -323,10 +324,11 @@ var SingleItem=React.createClass({
                     y:40,
                     course:60,
                     speed: 2
-                }
+                },
+                comment:''
             }
         }
-        return {};
+        return {comment: this.values.comment};
     },
     render:function(){
         this.drawer=undefined;
@@ -342,13 +344,14 @@ var SingleItem=React.createClass({
                 <canvas width="250" height="250" className="mouseCanvas" onClick={this.canvasClick} onMouseMove={this.canvasMove}/>
                 </div>
                 <div className="itemData" >
-                    <div className="Info">
+                    <div className="info">
                         <div>Scenario#{this.props.id}</div>
+                        <input type="text" onChange={this.commentChange} value={this.values.comment}/>
                     </div>
                     <div className="ships">
-                        <Ship key="x" className="shipX" valueChanged={function(val){self.valueChanged(0,val);}} {...X} color={XCOLOR}>
+                        <Ship key="x" className="shipX" valueChanged={function(val){self.valueChanged(0,val);}} {...X} color={XCOLOR} info="S">
                         </Ship>
-                        <Ship key="y" className="shipY" valueChanged={function(val){self.valueChanged(1,val);}} {...Y} color={YCOLOR}  >
+                        <Ship key="y" className="shipY" valueChanged={function(val){self.valueChanged(1,val);}} {...Y} color={YCOLOR}  info="D">
                         </Ship>
                     </div>
                     <div className="results">
@@ -372,6 +375,11 @@ var SingleItem=React.createClass({
                 </div>
             </div>
         );
+    },
+    commentChange: function(ev){
+        var nval=ev.target.value;
+        this.values.comment=nval;
+        this.setState({comment: nval});
     },
     valueChanged:function(idx,newVal){
         if (! this.values){
