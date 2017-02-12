@@ -14,7 +14,7 @@ var NavData=require('./navdata');
  * @param {NavData} navdata
  * @constructor
  */
-var AisData=function(propertyHandler,navdata){
+var AisData=function(propertyHandler,navdata, opt_noQuery){
     /** @private */
     this.propertyHandler=propertyHandler;
     /** @private */
@@ -130,8 +130,12 @@ var AisData=function(propertyHandler,navdata){
             headline: 'pass',
             format: function(v){
                 if (! v.cpa) return "-";
-                if (v.passFront) return "Front";
-                return "Back";
+                if (v.passFront !== undefined){
+                    if (v.passFront > 0) return "Front";
+                    if (v.passFront < 0) return "Pass";
+                    return "Back";
+                }
+                return "Done";
             }
         },
         shipname:{
@@ -192,9 +196,49 @@ var AisData=function(propertyHandler,navdata){
      * @type {Formatter}
      */
     this.formatter=new Formatter();
-    this.startQuery();
+    if (! opt_noQuery) this.startQuery();
 };
 
+/**
+ *
+ * @param boatPos boat pos, course, speed
+ * @param ais the ais target, will be modified
+ * @param properties - the current properties
+ * @private
+ */
+AisData.prototype._computeAisTarget=function(boatPos,ais,properties){
+    ais.warning=false;
+    ais.tracking=false;
+    ais.nearest=false;
+    var dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
+    var cpadata = NavCompute.computeCpa({
+            lon: boatPos.lon,
+            lat: boatPos.lat,
+            course: boatPos.course || 0,
+            speed: boatPos.speed || 0
+        },
+        {
+            lon: parseFloat(ais.lon || 0),
+            lat: parseFloat(ais.lat || 0),
+            course: parseFloat(ais.course || 0),
+            speed: parseFloat(ais.speed || 0)
+        },
+        properties
+    );
+    ais.distance = dst.dtsnm;
+    ais.headingTo = dst.course;
+    if (cpadata.tcpa !== undefined && cpadata.cpanm !== undefined) {
+        ais.cpa = cpadata.cpanm;
+        ais.tcpa = cpadata.tcpa;
+    }
+    else {
+        ais.cpa = 0;
+        ais.tcpa = 0;
+    }
+    ais.passFront = cpadata.front;
+    if (!ais.shipname) ais.shipname = "unknown";
+    if (!ais.callsign) ais.callsign = "????";
+};
 /**
  * compute all the cpa data...
  * @private
@@ -209,37 +253,7 @@ AisData.prototype.handleAisData=function() {
         var foundTrackedTarget = false;
         for (var aisidx in this.currentAis) {
             var ais = this.currentAis[aisidx];
-            ais.warning=false;
-            ais.tracking=false;
-            ais.nearest=false;
-            var dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
-            var cpadata = NavCompute.computeCpa({
-                    lon: boatPos.lon,
-                    lat: boatPos.lat,
-                    course: boatPos.course || 0,
-                    speed: boatPos.speed || 0
-                },
-                {
-                    lon: parseFloat(ais.lon || 0),
-                    lat: parseFloat(ais.lat || 0),
-                    course: parseFloat(ais.course || 0),
-                    speed: parseFloat(ais.speed || 0)
-                },
-                properties
-            );
-            ais.distance = dst.dtsnm;
-            ais.headingTo = dst.course;
-            if (cpadata.tcpa !== undefined && cpadata.cpanm !== undefined) {
-                ais.cpa = cpadata.cpanm;
-                ais.tcpa = cpadata.tcpa;
-            }
-            else {
-                ais.cpa = 0;
-                ais.tcpa = 0;
-            }
-            ais.passFront = cpadata.front;
-            if (!ais.shipname) ais.shipname = "unknown";
-            if (!ais.callsign) ais.callsign = "????";
+            this._computeAisTarget(boatPos,ais,properties);
             var warningCpa=properties.aisWarningCpa/this.NM;
             if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && ais.tcpa < properties.aisWarningTpa) {
                 if (aisWarningAis) {

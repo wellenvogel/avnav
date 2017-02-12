@@ -132,7 +132,7 @@ navobjects.WayPoint=function(lon,lat,opt_name){
 
     /**
      * if this waypoint belongs to a route
-     * this parameter will be set
+     * this parameter will be set<script type="text/javascript" src="libraries/geo.js"></script>
      * @type {string}
      */
     this.routeName=undefined;

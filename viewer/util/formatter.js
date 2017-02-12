@@ -55,7 +55,7 @@ Formatter.prototype.formatLonLatsDecimal=function(coordinate,axis){
  * @returns {string}
  */
 Formatter.prototype.formatLonLats=function(lonlat){
-    if (isNaN(lonlat.lat) || isNaN(lonlat.lon)){
+    if (! lonlat || isNaN(lonlat.lat) || isNaN(lonlat.lon)){
         return "-----";
     }
     var ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
@@ -107,6 +107,7 @@ Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace){
  * @returns {string}
  */
 Formatter.prototype.formatTime=function(curDate){
+    if (! curDate) return "--:--:--";
     var datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");

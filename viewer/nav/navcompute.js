@@ -71,6 +71,7 @@ NavCompute.computeCpa=function(src,dst,properties){
     if (curdistance < 0.1){
         var x=curdistance;
     }
+    rt.curdistance=curdistance;
     var courseToTarget=llsrc.bearingTo(lldst); //in deg
     //default to our current distance
     rt.tcpa=0;
@@ -105,7 +106,7 @@ NavCompute.computeCpa=function(src,dst,properties){
         rt.front=(appr.ts<appr.td)?0:1;
     }
     else{
-        if (appr.tm >0) rt.front=-1;
+        if (appr.tm >0) rt.front=-1; //we do not cross but will still aproach
         else rt.front=undefined;
     }
     return rt;

@@ -5,8 +5,11 @@ require('../base.js');
 var NavCompute=require('../nav/navcompute');
 var Formatter=require('../util/formatter');
 var Store=require('../util/store');
-
+var AisData=require('../nav/aisdata');
+var NavObjects=require('../nav/navobjects');
 var formatter=new Formatter();
+var NM=1852;
+var speedKnToMs=NM/3600.0;
 
 var XCOLOR='rgb(206, 46, 46)';
 var YCOLOR='rgb(72, 142, 30)';
@@ -14,10 +17,20 @@ var ACOLOR='rgb(60, 64, 58)';
 var MCOLOR='rgb(6, 106, 236)';
 
 
+var aisTestData=new AisData({
+        getProperties: function(){
+            return{ NM:NM}
+        }
+    },
+    {
+        registerValueProvider: function(){}
+    },
+    true);
 var store=new Store();
 var keys={
     items: 'items',
-    mouse: 'mouse'
+    mouse: 'mouse',
+    ship: 'ship'
 };
 
 store.storeData(keys.items,[]);
@@ -27,6 +40,7 @@ var addItem=function(opt_after,opt_data){
     var i=0;
     var items=store.getData(keys.items);
     for (i=0;i<items.length;i++){
+        if (items[i]=="ship") continue;
         if(items[i]>id) id=items[i];
     }
     id++;
@@ -61,8 +75,12 @@ var removeItem=function(id){
 
 var loadAll=function(){
     var currentData=getData();
+    if (currentData.ship){
+        store.storeData(keys.ship,currentData.ship);
+    }
     var items=[];
     for (var idx in currentData){
+        if (idx == "ship") continue;
         items.push(idx);
     }
     store.storeData(keys.items,items);
@@ -79,17 +97,89 @@ var saveData=function(idx,data){
     else delete current[idx];
     window.localStorage.setItem("aistest",JSON.stringify(current));
 };
+var saveShipPos=function(ship){
+    var current=getData();
+    current.ship=ship;
+    window.localStorage.setItem("aistest",JSON.stringify(current));
+};
 var Main=React.createClass({
+    getInitialState: function(){
+        return({
+            ship: {lat:"0",lon:"0",factor:"1"}
+        });
+    },
     render: function(){
         return(
             <div className="main">
                 <h1>AIS Test</h1>
-                <button className="loadButton" onClick={loadAll}>Load All</button>
+                <div className="topButtons">
+                    <button className="loadButton" onClick={loadAll}>Load All</button>
+                    <button className="downloadButton" onClick={this.download}>Download</button>
+                    <a id="download" style={{display:"none"}}/>
+                    <button className="uploadButton" onClick={this.upload}>Upload</button>
+                    <input id="upload" type="file" style={{display:"none"}} ref="upload" onChange={this.uploadFiles}/>
+                </div>
+                <div className="shipPos">
+                    <label>Ship Lat</label><input type="text" value={this.state.ship.lat} onChange={this.latChanged}/>
+                    <label>Ship Lon</label><input type="text" value={this.state.ship.lon} onChange={this.lonChanged}/>
+                    <label>Len Factor</label><input type="text" value={this.state.ship.factor} onChange={this.facChanged}/>
+                </div>
                 <List/>
                 <button className="addButton" onClick={addItem}>Add</button>
             </div>
 
         );
+    },
+    latChanged:function(ev){
+        var v=ev.target.value;
+        this.changeShip({lat:v});
+    },
+    lonChanged:function(ev){
+        var v=ev.target.value;
+        this.changeShip({lon:v});
+    },
+    facChanged:function(ev){
+        var v=ev.target.value;
+        this.changeShip({factor:v});
+    },
+    changeShip:function(val){
+        var nship=avnav.assign({},this.state.ship,val);
+        saveShipPos(nship);
+        store.storeData(keys.ship,nship);
+    },
+    componentDidMount: function () {
+        store.register(this, keys.ship)
+    },
+    componentWillUnmount: function () {
+        store.deregister(this);
+    },
+    dataChanged: function () {
+        var ship = store.getData(keys.ship||{lat:0,lon:0, factor:1});
+        if (!ship.factor) ship.factor=1;
+        this.setState({ship: ship});
+    },
+    download: function () {
+        var contentType = 'application/octet-stream';
+        var a = document.getElementById('download');
+        var blob = new Blob([JSON.stringify(getData(),undefined,2)], {'type': contentType});
+        a.href = window.URL.createObjectURL(blob);
+        a.download = "aistest.json";
+        a.click();
+    },
+    upload: function(){
+        var fi=this.refs.upload;
+        if (! fi) return;
+        fi.value="";
+        fi.click();
+    },
+    uploadFiles: function(ev){
+        if (ev.target.files.length < 1) return;
+        var reader=new FileReader();
+        reader.onload=function(){
+            window.localStorage.setItem("aistest",this.result);
+            loadAll();
+        };
+        reader.readAsText(ev.target.files[0]);
     }
 });
 
@@ -334,9 +424,11 @@ var SingleItem=React.createClass({
         this.drawer=undefined;
         this.mouseDrawer=undefined;
         var state=this.state.approach||{};
+        var result=this.state.simulatedResult||{cpa:{},ship:{},target:{}};
         var self=this;
         var X=this.getValues(0);
         var Y=this.getValues(1);
+        var aisFormatter=aisTestData.aisparam;
         return(
             <div className="item">
                 <div className="canvasFrame">
@@ -346,7 +438,7 @@ var SingleItem=React.createClass({
                 <div className="itemData" >
                     <div className="info">
                         <div>Scenario#{this.props.id}</div>
-                        <input type="text" onChange={this.commentChange} value={this.values.comment}/>
+                        <input type="text" onChange={this.commentChange} value={this.values.comment} style={(this.values.comment && this.values.comment.match(/!/))?{color:"red"}:{}}/>
                     </div>
                     <div className="ships">
                         <Ship key="x" className="shipX" valueChanged={function(val){self.valueChanged(0,val);}} {...X} color={XCOLOR} info="S">
@@ -365,6 +457,18 @@ var SingleItem=React.createClass({
                         <span className="dms">dms={formatter.formatDecimal(state.dms,4,2)}</span>
                         <span className="dmd">dmd={formatter.formatDecimal(state.dmd,4,2)}</span>
                     </div>
+                    <div className="results">
+                        <span>S Pos={formatter.formatLonLats(result.ship)}</span>
+                        <span>,{formatter.formatDecimal(result.ship.speed,4,2)} kn</span>
+                        <span>D Pos={formatter.formatLonLats(result.target)}</span>
+                        <span>,{formatter.formatDecimal(result.target.speed,4,2)} kn</span>
+                        <span>Cur={formatter.formatDecimal(result.cpa.curdistance/NM,4,3)} nm</span>
+                        <span>,{formatter.formatDecimal(result.cpa.curdistance,4,2)} m</span>
+                        <span>Cpa={formatter.formatDecimal(result.cpa.cpanm,4,3)} nm</span>
+                        <span>Tcpa(h)={aisFormatter.tcpa.format(result.cpa)}</span>
+                        <span>Front={aisFormatter.passFront.format(avnav.assign({},result.cpa,{passFront:result.cpa.front}))}</span>
+                        <span>, {result.cpa.front}</span>
+                    </div>
                     <MousePositionHandler index={this.props.id}/>
                 </div>
                 <div className="buttons">
@@ -377,6 +481,7 @@ var SingleItem=React.createClass({
         );
     },
     commentChange: function(ev){
+        this.saveValues();
         var nval=ev.target.value;
         this.values.comment=nval;
         this.setState({comment: nval});
@@ -435,6 +540,7 @@ var SingleItem=React.createClass({
         return this.mouseDrawer;
     },
     drawFunction: function(){
+        this.saveValues();
         if (!this.refs.canvas) return;
         var drawer=this.getDrawer();
         drawer.clear();
@@ -451,7 +557,27 @@ var SingleItem=React.createClass({
         if (approach.dms !== undefined) drawer.drawPointAtOffset(X,approach.dms,ACOLOR);
         if (approach.dd !== undefined) drawer.drawPointAtOffset(Y,approach.dd,YCOLOR);
         if (approach.dmd !== undefined) drawer.drawPointAtOffset(Y,approach.dmd,ACOLOR);
-        this.setState({approach:approach});
+        //now compute some pseudo position for the target and use the final ais computation again
+        var shipPos=store.getData(keys.ship,{lat:0,lon:0,factor:1});
+        var lat=Geo.parseDMS(shipPos.lat);
+        var lon=Geo.parseDMS(shipPos.lon.replace(/o/i, 'e'));
+        var factor=parseFloat(shipPos.factor);
+        var simulatedShip=new NavObjects.GpsInfo();
+        simulatedShip.speed=X.speed/speedKnToMs; //is in kn
+        simulatedShip.lat=lat;
+        simulatedShip.lon=lon;
+        simulatedShip.course=X.course;
+        var simulatedResult={};
+        simulatedResult.ship=simulatedShip;
+        var aisTarget=NavCompute.computeTarget(simulatedShip,courseTarget,factor*curdistance);
+        simulatedResult.target=avnav.assign({},aisTarget,{course:Y.course,speed:Y.speed/speedKnToMs,mmsi: this.props.id});
+        simulatedResult.cpa=NavCompute.computeCpa(simulatedResult.ship,simulatedResult.target,{NM:NM,minAISspeed:0.2*speedKnToMs})
+        console.log("xxx"+lat+","+lon+","+factor);
+
+        this.setState({
+            approach:approach,
+            simulatedResult: simulatedResult
+        });
     },
     getValues:function(index){
         var rt={x:0,y:0,course:0,speed:0};
