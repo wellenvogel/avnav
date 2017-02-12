@@ -10,6 +10,7 @@ var NavObjects=require('../nav/navobjects');
 var formatter=new Formatter();
 var NM=1852;
 var speedKnToMs=NM/3600.0;
+var MAX_DISTANCE=6371*1000*Math.PI;
 
 var XCOLOR='rgb(206, 46, 46)';
 var YCOLOR='rgb(72, 142, 30)';
@@ -550,7 +551,7 @@ var SingleItem=React.createClass({
         drawer.drawShip(Y,YCOLOR);
         var courseTarget=getCourseXY(X,Y);
         var curdistance=getDistanceXY(X,Y);
-        var approach=NavCompute.computeApproach(courseTarget,curdistance,X.course,X.speed,Y.course,Y.speed,0.01);
+        var approach=NavCompute.computeApproach(courseTarget,curdistance,X.course,X.speed,Y.course,Y.speed,0.01,MAX_DISTANCE);
         approach.curdistance=curdistance;
         approach.courseTarget=courseTarget;
         if (approach.ds !== undefined) drawer.drawPointAtOffset(X,approach.ds,XCOLOR);

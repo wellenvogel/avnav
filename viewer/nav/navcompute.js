@@ -77,12 +77,13 @@ NavCompute.computeCpa=function(src,dst,properties){
     rt.tcpa=0;
     rt.cpa=curdistance;
     rt.cpanm=rt.cpa/NM;
-    var appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed*msFactor,dst.course,dst.speed*msFactor,properties.minAISspeed*msFactor);
+    var maxDistance=llsrc._radius*1000*Math.PI; //half earth
+    var appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed*msFactor,dst.course,dst.speed*msFactor,properties.minAISspeed*msFactor,maxDistance);
     if (appr.dd !== undefined && appr.ds !== undefined) {
         var xpoint = llsrc.destinationPoint(src.course, appr.dd / 1000);
         rt.crosspoint = new navobjects.Point(xpoint._lon, xpoint._lat);
     }
-    if (appr.tcpa == 0){
+    if (!appr.tm){
         rt.tcpa=0; //better undefined
         rt.cpa=curdistance;
         rt.cpanm = rt.cpa / NM;
@@ -103,7 +104,7 @@ NavCompute.computeCpa=function(src,dst,properties){
     }
     rt.cpanm = rt.cpa / NM;
     if (appr.td !==undefined && appr.ts!==undefined){
-        rt.front=(appr.ts<appr.td)?0:1;
+        rt.front=(appr.ts<appr.td)?1:0;
     }
     else{
         if (appr.tm >0) rt.front=-1; //we do not cross but will still aproach
@@ -122,17 +123,17 @@ NavCompute.computeCpa=function(src,dst,properties){
  * @param dstCourse
  * @param dstSpeed
  * @param minAisSpeed - minimal speed we allow for crossing computation
+ * @param maxDistance
  * @returns {object} an object with the properties
  *        td - time dest to crosspoint (if crossing)
  *        ts - time src to crosspoint (if crossing)
  *        dd - distance destination to crosspoint
  *        ds - distance src to crosspoint
  *        tm - TCPA
- *        cpa - computed cpa (or currentDistance if this is lower)
  *        dms - distance src to cpa point
  *        dmd - distance dest to cpa point
  */
-NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpeed,dstCourse,dstSpeed,minAisSpeed){
+NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpeed,dstCourse,dstSpeed,minAisSpeed,maxDistance){
     //courses
     var rt={};
     var ca=(courseToTarget-srcCourse)/180*Math.PI; //rad
@@ -141,7 +142,7 @@ NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpee
     var sina=Math.sin(ca);
     var cosb=Math.cos(cb);
     var sinb=Math.sin(cb);
-    if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed && Math.abs(srcCourse-dstCourse)> 5){
+    if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed ){
         //compute crossing
         try {
             rt.td = curdistance / (dstSpeed * (cosa / sina * sinb - cosb));
@@ -152,12 +153,19 @@ NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpee
         if (rt.td !== undefined && rt.ts !== undefined){
             rt.ds=srcSpeed*rt.ts; //in m
             rt.dd=dstSpeed*rt.td; //in m
+            if (maxDistance !== undefined){
+                if (Math.abs(rt.ds) > maxDistance || Math.abs(rt.dd) > maxDistance){
+                    rt.td=undefined;
+                    rt.ts=undefined;
+                    rt.ds=undefined;
+                    rt.dd=undefined;
+                }
+            }
         }
     }
     var quot=(srcSpeed*srcSpeed+dstSpeed*dstSpeed-2*srcSpeed*dstSpeed*(cosa*cosb+sina*sinb));
     if (quot < 1e-6 && quot > -1e-6){
-        rt.tcpa=0; //better undefined
-        rt.cpa=curdistance;
+        rt.tm=undefined;
         return rt;
     }
     rt.tm=curdistance*(cosa*srcSpeed-cosb*dstSpeed)/quot;

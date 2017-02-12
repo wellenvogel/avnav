@@ -1,0 +1,157 @@
+{
+  "1": {
+    "0": {
+      "x": 10,
+      "y": 20,
+      "course": 90,
+      "speed": 1
+    },
+    "1": {
+      "x": 30,
+      "y": 40,
+      "course": 60,
+      "speed": 2
+    },
+    "comment": "cross, t>0, ts>td -> normal , Back (td< ts)"
+  },
+  "2": {
+    "0": {
+      "x": 50,
+      "y": 20,
+      "course": 90,
+      "speed": 2
+    },
+    "1": {
+      "x": 50,
+      "y": 40,
+      "course": 60,
+      "speed": 1
+    },
+    "comment": "cross, t>0, ts>td -> normal , Front (ts < td)"
+  },
+  "3": {
+    "0": {
+      "x": 101,
+      "y": 50,
+      "course": 90,
+      "speed": 1
+    },
+    "1": {
+      "x": 100,
+      "y": 70,
+      "course": 270,
+      "speed": 2
+    },
+    "comment": "no cross, cpa == current, Done  (dms =0,dmd=0, tm=0) (we allow for a small uncertainty if we are really at cpa..."
+  },
+  "4": {
+    "0": {
+      "x": 100,
+      "y": 50,
+      "course": 90,
+      "speed": 1
+    },
+    "1": {
+      "x": 100,
+      "y": 70,
+      "course": 120,
+      "speed": 2
+    },
+    "comment": "cross, already passed, dms<0,dmd<0, Front (ts < td)!"
+  },
+  "5": {
+    "0": {
+      "x": 10,
+      "y": 20,
+      "course": 90,
+      "speed": 1
+    },
+    "1": {
+      "x": 30,
+      "y": 40,
+      "course": 60,
+      "speed": 0
+    },
+    "comment": "target not moving, tcpa >0, Pass"
+  },
+  "6": {
+    "0": {
+      "x": 40,
+      "y": 20,
+      "course": 90,
+      "speed": 0
+    },
+    "1": {
+      "x": 30,
+      "y": 40,
+      "course": 60,
+      "speed": 1
+    },
+    "comment": "ship not moving,tcpa > 0, Pass"
+  },
+  "7": {
+    "0": {
+      "x": 40,
+      "y": 20,
+      "course": 90,
+      "speed": 1
+    },
+    "1": {
+      "x": 30,
+      "y": 40,
+      "course": 85,
+      "speed": 2
+    },
+    "comment": "cross, only 5° diff, tcpa > 0 Back, should we notify that the target reaches use \"from back\" ?"
+  },
+  "8": {
+    "0": {
+      "x": 40,
+      "y": 20,
+      "course": 90,
+      "speed": 1
+    },
+    "1": {
+      "x": 30,
+      "y": 40,
+      "course": 150,
+      "speed": 2
+    },
+    "comment": "cross, tcpa < 0 Front (ts < td)"
+  },
+  "9": {
+    "0": {
+      "x": 100,
+      "y": 50,
+      "course": 90,
+      "speed": 1
+    },
+    "1": {
+      "x": 200,
+      "y": 70,
+      "course": 270,
+      "speed": 2
+    },
+    "comment": "no cross, cpa <> current, tcpa > 0, Front/Pass (ts,td=0, tm>0)"
+  },
+  "10": {
+    "0": {
+      "x": 100,
+      "y": 50,
+      "course": 90,
+      "speed": 1
+    },
+    "1": {
+      "x": 200,
+      "y": 70,
+      "course": 90,
+      "speed": 2
+    },
+    "comment": "no cross, cpa == current, tcpa < 0, Done (ts =0,td=0, tm<0)"
+  },
+  "ship": {
+    "lat": "54",
+    "lon": "13",
+    "factor": "10"
+  }
+}

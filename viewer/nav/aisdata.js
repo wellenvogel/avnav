@@ -119,11 +119,15 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
             headline: 'tcpa',
             format: function(v){
                 var tval=parseFloat(v.tcpa||0);
-                //if (tval < 0) return "--:--:--";
+                var sign="";
+                if (tval < 0) {
+                    sign="-";
+                    tval=-tval;
+                }
                 var h=Math.floor(tval/3600);
                 var m=Math.floor((tval-h*3600)/60);
                 var s=tval-3600*h-60*m;
-                return self.formatter.formatDecimal(h,2,0).replace(" ","0")+':'+self.formatter.formatDecimal(m,2,0).replace(" ","0")+':'+self.formatter.formatDecimal(s,2,0).replace(" ","0");
+                return sign+self.formatter.formatDecimal(h,2,0).replace(" ","0")+':'+self.formatter.formatDecimal(m,2,0).replace(" ","0")+':'+self.formatter.formatDecimal(s,2,0).replace(" ","0");
             }
         },
         passFront:{
