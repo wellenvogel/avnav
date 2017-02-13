@@ -138,6 +138,7 @@ var propertyDefinitions=function(){
         allowTwoWidgetRows:new avnav.util.Property(true,"2 widget rows",avnav.util.PropertyType.CHECKBOX),
         showClock:new avnav.util.Property(true,"show clock",avnav.util.PropertyType.CHECKBOX),
         showZoom:new avnav.util.Property(true,"show zoom",avnav.util.PropertyType.CHECKBOX),
+        autoZoom:new avnav.util.Property(true,"automatic zoom",avnav.util.PropertyType.CHECKBOX),
         nightMode: new avnav.util.Property( false,"NightMode",avnav.util.PropertyType.CHECKBOX),
         nightColorDim:new avnav.util.Property( 60,"Night Dim for Colors",avnav.util.PropertyType.RANGE,[5,100]), //should match @nightModeVale in less
         smallBreak:new avnav.util.Property( 480,"portrait layout below (px)",avnav.util.PropertyType.RANGE,[200,9999]), 

@@ -347,7 +347,9 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(){
  * @private
  */
 avnav.gui.Navpage.prototype._updateZoom=function(){
-    var zoom=this.getMap().getZoom();
+    var bzoom=this.getMap().getZoom();
+    var zoom=bzoom.current;
+    if (bzoom.current != bzoom.required) zoom+="("+bzoom.required+")";
     var old=this.store.getData(keys.zoom,0);
     if (old != zoom){
         this.store.storeData(keys.zoom,zoom);

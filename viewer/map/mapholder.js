@@ -110,12 +110,14 @@ avnav.map.MapHolder=function(properties,navobject){
     this.maxzoom=0;
     this.center=[0,0];
     this.zoom=-1;
+    this.requiredZoom=-1;
     try {
         var currentView = localStorage.getItem(this.properties.getProperties().centerName);
         if (currentView) {
             var decoded = JSON.parse(currentView);
             this.center = decoded.center;
             this.zoom = decoded.zoom;
+            this.requiredZoom=decoded.requiredZoom || this.zoom;
         }
     }catch (e){}
 
@@ -199,8 +201,8 @@ avnav.map.MapHolder.prototype.getView=function(){
  */
 avnav.map.MapHolder.prototype.getZoom=function(){
     var v=this.olmap?this.olmap.getView():undefined;
-    if (! v ) return;
-    return v.getZoom();
+    if (! v ) return {required:this.requiredZoom,current: this.zoom};
+    return {required:this.requiredZoom,current: v.getZoom()};
 };
 /**
  * init the map (deinit an old one...)
@@ -274,6 +276,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     }
     var recenter=true;
     var view;
+    if (this.requiredZoom) this.zoom=this.requiredZoom;
     if (this.center && this.zoom >0){
         //if we load a new map - try to restore old center and zoom
         view=this.getView();
@@ -285,6 +288,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             this.zoom-=this.properties.getProperties().slideLevels;
             this.doSlide(this.properties.getProperties().slideLevels);
         }
+        this.requiredZoom=this.zoom;
         view.setZoom(this.zoom);
         recenter=false;
         var lext;
@@ -333,13 +337,15 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
  * @param number
  */
 avnav.map.MapHolder.prototype.changeZoom=function(number){
-    var curzoom=this.getView().getZoom();
+    var curzoom=this.requiredZoom; //this.getView().getZoom();
     curzoom+=number;
     if (curzoom < this.minzoom ) curzoom=this.minzoom;
     if (curzoom > (this.maxzoom+this.properties.getProperties().maxUpscale) ) {
         curzoom=this.maxzoom+this.properties.getProperties().maxUpscale;
     }
+    this.requiredZoom=curzoom;
     this.getView().setZoom(curzoom);
+    this.checkAutoZoom();
 };
 /**
  * draw the grid
@@ -461,8 +467,74 @@ avnav.map.MapHolder.prototype.navEvent=function(evdata){
                 this.setMapRotation(this.averageCourse);
             }
         }
+        this.checkAutoZoom();
         if (this.olmap) this.olmap.render();
 
+    }
+};
+
+avnav.map.MapHolder.prototype.checkAutoZoom=function(){
+    var enabled= this.properties.getProperties().autoZoom;
+    if (! this.olmap) return;
+    if (! enabled ||  !this.gpsLocked) {
+        if (this.olmap.getView().getZoom() != this.requiredZoom){
+            this.olmap.getView().setZoom(this.requiredZoom);
+        }
+        return;
+    }
+    if (this.slideIn) {
+        return;
+    }
+    //check if we have tiles available for this zoom
+    //otherwise change zoom but leave required as it is
+    var currentZoom=this.olmap.getView().getZoom();
+    var centerCoord=this.olmap.getView().getCenter();
+    var hasZoomInfo=false;
+    var zoomOk=false;
+    for (var tzoom=this.requiredZoom;tzoom >= this.minzoom;tzoom--){
+        zoomOk=false;
+        var layers=this.olmap.getLayers().getArray();
+        for (var i=0;i<layers.length && ! zoomOk;i++){
+            var layer=layers[i];
+            if (! layer.avnavOptions || ! layer.avnavOptions.zoomLayerBoundings) continue;
+            var source=layer.get('source');
+            if (!source || ! (source instanceof ol.source.XYZ)) continue;
+            hasZoomInfo=true;
+            var boundings=layer.avnavOptions.zoomLayerBoundings;
+            var centerTile=source.getTileGrid().getTileCoordForCoordAndZ(centerCoord,tzoom);
+            var z = centerTile[0];
+            var x = centerTile[1];
+            var y = centerTile[2];
+            y=-y-1; //we still have the old counting...
+            //TODO: have a common function for this and the tileUrlFunction
+            if (!boundings[z]) continue; //nothing at this zoom level
+            for (var bindex in boundings[z]) {
+                var zbounds = boundings[z][bindex];
+                if (zbounds.minx <= x && zbounds.maxx >= x && zbounds.miny <= y && zbounds.maxy >= y) {
+                    zoomOk = true;
+                    break;
+                }
+            }
+        }
+        if (zoomOk){
+            if (tzoom != this.olmap.getView().getZoom) {
+                avnav.log("autozoom change to "+tzoom);
+                this.olmap.getView().setZoom(tzoom); //should set our zoom in the post render
+            }
+            break;
+        }
+    }
+    if (! zoomOk && hasZoomInfo){
+        var nzoom=tzoom+1;
+        if (nzoom > this.requiredZoom) nzoom=this.requiredZoom;
+        if (nzoom != this.olmap.getView().getZoom) {
+            avnav.log("autozoom change to " + tzoom);
+            this.olmap.getView().setZoom(nzoom);
+        }
+    }
+    if (! hasZoomInfo){
+        //hmm - no zoominfo - better go back to the required zoom
+        this.olmap.getView().setZoom(this.requiredZoom);
     }
 };
 
@@ -774,6 +846,7 @@ avnav.map.MapHolder.prototype.setGpsLock=function(lock){
     if (! this.getProperties().getProperties().layers.boat && lock) return;
     this.gpsLocked=lock;
     if (lock) this.setCenter(gps);
+    this.checkAutoZoom();
 };
 
 /**
@@ -949,14 +1022,10 @@ avnav.map.MapHolder.prototype.triggerRender=function(){
  * @private
  */
 avnav.map.MapHolder.prototype.saveCenter=function(){
-    var raw=JSON.stringify({center:this.center,zoom:this.zoom});
+    var raw=JSON.stringify({center:this.center,zoom:this.zoom,requiredZoom: this.requiredZoom});
     localStorage.setItem(this.properties.getProperties().centerName,raw);
 };
 
-avnav.map.MapHolder.prototype.loadCenter=function(){
-    var raw=JSON.stringify({center:this.center,zoom:this.zoom});
-    localStorage.setItem(this.properties.getProperties().centerName,raw);
-};
 /**
  * set the visibility of the routing - this controls if we can select AIS targets
  * @param on
