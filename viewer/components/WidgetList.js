@@ -94,6 +94,13 @@ var widgetList=[
 
     },
     {
+        name: 'Zoom',
+        default: "--",
+        caption: 'Zoom',
+        classes: 'avn_zoomWidget',
+        dataKey: 'zoom'
+    },
+    {
         name: 'AisTarget',
         caption: 'AIS',
         wclass: AisTargetWidget

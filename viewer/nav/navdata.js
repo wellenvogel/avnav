@@ -314,6 +314,11 @@ NavData.prototype.getComputedValues=function(){
     return this.data;
 };
 
+NavData.prototype.getData=function(key,opt_default){
+    var rt=this.getValue(key);
+    if (rt === undefined) return opt_default;
+    return rt;
+};
 
 /**
  * get the value of a display item

@@ -3,7 +3,7 @@
  */
 
 var React=require("react");
-var NavData=require('../nav/navdata');
+var Store=require('../util/store');
 
 var Widget=React.createClass({
     propTypes:{
@@ -14,19 +14,19 @@ var Widget=React.createClass({
         averageKey: React.PropTypes.string,
         //formatter: React.PropTypes.func,
         onClick: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(NavData).isRequired,
+        store: React.PropTypes.instanceOf(Store).isRequired,
         classes: React.PropTypes.string
     },
     getInitialState: function(){
         return{
-            val:this.props.store.getValue(this.props.dataKey),
-            average:this.props.averageKey?this.props.store.getValue(this.props.averageKey):false
+            val:this.props.store.getData(this.props.dataKey),
+            average:this.props.averageKey?this.props.store.getData(this.props.averageKey):false
         };
     },
     componentWillReceiveProps: function(nextProps) {
         this.setState({
-            val:this.props.store.getValue(nextProps.dataKey),
-            average:nextProps.averageKey?this.props.store.getValue(nextProps.averageKey):false
+            val:this.props.store.getData(nextProps.dataKey),
+            average:nextProps.averageKey?this.props.store.getData(nextProps.averageKey):false
         });
     },
     render: function(){

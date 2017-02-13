@@ -194,6 +194,15 @@ avnav.map.MapHolder.prototype.getView=function(){
     return mview;
 };
 /**
+ * get the current map zoom level
+ * @returns {number|Number|*}
+ */
+avnav.map.MapHolder.prototype.getZoom=function(){
+    var v=this.olmap?this.olmap.getView():undefined;
+    if (! v ) return;
+    return v.getZoom();
+};
+/**
  * init the map (deinit an old one...)
  * @param {String} div
  * @param {Object} layerdata - the data as returned by the query to the description
@@ -331,8 +340,6 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
         curzoom=this.maxzoom+this.properties.getProperties().maxUpscale;
     }
     this.getView().setZoom(curzoom);
-    this.zoom=curzoom;
-    this.saveCenter();
 };
 /**
  * draw the grid
@@ -846,10 +853,9 @@ avnav.map.MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
  */
 avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     var newCenter= this.pointFromMap(this.getView().getCenter());
-    this.setCenterFromMove(newCenter);
-    this.saveCenter();
-
-
+    if (this.setCenterFromMove(newCenter)) {
+        this.saveCenter();
+    }
     avnav.log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
 
 };
@@ -874,6 +880,7 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
             new avnav.map.MapEvent(avnav.map.EventType.MOVE, {})
         );
     }
+    return true;
 };
 
 /**
@@ -882,7 +889,7 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
  */
 avnav.map.MapHolder.prototype.onPostCompose=function(evt){
     var newCenter=this.pointFromMap(evt.frameState.viewState.center);
-    this.setCenterFromMove(newCenter);
+    if (this.setCenterFromMove(newCenter)) this.saveCenter();
     if (this.opacity != this.lastOpacity){
         $(evt.context.canvas).css('opacity',this.opacity);
         this.lastOpacity=this.opacity;

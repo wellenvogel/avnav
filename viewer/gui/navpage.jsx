@@ -26,7 +26,8 @@ var keys={
     topWidgets: 'topWidgets',
     bottomLeftWidgets: 'bottomLeft',
     bottomRightWidgets: 'bottomRight',
-    routingVisible: 'routingVisible'
+    routingVisible: 'routingVisible',
+    zoom: 'zoom'
 };
 var widgetKeys=[keys.leftWidgets, keys.bottomLeftWidgets, keys.bottomRightWidgets,keys.topWidgets];
 var selectors={
@@ -107,16 +108,18 @@ avnav.gui.Navpage=function(){
     this.widgetLists[keys.leftWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {key:1,name:'CenterDisplay'},
-        {key:2,name:'AisTarget'},
-        {key:3,name:'ActiveRoute'},
-        {key:4,name:'LargeTime'}
+        {key:2,name:'Zoom',store: self.store, dataKey:keys.zoom},
+        {key:3,name:'AisTarget'},
+        {key:4,name:'ActiveRoute'},
+        {key:5,name:'LargeTime'}
     ];
     this.widgetLists[keys.topWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {key:1,name:'CenterDisplay',mode:'small'},
         {key:2,name:'AisTarget',mode:'small'},
         {key:3,name:'EditRoute',wide:true},
-        {key:4,name:'LargeTime'}
+        {key:4,name:'LargeTime'},
+        {key:5,name:'Zoom', store: self.store, dataKey:keys.zoom}
     ];
     this.widgetLists[keys.bottomLeftWidgets]=[
         //['BRG','DST','ETA','WpPosition']
@@ -292,6 +295,9 @@ avnav.gui.Navpage.prototype.widgetVisibility=function(){
     this.setWidgetVisibility(keys.leftWidgets,'LargeTime',clockVisible && ! isSmall&& ! routingVisible);
     this.setWidgetVisibility(keys.topWidgets,'LargeTime',clockVisible && isSmall && ! routingVisible);
     this.setWidgetVisibility(keys.topWidgets,'EditRoute', isSmall && routingVisible);
+    var zoomVisible=this.gui.properties.getProperties().showZoom;
+    this.setWidgetVisibility(keys.topWidgets,'Zoom', isSmall && zoomVisible);
+    this.setWidgetVisibility(keys.leftWidgets,'Zoom', !isSmall && zoomVisible);
     var oldRoutingVisibility=this.store.getData(keys.routingVisible,{}).routingVisible||false;
     var newRoutingVisibility=! isSmall && routingVisible;
     if (oldRoutingVisibility != newRoutingVisibility) this.store.storeData(keys.routingVisible,{routingVisible: newRoutingVisibility});
@@ -336,13 +342,24 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(){
         }
     }
 };
-
+/**
+ *
+ * @private
+ */
+avnav.gui.Navpage.prototype._updateZoom=function(){
+    var zoom=this.getMap().getZoom();
+    var old=this.store.getData(keys.zoom,0);
+    if (old != zoom){
+        this.store.storeData(keys.zoom,zoom);
+    }
+};
 avnav.gui.Navpage.prototype.timerEvent=function(){
     if (this.wpHidetime > 0 && this.wpHidetime <= new Date().getTime()){
         if (! (this.isSmall() && this.routingVisible))this.hideWpButtons();
     }
     this.buttonUpdate();
     this.widgetVisibility();
+    this._updateZoom();
 };
 avnav.gui.Navpage.prototype.hidePage=function(){
     this.hideWpButtons();
@@ -394,7 +411,8 @@ avnav.gui.Navpage.prototype.localInit=function(){
         self.updateLayout();
     });
     var widgetCreator=function(widget){
-        return WidgetFactory.createWidget(widget,self.navobject,{propertyHandler:self.gui.properties});
+        var store=widget.store||self.navobject;
+        return WidgetFactory.createWidget(widget,{propertyHandler:self.gui.properties, store:store});
     };
     this.resetWidgetLayouts();
     this.computeLayoutParam(); //initially fill the stores
@@ -507,6 +525,7 @@ avnav.gui.Navpage.prototype.navEvent=function(evdata){
 avnav.gui.Navpage.prototype.mapEvent=function(evdata){
     var self=this;
     if (! this.visible) return;
+    this._updateZoom();
     if (evdata.type == avnav.map.EventType.MOVE) {
         //show the center display if not visible
         if (!this.routingVisible) {
