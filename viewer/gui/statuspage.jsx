@@ -75,6 +75,7 @@ Statuspage.prototype.getPageContent=function(){
     var buttons=[
         {key:'Cancel'},
         {key:'StatusWpa'},
+        {key:'StatusAddresses'},
         {key:'StatusAndroid',android:true}
     ];
     this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
@@ -89,7 +90,7 @@ Statuspage.prototype.getPageContent=function(){
     };
     var StatusItem=function(props){
         return(
-            <div className="avn_status">
+            <div className="avn_status" onClick={props.onClick}>
                 <span className="avn_status_name">{props.name.replace(/\[.*\]/,'')}</span>
                 {props.info.items.map(function(el){
                     return <ChildStatus {...el} key={el.name}/>
@@ -100,7 +101,11 @@ Statuspage.prototype.getPageContent=function(){
     };
     var StatusList=ItemUpdater(ItemList,this.store,keys.statusItems);
     var listProperties={
-        onItemClick: function(item,opt_data){},
+        onItemClick: function(item,opt_data){
+            if (item.configname=="AVNHttpServer" && item.properties && item.properties.addresses){
+                self.gui.showPage("addresspage");
+            }
+        },
         itemClass: StatusItem
     };
     var Headline=function(props){
@@ -130,7 +135,10 @@ Statuspage.prototype.btnStatusAndroid=function(button,ev) {
     avnav.log("StatusAndroid clicked");
     avnav.android.showSettings();
 };
-
+Statuspage.prototype.btnStatusAddresses=function(button,ev) {
+    avnav.log("StatusAddresses clicked");
+    this.gui.showPage('addresspage');
+};
 (function(){
     //create an instance of the status page handler
     var page=new Statuspage();
