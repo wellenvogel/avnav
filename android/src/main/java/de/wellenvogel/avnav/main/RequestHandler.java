@@ -536,7 +536,7 @@ public class RequestHandler {
                             while (ifaddresses.hasMoreElements()){
                                 InetAddress ifaddress=ifaddresses.nextElement();
                                 if (ifaddress.getHostAddress().contains(":")) continue; //skip IPV6 for now
-                                String ifurl="http://"+ifaddress.getHostAddress()+":"+serverInfo.address.getPort();
+                                String ifurl=ifaddress.getHostAddress()+":"+serverInfo.address.getPort();
                                 addr.put(ifurl);
                             }
                         }
