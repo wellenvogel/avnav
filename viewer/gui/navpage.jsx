@@ -295,7 +295,7 @@ avnav.gui.Navpage.prototype.widgetVisibility=function(){
     this.setWidgetVisibility(keys.leftWidgets,'LargeTime',clockVisible && ! isSmall&& ! routingVisible);
     this.setWidgetVisibility(keys.topWidgets,'LargeTime',clockVisible && isSmall && ! routingVisible);
     this.setWidgetVisibility(keys.topWidgets,'EditRoute', isSmall && routingVisible);
-    var zoomVisible=this.gui.properties.getProperties().showZoom;
+    var zoomVisible=this.gui.properties.getProperties().showZoom && ! routingVisible;
     this.setWidgetVisibility(keys.topWidgets,'Zoom', isSmall && zoomVisible);
     this.setWidgetVisibility(keys.leftWidgets,'Zoom', !isSmall && zoomVisible);
     var oldRoutingVisibility=this.store.getData(keys.routingVisible,{}).routingVisible||false;
@@ -348,8 +348,8 @@ avnav.gui.Navpage.prototype.buttonUpdate=function(){
  */
 avnav.gui.Navpage.prototype._updateZoom=function(){
     var bzoom=this.getMap().getZoom();
-    var zoom=bzoom.current;
-    if (bzoom.current != bzoom.required) zoom+="("+bzoom.required+")";
+    var zoom=this.formatter.formatDecimalOpt(bzoom.current,2,1);
+    if (bzoom.current != bzoom.required) zoom+="("+this.formatter.formatDecimalOpt(bzoom.required,2,1)+")";
     var old=this.store.getData(keys.zoom,0);
     if (old != zoom){
         this.store.storeData(keys.zoom,zoom);
@@ -506,6 +506,9 @@ avnav.gui.Navpage.prototype.widgetClick=function(widgetDescription){
     }
     if (widgetDescription.name == "EditRoute"){
         this.gui.showPage("routepage");
+    }
+    if (widgetDescription.name == "Zoom"){
+        this.gui.map.checkAutoZoom(true);
     }
 };
 

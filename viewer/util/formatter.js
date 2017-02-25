@@ -100,6 +100,14 @@ Formatter.prototype.formatDecimal=function(number,fix,fract,addSpace){
     }
     return sign+rt;
 };
+Formatter.prototype.formatDecimalOpt=function(number,fix,fract,addSpace){
+    number=parseFloat(number);
+    if (isNaN(number)) return Formatter.prototype.formatDecimal(number,fix,fract,addSpace);
+    if (Math.floor(number) == number){
+        return Formatter.prototype.formatDecimal(number,fix,0,addSpace);
+    }
+    return Formatter.prototype.formatDecimal(number,fix,fract,addSpace);
+};
 
 /**
  *

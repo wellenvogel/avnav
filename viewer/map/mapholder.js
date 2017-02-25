@@ -111,6 +111,7 @@ avnav.map.MapHolder=function(properties,navobject){
     this.center=[0,0];
     this.zoom=-1;
     this.requiredZoom=-1;
+    this.mapZoom=-1; //the last zoom we required from the map
     try {
         var currentView = localStorage.getItem(this.properties.getProperties().centerName);
         if (currentView) {
@@ -273,6 +274,9 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         this.olmap.on('dblclick', function(evt) {
             return self.onDoubleClick(evt);
         });
+        this.olmap.getView().on('change:resolution',function(evt){
+            return self.onZoomChange(evt);
+        });
     }
     var recenter=true;
     var view;
@@ -289,7 +293,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             this.doSlide(this.properties.getProperties().slideLevels);
         }
         this.requiredZoom=this.zoom;
-        view.setZoom(this.zoom);
+        this.setZoom(this.zoom);
         recenter=false;
         var lext;
         if (layers.length > 0) {
@@ -302,7 +306,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
                         var view = self.getView();
                         var lext = layers[0].avnavOptions.extent;
                         if (lext !== undefined) view.fit(lext,self.olmap.getSize());
-                        view.setZoom(self.minzoom);
+                        self.setZoom(self.minzoom);
                         self.center = self.pointFromMap(view.getCenter());
                         self.zoom = view.getZoom();
 
@@ -320,7 +324,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             view = this.getView();
             lext=layers[0].avnavOptions.extent;
             if (lext !== undefined) view.fit(lext,self.olmap.getSize());
-            view.setZoom(this.minzoom);
+            this.setZoom(this.minzoom);
             this.center=this.pointFromMap(view.getCenter());
             this.zoom=view.getZoom();
 
@@ -344,8 +348,19 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
         curzoom=this.maxzoom+this.properties.getProperties().maxUpscale;
     }
     this.requiredZoom=curzoom;
-    this.getView().setZoom(curzoom);
+    this.setZoom(curzoom);
     this.checkAutoZoom();
+};
+/**
+ * set the zoom at the map and remember the zoom we required
+ * @private
+ * @param newZoom
+ */
+avnav.map.MapHolder.prototype.setZoom=function(newZoom){
+    if (! this.olmap) return;
+    console.log("set new zoom "+newZoom);
+    this.mapZoom=newZoom;
+    this.olmap.getView().setZoom(newZoom);
 };
 /**
  * draw the grid
@@ -473,12 +488,12 @@ avnav.map.MapHolder.prototype.navEvent=function(evdata){
     }
 };
 
-avnav.map.MapHolder.prototype.checkAutoZoom=function(){
-    var enabled= this.properties.getProperties().autoZoom;
+avnav.map.MapHolder.prototype.checkAutoZoom=function(opt_force){
+    var enabled= this.properties.getProperties().autoZoom||opt_force;
     if (! this.olmap) return;
-    if (! enabled ||  !this.gpsLocked) {
+    if (! enabled ||  !(this.gpsLocked||opt_force)) {
         if (this.olmap.getView().getZoom() != this.requiredZoom){
-            this.olmap.getView().setZoom(this.requiredZoom);
+            this.setZoom(this.requiredZoom);
         }
         return;
     }
@@ -491,7 +506,7 @@ avnav.map.MapHolder.prototype.checkAutoZoom=function(){
     var centerCoord=this.olmap.getView().getCenter();
     var hasZoomInfo=false;
     var zoomOk=false;
-    for (var tzoom=this.requiredZoom;tzoom >= this.minzoom;tzoom--){
+    for (var tzoom=Math.floor(this.requiredZoom);tzoom >= this.minzoom;tzoom--){
         zoomOk=false;
         var layers=this.olmap.getLayers().getArray();
         for (var i=0;i<layers.length && ! zoomOk;i++){
@@ -517,9 +532,15 @@ avnav.map.MapHolder.prototype.checkAutoZoom=function(){
             }
         }
         if (zoomOk){
-            if (tzoom != this.olmap.getView().getZoom) {
+            if (tzoom != Math.floor(this.olmap.getView().getZoom())) {
                 avnav.log("autozoom change to "+tzoom);
-                this.olmap.getView().setZoom(tzoom); //should set our zoom in the post render
+                if (opt_force) this.requiredZoom=tzoom;
+                this.setZoom(tzoom); //should set our zoom in the post render
+            }
+            else{
+                if (opt_force && (tzoom != this.requiredZoom)){
+                    this.requiredZoom=tzoom;
+                }
             }
             break;
         }
@@ -529,12 +550,13 @@ avnav.map.MapHolder.prototype.checkAutoZoom=function(){
         if (nzoom > this.requiredZoom) nzoom=this.requiredZoom;
         if (nzoom != this.olmap.getView().getZoom) {
             avnav.log("autozoom change to " + tzoom);
-            this.olmap.getView().setZoom(nzoom);
+            if (opt_force) this.requiredZoom=nzoom;
+            this.setZoom(nzoom);
         }
     }
     if (! hasZoomInfo){
         //hmm - no zoominfo - better go back to the required zoom
-        this.olmap.getView().setZoom(this.requiredZoom);
+        this.setZoom(this.requiredZoom);
     }
 };
 
@@ -882,6 +904,23 @@ avnav.map.MapHolder.prototype.onClick=function(evt){
 avnav.map.MapHolder.prototype.onDoubleClick=function(evt){
     evt.preventDefault();
     this.getView().setCenter(this.pixelToCoord(evt.pixel));
+};
+
+avnav.map.MapHolder.prototype.onZoomChange=function(evt){
+    evt.preventDefault();
+    avnav.log("zoom changed");
+    if (this.mapZoom >=0){
+        var vZoom=this.getView().getZoom();
+        if (vZoom != this.mapZoom){
+            if (vZoom < this.minzoom) vZoom=this.minzoom;
+            if (vZoom > (this.maxzoom+this.properties.getProperties().maxUpscale) ) {
+                vZoom=this.maxzoom+this.properties.getProperties().maxUpscale;
+            }
+            console.log("zoom required from map: " + vZoom);
+            this.requiredZoom = vZoom;
+            if (vZoom != this.getView().getZoom()) this.getView().setZoom(vZoom);
+        }
+    }
 };
 /**
  * find the nearest matching point from an array
