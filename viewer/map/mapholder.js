@@ -358,7 +358,7 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
  */
 avnav.map.MapHolder.prototype.setZoom=function(newZoom){
     if (! this.olmap) return;
-    console.log("set new zoom "+newZoom);
+    avnav.log("set new zoom "+newZoom);
     this.mapZoom=newZoom;
     this.olmap.getView().setZoom(newZoom);
 };
@@ -916,7 +916,7 @@ avnav.map.MapHolder.prototype.onZoomChange=function(evt){
             if (vZoom > (this.maxzoom+this.properties.getProperties().maxUpscale) ) {
                 vZoom=this.maxzoom+this.properties.getProperties().maxUpscale;
             }
-            console.log("zoom required from map: " + vZoom);
+            avnav.log("zoom required from map: " + vZoom);
             this.requiredZoom = vZoom;
             if (vZoom != this.getView().getZoom()) this.getView().setZoom(vZoom);
         }
