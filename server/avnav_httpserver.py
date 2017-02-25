@@ -52,6 +52,13 @@ from avnav_router import *
 from avnav_trackwriter import *
 from avnav_httpserver import *
 from avnav_wpahandler import *
+hasIfaces=False
+try:
+  import netifaces
+  hasIfaces=True
+except:
+  pass
+import threading
 
  
   
@@ -123,9 +130,11 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
         self.overwrite_map[mtype['extension']]=mtype['type']
     server_address=(cfgparam['httpHost'],int(cfgparam['httpPort']))
     AVNWorker.__init__(self, cfgparam)
-    self.type=AVNWorker.Type.HTTPSERVER;
+    self.type=AVNWorker.Type.HTTPSERVER
     self.handlers={}
-    self.gemfCondition=threading.Condition();
+    self.interfaceReader=None
+    self.gemfCondition=threading.Condition()
+    self.addresslist=[]
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
   def getName(self):
     return "HTTPServer"
@@ -146,6 +155,10 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
         with open(fname,"rb") as f:
           self.emptytile=f.read()
     self.gemfhandler.start()
+    if hasIfaces:
+      self.interfaceReader=threading.Thread(target=self.readInterfaces)
+      self.interfaceReader.daemon=True
+      self.interfaceReader.start()
     self.serve_forever()
     
   def handlePathmapping(self,path):
@@ -288,7 +301,27 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       self.handlers[name]=rt
     return rt
 
+  #read out all IP addresses
+  def readInterfaces(self):
+    while True:
+      addresses=[]
+      interfaces=netifaces.interfaces()
+      for intf in interfaces:
+        intfaddr=netifaces.ifaddresses(intf)
+        if intfaddr is not None:
+          ips=intfaddr.get(netifaces.AF_INET)
+          if ips is not None:
+            for ip in ips:
+              if ip.get('addr') is not None:
+                addresses.append(ip.get('addr')+":"+str(self.server_port))
+      self.addresslist=addresses
+      time.sleep(5)
 
+  def getStatusProperties(self):
+    if self.addresslist is not None and len(self.addresslist) > 0:
+      return {'addresses':self.addresslist}
+    else:
+      return {}
 
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def __init__(self,request,client_address,server):
@@ -666,7 +699,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       entry={'configname':handler.getConfigName(),
              'config': handler.getParam(),
              'name':handler.getName(),
-             'info':handler.getInfo()}
+             'info':handler.getInfo(),
+             'properties':handler.getStatusProperties()}
       rt.append(entry)       
     return json.dumps({'handler':rt})
   def handleDebugLevelRequest(self,requestParam):
@@ -1018,4 +1052,5 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         #TODO: how to avoid timeout here?
         shutil.rmtree(dirname)
         return json.dumps(rt)
+
 

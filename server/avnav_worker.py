@@ -73,7 +73,9 @@ class AVNWorker(threading.Thread):
     self.setName(self.getName())
     self.info={'main':"started"}
     self.status={'main':self.Status.STARTED}
-    self.type=self.Type.DEFAULT;
+    self.type=self.Type.DEFAULT
+  def getStatusProperties(self):
+    return {}
   def getInfo(self):
     try:
       rt=self.info.copy();
