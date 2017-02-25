@@ -51,7 +51,7 @@ window.avnav={};
     require('./gui/aispage.jsx');
     require('./gui/aisinfopage.js');
     require('./gui/settingspage.jsx');
-    require('./gui/statuspage.js');
+    require('./gui/statuspage.jsx');
     require('./gui/gpspage.js');
     require('./gui/routepage.jsx');
     require('./gui/downloadpage.jsx');
