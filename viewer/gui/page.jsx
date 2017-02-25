@@ -140,6 +140,7 @@ Page.prototype._initPage=function(){
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
     var buttonFontSize=this.gui.properties.getButtonFontSize();
     this.store.replaceSubKey(this.globalKeys.buttons,buttonFontSize,'fontSize');
+    this.store.replaceSubKey(this.globalKeys.buttons,{android: avnav.android?true:false},'visibilityFlags');
     var Buttons=ItemUpdater(ButtonList,this.store,this.globalKeys.buttons);
     var PageData=ItemUpdater(React.createClass({
         render: function(){
@@ -149,12 +150,12 @@ Page.prototype._initPage=function(){
                     <div className="avn_left_panel">
                         <Content/>
                     </div>
-                    <Buttons className="avn_right_panel" buttonHandler={self}  visibilityFlags={{android: avnav.android?true:false}}/>
+                    <Buttons className="avn_right_panel" buttonHandler={self} />
                 </div>
             );
         }
     }),this.store,this.globalKeys.pageVisible);
-    ReactDOM.render(React.createElement(PageData,{}),this.getDiv()[0])
+    ReactDOM.render(React.createElement(PageData,{}),this.getDiv()[0]);
     return true;
     
 };
@@ -173,6 +174,17 @@ Page.prototype.changeButtonDisplay=function(key,display){
             this.store.replaceSubKey(this.globalKeys.buttons,buttons,'itemList')
         }
     }
+};
+/**
+ * change a button visibility tag
+ * @param {string} flag the tag name
+ * @param {boolean} value
+ */
+Page.prototype.changeButtonVisibilityFlag=function(flag,value){
+    var flags=this.store.getData(this.globalKeys.buttons,{}).visibilityFlags||{};
+    if (flags[flag] === value) return;
+    flags[flag]=value;
+    this.store.replaceSubKey(this.globalKeys.buttons,flags,'visibilityFlags');
 };
 /**
  * event handler that is called by the page event

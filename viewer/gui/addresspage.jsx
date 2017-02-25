@@ -4,6 +4,7 @@
 var ItemList=require('../components/ItemList.jsx');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var React=require('react');
+var QRCode=require('qrcode.react');
 
 var keys={
   addressItems:'addresses'
@@ -86,13 +87,17 @@ Addresspage.prototype.localInit=function() {
 Addresspage.prototype.getPageContent=function(){
     var self=this;
     var buttons=[
-        {key:'Cancel'},
+        {key:'Cancel'}
     ];
     this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
     var AddressItem=function(props){
+        var url="http://"+props.value;
         return(
             <div className="avn_address">
-                {props.value}
+                <div className="avn_url">
+                {url}
+                </div>
+                <QRCode value={url}/>
             </div>
 
         );

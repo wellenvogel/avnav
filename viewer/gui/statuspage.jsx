@@ -41,7 +41,13 @@ Statuspage.prototype.doQuery=function(){
         success: function(data,status){
             if (this.sequence != self.statusQuery) return;
             if (data.handler) {
-                data.handler.forEach(function(el){el.key=el.name});
+                data.handler.forEach(function(el){
+                    el.key=el.name;
+                    if (el.configname=="AVNHttpServer"){
+                        if (el.properties && el.properties.addresses ) self.changeButtonVisibilityFlag('addresses',true);
+                        else self.changeButtonVisibilityFlag('addresses',false);
+                    }
+                });
                 self.store.storeData(keys.statusItems, {itemList: data.handler});
             }
             self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
@@ -75,7 +81,7 @@ Statuspage.prototype.getPageContent=function(){
     var buttons=[
         {key:'Cancel'},
         {key:'StatusWpa'},
-        {key:'StatusAddresses'},
+        {key:'StatusAddresses',addresses:true},
         {key:'StatusAndroid',android:true}
     ];
     this.store.storeData(this.globalKeys.buttons,{itemList:buttons});

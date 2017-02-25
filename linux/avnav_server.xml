@@ -7,7 +7,7 @@
 	debugToLog="true"/>
 <Readers>
 <!--<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />-->
-<AVNGpsdFeeder useGpsd="true" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
+<AVNGpsdFeeder useGpsd="false" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
 <!-- <AVNSerialReader name="com4reader" port="3" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
 <!--<AVNSerialReader useFeeder="true" name="com8reader" port="7" baud="38400" minbaud="4800"/>-->

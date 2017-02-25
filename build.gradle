@@ -103,6 +103,7 @@ ospackage {
     requires 'python-serial'
     requires 'python-gdal'
     requires 'python-imaging'
+    requires 'python-netifaces'
     user='root'
     into ('/usr/lib/avnav') {
         from('viewer/build/release') {
