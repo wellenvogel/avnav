@@ -23,13 +23,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.gps.TrackWriter;
@@ -61,6 +68,9 @@ public class RequestHandler {
     private boolean chartHandlerRunning=false;
     private final Object chartHandlerMonitor=new Object();
 
+    public static class ServerInfo{
+        public InetSocketAddress address;
+    }
 
 
     class GemfChart{
@@ -232,6 +242,9 @@ public class RequestHandler {
     }
 
     ExtendedWebResourceResponse handleNavRequest(String url, String postData){
+        return handleNavRequest(url,postData,null);
+    }
+    ExtendedWebResourceResponse handleNavRequest(String url, String postData,ServerInfo serverInfo){
         Uri uri= Uri.parse(url);
         String type=uri.getQueryParameter("request");
         if (type == null) type="gps";
@@ -498,6 +511,40 @@ public class RequestHandler {
                     tw.put("name","TrackWriter");
                     tw.put("info",getGpsService().getTrackStatus());
                     items.put(tw);
+                }
+                if (serverInfo != null){
+                    //we are queried from the WebServer - just return all network interfaces
+                    JSONObject http=new JSONObject();
+                    http.put("name","AVNHttpServer");
+                    http.put("configname","AVNHttpServer"); //this is the part the GUI looks for
+                    JSONArray status=new JSONArray();
+                    JSONObject serverStatus=new JSONObject();
+                    serverStatus.put("info","listening on "+serverInfo.address.toString());
+                    serverStatus.put("name","HttpServer");
+                    serverStatus.put("status", GpsDataProvider.STATUS_NMEA);
+                    status.put(serverStatus);
+                    JSONObject info=new JSONObject();
+                    info.put("items",status);
+                    http.put("info",info);
+                    JSONObject props=new JSONObject();
+                    JSONArray addr=new JSONArray();
+                    try {
+                        Enumeration<NetworkInterface> intfs=NetworkInterface.getNetworkInterfaces();
+                        while (intfs.hasMoreElements()){
+                            NetworkInterface intf=intfs.nextElement();
+                            Enumeration<InetAddress> ifaddresses=intf.getInetAddresses();
+                            while (ifaddresses.hasMoreElements()){
+                                InetAddress ifaddress=ifaddresses.nextElement();
+                                if (ifaddress.getHostAddress().contains(":")) continue; //skip IPV6 for now
+                                String ifurl="http://"+ifaddress.getHostAddress()+":"+serverInfo.address.getPort();
+                                addr.put(ifurl);
+                            }
+                        }
+                    } catch (SocketException e1) {
+                    }
+                    props.put("addresses",addr);
+                    http.put("properties",props);
+                    items.put(http);
 
                 }
                 o.put("handler",items);

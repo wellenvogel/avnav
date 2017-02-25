@@ -140,7 +140,7 @@ Page.prototype._initPage=function(){
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
     var buttonFontSize=this.gui.properties.getButtonFontSize();
     this.store.replaceSubKey(this.globalKeys.buttons,buttonFontSize,'fontSize');
-    this.store.replaceSubKey(this.globalKeys.buttons,{android: avnav.android?true:false},'visibilityFlags');
+    this.changeButtonVisibilityFlag("android",avnav.android?true:false);
     var Buttons=ItemUpdater(ButtonList,this.store,this.globalKeys.buttons);
     var PageData=ItemUpdater(React.createClass({
         render: function(){

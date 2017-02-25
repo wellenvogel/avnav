@@ -39,16 +39,25 @@ Statuspage.prototype.doQuery=function(){
         cache:	false,
         context: {sequence:self.statusQuery},
         success: function(data,status){
+            var visibility={
+                addresses:false,
+                wpa:false
+            };
             if (this.sequence != self.statusQuery) return;
             if (data.handler) {
                 data.handler.forEach(function(el){
                     el.key=el.name;
                     if (el.configname=="AVNHttpServer"){
-                        if (el.properties && el.properties.addresses ) self.changeButtonVisibilityFlag('addresses',true);
-                        else self.changeButtonVisibilityFlag('addresses',false);
+                        if (el.properties && el.properties.addresses ) visibility.addresses=true;
+                    }
+                    if (el.configname == "AVNWpaHandler"){
+                        visibility.wpa=true;
                     }
                 });
                 self.store.storeData(keys.statusItems, {itemList: data.handler});
+            }
+            for (var k in visibility){
+                self.changeButtonVisibilityFlag(k,visibility[k]);
             }
             self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
         },
@@ -80,11 +89,12 @@ Statuspage.prototype.getPageContent=function(){
     var self=this;
     var buttons=[
         {key:'Cancel'},
-        {key:'StatusWpa'},
+        {key:'StatusWpa',wpa:true},
         {key:'StatusAddresses',addresses:true},
         {key:'StatusAndroid',android:true}
     ];
     this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.changeButtonVisibilityFlag('addresses',false);
     var ChildStatus=function(props){
         return (
             <div className="avn_child_status">
@@ -98,7 +108,7 @@ Statuspage.prototype.getPageContent=function(){
         return(
             <div className="avn_status" onClick={props.onClick}>
                 <span className="avn_status_name">{props.name.replace(/\[.*\]/,'')}</span>
-                {props.info.items.map(function(el){
+                {props.info && props.info.items && props.info.items.map(function(el){
                     return <ChildStatus {...el} key={el.name}/>
                 })}
             </div>

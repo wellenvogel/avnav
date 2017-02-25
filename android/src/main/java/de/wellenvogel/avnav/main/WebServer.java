@@ -66,7 +66,12 @@ public class WebServer {
                 if (bread != contentLength) throw new IOException("not enough post data");
                 postData=new String(data);
             }
-            RequestHandler.ExtendedWebResourceResponse resp=activity.getRequestHandler().handleNavRequest(url, postData);
+            RequestHandler.ServerInfo info=null;
+            if (listener != null){
+                info=new RequestHandler.ServerInfo();
+                info.address=new InetSocketAddress(listener.getPort());
+            }
+            RequestHandler.ExtendedWebResourceResponse resp=activity.getRequestHandler().handleNavRequest(url, postData,info);
             if (resp != null){
                 httpResponse.setHeader("content-type","application/json");
                 for (String k:resp.getHeaders().keySet()){
