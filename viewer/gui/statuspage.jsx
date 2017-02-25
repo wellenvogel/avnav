@@ -48,7 +48,7 @@ Statuspage.prototype.doQuery=function(){
         },
         error: function(status,data,error){
             avnav.log("status query error");
-            if (this.sequence != this.self.statusQuery) return;
+            if (this.sequence != self.statusQuery) return;
             self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
         },
         timeout: self.gui.properties.getProperties().statusQueryTimeout*0.9
