@@ -211,7 +211,7 @@ public class RequestHandler {
                 if (fname.startsWith(CHARTPREFIX)){
                     return handleChartRequest(fname);
                 }
-                InputStream is=activity.assetManager.open(fname);
+                InputStream is=activity.assetManager.open(fname.replaceAll("\\?.*",""));
                 return new WebResourceResponse(mimeType(fname),"",is);
             } catch (IOException e) {
                 e.printStackTrace();
