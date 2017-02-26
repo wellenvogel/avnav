@@ -76,11 +76,7 @@ boundingbox_xml='''
 <BoundingBox minlon="%(minlon).11G" minlat="%(minlat).11G" maxlon="%(maxlon).11G" maxlat="%(maxlat).11G"
    title="%(title)s"/>
 '''
-boundings_xml='''
-<LayerBoundings>
-%(boundings)s
-</LayerBoundings>
-'''
+
 
 zoom_boundings_entry='''
 <BoundingBox minx="%(minx)s" maxx="%(maxx)s" miny="%(miny)s" maxy="%(maxy)s">
