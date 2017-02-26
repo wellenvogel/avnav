@@ -7,7 +7,7 @@ var React=require('react');
 var QRCode=require('qrcode.react');
 
 var keys={
-  addressItems:'addresses'
+  infoItems:'addresses'
 };
 
 
@@ -51,16 +51,16 @@ Addresspage.prototype.doQuery=function(){
                             for (var i=0;i<el.properties.addresses.length;i++){
                                 items.push({key:i,value:el.properties.addresses[i]});
                             }
-                            self.store.storeData(keys.addressItems,{itemList:items});
+                            self.store.storeData(keys.infoItems,{itemList:items});
                         }
                         else{
-                            self.store.storeData(keys.addressItems,{itemList:[]});
+                            self.store.storeData(keys.infoItems,{itemList:[]});
                         }
                     }
                 });
             }
             if (! hasServer){
-                self.store.storeData(keys.addressItems,{itemList:[]});
+                self.store.storeData(keys.infoItems,{itemList:[]});
             }
             self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
         },
@@ -102,7 +102,7 @@ Addresspage.prototype.getPageContent=function(){
 
         );
     };
-    var AddressList=ItemUpdater(ItemList,this.store,keys.addressItems);
+    var AddressList=ItemUpdater(ItemList,this.store,keys.infoItems);
     var listProperties={
         onItemClick: function(item,opt_data){},
         itemClass: AddressItem

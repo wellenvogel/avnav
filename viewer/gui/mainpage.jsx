@@ -206,6 +206,10 @@ avnav.gui.Mainpage.prototype.btnMainAndroid=function (button,ev) {
     avnav.log("main android settings clicked");
     avnav.android.showSettings();
 };
+avnav.gui.Mainpage.prototype.btnMainInfo=function (button,ev) {
+    avnav.log("main info clicked");
+    this.gui.showPage('infopage');
+};
 avnav.gui.Mainpage.prototype.btnMainCancel=function (button,ev) {
     avnav.log("main cancel clicked");
     avnav.android.goBack();

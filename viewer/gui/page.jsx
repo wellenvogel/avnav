@@ -155,6 +155,10 @@ Page.prototype._initPage=function(){
             );
         }
     }),this.store,this.globalKeys.pageVisible);
+    var pageDiv=this.getDiv();
+    if (!pageDiv.length){
+        $('body').append($('<div id="avi_'+this.name+'" class="avn_page avn_hidden"></div>'));
+    }
     ReactDOM.render(React.createElement(PageData,{}),this.getDiv()[0]);
     return true;
     

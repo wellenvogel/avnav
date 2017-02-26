@@ -1326,6 +1326,7 @@ button.avb_AisInfoList {
   right: 0;
   overflow-y: hidden;
   overflow-x: hidden;
+  .flex-display();
 }
 
 .avn_listWrapper .avn_listContainer {
@@ -1671,143 +1672,10 @@ button.avb_GpsCenter{
 }
 
 
-
-
 .avn_clear {
   clear: both;
 }
 
-.avn_settings_line {
-  line-height: 2em;
-  margin-bottom: 8px;
-}
-
-.avn_settings_line input[type="checkbox"] {
-  height: 2em;
-  width: 2em;
-  margin-left: 1em;
-  margin-right: 5px;
-}
-
-.avn_slider {
-  float: left;
-  width: 30em;
-  height: 1em;
-  margin-left: 1em;
-  margin-right: 10px;
-  margin-bottom: 10px;
-  margin-top: 10px;
-}
-
-.avn_slider_label {
-  float: left;
-  width: 12em;
-  margin-top: 10px;
-}
-
-.avn_slider_out {
-  float: left;
-  width: 8em;
-  margin-top: 10px;
-}
-
-.avn_rangeslider__handle {
-  background: white;
-  border: 1px solid;
-  .nightBorderFade(#ccc);
-  cursor: pointer;
-  display: inline-block;
-  position: absolute;
-  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, rgba(255, 255, 255, 0)), color-stop(100%, rgba(0, 0, 0, 0.1)));
-  background-image: -webkit-linear-gradient(rgba(255, 255, 255, 0), rgba(0, 0, 0, 0.1));
-  background-image: -moz-linear-gradient(rgba(255, 255, 255, 0), rgba(0, 0, 0, 0.1));
-  background-image: -o-linear-gradient(rgba(255, 255, 255, 0), rgba(0, 0, 0, 0.1));
-  background-image: linear-gradient(rgba(255, 255, 255, 0), rgba(0, 0, 0, 0.1));
-  -webkit-box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
-  -moz-box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
-  -webkit-border-radius: 50%;
-  -moz-border-radius: 50%;
-  -ms-border-radius: 50%;
-  -o-border-radius: 50%;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  //top: -5px;
-}
-
-.avn_rangeslider__handle:after {
-  content: "";
-  display: block;
-  width: 18px;
-  height: 18px;
-  margin: auto;
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, rgba(0, 0, 0, 0.13)), color-stop(100%, rgba(255, 255, 255, 0)));
-  background-image: -webkit-linear-gradient(rgba(0, 0, 0, 0.13), rgba(255, 255, 255, 0));
-  background-image: -moz-linear-gradient(rgba(0, 0, 0, 0.13), rgba(255, 255, 255, 0));
-  background-image: -o-linear-gradient(rgba(0, 0, 0, 0.13), rgba(255, 255, 255, 0));
-  background-image: linear-gradient(rgba(0, 0, 0, 0.13), rgba(255, 255, 255, 0));
-  -webkit-border-radius: 50%;
-  -moz-border-radius: 50%;
-  -ms-border-radius: 50%;
-  -o-border-radius: 50%;
-  border-radius: 50%;
-}
-
-.avn_rangeslider__fill {
-  background: #298FC9;
-  position: absolute;
-  top: 0;
-  display: block;
-  width: 100%;
-  -webkit-box-shadow: 0px 2px 2px rgba(255, 255, 255, 0.25), inset 0px 1px 3px rgba(0, 0, 0, 0.3);
-  -moz-box-shadow: 0px 2px 2px rgba(255, 255, 255, 0.25), inset 0px 1px 3px rgba(0, 0, 0, 0.3);
-  box-shadow: 0px 2px 2px rgba(255, 255, 255, 0.25), inset 0px 1px 3px rgba(0, 0, 0, 0.3);
-  -webkit-border-radius: 10px;
-  -moz-border-radius: 10px;
-  -ms-border-radius: 10px;
-  -o-border-radius: 10px;
-  border-radius: 10px;
-  height: 20px;
-}
-
-.avn_color {
-  float: left;
-  width: 150px;
-  margin-left: 1em;
-  margin-right: 1em;
-  margin-bottom: 10px;
-  height: 2em;
-}
-
-.avn_color_label {
-  float: left;
-  width: 12em;
-  margin-top: 10px;
-}
-
-.avn_color_out {
-  float: left;
-  width: 8em;
-  margin-top: 10px;
-}
-
-.avn_settings_reset {
-  .avn_iconButton('images/icons-new/ic_delete.svg');
-  margin-top: 5px;
-  margin-left: 20px;
-  float: left;
-}
-
-.avn_settings_reset:active {
-  border: 2px solid;
-  .nightBorderFade(#6B6B6B);
-}
 
 button.avb_SettingsCancel {
   .avn_iconButton('images/icons-new/ic_clear.svg');
@@ -1823,6 +1691,24 @@ button.avb_SettingsDefaults {
 
 button.avb_SettingsAndroid {
   .avn_iconButton('images/icons-new/ic_android.svg');
+}
+
+/*-------------------------------------------------------------------------------
+    info page
+  -------------------------------------------------------------------------------
+*/
+.avn_infoText{
+  padding-left: 1em;
+  padding-right: 1em;
+  overflow: auto;
+}
+.avn_infoText p {
+  margin-top: 0.2em;
+  margin-bottom: 0.5em;
+}
+.avn_infoText h3{
+  margin-top: 1em;
+  margin-bottom: 0.2em;
 }
 
 /*-------------------------------------------------------------------------------
@@ -1924,6 +1810,9 @@ button.avb_MainCancel {
 
 button.avb_MainAndroid {
   .avn_iconButton('images/icons-new/ic_android.svg');
+}
+.avb_MainInfo{
+  .avn_iconButton('images/icons-new/ic_info.svg');
 }
 
 /*-------------------------------------------------------------------------------
