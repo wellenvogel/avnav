@@ -134,6 +134,11 @@ public class WebServer {
             if (!method.equals("GET") && !method.equals("HEAD") ) {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
+            if (url.equals("")|| url.equals("/")) {
+                httpResponse.setStatusCode(301);
+                httpResponse.addHeader("Location","/viewer/avnav_viewer.html?onAndroid=1");
+                return;
+            }
             url=url.replaceAll("^/*","");
             url=url.replaceAll("\\?.*","");
             //TODO: restrict access
