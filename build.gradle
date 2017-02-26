@@ -1,5 +1,9 @@
 import java.text.SimpleDateFormat
 import org.apache.commons.net.ftp.*
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder
+import org.eclipse.jgit.lib.Repository
+import org.eclipse.jgit.lib.ObjectId
+import org.gradle.api.*
 buildscript{
 	repositories{
 		mavenCentral()
@@ -8,6 +12,7 @@ buildscript{
         classpath localGroovy()
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.6.1'
         classpath 'commons-net:commons-net:3.3'
+        classpath 'org.eclipse.jgit:org.eclipse.jgit:4.6.0.201612231935-r'
     }
 }
 
@@ -16,7 +21,34 @@ repositories{
 }
 
 
+void checkGitVersion(String version){
+    logger.info("checking for git tag $version")
+    FileRepositoryBuilder builder=new FileRepositoryBuilder()
+    Repository repo=builder.readEnvironment().findGitDir(project.buildDir).setMustExist(true).build()
+    ObjectId head=repo.resolve("HEAD")
+    logger.info "current git commit=$head.name"
+    def tags=repo.getTags()
+    def tagCommit=tags.get(version)
+    assert tagCommit,"unable to find tag $version"
+    ObjectId tagResolved=repo.resolve(tagCommit.getName())
+    assert tagResolved.getName() == head.getName(),"found $version ($tagResolved.name) but this is not the current HEAD"
+    logger.info "version $version resolves to $tagCommit"
+}
 
+if (project.hasProperty("avnavRelease")){
+    project.ext.avnavRelease=true
+    logger.lifecycle "setting avnavRelease"
+}
+else {
+    project.ext.avnavRelease=false
+    def cmdLineTasks=project.gradle.getStartParameter().getTaskNames()
+    cmdLineTasks.each { String t ->
+        if (t.matches(/.*[rR]elease.*/)) {
+            project.ext.avnavRelease = true
+            logger.lifecycle "seeting avnavRelease due to task $t"
+        }
+    }
+}
 if (! project.hasProperty('packageVersion')){
     SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
     project.ext.avnavVersion=f.format(new Date())
@@ -36,7 +68,14 @@ apply plugin: 'java'
 
 apply plugin: 'nebula.ospackage-base'
 
-
+task testGit<<{
+    try {
+        checkGitVersion((project.avnavRelease ? "release-" : "") + project.avnavVersion)
+    }catch (Error t){
+        if (!project.hasProperty("avnavIgnoreGit")) throw t;
+        logger.lifecycle "### ignoring failed GIT check ###"
+    }
+}
 
 def taskgroup="avnav"
 ['assembleRelease','assembleDebug','assembleBeta','clean'].each { tt ->
@@ -191,7 +230,7 @@ task release{
     doLast {
         println "all release packages have been build"
     }
-    dependsOn releaseRpm, releaseDeb,raspiDeb,assembleReleaseAndroid
+    dependsOn testGit, releaseRpm, releaseDeb,raspiDeb,assembleReleaseAndroid
     if (onWindows){
         dependsOn windowsBuild
     }
@@ -390,6 +429,22 @@ task uploadViewer(type: UploadTask){
     dependsOn releaseViewer
 }
 
+task uploadViewerRelease(type: UploadTask){
+    inputFiles=fileTree(dir:"viewer/build/release")
+    inputFiles+=fileTree("viewer/demo",{
+        include "demo-osm/**"
+    })
+    inputFiles+=fileTree("viewer/demo",{
+        include "demo-eniro/**"
+    })
+    inputFiles+=fileTree("viewer/demo",{
+        include "demo-bsh/**"
+    })
+    baseDir="/www/software/avnav/viewerr"
+    //deleteTargetDir=true
+    dependsOn releaseViewer
+}
+
 task upload{
     doLast {
         println "###uploaded artifacts to version dir $project.avnavVersion###"
@@ -400,12 +455,28 @@ task upload{
     }
 }
 
+task uploadRelease{
+    doLast {
+        println "###upload release artifacts to version dir $project.avnavVersion###"
+    }
+    dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadAndroidRelease,uploadViewerRelease
+    if (onWindows){
+        dependsOn uploadWindows
+    }
+}
 
 afterEvaluate{
     tasks.withType(org.gradle.api.tasks.GradleBuild.class){GradleBuild b->
         b.dependsOn pkgVersion
+        if (project.avnavRelease) b.dependsOn testGit
         b.doFirst{
             startParameter.projectProperties.put('packageVersion',project.avnavVersion)
+        }
+    }
+    if (project.avnavRelease) {
+        tasks.withType(UploadTask.class) { UploadTask task ->
+            task.baseDir = "/www/software/avnav/downloads/release"
+
         }
     }
 }
