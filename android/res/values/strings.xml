@@ -46,7 +46,7 @@
         and should install the AvNavXwalk runtime for the app to work properly.
         Do you want to install it now?
         Required runtime version=</string>
-    <string name="xwalkNotFoundText">You selected to run with the xwalk runtime but i is not installed yet.
+    <string name="xwalkNotFoundText">You selected to run with the xwalk runtime but it is not installed yet.
         Do you want to install it now?
         Required runtime version=</string>
     <string name="btXwalDownload">Download</string>

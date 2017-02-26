@@ -37,7 +37,7 @@ public class Info extends Activity {
             Log.e(Constants.LOGPRFX,"unable to access version name");
         }
         setText("version.txt",R.id.txVersion);
-        setText("info.html",R.id.txInfo);
+        setText("viewer/info.html",R.id.txInfo);
         TextView xwalk=(TextView)findViewById(R.id.txXwalk);
         boolean xw= SettingsActivity.isXwalRuntimeInstalled(this);
         xwalk.setText("XWALK V "+ Constants.XWALKVERSION+" \n("+(xw?"installed":"not installed")+")");
@@ -61,13 +61,16 @@ public class Info extends Activity {
         AssetManager assetManager=getAssets();
         try {
             InputStream input = assetManager.open(fname);
-            int size = input.available();
-            byte[] buffer = new byte[size];
-            input.read(buffer);
+            int BUFSIZE=10000;
+            byte[] buffer = new byte[BUFSIZE];
+            int av;
+            StringBuilder builder=new StringBuilder();
+            while ((av=input.read(buffer)) > 0){
+                builder.append(new String(buffer,0,av));
+            }
             input.close();
-            String text = new String(buffer);
             TextView txtContent=(TextView)findViewById(id);
-            if (txtContent != null) txtContent.setText(Html.fromHtml(text));
+            if (txtContent != null) txtContent.setText(Html.fromHtml(builder.toString()));
         } catch (Exception e){
             Log.e(Constants.LOGPRFX,"exception setting text "+e.getLocalizedMessage());
         }
