@@ -18,4 +18,9 @@
         android:title="@string/enableDemoLabel"
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
+    <CheckBoxPreference
+        android:key="externalaccess"
+        android:title="@string/enableExternalAccess"
+        android:widgetLayout="@layout/preference_checkbox">
+    </CheckBoxPreference>
 </PreferenceScreen>

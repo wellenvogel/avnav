@@ -26,7 +26,6 @@ import java.util.Locale;
 public class WebServer {
 
     static final String NAME="AvNavWebServer";
-    private int serverPort = 34567; //TODO: make this configurable
 
     private BasicHttpProcessor httpproc = null;
     private BasicHttpContext httpContext = null;
@@ -36,6 +35,19 @@ public class WebServer {
 
     protected MainActivity activity;
     private boolean running;
+
+    public RequestHandler.ServerInfo getServerInfo(){
+        RequestHandler.ServerInfo info=null;
+        if (listener != null){
+            try {
+                info = new RequestHandler.ServerInfo();
+                info.address = listener.getLocalAddress();
+                info.listenAny = listener.getAny();
+                info.lastError = listener.getLastError();
+            }catch (Throwable t){}
+        }
+        return info;
+    };
 
     class NavRequestHandler implements HttpRequestHandler{
 
@@ -66,12 +78,8 @@ public class WebServer {
                 if (bread != contentLength) throw new IOException("not enough post data");
                 postData=new String(data);
             }
-            RequestHandler.ServerInfo info=null;
-            if (listener != null){
-                info=new RequestHandler.ServerInfo();
-                info.address=new InetSocketAddress(listener.getPort());
-            }
-            RequestHandler.ExtendedWebResourceResponse resp=activity.getRequestHandler().handleNavRequest(url, postData,info);
+
+            RequestHandler.ExtendedWebResourceResponse resp=activity.getRequestHandler().handleNavRequest(url, postData,getServerInfo());
             if (resp != null){
                 httpResponse.setHeader("content-type","application/json");
                 for (String k:resp.getHeaders().keySet()){
@@ -197,18 +205,15 @@ public class WebServer {
         private ServerSocket serversocket;
         private BasicHttpParams params;
         private HttpService httpService;
+        private boolean any; //bind to any
+        private int port;
+        private String lastError=null;
 
-        Listener() throws IOException {
+
+        Listener(boolean any, int port) throws IOException {
+            this.port=port;
+            this.any=any;
             serversocket = new ServerSocket();
-            try {
-                serversocket.setReuseAddress(true);
-                serversocket.bind(new InetSocketAddress(serverPort));
-            }catch (IOException ex){
-                try {
-                    serversocket.close();
-                }catch (IOException i){}
-                throw ex;
-            }
             params = new BasicHttpParams();
             params
                     .setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 5000)
@@ -237,7 +242,18 @@ public class WebServer {
         }
 
         int getPort(){
-            return serversocket.getLocalPort();
+            return port;
+        }
+        String getLastError(){
+            return lastError;
+        }
+        InetSocketAddress getLocalAddress(){
+            if (listener == null) return new InetSocketAddress(port);
+            return new InetSocketAddress(serversocket.getInetAddress(),port);
+        }
+
+        boolean getAny(){
+            return any;
         }
 
         void close(){
@@ -249,6 +265,28 @@ public class WebServer {
         @Override
         public void run(){
             AvnLog.i(NAME,"Listening on port " + this.serversocket.getLocalPort());
+            lastError=null;
+            try {
+                serversocket.setReuseAddress(true);
+                if (any) serversocket.bind(new InetSocketAddress(port));
+                else {
+                    InetAddress local=null;
+                    try {
+                        local = InetAddress.getByName("localhost");
+                    }catch(Exception ex){
+                        AvnLog.e("Exception getting localhost: "+ex);
+                    }
+                    if (local == null) local=InetAddress.getLocalHost();
+                    serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
+                }
+            }catch (IOException ex){
+                AvnLog.e("Exception while starting server "+ex);
+                lastError=ex.getLocalizedMessage();
+                try {
+                    serversocket.close();
+                }catch (IOException i){}
+                return;
+            }
             while (!Thread.interrupted()) {
                 try {
                     Socket socket = this.serversocket.accept();
@@ -261,13 +299,16 @@ public class WebServer {
                     t.setDaemon(true);
                     t.start();
                 } catch (SocketException e) {
+                    lastError=e.getLocalizedMessage();
                     break;
                 } catch (InterruptedIOException ex) {
                     Log.e(NAME,"Listener Interrupted ");
+                    lastError=ex.getLocalizedMessage();
                     break;
                 } catch (IOException e) {
                     Log.d(NAME,"Listener I/O error "
                             + e.getMessage());
+                    lastError=e.getLocalizedMessage();
                     break;
                 }
             }
@@ -323,20 +364,20 @@ public class WebServer {
         listener=null;
     }
 
-    public int startServer(String port) throws Exception {
+    public int startServer(String port, boolean anyAddress) throws Exception {
         int newPort=Integer.parseInt(port);
         if (running && listener != null) {
             int oldPort=listener.getPort();
-            if (oldPort == newPort) return oldPort;
+            boolean oldAny=listener.getAny();
+            if (oldPort == newPort && oldAny == anyAddress) return oldPort;
             AvnLog.d(NAME,"stop");
             running=false;
             listener.close();
             listener=null;
         }
-        this.serverPort=newPort;
         AvnLog.d(NAME,"start");
         running=true;
-        listener=new Listener();
+        listener=new Listener(anyAddress,newPort);
         listener.setDaemon(true);
         listener.start();
         return listener.getPort();

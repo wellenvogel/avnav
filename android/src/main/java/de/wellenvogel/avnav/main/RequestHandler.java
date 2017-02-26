@@ -70,6 +70,8 @@ public class RequestHandler {
 
     public static class ServerInfo{
         public InetSocketAddress address;
+        boolean listenAny=false;
+        String lastError=null;
     }
 
 
@@ -528,19 +530,25 @@ public class RequestHandler {
                     http.put("info",info);
                     JSONObject props=new JSONObject();
                     JSONArray addr=new JSONArray();
-                    try {
-                        Enumeration<NetworkInterface> intfs=NetworkInterface.getNetworkInterfaces();
-                        while (intfs.hasMoreElements()){
-                            NetworkInterface intf=intfs.nextElement();
-                            Enumeration<InetAddress> ifaddresses=intf.getInetAddresses();
-                            while (ifaddresses.hasMoreElements()){
-                                InetAddress ifaddress=ifaddresses.nextElement();
-                                if (ifaddress.getHostAddress().contains(":")) continue; //skip IPV6 for now
-                                String ifurl=ifaddress.getHostAddress()+":"+serverInfo.address.getPort();
-                                addr.put(ifurl);
+                    if (serverInfo.listenAny) {
+                        try {
+                            Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
+                            while (intfs.hasMoreElements()) {
+                                NetworkInterface intf = intfs.nextElement();
+                                Enumeration<InetAddress> ifaddresses = intf.getInetAddresses();
+                                while (ifaddresses.hasMoreElements()) {
+                                    InetAddress ifaddress = ifaddresses.nextElement();
+                                    if (ifaddress.getHostAddress().contains(":"))
+                                        continue; //skip IPV6 for now
+                                    String ifurl = ifaddress.getHostAddress() + ":" + serverInfo.address.getPort();
+                                    addr.put(ifurl);
+                                }
                             }
+                        } catch (SocketException e1) {
                         }
-                    } catch (SocketException e1) {
+                    }
+                    else{
+                        addr.put(serverInfo.address.getAddress().getHostAddress()+":"+serverInfo.address.getPort());
                     }
                     props.put("addresses",addr);
                     http.put("properties",props);

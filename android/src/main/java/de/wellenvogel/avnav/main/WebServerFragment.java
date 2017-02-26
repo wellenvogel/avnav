@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.main;
 import android.app.Fragment;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -75,7 +76,7 @@ public class WebServerFragment extends Fragment {
                     stopWebServer();
                 }
                 else {
-                    startWebServer();
+                    startWebServer(false);
                 }
 
             }
@@ -99,7 +100,7 @@ public class WebServerFragment extends Fragment {
             }
         });
         if (webServer == null) webServer=new WebServer((MainActivity)getActivity());
-        startWebServer();
+        startWebServer(true);
         timerSequence++;
         runnable=new TimerRunnable(timerSequence);
         handler.postDelayed(runnable,100);
@@ -137,25 +138,14 @@ public class WebServerFragment extends Fragment {
     public void onResume() {
         super.onResume();
         ((MainActivity)getActivity()).getToolbar().show().setOnMenuItemClickListener(this).setTitle(R.string.webserver);
-        String port=((MainActivity)getActivity()).sharedPrefs.getString(Constants.WEBSERVERPORT,"34567");
-        try {
-            int portnum = Integer.parseInt(port);
-            if (serverRunning) {
-                if (webServer.getPort() != portnum) {
-                    stopWebServer();
-                }
-            }
-            if (! serverRunning){
-                startWebServer();
-            }
-        }catch (Exception e){}
+        startWebServer(true);
     }
 
     private void launchBrowser(){
         if (! serverRunning) return;
         int port=webServer.getPort();
         String start="http://localhost:"+port+"/viewer/avnav_viewer.html?onAndroid=1";
-        if (BuildConfig.DEBUG) start+="&logNmea=1";
+        if (BuildConfig.DEBUG) start+="&log=1";
         AvnLog.d(LOGPRFX, "start browser with " + start);
         try {
             Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(start));
@@ -168,19 +158,17 @@ public class WebServerFragment extends Fragment {
         }
     }
 
-    private void startWebServer(){
-        if (serverRunning) return;
+    private void startWebServer(boolean force){
+        if (serverRunning && ! force) return;
         try {
-            webServer.startServer(((MainActivity)getActivity()).sharedPrefs.getString(Constants.WEBSERVERPORT,"34567"));
+            SharedPreferences prefs=((MainActivity)getActivity()).sharedPrefs;
+            webServer.startServer(prefs.getString(Constants.WEBSERVERPORT,"34567"),prefs.getBoolean(Constants.EXTERNALACCESS,false));
         } catch (Exception e) {
             e.printStackTrace();
-            txServer.setText("failed to start server: "+e.getLocalizedMessage());
             return;
         }
         serverRunning=true;
         AvnLog.d(LOGPRFX, "starting webserver");
-        int port=webServer.getPort();
-        txServer.setText("server running at port "+port);
         btLaunch.setEnabled(true);
         btServer.setText(R.string.stopServer);
 
@@ -227,6 +215,17 @@ public class WebServerFragment extends Fragment {
                 //???
             }
         }
+        String statusText="";
+        RequestHandler.ServerInfo info=webServer.getServerInfo();
+        if (info.lastError == null){
+            statusText="server running at "+info.address;
+            if (info.listenAny) statusText+="\nexternal access enabled";
+            else statusText+="\nexternal access disabled";
+        }
+        else{
+            statusText="server (port "+info.address.getPort()+") failed to run:\n"+info.lastError;
+        }
+        txServer.setText(statusText);
     }
 
     private class TimerRunnable implements Runnable{
