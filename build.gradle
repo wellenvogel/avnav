@@ -475,7 +475,7 @@ afterEvaluate{
     }
     if (project.avnavRelease) {
         tasks.withType(UploadTask.class) { UploadTask task ->
-            task.baseDir = "/www/software/avnav/downloads/release"
+            if (! task.name.equals("uploadViewerRelease")) task.baseDir = "/www/software/avnav/downloads/release"
 
         }
     }
