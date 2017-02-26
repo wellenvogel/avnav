@@ -3,9 +3,11 @@ package de.wellenvogel.avnav.main;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -24,9 +26,9 @@ public class GemfHandler {
             "        title=\"layer\"/>\n" +
             "\n" +
             "       <TileFormat width=\"256\" height=\"256\" mime-type=\"x-png\" extension=\"png\" />\n" +
-            "       <LayerBoundings>\n"+
-            "       %LAYERBOUNDINGS%\n"+
-            "       </LayerBoundings>\n"+
+            "       <LayerZoomBoundings>\n"+
+            "       %ZOOMBOUNDINGS%\n"+
+            "       </LayerZoomBoundings>\n"+
             "       \n" +
             "    </TileMap>\n";
     private static final String GEMFTEMPLATE="<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
@@ -40,7 +42,10 @@ public class GemfHandler {
             "   </TileMaps>\n" +
             " </TileMapService>\n" +
             " ";
-    private static final String LAYERBOUNDING="<BoundingBox minlon=\"%MINLON%\" minlat=\"%MINLAT%\" maxlon=\"%MAXLON%\" maxlat=\"%MAXLAT%\" title=\"gemfrange\"/>\n";
+    private static final String ZOOMBOUNDINGFRAME="<ZoomBoundings zoom=\"%ZOOM%\">\n" +
+            "%BOUNDINGS%\n" +
+            "</ZoomBoundings>\n";
+    private static final String ZOOMBOUNDING="<BoundingBox minx=\"%MINX%\" maxx=\"%MAXX%\" miny=\"%MINY%\" maxy=\"%MAXY%\" />\n";
     private GEMFFile gemf;
     public GemfHandler(GEMFFile file, String urlName){
         this.urlName=urlName;
@@ -155,36 +160,44 @@ public class GemfHandler {
         List<GEMFFile.GEMFRange> ranges = gemf.getRanges();
         SourceEntry mapSources[]=new SourceEntry[sources.size()];
         int idx=0;
-        boolean multiLayer=sources.keySet().size()>1;
         for (Integer src:sources.keySet()) {
-            StringBuilder layerBoundings=new StringBuilder();
+            StringBuilder zoomBoundings=new StringBuilder();
             BoundingBox extend = new BoundingBox();
             int minzoom = 1000;
             int maxzoom = 0;
             //we first have to find out min/max zoom as we only consider max zoom for bounding boxes
             //if we have multiple layers
+            HashSet<Integer> zooms=new HashSet<>();
             for (GEMFFile.GEMFRange range : ranges) {
                 if (range.sourceIndex != src.intValue()) continue;
+                zooms.add(range.zoom);
                 if (range.zoom < minzoom) minzoom = range.zoom;
                 if (range.zoom > maxzoom) maxzoom = range.zoom;
             }
-            for (GEMFFile.GEMFRange range : ranges) {
-                if (range.sourceIndex != src.intValue())continue;
-                if (multiLayer && range.zoom != maxzoom) continue;
-                BoundingBox rbb = range2boundingBox(range);
-                HashMap<String,String> values=new HashMap<String, String>();
-                rbb.fillValues(values);
-                layerBoundings.append(replaceTemplate(LAYERBOUNDING,values));
-                extend.extend(rbb);
+
+            for (Integer zoom : zooms) {
+                StringBuilder zb = new StringBuilder();
+                for (GEMFFile.GEMFRange range : ranges) {
+                    if (range.sourceIndex != src.intValue()) continue;
+                    if (range.zoom != zoom) continue;
+                    HashMap<String, String> values = new HashMap<String, String>();
+                    range.fillValues(values);
+                    zb.append(replaceTemplate(ZOOMBOUNDING, values));
+                }
+                HashMap<String, String> values = new HashMap<String, String>();
+                values.put("ZOOM", "" + zoom);
+                values.put("BOUNDINGS", zb.toString());
+                zoomBoundings.append(replaceTemplate(ZOOMBOUNDINGFRAME, values));
             }
+
             HashMap<String,String> values=new HashMap<String, String>();
             values.put("HREF", src.toString());
             values.put("MINZOOM", Integer.toString(minzoom));
             values.put("MAXZOOM", Integer.toString(maxzoom));
             extend.fillValues(values);
             values.put("TITLE", "");
-            values.put("LAYERBOUNDINGS",layerBoundings.toString());
-            SourceEntry e=new SourceEntry(src.intValue(),maxzoom,replaceTemplate(MAPSRCTEMPLATE,values));
+            values.put("ZOOMBOUNDINGS",zoomBoundings.toString());
+            SourceEntry e=new SourceEntry(src,maxzoom,replaceTemplate(MAPSRCTEMPLATE,values));
             mapSources[idx]=e;
             idx++;
             AvnLog.i(Constants.LOGPRFX, "read gemf overview " + gemf.getName() + " source=" + sources.get(src) + " ,minzoom= " + minzoom + ", maxzoom=" + maxzoom + " : " + extend.toString());

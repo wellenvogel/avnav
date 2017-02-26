@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -634,6 +635,14 @@ public class GEMFFile {
 			return String.format(
 					"GEMF Range: source=%d, zoom=%d, x=%d-%d, y=%d-%d, offset=0x%08X",
 					sourceIndex, zoom, xMin, xMax, yMin, yMax, offset);
+		}
+		public void fillValues(HashMap<String,String> map){
+			if (map == null) return;
+			map.put("MINX",""+xMin);
+			map.put("MINY",""+yMin);
+			map.put("MAXX",""+xMax);
+			map.put("MAXY",""+yMax);
+			map.put("ZOOM",""+zoom);
 		}
 	}
 
