@@ -38,6 +38,15 @@ Infopage.prototype.doQuery=function(){
             self.store.storeData(keys.info,{info:data});
         }
     });
+    var url="license.html";
+    $.ajax({
+        url: url,
+        dataType: 'html',
+        cache:	false,
+        success: function(data,status){
+            self.store.storeData(keys.info,{license:data});
+        }
+    });
 
 };
 
@@ -59,8 +68,13 @@ Infopage.prototype.getPageContent=function(){
         return <div className="avn_left_top">License Info</div>
     };
     var InfoItem=ItemUpdater(function(props){
-        return <div className="avn_infoText" dangerouslySetInnerHTML={{__html: props.info}}>
-        </div>
+        return (
+            <div className="avn_infoFrame">
+                <div className="avn_infoText" dangerouslySetInnerHTML={{__html: props.info}}>
+                </div>
+                <div className="avn_licenseText" dangerouslySetInnerHTML={{__html: props.license}}>
+                </div>
+            </div>);
     },self.store,keys.info);
     return React.createClass({
         render: function(){

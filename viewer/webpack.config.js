@@ -2,6 +2,8 @@ var path = require('path');
 var webpack = require('webpack');
 var CopyWebpackPlugin= require('copy-webpack-plugin');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var generateLicense=require('./collectLicense');
+var GenerateAssetsPlugin=require('generate-asset-webpack-plugin');
 
 var cssLoaderQuery="&localIdentName=[path][name]---[local]---[hash:base64:5]";
 var outDir="build/debug";
@@ -59,10 +61,16 @@ if (process.env.NODE_ENV !== 'production') {
     resolveAlias['openlayers$']=__dirname+"/node_modules/openlayers/dist/ol-debug.js";
 }
 
-var plugins=[
-            new CopyWebpackPlugin(copyList),
-            new ExtractTextPlugin("avnav_viewer.css",{ allChunks: true }),
-            ];
+var plugins = [
+    new CopyWebpackPlugin(copyList),
+    new ExtractTextPlugin("avnav_viewer.css", {allChunks: true}),
+    new GenerateAssetsPlugin({
+        filename: 'license.html',
+        fn: function (compilation, cb) {
+            generateLicense(function(data){cb(null,data)});
+        }
+    })
+];
 if (process.env.AVNAV_VERSION_FILE){
     plugins.push(new webpack.NormalModuleReplacementPlugin(/version\.js/,process.env.AVNAV_VERSION_FILE));
 }

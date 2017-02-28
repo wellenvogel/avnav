@@ -75,10 +75,3 @@ task debug(type: MyNpm){
     })
 	dependsOn npmInstall,pkgVersion
 }
-
-task createLicenseInfo(type:com.moowork.gradle.node.task.NodeTask){
-    script=file("collectLicense.js")
-    execOverrides{
-        it.standardOutput=new FileOutputStream("$buildDir/license.html")
-    }
-}
