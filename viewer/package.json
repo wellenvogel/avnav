@@ -34,6 +34,7 @@
     "less-loader": "^2.2.3",
     "loader-utils": "^0.2.15",
     "lodash.camelcase": "^4.1.1",
+    "nlf": "^1.4.3",
     "object-assign": "^4.1.0",
     "openlayers": "3.20.1",
     "postcss": "^5.0.21",
