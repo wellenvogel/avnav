@@ -25,8 +25,9 @@ var ActiveRouteWidget=React.createClass({
         };
     },
     getInitialState: function(){
-        //this.doLayoutUpdate=true;
-        return this._getValues();
+        var rt=this._getValues();
+        this.lastApproaching=rt.isApproaching;
+        return rt;
     },
     componentWillReceiveProps: function(nextProps) {
         var nextState=this._getValues();
@@ -51,6 +52,10 @@ var ActiveRouteWidget=React.createClass({
         var self=this;
         var classes="avn_widget avn_activeRouteWidget "+this.props.classes||"";
         if (this.state.isApproaching) classes +=" avn_route_display_approach ";
+        if (this.state.isApproaching != this.lastApproaching){
+            this.doLayoutUpdate=true;
+            this.lastApproaching=this.state.isApproaching;
+        }
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style}>
             <div className="avn_widgetInfoLeft">RTE</div>
