@@ -6,7 +6,7 @@
   </head>
   <body>
     <h1>AvNav Android</h1>
-    <p>Version 1.0.0.</p>
+    <p>Version 2017xxxx.</p>
     <p>Nachdem die Navigations-App für die <a href="beschreibung.html">Nutzung
         mit dem Raspberry Pi</a>&nbsp; bereits einige Jahre erfolgreich im
       Einsatz ist, gibt es jetzt auch eine Version, die direkt (ohne einen
@@ -50,7 +50,7 @@
       Einführungsseite:</p>
     <img alt="" src="android-start-first.png" height="400"><br>
     Nach dem Klick kommt man auf die Einstellungsseite:<br>
-    <img alt="" src="android-settings-main.png"><br>
+    <img style="width: 640px; height: 400px;" alt="" src="android-settings-main.png"><br>
     Hier können z.B. die Verzeichnisse&nbsp; für Karten und Tracks gewählt
     werden, sowie die Quelle für die Positionsdaten.<br>
     Eine Liste der Settings findet sich <a href="#Settings">hier</a>.<br>
@@ -58,7 +58,8 @@
     Die Settings Seite kann über den OK button (oben rechts) oder über den
     Zurück-Button verlassen werden. Im Normalmodus erreicht man damit die
     Hauptseite der App.<br>
-    <img alt="" src="android-main-ip.png"><br>
+    <br>
+    <img style="width: 640px; height: 400px;" alt="" src="android-main-ip.png"><br>
     <br>
     <br>
     <br>
@@ -107,9 +108,9 @@
     Wenn die App das erste mal gestartet wird, prüft sie, ob eine solche runtime
     installiert ist und bietet sonst an, das zu tun.<br>
     <br>
-    <img alt="" src="android-crosswalk-1.png"><br>
+    <img style="width: 640px; height: 400px;" alt="" src="android-crosswalk-1.png"><br>
     Hier gibt es 2 Möglichkeiten:<br>
-    <img alt="" src="android-crosswalk2.png"><br>
+    <img style="width: 639px; height: 399px;" alt="" src="android-crosswalk2.png"><br>
     GooglePlay - das installiert die neueste Version der runtime. Wenn man die
     App auch auf der neuesten Version hat, sollte das funktionieren.<br>
     Sonst die Möglichkeit ApkDownload auswählen (das geht zur passenden Version
@@ -131,7 +132,7 @@
     Im Browser Mode startet die App einen kleinen Webserver (also spielt so ein
     wenig Raspberry...) auf einem einstellbaren Port (34567) und zeigt die
     folgende Seite an:<br>
-    <img alt="" src="android-browser.png"><br>
+    <img style="width: 641px; height: 400px;" alt="" src="android-browser.png"><br>
     <br>
     Durch einen Klick auf Start Browser wird eine Auswahl der installierten
     Browser angezeigt, hier Chrome auswählen.<br>
@@ -140,12 +141,12 @@
     Startbildschirm hinzufügen" einstellen, dann noch einen sinnvollen Namen
     vergeben .<br>
     <br>
-    <img alt="" src="android-chrome.png"><br>
+    <img style="width: 640px; height: 400px;" alt="" src="android-chrome.png"><br>
     <br>
     Danach über den Home Button hier den Chrome Browser verlassen und auf dem
     Startbildschirm auf das neue Icon klicken.<br>
     Das sieht dann wieder gut aus:<br>
-    <img alt="" src="android-chrome2.png"><br>
+    <img style="width: 640px; height: 400px;" alt="" src="android-chrome2.png"><br>
     <br>
     Zum Beenden oben (roter Pfeil) über die Notifikation gehen (kleines
     Segelboot), darüber kommt man wieder in die App und kann sie über die
@@ -193,8 +194,17 @@
         <tr>
           <td>show demo charts</td>
           <td>Anzeige der Demo Karten (erfordert Internet Verbindung)</td>
-          <td><br>
+          <td>ein<br>
           </td>
+        </tr>
+        <tr>
+          <td>WebServer External Access</td>
+          <td>Im External Browser Mode können andere Geräte von aussen
+            zugreifen. Im Browser erreicht man dazu von der Status Seite eine
+            Anzeige von QR codes - wenn man diese mit dem anderen Gerät ausliest
+            (typisch der 2. angezeigte) und sich im gleichen WLAN befindet, kann
+            man mit dem 2. Gerät ebenfalls zugreifen.</td>
+          <td>aus</td>
         </tr>
       </tbody>
     </table>

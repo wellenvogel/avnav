@@ -323,15 +323,38 @@
     <h3>Die Status Seite</h3>
     Von der Startseite kann man noch eine Status-Seite erreichen – hier werden
     interne Status-Infos des Servers angezeigt.
-    <p><img style="width: 690px;" src="navi-status.png" name="Grafik11" width="600"
-        border="0"><br clear="RIGHT">
-      Wichtig ist hier insbesondere der Status der „Serial reader“ - dieser
+    <div><img style="width: 690px;" src="navi-status.png" name="Grafik11" width="600"
+        border="0">
+      <div style="display: inline-block;margin-left: 2em;"> <span style="font-weight: bold;">Buttons</span><br>
+        <ul>
+          <li>Zurück</li>
+          <li>Android Settings (nur Android)</li>
+          <li>WLAN (nur Raspberry)</li>
+          <li>QR Codes (Android im external browser mode, raspberry)</li>
+        </ul>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+      </div>
+    </div>
+    <p> Wichtig ist hier insbesondere der Status der „Serial reader“ - dieser
       zeigt, ob sie NMEA Daten empfangen.</p>
     <p>Unter Android kann man von hier aus auch die Android Einstellungen
       erreichen.</p>
-    <p>Von hier gelangt man mit dem WLAN button zur WLAN Seite (nicht auf
-      Android).</p>
-    <img style="width: 689px;" alt="" src="wpa-page.png"><br>
+    <p>Mit dem QR-Code Button kommt man zu einer Seite, auf der die Adressen des
+      Web-Servers angezeigt werden.</p>
+    <img style="width: 639px; height: 400px;" alt="qr codes" src="qrpage.png"><br>
+    Durch scannen dieser Codes mit einem anderen Tablet kann man leicht auf den
+    gleichen Server (raspberry) zugreifen. Typisch wird es der 2. angezeigt code
+    sein, den man benutzen muss (der erste ist nur lokal auf dem Gerät).<br>
+    <p>Über den WLAN-Button gelangt man zur WLAN Seite (nicht auf Android).</p>
+    <img style="width: 678px; height: 400px;" alt="" src="wpa-page.png"><br>
     Falls der 2. WLAN Adapter konfiguriert ist, werden verfügbare WLANs gescannt
     und angezeigt.<br>
     Zum Verbinden auf das gewünschte WLAN klicken.<br>
@@ -365,7 +388,7 @@
     <div id="block-system-main" dir="LTR">
       <div id="node-66" dir="LTR">
         <h4 class="western">The MIT License (MIT)</h4>
-        <p>Copyright (c) 2013-2016 Andreas Vogel http://www.wellenvogel.de</p>
+        <p>Copyright (c) 2013-2017 Andreas Vogel http://www.wellenvogel.de</p>
         <p>Permission is hereby granted, free of charge, to any person obtaining
           a copy<br>
           of this software and associated documentation files (the "Software"),
