@@ -38,6 +38,7 @@ public class Info extends Activity {
         }
         setText("version.txt",R.id.txVersion);
         setText("viewer/info.html",R.id.txInfo);
+        setText("viewer/license.html",R.id.txLicense);
         TextView xwalk=(TextView)findViewById(R.id.txXwalk);
         boolean xw= SettingsActivity.isXwalRuntimeInstalled(this);
         xwalk.setText("XWALK V "+ Constants.XWALKVERSION+" \n("+(xw?"installed":"not installed")+")");

@@ -11,11 +11,10 @@ var generateLicenseFile=function(cb){
         data.forEach(function(el){
             if (el.name == "avnav-viewer") return;
             var repo=el.repository.replace(/ssh:\/\/git@github.com/,'https://github.com/');
-            rt+=(`<div class="elEntry"><span class="elName">${el.name}</span>
-        <span class="elVersion">${el.version}</span>
-        <a class="elRepo" href="${repo}">${repo}</a>
-        <span class="elLicense">${el.licenseSources.package.summary()}</span>
-        </div>`);
+            rt+=(`<div class="elEntry"><h3 class="elName">${el.name} ${el.version}</h3>
+            <p><a class="elRepo" href="${repo}">${repo}</a></p>
+            <p class="elLicense">${el.licenseSources.package.summary()}</p>
+            </div>`);
         });
         rt+=('</div>');
         cb(rt);
