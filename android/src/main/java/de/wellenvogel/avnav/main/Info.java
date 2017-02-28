@@ -52,8 +52,8 @@ public class Info extends Activity {
                         getString(R.string.xwalkNotFoundText)+ Constants.XWALKVERSION,false);
             }
         });
-        TextView view=(TextView)findViewById(R.id.txInfo);
-        view.setMovementMethod(LinkMovementMethod.getInstance());
+        //TextView view=(TextView)findViewById(R.id.txInfo);
+        //view.setMovementMethod(LinkMovementMethod.getInstance());
         ActionBarHandler toolbar=new ActionBarHandler(this,R.menu.info_activity_actions);
         toolbar.show().setOnMenuItemClickListener(this);
     }

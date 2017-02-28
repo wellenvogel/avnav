@@ -60,6 +60,7 @@
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
                 android:maxLines="1000"
+                android:autoLink="web"
                 android:text="test" />
             <TextView
                 android:id="@+id/txLicense"
@@ -67,6 +68,7 @@
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
                 android:maxLines="1000"
+                android:autoLink="web"
                 android:text="test" />
         </LinearLayout>
     </ScrollView>

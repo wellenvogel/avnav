@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.*;
+import android.net.Uri;
 import android.os.*;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,6 +74,16 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 if (pd.isShowing()) pd.dismiss();
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url != null && (url.startsWith("http://")||url.startsWith("https://") )) {
+                    view.getContext().startActivity(
+                            new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                    return true;
+                } else {
+                    return false;
+                }
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
