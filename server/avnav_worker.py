@@ -33,30 +33,37 @@ from avnav_util import Enum
 
 __author__="Andreas"
 __date__ ="$29.06.2014 21:09:10$"
-#a base class for all workers
-#this provides some config functions and a common interfcace for handling them
+
 class AVNWorker(threading.Thread):
+  """a base class for all workers
+     this provides some config functions and a common interfcace for handling them"""
   allHandlers=[]
   Status=Enum(['INACTIVE','STARTED','RUNNING','NMEA','ERROR'])
   Type=Enum(['DEFAULT','FEEDER','HTTPSERVER'])
-  
-  #find a feeder
+
+  @classmethod
+  def findHandlerByTypeAndName(cls, type, name=None):
+    """find a handler by its type and name (not configName)
+       leave the name unset to find by type
+    """
+    if not name is None and name == '':
+      name = None
+    rt = None
+    for handler in cls.allHandlers:
+      if handler.type == type:
+        if not name is None:
+          if handler.getName() == name:
+            rt = handler
+            break
+        else:
+          rt = handler
+          break
+    return rt
+
   @classmethod
   def findFeeder(cls,feedername):
     """find a feeder by its name (not configName)"""
-    if not feedername is None and feedername == '':
-      feedername=None
-    feeder=None
-    for handler in cls.allHandlers:
-      if handler.type == cls.Type.FEEDER:
-        if not feedername is None:
-          if handler.getName()==feedername:
-            feeder=handler
-            break
-        else:
-          feeder=handler
-          break
-    return feeder
+    return cls.findHandlerByTypeAndName(cls.Type.FEEDER,feedername)
   
   @classmethod
   def findHandlerByName(cls,name):
