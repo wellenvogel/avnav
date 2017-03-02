@@ -54,13 +54,13 @@ class Handler:
     self.subprocess=None
 
   def start(self):
-    self.subprocess=subprocess.Popen(self.command, stdout=subprocess.PIPE,
+    self.subprocess=subprocess.Popen(self.command.split(), stdout=subprocess.PIPE,
                        preexec_fn=os.setsid)
     self.thread=threading.Thread(target=self.run)
     self.thread.setDaemon(True)
     self.thread.start()
 
-  def stop(self):
+  def stopHandler(self):
     if self.stop:
       return
     try:
@@ -77,9 +77,20 @@ class Handler:
       if not line:
         break
       AVNLog.debug("[cmd]%s", line.strip())
-    self.subprocess.poll()
+    status=None
+    try:
+      wt=30
+      while wt >0 and status is None:
+        status=self.subprocess.poll()
+        if status is None:
+          time.sleep(0.1)
+        wt-=1
+    except :
+      pass
     if self.callback is not None:
-      self.callback(self.name,self.subprocess.returncode)
+      if status is None:
+        status=-1
+      self.callback(self.name,status)
     return self.subprocess.returncode
 
 class AVNCommandHandler(AVNWorker):
@@ -98,7 +109,7 @@ class AVNCommandHandler(AVNWorker):
     if child == "Command":
       return {
         'name': '',
-        'commandline': ""
+        'command': ""
       }
   @classmethod
   def preventMultiInstance(cls):
@@ -109,17 +120,19 @@ class AVNCommandHandler(AVNWorker):
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
     while True:
-      time.sleep(5)
+      #self.startCommand("test")
+      time.sleep(10)
 
   def findCommand(self,name):
-    definedCommands=self.param.get('Commands')
+    definedCommands=self.param.get('Command')
     if definedCommands is None:
       return None
     for cmd in definedCommands:
       if cmd.get('name') is not None and cmd.get('name') == name:
-        return cmd.get('commandLine')
+        return cmd.get('command')
   def commandFinished(self,name,status):
-    AVNLog.debug("command %s finished with status %d",name,status)
+    AVNLog.info("finished with status %d",status)
+    self.setInfo(name,"finished with status %d"%(status),self.Status.INACTIVE)
     try:
       del self.runningProcesses[name]
     except:
@@ -134,17 +147,30 @@ class AVNCommandHandler(AVNWorker):
     current=self.runningProcesses.get(name)
     if current is not None:
       AVNLog.warn("command %s running on new start, trying to stop",name)
-      current.stop()
+      current.stopHandler()
     AVNLog.info("start command %s=%s",name,cmd)
     handler=Handler(cmd,name,self.commandFinished)
     try:
       handler.start()
+      self.setInfo(name,"running",self.Status.RUNNING)
     except:
       AVNLog.error("error starting command %s=%s: %s",name,cmd,traceback.format_exc())
+      self.setInfo(name, "unable to run %s: %s"%(cmd,traceback.format_exc(1)), self.Status.ERROR)
       return False
     self.runningProcesses[name]=handler
 
 
+  def getStatusProperties(self):
+    commands=self.param.get('Command')
+    if commands is None:
+      return {}
+    rt={}
+    for cmd in commands:
+      n=cmd.get('name')
+      if n is None:
+        continue
+      rt[n]=cmd.get('command')
+    return rt
 
 avnav_handlerList.registerHandler(AVNCommandHandler)
 

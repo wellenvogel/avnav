@@ -75,6 +75,7 @@ from avnav_serialwriter import *
 from avnav_nmealogger import *
 from avnav_importer import AVNImporter
 from avnav_wpahandler import *
+import avnav_commandhandler
 import avnav_handlerList
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 
