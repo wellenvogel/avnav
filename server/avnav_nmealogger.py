@@ -40,6 +40,7 @@ from avnav_util import *
 from avnav_worker import *
 from avnav_nmea import *
 from avnav_trackwriter import *
+import avnav_handlerList
 
 #a writer for our track
 class AVNNmeaLogger(AVNWorker):
@@ -61,9 +62,6 @@ class AVNNmeaLogger(AVNWorker):
             'interval':'5' #interval in seconds
 
     }
-  @classmethod
-  def createInstance(cls, cfgparam):
-    return AVNNmeaLogger(cfgparam)
   def getName(self):
     return "NmeaLogger"
   #write out the line
@@ -212,6 +210,7 @@ class AVNNmeaLogger(AVNWorker):
           os.unlink(tdel)
         except:
           AVNLog.error("unable to delete file %s: %s",tdel, traceback.format_exc())
+avnav_handlerList.registerHandler(AVNNmeaLogger)
 
       
 

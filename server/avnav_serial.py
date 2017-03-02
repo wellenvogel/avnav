@@ -38,6 +38,7 @@ try:
 except:
   pass
 
+import avnav_handlerList
 #a reader class to read from a serial port using pyserial
 #on windows use an int for the port - e.g. use 4 for COM5
 #on linux use the device name for the port
@@ -397,5 +398,5 @@ class AVNSerialReader(AVNWorker):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
     reader=SerialReader(self.param, self.navdata if self.writeData is None else None, self.writeData,self) 
     reader.run()
-
+avnav_handlerList.registerHandler(AVNSerialReader)
 

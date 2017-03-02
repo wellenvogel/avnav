@@ -75,6 +75,7 @@ from avnav_serialwriter import *
 from avnav_nmealogger import *
 from avnav_importer import AVNImporter
 from avnav_wpahandler import *
+import avnav_handlerList
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 
 loggingInitialized=False
@@ -106,11 +107,12 @@ class AVNBaseConfig(AVNWorker):
             'settimeperiod': 3600 #how often do we set the system time
     }
   @classmethod
-  def createInstance(cls, cfgparam):
-    return AVNBaseConfig(cfgparam)
+  def preventMultiInstance(cls):
+    return True
   def start(self):
     pass
-          
+
+avnav_handlerList.registerHandler(AVNBaseConfig)
  
 #a worker to check the chart dirs
 #and create avnav.xml...
@@ -129,8 +131,8 @@ class AVNChartHandler(AVNWorker):
             'period': 30 #how long to sleep between 2 checks
     }
   @classmethod
-  def createInstance(cls, cfgparam):
-    return AVNChartHandler(cfgparam)
+  def preventMultiInstance(cls):
+    return True
   def getName(self):
     return "AVNChartHandler"
   def run(self):
@@ -163,7 +165,7 @@ class AVNChartHandler(AVNWorker):
       except:
         AVNLog.error("error while trying to update charts %s",traceback.format_exc())
       time.sleep(self.getIntParam('period') or 10)   
-    
+avnav_handlerList.registerHandler(AVNChartHandler)
       
 def sighandler(signal,frame):
   for handler in AVNWorker.allHandlers:
@@ -200,7 +202,7 @@ def main(argv):
   else:
     cfgname=args[0]
   AVNLog.initLoggingInitial(options.verbose if not options.verbose is None else logging.INFO)
-  cfg=AVNConfig(workerlist)
+  cfg=AVNConfig()
   allHandlers=cfg.readConfigAndCreateHandlers(cfgname)
   if allHandlers is None:
     AVNLog.error("unable to parse config file %s",cfgname)

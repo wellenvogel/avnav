@@ -32,12 +32,12 @@ import xml.sax as sax
 import traceback
 from avnav_util import *
 from avnav_worker import *
+import avnav_handlerList
   
   
 # a class for parsing the config file
 class AVNConfig(sax.handler.ContentHandler):
-  def __init__(self,handlerList):
-    self.handlerList=handlerList
+  def __init__(self):
     #global parameters
     self.parameters={
                      "debug":0,
@@ -77,12 +77,12 @@ class AVNConfig(sax.handler.ContentHandler):
       self.currentHandlerData[name].append(childParam)
       AVNLog.ld("added sub to handlerdata",name,childParam)
       return
-    for handler in self.handlerList:
-      if name==handler.getConfigName():
-        self.currentHandlerClass=handler
-        self.currentHandlerData=handler.parseConfig(attrs, handler.getConfigParam(None))
-        AVNLog.ld("handler config started for ",name,self.currentHandlerData)
-        return
+    handler=avnav_handlerList.findHandlerByConfigName(name)
+    if handler is not None:
+      self.currentHandlerClass=handler
+      self.currentHandlerData=handler.parseConfig(attrs, handler.getConfigParam(None))
+      AVNLog.ld("handler config started for ",name,self.currentHandlerData)
+      return
     AVNLog.warn("unknown XML element %s - ignoring",name)
     pass
   def endElement(self, name):

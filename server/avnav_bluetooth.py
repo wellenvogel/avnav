@@ -26,10 +26,6 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import time
-import socket
-import threading
-
 hasBluetooth=False
 
 try:
@@ -37,10 +33,8 @@ try:
   hasBluetooth=True
 except:
   pass
-from avnav_util import *
-from avnav_nmea import *
-from avnav_worker import *
 from avnav_socketreaderbase import *
+import avnav_handlerList
 
 #a Worker for reading bluetooth devices
 #it uses a feeder to handle the received data
@@ -171,5 +165,5 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
             AVNLog.warn("unable to start BT handler %s",traceback.format_exc())
             self.removeAddr(host)
       time.sleep(10)
-      
+avnav_handlerList.registerHandler(AVNBlueToothReader)
       

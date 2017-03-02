@@ -36,7 +36,7 @@ from avnav_nmea import *
 from avnav_worker import *
 from avnav_nmea import *
 from avnav_socketreaderbase import *
-
+import avnav_handlerList
 
 #a worker to output data via a socket
 
@@ -62,10 +62,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           };
       return rt
     return None
-  
-  @classmethod
-  def createInstance(cls, cfgparam):
-    return AVNSocketWriter(cfgparam)
+
   
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
@@ -206,5 +203,5 @@ class AVNSocketWriter(AVNWorker,SocketReader):
         except:
           pass
         break
-          
+avnav_handlerList.registerHandler(AVNSocketWriter)
   

@@ -41,6 +41,7 @@ import threading
 from avnav_util import *
 from avnav_worker import *
 from wpa_control import WpaControl
+import avnav_handlerList
 
 #a handler to set up a wpa claient
 class AVNWpaHandler(AVNWorker):
@@ -62,8 +63,8 @@ class AVNWpaHandler(AVNWorker):
             'ownSsid':'avnav'
     }
   @classmethod
-  def createInstance(cls, cfgparam):
-    return AVNWpaHandler(cfgparam)
+  def preventMultiInstance(cls):
+    return True
   def getName(self):
     return "WpaControl"
 
@@ -254,5 +255,5 @@ class AVNWpaHandler(AVNWorker):
     end=datetime.datetime.utcnow()
     AVNLog.debug("wpa request %s lasted %d millis",command,(end-start).total_seconds()*1000)
     return rt
-
+avnav_handlerList.registerHandler(AVNWpaHandler)
         

@@ -41,6 +41,7 @@ import select
 import gemf_reader
 import cgi
 import shutil
+import avnav_handlerList
 try:
   import create_overview
 except:
@@ -65,7 +66,6 @@ import threading
 
 #a HTTP server with threads for each request
 class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWorker):
-  instances=0
   navxml="avnav.xml"
   
   @classmethod
@@ -73,9 +73,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     return "AVNHttpServer"
   @classmethod
   def createInstance(cls, cfgparam):
-    if cls.instances > 0:
-      raise Exception("only one AVNHttpServer is allowed")
-    cls.instances+=1
+    cls.checkSingleInstance()
     return AVNHTTPServer(cfgparam,AVNHTTPHandler)
   @classmethod
   def getConfigParam(cls,child):
@@ -322,6 +320,8 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       return {'addresses':self.addresslist}
     else:
       return {}
+
+avnav_handlerList.registerHandler(AVNHTTPServer)
 
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def __init__(self,request,client_address,server):

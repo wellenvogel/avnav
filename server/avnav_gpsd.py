@@ -51,6 +51,8 @@ try:
 except:
   pass
 
+import avnav_handlerList
+
 #a worker to interface with gpsd
 #as gpsd is not really able to handle dynamically assigned ports correctly, 
 #we monitor first if the device file exists and only start gpsd once it is visible
@@ -92,7 +94,7 @@ class AVNGpsd(AVNWorker):
     if not hasGpsd:
       AVNLog.warn("gpsd not available, ignore configured reader ")
       return None
-    return AVNGpsd(cfgparam)
+    return cls(cfgparam)
   
   def stopChildren(self):
     if not self.gpsdproc is None:
@@ -200,7 +202,7 @@ class AVNGpsd(AVNWorker):
             reader=None  
         #end of loop - device available
         time.sleep(timeout/2)
-          
+avnav_handlerList.registerHandler(AVNGpsd)
         
       
 #a reader thread for the gpsd reader
@@ -315,19 +317,14 @@ class AVNGpsdFeeder(AVNGpsd):
             'timeout': 40,       #??? do we still need this?
             'name': ''           #if there should be more then one reader we must set the name
             }
-    
-  @classmethod
-  def createInstance(cls, cfgparam):
-    
-    return AVNGpsdFeeder(cfgparam)
-  
+
   @classmethod
   def getStartupGroup(cls):
     return 1
-  
+
   def __init__(self,cfgparam):
     AVNGpsd.__init__(self, cfgparam)
-    self.type=AVNWorker.Type.FEEDER;
+    self.type=AVNWorker.Type.FEEDER
     self.listlock=threading.Lock()
     self.list=[]
     self.history=[]
@@ -519,3 +516,4 @@ class AVNGpsdFeeder(AVNGpsd):
               pass
             reader.doStop()
             break
+avnav_handlerList.registerHandler(AVNGpsdFeeder)

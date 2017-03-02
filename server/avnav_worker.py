@@ -43,6 +43,7 @@ class AVNWorker(threading.Thread):
   #find a feeder
   @classmethod
   def findFeeder(cls,feedername):
+    """find a feeder by its name (not configName)"""
     if not feedername is None and feedername == '':
       feedername=None
     feeder=None
@@ -59,6 +60,7 @@ class AVNWorker(threading.Thread):
   
   @classmethod
   def findHandlerByName(cls,name):
+    """find a handler by its config name"""
     for handler in cls.allHandlers:
       if handler.getConfigName() == name:
         return handler
@@ -169,10 +171,18 @@ class AVNWorker(threading.Thread):
   @classmethod
   def getConfigParam(cls,child=None):
     raise Exception("getConfigParam must be overwritten")
-  
+  @classmethod
+  def preventMultiInstance(cls):
+    """overwrite this to return true if you only allow one instance
+       will only be used if you do not overwrite createInstance
+    """
+    return False
   @classmethod
   def createInstance(cls,cfgparam):
-    raise Exception("createInstance must be overwritten")
+    if cls.preventMultiInstance():
+      cls.checkSingleInstance()
+    instance =cls(cfgparam)
+    return instance
   #parse an config entry
   @classmethod
   def parseConfig(cls,attrs,default):
@@ -201,6 +211,12 @@ class AVNWorker(threading.Thread):
   @classmethod
   def getStartupGroup(cls):
     return 2
-    
+  #check that we only run in one instance
+  #workers that rely on running only once should call this in createInstance
+  @classmethod
+  def checkSingleInstance(cls):
+    other=cls.findHandlerByName(cls.getConfigName())
+    if not other is None:
+      raise Exception("there is already a handler with %s, cannot create another one"%(cls.getConfigName()))
  
   

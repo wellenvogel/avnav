@@ -46,7 +46,7 @@ from avnav_nmea import *
 from avnav_worker import *
 from avnav_data import *
 from avnav_nmea import *
-
+import avnav_handlerList
 
 class AVNRoutingLeg():
   def __init__(self,name,fromWP,toWP,active,currentTarget,approachDistance,approach):
@@ -719,7 +719,7 @@ class AVNRouter(AVNWorker):
       return json.dumps({'status':'OK'})
     except Exception as e:
       raise Exception("exception parsing "+fname+": "+e.message)
-
+avnav_handlerList.registerHandler(AVNRouter)
 
 
 

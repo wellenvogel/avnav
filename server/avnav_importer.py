@@ -31,6 +31,7 @@ import traceback
 from avnav_httpserver import AVNHTTPServer
 from avnav_util import *
 from avnav_worker import *
+import avnav_handlerList
 
 
 #a converter to read our known chart formats and convert them to gemf
@@ -57,10 +58,6 @@ class AVNImporter(AVNWorker):
       'waittime': 30,       #time to wait in seconds before a conversion is started after detecting a change (and no further change)
       'knownExtensions': 'kap,map,geo' #extensions for gdal conversion
     }
-    return rt
-  @classmethod
-  def createInstance(cls, cfgparam):
-    rt=AVNImporter(cfgparam)
     return rt
     
   def __init__(self,param):
@@ -343,6 +340,7 @@ class AVNImporter(AVNWorker):
       return rt
     except:
       AVNLog.error("unable to start converter for %s:%s",name,traceback.format_exc())
+avnav_handlerList.registerHandler(AVNImporter)
 
 
 

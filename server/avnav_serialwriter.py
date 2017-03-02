@@ -31,6 +31,7 @@ from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_serial import *
+import avnav_handlerList
 hasSerial=False
 
 try:
@@ -323,5 +324,5 @@ class AVNSerialWriter(AVNWorker):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
     writer=SerialWriter(self.param,self.navdata if self.writeData is None else None, self.writeData,self)
     writer.run()
-
+avnav_handlerList.registerHandler(AVNSerialWriter)
 

@@ -37,7 +37,7 @@ import traceback
 
 from avnav_util import *
 from avnav_worker import *
-
+import avnav_handlerList
 #a writer for our track
 class AVNTrackWriter(AVNWorker):
   def __init__(self,param):
@@ -69,9 +69,6 @@ class AVNTrackWriter(AVNWorker):
             'mindistance': 25, #only write if we at least moved this distance
             'cleanup': 25, #cleanup in hours
     }
-  @classmethod
-  def createInstance(cls, cfgparam):
-    return AVNTrackWriter(cfgparam)
 
   def getTrackDir(self):
     return self.trackdir
@@ -314,4 +311,4 @@ class AVNTrackWriter(AVNWorker):
       if self.fname == name[:-4]:
         AVNLog.info("deleting current track!")
         self.track=[]
-        
+avnav_handlerList.registerHandler(AVNTrackWriter)

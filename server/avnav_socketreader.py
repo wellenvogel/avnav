@@ -34,7 +34,7 @@ from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_socketreaderbase import *
-
+import avnav_handlerList
 
 
 
@@ -111,7 +111,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
         self.readSocket(sock,'main')
       except:
         AVNLog.info("exception while reading from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
-      
+avnav_handlerList.registerHandler(AVNSocketReader)
         
         
                                         

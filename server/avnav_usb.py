@@ -36,6 +36,7 @@ from avnav_nmea import *
 from avnav_worker import *
 from avnav_serial import *
 from avnav_serialwriter import *
+import avnav_handlerList
 hasUdev=False
 try:
   import pyudev
@@ -94,6 +95,7 @@ class AVNUsbSerialReader(AVNWorker):
   def createInstance(cls, cfgparam):
     if not hasUdev:
       raise Exception("no pyudev installed, cannot run %s"%(cls.getConfigName()))
+    cls.checkSingleInstance()
     return AVNUsbSerialReader(cfgparam)
   
   def __init__(self,cfgparam):
@@ -313,4 +315,4 @@ class AVNUsbSerialReader(AVNWorker):
       return {'name':self.getName(),'items':rta}
     except:
       return {'name':self.getName(),'items':[],'error':"no info available"}
-
+avnav_handlerList.registerHandler(AVNUsbSerialReader)
