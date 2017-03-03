@@ -251,16 +251,21 @@ class AVNUsbSerialReader(AVNWorker):
     self.setInfo('monitor', "running", AVNWorker.Status.RUNNING)
     threading.current_thread().setName("[%s]%s[monitor]"%(AVNLog.getThreadId(),self.getName()))
     AVNLog.info("start device monitoring")
-    monitor = pyudev.Monitor.from_netlink(context)
-    monitor.filter_by(subsystem='tty')
-    AVNLog.info("start monitor loop")
-    for deviceaction in monitor:
-      action,device=deviceaction
-      if action=='remove':
-        usbid=self.usbIdFromPath(device.device_path)
-        AVNLog.info("device removal detected %s",usbid)
-        self.stopHandler(usbid)
-      #any start handling we leave to the audit...
+    while True:
+      try:
+        monitor = pyudev.Monitor.from_netlink(context)
+        monitor.filter_by(subsystem='tty')
+        AVNLog.info("start monitor loop")
+        for deviceaction in monitor:
+          action,device=deviceaction
+          if action=='remove':
+            usbid=self.usbIdFromPath(device.device_path)
+            AVNLog.info("device removal detected %s",usbid)
+            self.stopHandler(usbid)
+      except:
+        AVNLog.error("error in usb monitor loop: ",traceback.format_exc(1))
+        time.sleep(2)
+          #any start handling we leave to the audit...
         
   #this is the main thread - this executes the bluetooth polling
   def run(self):

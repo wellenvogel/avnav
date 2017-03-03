@@ -132,6 +132,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.interfaceReader=None
     self.gemfCondition=threading.Condition()
     self.addresslist=[]
+    self.handlerMap={}
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
   def getName(self):
     return "HTTPServer"
@@ -320,6 +321,17 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     else:
       return {}
 
+  def registerRequestHandler(self,type,command,handler):
+    if self.handlerMap.get(type) is None:
+      self.handlerMap[type]={}
+    self.handlerMap[type][command]=handler
+
+  def getRequestHandler(self,type,command):
+    typeMap=self.handlerMap.get(type)
+    if typeMap is None:
+      return None
+    return typeMap.get(command)
+
 avnav_handlerList.registerHandler(AVNHTTPServer)
 
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -328,6 +340,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     #see https://lautaportti.wordpress.com/2011/04/01/basehttprequesthandler-wastes-tcp-packets/
     self.wbufsize=-1
     self.id=None
+    self.getRequestParam=AVNUtil.getHttpRequestParam
     AVNLog.ld("receiver thread started",client_address)
     SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
    
@@ -465,16 +478,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       #pathmappings expect to have absolute pathes!
       return self.handlePathmapping(path)
   
-  
-  #return the first element of a request param if set
-  @classmethod
-  def getRequestParam(cls,param,name):
-    pa=param.get(name)
-    if pa is None:
-      return None
-    if len(pa) > 0:
-      return pa[0].decode('utf-8')
-    return None
 
   #handle the request to an gemf file
   def handleGemfRequest(self,path,query):
@@ -563,40 +566,39 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       rtj=None
       if requestType=='gps':
         rtj=self.handleGpsRequest(requestParam)
-      if requestType=='ais':
+      elif requestType=='ais':
         rtj=self.handleAISRequest(requestParam)
-      if requestType=='track':
-        rtj=self.handleTrackRequest(requestParam)
-      if requestType=='status':
+      elif requestType=='status':
         rtj=self.handleStatusRequest(requestParam)
-      if requestType=='debuglevel':
+      elif requestType=='debuglevel':
         rtj=self.handleDebugLevelRequest(requestParam)
-      if requestType=='listCharts':
+      elif requestType=='listCharts':
         rtj=self.handleListChartRequest(requestParam)
-      if requestType=='routing':
-        rtj=self.handleRoutingRequest(requestParam)
-      if requestType=='wpa':
-        rtj=self.handleWpaRequest(requestParam)
-      if requestType=='listdir':
+      elif requestType=='listdir':
         rtj=self.handleListDir(requestParam)
-      if requestType=='download':
+      elif requestType=='download':
         #download requests are special
         # the dow not return json...
         self.handleDownloadRequest(requestParam)
         return
-      if requestType=='upload':
+      elif requestType=='upload':
         try:
           rtj=self.handleUploadRequest(requestParam)
         except Exception as e:
           AVNLog.error("upload error: %s",unicode(e))
           rtj=json.dumps({'status':unicode(e)})
-      if requestType=='delete':
+      elif requestType=='delete':
         rtj=self.handleDeleteRequest(requestParam)
+      else:
+        handler=self.server.getRequestHandler('api',requestType)
+        if handler is None:
+          raise Exception("no handler found for request %s",requestType)
+        rtj=handler.handleApiRequest('api',requestType,requestParam)
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
           text=e.message+"\n"+traceback.format_exc()
           AVNLog.ld("unable to process request for navrequest ",text)
-          self.send_response(500,text);
+          self.send_response(500,text)
           self.end_headers()
           return
   #return AIS targets
@@ -670,28 +672,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     statusAis={"status":status,"source":src,"info":"%d targets"%(numAis)}
     rtv.data["raw"]={"status":{"nmea":statusNmea,"ais":statusAis}}
     return json.dumps(rtv.data)
-  #query the current list of trackpoints
-  #currently we only limit by maxnumber and interval (in s)
-  def handleTrackRequest(self,requestParam):
-    lat=None
-    lon=None
-    dist=None
-    maxnum=60 #with default settings this is one hour
-    interval=60
-    try:
-      maxnumstr=self.getRequestParam(requestParam, 'maxnum')
-      if not maxnumstr is None:
-        maxnum=int(maxnumstr)
-      intervalstr=self.getRequestParam(requestParam, 'interval')
-      if not intervalstr is None:
-        interval=int(intervalstr)
-    except:
-      pass
-    frt=[]
-    trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
-    if not trackWriter is None:
-      frt=trackWriter.getTrackFormatted(maxnum,interval)
-    return json.dumps(frt)
+
+
   def handleStatusRequest(self,requestParam):
     rt=[]
     for handler in AVNWorker.allHandlers:
@@ -790,23 +772,16 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def handleListChartRequest(self,requestParam):
     return json.dumps(self.listCharts(requestParam))
 
-  def handleRoutingRequest(self,requestParam):
-    rt=self.server.getHandler(AVNRouter.getConfigName())
-    rtj=None
-    if rt is not None:
-      rtj=rt.handleRoutingRequest(requestParam)
-    else:
-      raise Exception("router not configured")
-    return rtj
+  def writeStream(self,bToSend,fh):
+    maxread = 1000000
+    while bToSend > 0:
+      buf = fh.read(maxread if bToSend > maxread else bToSend)
+      if buf is None or len(buf) == 0:
+        raise Exception("no more data")
+      self.wfile.write(buf)
+      bToSend -= len(buf)
+    fh.close()
 
-  def handleWpaRequest(self,requestParam):
-    rt=self.server.getHandler(AVNWpaHandler.getConfigName())
-    rtj=None
-    if rt is not None:
-      rtj=rt.handleWpaRequest(requestParam)
-    else:
-      raise Exception("wpa not configured")
-    return rtj
   #download requests
   #parameters:
   #   type
@@ -815,30 +790,42 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   #   filename
   def handleDownloadRequest(self,requestParam):
     type=self.getRequestParam(requestParam,"type")
+    try:
+      handler=self.server.getRequestHandler('download',type)
+      AVNLog.debug("found handler %s to handle download %s",handler.getConfigName(),type)
+      if handler is not None:
+        dl=handler.handleApiRequest('download',type,requestParam)
+        if dl is None:
+          raise Exception("unable to download %s",type)
+        if dl.get('mimetype') is None:
+          raise Exception("no mimetype")
+        if dl.get('size') is None:
+          raise Exception("no size")
+        if dl.get("stream") is None:
+          raise Exception("missing stream")
+        self.send_response(200)
+        fname = self.getRequestParam(requestParam, "filename")
+        if fname is not None and fname != "":
+          self.send_header("Content-Disposition", "attachment")
+        self.send_header("Content-type", dl['mimetype'])
+        self.send_header("Content-Length", dl['size'])
+        self.send_header("Last-Modified", self.date_time_string())
+        self.end_headers()
+        try:
+          self.writeStream(dl['size'],dl['stream'])
+        except:
+          try:
+            dl['stream'].close()
+          except:
+            pass
+        return
+
+    except:
+      self.send_error(404,traceback.format_exc(1))
+      return
     rtd=None
     mtype="application/octet-stream"
     requestOk=False
-    if type == "route":
-      requestOk=True
-      mtype="application/gpx+xml"
-      rt=self.server.getHandler(AVNRouter.getConfigName())
-      if rt is not None:
-        rtd=rt.handleRouteDownloadRequest(requestParam)
-      else:
-        raise Exception("router not configured")
-    if type == "track":
-      requestOk=True
-      mtype="application/gpx+xml"
-      name=self.getRequestParam(requestParam,"name")
-      trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
-      trackdir=trackWriter.getTrackDir()
-      #TODO: some security stuff
-      name=name.replace("/","")
-      fname=os.path.join(trackdir,name)
-      if os.path.isfile(fname):
-        f=open(fname,"rb")
-        rtd=f.read()
-        f.close()
     if type=="chart":
       requestOk=True
       url=self.getRequestParam(requestParam,"url")
@@ -913,7 +900,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rt=self.server.getHandler(AVNRouter.getConfigName())
         if rt is not None:
           rtd=rt.handleRouteUploadRequest(requestParam,self.rfile,int(rlen))
-          return rtd;
+          return rtd
         else:
           raise Exception("router not configured")
       if type == "chart":

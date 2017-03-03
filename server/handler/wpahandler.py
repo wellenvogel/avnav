@@ -50,6 +50,7 @@ class AVNWpaHandler(AVNWorker):
     self.wpaHandler=None
     self.lastScan=datetime.datetime.utcnow()
     self.scanLock=threading.Lock()
+    self.getRequestParam=AVNUtil.getHttpRequestParam
   @classmethod
   def getConfigName(cls):
     return "AVNWpaHandler"
@@ -214,15 +215,10 @@ class AVNWpaHandler(AVNWorker):
       AVNLog.error("exception in WPAHandler:getStatus: %s",traceback.format_exc())
       return {'wpa_state','COMMANDERROR'}
 
-  #get a HTTP request param
-  def getRequestParam(self,requestparam,name):
-    rt=requestparam.get(name)
-    if rt is None:
-      return None
-    if isinstance(rt,list):
-      return rt[0].decode('utf-8',errors='ignore')
-    return rt
-  def handleWpaRequest(self,requestparam):
+  def getHandledCommands(self):
+    return "wpa"
+
+  def handleApiRequest(self,type,requestparam):
     start=datetime.datetime.utcnow()
     command=self.getRequestParam(requestparam, 'command')
     rt=None

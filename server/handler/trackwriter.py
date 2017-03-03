@@ -99,7 +99,46 @@ class AVNTrackWriter(AVNWorker):
     self.tracklock.release()
     if numremoved > 0:
       AVNLog.debug("removed %d track entries older then %s",numremoved,cleanupTime.isoformat())
-  
+
+  def getHandledCommands(self):
+    return {'api':'track','download':'track'}
+
+  def handleApiRequest(self,type,command,requestparam,**kwargs):
+    if type == 'api':
+      return self.handleTrackRequest(requestparam)
+    if type == 'download':
+      return self.handleDownloadRequest(requestparam)
+
+  def handleDownloadRequest(self,requestParam):
+    mtype = "application/gpx+xml"
+    name = AVNUtil.getHttpRequestParam(requestParam, "name")
+    trackdir = self.getTrackDir()
+    # TODO: some security stuff
+    name = name.replace("/", "")
+    fname = os.path.join(trackdir, name)
+    if os.path.isfile(fname):
+      size=os.path.getsize(fname)
+      f = open(fname, "rb")
+      return{'mimetype':mtype,'size':size,'stream':f}
+
+  def handleTrackRequest(self, requestParam):
+      lat = None
+      lon = None
+      dist = None
+      maxnum = 60  # with default settings this is one hour
+      interval = 60
+      try:
+        maxnumstr = AVNUtil.getHttpRequestParam(requestParam, 'maxnum')
+        if not maxnumstr is None:
+          maxnum = int(maxnumstr)
+        intervalstr = AVNUtil.getHttpRequestParam(requestParam, 'interval')
+        if not intervalstr is None:
+          interval = int(intervalstr)
+      except:
+        pass
+      frt = self.getTrackFormatted(maxnum, interval)
+      return frt
+
   #get the track as array of dicts
   #filter by maxnum and interval
   def getTrackFormatted(self,maxnum,interval):

@@ -33,6 +33,8 @@ import threading
 import os
 import sys
 import math
+
+import StringIO
 from __main__ import traceback
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries"))
 import gpxpy098.gpx as gpx
@@ -139,6 +141,7 @@ class AVNRouter(AVNWorker):
     self.routes=[]
     self.routeListLock=threading.Lock()
     self.routeInfos={}
+    self.getRequestParam=AVNUtil.getHttpRequestParam
     #build the backward conversion
     for k in self.fromGpx.keys():
       v=self.fromGpx[k]
@@ -589,21 +592,23 @@ class AVNRouter(AVNWorker):
     self.routes.append(route)
     self.routeListLock.release()
 
-  #get a HTTP request param
-  def getRequestParam(self,requestparam,name):
-    rt=requestparam.get(name)
-    if rt is None:
-      return None
-    if isinstance(rt,list):
-      return rt[0].decode('utf-8',errors='ignore')
-    return rt
-  
+  def getHandledCommands(self):
+    return {"api":"routing","download":"route"}
+
   #handle a routing request
   #this expects a command as parameter
   #data has the POST data
+  def handleApiRequest(self,type,subtype,requestparam,**kwargs):
+    if type == 'api':
+      return self.handleRoutingRequest(requestparam)
+    elif type=="upload":
+      return self.handleRouteUploadRequest(requestparam,kwargs['rfile'],kwargs['flen'])
+    elif type=="download":
+      return self.handleRouteDownloadRequest(requestparam)
+    raise Exception("unable to handle routing request of type %s:%s"%(type,subtype))
   def handleRoutingRequest(self,requestparam):
     command=self.getRequestParam(requestparam, 'command')
-    
+
     if command is None:
       raise Exception('missing command for routing request')
     if (command == 'getleg'):
@@ -676,6 +681,7 @@ class AVNRouter(AVNWorker):
   #we need to ensure that we always return some data
   #otherwise we break the GUI
   def handleRouteDownloadRequest(self,requestparam):
+    mtype = "application/gpx+xml"
     route=None
     try:
       name=self.getRequestParam(requestparam,"name")
@@ -690,8 +696,9 @@ class AVNRouter(AVNWorker):
         route=self.routeFromJsonString(data)
       if route is None:
           return "error - route not found"
-      rt=self.gpxFormat%(route.to_xml())
-      return rt
+      data=self.gpxFormat%(route.to_xml())
+      stream=StringIO.StringIO(data)
+      return {'size':len(data),'mimetype':mtype,'stream':stream}
     except:
       AVNLog.error("exception in route download %s",traceback.format_exc())
       return "error"

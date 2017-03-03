@@ -212,16 +212,41 @@ class AVNWorker(threading.Thread):
   def startInstance(self,navdata):
     self.navdata=navdata
     self.start()
+
+  def getHandledCommands(self):
+    """get the API commands that will be handled by this instance
+       the return must either be a single string or a dict
+       of the form {'api':'route','download':'route','upload':'route','list':'route'}
+    """
+    return None
+
+  def handleApiRequest(self,type,command,requestparam,**kwargs):
+    """
+    handle an http request , handling/parameter/return depend on type
+    raise an exception on error
+    :param type:
+           api - return a json with the response
+           download: return a dict with: mimetype,size,stream
+           upload: -- (exception on error)
+           list:
+    :param command: the (sub)command
+    :param requestparam: the HTTP request parameter
+    :param kwargs: on upload: rfile,flen
+    :return: json
+    """
+    raise Exception("handler for %s:%s not implemented in %s"%(type,command,self.getConfigName()))
     
   #we have 2 startup groups - one for the feeders and 2 for the rest
   #by default we start in groupd 2
   @classmethod
   def getStartupGroup(cls):
     return 2
-  #check that we only run in one instance
-  #workers that rely on running only once should call this in createInstance
   @classmethod
   def checkSingleInstance(cls):
+    """"
+    check that we only run in one instance
+    workers that rely on running only once should call this in createInstance
+    """
     other=cls.findHandlerByName(cls.getConfigName())
     if not other is None:
       raise Exception("there is already a handler with %s, cannot create another one"%(cls.getConfigName()))

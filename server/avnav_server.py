@@ -46,8 +46,6 @@ AVNUtil.importFromDir(os.path.join(os.path.dirname(__file__),"handler"),globals(
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 
 loggingInitialized=False
-#should have a better solution then a global...
-trackWriter=None
 
 
 #a dummy worker class to read some basic configurations
@@ -96,7 +94,7 @@ def findHandlerByConfig(list,configName):
   return None
 
 def main(argv):
-  global loggingInitialized,debugger,trackWriter
+  global loggingInitialized,debugger
   debugger=sys.gettrace()
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [configfile] " % (argv[0])
@@ -111,7 +109,7 @@ def main(argv):
   parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
   parser.add_option("-c", "--chartbase", dest="chartbase", help="if set, overwrite the chart base dir from the HTTPServer")
   parser.add_option("-u", "--urlmap", dest="urlmap",
-                    help="provide mappinsg in the form url=path,...")
+                    help="provide mappings in the form url=path,...")
   (options, args) = parser.parse_args(argv[1:])
   if len(args) < 1:
     cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
@@ -126,7 +124,6 @@ def main(argv):
   #we cannot use the find methods at AVNWorker here as they only work after instantiation
   baseConfig=findHandlerByConfig(allHandlers,"AVNConfig")
   httpServer=findHandlerByConfig(allHandlers,"AVNHttpServer")
-  trackWriter=findHandlerByConfig(allHandlers,"AVNTrackWriter")
   if baseConfig is None:
     #no entry for base config found - using defaults
     baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())
@@ -142,6 +139,15 @@ def main(argv):
         AVNLog.info("set url mapping %s=%s"%(url,path))
       except:
         pass
+  if httpServer is not None:
+    for handler in allHandlers:
+      handledCommands=handler.getHandledCommands()
+      if handledCommands is not None:
+        if isinstance(handledCommands,dict):
+          for h in handledCommands.keys():
+            httpServer.registerRequestHandler(h,handledCommands[h],handler)
+        else:
+          httpServer.registerRequestHandler('api',handledCommands,handler)
   navData=AVNNavData(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
   level=logging.INFO
   filename=os.path.join(os.path.dirname(argv[0]),"log","avnav.log")
