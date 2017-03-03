@@ -228,7 +228,7 @@ class AVNWorker(threading.Thread):
            api - return a json with the response
            download: return a dict with: mimetype,size,stream
            upload: -- (exception on error)
-           list:
+           list: dict with {status:OK,items:[]}, items: list of dict{name:xxx,time:xxx}
     :param command: the (sub)command
     :param requestparam: the HTTP request parameter
     :param kwargs: on upload: rfile,flen

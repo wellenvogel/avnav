@@ -49,8 +49,6 @@ except:
 from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
-from router import *
-from trackwriter import *
 from wpahandler import *
 hasIfaces=False
 try:
@@ -792,8 +790,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     type=self.getRequestParam(requestParam,"type")
     try:
       handler=self.server.getRequestHandler('download',type)
-      AVNLog.debug("found handler %s to handle download %s",handler.getConfigName(),type)
       if handler is not None:
+        AVNLog.debug("found handler %s to handle download %s"%(handler.getConfigName(), type))
         dl=handler.handleApiRequest('download',type,requestParam)
         if dl is None:
           raise Exception("unable to download %s",type)
@@ -825,7 +823,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       return
     rtd=None
     mtype="application/octet-stream"
-    requestOk=False
     if type=="chart":
       requestOk=True
       url=self.getRequestParam(requestParam,"url")
@@ -852,12 +849,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                   self.send_header("Content-type", mtype)
                   self.send_header("Content-Length", bToSend)
                   self.end_headers()
-                  while bToSend > 0:
-                    buf=fh.read(maxread if bToSend > maxread else bToSend)
-                    if buf is None or len(buf) == 0:
-                      raise Exception("no more data")
-                    self.wfile.write(buf)
-                    bToSend-=len(buf)
+                  self.writeStream(bToSend,fh)
                   fh.close()
                 except:
                   AVNLog.error("error during download %s",url)
@@ -866,24 +858,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                   except:
                     pass
                 return
-              else:
-                rtd="unable to open file %s"%(url)
-            else:
-              rtd="%s not found"%(url)
-    if not requestOk:
-      raise Exception("invalid request %s",type)
-    if rtd is None:
-      self.send_error(404, "File not found")
-      return
-    self.send_response(200)
-    fname=self.getRequestParam(requestParam,"filename")
-    if fname is not None and fname != "":
-      self.send_header("Content-Disposition","attachment")
-    self.send_header("Content-type", mtype)
-    self.send_header("Content-Length", len(rtd))
-    self.send_header("Last-Modified", self.date_time_string())
-    self.end_headers()
-    self.wfile.write(rtd)
+    self.send_error(404, "invalid download request %s"%type)
 
   #we use a special form of upload
   #where the file is completely unencoded in the input stream
@@ -891,18 +866,16 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def handleUploadRequest(self,requestParam):
     rlen=None
     try:
-      rlen=self.headers.get("Content-Length");
+      rlen=self.headers.get("Content-Length")
       if rlen is None:
         raise Exception("Content-Length not set in upload request")
       self.connection.settimeout(30)
       type=self.getRequestParam(requestParam,"type")
-      if type == "route":
-        rt=self.server.getHandler(AVNRouter.getConfigName())
-        if rt is not None:
-          rtd=rt.handleRouteUploadRequest(requestParam,self.rfile,int(rlen))
-          return rtd
-        else:
-          raise Exception("router not configured")
+      handler=self.server.getRequestHandler("upload",type)
+      if handler is not None:
+        AVNLog.debug("found handler for upload request %s:%s"%(type,handler.getConfigName()))
+        handler.handleApiRequest("upload",type,rfile=self.rfile,flen=rlen)
+        return json.dumps({'status': 'OK'})
       if type == "chart":
         filename=self.getRequestParam(requestParam,"filename")
         if filename is None:
@@ -954,53 +927,36 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     type=self.getRequestParam(requestParam,"type")
     if type is None:
       raise Exception("no type for listdir")
-    if type != "chart" and type != "track":
-      raise Exception("invalid type %s, allowed are track and chart"%type)
-    rt={'status':'OK','items':[]}
-    filter=".gpx,.nmea,.nmea.gz"
-    dir=None
-    if type == "track":
-      trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
-      dir=trackWriter.getTrackDir()
-    if type == "chart":
-      charts=self.listCharts(requestParam)
-      rt['items']=charts['data']
+    handler=self.server.getRequestHandler('list',type)
+    if handler is not None:
+      AVNLog.debug("found handler for list request %s:%s" % (type, handler.getConfigName()))
+      rt=handler.handleApiRequest('list',type,requestParam)
+      if rt is None:
+        raise Exception("invalid list response")
       return json.dumps(rt)
-    if os.path.isdir(dir):
-      for f in os.listdir(dir):
-        match=False
-        for fe in filter.split(","):
-          if f.endswith(fe):
-            match=True
-        if not match:
-          continue
-        fname=os.path.join(dir,f)
-        if not os.path.isfile(fname):
-           continue
-        item={
-           'name': f,
-           'time': os.path.getmtime(fname)
-        }
-        rt['items'].append(item)
+
+    if type != "chart" :
+      raise Exception("invalid type %s, allowed is chart"%type)
+    rt={'status':'OK','items':[]}
+    charts=self.listCharts(requestParam)
+    rt['items']=charts['data']
     return json.dumps(rt)
 
   def handleDeleteRequest(self,requestParam):
     type=self.getRequestParam(requestParam,"type")
     if type is None:
       raise Exception("no type for delete")
-    if type != "chart" and type != "track":
-      raise Exception("invalid type %s, allowed are track and chart"%type)
+    type = self.getRequestParam(requestParam, "type")
+    handler = self.server.getRequestHandler('delete', type)
+    rt = {'status': 'OK'}
+    if handler is not None:
+      AVNLog.debug("found handler for delete request %s:%s" % (type, handler.getConfigName()))
+      handler.handleApiRequest('delete', type, requestParam)
+      return json.dumps(rt)
+    if type != "chart" :
+      raise Exception("invalid type %s, allowed is chart"%type)
     rt={'status':'OK'}
     dir=None
-    if type == "track":
-      name=self.getRequestParam(requestParam,"name")
-      if name is None:
-        raise Exception("no name for delete track")
-      AVNLog.debug("delete track request, name=%s",name)
-      name=name.replace("/","")
-      trackWriter=self.server.getHandler(AVNTrackWriter.getConfigName())
-      trackWriter.deleteTrack(name)
-      return json.dumps(rt)
     if type == "chart":
       dir=self.getChartDir()
       url=self.getRequestParam(requestParam,"url")

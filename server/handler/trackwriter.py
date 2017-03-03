@@ -25,7 +25,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+import json
 import time
 import subprocess
 import threading
@@ -101,13 +101,17 @@ class AVNTrackWriter(AVNWorker):
       AVNLog.debug("removed %d track entries older then %s",numremoved,cleanupTime.isoformat())
 
   def getHandledCommands(self):
-    return {'api':'track','download':'track'}
+    return {'api':'track','download':'track',"list":"track","delete":"track"}
 
   def handleApiRequest(self,type,command,requestparam,**kwargs):
     if type == 'api':
       return self.handleTrackRequest(requestparam)
     if type == 'download':
       return self.handleDownloadRequest(requestparam)
+    if type == 'list':
+      return self.listTracks()
+    if type == 'delete':
+      return self.deleteTrackRequest(requestparam)
 
   def handleDownloadRequest(self,requestParam):
     mtype = "application/gpx+xml"
@@ -139,6 +143,35 @@ class AVNTrackWriter(AVNWorker):
       frt = self.getTrackFormatted(maxnum, interval)
       return frt
 
+  def listTracks(self):
+    rt = {'status': 'OK', 'items': []}
+    filter = ".gpx,.nmea,.nmea.gz"
+    dir=self.getTrackDir()
+    if os.path.isdir(dir):
+      for f in os.listdir(dir):
+        match=False
+        for fe in filter.split(","):
+          if f.endswith(fe):
+            match=True
+        if not match:
+          continue
+        fname=os.path.join(dir,f)
+        if not os.path.isfile(fname):
+           continue
+        item={
+           'name': f,
+           'time': os.path.getmtime(fname)
+        }
+        rt['items'].append(item)
+    return rt
+
+  def deleteTrackRequest(self,requestParam):
+    name = AVNUtil.getHttpRequestParam(requestParam, "name")
+    if name is None:
+      raise Exception("no name for delete track")
+    AVNLog.debug("delete track request, name=%s", name)
+    name = name.replace("/", "")
+    self.deleteTrack(name)
   #get the track as array of dicts
   #filter by maxnum and interval
   def getTrackFormatted(self,maxnum,interval):

@@ -593,7 +593,7 @@ class AVNRouter(AVNWorker):
     self.routeListLock.release()
 
   def getHandledCommands(self):
-    return {"api":"routing","download":"route"}
+    return {"api":"routing","download":"route","upload":"route"}
 
   #handle a routing request
   #this expects a command as parameter
@@ -725,7 +725,7 @@ class AVNRouter(AVNWorker):
       rinfo=AVNRouteInfo.fromRoute(route,AVNUtil.utcnow())
       self.routeInfos[route.name]=rinfo
       self.saveRoute(route)
-      return json.dumps({'status':'OK'})
+      return
     except Exception as e:
       raise Exception("exception parsing "+fname+": "+e.message)
 avnav_handlerList.registerHandler(AVNRouter)
