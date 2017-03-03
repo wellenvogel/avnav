@@ -31,7 +31,8 @@ var FileInfo=function(name,type,time){
 var keys={
     type: 'type', //{value}
     downloadList: 'list', //{itemList,selectors}]
-    upload: 'upload' //{upload:true|false,total,loaded}
+    upload: 'upload', //{upload:true|false,total,loaded}
+    uploadForm: 'uploadForm' //counter
 };
 var selectors={
     active:'avn_download_active_entry'
@@ -113,6 +114,7 @@ avnav.inherits(Downloadpage,avnav.gui.Page);
 
 Downloadpage.prototype.resetUpload=function(){
     $('#avi_download_downloadform')[0].reset();
+    this.store.storeData(keys.uploadForm, {count:(new Date()).getTime()})
 };
 
 Downloadpage.prototype.uploadChart=function(fileObject){
@@ -162,6 +164,7 @@ Downloadpage.prototype.uploadRoute=function(fileObject){
         if (!window.FileReader) {
             if (!self.fallbackUpload) {
                 self.toast("your browser does not support FileReader, cannot upload");
+                self.resetUpload();
                 return;
             }
             self.directUpload(file);
@@ -170,6 +173,7 @@ Downloadpage.prototype.uploadRoute=function(fileObject){
         var reader = new FileReader();
         reader.onloadend = function () {
             var xml = reader.result;
+            self.resetUpload();
             if (!xml) {
                 self.toast("unable to load file " + file.name);
                 return;
@@ -310,6 +314,15 @@ Downloadpage.prototype.getPageContent=function(){
             </div>
         );
     },this.store,keys.upload);
+    var UploadForm=ItemUpdater(function(props){
+        return(
+            <form id="avi_download_uploadform" className="avn_hidden" method="post">
+                <input type="file" id="avi_download_uploadfile" name="file" key={props.count} onChange={function(ev){
+                            self.startUpload(ev);
+                        }}/>
+            </form>
+        )
+    },this.store,keys.uploadForm);
     return React.createClass({
         render: function () {
             return(
@@ -325,11 +338,7 @@ Downloadpage.prototype.getPageContent=function(){
                         <input type="hidden" name="type" value="track"/>
                         <input type="hidden" name="_json" value=""/>
                     </form>
-                    <form id="avi_download_uploadform" className="avn_hidden" method="post">
-                        <input type="file" id="avi_download_uploadfile" name="file" onChange={function(ev){
-                            self.startUpload(ev);
-                        }}/>
-                    </form>
+                    <UploadForm/>
                     <UploadIndicator/>
                 </div>
             );
