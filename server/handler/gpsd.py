@@ -142,12 +142,12 @@ class AVNGpsd(AVNWorker):
             time.sleep(timeout/2)
             continue
         AVNLog.info("device %s became visible, starting gpsd",device)
-        self.setInfo('main', "starting gpsd with command"%(gpsdcommand), AVNWorker.Status.STARTED)
+        self.setInfo('main', "starting gpsd with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
         try:
           self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True,close_fds=True)
           reader=GpsdReader(self.navdata, port, "GPSDReader[Reader] %s at %d"%(device,port),self)
           reader.start()
-          self.setInfo('main', "gpsd running with command"%(gpsdcommand), AVNWorker.Status.STARTED)
+          self.setInfo('main', "gpsd running with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
         except:
           AVNLog.debug("unable to start gpsd with command %s: %s",gpsdcommand,traceback.format_exc())
           try:

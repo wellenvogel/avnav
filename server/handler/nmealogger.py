@@ -39,7 +39,7 @@ import gzip
 from avnav_util import *
 from avnav_worker import *
 from avnav_nmea import *
-from avnav_trackwriter import *
+from trackwriter import *
 import avnav_handlerList
 
 #a writer for our track
@@ -113,6 +113,7 @@ class AVNNmeaLogger(AVNWorker):
     while True:
       currentTime=datetime.datetime.utcnow()
       try:
+        newFile=False
         if not os.path.isdir(self.trackdir):
           os.makedirs(self.trackdir, 0775)
         curfname=os.path.join(self.trackdir,self.createFileName(currentTime))

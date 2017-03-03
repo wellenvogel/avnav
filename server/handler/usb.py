@@ -35,7 +35,7 @@ from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_serial import *
-from avnav_serialwriter import *
+from serialwriter import *
 import avnav_handlerList
 hasUdev=False
 try:
@@ -299,7 +299,7 @@ class AVNUsbSerialReader(AVNWorker):
   #overloaded info method
   def getInfo(self):
     try:
-      rt=self.info.copy();
+      rt=self.info.copy()
       st=self.status.copy()
       rta=[]
       keys=sorted(rt.keys(),key=lambda x: re.sub("^[^-]*[-]","-",x))

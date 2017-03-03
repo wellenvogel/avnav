@@ -28,7 +28,7 @@ import shutil
 
 import time
 import traceback
-from avnav_httpserver import AVNHTTPServer
+from httpserver import AVNHTTPServer
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList

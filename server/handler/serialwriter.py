@@ -84,6 +84,7 @@ class SerialWriter(SerialReader):
     #the serial device
     self.device=None
     self.nmeaParser=NMEAParser(navdata)
+    self.buffer=None
 
   def getName(self):
     if self.param.get('combined') is not None and unicode(self.param.get('combined')).upper()=="TRUE":

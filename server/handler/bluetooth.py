@@ -33,7 +33,7 @@ try:
   hasBluetooth=True
 except:
   pass
-from avnav_socketreaderbase import *
+from socketreaderbase import *
 import avnav_handlerList
 
 #a Worker for reading bluetooth devices

@@ -34,7 +34,7 @@ import os
 import sys
 import math
 from __main__ import traceback
-sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries"))
 import gpxpy098.gpx as gpx
 import gpxpy098.parser as gpxparser
 import gpxpy098.utils as gpxutils
@@ -355,6 +355,7 @@ class AVNRouter(AVNWorker):
     self.fillRouteInfos()
     self.currentLegFileName=os.path.join(self.routesdir,self.currentLegName)
     if os.path.exists(self.currentLegFileName):
+      f=None
       try:
         f=open(self.currentLegFileName,"r")
         strleg=f.read(self.MAXROUTESIZE+1000)
@@ -378,11 +379,12 @@ class AVNRouter(AVNWorker):
           if self.currentLeg.name is not None:
             self.activeRoute=self.loadRoute(self.currentLeg.name)
             if self.activeRoute is None:
-              self.activeRoute=GPXRoute(self.currentLeg.name)
+              self.activeRoute=gpx.GPXRoute(self.currentLeg.name)
             self.currentLeg.currentRoute=self.activeRoute
       except:
         AVNLog.error("error parsing current leg %s: %s"%(self.currentLegFileName,traceback.format_exc()))
-      f.close()
+      if f is not None:
+        f.close()
       #TODO: open route
     else:
       AVNLog.info("no current leg %s found"%(self.currentLegFileName,))
@@ -700,7 +702,7 @@ class AVNRouter(AVNWorker):
     fname=self.getRequestParam(requestparam,"filename")
     AVNLog.debug("route upload request for %s",fname)
     if flen > self.MAXROUTESIZE:
-      raise Exception("route is to big, max allowed filesize: "+self.MAXROUTESIZE)
+      raise Exception("route is to big, max allowed filesize %d: "%self.MAXROUTESIZE)
     try:
       data=rfile.read(flen)
       parser = gpxparser.GPXParser(data)
@@ -714,8 +716,8 @@ class AVNRouter(AVNWorker):
       if rinfo is not None:
         raise Exception("route with name "+route.name+" already exists")
       rinfo=AVNRouteInfo.fromRoute(route,AVNUtil.utcnow())
-      self.routeInfos[route.name]=rinfo;
-      self.saveRoute(route);
+      self.routeInfos[route.name]=rinfo
+      self.saveRoute(route)
       return json.dumps({'status':'OK'})
     except Exception as e:
       raise Exception("exception parsing "+fname+": "+e.message)

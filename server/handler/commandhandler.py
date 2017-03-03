@@ -41,7 +41,6 @@ import signal
 
 from avnav_util import *
 from avnav_worker import *
-from wpa_control import WpaControl
 import avnav_handlerList
 
 class Handler:

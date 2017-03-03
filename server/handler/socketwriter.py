@@ -35,7 +35,7 @@ from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_nmea import *
-from avnav_socketreaderbase import *
+from socketreaderbase import *
 import avnav_handlerList
 
 #a worker to output data via a socket
@@ -59,7 +59,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           'read': True,       #allow for reading data
           'readerFilter':'',
           'minTime':50         #if this is set, wait this time before reading new data (ms)
-          };
+          }
       return rt
     return None
 

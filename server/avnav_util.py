@@ -36,6 +36,7 @@ import math
 import re
 import sys
 import ctypes
+import traceback
 
 VERSION="0.9.1"
 
@@ -178,7 +179,7 @@ class AVNLog():
 
 
 class AVNUtil():
-  
+  NAVXML="avnav.xml"
   NM=1852.0; #convert nm into m
   R=6371000; #earth radius in m
   #convert a datetime UTC to a timestamp in seconds
@@ -310,4 +311,23 @@ class AVNUtil():
       AVNLog.debug("[cmd]%s",line.strip())
     cmd.poll()
     return cmd.returncode
-    
+
+  @classmethod
+  def importFromDir(cls,mdir,scope):
+    """import all pythin files in a directory
+       into the callers scope
+       inspired by https://gitlab.com/aurelien-lourot/importdir/tree/master
+       """
+    regexp="(.+)\.py(c?)$"
+    names=set()
+    for entry in os.listdir(mdir):
+      if os.path.isfile(os.path.join(mdir, entry)):
+        regexp_result = re.search(regexp, entry)
+        if regexp_result:  # is a module file name
+          names.add(regexp_result.groups()[0])
+    sys.path.append(mdir)
+    for module_name in sorted(names):  # for each found module...
+      try:
+        scope[module_name] = __import__(module_name)
+      except:
+        print "error importing module %s"%module_name,traceback.format_exc()

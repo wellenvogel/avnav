@@ -25,31 +25,14 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-import sys
-import os
-import signal
-import logging
 import logging.handlers
-import json
-import time
-import threading
-import datetime
-import traceback
-import pprint
-import socket
-import posixpath
-import urllib
 import optparse
-import subprocess
-import urlparse
-import re
-import select
-import gemf_reader
+import signal
+
 try:
   import create_overview
 except:
   pass
-import glob
 AVNAV_VERSION="development"
 try:
   from avnav_server_version import AVNAV_VERSION
@@ -57,26 +40,9 @@ except:
   pass
 from avnav_util import *
 from avnav_config import *
-from avnav_worker import *
-from avnav_data import *
-from avnav_nmea import *
-from avnav_serial import *
-from avnav_gpsd import *
-from avnav_trackwriter import *
-from avnav_socketwriter import *
-from avnav_bluetooth import *
-from avnav_usb import *
-from avnav_socketreaderbase import *
-from avnav_socketreader import *
-from avnav_udpreader import *
-from avnav_httpserver import *
-from avnav_router import *
-from avnav_serialwriter import *
-from avnav_nmealogger import *
-from avnav_importer import AVNImporter
-from avnav_wpahandler import *
-import avnav_commandhandler
 import avnav_handlerList
+from avnav_data import *
+AVNUtil.importFromDir(os.path.join(os.path.dirname(__file__),"handler"),globals())
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 
 loggingInitialized=False
@@ -114,60 +80,7 @@ class AVNBaseConfig(AVNWorker):
     pass
 
 avnav_handlerList.registerHandler(AVNBaseConfig)
- 
-#a worker to check the chart dirs
-#and create avnav.xml...
-class AVNChartHandler(AVNWorker):
-  def __init__(self,param):
-    self.param=param
-    AVNWorker.__init__(self, param)
-  @classmethod
-  def getConfigName(cls):
-    return "AVNChartHandler"
-  @classmethod
-  def getConfigParam(cls, child=None):
-    if child is not None:
-      return None
-    return {
-            'period': 30 #how long to sleep between 2 checks
-    }
-  @classmethod
-  def preventMultiInstance(cls):
-    return True
-  def getName(self):
-    return "AVNChartHandler"
-  def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    server=None
-    for h in self.allHandlers:
-      if h.getConfigName()==AVNHTTPServer.getConfigName():
-        server=h
-        break
-    if server is None:
-      AVNLog.error("unable to find AVNHTTPServer")
-      return
-    AVNLog.info("charthandler started")
-    while True:
-      try:
-        osdir=server.getChartBaseDir()
-        if osdir is None or not os.path.isdir(osdir):
-          AVNLog.error("unable to find a valid chart directory %s"%(osdir))
-        else:
-          for cd in os.listdir(osdir):
-            chartdir=os.path.join(osdir,cd)
-            if not os.path.isdir(chartdir):
-              continue
-            args=["","-i",chartdir]
-            rt=create_overview.main(args)
-            if rt == 0:
-              AVNLog.info("created/updated %s in %s",AVNHTTPServer.navxml,chartdir)
-            if rt == 1:
-              AVNLog.error("error creating/updating %s in %s",AVNHTTPServer.navxml,chartdir)
-      except:
-        AVNLog.error("error while trying to update charts %s",traceback.format_exc())
-      time.sleep(self.getIntParam('period') or 10)   
-avnav_handlerList.registerHandler(AVNChartHandler)
-      
+
 def sighandler(signal,frame):
   for handler in AVNWorker.allHandlers:
     try:
@@ -180,9 +93,6 @@ def sighandler(signal,frame):
 def main(argv):
   global loggingInitialized,debugger,trackWriter
   debugger=sys.gettrace()
-  workerlist=[AVNBaseConfig,AVNGpsdFeeder,AVNSerialReader,AVNGpsd,
-              AVNHTTPServer,AVNTrackWriter,AVNBlueToothReader,AVNUsbSerialReader,
-              AVNSocketWriter,AVNSocketReader,AVNUdpReader,AVNChartHandler,AVNRouter, AVNSerialWriter, AVNNmeaLogger, AVNImporter,AVNWpaHandler]
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
@@ -208,15 +118,9 @@ def main(argv):
   if allHandlers is None:
     AVNLog.error("unable to parse config file %s",cfgname)
     sys.exit(1)
-  baseConfig=None
-  httpServer=None
-  for handler in allHandlers:
-    if handler.getConfigName() == "AVNConfig":
-      baseConfig=handler
-    if handler.getConfigName() == "AVNTrackWriter":
-      trackWriter=handler
-    if handler.getConfigName() == AVNHTTPServer.getConfigName():
-      httpServer=handler
+  baseConfig=AVNWorker.findHandlerByName("AVNConfig")
+  httpServer=AVNWorker.findHandlerByName("AVNHTTPServer")
+  trackWriter=AVNWorker.findHandlerByName("AVNTrackWriter")
   if baseConfig is None:
     #no entry for base config found - using defaults
     baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())

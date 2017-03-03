@@ -49,10 +49,9 @@ except:
 from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
-from avnav_router import *
-from avnav_trackwriter import *
-from avnav_httpserver import *
-from avnav_wpahandler import *
+from router import *
+from trackwriter import *
+from wpahandler import *
 hasIfaces=False
 try:
   import netifaces
@@ -66,7 +65,7 @@ import threading
 
 #a HTTP server with threads for each request
 class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWorker):
-  navxml="avnav.xml"
+  navxml=AVNUtil.NAVXML
   
   @classmethod
   def getConfigName(cls):
