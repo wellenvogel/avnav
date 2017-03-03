@@ -82,4 +82,7 @@
 <AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter importDir="../data_linux/import"></AVNImporter>
 <AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan0"></AVNWpaHandler>
+<AVNCommandHandler>
+	<Command name="test" command="sleep 4"/>
+</AVNCommandHandler>
 </AVNServer>
