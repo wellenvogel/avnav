@@ -171,6 +171,19 @@ class AVNCommandHandler(AVNWorker):
       rt[n]=cmd.get('command')
     return rt
 
+  def getHandledCommands(self):
+    return "command"
+  def handleApiRequest(self,type,command,requestparam,**kwargs):
+    command=AVNUtil.getHttpRequestParam(requestparam,"command")
+    if command is None:
+      raise Exception("missing request parameter command")
+    rt={'status':'ok'}
+    if not self.startCommand(command):
+      rt['status']='error'
+      rt['info']=self.info.get(command)
+    return rt
+
+
 avnav_handlerList.registerHandler(AVNCommandHandler)
 
 
