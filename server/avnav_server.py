@@ -89,6 +89,11 @@ def sighandler(signal,frame):
       pass
   sys.exit(1)
         
+def findHandlerByConfig(list,configName):
+  for h in list:
+    if h.getConfigName()==configName:
+      return h
+  return None
 
 def main(argv):
   global loggingInitialized,debugger,trackWriter
@@ -118,9 +123,10 @@ def main(argv):
   if allHandlers is None:
     AVNLog.error("unable to parse config file %s",cfgname)
     sys.exit(1)
-  baseConfig=AVNWorker.findHandlerByName("AVNConfig")
-  httpServer=AVNWorker.findHandlerByName("AVNHTTPServer")
-  trackWriter=AVNWorker.findHandlerByName("AVNTrackWriter")
+  #we cannot use the find methods at AVNWorker here as they only work after instantiation
+  baseConfig=findHandlerByConfig(allHandlers,"AVNConfig")
+  httpServer=findHandlerByConfig(allHandlers,"AVNHttpServer")
+  trackWriter=findHandlerByConfig(allHandlers,"AVNTrackWriter")
   if baseConfig is None:
     #no entry for base config found - using defaults
     baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())
