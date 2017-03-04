@@ -84,5 +84,7 @@
 <AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan0"></AVNWpaHandler>
 <AVNCommandHandler>
 	<Command name="test" command="sleep 4"/>
+	<Command name="shutdown" command="echo shutdown triggered"/>
+	<Command name="alarm" command="mplayer -ao pulse  -volume 90 /home/andreas/Downloads/alarm-tones/open-your-eyes-and-see.mp3" repeat="10"/>
 </AVNCommandHandler>
 </AVNServer>
