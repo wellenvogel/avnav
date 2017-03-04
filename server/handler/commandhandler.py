@@ -46,19 +46,27 @@ import avnav_handlerList
 
 class Handler:
   def __init__(self,command,name,callback):
-    self.command=command
+    cmdstring=command.get('command')
+    repeat=command.get('repeat')
+    self.command=cmdstring
     self.name=name
     self.callback=callback
     self.thread=None
     self.stop=False
+    self.repeat=int(repeat) if repeat is not None else 1
     self.subprocess=None
 
-  def start(self):
-    args=shlex.split(self.command)
-    AVNLog.debug("starting command ",args)
-    self.subprocess=subprocess.Popen(args, stdout=subprocess.PIPE,stdin=subprocess.PIPE,
-                       preexec_fn=os.setsid)
+  def getCommand(self):
+    return self.command
+
+  def _startCmd(self):
+    args = shlex.split(self.command)
+    AVNLog.debug("starting command ", args)
+    self.subprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                                       preexec_fn=os.setsid)
     self.subprocess.stdin.close()
+  def start(self):
+    self._startCmd()
     self.thread=threading.Thread(target=self.run)
     self.thread.setDaemon(True)
     self.thread.start()
@@ -68,6 +76,7 @@ class Handler:
       return
     try:
       self.stop=True
+      self.repeat=0
       os.killpg(os.getpgid(self.subprocess.pid), signal.SIGTERM)
       self.thread.join(10)
     except :
@@ -75,25 +84,33 @@ class Handler:
 
   def run(self):
     threading.current_thread().setName("[%s]cmd: %s" % (AVNLog.getThreadId(), self.name))
-    while True and not self.stop:
-      line = self.subprocess.stdout.readline()
-      if not line:
-        break
-      AVNLog.debug("[cmd]%s", line.strip())
-    status=None
-    try:
-      wt=30
-      while wt >0 and status is None:
-        status=self.subprocess.poll()
-        if status is None:
-          time.sleep(0.1)
-        wt-=1
-    except :
-      pass
-    if self.callback is not None:
-      if status is None:
-        status=-1
-      self.callback(self.name,status)
+    while self.repeat > 0:
+      try:
+        while True and not self.stop:
+          line = self.subprocess.stdout.readline()
+          if not line:
+            break
+          AVNLog.debug("[cmd]%s", line.strip())
+        status=None
+        wt=30
+        while wt >0 and status is None:
+          status=self.subprocess.poll()
+          if status is None:
+            time.sleep(0.1)
+          wt-=1
+      except :
+        pass
+      self.repeat -= 1
+      if self.repeat <= 0:
+        if self.callback is not None:
+          if status is None:
+            status=-1
+          self.callback(self.name,status)
+      if self.repeat > 0:
+        try:
+          self._startCmd()
+        except:
+          AVNLog.debug("unable to start command %s:%s",self.name,self.command)
     return self.subprocess.returncode
 
 class AVNCommandHandler(AVNWorker):
@@ -112,7 +129,8 @@ class AVNCommandHandler(AVNWorker):
     if child == "Command":
       return {
         'name': '',
-        'command': ""
+        'command': '',
+        'repeat':1
       }
   @classmethod
   def preventMultiInstance(cls):
@@ -132,7 +150,7 @@ class AVNCommandHandler(AVNWorker):
       return None
     for cmd in definedCommands:
       if cmd.get('name') is not None and cmd.get('name') == name:
-        return cmd.get('command')
+        return {'command':cmd.get('command'),'repeat':cmd.get('repeat')}
   def commandFinished(self,name,status):
     AVNLog.info("finished with status %d",status)
     self.setInfo(name,"finished with status %d"%(status),self.Status.INACTIVE)
@@ -156,13 +174,28 @@ class AVNCommandHandler(AVNWorker):
     handler=Handler(cmd,name,self.commandFinished)
     try:
       handler.start()
-      self.setInfo(name,"running \"%s\""%cmd,self.Status.RUNNING)
+      self.setInfo(name,"running \"%s\""%handler.getCommand(),self.Status.RUNNING)
     except:
-      AVNLog.error("error starting command %s=%s: %s",name,cmd,traceback.format_exc())
+      AVNLog.error("error starting command %s=%s: %s",name,handler.getCommand(),traceback.format_exc())
       self.setInfo(name, "unable to run %s: %s"%(cmd,traceback.format_exc(1)), self.Status.ERROR)
       return False
     self.runningProcesses[name]=handler
     return True
+
+  def stopCommand(self, name):
+    cmd = self.findCommand(name)
+    if cmd is None:
+      AVNLog.error("no command \"%s\" configured", name)
+      return False
+    current = self.runningProcesses.get(name)
+    if current is not None:
+      AVNLog.warn("command %s running on new start, trying to stop", name)
+      try:
+        current.stopHandler()
+        return True
+      except:
+        self.setInfo(name,"unable to stop command %s"%traceback.format_exc(1),self.Status.ERROR)
+        return False
 
 
   def getStatusProperties(self):
@@ -180,13 +213,39 @@ class AVNCommandHandler(AVNWorker):
   def getHandledCommands(self):
     return "command"
   def handleApiRequest(self,type,command,requestparam,**kwargs):
-    command=AVNUtil.getHttpRequestParam(requestparam,"command")
+    status=AVNUtil.getHttpRequestParam(requestparam,"status")
+    if status is not None:
+      status=status.split(',')
+      rt={}
+      definedCommands = self.param.get('Command')
+      if definedCommands is None:
+        return rt
+      for cmd in definedCommands:
+        name=cmd.get('name')
+        if name is None:
+          continue
+        if not name in status and not 'all' in status :
+          continue
+        running=self.runningProcesses.get(name)
+        rt[name]={'command':cmd.get('command'),'repeat':cmd.get('repeat'),'running':True if running is not None else False}
+      return rt
+    mode="start"
+    command=AVNUtil.getHttpRequestParam(requestparam,"start")
     if command is None:
-      raise Exception("missing request parameter command")
+      command = AVNUtil.getHttpRequestParam(requestparam, "stop")
+      mode="stop"
+      if command is None:
+        raise Exception("missing request parameter start or stop")
+
     rt={'status':'ok'}
-    if not self.startCommand(command):
-      rt['status']='error'
-      rt['info']=self.info.get(command)
+    if mode == "start":
+      if not self.startCommand(command):
+        rt['status']='error'
+        rt['info']=self.info.get(command)
+      return rt
+    if not self.stopCommand(command):
+      rt['status'] = 'error'
+      rt['info'] = self.info.get(command)
     return rt
 
 
