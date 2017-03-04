@@ -4,6 +4,7 @@
 var ItemList=require('../components/ItemList.jsx');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var React=require('react');
+var OverlayDialog=require('../components/OverlayDialog.jsx');
 
 var keys={
   statusItems:'status'
@@ -17,6 +18,8 @@ var keys={
 var Statuspage=function(){
     avnav.gui.Page.call(this,'statuspage');
     this.statusQuery=0; //sequence counter
+    this.errors=0;
+    this.MAXERR=5;
 };
 avnav.inherits(Statuspage,avnav.gui.Page);
 
@@ -41,9 +44,11 @@ Statuspage.prototype.doQuery=function(){
         success: function(data,status){
             var visibility={
                 addresses:false,
-                wpa:false
+                wpa:false,
+                shutdown:false
             };
             if (this.sequence != self.statusQuery) return;
+            self.errors=0;
             if (data.handler) {
                 data.handler.forEach(function(el){
                     el.key=el.name;
@@ -53,17 +58,25 @@ Statuspage.prototype.doQuery=function(){
                     if (el.configname == "AVNWpaHandler"){
                         visibility.wpa=true;
                     }
+                    if (el.configname=="AVNCommandHandler"){
+                        if (el.properties && el.properties.shutdown ) visibility.shutdown=true;
+                    }
                 });
-                self.store.storeData(keys.statusItems, {itemList: data.handler});
+                self.store.storeData(keys.statusItems, {itemList: data.handler,serverError:false});
             }
-            for (var k in visibility){
-                self.changeButtonVisibilityFlag(k,visibility[k]);
+            else{
+                self.store.storeData(keys.statusItems, {itemList: [],serverError:false});
             }
+            self.changeButtonVisibilityFlag(visibility);
             self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
         },
         error: function(status,data,error){
             avnav.log("status query error");
             if (this.sequence != self.statusQuery) return;
+            self.errors++;
+            if (self.errors > self.MAXERR){
+                self.store.storeData(keys.statusItems,{itemList:[],serverError:true})
+            }
             self.statusTimer=window.setTimeout(function(){self.doQuery();},self.gui.properties.getProperties().statusQueryTimeout);
         },
         timeout: self.gui.properties.getProperties().statusQueryTimeout*0.9
@@ -91,10 +104,11 @@ Statuspage.prototype.getPageContent=function(){
         {key:'Cancel'},
         {key:'StatusWpa',wpa:true},
         {key:'StatusAddresses',addresses:true},
-        {key:'StatusAndroid',android:true}
+        {key:'StatusAndroid',android:true},
+        {key:'StatusShutdown',android:false,shutdown:true}
     ];
     this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
-    this.changeButtonVisibilityFlag('addresses',false);
+    this.changeButtonVisibilityFlag({addresses:false,shutdown:false,wpa:false});
     var ChildStatus=function(props){
         return (
             <div className="avn_child_status">
@@ -115,7 +129,6 @@ Statuspage.prototype.getPageContent=function(){
 
         );
     };
-    var StatusList=ItemUpdater(ItemList,this.store,keys.statusItems);
     var listProperties={
         onItemClick: function(item,opt_data){
             if (item.configname=="AVNHttpServer" && item.properties && item.properties.addresses){
@@ -124,18 +137,25 @@ Statuspage.prototype.getPageContent=function(){
         },
         itemClass: StatusItem
     };
-    var Headline=function(props){
-        return <div className="avn_left_top">Server Status</div>
-    };
+    var Body=ItemUpdater(function(props){
+        if (props.serverError){
+            return <div className="avn_left_top avn_serverError">Server Connection lost</div>
+        }
+        else{
+            return (
+            <div className="avn_panel_fill_flex">
+                <div className="avn_left_top">Server Status</div>
+                <div className="avn_listWrapper">
+                    <ItemList {...listProperties} {...props}/>
+                </div>
+            </div>
+            )
+        }
+    },this.store,keys.statusItems);
     return React.createClass({
         render: function(){
             return(
-                <div className="avn_panel_fill_flex">
-                    <Headline/>
-                    <div className="avn_listWrapper">
-                        <StatusList {...listProperties}/>
-                    </div>
-                </div>
+                <Body/>
             );
         }
     });
@@ -154,6 +174,23 @@ Statuspage.prototype.btnStatusAndroid=function(button,ev) {
 Statuspage.prototype.btnStatusAddresses=function(button,ev) {
     avnav.log("StatusAddresses clicked");
     this.gui.showPage('addresspage');
+};
+Statuspage.prototype.btnStatusShutdown=function(button,ev) {
+    avnav.log("StatusShutdown clicked");
+    var self=this;
+    OverlayDialog.confirm("really shutdown the server?").then(function(){
+        var url=self.gui.properties.getProperties().navUrl+"?request=command&start=shutdown";
+        $.ajax({
+            url:url,
+            success: function(){
+                self.toast("shutdown started");
+            },
+            error: function(data){
+                OverlayDialog.alert("unable to trigger shutdown: "+(data?data.responseText:""));
+            }
+        })
+    })
+
 };
 (function(){
     //create an instance of the status page handler

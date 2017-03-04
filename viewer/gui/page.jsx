@@ -168,18 +168,18 @@ Page.prototype._initPage=function(){
 
 /**
  * change a button visibility tag
- * @param {string} flag the tag name
- * @param {boolean} value
+ * @param {string|Object} flag the tag name
+ * @param {boolean} opt_value (only if flag is a string)
  */
-Page.prototype.changeButtonVisibilityFlag=function(flag,value){
+Page.prototype.changeButtonVisibilityFlag=function(flag,opt_value){
     var flags=this.store.getData(this.globalKeys.buttons,{}).visibilityFlags||{};
     if (flag instanceof Object){
         if (equals(flag,flags)) return;
         flags=assign({},flags,flag);
     }
     else {
-        if (flags[flag] === value) return;
-        flags[flag] = value;
+        if (flags[flag] === opt_value) return;
+        flags[flag] = opt_value;
     }
     this.store.replaceSubKey(this.globalKeys.buttons,flags,'visibilityFlags');
 };
