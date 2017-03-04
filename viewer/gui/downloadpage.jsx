@@ -229,10 +229,10 @@ Downloadpage.prototype.startUpload=function(ev){
 Downloadpage.prototype.getPageContent=function(){
     var self=this;
     var buttons=[
-        {key:'DownloadPageCharts'},
-        {key:'DownloadPageTracks'},
-        {key:'DownloadPageRoutes'},
-        {key:'DownloadPageUpload'},
+        {key:'DownloadPageCharts',chart:true},
+        {key:'DownloadPageTracks',track: true},
+        {key:'DownloadPageRoutes',route:true},
+        {key:'DownloadPageUpload',upload:true},
         {key:'Cancel'}
     ];
     this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
@@ -360,31 +360,21 @@ Downloadpage.prototype.showPage=function(options) {
         this.selectItemCallback=options.selectItemCallback;
     }
     this.store.storeData(keys.type,{value:this.headlines[this.type]});
-    this.changeButtonDisplay('DownloadPageCharts',this.allowChange);
-    this.changeButtonDisplay('DownloadPageTracks',this.allowChange);
-    this.changeButtonDisplay('DownloadPageRoutes',this.allowChange);
-    if (this.type == "chart"){
-        if (avnav.android||this.gui.properties.getProperties().onAndroid) this.changeButtonDisplay('DownloadPageUpload',false);
-        this.changeButtonDisplay('DownloadPageUpload',true);
-        this.handleToggleButton('.avb_DownloadPageTracks',false);
-        this.handleToggleButton('.avb_DownloadPageCharts',true);
-        this.handleToggleButton('.avb_DownloadPageRoutes',false);
-    }
-    if (this.type == "track") {
-        this.changeButtonDisplay('DownloadPageUpload',false);
-        this.handleToggleButton('.avb_DownloadPageCharts',false);
-        this.handleToggleButton('.avb_DownloadPageTracks',true);
-        this.handleToggleButton('.avb_DownloadPageRoutes',false);
-    }
-    if (this.type == "route") {
-        this.changeButtonDisplay('DownloadPageUpload',true);
-        this.handleToggleButton('.avb_DownloadPageCharts',false);
-        this.handleToggleButton('.avb_DownloadPageTracks',false);
-        this.handleToggleButton('.avb_DownloadPageRoutes',true);
-    }
-    if (!this.gui.properties.getProperties().connectedMode && this.type != "route"){
-        this.changeButtonDisplay('DownloadPageUpload',false);
-    }
+    var onAndroid=avnav.android||this.gui.properties.getProperties().onAndroid;
+    var visibility={
+        track:this.type == 'track'|| this.allowChange,
+        route:this.type == 'route'|| this.allowChange,
+        chart:this.type == 'chart'|| this.allowChange,
+        upload:this.type == 'route'|| (this.type == 'chart' && ! onAndroid && this.gui.properties.getProperties().connectedMode)
+    };
+    this.changeButtonVisibilityFlag(visibility);
+    var toggles={
+        DownloadPageTracks: this.type == 'track',
+        DownloadPageCharts: this.type == 'chart',
+        DownloadPageRoutes: this.type == 'route'
+    };
+
+    this.handleToggleButton(toggles);
     this.fillData(true);
     this.hideProgress();
 };
@@ -687,12 +677,15 @@ Downloadpage.prototype.btnDownloadPageUpload=function(button,ev){
 };
 
 Downloadpage.prototype.btnDownloadPageRoutes=function(button,ev){
+    if (this.type == 'route') return;
     this.showPage({downloadtype:"route",skipHistory: true});
 };
 Downloadpage.prototype.btnDownloadPageTracks=function(button,ev){
+    if (this.type == 'track') return;
     this.showPage({downloadtype:"track",skipHistory: true});
 };
 Downloadpage.prototype.btnDownloadPageCharts=function(button,ev){
+    if (this.type == 'chart') return;
     this.showPage({downloadtype:"chart",skipHistory: true});
 };
 

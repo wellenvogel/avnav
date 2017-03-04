@@ -11,6 +11,8 @@ var React=require('react');
 var ReactDOM=require('react-dom');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ButtonList=require('../components/ButtonList.jsx');
+var assign=require('object-assign');
+var equals=require('shallow-equals');
 
 
 /**
@@ -163,22 +165,7 @@ Page.prototype._initPage=function(){
     return true;
     
 };
-/**
- * show or hide a button
- * @param key the button key
- * @param display true|false
- */
-Page.prototype.changeButtonDisplay=function(key,display){
-    var buttons=this.store.getData(this.globalKeys.buttons,{});
-    if (! buttons.itemList) return;
-    buttons=buttons.itemList;
-    for (var i in buttons){
-        if (buttons[i].key == key){
-            buttons[i]=avnav.assign({},buttons[i],{visible:display?true:false});
-            this.store.replaceSubKey(this.globalKeys.buttons,buttons,'itemList')
-        }
-    }
-};
+
 /**
  * change a button visibility tag
  * @param {string} flag the tag name
@@ -186,8 +173,14 @@ Page.prototype.changeButtonDisplay=function(key,display){
  */
 Page.prototype.changeButtonVisibilityFlag=function(flag,value){
     var flags=this.store.getData(this.globalKeys.buttons,{}).visibilityFlags||{};
-    if (flags[flag] === value) return;
-    flags[flag]=value;
+    if (flag instanceof Object){
+        if (equals(flag,flags)) return;
+        flags=assign({},flags,flag);
+    }
+    else {
+        if (flags[flag] === value) return;
+        flags[flag] = value;
+    }
     this.store.replaceSubKey(this.globalKeys.buttons,flags,'visibilityFlags');
 };
 /**
@@ -441,6 +434,25 @@ Page.prototype.hidePage=function(){
  * @param onClass
  */
 Page.prototype.handleToggleButton=function(id,onoff,onClass){
+    var buttonList=this.store.getData(this.globalKeys.buttons,{}).itemList;
+    if (buttonList){
+        //new pages...
+        var changed=false;
+        id=id.replace(/^\.avb_/,"");
+        for (var i=0;i< buttonList.length;i++){
+            var item=buttonList[i];
+            if (item.key == id){
+                if (onoff != item.toggle){
+                    item.toggle=onoff;
+                    changed=true;
+                }
+            }
+        }
+        if (changed){
+            this.store.replaceSubKey(this.globalKeys.buttons,buttonList,'itemList');
+        }
+        return;
+    }
     var oc=onClass || "avn_buttonActive";
     if (onoff){
         this.selectOnPage(id).removeClass("avn_buttonActive");

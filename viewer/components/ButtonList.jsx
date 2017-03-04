@@ -50,7 +50,7 @@ var ButtonList= React.createClass({
             if (item.toggle !== undefined){
                 addClass+=" avb_toggleButton ";
                 if (item.toggle) addClass+="avn_buttonActive";
-                else addClass="avn_buttonInactive"
+                else addClass+="avn_buttonInactive"
             }
             item.addClass=item.addClass?(item.addClass+" "+addClass):addClass;
             newItemList.push(item);
