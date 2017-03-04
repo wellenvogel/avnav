@@ -27,6 +27,7 @@ avnav.inherits(Statuspage,avnav.gui.Page);
 
 Statuspage.prototype.showPage=function(options){
     if (!this.gui) return;
+    this.changeButtonVisibilityFlag({connected:this.gui.properties.getProperties().connectedMode});
     this.statusQuery=1;
     this.doQuery();
 };
@@ -102,13 +103,13 @@ Statuspage.prototype.getPageContent=function(){
     var self=this;
     var buttons=[
         {key:'Cancel'},
-        {key:'StatusWpa',wpa:true},
+        {key:'StatusWpa',wpa:true,connected:true},
         {key:'StatusAddresses',addresses:true},
         {key:'StatusAndroid',android:true},
-        {key:'StatusShutdown',android:false,shutdown:true}
+        {key:'StatusShutdown',android:false,shutdown:true,connected:true}
     ];
     this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
-    this.changeButtonVisibilityFlag({addresses:false,shutdown:false,wpa:false});
+    this.changeButtonVisibilityFlag({addresses:false,shutdown:false,wpa:false,connected:this.gui.properties.getProperties().connectedMode});
     var ChildStatus=function(props){
         return (
             <div className="avn_child_status">
