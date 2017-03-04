@@ -38,6 +38,7 @@ import json
 import datetime
 import threading
 import signal
+import shlex
 
 from avnav_util import *
 from avnav_worker import *
@@ -53,8 +54,11 @@ class Handler:
     self.subprocess=None
 
   def start(self):
-    self.subprocess=subprocess.Popen(self.command.split(), stdout=subprocess.PIPE,
+    args=shlex.split(self.command)
+    AVNLog.debug("starting command ",args)
+    self.subprocess=subprocess.Popen(args, stdout=subprocess.PIPE,stdin=subprocess.PIPE,
                        preexec_fn=os.setsid)
+    self.subprocess.stdin.close()
     self.thread=threading.Thread(target=self.run)
     self.thread.setDaemon(True)
     self.thread.start()
@@ -141,7 +145,8 @@ class AVNCommandHandler(AVNWorker):
     """start a named command"""
     cmd=self.findCommand(name)
     if cmd is None:
-      AVNLog.error("no command %s configured", name)
+      AVNLog.error("no command \"%s\" configured", name)
+      self.setInfo(name, "no command \"%s\" configured"%name, self.Status.ERROR)
       return False
     current=self.runningProcesses.get(name)
     if current is not None:
@@ -151,12 +156,13 @@ class AVNCommandHandler(AVNWorker):
     handler=Handler(cmd,name,self.commandFinished)
     try:
       handler.start()
-      self.setInfo(name,"running",self.Status.RUNNING)
+      self.setInfo(name,"running \"%s\""%cmd,self.Status.RUNNING)
     except:
       AVNLog.error("error starting command %s=%s: %s",name,cmd,traceback.format_exc())
       self.setInfo(name, "unable to run %s: %s"%(cmd,traceback.format_exc(1)), self.Status.ERROR)
       return False
     self.runningProcesses[name]=handler
+    return True
 
 
   def getStatusProperties(self):

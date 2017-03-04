@@ -259,11 +259,11 @@ class AVNTrackWriter(AVNWorker):
     try:
       f.write(header%(title,))
       for trackpoint in data:
-        ts=trackpoint[0].isoformat();
+        ts=trackpoint[0].isoformat()
         if not ts[-1:]=="Z":
           ts+="Z"
         f.write(trkpstr%(trackpoint[1],trackpoint[2],ts,trackpoint[3],trackpoint[4]))
-      f.write(footer);
+      f.write(footer)
     except:
       AVNLog.warn("Exception while writing gpx file %s: %s",filename,traceback.format_exc());
     f.close()

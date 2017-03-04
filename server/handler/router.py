@@ -612,10 +612,10 @@ class AVNRouter(AVNWorker):
     if command is None:
       raise Exception('missing command for routing request')
     if (command == 'getleg'):
-      return json.dumps(self.leg2Json(self.currentLeg))
+      return self.leg2Json(self.currentLeg)
     if (command == 'unsetleg'):
       self.setCurrentLeg(None)
-      return json.dumps({'status':'OK'})
+      return {'status':'OK'}
     if (command == 'setleg'):
       data=self.getRequestParam(requestparam, 'leg')
       if data is None:
@@ -626,19 +626,19 @@ class AVNRouter(AVNWorker):
       if leg is None:
         raise Exception("invalid leg data %s"%(data))
       self.setCurrentLeg(leg)
-      return json.dumps({'status':'OK'})  
+      return {'status':'OK'}
     if (command == 'setroute'):
-      data=self.getRequestParam(requestparam,'_json');
+      data=self.getRequestParam(requestparam,'_json')
       if data is None:
         raise Exception("missing route for setroute")
       route=self.routeFromJsonString(data)
       AVNLog.info("saving route %s with %d points"%(route.name,len(route.points)))
       self.saveRoute(route)
-      return json.dumps({'status':'OK'})  
+      return {'status':'OK'}
     if (command == 'getroute'):
       data=self.getRequestParam(requestparam, 'name')
       if data is None:
-        return json.dumps({'status':'no route name'})
+        return {'status':'no route name'}
       AVNLog.debug("load route %s"%(data))
       route=self.loadRoute(data)
       if route is None:
@@ -648,13 +648,13 @@ class AVNRouter(AVNWorker):
       rinfo=self.routeInfos.get(data)
       if rinfo is not None:
         jroute['time']=rinfo.time
-      return json.dumps(jroute)
+      return jroute
     if (command == 'deleteroute'):
       name=self.getRequestParam(requestparam, 'name')
       if name is None:
         return json.dumps({'status':'no route name'})
       if self.currentLeg.name is not None and self.currentLeg.active and self.currentLeg.name == name:
-        return json.dumps({'status':'cannot delete active route'})
+        return {'status':'cannot delete active route'}
       self.deleteRouteFromList(name)
       self.deleteRouteInfo(name)
       fname=self.getRouteFileName(name)
@@ -663,15 +663,15 @@ class AVNRouter(AVNWorker):
           os.unlink(fname)
         except:
           pass
-      return json.dumps({'status':'OK'})
+      return {'status':'OK'}
 
     if (command == 'listroutes'):
       rt={'status':'OK'}
       infos=[]
       for ri in self.routeInfos:
         infos.append(self.routeInfos[ri].__dict__)
-      rt['items']=infos;
-      return json.dumps(rt)
+      rt['items']=infos
+      return rt
 
     raise Exception("invalid command "+command)
   #download a route in xml format
