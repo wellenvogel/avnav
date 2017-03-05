@@ -64,10 +64,10 @@ if [ ! -e /sys/class/net/$net ]; then
 fi
 pidfile=/run/hostapd.$net.pid
 drv=`cat /sys/class/net/$net/device/uevent | grep DRIVER `
-hasrtl=`echo $drv | grep rtl81`
+hasrtl=`echo $drv | grep -e rtl81 -e r81`
 logger -t $prfx "detected driver $drv"
 if [ "$hasrtl" != "" ] ; then
-    logger -t $prfx "rtl81xx driver detected"
+    logger -t $prfx "$hasrtl detected"
     if [ -x $HOSTAPD_EDI ] ; then
         logger -t $prfx "using $HOSTAPD_EDI"
         tmpf=/etc/hostapd/$net.edi.conf
