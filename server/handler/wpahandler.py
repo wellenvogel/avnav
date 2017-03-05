@@ -61,7 +61,7 @@ class AVNWpaHandler(AVNWorker):
     return {
             'ownSocket':'/tmp/avnav-wpa-ctrl', #my own socket endpoint
             'wpaSocket':"/var/run/wpa_supplicant/wlan-av1", #the wpa control socket
-            'ownSsid':'avnav'
+            'ownSsid':'avnav,avnav1,avnav2'
     }
   @classmethod
   def preventMultiInstance(cls):
@@ -137,7 +137,7 @@ class AVNWpaHandler(AVNWorker):
         #remove own ssid
         for net in list:
           netSsid=net.get('ssid')
-          if netSsid is not None and netSsid==ownSSid:
+          if netSsid is not None and netSsid in ownSSid.split(","):
             continue
           rt.append(net)
       else:
@@ -218,7 +218,7 @@ class AVNWpaHandler(AVNWorker):
   def getHandledCommands(self):
     return "wpa"
 
-  def handleApiRequest(self,type,requestparam):
+  def handleApiRequest(self,type,subtype,requestparam):
     start=datetime.datetime.utcnow()
     command=self.getRequestParam(requestparam, 'command')
     rt=None
