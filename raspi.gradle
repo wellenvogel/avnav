@@ -107,6 +107,12 @@ ospackage {
             include('dhcpcd.enter-hook')
         }
     }
+    into('/etc/modprobe.d'){
+        from('raspberry'){
+            include('r8188eu.conf')
+            include('8192cu.conf')
+        }
+    }
 
     postInstall file('raspberry/postinstall')
     preInstall file('raspberry/preinstall')
