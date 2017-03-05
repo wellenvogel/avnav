@@ -61,7 +61,6 @@ ospackage {
     }
     into('/usr/lib/systemd/system'){
         from('raspberry'){
-            include('avnav-check-wlan.service')
             include('avnav-check-parts.service')
         }
     }
@@ -69,11 +68,18 @@ ospackage {
         from('raspberry'){
             include('wlan0')
             include('wlan-av1')
+            include('wlan-ap')
+            include('wlan-ap2')
         }
     }
     into('/etc/hostapd'){
         from('raspberry'){
-            include('hostapd.conf')
+            include('hostapd.conf*')
+        }
+    }
+    into('/etc/sysctl.d'){
+        from('raspberry'){
+            include('99-zzavnavsysctl.conf')
         }
     }
     into('/etc'){

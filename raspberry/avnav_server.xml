@@ -195,5 +195,8 @@
 <AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter importDir="/home/pi/avnav/data/import"></AVNImporter>
 <AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan-av1"></AVNWpaHandler>
+<AVNCommandHandler >
+	<Command name="shutdown" command="sudo shutdown -P"/>
+</AVNCommandHandler>
 
 </AVNServer>

@@ -56,6 +56,9 @@ net=$1
 logger -t $prfx "avnav hostapd wrapper started for interface $net"
 CONFIG=$CONFIGBASE.$net
 if [ ! -f $CONFIG ] ; then
+  $CONFIG=$CONFIGBASE.wlan0
+fi
+if [ ! -f $CONFIG ] ; then
   logger -t $prfx "ERROR: config file $CONFIG not found, cannot start hostapd"
 fi
 if [ ! -e /sys/class/net/$net ]; then
@@ -64,6 +67,9 @@ if [ ! -e /sys/class/net/$net ]; then
 fi
 pidfile=/run/hostapd.$net.pid
 drv=`cat /sys/class/net/$net/device/uevent | grep DRIVER `
+#as of jessie 2017-03-02 it seems we don't need this any more
+#the edimax driver does not seem to work anyway
+#so we do not deliver the edimax hostapd - but we do not break old stuff...
 hasrtl=`echo $drv | grep -e rtl81 -e r81`
 logger -t $prfx "detected driver $drv"
 if [ "$hasrtl" != "" ] ; then
@@ -81,7 +87,11 @@ if [ "$hasrtl" != "" ] ; then
 fi
 tmpf=/etc/hostapd/$net.conf
 rm -f $tmpf
-sed "s/.*interface *=.*/interface=$net/" $CONFIG > $tmpf
+common=$CONFIGBASE.common
+if [ -f $common ] ; then
+  cat $common > $tmpf
+fi
+sed "s/.*interface *=.*/interface=$net/" $CONFIG >> $tmpf
 logger -t $prfx "starting normal hostapd"
 $0 -r $HOSTAPD $pidfile $tmpf $net &
 

@@ -6,6 +6,12 @@
 #lower right: 1-1.5:1.0
 #currently we use upper left
 KERNELS=="1-1.2:1.0",SUBSYSTEM=="net",NAME="wlan-av1"
+
+#to fix a dongle to also work as access point if there are some conflicts
+#just select an USB port that you would like to plug it
+#and uncomment this line (example for upper right)
+#KERNELS=="1-1.4:1.0",SUBSYSTEM=="net",NAME="wlan-ap2"
+
 #an entry to bring the build in adapter of the rapsi3
 #to a separate wlan - this should avoid conflicts
 #with an adapter that has been plugged in

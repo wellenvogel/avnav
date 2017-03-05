@@ -153,9 +153,9 @@ ospackage {
             into "server"
             fileMode 0755
         }
-        from('server/worker') {
+        from('server/handler') {
             include "*.py"
-            into "server/worker"
+            into "server/handler"
             fileMode 0755
         }
         from('chartconvert') {
