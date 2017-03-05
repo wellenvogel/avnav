@@ -438,13 +438,22 @@ Page.prototype.handleToggleButton=function(id,onoff,onClass){
     if (buttonList){
         //new pages...
         var changed=false;
-        id=id.replace(/^\.avb_/,"");
-        for (var i=0;i< buttonList.length;i++){
-            var item=buttonList[i];
-            if (item.key == id){
-                if (onoff != item.toggle){
-                    item.toggle=onoff;
-                    changed=true;
+        var nid=id;
+        if (! (id instanceof Object)){
+            nid={};
+            id=id.replace(/^\.avb_/,"");
+            nid[id]=onOff;
+
+        }
+        for (var idx in nid) {
+            var value=nid[idx];
+            for (var i = 0; i < buttonList.length; i++) {
+                var item = buttonList[i];
+                if (item.key == idx) {
+                    if (value != item.toggle) {
+                        item.toggle = value;
+                        changed = true;
+                    }
                 }
             }
         }
