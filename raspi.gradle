@@ -61,7 +61,7 @@ ospackage {
     }
     into('/usr/lib/systemd/system'){
         from('raspberry'){
-            //include('avnav-check-wlan.service')
+            include('avnav-check-wlan.service')
             include('avnav-check-parts.service')
         }
     }

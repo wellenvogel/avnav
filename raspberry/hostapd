@@ -2,7 +2,7 @@
 #small wrapper around hostapd
 HOSTAPD=/usr/sbin/hostapd
 HOSTAPD_EDI=/usr/sbin/hostapd.edimax
-CONFIG=/etc/hostapd/hostapd.conf
+CONFIGBASE=/etc/hostapd/hostapd.conf
 prfx="avnav-hostapd"
 
 if [ "$1" = "-r" ] ; then
@@ -54,6 +54,7 @@ if [ $# != 1 ] ; then
 fi
 net=$1
 logger -t $prfx "avnav hostapd wrapper started for interface $net"
+CONFIG=$CONFIGBASE.$net
 if [ ! -f $CONFIG ] ; then
   logger -t $prfx "ERROR: config file $CONFIG not found, cannot start hostapd"
 fi

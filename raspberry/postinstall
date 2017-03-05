@@ -49,6 +49,8 @@ fi
 #remove wlan0 config from /etc/network/interfaces
 sed -i -e '/^iface *wlan0/,/^[^ ]/d' -e '/wlan0/d' /etc/network/interfaces
 
+systemctl disable dhcpd || echo "dhcpd not running, dont need to disable"
+systemctl stop dhcpd || echo "dhcpd not running, dont need to disable"
 systemctl daemon-reload
 systemctl restart dnsmasq
 systemctl restart ntp
