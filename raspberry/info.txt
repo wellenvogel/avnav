@@ -400,7 +400,15 @@ sudo vi /etc/default/rcS
 change #FSCKFIX=no
 to FSCKFIX=yes
 
+====================== prevent resize on newer raspbian images ===================
+https://www.raspberrypi.org/blog/another-update-raspbian/
+http://raspberrypi.stackexchange.com/questions/47773/disable-auto-file-system-expansion-in-new-jessie-image-2016-05-10
+edit cmdline.txt in the boot partition and remove init=/usr/lib/raspi-config/init_resize.sh
 
+to enable resize again, follow the steps described at https://www.raspberrypi.org/forums/viewtopic.php?t=174434&p=1113971
+sudo wget -O /etc/init.d/resize2fs_once https://github.com/RPi-Distro/pi-gen/raw/dev/stage2/01-sys-tweaks/files/resize2fs_once
+sudo chmod +x /etc/init.d/resize2fs_once
+sudo systemctl enable resize2fs_once
 
 
 ====================== after 2016/03/12 ==========================================
@@ -488,8 +496,18 @@ sudo ./setup.sh nopart
 sudo systemctl start avnav
  
 
+ ========== starting with 2017-03-xx =============================
 
-
+To prevent WLAN issues with adapters and the build in we will go for 2 access points:
+1. wlan-ap - used for the internal adapter - address range: 192.168.30.xxx (host 192.168.30.10)
+2. wlan0 for any plugged in adapters that are not used for the client connection 192.168.20.xxx (host 192.168.20.10)
+3. wlan-ap2 - still not assigned (but prepared for address range 192.168.40.xxx) - simply add a mapping in 010-avnav-net.rules
+therefore we add to 
+/etc/udev/rules.d/010-avnav-net.rules:
+KERNELS=="mmc1:0001:1",NAME="wlan-ap" 
+and we double the configuration:
+/etc/network/interfaces.d - config for wlan-ap
+/etc/dnsmasq.conf.d
 
  
  
