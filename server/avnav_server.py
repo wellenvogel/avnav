@@ -17,7 +17,7 @@
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHERtime
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
@@ -28,6 +28,7 @@
 import logging.handlers
 import optparse
 import signal
+import datetime
 
 try:
   import create_overview
@@ -95,6 +96,12 @@ def findHandlerByConfig(list,configName):
 
 def main(argv):
   global loggingInitialized,debugger
+  try:
+    #workaround for some strange bug AttributeError: 'module' object has no attribute '_strptime'
+    #see http://code-trick.com/python-bug-attribute-error-_strptime
+    datetime.datetime.strptime("1999","%Y")
+  except:
+    pass
   debugger=sys.gettrace()
   cfgname=None
   usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [configfile] " % (argv[0])
