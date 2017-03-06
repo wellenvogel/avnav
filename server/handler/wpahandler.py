@@ -115,6 +115,7 @@ class AVNWpaHandler(AVNWorker):
     self.scanLock.acquire()
     now=datetime.datetime.utcnow()
     if now > (self.lastScan + datetime.timedelta(seconds=30)):
+      AVNLog.debug("wpa start scan")
       self.lastScan=now
       self.scanLock.release()
       self.wpaHandler.startScan()
@@ -122,6 +123,7 @@ class AVNWpaHandler(AVNWorker):
     self.scanLock.release()
 
   def getList(self):
+    AVNLog.debug("wpa getList")
     rt=[]
     wpaHandler=self.wpaHandler
     if wpaHandler is None:
@@ -158,7 +160,7 @@ class AVNWpaHandler(AVNWorker):
       wpaHandler.saveConfig()
       return {'status':'OK'}
     except Exception as e:
-      AVNLog.error("exception in WPAHandler:getList: %s",traceback.format_exc())
+      AVNLog.error("exception in WPAHandler:removeNetwork: %s",traceback.format_exc())
       return {'status':'commandError','info':str(e)}
 
   def enableNetwork(self,id):
@@ -172,7 +174,7 @@ class AVNWpaHandler(AVNWorker):
       wpaHandler.saveConfig()
       return {'status':'OK'}
     except Exception as e:
-      AVNLog.error("exception in WPAHandler:getList: %s",traceback.format_exc())
+      AVNLog.error("exception in WPAHandler:enableNetwork: %s",traceback.format_exc())
       return {'status':'commandError','info':str(e)}
   def disableNetwork(self,id):
     rt={'status':'no WLAN'}
@@ -218,9 +220,10 @@ class AVNWpaHandler(AVNWorker):
   def getHandledCommands(self):
     return "wpa"
 
-  def handleApiRequest(self,type,subtype,requestparam):
+  def handleApiRequest(self,type,subtype,requestparam,**kwargs):
     start=datetime.datetime.utcnow()
     command=self.getRequestParam(requestparam, 'command')
+    AVNLog.debug("wpa api request %s",command)
     rt=None
     if command is None:
       raise Exception('missing command for wpa request')
