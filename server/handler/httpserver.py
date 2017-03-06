@@ -592,7 +592,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if handler is None:
           raise Exception("no handler found for request %s",requestType)
         rtj=handler.handleApiRequest('api',requestType,requestParam)
-        if isinstance(rtj,dict):
+        if isinstance(rtj,dict) or isinstance(rtj,list):
           rtj=json.dumps(rtj)
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
