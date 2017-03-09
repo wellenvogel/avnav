@@ -299,7 +299,11 @@ class AVNRouter(AVNWorker):
     if rt is not None:
       return rt
     filename=self.getRouteFileName(name)
-    rt=self.loadRouteFile(filename)
+    try:
+      rt=self.loadRouteFile(filename)
+    except:
+      AVNLog.error("unable to load route %s:%s"%(filename,traceback.format_exc(1)))
+      return
     if rt is not None:
       self.addRouteToList(rt)
     return rt
