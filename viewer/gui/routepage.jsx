@@ -198,6 +198,7 @@ Routepage.prototype._updateDisplay=function(){
 Routepage.prototype.waypointClicked=function(item,param){
     if (param && param=='btnDelete'){
         if (!this.currentRoute) return;
+        if (! this.canEditOrWarn()) return false;
         this.currentRoute.deletePoint(item.idx);
         this._updateDisplay();
         return;
@@ -208,6 +209,7 @@ Routepage.prototype.waypointClicked=function(item,param){
         this.updateSelection(selectors.selected,item.key);
         return;
     }
+    if (! this.canEditOrWarn()) return false;
     var self=this;
     var wp=this.currentRoute.getPointAtIndex(item.idx);
     var wpChanged=function(newWp,close){
@@ -267,6 +269,19 @@ Routepage.prototype.goBack=function(){
     this.btnRoutePageCancel();
 };
 
+Routepage.prototype.canEdit=function(){
+    if (this.gui.properties.getProperties().connectedMode) return true;
+    if (! this.currentRoute) return false;
+    if (this.currentRoute.server) return false;
+    return true;
+};
+
+Routepage.prototype.canEditOrWarn=function(){
+    if (this.canEdit()) return true;
+    OverlayDialog.confirm("you cannot edit this route as you are disconnected. Please select a new name",this.getDialogContainer());
+    return false;
+};
+
 /**
  * store the route we are currently editing
  * @private
@@ -276,6 +291,16 @@ Routepage.prototype.goBack=function(){
 Routepage.prototype.storeRoute=function(opt_targetSelected){
     if (! this.currentRoute) return;
     var selectedWaypoint=this.store.getData(keys.waypointSelections,{selectors:{}}).selectors[selectors.selected];
+    if (this.initialName != this.currentRoute.name){
+        //we selected a new name
+        //now set route to be local iuf we are not connected
+        if (! this.gui.properties.getProperties().connectedMode){
+            this.currentRoute.server=false;
+        }
+    }
+    if (this.currentRoute.differsTo(this.routingHandler.getEditingRoute())){
+        if (! this.canEditOrWarn()) return false;
+    }
     this.routingHandler.setNewEditingRoute(this.currentRoute, this._isEditingActive);
     this.initialName=this.currentRoute.name;
     var targetWp;
@@ -296,6 +321,7 @@ Routepage.prototype.storeRoute=function(opt_targetSelected){
     if (selectedWaypoint !== undefined) {
         this.routingHandler.setEditingWpIdx(selectedWaypoint);
     }
+    return true;
 
 };
 //-------------------------- Buttons ----------------------------------------
@@ -305,18 +331,16 @@ Routepage.prototype.btnRoutePageOk=function (button,ev){
     var self=this;
     if (this.currentRoute.name != this.initialName ){
         //check if a route with this name already exists
-        this.routingHandler.fetchRoute(this.currentRoute.name,false,
+        this.routingHandler.fetchRoute(this.currentRoute.name,!this.currentRoute.server,
         function(data){
             self.toast("route with name "+this.currentRoute.name+" already exists",true);
         },
         function(er){
-            self.storeRoute();
-            self.gui.returnToLast();
+            if(self.storeRoute()) self.gui.returnToLast();
         });
         return;
     }
-    this.storeRoute();
-    this.gui.returnToLast();
+    if (this.storeRoute()) this.gui.returnToLast();
 };
 
 Routepage.prototype.btnNavGoto=function (button,ev){
@@ -324,18 +348,16 @@ Routepage.prototype.btnNavGoto=function (button,ev){
     var self=this;
     if (this.currentRoute.name != this.initialName ){
         //check if a route with this name already exists
-        this.routingHandler.fetchRoute(this.currentRoute.name,false,
+        this.routingHandler.fetchRoute(this.currentRoute.name,!this.currentRoute.server,
             function(data){
                 self.toast("route with name "+this.currentRoute.name+" already exists",true);
             },
             function(er){
-                self.storeRoute(true);
-                self.gui.returnToLast();
+                if (self.storeRoute(true)) self.gui.returnToLast();
             });
         return;
     }
-    this.storeRoute(true);
-    this.gui.returnToLast();
+    if(this.storeRoute(true)) this.gui.returnToLast();
 };
 
 Routepage.prototype.btnRoutePageCancel=function (button,ev){
@@ -351,7 +373,7 @@ Routepage.prototype.btnRoutePageDownload=function(button,ev){
         downloadtype:'route',
         allowChange: false,
         selectItemCallback: function(item){
-            this.routingHandler.fetchRoute(item.name,false,
+            this.routingHandler.fetchRoute(item.name,!item.server,
                 function(route){
                     self.currentRoute=route;
                     self.initialName=route.name;
@@ -369,12 +391,14 @@ Routepage.prototype.btnRoutePageDownload=function(button,ev){
 
 Routepage.prototype.btnNavDeleteAll=function(button,ev){
     avnav.log("navDeletAll clicked");
+    if (! this.canEditOrWarn()) return false;
     this.currentRoute.points=[];
     this._updateDisplay();
 };
 
 Routepage.prototype.btnNavInvert=function(button,ev){
     avnav.log("navInvert clicked");
+    if (! this.canEditOrWarn()) return false;
     this.currentRoute.swap();
     this._updateDisplay();
 };

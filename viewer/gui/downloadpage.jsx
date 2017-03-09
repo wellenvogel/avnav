@@ -408,7 +408,8 @@ Downloadpage.prototype.deleteItem=function(info){
                 function(rinfo){
                     self.toast("unable to delete route: "+rinfo,true);
                     self.fillData(false);
-                }
+                },
+                !info.server //if we think this is a local route - just delete it local only
             );
         }
         self.fillData(false);

@@ -779,8 +779,9 @@ avnav.gui.Navpage.prototype.updateRoutePoints=function(opt_initial,opt_centerAct
 avnav.gui.Navpage.prototype.checkRouteWritable=function(){
     if (this.navobject.getRoutingHandler().isRouteWritable()) return true;
     var ok=OverlayDialog.confirm("you cannot edit this route as you are disconnected. OK to select a new name",this.getDialogContainer());
+    var self=this;
     ok.then(function(){
-        this.gui.showPage('routepage');
+        self.gui.showPage('routepage');
     });
     return false;
 };

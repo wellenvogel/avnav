@@ -783,7 +783,7 @@ RouteData.prototype.listRoutesLocal=function(){
  */
 RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,opt_localonly){
     var rt=this._loadRoute(name,true);
-    if ((! rt || rt.server) && ! (this.connectMode && ! opt_localonly)){
+    if ((! rt || rt.server) && ! this.connectMode && ! opt_localonly){
         if (opt_errorcallback){
             setTimeout(function(){
                 opt_errorcallback("server route and we are disconnected");
