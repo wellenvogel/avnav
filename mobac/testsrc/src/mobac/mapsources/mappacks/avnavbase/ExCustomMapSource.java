@@ -2,11 +2,7 @@ package mobac.mapsources.mappacks.avnavbase;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.RGBImageFilter;
-import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,10 +23,9 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.log4j.Logger;
 
-import mobac.exceptions.DownloadFailedException;
 import mobac.exceptions.UnrecoverableDownloadException;
 import mobac.mapsources.MapSourceTools;
-import mobac.mapsources.mappacks.avnavbase.ExCustomWmsMapSource.LayerMapping;
+//import mobac.mapsources.mappacks.avnavbase.ExCustomWmsMapSource.LayerMapping;
 import mobac.mapsources.mapspace.MercatorPower2MapSpace;
 import mobac.program.download.TileDownLoader;
 import mobac.program.interfaces.HttpMapSource;
@@ -119,7 +114,14 @@ public class ExCustomMapSource implements HttpMapSource {
 	@XmlList
 	private String[] serverParts = null;
 	private int currentServerPart = 0;
-	
+
+	/**
+	 * set some http headers if required
+	 */
+	@XmlElement(required = false, defaultValue = "")
+	@XmlList
+	private String[] httpHeader = null;
+
 	@XmlElementWrapper(name="colorMappings")
 	@XmlElements({ @XmlElement(name = "colorMapping", type = ColorMapping.class)})
 	private ArrayList<ColorMapping>colormappings=new ArrayList<ColorMapping>();
@@ -188,6 +190,12 @@ public class ExCustomMapSource implements HttpMapSource {
 		if (userAgent != null && !userAgent.isEmpty()){
 			rt.setRequestProperty("User-agent",userAgent);
 		}
+		if (httpHeader != null && httpHeader.length>0){
+			for(String header: httpHeader){
+				String nv[]=header.split(":",2);
+				rt.setRequestProperty(nv[0],nv[1]);
+			}
+		}
 		return rt;
 	}
 
@@ -213,7 +221,8 @@ public class ExCustomMapSource implements HttpMapSource {
 	}
 	
 	
-	private byte[] fetchTileData(int zoom, int x, int y, LoadMethod loadMethod) throws IOException,
+	private byte[]
+	fetchTileData(int zoom, int x, int y, LoadMethod loadMethod) throws IOException,
 				UnrecoverableDownloadException, InterruptedException {
 		if (invertYCoordinate)
 			y = ((1 << zoom) - y - 1);
