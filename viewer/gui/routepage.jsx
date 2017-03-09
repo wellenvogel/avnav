@@ -107,6 +107,7 @@ Routepage.prototype.getPageContent=function(){
                         function (er) {
                             closeFunction();
                             self.currentRoute.setName(name);
+                            if (! self.gui.properties.getProperties().connectedMode) self.currentRoute.server=false;
                             self._updateDisplay();
                         });
                     return false;
