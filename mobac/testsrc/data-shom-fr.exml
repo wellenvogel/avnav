@@ -4,16 +4,7 @@
 <tileType>png</tileType>
 <backgroundColor>#ffffff</backgroundColor>
 <layers>
-<exCustomMapSource>
-<name>RASTER_MARINE_3857_WMTS</name>
-<minZoom>5</minZoom>
-<maxZoom>16</maxZoom>
-<numLowerLevels>2</numLowerLevels>
-<httpHeader>Referer:http://data.shom.fr/outils</httpHeader>
-<url>http://services.data.shom.fr/clevisu/wmts?layer=RASTER_MARINE_3857_WMTS&amp;style=normal&amp;tilematrixset=3857&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%2Fpng&amp;TileMatrix={$z}&amp;TileCol={$x}&amp;TileRow={$y}</url>
-<ignoreErrors>true</ignoreErrors>
-<mergeLevels>true</mergeLevels>
-</exCustomMapSource>
+
 <exCustomMapSource>
 <retries>1</retries>
 <name>FDC_GEBCO_PYR</name>
@@ -24,6 +15,17 @@
 <url>http://services.data.shom.fr/clevisu/wmts?layer=FDC_GEBCO_PYR-PNG_3857_WMTS&amp;style=normal&amp;tilematrixset=3857&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%2Fpng&amp;TileMatrix={$z}&amp;TileCol={$x}&amp;TileRow={$y}</url>
 <ignoreErrors>true</ignoreErrors>
 <backgroundColor>#00000000</backgroundColor>
+<mergeLevels>true</mergeLevels>
+</exCustomMapSource>
+
+<exCustomMapSource>
+<name>RASTER_MARINE_3857_WMTS</name>
+<minZoom>5</minZoom>
+<maxZoom>16</maxZoom>
+<numLowerLevels>2</numLowerLevels>
+<httpHeader>Referer:http://data.shom.fr/outils</httpHeader>
+<url>http://services.data.shom.fr/clevisu/wmts?layer=RASTER_MARINE_3857_WMTS&amp;style=normal&amp;tilematrixset=3857&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%2Fpng&amp;TileMatrix={$z}&amp;TileCol={$x}&amp;TileRow={$y}</url>
+<ignoreErrors>true</ignoreErrors>
 <mergeLevels>true</mergeLevels>
 </exCustomMapSource>
 
