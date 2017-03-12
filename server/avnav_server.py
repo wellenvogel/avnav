@@ -43,7 +43,6 @@ from avnav_util import *
 from avnav_config import *
 import avnav_handlerList
 from avnav_data import *
-AVNUtil.importFromDir(os.path.join(os.path.dirname(__file__),"handler"),globals())
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 
 loggingInitialized=False
@@ -123,6 +122,7 @@ def main(argv):
   else:
     cfgname=args[0]
   AVNLog.initLoggingInitial(options.verbose if not options.verbose is None else logging.INFO)
+  AVNUtil.importFromDir(os.path.join(os.path.dirname(__file__), "handler"), globals())
   cfg=AVNConfig()
   allHandlers=cfg.readConfigAndCreateHandlers(cfgname)
   if allHandlers is None:

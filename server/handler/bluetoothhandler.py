@@ -133,7 +133,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
         AVNLog.debug("starting BT discovery")
         service_matches = bluetooth.find_service(uuid = bluetooth.SERIAL_PORT_CLASS)
       except Exception as e:
-        AVNLog.debug("exception when querying BT services %s, retrying after 10s",traceback.format_exc())
+        AVNLog.warn("exception when querying BT services %s, retrying after 10s",traceback.format_exc())
       if len(service_matches) == 0:
         time.sleep(10)
         continue
