@@ -107,16 +107,19 @@ avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
         drawing.drawImageToContext(this.boatPosition, this.boatStyle.image, this.boatStyle);
         var pos = this.boatPosition;
         var other;
-        if (prop.navCircle1Radius > 10) {
-            other = this.computeTarget(pos, this.lastBoatCourse, prop.navCircle1Radius);
+        var radius1=parseInt(prop.navCircle1Radius);
+        if (radius1 > 10) {
+            other = this.computeTarget(pos, this.lastBoatCourse, radius1);
             drawing.drawCircleToContext(pos, other, this.circleStyle);
         }
-        if (prop.navCircle2Radius > 10 && prop.navCircle2Radius > prop.navCircle1Radius) {
-            other = this.computeTarget(pos, this.lastBoatCourse, prop.navCircle2Radius);
+        var radius2=parseInt(prop.navCircle2Radius);
+        if (radius2 > 10 && radius2 > radius1) {
+            other = this.computeTarget(pos, this.lastBoatCourse, radius2);
             drawing.drawCircleToContext(pos, other, this.circleStyle);
         }
-        if (prop.navCircle3Radius > 10 && prop.navCircle3Radius > prop.navCircle2Radius && prop.navCircle3Radius > prop.navCircle2Radius) {
-            other = this.computeTarget(pos, this.lastBoatCourse, prop.navCircle3Radius);
+        var radius3=parseInt(prop.navCircle3Radius);
+        if (radius3 > 10 && radius3 > radius2 && radius3 > radius1) {
+            other = this.computeTarget(pos, this.lastBoatCourse, radius3);
             drawing.drawCircleToContext(pos, other, this.circleStyle);
         }
     }
