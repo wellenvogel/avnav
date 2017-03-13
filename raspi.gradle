@@ -32,6 +32,10 @@ ospackage {
     requires 'hostapd'
     requires 'dnsmasq'
     packageName='avnav-raspi'
+    ['common','wlan0','wlan-ap2'].each { String ext->
+        configurationFile("/etc/hostapd/hostapd.conf.$ext")
+    }
+    configurationFile("/etc/udev/rules.d/010-avnav-net.rules")
     user='root'
     into ('/usr/lib/avnav/raspberry') {
         from('raspberry'){
