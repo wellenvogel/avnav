@@ -3,6 +3,7 @@
 HOSTAPD=/usr/sbin/hostapd
 HOSTAPD_EDI=/usr/sbin/hostapd.edimax
 CONFIGBASE=/etc/hostapd/hostapd.conf
+CONFIGEXTRA=/boot/hostapd.conf
 prfx="avnav-hostapd"
 
 if [ "$1" = "-r" ] ; then
@@ -92,6 +93,10 @@ if [ -f $common ] ; then
   cat $common > $tmpf
 fi
 sed "s/.*interface *=.*/interface=$net/" $CONFIG >> $tmpf
+if [ -f $CONFIGEXTRA ] ; then
+  logger -t $prfx "adding configuration from $CONFIGEXTRA"
+  cat $CONFIGEXTRA >> $tmpf
+fi
 logger -t $prfx "starting normal hostapd"
 $0 -r $HOSTAPD $pidfile $tmpf $net &
 
