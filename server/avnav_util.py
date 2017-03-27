@@ -331,6 +331,7 @@ class AVNUtil():
         scope[module_name] = __import__(module_name)
       except:
         print "error importing module %s"%module_name,traceback.format_exc()
+        raise
 
   @classmethod
   def getHttpRequestParam(cls,requestparam,name):
