@@ -322,6 +322,11 @@ class AVNGpsdFeeder(AVNGpsd):
   def getStartupGroup(cls):
     return 1
 
+  @classmethod
+  def createInstance(cls, cfgparam):
+    return cls(cfgparam)
+
+
   def __init__(self,cfgparam):
     AVNGpsd.__init__(self, cfgparam)
     self.type=AVNWorker.Type.FEEDER
