@@ -424,6 +424,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
 
     @Override
     public synchronized void check() {
+        if (this.isStopped()) return;
         if (this.runnable == null || ! this.runnable.getRunning()){
             this.runnable=new ReceiverRunnable(this.socket,properties);
             this.receiverThread=new Thread(this.runnable);

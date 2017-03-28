@@ -141,7 +141,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                 return false;
             }
         }
-        if (sharedPrefs.getBoolean(Constants.USBAIS,false)||sharedPrefs.getBoolean(Constants.USBAIS,false)){
+        if (sharedPrefs.getBoolean(Constants.USBNMEA,false)||sharedPrefs.getBoolean(Constants.USBAIS,false)){
             String usbDevice=sharedPrefs.getString(Constants.USBDEVICE,"");
             if (UsbSerialPositionHandler.getDeviceForName(this,usbDevice) == null){
                 Toast.makeText(this, getText(R.string.noSuchUsbDevice)+":"+usbDevice, Toast.LENGTH_SHORT).show();

@@ -91,6 +91,9 @@ public class GpsService extends Service implements INmeaLogger {
     private GpsDataProvider[] getAllProviders(){
         return new GpsDataProvider[]{internalProvider,externalProvider,bluetoothProvider,usbHandler};
     }
+    private boolean isProviderActive(GpsDataProvider provider){
+        return (provider != null) && ! provider.isStopped();
+    }
     @Override
     public void logNmea(String data) {
         synchronized (loggerLock){
@@ -546,7 +549,7 @@ public class GpsService extends Service implements INmeaLogger {
         GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
         if (! isRunning ) return rt;
         for (GpsDataProvider provider: getAllProviders()){
-            if (provider != null && provider.handlesNmea()){
+            if (isProviderActive(provider) && provider.handlesNmea()){
                 rt=provider.getSatStatus();
                 AvnLog.d(LOGPRFX,"getSatStatus returns "+rt);
                 return rt;
@@ -559,14 +562,14 @@ public class GpsService extends Service implements INmeaLogger {
 
     public JSONObject getGpsData() throws JSONException{
         for (GpsDataProvider provider: getAllProviders()){
-            if (provider != null) return provider.getGpsData();
+            if (isProviderActive(provider)) return provider.getGpsData();
         }
         return null;
     }
 
     private Location getLocation(){
         for (GpsDataProvider provider: getAllProviders()){
-            if (provider != null && provider.handlesNmea()) return provider.getLocation();
+            if (isProviderActive(provider) && provider.handlesNmea()) return provider.getLocation();
         }
         return null;
     }
@@ -647,7 +650,7 @@ public class GpsService extends Service implements INmeaLogger {
         ais.put("status","red");
         ais.put("info","disabled");
         for (GpsDataProvider provider: getAllProviders()) {
-            if (provider != null) {
+            if (isProviderActive(provider)) {
                 GpsDataProvider.SatStatus st = provider.getSatStatus();
                 Location loc = provider.getLocation();
                 String addr = provider.getConnectionId();
