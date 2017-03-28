@@ -42,6 +42,7 @@ import de.wellenvogel.avnav.util.AvnUtil;
  */
 public abstract class SocketPositionHandler extends GpsDataProvider {
     private long lastAisCleanup=0;
+    private boolean stopped=false;
 
     class GSVStore{
         public static final int MAXGSV=20; //max number of gsv sentences without one that is the last
@@ -398,7 +399,13 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
 
     @Override
     public synchronized void stop() {
+        this.stopped=true;
         this.runnable.stop();
+    }
+
+    @Override
+    public boolean isStopped() {
+        return stopped;
     }
 
     @Override
@@ -447,7 +454,8 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
      * @param distance in nm
      * @return
      */
-    JSONArray  getAisData(double lat,double lon,double distance){
+    @Override
+    public JSONArray  getAisData(double lat,double lon,double distance){
         if (runnable == null) return new JSONArray();
         return runnable.getAisData(lat,lon,distance);
     }
@@ -460,5 +468,37 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
     @Override
     public String getConnectionId() {
         return socket.getId();
+    }
+
+    @Override
+    JSONObject getHandlerStatus() throws JSONException {
+        SocketPositionHandler handler=this;
+        JSONObject item = new JSONObject();
+        item.put("name", handler.getName());
+        String addr = handler.socket.getId();
+        GpsDataProvider.SatStatus st = handler.getSatStatus();
+        Location loc = handler.getLocation();
+        int numAis = handler.numAisData();
+        if (loc != null) {
+            String info = "(" + addr + ") valid position, sats: " + st.numSat + " / " + st.numUsed;
+            if (numAis > 0) info += ", valid AIS data, " + numAis + " targets";
+            item.put("info", info);
+            item.put("status", GpsDataProvider.STATUS_NMEA);
+        } else {
+            if (!handler.handlesAis() && numAis > 0) {
+                item.put("info", "(" + addr + ") valid AIS data, " + numAis + " targets");
+                item.put("status", GpsDataProvider.STATUS_NMEA);
+
+            } else {
+                if (st.gpsEnabled) {
+                    item.put("info", "(" + addr + ") connected, sats: " + st.numSat + " available / " + st.numUsed + " used");
+                    item.put("status", GpsDataProvider.STATUS_STARTED);
+                } else {
+                    item.put("info", "(" + addr + ") disconnected");
+                    item.put("status", GpsDataProvider.STATUS_ERROR);
+                }
+            }
+        }
+        return item;
     }
 }

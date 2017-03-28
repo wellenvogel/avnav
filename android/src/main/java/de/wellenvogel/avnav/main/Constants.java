@@ -54,4 +54,11 @@ public class Constants {
     public static final String TRACKDISTANCE ="track.distance";
     public static final String TRACKMINTIME ="track.mintime";
     public static final String TRACKTIME ="track.time";
+
+    //modes
+    public static final String MODE_INTERNAL="internal";
+    public static final String MODE_IP="ip";
+    public static final String MODE_BLUETOOTH="bluetooth";
+    public static final String MODE_USB="usb";
+    public static final String MODE_NONE="none";
 }

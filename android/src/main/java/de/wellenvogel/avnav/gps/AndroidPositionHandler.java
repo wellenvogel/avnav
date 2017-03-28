@@ -39,6 +39,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
 
 
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
+    private boolean stopped=false;
 
     AndroidPositionHandler(Context ctx, long timeOffset){
         this.context=ctx;
@@ -55,11 +56,17 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
      * will be called whe we intend to really stop
      * after a call to this method the object is not working any more
      */
+    @Override
     public void stop(){
         deregister();
         location=null;
         lastValidLocation=0;
         AvnLog.d(LOGPRFX,"stopped");
+        stopped=true;
+    }
+    @Override
+    public boolean isStopped(){
+        return this.stopped;
     }
 
     public void check(){
@@ -233,5 +240,28 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
     @Override
     public void onGpsStatusChanged(int event) {
 
+    }
+
+    @Override
+    JSONObject getHandlerStatus() throws JSONException {
+        JSONObject item=new JSONObject();
+        item.put("name","internal GPS");
+        GpsDataProvider.SatStatus st=this.getSatStatus();
+        Location loc=this.getLocation();
+        if (loc != null) {
+            item.put("info", "valid position, sats: "+st.numSat+" / "+st.numUsed+", acc="+loc.getAccuracy());
+            item.put("status", GpsDataProvider.STATUS_NMEA);
+        }
+        else {
+            if (st.gpsEnabled) {
+                item.put("info", "sats: " + st.numSat + " / " + st.numUsed);
+                item.put("status", GpsDataProvider.STATUS_STARTED);
+            }
+            else{
+                item.put("info", "disabled");
+                item.put("status", GpsDataProvider.STATUS_ERROR);
+            }
+        }
+        return item;
     }
 }

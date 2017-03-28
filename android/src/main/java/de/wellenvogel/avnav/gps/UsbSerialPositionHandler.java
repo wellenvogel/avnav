@@ -151,4 +151,5 @@ public class UsbSerialPositionHandler extends SocketPositionHandler {
     public String getName() {
         return "USBSerial";
     }
+
 }

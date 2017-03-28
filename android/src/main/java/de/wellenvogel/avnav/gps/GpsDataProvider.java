@@ -3,6 +3,8 @@ package de.wellenvogel.avnav.gps;
 import android.location.Location;
 import android.util.Log;
 import de.wellenvogel.avnav.util.AvnLog;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -71,6 +73,14 @@ public abstract class GpsDataProvider {
      */
     public void stop(){}
 
+    /**
+     * check if the handler is stopped and should be reinitialized
+     * @return
+     */
+    public boolean isStopped(){
+        return false;
+    }
+
     /**<EditTextPreference
         android:key="gps.offset"
         android:defaultValue="0"
@@ -87,6 +97,14 @@ public abstract class GpsDataProvider {
      * @return
      */
     public JSONObject getGpsData() throws JSONException{ return null;}
+
+    /**
+     * get the AIS data the same way as we return it in the Json response
+     * (i.e. the format used by gpsd)
+     * @return
+     */
+    public JSONArray getAisData(double lat,double lon,double distance) throws JSONException{ return null;}
+
 
     /**
      * will be called from a timer in regular intervals
@@ -117,6 +135,10 @@ public abstract class GpsDataProvider {
         AvnLog.d(LOGPRFX,"getGpsData: "+rt.toString());
         return rt;
     }
+
+    JSONObject getHandlerStatus() throws JSONException {
+        return new JSONObject();
+    };
 
     //GPS position data
     public static final String G_CLASS="class";

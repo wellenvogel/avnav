@@ -36,6 +36,13 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.DialogBuilder;
+import de.wellenvogel.avnav.main.Constants;
+
+import static de.wellenvogel.avnav.main.Constants.MODE_BLUETOOTH;
+import static de.wellenvogel.avnav.main.Constants.MODE_INTERNAL;
+import static de.wellenvogel.avnav.main.Constants.MODE_IP;
+import static de.wellenvogel.avnav.main.Constants.MODE_NONE;
+import static de.wellenvogel.avnav.main.Constants.MODE_USB;
 
 /**
  * Created by andreas on 24.10.15.
@@ -46,11 +53,6 @@ public class NmeaSettingsFragment extends SettingsFragment {
     private EditTextPreference blueToothDevice;
     private EditTextPreference usbDevice;
     //list pref values
-    private static final String MODE_INTERNAL="internal";
-    private static final String MODE_IP="ip";
-    private static final String MODE_BLUETOOTH="bluetooth";
-    private static final String MODE_USB="usb";
-    private static final String MODE_NONE="none";
     private BluetoothAdapter bluetoothAdapter;
     private UsbManager usbManager;
     private PendingIntent mPermissionIntent;
@@ -381,14 +383,14 @@ public class NmeaSettingsFragment extends SettingsFragment {
         return "";
     }
 
-    static String getNmeaMode(SharedPreferences prefs){
+    static public String getNmeaMode(SharedPreferences prefs){
         if (prefs.getBoolean(Constants.INTERNALGPS,false)) return MODE_INTERNAL;
         if (prefs.getBoolean(Constants.IPNMEA,false)) return MODE_IP;
         if (prefs.getBoolean(Constants.BTNMEA,false)) return MODE_BLUETOOTH;
         if (prefs.getBoolean(Constants.USBNMEA,false)) return MODE_USB;
         return MODE_NONE;
     }
-    static String getAisMode(SharedPreferences prefs){
+    static public String getAisMode(SharedPreferences prefs){
         if (prefs.getBoolean(Constants.IPAIS,false)) return MODE_IP;
         if (prefs.getBoolean(Constants.BTAIS,false)) return MODE_BLUETOOTH;
         if (prefs.getBoolean(Constants.USBAIS,false)) return MODE_USB;
