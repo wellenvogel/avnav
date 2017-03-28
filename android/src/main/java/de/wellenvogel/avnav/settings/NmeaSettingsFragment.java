@@ -49,6 +49,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
     private static final String MODE_INTERNAL="internal";
     private static final String MODE_IP="ip";
     private static final String MODE_BLUETOOTH="bluetooth";
+    private static final String MODE_USB="usb";
     private static final String MODE_NONE="none";
     private BluetoothAdapter bluetoothAdapter;
     private UsbManager usbManager;
@@ -75,6 +76,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
             }
         }
     };
+    private ListPreference usbBaudSelector;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -109,6 +111,18 @@ public class NmeaSettingsFragment extends SettingsFragment {
                     String nval=(String)newValue;
                     updateAisMode(prefs,nval);
                     ((ListPreference)preference).setSummary(getModeEntrieAis(getActivity().getResources(), nval));
+                    return true;
+                }
+            });
+        }
+        p=getPreferenceScreen().findPreference(Constants.USBBAUD);
+        if (p != null) usbBaudSelector=(ListPreference)p;
+        if (usbBaudSelector != null){
+            usbBaudSelector.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    String nval=(String)newValue;
+                    ((ListPreference)preference).setSummary(nval);
                     return true;
                 }
             });
@@ -319,12 +333,17 @@ public class NmeaSettingsFragment extends SettingsFragment {
         Resources res=a.getResources();
         nmeaSelector.setEntries(new String[]{getModeEntrieNmea(res,MODE_NONE),getModeEntrieNmea(res,MODE_INTERNAL),getModeEntrieNmea(res,MODE_IP),getModeEntrieNmea(res,MODE_BLUETOOTH)});
         if (bluetoothAdapter == null) {
-            nmeaSelector.setEntryValues(new String[]{MODE_NONE, MODE_INTERNAL, MODE_IP});
-            aisSelector.setEntryValues(new String[]{MODE_NONE,MODE_IP});
+            nmeaSelector.setEntryValues(new String[]{MODE_NONE, MODE_INTERNAL, MODE_IP,MODE_USB});
+            aisSelector.setEntryValues(new String[]{MODE_NONE,MODE_IP,MODE_USB});
         }
         else {
-            nmeaSelector.setEntryValues(new String[]{MODE_NONE, MODE_INTERNAL, MODE_IP, MODE_BLUETOOTH});
-            aisSelector.setEntryValues(new String[]{MODE_NONE,MODE_IP,MODE_BLUETOOTH});
+            nmeaSelector.setEntryValues(new String[]{MODE_NONE, MODE_INTERNAL, MODE_IP, MODE_BLUETOOTH,MODE_USB});
+            aisSelector.setEntryValues(new String[]{MODE_NONE,MODE_IP,MODE_BLUETOOTH,MODE_USB});
+        }
+        String [] bauds=new String[]{"1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400"};
+        if (usbBaudSelector != null){
+            usbBaudSelector.setEntryValues(bauds);
+            usbBaudSelector.setEntries(bauds);
         }
         String e[]=new String[nmeaSelector.getEntryValues().length];
         for (int i=0;i<nmeaSelector.getEntryValues().length;i++){
@@ -350,6 +369,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
         if (mode.equals(MODE_NONE)) return res.getString(R.string.labelSettingsNone);
         if (mode.equals(MODE_IP)) return res.getString(R.string.externalGps);
         if (mode.equals(MODE_BLUETOOTH)) return res.getString(R.string.bluetoothLabel);
+        if (mode.equals(MODE_USB)) return res.getString(R.string.usbLabel);
         return "";
     }
     private static String getModeEntrieNmea(Resources res,CharSequence mode){
@@ -357,6 +377,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
         if (mode.equals(MODE_INTERNAL)) return res.getString(R.string.labelInternalGps);
         if (mode.equals(MODE_IP)) return res.getString(R.string.externalGps);
         if (mode.equals(MODE_BLUETOOTH)) return res.getString(R.string.bluetoothLabel);
+        if (mode.equals(MODE_USB)) return res.getString(R.string.usbLabel);
         return "";
     }
 
@@ -364,31 +385,43 @@ public class NmeaSettingsFragment extends SettingsFragment {
         if (prefs.getBoolean(Constants.INTERNALGPS,false)) return MODE_INTERNAL;
         if (prefs.getBoolean(Constants.IPNMEA,false)) return MODE_IP;
         if (prefs.getBoolean(Constants.BTNMEA,false)) return MODE_BLUETOOTH;
+        if (prefs.getBoolean(Constants.USBNMEA,false)) return MODE_USB;
         return MODE_NONE;
     }
     private static String getAisMode(SharedPreferences prefs){
         if (prefs.getBoolean(Constants.IPAIS,false)) return MODE_IP;
         if (prefs.getBoolean(Constants.BTAIS,false)) return MODE_BLUETOOTH;
+        if (prefs.getBoolean(Constants.USBAIS,false)) return MODE_USB;
         return MODE_NONE;
     }
     private void updateNmeaMode(SharedPreferences prefs,String mode){
         SharedPreferences.Editor e=prefs.edit();
-        if (mode.equals(MODE_BLUETOOTH)){
+        if (mode.equals(MODE_USB)){
+            e.putBoolean(Constants.USBNMEA,true);
+            e.putBoolean(Constants.BTNMEA,false);
+            e.putBoolean(Constants.IPNMEA,false);
+            e.putBoolean(Constants.INTERNALGPS,false);
+        }
+        else if (mode.equals(MODE_BLUETOOTH)){
+            e.putBoolean(Constants.USBNMEA,false);
             e.putBoolean(Constants.BTNMEA,true);
             e.putBoolean(Constants.IPNMEA,false);
             e.putBoolean(Constants.INTERNALGPS,false);
         }
         else if (mode.equals(MODE_IP)){
+            e.putBoolean(Constants.USBNMEA,false);
             e.putBoolean(Constants.BTNMEA,false);
             e.putBoolean(Constants.IPNMEA,true);
             e.putBoolean(Constants.INTERNALGPS,false);
         }
         else if (mode.equals(MODE_INTERNAL)){
+            e.putBoolean(Constants.USBNMEA,false);
             e.putBoolean(Constants.BTNMEA,false);
             e.putBoolean(Constants.IPNMEA,false);
             e.putBoolean(Constants.INTERNALGPS,true);
         }
         else {
+            e.putBoolean(Constants.USBNMEA,false);
             e.putBoolean(Constants.BTNMEA, false);
             e.putBoolean(Constants.IPNMEA, false);
             e.putBoolean(Constants.INTERNALGPS, false);
@@ -398,15 +431,23 @@ public class NmeaSettingsFragment extends SettingsFragment {
 
     private void updateAisMode(SharedPreferences prefs,String mode){
         SharedPreferences.Editor e=prefs.edit();
-        if (mode.equals(MODE_BLUETOOTH)){
+        if (mode.equals(MODE_USB)){
+            e.putBoolean(Constants.USBAIS,true);
+            e.putBoolean(Constants.BTAIS,false);
+            e.putBoolean(Constants.IPAIS,false);
+        }
+        else if (mode.equals(MODE_BLUETOOTH)){
+            e.putBoolean(Constants.USBAIS,false);
             e.putBoolean(Constants.BTAIS,true);
             e.putBoolean(Constants.IPAIS,false);
         }
         else if (mode.equals(MODE_IP)){
+            e.putBoolean(Constants.USBAIS,false);
             e.putBoolean(Constants.BTAIS,false);
             e.putBoolean(Constants.IPAIS,true);
         }
         else {
+            e.putBoolean(Constants.USBAIS,false);
             e.putBoolean(Constants.BTAIS, false);
             e.putBoolean(Constants.IPAIS, false);
         }

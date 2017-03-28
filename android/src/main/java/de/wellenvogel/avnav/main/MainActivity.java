@@ -34,6 +34,7 @@ import java.net.InetSocketAddress;
 import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
+import de.wellenvogel.avnav.gps.UsbSerialPositionHandler;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -136,6 +137,13 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             String btdevice=sharedPrefs.getString(Constants.BTDEVICE,"");
             if (BluetoothPositionHandler.getDeviceForName(btdevice) == null){
                 Toast.makeText(this, getText(R.string.noSuchBluetoothDevice)+":"+btdevice, Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        if (sharedPrefs.getBoolean(Constants.USBAIS,false)||sharedPrefs.getBoolean(Constants.USBAIS,false)){
+            String usbDevice=sharedPrefs.getString(Constants.USBDEVICE,"");
+            if (UsbSerialPositionHandler.getDeviceForName(this,usbDevice) == null){
+                Toast.makeText(this, getText(R.string.noSuchUsbDevice)+":"+usbDevice, Toast.LENGTH_SHORT).show();
                 return false;
             }
         }

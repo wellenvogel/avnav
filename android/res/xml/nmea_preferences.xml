@@ -23,6 +23,10 @@
     <de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference
         android:title="@string/selectUsb"
         android:key="usb.device"/>
+    <de.wellenvogel.avnav.settings.OwnDialogListPreference
+        android:title="@string/labelSettingsUsbBaud"
+        android:key="usb.baud"
+        />
     <de.wellenvogel.avnav.settings.ClearableEditTextPreference
         android:key="ais.own"
         android:numeric="integer"

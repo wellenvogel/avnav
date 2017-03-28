@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.hardware.usb.UsbDevice;
 import android.location.*;
 import android.os.Binder;
 import android.os.Handler;
@@ -54,6 +55,7 @@ public class GpsService extends Service implements INmeaLogger {
     private GpsDataProvider internalProvider=null;
     private IpPositionHandler externalProvider=null;
     private BluetoothPositionHandler bluetoothProvider=null;
+    private UsbSerialPositionHandler usbHandler=null;
 
     private boolean isRunning;  //this is our view whether we are running or not
                                 //running means that we are registered for updates and have our timer active
@@ -69,6 +71,8 @@ public class GpsService extends Service implements INmeaLogger {
     private boolean ipAis=false;
     private boolean btNmea=false;
     private boolean btAis=false;
+    private boolean usbAis=false;
+    private boolean usbNmea=false;
 
     private TrackWriter trackWriter;
     private NmeaLogger nmeaLogger;
@@ -211,6 +215,8 @@ public class GpsService extends Service implements INmeaLogger {
         ipNmea=prefs.getBoolean(Constants.IPNMEA,false);
         btAis=prefs.getBoolean(Constants.BTAIS,false);
         btNmea=prefs.getBoolean(Constants.BTNMEA,false);
+        usbAis=prefs.getBoolean(Constants.USBAIS,false);
+        usbNmea=prefs.getBoolean(Constants.USBNMEA,false);
         Properties loggerProperties=new Properties();
         loggerProperties.logAis=prefs.getBoolean(Constants.AISLOG,false);
         loggerProperties.logNmea=prefs.getBoolean(Constants.NMEALOG,false);
@@ -222,7 +228,10 @@ public class GpsService extends Service implements INmeaLogger {
                 ", ipNmea="+ipNmea+
                 ", ipAis="+ipAis+
                 ", btNmea="+btNmea+
-                ", btAis="+btAis);
+                ", btAis="+btAis+
+                ", usbNmae="+usbNmea+
+                ", usbAis="+usbAis
+                );
         trackDir = newTrackDir;
         synchronized (loggerLock) {
             if (loggerProperties.logNmea||loggerProperties.logAis) {
@@ -322,6 +331,39 @@ public class GpsService extends Service implements INmeaLogger {
                 bluetoothProvider.stop();
             }
         }
+
+        if (usbAis || usbNmea){
+            if (usbHandler == null){
+                try {
+                    String dname=prefs.getString(Constants.USBDEVICE, "");
+                    UsbDevice dev=UsbSerialPositionHandler.getDeviceForName(this,dname);
+                    if (dev == null){
+                        throw new Exception("no usb device found for"+dname);
+                    }
+                    AvnLog.d(LOGPRFX,"starting usb serial receiver for "+dname+": "+ dev.getDeviceName());
+                    GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
+                    prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
+                    prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
+                    prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
+                    prop.connectTimeout=(int)(1000*AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout));
+                    prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
+                    prop.readAis=usbAis;
+                    prop.readNmea=usbNmea;
+                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
+                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
+                    usbHandler=new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop);
+                }catch (Exception i){
+                    Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
+                }
+
+            }
+        }
+        else{
+            if (usbHandler != null){
+                AvnLog.d(LOGPRFX,"stopping usbHandler service");
+                usbHandler.stop();
+            }
+        }
         isRunning=true;
         return Service.START_REDELIVER_INTENT;
     }
@@ -370,6 +412,10 @@ public class GpsService extends Service implements INmeaLogger {
         if (bluetoothProvider != null){
             bluetoothProvider.stop();
             bluetoothProvider=null;
+        }
+        if (usbHandler != null ){
+            usbHandler.stop();
+            usbHandler=null;
         }
         //this is not completely OK: we could fail to write our last track points
         //if we still load the track - but otherwise we could reeally empty the track
@@ -520,6 +566,7 @@ public class GpsService extends Service implements INmeaLogger {
         if (internalProvider == null) {
             if (externalProvider != null && ipNmea) return externalProvider.getSatStatus();
             if (bluetoothProvider != null && btNmea) return bluetoothProvider.getSatStatus();
+            if (usbHandler != null && usbNmea) return usbHandler.getSatStatus();
             return rt;
         }
         rt=internalProvider.getSatStatus();
@@ -527,19 +574,7 @@ public class GpsService extends Service implements INmeaLogger {
         return rt;
     }
 
-    public GpsDataProvider.SatStatus getExternalStatus(){
-        GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
-        if (! isRunning) return rt;
-        if (externalProvider != null) return externalProvider.getSatStatus();
-        return rt;
-    }
 
-    public GpsDataProvider.SatStatus getBluetoothStatus(){
-        GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
-        if (! isRunning) return rt;
-        if (bluetoothProvider != null) return bluetoothProvider.getSatStatus();
-        return rt;
-    }
 
     public JSONObject getGpsData() throws JSONException{
         if (internalProvider != null) return internalProvider.getGpsData();
@@ -552,12 +587,13 @@ public class GpsService extends Service implements INmeaLogger {
         if (internalProvider != null) return internalProvider.getLocation();
         if (externalProvider != null && ipNmea) return externalProvider.getLocation();
         if (bluetoothProvider != null && btNmea) return bluetoothProvider.getLocation();
+        if (usbHandler != null && usbNmea) return usbHandler.getLocation();
         return null;
     }
 
     public JSONArray getAisData(double lat,double lon, double distance){
         JSONArray rt=new JSONArray();
-        for (SocketPositionHandler h: new SocketPositionHandler[]{externalProvider,bluetoothProvider}){
+        for (SocketPositionHandler h: new SocketPositionHandler[]{externalProvider,bluetoothProvider,usbHandler}){
             if (h != null){
                 try {
                     JSONArray items = h.getAisData(lat, lon, distance);
@@ -649,7 +685,7 @@ public class GpsService extends Service implements INmeaLogger {
                 }
             }
         }
-        for (GpsDataProvider provider: new GpsDataProvider[]{externalProvider,bluetoothProvider}) {
+        for (GpsDataProvider provider: new GpsDataProvider[]{externalProvider,bluetoothProvider,usbHandler}) {
             if (provider != null) {
                 GpsDataProvider.SatStatus st = provider.getSatStatus();
                 Location loc = provider.getLocation();
@@ -769,6 +805,41 @@ public class GpsService extends Service implements INmeaLogger {
             }
             else {
                 if (!btNmea && numAis>0) {
+                    item.put("info", "(" + addr + ") valid AIS data, "+numAis+" targets");
+                    item.put("status", GpsDataProvider.STATUS_NMEA);
+
+                }
+                else {
+                    if (st.gpsEnabled) {
+                        item.put("info", "(" + addr + ") connected, sats: "+st.numSat+" available / "+st.numUsed+" used");
+                        item.put("status", GpsDataProvider.STATUS_STARTED);
+                    } else {
+                        item.put("info", "(" + addr + ") disconnected");
+                        item.put("status", GpsDataProvider.STATUS_ERROR);
+                    }
+                }
+            }
+        }
+        else {
+            item.put("info","disabled");
+            item.put("status",GpsDataProvider.STATUS_INACTIVE);
+        }
+        rt.put(item);
+        item=new JSONObject();
+        item.put("name","usbSerial");
+        if (usbHandler != null) {
+            String addr=usbHandler.socket.getId();
+            GpsDataProvider.SatStatus st=usbHandler.getSatStatus();
+            Location loc=usbHandler.getLocation();
+            int numAis=usbHandler.numAisData();
+            if (loc != null) {
+                String info="("+addr+") valid position, sats: "+st.numSat+" / "+st.numUsed;
+                if (numAis>0)info+=", valid AIS data, "+numAis+" targets";
+                item.put("info", info);
+                item.put("status", GpsDataProvider.STATUS_NMEA);
+            }
+            else {
+                if (!usbNmea && numAis>0) {
                     item.put("info", "(" + addr + ") valid AIS data, "+numAis+" targets");
                     item.put("status", GpsDataProvider.STATUS_NMEA);
 

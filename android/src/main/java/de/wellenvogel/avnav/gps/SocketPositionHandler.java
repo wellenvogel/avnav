@@ -112,10 +112,12 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
         @Override
         public void run() {
             int numGsv=0; //number of gsv sentences without being the last
+            long lastConnect=0;
             while (! doStop) {
                 isConnected=false;
                 stat.gpsEnabled=false;
                 try {
+                    lastConnect=System.currentTimeMillis();
                     socket.connect();
                 } catch (Exception e) {
                     Log.e(LOGPRFX, name + ": Exception during connect " + e.getLocalizedMessage());
@@ -284,6 +286,16 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                     } catch (Exception i) {
                     }
                     isConnected = false;
+                }
+                long current=System.currentTimeMillis();
+                if ((current-lastConnect) < 3000){
+                    try {
+                        synchronized (waiter) {
+                            waiter.wait(3000 -(current-lastConnect));
+                        }
+                    } catch (InterruptedException e1) {
+
+                    }
                 }
             }
             isRunning=false;
