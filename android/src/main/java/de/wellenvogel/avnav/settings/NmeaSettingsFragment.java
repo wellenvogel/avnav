@@ -346,6 +346,9 @@ public class NmeaSettingsFragment extends SettingsFragment {
         if (usbBaudSelector != null){
             usbBaudSelector.setEntryValues(bauds);
             usbBaudSelector.setEntries(bauds);
+            int idx=usbBaudSelector.findIndexOfValue(usbBaudSelector.getValue());
+            if (idx < 0) idx=0;
+            usbBaudSelector.setSummary(bauds[idx]);
         }
         String e[]=new String[nmeaSelector.getEntryValues().length];
         for (int i=0;i<nmeaSelector.getEntryValues().length;i++){

@@ -67,7 +67,7 @@
     <string name="labelSettingsNmeaInput">NMEA Source</string>
     <string name="labelSettingsActivity">Android Settings</string>
     <string name="labelSettingsMain">Main Settings</string>
-    <string name="labelSettingsUsbBaud">Usb Baudrate</string>
+    <string name="labelSettingsUsbBaud">USB Baudrate</string>
     <string name="labelSettingsAisInput">AIS Source</string>
     <string name="labelSettingsNone">Off</string>
     <string name="labelSettingsExpert">Expert Settings</string>
