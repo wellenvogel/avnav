@@ -47,6 +47,14 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
         webView = new WebView(inflater.getContext());
         webView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         webView.getSettings().setJavaScriptEnabled(true);
+        if (Build.VERSION.SDK_INT >= 16){
+            try {
+                WebSettings settings = webView.getSettings();
+                Method m = WebSettings.class.getDeclaredMethod("setAllowUniversalAccessFromFileURLs", boolean.class);
+                m.setAccessible(true);
+                m.invoke(settings, true);
+            }catch (Exception e){}
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && BuildConfig.DEBUG) {
             try {
                 Method m=WebView.class.getDeclaredMethod("setWebContentsDebuggingEnabled",boolean.class);

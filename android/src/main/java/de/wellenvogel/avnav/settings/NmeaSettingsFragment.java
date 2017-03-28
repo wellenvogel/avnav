@@ -1,25 +1,33 @@
 package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.hardware.usb.UsbConstants;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 
 import de.wellenvogel.avnav.main.Constants;
@@ -34,16 +42,46 @@ public class NmeaSettingsFragment extends SettingsFragment {
     private ListPreference nmeaSelector;
     private ListPreference aisSelector;
     private EditTextPreference blueToothDevice;
+    private EditTextPreference usbDevice;
     //list pref values
     private static final String MODE_INTERNAL="internal";
     private static final String MODE_IP="ip";
     private static final String MODE_BLUETOOTH="bluetooth";
     private static final String MODE_NONE="none";
     private BluetoothAdapter bluetoothAdapter;
+    private UsbManager usbManager;
+    private PendingIntent mPermissionIntent;
+    private static final String ACTION_USB_PERMISSION =
+            "de.wellenvogel.avnav.USB_PERMISSION";
+    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (ACTION_USB_PERMISSION.equals(action)) {
+                synchronized (this) {
+                    UsbDevice device = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+
+                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+                        if(device != null){
+                            usbDevice.setText(device.getDeviceName());
+                        }
+                    }
+                    else {
+                        AvnLog.i(AvnLog.LOGPREFIX, "permission denied for device " + device);
+                    }
+                }
+            }
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mPermissionIntent = PendingIntent.getBroadcast(this.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
+        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+        getActivity().registerReceiver(mUsbReceiver, filter);
         bluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
+        usbManager=(UsbManager) getActivity().getSystemService(Context.USB_SERVICE);
         addPreferencesFromResource(R.xml.nmea_preferences);
         final SharedPreferences prefs=getActivity().getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         Preference p=getPreferenceScreen().findPreference("nmeaInput");
@@ -123,6 +161,53 @@ public class NmeaSettingsFragment extends SettingsFragment {
                 });
             }
         }
+        usbDevice=(EditTextPreference) findPreference(Constants.USBDEVICE);
+        if (usbDevice != null){
+            if (usbManager==null) {
+                getPreferenceScreen().removePreference(usbDevice);
+                usbDevice=null;
+            }
+            else {
+                usbDevice.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        final DialogBuilder builder=new DialogBuilder(getActivity(),R.layout.dialog_selectlist);
+                        builder.setTitle(R.string.selectUsb);
+                        final ArrayList<UsbDeviceForList> items=getUsbDevices();
+                        ArrayAdapter<UsbDeviceForList> adapter=new ArrayAdapter<UsbDeviceForList>(getActivity(),R.layout.list_item,items);
+                        ListView lv=(ListView)builder.getContentView().findViewById(R.id.list_value);
+                        lv.setAdapter(adapter);
+                        String current=usbDevice.getText();
+                        if (current != null && ! current.isEmpty()){
+                            for (int i=0;i<items.size();i++){
+                                if (items.get(i).equals(current)){
+                                    lv.setItemChecked(i,true);
+                                    break;
+                                }
+                            }
+                        }
+                        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                UsbDeviceForList dev=items.get(position);
+                                if (usbManager == null) return;
+                                usbManager.requestPermission(dev.getDev(),mPermissionIntent);
+                                builder.dismiss();
+                            }
+                        });
+                        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+                        builder.show();
+                        return false;
+                    }
+                });
+            }
+        }
+
         Preference ipPort=findPreference(Constants.IPPORT);
         if (ipPort != null){
             ((CheckEditTextPreference)ipPort).setChecker(new ISettingsChecker() {
@@ -141,6 +226,12 @@ public class NmeaSettingsFragment extends SettingsFragment {
         super.onResume();
         fillData(getActivity());
         checkGpsEnabled(getActivity(),false);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getActivity().unregisterReceiver(mUsbReceiver);
     }
 
     public static void checkGpsEnabled(final Activity activity, boolean force) {
@@ -178,6 +269,34 @@ public class NmeaSettingsFragment extends SettingsFragment {
         }
         return rt;
     }
+
+    private static class UsbDeviceForList{
+        private UsbDevice dev;
+        UsbDeviceForList(UsbDevice dev){
+            this.dev=dev;
+        }
+        @Override
+        public String toString(){
+            return this.dev.getDeviceName();
+        }
+        public UsbDevice getDev(){
+            return dev;
+        }
+    }
+    private ArrayList<UsbDeviceForList> getUsbDevices(){
+        ArrayList<UsbDeviceForList> rt=new ArrayList<UsbDeviceForList>();
+        if (usbManager == null) return rt;
+        Map<String,UsbDevice> devices = usbManager.getDeviceList();
+        for (String d: devices.keySet()){
+            UsbDevice dev=devices.get(d);
+            AvnLog.d("found USB device " + d + ",class=" + dev.getDeviceClass());
+            if (dev.getDeviceClass() != UsbConstants.USB_CLASS_COMM) continue;
+            rt.add(new UsbDeviceForList(dev));
+        }
+        return rt;
+    }
+
+
 
     private void fillData(Activity a){
         SharedPreferences prefs=a.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);

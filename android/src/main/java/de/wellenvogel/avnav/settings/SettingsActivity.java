@@ -59,6 +59,10 @@ public class SettingsActivity extends PreferenceActivity {
         toolbarContainer.addView(content);
         root.addView(toolbarContainer);
     }
+    @Override
+    public boolean isValidFragment(String n){
+        return true;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

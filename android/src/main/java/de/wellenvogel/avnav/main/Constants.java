@@ -18,6 +18,7 @@ public class Constants {
     public static final String BTAIS="bt.ais";
     public static final String BTDEVICE="bt.device";
     public static final String BTOFFSET="bt.offset";
+    public static final String USBDEVICE="usb.device";
     public static final String IPCONNTIMEOUT="ip.conntimeout";
     public static final String IPPOSAGE="ip.posAge";
     public static final String AISLIFETIME ="ais.Lifetime";
