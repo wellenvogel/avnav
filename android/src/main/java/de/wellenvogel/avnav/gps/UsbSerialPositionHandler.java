@@ -99,6 +99,26 @@ public class UsbSerialPositionHandler extends SocketPositionHandler {
                         }
                     }
                 }
+                @Override
+                public int read(byte[] obuffer, int byteOffset, int byteCount){
+                    while (true) {
+                        synchronized (bufferLock) {
+                            if (buffer.size() > 0) {
+                                int rt = 0;
+                                while (rt < byteCount && buffer.size() > 0) {
+                                    obuffer[byteOffset + rt] = buffer.remove(0);
+                                    rt += 1;
+                                }
+                                return rt;
+                            }
+                            if (serialPort == null) return -1;
+                            try {
+                                bufferLock.wait();
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                    }
+                };
             };
         }
 

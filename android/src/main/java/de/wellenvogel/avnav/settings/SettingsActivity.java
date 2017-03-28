@@ -204,18 +204,11 @@ public class SettingsActivity extends PreferenceActivity {
             FolderChooseDialog.chooseFile_or_Dir(wdf.getAbsolutePath());
             rt=false;
         }
-        if (sharedPrefs.getBoolean(Constants.INTERNALGPS,false)==false &&
-                sharedPrefs.getBoolean(Constants.IPNMEA,false)==false &&
-                sharedPrefs.getBoolean(Constants.BTNMEA,false)==false){
-            e.putBoolean(Constants.INTERNALGPS,true);
-        }
-        //to be robust...
-        if (sharedPrefs.getBoolean(Constants.IPNMEA,false)==true) e.putBoolean(Constants.INTERNALGPS,false);
-        if (sharedPrefs.getBoolean(Constants.BTNMEA,false)==true) {
-            e.putBoolean(Constants.INTERNALGPS,false);
-            e.putBoolean(Constants.IPNMEA,false);
-        }
-        if (sharedPrefs.getBoolean(Constants.BTAIS,false)==true) e.putBoolean(Constants.IPAIS,false);
+        //for robustness update all modes matching the current settings and version
+        String nmeaMode=NmeaSettingsFragment.getNmeaMode(sharedPrefs);
+        NmeaSettingsFragment.updateNmeaMode(sharedPrefs,nmeaMode);
+        String aisMode=NmeaSettingsFragment.getAisMode(sharedPrefs);
+        NmeaSettingsFragment.updateAisMode(sharedPrefs,aisMode);
         try {
             int version = activity.getPackageManager()
                     .getPackageInfo(activity.getPackageName(), 0).versionCode;

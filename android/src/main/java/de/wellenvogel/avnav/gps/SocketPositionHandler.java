@@ -136,7 +136,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                 }
                 AvnLog.d(LOGPRFX, name + ": connected to " + socket.getId());
                 try {
-                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()),8);
                     status = "receiving";
                     isConnected = true;
                     stat.gpsEnabled=true;

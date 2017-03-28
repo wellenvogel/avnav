@@ -119,7 +119,8 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
 
         if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
                 ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
-                ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false)){
+                ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false) &&
+                ! sharedPrefs.getBoolean(Constants.USBNMEA,false)){
             Toast.makeText(this, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
             return false;
         }

@@ -580,6 +580,7 @@ public class GpsService extends Service implements INmeaLogger {
         if (internalProvider != null) return internalProvider.getGpsData();
         if (externalProvider != null && ipNmea) return externalProvider.getGpsData();
         if (bluetoothProvider != null && btNmea) return bluetoothProvider.getGpsData();
+        if (usbHandler != null && usbNmea) return usbHandler.getGpsData();
         return null;
     }
 

@@ -381,20 +381,20 @@ public class NmeaSettingsFragment extends SettingsFragment {
         return "";
     }
 
-    private static String getNmeaMode(SharedPreferences prefs){
+    static String getNmeaMode(SharedPreferences prefs){
         if (prefs.getBoolean(Constants.INTERNALGPS,false)) return MODE_INTERNAL;
         if (prefs.getBoolean(Constants.IPNMEA,false)) return MODE_IP;
         if (prefs.getBoolean(Constants.BTNMEA,false)) return MODE_BLUETOOTH;
         if (prefs.getBoolean(Constants.USBNMEA,false)) return MODE_USB;
         return MODE_NONE;
     }
-    private static String getAisMode(SharedPreferences prefs){
+    static String getAisMode(SharedPreferences prefs){
         if (prefs.getBoolean(Constants.IPAIS,false)) return MODE_IP;
         if (prefs.getBoolean(Constants.BTAIS,false)) return MODE_BLUETOOTH;
         if (prefs.getBoolean(Constants.USBAIS,false)) return MODE_USB;
         return MODE_NONE;
     }
-    private void updateNmeaMode(SharedPreferences prefs,String mode){
+    static void updateNmeaMode(SharedPreferences prefs,String mode){
         SharedPreferences.Editor e=prefs.edit();
         if (mode.equals(MODE_USB)){
             e.putBoolean(Constants.USBNMEA,true);
@@ -429,7 +429,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
         e.apply();
     }
 
-    private void updateAisMode(SharedPreferences prefs,String mode){
+    static void updateAisMode(SharedPreferences prefs,String mode){
         SharedPreferences.Editor e=prefs.edit();
         if (mode.equals(MODE_USB)){
             e.putBoolean(Constants.USBAIS,true);
