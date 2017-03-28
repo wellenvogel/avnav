@@ -15,6 +15,7 @@ import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -26,6 +27,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
@@ -180,7 +182,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
                         String current=usbDevice.getText();
                         if (current != null && ! current.isEmpty()){
                             for (int i=0;i<items.size();i++){
-                                if (items.get(i).equals(current)){
+                                if (items.get(i).getDev().getDeviceName().equals(current)){
                                     lv.setItemChecked(i,true);
                                     break;
                                 }
@@ -277,7 +279,16 @@ public class NmeaSettingsFragment extends SettingsFragment {
         }
         @Override
         public String toString(){
-            return this.dev.getDeviceName();
+            String rt=this.dev.getDeviceName();
+            if (Build.VERSION.SDK_INT >= 16){
+                try {
+                    Method m=UsbDevice.class.getDeclaredMethod("getProductName");
+                    m.setAccessible(true);
+                    rt+=":"+(String)m.invoke(this.dev);
+                } catch (Exception e) {
+                }
+            }
+            return rt;
         }
         public UsbDevice getDev(){
             return dev;
@@ -289,9 +300,14 @@ public class NmeaSettingsFragment extends SettingsFragment {
         Map<String,UsbDevice> devices = usbManager.getDeviceList();
         for (String d: devices.keySet()){
             UsbDevice dev=devices.get(d);
+            //from the example at: https://github.com/felHR85/SerialPortExample/blob/master/example/src/main/java/com/felhr/serialportexample/UsbService.java
+            //classes seem to be incorrect...
+            int deviceVID = dev.getVendorId();
+            int devicePID = dev.getProductId();
             AvnLog.d("found USB device " + d + ",class=" + dev.getDeviceClass());
-            if (dev.getDeviceClass() != UsbConstants.USB_CLASS_COMM) continue;
-            rt.add(new UsbDeviceForList(dev));
+            if (deviceVID != 0x1d6b && (devicePID != 0x0001 || devicePID != 0x0002 || devicePID != 0x0003)) {
+                rt.add(new UsbDeviceForList(dev));
+            }
         }
         return rt;
     }
