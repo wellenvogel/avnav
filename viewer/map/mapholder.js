@@ -358,9 +358,11 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
  */
 avnav.map.MapHolder.prototype.setZoom=function(newZoom){
     if (! this.olmap) return;
-    avnav.log("set new zoom "+newZoom);
     this.mapZoom=newZoom;
-    this.olmap.getView().setZoom(newZoom);
+    if (this.olmap.getView().getZoom() != newZoom) {
+        avnav.log("set new zoom " + newZoom);
+        this.olmap.getView().setZoom(newZoom);
+    }
 };
 /**
  * draw the grid
@@ -967,8 +969,8 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
     var newCenter= this.pointFromMap(this.getView().getCenter());
     if (this.setCenterFromMove(newCenter)) {
         this.saveCenter();
+        avnav.log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
     }
-    avnav.log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
 
 };
 
