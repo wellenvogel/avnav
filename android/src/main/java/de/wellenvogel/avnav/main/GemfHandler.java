@@ -78,7 +78,7 @@ public class GemfHandler {
 
 
     //from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Java
-    class BoundingBox {
+    static class BoundingBox {
         double north;
         double south;
         double east;
@@ -110,7 +110,7 @@ public class GemfHandler {
             values.put("MAXLAT", Double.toString(north));
         }
     }
-    BoundingBox tile2boundingBox(final int x, final int y, final int zoom) {
+    static BoundingBox tile2boundingBox(final int x, final int y, final int zoom) {
         BoundingBox bb = new BoundingBox();
         bb.north = tile2lat(y, zoom);
         bb.south = tile2lat(y + 1, zoom);
@@ -118,7 +118,7 @@ public class GemfHandler {
         bb.east = tile2lon(x + 1, zoom);
         return bb;
     }
-    BoundingBox range2boundingBox(GEMFFile.GEMFRange range) {
+    static BoundingBox range2boundingBox(GEMFFile.GEMFRange range) {
         BoundingBox bb = new BoundingBox();
         bb.north = tile2lat(range.yMin, range.zoom);
         bb.south = tile2lat(range.yMax + 0.999, range.zoom);
@@ -173,13 +173,15 @@ public class GemfHandler {
                 zooms.add(range.zoom);
                 if (range.zoom < minzoom) minzoom = range.zoom;
                 if (range.zoom > maxzoom) maxzoom = range.zoom;
+                BoundingBox rangeBoundings=range2boundingBox(range);
+                extend.extend(rangeBoundings);
             }
 
             for (Integer zoom : zooms) {
                 StringBuilder zb = new StringBuilder();
                 for (GEMFFile.GEMFRange range : ranges) {
                     if (range.sourceIndex != src.intValue()) continue;
-                    if (range.zoom != zoom) continue;
+                    if (!range.zoom.equals(zoom)) continue;
                     HashMap<String, String> values = new HashMap<String, String>();
                     range.fillValues(values);
                     zb.append(replaceTemplate(ZOOMBOUNDING, values));
