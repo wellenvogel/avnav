@@ -227,6 +227,9 @@ public class AisStore {
             }
         }
     }
+    public synchronized void clear(){
+        aisData.clear();
+    }
 
     public int numAisEntries(){
         return aisData.size();

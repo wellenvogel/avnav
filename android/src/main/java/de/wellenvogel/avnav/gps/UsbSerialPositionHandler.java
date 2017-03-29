@@ -25,6 +25,17 @@ import de.wellenvogel.avnav.util.AvnLog;
  */
 public class UsbSerialPositionHandler extends SocketPositionHandler {
 
+    void deviceDetach(UsbDevice dev) {
+        UsbSerialSocket usb=(UsbSerialSocket)socket;
+        if (usb != null && usb.dev.equals(dev)){
+            AvnLog.i(UsbSerialSocket.PREFIX,"device "+usb.getId()+" detached, closing");
+            try {
+                usb.close();
+            } catch (IOException e) {
+            }
+        }
+    }
+
     static private class UsbSerialSocket extends AbstractSocket{
         UsbDevice dev;
         UsbDeviceConnection connection;

@@ -5,10 +5,13 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.location.*;
 import android.os.Binder;
 import android.os.Handler;
@@ -56,7 +59,7 @@ public class GpsService extends Service implements INmeaLogger {
     private GpsDataProvider internalProvider=null;
     private IpPositionHandler externalProvider=null;
     private BluetoothPositionHandler bluetoothProvider=null;
-    private UsbSerialPositionHandler usbHandler=null;
+    private UsbSerialPositionHandler usbProvider =null;
 
     private boolean isRunning;  //this is our view whether we are running or not
                                 //running means that we are registered for updates and have our timer active
@@ -79,7 +82,21 @@ public class GpsService extends Service implements INmeaLogger {
     private long loadSequence=1;
     private static final int NOTIFY_ID=1;
     private Object loggerLock=new Object();
-    //location data
+
+    private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context ctx, Intent intent) {
+
+            if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
+                UsbDevice dev = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                if (dev != null && usbProvider != null) {
+                    usbProvider.deviceDetach(dev);
+                }
+
+            }
+        }
+    };
+    boolean receiverRegistered=false;
 
 
     private static final String LOGPRFX="Avnav:GpsService";
@@ -89,7 +106,7 @@ public class GpsService extends Service implements INmeaLogger {
      * @return
      */
     private GpsDataProvider[] getAllProviders(){
-        return new GpsDataProvider[]{internalProvider,externalProvider,bluetoothProvider,usbHandler};
+        return new GpsDataProvider[]{internalProvider,externalProvider,bluetoothProvider, usbProvider};
     }
     private boolean isProviderActive(GpsDataProvider provider){
         return (provider != null) && ! provider.isStopped();
@@ -251,6 +268,10 @@ public class GpsService extends Service implements INmeaLogger {
         }
         runnable=new TimerRunnable(timerSequence);
         handler.postDelayed(runnable, trackMintime);
+        if (! receiverRegistered) {
+            registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
+            receiverRegistered=true;
+        }
         if (nmeaMode.equals(Constants.MODE_INTERNAL)){
             if (internalProvider == null || internalProvider.isStopped()) {
                 AvnLog.d(LOGPRFX,"start internal provider");
@@ -328,7 +349,7 @@ public class GpsService extends Service implements INmeaLogger {
         }
 
         if (aisMode.equals(Constants.MODE_USB) || nmeaMode.equals(Constants.MODE_USB)){
-            if (usbHandler == null || usbHandler.isStopped()){
+            if (usbProvider == null || usbProvider.isStopped()){
                 try {
                     String dname=prefs.getString(Constants.USBDEVICE, "");
                     UsbDevice dev=UsbSerialPositionHandler.getDeviceForName(this,dname);
@@ -346,7 +367,7 @@ public class GpsService extends Service implements INmeaLogger {
                     prop.readNmea=nmeaMode.equals(Constants.MODE_USB);
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    usbHandler=new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop);
+                    usbProvider =new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
                 }
@@ -354,9 +375,9 @@ public class GpsService extends Service implements INmeaLogger {
             }
         }
         else{
-            if (usbHandler != null){
-                AvnLog.d(LOGPRFX,"stopping usbHandler service");
-                usbHandler.stop();
+            if (usbProvider != null){
+                AvnLog.d(LOGPRFX,"stopping usbProvider service");
+                usbProvider.stop();
             }
         }
         isRunning=true;
@@ -438,6 +459,10 @@ public class GpsService extends Service implements INmeaLogger {
     {
         super.onDestroy();
         handleStop(true);
+        if (receiverRegistered) {
+            unregisterReceiver(usbReceiver);
+            receiverRegistered=false;
+        }
     }
 
 
@@ -562,7 +587,7 @@ public class GpsService extends Service implements INmeaLogger {
 
     public JSONObject getGpsData() throws JSONException{
         for (GpsDataProvider provider: getAllProviders()){
-            if (isProviderActive(provider)) return provider.getGpsData();
+            if (isProviderActive(provider) && provider.handlesNmea()) return provider.getGpsData();
         }
         return null;
     }

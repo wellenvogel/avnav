@@ -117,6 +117,9 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
             while (! doStop) {
                 isConnected=false;
                 stat.gpsEnabled=false;
+                if (store != null){
+                    store.clear();
+                }
                 try {
                     lastConnect=System.currentTimeMillis();
                     socket.connect();
@@ -379,8 +382,8 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
     SatStatus getSatStatus() {
         SatStatus rt=new SatStatus(0,0);
         synchronized (this) {
-            if (runnable != null && runnable.stat != null && runnable.hasValidStatus()) {
-                rt = new SatStatus(runnable.stat.numSat, runnable.stat.numUsed);
+            if (runnable != null && runnable.stat != null ) {
+                if (runnable.hasValidStatus()) rt = new SatStatus(runnable.stat.numSat, runnable.stat.numUsed);
                 rt.gpsEnabled = runnable.stat.gpsEnabled;
             }
         }
