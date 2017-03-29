@@ -217,13 +217,14 @@ public class WebServerFragment extends Fragment {
         }
         String statusText="";
         RequestHandler.ServerInfo info=webServer.getServerInfo();
-        if (info.lastError == null){
+        if (info != null && info.lastError == null){
             statusText="server running at "+info.address;
             if (info.listenAny) statusText+="\nexternal access enabled";
             else statusText+="\nexternal access disabled";
         }
         else{
-            statusText="server (port "+info.address.getPort()+") failed to run:\n"+info.lastError;
+            if (info != null) statusText="server (port "+info.address.getPort()+") failed to run:\n"+info.lastError;
+            else statusText="server stopped";
         }
         txServer.setText(statusText);
     }
