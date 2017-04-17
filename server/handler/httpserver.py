@@ -553,7 +553,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       fname=fname.split('?',1)[0]
       if fname != "":
         if requestParam.get('filename') is None:
-          requestParam['filename']=[fname]
+          requestParam['filename']=[fname.encode('utf-8')]
     requestType=requestParam.get('request')
     if requestType is None:
       requestType='gps'
