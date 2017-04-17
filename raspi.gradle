@@ -32,7 +32,7 @@ ospackage {
     requires 'hostapd'
     requires 'dnsmasq'
     packageName='avnav-raspi'
-    ['common','wlan0','wlan-ap2'].each { String ext->
+    ['common','wlan0','wlan1','wlan-ap','wlan-ap2'].each { String ext->
         configurationFile("/etc/hostapd/hostapd.conf.$ext")
     }
     configurationFile("/etc/udev/rules.d/010-avnav-net.rules")
@@ -71,6 +71,7 @@ ospackage {
     into('/etc/network/interfaces.d'){
         from('raspberry'){
             include('wlan0')
+            include('wlan1')
             include('wlan-av1')
             include('wlan-ap')
             include('wlan-ap2')

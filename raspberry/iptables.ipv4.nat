@@ -17,16 +17,20 @@ COMMIT
 -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 -A INPUT -i wlan-av1 -j REJECT --reject-with icmp-port-unreachable
 -A INPUT -j ACCEPT
-#nat to wlan-av1 (from wlan0,wlan-ap)
+#nat to wlan-av1 (from wlan0,wlan1,wlan-ap,wlan-ap2)
 -A FORWARD -i wlan-av1 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i wlan0 -o wlan-av1 -j ACCEPT
+-A FORWARD -i wlan-av1 -o wlan1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i wlan1 -o wlan-av1 -j ACCEPT
 -A FORWARD -i wlan-av1 -o wlan-ap -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i wlan-ap -o wlan-av1 -j ACCEPT
 -A FORWARD -i wlan-av1 -o wlan-ap2 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i wlan-ap2 -o wlan-av1 -j ACCEPT
-#nat to eth0 (from wlan0,wlan-ap)
+#nat to eth0 (from wlan0,wlan1,wlan-ap,wlan-ap2)
 -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+-A FORWARD -i eth0 -o wlan1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i wlan1 -o eth0 -j ACCEPT
 -A FORWARD -i eth0 -o wlan-ap -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i wlan-ap -o eth0 -j ACCEPT
 -A FORWARD -i eth0 -o wlan-ap2 -m state --state RELATED,ESTABLISHED -j ACCEPT
