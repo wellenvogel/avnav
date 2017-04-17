@@ -1,0 +1,9 @@
+#hostapd config file
+interface=wlan1
+driver=nl80211
+ssid=avnav3
+hw_mode=g
+channel=9
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
