@@ -1,6 +1,6 @@
 
-- sh2MDA.py Translate Sense Hat sensoren to NMEA's MDA sentence
-- sh2XDR.py Translate Sense Hat sensoren to NMEA's XDR sentence
+- sh2mda.py Translate Sense Hat sensoren to NMEA's MDA sentence
+- sh2xdr.py Translate Sense Hat sensoren to NMEA's XDR sentence
 
 
 ## Installation: ##
