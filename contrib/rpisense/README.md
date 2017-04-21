@@ -9,8 +9,8 @@
     
 ## Usage: ##
 
-    sh2MDA.py | nc -u 127.0.0.1 34667
+    sh2mda.py | nc -u 127.0.0.1 34667
 or
 
 
-    sh2XDR.py | nc -u 127.0.0.1 34667
+    sh2xdr.py | nc -u 127.0.0.1 34667
