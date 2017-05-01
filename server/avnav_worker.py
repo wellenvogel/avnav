@@ -37,7 +37,7 @@ __date__ ="$29.06.2014 21:09:10$"
 class AVNWorker(threading.Thread):
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
-  allHandlers=[]
+  allHandlers=[] #the list of all instantiated handlers
   Status=Enum(['INACTIVE','STARTED','RUNNING','NMEA','ERROR'])
   Type=Enum(['DEFAULT','FEEDER','HTTPSERVER'])
 
@@ -45,12 +45,13 @@ class AVNWorker(threading.Thread):
   def findHandlerByTypeAndName(cls, type, name=None):
     """find a handler by its type and name (not configName)
        leave the name unset to find by type
+       do not find any disabled handler
     """
     if not name is None and name == '':
       name = None
     rt = None
     for handler in cls.allHandlers:
-      if handler.type == type:
+      if handler.type == type and not handler.isDisabled():
         if not name is None:
           if handler.getName() == name:
             rt = handler
@@ -66,12 +67,30 @@ class AVNWorker(threading.Thread):
     return cls.findHandlerByTypeAndName(cls.Type.FEEDER,feedername)
   
   @classmethod
-  def findHandlerByName(cls,name):
+  def findHandlerByName(cls,name,disabled=False):
     """find a handler by its config name"""
     for handler in cls.allHandlers:
-      if handler.getConfigName() == name:
+      if handler.getConfigName() == name and (not handler.isDisabled() or disabled):
         return handler
     return None
+
+  @classmethod
+  def getAllHandlers(cls,disabled=False):
+    """get the list of all instantiated handlers
+    :param disabled if set to true also return disabled handler
+    """
+    rt=[]
+    for h in cls.allHandlers:
+      if not h.isDisabled() or disabled:
+        rt.append(h)
+    return rt
+
+  @classmethod
+  def autoInstantiate(cls):
+    """should we instantiate this handler even without config?
+       instantiation can still be prevented by setting enabled=false
+    """
+    return False
   
   def __init__(self,cfgparam):
     self.allHandlers.append(self) #fill the static list of handlers
@@ -158,6 +177,13 @@ class AVNWorker(threading.Thread):
         return 0
       else:
         raise e
+  def isDisabled(self):
+    """is this handler set to disabled?"""
+    en=self.getParamValue("enabled")
+    if en is None:
+      en="True"
+    return unicode(en).upper()!='TRUE'
+
     
   
   #stop any child process (will be called by signal handler)

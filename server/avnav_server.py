@@ -124,13 +124,12 @@ def main(argv):
   AVNLog.initLoggingInitial(options.verbose if not options.verbose is None else logging.INFO)
   AVNUtil.importFromDir(os.path.join(os.path.dirname(__file__), "handler"), globals())
   cfg=AVNConfig()
-  allHandlers=cfg.readConfigAndCreateHandlers(cfgname)
-  if allHandlers is None:
+  rt=cfg.readConfigAndCreateHandlers(cfgname)
+  if rt is False:
     AVNLog.error("unable to parse config file %s",cfgname)
     sys.exit(1)
-  #we cannot use the find methods at AVNWorker here as they only work after instantiation
-  baseConfig=findHandlerByConfig(allHandlers,"AVNConfig")
-  httpServer=findHandlerByConfig(allHandlers,"AVNHttpServer")
+  baseConfig=AVNWorker.findHandlerByName("AVNConfig")
+  httpServer=AVNWorker.findHandlerByName("AVNHttpServer")
   if baseConfig is None:
     #no entry for base config found - using defaults
     baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())
@@ -147,7 +146,7 @@ def main(argv):
       except:
         pass
   if httpServer is not None:
-    for handler in allHandlers:
+    for handler in AVNWorker.getAllHandlers():
       handledCommands=handler.getHandledCommands()
       if handledCommands is not None:
         if isinstance(handledCommands,dict):
@@ -186,7 +185,7 @@ def main(argv):
     pass
   try:
     for group in (1,2):
-      for handler in allHandlers:
+      for handler in AVNWorker.getAllHandlers():
         try:
           if handler.getStartupGroup() == group:
             handler.startInstance(navData)

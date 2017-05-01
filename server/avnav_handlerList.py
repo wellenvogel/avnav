@@ -44,3 +44,10 @@ def registerHandler(handler):
 def findHandlerByConfigName(name):
   return handlerList.get(name)
 
+def getAllHandlerClasses():
+  rt=[]
+  for name in handlerList.keys():
+    handler=handlerList[name]
+    rt.append(handler)
+  return rt
+

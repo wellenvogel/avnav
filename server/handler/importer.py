@@ -59,7 +59,11 @@ class AVNImporter(AVNWorker):
       'knownExtensions': 'kap,map,geo' #extensions for gdal conversion
     }
     return rt
-    
+
+  @classmethod
+  def autoInstantiate(cls):
+    return True
+
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.importDir=None

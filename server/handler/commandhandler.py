@@ -135,6 +135,11 @@ class AVNCommandHandler(AVNWorker):
   @classmethod
   def preventMultiInstance(cls):
     return True
+
+  @classmethod
+  def autoInstantiate(cls):
+    return True
+
   def getName(self):
     return "CommandHandler"
 
