@@ -43,37 +43,39 @@ from avnav_worker import *
 import avnav_handlerList
 
 
-
-#a Worker to read  NMEA source from a udp socket
 class AVNSenseHatReader(AVNWorker):
-  
+  """ a worker to read data from the SenseHat module
+    and insert it as NMEA MDA/XDR records
+  """
+
   @classmethod
   def getConfigName(cls):
     return "AVNSenseHatReader"
-  
+
   @classmethod
-  def getConfigParam(cls,child=None):
+  def getConfigParam(cls, child=None):
     if not child is None:
       return None
-    rt={
-      'feederName':'',      #if this one is set, we do not use the defaul feeder but this one
-      'interval':'5',
-      'writeMda':'true',
-      'writeXdr':'true'
+    rt = {
+      'feederName': '',  # if this one is set, we do not use the defaul feeder but this one
+      'interval': '5',
+      'writeMda': 'true',
+      'writeXdr': 'true'
     }
     return rt
+
   @classmethod
   def createInstance(cls, cfgparam):
     if cfgparam.get('name') is None:
-      cfgparam['name']="SenseHatReader"
-    rt=AVNSenseHatReader(cfgparam)
+      cfgparam['name'] = "SenseHatReader"
+    rt = AVNSenseHatReader(cfgparam)
     return rt
-    
-  def __init__(self,param):
-    self.feederWrite=None
+
+  def __init__(self, param):
+    self.feederWrite = None
     AVNWorker.__init__(self, param)
     if param.get('name') is None:
-      self.param['name']="SenseHatReader"
+      self.param['name'] = "SenseHatReader"
 
   def isDisabled(self):
     if not hasSenseHat:
@@ -82,50 +84,49 @@ class AVNSenseHatReader(AVNWorker):
 
   def getName(self):
     return self.param['name']
-  #make some checks when we have to start
-  #we cannot do this on init as we potentiall have to find the feeder...
+
+  # make some checks when we have to start
+  # we cannot do this on init as we potentiall have to find the feeder...
   def start(self):
-    feedername=self.getStringParam('feederName')
-    feeder=self.findFeeder(feedername)
+    feedername = self.getStringParam('feederName')
+    feeder = self.findFeeder(feedername)
     if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
-    self.feederWrite=feeder.addNMEA
+      raise Exception("%s: cannot find a suitable feeder (name %s)", self.getName(), feedername or "")
+    self.feederWrite = feeder.addNMEA
     AVNWorker.start(self)
-    
-  def writeData(self,data):
+
+  def writeData(self, data):
     self.feederWrite(data)
-     
-  #thread run method - just try forever  
+
+  # thread run method - just try forever
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName("[%s]%s" % (AVNLog.getThreadId(), self.getName()))
     self.setInfo('main', "reading sense", AVNWorker.Status.NMEA)
-    sense=SenseHat()
+    sense = SenseHat()
     while True:
       try:
         if self.getBoolParam('writeMda'):
           """$WIMDA,30.2269,I,1.0236,B,17.7,C,,,43.3,,5.0,C,131.5,T,128.6,M,0.8,N,0.4,M"""
-          mda='$SHMDA,%.4f,I,%.4f,B,%.1f,C,,C,%.1f,,,C,,T,,M,,N,,M' %(sense.pressure * 29.5301/1000,
-                            sense.pressure / 1000,
-                            sense.temp,
-                            sense.humidity)
-          mda+="*"+NMEAParser.nmeaChecksum(mda)+"\r\n"
-          AVNLog.debug("SenseHat:MDA %s",mda)
+          mda = '$SHMDA,%.4f,I,%.4f,B,%.1f,C,,C,%.1f,,,C,,T,,M,,N,,M' % (sense.pressure * 29.5301 / 1000,
+                                                                         sense.pressure / 1000,
+                                                                         sense.temp,
+                                                                         sense.humidity)
+          mda += "*" + NMEAParser.nmeaChecksum(mda) + "\r\n"
+          AVNLog.debug("SenseHat:MDA %s", mda)
           self.writeData(mda)
         if self.getBoolParam('writeXdr'):
-          xdr='$SHXDR,P,%.4f,B,SHPRESSURE,C,%.1f,C,SHTEMP,H,%.1f,P,SHHUMI' % (sense.pressure / 1000.,
-                            sense.temp,
-                            sense.humidity)
-          xdr+="*"+NMEAParser.nmeaChecksum(xdr)+"\r\n"
+          xdr = '$SHXDR,P,%.4f,B,SHPRESSURE,C,%.1f,C,SHTEMP,H,%.1f,P,SHHUMI' % (sense.pressure / 1000.,
+                                                                                sense.temp,
+                                                                                sense.humidity)
+          xdr += "*" + NMEAParser.nmeaChecksum(xdr) + "\r\n"
           AVNLog.debug("SenseHat:XDR %s", xdr)
           self.writeData(xdr)
       except:
-        AVNLog.info("exception while reading data from SenseHat %s",traceback.format_exc())
-      wt=self.getFloatParam("interval")
+        AVNLog.info("exception while reading data from SenseHat %s", traceback.format_exc())
+      wt = self.getFloatParam("interval")
       if not wt:
-        wt=5.0
+        wt = 5.0
       time.sleep(wt)
-avnav_handlerList.registerHandler(AVNSenseHatReader)
 
-        
-        
-                                        
+
+avnav_handlerList.registerHandler(AVNSenseHatReader)
