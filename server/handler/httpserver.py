@@ -676,12 +676,13 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
   def handleStatusRequest(self,requestParam):
     rt=[]
-    for handler in AVNWorker.allHandlers:
+    for handler in AVNWorker.getAllHandlers(True):
       entry={'configname':handler.getConfigName(),
              'config': handler.getParam(),
              'name':handler.getName(),
              'info':handler.getInfo(),
-             'properties':handler.getStatusProperties()}
+             'disabled': handler.isDisabled(),
+             'properties':handler.getStatusProperties() if not handler.isDisabled() else {}}
       rt.append(entry)       
     return json.dumps({'handler':rt})
   def handleDebugLevelRequest(self,requestParam):

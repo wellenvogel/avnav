@@ -45,7 +45,6 @@ class AVNConfig(sax.handler.ContentHandler):
                      }
     self.currentHandlerClass=None
     self.currentHandlerData=None
-    self.handlerInstances=None
     sax.handler.ContentHandler.__init__(self)
     pass
   
@@ -57,12 +56,17 @@ class AVNConfig(sax.handler.ContentHandler):
     try:
       self.currentHandlerData=None
       self.currentHandlerClass=None
-      self.handlerInstances=[]
       parser=sax.parse(filename,self)
     except:
       AVNLog.error("error parsing cfg file %s : %s",filename,traceback.format_exc())
-      return None
-    return self.handlerInstances
+      return False
+    for handler in avnav_handlerList.getAllHandlerClasses():
+      if handler.autoInstantiate():
+        existing=AVNWorker.findHandlerByName(handler.getConfigName(), True)
+        if existing is None:
+          AVNLog.info("auto instantiate for %s",handler.getConfigName())
+          handler.createInstance(handler.parseConfig({}, handler.getConfigParam(None)))
+    return len(AVNWorker.getAllHandlers()) > 0
     
   def startElement(self, name, attrs):
     if not self.currentHandlerClass is None:
@@ -92,9 +96,7 @@ class AVNConfig(sax.handler.ContentHandler):
       return #only create the handler when we are back at the handler level
     AVNLog.info("creating instance for %s with param %s",name,pprint.pformat(self.currentHandlerData))
     nextInstance=self.currentHandlerClass.createInstance(self.currentHandlerData)
-    if not nextInstance is None:
-      self.handlerInstances.append(nextInstance)
-    else:
+    if nextInstance is None:
       AVNLog.warn("unable to create instance for handler %s",name)
     self.currentHandlerClass=None
     self.currentHandlerData=None   
