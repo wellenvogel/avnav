@@ -1,8 +1,7 @@
 allow-hotplug wlan0
 
 iface wlan0 inet static
-  address 192.168.20.10
+  address 192.168.60.10
   netmask 255.255.255.0
-  up iptables-restore < /etc/iptables.ipv4.nat
   up /usr/lib/avnav/raspberry/hostapd wlan0
   down /usr/lib/avnav/raspberry/hostapd -s wlan0

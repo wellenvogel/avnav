@@ -3,6 +3,5 @@ allow-hotplug wlan-ap2
 iface wlan-ap2 inet static
   address 192.168.40.10
   netmask 255.255.255.0
-  up iptables-restore < /etc/iptables.ipv4.nat
   up /usr/lib/avnav/raspberry/hostapd wlan-ap2
   down /usr/lib/avnav/raspberry/hostapd -s wlan-ap2

@@ -1,0 +1,5 @@
+#add our "main" avnav address to the loopback if
+#to make it available regardless of the wlan adapter config
+auto lo
+iface lo inet loopback
+  up ip addr add 192.168.20.10/24 dev $IFACE

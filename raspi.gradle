@@ -45,6 +45,7 @@ ospackage {
             include 'hostapd'
             include 'settime.sh'
             include 'shutdown.sh'
+            include 'restore-iptables.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'
@@ -66,10 +67,12 @@ ospackage {
     into('/usr/lib/systemd/system'){
         from('raspberry'){
             include('avnav-check-parts.service')
+            include('avnav-iptables.service')
         }
     }
     into('/etc/network/interfaces.d'){
         from('raspberry'){
+            include('lo')
             include('wlan0')
             include('wlan1')
             include('wlan-av1')
