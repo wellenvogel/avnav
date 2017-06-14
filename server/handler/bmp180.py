@@ -200,6 +200,9 @@ class AVNBMP180Reader(AVNWorker):
     self.setName("[%s]%s" % (AVNLog.getThreadId(), self.getName()))
     self.setInfo('main', "reading BMP180", AVNWorker.Status.NMEA)
     addr = int(self.getStringParam('addr'),16)
+    (chip_id,chip_version) = readBmp180Id(addr)
+    info = "Using BMP180 Chip: %d Version: %d " % (chip_id,chip_version)
+    AVNLog.info(info)
     while True:
       try:
         temperature,pressure = readBmp180(addr)

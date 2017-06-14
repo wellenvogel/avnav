@@ -239,7 +239,9 @@ class AVNBME280Reader(AVNWorker):
     self.setName("[%s]%s" % (AVNLog.getThreadId(), self.getName()))
     self.setInfo('main', "reading BME280", AVNWorker.Status.NMEA)
     addr = int(self.getStringParam('addr'),16)
-    #addr = 119
+    (chip_id, chip_version) = readBME280ID(addr)
+    info = "Using BME280 Chip: %d Version: %d" % (chip_id, chip_version)
+    AVNLog.info(info)
     while True:
       try:
         temperature,pressure,humidity = readBME280All(addr)
