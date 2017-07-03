@@ -46,7 +46,7 @@ from avnav_nmea import *
 from avnav_worker import *
 import avnav_handlerList
 
-bus = smbus.SMBus(1) # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
+bus=None
 
 def convertToString(data):
   # Simple function to convert binary data into
@@ -197,6 +197,9 @@ class AVNBMP180Reader(AVNWorker):
 
   # thread run method - just try forever
   def run(self):
+    global bus
+    if hasBMP180:
+      bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
     self.setName("[%s]%s" % (AVNLog.getThreadId(), self.getName()))
     self.setInfo('main', "reading BMP180", AVNWorker.Status.NMEA)
     addr = int(self.getStringParam('addr'),16)

@@ -48,8 +48,7 @@ from avnav_nmea import *
 from avnav_worker import *
 import avnav_handlerList
 
-#BME280DEVICE = 0x77 # Default device I2C Address
-bus = smbus.SMBus(1) # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
+bus=None
 
 def getShort(data, index):
   # return two bytes from data as a signed 16-bit value
@@ -236,6 +235,10 @@ class AVNBME280Reader(AVNWorker):
 
   # thread run method - just try forever
   def run(self):
+    global bus
+    if hasBME280:
+      # BME280DEVICE = 0x77 # Default device I2C Address
+      bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
     self.setName("[%s]%s" % (AVNLog.getThreadId(), self.getName()))
     self.setInfo('main', "reading BME280", AVNWorker.Status.NMEA)
     addr = int(self.getStringParam('addr'),16)
