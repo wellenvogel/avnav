@@ -67,7 +67,7 @@ class AVNAlarmHandler(AVNWorker):
         'name': '',
         'command': '',
         'autoclean':'false',
-        'repeat':'false',
+        'repeat':'1',
         'parameter':'',
         'duration':'' #duration in s - last that long even if the command finishes earlier
       }
@@ -97,7 +97,8 @@ class AVNAlarmHandler(AVNWorker):
         if not self.commandHandler.isCommandRunning(info['command']):
           if info['autoclean']:
             deletes.append(k)
-          if info['repeat']:
+          if info['repeat'] > 1:
+            info['repeat'] = info['repeat'] -1
             self._startAlarmCmd(info)
       for k in deletes:
         try:
@@ -116,7 +117,16 @@ class AVNAlarmHandler(AVNWorker):
     if rt is None:
       return False
     return unicode(rt).upper() == u'TRUE'
-  def findAlarm(self,name):
+  @classmethod
+  def getInt(cls,dict,name):
+    if dict is None:
+      return None
+    rt=dict.get(name)
+    try:
+      return int(rt or 0)
+    except:
+      return 0
+  def findAlarm(self,name,useDefault=False):
     definedAlarms=self.param.get('Alarm')
     rt=None
     if definedAlarms is not None:
@@ -130,30 +140,33 @@ class AVNAlarmHandler(AVNWorker):
           rt= {
             'command':cmd.get('command'),
             'autoclean':self.getBoolean(cmd,'autoclean'),
-            'repeat':self.getBoolean(cmd,'repeat'),
+            'repeat':self.getInt(cmd,'repeat'),
             'parameter':param
           }
           break
-    if rt is None:
+    if rt is None and useDefault:
       rt={
         'command':self.getStringParam('defaultCommand'),
         'parameter':self.getStringParam('defaultParameter'),
         'autoclean':True,
-        'repeat':False}
+        'repeat':1}
     return rt
 
   def _startAlarmCmd(self,alarmdef):
     return self.commandHandler.startCommand(alarmdef['command'],alarmdef.get('parameter'))
 
-  def startAlarm(self,name):
+  def startAlarm(self,name,useDefault=False):
     """start a named alarm"""
-    cmd=self.findAlarm(name)
+    cmd=self.findAlarm(name,useDefault)
     if cmd is None:
       AVNLog.error("no alarm \"%s\" configured", name)
       self.setInfo(name, "no alarm \"%s\" configured"%name, self.Status.ERROR)
       return False
     if self._startAlarmCmd(cmd):
-      self.setInfo(name, "activating alarm \"%s\" " % name, self.Status.NMEA)
+      info=cmd['command']
+      if cmd.get('parameter') is not None:
+        info+=" "+cmd.get('parameter')
+      self.setInfo(name, "activated %s" % info, self.Status.NMEA)
     else:
       self.setInfo(name, "unable to start alarm command \"%s\":\"%s\" " % (name,cmd['command']), self.Status.INACTIVE)
     self.runningAlarms[name] = cmd
@@ -161,7 +174,7 @@ class AVNAlarmHandler(AVNWorker):
 
   def stopAlarm(self, name):
     '''stop a named command'''
-    cmd = self.findAlarm(name)
+    cmd = self.findAlarm(name,True)
     if cmd is None:
       AVNLog.error("no alarm \"%s\" configured", name)
       return False
@@ -170,6 +183,8 @@ class AVNAlarmHandler(AVNWorker):
     except:
       pass
     self.commandHandler.stopCommand(cmd['command'])
+    self.setInfo(name, "stopped", self.Status.INACTIVE)
+    return True
 
   def isAlarmActive(self,name):
     '''return True if the named alarm is running'''
@@ -220,7 +235,7 @@ class AVNAlarmHandler(AVNWorker):
         return rt
     rt={'status':'ok'}
     if mode == "start":
-      if not self.startAlarm(command):
+      if not self.startAlarm(command,True):
         rt['status']='error'
         rt['info']=self.info.get(command)
       return rt

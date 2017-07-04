@@ -197,6 +197,12 @@
 <AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan-av1"></AVNWpaHandler>
 <AVNCommandHandler >
 	<Command name="shutdown" command="sudo shutdown -P"/>
+	<Command name="sound" command="mpg123 -q" repeat="1"/>
 </AVNCommandHandler>
+<AVNAlarmHandler>
+		<Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/>
+		<Alarm name="ais" command="sound" parameter="$BASEDIR/../sounds/aisAlarm.mp3" repeat="1"/>
+		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
+</AVNAlarmHandler>
 
 </AVNServer>

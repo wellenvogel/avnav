@@ -77,4 +77,12 @@
 <AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter importDir="BASEDIR/import"></AVNImporter>
 <AVNWpaHandler></AVNWpaHandler>
+<AVNCommandHandler>
+	<Command name="sound" command="mpg123 -q" repeat="1"/>
+</AVNCommandHandler>
+<AVNAlarmHandler>
+	<Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/>
+	<Alarm name="ais" command="sound" parameter="$BASEDIR/../sounds/aisAlarm.mp3" repeat="1"/>
+	<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
+</AVNAlarmHandler>
 </AVNServer>

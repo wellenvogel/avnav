@@ -153,6 +153,11 @@ ospackage {
             into "server"
             fileMode 0755
         }
+        from('sounds'){
+            into "sounds"
+            include "*.mp3"
+            include "*.txt"
+        }
         from('server/handler') {
             include "*.py"
             into "server/handler"

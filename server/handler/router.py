@@ -449,6 +449,9 @@ class AVNRouter(AVNWorker):
       self.lastDistanceToNext=None
       return
     if not self.currentLeg.approach:
+      alert=self.findHandlerByName("AVNAlarmHandler")
+      if alert is not None:
+        alert.startAlarm("waypoint")
       self.currentLeg.approach=True
       #save the leg
       self.setCurrentLeg(self.currentLeg)
