@@ -341,3 +341,23 @@ class AVNUtil():
     if isinstance(rt, list):
       return rt[0].decode('utf-8', errors='ignore')
     return rt
+
+  @classmethod
+  def replaceParam(cls,instr,param):
+    if instr is None:
+      return instr
+    if param is None:
+      return instr
+    for k in param.keys():
+      instr=instr.replace("$"+k,param.get(k))
+    return instr
+
+  @classmethod
+  def prependBase(cls,path,base):
+    if path is None:
+      return path
+    if os.path.isabs(path):
+      return path
+    if base is None:
+      return base
+    return os.path.join(base,path)

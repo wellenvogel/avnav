@@ -50,6 +50,7 @@ from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 from wpahandler import *
+from avnav_config import *
 hasIfaces=False
 try:
   import netifaces
@@ -102,9 +103,14 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     return rt
   
   def __init__(self,cfgparam,RequestHandlerClass):
+    replace=AVNConfig.filterBaseParam(cfgparam)
     self.basedir=cfgparam['basedir']
     if self.basedir==".":
-      self.basedir=os.getcwd()
+      self.basedir=cfgparam[AVNConfig.BASEPARAM.BASEDIR]
+    else:
+      self.basedir=AVNUtil.replaceParam(self.basedir,replace)
+    self.basedir=AVNUtil.prependBase(self.basedir,cfgparam[AVNConfig.BASEPARAM.BASEDIR])
+    datadir=cfgparam[AVNConfig.BASEPARAM.DATADIR]
     pathmappings=None
     #a list of gemf files (key is the url below charts)
     self. gemflist={}
@@ -112,8 +118,13 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if marray is not None:
       pathmappings={}
       for mapping in marray:
-        pathmappings[mapping['urlpath']]=os.path.expanduser(mapping['path'])
+        pathmappings[mapping['urlpath']]=AVNUtil.prependBase(AVNUtil.replaceParam(os.path.expanduser(mapping['path']),replace),self.basedir)
     self.pathmappings=pathmappings
+    charturl=cfgparam['chartbase']
+    if charturl is not None:
+      #set a default chart dir if not set via config url mappings
+      if self.pathmappings.get(charturl) is None:
+        self.pathmappings[charturl]=os.path.join(cfgparam[AVNConfig.BASEPARAM.DATADIR],"charts")
     self.navurl=cfgparam['navurl']
     self.overwrite_map=({
                               '.png': 'image/png',

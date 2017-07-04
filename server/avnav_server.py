@@ -114,6 +114,8 @@ def main(argv):
         const=logging.DEBUG, dest="verbose")
   parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
   parser.add_option("-c", "--chartbase", dest="chartbase", help="if set, overwrite the chart base dir from the HTTPServer")
+  parser.add_option("-w", "--datadir", dest="datadir",
+                    help="if set make this the base data dir")
   parser.add_option("-u", "--urlmap", dest="urlmap",
                     help="provide mappings in the form url=path,...")
   (options, args) = parser.parse_args(argv[1:])
@@ -123,7 +125,18 @@ def main(argv):
     cfgname=args[0]
   AVNLog.initLoggingInitial(options.verbose if not options.verbose is None else logging.INFO)
   AVNUtil.importFromDir(os.path.join(os.path.dirname(__file__), "handler"), globals())
+  basedir=os.path.abspath(os.path.dirname(__file__))
+  datadir=options.datadir
+  if datadir is None:
+    if options.chartbase is not None:
+      datadir=os.path.join(options.chartbase,os.path.pardir)
+  if datadir is None:
+    datadir=os.path.join(os.path.expanduser("~"),"avnav")
+  datadir=os.path.abspath(datadir)
+  AVNLog.info("basedir=%s,datadir=%s",basedir,datadir)
   cfg=AVNConfig()
+  cfg.setBaseParam(cfg.BASEPARAM.BASEDIR,basedir)
+  cfg.setBaseParam(cfg.BASEPARAM.DATADIR,datadir)
   rt=cfg.readConfigAndCreateHandlers(cfgname)
   if rt is False:
     AVNLog.error("unable to parse config file %s",cfgname)
@@ -156,7 +169,7 @@ def main(argv):
           httpServer.registerRequestHandler('api',handledCommands,handler)
   navData=AVNNavData(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
   level=logging.INFO
-  filename=os.path.join(os.path.dirname(argv[0]),"log","avnav.log")
+  filename=os.path.join(datadir,"log","avnav.log")
   if not options.verbose is None:
     level=options.verbose
   else:    
@@ -197,7 +210,7 @@ def main(argv):
     #check if we have a position and handle time updates
     hasFix=False
     lastsettime=0
-    lastutc=datetime.datetime.utcnow();
+    lastutc=datetime.datetime.utcnow()
     timeFalse=False
     
     while True:

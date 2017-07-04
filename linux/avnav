@@ -109,9 +109,9 @@ if [ "$gui" != 0 ] ; then
 else
   echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
   if [ "$silent" = 0 ] ; then
-    exec $startprog -c "$chartdir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries" $dopt "$xmlfile"
+    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries" $dopt "$xmlfile"
   else
-    exec $startprog -c "$chartdir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries" $dopt "$xmlfile"  > /dev/null 2>&1
+    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries" $dopt "$xmlfile"  > /dev/null 2>&1
   fi
 fi
 
