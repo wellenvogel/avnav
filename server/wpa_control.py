@@ -197,7 +197,10 @@ class WpaControl():
   '''
   def configureNetwork(self,id,param):
     for k in param.keys():
-      self.runSimpleScommand("SET_NETWORK %s %s \"%s\""%(id,k,param[k]),False)
+      if param[k] is not None:
+        self.runSimpleScommand("SET_NETWORK %s %s \"%s\""%(id,k,param[k]),False)
+      else:
+        self.runSimpleScommand("SET_NETWORK %s %s NONE" % (id, k), False)
     return id
   def enableNetwork(self,id):
     self.runSimpleScommand("ENABLE_NETWORK %s"%(id),False)
