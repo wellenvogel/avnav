@@ -77,6 +77,8 @@ class  AvnavGui(Avnav):
         if self.urlmap is not None:
             args.append("-u")
             args.append(self.urlmap)
+        args.append("-w")
+        args.append(self.serverbase)
         args.append(os.path.join(self.serverbase,"avnav_server.xml"))
         self.server=subprocess.Popen(args,cwd=self.getBaseDir())
         self.checkServerRunning()

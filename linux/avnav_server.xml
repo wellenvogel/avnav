@@ -85,6 +85,11 @@
 <AVNCommandHandler>
 	<Command name="test" command="sleep 4"/>
 	<Command name="shutdown" command="echo shutdown triggered"/>
-	<Command name="alarm" command="mplayer -ao pulse  -volume 90 /home/andreas/Downloads/alarm-tones/open-your-eyes-and-see.mp3" repeat="10"/>
+	<Command name="sound" command="mpg123 -q" repeat="1"/>
 </AVNCommandHandler>
+	<AVNAlarmHandler>
+		<Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/>
+		<Alarm name="ais" command="sound" parameter="$BASEDIR/../sounds/aisAlarm.mp3" repeat="1"/>
+		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
+	</AVNAlarmHandler>
 </AVNServer>

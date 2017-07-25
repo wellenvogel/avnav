@@ -28,6 +28,8 @@ import shutil
 
 import time
 import traceback
+
+from avnav_config import AVNConfig
 from httpserver import AVNHTTPServer
 from avnav_util import *
 from avnav_worker import *
@@ -73,9 +75,9 @@ class AVNImporter(AVNWorker):
     self.waittime=self.getIntParam('waittime',True)
     self.chartbase=None
     self.extensions=self.getStringParam('knownExtensions').split(',')
-    self.importDir=self.getStringParam('importDir')
-    self.workDir=self.getStringParam('workDir')
-    self.converterDir=self.getStringParam('converterDir')
+    self.importDir=AVNUtil.prependBase(AVNUtil.replaceParam(self.getStringParam('importDir'),AVNConfig.filterBaseParam(self.getParam())),self.getStringParam(AVNConfig.BASEPARAM.DATADIR))
+    self.workDir=AVNUtil.prependBase(AVNUtil.replaceParam(self.getStringParam('workDir'),AVNConfig.filterBaseParam(self.getParam())),self.getStringParam(AVNConfig.BASEPARAM.DATADIR))
+    self.converterDir=self.getStringParam('converterDir') # the location of the coneverter python
     if self.converterDir is None or self.converterDir=='':
       self.converterDir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"..","chartconvert")
 

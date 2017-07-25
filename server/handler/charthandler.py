@@ -58,9 +58,9 @@ class AVNChartHandler(AVNWorker):
     return "AVNChartHandler"
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    server=self.findHandlerByName("AVNHTTPServer")
+    server=self.findHandlerByName("AVNHttpServer")
     if server is None:
-      AVNLog.error("unable to find AVNHTTPServer")
+      AVNLog.error("unable to find AVNHttpServer")
       return
     AVNLog.info("charthandler started")
     while True:

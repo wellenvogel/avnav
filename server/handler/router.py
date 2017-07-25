@@ -36,6 +36,9 @@ import math
 
 import StringIO
 from __main__ import traceback
+
+from avnav_config import AVNConfig
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries"))
 import gpxpy098.gpx as gpx
 import gpxpy098.parser as gpxparser
@@ -352,9 +355,9 @@ class AVNRouter(AVNWorker):
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
     interval=self.getIntParam('interval')
-    routesdir=os.path.expanduser(self.getStringParam("routesdir"))
+    routesdir=AVNUtil.replaceParam(os.path.expanduser(self.getStringParam("routesdir")),AVNConfig.filterBaseParam(self.getParam()))
     if routesdir == "":
-      routesdir=os.path.join(unicode(os.path.dirname(sys.argv[0])),u'routes')
+      routesdir=os.path.join(self.getStringParam(AVNConfig.BASEPARAM.DATADIR),u'routes')
     self.routesdir=routesdir
     if not os.path.isdir(self.routesdir):
       AVNLog.info("creating routes directory %s"%(self.routesdir))
@@ -446,6 +449,9 @@ class AVNRouter(AVNWorker):
       self.lastDistanceToNext=None
       return
     if not self.currentLeg.approach:
+      alert=self.findHandlerByName("AVNAlarmHandler")
+      if alert is not None:
+        alert.startAlarm("waypoint")
       self.currentLeg.approach=True
       #save the leg
       self.setCurrentLeg(self.currentLeg)

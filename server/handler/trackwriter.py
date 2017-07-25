@@ -35,6 +35,7 @@ import glob
 import sys
 import traceback
 
+from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
@@ -51,9 +52,9 @@ class AVNTrackWriter(AVNWorker):
     self.tracklock=threading.Lock()
     trackdir=self.getStringParam("trackdir")
     if trackdir == "":
-      trackdir=unicode(os.path.join(os.path.dirname(sys.argv[0]),'tracks'))
+      trackdir=unicode(os.path.join(self.getStringParam(AVNConfig.BASEPARAM.DATADIR),'tracks'))
     else:
-      trackdir=os.path.expanduser(trackdir)
+      trackdir=AVNUtil.replaceParam(os.path.expanduser(trackdir),AVNConfig.filterBaseParam(param))
     self.trackdir=trackdir
     self.fname=None
   @classmethod

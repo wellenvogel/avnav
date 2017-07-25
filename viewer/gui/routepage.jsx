@@ -26,6 +26,74 @@ var selectors={
     target: 'avn_route_info_target'
 };
 
+var createNewRoute=function(name,isActive,okCallback) {
+    var Dialog = React.createClass({
+        propTypes: {
+            closeCallback: React.PropTypes.func,
+        },
+        getInitialState: function () {
+            return {
+                name: name,
+                activate: isActive,
+                copyPoints: true
+            };
+        },
+        nameChanged: function (event) {
+            this.setState({name: event.target.value});
+        },
+        changeValue: function (name,newValue) {
+            var ns={};
+            ns[name]=newValue;
+            this.setState(ns);
+        },
+        closeFunction: function (opt_skip) {
+            if (this.props.closeCallback) this.props.closeCallback();
+        },
+        okFunction: function (event) {
+            var rt = okCallback(this.state, this.closeFunction);
+            if (rt && this.props.closeCallback) this.props.closeCallback();
+        },
+        cancelFunction: function (event) {
+            this.closeFunction();
+        },
+        render: function () {
+            var self=this;
+            var html = (
+                <div className="avn_editRouteName">
+                    <h3 className="avn_dialogTitle">Save as New</h3>
+                    <div>
+                        <div className="avn_row">
+                            <input type="text" name="value" value={this.state.name} onChange={this.nameChanged}/>
+                        </div>
+                        <div className="avn_row"
+                             >
+                            <div onClick={function () {
+                                self.changeValue('copyPoints', !self.state.copyPoints);
+                            }} className="avnCheckBoxItem">
+                            <div className="avn_label">Copy Points</div>
+                            <span className={'avnCheckbox' + (this.state.copyPoints ? ' checked' : '')}/>
+                            </div>
+                            {isActive?
+                                <div onClick={function () {
+                                    self.changeValue('activate', !self.state.activate);
+                                }} className="avnCheckBoxItem">
+                                    <div className="avn_label">Activate</div>
+                                    <span className={'avnCheckbox' + (this.state.activate ? ' checked' : '')}/>
+                                </div>
+                                :""}
+                        </div>
+                    </div>
+                    <button name="ok" onClick={this.okFunction}>Ok</button>
+                    <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
+                    <div className="avn_clear"></div>
+                </div>
+            );
+            return html;
+        }
+    });
+    return Dialog;
+};
+
 /**
  *
  * @constructor
@@ -97,7 +165,9 @@ Routepage.prototype.getPageContent=function(){
     }), this.store, keys.routeInfo);
     var headingProperties={
         onClick: function () {
-            var okCallback = function (name, closeFunction) {
+            var okCallback = function (values, closeFunction) {
+                var name=values.name||"";
+                if (name == self.currentRoute.name) return true;
                 if (name != self.initialName) {
                     //check if a route with this name already exists
                     self.routingHandler.fetchRoute(name, false,
@@ -105,18 +175,19 @@ Routepage.prototype.getPageContent=function(){
                             self.toast("route with name " + name + " already exists", true);
                         },
                         function (er) {
-                            closeFunction();
                             self.currentRoute.setName(name);
+                            if (! values.copyPoints) self.currentRoute.points=[];
+                            if (! values.activate) self._isEditingActive=false;
                             if (! self.gui.properties.getProperties().connectedMode) self.currentRoute.server=false;
+                            closeFunction();
                             self._updateDisplay();
                         });
                     return false;
                 }
                 return true;
             };
-            OverlayDialog.valueDialog("Edit Route Name", self.currentRoute.name,
-                okCallback, self.getDialogContainer(), 'Name'
-            );
+            OverlayDialog.dialog(createNewRoute(self.currentRoute.name,self._isEditingActive,
+                okCallback), self.getDialogContainer());
         }
     };
     var List=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);

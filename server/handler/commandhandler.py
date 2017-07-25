@@ -40,15 +40,17 @@ import threading
 import signal
 import shlex
 
+from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
 
 class Handler:
-  def __init__(self,command,name,callback):
+  def __init__(self,command,name,callback,parameters=None):
     cmdstring=command.get('command')
     repeat=command.get('repeat')
     self.command=cmdstring
+    self.parameters=parameters
     self.name=name
     self.callback=callback
     self.thread=None
@@ -62,6 +64,11 @@ class Handler:
   def _startCmd(self):
     args = shlex.split(self.command)
     AVNLog.debug("starting command ", args)
+    if self.parameters is not None:
+      if isinstance(self.parameters,list):
+        args.extend(self.parameters)
+      else:
+        args.extend(shlex.split(self.parameters))
     self.subprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
                                        preexec_fn=os.setsid)
     self.subprocess.stdin.close()
@@ -155,7 +162,7 @@ class AVNCommandHandler(AVNWorker):
       return None
     for cmd in definedCommands:
       if cmd.get('name') is not None and cmd.get('name') == name:
-        return {'command':cmd.get('command'),'repeat':cmd.get('repeat')}
+        return {'command':AVNUtil.replaceParam(cmd.get('command'),AVNConfig.filterBaseParam(self.getParam())),'repeat':cmd.get('repeat')}
   def commandFinished(self,name,status):
     AVNLog.info("finished with status %d",status)
     self.setInfo(name,"finished with status %d"%(status),self.Status.INACTIVE)
@@ -164,7 +171,7 @@ class AVNCommandHandler(AVNWorker):
     except:
       pass
 
-  def startCommand(self,name):
+  def startCommand(self,name,parameters=None):
     """start a named command"""
     cmd=self.findCommand(name)
     if cmd is None:
@@ -176,7 +183,7 @@ class AVNCommandHandler(AVNWorker):
       AVNLog.warn("command %s running on new start, trying to stop",name)
       current.stopHandler()
     AVNLog.info("start command %s=%s",name,cmd)
-    handler=Handler(cmd,name,self.commandFinished)
+    handler=Handler(cmd,name,self.commandFinished,parameters)
     try:
       handler.start()
       self.setInfo(name,"running \"%s\""%handler.getCommand(),self.Status.RUNNING)
@@ -188,6 +195,7 @@ class AVNCommandHandler(AVNWorker):
     return True
 
   def stopCommand(self, name):
+    '''stop a named command'''
     cmd = self.findCommand(name)
     if cmd is None:
       AVNLog.error("no command \"%s\" configured", name)
@@ -202,6 +210,15 @@ class AVNCommandHandler(AVNWorker):
         self.setInfo(name,"unable to stop command %s"%traceback.format_exc(1),self.Status.ERROR)
         return False
 
+  def isCommandRunning(self,name):
+    '''return True if the named command is running'''
+    cmd=self.findCommand(name)
+    if cmd is None:
+      return False
+    current=self.runningProcesses.get(name)
+    if current is None:
+      return False
+    return True
 
   def getStatusProperties(self):
     commands=self.param.get('Command')

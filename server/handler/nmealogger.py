@@ -36,6 +36,7 @@ import sys
 import traceback
 import gzip
 
+from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 from avnav_nmea import *
@@ -90,7 +91,7 @@ class AVNNmeaLogger(AVNWorker):
       if trackwriter is not None:
         trackdir=trackwriter.getTrackDir()
       if trackdir is None or trackdir == "":
-        trackdir=unicode(os.path.join(os.path.dirname(sys.argv[0]),'tracks'))
+        trackdir=unicode(os.path.join(self.getStringParam(AVNConfig.BASEPARAM.DATADIR),'tracks'))
     else:
       trackdir=os.path.expanduser(trackdir)
     self.trackdir=trackdir

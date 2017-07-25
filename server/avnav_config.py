@@ -37,17 +37,39 @@ import avnav_handlerList
   
 # a class for parsing the config file
 class AVNConfig(sax.handler.ContentHandler):
+  class BASEPARAM(Enum):
+    BASEDIR='BASEDIR' #the base directory for the server - location of the main python file
+    DATADIR='DATADIR' #the data directory if not provided on the commandline: either parent dir of chart dir or $HOME/avnav
+
+  @classmethod
+  def filterBaseParam(cls,dict):
+    '''
+    filter the base parameter out of the existing paramneters
+    :param dict: the dict with the current parameters
+    :return: a dictionary with all baseparameters (if they are set)
+    '''
+    rt={}
+    if dict is None:
+      return rt
+    for k in cls.BASEPARAM.__dict__.keys():
+      if dict.get(k) is not None:
+        rt[k]=dict[k]
+    return rt
   def __init__(self):
     #global parameters
     self.parameters={
                      "debug":0,
                      "expiryTime":20, #time after which an entry is considered to be expired
                      }
+    self.baseParam={} #parameters to be added to all handlers
     self.currentHandlerClass=None
     self.currentHandlerData=None
     sax.handler.ContentHandler.__init__(self)
     pass
-  
+  def setBaseParam(self,name,value):
+    if not hasattr(self.BASEPARAM,name):
+      raise Exception("invalid parameter for setBaseParam")
+    self.baseParam[name]=value
   def readConfigAndCreateHandlers(self,filename):
     AVNLog.info("reading config %s",filename)
     if not os.path.exists(filename):
@@ -65,7 +87,9 @@ class AVNConfig(sax.handler.ContentHandler):
         existing=AVNWorker.findHandlerByName(handler.getConfigName(), True)
         if existing is None:
           AVNLog.info("auto instantiate for %s",handler.getConfigName())
-          handler.createInstance(handler.parseConfig({}, handler.getConfigParam(None)))
+          cfg=handler.parseConfig({}, handler.getConfigParam(None))
+          cfg.update(self.baseParam)
+          handler.createInstance(cfg)
     return len(AVNWorker.getAllHandlers()) > 0
     
   def startElement(self, name, attrs):
@@ -95,6 +119,7 @@ class AVNConfig(sax.handler.ContentHandler):
     if not self.currentHandlerClass.getConfigName() == name:
       return #only create the handler when we are back at the handler level
     AVNLog.info("creating instance for %s with param %s",name,pprint.pformat(self.currentHandlerData))
+    self.currentHandlerData.update(self.baseParam)
     nextInstance=self.currentHandlerClass.createInstance(self.currentHandlerData)
     if nextInstance is None:
       AVNLog.warn("unable to create instance for handler %s",name)
