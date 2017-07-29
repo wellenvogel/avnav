@@ -248,10 +248,12 @@ class AVNWpaHandler(AVNWorker):
         v=self.getRequestParam(requestparam,k)
         if v is not None and v != "":
           param[k]=v
-        else:
-          if k == 'psk':
-            #if we have an empty psk we assume an open network
-            param['key_mgmt']=None
+      key=self.getRequestParam(requestparam,"psk")
+      if key is None or key == "":
+        param['key_mgmt'] = "NONE"
+      else:
+        param['key_mgmt'] = "WPA-PSK"
+
       rt=json.dumps(self.connect(param))
     if rt is None:
       raise Exception("unknown command %s"%(command))
