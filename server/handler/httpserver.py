@@ -682,6 +682,13 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     src=self.server.navdata.getLastSource('AIS')
     statusAis={"status":status,"source":src,"info":"%d targets"%(numAis)}
     rtv.data["raw"]={"status":{"nmea":statusNmea,"ais":statusAis}}
+    alarmHandler = self.server.findHandlerByName("AVNAlarmHandler")
+    if alarmHandler is not None:
+      alarmInfo={}
+      alarms=alarmHandler.getRunningAlarms()
+      for k in alarms.keys():
+        alarmInfo[k]={'running':True,'alarm':k}
+      rtv.data['raw']['alarms']=alarmInfo
     return json.dumps(rtv.data)
 
 
