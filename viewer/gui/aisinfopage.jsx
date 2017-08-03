@@ -1,7 +1,7 @@
 /**
  * Created by andreas on 02.05.14.
  */
-
+var Page=require('./page.jsx');
 var navobjects=require('../nav/navobjects');
 var AisHandler=require('../nav/aisdata');
 var React=require('react');
@@ -18,7 +18,7 @@ var keys={
  * @constructor
  */
 var AisInfoPage=function(){
-    avnav.gui.Page.call(this,'aisinfopage',
+    Page.call(this,'aisinfopage',
         {
             eventlist:[navobjects.NavEvent.EVENT_TYPE],
             returnOnClick: true
@@ -35,9 +35,9 @@ var AisInfoPage=function(){
      * @type {undefined}
      */
     this.mmsi=undefined;
-   
+
 };
-avnav.inherits(AisInfoPage,avnav.gui.Page);
+avnav.inherits(AisInfoPage,Page);
 
 AisInfoPage.prototype.localInit=function(){
     this.aishandler=this.navobject.getAisHandler();
@@ -128,11 +128,7 @@ AisInfoPage.prototype.showPage=function(options) {
 
 AisInfoPage.prototype.getCurrentTarget=function(){
     var current=this.aishandler.getAisByMmsi(this.mmsi);
-    var warning=this.aishandler.getNearestAisTarget();
-    if (warning && warning.warning){
-        this.mmsi=warning.mmsi;
-        return warning;
-    }
+
     return current;
 };
 AisInfoPage.prototype.fillData=function(initial){
@@ -148,7 +144,7 @@ AisInfoPage.prototype.fillData=function(initial){
     else{
         if (currentObject.nearest) status='nearest';
     }
-    this.store.storeData(keys.status,{roatation:currentObject.course,src:this.gui.map.getAisIcon(status)});
+    this.store.storeData(keys.status,{rotation:currentObject.course,src:this.gui.map.getAisIcon(status)});
     this.store.storeData(keys.aisItem,currentObject);
 };
 
