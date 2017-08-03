@@ -69,8 +69,11 @@ class Handler:
         args.extend(self.parameters)
       else:
         args.extend(shlex.split(self.parameters))
-    self.subprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+    if hasattr(os,'setsid'):
+      self.subprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
                                        preexec_fn=os.setsid)
+    else:
+      self.subprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     self.subprocess.stdin.close()
   def start(self):
     self._startCmd()
@@ -84,7 +87,10 @@ class Handler:
     try:
       self.stop=True
       self.repeat=0
-      os.killpg(os.getpgid(self.subprocess.pid), signal.SIGTERM)
+      if hasattr(os,'killpg'):
+        os.killpg(os.getpgid(self.subprocess.pid), signal.SIGTERM)
+      else:
+        os.kill(self.subprocess.pid,signal.SIGTERM)
       self.thread.join(10)
     except :
       AVNLog.error("unable to stop command %s:%s",self.name,traceback.format_exc())
