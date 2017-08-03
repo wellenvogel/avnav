@@ -49,7 +49,7 @@ window.avnav={};
     require('./gui/mainpage.jsx');
     require('./gui/navpage.jsx');
     require('./gui/aispage.jsx');
-    require('./gui/aisinfopage.js');
+    require('./gui/aisinfopage.jsx');
     require('./gui/settingspage.jsx');
     require('./gui/statuspage.jsx');
     require('./gui/addresspage.jsx');
