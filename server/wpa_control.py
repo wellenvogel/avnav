@@ -195,12 +195,14 @@ class WpaControl():
     return data.strip()
   '''configure a network (number as string), param being a dict
   '''
+  unquotedParam=['key_mgmt']
   def configureNetwork(self,id,param):
     for k in param.keys():
       if param[k] is not None:
-        self.runSimpleScommand("SET_NETWORK %s %s \"%s\""%(id,k,param[k]),False)
-      else:
-        self.runSimpleScommand("SET_NETWORK %s %s NONE" % (id, k), False)
+        if not k in self.unquotedParam:
+          self.runSimpleScommand("SET_NETWORK %s %s \"%s\""%(id,k,param[k]),False)
+        else:
+          self.runSimpleScommand("SET_NETWORK %s %s %s" % (id, k, param[k]), False)
     return id
   def enableNetwork(self,id):
     self.runSimpleScommand("ENABLE_NETWORK %s"%(id),False)
