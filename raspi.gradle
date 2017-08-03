@@ -47,6 +47,7 @@ ospackage {
             include 'settime.sh'
             include 'shutdown.sh'
             include 'restore-iptables.sh'
+            include 'sound.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'

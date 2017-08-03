@@ -197,7 +197,7 @@
 <AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan-av1"></AVNWpaHandler>
 <AVNCommandHandler >
 	<Command name="shutdown" command="sudo shutdown -P"/>
-	<Command name="sound" command="mpg123 -q" repeat="1"/>
+	<Command name="sound" command="/bin/sh $BASEDIR/../raspberry/sound.sh 90%" repeat="1"/>
 </AVNCommandHandler>
 <AVNAlarmHandler>
 		<Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/>
