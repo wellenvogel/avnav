@@ -141,7 +141,7 @@ avnav.gui.Navpage=function(){
      * @private
      * @type {undefined}
      */
-    this.lastLock=undefined;
+    this.lastLockWp=undefined;
 
 };
 avnav.inherits(avnav.gui.Navpage,avnav.gui.Page);
@@ -363,8 +363,12 @@ avnav.gui.Navpage.prototype._updateZoom=function(){
 };
 avnav.gui.Navpage.prototype.timerEvent=function(){
     if (this.wpHidetime > 0 && this.wpHidetime <= new Date().getTime()){
-        if (! (this.isSmall() && this.routingVisible))this.hideWpButtons();
+        if (! (this.isSmall() && this.routingVisible)){
+            this.lastLockWp=undefined; //do not surprise the user...
+            this.hideWpButtons();
+        }
     }
+
     this.buttonUpdate();
     this.widgetVisibility();
     this._updateZoom();
@@ -397,7 +401,7 @@ avnav.gui.Navpage.prototype.localInit=function(){
             if (self.routingVisible && ! self.isSmall()) {
                 return;
             }
-            self.lastLock=self.gui.map.getGpsLock();
+            self.lastLockWp=self.gui.map.getGpsLock();
             self.showWpButtons(wp);
         }
     });
@@ -574,6 +578,7 @@ avnav.gui.Navpage.prototype.mapEvent=function(evdata){
             return;
         }
         if (! this.routingVisible || this.isSmall()){
+            this.lastLockWp=this.gui.map.getGpsLock();
             this.showWpButtons(wp);
         }
     }
@@ -808,8 +813,8 @@ avnav.gui.Navpage.prototype.hideWpButtons=function(){
     this.selectOnPage('#avi_navpage_wpbuttons').hide();
     this.selectedWp=undefined;
     this.wpHidetime=0;
-    if (this.lastLock !== undefined) this.gui.map.setGpsLock(this.lastLock);
-    this.lastLock=undefined;
+    if (this.lastLockWp !== undefined) this.gui.map.setGpsLock(this.lastLockWp);
+    this.lastLockWp=undefined;
 };
 
 
