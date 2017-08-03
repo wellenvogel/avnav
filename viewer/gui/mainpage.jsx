@@ -1,8 +1,7 @@
 /**
  * Created by andreas on 02.05.14.
  */
-avnav.provide('avnav.gui.Mainpage');
-
+var Page=require('./page.jsx');
 var navobjects=require('../nav/navobjects');
 var Store=require('../util/store');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
@@ -10,45 +9,56 @@ var ItemList=require("../components/ItemList.jsx");
 var ReactDOM=require("react-dom");
 var React=require("react");
 var keys={
-    chartlist:'charts'
+    chartlist:'charts',
+    status:'status'
 };
 
 /**
  *
  * @constructor
  */
-avnav.gui.Mainpage=function(){
-    avnav.gui.Page.call(this,'mainpage');
+var Mainpage=function(){
+    Page.call(this,'mainpage');
     var self=this;
     this.lastNmeaStatus=null;
     this.lastAisStatus=null;
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
-    $(window).on('resize', function () {
-        self.layout();
-    });
+
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
-        self.layout();
         self.fillList();
     });
     this.store=new Store();
 };
-avnav.inherits(avnav.gui.Mainpage,avnav.gui.Page);
+avnav.inherits(Mainpage,Page);
 
 /**
  * changethe night mode
  * @param {boolean} newDim
  */
-avnav.gui.Mainpage.prototype.changeDim=function(newDim){
+Mainpage.prototype.changeDim=function(newDim){
     this.gui.properties.setValueByName('nightMode',newDim);
     this.gui.properties.saveUserData();
     this.gui.properties.updateLayout();
     $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
 };
-
-avnav.gui.Mainpage.prototype.localInit=function(){
+Mainpage.prototype.getPageContent=function(){
     var self=this;
+    var buttons=[
+        {key:'ShowStatus'},
+        {key:'ShowSettings'},
+        {key:'ShowDownload'},
+        {key:'Connected',toggle:true},
+        {key:'ShowGps'},
+        {key:'Night',toggle:true},
+        {key:'MainInfo'},
+        {key:'MainCancel',android:true}
+        ];
+    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    var Headline=function(props){
+        return <div className="avn_left_top">AvNav</div>
+    };
     var chartSelected=function(item){
         self.showNavpage(item);
     };
@@ -61,20 +71,50 @@ avnav.gui.Mainpage.prototype.localInit=function(){
             </div>
         );
     };
+    var BottomLine=function(props){
+       return (
+           <div className='avn_panel avn_left_bottom '>
+               <div className="avn_mainpage_leftbottominner">
+                   <div className='avn_mainpage_status'>
+                       <div class='avn_label '>
+                           <img  className='avn_status_image_small' src={props.nmeaStatusSrc}/>
+                           NMEA&nbsp;{props.nmeaStatusText}>
+                       </div>
+                       <div className='avn_label'>
+                           <img id='avi_mainAisStatusImage' className='avn_status_image_small' src={props.aisStatusSrc}/>
+                           AIS&nbsp;{props.aisStatusText}
+                       </div>
+                   </div>
+                   <div className="avn_mainpage_link" >
+                       <div className="avn_label"> AVNav Version <span id="avi_mainpage_version">develop</span></div>
+                       <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="avn_extlink">www.wellenvogel.de/software/avnav/index.php</a></div>
+                   </div>
+               </div>
+           </div>
+       )
+    };
+    var BottomLineItem=ItemUpdater(BottomLine,this.store,keys.status);
     var ChartList=ItemUpdater(ItemList,this.store,keys.chartlist);
-    ReactDOM.render(
-        <ChartList
-            itemClass={ChartItem}
-            onItemClick={chartSelected}
-            className=""
-            itemList={[]}
-            updateCallback={function(){
-                self.layout();
-            }}
-        />,
-        this.selectOnPage('.avn_left_inner')[0]);
+    return React.createClass({
+        render: function(){
+            return(
+                <div className="avn_panel_fill_flex">
+                    <Headline/>
+                    <div className="avn_listWrapper">
+                        <ChartList itemClass={ChartItem}
+                                   onItemClick={chartSelected}
+                                   className=""
+                                   itemList={[]}
+                        />
+                    </div>
+                    <BottomLineItem/>
+                </div>
+            );
+        }
+    });
 };
-avnav.gui.Mainpage.prototype.fillList=function(){
+
+Mainpage.prototype.fillList=function(){
     var page=this;
     var url=this.gui.properties.getProperties().navUrl+"?request=listCharts";
     $.ajax({
@@ -105,7 +145,7 @@ avnav.gui.Mainpage.prototype.fillList=function(){
 
     });
 };
-avnav.gui.Mainpage.prototype.showPage=function(options){
+Mainpage.prototype.showPage=function(options){
     if (!this.gui) return;
     var ncon=this.gui.properties.getProperties().connectedMode;
     this.handleToggleButton('.avb_Connected',ncon);
@@ -122,67 +162,63 @@ avnav.gui.Mainpage.prototype.showPage=function(options){
  * the click handler for the charts
  * @param entry - the chart entry
  */
-avnav.gui.Mainpage.prototype.showNavpage=function(entry){
+Mainpage.prototype.showNavpage=function(entry){
     avnav.log("activating navpage with url "+entry.url);
     this.gui.showPage('navpage',{url:entry.url,charturl:entry.charturl});
 
 };
-avnav.gui.Mainpage.prototype.hidePage=function(){
+Mainpage.prototype.hidePage=function(){
 
 };
-avnav.gui.Mainpage.prototype.goBack=function(){
+Mainpage.prototype.goBack=function(){
     avnav.android.goBack();
 };
 
-avnav.gui.Mainpage.prototype.setImageColor=function(imageId,color){
-    if (color == "red") $(imageId).attr('src', this.gui.properties.getProperties().statusErrorImage);
-    if (color == "green") $(imageId).attr('src', this.gui.properties.getProperties().statusOkImage);
-    if (color == "yellow") $(imageId).attr('src', this.gui.properties.getProperties().statusYellowImage);
+Mainpage.prototype.getImgSrc=function(color){
+    if (color == "red") return this.gui.properties.getProperties().statusErrorImage;
+    if (color == "green") return this.gui.properties.getProperties().statusOkImage;
+    if (color == "yellow")return this.gui.properties.getProperties().statusYellowImage;
 };
 
 /**
  *
  * @param {navobjects.NavEvent} evdata
  */
-avnav.gui.Mainpage.prototype.navEvent=function(evdata) {
+Mainpage.prototype.navEvent=function(evdata) {
     if (!this.visible) return;
-    if (evdata.type == navobjects.NavEventType.GPS){
-        var status=this.navobject.getValue("aisStatusColor");
-        if (status != this.lastAisStatus) {
-            this.setImageColor('#avi_mainAisStatusImage',status);
-            this.lastAisStatus=status;
-        }
-        status=this.navobject.getValue("nmeaStatusColor");
-        if (status != this.lastNmeaStatus) {
-            this.setImageColor('#avi_mainNmeaStatusImage',status);
-            this.lastNmeaStatus=status;
-        }
+    if (evdata.type == navobjects.NavEventType.GPS) {
+        var nmeaStatus = this.navobject.getValue("aisStatusColor");
+        var aisStatus = this.navobject.getValue("nmeaStatusColor");
+
+        this.store.storeData(keys.status, {
+            nmeaStatusText: this.navobject.getValue('nmeaStatusText'),
+            nmeaStatusSrc: this.getImgSrc(nmeaStatus),
+            aisStatusText: this.navobject.getValue('aisStatusText'),
+            aisStatusSrc: this.getImgSrc(aisStatus)
+        });
     }
 };
 
-avnav.gui.Mainpage.prototype.layout=function(){
-    this.selectOnPage('.avn_listContainer').vAlign().hAlign();
-};
 
 //-------------------------- Buttons ----------------------------------------
 
-avnav.gui.Mainpage.prototype.btnShowHelp=function (button,ev){
+Mainpage.prototype.btnShowHelp=function (button,ev){
     avnav.log("ShowHelp clicked");
 };
 
-avnav.gui.Mainpage.prototype.btnShowStatus=function (button,ev){
+Mainpage.prototype.btnShowStatus=function (button,ev){
     avnav.log("ShowStatus clicked");
     this.gui.showPage('statuspage');
 };
-avnav.gui.Mainpage.prototype.btnShowSettings=function (button,ev){
+Mainpage.prototype.btnShowSettings=function (button,ev){
     avnav.log("ShowSettings clicked");
     this.gui.showPage('settingspage');
 };
-avnav.gui.Mainpage.prototype.btnShowGps=function (button,ev){
+Mainpage.prototype.btnShowGps=function (button,ev){
     avnav.log("ShowGps clicked");
     this.gui.showPage('gpspage');
 };
-avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
+Mainpage.prototype.btnConnected=function (button,ev){
     avnav.log("Connected clicked");
     var ncon=!this.gui.properties.getProperties().connectedMode;
     this.handleToggleButton('.avb_Connected',ncon);
@@ -192,25 +228,25 @@ avnav.gui.Mainpage.prototype.btnConnected=function (button,ev){
 
 };
 
-avnav.gui.Mainpage.prototype.btnNight=function (button,ev){
+Mainpage.prototype.btnNight=function (button,ev){
     avnav.log("Night clicked");
     var ncon=this.gui.properties.getProperties().nightMode;
     this.handleToggleButton('.avb_Night',!ncon);
     this.changeDim(!ncon);
 };
-avnav.gui.Mainpage.prototype.btnShowDownload=function (button,ev) {
+Mainpage.prototype.btnShowDownload=function (button,ev) {
     avnav.log("show download clicked");
     this.gui.showPage('downloadpage');
 };
-avnav.gui.Mainpage.prototype.btnMainAndroid=function (button,ev) {
+Mainpage.prototype.btnMainAndroid=function (button,ev) {
     avnav.log("main android settings clicked");
     avnav.android.showSettings();
 };
-avnav.gui.Mainpage.prototype.btnMainInfo=function (button,ev) {
+Mainpage.prototype.btnMainInfo=function (button,ev) {
     avnav.log("main info clicked");
     this.gui.showPage('infopage');
 };
-avnav.gui.Mainpage.prototype.btnMainCancel=function (button,ev) {
+Mainpage.prototype.btnMainCancel=function (button,ev) {
     avnav.log("main cancel clicked");
     avnav.android.goBack();
 };
@@ -219,6 +255,6 @@ avnav.gui.Mainpage.prototype.btnMainCancel=function (button,ev) {
  */
 (function(){
     //create an instance of the status page handler
-    var page=new avnav.gui.Mainpage();
+    var page=new Mainpage();
 }());
 

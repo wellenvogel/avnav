@@ -442,7 +442,7 @@ Page.prototype.handleToggleButton=function(id,onoff,onClass){
         if (! (id instanceof Object)){
             nid={};
             id=id.replace(/^\.avb_/,"");
-            nid[id]=onOff;
+            nid[id]=onoff;
 
         }
         for (var idx in nid) {
