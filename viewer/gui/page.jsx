@@ -52,8 +52,8 @@ var Page=function(name,options){
      */
     this.store=new Store();
     this.globalKeys={
-        pageVisible: 'visible',
-        buttons: 'buttons'
+        pageVisible: 'global.visible',
+        buttons: 'global.buttons'
     };
     $(document).on(avnav.gui.PageEvent.EVENT_TYPE, function(ev,evdata){
 
