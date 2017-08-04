@@ -78,7 +78,7 @@ Mainpage.prototype.getPageContent=function(){
                    <div className='avn_mainpage_status'>
                        <div class='avn_label '>
                            <img  className='avn_status_image_small' src={props.nmeaStatusSrc}/>
-                           NMEA&nbsp;{props.nmeaStatusText}>
+                           NMEA&nbsp;{props.nmeaStatusText}
                        </div>
                        <div className='avn_label'>
                            <img id='avi_mainAisStatusImage' className='avn_status_image_small' src={props.aisStatusSrc}/>
