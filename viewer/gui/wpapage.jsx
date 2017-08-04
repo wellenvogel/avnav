@@ -1,6 +1,7 @@
 /**
  * Created by Andreas on 27.04.2014.
  */
+var Page=require('./page.jsx');
 var React=require('react');
 var ReactDOM=require('react-dom');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
@@ -18,7 +19,7 @@ var keys={
  * @constructor
  */
 var Wpapage=function(){
-    avnav.gui.Page.call(this,'wpapage');
+    Page.call(this,'wpapage');
     this.statusQuery=0; //sequence handler
     this.timeout=4000;
     this.numErrors=0;
@@ -29,7 +30,7 @@ var Wpapage=function(){
      */
     this.store=new Store();
 };
-avnav.inherits(Wpapage,avnav.gui.Page);
+avnav.inherits(Wpapage,Page);
 
 
 
@@ -39,7 +40,8 @@ Wpapage.prototype.showPage=function(options){
     this.statusQuery=window.setInterval(function(){
         self.doQuery();
     },this.timeout);
-    this.store.resetData();
+    this.store.storeData(keys.interfaceKey,{});
+    this.store.storeData(keys.itemListKey,{});
     this.doQuery();
 };
 
@@ -123,9 +125,13 @@ Wpapage.prototype.sendRequest=function(request,message,param){
     });
 };
 
-Wpapage.prototype.localInit=function() {
+Wpapage.prototype.getPageContent=function() {
     var self=this;
     this.timeout=this.gui.properties.getProperties().wpaQueryTimeout;
+    var buttons=[
+        {key:'Cancel'} 
+    ];
+    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
     var wpaClickHandler=function(item){
         self.showWpaDialog(item.ssid,item.id);
     };
@@ -190,21 +196,26 @@ Wpapage.prototype.localInit=function() {
 
     var NetworkList=ItemUpdater(ItemList,this.store,keys.itemListKey);
 
-    var leftPanel=(
-        <div className="avn_panel_fill">
-            <div className='avn_panel avn_left_top'>
-                <div >Wifi Client connection
-                </div>
-            </div>
+    var leftPanel=React.createClass({
+        render:function(props) {
+            return(
+                <div className="avn_panel_fill_flex">
+                    <div className='avn_left_top'>
+                        <div >Wifi Client connection
+                        </div>
+                    </div>
 
-            <div className="avn_panel avn_scrollable_page avn_left_inner">
-                <HeaderClass></HeaderClass>
-                <NetworkList itemClass={listEntryClass}>
-                </NetworkList>
-            </div>
-        </div>
-    );
-    ReactDOM.render(leftPanel,this.selectOnPage('.avn_left_panel')[0]);
+                    <div className="avn_panel avn_scrollable_page avn_left_inner">
+                        <HeaderClass></HeaderClass>
+                        <NetworkList itemClass={listEntryClass}>
+                        </NetworkList>
+                    </div>
+                </div>
+            );
+        }
+    });
+    return leftPanel;
+
 };
 
 Wpapage.prototype.showWpaDialog=function(ssid,id){
