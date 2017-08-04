@@ -1,8 +1,12 @@
 /**
  * Created by Andreas on 27.04.2014.
  */
-avnav.provide('avnav.gui.Gpspage');
+
+var Page=require('./page.jsx');
+var React=require('react');
+var ItemUpdater=require('../components/ItemUpdater.jsx');
 var navobjects=require('../nav/navobjects');
+var Formatter=require('../util/formatter');
 
 
 
@@ -10,25 +14,25 @@ var navobjects=require('../nav/navobjects');
  *
  * @constructor
  */
-avnav.gui.Gpspage=function(){
-    avnav.gui.Page.call(this,'gpspage');
+var Gpspage=function(){
+    Page.call(this,'gpspage');
     /**
      * @private
-     * @type {avnav.util.Formatter}
+     * @type {Formatter}
      */
-    this.formatter=new avnav.util.Formatter();
+    this.formatter=new Formatter();
 };
-avnav.inherits(avnav.gui.Gpspage,avnav.gui.Page);
+avnav.inherits(Gpspage,Page);
 
 
 
-avnav.gui.Gpspage.prototype.showPage=function(options){
+Gpspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.gui.navobject.setAisCenterMode(navobjects.AisCenterMode.GPS);
     this.gui.navobject.getAisHandler().setTrackedTarget(0);
     this.computeLayout();
 };
-avnav.gui.Gpspage.prototype.localInit=function(){
+Gpspage.prototype.localInit=function(){
     var self=this;
     $(window).on('resize',function(){
        self.computeLayout();
@@ -47,8 +51,116 @@ avnav.gui.Gpspage.prototype.localInit=function(){
 };
 
 
-avnav.gui.Gpspage.prototype.hidePage=function(){
+Gpspage.prototype.hidePage=function(){
 
+};
+
+Gpspage.prototype.createElememt=function(key,unit,rel){
+    var self=this;
+    var Element=function(props){
+        return(
+            
+                <div>
+                    <span className='avn_gpsp_value' data-avnrel={rel}>{props[key]}</span>
+                    <span className='avn_gpsp_unit'>{unit}</span>
+                </div>
+        );
+    };
+    return React.createElement(ItemUpdater(Element,self.gui.navobject,key));
+};
+
+Gpspage.prototype.getPageContent=function(){
+    var self=this;
+    var buttons=[
+        {key:'GpsCenter'},
+        {key:'Cancel'}
+    ];
+    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    $(window).on('resize',function(){
+        self.computeLayout();
+    });
+    $('#avi_gps_page_inner').on('click',function(){
+        self.returnToLast();
+    });
+    $('#avi_gpsp_aisframe').on('click',function(evt){
+        evt.stopPropagation();
+        self.gui.showPage('aisinfopage');
+    });
+    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
+        self.navEvent(evdata);
+    });
+    var Main=React.createClass({
+        render: function(){
+            return (
+                <div className="avn_panel_fill">
+                    <div id='avi_gps_page_left' className="avn_gpsp_hfield">
+                        <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
+                            <div className='avn_gpsp_field_label'>WP-BRG</div>
+                            {self.createElememt('markerCourse',"\u00b0",4)}
+                        </div>
+
+                        <div id='avi_gpsp_xte_field' className='avn_gpsp_vfield' data-avnfs="28">
+                            <div id='avi_gpsp_xte_label' className='avn_gpsp_field_label'>WP - XTE</div>
+                            <canvas id="avi_gpsp_xte"></canvas>
+                        </div>
+                        <div className='avn_gpsp_vfield' data-avnfs="15">
+                            <div className='avn_gpsp_field_label'>WP-DST</div>
+                            {self.createElememt('markerDistance','nm',5)}
+                        </div>
+                        <div className='avn_gpsp_vfield' data-avnfs="15">
+                            <div className='avn_gpsp_field_label'>WP - ETA</div>
+                            {self.createElememt('markerEta','',8)}
+                        </div>
+                        <div className='avn_gpsp_vfield' data-avnfs="15">
+                            <div id="avi_gpsp_route_dist">
+                                <div className='avn_gpsp_field_label'>RTE dist</div>
+                                {self.createElememt('routeRemain','nm',5)}
+                            </div>
+                            <div id="avi_gpsp_route_eta">
+                                <div className='avn_gpsp_field_label'>RTE ETA</div>
+                                {self.createElememt('routeEta','',8)}
+                            </div>
+                        </div>
+
+                    </div>
+                    <div id='avi_gps_page_right' className="avn_gpsp_hfield">
+                        <div id='avi_gpsp_course' className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
+                            <div className='avn_gpsp_field_label'>COG</div>
+                            {self.createElememt('gpsCourse',"\u00b0",4)}
+                        </div>
+                        <div id='avi_gpsp_speed' className='avn_gpsp_vfield' data-avnfs="28">
+                            <div className='avn_gpsp_field_label'>SOG</div>
+                            {self.createElememt('gpsSpeed','kn',5)}
+                        </div>
+                        <div className='avn_gpsp_vfield' data-avnfs="15">
+                            <div className='avn_gpsp_field_label'>Local Time</div>
+                            {self.createElememt('gpsTime','',8)}
+                        </div>
+                        <div className='avn_gpsp_vfield' data-avnfs="15">
+                            <div className='avn_gpsp_field_label'>Pos</div>
+                            {self.createElememt('gpsPosition','',15)}
+                        </div>
+                        <div className='avn_gpsp_vfield' data-avnfs="15">
+                            <div className='avn_gpsp_field_label'>AIS</div>
+                            <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22">
+                                <div id="avi_gpsp_ais_status"></div>
+                                <div id='avi_gpsp_ais'></div>
+                                <span id="avi_aisStatusText"></span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        },
+        componentDidMount: function(){
+            self.computeLayout();
+        },
+        componentDidUpdate: function(){
+            self.computeLayout();
+        }
+    });
+    return Main;
 };
 
 /**
@@ -60,7 +172,7 @@ avnav.gui.Gpspage.prototype.hidePage=function(){
  * having an attr avnrel given a relative with (nearly character units)
  * @private
  */
-avnav.gui.Gpspage.prototype.computeLayout=function(){
+Gpspage.prototype.computeLayout=function(){
     var numhfields=0;
     this.getDiv().find('.avn_gpsp_hfield').each(function(i,el){
         numhfields++;
@@ -77,11 +189,11 @@ avnav.gui.Gpspage.prototype.computeLayout=function(){
         var vfieldlengths=[];
         $(el).find('.avn_gpsp_vfield').each(function(idx,hel){
             numhfields++;
-            vfieldweights[idx]=parseFloat($(hel).attr('avnfs'));
+            vfieldweights[idx]=parseFloat($(hel).attr('data-avnfs'));
             weigthsum+=vfieldweights[idx];
             var len=0;
             $(hel).find('.avn_gpsp_value').each(function(vidx,vel){
-                len+=parseFloat($(vel).attr('avnrel'));
+                len+=parseFloat($(vel).attr('data-avnrel'));
             });
             vfieldlengths[idx]=len;
         });
@@ -123,7 +235,7 @@ avnav.gui.Gpspage.prototype.computeLayout=function(){
  *
  * @param {CanvasRenderingContext2D} context
  */
-avnav.gui.Gpspage.prototype.drawXte=function(context){
+Gpspage.prototype.drawXte=function(context){
     if (! this.isVisible()) return;
     var xteMax=this.gui.properties.getProperties().gpsXteMax;
     var xteText=this.formatter.formatDecimal(xteMax,1,1)+"nm";
@@ -181,9 +293,9 @@ avnav.gui.Gpspage.prototype.drawXte=function(context){
     context.closePath();
 };
 
-avnav.gui.Gpspage.prototype.navEvent=function(evt){
+Gpspage.prototype.navEvent=function(evt){
     var canvas=$('#avi_gpsp_xte')[0];
-    this.drawXte(canvas.getContext("2d"));
+    if (canvas) this.drawXte(canvas.getContext("2d"));
     var nearestTarget = this.navobject.getAisHandler().getNearestAisTarget();
     var color="";
     if (this.gui.properties.getProperties().layers.ais && nearestTarget.cpa ){
@@ -203,7 +315,7 @@ avnav.gui.Gpspage.prototype.navEvent=function(evt){
 };
 
 //-------------------------- Buttons ----------------------------------------
-avnav.gui.Gpspage.prototype.btnGpsCenter=function (button,ev){
+Gpspage.prototype.btnGpsCenter=function (button,ev){
     avnav.log("Center clicked");
     var pos=this.gui.navobject.getGpsHandler().getGpsData();
     if (pos.valid){
@@ -214,7 +326,7 @@ avnav.gui.Gpspage.prototype.btnGpsCenter=function (button,ev){
 
 (function(){
     //create an instance of the status page handler
-    var page=new avnav.gui.Gpspage();
+    var page=new Gpspage();
 }());
 
 

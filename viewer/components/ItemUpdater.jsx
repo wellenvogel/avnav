@@ -36,7 +36,12 @@ var Updater=function(Item,store,opt_storeKey) {
                 return;
             }
             getStoreKeys().forEach(function(key){
-                avnav.assign(st,store.getData(key));
+                var v=store.getData(key);
+                if (typeof(v) != "object"){
+                    v={};
+                    v[key]=store.getData(key);
+                }
+                avnav.assign(st,v);
             });
             this.setState(st);
         },
