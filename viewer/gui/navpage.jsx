@@ -415,7 +415,7 @@ Navpage.prototype.createButtons=function()
 Navpage.prototype.getPageContent=function(){
     var self=this;
     self.createButtons();
-    
+
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
@@ -531,7 +531,7 @@ Navpage.prototype.isWidgetInList=function(widgetDescription,listKey){
     var list=this.widgetLists[listKey];
     if (! list) return false;
     for (var w in list){
-        if (w.name == widgetDescription.name){
+        if (list[w].name == widgetDescription.name){
             return true;
         }
     }
@@ -562,7 +562,7 @@ Navpage.prototype.widgetClick=function(widgetDescription){
             if (this.routingVisible && ! this.isSmall()) {
                 return;
             }
-            this.lastLockWp=self.gui.map.getGpsLock();
+            this.lastLockWp=this.gui.map.getGpsLock();
             this.showWpButtons(wp);
         }
         return;
