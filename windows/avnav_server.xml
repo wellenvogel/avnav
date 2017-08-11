@@ -34,5 +34,14 @@
 <!--  routing handler -->
 <AVNRouter routesdir="..\data_windows\routes"></AVNRouter>
 <AVNNmeaLogger></AVNNmeaLogger>
+<AVNCommandHandler>
+	<Command name="test" command="sleep 4"/>
+</AVNCommandHandler>
+	<AVNAlarmHandler>
+		<Alarm name="test" command="test"  repeat="10"/>
+		<Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/>
+		<Alarm name="ais" command="sound" parameter="$BASEDIR/../sounds/aisAlarm.mp3" repeat="1"/>
+		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
+	</AVNAlarmHandler>
 
 </AVNServer>
