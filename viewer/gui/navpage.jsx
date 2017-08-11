@@ -18,6 +18,7 @@ var ItemUpdater=require('../components/ItemUpdater.jsx');
 var WidgetFactory=require('../components/WidgetFactory.jsx');
 var EditRouteWidget=require('../components/EditRouteWidget.jsx');
 var Page=require('./page.jsx');
+var ButtonList=require('../components/ButtonList.jsx');
 
 var keys={
     waypointList: 'waypointList',
@@ -27,7 +28,12 @@ var keys={
     bottomLeftWidgets: 'bottomLeft',
     bottomRightWidgets: 'bottomRight',
     routingVisible: 'routingVisible',
-    zoom: 'zoom'
+    zoom: 'zoom',
+    wpButtons: 'wpButtons'
+};
+var wpKeyFlags={
+    currentTarget:'currentTarget',
+    routeActive: 'routeActive'
 };
 var widgetKeys=[keys.leftWidgets, keys.bottomLeftWidgets, keys.bottomRightWidgets,keys.topWidgets];
 var selectors={
@@ -333,21 +339,16 @@ Navpage.prototype.buttonUpdate=function(){
     if (this.selectedWp){
         var router=this.navobject.getRoutingHandler();
         if (router.isCurrentRoutingTarget(this.selectedWp)){
-            this.selectOnPage('.avb_WpGoto').hide();
-            this.selectOnPage('.avb_NavNext').show();
+            this.store.updateSubItem(keys.wpButtons,wpKeyFlags.currentTarget,true,'visibilityFlags');
         }
         else{
-            this.selectOnPage('.avb_WpGoto').show();
-            this.selectOnPage('.avb_NavNext').hide();
+            this.store.updateSubItem(keys.wpButtons,wpKeyFlags.currentTarget,false,'visibilityFlags')
         }
         if (this.selectedWp.routeName){
-            this.selectOnPage('.avb_WpNext').show();
-            this.selectOnPage('.avb_WpPrevious').show();
+            this.store.updateSubItem(keys.wpButtons,wpKeyFlags.routeActive,true,'visibilityFlags');
         }
         else{
-            this.selectOnPage('.avb_WpNext').hide();
-            this.selectOnPage('.avb_WpPrevious').hide();
-            this.selectOnPage('.avb_NavNext').hide();
+            this.store.updateSubItem(keys.wpButtons,wpKeyFlags.routeActive,false,'visibilityFlags');
         }
     }
 };
@@ -408,6 +409,31 @@ Navpage.prototype.createButtons=function()
         {key: "Cancel"}
     ];
     this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+};
+Navpage.prototype.wpButtons=function(onoff){
+    //TODO: handle active wp
+    if (! onoff) {
+        this.store.updateSubItem(keys.wpButtons,'itemList',[]);
+        return;
+    }
+    var btGoto={key:'WpGoto'};
+    btGoto[wpKeyFlags.currentTarget]=false;
+    var btNavNext={key:'NavNext'};
+    btNavNext[wpKeyFlags.currentTarget]=true;
+    btNavNext[wpKeyFlags.routeActive]=true;
+    var btRNext={key:'WpNext'};
+    btRNext[wpKeyFlags.routeActive]=true;
+    var btRPrev={key:'WpPrevious'};
+    btRPrev[wpKeyFlags.routeActive]=true;
+    var wpButtons=[
+        {key:'WpLocate'},
+        {key:'WpEdit'},
+        btGoto,
+        btNavNext,
+        btRNext,
+        btRPrev
+    ];
+    this.store.updateSubItem(keys.wpButtons,'itemList',wpButtons);
 };
 /**
  *
@@ -479,7 +505,7 @@ Navpage.prototype.getPageContent=function(){
         updateCallback:function(container){
             $('#avi_nav_bottom').css('height',(container.other+container.otherMargin)+"px").css('padding-top',container.otherMargin+"px");
             $('#avi_navLeftContainer').css('bottom',(container.other+container.otherMargin)+"px");
-            $('#avi_navpage_wpbuttons').css('bottom',(container.other+container.otherMargin)+"px");
+            $('#avi_navpage .avn_wpbuttons').css('bottom',(container.other+container.otherMargin)+"px");
 
         }
     };
@@ -508,11 +534,18 @@ Navpage.prototype.getPageContent=function(){
             self.selectOnPage('.avn_topRightWidgets').css('height',container.other+"px").css('width',container.main+"px");
         }
     };
+    var WpButtons=ItemUpdater(ButtonList,this.store,keys.wpButtons);
+    var wpButtonProps={
+        className: "avn_wpbuttons",
+        buttonHandler: self
+    };
     return React.createClass({
         render: function(){
             return (
                 <div className="avn_panel_fill">
-                    <div id='avi_map_navpage' ref="map" className='avn_panel avn_map'/>
+                    <div id='avi_map_navpage' ref="map" className='avn_panel avn_map'>
+                        <WpButtons {...wpButtonProps}/>
+                    </div>
                     <div id="avi_nav_bottom" className="avn_panel avn_left_bottom avn_widgetContainer">
                         <LeftBottomMarker {...leftBottomMarkerProps}/>
                         <LeftBottomPosition {...leftBottomPositionProps}/>
@@ -766,7 +799,7 @@ Navpage.prototype.updateLayout=function(opt_force){
     window.setTimeout(function(){
         var rtop=$('#avi_nav_bottom').outerHeight();
         $('#avi_navLeftContainer').css('bottom',rtop+"px");
-        $('#avi_navpage_wpbuttons').css('bottom',rtop+"px");
+        $('#avi_navpage .avn_wpbuttons').css('bottom',rtop+"px");
         $('#avi_route_info_navpage').css('bottom',rtop+"px");
         self.scrollRoutePoints();
         var w=$(window).width();
@@ -860,7 +893,7 @@ Navpage.prototype.checkRouteWritable=function(){
 
 Navpage.prototype.showWpButtons=function(waypoint,opt_nocenter){
     if (!opt_nocenter) this.gui.map.setCenter(waypoint);
-    this.selectOnPage('#avi_navpage_wpbuttons').show();
+    this.wpButtons(true);
     this.selectedWp=waypoint;
     this.wpHidetime=new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
     this.gui.map.setGpsLock(false);
@@ -870,7 +903,7 @@ Navpage.prototype.showWpButtons=function(waypoint,opt_nocenter){
 
 Navpage.prototype.hideWpButtons=function(){
     if (!this.selectedWp) return;
-    this.selectOnPage('#avi_navpage_wpbuttons').hide();
+    this.wpButtons(false);
     this.selectedWp=undefined;
     this.wpHidetime=0;
     if (this.lastLockWp !== undefined) this.gui.map.setGpsLock(this.lastLockWp);
