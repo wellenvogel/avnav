@@ -62,11 +62,6 @@ var Navpage=function(){
      */
     this.mapdom=null;
     var self=this;
-    /**
-     * @private
-     * @type {boolean}
-     */
-    this.routingVisible=false;
 
     /**
      * @private
@@ -165,7 +160,11 @@ Navpage.prototype.getMap=function(){
     return this.gui.map;
 };
 
-
+Navpage.prototype.routingVisible=function(){
+    var isVisible=this.store.getData(keys.routingVisible);
+    if (! isVisible) return false;
+    return isVisible.routingVisible;
+};
 Navpage.prototype.showPage=function(options){
     if (!this.gui) return;
     //recompute layouts
@@ -282,7 +281,7 @@ Navpage.prototype.setWidgetVisibility=function(key,listName,visible){
 };
 Navpage.prototype.widgetVisibility=function(){
     var isSmall=this.isSmall();
-    var routingVisible=this.routingVisible;
+    var routingVisible=this.routingVisible();
     if (isSmall){
         this.gui.map.setCompassOffset(this.gui.properties.getProperties().widgetFontSize*5);
     }
@@ -327,10 +326,10 @@ Navpage.prototype.buttonUpdate=function(){
     //TODO: make this more generic
     var markerLock=this.navobject.getRoutingHandler().getLock()||false;
     this.handleToggleButton('.avb_LockMarker',markerLock);
-    if (markerLock || this.routingVisible) this.selectOnPage('.avb_LockMarker').hide();
+    if (markerLock || this.routingVisible()) this.selectOnPage('.avb_LockMarker').hide();
     else this.showBlock('.avb_LockMarker');
     this.handleToggleButton('.avb_StopNav',markerLock);
-    if (!markerLock || this.routingVisible) this.selectOnPage('.avb_StopNav').hide();
+    if (!markerLock || this.routingVisible()) this.selectOnPage('.avb_StopNav').hide();
     else this.showBlock('.avb_StopNav');
     var gpsLock=this.gui.map.getGpsLock();
     this.handleToggleButton('.avb_LockPos',gpsLock);
@@ -367,7 +366,7 @@ Navpage.prototype._updateZoom=function(){
 };
 Navpage.prototype.timerEvent=function(){
     if (this.wpHidetime > 0 && this.wpHidetime <= new Date().getTime()){
-        if (! (this.isSmall() && this.routingVisible)){
+        if (! (this.isSmall() && this.routingVisible())){
             this.lastLockWp=undefined; //do not surprise the user...
             this.hideWpButtons();
         }
@@ -380,7 +379,7 @@ Navpage.prototype.timerEvent=function(){
 Navpage.prototype.hidePage=function(){
     this.hideWpButtons();
     this.hidetime=0;
-    this.showRouteOnReturn=this.routingVisible;
+    this.showRouteOnReturn=this.routingVisible();
     this.hideRouting(true);
     var map=this.getMap();
     if (map) map.renderTo(null);
@@ -398,16 +397,31 @@ Navpage.prototype.resetWidgetLayouts=function() {
 
 Navpage.prototype.createButtons=function()
 {
-    var buttons=[
-        {key: "ZoomIn"},
-        {key: "ZoomOut"},
-        {key: "LockPos",toggle:true},
-        {key: "LockMarker",toggle:true},
-        {key: "StopNav",toggle:true},
-        {key: "CourseUp",toggle:true},
-        {key: "ShowRoutePanel"},
-        {key: "Cancel"}
-    ];
+    var buttons;
+    if (this.routingVisible()){
+        buttons=[
+            {key:"ZoomIn"},
+            {key:"ZoomOut"},
+            {key:"NavAdd"},
+            {key:"NavDelete"},
+            {key:"NavToCenter"},
+            {key:"NavGoto"},
+            {key:"NavInvert"},
+            {key:"CancelNav"}
+        ];
+    }
+    else {
+        buttons = [
+            {key: "ZoomIn"},
+            {key: "ZoomOut"},
+            {key: "LockPos", toggle: true},
+            {key: "LockMarker", toggle: true},
+            {key: "StopNav", toggle: true},
+            {key: "CourseUp", toggle: true},
+            {key: "ShowRoutePanel"},
+            {key: "CancelNav"}
+        ];
+    }
     this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
 };
 Navpage.prototype.wpButtons=function(onoff){
@@ -458,6 +472,12 @@ Navpage.prototype.getPageContent=function(){
         var store=widget.store||self.navobject;
         return WidgetFactory.createWidget(widget,{propertyHandler:self.gui.properties, store:store});
     };
+    var buttonUpdater={
+      dataChanged: function(){
+          self.createButtons();
+      }
+    };
+    this.store.register(buttonUpdater,keys.routingVisible);
     this.resetWidgetLayouts();
     this.computeLayoutParam(); //initially fill the stores
     var RoutePoints=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);
@@ -592,7 +612,7 @@ Navpage.prototype.widgetClick=function(widgetDescription){
         var wp=this.navobject.getRoutingHandler().getCurrentLegTarget();
         if (wp){
             this.gui.map.setCenter(wp);
-            if (this.routingVisible && ! this.isSmall()) {
+            if (this.routingVisible() && ! this.isSmall()) {
                 return;
             }
             this.lastLockWp=this.gui.map.getGpsLock();
@@ -614,7 +634,7 @@ Navpage.prototype.widgetClick=function(widgetDescription){
 Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
     if (evdata.type == navobjects.NavEventType.ROUTE){
-        if (this.routingVisible)this.updateRoutePoints();
+        if (this.routingVisible())this.updateRoutePoints();
     }
 };
 /**
@@ -627,7 +647,7 @@ Navpage.prototype.mapEvent=function(evdata){
     this._updateZoom();
     if (evdata.type == avnav.map.EventType.MOVE) {
         //show the center display if not visible
-        if (!this.routingVisible) {
+        if (!this.routingVisible()) {
             this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
             this.widgetVisibility();
             return;
@@ -646,7 +666,7 @@ Navpage.prototype.mapEvent=function(evdata){
         var wp=evdata.parameter.wp;
         if (! wp) return;
         var currentEditing=this.navobject.getRoutingHandler().getEditingWp();
-        if (this.routingVisible && wp.routeName ){
+        if (this.routingVisible() && wp.routeName ){
             if (currentEditing && currentEditing.compare(wp)){
                 self.showWaypointDialog(wp);
             }
@@ -660,7 +680,7 @@ Navpage.prototype.mapEvent=function(evdata){
             this.showWaypointDialog(wp);
             return;
         }
-        if (! this.routingVisible || this.isSmall()){
+        if (! this.routingVisible() || this.isSmall()){
             this.lastLockWp=this.gui.map.getGpsLock();
             this.showWpButtons(wp);
         }
@@ -675,16 +695,12 @@ Navpage.prototype.mapEvent=function(evdata){
 Navpage.prototype.showRouting=function(opt_returning) {
     var isSmall=this.isSmall();
     if (! isSmall) this.hideWpButtons();
-    if (this.routingVisible) return;
+    if (this.routingVisible()) return;
     if (!this.gui.properties.getProperties().layers.nav) return;
     var upd=false;
     var routeActive=this.navobject.getRoutingHandler().hasActiveRoute();
-    this.showBlock('.avn_routeBtn');
-    this.selectOnPage('.avn_noRouteBtn').hide();
-    this.routingVisible=true;
     this.store.storeData(keys.routingVisible,{routingVisible:true});
     this.widgetVisibility();
-    this.handleToggleButton('.avb_ShowRoutePanel',true);
     var isReactivating=false;
     if (opt_returning ){
         //first try to reactivate the las editing route
@@ -716,13 +732,9 @@ Navpage.prototype.showRouting=function(opt_returning) {
  */
 Navpage.prototype.hideRouting=function(opt_noStop) {
     var upd=false;
-    this.selectOnPage('.avn_routeBtn').hide();
-    this.showBlock('.avn_noRouteBtn');
-    this.routingVisible=false;
     this.store.storeData(keys.routingVisible,{routingVisible:false});
     this.widgetVisibility();
     this.hideWpButtons();
-    this.handleToggleButton('.avb_ShowRoutePanel',false);
     if (! opt_noStop) {
         this.gui.map.setRoutingActive(false);
         this.navobject.getRoutingHandler().stopEditingRoute();
@@ -804,7 +816,7 @@ Navpage.prototype.updateLayout=function(opt_force){
         self.scrollRoutePoints();
         var w=$(window).width();
         self.computeLayoutParam();
-        if (self.routingVisible) {
+        if (self.routingVisible()) {
             if (!self.isSmall()) self.hideWpButtons();
             else self.showWpButtons(self.navobject.getRoutingHandler().getEditingWp());
         }
@@ -950,7 +962,7 @@ Navpage.prototype.btnLockPos=function (button,ev){
     this.hideWpButtons();
     var nLock=! this.gui.map.getGpsLock();
     this.gui.map.setGpsLock(nLock);
-    this.handleToggleButton(button,nLock);
+    this.handleToggleButton("LockPos",nLock);
     this.gui.map.triggerRender();
     this.widgetVisibility();
     avnav.log("LockPos clicked");
@@ -985,20 +997,20 @@ Navpage.prototype.btnStopNav=function (button,ev) {
 Navpage.prototype.btnCourseUp=function (button,ev){
     var nLock=! this.gui.map.getCourseUp();
     nLock=this.gui.map.setCourseUp(nLock);
-    this.handleToggleButton(button,nLock);
+    this.handleToggleButton("CourseUp",nLock);
     this.gui.map.triggerRender();
     avnav.log("courseUp clicked");
 };
 Navpage.prototype.btnShowRoutePanel=function (button,ev){
     avnav.log("showRoutePanel clicked");
     this.hideWpButtons();
-    if (! this.routingVisible) this.showRouting();
+    if (! this.routingVisible()) this.showRouting();
     else this.hideRouting();
 };
 Navpage.prototype.btnCancelNav=function (button,ev){
     avnav.log("CancelNav clicked");
     this.hideWpButtons();
-    if (this.routingVisible){
+    if (this.routingVisible()){
         this.hideRouting();
         return;
     }
@@ -1072,7 +1084,7 @@ Navpage.prototype.btnWpGoto=function(button,ev) {
     avnav.log("Goto clicked");
     var wp=this.selectedWp;
     this.hideWpButtons();
-    if (this.routingVisible) this.hideRouting();
+    if (this.routingVisible()) this.hideRouting();
     if (! wp) {
         return;
     }
@@ -1097,7 +1109,7 @@ Navpage.prototype.btnWpNext=function(button,ev) {
     var router=this.navobject.getRoutingHandler();
     var next=router.getPointAtOffset(this.selectedWp,1);
     if (! next) return;
-    if (this.routingVisible) router.setEditingWp(next);
+    if (this.routingVisible()) router.setEditingWp(next);
     this.showWpButtons(next);
 };
 
@@ -1107,7 +1119,7 @@ Navpage.prototype.btnWpPrevious=function(button,ev) {
     var router=this.navobject.getRoutingHandler();
     var next=router.getPointAtOffset(this.selectedWp,-1);
     if (! next) return;
-    if (this.routingVisible) router.setEditingWp(next);
+    if (this.routingVisible()) router.setEditingWp(next);
     this.showWpButtons(next);
 };
 
