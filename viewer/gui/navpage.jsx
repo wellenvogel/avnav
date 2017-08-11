@@ -503,6 +503,17 @@ Navpage.prototype.getPageContent=function(){
         );
     };
     var RouteInfoPoints=ItemUpdater(list,this.store,[keys.routingVisible]);
+    var routePanel=function(props){
+        if (props.routingVisible){
+            return(
+                <div id="avi_route_info_navpage" className="avn_panel">
+                    <RouteInfoPoints/>
+                </div>
+            );
+        }
+        else return null;
+    };
+    var RoutingPanel=ItemUpdater(routePanel,self.store,keys.routingVisible);
     var LeftBottomMarker=ItemUpdater(WidgetContainer,this.store,keys.bottomLeftWidgets);
     var leftBottomMarkerProps={
         className: "leftBottomMarker",
@@ -565,6 +576,7 @@ Navpage.prototype.getPageContent=function(){
             return (
                 <div className="avn_panel_fill">
                     <div id='avi_map_navpage' ref="map" className='avn_panel avn_map'>
+                        <RoutingPanel/>
                         <WpButtons {...wpButtonProps}/>
                         <NavLeftContainer {...navLeftContainerProps}/>
                     </div>
