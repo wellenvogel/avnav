@@ -512,7 +512,7 @@ Navpage.prototype.getPageContent=function(){
         updateCallback:function(container){
             $('#avi_nav_bottom').css('height',(container.other+container.otherMargin)+"px").css('padding-top',container.otherMargin+"px");
             $('#avi_route_info_navpage').css('bottom',(container.other+container.otherMargin)+"px");
-            $('#avi_navLeftContainer').css('bottom',(container.other+container.otherMargin)+"px");
+            $('#avi_navpage .navLeftContainer').css('bottom',(container.other+container.otherMargin)+"px");
             self.scrollRoutePoints();
         }
         };
@@ -524,19 +524,20 @@ Navpage.prototype.getPageContent=function(){
         itemCreator: widgetCreator,
         updateCallback:function(container){
             $('#avi_nav_bottom').css('height',(container.other+container.otherMargin)+"px").css('padding-top',container.otherMargin+"px");
-            $('#avi_navLeftContainer').css('bottom',(container.other+container.otherMargin)+"px");
+            $('#avi_navpage .navLeftContainer').css('bottom',(container.other+container.otherMargin)+"px");
             $('#avi_navpage .avn_wpbuttons').css('bottom',(container.other+container.otherMargin)+"px");
 
         }
     };
     var NavLeftContainer=ItemUpdater(WidgetContainer,this.store,keys.leftWidgets);
     var navLeftContainerProps={
+        className: "navLeftContainer",
         onItemClick: self.widgetClick,
         itemList:[],
         itemCreator: widgetCreator,
         updateCallback:function(container){
-            $('#avi_navLeftContainer').height(container.main+"px");
-            $('#avi_navLeftContainer').width(container.other+"px");
+            $('#avi_navpage .navLeftContainer').height(container.main+"px");
+            $('#avi_navpage .navLeftContainer').width(container.other+"px");
             if (container.other != self.lastOtherLeft){
                 self.lastOtherLeft=container.other;
                 window.setTimeout(function(){
@@ -565,6 +566,7 @@ Navpage.prototype.getPageContent=function(){
                 <div className="avn_panel_fill">
                     <div id='avi_map_navpage' ref="map" className='avn_panel avn_map'>
                         <WpButtons {...wpButtonProps}/>
+                        <NavLeftContainer {...navLeftContainerProps}/>
                     </div>
                     <div id="avi_nav_bottom" className="avn_panel avn_left_bottom avn_widgetContainer">
                         <LeftBottomMarker {...leftBottomMarkerProps}/>
@@ -758,7 +760,7 @@ Navpage.prototype.computeLayoutParam=function(){
         mainMargin: widgetMargin,
         otherMargin: widgetMargin,
         startMargin: 0,
-        outerSize: isSmall?0:$('#avi_navLeftContainer').width()-widgetMargin,
+        outerSize: isSmall?0:$('#avi_navpage .navLeftContainer').width()-widgetMargin,
         maxRowCol: this.gui.properties.getProperties().allowTwoWidgetRows?2:1,
         maxSize:self.panelWidth/2+widgetMargin/2
     },'layoutParameter');
@@ -769,7 +771,7 @@ Navpage.prototype.computeLayoutParam=function(){
         mainMargin: widgetMargin,
         otherMargin: widgetMargin,
         startMargin: 0,
-        outerSize: isSmall?0:$('#avi_navLeftContainer').width()-widgetMargin,
+        outerSize: isSmall?0:$('#avi_navpage .navLeftContainer').width()-widgetMargin,
         maxRowCol: this.gui.properties.getProperties().allowTwoWidgetRows ? 2 : 1,
         maxSize: self.panelWidth/2+widgetMargin/2
     },'layoutParameter');
@@ -810,7 +812,7 @@ Navpage.prototype.updateLayout=function(opt_force){
     if (! doUpdate) return;
     window.setTimeout(function(){
         var rtop=$('#avi_nav_bottom').outerHeight();
-        $('#avi_navLeftContainer').css('bottom',rtop+"px");
+        $('#avi_navpage .navLeftContainer').css('bottom',rtop+"px");
         $('#avi_navpage .avn_wpbuttons').css('bottom',rtop+"px");
         $('#avi_route_info_navpage').css('bottom',rtop+"px");
         self.scrollRoutePoints();
