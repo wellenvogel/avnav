@@ -512,32 +512,6 @@ Page.prototype.showHideAdditionalPanel=function(id,show,mainid){
     return false;
 };
 
-Page.prototype.updateMainPanelSize=function(mainid){
-    var main=$(mainid);
-    if (! main) return;
-    var args=[
-        {cl:'.avn_top',main:'top',el:'height',neg:false},
-        {cl:'.avn_left',main:'left',el:'width',neg:false},
-        {cl:'.avn_bottom',main:'bottom',el:'height',neg:false},
-        {cl:'.avn_right',main:'right',el:'width',neg:false}
-    ];
-    var nval, k,arg,last;
-    for (var k in args){
-        arg=args[k];
-        last=arg.neg?99999:0;
-        nval=last;
-        main.parent().find(arg.cl).each(function(id,el){
-            if ($(el).is(':visible')){
-                var v=parseInt($(el).css(arg.el).replace(/px/,""));
-                if (( arg.neg && v < last) || (! arg.neg && v>last)) {
-                    last=v;
-                    nval=v;
-                }
-            }
-        });
-        main.css(arg.main,nval);
-    }
-};
 
 Page.prototype.goBack=function(){
     this.returnToLast();

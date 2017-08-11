@@ -72,7 +72,9 @@ avnav.map.MapHolder=function(properties,navobject){
      *  @type {avnav.properties.PropertyHandler}
      *  */
     this.properties=properties;
-
+    
+    this.defaultDiv=document.createElement('div');
+    
     /**
      * locked to GPS
      * @type {boolean}
@@ -205,6 +207,17 @@ avnav.map.MapHolder.prototype.getZoom=function(){
     if (! v ) return {required:this.requiredZoom,current: this.zoom};
     return {required:this.requiredZoom,current: v.getZoom()};
 };
+
+/**
+ * render the map to a new div
+ * @param div if null - render to a default div (i.e. invisible)
+ */
+avnav.map.MapHolder.prototype.renderTo=function(div){
+    if (! this.olmap) return;
+    if (!div) div=this.defaultDiv;
+    this.olmap.setTarget(div);
+    this.olmap.updateSize();
+};
 /**
  * init the map (deinit an old one...)
  * @param {String} div
@@ -245,7 +258,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     }
     else {
         this.olmap = new ol.Map({
-            target: div,
+            target: div?div:self.defaultDiv,
             layers: layersreverse,
             interactions: ol.interaction.defaults({
                 altShiftDragRotate:false,

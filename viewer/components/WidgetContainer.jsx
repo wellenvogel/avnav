@@ -210,7 +210,8 @@ var WidgetContainer=React.createClass({
             updateCallback: React.PropTypes.func,
             layoutParameter: React.PropTypes.object,
             dummy: React.PropTypes.any,
-            renewSequence: React.PropTypes.number
+            renewSequence: React.PropTypes.number,
+            className: React.PropTypes.string
         },
         getInitialState: function(){
             this.itemInfo={};
@@ -308,6 +309,7 @@ var WidgetContainer=React.createClass({
                         self.updateItemInfo(itemKey, rect, opt_force);});
                 }
             };
+            if (this.props.className) listProps.className=this.props.className;
             var rt=(
                 <ItemList {...listProps}
                     />
