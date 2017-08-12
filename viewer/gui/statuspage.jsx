@@ -97,8 +97,7 @@ Statuspage.prototype.statusTextToImageUrl=function(text){
     if (! rt) rt=this.gui.properties.getProperties().statusIcons.INACTIVE;
     return rt;
 };
-Statuspage.prototype.localInit=function() {
-};
+
 Statuspage.prototype.getPageContent=function(){
     var self=this;
     var buttons=[

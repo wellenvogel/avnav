@@ -204,15 +204,6 @@ Downloadpage.prototype.uploadRoute=function(fileObject){
     }
 };
 
-Downloadpage.prototype.localInit=function(){
-    if (! this.gui) return;
-    this.routingHandler=this.gui.navobject.getRoutingHandler();
-    var self=this;
-
-    $('#avi_download_uploadform').submit(function(form){
-       self.toast("upload file");
-    });
-};
 
 Downloadpage.prototype.startUpload=function(ev){
     ev.preventDefault();
@@ -228,6 +219,8 @@ Downloadpage.prototype.startUpload=function(ev){
 
 Downloadpage.prototype.getPageContent=function(){
     var self=this;
+    if (! this.gui) return;
+    this.routingHandler=this.gui.navobject.getRoutingHandler();
     var buttons=[
         {key:'DownloadPageCharts',chart:true},
         {key:'DownloadPageTracks',track: true},

@@ -56,8 +56,7 @@ Infopage.prototype.hidePage=function(){
 
 
 
-Infopage.prototype.localInit=function() {
-};
+
 Infopage.prototype.getPageContent=function(){
     var self=this;
     var buttons=[

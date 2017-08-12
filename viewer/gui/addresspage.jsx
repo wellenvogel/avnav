@@ -80,10 +80,6 @@ Addresspage.prototype.hidePage=function(){
 };
 
 
-
-
-Addresspage.prototype.localInit=function() {
-};
 Addresspage.prototype.getPageContent=function(){
     var self=this;
     var buttons=[

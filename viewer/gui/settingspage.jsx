@@ -44,16 +44,6 @@ var Settingspage=function(){
 };
 avnav.inherits(Settingspage,Page);
 
-/**
- * the local init called from the base class when the page is instantiated
- */
-Settingspage.prototype.localInit=function(){
-    var self=this;
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
-        var leftVisible=self.isLeftVisible();
-        self.handlePanels(leftVisible?undefined:self.getcurrentSectionName());
-    });
-};
 
 
 Settingspage.prototype.isLeftVisible=function(){
@@ -70,6 +60,10 @@ Settingspage.prototype.getPageContent=function(){
     this.store.storeData(this.globalKeys.buttons,{itemList:buttonList});
     this.handlePanels(undefined);
     var self=this;
+    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
+        var leftVisible=self.isLeftVisible();
+        self.handlePanels(leftVisible?undefined:self.getcurrentSectionName());
+    });
     this.sectionItems=[];
     var idx=0;
     for (var section in settingsSections){

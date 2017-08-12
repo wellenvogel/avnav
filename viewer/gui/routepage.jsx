@@ -142,6 +142,7 @@ var Routepage=function(){
 avnav.inherits(Routepage,avnav.gui.Page);
 
 Routepage.prototype.getPageContent=function(){
+    this.routingHandler=this.gui.navobject.getRoutingHandler();
     var buttons=[
         {key:'RoutePageOk'},
         {key:'NavGoto'},
@@ -224,10 +225,6 @@ Routepage.prototype.getPageContent=function(){
                 );
             }
         });
-};
-Routepage.prototype.localInit=function(){
-    if (! this.gui) return;
-    this.routingHandler=this.gui.navobject.getRoutingHandler();
 };
 Routepage.prototype.showPage=function(options) {
     if (!this.gui) return;

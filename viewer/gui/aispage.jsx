@@ -152,9 +152,7 @@ Aispage.prototype.getPageContent=function(){
         }
     });
 };
-Aispage.prototype.localInit=function(){
 
-};
 Aispage.prototype.showPage=function(options) {
     if (!this.gui) return;
     this.fillData(true);

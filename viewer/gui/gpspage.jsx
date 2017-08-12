@@ -32,23 +32,6 @@ Gpspage.prototype.showPage=function(options){
     this.gui.navobject.getAisHandler().setTrackedTarget(0);
     this.computeLayout();
 };
-Gpspage.prototype.localInit=function(){
-    var self=this;
-    $(window).on('resize',function(){
-       self.computeLayout();
-    });
-    $('#avi_gps_page_inner').on('click',function(){
-       self.returnToLast();
-    });
-    $('#avi_gpsp_aisframe').on('click',function(evt){
-        evt.stopPropagation();
-        self.gui.showPage('aisinfopage');
-    });
-    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
-        self.navEvent(evdata);
-    });
-
-};
 
 
 Gpspage.prototype.hidePage=function(){
@@ -79,20 +62,15 @@ Gpspage.prototype.getPageContent=function(){
     $(window).on('resize',function(){
         self.computeLayout();
     });
-    $('#avi_gps_page_inner').on('click',function(){
-        self.returnToLast();
-    });
-    $('#avi_gpsp_aisframe').on('click',function(evt){
-        evt.stopPropagation();
-        self.gui.showPage('aisinfopage');
-    });
+    
+    
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
     var Main=React.createClass({
         render: function(){
             return (
-                <div className="avn_panel_fill">
+                <div className="avn_panel_fill" onClick={self.returnToLast()}>
                     <div id='avi_gps_page_left' className="avn_gpsp_hfield">
                         <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
                             <div className='avn_gpsp_field_label'>WP-BRG</div>
@@ -142,7 +120,7 @@ Gpspage.prototype.getPageContent=function(){
                         </div>
                         <div className='avn_gpsp_vfield' data-avnfs="15">
                             <div className='avn_gpsp_field_label'>AIS</div>
-                            <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22">
+                            <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22" onClick={self.gui.showPage('aisinfopage')}>
                                 <div id="avi_gpsp_ais_status"></div>
                                 <div id='avi_gpsp_ais'></div>
                                 <span id="avi_aisStatusText"></span>

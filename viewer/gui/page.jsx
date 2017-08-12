@@ -200,7 +200,6 @@ Page.prototype.handlePage=function(evdata){
         this.isInitialized=true;
         this.initButtons();
         this._initPage();
-        this.localInit();
         this.initDisplayObjects();
         this.initFocusHandler();
         this.initExternalLinks();
@@ -278,7 +277,7 @@ Page.prototype.timerEvent=function(){
 /**
  * get the content to be displayed on the page
  * the return value must be a reactClass or another type that can be used in a React.createElement
- * it will be called once when initially being displayed (before localInit)
+ * it will be called once when initially being displayed 
  * when this function returns data buttons will be created using the button list in the store
  */
 Page.prototype.getPageContent=function(){
@@ -315,13 +314,6 @@ Page.prototype.updateDisplayObjects=function(){
     }
 };
 
-/**
- * init function called after receiving the first event
- * intended to be overloaded by subclasses
- */
-Page.prototype.localInit=function(){
-
-};
 
 /**
  * function to handle back-keys
@@ -474,42 +466,6 @@ Page.prototype.handleToggleButton=function(id,onoff,onClass){
         this.selectOnPage(id).removeClass("avn_buttonActiveError");
         this.selectOnPage(id).addClass("avn_buttonInactive");
     }
-};
-
-/**
- * show or hide an panel and resize some related
- * @param id - #id or .class of the panel
- * @param show - true for show, fals for hide
- * @param mainid #id or .class for a panel - if the panel to show has one of the classes
- *               anv_left|right|top|bottom it is resized...
- * @returns {boolean} - true when mainid something changed
- */
-Page.prototype.showHideAdditionalPanel=function(id,show,mainid){
-    var updateSize=false;
-    if (show){
-        if (!$(id).is(':visible')) {
-            $(id).show();
-            updateSize=true;
-        }
-    }
-    else {
-        if ($(id).is(':visible')) {
-
-            updateSize = true;
-        }
-        $(id).hide();
-
-    }
-    if (updateSize) {
-        this.updateMainPanelSize(mainid);
-        //additional top/bottom panels should only fill the same width as main
-        $('.avn_top:visible').css('left', $(mainid).css('left'));
-        $('.avn_bottom:visible').css('left', $(mainid).css('left'));
-        $('.avn_top:visible').css('right', $(mainid).css('right'));
-        $('.avn_bottom:visible').css('right', $(mainid).css('right'));
-        return true;
-    }
-    return false;
 };
 
 

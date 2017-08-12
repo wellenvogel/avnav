@@ -39,9 +39,7 @@ var AisInfoPage=function(){
 };
 avnav.inherits(AisInfoPage,Page);
 
-AisInfoPage.prototype.localInit=function(){
-    this.aishandler=this.navobject.getAisHandler();
-};
+
 /**
  * @private
  * @param label
