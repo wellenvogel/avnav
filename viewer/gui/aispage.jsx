@@ -76,7 +76,7 @@ Aispage.prototype.getPageContent=function(){
         {key:"AisSort"},
         {key:"Cancel"}
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
 
     var AisItem=function(props){
         var fmt=self.aisFormatter;

@@ -131,7 +131,7 @@ Wpapage.prototype.getPageContent=function() {
     var buttons=[
         {key:'Cancel'} 
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
     var wpaClickHandler=function(item){
         self.showWpaDialog(item.ssid,item.id);
     };

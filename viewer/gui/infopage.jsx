@@ -62,7 +62,7 @@ Infopage.prototype.getPageContent=function(){
     var buttons=[
         {key:'Cancel'}
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
     var Headline=function(props){
         return <div className="avn_left_top">License Info</div>
     };

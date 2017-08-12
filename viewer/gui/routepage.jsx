@@ -151,7 +151,7 @@ Routepage.prototype.getPageContent=function(){
         {key:'RoutePageDownload'},
         {key:'RoutePageCancel'}
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
     var self=this;
     var Heading = ItemUpdater(React.createClass({
         render: function(){

@@ -57,7 +57,7 @@ Settingspage.prototype.getPageContent=function(){
         {key: 'SettingsDefaults'},
         {key:'SettingsAndroid',android: true}
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttonList});
+    this.setButtons(buttonList);
     this.handlePanels(undefined);
     var self=this;
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){

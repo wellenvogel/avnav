@@ -68,7 +68,7 @@ AisInfoPage.prototype.getPageContent=function(){
         {key:'AisInfoList'},
         {key:'Cancel'}
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
     var Headline=function(props){
         return <div className="avn_left_top">AIS Info</div>
     };

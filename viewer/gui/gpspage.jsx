@@ -58,7 +58,7 @@ Gpspage.prototype.getPageContent=function(){
         {key:'GpsCenter'},
         {key:'Cancel'}
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
     $(window).on('resize',function(){
         self.computeLayout();
     });
@@ -70,7 +70,7 @@ Gpspage.prototype.getPageContent=function(){
     var Main=React.createClass({
         render: function(){
             return (
-                <div className="avn_panel_fill" onClick={self.returnToLast()}>
+                <div className="avn_panel_fill" onClick={self.returnToLast}>
                     <div id='avi_gps_page_left' className="avn_gpsp_hfield">
                         <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
                             <div className='avn_gpsp_field_label'>WP-BRG</div>
@@ -120,7 +120,7 @@ Gpspage.prototype.getPageContent=function(){
                         </div>
                         <div className='avn_gpsp_vfield' data-avnfs="15">
                             <div className='avn_gpsp_field_label'>AIS</div>
-                            <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22" onClick={self.gui.showPage('aisinfopage')}>
+                            <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22" onClick={function(){self.gui.showPage('aisinfopage')}}>
                                 <div id="avi_gpsp_ais_status"></div>
                                 <div id='avi_gpsp_ais'></div>
                                 <span id="avi_aisStatusText"></span>

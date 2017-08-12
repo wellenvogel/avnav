@@ -107,7 +107,7 @@ Statuspage.prototype.getPageContent=function(){
         {key:'StatusAndroid',android:true},
         {key:'StatusShutdown',android:false,shutdown:true,connected:true}
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
     this.changeButtonVisibilityFlag({addresses:false,shutdown:false,wpa:false,connected:this.gui.properties.getProperties().connectedMode});
     var ChildStatus=function(props){
         return (

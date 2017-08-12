@@ -85,7 +85,7 @@ Addresspage.prototype.getPageContent=function(){
     var buttons=[
         {key:'Cancel'}
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
     var AddressItem=function(props){
         var url="http://"+props.value;
         return(

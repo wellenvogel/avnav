@@ -55,7 +55,7 @@ Mainpage.prototype.getPageContent=function(){
         {key:'MainInfo'},
         {key:'MainCancel',android:true}
         ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
     var Headline=function(props){
         return <div className="avn_left_top">AvNav</div>
     };

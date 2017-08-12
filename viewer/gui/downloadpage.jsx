@@ -228,7 +228,7 @@ Downloadpage.prototype.getPageContent=function(){
         {key:'DownloadPageUpload',upload:true},
         {key:'Cancel'}
     ];
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
     var HeadLine=ItemUpdater(React.createClass({
         render: function(){
                 return <div className="avn_left_top"><div>{this.props.value}</div></div>

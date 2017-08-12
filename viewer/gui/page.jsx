@@ -135,6 +135,14 @@ Page.prototype.isVisible=function(){
     return rt;
 };
 
+/**
+ * set the buttons for this page
+ * normally to be called within getPageContent (but can be called later on)
+ * @param buttonList
+ */
+Page.prototype.setButtons=function(buttonList){
+    this.store.replaceSubKey(this.globalKeys.buttons,buttonList,'itemList');
+};
 Page.prototype._initPage=function(){
     var self=this;
     var Content=this.getPageContent();
@@ -198,7 +206,6 @@ Page.prototype.handlePage=function(evdata){
          */
         this.navobject=evdata.navobject;
         this.isInitialized=true;
-        this.initButtons();
         this._initPage();
         this.initDisplayObjects();
         this.initFocusHandler();
@@ -339,43 +346,7 @@ Page.prototype.fillData=function(initial){
 
 };
 
-/**
- * init the buttons (i.e. assign listeners and add the icons)
- * each button click will call a btn<ButtonName> method at this gui object
- * ButtonName is the id of the button minus the leading avb_
- * @private
- *
- */
-Page.prototype.initButtons=function(){
-    var page=this;
-    var div=this.getDiv();
-    this.selectOnPage('.avn_button').each(function (i, e) {
-        var classList = $(e).attr('class').split(/\s+/);
-        $.each(classList, function(index, item) {
-            if (! item.match(/^avb_/)) return;
-            //$(e).html('<span class="avn_button_icon"></span>');
-            if (item) {
-                var id = item.replace(/^avb_/, '');
-                var proto = Object.getPrototypeOf(page);
-                var f = proto['btn' + id];
-                if (f) {
-                    $(e).click(function (b) {
-                        f.call(page, this, b);
-                        avnav.log("clicked " + id + "at " + b);
-                        return false;
-                    });
-                }
-            }
-        });
-        if ($(e).hasClass("avn_android") && avnav.android){
-            $(e).show();
-        }
-        if ($(e).hasClass("avn_no_android") && avnav.android){
-            $(e).hide();
-        }
-    });
 
-};
 
 Page.prototype.initFocusHandler=function() {
     var page = this;

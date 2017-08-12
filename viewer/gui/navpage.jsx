@@ -422,10 +422,12 @@ Navpage.prototype.createButtons=function()
             {key: "CancelNav"}
         ];
     }
-    this.store.storeData(this.globalKeys.buttons,{itemList:buttons});
+    this.setButtons(buttons);
 };
 Navpage.prototype.wpButtons=function(onoff){
     //TODO: handle active wp
+    var buttonFontSize=this.gui.properties.getButtonFontSize();
+    this.store.replaceSubKey(keys.wpButtons,buttonFontSize,'fontSize');
     if (! onoff) {
         this.store.updateSubItem(keys.wpButtons,'itemList',[]);
         return;
@@ -805,6 +807,8 @@ Navpage.prototype.computeLayoutParam=function(){
 /** @private */
 Navpage.prototype.updateLayout=function(opt_force){
     var self=this;
+    var buttonFontSize=this.gui.properties.getButtonFontSize();
+    this.store.replaceSubKey(keys.wpButtons,buttonFontSize,'fontSize');
     var nwidth=this.selectOnPage('.avn_left_panel').width();
     var nheight=this.selectOnPage('.avn_left_panel').height();
     var doUpdate=opt_force;
