@@ -28,6 +28,7 @@ var keys={
     bottomLeftWidgets: 'bottomLeft',
     bottomRightWidgets: 'bottomRight',
     routingVisible: 'routingVisible',
+    isSmall: 'isSmall',
     zoom: 'zoom',
     wpButtons: 'wpButtons'
 };
@@ -163,7 +164,7 @@ Navpage.prototype.getMap=function(){
 Navpage.prototype.routingVisible=function(){
     var isVisible=this.store.getData(keys.routingVisible);
     if (! isVisible) return false;
-    return isVisible.routingVisible;
+    return true;
 };
 Navpage.prototype.showPage=function(options){
     if (!this.gui) return;
@@ -173,6 +174,7 @@ Navpage.prototype.showPage=function(options){
     this.hideWpButtons();
     var newMap=false;
     var brightness=1;
+    this.store.storeData(keys.isSmall,this.isSmall());
     if (this.gui.properties.getProperties().nightMode) {
         brightness=this.gui.properties.getProperties().nightChartFade/100;
     }
@@ -281,6 +283,7 @@ Navpage.prototype.setWidgetVisibility=function(key,listName,visible){
 };
 Navpage.prototype.widgetVisibility=function(){
     var isSmall=this.isSmall();
+    this.store.storeData(keys.isSmall,isSmall);
     var routingVisible=this.routingVisible();
     if (isSmall){
         this.gui.map.setCompassOffset(this.gui.properties.getProperties().widgetFontSize*5);
@@ -312,9 +315,6 @@ Navpage.prototype.widgetVisibility=function(){
     var zoomVisible=this.gui.properties.getProperties().showZoom && ! routingVisible;
     this.setWidgetVisibility(keys.topWidgets,'Zoom', isSmall && zoomVisible);
     this.setWidgetVisibility(keys.leftWidgets,'Zoom', !isSmall && zoomVisible);
-    var oldRoutingVisibility=this.store.getData(keys.routingVisible,{}).routingVisible||false;
-    var newRoutingVisibility=! isSmall && routingVisible;
-    if (oldRoutingVisibility != newRoutingVisibility) this.store.storeData(keys.routingVisible,{routingVisible: newRoutingVisibility});
     this.updateWidgetLists();
 };
 /**
@@ -482,10 +482,10 @@ Navpage.prototype.getPageContent=function(){
     this.computeLayoutParam(); //initially fill the stores
     var RoutePoints=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);
     var RouteInfo=ItemUpdater(EditRouteWidget,self.navobject);
-    var list = function (props) {
-        if (!props.routingVisible) return null;
+    var routePanel = function (props) {
+        if (!props.routingVisible || props.isSmall) return null;
         return (
-            <div className="avn_routeDisplay">
+            <div id="avi_route_info_navpage" className="avn_routeDisplay">
                 <RouteInfo store={self.navobject} onClick={function(){
                     self.gui.showPage('routepage');
                 }}
@@ -502,18 +502,8 @@ Navpage.prototype.getPageContent=function(){
                 </div>
         );
     };
-    var RouteInfoPoints=ItemUpdater(list,this.store,[keys.routingVisible]);
-    var routePanel=function(props){
-        if (props.routingVisible){
-            return(
-                <div id="avi_route_info_navpage" className="avn_panel">
-                    <RouteInfoPoints/>
-                </div>
-            );
-        }
-        else return null;
-    };
-    var RoutingPanel=ItemUpdater(routePanel,self.store,keys.routingVisible);
+    var RoutePanel=ItemUpdater(routePanel,this.store,[keys.routingVisible,keys.isSmall]);
+
     var LeftBottomMarker=ItemUpdater(WidgetContainer,this.store,keys.bottomLeftWidgets);
     var leftBottomMarkerProps={
         className: "leftBottomMarker",
@@ -559,6 +549,7 @@ Navpage.prototype.getPageContent=function(){
         };
     var TopWidgets=ItemUpdater(WidgetContainer,this.store,keys.topWidgets);
     var topWidgetsProps={
+        className: "avn_topRightWidgets",
         onItemClick: self.widgetClick,
         itemList:[],
         itemCreator: widgetCreator,
@@ -576,7 +567,8 @@ Navpage.prototype.getPageContent=function(){
             return (
                 <div className="avn_panel_fill">
                     <div id='avi_map_navpage' ref="map" className='avn_panel avn_map'>
-                        <RoutingPanel/>
+                        <TopWidgets {...topWidgetsProps}/>
+                        <RoutePanel/>
                         <WpButtons {...wpButtonProps}/>
                         <NavLeftContainer {...navLeftContainerProps}/>
                     </div>
@@ -713,7 +705,7 @@ Navpage.prototype.showRouting=function(opt_returning) {
     if (!this.gui.properties.getProperties().layers.nav) return;
     var upd=false;
     var routeActive=this.navobject.getRoutingHandler().hasActiveRoute();
-    this.store.storeData(keys.routingVisible,{routingVisible:true});
+    this.store.storeData(keys.routingVisible,true);
     this.widgetVisibility();
     var isReactivating=false;
     if (opt_returning ){
@@ -746,7 +738,7 @@ Navpage.prototype.showRouting=function(opt_returning) {
  */
 Navpage.prototype.hideRouting=function(opt_noStop) {
     var upd=false;
-    this.store.storeData(keys.routingVisible,{routingVisible:false});
+    this.store.storeData(keys.routingVisible,false);
     this.widgetVisibility();
     this.hideWpButtons();
     if (! opt_noStop) {

@@ -11,6 +11,8 @@ var React=require('react');
  * @param {*} Item the item (html or react class) that should be wrapped
  * @param {Store} store the store
  * @param {string||string[]} opt_storeKey the key(s) to register at the store and fetch data
+ *         if any of the returned items is not an object, the value will be assigned to a key with the
+ *         name of the store key
  * @returns {*} the wrapped react class
  * @constructor
  */
@@ -25,7 +27,12 @@ var Updater=function(Item,store,opt_storeKey) {
             var st={};
             if (! opt_storeKey) return {update:1};
             getStoreKeys().forEach(function(key){
-                avnav.assign(st,store.getData(key));
+                var v=store.getData(key);
+                if (typeof(v) != "object"){
+                    v={};
+                    v[key]=store.getData(key);
+                }
+                avnav.assign(st,v);
             });
             return st;
         },

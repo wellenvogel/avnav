@@ -765,51 +765,20 @@ html,body {
   bottom: 0px;
   width: 8.7em;
   z-index: 100;
-  pointer-events: none;
   .flex-display();
   .flex-direction(column);
-  .avn_routeDisplay{
-    pointer-events: all;
-    .flex(1);
-    .nightBackFade(white);
-    overflow: hidden;
-    .flex-display();
-    .flex-direction(column);
-  }
+  .nightBackFade(white);
+  overflow: hidden;
   .avn_listContainer{
     .flex(1);
     overflow-x: hidden;
     overflow-y: auto;
   }
-}
-
-
-
-
-
-
-
-@routeInfoHeaderHeight: 12em;
-#avi_route_info_navpage_inner{
-  height: @routeInfoHeaderHeight;
-  padding-left: 0.2em;
-}
-#avi_route_info_list{
   position: absolute;
-  left: 0;
-  bottom: 0;
-  top: @routeInfoHeaderHeight;
-  right: 0;
-  overflow-y: hidden;
-  overflow-x: hidden;
 }
 
-#avi_route_info_list .avn_listContainer {
-  width: 100%;
-  height:100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
+
+
 .avn_route_info_point{
   border-bottom: 1px solid;
   .nightBorderColorGR();
