@@ -228,7 +228,7 @@ def main(argv):
       if ( not curTPV.data.get('lat') is None) and (not curTPV.data.get('lon') is None):
         #we have some position
         if not hasFix:
-          AVNLog.info("new GPS fix lat=%f lon=%f",curTPV.data.get('lat'),curTPV.data.get('lon'))
+          AVNLog.info("new GPS fix lat=%f lon=%f, time=%s, currentTime=%s",curTPV.data.get('lat'),curTPV.data.get('lon'),curTPV.data.get('time'),curutc.isoformat())
           hasFix=True
         #settime handling
         curTPVtime=curTPV.data.get('time')
@@ -262,9 +262,9 @@ def main(argv):
                     pass
                   curutc=datetime.datetime.utcnow()
                   if abs(AVNUtil.total_seconds(curts-curutc)) > allowedDiff:
-                    AVNLog.error("unable to set system time, still above difference")
+                    AVNLog.error("unable to set system time to %s, still above difference",newtime)
                   else:
-                    AVNLog.info("setting system time succeeded")
+                    AVNLog.info("setting system time to %s succeeded",newtime)
                     lastsettime=curutc
                     timeFalse=False
               else:
