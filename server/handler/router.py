@@ -117,8 +117,9 @@ class AVNRouter(AVNWorker):
           "routesdir":"",
           "interval": 5, #interval in seconds for computing route data
           "feederName":'',
-          "computeRMB":True #if set we compute AP control data
-          };
+          "computeRMB":True, #if set we compute AP control data,
+          "computeAPB": False #if set to true, compute APB taking True course as magnetic!
+          }
       return rt
     return None
   
@@ -413,8 +414,10 @@ class AVNRouter(AVNWorker):
         self.setInfo("leg",routerInfo
                   ,AVNWorker.Status.RUNNING)
       try:
-        if self.getBoolParam("computeRMB"):
-          hasRMB=self.computeRMB()
+        computeRMB=self.getBoolParam("computeRMB")
+        computeAPB=self.getBoolParam("computeAPB")
+        if computeRMB or computeAPB :
+          hasRMB=self.computeRMB(computeRMB,computeAPB)
       except Exception as e:
         AVNLog.warn("exception in computeRMB %s, retrying",traceback.format_exc())
       try:
@@ -518,7 +521,7 @@ class AVNRouter(AVNWorker):
 
   #compute an RMB record and write this into the feeder
   #if we have an active leg
-  def computeRMB(self):
+  def computeRMB(self,computeRMB,computeAPB):
     hasRMB=False
     #do the computation of some route data
     nmeaData="$GPRMB,A,,,,,,,,,,,,V,D*19\r\n"
@@ -549,7 +552,6 @@ class AVNRouter(AVNWorker):
           XTE=abs(XTE)
           if XTE>9.99:
             XTE=9.99
-          XTE="%.2f"%(XTE)
           destDis=AVNUtil.distance((lat,lon),self.wpToLatLon(self.endWp))
           if destDis>999.9:
             destDis=999.9
@@ -557,15 +559,24 @@ class AVNRouter(AVNWorker):
             arrival="A"
           else:
             arrival="V"
-          destDis="%.1f"%(destDis)
-          destBearing="%.1f"%AVNUtil.calcBearing((lat,lon),self.wpToLatLon(self.endWp))
-          nmeaData="GPRMB,A,"+XTE+","+LR+","+"%s"%(self.WpNr)+","+"%s"%(self.WpNr+1)+",,,,,"+destDis+","+destBearing+","+"%.1f"%kn+","+arrival+",A"
-          nmeaData="$"+nmeaData+"*"+NMEAParser.nmeaChecksum(nmeaData)+"\r\n"
-          self.setInfo("autopilot","GPRMB:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s"%
-                      (self.WpNr,XTE,LR,destDis,destBearing,arrival),AVNWorker.Status.NMEA)
+          wplat=NMEAParser.nmeaFloatToPos(self.endWp.latitude,True)
+          wplon = NMEAParser.nmeaFloatToPos(self.endWp.longitude, False)
+          destBearing=AVNUtil.calcBearing((lat,lon),self.wpToLatLon(self.endWp))
+          brg=AVNUtil.calcBearing(self.wpToLatLon(self.startWp),self.wpToLatLon(self.endWp))
+          self.setInfo("autopilot","RMB=%s,APB=%s:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s"%
+                      (computeRMB,computeAPB,self.WpNr,XTE,LR,destDis,destBearing,arrival),AVNWorker.Status.NMEA)
           hasRMB=True
-          AVNLog.debug("adding NMEA %s",nmeaData,)
-          self.feeder.addNMEA(nmeaData)
+          if computeRMB:
+            nmeaData = "GPRMB,A,%.2f,%s,%s,%s,%s,%s,%s,%s,%.1f,%.1f,%.1f,%s,A"% (
+              XTE,LR,self.WpNr,self.WpNr+1,wplat[0],wplat[1],wplon[0],wplon[1],destDis,destBearing,kn,arrival)
+            nmeaData = "$" + nmeaData + "*" + NMEAParser.nmeaChecksum(nmeaData) + "\r\n"
+            AVNLog.debug("adding NMEA %s",nmeaData)
+            self.feeder.addNMEA(nmeaData)
+          if computeAPB:
+            nmeaData = "GPAPB,A,A,%.2f,%s,N,%s,,%.1f,M,%s,%.1f,M,%.1f,M" % (XTE,LR,arrival,brg,self.WpNr + 1,destBearing,destBearing)
+            nmeaData = "$" + nmeaData + "*" + NMEAParser.nmeaChecksum(nmeaData) + "\r\n"
+            AVNLog.debug("adding NMEA %s", nmeaData, )
+            self.feeder.addNMEA(nmeaData)
     return hasRMB
 
   def deleteRouteFromList(self,name):

@@ -123,7 +123,19 @@ class NMEAParser():
       rt=-rt;
     AVNLog.ld("pos",pos,rt)
     return rt
-   
+
+  @classmethod
+  def nmeaFloatToPos(cls,pos,isLat):
+    '''return a tuple (string,direction) from a position'''
+    dir='N' if isLat else 'E'
+    if pos < 0:
+      dir = 'S' if isLat else 'W'
+      pos=-pos
+    deg = int(pos)
+    min = 60*pos - 60 * deg
+    rt="%d%05.2f"%(deg,min)
+    AVNLog.debug("nmeaFloatToPos for %f (isLat=%s) returns %s,%s",pos,isLat,rt,dir)
+    return(rt,dir)
   @classmethod
   #check if the line matches a provided filter
   #filter entries starting with ^are considered as blacklist
