@@ -77,7 +77,7 @@
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
     <!--  routing handler -->
-<AVNRouter routesdir="../data_linux/routes"></AVNRouter>
+<AVNRouter routesdir="../data_linux/routes" computeAPB="true"></AVNRouter>
 <!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
 <AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter importDir="../data_linux/import"></AVNImporter>
