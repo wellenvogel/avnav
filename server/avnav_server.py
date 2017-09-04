@@ -51,6 +51,7 @@ loggingInitialized=False
 #a dummy worker class to read some basic configurations
 class AVNBaseConfig(AVNWorker):
   def __init__(self,param):
+    AVNWorker.__init__(self,param)
     self.param=param
   @classmethod
   def getConfigName(cls):

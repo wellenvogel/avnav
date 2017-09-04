@@ -4,7 +4,10 @@
 <AVNServer>
 <AVNConfig loglevel="DEBUG"
 	logfile="../data_linux/avnav.log" 
-	debugToLog="true"/>
+	debugToLog="true"
+    systimediff="5"
+    settimecmd="beep"
+    settimeperiod="3600"/>
 <Readers>
 <!--<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />-->
 <AVNGpsdFeeder useGpsd="false" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
