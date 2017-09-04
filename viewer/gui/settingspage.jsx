@@ -123,22 +123,23 @@ Settingspage.prototype.getPageContent=function(){
             var leftClass="avn_leftSection";
             if (! rightVisible) leftClass+=" avn_expand";
             return (
-                <div className="avn_panel_fill">
+                <div className="avn_panel_fill_flex">
                     <div className="avn_left_top">
                         <div>{this.props.headline}</div>
                     </div>
-                    <div className="avn_left_inner avn_panel">
-                        { leftVisibile && <div className={leftClass}><SectionList
-                            className="avn_scroll"
-                            itemClass={SectionItem}
-                            onItemClick={sectionClick}
-                            itemList={self.sectionItems}
-                        /></div>}
-                        {rightVisible && <div className="avn_rightSection"><SettingsList
-                            className="avn_scroll"
-                            itemClass={SettingsItem}
-                        /></div>}
+                    <div className="avn_flexRow">
+                    { leftVisibile && <div className={leftClass}><SectionList
+                        className="avn_scroll"
+                        itemClass={SectionItem}
+                        onItemClick={sectionClick}
+                        itemList={self.sectionItems}
+                    /></div>}
+                    {rightVisible && <div className="avn_rightSection"><SettingsList
+                        className="avn_scroll"
+                        itemClass={SettingsItem}
+                    /></div>}
                     </div>
+
                 </div>
             );
         }

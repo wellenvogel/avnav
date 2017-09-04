@@ -100,7 +100,7 @@ AisInfoPage.prototype.getPageContent=function(){
              <div className="avn_panel_fill_flex">
                  <Headline/>
                  <StatusItem/>
-                 <div className="avn_panel avn_scrollable_page avn_left_inner" onClick={onClick}>
+                 <div className="avn_listWrapper" onClick={onClick}>
                      <div className='avn_infopage_inner'>
                          <div className="avn_table">
                              {displayItems.map(function(item){

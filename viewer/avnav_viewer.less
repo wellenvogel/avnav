@@ -340,10 +340,6 @@ html,body {
 }
 
 .avn_left_top{
-  position: absolute;
-  left:0;
-  right:0;
-  top:0;
   height: @headlineHeight;
   padding: 1em;
   .nightBackFade(@colorMain);
@@ -357,14 +353,12 @@ html,body {
 .avn_left_top.avn_active_headline{
   .nightBackFade(@colorRed);
 }
-.avn_left_inner{
-  .avn_panel_fill();
-  top: @headlineHeight !important;
+
+.avn_flexRow{
+  .flex-display();
+  .flex-direction();
 }
-.avn_left_inner_flex{
-  .avn_panel_fill_flex();
-  top: @headlineHeight !important;
-}
+
 
 /*
   for a page that consumes the left side and is scrollable
@@ -940,10 +934,6 @@ button.avb_WpEdit {
   overflow: auto;
   top: 5.3em;
 }
-#avi_routepage .avn_left_inner{
-  .flex-display();
-  .flex-direction(column);
-}
 
 .avn_active_route{
   .nightForeColor(@routeApproachingColor);
@@ -1044,18 +1034,9 @@ button.avb_RoutePageDownload{
 /*-------------------------------------------------------------
    download/upload page
 -------------------------------------------------------------*/
-#avi_downloadpage .avn_left_inner{
-  .avm_listpage();
-  .flex-display();
-}
 
 
-#avi_downloadpage .avn_left_inner .avn_listContainer {
-  .avm_listcontainer();
-  .flex(1);
-  width: 100%;
-  overflow-y: auto;
-}
+
 .avn_download_list_entry{
   .avm_list_entry();
 }
@@ -1308,14 +1289,10 @@ button.avb_AisInfoList {
 }
 
 .avn_listWrapper {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  top: @headlineHeight;
-  right: 0;
-  overflow-y: hidden;
+  overflow-y: auto;
   overflow-x: hidden;
   .flex-display();
+  .flex-direction(column);
 }
 
 .avn_listWrapper .avn_listContainer {
@@ -1368,10 +1345,7 @@ button.avb_StatusShutdown{
 -------------------------------------------------------------*/
 
 
-#avi_wpapage .avn_left_inner{
-  padding-left: 2em;
-  padding-right: 2em;
-}
+
 .avn_wpa_interface{
   font-size: 1.5em;
   margin-top: 0.5em;
@@ -1575,8 +1549,6 @@ button.avb_GpsCenter{
 }
 #avi_settingspage .avn_leftSection{
   width: 10em;
-  float: left;
-  height: 100%;
   border-right: 1px solid ;
   margin-right: 2em;
   .nightBorderColorGR();
@@ -1591,7 +1563,7 @@ button.avb_GpsCenter{
 #avi_settingspage .avn_rightSection {
   width: auto;
   overflow: hidden;
-  height: 100%;
+  .flex(1);
   .avn_list_entry{
     .nightBorderColorGR(10);
   }
@@ -1621,6 +1593,9 @@ button.avb_GpsCenter{
     margin-left: 1em;
     .avm_listEntryItem();
   }
+}
+#avi_settingspage .avn_flexRow{
+  height: 100%;
 }
 
 .avn_colorDialog {
@@ -1760,18 +1735,17 @@ button.avb_SettingsAndroid {
   display: inline-block;
 }
 
-#avi_mainpage .avn_left_bottom {
+#avi_mainpage .avn_listWrapper{
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.avn_left_bottom {
   height: 3.3em;
-  bottom: 0;
-  left: 0;
-  right: 0;
   background-color: @colorSecond;
   .nightColors();
 }
 
-#avi_mainpage .avn_left_inner {
-  bottom: 3.3em;
-}
 
 .avn_mainpage_leftbottominner {
   font-size: 0.8em;

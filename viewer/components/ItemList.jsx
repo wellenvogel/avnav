@@ -24,7 +24,8 @@ module.exports=React.createClass({
                                             //the key will be added as an additional class
         itemList: React.PropTypes.array,
         childProperties: React.PropTypes.object,
-        className: React.PropTypes.string
+        className: React.PropTypes.string,
+        style: React.PropTypes.object
     },
     getInitialState: function(){
         var itemList=[];
@@ -59,7 +60,7 @@ module.exports=React.createClass({
             }
         }
         return(
-            <div className={className}>
+            <div className={className} style={this.props.style}>
                 { items.map(function (entry) {
                     var opts = {};
                     var addClass = entry.addClass||"";

@@ -68,9 +68,12 @@ Gpspage.prototype.getPageContent=function(){
         self.navEvent(evdata);
     });
     var Main=React.createClass({
+        goBack: function(){
+            self.returnToLast();
+        },
         render: function(){
             return (
-                <div className="avn_panel_fill" onClick={self.returnToLast}>
+                <div className="avn_panel_fill" onClick={this.goBack}>
                     <div id='avi_gps_page_left' className="avn_gpsp_hfield">
                         <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
                             <div className='avn_gpsp_field_label'>WP-BRG</div>
@@ -301,6 +304,7 @@ Gpspage.prototype.btnGpsCenter=function (button,ev){
     }
     this.returnToLast();
 };
+
 
 (function(){
     //create an instance of the status page handler

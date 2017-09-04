@@ -211,7 +211,8 @@ var WidgetContainer=React.createClass({
             layoutParameter: React.PropTypes.object,
             dummy: React.PropTypes.any,
             renewSequence: React.PropTypes.number,
-            className: React.PropTypes.string
+            className: React.PropTypes.string,
+            style: React.PropTypes.object
         },
         getInitialState: function(){
             this.itemInfo={};
@@ -307,9 +308,11 @@ var WidgetContainer=React.createClass({
                     return LayoutMonitor(self.props.itemCreator(props,self.props.store),
                         function(rect,opt_force){
                         self.updateItemInfo(itemKey, rect, opt_force);});
-                }
+                },
+                className: "avn_widgetContainer"
             };
-            if (this.props.className) listProps.className=this.props.className;
+            if (this.props.className !== undefined ) listProps.className+=" "+this.props.className;
+            if (this.props.style) listProps.style=this.props.style;
             var rt=(
                 <ItemList {...listProps}
                     />

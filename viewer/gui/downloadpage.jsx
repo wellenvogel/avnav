@@ -321,7 +321,7 @@ Downloadpage.prototype.getPageContent=function(){
             return(
                 <div className="avn_panel_fill_flex">
                     <HeadLine/>
-                    <div className="avn_left_inner">
+                    <div className="avn_listWrapper">
                         <List {...listProperties}/>
                     </div>
                     <form id="avi_download_downloadform" className="avn_hidden" method="get" >

@@ -205,7 +205,7 @@ Wpapage.prototype.getPageContent=function() {
                         </div>
                     </div>
 
-                    <div className="avn_panel avn_scrollable_page avn_left_inner">
+                    <div className="avn_listWrapper">
                         <HeaderClass></HeaderClass>
                         <NetworkList itemClass={listEntryClass}>
                         </NetworkList>

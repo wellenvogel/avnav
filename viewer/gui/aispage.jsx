@@ -137,17 +137,18 @@ Aispage.prototype.getPageContent=function(){
                     <div className="avn_left_top">
                         <div>Ais</div>
                     </div>
-                    <div className="avn_left_inner_flex">
-                        <Summary numTargets={0} />
-                        <AisList
-                            itemClass={AisItem}
-                            onItemClick={function(item){
-                            self.aishandler.setTrackedTarget(item.mmsi);
-                            self.gui.showPage('aisinfopage',{mmsi:item.mmsi,skipHistory: true});
-                            }}
-                            className="avn_scrollable_page avn_aisList"
-                        />
-                    </div>
+
+                        <Summary numTargets={0}/>
+                        <div className="avn_listWrapper">
+                            <AisList
+                                itemClass={AisItem}
+                                onItemClick={function (item) {
+                                    self.aishandler.setTrackedTarget(item.mmsi);
+                                    self.gui.showPage('aisinfopage', {mmsi: item.mmsi, skipHistory: true});
+                                }}
+                                className="avn_aisList"
+                            />
+                        </div>
                 </div>);
         }
     });

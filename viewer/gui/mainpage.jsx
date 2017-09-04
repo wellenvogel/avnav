@@ -73,7 +73,7 @@ Mainpage.prototype.getPageContent=function(){
     };
     var BottomLine=function(props){
        return (
-           <div className='avn_panel avn_left_bottom '>
+           <div className='avn_left_bottom '>
                <div className="avn_mainpage_leftbottominner">
                    <div className='avn_mainpage_status'>
                        <div className='avn_label '>

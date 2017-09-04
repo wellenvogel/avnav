@@ -387,11 +387,13 @@ Navpage.prototype.hidePage=function(){
 
 Navpage.prototype.resetWidgetLayouts=function() {
     var self=this;
+    var fontSize=this.gui.properties.getValueByName("widgetFontSize");
     for (var i in widgetKeys) {
         var key=widgetKeys[i];
         //re-layout all widgets
         var oldSeq = self.store.getData(key, {}).renewSequence || 0;
         self.store.replaceSubKey(key, oldSeq + 1, 'renewSequence');
+        self.store.replaceSubKey(key,{fontSize:fontSize},"style");
     }
 };
 
@@ -422,6 +424,8 @@ Navpage.prototype.createButtons=function()
             {key: "CancelNav"}
         ];
     }
+    var buttonFontSize=this.gui.properties.getButtonFontSize();
+    this.store.replaceSubKey(this.globalKeys.buttons,buttonFontSize,'fontSize');
     this.setButtons(buttons);
 };
 Navpage.prototype.wpButtons=function(onoff){

@@ -215,13 +215,13 @@ Routepage.prototype.getPageContent=function(){
     return React.createClass({
             render: function () {
                 return(
-                <div className="avn_panel_fill_flex">
-                    <HeadLine/>
-                    <div className="avn_left_inner">
+                    <div className="avn_panel_fill_flex">
+                        <HeadLine/>
                         <Heading {...headingProperties}/>
-                        <List {...listProperties}/>
+                        <div className="avn_listWrapper">
+                            <List {...listProperties}/>
+                        </div>
                     </div>
-                </div>
                 );
             }
         });
