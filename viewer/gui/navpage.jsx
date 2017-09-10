@@ -28,7 +28,9 @@ var keys={
     routingVisible: 'routingVisible',
     isSmall: 'isSmall',
     zoom: 'zoom',
-    wpButtons: 'wpButtons'
+    wpButtons: 'wpButtons',
+    widgetDimensionsFull: 'fullDimensions',
+    widgetDimensionsHalf: 'halfDimensions'
 };
 var wpKeyFlags={
     currentTarget:'currentTarget',
@@ -507,7 +509,9 @@ Navpage.prototype.getPageContent=function(){
         );
     };
     var RoutePanel=ItemUpdater(routePanel,this.store,[keys.routingVisible,keys.isSmall]);
-
+    var isSmall=this.isSmall();
+    var numWRows=this.gui.properties.getProperties().allowTwoWidgetRows?2:1;
+    var leftWidth=$('#avi_navpage .avn_navLeftContainer').width()||0;
     var LeftBottomMarker=ItemUpdater(WidgetContainer,this.store,keys.bottomLeftWidgets);
     self.store.updateData(keys.bottomLeftWidgets,{
         className: "leftBottomMarker",
@@ -515,6 +519,16 @@ Navpage.prototype.getPageContent=function(){
         itemCreator: widgetCreator,
         itemList: [],
         setContainerHeight: true,
+        layoutParameter:{
+            inverted: false,
+            direction: 'left',
+            scale: true,
+            mainMargin: widgetMargin,
+            otherMargin: widgetMargin,
+            startMargin: 0,
+            outerSize: isSmall?0:leftWidth,
+            maxRowCol: numWRows,
+            maxSize:self.panelWidth/2+widgetMargin/2}
         });
     var LeftBottomPosition=ItemUpdater(WidgetContainer,this.store,keys.bottomRightWidgets);
     self.store.updateData(keys.bottomRightWidgets,{
@@ -522,7 +536,18 @@ Navpage.prototype.getPageContent=function(){
         onItemClick: self.widgetClick,
         itemList:[],
         itemCreator: widgetCreator,
-        setContainerHeight: true
+        setContainerHeight: true,
+        layoutParameter:{
+            inverted: false,
+            scale: true,
+            direction: 'right',
+            mainMargin: widgetMargin,
+            otherMargin: widgetMargin,
+            startMargin: 0,
+            outerSize: isSmall?0:leftWidth,
+            maxRowCol: numWRows,
+            maxSize: self.panelWidth/2+widgetMargin/2
+        }
     });
     var NavLeftContainer=ItemUpdater(WidgetContainer,this.store,keys.leftWidgets);
     self.store.updateData(keys.leftWidgets,{
@@ -532,6 +557,15 @@ Navpage.prototype.getPageContent=function(){
         itemCreator: widgetCreator,
         setContainerHeight: true,
         setContainerWidth: false,
+        layoutParameter: {
+            inverted: false,
+            scale: false,
+            mainMargin: widgetMargin,
+            otherMargin: widgetMargin,
+            maxSize: 0,
+            direction: 'bottom',
+            inverseAlignment: false
+        }
     });
     var TopWidgets=ItemUpdater(WidgetContainer,this.store,keys.topWidgets);
     self.store.updateData(keys.topWidgets, {
@@ -541,6 +575,17 @@ Navpage.prototype.getPageContent=function(){
         itemCreator: widgetCreator,
         setContainerWidth: true,
         setContainerHeight: true,
+        layoutParameter: {
+            inverted: false,
+            scale: true,
+            direction: 'right',
+            mainMargin: widgetMargin,
+            otherMargin: widgetMargin,
+            startMargin: 0,
+            outerSize: 0,
+            maxRowCol: 1,
+            maxSize: this.panelWidth
+        }
     });
     var WpButtons=ItemUpdater(ButtonList,this.store,keys.wpButtons);
     self.store.updateData(keys.wpButtons,{
@@ -745,48 +790,23 @@ Navpage.prototype.computeLayoutParam=function(){
     var self=this;
     var isSmall=this.isSmall();
     var widgetMargin=this.gui.properties.getProperties().style.widgetMargin;
-    this.store.replaceSubKey(keys.bottomLeftWidgets,{
-        inverted: false,
-        direction: 'left',
-        scale: true,
-        mainMargin: widgetMargin,
-        otherMargin: widgetMargin,
-        startMargin: 0,
-        outerSize: isSmall?0:$('#avi_navpage .avn_navLeftContainer').width(),
-        maxRowCol: this.gui.properties.getProperties().allowTwoWidgetRows?2:1,
+    var leftWidth=$('#avi_navpage .avn_navLeftContainer').width()||0;
+    var outerSize=isSmall?0:leftWidth;
+    var maxRowCol=this.gui.properties.getProperties().allowTwoWidgetRows?2:1;
+
+    this.store.updateData(keys.bottomLeftWidgets,{
+        outerSize: outerSize,
+        maxRowCol: maxRowCol,
         maxSize:self.panelWidth/2+widgetMargin/2
     },'layoutParameter');
-    this.store.replaceSubKey(keys.bottomRightWidgets,{
-        inverted: false,
-        scale: true,
-        direction: 'right',
-        mainMargin: widgetMargin,
-        otherMargin: widgetMargin,
-        startMargin: 0,
-        outerSize: isSmall?0:$('#avi_navpage .avn_navLeftContainer').width(),
-        maxRowCol: this.gui.properties.getProperties().allowTwoWidgetRows ? 2 : 1,
+    this.store.updateData(keys.bottomRightWidgets,{
+        outerSize: outerSize,
+        maxRowCol: maxRowCol,
         maxSize: self.panelWidth/2+widgetMargin/2
     },'layoutParameter');
-    this.store.replaceSubKey(keys.topWidgets,{
-        inverted: false,
-        scale: true,
-        direction: 'right',
-        mainMargin: widgetMargin,
-        otherMargin: widgetMargin,
-        startMargin: 0,
-        outerSize: 0,
-        maxRowCol: 1,
-        maxSize: this.selectOnPage('.avn_left_panel').width()
+    this.store.updateData(keys.topWidgets,{
+        maxSize: self.panelWidth
     },'layoutParameter');
-    this.store.replaceSubKey(keys.leftWidgets, {
-        inverted: false,
-        scale: false,
-        mainMargin: widgetMargin,
-        otherMargin: widgetMargin,
-        maxSize: 0,
-        direction: 'bottom',
-        inverseAlignment: false
-    }, 'layoutParameter');
 
 };
 
