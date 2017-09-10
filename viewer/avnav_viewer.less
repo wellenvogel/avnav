@@ -359,6 +359,11 @@ html,body {
   .flex-direction();
 }
 
+.avn_flexFill{
+  .flex(1);
+  position: relative;
+}
+
 
 /*
   for a page that consumes the left side and is scrollable
@@ -713,36 +718,27 @@ html,body {
    bottom display
 -------------------------------------------------------------*/
 
-#avi_nav_bottom{
-  bottom: 0;
-  left: 0;
-  right: 0;
+.avn_nav_bottom{
+  z-index: 1;
   background-color: @colorMain;
   .nightColors();
+  .flex-display();
+  .flex-direction(row);
 }
 
-#avi_nav_bottom .avn_widget{
+.avn_nav_bottom .avn_widget{
   height: 3.8em;
 }
 
-#avi_nav_bottom .leftBottomMarker{
-  float: left;
+.avn_nav_bottom .leftBottomMarker{
   width: 50%;
   position: relative;
-  bottom: 0;
   height: 1em;
 }
 
-
-#avi_nav_bottom .leftBottomMarker .avn_widget{
-  margin-left: 0;
-}
-
-#avi_nav_bottom .leftBottomPosition{
-  float: left;
+.avn_nav_bottom .leftBottomPosition{
   width: 50%;
   position: relative;
-  bottom: 0;
   height: 1em;
 }
 
@@ -753,7 +749,7 @@ html,body {
 -------------------------------------------------------------*/
 
 
-#avi_route_info_navpage{
+.avn_routeDisplay{
   top: 0px;
   left:0px;
   bottom: 0px;
@@ -799,24 +795,26 @@ html,body {
 /*-------------------------------------------------------------
    left widget container
 --------------------------------------------------------------*/
-#avi_navpage .navLeftContainer{
-  position: absolute;
-  left: 0;
+#avi_navpage .avn_navLeftContainer{
+  position: relative;
   overflow: hidden;
   background-color: @colorMain;
   .nightColors();
-  z-index: 10;
-  bottom: 0;
   pointer-events: none;
-}
-#avi_navpage .navLeftContainer.smallBreak{
-  background-color: inherit;
-  .avn_widget{
-    height: 7em;
-  }
+  width: @navLeftWidgetWidth;
 }
 
-#avi_navpage .navLeftContainer .avn_widget{
+#avi_navpage .avn_leftFrame{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  background-color: @colorMain;
+  .nightColors();
+}
+
+
+#avi_navpage .avn_navLeftContainer .avn_widget{
   margin-left: 0;
   margin-right: 0;
   margin-top: 0;
@@ -839,7 +837,7 @@ html,body {
   position: absolute;
   bottom: 0;
   right: 0;
-  z-index: 1;
+  z-index: 10;
 }
 
 .avn_routeBtn{
@@ -1741,7 +1739,6 @@ button.avb_SettingsAndroid {
 }
 
 .avn_left_bottom {
-  height: 3.3em;
   background-color: @colorSecond;
   .nightColors();
 }
@@ -1811,7 +1808,7 @@ button.avb_MainAndroid {
   left: 0px;
   right: 0px;
   bottom: 0px;
-
+  z-index: 1;
 }
 
 .avn_main {

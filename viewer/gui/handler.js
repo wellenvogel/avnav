@@ -115,6 +115,13 @@ avnav.gui.Handler.prototype.addActiveInput = function (id) {
     this.activeInputs[id] = true;
 };
 
+/**
+ *
+ * @returns {avnav.map.MapHolder}
+ */
+avnav.gui.Handler.prototype.getMap=function(){
+    return this.map;
+};
 avnav.gui.Handler.prototype.removeActiveInput = function (id) {
     var trigger = (Object.keys(this.activeInputs).length > 0);
     delete this.activeInputs[id];

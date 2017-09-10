@@ -127,7 +127,7 @@ avnav.map.MapHolder=function(properties,navobject){
     this.slideIn=0; //when set we step by step zoom in
     /**
      * @private
-     * @type {avnav.map.Drawing
+     * @type {avnav.map.Drawing}
      */
     this.drawing=new avnav.map.Drawing(this);
     /**
@@ -158,6 +158,12 @@ avnav.map.MapHolder=function(properties,navobject){
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
+    /**
+     * the last base url
+     * @type {String}
+     * @private
+     */
+    this._chartbase=undefined;
 
 };
 
@@ -217,6 +223,48 @@ avnav.map.MapHolder.prototype.renderTo=function(div){
     if (!div) div=this.defaultDiv;
     this.olmap.setTarget(div);
     this.olmap.updateSize();
+};
+
+
+avnav.map.MapHolder.prototype.loadMap=function(options,opt_force){
+    var self=this;
+    var chartbase = options.charturl;
+    var list = options.url;
+    if (!chartbase) {
+        chartbase = list;
+    }
+    if (! chartbase){
+        list=this._chartbase;
+        chartbase=this._chartbase;
+    }
+    if (! list){
+        throw Error("missing charturl when loading rteditpage");
+    }
+    if (!list.match(/^http:/)) {
+        if (list.match(/^\//)) {
+            list = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + list;
+        }
+        else {
+            list = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + list;
+        }
+    }
+    if (list != this._chartbase || opt_force) {
+        //chartbase: optional url for charts
+        //list: the base url
+
+        var url = list + "/avnav.xml";
+        $.ajax({
+            url: url,
+            dataType: 'xml',
+            cache: false,
+            success: function (data) {
+                self.initMap(self.mapdom, data, chartbase);
+            },
+            error: function (ev) {
+                self.toast("unable to load charts " + ev.responseText);
+            }
+        });
+    }
 };
 /**
  * init the map (deinit an old one...)

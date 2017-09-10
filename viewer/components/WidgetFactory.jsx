@@ -40,7 +40,7 @@ class WidgetFactory{
         }
         return -1;
     }
-    createWidget(props: Object,opt_properties: Object){
+    createWidget(props,opt_properties){
         if (! props.name) return;
         var e=this.findWidget(props.name);
         var RenderWidget=e.wclass||Widget;
@@ -59,7 +59,7 @@ class WidgetFactory{
             });
         }
     }
-    getWidget(index: Number){
+    getWidget(index){
         if (index < 0 || index >= widgetList.length) return undefined;
         var el=assign({},widgetList[index]);
         if (el.name === undefined) el.name=el.caption;

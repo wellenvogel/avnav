@@ -4,6 +4,7 @@
 var React=require('react');
 var LayoutMonitor=require('./LayoutMonitor.jsx');
 var ItemList=require('./ItemList.jsx');
+var assign=require('object-assign');
 
 var LayoutParameters=function(options){
     this.scale=options.scale;
@@ -44,9 +45,21 @@ LayoutParameters.prototype.resetParameters=function(){
 LayoutParameters.prototype.containerDimensionProperties=function(size,opt_otherSize){
     var rt={width:'',height:''};
     rt[this.containerDimension]=size+"px";
-    if (this.scaleContainer){
+    if (this.scaleContainer ){
         rt[this.scalingProperty]=opt_otherSize+"px";
     }
+    return rt;
+};
+/**
+ * get the width and height of the container given the main property and the other property
+ * @param main
+ * @param otherSize
+ * @returns {{width: string, height: string}}
+ */
+LayoutParameters.prototype.containerWidthHeight=function(main,otherSize){
+    var rt={width:'',height:''};
+    rt[this.containerDimension]=otherSize;
+    rt[this.scalingProperty]=main;
     return rt;
 };
 LayoutParameters.prototype.containerResetProperties=function(){
@@ -192,7 +205,8 @@ var layout=function(itemList,parameters) {
         };
     }
     return {
-        container:{ other: topLeftPosition,main:containerMain,otherMargin: otherMargin,mainMargin:mainMargin},
+        container:assign({other: topLeftPosition,main:containerMain,otherMargin: otherMargin,mainMargin:mainMargin},
+            layoutParameter.containerWidthHeight(containerMain,topLeftPosition)),
         styles:styles
     };
 };
@@ -207,12 +221,13 @@ var WidgetContainer=React.createClass({
              */
             itemList: React.PropTypes.array.isRequired,
             itemCreator: React.PropTypes.func.isRequired,
-            updateCallback: React.PropTypes.func,
             layoutParameter: React.PropTypes.object,
             dummy: React.PropTypes.any,
             renewSequence: React.PropTypes.number,
             className: React.PropTypes.string,
-            style: React.PropTypes.object
+            style: React.PropTypes.object,
+            setContainerWidth: React.PropTypes.bool,
+            setContainerHeight: React.PropTypes.bool
         },
         getInitialState: function(){
             this.itemInfo={};
@@ -312,7 +327,10 @@ var WidgetContainer=React.createClass({
                 className: "avn_widgetContainer"
             };
             if (this.props.className !== undefined ) listProps.className+=" "+this.props.className;
-            if (this.props.style) listProps.style=this.props.style;
+            if (this.props.style) listProps.style=assign({},this.props.style);
+            else listProps.style={};
+            if (this.props.setContainerWidth) listProps.style.width=this.container.width||0;
+            if (this.props.setContainerHeight ) listProps.style.height=this.container.height||0;
             var rt=(
                 <ItemList {...listProps}
                     />
@@ -320,14 +338,6 @@ var WidgetContainer=React.createClass({
             return rt;
         },
         componentDidMount: function () {
-            if (this.props.updateCallback && this.container) {
-                this.props.updateCallback(this.container);
-            }
-            /*
-            if (self._layoutHandler){
-                self._layoutHandler.init();
-            }
-            */
             this.componentDidUpdate();
         },
         checkUnlayouted:function(){
@@ -353,9 +363,6 @@ var WidgetContainer=React.createClass({
         },
         componentDidUpdate:function(){
             this.checkUnlayouted();
-            if (this.container && this.props.updateCallback){
-                this.props.updateCallback(this.container);
-            }
         }
     });
 module.exports=WidgetContainer;
