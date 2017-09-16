@@ -48,10 +48,10 @@ def mbtiles_connect(mbtiles_file):
 #currently we are not prepared for any change of the mbtiles data
 #between importing the header and importing the data
 #mbtiles follow the tms spec - so we have to compute the gemf y by 2^^z-1-y
-def mb2gemf(tile,scheme="tms"):
-  if scheme.lower() == "tms":
+def mb2gemf(tile,scheme="xyz"):
+  if scheme.lower() == "xyz":
     return (tile[0],tile[1],pow(2,tile[0])-1-tile[2])
-  else:  #scheme.lower() == "xyz":
+  else:  #scheme.lower() == "tms":
     return (tile[0],tile[1],tile[2])
 
 
