@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<exCustomMapSource>
+    <name>NVPedia2017</name>
+   <minZoom>6</minZoom>
+   <maxZoom>18</maxZoom>
+ <backgroundColor>#FF000000</backgroundColor>
+  <invertYCoordinate>false</invertYCoordinate>
+<numLowerLevels>4</numLowerLevels>
+<mergeLevels>true</mergeLevels>
+<ignoreErrors>true</ignoreErrors>
+    <url>http://app.nv-data.de/navipack.php?tiles=2017,451,{$z},{$y},{$x}</url>
+</exCustomMapSource>
