@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<atlas version="1" name="Eniro-Swe-Sued" outputFormat="OSMTracker">
+<atlas version="1" name="Eniro-Swe-Sued" outputFormat="OsmdroidGEMF">
     <Layer name="Swe-Sued1">
         <Map maxTileCoordinate="18175/10495" minTileCoordinate="16896/9984" mapSource="Eniro Nautical" zoom="7" name="Swe-Sued1 07"/>
         <Map maxTileCoordinate="36095/20991" minTileCoordinate="34048/20224" mapSource="Eniro Nautical" zoom="8" name="Swe-Sued1 08"/>
