@@ -674,7 +674,7 @@ class AVNRouter(AVNWorker):
       name=self.getRequestParam(requestparam, 'name')
       if name is None:
         return json.dumps({'status':'no route name'})
-      if self.currentLeg.name is not None and self.currentLeg.active and self.currentLeg.name == name:
+      if self.currentLeg is not None and self.currentLeg.name is not None and self.currentLeg.active and self.currentLeg.name == name:
         return {'status':'cannot delete active route'}
       self.deleteRouteFromList(name)
       self.deleteRouteInfo(name)
