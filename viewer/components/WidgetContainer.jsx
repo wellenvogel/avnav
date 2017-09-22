@@ -285,12 +285,25 @@ var WidgetContainer=React.createClass({
             for (var i in this.props.itemList){
                 var item=this.props.itemList[i];
                 if (! item.key){
-                    avnav.log("missing item key");
-                    continue;
+                    if (! item.name) {
+                        avnav.log("missing item key and name");
+                        continue;
+                    }
+                    else{
+                        item=assign({key:item.name},item);
+                    }
                 }
+                var vis=true;
                 if (item.visible !== undefined && ! item.visible) {
-                    continue;
+                    vis=false;
                 }
+                if (this.props.visibilityFlags){
+                    var flag=this.props.visibilityFlags[item.key];
+                    if (flag !== undefined){
+                        vis=flag;
+                    }
+                }
+                if (! vis) continue;
                 var rect=this.itemInfo[item.key];
                 this.renderedItems.push(item);
                 if (rect !== undefined) items.push(new ItemWrapper(rect,item))

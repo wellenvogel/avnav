@@ -110,33 +110,33 @@ var Navpage=function(){
     this.widgetLists={};
     this.widgetLists[keys.leftWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
-        {key:1,name:'CenterDisplay'},
-        {key:2,name:'Zoom',store: self.store, dataKey:keys.zoom},
-        {key:3,name:'AisTarget'},
-        {key:4,name:'ActiveRoute'},
-        {key:5,name:'LargeTime'}
+        {name:'CenterDisplay'},
+        {name:'Zoom',store: self.store, dataKey:keys.zoom},
+        {name:'AisTarget'},
+        {name:'ActiveRoute'},
+        {name:'LargeTime'}
     ];
     this.widgetLists[keys.topWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
-        {key:1,name:'CenterDisplay',mode:'small'},
-        {key:2,name:'AisTarget',mode:'small'},
-        {key:3,name:'EditRoute',wide:true},
-        {key:4,name:'LargeTime'},
-        {key:5,name:'Zoom', store: self.store, dataKey:keys.zoom}
+        {name:'CenterDisplay',mode:'small'},
+        {name:'AisTarget',mode:'small'},
+        {name:'EditRoute',wide:true},
+        {name:'LargeTime'},
+        {name:'Zoom', store: self.store, dataKey:keys.zoom}
     ];
     this.widgetLists[keys.bottomLeftWidgets]=[
         //['BRG','DST','ETA','WpPosition']
-        {key:1,name:'BRG'},
-        {key:2,name:'DST'},
-        {key:3,name:'ETA'},
-        {key:4,name:'WpPosition'}
+        {name:'BRG'},
+        {name:'DST'},
+        {name:'ETA'},
+        {name:'WpPosition'}
     ];
     this.widgetLists[keys.bottomRightWidgets]=[
         //['COG','SOG','TimeStatus','Position']
-        {key:1,name:'COG'},
-        {key:2,name:'SOG'},
-        {key:3,name:'TimeStatus'},
-        {key:4,name:'Position'}
+        {name:'COG'},
+        {name:'SOG'},
+        {name:'TimeStatus'},
+        {name:'Position'}
     ];
     this.lastOtherLeft=0;
     
@@ -246,37 +246,6 @@ Navpage.prototype.showPage=function(options){
     this.resetWidgetLayouts();
 };
 
-Navpage.prototype.updateWidgetLists=function(){
-    for (var key in this.widgetLists){
-        var visibleList=avnav.arrayClone(this.widgetLists[key]);
-        var current=this.store.getData(key);
-        if (current) current=current.itemList;
-        var doUpdate=false;
-        if (!current && visibleList.length) doUpdate=true;
-        if (! doUpdate && current && visibleList){
-            if (current.length != visibleList.length) doUpdate=true;
-        };
-        if (! doUpdate){
-            for (var i=0; i< visibleList.length;i++){
-                if (current[i].key != visibleList[i].key || current[i].visible != visibleList[i].visible){
-                    //TODO: check other parameters?
-                    doUpdate=true;
-                    break;
-                }
-            }
-        }
-        if (doUpdate){
-            this.store.replaceSubKey(key,visibleList,'itemList');
-        }
-    }
-};
-Navpage.prototype.setWidgetVisibility=function(key,listName,visible){
-    var list=this.widgetLists[key];
-    if (! list) return;
-    for (var i in list){
-        if (list[i].name == listName) list[i].visible=visible;
-    }
-};
 Navpage.prototype.widgetVisibility=function(){
     var isSmall=this.isSmall();
     this.store.storeData(keys.isSmall,isSmall);
@@ -292,26 +261,28 @@ Navpage.prototype.widgetVisibility=function(){
         var aisTarget=this.navobject.getAisHandler().getNearestAisTarget();
         aisVisible=(aisTarget && aisTarget.mmsi)?true:false;
     }
-    this.setWidgetVisibility(keys.leftWidgets,'AisTarget',aisVisible && ! isSmall && ! routingVisible);
-    this.setWidgetVisibility(keys.topWidgets,'AisTarget',aisVisible && isSmall && ! routingVisible);
-    //aisVisible=true;
     var routeVisible=this.gui.properties.getProperties().layers.nav;
     if (routeVisible) routeVisible=this.navobject.getRoutingHandler().hasActiveRoute();
-    this.setWidgetVisibility(keys.leftWidgets,'ActiveRoute',routeVisible && ! routingVisible);
     var centerVisible=this.gui.properties.getProperties().layers.measures;
     if (this.hidetime <=0 || this.hidetime <= new Date().getTime()|| this.gui.map.getGpsLock()){
         centerVisible=false;
     }
-    this.setWidgetVisibility(keys.leftWidgets,'CenterDisplay',centerVisible && ! isSmall && ! routingVisible);
-    this.setWidgetVisibility(keys.topWidgets,'CenterDisplay',centerVisible && isSmall && ! routingVisible);
     var clockVisible=this.gui.properties.getProperties().showClock;
-    this.setWidgetVisibility(keys.leftWidgets,'LargeTime',clockVisible && ! isSmall&& ! routingVisible);
-    this.setWidgetVisibility(keys.topWidgets,'LargeTime',clockVisible && isSmall && ! routingVisible);
-    this.setWidgetVisibility(keys.topWidgets,'EditRoute', isSmall && routingVisible);
     var zoomVisible=this.gui.properties.getProperties().showZoom && ! routingVisible;
-    this.setWidgetVisibility(keys.topWidgets,'Zoom', isSmall && zoomVisible);
-    this.setWidgetVisibility(keys.leftWidgets,'Zoom', !isSmall && zoomVisible);
-    this.updateWidgetLists();
+    this.store.updateData(keys.topWidgets,{
+        CenterDisplay:centerVisible && isSmall && ! routingVisible,
+        EditRoute:isSmall && routingVisible,
+        AisTarget:aisVisible && isSmall && ! routingVisible,
+        LargeTime:clockVisible && isSmall && ! routingVisible,
+        Zoom: isSmall && zoomVisible
+    },'visibilityFlags');
+    this.store.updateData(keys.leftWidgets,{
+        CenterDisplay:centerVisible && !isSmall && ! routingVisible,
+        AisTarget:aisVisible && !isSmall && ! routingVisible,
+        LargeTime:clockVisible && !isSmall && ! routingVisible,
+        Zoom: !isSmall && zoomVisible,
+        ActiveRoute: routeVisible && ! routingVisible
+    },'visibilityFlags');
 };
 /**
  * the periodic timer call
@@ -506,7 +477,7 @@ Navpage.prototype.getPageContent=function(){
         className: "leftBottomMarker",
         onItemClick: self.widgetClick,
         itemCreator: widgetCreator,
-        itemList: [],
+        itemList: this.widgetLists[keys.bottomLeftWidgets],
         setContainerHeight: true,
         layoutParameter:{
             inverted: false,
@@ -523,7 +494,7 @@ Navpage.prototype.getPageContent=function(){
     self.store.updateData(keys.bottomRightWidgets,{
         className: 'leftBottomPosition',
         onItemClick: self.widgetClick,
-        itemList:[],
+        itemList:this.widgetLists[keys.bottomRightWidgets],
         itemCreator: widgetCreator,
         setContainerHeight: true,
         layoutParameter:{
@@ -566,7 +537,7 @@ Navpage.prototype.getPageContent=function(){
     self.store.updateData(keys.leftWidgets,{
         className: "avn_navLeftContainer",
         onItemClick: self.widgetClick,
-        itemList:[],
+        itemList:this.widgetLists[keys.leftWidgets],
         itemCreator: widgetCreator,
         setContainerHeight: true,
         setContainerWidth: false,
@@ -584,7 +555,7 @@ Navpage.prototype.getPageContent=function(){
     self.store.updateData(keys.topWidgets, {
         className: "avn_topRightWidgets",
         onItemClick: self.widgetClick,
-        itemList:[],
+        itemList:this.widgetLists[keys.topWidgets],
         itemCreator: widgetCreator,
         setContainerWidth: true,
         setContainerHeight: true,
@@ -834,6 +805,7 @@ Navpage.prototype.leftPanelChanged=function(rect){
     this.store.updateData(keys.wpButtons,{fontSize:buttonFontSize});
     if (! doUpdate) return;
     self.computeLayoutParam();
+    self.widgetVisibility();
     window.setTimeout(function(){
         self.scrollRoutePoints();
         if (self.routingVisible()) {

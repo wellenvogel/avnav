@@ -23,6 +23,8 @@ module.exports=React.createClass({
         updateCallback: React.PropTypes.func,
         selectors:  React.PropTypes.object, //if a value from this object matches an item key
                                             //the key will be added as an additional class
+        visibilityFlags: React.PropTypes.object, //if there is an entry for a particular item key
+                                            //this will be considered for visibility
         itemList: React.PropTypes.array,
         childProperties: React.PropTypes.object,
         className: React.PropTypes.string,
@@ -36,9 +38,17 @@ module.exports=React.createClass({
         if (this.props.className) className+=" "+this.props.className;
         var items=[];
         for (var idx in allitems){
+            var vis=false;
             if (allitems[idx].visible === undefined || allitems[idx].visible){
-                items.push(allitems[idx]);
+                vis=true;
             }
+            if (self.props.visibilityFlags && allitems[idx].key){
+                var flag=self.props.visibilityFlags[allitems[idx].key];
+                if (flag !== undefined){
+                    vis=flag;
+                }
+            }
+            if (vis)items.push(allitems[idx]);
         }
         if (this.props.hidden) return null;
         return(
