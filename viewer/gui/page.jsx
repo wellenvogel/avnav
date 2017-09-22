@@ -456,7 +456,7 @@ Page.prototype.getDialogContainer=function(){
 };
 
 Page.prototype.isSmall=function(){
-    var w=$(window).width();
+    var w=window.innerWidth;
     if ( w<= this.gui.properties.getProperties().smallBreak){
         return true; //hide left widgets, display top
     }

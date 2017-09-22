@@ -7,6 +7,9 @@
 var UpdateCallback=function(){
 
 };
+
+var equalsObjects=require('shallow-equal/objects');
+var equalsArrays=require('shallow-equal/arrays');
 /**
  * @param {object} store
  */
@@ -155,9 +158,24 @@ Store.prototype.storeData=function(key,data){
     //this could be improved by checking for changes...
     this.callCallbacks([key]);
 };
+
+Store.prototype.equalsData=function(oldData,newData){
+    if (oldData === undefined && newData === undefined) return true;
+    if (oldData === undefined) return false;
+    if (newData === undefined) return false;
+    if (typeof (newData) !== typeof (oldData)) return false;
+    if (newData instanceof Array && oldData instanceof Array){
+        return equalsArrays(oldData,newData)
+    }
+    if (newData instanceof Object && oldData instanceof Object){
+        return equalsObjects(newData,oldData);
+    }
+    return oldData == newData;
+};
 /**
  * update data in the store
  * the data needs to be an object!
+ * will only call callbacks if data is changed
  * @param key
  * @param {*} data either an object to be merged
  *            or a function that is called with the old data and should return the new
@@ -180,6 +198,7 @@ Store.prototype.updateData=function(key,data,opt_subkey){
             newData=avnav.assign({},oldData, data);
         }
     }
+    var hasChanged=this.equalsData(oldData,newData);
     if (opt_subkey){
         this.data[key][opt_subkey]=newData;
     }
@@ -187,7 +206,7 @@ Store.prototype.updateData=function(key,data,opt_subkey){
         this.data[key]=newData;
     }
     //this could be improved by checking for changes...
-    this.callCallbacks([key]);
+    if (hasChanged) this.callCallbacks([key]);
 };
 /**
  * replace a subkey of an object

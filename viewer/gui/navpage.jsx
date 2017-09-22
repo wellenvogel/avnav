@@ -17,6 +17,7 @@ var WidgetFactory=require('../components/WidgetFactory.jsx');
 var EditRouteWidget=require('../components/EditRouteWidget.jsx');
 var Page=require('./page.jsx');
 var ButtonList=require('../components/ButtonList.jsx');
+var Measure=require('react-measure').default;
 
 var keys={
     waypointList: 'waypointList',
@@ -511,7 +512,6 @@ Navpage.prototype.getPageContent=function(){
     var RoutePanel=ItemUpdater(routePanel,this.store,[keys.routingVisible,keys.isSmall]);
     var isSmall=this.isSmall();
     var numWRows=this.gui.properties.getProperties().allowTwoWidgetRows?2:1;
-    var leftWidth=$('#avi_navpage .avn_navLeftContainer').width()||0;
     var LeftBottomMarker=ItemUpdater(WidgetContainer,this.store,keys.bottomLeftWidgets);
     self.store.updateData(keys.bottomLeftWidgets,{
         className: "leftBottomMarker",
@@ -526,7 +526,7 @@ Navpage.prototype.getPageContent=function(){
             mainMargin: widgetMargin,
             otherMargin: widgetMargin,
             startMargin: 0,
-            outerSize: isSmall?0:leftWidth,
+            outerSize: 0,
             maxRowCol: numWRows,
             maxSize:self.panelWidth/2+widgetMargin/2}
         });
@@ -544,12 +544,36 @@ Navpage.prototype.getPageContent=function(){
             mainMargin: widgetMargin,
             otherMargin: widgetMargin,
             startMargin: 0,
-            outerSize: isSmall?0:leftWidth,
+            outerSize: 0,
             maxRowCol: numWRows,
             maxSize: self.panelWidth/2+widgetMargin/2
         }
     });
-    var NavLeftContainer=ItemUpdater(WidgetContainer,this.store,keys.leftWidgets);
+    var NavLeftContent = function (props) {
+        return <Measure
+            bounds="true"
+            onResize={function (rect) {
+                var small=self.isSmall();
+                self.store.updateData(keys.bottomLeftWidgets,{
+                    outerSize: small?0:rect.bounds.width
+                },'layoutParameter');
+                self.store.updateData(keys.bottomRightWidgets,{
+                    outerSize: small?0:rect.bounds.width
+                },'layoutParameter');
+            }
+            }
+            children={
+                function (mp) {
+                    return (
+                        <div ref={mp.measureRef}>
+                            <WidgetContainer {...props}/>
+                        </div>
+                    );
+                }
+            }
+        />
+    };
+    var NavLeftContainer=ItemUpdater(NavLeftContent,this.store,keys.leftWidgets);
     self.store.updateData(keys.leftWidgets,{
         className: "avn_navLeftContainer",
         onItemClick: self.widgetClick,
@@ -790,17 +814,13 @@ Navpage.prototype.computeLayoutParam=function(){
     var self=this;
     var isSmall=this.isSmall();
     var widgetMargin=this.gui.properties.getProperties().style.widgetMargin;
-    var leftWidth=$('#avi_navpage .avn_navLeftContainer').width()||0;
-    var outerSize=isSmall?0:leftWidth;
     var maxRowCol=this.gui.properties.getProperties().allowTwoWidgetRows?2:1;
 
     this.store.updateData(keys.bottomLeftWidgets,{
-        outerSize: outerSize,
         maxRowCol: maxRowCol,
         maxSize:self.panelWidth/2+widgetMargin/2
     },'layoutParameter');
     this.store.updateData(keys.bottomRightWidgets,{
-        outerSize: outerSize,
         maxRowCol: maxRowCol,
         maxSize: self.panelWidth/2+widgetMargin/2
     },'layoutParameter');
