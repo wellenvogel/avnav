@@ -290,7 +290,7 @@ Navpage.prototype.widgetVisibility=function(){
     var aisVisible=this.gui.properties.getProperties().layers.ais;
     if (aisVisible) {
         var aisTarget=this.navobject.getAisHandler().getNearestAisTarget();
-        aisVisible=(aisTarget && aisTarget.mmsi);
+        aisVisible=(aisTarget && aisTarget.mmsi)?true:false;
     }
     this.setWidgetVisibility(keys.leftWidgets,'AisTarget',aisVisible && ! isSmall && ! routingVisible);
     this.setWidgetVisibility(keys.topWidgets,'AisTarget',aisVisible && isSmall && ! routingVisible);
@@ -369,7 +369,6 @@ Navpage.prototype.timerEvent=function(){
     }
 
     this.buttonUpdate();
-    this.widgetVisibility();
     this._updateZoom();
 };
 Navpage.prototype.hidePage=function(){
@@ -688,6 +687,9 @@ Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
     if (evdata.type == navobjects.NavEventType.ROUTE){
         if (this.routingVisible())this.updateRoutePoints();
+    }
+    if (evdata.type == navobjects.NavEventType.AIS){
+        this.widgetVisibility();
     }
 };
 /**
