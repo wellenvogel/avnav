@@ -11,6 +11,7 @@
  */
 
 var React=require('react');
+var assign=require('object-assign');
 
 
 
@@ -25,31 +26,11 @@ module.exports=React.createClass({
         itemList: React.PropTypes.array,
         childProperties: React.PropTypes.object,
         className: React.PropTypes.string,
-        style: React.PropTypes.object
-    },
-    getInitialState: function(){
-        var itemList=[];
-        if (this.props.itemList) itemList=this.props.itemList;
-        var st= {
-            itemList: itemList,
-        };
-        if (this.props.selectors){
-            st.selectors=this.props.selectors;
-        }
-        return st;
-    },
-    componentWillReceiveProps:function(nextProps){
-        var nstate={};
-        if (nextProps.itemList) {
-            nstate.itemList=nextProps.itemList;
-        }
-        if (nextProps.selectors){
-            nstate.selectors=nextProps.selectors;
-        }
-        this.setState(nstate);
+        style: React.PropTypes.object,
+        hidden: React.PropTypes.bool
     },
     render: function(){
-        var allitems=this.state.itemList||[];
+        var allitems=this.props.itemList||[];
         var self=this;
         var className="avn_listContainer";
         if (this.props.className) className+=" "+this.props.className;
@@ -59,6 +40,7 @@ module.exports=React.createClass({
                 items.push(allitems[idx]);
             }
         }
+        if (this.props.hidden) return null;
         return(
             <div className={className} style={this.props.style}>
                 { items.map(function (entry) {
@@ -69,16 +51,16 @@ module.exports=React.createClass({
                     var k;
                     var key = entry.key;
                     if (key !== undefined) {
-                        if (self.state.selectors) {
-                            for (k in self.state.selectors) {
-                                isSet = self.state.selectors[k] == entry.key;
+                        if (self.props.selectors) {
+                            for (k in self.props.selectors) {
+                                isSet = self.props.selectors[k] == entry.key;
                                 if (isSet) {
                                     addClass += " " + k;
                                 }
                             }
                         }
                     }
-                    var prop=avnav.assign({},entry,self.props.childProperties);
+                    var prop=assign({},entry,self.props.childProperties);
                     var clickHandler=function(opt_item,opt_data){
                         if (! self.props.onItemClick) return;
                         if (!opt_item) opt_item=prop;
