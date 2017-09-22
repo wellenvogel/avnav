@@ -55,7 +55,7 @@ def mb2gemf(tile,scheme="xyz"):
     return (tile[0],tile[1],tile[2])
 
 
-def convertMbTiles(nameOut,namesIn):
+def convertMbTiles(nameOut,namesIn,scheme="xyz"):
   gemf=create_gemf.GemfWriter(nameOut);
   source="default"
   for nameIn in namesIn:
@@ -69,7 +69,10 @@ def convertMbTiles(nameOut,namesIn):
         x = t[1]
         y = t[2]
         logger.debug("tile z=%d,x=%d,y=%d",z,x,y)
-        ts=set([mb2gemf((z,x,y)),])
+        if scheme.lower() == "xyz":
+          ts=set([mb2gemf((z,x,y)),])
+        else:
+          ts=set([mb2gemf((z,x,y),"tms"),])
         gemf.addTileSet(source,ts)
         t=tiles.fetchone()
     con.close()
@@ -94,7 +97,14 @@ def convertMbTiles(nameOut,namesIn):
   gemf.closeFile()
 
 if __name__ == "__main__":
-  if len(sys.argv) < 3:
-    raise Exception("missing parameter, usage: %s gemfname mbname [mbname]..."%(sys.argv[0]))
-  convertMbTiles(sys.argv[1],sys.argv[2:])
+  if len(sys.argv) < 2:
+    raise Exception("missing parameter, usage: %s [xyz|tms] gemfname mbname [mbname]..."%(sys.argv[0]))
+  if sys.argv[1].lower() == "xyz" or sys.argv[1].lower() == "tms":
+    if len(sys.argv) < 4:
+      raise Exception("missing parameter, usage: %s [xyz|tms] gemfname mbname [mbname]..."%(sys.argv[0]))
+    convertMbTiles(sys.argv[2],sys.argv[3:],sys.argv[1])
+  else:
+    if len(sys.argv) < 3:
+      raise Exception("missing parameter, usage: %s [xyz|tms] gemfname mbname [mbname]..."%(sys.argv[0]))
+    convertMbTiles(sys.argv[1],sys.argv[2:])
 
