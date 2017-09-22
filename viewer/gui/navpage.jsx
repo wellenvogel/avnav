@@ -244,10 +244,6 @@ Navpage.prototype.showPage=function(options){
     }
     this.widgetVisibility();
     this.resetWidgetLayouts();
-    window.setTimeout(function(){
-        self.updateLayout(true);
-    },0);
-
 };
 
 Navpage.prototype.updateWidgetLists=function(){
@@ -467,12 +463,6 @@ Navpage.prototype.getPageContent=function(){
     });
     $(document).on(avnav.map.MapEvent.EVENT_TYPE, function(ev,evdata){
         self.mapEvent(evdata);
-    });
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
-        self.resetWidgetLayouts();
-    });
-    $(window).on('resize',function(){
-        self.updateLayout();
     });
     var widgetCreator=function(widget){
         var store=widget.store||self.navobject;
@@ -830,29 +820,28 @@ Navpage.prototype.computeLayoutParam=function(){
 
 };
 
-/** @private */
-Navpage.prototype.updateLayout=function(opt_force){
+Navpage.prototype.leftPanelChanged=function(rect){
     var self=this;
-    var buttonFontSize=this.gui.properties.getButtonFontSize();
-    this.store.replaceSubKey(keys.wpButtons,buttonFontSize,'fontSize');
-    var nwidth=this.selectOnPage('.avn_left_panel').width();
-    var nheight=this.selectOnPage('.avn_left_panel').height();
-    var doUpdate=opt_force;
-    if (nwidth != this.panelWidth || nheight != this.panelHeight){
-        this.panelHeight=nheight;
-        this.panelWidth=nwidth;
+    var doUpdate=false;
+    if (rect.width != this.panelWidth || rect.height != this.panelHeight){
+        this.panelHeight=rect.height;
+        this.panelWidth=rect.width;
         doUpdate=true;
     }
+    var buttonFontSize=this.gui.properties.getButtonFontSize();
+    this.store.updateData(keys.wpButtons,{fontSize:buttonFontSize});
     if (! doUpdate) return;
+    self.computeLayoutParam();
     window.setTimeout(function(){
         self.scrollRoutePoints();
-        self.computeLayoutParam();
         if (self.routingVisible()) {
             if (!self.isSmall()) self.hideWpButtons();
             else self.showWpButtons(self.navobject.getRoutingHandler().getEditingWp());
         }
     },0);
 };
+
+
 
 Navpage.prototype.waypointClicked=function(item,options){
     var self=this;

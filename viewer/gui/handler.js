@@ -90,12 +90,6 @@ avnav.gui.Handler = function (properties, navobject, map) {
             }
         } catch (e) {
         }
-        setTimeout(function () {
-            self.lasth = $(window).height();
-            self.lastw = $(window).width();
-            self.properties.updateLayout();
-            $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE, new avnav.util.PropertyChangeEvent(self.properties));
-        }, 10);
     });
     $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE, function (ev, evdata) {
         if (evdata.key && evdata.key == "backPressed") {

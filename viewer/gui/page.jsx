@@ -13,6 +13,7 @@ var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ButtonList=require('../components/ButtonList.jsx');
 var assign=require('object-assign');
 var equals=require('shallow-equals');
+var Measure=require('react-measure').default;
 
 
 /**
@@ -155,12 +156,25 @@ Page.prototype._initPage=function(){
     var PageData=ItemUpdater(React.createClass({
         render: function(){
             if (!this.props.visible) return null;
-            return(
+            return (
                 <div className="avn_page">
-                    <div className="avn_left_panel">
-                        <Content/>
-                    </div>
-                    <Buttons className="avn_right_panel" buttonHandler={self} />
+                    <Measure
+                        bounds="true"
+                        onResize={function (item) {
+                            self.leftPanelChanged(item.bounds);
+                            var buttonFontSize=self.gui.properties.getButtonFontSize();
+                            self.store.updateData(self.globalKeys.buttons,{fontSize:buttonFontSize});
+                        }
+                        }
+                        children={function (mp) {
+                            return (
+                                <div className="avn_left_panel" ref={mp.measureRef}>
+                                    <Content/>
+                                </div>
+                            );
+                        }
+                        }/>
+                    <Buttons className="avn_right_panel" buttonHandler={self}/>
                 </div>
             );
         }
@@ -172,6 +186,13 @@ Page.prototype._initPage=function(){
     ReactDOM.render(React.createElement(PageData,{}),this.getDiv()[0]);
     return true;
     
+};
+/**
+ * function will be called whenever the size of the left panel changes
+ * @param rect
+ */
+Page.prototype.leftPanelChanged=function(rect){
+
 };
 
 /**
@@ -220,10 +241,6 @@ Page.prototype.handlePage=function(evdata){
            if (evdata.name && evdata.name==self.name){
                self.goBack();
            }
-        });
-        $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
-            var buttonFontSize=self.gui.properties.getButtonFontSize();
-            self.store.replaceSubKey(self.globalKeys.buttons,buttonFontSize,'fontSize');
         });
     }
     if (this.visible != this.isVisible()){

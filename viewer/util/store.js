@@ -198,7 +198,7 @@ Store.prototype.updateData=function(key,data,opt_subkey){
             newData=avnav.assign({},oldData, data);
         }
     }
-    var hasChanged=this.equalsData(oldData,newData);
+    var hasChanged=!this.equalsData(oldData,newData);
     if (opt_subkey){
         this.data[key][opt_subkey]=newData;
     }
