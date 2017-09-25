@@ -175,7 +175,7 @@
   .flex-display();
 }
 .avm_listEntryItem{
-  display: inline-block;
+  display: block;
   margin-bottom: auto;
   margin-top: auto;
   overflow: hidden;
@@ -345,6 +345,7 @@ html,body {
   .nightBackFade(@colorMain);
   .nightForeColor(white,@nightColor);
   font-weight: bold;
+  .flex-shrink(0);
 
 }
 .avn_left_top div, .avn_left_top span{
@@ -696,7 +697,7 @@ html,body {
   .nightBackFade(@colorMain);
   position: absolute;
   right: 0;
-  z-index: 1;
+  z-index: 3;
   .avn_editingRouteWidget{
     .avn_routeInfoLine{
       display: inline-block;
@@ -719,11 +720,12 @@ html,body {
 -------------------------------------------------------------*/
 
 .avn_nav_bottom{
-  z-index: 1;
+  z-index: 3;
   background-color: @colorMain;
   .nightColors();
   .flex-display();
   .flex-direction(row);
+  position: relative; //necessary to make z-index working on old webkit AppleWebKit/536.2
 }
 
 .avn_nav_bottom .avn_widget{
@@ -1291,11 +1293,14 @@ button.avb_AisInfoList {
   overflow-x: hidden;
   .flex-display();
   .flex-direction(column);
+  -webkit-box-flex: 1; //old safari otherwise extends this...
+  -ms-flex:1;
 }
 
 .avn_listWrapper .avn_listContainer {
   overflow-y: auto;
   overflow-x: hidden;
+  .flex(1);
 }
 
 
@@ -1732,16 +1737,15 @@ button.avb_SettingsAndroid {
 }
 
 #avi_mainpage .avn_listWrapper{
-  .flex(1);
-}
-#avi_mainpage .avn_listWrapper .avn_listContainer{
-  margin-bottom: auto;
   margin-top: auto;
+  margin-bottom: auto;
 }
+
 
 .avn_left_bottom {
   background-color: @colorSecond;
   .nightColors();
+  .flex-shrink(0);
 }
 
 

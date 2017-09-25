@@ -160,4 +160,9 @@ avnav.isString=function(x){
     };
 })(jQuery);
 
+if (! window.SVGElement){
+    //old safari on Playbook - measure will not work without this
+    window.SVGElement=function(){};
+}
+
 

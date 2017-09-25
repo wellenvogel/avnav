@@ -8,8 +8,7 @@ var UpdateCallback=function(){
 
 };
 
-var equalsObjects=require('shallow-equal/objects');
-var equalsArrays=require('shallow-equal/arrays');
+var shallowCompare=require('./shallowcompare');
 /**
  * @param {object} store
  */
@@ -159,19 +158,7 @@ Store.prototype.storeData=function(key,data){
     this.callCallbacks([key]);
 };
 
-Store.prototype.equalsData=function(oldData,newData){
-    if (oldData === undefined && newData === undefined) return true;
-    if (oldData === undefined) return false;
-    if (newData === undefined) return false;
-    if (typeof (newData) !== typeof (oldData)) return false;
-    if (newData instanceof Array && oldData instanceof Array){
-        return equalsArrays(oldData,newData)
-    }
-    if (newData instanceof Object && oldData instanceof Object){
-        return equalsObjects(newData,oldData);
-    }
-    return oldData == newData;
-};
+Store.prototype.equalsData=shallowCompare;
 /**
  * update data in the store
  * the data needs to be an object!
