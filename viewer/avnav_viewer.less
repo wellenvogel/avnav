@@ -1294,8 +1294,6 @@ button.avb_AisInfoList {
 }
 
 .avn_listWrapper .avn_listContainer {
-  width: 100%;
-  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -1734,8 +1732,11 @@ button.avb_SettingsAndroid {
 }
 
 #avi_mainpage .avn_listWrapper{
-  margin-top: auto;
+  .flex(1);
+}
+#avi_mainpage .avn_listWrapper .avn_listContainer{
   margin-bottom: auto;
+  margin-top: auto;
 }
 
 .avn_left_bottom {
