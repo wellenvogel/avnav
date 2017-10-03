@@ -80,7 +80,7 @@ class AVNImporter(AVNWorker):
     self.workDir=AVNUtil.prependBase(AVNUtil.replaceParam(self.getStringParam('workDir'),AVNConfig.filterBaseParam(self.getParam())),self.getStringParam(AVNConfig.BASEPARAM.DATADIR))
     self.converterDir=self.getStringParam('converterDir') # the location of the coneverter python
     if self.converterDir is None or self.converterDir=='':
-      self.converterDir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"..","chartconvert")
+      self.converterDir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"../..","chartconvert")
 
 
     
@@ -228,7 +228,7 @@ class AVNImporter(AVNWorker):
     fullname=os.path.join(self.importDir,name)
     gemfName=self.getGemfName(name)
     po=None
-    if os.path.isdir(fullname) or not name.endswith("mbtiles") or not name.endswith("navipack"):
+    if os.path.isdir(fullname):
       AVNLog.info("gdal conversion for %s",name)
       workdir=os.path.join(self.workDir,name)
       doStart=True
