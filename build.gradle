@@ -63,6 +63,15 @@ if (System.properties['os.name'].toLowerCase().contains('windows')) {
     onWindows = true
 }
 
+boolean buildAndroid=false
+if (System.getenv("ANDROID_HOME")){
+    buildAndroid=true
+}
+else{
+    logger.warn("ANDROID_HOME not set, cannot build android")
+}
+
+
 description="NMEA multiplexer and Browser based navigation"
 apply plugin: 'java'
 
@@ -240,12 +249,15 @@ task release{
     doLast {
         println "all release packages have been build"
     }
-    dependsOn testGit, releaseRpm, releaseDeb,raspiDeb,assembleReleaseAndroid
+    dependsOn testGit, releaseRpm, releaseDeb,raspiDeb
     if (onWindows){
         dependsOn windowsBuild
     }
     else{
         dependsOn noWindowsBuild
+    }
+    if (buildAndroid){
+        dependsOn assembleReleaseAndroid
     }
 }
 task beta{
@@ -254,12 +266,15 @@ task beta{
     doLast {
         println "all beta packages have been build"
     }
-    dependsOn releaseRpm, releaseDeb,raspiDeb,assembleBetaAndroid
+    dependsOn releaseRpm, releaseDeb,raspiDeb
     if (onWindows){
         dependsOn windowsBuild
     }
     else{
         dependsOn noWindowsBuild
+    }
+    if (buildAndroid){
+        dependsOn assembleBetaAndroid
     }
 }
 
@@ -459,9 +474,12 @@ task upload{
     doLast {
         println "###uploaded artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadAndroidBeta,uploadViewer
+    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadViewer
     if (onWindows){
         dependsOn uploadWindows
+    }
+    if (buildAndroid){
+        dependsOn uploadAndroidBeta
     }
 }
 
@@ -469,9 +487,12 @@ task uploadRelease{
     doLast {
         println "###upload release artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadAndroidRelease,uploadViewerRelease
+    dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease
     if (onWindows){
         dependsOn uploadWindows
+    }
+    if (buildAndroid){
+        uploadAndroidRelease
     }
 }
 

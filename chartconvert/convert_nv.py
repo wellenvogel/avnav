@@ -55,7 +55,8 @@ def swarn(txt):
 
 #------------------------------------------------
 #nv converter
-def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn,updateOnly=False):
+def nvConvert(chart,outdir,outname,tilertools,logf,warn,updateOnly=False):
+
   if updateOnly and os.path.exists(outname):
     ostat=os.stat(outname)
     cstat=os.stat(chart)
@@ -69,17 +70,15 @@ def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn,updateOnly=False
     warn("converting NV %s only possible on windows"%(chart,))
     return
   dn = os.path.dirname(os.path.realpath(__file__))
-  callprog=os.path.join(dn,exename)
+  ocpnDir=os.path.join(dn,"..","ocpn")
+  callprog=os.path.join(ocpnDir,exename)
   if not os.path.isfile(callprog):
     warn ("unable to find converter %s for %s"%(callprog,chart))
     return
   my_env = os.environ.copy()
-  if opencpn is None:
-    warn("no path to opencpn is set (either environment OPENCPN or via -n, unable to convert %s"%(chart,))
-    return
-  my_env["PATH"] = my_env["PATH"]+";%s;%s\plugins"%(opencpn,opencpn)
+  my_env["PATH"] = my_env["PATH"]+";%s"%(os.path.join(ocpnDir))
   #will write <basename>.tif and <basename>_header.kap
-  args=[callprog,'-o',outdir,os.path.join(opencpn,'plugins'),chart]
+  args=[callprog,'-o',outdir,os.path.join(ocpnDir),chart]
   logf("calling %s,%s"%(",".join(args),my_env['PATH']))
   proc=subprocess.Popen(args,env=my_env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=None)
 
@@ -118,7 +117,7 @@ def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn,updateOnly=False
     if srcds is None:
       warn("unable to read %s with gdal"%(tifname,))
       return
-    drv=gdal.GetDriverByName("vrt");
+    drv=gdal.GetDriverByName("vrt")
     if drv is None:
       warn("unable to find gdal driver for vrt")
       return
@@ -165,8 +164,8 @@ def nvConvert(chart,outdir,outname,opencpn,tilertools,logf,warn,updateOnly=False
   logf("successfully created merged vrt %s"%(chart,))  
   
 if __name__ == '__main__':
-  if len(sys.argv) != 5:
-    print "usage: %s chartname outdir opencpn dir tilertoolsdir"%(sys.argv[0],)
+  if len(sys.argv) != 4:
+    print "usage: %s chartname outdir tilertoolsdir"%(sys.argv[0],)
     sys.exit(1)
   nvConvert(sys.argv[1], sys.argv[2], os.path.join(sys.argv[2],os.path.basename(sys.argv[1])+".vrt"), 
-            sys.argv[3], sys.argv[4], slog, swarn, False)
+            sys.argv[3],  slog, swarn, False)

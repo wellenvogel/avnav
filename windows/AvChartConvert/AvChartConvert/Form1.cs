@@ -93,10 +93,7 @@ namespace AvChartConvert
             this.tbUrl.Text = (string)Properties.Settings.Default["LocalUrl"];
             if (tbUrl.Text == "") tbUrl.Text = "http://localhost:8080";
             this.textIn.Clear();
-            this.textOpenCPN.Text=locateOpenCpn((string)Properties.Settings.Default["OpenCPN"]);
             string[] args = Environment.GetCommandLineArgs();
-            bool hasOpenCpnConvert = File.Exists(Path.Combine(scriptpath, "opencpn.exe" ));
-            showOpenCPN(hasOpenCpnConvert);
             if (!File.Exists(Path.Combine(myPath, SCRIPTCMD))){
                 checkUseCmd.Hide();
                 lbCmd.Hide();
@@ -214,33 +211,7 @@ namespace AvChartConvert
             return serverconfig;
         }
 
-        private void showOpenCPN(bool show)
-        {
-            this.textOpenCPN.Visible = show;
-            this.labelOpenCPN.Visible = show;
-            this.buttonOpenCPN.Visible = show;
-        }
-
-        //get the directory where opencpn is found
-        private string locateOpenCpn(string currdir)
-        {
-            string ename = "opencpn.exe";
-            if (currdir != null && currdir != "")
-            {
-                string completeName = Path.Combine(currdir, ename);
-                if (File.Exists(completeName)) return currdir;
-            }
-            //either not found or empty...
-            foreach (Environment.SpecialFolder f 
-                in new []{Environment.SpecialFolder.ProgramFiles, Environment.SpecialFolder.ProgramFilesX86})
-            {
-                string dir=Path.Combine(Environment.GetFolderPath(f),"OpenCPN");
-                string completeName = Path.Combine(dir,ename);
-                if (File.Exists(completeName)) return dir;
-            }
-            return null;
-        }
-
+        
         private void buttonAddFile_Click(object sender, EventArgs e)
         {
             this.openInputDialog.Reset();
@@ -350,10 +321,6 @@ namespace AvChartConvert
                     //MessageBox.Show("CMD:" + cmd);
                     if (!this.checkBoxUpdate.Checked) args += " -f";
                     args += " -b " + "\"" + this.textOutdir.Text + "\"";
-                    if (this.textOpenCPN.Visible && this.textOpenCPN.Text != "")
-                    {
-                        args += " -n \"" + this.textOpenCPN.Text + "\" ";
-                    }
                     foreach (String inf in infiles)
                     {
                         args += " \"" + inf + "\"";
@@ -465,33 +432,7 @@ namespace AvChartConvert
 
         }
 
-        private void buttonOpenCPN_Click(object sender, EventArgs e)
-        {
-            this.openInputDialog.Reset();
-            this.openInputDialog.Title = "Select OpenCPN Location";
-            this.openInputDialog.Multiselect = false;
-            this.openInputDialog.FileName = "opencpn.exe";
-            this.openInputDialog.ValidateNames = true;
-            this.openInputDialog.CheckFileExists = true;
-            this.openInputDialog.CheckPathExists = true;
-            this.openInputDialog.Filter = "opencpn|opencpn.exe";
-            this.openInputDialog.InitialDirectory = this.textOpenCPN.Text;
-            
-            if (this.openInputDialog.ShowDialog() == DialogResult.OK)
-            {
-            
-                foreach (String fn in this.openInputDialog.FileNames)
-                {
-                    string newdir = locateOpenCpn(Path.GetDirectoryName(fn));
-                    if (newdir != null)
-                    {
-                        this.textOpenCPN.Text = newdir;
-                        Properties.Settings.Default["OpenCPN"] = newdir;
-                        Properties.Settings.Default.Save();
-                    }
-                }
-            }
-        }
+        
         private bool isServerRunning()
         {
             try
@@ -839,6 +780,11 @@ namespace AvChartConvert
         private void lnkHome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start(e.Link.LinkData.ToString());
+        }
+
+        private void textIn_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
     //taken from http://stackoverflow.com/questions/5901679/kill-process-tree-programatically-in-c-sharp

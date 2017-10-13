@@ -1092,11 +1092,8 @@ def readDir(dir):
 #------------------------------------------------
 #nv converter
 def nvConvert(chart,outdir,outname):
-  opencpn=options.opencpn
-  if opencpn is None:
-    opencpn=os.environ.get("OPENCPN")
   if hasNvConvert:
-    convert_nv.nvConvert(chart,outdir,outname,opencpn,TilerTools,log,warn,options.update==1)
+    convert_nv.nvConvert(chart,outdir,outname,TilerTools,log,warn,options.update==1)
   else:
     warn("no converted installed, unable to handle char %s"%(chart,))
 
@@ -1598,7 +1595,6 @@ def main(argv):
   parser.add_option("-b", "--basedir", dest="basedir", help="the output and work directory, defaults to %s" % (DEFAULT_OUTDIR))
   parser.add_option("-t", "--threads", dest="threads", help="number of worker threads, default 4")
   parser.add_option("-a", "--add", dest="ttdir", help="directory where to search for tiler tools (if not set use environment TILERTOOLS or current dir)")
-  parser.add_option("-n", "--opencpn", dest="opencpn", help="directory where opencpn is installed (if used for conversion) (if not set use environment OPENCPN)")
   parser.add_option("-f", "--force", action="store_const", const=0, dest="update", help="force update of existing charts (if not set, only necessary charts are generated")
   parser.add_option("-g", "--newgemf", action="store_const", const=1, dest="newgemf", help="use new gemf writer (do not write merged tiles separately)")
   parser.add_option("-r", "--oldpyramid", action="store_const", const=1, dest="oldpyramid", help="use old pyramid handling")
