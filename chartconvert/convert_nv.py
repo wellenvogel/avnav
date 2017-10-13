@@ -76,9 +76,9 @@ def nvConvert(chart,outdir,outname,tilertools,logf,warn,updateOnly=False):
     warn ("unable to find converter %s for %s"%(callprog,chart))
     return
   my_env = os.environ.copy()
-  my_env["PATH"] = my_env["PATH"]+";%s"%(os.path.join(ocpnDir))
+  my_env["PATH"] = my_env["PATH"]+";%s"%(ocpnDir)
   #will write <basename>.tif and <basename>_header.kap
-  args=[callprog,'-o',outdir,os.path.join(ocpnDir),chart]
+  args=[callprog,'-o',outdir,ocpnDir,chart]
   logf("calling %s,%s"%(",".join(args),my_env['PATH']))
   proc=subprocess.Popen(args,env=my_env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=None)
 
