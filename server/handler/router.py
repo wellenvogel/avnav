@@ -430,21 +430,33 @@ class AVNRouter(AVNWorker):
         self.setInfo("autopilot","no autopilot data",AVNWorker.Status.INACTIVE)
       AVNLog.debug("router main loop")
 
+  def startStopAlarm(self,start):
+    alert = self.findHandlerByName("AVNAlarmHandler")
+    if alert is None:
+      return
+    if start:
+      alert.startAlarm("waypoint")
+    else:
+      alert.stopAlarm("waypoint")
   #compute whether we are approaching the waypoint
   def computeApproach(self):
     if self.currentLeg is None:
+      self.startStopAlarm(False)
       return
     if not self.currentLeg.active:
+      self.startStopAlarm(False)
       return
     curTPV=self.navdata.getMergedEntries("TPV", [])
     lat=curTPV.data.get('lat')
     lon=curTPV.data.get('lon')
     if lat is None or lon is None:
+      self.startStopAlarm(False)
       return
     dst = AVNUtil.distanceM(self.wpToLatLon(self.currentLeg.toWP),(lat,lon));
     AVNLog.debug("approach current distance=%f",float(dst))
     if (dst > self.currentLeg.approachDistance):
       self.currentLeg.approach=False
+      self.startStopAlarm(False)
       if (self.currentLeg.approach):
         #save leg
         self.setCurrentLeg(self.currentLeg)
@@ -452,9 +464,7 @@ class AVNRouter(AVNWorker):
       self.lastDistanceToNext=None
       return
     if not self.currentLeg.approach:
-      alert=self.findHandlerByName("AVNAlarmHandler")
-      if alert is not None:
-        alert.startAlarm("waypoint")
+      self.startStopAlarm(True)
       self.currentLeg.approach=True
       #save the leg
       self.setCurrentLeg(self.currentLeg)
