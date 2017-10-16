@@ -5,6 +5,7 @@ from compiler.pyassem import CONV
 
 ###############################################################################
 # Copyright (c) 2012,2013,2014 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2017 free-x 1073657+free-x@users.noreply.github.com
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -36,75 +37,59 @@ import create_gemf
 
 logger=logging.getLogger(__name__)
 
-def mbtiles_connect(mbtiles_file):
+def navipack_connect(navipack_file):
     try:
-        con = sqlite3.connect(mbtiles_file)
+        con = sqlite3.connect(navipack_file)
         return con
     except Exception as e:
         logger.error("Could not connect to database")
         logger.exception(e)
         raise e
 
-#currently we are not prepared for any change of the mbtiles data
-#between importing the header and importing the data
-#mbtiles follow the tms spec - so we have to compute the gemf y by 2^^z-1-y
-def mb2gemf(tile,scheme="xyz"):
-  if scheme.lower() == "xyz":
-    return (tile[0],tile[1],pow(2,tile[0])-1-tile[2])
-  else:  #scheme.lower() == "tms":
-    return (tile[0],tile[1],tile[2])
 
-
-def convertMbTiles(nameOut,namesIn,scheme="xyz"):
+def convertnavipack(nameOut,namesIn):
   gemf=create_gemf.GemfWriter(nameOut);
   source="default"
   for nameIn in namesIn:
-    con=mbtiles_connect(nameIn)
-    logger.info("importing mbtiles (header) from %s to %s",nameIn,nameOut)
+    con=navipack_connect(nameIn)
+    logger.info("importing navipack (header) from %s to %s",nameIn,nameOut)
     #write header data
-    tiles = con.execute('select zoom_level, tile_column, tile_row, tile_data from tiles;')
+    tiles = con.execute("SELECT zyx, png FROM tiles")
     t = tiles.fetchone()
     while t:
-        z = t[0]
-        x = t[1]
-        y = t[2]
-        logger.debug("tile z=%d,x=%d,y=%d",z,x,y)
-        if scheme.lower() == "xyz":
-          ts=set([mb2gemf((z,x,y)),])
-        else:
-          ts=set([mb2gemf((z,x,y),"tms"),])
-        gemf.addTileSet(source,ts)
-        t=tiles.fetchone()
+      izyx = int(t[0])
+      x = izyx & 0b11111111111111111111
+      y = (izyx & ( 0b11111111111111111111 << 20)) >> 20
+      z = (izyx & ( 0b11111111111111111111 << 40)) >> 40
+      logger.debug("tile z=%d,x=%d,y=%d",z,x,y)
+      ts=set([(z,x,y)])
+      gemf.addTileSet(source,ts)
+      t=tiles.fetchone()
     con.close()
   logger.info("creating gemf header for %s",nameOut)
   gemf.finishHeader()
   logger.info("gemf has %d ranges",len(gemf.ranges))
   for nameIn in namesIn:
-    con=mbtiles_connect(nameIn)
-    logger.info("importing mbtiles (data) from %s to %s",nameIn,nameOut)
-    tiles = con.execute('select zoom_level, tile_column, tile_row, tile_data from tiles;')
+    con=navipack_connect(nameIn)
+    logger.info("importing navipack (data) from %s to %s",nameIn,nameOut)
+    tiles = con.execute("SELECT zyx, png FROM tiles")
     t = tiles.fetchone()
     while t:
-        z = t[0]
-        x = t[1]
-        y = t[2]
-        data=t[3]
-        logger.debug("tile data z=%d,x=%d,y=%d",z,x,y)
-        gemf.addTile(source,mb2gemf((z,x,y)),data)
-        t=tiles.fetchone()
+      izyx = int(t[0])
+      x = izyx & 0b11111111111111111111
+      y = (izyx & ( 0b11111111111111111111 << 20)) >> 20
+      z = (izyx & ( 0b11111111111111111111 << 40)) >> 40
+      data = t[1]
+      logger.debug("tile data z=%d,x=%d,y=%d",z,x,y)
+      gemf.addTile(source,(z,x,y),data)
+      t=tiles.fetchone()
     con.close()
   logger.info("closing gemf file %s",nameOut)
   gemf.closeFile()
 
 if __name__ == "__main__":
-  if len(sys.argv) < 2:
-    raise Exception("missing parameter, usage: %s [xyz|tms] gemfname mbname [mbname]..."%(sys.argv[0]))
-  if sys.argv[1].lower() == "xyz" or sys.argv[1].lower() == "tms":
-    if len(sys.argv) < 4:
-      raise Exception("missing parameter, usage: %s [xyz|tms] gemfname mbname [mbname]..."%(sys.argv[0]))
-    convertMbTiles(sys.argv[2],sys.argv[3:],sys.argv[1])
-  else:
-    if len(sys.argv) < 3:
-      raise Exception("missing parameter, usage: %s [xyz|tms] gemfname mbname [mbname]..."%(sys.argv[0]))
-    convertMbTiles(sys.argv[1],sys.argv[2:])
+  if len(sys.argv) < 3:
+    raise Exception("missing parameter, usage: %s gemfname navipack [navipack]..."%(sys.argv[0]))
+  convertnavipack(sys.argv[1],sys.argv[2:])
 
+      

@@ -39,8 +39,9 @@ import avnav_handlerList
 #a converter to read our known chart formats and convert them to gemf
 #charts are read from the .../data/import directory
 #currently supported:
-#    xxx.mbtiles - directly in the import directory - will be converted to xxx.gemf
-#    yyy         - subdirectory below import - will use our chartconvert and will be converted to yyy.gemf
+#    xxx.mbtiles  - directly in the import directory - will be converted to xxx.gemf
+#    xxx.navipack - directly in the import directory - will be converted to xxx.gemf
+#    yyy          - subdirectory below import - will use our chartconvert and will be converted to yyy.gemf
 # when deleting files via the gui corresponding files at import are deleted too
 # intermediate files are written to the ...import/yyy/work directory
 class AVNImporter(AVNWorker):
@@ -79,7 +80,7 @@ class AVNImporter(AVNWorker):
     self.workDir=AVNUtil.prependBase(AVNUtil.replaceParam(self.getStringParam('workDir'),AVNConfig.filterBaseParam(self.getParam())),self.getStringParam(AVNConfig.BASEPARAM.DATADIR))
     self.converterDir=self.getStringParam('converterDir') # the location of the coneverter python
     if self.converterDir is None or self.converterDir=='':
-      self.converterDir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"..","chartconvert")
+      self.converterDir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"../..","chartconvert")
 
 
     
@@ -185,7 +186,7 @@ class AVNImporter(AVNWorker):
           rt[file]=timestamp
       else:
         knownFile=False
-        for ext in self.extensions + ["mbtiles"]:
+        for ext in self.extensions + ["mbtiles","navipack"]:
            if file.upper().endswith("."+ext.upper()):
               knownFile=True
               break
@@ -200,6 +201,8 @@ class AVNImporter(AVNWorker):
     filename=name
     if (name.endswith(".mbtiles")):
       filename=name.replace(".mbtiles","")
+    if (name.endswith(".navipack")):
+      filename=name.replace(".navipack","")
     filename=os.path.join(self.chartbase,filename+".gemf")
     return filename
 
@@ -225,7 +228,7 @@ class AVNImporter(AVNWorker):
     fullname=os.path.join(self.importDir,name)
     gemfName=self.getGemfName(name)
     po=None
-    if os.path.isdir(fullname) or not name.endswith("mbtiles"):
+    if os.path.isdir(fullname):
       AVNLog.info("gdal conversion for %s",name)
       workdir=os.path.join(self.workDir,name)
       doStart=True
@@ -240,10 +243,15 @@ class AVNImporter(AVNWorker):
         args=[sys.executable,os.path.join(self.converterDir,"read_charts.py"),"-o",name+"-tmp","-b",workdir,"-g","-t","1",fullname]
         tmpOutName=os.path.join(workdir,"out",name+"-tmp.gemf")
         po=self.runConverter(name,args)
-    else:
+    elif name.endswith("mbtiles"):
       args=[sys.executable,os.path.join(self.converterDir,"convert_mbtiles.py"),gemfName+".tmp",fullname]
       tmpOutName=gemfName+".tmp"
       po=self.runConverter(name,args)
+    elif name.endswith("navipack"):
+      args=[sys.executable,os.path.join(self.converterDir,"convert_navipack.py"),gemfName+".tmp",fullname]
+      tmpOutName=gemfName+".tmp"
+      po=self.runConverter(name,args)
+
     if po is None:
       AVNLog.error("unable to start conversion for %s",name)
       self.setInfo("converter","start for %s failed",AVNWorker.Status.ERROR)
@@ -318,13 +326,14 @@ class AVNImporter(AVNWorker):
       except:
         AVNLog.error("error deleting directory %s:%s",fullname,traceback.format_exc())
     else:
-      fullname=os.path.join(self.importDir,name+".mbtiles")
-      if os.path.isfile(fullname):
-        AVNLog.info("deleting import file %s",fullname)
-        try:
-          os.unlink(fullname)
-        except:
-          AVNLog.error("error deleting file %s:%s",fullname,traceback.format_exc())
+      for ext in [".mbtiles",".navipack"]:
+        fullname=os.path.join(self.importDir,name+ext)
+        if os.path.isfile(fullname):
+          AVNLog.info("deleting import file %s",fullname)
+          try:
+            os.unlink(fullname)
+          except:
+            AVNLog.error("error deleting file %s:%s",fullname,traceback.format_exc())
 
   def runConverter(self,name,args):
     logdir=AVNLog.getLogDir()
