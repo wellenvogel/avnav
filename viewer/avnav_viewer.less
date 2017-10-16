@@ -630,6 +630,18 @@ html,body {
   padding-top: 0.3em;
 }
 
+.avn_alarmWidget{
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 3em;
+  font-size: 1.5em;
+  .nightBackFade(@colorRed);
+  padding: 1.5em;
+  padding-top: 1em;
+  margin: 0.5em;
+}
+
 /*-------------------------------------------------------------
     some classes for info pages
 --------------------------------------------------------------*/
@@ -943,6 +955,7 @@ button.avb_WpEdit {
   padding: 1em;
   padding-right: 1.5em;
   height: 5.2em;
+  position: relative;
   .mdShadow1();
   .avn_routeInfo{
     .mdText2();

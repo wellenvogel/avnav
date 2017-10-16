@@ -109,6 +109,7 @@ AisInfoPage.prototype.getPageContent=function(){
                          </div>
                      </div>
                  </div>
+                 {self.getAlarmWidget()}
              </div>
          );
       }

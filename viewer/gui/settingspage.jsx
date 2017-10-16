@@ -139,6 +139,7 @@ Settingspage.prototype.getPageContent=function(){
                         itemClass={SettingsItem}
                     /></div>}
                     </div>
+                    {self.getAlarmWidget()}
 
                 </div>
             );

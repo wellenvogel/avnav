@@ -83,6 +83,7 @@ Infopage.prototype.getPageContent=function(){
                     <div className="avn_listWrapper">
                         <InfoItem/>
                     </div>
+                    {self.getAlarmWidget()}
                 </div>
             );
         }

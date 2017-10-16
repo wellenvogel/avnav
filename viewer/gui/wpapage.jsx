@@ -210,6 +210,7 @@ Wpapage.prototype.getPageContent=function() {
                         <NetworkList itemClass={listEntryClass}>
                         </NetworkList>
                     </div>
+                    {self.getAlarmWidget()}
                 </div>
             );
         }

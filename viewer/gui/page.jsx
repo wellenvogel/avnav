@@ -14,6 +14,7 @@ var ButtonList=require('../components/ButtonList.jsx');
 var assign=require('object-assign');
 var equals=require('shallow-equals');
 var Measure=require('react-measure').default;
+var Alarm=require('../components/AlarmWidget.jsx');
 
 
 /**
@@ -478,6 +479,24 @@ Page.prototype.isSmall=function(){
         return true; //hide left widgets, display top
     }
     return false;
+};
+
+Page.prototype.getAlarmWidget=function(){
+    var self=this;
+    var key="alarmInfo";
+    var AlarmHandler=ItemUpdater(Alarm,this.navobject,key);
+    return React.createElement(
+        AlarmHandler,{
+            onClick: function(){
+                var alarms=self.navobject.getValue(key);
+                if (alarms) {
+                    alarms.split(",").forEach(function(k) {
+                        self.navobject.getGpsHandler().stopAlarm(k);
+                    });
+                }
+            }
+        }
+    )
 };
 
 /*-------------------------------------------------------

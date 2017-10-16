@@ -148,6 +148,7 @@ Statuspage.prototype.getPageContent=function(){
                 <div className="avn_listWrapper">
                     <ItemList {...listProperties} {...props}/>
                 </div>
+                {self.getAlarmWidget()}
             </div>
             )
         }

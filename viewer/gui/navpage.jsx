@@ -576,6 +576,7 @@ Navpage.prototype.getPageContent=function(){
         className: "avn_wpbuttons",
         buttonHandler: self
     });
+    var Alarm=self.getAlarmWidget();
     return React.createClass({
         render: function(){
             return (
@@ -588,6 +589,7 @@ Navpage.prototype.getPageContent=function(){
                         <div className="avn_leftFrame" style={{paddingRight: widgetMargin}}>
                             <NavLeftContainer />
                         </div>
+                        {Alarm}
                     </div>
                     <div className="avn_nav_bottom avn_widgetContainer" style={{paddingTop:widgetMargin}}>
                         <LeftBottomMarker />

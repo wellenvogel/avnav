@@ -285,6 +285,7 @@ RtEditPage.prototype.getPageContent=function(){
                         <RoutePanel/>
                         <WpButtons {...wpButtonProps}/>
                         <NavLeftContainer {...navLeftContainerProps}/>
+                        {self.getAlarmWidget()}
                     </div>
                     <div id="avi_nav_bottom" className="avn_panel avn_left_bottom avn_widgetContainer">
                         <LeftBottomMarker {...leftBottomMarkerProps}/>

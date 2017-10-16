@@ -324,6 +324,7 @@ Downloadpage.prototype.getPageContent=function(){
                     <div className="avn_listWrapper">
                         <List {...listProperties}/>
                     </div>
+                    {self.getAlarmWidget()}
                     <form id="avi_download_downloadform" className="avn_hidden" method="get" >
                         <input type="hidden" name="name"/>
                         <input type="hidden" name="url"/>

@@ -107,6 +107,7 @@ Mainpage.prototype.getPageContent=function(){
                                    itemList={[]}
                         />
                     </div>
+                    {self.getAlarmWidget()}
                     <BottomLineItem/>
                 </div>
             );

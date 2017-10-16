@@ -221,6 +221,7 @@ Routepage.prototype.getPageContent=function(){
                         <div className="avn_listWrapper">
                             <List {...listProperties}/>
                         </div>
+                        {self.getAlarmWidget()}
                     </div>
                 );
             }

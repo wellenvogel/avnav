@@ -32,7 +32,8 @@ var GpsData=function(propertyHandler,navobject){
         nmeaStatusText:"???",
         aisStatusColor: "red",
         aisStatusText: "???",
-        clock: "00:00"
+        clock: "00:00",
+        alarmInfo:""
     };
     /** {avnav.util.Formatter} @private */
     this.formatter=new avnav.util.Formatter();
@@ -46,6 +47,7 @@ var GpsData=function(propertyHandler,navobject){
     this.latAverageData=[];
     this.lonAverageData=[];
     this.startQuery();
+    this.alarms=undefined;
     for (var k in this.formattedData){
         this.navobject.registerValueProvider(k,this,this.getFormattedGpsValue);
     }
@@ -99,6 +101,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         gpsdata.speed = data.speed * 3600 / this.NM;
         gpsdata=this.average(gpsdata);
         gpsdata.valid = true;
+        this.alarms=data.alarms;
     }
     else{
         //clean average data
@@ -106,6 +109,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         this.courseAverageData=[];
         this.latAverageData=[];
         this.lonAverageData=[];
+        this.alarms=undefined;
     }
     gpsdata.raw=data.raw;
     this.gpsdata=gpsdata;
@@ -136,7 +140,21 @@ GpsData.prototype.handleGpsResponse=function(data, status){
             formattedData.aisStatusText=data.raw.status.ais.source+":"+data.raw.status.ais.info;
         }
     }catch(e){}
-
+    var key;
+    if (data.raw.alarms){
+        try{
+            formattedData.alarmInfo=undefined;
+            for (key in data.raw.alarms){
+                if (formattedData.alarmInfo) {
+                    formattedData.alarmInfo+=",";
+                    formattedData.alarmInfo+=key;
+                }
+                else{
+                    formattedData.alarmInfo=key;
+                }
+            }
+        }catch(e){}
+    }
     this.formattedData=formattedData;
 };
 
@@ -173,6 +191,25 @@ GpsData.prototype.startQuery=function(){
             self.timer=window.setTimeout(function(){
                 self.startQuery();
             },timeout);
+        },
+        timeout: 10000
+    });
+
+};
+
+GpsData.prototype.stopAlarm=function(type){
+    var url=this.propertyHandler.getProperties().navUrl+"?request=alarm&stop="+type;
+    var timeout=this.propertyHandler.getProperties().positionQueryTimeout;
+    var self=this;
+    $.ajax({
+        url: url,
+        dataType: 'json',
+        cache:	false,
+        success: function(data,status){
+
+        },
+        error: function(status,data,error){
+            avnav.log("unable to stop alarm "+type);
         },
         timeout: 10000
     });

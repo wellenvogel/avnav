@@ -131,6 +131,7 @@ Gpspage.prototype.getPageContent=function(){
                         </div>
 
                     </div>
+                    {self.getAlarmWidget()}
                 </div>
             );
         },

@@ -114,6 +114,7 @@ Addresspage.prototype.getPageContent=function(){
                     <div className="avn_listWrapper">
                         <AddressList {...listProperties}/>
                     </div>
+                    {self.getAlarmWidget()}
                 </div>
             );
         }

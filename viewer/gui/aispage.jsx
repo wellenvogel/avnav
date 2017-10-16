@@ -149,6 +149,7 @@ Aispage.prototype.getPageContent=function(){
                                 className="avn_aisList"
                             />
                         </div>
+                    {self.getAlarmWidget()}
                 </div>);
         }
     });
