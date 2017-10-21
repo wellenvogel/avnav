@@ -23,7 +23,7 @@ var settingsSections={
     Layout:     ["baseFontSize","widgetFontSize","smallBreak","allowTwoWidgetRows","showClock","showZoom","autoZoom","style.buttonSize","nightFade","nightChartFade"],
     AIS:        ["aisDistance","aisWarningCpa","aisWarningTpa","aisTextSize","style.aisNormalColor","style.aisNearestColor","style.aisWarningColor"],
     Navigation: ["bearingColor","bearingWidth","navCircleColor","navCircleWidth","navCircle1Radius","navCircle2Radius","navCircle3Radius",
-                    "courseAverageTolerance","gpsXteMax","courseAverageInterval","speedAverageInterval","positionAverageInterval"],
+                    "courseAverageTolerance","gpsXteMax","courseAverageInterval","speedAverageInterval","positionAverageInterval","anchorWatchDefault","anchorCircleWidth","anchorCircleColor"],
     Track:      ["trackColor","trackWidth","trackInterval","initialTrackLength"],
     Route:      ["routeColor","routeWidth","routingTextSize","routeApproach","routeShowLL"]
 };

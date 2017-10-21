@@ -35,7 +35,7 @@ window.avnav={};
     avnav.ensurePath('avnav.util');
     avnav.util.Formatter=require('./util/formatter.js');
     require('./util/propertyhandler.js');
-    require('./util/helper.js');
+    avnav.util.Helper=require('./util/helper.js');
     avnav.util.Overlay=require('./util/overlay.js');
     require('./map/drawing.js');
     require('./map/mapholder.js');

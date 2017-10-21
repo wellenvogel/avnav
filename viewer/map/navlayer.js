@@ -6,6 +6,7 @@ avnav.provide('avnav.map.NavLayer');
 var NavCompute=require('../nav/navcompute');
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navobjects');
+var anchor=require('../images/icons-new/anchor.svg');
 
 
 
@@ -55,6 +56,7 @@ avnav.map.NavLayer=function(mapholder,navobject){
      * @type {ol.style.Style}
      */
     this.circleStyle={};
+    this.anchorCircleStyle={};
     this.setStyle();
 
 
@@ -71,6 +73,13 @@ avnav.map.NavLayer=function(mapholder,navobject){
     };
     this.centerStyle.image.src=this.centerStyle.src;
 
+    this.anchorStyle={
+        anchor: [20, 20],
+        size: [40, 40],
+        src: anchor,
+        image: new Image()
+    };
+    this.anchorStyle.image.src=this.anchorStyle.src;
     /**
      * the boat position in map coordinates
      * @type {ol.Coordinate}
@@ -92,6 +101,10 @@ avnav.map.NavLayer.prototype.setStyle=function() {
             color: this.mapholder.properties.getProperties().navCircleColor,
             width: this.mapholder.properties.getProperties().navCircleWidth
     };
+    this.anchorCircleStyle={
+        color: this.mapholder.properties.getProperties().anchorCircleColor,
+        width: this.mapholder.properties.getProperties().anchorCircleWidth
+    };
 };
 
 
@@ -103,29 +116,44 @@ avnav.map.NavLayer.prototype.setStyle=function() {
  */
 avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
     var prop=this.mapholder.getProperties().getProperties();
+    var anchorDistance=this.navobject.getRoutingHandler().getAnchorWatch();
     if (prop.layers.boat) {
         drawing.drawImageToContext(this.boatPosition, this.boatStyle.image, this.boatStyle);
         var pos = this.boatPosition;
         var other;
-        var radius1=parseInt(prop.navCircle1Radius);
-        if (radius1 > 10) {
-            other = this.computeTarget(pos, this.lastBoatCourse, radius1);
-            drawing.drawCircleToContext(pos, other, this.circleStyle);
-        }
-        var radius2=parseInt(prop.navCircle2Radius);
-        if (radius2 > 10 && radius2 > radius1) {
-            other = this.computeTarget(pos, this.lastBoatCourse, radius2);
-            drawing.drawCircleToContext(pos, other, this.circleStyle);
-        }
-        var radius3=parseInt(prop.navCircle3Radius);
-        if (radius3 > 10 && radius3 > radius2 && radius3 > radius1) {
-            other = this.computeTarget(pos, this.lastBoatCourse, radius3);
-            drawing.drawCircleToContext(pos, other, this.circleStyle);
+        if (! anchorDistance) {
+            var radius1 = parseInt(prop.navCircle1Radius);
+            if (radius1 > 10) {
+                other = this.computeTarget(pos, this.lastBoatCourse, radius1);
+                drawing.drawCircleToContext(pos, other, this.circleStyle);
+            }
+            var radius2 = parseInt(prop.navCircle2Radius);
+            if (radius2 > 10 && radius2 > radius1) {
+                other = this.computeTarget(pos, this.lastBoatCourse, radius2);
+                drawing.drawCircleToContext(pos, other, this.circleStyle);
+            }
+            var radius3 = parseInt(prop.navCircle3Radius);
+            if (radius3 > 10 && radius3 > radius2 && radius3 > radius1) {
+                other = this.computeTarget(pos, this.lastBoatCourse, radius3);
+                drawing.drawCircleToContext(pos, other, this.circleStyle);
+            }
         }
     }
     if (!this.mapholder.getGpsLock()) {
         drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
     }
+    if (anchorDistance){
+        var p=this.navobject.getRoutingHandler().getCurrentLeg().from;
+        if (p){
+            var c=this.mapholder.transformToMap(p.toCoord());
+            drawing.drawImageToContext(c,this.anchorStyle.image,this.anchorStyle);
+            var other=this.computeTarget(c,0,anchorDistance);
+            drawing.drawCircleToContext(c,other,this.anchorCircleStyle);
+        }
+        var x=p;
+
+    }
+
 
 
 };

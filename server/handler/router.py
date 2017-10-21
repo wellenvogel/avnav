@@ -63,10 +63,15 @@ class AVNRoutingLeg():
     self.approachDistance=approachDistance if approachDistance is not None else 300
     self.approach = approach if approach is not None else False
     self.currentRoute=None
+    self.anchorDistance=None #if set - we are in anchor watch mode, ignore any toWp and any route
 
   
   def __unicode__(self):
-    return "AVNRoutingLeg route=%s,from=%s,to=%s,active=%s, target=%d, approachDistance=%s, approach=%s"\
+    if self.anchorDistance is not None:
+      return "AVNRoutingLeg route=%s,from=%s,anchorDistanc=%s" \
+             % (self.name, unicode(self.fromWP),unicode(self.anchorDistance))
+    else:
+      return "AVNRoutingLeg route=%s,from=%s,to=%s,active=%s, target=%d, approachDistance=%s, approach=%s"\
            %(self.name,unicode(self.fromWP),unicode(self.toWP),self.active,self.currentTarget,unicode(self.approachDistance),"True" if self.approach else "False")
 
 class AVNRouteInfo():
@@ -186,6 +191,18 @@ class AVNRouter(AVNWorker):
     dct=json.loads(str)
     if dct.get('from') is None:
       return None
+    if (dct.get('anchorDistance') is not None):
+      rt = AVNRoutingLeg(
+        None,
+        gpx.GPXWaypoint(**self.convertToGpx(dct.get('from'))),
+          None,
+          False,
+          -1,
+          0,
+          False)
+      rt.anchorDistance=float(dct.get('anchorDistance'))
+      return rt
+
     if dct.get('to') is None:
       return None
     currentTarget=dct.get('currentTarget')
@@ -210,6 +227,12 @@ class AVNRouter(AVNWorker):
   def leg2Json(self,leg):
     if leg is None:
       return {}
+    if leg.anchorDistance is not None:
+      dct={
+        'from': self.convertFromGpx(leg.fromWP.__dict__),
+        'anchorDistance':leg.anchorDistance
+      }
+      return dct
     dct={
          'from':self.convertFromGpx(leg.fromWP.__dict__),
          'to':self.convertFromGpx(leg.toWP.__dict__),
@@ -229,7 +252,7 @@ class AVNRouter(AVNWorker):
     return (wP.latitude,wP.longitude)
   
   def setCurrentLeg(self,leg):
-    self.currentLeg=leg;
+    self.currentLeg=leg
     if leg is None:
       if os.path.exists(self.currentLegFileName):
         os.unlink(self.currentLegFileName)
@@ -371,9 +394,15 @@ class AVNRouter(AVNWorker):
         f=open(self.currentLegFileName,"r")
         strleg=f.read(self.MAXROUTESIZE+1000)
         self.currentLeg=self.parseLeg(strleg)
-        distance=geo.length([self.currentLeg.fromWP,self.currentLeg.toWP])
-        AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.name,
+        if self.currentLeg.toWP is not None:
+          distance=geo.length([self.currentLeg.fromWP,self.currentLeg.toWP])
+          AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.name,
                                                                   unicode(self.currentLeg.fromWP),unicode(self.currentLeg.toWP),distance/AVNUtil.NM))
+        else:
+          AVNLog.info("read current leg, route=%s, from=%s, to=%s"% (self.currentLeg.name,
+                                                                                   unicode(self.currentLeg.fromWP),
+                                                                                   "NONE",
+                                                                                   ))
         if self.currentLeg.name is not None:
           self.activeRouteName=self.currentLeg.name
         if self.currentLeg.currentRoute is not None:
@@ -406,7 +435,12 @@ class AVNRouter(AVNWorker):
       time.sleep(interval)
       if self.currentLeg and self.currentLeg.active:
         hasLeg=True
-        routerInfo="from %s, to %s, route=%s, activeWp=%d, approach=%s (approach radius %dm)"%(unicode(self.currentLeg.fromWP)
+        if self.currentLeg.anchorDistance is not None:
+          routerInfo = "Anchor watch, from %s, (anchor radius %dm)" % (
+          unicode(self.currentLeg.fromWP),
+           int(self.currentLeg.anchorDistance))
+        else:
+          routerInfo="from %s, to %s, route=%s, activeWp=%d, approach=%s (approach radius %dm)"%(unicode(self.currentLeg.fromWP)
                    if self.currentLeg.fromWP else "NONE",unicode(self.currentLeg.toWP) if self.currentLeg.toWP else "NONE",
                    self.currentLeg.name if self.currentLeg.name is not None else "NONE", self.currentLeg.currentTarget,
                    "TRUE" if self.currentLeg.approach else "FALSE",int(self.currentLeg.approachDistance))
@@ -414,10 +448,14 @@ class AVNRouter(AVNWorker):
         self.setInfo("leg",routerInfo
                   ,AVNWorker.Status.RUNNING)
       try:
-        computeRMB=self.getBoolParam("computeRMB")
-        computeAPB=self.getBoolParam("computeAPB")
-        if computeRMB or computeAPB :
-          hasRMB=self.computeRMB(computeRMB,computeAPB)
+        if self.currentLeg.anchorDistance is not None:
+          self.computeAnchor()
+        else:
+          self.startStopAlarm(False,'anchor')
+          computeRMB=self.getBoolParam("computeRMB")
+          computeAPB=self.getBoolParam("computeAPB")
+          if computeRMB or computeAPB :
+            hasRMB=self.computeRMB(computeRMB,computeAPB)
       except Exception as e:
         AVNLog.warn("exception in computeRMB %s, retrying",traceback.format_exc())
       try:
@@ -428,16 +466,24 @@ class AVNRouter(AVNWorker):
         self.setInfo("leg","no leg",AVNWorker.Status.INACTIVE)
       if (not hasRMB):
         self.setInfo("autopilot","no autopilot data",AVNWorker.Status.INACTIVE)
+      try:
+        curTPV = self.navdata.getMergedEntries("TPV", [])
+        lat = curTPV.data.get('lat')
+        lon = curTPV.data.get('lon')
+        if lat is not None and lon is not None:
+          self.startStopAlarm(False,'gps')
+      except:
+        pass
       AVNLog.debug("router main loop")
 
-  def startStopAlarm(self,start):
+  def startStopAlarm(self,start,name='waypoint'):
     alert = self.findHandlerByName("AVNAlarmHandler")
     if alert is None:
       return
     if start:
-      alert.startAlarm("waypoint")
+      alert.startAlarm(name)
     else:
-      alert.stopAlarm("waypoint")
+      alert.stopAlarm(name)
   #compute whether we are approaching the waypoint
   def computeApproach(self):
     if self.currentLeg is None:
@@ -588,7 +634,22 @@ class AVNRouter(AVNWorker):
             AVNLog.debug("adding NMEA %s", nmeaData, )
             self.feeder.addNMEA(nmeaData)
     return hasRMB
-
+  ''' anchor watch
+      will only be called if self.currentLeg.anchorDistance is not none
+  '''
+  def computeAnchor(self):
+    curTPV = self.navdata.getMergedEntries("TPV", [])
+    lat = curTPV.data.get('lat')
+    lon = curTPV.data.get('lon')
+    if lat is None or lon is None:
+      self.startStopAlarm(False,'anchor')
+      self.startStopAlarm(True,'gps')
+      return
+    anchorDistance = AVNUtil.distanceM((lat, lon), self.wpToLatLon(self.currentLeg.fromWP))
+    AVNLog.debug("Anchor distance %d, allowed %d",anchorDistance,self.currentLeg.anchorDistance)
+    if anchorDistance > self.currentLeg.anchorDistance:
+      self.startStopAlarm(True,'anchor')
+    return
   def deleteRouteFromList(self,name):
     self.routeListLock.acquire()
     for i in range(0,len(self.routes)):

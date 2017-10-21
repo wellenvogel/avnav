@@ -153,7 +153,7 @@ class AVNAlarmHandler(AVNWorker):
     return rt
 
   def _startAlarmCmd(self,alarmdef):
-    return self.commandHandler.startCommand(alarmdef['command'],alarmdef.get('parameter'))
+    return self.commandHandler.startCommand(alarmdef['command'],alarmdef.get('repeat'),alarmdef.get('parameter'))
 
   def startAlarm(self,name,useDefault=False):
     """start a named alarm"""
@@ -162,6 +162,8 @@ class AVNAlarmHandler(AVNWorker):
       AVNLog.error("no alarm \"%s\" configured", name)
       self.setInfo(name, "no alarm \"%s\" configured"%name, self.Status.ERROR)
       return False
+    if self.runningAlarms.get(name) is not None:
+      return True
     if self._startAlarmCmd(cmd):
       info=cmd['command']
       if cmd.get('parameter') is not None:

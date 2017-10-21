@@ -157,9 +157,15 @@ NavData.prototype.computeValues=function(){
     }
 
     //distance between marker and center
-    var mcdst=NavCompute.computeDistance(this.data.markerWp,this.maplatlon);
-    this.data.centerMarkerCourse=mcdst.course;
-    this.data.centerMarkerDistance=mcdst.dtsnm;
+    if (this.data.markerWp) {
+        var mcdst = NavCompute.computeDistance(this.data.markerWp, this.maplatlon);
+        this.data.centerMarkerCourse = mcdst.course;
+        this.data.centerMarkerDistance = mcdst.dtsnm;
+    }
+    else{
+        this.data.centerMarkerCourse=undefined;
+        this.data.centerMarkerDistance=undefined;
+    }
     //route data
     var curRoute=this.routeHandler.getCurrentLeg().currentRoute;
     if (this.routeHandler.hasActiveRoute()) {
@@ -219,7 +225,7 @@ NavData.prototype.computeValues=function(){
     var legDataFormatted=this.formatLegData(this.data);
     avnav.assign(this.formattedValues,legDataFormatted);
 
-    this.formattedValues.markerName=this.data.markerWp.name||"Marker";
+    this.formattedValues.markerName=this.data.markerWp?this.data.markerWp.name||"Marker":"Marker";
     this.formattedValues.centerCourse=this.formatter.formatDecimal(
         this.data.centerCourse,3,0
     );
@@ -460,6 +466,12 @@ NavData.prototype.triggerUpdateEvent=function(source){
     $(document).trigger(navobjects.NavEvent.EVENT_TYPE,
         new navobjects.NavEvent(navobjects.NavEventType.GPS,this.getValueNames(),source,this)
     );
+};
+
+NavData.prototype.getCurrentPosition=function(){
+    var gps=this.getGpsHandler().getGpsData();
+    if (! gps.valid) return;
+    return new navobjects.Point(gps.lon,gps.lat);
 };
 
 module.exports=NavData;

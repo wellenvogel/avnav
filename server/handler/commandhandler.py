@@ -177,17 +177,20 @@ class AVNCommandHandler(AVNWorker):
     except:
       pass
 
-  def startCommand(self,name,parameters=None):
+  def startCommand(self,name,repeat=None,parameters=None):
     """start a named command"""
     cmd=self.findCommand(name)
     if cmd is None:
       AVNLog.error("no command \"%s\" configured", name)
       self.setInfo(name, "no command \"%s\" configured"%name, self.Status.ERROR)
       return False
+    cmd=cmd.copy()
     current=self.runningProcesses.get(name)
     if current is not None:
       AVNLog.warn("command %s running on new start, trying to stop",name)
       current.stopHandler()
+    if repeat is not None:
+      cmd['repeat']=repeat
     AVNLog.info("start command %s=%s",name,cmd)
     handler=Handler(cmd,name,self.commandFinished,parameters)
     try:

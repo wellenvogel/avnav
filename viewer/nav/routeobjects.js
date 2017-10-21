@@ -56,6 +56,14 @@ routeobjects.Leg=function(from, to, active, opt_routeName){
      */
     this.currentRoute=undefined;
 
+    /**
+     * if this is set - ignore any to, route, approach
+     * and handle anchor watch
+     * @type {undefined}
+     */
+    this.anchorDistance=undefined;
+
+
 };
 
 routeobjects.Leg.prototype.clone=function(){
@@ -64,6 +72,7 @@ routeobjects.Leg.prototype.clone=function(){
     rt.approach=false;
     rt.approachDistance=this.approachDistance;
     rt.currentRoute=this.currentRoute?this.currentRoute.clone():undefined;
+    rt.anchorDistance=this.anchorDistance;
     return rt;
 };
 /**
@@ -81,6 +90,9 @@ routeobjects.Leg.prototype.toJsonString=function(){
         approachDistance: this.approachDistance+0,
         currentRoute: this.currentRoute?this.currentRoute.toJson():undefined
     };
+    if (this.anchorDistance){
+        rt.anchorDistance=this.anchorDistance;
+    }
     return JSON.stringify(rt);
 };
 
@@ -100,7 +112,7 @@ routeobjects.Leg.prototype.fromJsonString=function(jsonString) {
  */
 routeobjects.Leg.prototype.fromJson=function(raw){
     this.from=navobjects.WayPoint.fromPlain(raw.from);
-    this.to=navobjects.WayPoint.fromPlain(raw.to);
+    if (raw.to) this.to=navobjects.WayPoint.fromPlain(raw.to);
     this.active=raw.active||false;
     this.name=raw.name;
     this.approach=raw.approach;
@@ -138,6 +150,10 @@ routeobjects.Leg.prototype.fromJson=function(raw){
     else{
         this.to.routeName=undefined;
     }
+    if (raw.anchorDistance) {
+        this.anchorDistance=raw.anchorDistance;
+        this.active=false;
+    }
     return this;
 };
 
@@ -149,6 +165,9 @@ routeobjects.Leg.prototype.fromJson=function(raw){
  */
 routeobjects.Leg.prototype.differsTo=function(leg2){
     if (! leg2) return true;
+    if (leg2.anchorDistance && ! this.anchorDistance) return true;
+    if (!leg2.anchorDistance && this.anchorDistance) return true;
+    if (this.anchorDistance && leg2.anchorDistance && this.anchorDistance != leg2.anchorDistance) return true;
     var leg1=this;
     var changed = false;
     var i;
@@ -181,6 +200,15 @@ routeobjects.Leg.prototype.getCurrentTargetIdx=function(){
         return this.currentRoute.getIndexFromPoint(this.to);
     }
     return -1;
+};
+routeobjects.Leg.prototype.setAnchorWatch=function(start,distance){
+    this.from=start;
+    this.to=undefined;
+    this.active=false;
+    this.approach=false;
+    this.name=undefined;
+    this.currentRoute=undefined;
+    this.anchorDistance=distance;
 };
 
 

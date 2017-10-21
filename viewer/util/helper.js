@@ -1,14 +1,12 @@
 /**
  * Created by andreas on 04.05.14.
  */
-avnav.provide('avnav.util.Helper');
-
 
 /**
  *
  * @constructor
  */
-avnav.util.Helper=function(){};
+var Helper=function(){};
 
 /**
  * @param url {string}
@@ -21,7 +19,7 @@ avnav.util.Helper=function(){};
  *        errorhandler: called on error
  *        see https://mobiarch.wordpress.com/2012/08/21/html5-file-upload-with-progress-bar-using-jquery/
  */
-avnav.util.Helper.uploadFile=function(url,file,param){
+Helper.uploadFile=function(url,file,param){
     var type=file.type;
     if (! type || type == "") type="application/octet-stream";
     try {
@@ -70,15 +68,23 @@ avnav.util.Helper.uploadFile=function(url,file,param){
     }
 };
 
-avnav.util.Helper.endsWith=function(str, suffix) {
+Helper.endsWith=function(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
 };
 
-avnav.util.Helper.startsWith=function(str, prefix) {
+Helper.startsWith=function(str, prefix) {
     return (str.indexOf(prefix, 0) == 0);
 };
 
-avnav.util.Helper.entityMap = {
+Helper.addEntryToListItem=function(list,keyname,keyvalue,key,value){
+  list.forEach(function(item){
+      if(item[keyname] === keyvalue){
+          item[key]=value;
+      }
+  })  
+};
+
+Helper.entityMap = {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -87,9 +93,9 @@ avnav.util.Helper.entityMap = {
     "/": '&#x2F;'
 };
 
-avnav.util.Helper.escapeHtml=function(string) {
+Helper.escapeHtml=function(string) {
     return String(string).replace(/[&<>"'\/]/g, function (s) {
-        return avnav.util.Helper.entityMap[s];
+        return Helper.entityMap[s];
     });
 };
 /**
@@ -97,7 +103,7 @@ avnav.util.Helper.escapeHtml=function(string) {
  * @param element a DOM element
  * @param parent a jquery selector
  */
-avnav.util.Helper.scrollIntoView=function(element,parent){
+Helper.scrollIntoView=function(element,parent){
     //ensure element is visible
     var eltop = $(element).position().top;
     var ph = $(parent).height();
@@ -106,11 +112,13 @@ avnav.util.Helper.scrollIntoView=function(element,parent){
     if ((eltop + eh) > (ph)) element.scrollIntoView(false);
 };
 
-avnav.util.Helper.scrollItemIntoView=function(itemSelector,parent){
+Helper.scrollItemIntoView=function(itemSelector,parent){
   $(parent).find(itemSelector).each(function(i,el){
-      avnav.util.Helper.scrollIntoView(el,parent);
+      Helper.scrollIntoView(el,parent);
   });
 };
+
+module.exports=Helper;
 
 
 

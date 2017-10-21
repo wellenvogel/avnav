@@ -87,9 +87,12 @@ var propertyDefinitions=function(){
         routeShowLL: new avnav.util.Property(false,"showLatLon",avnav.util.PropertyType.CHECKBOX), //show latlon or leg course/len
         navCircleColor: new avnav.util.Property( "#D71038","Circle Color",avnav.util.PropertyType.COLOR),
         navCircleWidth: new avnav.util.Property( 1,"Circle Width",avnav.util.PropertyType.RANGE,[1,10]),
+        anchorCircleColor: new avnav.util.Property( "#D71038","Anchor Circle Color",avnav.util.PropertyType.COLOR),
+        anchorCircleWidth: new avnav.util.Property( 1,"Anchor Circle Width",avnav.util.PropertyType.RANGE,[1,10]),
         navCircle1Radius: new avnav.util.Property( 300,"Circle 1 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
         navCircle2Radius: new avnav.util.Property( 1000,"Circle 2 Radius(m)",avnav.util.PropertyType.RANGE,[0,5000,10]),
         navCircle3Radius: new avnav.util.Property( 0,"Circle 3 Radius(m)",avnav.util.PropertyType.RANGE,[0,10000,10]),
+        anchorWatchDefault: new avnav.util.Property( 300,"AnchorWatch(m)",avnav.util.PropertyType.RANGE,[0,1000,1]),
         gpsXteMax:new avnav.util.Property( 1,"XTE(nm)",avnav.util.PropertyType.RANGE,[0.1,5,0.1,1]),
         trackColor: new avnav.util.Property( "#942eba","Color",avnav.util.PropertyType.COLOR),
         trackWidth: new avnav.util.Property( 3,"Width",avnav.util.PropertyType.RANGE,[1,10]),

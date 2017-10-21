@@ -173,7 +173,16 @@ RouteData.prototype.getCurrentLeg=function(){
  * @returns {boolean}
  */
 RouteData.prototype.getLock=function(){
-    return this.currentLeg.active;
+    return this.currentLeg.active && ! this.currentLeg.anchorDistance;
+};
+
+/**
+ * the anchor watch distance or undefined
+ * @returns {*|boolean}
+ */
+
+RouteData.prototype.getAnchorWatch=function(){
+    return this.currentLeg.anchorDistance;
 };
 
 /**
@@ -181,6 +190,7 @@ RouteData.prototype.getLock=function(){
  * @returns {boolean}
  */
 RouteData.prototype.hasActiveRoute=function(){
+    if (this.currentLeg.anchorDistance) return false;
     if (! this.currentLeg.active) return false;
     if (! this.currentLeg.name) return false;
     if (! this.currentLeg.currentRoute) return false;
@@ -192,7 +202,7 @@ RouteData.prototype.hasActiveRoute=function(){
  * @returns {navobjects.WayPoint|undefined}
  */
 RouteData.prototype.getCurrentLegTarget=function(){
-    return this.currentLeg.to;
+    return this.currentLeg.anchorDistance?undefined:this.currentLeg.to;
 };
 /**
  * get the next wp if there is one
@@ -644,6 +654,23 @@ RouteData.prototype.wpOnInactive=function(wp,opt_keep_from) {
     var stwp=new navobjects.WayPoint.fromPlain(wp);
     this._startRouting(routeobjects.RoutingMode.WPINACTIVE,stwp,opt_keep_from);
 };
+
+/**
+ *
+ * @param {navobjects.WayPoint} wp
+ * @param {number} distance
+ */
+
+RouteData.prototype.anchorOn=function(wp,distance){
+    this.currentLeg.setAnchorWatch(wp,distance);
+    this._legChanged();
+};
+RouteData.prototype.anchorOff=function(){
+    this.currentLeg.anchorDistance=undefined;
+    this.currentLeg.to=new navobjects.Point(0,0);
+    this.currentLeg.active=false;
+    this._legChanged();
+};
 /**
  *
  * @param mode
@@ -671,6 +698,7 @@ RouteData.prototype._startRouting=function(mode,newWp,opt_keep_from){
         this.currentLeg.name=undefined;
         this.currentLeg.currentRoute=undefined;
         this.currentLeg.active=true;
+        this.currentLeg.anchorDistance=undefined;
         this._legChanged();
         return true;
     }
@@ -679,6 +707,7 @@ RouteData.prototype._startRouting=function(mode,newWp,opt_keep_from){
         this.currentLeg.name=undefined;
         this.currentLeg.currentRoute=undefined;
         this.currentLeg.active=false;
+        this.currentLeg.anchorDistance=undefined;
         this._legChanged();
         return true;
     }
@@ -692,6 +721,7 @@ RouteData.prototype._startRouting=function(mode,newWp,opt_keep_from){
         this.currentLeg.name = route.name;
         this.currentLeg.to = newWp;
         this.currentLeg.active=true;
+        this.currentLeg.anchorDistance=undefined;
         this._legChanged();
         return true;
     }
@@ -996,7 +1026,7 @@ RouteData.prototype._handleLegResponse=function(data) {
     }
     this.routeErrors=0;
     this.serverConnected=true;
-    if (! data.to || ! data.from) return false;
+    if (! data.from) return false;
     var nleg=new routeobjects.Leg();
     nleg.fromJson(data);
     if (!nleg.differsTo(this.serverLeg)) {

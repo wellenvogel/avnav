@@ -18,6 +18,7 @@ var EditRouteWidget=require('../components/EditRouteWidget.jsx');
 var Page=require('./page.jsx');
 var ButtonList=require('../components/ButtonList.jsx');
 var Measure=require('react-measure').default;
+var Helper=require('../util/helper');
 
 var keys={
     waypointList: 'waypointList',
@@ -35,7 +36,8 @@ var keys={
 };
 var wpKeyFlags={
     currentTarget:'currentTarget',
-    routeActive: 'routeActive'
+    routeActive: 'routeActive',
+    wpActive: 'wpActive'
 };
 var widgetKeys=[keys.leftWidgets, keys.bottomLeftWidgets, keys.bottomRightWidgets,keys.topWidgets];
 var selectors={
@@ -292,16 +294,15 @@ Navpage.prototype.widgetVisibility=function(){
 Navpage.prototype.buttonUpdate=function(){
     //TODO: make this more generic
     var markerLock=this.navobject.getRoutingHandler().getLock()||false;
-    this.handleToggleButton('.avb_LockMarker',markerLock);
-    if (markerLock || this.routingVisible()) this.selectOnPage('.avb_LockMarker').hide();
-    else this.showBlock('.avb_LockMarker');
-    this.handleToggleButton('.avb_StopNav',markerLock);
-    if (!markerLock || this.routingVisible()) this.selectOnPage('.avb_StopNav').hide();
-    else this.showBlock('.avb_StopNav');
+    this.handleToggleButton('LockMarker',markerLock);
+    this.store.updateSubItem(this.globalKeys.buttons,wpKeyFlags.wpActive, (markerLock || this.routingVisible()),"visibilityFlags") ;
+    this.handleToggleButton('StopNav',markerLock);
     var gpsLock=this.gui.map.getGpsLock();
-    this.handleToggleButton('.avb_LockPos',gpsLock);
+    this.handleToggleButton('LockPos',gpsLock);
     var courseUp=this.gui.map.getCourseUp();
-    this.handleToggleButton('.avb_CourseUp',courseUp);
+    this.handleToggleButton('CourseUp',courseUp);
+    var anchorWatch=this.navobject.getRoutingHandler().getAnchorWatch()?true:false;
+    this.handleToggleButton('AnchorWatch',anchorWatch);
     if (this.selectedWp){
         var router=this.navobject.getRoutingHandler();
         if (router.isCurrentRoutingTarget(this.selectedWp)){
@@ -387,8 +388,11 @@ Navpage.prototype.createButtons=function()
             {key: "StopNav", toggle: true},
             {key: "CourseUp", toggle: true},
             {key: "ShowRoutePanel"},
+            {key: "AnchorWatch",toggle:true},
             {key: "CancelNav"}
         ];
+        Helper.addEntryToListItem(buttons,"key","LockMarker",wpKeyFlags.wpActive,false);
+        Helper.addEntryToListItem(buttons,"key","StopNav",wpKeyFlags.wpActive,true);
     }
     var buttonFontSize=this.gui.properties.getButtonFontSize();
     this.store.replaceSubKey(this.globalKeys.buttons,buttonFontSize,'fontSize');
@@ -402,23 +406,20 @@ Navpage.prototype.wpButtons=function(onoff){
         this.store.updateSubItem(keys.wpButtons,'itemList',[]);
         return;
     }
-    var btGoto={key:'WpGoto'};
-    btGoto[wpKeyFlags.currentTarget]=false;
-    var btNavNext={key:'NavNext'};
-    btNavNext[wpKeyFlags.currentTarget]=true;
-    btNavNext[wpKeyFlags.routeActive]=true;
-    var btRNext={key:'WpNext'};
-    btRNext[wpKeyFlags.routeActive]=true;
-    var btRPrev={key:'WpPrevious'};
-    btRPrev[wpKeyFlags.routeActive]=true;
     var wpButtons=[
         {key:'WpLocate'},
         {key:'WpEdit'},
-        btGoto,
-        btNavNext,
-        btRNext,
-        btRPrev
+        {key:'WpGoto'},
+        {key:'NavNext'},
+        {key:'WpNext'},
+        {key:'WpPrevious'}
     ];
+    var btGoto={key:'WpGoto'};
+    Helper.addEntryToListItem(wpButtons,"key","WpGoto",wpKeyFlags.currentTarget,false);
+    Helper.addEntryToListItem(wpButtons,"key","NavNext",wpKeyFlags.currentTarget,true);
+    Helper.addEntryToListItem(wpButtons,"key","NavNext",wpKeyFlags.routeActive,true);
+    Helper.addEntryToListItem(wpButtons,"key","WpNext",wpKeyFlags.routeActive,true);
+    Helper.addEntryToListItem(wpButtons,"key","WpPrevious",wpKeyFlags.routeActive,true);
     this.store.updateSubItem(keys.wpButtons,'itemList',wpButtons);
 };
 /**
@@ -1117,6 +1118,23 @@ Navpage.prototype.btnWpPrevious=function(button,ev) {
     if (! next) return;
     if (this.routingVisible()) router.setEditingWp(next);
     this.showWpButtons(next);
+};
+
+
+Navpage.prototype.btnAnchorWatch=function(button,ev) {
+    avnav.log("AnchorWatch clicked");
+    var router = this.navobject.getRoutingHandler();
+    if (router.getAnchorWatch()) {
+        router.anchorOff();
+        return;
+    }
+    var pos=this.navobject.getCurrentPosition();
+    if (! pos) return;
+    var def=this.gui.properties.getProperties().anchorWatchDefault;
+    OverlayDialog.valueDialogPromise("Set Anchor Watch",def,this.getDialogContainer(),"Radius(m)")
+        .then(function(value){
+            router.anchorOn(pos,value);
+        })
 };
 
 
