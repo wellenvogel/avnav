@@ -237,6 +237,19 @@ class AVNAlarmHandler(AVNWorker):
         running=self.runningAlarms.get(name)
         rt[name]={'alarm':name,'running':True if running is not None else False}
       return rt
+    media=AVNUtil.getHttpRequestParam(requestparam,"media")
+    rt={'status':'ok'}
+    if media is not None:
+      http=self.findHandlerByName('AVNHttpServer')
+      for alarm in media.split(','):
+        alarmInfo=self.findAlarm(alarm)
+        rt['command']=alarmInfo.get('command')
+        rt['repeat']=alarmInfo.get('repeat')
+        if http is not None:
+          rt['url']=http.getUrlPath(alarmInfo.get('parameter')) or ""
+        return rt
+        #TODO: handle multiple alarms
+      return rt
     mode="start"
     command=AVNUtil.getHttpRequestParam(requestparam,"start")
     if command is None:

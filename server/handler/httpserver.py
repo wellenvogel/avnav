@@ -180,6 +180,26 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     else:
       return path
 
+  def getUrlPath(self,path):
+    '''
+    get an url path that can be used to obtain a file given
+
+    :param path:
+    :return: None if no mapping is possible
+    '''
+    fp=os.path.realpath(path)
+    for k in self.pathmappings.keys():
+      mpath=os.path.realpath(os.path.join(self.basedir,self.pathmappings[k]))
+      if os.path.commonprefix([mpath,fp]) == mpath:
+        return "/"+k+"/"+os.path.relpath(fp,mpath)
+    mpath=os.path.realpath(self.basedir)
+    if os.path.commonprefix([mpath,fp]) == mpath:
+      return "/"+os.path.relpath(fp,mpath)
+    return None
+
+
+
+
   def waitOnGemfCondition(self,timeout):
     self.gemfCondition.acquire()
     try:
