@@ -171,14 +171,15 @@ class AVNAlarmHandler(AVNWorker):
       return False
     if self.runningAlarms.get(name) is not None:
       return True
-    if self._startAlarmCmd(cmd):
+    alarmid=self._startAlarmCmd(cmd)
+    if alarmid is not None:
       info=cmd['command']
       if cmd.get('parameter') is not None:
         info+=" "+cmd.get('parameter')
       self.setInfo(name, "activated %s" % info, self.Status.NMEA)
     else:
       self.setInfo(name, "unable to start alarm command \"%s\":\"%s\" " % (name,cmd['command']), self.Status.INACTIVE)
-    self.runningAlarms[name] = cmd
+    self.runningAlarms[name] = alarmid
     return True
 
   def stopAlarm(self, name):
@@ -187,11 +188,13 @@ class AVNAlarmHandler(AVNWorker):
     if cmd is None:
       AVNLog.error("no alarm \"%s\" configured", name)
       return False
+    alarmid=self.runningAlarms.get(name)
     try:
       del self.runningAlarms[name]
     except:
       pass
-    self.commandHandler.stopCommand(cmd['command'])
+    if alarmid is not None:
+      self.commandHandler.stopCommand(alarmid)
     self.setInfo(name, "stopped", self.Status.INACTIVE)
     return True
 

@@ -46,23 +46,23 @@ from avnav_worker import *
 import avnav_handlerList
 
 class Handler:
-  def __init__(self,command,name,callback,parameters=None):
-    cmdstring=command.get('command')
+  def __init__(self,command,id,callback,parameters=None):
     repeat=command.get('repeat')
-    self.command=cmdstring
+    self.command=command
     self.parameters=parameters
-    self.name=name
+    self.name=command.get('name')
+    self.id=id
     self.callback=callback
     self.thread=None
     self.stop=False
     self.repeat=int(repeat) if repeat is not None else 1
     self.subprocess=None
 
-  def getCommand(self):
-    return self.command
+  def getCommandStr(self):
+    return self.command.get('command')
 
   def _startCmd(self):
-    args = shlex.split(self.command)
+    args = shlex.split(self.getCommandStr())
     AVNLog.debug("starting command ", args)
     if self.parameters is not None:
       if isinstance(self.parameters,list):
@@ -95,6 +95,7 @@ class Handler:
     except :
       AVNLog.error("unable to stop command %s:%s",self.name,traceback.format_exc())
 
+
   def run(self):
     threading.current_thread().setName("[%s]cmd: %s" % (AVNLog.getThreadId(), self.name))
     while self.repeat > 0:
@@ -118,7 +119,7 @@ class Handler:
         if self.callback is not None:
           if status is None:
             status=-1
-          self.callback(self.name,status)
+          self.callback(self.id,status)
       if self.repeat > 0:
         try:
           self._startCmd()
@@ -126,11 +127,22 @@ class Handler:
           AVNLog.debug("unable to start command %s:%s",self.name,self.command)
     return self.subprocess.returncode
 
+  def getName(self):
+    return self.name
+  def getId(self):
+    return self.id
+  def getIdStr(self):
+    return str(self.id)
+  def __unicode__(self):
+    return "%s(%d): %s %s, repeat=%d"%(self.name,self.id,self.getCommandStr(),self.parameters,self.repeat)
+
 class AVNCommandHandler(AVNWorker):
   """a handler to start configured commands"""
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.runningProcesses={}
+    self.cntLock = threading.Lock()
+    self.idCounter = 0
   @classmethod
   def getConfigName(cls):
     return "AVNCommandHandler"
@@ -159,76 +171,112 @@ class AVNCommandHandler(AVNWorker):
 
   def getName(self):
     return "CommandHandler"
-
+  def getNextId(self):
+    self.cntLock.acquire()
+    self.idCounter+=1
+    rt=self.idCounter
+    self.cntLock.release()
+    return rt
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
+    for cmd in self.getConfiguredCommands():
+      self.updateCommandStatus(cmd)
     while True:
       #self.startCommand("test")
       time.sleep(10)
 
-  def findCommand(self,name):
-    definedCommands=self.param.get('Command')
+  def getConfiguredCommands(self):
+    rt=[]
+    definedCommands = self.param.get('Command')
     if definedCommands is None:
-      return None
-    for cmd in definedCommands:
+      return rt
+    return definedCommands
+
+  def updateCommandStatus(self,cmd):
+    running=self.findRunningCommandsByName(cmd.get('name'))
+    self.setInfo(cmd.get('name'), "param=%s,repeat=%s" % (cmd.get('parameter'), cmd.get('repeat')),
+                 self.Status.INACTIVE if len(running) == 0 else self.Status.NMEA)
+
+  def findCommand(self,name):
+    '''
+    find a command by its name
+    :param name:
+    :return:
+    '''
+    for cmd in self.getConfiguredCommands():
       if cmd.get('name') is not None and cmd.get('name') == name:
-        return {'command':AVNUtil.replaceParam(cmd.get('command'),AVNConfig.filterBaseParam(self.getParam())),'repeat':cmd.get('repeat')}
-  def commandFinished(self,name,status):
-    AVNLog.info("finished with status %d",status)
-    self.setInfo(name,"finished with status %d"%(status),self.Status.INACTIVE)
+        return {'command':AVNUtil.replaceParam(cmd.get('command'),AVNConfig.filterBaseParam(self.getParam())),'repeat':cmd.get('repeat'),'name':cmd.get('name')}
+  def findRunningCommandsByName(self,name):
+    rt=[]
+    if name is None:
+      return rt
+    for id in self.runningProcesses.keys():
+      try:
+        if self.runningProcesses[id].getName() == name:
+          rt.append(self.runningProcesses[id])
+      except:
+        pass
+    return rt
+  def commandFinished(self,id,status):
+    AVNLog.info("%d finished with status %d",id,status)
+    self.deleteInfo(id)
     try:
-      del self.runningProcesses[name]
+      cmd=self.runningProcesses.get(id)
+      del self.runningProcesses[id]
+      if cmd is not None:
+        self.updateCommandStatus(cmd)
     except:
       pass
 
   def startCommand(self,name,repeat=None,parameters=None):
-    """start a named command"""
+    """start a named command
+
+        :arg name the name of the command to be started
+        :returns an id to be used when querying or stopping the command or None if not started
+    """
     cmd=self.findCommand(name)
     if cmd is None:
       AVNLog.error("no command \"%s\" configured", name)
       self.setInfo(name, "no command \"%s\" configured"%name, self.Status.ERROR)
-      return False
+      return None
     cmd=cmd.copy()
-    current=self.runningProcesses.get(name)
-    if current is not None:
-      AVNLog.warn("command %s running on new start, trying to stop",name)
-      current.stopHandler()
     if repeat is not None:
       cmd['repeat']=repeat
     AVNLog.info("start command %s=%s",name,cmd)
-    handler=Handler(cmd,name,self.commandFinished,parameters)
+    id=self.getNextId()
+    handler=Handler(cmd,id,self.commandFinished,parameters)
     try:
       handler.start()
-      self.setInfo(name,"running \"%s\""%handler.getCommand(),self.Status.RUNNING)
+      self.setInfo(id,"running %s"%(unicode(handler)),self.Status.RUNNING)
     except:
-      AVNLog.error("error starting command %s=%s: %s",name,handler.getCommand(),traceback.format_exc())
+      AVNLog.error("error starting command %s=%s: %s",name,handler.getCommandStr(),traceback.format_exc())
       self.setInfo(name, "unable to run %s: %s"%(cmd,traceback.format_exc(1)), self.Status.ERROR)
-      return False
-    self.runningProcesses[name]=handler
-    return True
+      return None
+    self.runningProcesses[id]=handler
+    try:
+      self.updateCommandStatus(cmd)
+    except:
+      pass
+    return id
 
-  def stopCommand(self, name):
-    '''stop a named command'''
-    cmd = self.findCommand(name)
-    if cmd is None:
-      AVNLog.error("no command \"%s\" configured", name)
-      return False
-    current = self.runningProcesses.get(name)
+  def stopCommand(self, id):
+    '''stop a command
+
+    :arg id the command id
+    '''
+    current = self.runningProcesses.get(id)
     if current is not None:
-      AVNLog.warn("command %s running on new start, trying to stop", name)
+      AVNLog.info("command %d running ,trying to stop", id)
       try:
         current.stopHandler()
         return True
       except:
-        self.setInfo(name,"unable to stop command %s"%traceback.format_exc(1),self.Status.ERROR)
+        self.setInfo(id,"unable to stop command %s"%traceback.format_exc(1),self.Status.ERROR)
         return False
 
-  def isCommandRunning(self,name):
-    '''return True if the named command is running'''
-    cmd=self.findCommand(name)
-    if cmd is None:
-      return False
-    current=self.runningProcesses.get(name)
+  def isCommandRunning(self,id):
+    '''return True if the command is running'''
+    current=self.runningProcesses.get(id)
     if current is None:
       return False
     return True
@@ -261,8 +309,8 @@ class AVNCommandHandler(AVNWorker):
           continue
         if not name in status and not 'all' in status :
           continue
-        running=self.runningProcesses.get(name)
-        rt[name]={'command':cmd.get('command'),'repeat':cmd.get('repeat'),'running':True if running is not None else False}
+        running=self.findRunningCommandsByName(name)
+        rt[name]={'command':cmd.get('command'),'repeat':cmd.get('repeat'),'running':",".join([ x.getIdStr() for x in running])}
       return rt
     mode="start"
     command=AVNUtil.getHttpRequestParam(requestparam,"start")
