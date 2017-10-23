@@ -73,6 +73,7 @@
 	<Directory urlpath="viewer" path="../viewer"></Directory>
 	<Directory urlpath="build" path="../viewer/build"></Directory>
 	<Directory urlpath="libraries" path="../libraries"></Directory>
+	<Directory urlpath="sounds" path="../sounds"></Directory>
 	<Directory urlpath="test" path="../../leaflet-test"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
@@ -88,11 +89,13 @@
 <AVNCommandHandler>
 	<Command name="test" command="sleep 4"/>
 	<Command name="shutdown" command="echo shutdown triggered"/>
-	<Command name="sound" command="mpg123 -q" repeat="1"/>
+	<!--<Command name="sound" command="mpg123 -q" repeat="1"/>-->
 </AVNCommandHandler>
+<!--
 	<AVNAlarmHandler>
 		<Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/>
 		<Alarm name="ais" command="sound" parameter="$BASEDIR/../sounds/aisAlarm.mp3" repeat="1"/>
 		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
 	</AVNAlarmHandler>
+-->
 </AVNServer>

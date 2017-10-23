@@ -57,6 +57,7 @@ var propertyDefinitions=function(){
             compass: new avnav.util.Property(true,"Compass",avnav.util.PropertyType.CHECKBOX),
             measures: new avnav.util.Property(true,"Measures",avnav.util.PropertyType.CHECKBOX)
         },
+        localAlarmSound: new avnav.util.Property(true,"Alarm Sound",avnav.util.PropertyType.CHECKBOX),
         connectedMode:new avnav.util.Property(true,"connected",avnav.util.PropertyType.CHECKBOX),
         readOnlyServer: new avnav.util.Property(false),
         onAndroid:new avnav.util.Property(false),

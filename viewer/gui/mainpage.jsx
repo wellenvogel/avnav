@@ -30,6 +30,9 @@ var Mainpage=function(){
         self.fillList();
     });
     this.store=new Store();
+    this.soundHandler=undefined;
+    this.soundRepeat=0;
+    this.lastAlarmSound=undefined;
 };
 avnav.inherits(Mainpage,Page);
 
@@ -45,6 +48,7 @@ Mainpage.prototype.changeDim=function(newDim){
 };
 Mainpage.prototype.getPageContent=function(){
     var self=this;
+    this.soundHandler=document.getElementById('avi_sound');
     var buttons=[
         {key:'ShowStatus'},
         {key:'ShowSettings'},
@@ -186,6 +190,7 @@ Mainpage.prototype.getImgSrc=function(color){
  * @param {navobjects.NavEvent} evdata
  */
 Mainpage.prototype.navEvent=function(evdata) {
+    this.updateAlarmSound();
     if (!this.visible) return;
     if (evdata.type == navobjects.NavEventType.GPS) {
         var nmeaStatus = this.navobject.getValue("aisStatusColor");
@@ -198,6 +203,46 @@ Mainpage.prototype.navEvent=function(evdata) {
             aisStatusSrc: this.getImgSrc(aisStatus)
         });
     }
+};
+
+Mainpage.prototype.updateAlarmSound=function(){
+   if (! this.soundHandler) return;
+   var alarmState=this.navobject.getValue('alarmInfo');
+   try {
+       if (!alarmState || ! this.gui.properties.getProperties().localAlarmSound) {
+           this.soundRepeat=0;
+           this.lastAlarmSound=undefined;
+           if (! this.soundHandler.src) return;
+           this.soundHandler.pause();
+           this.soundHandler.removeAttribute('src');
+           return;
+       }
+       var self=this;
+       if (alarmState !== this.lastAlarmSound){
+           this.lastAlarmSound=alarmState;
+           $.ajax({
+               url:self.gui.properties.getProperties().navUrl+"?request=alarm&media="+alarmState,
+               success: function(data){
+                   if (data.url){
+                       self.soundHandler.src=data.url;
+                       self.soundHandler.play();
+                       self.soundRepeat=parseInt(data.repeat||1);
+                   }
+               },
+               error: function(err){
+                   self.lastAlarmSound=undefined;
+               }
+           });
+       }
+       if (this.soundHandler.ended){
+           if (this.soundRepeat > 0){
+               this.soundRepeat--;
+               this.soundHandler.play();
+           }
+       }
+
+
+   }catch(e){}
 };
 
 

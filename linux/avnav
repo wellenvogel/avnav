@@ -105,13 +105,13 @@ fi
 if [ "$gui" != 0 ] ; then
   python -c 'import wx' > /dev/null 2>&1
   [ $? != 0 ] && err "missing package python-wxgtkn.n, please install a valid version of this package (e.g. python-wxgtk3.0)"
-  exec $guiprog -b "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries"
+  exec $guiprog -b "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds"
 else
   echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
   if [ "$silent" = 0 ] ; then
-    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries" $dopt "$xmlfile"
+    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt "$xmlfile"
   else
-    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries" $dopt "$xmlfile"  > /dev/null 2>&1
+    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt "$xmlfile"  > /dev/null 2>&1
   fi
 fi
 
