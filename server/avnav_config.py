@@ -95,7 +95,7 @@ class AVNConfig(sax.handler.ContentHandler):
               parser=sax.parseString(ai,self)
               self.restrictedHandler=None
             except Exception:
-              AVNLog.error("error parsing default config %s for %s:%s",ai,handler.getConfigName(),sys.exc_info()[0])
+              AVNLog.error("error parsing default config %s for %s:%s",ai,handler.getConfigName(),sys.exc_info()[1])
               return False
           else:
             cfg=handler.parseConfig({}, handler.getConfigParam(None))
