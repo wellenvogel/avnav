@@ -151,7 +151,11 @@ class AVNCommandHandler(AVNWorker):
 
   @classmethod
   def autoInstantiate(cls):
-    return True
+    return '''
+    <AVNCommandHandler>
+        <Command name="sound" command="mpg123 -q" repeat="1"/>
+    </AVNCommandHandler>
+    '''
 
   def getName(self):
     return "CommandHandler"

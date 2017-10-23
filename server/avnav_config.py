@@ -64,6 +64,7 @@ class AVNConfig(sax.handler.ContentHandler):
     self.baseParam={} #parameters to be added to all handlers
     self.currentHandlerClass=None
     self.currentHandlerData=None
+    self.restrictedHandler=None
     sax.handler.ContentHandler.__init__(self)
     pass
   def setBaseParam(self,name,value):
@@ -83,13 +84,23 @@ class AVNConfig(sax.handler.ContentHandler):
       AVNLog.error("error parsing cfg file %s : %s",filename,traceback.format_exc())
       return False
     for handler in avnav_handlerList.getAllHandlerClasses():
-      if handler.autoInstantiate():
+      ai=handler.autoInstantiate()
+      if ai:
         existing=AVNWorker.findHandlerByName(handler.getConfigName(), True)
         if existing is None:
-          AVNLog.info("auto instantiate for %s",handler.getConfigName())
-          cfg=handler.parseConfig({}, handler.getConfigParam(None))
-          cfg.update(self.baseParam)
-          handler.createInstance(cfg)
+          AVNLog.info("auto instantiate for %s", handler.getConfigName())
+          if isinstance(ai,str):
+            try:
+              self.restrictedHandler=handler
+              parser=sax.parseString(ai,self)
+              self.restrictedHandler=None
+            except Exception:
+              AVNLog.error("error parsing default config %s for %s:%s",ai,handler.getConfigName(),sys.exc_info()[0])
+              return False
+          else:
+            cfg=handler.parseConfig({}, handler.getConfigParam(None))
+            cfg.update(self.baseParam)
+            handler.createInstance(cfg)
     return len(AVNWorker.getAllHandlers()) > 0
     
   def startElement(self, name, attrs):
@@ -106,6 +117,9 @@ class AVNConfig(sax.handler.ContentHandler):
       AVNLog.ld("added sub to handlerdata",name,childParam)
       return
     handler=avnav_handlerList.findHandlerByConfigName(name)
+    if self.restrictedHandler is not None:
+      if self.restrictedHandler.getConfigName() != name:
+        raise Exception("invalid xml for default config, expected %s, got %s"%(self.restrictedHandler.getConfigName(),name))
     if handler is not None:
       self.currentHandlerClass=handler
       self.currentHandlerData=handler.parseConfig(attrs, handler.getConfigParam(None))
