@@ -452,6 +452,7 @@ class AVNRouter(AVNWorker):
           self.computeAnchor()
         else:
           self.startStopAlarm(False,'anchor')
+          self.startStopAlarm(False, 'gps')
           computeRMB=self.getBoolParam("computeRMB")
           computeAPB=self.getBoolParam("computeAPB")
           if computeRMB or computeAPB :
