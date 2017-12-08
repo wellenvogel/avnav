@@ -151,6 +151,7 @@ class AVNRouter(AVNWorker):
     self.routeListLock=threading.Lock()
     self.routeInfos={}
     self.getRequestParam=AVNUtil.getHttpRequestParam
+    self.activatedAlarms={} #ensure that we only re send alarms after they have been reset
     #build the backward conversion
     for k in self.fromGpx.keys():
       v=self.fromGpx[k]
@@ -644,8 +645,13 @@ class AVNRouter(AVNWorker):
     lon = curTPV.data.get('lon')
     if lat is None or lon is None:
       self.startStopAlarm(False,'anchor')
-      self.startStopAlarm(True,'gps')
+      if self.activatedAlarms.get('gps') is None:
+        self.startStopAlarm(True,'gps')
+        self.activatedAlarms['gps']=True
       return
+    if self.activatedAlarms.get('gps'):
+      del self.activatedAlarms['gps']
+    self.startStopAlarm(False,'gps')
     anchorDistance = AVNUtil.distanceM((lat, lon), self.wpToLatLon(self.currentLeg.fromWP))
     AVNLog.debug("Anchor distance %d, allowed %d",anchorDistance,self.currentLeg.anchorDistance)
     if anchorDistance > self.currentLeg.anchorDistance:
