@@ -141,7 +141,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         }
     }catch(e){}
     var key;
-    if (data.raw.alarms){
+    if (data.raw && data.raw.alarms){
         try{
             formattedData.alarmInfo=undefined;
             for (key in data.raw.alarms){
