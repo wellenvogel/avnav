@@ -70,13 +70,14 @@ public class SimpleFileDialog
     public static final int FileSave     = 1;
     public static final int FolderChoose = 2;
     public static final int FolderChooseWrite=3;
+    public static final int FileOpenDefault =4;
     private int Select_type = FileSave;
     private String m_sdcardDirectory = "";
     private Activity m_context;
     private AvnDialogHandler handler;
     private DialogBuilder mBuilder;
     public String Default_File_Name = "default.txt";
-    private String Selected_File_Name = Default_File_Name;
+    public String Selected_File_Name = Default_File_Name;
 
     private String m_dir = "";
     private List<FileEntry> m_subdirs = null;
@@ -188,9 +189,8 @@ public class SimpleFileDialog
                 if (!handler.onOk(dialogId)) return;
                 if (m_SimpleFileDialogListener != null) {
                     {
-                        if (Select_type == FileOpen || Select_type == FileSave) {
-                            //Selected_File_Name = input_text.getText() + "";
-                            //m_SimpleFileDialogListener.onChosenDir(m_dir + "/" + Selected_File_Name);
+                        if ((Select_type == FileOpen || Select_type == FileOpenDefault) && Selected_File_Name != null ) {
+                            m_SimpleFileDialogListener.onChosenDir(m_dir + "/" + Selected_File_Name);
                         } else {
                             if (Select_type == FolderChooseWrite && !(new File(m_dir)).canWrite()){
                                 wantToCloseDialog = false;
@@ -251,7 +251,7 @@ public class SimpleFileDialog
                     if (file.isDirectory()) {
 
                         dirs.add(new FileEntry(file.getName(), file.canWrite(), true));
-                    } else if (Select_type == FileSave || Select_type == FileOpen) {
+                    } else if (Select_type == FileSave || Select_type == FileOpen || Select_type == FileOpenDefault) {
                         // Add file names to the list if we are doing a file save or file open operation
                         dirs.add(new FileEntry(file.getName(), file.canWrite(), false));
                     }
@@ -320,7 +320,7 @@ public class SimpleFileDialog
             dialogBuilder.setTitle(dialogTitle);
         }
         else {
-            if (Select_type == FileOpen) dialogBuilder.setTitle("Open:");
+            if (Select_type == FileOpen|| Select_type == FileOpenDefault) dialogBuilder.setTitle("Open:");
             if (Select_type == FileSave) dialogBuilder.setTitle("Save As:");
             if (Select_type == FolderChoose || Select_type == FolderChooseWrite) dialogBuilder.setTitle("Folder Select:");
         }
@@ -356,6 +356,18 @@ public class SimpleFileDialog
                 }
             });
         }
+        else if (Select_type == FileOpenDefault){
+            dialogBuilder.setButton(R.string.setDefault,DialogInterface.BUTTON_NEUTRAL, new DialogInterface.OnClickListener(){
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (m_SimpleFileDialogListener != null){
+                        m_SimpleFileDialogListener.onChosenDir(Default_File_Name);
+                    }
+                    dialog.dismiss();
+                }
+            });
+        }
         else dialogBuilder.hideButton(DialogInterface.BUTTON_NEUTRAL);
         ListView lv=(ListView)dialogBuilder.getContentView().findViewById(R.id.list_value);
         m_listAdapter = createListAdapter(listItems);
@@ -371,8 +383,9 @@ public class SimpleFileDialog
         mSubHeader.setText(m_dir);
         m_listAdapter.notifyDataSetChanged();
         //#scorch
-        if (Select_type == FileSave || Select_type == FileOpen)
+        if (Select_type == FileSave || Select_type == FileOpen || Select_type==FileOpenDefault)
         {
+            //Selected_File_Name=null;
             //input_text.setText(Selected_File_Name);
         }
     }
@@ -401,6 +414,9 @@ public class SimpleFileDialog
                     else {
                         tv.setTextColor(m_context.getResources().getColor(R.color.colorText));
                     }
+                    if (Selected_File_Name != null && txt.equals(Selected_File_Name) && ! getItem(position).isDir){
+                        tv.setBackgroundColor(m_context.getResources().getColor(R.color.colorSelection));
+                    }
                     tv.setText(txt);
                     tv.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -420,12 +436,11 @@ public class SimpleFileDialog
                             {
                                 m_dir += "/" + sel;
                             }
-                            Selected_File_Name = Default_File_Name;
-
                             if ((new File(m_dir).isFile())) // If the selection is a regular file
                             {
                                 m_dir = m_dir_old;
                                 Selected_File_Name = sel;
+                                v.setBackgroundColor(m_context.getResources().getColor(R.color.colorSelection));
                             }
                             if (m_dir.startsWith("//")) m_dir=m_dir.substring(1);
                             updateDirectory();

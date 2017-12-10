@@ -51,6 +51,11 @@
         android:defaultValue="34567"
         android:inputType="number"
         android:title="@string/labelSettingsServerPort"></de.wellenvogel.avnav.settings.CheckEditTextPreference>
+    <de.wellenvogel.avnav.settings.DefaultsEditTextPreference
+        android:key="alarm.anchor"
+        android:defaultValue="anchor-alarm.mp3"
+        android:inputType="text"
+        android:title="@string/labelSettingsAnchorAlarm"></de.wellenvogel.avnav.settings.DefaultsEditTextPreference>
     <Preference
         android:title="@string/labelSettingsDefaults"
         android:key="prefs.default"></Preference>

@@ -37,6 +37,7 @@ public class Constants {
     public static final String WAITSTART="waitstart";
     public static final String VERSION="version";
     public static final String WEBSERVERPORT="web.port";
+    public static final String ANCHORALARM="alarm.anchor";
     public static final String PREFNAME="AvNav";
     //dummy file to make the media scanner see or directories...
     public static final String EMPTY_FILE="EMPTY";

@@ -40,4 +40,5 @@ public class DefaultsEditTextPreference extends OwnDialogEditTextPreference {
     public void setDefaultValue(String defaultValue){
         this.defaultValue=defaultValue;
     }
+    public String getDefaultValue(){ return defaultValue;}
 }

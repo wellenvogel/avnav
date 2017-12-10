@@ -85,7 +85,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            MainActivity.this.handleRestart(msg.what == 1,false);
+            MainActivity.this.handleRestart(msg.what == ICallback.CB_RESTART_SETTINGS,false);
         }
     };
 

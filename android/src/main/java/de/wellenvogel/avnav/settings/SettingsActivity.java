@@ -1,7 +1,6 @@
 package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.*;
-import android.support.v7.widget.Toolbar;
 
 import android.util.DisplayMetrics;
 import android.view.Menu;
@@ -19,10 +17,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
@@ -33,6 +36,7 @@ import de.wellenvogel.avnav.main.SimpleFileDialog;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
  * Created by andreas on 03.09.15.
@@ -103,6 +107,107 @@ public class SettingsActivity extends PreferenceActivity {
             }
         }
     }
+    public static interface SelectWorkingDir{
+        public void directorySelected(File dir);
+        public void failed();
+    }
+
+    //select a valid working directory - or exit
+    public static boolean selectWorkingDirectory(final Activity activity, final SelectWorkingDir callback, String current){
+        File currentFile=null;
+        if (current != null  && ! current.isEmpty()) {
+            currentFile=new File(current);
+            if (!currentFile.isDirectory()) {
+                //maybe we can just create it...
+                try {
+                    createWorkingDir(activity, currentFile);
+                } catch (Exception e1) {
+                    currentFile=null;
+                }
+            }
+        }
+        if (currentFile != null && currentFile.canWrite()){
+            return true;
+        }
+        //seems that either the directory is not writable
+        //or not set at all
+        final DialogBuilder builder=new DialogBuilder(activity,R.layout.dialog_selectlist);
+        final boolean emptyWorkdir=(current == null || current.isEmpty());
+        builder.setTitle(current!=null?R.string.selectWorkDirWritable:R.string.selectWorkDir);
+        ArrayList<String> selections=new ArrayList<String>();
+        selections.add(activity.getString(R.string.internalStorage));
+        boolean hasExternal=false;
+        String state=Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) hasExternal=true;
+        if (hasExternal) selections.add(activity.getString(R.string.externalStorage));
+        selections.add(activity.getString(R.string.selectStorage));
+        ArrayAdapter<String> adapter=new ArrayAdapter<String>(activity,R.layout.list_item,selections);
+        ListView lv=(ListView)builder.getContentView().findViewById(R.id.list_value);
+        lv.setAdapter(adapter);
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final boolean hasExternal=parent.getAdapter().getCount()>2;
+                if (position == (parent.getAdapter().getCount() -1)){
+                    //last item selected - show file dialog
+                    SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(activity, SimpleFileDialog.FolderChoose,
+                            new SimpleFileDialog.SimpleFileDialogListener() {
+                                @Override
+                                public void onChosenDir(String chosenDir) {
+                                    builder.dismiss();
+                                    // The code in this function will be executed when the dialog OK button is pushed
+                                    File newDir=new File(chosenDir);
+                                    try {
+                                        createWorkingDir(activity, newDir);
+                                    } catch (Exception ex) {
+                                        Toast.makeText(activity, ex.getMessage(), Toast.LENGTH_SHORT).show();
+                                        callback.failed();
+                                        return;
+                                    }
+                                    AvnLog.i(Constants.LOGPRFX, "select work directory " + chosenDir);
+                                    callback.directorySelected(newDir);
+                                }
+                                @Override
+                                public void onCancel() {
+
+                                }
+                            });
+                    FolderChooseDialog.Default_File_Name="avnav";
+                    FolderChooseDialog.dialogTitle=activity.getString(emptyWorkdir?R.string.selectWorkDir:R.string.selectWorkDirWritable);
+                    FolderChooseDialog.okButtonText=R.string.ok;
+                    FolderChooseDialog.cancelButtonText=R.string.cancel;
+                    FolderChooseDialog.newFolderNameText=activity.getString(R.string.newFolderName);
+                    FolderChooseDialog.newFolderText=activity.getString(R.string.createFolder);
+                    File start=hasExternal?activity.getExternalFilesDir(null):activity.getFilesDir();
+                    String startPath="";
+                    try {
+                        startPath=start.getCanonicalPath();
+                    } catch (IOException e) {
+                    }
+                    FolderChooseDialog.chooseFile_or_Dir(startPath);
+                    return;
+                }
+                File newDir=(position == 0)?activity.getFilesDir():activity.getExternalFilesDir(null);
+                try{
+                    createWorkingDir(activity,newDir);
+                }catch (Exception e){
+                    builder.dismiss();
+                    Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    callback.failed();
+                }
+                builder.dismiss();
+                callback.directorySelected(newDir);
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                System.exit(1);
+            }
+        });
+        builder.show();
+        return false;
+    }
 
     /**
      * check the current settings
@@ -146,64 +251,32 @@ public class SettingsActivity extends PreferenceActivity {
             }
         }
         String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
-        if (workdir.isEmpty()){
-            File wdf=new File(Environment.getExternalStorageDirectory(),"avnav");
-            workdir=wdf.getAbsolutePath();
-        }
-        //TODO: handle unwritable workdir
         String chartdir=sharedPrefs.getString(Constants.CHARTDIR, new File(new File(workdir), "charts").getAbsolutePath());
         if (mode.isEmpty()) mode=Constants.MODE_NORMAL;
         e.putString(Constants.RUNMODE, mode);
         e.putString(Constants.WORKDIR, workdir);
         e.putString(Constants.CHARTDIR, chartdir);
         e.apply();
-        if (! new File(workdir).isDirectory()){
-            //maybe we can just create it...
-            try{
-                createWorkingDir(activity,new File(workdir));
-            } catch (Exception e1) {
+        rt=selectWorkingDirectory(activity, new SelectWorkingDir() {
+            @Override
+            public void directorySelected(File dir) {
+                try {
+                    SharedPreferences.Editor e=sharedPrefs.edit();
+                    e.putString(Constants.WORKDIR,dir.getCanonicalPath());
+                    e.apply();
+                } catch (IOException e1) {
+                    Toast.makeText(activity, e1.getMessage(), Toast.LENGTH_SHORT).show();
+                    callback.callback(ICallback.CB_RESTART_SETTINGS);
+                }
+                callback.callback(ICallback.CB_SETTINGS_OK);
             }
-        }
-        final String oldWorkdir=workdir;
-        if (!(new File(workdir)).canWrite()){
-            SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(activity, SimpleFileDialog.FolderChoose,
-                    new SimpleFileDialog.SimpleFileDialogListener() {
-                        @Override
-                        public void onChosenDir(String chosenDir) {
-                            // The code in this function will be executed when the dialog OK button is pushed
-                            SharedPreferences.Editor e=sharedPrefs.edit();
-                            e.putString(Constants.WORKDIR,chosenDir);
-                            e.apply();
-                            try {
-                                createWorkingDir(activity, new File(chosenDir));
-                            } catch (Exception ex) {
-                                Toast.makeText(activity, ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                callback.callback(1);
-                                return;
-                            }
-                            //TODO: copy files
-                            AvnLog.i(Constants.LOGPRFX, "select work directory " + chosenDir);
-                            callback.callback(0);
-                        }
 
-                        @Override
-                        public void onCancel() {
-                            System.exit(1);
-                        }
-                    });
-            FolderChooseDialog.Default_File_Name="avnav";
-            FolderChooseDialog.dialogTitle=activity.getString(R.string.selectWorkDirWritable);
-            FolderChooseDialog.okButtonText=R.string.ok;
-            FolderChooseDialog.cancelButtonText=R.string.cancel;
-            FolderChooseDialog.newFolderNameText=activity.getString(R.string.newFolderName);
-            FolderChooseDialog.newFolderText=activity.getString(R.string.createFolder);
-            File wdf=new File(Environment.getExternalStorageDirectory(),"avnav");
-            if (! wdf.isDirectory()){
-                wdf.mkdirs();
+            @Override
+            public void failed() {
+                callback.callback(ICallback.CB_RESTART_SETTINGS);
             }
-            FolderChooseDialog.chooseFile_or_Dir(wdf.getAbsolutePath());
-            rt=false;
-        }
+        },workdir);
+
         //for robustness update all modes matching the current settings and version
         String nmeaMode=NmeaSettingsFragment.getNmeaMode(sharedPrefs);
         NmeaSettingsFragment.updateNmeaMode(sharedPrefs,nmeaMode);
