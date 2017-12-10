@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by andreas on 12.12.14.
@@ -584,6 +586,21 @@ public class GpsService extends Service implements INmeaLogger {
     }
 
 
+    public Map<String,Alarm> getAlarmStatus() {
+        return new HashMap<String, Alarm>();
+    }
+    public JSONObject getAlarStatusJson() throws JSONException {
+        Map<String,Alarm> alarms=getAlarmStatus();
+        JSONObject rt=new JSONObject();
+        for (String k: alarms.keySet()){
+            rt.put(k,alarms.get(k).toJson());
+        }
+        return rt;
+    }
+
+    public void resetAlarm(String type){
+
+    }
 
     public JSONObject getGpsData() throws JSONException{
         for (GpsDataProvider provider: getAllProviders()){

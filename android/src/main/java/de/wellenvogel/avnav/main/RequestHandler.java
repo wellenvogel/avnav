@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import de.wellenvogel.avnav.gps.Alarm;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.gps.RouteHandler;
@@ -266,6 +267,8 @@ public class RequestHandler {
                     JSONObject nmea = new JSONObject();
                     JSONObject status = getGpsService().getNmeaStatus();
                     nmea.put("status", status);
+                    JSONObject alarms=getGpsService().getAlarStatusJson();
+                    nmea.put("alarms",alarms);
                     navLocation.put("raw", nmea);
 
                 }
@@ -556,6 +559,51 @@ public class RequestHandler {
 
                 }
                 o.put("handler",items);
+                fout=o;
+            }
+            if (type.equals("alarm")){
+                handled=true;
+                JSONObject o=null;
+                String status=uri.getQueryParameter("status");
+                if (status != null && ! status.isEmpty()){
+                    if (status.matches(".*all.*")){
+                        o=getGpsService().getAlarStatusJson();
+                    }
+                    else {
+                        Map <String,Alarm> alarmStatus=getGpsService().getAlarmStatus();
+                        o=new JSONObject();
+                        String[] queryAlarms = status.split(",");
+                        for (String alarm:queryAlarms){
+                            Alarm ao=alarmStatus.get(alarm);
+                            if (ao != null){
+                                o.put(alarm,ao.toJson());
+                            }
+                        }
+                    }
+                }
+                String stop=uri.getQueryParameter("stop");
+                if (stop != null && ! stop.isEmpty()){
+                    getGpsService().resetAlarm(stop);
+                    o=new JSONObject();
+                    o.put("status","ok");
+                }
+                String media=uri.getQueryParameter("media");
+                if (media != null && ! media.isEmpty()){
+                    o=new JSONObject();
+                    Alarm a=getGpsService().getAlarmStatus().get(media);
+                    if (a != null && a.url != null){
+                        o=a.toJson();
+                    }
+                    else{
+                        o.put("status","error");
+                        o.put("info","url for "+media+" not found");
+                    }
+                }
+                if (o == null){
+                    o=new JSONObject();
+                    o.put("status","error");
+                    o.put("info","unknown alarm command");
+                }
                 fout=o;
             }
             if (!handled){
