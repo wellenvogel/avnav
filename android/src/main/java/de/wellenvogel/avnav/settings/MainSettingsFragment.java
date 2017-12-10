@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.preference.DialogPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -15,7 +14,6 @@ import java.io.File;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.main.SimpleFileDialog;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 
@@ -35,11 +33,11 @@ public class MainSettingsFragment extends SettingsFragment {
                     SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(getActivity(), SimpleFileDialog.FolderChooseWrite,
                             new SimpleFileDialog.SimpleFileDialogListener() {
                                 @Override
-                                public void onChosenDir(String chosenDir) {
+                                public void onChosenDir(File chosenDir) {
                                     // The code in this function will be executed when the dialog OK button is pushed
-                                    ((EditTextPreference)preference).setText(chosenDir);
+                                    ((EditTextPreference)preference).setText(chosenDir.getAbsolutePath());
                                     try {
-                                        SettingsActivity.createWorkingDir(getActivity(), new File(chosenDir));
+                                        SettingsActivity.createWorkingDir(getActivity(), chosenDir);
                                     } catch (Exception ex) {
                                         Toast.makeText(getActivity(), ex.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
@@ -50,12 +48,23 @@ public class MainSettingsFragment extends SettingsFragment {
                                 public void onCancel() {
 
                                 }
+
+                                @Override
+                                public void onDefault() {
+
+                                }
                             });
                     FolderChooseDialog.Default_File_Name="avnav";
                     FolderChooseDialog.dialogTitle=getString(R.string.selectWorkDir);
                     FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
                     FolderChooseDialog.newFolderText=getString(R.string.createFolder);
-                    FolderChooseDialog.chooseFile_or_Dir(myPref.getText());
+                    try {
+                        FolderChooseDialog.setStartDir(myPref.getText());
+                    } catch (Exception e) {
+                        //TODO: error handling
+                        e.printStackTrace();
+                    }
+                    FolderChooseDialog.chooseFile_or_Dir(false);
                     return true;
                 }
             });
@@ -68,9 +77,9 @@ public class MainSettingsFragment extends SettingsFragment {
                     SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(getActivity(), SimpleFileDialog.FolderChoose,
                             new SimpleFileDialog.SimpleFileDialogListener() {
                                 @Override
-                                public void onChosenDir(String chosenDir) {
+                                public void onChosenDir(File chosenDir) {
                                     // The code in this function will be executed when the dialog OK button is pushed
-                                    ((EditTextPreference)preference).setText(chosenDir);
+                                    ((EditTextPreference)preference).setText(chosenDir.getAbsolutePath());
                                     AvnLog.i(Constants.LOGPRFX, "select chart directory " + chosenDir);
                                 }
 
@@ -78,12 +87,31 @@ public class MainSettingsFragment extends SettingsFragment {
                                 public void onCancel() {
 
                                 }
+
+                                @Override
+                                public void onDefault() {
+
+                                }
                             });
                     FolderChooseDialog.Default_File_Name="avnav";
                     FolderChooseDialog.dialogTitle=getString(R.string.selectChartDir);
                     FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
                     FolderChooseDialog.newFolderText=getString(R.string.createFolder);
-                    FolderChooseDialog.chooseFile_or_Dir(myChartPref.getText());
+                    String startDir=myChartPref.getText();
+                    if (startDir.isEmpty()){
+                        startDir=myPref.getText();
+                    }
+                    try {
+                        FolderChooseDialog.setStartDir(startDir);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        myChartPref.setText("");
+                        try{
+                            FolderChooseDialog.setStartDir(myPref.getText());
+                        }catch (Exception e1){}
+                        return true;
+                    }
+                    FolderChooseDialog.chooseFile_or_Dir(false);
                     return true;
                 }
             });

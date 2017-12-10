@@ -11,8 +11,6 @@ import java.io.File;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.main.SimpleFileDialog;
-import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 24.10.15.
@@ -54,9 +52,8 @@ public class ExpertSettingsFragment extends SettingsFragment {
                     SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(getActivity(), SimpleFileDialog.FileOpenDefault,
                             new SimpleFileDialog.SimpleFileDialogListener() {
                                 @Override
-                                public void onChosenDir(String chosenDir) {
-                                    // The code in this function will be executed when the dialog OK button is pushed
-                                    ((EditTextPreference)preference).setText(chosenDir);
+                                public void onChosenDir(File chosenDir) {
+                                    ((EditTextPreference)preference).setText(chosenDir.getAbsolutePath());
                                     anchor.getDialog().dismiss();
                                 }
 
@@ -64,21 +61,33 @@ public class ExpertSettingsFragment extends SettingsFragment {
                                 public void onCancel() {
                                     anchor.getDialog().dismiss();
                                 }
+
+                                @Override
+                                public void onDefault() {
+                                    ((EditTextPreference)preference).setText(anchor.getDefaultValue());
+                                }
                             });
-                    FolderChooseDialog.Default_File_Name=anchor.getDefaultValue();
                     FolderChooseDialog.Selected_File_Name=anchor.getText();
                     FolderChooseDialog.dialogTitle=getString(R.string.labelSettingsAnchorAlarm);
                     FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
                     FolderChooseDialog.newFolderText=getString(R.string.createFolder);
-                    String start="";
-                    if (anchor.getText().startsWith("/")){
-                        try{
-                            File current=new File(anchor.getText());
+                    String start = "";
+                    try {
+                        if (anchor.getText().startsWith("/")) {
+                            File current = new File(anchor.getText());
                             start = current.getParentFile().getCanonicalPath();
-                            FolderChooseDialog.Selected_File_Name=current.getName();
-                        }catch (Exception e){}
+                            FolderChooseDialog.Selected_File_Name = current.getName();
+                        } else {
+                            start = getActivity().getFilesDir().getAbsolutePath();
+                            FolderChooseDialog.Selected_File_Name = anchor.getText();
+                        }
+                        FolderChooseDialog.setStartDir(start);
+                    } catch (Exception e) {
+                        Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        ((EditTextPreference) preference).setText(anchor.getDefaultValue());
+                        return false;
                     }
-                    FolderChooseDialog.chooseFile_or_Dir(start);
+                    FolderChooseDialog.chooseFile_or_Dir(false);
                     return true;
                 }
             });

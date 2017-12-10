@@ -32,7 +32,6 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.ICallback;
 import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.main.SimpleFileDialog;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -153,10 +152,9 @@ public class SettingsActivity extends PreferenceActivity {
                     SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(activity, SimpleFileDialog.FolderChoose,
                             new SimpleFileDialog.SimpleFileDialogListener() {
                                 @Override
-                                public void onChosenDir(String chosenDir) {
+                                public void onChosenDir(File newDir) {
                                     builder.dismiss();
                                     // The code in this function will be executed when the dialog OK button is pushed
-                                    File newDir=new File(chosenDir);
                                     try {
                                         createWorkingDir(activity, newDir);
                                     } catch (Exception ex) {
@@ -164,27 +162,32 @@ public class SettingsActivity extends PreferenceActivity {
                                         callback.failed();
                                         return;
                                     }
-                                    AvnLog.i(Constants.LOGPRFX, "select work directory " + chosenDir);
+                                    AvnLog.i(Constants.LOGPRFX, "select work directory " + newDir.getAbsolutePath());
                                     callback.directorySelected(newDir);
                                 }
                                 @Override
                                 public void onCancel() {
 
                                 }
+
+                                @Override
+                                public void onDefault() {
+
+                                }
                             });
                     FolderChooseDialog.Default_File_Name="avnav";
                     FolderChooseDialog.dialogTitle=activity.getString(emptyWorkdir?R.string.selectWorkDir:R.string.selectWorkDirWritable);
-                    FolderChooseDialog.okButtonText=R.string.ok;
-                    FolderChooseDialog.cancelButtonText=R.string.cancel;
                     FolderChooseDialog.newFolderNameText=activity.getString(R.string.newFolderName);
                     FolderChooseDialog.newFolderText=activity.getString(R.string.createFolder);
                     File start=hasExternal?activity.getExternalFilesDir(null):activity.getFilesDir();
                     String startPath="";
                     try {
                         startPath=start.getCanonicalPath();
-                    } catch (IOException e) {
+                        FolderChooseDialog.setStartDir(startPath);
+                    } catch (Exception e) {
+                        return;
                     }
-                    FolderChooseDialog.chooseFile_or_Dir(startPath);
+                    FolderChooseDialog.chooseFile_or_Dir(false);
                     return;
                 }
                 File newDir=(position == 0)?activity.getFilesDir():activity.getExternalFilesDir(null);
