@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import de.wellenvogel.avnav.gps.Alarm;
@@ -743,8 +744,11 @@ public class RequestHandler {
     }
 
     private void readChartDir(File chartDir,String index,HashMap<String,File> arr) {
+        if (chartDir == null) return;
         if (! chartDir.isDirectory()) return;
-        for (File f : chartDir.listFiles()) {
+        File[] files=chartDir.listFiles();
+        if (files == null) return;
+        for (File f : files) {
             try {
                 if (f.getName().endsWith(GEMFEXTENSION)){
                     String gemfName = f.getName();
