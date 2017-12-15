@@ -221,7 +221,20 @@ class AVNAlarmHandler(AVNWorker):
 
   def getHandledCommands(self):
     return "alarm"
+
   def handleApiRequest(self,type,command,requestparam,**kwargs):
+    '''
+    handle the URL based requests
+    :param type: api
+    :param command: alarm
+    :param requestparam: url parameters
+    :param kwargs:
+    :return: the answer
+    status=name,name,|all returns a hash {name:{name:alarmName,running:true}
+    start=name returns {status:ok|error}
+    stop=name,name {status: ok|err}
+    media=name {command:thecommand,repeat:therepeat,url:mediaUrl}
+    '''
     status=AVNUtil.getHttpRequestParam(requestparam,"status")
     if status is not None:
       status=status.split(',')

@@ -47,6 +47,15 @@ Infopage.prototype.doQuery=function(){
             self.store.storeData(keys.info,{license:data});
         }
     });
+    var url="privacy-en.html";
+    $.ajax({
+        url: url,
+        dataType: 'html',
+        cache:	false,
+        success: function(data,status){
+            self.store.storeData(keys.info,{privacy:data});
+        }
+    });
 
 };
 
@@ -64,7 +73,7 @@ Infopage.prototype.getPageContent=function(){
     ];
     this.setButtons(buttons);
     var Headline=function(props){
-        return <div className="avn_left_top">License Info</div>
+        return <div className="avn_left_top">License and Privacy Info</div>
     };
     var InfoItem=ItemUpdater(function(props){
         return (
@@ -72,6 +81,8 @@ Infopage.prototype.getPageContent=function(){
                 <div className="avn_infoText" dangerouslySetInnerHTML={{__html: props.info}}>
                 </div>
                 <div className="avn_licenseText" dangerouslySetInnerHTML={{__html: props.license}}>
+                </div>
+                <div className="avn_privacyText" dangerouslySetInnerHTML={{__html: props.privacy}}>
                 </div>
             </div>);
     },self.store,keys.info);

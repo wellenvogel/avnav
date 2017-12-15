@@ -15,6 +15,7 @@ if (process.env.NODE_ENV === 'production') {
 var copyList=[
     {from: './avnav_viewer.html'},
     {from: './info.html'},
+    {from: './privacy-en.html'},
     {from: './webpack-loader.js',to:'loader.js'},
     {from: './util/polyfill.js',to:'polyfill.js'},
     {from: './images/icons-new/*svg'},
