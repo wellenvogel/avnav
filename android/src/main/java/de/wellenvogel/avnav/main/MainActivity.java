@@ -315,6 +315,10 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         updateWorkDir(workBase);
         updateWorkDir(new File(sharedPrefs.getString(Constants.CHARTDIR, "")));
     }
+
+    void hideToolBar(){
+        if (mToolbar != null) mToolbar.hide();
+    }
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         serviceNeedsRestart = true;
