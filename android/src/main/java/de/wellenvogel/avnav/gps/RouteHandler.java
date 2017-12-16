@@ -159,12 +159,88 @@ public class RouteHandler {
 
     };
 
+    public static class RoutingLeg{
+        private RoutePoint from;
+        private RoutePoint to;
+        private Route route;
+        private int currentTarget=-1;
+        private boolean active=false;
+        private double anchorDistance=-1;
+        private double approachDistance=-1;
+        JSONObject jsonData;
+
+        public RoutePoint getFrom() {
+            return from;
+        }
+
+        public RoutePoint getTo() {
+            return to;
+        }
+
+        public Route getRoute() {
+            return route;
+        }
+
+        public double getAnchorDistance() {
+            return anchorDistance;
+        }
+        public boolean hasAnchorWatch(){
+            return (from != null && anchorDistance>=0);
+        }
+        public RoutingLeg(JSONObject o) throws JSONException {
+            if (o.has("from")){
+                from=RoutePoint.fromJson(o.getJSONObject("from"));
+            }
+            else{
+                from=null;
+            }
+            if (o.has("to")){
+                to=RoutePoint.fromJson(o.getJSONObject("to"));
+            }
+            else{
+                to=null;
+            }
+            if (o.has("currentRoute")){
+                route=Route.fromJson(o.getJSONObject("currentRoute"));
+            }
+            else{
+                route=null;
+            }
+            if (o.has("currentTarget")){
+                currentTarget=o.getInt("currentTarget");
+            }
+            else{
+                currentTarget=-1;
+            }
+            if (o.has("approachDistance")){
+                approachDistance=o.getDouble("approachDistance");
+            }
+            else{
+                approachDistance=-1;
+            }
+            if (o.has("anchorDistance")){
+                anchorDistance=o.getDouble("anchorDistance");
+            }
+            else{
+                anchorDistance=-1;
+            }
+            if (o.has("active")){
+                active=o.getBoolean("active");
+            }
+            else{
+                active=false;
+            }
+            jsonData=o;
+        }
+        JSONObject getJsonData(){return jsonData;}
+    }
+
 
     private File routedir;
     private HashMap<String,RouteInfo> routeInfos=new HashMap<String, RouteInfo>();
     private boolean stopParser;
     private Object parserLock=new Object();
-    private JSONObject currentLeg;
+    private RoutingLeg currentLeg;
 
 
     public RouteHandler(File routedir){
@@ -412,7 +488,7 @@ public class RouteHandler {
 
     public void setLeg(String data) throws Exception{
         AvnLog.i("setLeg");
-        currentLeg=new JSONObject(data);
+        currentLeg =new RoutingLeg(new JSONObject(data));
         File legFile=new File(routedir,LEGFILE);
         FileOutputStream os=new FileOutputStream(legFile);
         os.write(data.getBytes("UTF-8"));
@@ -420,7 +496,7 @@ public class RouteHandler {
     }
 
     public JSONObject getLeg() throws Exception{
-        if (currentLeg != null) return currentLeg;
+        if (currentLeg != null) return currentLeg.getJsonData();
         JSONObject rt=new JSONObject();
         File legFile=new File(routedir,LEGFILE);
         if (! legFile.isFile()) {
@@ -445,7 +521,7 @@ public class RouteHandler {
             rt.put("status","exception while parsing legfile "+legFile.getAbsolutePath()+": "+e.getLocalizedMessage());
             return rt;
         }
-        currentLeg=rt;
+        currentLeg =new RoutingLeg(rt);
         return rt;
     }
 
@@ -453,7 +529,7 @@ public class RouteHandler {
         AvnLog.i("unset leg");
         File legFile=new File(routedir,LEGFILE);
         if (legFile.isFile()) legFile.delete();
-        currentLeg=null;
+        currentLeg =null;
     }
 
     public void setMediaUpdater(IMediaUpdater u){

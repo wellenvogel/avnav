@@ -259,7 +259,10 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
             gpsService = binder.getService();
-            if (gpsService !=null) gpsService.setMediaUpdater(MainActivity.this);
+            if (gpsService !=null) {
+                gpsService.setMediaUpdater(MainActivity.this);
+                requestHandler.setRouteHandler(gpsService.getRouteHandler());
+            }
             AvnLog.d(Constants.LOGPRFX, "gps service connected");
 
         }

@@ -131,12 +131,6 @@ public class RequestHandler {
 
     void startHandler(){
         synchronized (handlerMonitor) {
-            if (routeHandler != null) {
-                routeHandler.stop();
-            }
-            routeHandler = new RouteHandler(new File(getWorkDir(), "routes"));
-            routeHandler.start();
-            routeHandler.setMediaUpdater(updater);
             if (chartHandler == null) {
                 chartHandlerRunning=true;
                 chartHandler = new Thread(new Runnable() {
@@ -165,6 +159,11 @@ public class RequestHandler {
     private RouteHandler getRouteHandler(){
         synchronized (handlerMonitor){
             return routeHandler;
+        }
+    }
+    public void setRouteHandler(RouteHandler h){
+        synchronized (handlerMonitor){
+            routeHandler=h;
         }
     }
     private File getWorkDir(){
@@ -369,7 +368,11 @@ public class RequestHandler {
                         String legData = uri.getQueryParameter("leg");
                         if (legData == null) legData=postData;
                         if (legData != null){
-                            getRouteHandler().setLeg(legData);
+                            try {
+                                getRouteHandler().setLeg(legData);
+                            }catch (Exception e){
+                                o.put("status",e.getMessage());
+                            }
                         }
                         else{
                             o.put("status","missing leg data");
@@ -617,6 +620,7 @@ public class RequestHandler {
             is = new ByteArrayInputStream(o);
         } catch (Exception e) {
             e.printStackTrace();
+            is=new ByteArrayInputStream(new byte[]{});
         }
         return new ExtendedWebResourceResponse(len,"application/json","UTF-8",is);
     }
@@ -877,22 +881,26 @@ public class RequestHandler {
         }
 
         @JavascriptInterface
-        public void setLeg(String legData){
-            if (getRouteHandler() == null) return;
+        public String setLeg(String legData){
+            if (getRouteHandler() == null) return returnStatus("not initialized");
             try {
                 getRouteHandler().setLeg(legData);
+                return returnStatus("OK");
             } catch (Exception e) {
                 AvnLog.i("unable to save leg "+e.getLocalizedMessage());
+                return returnStatus(e.getMessage());
             }
         }
 
         @JavascriptInterface
-        public void unsetLeg(){
-            if (getRouteHandler() == null) return;
+        public String unsetLeg(){
+            if (getRouteHandler() == null) return returnStatus("not initialized");
             try {
                 getRouteHandler().unsetLeg();
+                return returnStatus("OK");
             } catch (Exception e) {
                 AvnLog.i("unable to unset leg "+e.getLocalizedMessage());
+                return returnStatus(e.getMessage());
             }
         }
 
@@ -951,9 +959,6 @@ public class RequestHandler {
 
     void stop(){
         synchronized (handlerMonitor) {
-            if (routeHandler != null) {
-                routeHandler.stop();
-            }
             if (chartHandler != null){
                 chartHandlerRunning=false;
                 synchronized (chartHandlerMonitor){

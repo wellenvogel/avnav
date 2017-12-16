@@ -75,6 +75,7 @@ public class GpsService extends Service implements INmeaLogger {
 
 
     private TrackWriter trackWriter;
+    private RouteHandler routeHandler;
     private NmeaLogger nmeaLogger;
     private Handler handler = new Handler();
     private long timerSequence=1;
@@ -268,6 +269,10 @@ public class GpsService extends Service implements INmeaLogger {
         else{
             trackLoading=false;
         }
+        File routeDir=new File(new File(prefs.getString(Constants.WORKDIR,"")),"routes");
+        routeHandler=new RouteHandler(routeDir);
+        routeHandler.setMediaUpdater(mediaUpdater);
+        routeHandler.start();
         runnable=new TimerRunnable(timerSequence);
         handler.postDelayed(runnable, trackMintime);
         if (! receiverRegistered) {
@@ -416,6 +421,7 @@ public class GpsService extends Service implements INmeaLogger {
         }
     }
 
+
     /**
      * will be called whe we intend to really stop
      */
@@ -446,6 +452,7 @@ public class GpsService extends Service implements INmeaLogger {
             trackDir = null;
         }
         loadSequence++;
+        if (routeHandler != null) routeHandler.stop();
         isRunning=false;
         handleNotification(false);
         AvnLog.d(LOGPRFX, "service stopped");
@@ -768,5 +775,9 @@ public class GpsService extends Service implements INmeaLogger {
         out.put("name", "TrackWriter");
         out.put("items", rt);
         return out;
+    }
+
+    public RouteHandler getRouteHandler(){
+        return routeHandler;
     }
 }

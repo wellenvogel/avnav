@@ -7,6 +7,7 @@ var navobjects=require('./navobjects');
 var NavData=require('./navobjects');
 var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
+var Overlay=require('../util/overlay');
 
 /**
  * the handler for the routing data
@@ -1302,7 +1303,7 @@ RouteData.prototype._sendRoute=function(route, opt_callback){
             if (opt_callback)opt_callback(true);
         },
         errorcallback:function(status,param){
-            if (param.self.propertyHandler.getProperties().routingServerError) avnav.util.overlay.Toast("unable to send route to server:" + errMsg);
+            if (param.self.propertyHandler.getProperties().routingServerError) Overlay.Toast("unable to send route to server:" + errMsg);
             if (opt_callback) opt_callback(false);
         }
     });
@@ -1322,7 +1323,14 @@ RouteData.prototype._legChanged=function(){
     this.navobject.routeEvent();
     var self=this;
     if (avnav.android){
-        avnav.android.setLeg(this.currentLeg.toJsonString());
+        var rt=avnav.android.setLeg(this.currentLeg.toJsonString());
+        if (rt){
+            try{
+                rt=JSON.parse(rt);
+                if (rt.status && rt.status === "OK") return;
+            }catch(e){}
+        }
+        Overlay.Toast("unable to save leg: "+((rt && rt.status)?rt.status:""));
         return;
     }
     if (this.connectMode){
@@ -1333,10 +1341,13 @@ RouteData.prototype._legChanged=function(){
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             success: function(data){
+                if (data && data.status && data.status !== "OK"){
+                    Overlay.Toast("unable to send leg to server:" + data.status);
+                }
                 avnav.log("new leg sent to server");
             },
             error: function(errMsg,x) {
-                if (self.propertyHandler.getProperties().routingServerError) avnav.util.overlay.Toast("unable to send leg to server:" +errMsg);
+                if (self.propertyHandler.getProperties().routingServerError) Overlay.Toast("unable to send leg to server:" +errMsg);
             }
         });
     }
