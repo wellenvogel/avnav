@@ -104,6 +104,17 @@ public class RouteHandler {
             rt.setLongitude(lon);
             return rt;
         }
+
+        /**
+         * get the distance in m
+         * @param other other route point (when 0: distance will be 0)
+         * @return the distance in m
+         */
+        public float distanceTo(Location other){
+            if (other == null) return 0;
+            Location own=this.toLocation();
+            return own.distanceTo(other);
+        }
     };
 
     public static class Route{
@@ -510,7 +521,7 @@ public class RouteHandler {
         }
         FileInputStream is=new FileInputStream(legFile);
         byte buffer[]=new byte[(int)(legFile.length())];
-        int rd=is.read();
+        int rd=is.read(buffer);
         if (rd != legFile.length()){
             rt.put("status","unable to read all bytes for "+legFile.getAbsolutePath());
             return rt;
@@ -530,6 +541,29 @@ public class RouteHandler {
         File legFile=new File(routedir,LEGFILE);
         if (legFile.isFile()) legFile.delete();
         currentLeg =null;
+    }
+
+    public boolean checkAnchor(Location currentPosition){
+        RoutingLeg leg=this.currentLeg;
+        if (leg == null) return false;
+        if (! leg.hasAnchorWatch()) return false;
+        if (currentPosition == null) return true; //lost gps
+        float distance=leg.from.distanceTo(currentPosition);
+        if (distance > leg.anchorDistance) return true;
+        return false;
+    }
+    public boolean anchorWatchActive(){
+        RoutingLeg leg=this.currentLeg;
+        if (leg == null) {
+            try {
+                getLeg();
+            }catch(Exception e){
+                AvnLog.e("unable to read leg: "+e.getMessage());
+            }
+            leg=this.currentLeg;
+            if (leg == null) return false;
+        }
+        return leg.hasAnchorWatch();
     }
 
     public void setMediaUpdater(IMediaUpdater u){

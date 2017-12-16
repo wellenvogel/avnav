@@ -22,6 +22,7 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.main.RequestHandler;
 import de.wellenvogel.avnav.settings.NmeaSettingsFragment;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -85,6 +86,7 @@ public class GpsService extends Service implements INmeaLogger {
     private long loadSequence=1;
     private static final int NOTIFY_ID=1;
     private Object loggerLock=new Object();
+    private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -397,6 +399,16 @@ public class GpsService extends Service implements INmeaLogger {
 
     }
 
+    private String getAlarmSound(Alarm alarm){
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        String sound=prefs.getString("alarm."+alarm.name,"");
+        if (sound.isEmpty()) return null;
+        if (sound.startsWith("/")){
+            return "file:/"+sound;
+        }
+        return RequestHandler.URLPREFIX+"sounds/"+sound;
+    }
+
     /**
      * a timer handler
      * we compare the sequence from the start with our current sequence to prevent
@@ -414,6 +426,7 @@ public class GpsService extends Service implements INmeaLogger {
     };
 
     private void timerAction(){
+        checkAnchor();
         handleNotification(true);
         checkTrackWriter();
         for (GpsDataProvider provider: getAllProviders()) {
@@ -421,6 +434,27 @@ public class GpsService extends Service implements INmeaLogger {
         }
     }
 
+    private void checkAnchor(){
+        if (routeHandler == null) return;
+        if (! routeHandler.anchorWatchActive()){
+            resetAlarm(Alarm.GPS.name);
+            resetAlarm(Alarm.ANCHOR.name);
+            return;
+        }
+        Location current=getLocation();
+        if (current == null){
+            resetAlarm(Alarm.ANCHOR.name);
+            //TODO: avoid repeated GPS alarm
+            setAlarm(Alarm.GPS.name);
+            return;
+        }
+        resetAlarm(Alarm.GPS.name);
+        if (! routeHandler.checkAnchor(current)){
+            resetAlarm(Alarm.ANCHOR.name);
+            return;
+        }
+        setAlarm(Alarm.ANCHOR.name);
+    }
 
     /**
      * will be called whe we intend to really stop
@@ -594,7 +628,7 @@ public class GpsService extends Service implements INmeaLogger {
 
 
     public Map<String,Alarm> getAlarmStatus() {
-        return new HashMap<String, Alarm>();
+        return alarmStatus;
     }
     public JSONObject getAlarStatusJson() throws JSONException {
         Map<String,Alarm> alarms=getAlarmStatus();
@@ -606,7 +640,22 @@ public class GpsService extends Service implements INmeaLogger {
     }
 
     public void resetAlarm(String type){
+        AvnLog.i("reset alarm "+type);
+        alarmStatus.remove(type);
+    }
 
+    private void setAlarm(String type){
+        Alarm a=Alarm.createAlarm(type);
+        if (a == null) return;
+        a.running=true;
+        Alarm current=alarmStatus.get(a.name);
+        if (current != null && current.running) return;
+        String sound=getAlarmSound(a);
+        if (sound != null){
+            a.url=sound;
+        }
+        AvnLog.i("set alarm "+type);
+        alarmStatus.put(type,a);
     }
 
     public JSONObject getGpsData() throws JSONException{

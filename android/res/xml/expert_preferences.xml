@@ -53,9 +53,14 @@
         android:title="@string/labelSettingsServerPort"></de.wellenvogel.avnav.settings.CheckEditTextPreference>
     <de.wellenvogel.avnav.settings.DefaultsEditTextPreference
         android:key="alarm.anchor"
-        android:defaultValue="anchor-alarm.mp3"
+        android:defaultValue="anchorAlarm.mp3"
         android:inputType="text"
         android:title="@string/labelSettingsAnchorAlarm"></de.wellenvogel.avnav.settings.DefaultsEditTextPreference>
+    <de.wellenvogel.avnav.settings.DefaultsEditTextPreference
+        android:key="alarm.gps"
+        android:defaultValue="anchorAlarm.mp3"
+        android:inputType="text"
+        android:title="@string/labelSettingsGpsAlarm"></de.wellenvogel.avnav.settings.DefaultsEditTextPreference>
     <Preference
         android:title="@string/labelSettingsDefaults"
         android:key="prefs.default"></Preference>

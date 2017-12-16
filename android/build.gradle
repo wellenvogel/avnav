@@ -162,7 +162,13 @@ task copyToAssetsViewerRelease(type: org.gradle.api.tasks.Copy) {
 }
 copyToAssetsViewerRelease.dependsOn(buildViewerRelease)
 
-
+task copySounds(type: org.gradle.api.tasks.Copy) {
+    group = taskgroup
+    from("../sounds")
+    into new File(assetsDir, "sounds")
+}
+copyToAssetsViewerRelease.dependsOn(copySounds)
+copyToAssetsViewerDebug.dependsOn(copySounds)
 
 afterEvaluate {
     generateDebugAssets.dependsOn(copyToAssetsViewerDebug)

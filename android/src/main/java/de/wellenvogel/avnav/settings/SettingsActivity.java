@@ -219,8 +219,11 @@ public class SettingsActivity extends PreferenceActivity {
      */
     public static boolean handleInitialSettings(final Activity activity, final ICallback callback){
         boolean rt=true;
+        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.expert_preferences,true);
+        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.nmea_preferences,true);
         final SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor e=sharedPrefs.edit();
+        final SharedPreferences.Editor e=sharedPrefs.edit();
+        boolean defaultsSet=false;
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
         if (mode.equals("")) {
             e.putBoolean(Constants.SHOWDEMO,true);
@@ -279,7 +282,6 @@ public class SettingsActivity extends PreferenceActivity {
                 callback.callback(ICallback.CB_RESTART_SETTINGS);
             }
         },workdir);
-
         //for robustness update all modes matching the current settings and version
         String nmeaMode=NmeaSettingsFragment.getNmeaMode(sharedPrefs);
         NmeaSettingsFragment.updateNmeaMode(sharedPrefs,nmeaMode);

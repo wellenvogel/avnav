@@ -54,6 +54,23 @@ var RouteData=function(propertyHandler,navobject){
     }catch(e){
         avnav.log("Exception reading currentLeg "+e);
     }
+    if (avnav.android){
+        var data=avnav.android.getLeg();
+        if (data && data != ""){
+            avnav.log("android: get leg from server");
+            try {
+                var nLeg = new routeobjects.Leg();
+                nLeg.fromJsonString(data);
+                this.currentLeg=nLeg;
+            }catch (e){
+                avnav.log("unable to get leg from server");
+                this.currentLeg=new routeobjects.Leg();
+            }
+        }
+        else{
+            this.currentLeg=new routeobjects.leg();
+        }
+    }
     if (this.currentLeg.name && ! this.currentLeg.currentRoute){
         //migrate from old stuff
         var route=this._loadRoute(this.currentLeg.name,true);
@@ -65,19 +82,7 @@ var RouteData=function(propertyHandler,navobject){
             this.currentLeg.currentRoute=new routeobjects.Route(this.currentLeg.name);
         }
     }
-    if (avnav.android){
-        var data=avnav.android.getLeg();
-        if (data && data != ""){
-            avnav.log("android: get leg from server");
-            try {
-                var nLeg = new routeobjects.Leg();
-                nLeg.fromJsonString(data);
-                this.currentLeg=nLeg;
-            }catch (e){
-                avnav.log("unable to get leg from server");
-            }
-        }
-    }
+
     /**
      * @private
      * @type {boolean}
@@ -1148,6 +1153,10 @@ RouteData.prototype._startQuery=function() {
     var url = this.propertyHandler.getProperties().navUrl+"?request=routing&command=getleg";
     var timeout = this.propertyHandler.getProperties().routeQueryTimeout; //in ms!
     var self = this;
+    if (avnav.android){
+        var leg=avnav.android.getLeg();
+        this._handleLegResponse(leg);
+    }
     if (! this.connectMode || avnav.android){
         self.timer=window.setTimeout(function() {
             self._startQuery();

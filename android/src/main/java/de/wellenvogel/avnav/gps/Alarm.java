@@ -11,9 +11,9 @@ public class Alarm {
     public String command;
     public int repeat=1;
     public String url;
-    public boolean running;
+    public boolean running=false;
     public String name;
-    public Alarm(String name){
+    private Alarm(String name){
         this.name=name;
     }
     public JSONObject toJson() throws JSONException {
@@ -35,5 +35,14 @@ public class Alarm {
             rt.append(", repeat=").append(repeat);
         }
         return rt.toString();
+    }
+    public static Alarm ANCHOR=new Alarm("anchor");
+    public static Alarm GPS=new Alarm("gps");
+    public static Alarm createAlarm(String name){
+        if (name == null) return null;
+        for (Alarm a: new Alarm[]{ANCHOR,GPS}){
+            if (a.name.equals(name)) return new Alarm(name);
+        }
+        return null;
     }
 }
