@@ -223,6 +223,9 @@ public class SettingsActivity extends PreferenceActivity {
         PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.nmea_preferences,true);
         final SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         final SharedPreferences.Editor e=sharedPrefs.edit();
+        if (! sharedPrefs.contains(Constants.ALARMSOUNDS)){
+            e.putBoolean(Constants.ALARMSOUNDS,true);
+        }
         boolean defaultsSet=false;
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
         if (mode.equals("")) {

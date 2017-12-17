@@ -65,12 +65,11 @@ public class ExpertSettingsFragment extends SettingsFragment {
                                 @Override
                                 public void onDefault() {
                                     ((EditTextPreference)preference).setText(anchor.getDefaultValue());
+                                    anchor.getDialog().dismiss();
                                 }
                             });
                     FolderChooseDialog.Selected_File_Name=anchor.getText();
                     FolderChooseDialog.dialogTitle=getString(R.string.labelSettingsAnchorAlarm);
-                    FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
-                    FolderChooseDialog.newFolderText=getString(R.string.createFolder);
                     String start = "";
                     try {
                         if (anchor.getText().startsWith("/")) {
@@ -85,6 +84,53 @@ public class ExpertSettingsFragment extends SettingsFragment {
                     } catch (Exception e) {
                         Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
                         ((EditTextPreference) preference).setText(anchor.getDefaultValue());
+                        return false;
+                    }
+                    FolderChooseDialog.chooseFile_or_Dir(false);
+                    return true;
+                }
+            });
+        }
+        final DefaultsEditTextPreference gps=(DefaultsEditTextPreference) findPreference(Constants.GPSALARM);
+        if (gps != null){
+            gps.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                public boolean onPreferenceClick(final Preference preference) {
+                    //open browser or intent here
+                    SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(getActivity(), SimpleFileDialog.FileOpenDefault,
+                            new SimpleFileDialog.SimpleFileDialogListener() {
+                                @Override
+                                public void onChosenDir(File chosenDir) {
+                                    ((EditTextPreference)preference).setText(chosenDir.getAbsolutePath());
+                                    gps.getDialog().dismiss();
+                                }
+
+                                @Override
+                                public void onCancel() {
+                                    gps.getDialog().dismiss();
+                                }
+
+                                @Override
+                                public void onDefault() {
+                                    ((EditTextPreference)preference).setText(gps.getDefaultValue());
+                                    gps.getDialog().dismiss();
+                                }
+                            });
+                    FolderChooseDialog.Selected_File_Name=gps.getText();
+                    FolderChooseDialog.dialogTitle=getString(R.string.labelSettingsGpsAlarm);
+                    String start = "";
+                    try {
+                        if (gps.getText().startsWith("/")) {
+                            File current = new File(gps.getText());
+                            start = current.getParentFile().getCanonicalPath();
+                            FolderChooseDialog.Selected_File_Name = current.getName();
+                        } else {
+                            start = getActivity().getFilesDir().getAbsolutePath();
+                            FolderChooseDialog.Selected_File_Name = gps.getText();
+                        }
+                        FolderChooseDialog.setStartDir(start);
+                    } catch (Exception e) {
+                        Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        ((EditTextPreference) preference).setText(gps.getDefaultValue());
                         return false;
                     }
                     FolderChooseDialog.chooseFile_or_Dir(false);

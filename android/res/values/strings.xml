@@ -110,5 +110,6 @@
     <string name="reset">Reset</string>
     <string name="webserver">AvNav Server</string>
     <string name="enableExternalAccess">WebServer External Access</string>
+    <string name="alarmSounds">Alarm sounds</string>
 
 </resources>

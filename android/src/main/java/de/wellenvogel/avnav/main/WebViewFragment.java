@@ -60,6 +60,9 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
                 Method m=WebView.class.getDeclaredMethod("setWebContentsDebuggingEnabled",boolean.class);
                 m.setAccessible(true);
                 m.invoke(webView,true);
+                m=WebSettings.class.getDeclaredMethod("setMediaPlaybackRequiresUserGesture",boolean.class);
+                m.setAccessible(true);
+                m.invoke(webView.getSettings(),false);
             } catch (Exception e) {
             }
         }

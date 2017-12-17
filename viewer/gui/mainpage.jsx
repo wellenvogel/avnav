@@ -220,19 +220,9 @@ Mainpage.prototype.updateAlarmSound=function(){
        var self=this;
        if (alarmState !== this.lastAlarmSound){
            this.lastAlarmSound=alarmState;
-           $.ajax({
-               url:self.gui.properties.getProperties().navUrl+"?request=alarm&media="+alarmState,
-               success: function(data){
-                   if (data.url){
-                       self.soundHandler.src=data.url;
-                       self.soundHandler.play();
-                       self.soundRepeat=parseInt(data.repeat||1);
-                   }
-               },
-               error: function(err){
-                   self.lastAlarmSound=undefined;
-               }
-           });
+           self.soundHandler.src=self.gui.properties.getProperties().navUrl+"?request=download&type=alarm&name="+encodeURIComponent(alarmState);
+           self.soundHandler.play();
+           self.soundRepeat=10000;
        }
        if (this.soundHandler.ended){
            if (this.soundRepeat > 0){

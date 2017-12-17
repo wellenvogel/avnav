@@ -23,4 +23,9 @@
         android:title="@string/enableExternalAccess"
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
+    <CheckBoxPreference
+        android:key="alarmSounds"
+        android:title="@string/alarmSounds"
+        android:widgetLayout="@layout/preference_checkbox">
+    </CheckBoxPreference>
 </PreferenceScreen>

@@ -25,7 +25,11 @@ var ButtonList= React.createClass({
     onItemClick: function(item){
         if (! this.props.buttonHandler) return;
         var proto = Object.getPrototypeOf(this.props.buttonHandler);
-        var f = proto['btn' + item.key];
+        var f = proto['btnAny'];
+        if (f) {
+            f.call(this.props.buttonHandler);
+        }
+        f = proto['btn' + item.key];
         if (f) {
             f.call(this.props.buttonHandler);
         }

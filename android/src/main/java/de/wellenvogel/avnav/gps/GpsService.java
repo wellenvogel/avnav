@@ -10,9 +10,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.AssetFileDescriptor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.location.*;
+import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -32,6 +34,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -87,6 +91,8 @@ public class GpsService extends Service implements INmeaLogger {
     private static final int NOTIFY_ID=1;
     private Object loggerLock=new Object();
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
+    private MediaPlayer mediaPlayer=null;
+    private boolean gpsLostAlarmed=false;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -396,19 +402,16 @@ public class GpsService extends Service implements INmeaLogger {
     {
         super.onCreate();
         ctx = this;
+        mediaPlayer=new MediaPlayer();
+        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                AvnLog.e("Media player error "+what+","+extra);
+                return true;
+            }
+        });
 
     }
-
-    private String getAlarmSound(Alarm alarm){
-        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        String sound=prefs.getString("alarm."+alarm.name,"");
-        if (sound.isEmpty()) return null;
-        if (sound.startsWith("/")){
-            return "file:/"+sound;
-        }
-        return RequestHandler.URLPREFIX+"sounds/"+sound;
-    }
-
     /**
      * a timer handler
      * we compare the sequence from the start with our current sequence to prevent
@@ -432,6 +435,14 @@ public class GpsService extends Service implements INmeaLogger {
         for (GpsDataProvider provider: getAllProviders()) {
             if (provider != null) provider.check();
         }
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        if (!prefs.getBoolean(Constants.ALARMSOUNDS,true)) {
+            try{
+                if (mediaPlayer != null){
+                    mediaPlayer.reset();
+                }
+            }catch (Exception e){}
+        }
     }
 
     private void checkAnchor(){
@@ -439,16 +450,19 @@ public class GpsService extends Service implements INmeaLogger {
         if (! routeHandler.anchorWatchActive()){
             resetAlarm(Alarm.GPS.name);
             resetAlarm(Alarm.ANCHOR.name);
+            gpsLostAlarmed=false;
             return;
         }
         Location current=getLocation();
         if (current == null){
             resetAlarm(Alarm.ANCHOR.name);
-            //TODO: avoid repeated GPS alarm
+            if (gpsLostAlarmed) return;
+            gpsLostAlarmed=true;
             setAlarm(Alarm.GPS.name);
             return;
         }
         resetAlarm(Alarm.GPS.name);
+        gpsLostAlarmed=false;
         if (! routeHandler.checkAnchor(current)){
             resetAlarm(Alarm.ANCHOR.name);
             return;
@@ -505,6 +519,13 @@ public class GpsService extends Service implements INmeaLogger {
         if (receiverRegistered) {
             unregisterReceiver(usbReceiver);
             receiverRegistered=false;
+        }
+        if (mediaPlayer != null){
+            try{
+                mediaPlayer.release();
+            }catch (Exception e){
+
+            }
         }
     }
 
@@ -641,6 +662,10 @@ public class GpsService extends Service implements INmeaLogger {
 
     public void resetAlarm(String type){
         AvnLog.i("reset alarm "+type);
+        Alarm a=alarmStatus.get(type);
+        if (a != null && a.isPlaying){
+            if (mediaPlayer != null) mediaPlayer.stop();
+        }
         alarmStatus.remove(type);
     }
 
@@ -650,12 +675,43 @@ public class GpsService extends Service implements INmeaLogger {
         a.running=true;
         Alarm current=alarmStatus.get(a.name);
         if (current != null && current.running) return;
-        String sound=getAlarmSound(a);
-        if (sound != null){
-            a.url=sound;
-        }
         AvnLog.i("set alarm "+type);
         alarmStatus.put(type,a);
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        if (!prefs.getBoolean(Constants.ALARMSOUNDS,true)) {
+            try{
+                if (mediaPlayer != null){
+                    mediaPlayer.reset();
+                }
+            }catch(Exception e){}
+            return;
+        }
+        String sound = prefs.getString("alarm." + a.name, "");
+        if (!sound.isEmpty()) {
+            try {
+                if (mediaPlayer != null) {
+                    if (mediaPlayer.isPlaying()) {
+                        mediaPlayer.stop();
+                    }
+                    mediaPlayer.reset();
+                    if (sound.startsWith("/")) {
+                        File soundFile = new File(sound);
+                        if (soundFile.isFile()) {
+                            mediaPlayer.setDataSource((new FileInputStream(soundFile)).getFD());
+                        }
+                    } else {
+                        AssetFileDescriptor af = this.getAssets().openFd("sounds/" + sound);
+                        mediaPlayer.setDataSource(af.getFileDescriptor(), af.getStartOffset(), af.getDeclaredLength());
+                    }
+                    mediaPlayer.setLooping(true);
+                    mediaPlayer.prepare();
+                    mediaPlayer.start();
+                }
+                a.isPlaying = true;
+            } catch (Exception e) {
+            }
+        }
+
     }
 
     public JSONObject getGpsData() throws JSONException{

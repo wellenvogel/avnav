@@ -1,8 +1,10 @@
 package de.wellenvogel.avnav.main;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.Resources;
 import android.location.Location;
 import android.net.Uri;
@@ -452,26 +454,53 @@ public class RequestHandler {
 
             }
             if (type.equals("download")){
+                boolean setAttachment=false;
                 String dltype=uri.getQueryParameter("type");
                 String name=uri.getQueryParameter("name");
                 ExtendedWebResourceResponse resp=null;
                 if (dltype != null && dltype.equals("track") && name != null) {
                     File trackfile = new File(getGpsService().getTrackDir(), name);
                     if (trackfile.isFile()) {
+                        setAttachment=true;
                         resp=new ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
                     }
                 }
                 if (dltype != null && dltype.equals("route") && name != null) {
                     File routefile = new File(new File(getWorkDir(),"routes"), name+".gpx");
                     if (routefile.isFile()) {
+                        setAttachment=true;
                         resp=new ExtendedWebResourceResponse((int) routefile.length(), "application/gpx+xml", "", new FileInputStream(routefile));
+                    }
+                }
+                if (dltype != null && dltype.equals("alarm") && name != null) {
+                    SharedPreferences prefs = getSharedPreferences();
+                    String sound = prefs.getString("alarm." + name, "");
+                    if (!sound.isEmpty()) {
+                        if (sound.startsWith("/")) {
+                            File soundFile=new File(sound);
+                            if (soundFile.isFile()) {
+                                resp = new ExtendedWebResourceResponse((int) soundFile.length(), "audio/mpeg", "", new FileInputStream(soundFile));
+                            }
+                        }
+                        else{
+                            try {
+                                AssetFileDescriptor af = activity.assetManager.openFd("sounds/" + sound);
+                                if (af != null) {
+                                    InputStream iss= af.createInputStream();
+                                    iss.skip(af.getStartOffset());
+                                    resp = new ExtendedWebResourceResponse((int) af.getLength(), "audio/mpeg", "",iss);
+                                }
+                            }catch(Exception e){
+                                AvnLog.e("unable to load sound "+sound+": "+e.getMessage());
+                            }
+                        }
                     }
                 }
                 if (resp == null) {
                     byte[] o = ("file " + ((name != null) ? name : "<null>") + " not found").getBytes();
                     resp = new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
                 }
-                resp.setHeader("Content-Disposition", "attachment");
+                if (setAttachment) resp.setHeader("Content-Disposition", "attachment");
                 resp.setHeader("Content-Type",resp.getMimeType());
                 return resp;
             }
@@ -590,18 +619,6 @@ public class RequestHandler {
                     getGpsService().resetAlarm(stop);
                     o=new JSONObject();
                     o.put("status","ok");
-                }
-                String media=uri.getQueryParameter("media");
-                if (media != null && ! media.isEmpty()){
-                    o=new JSONObject();
-                    Alarm a=getGpsService().getAlarmStatus().get(media);
-                    if (a != null && a.url != null){
-                        o=a.toJson();
-                    }
-                    else{
-                        o.put("status","error");
-                        o.put("info","url for "+media+" not found");
-                    }
                 }
                 if (o == null){
                     o=new JSONObject();

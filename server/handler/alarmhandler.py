@@ -220,7 +220,7 @@ class AVNAlarmHandler(AVNWorker):
     return rt
 
   def getHandledCommands(self):
-    return "alarm"
+    return {"api":"alarm","download":"alarm"}
 
   def handleApiRequest(self,type,command,requestparam,**kwargs):
     '''
@@ -235,6 +235,29 @@ class AVNAlarmHandler(AVNWorker):
     stop=name,name {status: ok|err}
     media=name {command:thecommand,repeat:therepeat,url:mediaUrl}
     '''
+    if type == "download":
+      name = AVNUtil.getHttpRequestParam(requestparam, "name")
+      AVNLog.debug("download alarm %s",name)
+      if name is None:
+        AVNLog.error("missing parameter name for alarm download")
+        return None
+      alarmInfo = self.findAlarm(name)
+      if alarmInfo is None:
+        AVNLog.error("no alarm %s defined",name)
+        return None
+      file=alarmInfo.get('parameter')
+      if file is None:
+        return None
+      fh=open(file)
+      if fh is None:
+        AVNLog.error("unable to find alarm sound %s",file)
+        return None
+      fsize=os.path.getsize(file)
+      rt={}
+      rt['mimetype'] = "audio/mpeg"
+      rt['size']=fsize
+      rt['stream']=fh
+      return rt
     status=AVNUtil.getHttpRequestParam(requestparam,"status")
     if status is not None:
       status=status.split(',')
@@ -250,19 +273,7 @@ class AVNAlarmHandler(AVNWorker):
         running=self.runningAlarms.get(name)
         rt[name]={'alarm':name,'running':True if running is not None else False}
       return rt
-    media=AVNUtil.getHttpRequestParam(requestparam,"media")
     rt={'status':'ok'}
-    if media is not None:
-      http=self.findHandlerByName('AVNHttpServer')
-      for alarm in media.split(','):
-        alarmInfo=self.findAlarm(alarm)
-        rt['command']=alarmInfo.get('command')
-        rt['repeat']=alarmInfo.get('repeat')
-        if http is not None:
-          rt['url']=http.getUrlPath(alarmInfo.get('parameter')) or ""
-        return rt
-        #TODO: handle multiple alarms
-      return rt
     mode="start"
     command=AVNUtil.getHttpRequestParam(requestparam,"start")
     if command is None:

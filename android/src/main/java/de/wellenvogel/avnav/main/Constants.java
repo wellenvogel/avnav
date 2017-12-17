@@ -10,6 +10,7 @@ public class Constants {
     public static final String SHOWDEMO="showdemo";
     public static final String INTERNALGPS="internalGps";
     public static final String EXTERNALACCESS="externalaccess";
+    public static final String ALARMSOUNDS="alarmSounds";
     public static final String IPNMEA="ip.nmea";
     public static final String IPAIS="ip.ais";
     public static final String IPADDR="ip.addr";
