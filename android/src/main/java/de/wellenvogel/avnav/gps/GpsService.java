@@ -16,6 +16,7 @@ import android.hardware.usb.UsbManager;
 import android.location.*;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -24,7 +25,6 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.main.RequestHandler;
 import de.wellenvogel.avnav.settings.NmeaSettingsFragment;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -34,7 +34,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -88,11 +87,13 @@ public class GpsService extends Service implements INmeaLogger {
     private IMediaUpdater mediaUpdater;
     private boolean trackLoading=true; //if set to true - do not write the track
     private long loadSequence=1;
-    private static final int NOTIFY_ID=1;
+    private static final int NOTIFY_ID=Constants.LOCALNOTIFY;
     private Object loggerLock=new Object();
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
     private MediaPlayer mediaPlayer=null;
     private boolean gpsLostAlarmed=false;
+    private NotifyInterface lockScreenNotify;
+    private BroadcastReceiver broadCastReceiver;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -212,13 +213,24 @@ public class GpsService extends Service implements INmeaLogger {
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             Notification not=notificationBuilder.getNotification();
             not.flags|=Notification.FLAG_ONGOING_EVENT;
-            mNotificationManager.notify(NOTIFY_ID,
-                    not);
+            /*mNotificationManager.notify(NOTIFY_ID,
+                    not);*/
+            if (lockScreenNotify != null) {
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    lockScreenNotify.startNotification(this, getResources().getString(R.string.notifyTitle), "alarm");
+                }
+                else{
+                    lockScreenNotify.cancelNotification(this);
+                }
+            }
         }
         else{
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.cancel(NOTIFY_ID);
+            if (lockScreenNotify != null){
+                lockScreenNotify.cancelNotification(this);
+            }
         }
     }
 
@@ -410,6 +422,21 @@ public class GpsService extends Service implements INmeaLogger {
                 return true;
             }
         });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            try {
+                lockScreenNotify=(NotifyInterface)(this.getClassLoader().loadClass(this.getClass().getPackage().getName()+".LockScreenNotify").newInstance());
+            } catch (Exception e) {
+                AvnLog.e("unable to instantiate lock screen handler: "+e.getMessage());
+            }
+        }
+        IntentFilter filter=new IntentFilter(Constants.BC_STOPALARM);
+        broadCastReceiver=new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                AvnLog.i("received notify in service");
+            }
+        };
+        registerReceiver(broadCastReceiver,filter);
 
     }
     /**
@@ -526,6 +553,9 @@ public class GpsService extends Service implements INmeaLogger {
             }catch (Exception e){
 
             }
+        }
+        if (broadCastReceiver != null){
+            unregisterReceiver(broadCastReceiver);
         }
     }
 
