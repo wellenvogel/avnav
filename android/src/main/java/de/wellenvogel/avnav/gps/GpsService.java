@@ -19,6 +19,7 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -211,13 +212,15 @@ public class GpsService extends Service implements INmeaLogger {
             else{
                 //
             }
-            Notification.Builder notificationBuilder =
-                    new Notification.Builder(this);
+            NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(this);
             notificationBuilder.setSmallIcon(R.drawable.sailboat);
             notificationBuilder.setContentTitle(getString(R.string.notifyTitle));
             notificationBuilder.setContentText(getString(R.string.notifyText));
-            notificationBuilder.setContent(nv);
-
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                notificationBuilder.setContent(nv);
+            }
+            //notificationBuilder.addAction(R.drawable.alarm256red,"alarm",stopAlarmPi);
             notificationBuilder.setContentIntent(contentIntent);
             notificationBuilder.setOngoing(true);
             notificationBuilder.setAutoCancel(false);
