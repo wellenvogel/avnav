@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
@@ -196,25 +197,29 @@ public class GpsService extends Service implements INmeaLogger {
 
     private void handleNotification(boolean start){
         if (start) {
-            Notification.Builder notificationBuilder =
-                    new Notification.Builder(this)
-                            .setSmallIcon(R.drawable.sailboat)
-                            .setContentTitle(getResources().getString(R.string.notifyTitle))
-                            .setContentText(getResources().getString(R.string.notifyText));
             Intent notificationIntent = new Intent(this, Dummy.class);
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                     notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            Intent bc=new Intent(ctx, de.wellenvogel.avnav.gps.BroadcastReceiver.class);
+            bc.setAction("STOP");
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(ctx,1,bc,PendingIntent.FLAG_CANCEL_CURRENT);
+            RemoteViews nv=new RemoteViews(getPackageName(),R.layout.notification);
+            nv.setOnClickPendingIntent(R.id.button2,pendingIntent);
+            Notification.Builder notificationBuilder =
+                    new Notification.Builder(this);
+            notificationBuilder.setSmallIcon(R.drawable.sailboat);
+            notificationBuilder.setContentTitle(getString(R.string.notifyTitle));
+            notificationBuilder.setContentText(getString(R.string.notifyText));
+            notificationBuilder.setContent(nv);
 
             notificationBuilder.setContentIntent(contentIntent);
-
-
-
+            notificationBuilder.setOngoing(true);
+            notificationBuilder.setAutoCancel(false);
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             Notification not=notificationBuilder.getNotification();
-            not.flags|=Notification.FLAG_ONGOING_EVENT;
-            /*mNotificationManager.notify(NOTIFY_ID,
-                    not);*/
+            mNotificationManager.notify(NOTIFY_ID,
+                    not);
             if (lockScreenNotify != null) {
                 if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                     lockScreenNotify.startNotification(this, getResources().getString(R.string.notifyTitle), "alarm");
@@ -424,7 +429,7 @@ public class GpsService extends Service implements INmeaLogger {
         });
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
             try {
-                lockScreenNotify=(NotifyInterface)(this.getClassLoader().loadClass(this.getClass().getPackage().getName()+".LockScreenNotify").newInstance());
+                //lockScreenNotify=(NotifyInterface)(this.getClassLoader().loadClass(this.getClass().getPackage().getName()+".LockScreenNotify").newInstance());
             } catch (Exception e) {
                 AvnLog.e("unable to instantiate lock screen handler: "+e.getMessage());
             }
