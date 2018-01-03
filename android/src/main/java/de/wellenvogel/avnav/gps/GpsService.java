@@ -93,7 +93,6 @@ public class GpsService extends Service implements INmeaLogger {
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
     private MediaPlayer mediaPlayer=null;
     private boolean gpsLostAlarmed=false;
-    private NotifyInterface lockScreenNotify;
     private BroadcastReceiver broadCastReceiver;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
@@ -200,11 +199,18 @@ public class GpsService extends Service implements INmeaLogger {
             Intent notificationIntent = new Intent(this, Dummy.class);
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                     notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            Intent bc=new Intent(ctx, de.wellenvogel.avnav.gps.BroadcastReceiver.class);
-            bc.setAction("STOP");
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(ctx,1,bc,PendingIntent.FLAG_CANCEL_CURRENT);
+            Intent boradcastIntent=new Intent();
+            boradcastIntent.setAction(Constants.BC_STOPALARM);
+            PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx,1,boradcastIntent,PendingIntent.FLAG_CANCEL_CURRENT);
             RemoteViews nv=new RemoteViews(getPackageName(),R.layout.notification);
-            nv.setOnClickPendingIntent(R.id.button2,pendingIntent);
+            nv.setOnClickPendingIntent(R.id.button2,stopAlarmPi);
+            //TODO: show/hide alarm button
+            if (hasAlarm()){
+                //
+            }
+            else{
+                //
+            }
             Notification.Builder notificationBuilder =
                     new Notification.Builder(this);
             notificationBuilder.setSmallIcon(R.drawable.sailboat);
@@ -215,27 +221,21 @@ public class GpsService extends Service implements INmeaLogger {
             notificationBuilder.setContentIntent(contentIntent);
             notificationBuilder.setOngoing(true);
             notificationBuilder.setAutoCancel(false);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                notificationBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
+            }
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             Notification not=notificationBuilder.getNotification();
             mNotificationManager.notify(NOTIFY_ID,
                     not);
-            if (lockScreenNotify != null) {
-                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                    lockScreenNotify.startNotification(this, getResources().getString(R.string.notifyTitle), "alarm");
-                }
-                else{
-                    lockScreenNotify.cancelNotification(this);
-                }
-            }
+
         }
         else{
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.cancel(NOTIFY_ID);
-            if (lockScreenNotify != null){
-                lockScreenNotify.cancelNotification(this);
-            }
+
         }
     }
 
@@ -427,18 +427,13 @@ public class GpsService extends Service implements INmeaLogger {
                 return true;
             }
         });
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-            try {
-                //lockScreenNotify=(NotifyInterface)(this.getClassLoader().loadClass(this.getClass().getPackage().getName()+".LockScreenNotify").newInstance());
-            } catch (Exception e) {
-                AvnLog.e("unable to instantiate lock screen handler: "+e.getMessage());
-            }
-        }
+
         IntentFilter filter=new IntentFilter(Constants.BC_STOPALARM);
         broadCastReceiver=new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                AvnLog.i("received notify in service");
+                AvnLog.i("received stop alarm");
+                resetAllAlarms();
             }
         };
         registerReceiver(broadCastReceiver,filter);
@@ -702,6 +697,18 @@ public class GpsService extends Service implements INmeaLogger {
             if (mediaPlayer != null) mediaPlayer.stop();
         }
         alarmStatus.remove(type);
+    }
+    public void resetAllAlarms(){
+        ArrayList<String> alarms=new ArrayList<String>();
+        for (String type: alarmStatus.keySet()){
+            alarms.add(type);
+        }
+        for (String alarm: alarms){
+            resetAlarm(alarm);
+        }
+    }
+    private boolean hasAlarm(){
+        return alarmStatus.size()>0;
     }
 
     private void setAlarm(String type){
