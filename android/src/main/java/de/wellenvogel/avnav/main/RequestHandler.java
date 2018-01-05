@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.main;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -27,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
@@ -36,12 +34,12 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import de.wellenvogel.avnav.gps.Alarm;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
+import de.wellenvogel.avnav.gps.IRouteHandlerProvider;
 import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.gps.TrackWriter;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -66,7 +64,7 @@ public class RequestHandler {
     private final Object handlerMonitor =new Object();
     private IMediaUpdater updater=null;
     //routes
-    private RouteHandler routeHandler=null;
+    private IRouteHandlerProvider routeHandler=null;
 
     private Thread chartHandler=null;
     private boolean chartHandlerRunning=false;
@@ -160,10 +158,10 @@ public class RequestHandler {
     }
     private RouteHandler getRouteHandler(){
         synchronized (handlerMonitor){
-            return routeHandler;
+            return routeHandler!=null?routeHandler.getRouteHandler():null;
         }
     }
-    public void setRouteHandler(RouteHandler h){
+    public void setRouteHandlerProvider(IRouteHandlerProvider h){
         synchronized (handlerMonitor){
             routeHandler=h;
         }

@@ -49,7 +49,7 @@ import java.util.Map;
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service implements INmeaLogger {
+public class GpsService extends Service implements INmeaLogger,IRouteHandlerProvider {
 
 
     public static String PROP_TRACKDIR="track.dir";
