@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import de.wellenvogel.avnav.main.Constants;
@@ -200,23 +201,31 @@ public class GpsService extends Service implements INmeaLogger {
             Intent notificationIntent = new Intent(this, Dummy.class);
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                     notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            Intent boradcastIntent=new Intent();
-            boradcastIntent.setAction(Constants.BC_STOPALARM);
-            PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx,1,boradcastIntent,PendingIntent.FLAG_CANCEL_CURRENT);
+            Intent broadcastIntent=new Intent();
+            broadcastIntent.setAction(Constants.BC_STOPALARM);
+            PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx,1,broadcastIntent,PendingIntent.FLAG_CANCEL_CURRENT);
             RemoteViews nv=new RemoteViews(getPackageName(),R.layout.notification);
             nv.setOnClickPendingIntent(R.id.button2,stopAlarmPi);
             //TODO: show/hide alarm button
-            if (hasAlarm()){
-                //
+            Alarm currentAlarm=getCurrentAlarm();
+            if (currentAlarm != null){
+                nv.setViewVisibility(R.id.button2,View.VISIBLE);
             }
             else{
-                //
+                nv.setViewVisibility(R.id.button2,View.INVISIBLE);
             }
             NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this);
             notificationBuilder.setSmallIcon(R.drawable.sailboat);
             notificationBuilder.setContentTitle(getString(R.string.notifyTitle));
-            notificationBuilder.setContentText(getString(R.string.notifyText));
+            if (currentAlarm == null) {
+                notificationBuilder.setContentText(getString(R.string.notifyText));
+                nv.setTextViewText(R.id.notificationText,getString(R.string.notifyText));
+            }
+            else{
+                notificationBuilder.setContentText(currentAlarm.name+ " Alarm");
+                nv.setTextViewText(R.id.notificationText,currentAlarm.name+ " Alarm");
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 notificationBuilder.setContent(nv);
             }
@@ -437,6 +446,7 @@ public class GpsService extends Service implements INmeaLogger {
             public void onReceive(Context context, Intent intent) {
                 AvnLog.i("received stop alarm");
                 resetAllAlarms();
+                handleNotification(true);
             }
         };
         registerReceiver(broadCastReceiver,filter);
@@ -710,8 +720,16 @@ public class GpsService extends Service implements INmeaLogger {
             resetAlarm(alarm);
         }
     }
-    private boolean hasAlarm(){
-        return alarmStatus.size()>0;
+    private Alarm getCurrentAlarm(){
+        if (alarmStatus.size() == 0) return null;
+        Alarm activeAlarm=null;
+        Alarm soundAlarm=null;
+        for (Alarm alarm:alarmStatus.values()){
+           if (alarm.running && activeAlarm==null) activeAlarm=alarm;
+           if (alarm.isPlaying && soundAlarm == null) soundAlarm=alarm;
+        }
+        if (soundAlarm != null) return soundAlarm;
+        return activeAlarm;
     }
 
     private void setAlarm(String type){
