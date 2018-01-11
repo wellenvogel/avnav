@@ -284,7 +284,7 @@ class UploadTask extends DefaultTask{
     protected createdDirs=[]
     private void checkReply(FTPClient ftp){
         if (! FTPReply.isPositiveCompletion(ftp.getReplyCode())){
-            throw Exception("negative ftp reply: "+ftp.getReplyString())
+            throw new Exception("negative ftp reply: "+ftp.getReplyString())
         }
     }
 
@@ -378,6 +378,11 @@ class UploadTask extends DefaultTask{
     boolean deleteTargetDir=false
     @TaskAction
     public void exec(){
+        /*
+        project.exec {
+            commandLine "ping","$server"
+        }
+        */
         assert (inputFile!=null || inputFiles!=null),"missing task parameter inputFile(s)"
         assert project.hasProperty("avnavVersion")
         logger.info("uploading to $server")
@@ -387,8 +392,10 @@ class UploadTask extends DefaultTask{
         def passwd=System.getenv("AVNAV_REPO_PASSWD")
         assert passwd !=null,"missing environemt variable AVNAV_REPO_PASSWD"
         ftp.connect(server)
+        checkReply(ftp)
         ftp.login(user,passwd)
         checkReply(ftp)
+        ftp.enterLocalPassiveMode()
         def dir=baseDir
         if (inputFile != null){
             assert inputFile.exists(),"input file $inputFile does not exist"

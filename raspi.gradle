@@ -144,6 +144,7 @@ task raspiDeb(type: Deb) {
     doFirst{
         version=project.packageVersion
         def vFile=file("$buildDir/$versionFileName")
+	if (! vFile.getParentFile().exists()) vFile.getParentFile().mkdirs()
         vFile.withWriter {wr->
             wr.println "AVNAV_VERSION=\"$version\""
         }
