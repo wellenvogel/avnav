@@ -7,7 +7,7 @@
     "watch": "webpack --progress --colors --watch",
     "watch-aistest": "webpack --config ./test/webpack.aistest.js --progress --colors --watch",
     "debug": "webpack",
-    "production": "cross-env NODE_ENV=production webpack -p"
+    "production": "webpack -p"
   },
   "repository": {
     "type": "git",

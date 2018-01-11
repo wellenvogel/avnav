@@ -7,7 +7,8 @@ var GenerateAssetsPlugin=require('generate-asset-webpack-plugin');
 
 var cssLoaderQuery="&localIdentName=[path][name]---[local]---[hash:base64:5]";
 var outDir="build/debug";
-if (process.env.NODE_ENV === 'production') {
+var isProduction=(process.env.NODE_ENV === 'production') || (process.argv.indexOf('-p') !== -1);
+if (isProduction) {
     cssLoaderQuery="";
     outDir="build/release";
 }
@@ -43,7 +44,7 @@ images.forEach(function(el){
    copyList.push({from: "./images/"+el,to:'images'});
 });
 
-if (process.env.NODE_ENV === 'production') {
+if (isProduction) {
     copyList.push({from: '../libraries/ol3201/ol.js', to:'libraries/ol.js'})
 }
 else{
@@ -54,12 +55,12 @@ var devtool="inline-source-map";
 var resolveAlias={
 
 };
-if (process.env.NODE_ENV === 'production') {
+if (isProduction) {
     devtool="";
     resolveAlias['react$']=__dirname+"/node_modules/react/dist/react.min.js";
     resolveAlias['react-dom$']=__dirname+"/node_modules/react-dom/dist/react-dom.min.js";
 }
-if (process.env.NODE_ENV !== 'production') {
+if (! isProduction) {
     resolveAlias['openlayers$']=__dirname+"/node_modules/openlayers/dist/ol-debug.js";
 }
 
@@ -145,7 +146,7 @@ module.exports = {
 };
 
 function getEntrySources(sources) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (isProduction) {
         //sources.push('webpack-dev-server/client?http://localhost:8082');
     }
 
