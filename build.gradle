@@ -396,6 +396,7 @@ class UploadTask extends DefaultTask{
         ftp.login(user,passwd)
         checkReply(ftp)
         ftp.enterLocalPassiveMode()
+        ftp.setBufferSize(1024*1024)
         def dir=baseDir
         if (inputFile != null){
             assert inputFile.exists(),"input file $inputFile does not exist"
