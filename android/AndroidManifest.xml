@@ -60,7 +60,7 @@
         <service
             android:name="de.wellenvogel.avnav.gps.GpsService"
             android:label="AvnavGps" />
-        <receiver android:name="de.wellenvogel.avnav.gps.BroadcastReceiver" />
+        <!--<receiver android:name="de.wellenvogel.avnav.gps.BroadcastReceiver" />-->
 
     </application>
 

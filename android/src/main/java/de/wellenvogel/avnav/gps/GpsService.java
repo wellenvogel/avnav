@@ -19,7 +19,10 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.RemoteViews;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
@@ -46,7 +49,7 @@ import java.util.Map;
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service implements INmeaLogger {
+public class GpsService extends Service implements INmeaLogger,IRouteHandlerProvider {
 
 
     public static String PROP_TRACKDIR="track.dir";
@@ -92,7 +95,6 @@ public class GpsService extends Service implements INmeaLogger {
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
     private MediaPlayer mediaPlayer=null;
     private boolean gpsLostAlarmed=false;
-    private NotifyInterface lockScreenNotify;
     private BroadcastReceiver broadCastReceiver;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
@@ -196,41 +198,56 @@ public class GpsService extends Service implements INmeaLogger {
 
     private void handleNotification(boolean start){
         if (start) {
-            Notification.Builder notificationBuilder =
-                    new Notification.Builder(this)
-                            .setSmallIcon(R.drawable.sailboat)
-                            .setContentTitle(getResources().getString(R.string.notifyTitle))
-                            .setContentText(getResources().getString(R.string.notifyText));
             Intent notificationIntent = new Intent(this, Dummy.class);
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                     notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
+            Intent broadcastIntent=new Intent();
+            broadcastIntent.setAction(Constants.BC_STOPALARM);
+            PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx,1,broadcastIntent,PendingIntent.FLAG_CANCEL_CURRENT);
+            RemoteViews nv=new RemoteViews(getPackageName(),R.layout.notification);
+            nv.setOnClickPendingIntent(R.id.button2,stopAlarmPi);
+            //TODO: show/hide alarm button
+            Alarm currentAlarm=getCurrentAlarm();
+            if (currentAlarm != null){
+                nv.setViewVisibility(R.id.button2,View.VISIBLE);
+            }
+            else{
+                nv.setViewVisibility(R.id.button2,View.INVISIBLE);
+            }
+            NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(this);
+            notificationBuilder.setSmallIcon(R.drawable.sailboat);
+            notificationBuilder.setContentTitle(getString(R.string.notifyTitle));
+            if (currentAlarm == null) {
+                notificationBuilder.setContentText(getString(R.string.notifyText));
+                nv.setTextViewText(R.id.notificationText,getString(R.string.notifyText));
+            }
+            else{
+                notificationBuilder.setContentText(currentAlarm.name+ " Alarm");
+                nv.setTextViewText(R.id.notificationText,currentAlarm.name+ " Alarm");
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                notificationBuilder.setContent(nv);
+            }
+            //notificationBuilder.addAction(R.drawable.alarm256red,"alarm",stopAlarmPi);
             notificationBuilder.setContentIntent(contentIntent);
-
-
-
+            notificationBuilder.setOngoing(true);
+            notificationBuilder.setAutoCancel(false);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                notificationBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
+            }
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             Notification not=notificationBuilder.getNotification();
-            not.flags|=Notification.FLAG_ONGOING_EVENT;
-            /*mNotificationManager.notify(NOTIFY_ID,
-                    not);*/
-            if (lockScreenNotify != null) {
-                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                    lockScreenNotify.startNotification(this, getResources().getString(R.string.notifyTitle), "alarm");
-                }
-                else{
-                    lockScreenNotify.cancelNotification(this);
-                }
-            }
+            mNotificationManager.notify(NOTIFY_ID,
+                    not);
+
         }
         else{
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.cancel(NOTIFY_ID);
-            if (lockScreenNotify != null){
-                lockScreenNotify.cancelNotification(this);
-            }
+
         }
     }
 
@@ -422,18 +439,14 @@ public class GpsService extends Service implements INmeaLogger {
                 return true;
             }
         });
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-            try {
-                lockScreenNotify=(NotifyInterface)(this.getClassLoader().loadClass(this.getClass().getPackage().getName()+".LockScreenNotify").newInstance());
-            } catch (Exception e) {
-                AvnLog.e("unable to instantiate lock screen handler: "+e.getMessage());
-            }
-        }
+
         IntentFilter filter=new IntentFilter(Constants.BC_STOPALARM);
         broadCastReceiver=new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                AvnLog.i("received notify in service");
+                AvnLog.i("received stop alarm");
+                resetAllAlarms();
+                handleNotification(true);
             }
         };
         registerReceiver(broadCastReceiver,filter);
@@ -697,6 +710,26 @@ public class GpsService extends Service implements INmeaLogger {
             if (mediaPlayer != null) mediaPlayer.stop();
         }
         alarmStatus.remove(type);
+    }
+    public void resetAllAlarms(){
+        ArrayList<String> alarms=new ArrayList<String>();
+        for (String type: alarmStatus.keySet()){
+            alarms.add(type);
+        }
+        for (String alarm: alarms){
+            resetAlarm(alarm);
+        }
+    }
+    private Alarm getCurrentAlarm(){
+        if (alarmStatus.size() == 0) return null;
+        Alarm activeAlarm=null;
+        Alarm soundAlarm=null;
+        for (Alarm alarm:alarmStatus.values()){
+           if (alarm.running && activeAlarm==null) activeAlarm=alarm;
+           if (alarm.isPlaying && soundAlarm == null) soundAlarm=alarm;
+        }
+        if (soundAlarm != null) return soundAlarm;
+        return activeAlarm;
     }
 
     private void setAlarm(String type){
