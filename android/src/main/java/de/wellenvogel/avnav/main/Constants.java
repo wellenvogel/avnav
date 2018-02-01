@@ -40,6 +40,12 @@ public class Constants {
     public static final String WEBSERVERPORT="web.port";
     public static final String ANCHORALARM="alarm.anchor";
     public static final String GPSALARM="alarm.gps";
+    //list of audio settings
+    //used to retrieve the request code for a get audio file
+    public static String[] audioPreferenceCodes=new String[]{
+            ANCHORALARM,
+            GPSALARM
+    };
     public static final String PREFNAME="AvNav";
     //dummy file to make the media scanner see or directories...
     public static final String EMPTY_FILE="EMPTY";

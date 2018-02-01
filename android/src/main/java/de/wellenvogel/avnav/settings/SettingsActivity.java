@@ -7,10 +7,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.*;
 
+import android.provider.OpenableColumns;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,6 +29,8 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
@@ -43,9 +48,23 @@ import de.wellenvogel.avnav.util.DialogBuilder;
 
 public class SettingsActivity extends PreferenceActivity {
 
+    public static interface ActivityResultCallback{
+        /**
+         * called on activity result
+         * @param requestCode
+         * @param resultCode
+         * @param data
+         * @return if true - result is handled
+         */
+        public boolean onActivityResult(int requestCode, int resultCode, Intent data);
+    }
+
+    private HashSet<ActivityResultCallback> callbacks=new HashSet<ActivityResultCallback>();
+
     private List<Header> headers=null;
     private static final int currentapiVersion = android.os.Build.VERSION.SDK_INT;
     private ActionBarHandler mToolbar;
+
 
     public ActionBarHandler getToolbar(){
         if (mToolbar != null) return mToolbar;
@@ -344,8 +363,8 @@ public class SettingsActivity extends PreferenceActivity {
         View toolbar=findViewById(R.id.toolbar);
         if (toolbar == null) injectToolbar();
         getToolbar().setOnMenuItemClickListener(this);
-        updateHeaderSummaries(true);
         super.onResume();
+        updateHeaderSummaries(true);
 
 
     }
@@ -396,6 +415,31 @@ public class SettingsActivity extends PreferenceActivity {
     public void showBreadCrumbs(CharSequence title, CharSequence shortTitle) {
         super.showBreadCrumbs(title,shortTitle);
         setTitle(title);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        callbacks.clear();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        for (ActivityResultCallback cb:callbacks){
+            boolean handled=cb.onActivityResult(requestCode,resultCode,data);
+            if (handled) break;
+        }
+
+
+
+    }
+
+    public void registerActivityResultCallback(ActivityResultCallback cb){
+        callbacks.add(cb);
+    }
+    public void deRegisterActivityResultCallback(ActivityResultCallback cb){
+        callbacks.remove(cb);
     }
 }
 

@@ -15,7 +15,8 @@
     <header
         android:fragment="de.wellenvogel.avnav.settings.ExpertSettingsFragment"
         android:title="@string/labelSettingsExpert"
-        android:summary="" >
+        android:summary=""
+        android:id="@+id/expert_settings">
 
     </header>
 

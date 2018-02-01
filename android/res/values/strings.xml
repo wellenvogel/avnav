@@ -111,5 +111,6 @@
     <string name="webserver">AvNav Server</string>
     <string name="enableExternalAccess">WebServer External Access</string>
     <string name="alarmSounds">Alarm sounds</string>
+    <string name="select">Select</string>
 
 </resources>

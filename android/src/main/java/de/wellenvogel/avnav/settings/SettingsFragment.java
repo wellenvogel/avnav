@@ -54,6 +54,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                                 if (p instanceof DefaultsEditTextPreference){
                                     ((DefaultsEditTextPreference)p).setDefaultValue(dv);
                                 }
+                                else if (p instanceof  AudioEditTextPreference){
+                                    ((AudioEditTextPreference)p).setDefaultValue(dv);
+                                }
                             }
                         }
                     }
@@ -64,6 +67,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         } catch (Exception e) {
             AvnLog.e("unable to reset", e);
         }
+
     }
 
     protected void setDefaults(int id){

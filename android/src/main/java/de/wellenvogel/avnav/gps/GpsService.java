@@ -15,6 +15,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.location.*;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -757,7 +758,10 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                         mediaPlayer.stop();
                     }
                     mediaPlayer.reset();
-                    if (sound.startsWith("/")) {
+                    if (sound.startsWith("content:")){
+                        mediaPlayer.setDataSource(this,Uri.parse(sound));
+                    }
+                    else  if (sound.startsWith("/")) {
                         File soundFile = new File(sound);
                         if (soundFile.isFile()) {
                             mediaPlayer.setDataSource((new FileInputStream(soundFile)).getFD());
