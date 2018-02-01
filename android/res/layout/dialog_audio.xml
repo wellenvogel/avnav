@@ -29,13 +29,13 @@
         android:orientation="vertical">
 
         <TextView
-            android:text="SomeTitle"
+            android:id="@+id/AudioTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/title"
-            android:textAppearance="@style/DialogTitle"
+            android:paddingBottom="20dp"
+            android:text="SomeTitle"
             android:textAlignment="textStart"
-            android:paddingBottom="20dp" />
+            android:textAppearance="@style/DialogTitle" />
 
         <EditText android:id="@+id/value"
             android:layout_marginBottom="24dp"
@@ -62,7 +62,7 @@
                 android:layout_weight="1">
 
                 <Button
-                    android:id="@+id/Button3"
+                    android:id="@+id/AudioBt3"
                     style="@style/FlatButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -71,19 +71,20 @@
             </LinearLayout>
 
             <Button
+                android:id="@+id/AudioBt2"
+                style="@style/FlatButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/cancel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/Button2"
-                style="@style/FlatButton"
                 android:visibility="visible" />
+
             <Button
-                android:text="@string/select"
+                android:id="@+id/AudioBt1"
+                style="@style/FlatButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/Button1"
-                style="@style/FlatButton"
-                android:visibility="visible"/>
+                android:text="@string/select"
+                android:visibility="visible" />
         </LinearLayout>
 
     </LinearLayout>

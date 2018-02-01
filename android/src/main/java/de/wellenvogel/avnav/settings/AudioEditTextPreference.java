@@ -16,7 +16,9 @@ import android.preference.EditTextPreference;
 import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.util.JsonReader;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.QuickContactBadge;
 import android.widget.TextView;
@@ -110,39 +112,23 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
     private String defaultValue;
 
     private EditText mEditText;
-    private DialogBuilder mDialogBuilder;
+    private AlertDialog.Builder mDialogBuilder;
     private int mRequestCode=-1;
-    @Override
-    public EditText getEditText() {
-        return mEditText;
-    }
-    @Override
-    protected void onDialogClosed(boolean positiveResult) {
-        if (positiveResult) {
-            //TODO
-            /*
-            String value = mEditText.getText().toString();
-            if (callChangeListener(value)) {
-                setText(value);
-            }
-            */
-        }
-    }
-    @Override
-    public void onClick(DialogInterface dialog, int which) {
-        if (which == DialogInterface.BUTTON_NEUTRAL) {
-            setText(""); //should be unparseable and this way fall back to default
-        }
-        super.onClick(dialog,which);
-
-    }
 
 
     @Override
     protected void showDialog(Bundle state) {
-        if (mDialogBuilder == null) {
-            mDialogBuilder=new DialogBuilder(getContext(),R.layout.dialog_audio);
-        }
+        showDialog(state,null);
+    }
+
+    private void showDialog(Bundle state,  AudioInfo dialogInfo){
+
+        mDialogBuilder = new AlertDialog.Builder(getContext())
+                .setTitle(null);
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View v= inflater.inflate(R.layout.dialog_audio, null);
+        mDialogBuilder.setView(v);
+        final AlertDialog dialog = mDialogBuilder.create();
         if (mRequestCode < 0){
             for (int i=0;i< Constants.audioPreferenceCodes.length;i++){
                 if (Constants.audioPreferenceCodes[i].equals(getKey())){
@@ -151,10 +137,11 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
                 }
             }
         }
-        mDialogBuilder.setTitle(getTitle());
-        mDialogBuilder.createDialog();
-        mEditText = (EditText) mDialogBuilder.getContentView().findViewById(R.id.value);
-        mEditText.setText(getSummaryText());
+        TextView title=(TextView)v.findViewById(R.id.AudioTitle);
+        title.setText(getTitle());
+        mEditText = (EditText) v.findViewById(R.id.value);
+        final AudioInfo internalDialogInfo=dialogInfo!=null?dialogInfo:info;
+        mEditText.setText(internalDialogInfo!=null?internalDialogInfo.getDisplayString():"default");
         mEditText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -162,32 +149,42 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
                 Intent intent1 = new Intent();
                 intent1.setAction(Intent.ACTION_GET_CONTENT);
                 intent1.setType("audio/*");
-                mDialogBuilder.dismiss();
+                dialog.dismiss();
                 ((Activity)getContext()).startActivityForResult(
                         Intent.createChooser(intent1, getTitle()), mRequestCode);
             }
         });
-        mDialogBuilder.getDialog().setOnDismissListener(this);
-        mDialogBuilder.setOnClickListener(this);
-        mDialogBuilder.setButton(R.string.setDefault,DialogInterface.BUTTON_NEUTRAL);
-        mDialogBuilder.setButton(R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
-        mDialogBuilder.setButton(R.string.ok,DialogInterface.BUTTON_POSITIVE);
-        onShowDialog(mDialogBuilder);
-        mDialogBuilder.show();
+        dialog.setOnDismissListener(this);
+        Button b3=(Button)v.findViewById(R.id.AudioBt3);
+        b3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setText("");
+                dialog.dismiss();
+            }
+        });
+        Button b2=(Button)v.findViewById(R.id.AudioBt2);
+        b2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        Button b1=(Button)v.findViewById(R.id.AudioBt1);
+        b1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    setText(internalDialogInfo.toJson().toString());
+                } catch (JSONException e) {
+                    setText("");
+                }
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 
-    @Override
-    public Dialog getDialog() {
-        return mDialogBuilder.getDialog();
-    }
-
-    protected AlertDialog getAlertDialog(){
-        return mDialogBuilder.getDialog();
-    }
-    protected DialogBuilder getDialogBuilder(){return mDialogBuilder;}
-    protected void onShowDialog(DialogBuilder b){
-        return;
-    }
 
     public void setDefaultValue(String defaultValue){
         this.defaultValue=defaultValue;
@@ -217,17 +214,11 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
             info.uri=uri;
             info.type="media";
             info.displayName=retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-            try {
-                setText(info.toJson().toString());
-            } catch (JSONException e) {
-                AvnLog.e("internal error, unable to encode audio info "+e);
-                setText("");
-            }
+            showDialog(null,info);
             return true;
 
         }
-        File alarm=new File(uri.getPath());
-        setText(alarm.getAbsolutePath());
+        showDialog(null,null);
         return true;
     }
 }
