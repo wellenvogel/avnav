@@ -37,14 +37,45 @@
             android:textAlignment="textStart"
             android:textAppearance="@style/DialogTitle" />
 
-        <EditText android:id="@+id/value"
-            android:layout_marginBottom="24dp"
+        <TextView android:id="@+id/value"
+            android:layout_marginBottom="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/DialogSecond"
             android:text="someValue"
             android:background="@drawable/edit_text_background" />
 
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/edpButtonContainerSelect"
+        android:gravity="left"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+        <Button
+            android:id="@+id/AudioMedia"
+            style="@style/FlatButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btSettingsAudioMedia"
+            android:visibility="visible" />
+        <Button
+            android:id="@+id/AudioRingtone"
+            style="@style/FlatButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btSettingsAudioRingtone"
+            android:visibility="visible" />
+        <Button
+            android:id="@+id/AudioBt3"
+            style="@style/FlatButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setDefault"
+            android:visibility="visible" />
+    </LinearLayout>
 
         <LinearLayout
             android:orientation="horizontal"
@@ -54,22 +85,22 @@
             android:gravity="right"
             android:paddingTop="8dp"
             android:paddingBottom="8dp">
+
             <LinearLayout
-                android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="left"
+                android:orientation="horizontal"
                 android:layout_weight="1">
 
                 <Button
-                    android:id="@+id/AudioBt3"
+                    android:id="@+id/AudioPlay"
                     style="@style/FlatButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/setDefault"
+                    android:text="@string/btSettingsAudioPlay"
                     android:visibility="visible" />
             </LinearLayout>
-
             <Button
                 android:id="@+id/AudioBt2"
                 style="@style/FlatButton"

@@ -2,36 +2,32 @@ package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.provider.MediaStore;
 import android.util.AttributeSet;
-import android.util.JsonReader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.QuickContactBadge;
 import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
+import java.io.IOException;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.DialogBuilder;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -45,12 +41,14 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         public String displayName;
         public String type;
         public Uri uri;
+        public String path;
 
         JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
             rt.put("display",displayName);
             rt.put("type",type);
             rt.put("uri",(uri != null)?uri.toString():"");
+            if (path != null) rt.put("path",path);
             return rt;
         }
         public AudioInfo(){}
@@ -60,15 +58,15 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
             try {
                 uri = Uri.parse(json.getString("uri"));
             }catch (Exception e){
-
             }
+            if (json.has("path")) path=json.getString("path");
         }
         public String getDisplayString(){
             if (type == null || type.equals("default")) {
                 if (uri == null || ! uri.toString().startsWith(ASSETS_URI_PREFIX)) return "default";
                 return uri.toString().substring(ASSETS_URI_PREFIX.length());
             }
-            return type+":"+displayName;
+            return "["+type+"] "+displayName;
         }
     }
     public AudioEditTextPreference(Context context) {
@@ -85,6 +83,12 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
 
     private AudioInfo info;
 
+    private void setDefault(final AudioInfo info){
+        info.displayName="default";
+        info.type="default";
+        info.uri=Uri.parse(ASSETS_URI_PREFIX+(defaultValue!=null?defaultValue:"alarm.mp3"));
+    }
+
     @Override
     public void setText(String text) {
         try {
@@ -92,9 +96,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
             info=new AudioInfo(jo);
         } catch (JSONException e) {
             info=new AudioInfo();
-            info.displayName="default";
-            info.type="default";
-            info.uri=Uri.parse(ASSETS_URI_PREFIX+(defaultValue!=null?defaultValue:"alarm.mp3"));
+            setDefault(info);
             try {
                 super.setText(info.toJson().toString());
             } catch (JSONException e1) {
@@ -111,7 +113,6 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
 
     private String defaultValue;
 
-    private EditText mEditText;
     private AlertDialog.Builder mDialogBuilder;
     private int mRequestCode=-1;
 
@@ -121,7 +122,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         showDialog(state,null);
     }
 
-    private void showDialog(Bundle state,  AudioInfo dialogInfo){
+    private void showDialog(Bundle state, final AudioInfo dialogInfo){
 
         mDialogBuilder = new AlertDialog.Builder(getContext())
                 .setTitle(null);
@@ -139,28 +140,45 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         }
         TextView title=(TextView)v.findViewById(R.id.AudioTitle);
         title.setText(getTitle());
-        mEditText = (EditText) v.findViewById(R.id.value);
+        final TextView value = (TextView) v.findViewById(R.id.value);
         final AudioInfo internalDialogInfo=dialogInfo!=null?dialogInfo:info;
-        mEditText.setText(internalDialogInfo!=null?internalDialogInfo.getDisplayString():"default");
-        mEditText.setOnClickListener(new View.OnClickListener() {
+        final MediaPlayer player=new MediaPlayer();
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                player.stop();
+                player.reset();
+            }
+        });
+        value.setText(internalDialogInfo!=null?internalDialogInfo.getDisplayString():"default");
+        Button bMedia=(Button)v.findViewById(R.id.AudioMedia);
+        bMedia.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mRequestCode < 0) return;
                 Intent intent1 = new Intent();
-                intent1.setAction(Intent.ACTION_GET_CONTENT);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    intent1.setAction(Intent.ACTION_OPEN_DOCUMENT);
+                }
+                else{
+                    intent1.setAction(Intent.ACTION_GET_CONTENT);
+                }
                 intent1.setType("audio/*");
                 dialog.dismiss();
                 ((Activity)getContext()).startActivityForResult(
                         Intent.createChooser(intent1, getTitle()), mRequestCode);
             }
         });
-        dialog.setOnDismissListener(this);
         Button b3=(Button)v.findViewById(R.id.AudioBt3);
         b3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setText("");
-                dialog.dismiss();
+                if (internalDialogInfo != null){
+                   setDefault(internalDialogInfo);
+                }
+                value.setText(internalDialogInfo!=null?internalDialogInfo.getDisplayString():"default");
+                player.stop();
+                player.reset();
             }
         });
         Button b2=(Button)v.findViewById(R.id.AudioBt2);
@@ -182,6 +200,36 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
                 dialog.dismiss();
             }
         });
+        Button bPlay=(Button)v.findViewById(R.id.AudioPlay);
+        bPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                player.reset();
+                if (internalDialogInfo == null) return;
+                try {
+                    if (internalDialogInfo.path != null){
+                        player.setDataSource(internalDialogInfo.path);
+                    }
+                    else {
+                        if (internalDialogInfo.uri.toString().startsWith(ASSETS_URI_PREFIX)){
+                            String ap="sounds/"+internalDialogInfo.uri.toString().substring(ASSETS_URI_PREFIX.length());
+                            AssetFileDescriptor af=getContext().getAssets().openFd(ap);
+                            if (af != null){
+                                player.setDataSource(af.getFileDescriptor(),af.getStartOffset(),af.getDeclaredLength());
+                            }
+                        }
+                        else {
+                            player.setDataSource(getContext(), internalDialogInfo.uri);
+                        }
+                    }
+                    player.prepare();
+                    player.start();
+                } catch (Exception e) {
+                    AvnLog.e("unable to play "+e);
+                }
+            }
+        });
+
         dialog.show();
     }
 
@@ -197,6 +245,41 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         ((SettingsActivity)getContext()).registerActivityResultCallback(this);
     }
 
+    /**
+     * for pre KitKat devices we try to keep the path in the settings
+     * to avoid any access rights problems when accessing the file url
+     * @param contentURI
+     * @return
+     */
+    private String getRealPathFromURI(Uri contentURI)
+    {
+        Cursor cursor = getContext().getContentResolver().query(contentURI, null, null, null, null);
+        cursor.moveToFirst();
+        String documentId = cursor.getString(0);
+        documentId = documentId.split(":")[1];
+        cursor.close();
+
+        cursor = getContext().getContentResolver().query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                null, "_id=? ", new String[] { documentId }, null);
+        cursor.moveToFirst();
+        String path=null;
+        if (cursor.getCount() > 0) {
+            path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        }
+        else {
+            cursor = getContext().getContentResolver().query(
+                    MediaStore.Audio.Media.INTERNAL_CONTENT_URI,
+                    null, "_id=? ", new String[] { documentId }, null);
+            cursor.moveToFirst();
+            if (cursor.getCount() > 0) {
+                path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+            }
+        }
+        cursor.close();
+
+        return path;
+    }
 
 
     @Override
@@ -206,6 +289,16 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         Uri uri=data.getData();
         if (uri == null) {
             AvnLog.i("empty audio select request");
+            return true;
+        }
+        boolean needsPath=true;
+        final int takeFlags = data.getFlags()
+                & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        // Check for the freshest data.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            getContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
+            needsPath=false;
         }
         if (uri.toString().startsWith("content:")){
             MediaMetadataRetriever retr=new MediaMetadataRetriever();
@@ -214,6 +307,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
             info.uri=uri;
             info.type="media";
             info.displayName=retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            if (needsPath) info.path= getRealPathFromURI(uri);
             showDialog(null,info);
             return true;
 
