@@ -3,18 +3,26 @@ package de.wellenvogel.avnav.settings;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
+import android.provider.MediaStore;
 import android.util.AttributeSet;
+import android.util.JsonReader;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.QuickContactBadge;
 import android.widget.TextView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 
@@ -30,6 +38,37 @@ import static android.app.Activity.RESULT_OK;
  */
 
 public class AudioEditTextPreference extends EditTextPreference implements SettingsActivity.ActivityResultCallback {
+    public static final String ASSETS_URI_PREFIX="file:///android_asset/sounds/";
+    public static class AudioInfo{
+        public String displayName;
+        public String type;
+        public Uri uri;
+
+        JSONObject toJson() throws JSONException {
+            JSONObject rt=new JSONObject();
+            rt.put("display",displayName);
+            rt.put("type",type);
+            rt.put("uri",(uri != null)?uri.toString():"");
+            return rt;
+        }
+        public AudioInfo(){}
+        public AudioInfo(JSONObject json) throws JSONException {
+            displayName=json.getString("display");
+            type=json.getString("type");
+            try {
+                uri = Uri.parse(json.getString("uri"));
+            }catch (Exception e){
+
+            }
+        }
+        public String getDisplayString(){
+            if (type == null || type.equals("default")) {
+                if (uri == null || ! uri.toString().startsWith(ASSETS_URI_PREFIX)) return "default";
+                return uri.toString().substring(ASSETS_URI_PREFIX.length());
+            }
+            return type+":"+displayName;
+        }
+    }
     public AudioEditTextPreference(Context context) {
         super(context);
     }
@@ -40,6 +79,32 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
 
     public AudioEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+    }
+
+    private AudioInfo info;
+
+    @Override
+    public void setText(String text) {
+        try {
+            JSONObject jo= new JSONObject(text);
+            info=new AudioInfo(jo);
+        } catch (JSONException e) {
+            info=new AudioInfo();
+            info.displayName="default";
+            info.type="default";
+            info.uri=Uri.parse(ASSETS_URI_PREFIX+(defaultValue!=null?defaultValue:"alarm.mp3"));
+            try {
+                super.setText(info.toJson().toString());
+            } catch (JSONException e1) {
+            }
+        }
+        super.setText(text);
+        setSummary(getSummaryText());
+    }
+
+    public String getSummaryText(){
+        if (info == null) return "default";
+        else return info.getDisplayString();
     }
 
     private String defaultValue;
@@ -54,16 +119,19 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
     @Override
     protected void onDialogClosed(boolean positiveResult) {
         if (positiveResult) {
+            //TODO
+            /*
             String value = mEditText.getText().toString();
             if (callChangeListener(value)) {
                 setText(value);
             }
+            */
         }
     }
     @Override
     public void onClick(DialogInterface dialog, int which) {
         if (which == DialogInterface.BUTTON_NEUTRAL) {
-            setText(defaultValue);
+            setText(""); //should be unparseable and this way fall back to default
         }
         super.onClick(dialog,which);
 
@@ -86,7 +154,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         mDialogBuilder.setTitle(getTitle());
         mDialogBuilder.createDialog();
         mEditText = (EditText) mDialogBuilder.getContentView().findViewById(R.id.value);
-        mEditText.setText(getText());
+        mEditText.setText(getSummaryText());
         mEditText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -141,6 +209,22 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         Uri uri=data.getData();
         if (uri == null) {
             AvnLog.i("empty audio select request");
+        }
+        if (uri.toString().startsWith("content:")){
+            MediaMetadataRetriever retr=new MediaMetadataRetriever();
+            retr.setDataSource(getContext(),uri);
+            AudioInfo info=new AudioInfo();
+            info.uri=uri;
+            info.type="media";
+            info.displayName=retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            try {
+                setText(info.toJson().toString());
+            } catch (JSONException e) {
+                AvnLog.e("internal error, unable to encode audio info "+e);
+                setText("");
+            }
+            return true;
+
         }
         File alarm=new File(uri.getPath());
         setText(alarm.getAbsolutePath());

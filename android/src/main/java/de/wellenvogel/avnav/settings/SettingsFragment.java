@@ -117,6 +117,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             if (pref instanceof EditTextPreference) {
                 pref.setSummary(((EditTextPreference) pref).getText());
             }
+            if (pref instanceof AudioEditTextPreference) {
+                pref.setSummary(((AudioEditTextPreference) pref).getSummaryText());
+            }
             if (pref instanceof PreferenceGroup) {
                 updateTextSummaries((PreferenceGroup) pref);
             }
