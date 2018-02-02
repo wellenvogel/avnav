@@ -56,7 +56,7 @@
         android:defaultValue="anchorAlarm.mp3"
         android:inputType="text"
         android:title="@string/labelSettingsAnchorAlarm"></de.wellenvogel.avnav.settings.AudioEditTextPreference>
-    <RingtonePreference
+    <de.wellenvogel.avnav.settings.AudioEditTextPreference
         android:key="alarm.gps"
         android:defaultValue="anchorAlarm.mp3"
         android:inputType="text"

@@ -9,6 +9,7 @@ import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -191,6 +192,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
+                mp.stop();
                 bStop.setVisibility(View.GONE);
                 bPlay.setVisibility(View.VISIBLE);
             }
@@ -219,6 +221,19 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
                 dialog.dismiss();
                 ((Activity)getContext()).startActivityForResult(
                         Intent.createChooser(intent1, getTitle()), mRequestCode);
+            }
+        });
+        Button btRingtone=(Button)v.findViewById(R.id.AudioRingtone);
+        btRingtone.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getTitle());
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE,RingtoneManager.TYPE_ALARM);
+                ((Activity)getContext()).startActivityForResult( intent, mRequestCode);
             }
         });
         Button b3=(Button)v.findViewById(R.id.AudioBt3);
@@ -313,17 +328,28 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         if (mRequestCode != requestCode) return false;
         if (resultCode != RESULT_OK) return true;
         Uri uri=data.getData();
+        boolean isRingtone=false;
         if (uri == null) {
-            AvnLog.i("empty audio select request");
-            return true;
+            uri=data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
+            if (uri == null) {
+                AvnLog.i("empty audio select request");
+                return true;
+            }
+            isRingtone=true;
+
         }
         boolean needsPath=true;
-        final int takeFlags = data.getFlags()
-                & (Intent.FLAG_GRANT_READ_URI_PERMISSION
-                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        // Check for the freshest data.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            getContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
+        if (! isRingtone) {
+            final int takeFlags = data.getFlags()
+                    & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            // Check for the freshest data.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                getContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
+                needsPath = false;
+            }
+        }
+        else{
             needsPath=false;
         }
         if (uri.toString().startsWith("content:")){
@@ -332,6 +358,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
             AudioInfo info=new AudioInfo();
             info.uri=uri;
             info.type="media";
+            if (isRingtone) info.type="ringtone";
             info.displayName=retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
             if (needsPath) info.path= getRealPathFromURI(uri);
             showDialog(null,info);

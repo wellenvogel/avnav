@@ -29,6 +29,7 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.settings.NmeaSettingsFragment;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -758,18 +759,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                         mediaPlayer.stop();
                     }
                     mediaPlayer.reset();
-                    if (sound.startsWith("content:")){
-                        mediaPlayer.setDataSource(this,Uri.parse(sound));
-                    }
-                    else  if (sound.startsWith("/")) {
-                        File soundFile = new File(sound);
-                        if (soundFile.isFile()) {
-                            mediaPlayer.setDataSource((new FileInputStream(soundFile)).getFD());
-                        }
-                    } else {
-                        AssetFileDescriptor af = this.getAssets().openFd("sounds/" + sound);
-                        mediaPlayer.setDataSource(af.getFileDescriptor(), af.getStartOffset(), af.getDeclaredLength());
-                    }
+                    AudioEditTextPreference.setPlayerSource(mediaPlayer,new AudioEditTextPreference.AudioInfo(new JSONObject(sound)),this);
                     mediaPlayer.setLooping(true);
                     mediaPlayer.prepare();
                     mediaPlayer.start();
