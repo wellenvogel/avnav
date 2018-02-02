@@ -19,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -122,6 +123,23 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         showDialog(state,null);
     }
 
+    public static void setPlayerSource(MediaPlayer player, AudioInfo info, Context context) throws Exception {
+        if (info == null) return;
+        if (info.path != null) {
+            player.setDataSource(info.path);
+        } else {
+            if (info.uri.toString().startsWith(ASSETS_URI_PREFIX)) {
+                String ap = "sounds/" + info.uri.toString().substring(ASSETS_URI_PREFIX.length());
+                AssetFileDescriptor af = context.getAssets().openFd(ap);
+                if (af != null) {
+                    player.setDataSource(af.getFileDescriptor(), af.getStartOffset(), af.getDeclaredLength());
+                }
+            } else {
+                player.setDataSource(context, info.uri);
+            }
+        }
+    }
+
     private void showDialog(Bundle state, final AudioInfo dialogInfo){
 
         mDialogBuilder = new AlertDialog.Builder(getContext())
@@ -143,6 +161,40 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         final TextView value = (TextView) v.findViewById(R.id.value);
         final AudioInfo internalDialogInfo=dialogInfo!=null?dialogInfo:info;
         final MediaPlayer player=new MediaPlayer();
+        final Button bPlay=(Button)v.findViewById(R.id.AudioPlay);
+        final Button bStop=(Button)v.findViewById(R.id.AudioStop);
+        bPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                player.reset();
+                if (internalDialogInfo == null) return;
+                try {
+                    setPlayerSource(player,internalDialogInfo,getContext());
+                    player.prepare();
+                    player.start();
+                    bPlay.setVisibility(View.GONE);
+                    bStop.setVisibility(View.VISIBLE);
+                } catch (Exception e) {
+                    AvnLog.e("unable to play "+e);
+                    Toast.makeText(getContext(),"unable to play: "+e, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+        bStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                player.stop();
+                bStop.setVisibility(View.GONE);
+                bPlay.setVisibility(View.VISIBLE);
+            }
+        });
+        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                bStop.setVisibility(View.GONE);
+                bPlay.setVisibility(View.VISIBLE);
+            }
+        });
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
@@ -179,6 +231,8 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
                 value.setText(internalDialogInfo!=null?internalDialogInfo.getDisplayString():"default");
                 player.stop();
                 player.reset();
+                bStop.setVisibility(View.GONE);
+                bPlay.setVisibility(View.VISIBLE);
             }
         });
         Button b2=(Button)v.findViewById(R.id.AudioBt2);
@@ -200,35 +254,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
                 dialog.dismiss();
             }
         });
-        Button bPlay=(Button)v.findViewById(R.id.AudioPlay);
-        bPlay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                player.reset();
-                if (internalDialogInfo == null) return;
-                try {
-                    if (internalDialogInfo.path != null){
-                        player.setDataSource(internalDialogInfo.path);
-                    }
-                    else {
-                        if (internalDialogInfo.uri.toString().startsWith(ASSETS_URI_PREFIX)){
-                            String ap="sounds/"+internalDialogInfo.uri.toString().substring(ASSETS_URI_PREFIX.length());
-                            AssetFileDescriptor af=getContext().getAssets().openFd(ap);
-                            if (af != null){
-                                player.setDataSource(af.getFileDescriptor(),af.getStartOffset(),af.getDeclaredLength());
-                            }
-                        }
-                        else {
-                            player.setDataSource(getContext(), internalDialogInfo.uri);
-                        }
-                    }
-                    player.prepare();
-                    player.start();
-                } catch (Exception e) {
-                    AvnLog.e("unable to play "+e);
-                }
-            }
-        });
+
 
         dialog.show();
     }

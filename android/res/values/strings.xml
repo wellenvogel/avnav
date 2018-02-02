@@ -88,6 +88,7 @@
     <string name="labelSettingsOwnMMSI">filter own MMSI</string>
     <string name="btSettingsAudioMedia">Media</string>
     <string name="btSettingsAudioPlay">Play</string>
+    <string name="btSettingsAudioStop">Stop</string>
     <string name="btSettingsAudioRingtone">Ringtone</string>
     <string name="somethingWrong">Startup Error</string>
     <string name="somethingWrongMessage">Something went wrong during the last start. Please change your settings and try again.</string>

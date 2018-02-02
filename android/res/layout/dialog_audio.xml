@@ -46,36 +46,46 @@
             android:background="@drawable/edit_text_background" />
 
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/edpButtonContainerSelect"
-        android:gravity="left"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
-        <Button
-            android:id="@+id/AudioMedia"
-            style="@style/FlatButton"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/edpButtonContainerSelect"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/btSettingsAudioMedia"
-            android:visibility="visible" />
-        <Button
-            android:id="@+id/AudioRingtone"
-            style="@style/FlatButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/btSettingsAudioRingtone"
-            android:visibility="visible" />
-        <Button
-            android:id="@+id/AudioBt3"
-            style="@style/FlatButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/setDefault"
-            android:visibility="visible" />
-    </LinearLayout>
+            android:gravity="fill_horizontal"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp"
+            android:paddingTop="8dp">
+
+            <Button
+                android:id="@+id/AudioMedia"
+                style="@style/FlatButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btSettingsAudioMedia"
+                android:visibility="visible" />
+            <Space
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"/>
+            <Button
+                android:id="@+id/AudioRingtone"
+                style="@style/FlatButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btSettingsAudioRingtone"
+                android:visibility="visible" />
+            <Space
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"/>
+
+            <Button
+                android:id="@+id/AudioBt3"
+                style="@style/FlatButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/setDefault"
+                android:visibility="visible" />
+        </LinearLayout>
 
         <LinearLayout
             android:orientation="horizontal"
@@ -100,6 +110,13 @@
                     android:layout_height="wrap_content"
                     android:text="@string/btSettingsAudioPlay"
                     android:visibility="visible" />
+                <Button
+                    android:id="@+id/AudioStop"
+                    style="@style/FlatButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/btSettingsAudioStop"
+                    android:visibility="invisible" />
             </LinearLayout>
             <Button
                 android:id="@+id/AudioBt2"
