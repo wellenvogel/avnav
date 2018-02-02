@@ -759,7 +759,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                         mediaPlayer.stop();
                     }
                     mediaPlayer.reset();
-                    AudioEditTextPreference.setPlayerSource(mediaPlayer,new AudioEditTextPreference.AudioInfo(new JSONObject(sound)),this);
+                    AudioEditTextPreference.setPlayerSource(mediaPlayer,sound,this);
                     mediaPlayer.setLooping(true);
                     mediaPlayer.prepare();
                     mediaPlayer.start();

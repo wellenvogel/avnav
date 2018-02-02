@@ -85,10 +85,10 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
 
     private AudioInfo info;
 
-    private void setDefault(final AudioInfo info){
+    private void setDefault(final AudioInfo info, String defaultValue){
         info.displayName="default";
         info.type="default";
-        info.uri=Uri.parse(ASSETS_URI_PREFIX+(defaultValue!=null?defaultValue:"alarm.mp3"));
+        info.uri=Uri.parse(ASSETS_URI_PREFIX+((defaultValue!=null && ! defaultValue.isEmpty())?defaultValue:"alarm.mp3"));
     }
 
     @Override
@@ -98,7 +98,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
             info=new AudioInfo(jo);
         } catch (JSONException e) {
             info=new AudioInfo();
-            setDefault(info);
+            setDefault(info,text);
             try {
                 super.setText(info.toJson().toString());
             } catch (JSONException e1) {
@@ -124,6 +124,18 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         showDialog(state,null);
     }
 
+    public static void setPlayerSource(MediaPlayer player, String sound, Context context) throws Exception{
+        AudioInfo info=null;
+        try{
+            info=new AudioInfo(new JSONObject(sound));
+        }catch (Exception e){
+            info=new AudioInfo();
+            info.displayName="default";
+            info.type="default";
+            info.uri=Uri.parse(ASSETS_URI_PREFIX+sound);
+        }
+        setPlayerSource(player,info,context);
+    }
     public static void setPlayerSource(MediaPlayer player, AudioInfo info, Context context) throws Exception {
         if (info == null) return;
         if (info.path != null) {
@@ -241,7 +253,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
             @Override
             public void onClick(View v) {
                 if (internalDialogInfo != null){
-                   setDefault(internalDialogInfo);
+                   setDefault(internalDialogInfo,defaultValue);
                 }
                 value.setText(internalDialogInfo!=null?internalDialogInfo.getDisplayString():"default");
                 player.stop();
