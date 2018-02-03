@@ -98,6 +98,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     private MediaPlayer mediaPlayer=null;
     private boolean gpsLostAlarmed=false;
     private BroadcastReceiver broadCastReceiver;
+    private boolean shouldStop=false;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -309,9 +310,11 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             trackLoading=false;
         }
         File routeDir=new File(new File(prefs.getString(Constants.WORKDIR,"")),"routes");
-        routeHandler=new RouteHandler(routeDir);
-        routeHandler.setMediaUpdater(mediaUpdater);
-        routeHandler.start();
+        if (routeHandler == null || routeHandler.isStopped()) {
+            routeHandler = new RouteHandler(routeDir);
+            routeHandler.setMediaUpdater(mediaUpdater);
+            routeHandler.start();
+        }
         runnable=new TimerRunnable(timerSequence);
         handler.postDelayed(runnable, trackMintime);
         if (! receiverRegistered) {
@@ -516,6 +519,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
      * will be called whe we intend to really stop
      */
     private void handleStop(boolean emptyTrack){
+        shouldStop=true;
         for (GpsDataProvider provider: getAllProviders()) {
             if (provider != null) {
                 provider.stop();
@@ -571,6 +575,11 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
         if (broadCastReceiver != null){
             unregisterReceiver(broadCastReceiver);
+        }
+        if (! shouldStop){
+            AvnLog.e("service unintentionally stopped - trigger restart");
+            Intent sintent=new Intent("de.wellenvogel.avnav.RestartService");
+            sendBroadcast(sintent);
         }
     }
 

@@ -44,6 +44,7 @@ public class RouteHandler {
     private static final String rtpntName="<name>%s</name>";
 
     private IMediaUpdater mediaUpdater;
+    private long startSequence=1;
 
     private static String escapeXml(String in){
         String rt=in.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;").replace("'","&apos;");
@@ -269,16 +270,24 @@ public class RouteHandler {
 
     public void start() {
         if (! stopParser) return;
+        startSequence++;
         stopParser=false;
-        Thread t=new Thread(new DirectoryReader());
+        Thread t=new Thread(new DirectoryReader(startSequence));
         t.start();
     }
+    public boolean isStopped(){
+        return stopParser;
+    }
     private class DirectoryReader implements  Runnable{
+        private long sequence;
+        public DirectoryReader(long startsequence){
+            sequence=startsequence;
+        }
         @Override
         public void run() {
             AvnLog.i("routes directory parser started");
             HashMap<String,RouteInfo> localList=new HashMap<String, RouteInfo>();
-            while (true && ! stopParser){
+            while (! stopParser && sequence == startSequence){
                 if (routedir.isDirectory()) {
                     for (File f : routedir.listFiles()) {
                         if (!f.isFile()) continue;
