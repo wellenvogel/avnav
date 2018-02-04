@@ -75,4 +75,6 @@ public class Constants {
 
     public static final int LOCALNOTIFY=1;
     public static final int LOCKNOTIFY=2;
+
+    public static final long WATCHDOGTIME=30000; //ms
 }

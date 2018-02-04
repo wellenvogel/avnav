@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.gps;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -99,6 +100,8 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     private boolean gpsLostAlarmed=false;
     private BroadcastReceiver broadCastReceiver;
     private boolean shouldStop=false;
+    PendingIntent watchdogIntent=null;
+    private static final String WATCHDOGACTION="restart";
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -261,6 +264,12 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         if (intent != null && intent.getBooleanExtra(PROP_CHECKONLY,false)){
             return Service.START_REDELIVER_INTENT;
         }
+        boolean isWatchdog=false;
+        if (intent != null && intent.getAction() != null && intent.getAction().equals(WATCHDOGACTION)) isWatchdog=true;
+        if (isWatchdog) AvnLog.i("service onStartCommand, watchdog=true");
+        else {
+            AvnLog.i("service onStartCommand");
+        }
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         handleNotification(true);
         //we rely on the activity to check before...
@@ -290,12 +299,14 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                 );
         trackDir = newTrackDir;
         synchronized (loggerLock) {
-            if (loggerProperties.logNmea||loggerProperties.logAis) {
-                if (nmeaLogger != null) nmeaLogger.stop();
-                nmeaLogger = new NmeaLogger(trackDir,mediaUpdater,loggerProperties);
-            } else {
-                if (nmeaLogger != null) nmeaLogger.stop();
-                nmeaLogger = null;
+            if (! isWatchdog || nmeaLogger == null) {
+                if (loggerProperties.logNmea || loggerProperties.logAis) {
+                    if (nmeaLogger != null) nmeaLogger.stop();
+                    nmeaLogger = new NmeaLogger(trackDir, mediaUpdater, loggerProperties);
+                } else {
+                    if (nmeaLogger != null) nmeaLogger.stop();
+                    nmeaLogger = null;
+                }
             }
         }
         if (loadTrack) {
@@ -316,8 +327,10 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             routeHandler.setMediaUpdater(mediaUpdater);
             routeHandler.start();
         }
-        runnable=new TimerRunnable(timerSequence);
-        handler.postDelayed(runnable, trackMintime);
+        if (! isWatchdog || runnable == null) {
+            runnable = new TimerRunnable(timerSequence);
+            handler.postDelayed(runnable, trackMintime);
+        }
         if (! receiverRegistered) {
             registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
             receiverRegistered=true;
@@ -456,6 +469,21 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             }
         };
         registerReceiver(broadCastReceiver,filter);
+        Intent watchdog = new Intent(getApplicationContext(), GpsService.class);
+        watchdog.setAction(WATCHDOGACTION);
+        watchdogIntent=PendingIntent.getService(
+                getApplicationContext(),
+                0,
+                watchdog,
+                0);
+
+        ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE))
+                .setInexactRepeating(
+                        AlarmManager.ELAPSED_REALTIME,
+                        0,
+                        Constants.WATCHDOGTIME,
+                        watchdogIntent
+                );
 
     }
     /**
@@ -561,17 +589,9 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     @Override
     public boolean onUnbind(Intent intent) {
         AvnLog.i("service unbind");
-        boolean rt=super.onUnbind(intent);
-        tryRestart();
-        return rt;
-
+        return super.onUnbind(intent);
     }
 
-    private void tryRestart(){
-        AvnLog.e("service unintentionally stopped - trigger restart");
-        Intent sintent=new Intent("de.wellenvogel.avnav.RestartService");
-        sendBroadcast(sintent);
-    }
     @Override
     public void onDestroy()
     {
@@ -591,8 +611,9 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         if (broadCastReceiver != null){
             unregisterReceiver(broadCastReceiver);
         }
-        if (! shouldStop){
-            tryRestart();
+        if (shouldStop){
+            ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
+                    cancel(watchdogIntent);
         }
     }
 

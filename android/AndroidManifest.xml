@@ -61,17 +61,6 @@
         <service
             android:name="de.wellenvogel.avnav.gps.GpsService"
             android:label="AvnavGps" />
-        <!--<receiver android:name="de.wellenvogel.avnav.gps.BroadcastReceiver" />-->
-
-        <receiver
-            android:name="de.wellenvogel.avnav.main.SericeRestarter"
-            android:enabled="true"
-            android:exported="true"
-            android:label="RestartServiceWhenStopped">
-            <intent-filter>
-                <action android:name="de.wellenvogel.avnav.RestartService"/>
-            </intent-filter>
-        </receiver>
 
     </application>
 
