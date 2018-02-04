@@ -5,7 +5,7 @@ var nlf = require('nlf');
 
 var generateLicenseFile=function(cb){
     var rt="";
-    nlf.find({depth:0}, function (err, data) {
+    nlf.find({depth:1}, function (err, data) {
         // do something with the response object.
         rt+='<div class="licenseList">';
         data.forEach(function(el){
