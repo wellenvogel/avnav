@@ -209,6 +209,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx,1,broadcastIntent,PendingIntent.FLAG_CANCEL_CURRENT);
             RemoteViews nv=new RemoteViews(getPackageName(),R.layout.notification);
             nv.setOnClickPendingIntent(R.id.button2,stopAlarmPi);
+            nv.setOnClickPendingIntent(R.id.notification,contentIntent);
             //TODO: show/hide alarm button
             Alarm currentAlarm=getCurrentAlarm();
             if (currentAlarm != null){
@@ -519,7 +520,6 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
      * will be called whe we intend to really stop
      */
     private void handleStop(boolean emptyTrack){
-        shouldStop=true;
         for (GpsDataProvider provider: getAllProviders()) {
             if (provider != null) {
                 provider.stop();
@@ -553,10 +553,25 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     }
 
     public void stopMe(boolean doShutdown){
+        shouldStop=doShutdown;
         handleStop(doShutdown);
         stopSelf();
     }
 
+    @Override
+    public boolean onUnbind(Intent intent) {
+        AvnLog.i("service unbind");
+        boolean rt=super.onUnbind(intent);
+        tryRestart();
+        return rt;
+
+    }
+
+    private void tryRestart(){
+        AvnLog.e("service unintentionally stopped - trigger restart");
+        Intent sintent=new Intent("de.wellenvogel.avnav.RestartService");
+        sendBroadcast(sintent);
+    }
     @Override
     public void onDestroy()
     {
@@ -577,9 +592,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             unregisterReceiver(broadCastReceiver);
         }
         if (! shouldStop){
-            AvnLog.e("service unintentionally stopped - trigger restart");
-            Intent sintent=new Intent("de.wellenvogel.avnav.RestartService");
-            sendBroadcast(sintent);
+            tryRestart();
         }
     }
 

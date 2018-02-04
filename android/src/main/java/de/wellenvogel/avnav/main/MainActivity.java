@@ -58,6 +58,8 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         return mToolbar;
     }
     private IJsEventHandler jsEventHandler;
+    private boolean exitRequested=false;
+    private boolean running=false;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -245,6 +247,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     }
 
     private void endApp(){
+        exitRequested=true;
         finish();
     }
 
@@ -290,14 +293,25 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopGpsService(true);
-        serviceNeedsRestart=true;
-        System.exit(0);
+        running=false;
+        serviceNeedsRestart = true;
+        if (exitRequested) {
+            stopGpsService(true);
+            System.exit(0);
+        }
+        else{
+            AvnLog.e("main unintentionally stopped");
+            Intent intent = new Intent(this, GpsService.class);
+            try {
+                unbindService(mConnection);
+            }catch (Exception e){}
+        }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (running) return;
         setContentView(R.layout.viewcontainer);
         mToolbar=new ActionBarHandler(this,R.menu.main_activity_actions);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
@@ -317,6 +331,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
         updateWorkDir(workBase);
         updateWorkDir(new File(sharedPrefs.getString(Constants.CHARTDIR, "")));
+        running=true;
     }
 
     void hideToolBar(){
