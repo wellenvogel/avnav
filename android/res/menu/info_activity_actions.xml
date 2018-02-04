@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:local="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/action_up"
+        android:icon="@drawable/ic_keyboard_arrow_up_white_48dp"
+        android:title="@string/ok"
+        local:showAsAction="always" />
     <item android:id="@+id/action_ok"
         android:icon="@drawable/ic_done_white_48dp"
         android:title="@string/ok"

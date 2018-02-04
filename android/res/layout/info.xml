@@ -41,12 +41,37 @@
                 android:text="@string/btXwalDownload"
                 android:id="@+id/btDownloadXwalk"/>
     </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        >
 
+        <Button
+            android:id="@+id/btShowInfo"
+            style="@style/FlatButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btShowInfo" />
+
+
+        <Button
+            android:id="@+id/btShowPrivacy"
+            style="@style/FlatButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btShowPrivacy" />
+    </LinearLayout>
     <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         style="@style/scrollbar_shape_style"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:padding="10dp"
+        android:id="@+id/scrollInfo"
         >
 
         <LinearLayout
@@ -70,7 +95,16 @@
                 android:maxLines="1000"
                 android:autoLink="web"
                 android:text="test" />
+            <TextView
+                android:id="@+id/txPrivacy"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:maxLines="1000"
+                android:autoLink="web"
+                android:text="test" />
         </LinearLayout>
+
     </ScrollView>
 
 </LinearLayout>

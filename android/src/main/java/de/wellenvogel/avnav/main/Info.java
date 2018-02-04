@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.InputStream;
+import java.util.HashMap;
 
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
@@ -24,6 +25,12 @@ import de.wellenvogel.avnav.util.ActionBarHandler;
  */
 public class Info extends Activity {
     private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
+    private void scrollView(View parent, int target){
+        if (parent == null) return;
+        View v=parent.findViewById(target);
+        if (v == null) return;
+        parent.scrollTo(0,(int)v.getY());
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,9 +43,25 @@ public class Info extends Activity {
         } catch (PackageManager.NameNotFoundException e) {
             Log.e(Constants.LOGPRFX,"unable to access version name");
         }
+        HashMap<Integer,Integer> buttonMap=new HashMap<Integer, Integer>();
+        buttonMap.put(R.id.btShowInfo,R.id.txInfo);
+        buttonMap.put(R.id.btShowPrivacy,R.id.txPrivacy);
+        final View scrollView=findViewById(R.id.scrollInfo);
+        for (final int b:buttonMap.keySet()){
+            Button bt=(Button)findViewById(b);
+            if (bt == null) continue;
+            final int sv=buttonMap.get(b);
+            bt.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    scrollView(scrollView,sv);
+                }
+            });
+        }
         setText("version.txt",R.id.txVersion);
         setText("viewer/info.html",R.id.txInfo);
         setText("viewer/license.html",R.id.txLicense);
+        setText("viewer/privacy-en.html",R.id.txPrivacy);
         TextView xwalk=(TextView)findViewById(R.id.txXwalk);
         boolean xw= SettingsActivity.isXwalRuntimeInstalled(this);
         xwalk.setText("XWALK V "+ Constants.XWALKVERSION+" \n("+(xw?"installed":"not installed")+")");
@@ -95,6 +118,9 @@ public class Info extends Activity {
         if (item.getItemId() == R.id.action_ok){
             finish();
             return true;
+        }
+        if (item.getItemId() == R.id.action_up){
+            scrollView(findViewById(R.id.scrollInfo),R.id.txInfo);
         }
         return false;
     }

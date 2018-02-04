@@ -53,6 +53,8 @@
         Do you want to install it now?
         Required runtime version=</string>
     <string name="btXwalDownload">Download</string>
+    <string name="btShowInfo">Info/Licenses</string>
+    <string name="btShowPrivacy">PrivacyInfo</string>
     <string name="selectApp">Select Application to handle</string>
     <string name="uploadRoute">Select a route to upload</string>
     <string name="installFileManager">Please install a file manager</string>
