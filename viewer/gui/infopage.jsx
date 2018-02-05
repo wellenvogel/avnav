@@ -115,14 +115,14 @@ Infopage.prototype.getPageContent=function(){
             if (! target) return;
             let parent=this.refs.infoFrame;
             if (! parent) return;
-            parent.scrollTo(0,0);
+            parent.scrollTop=0;
         },
         showPrivacy:function(){
             let target=this.refs.privacy;
             if (! target) return;
             let parent=this.refs.infoFrame;
             if (! parent) return;
-            parent.scrollTo(0,target.offsetTop);
+            parent.scrollTop=target.offsetTop;
         }
     });
 };
