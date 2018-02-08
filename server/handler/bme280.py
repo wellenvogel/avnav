@@ -256,7 +256,7 @@ class AVNBME280Reader(AVNWorker):
           self.writeData(mda)
           """$AVMTA,19.50,C*2B"""
           mta = 'AVMTA,%.2f,C' % (temperature)
-          mta += "*" + NMEAParser.nmeaChecksum(mda) + "\r\n"
+          mta += "*" + NMEAParser.nmeaChecksum(mta) + "\r\n"
           AVNLog.debug("BME280:MTA %s", mta)
           self.writeData(mta)
         if self.getBoolParam('writeXdr'):
