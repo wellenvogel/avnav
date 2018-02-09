@@ -106,21 +106,32 @@ class AVNSenseHatReader(AVNWorker):
     while True:
       try:
         if self.getBoolParam('writeMda'):
-          """$WIMDA,30.2269,I,1.0236,B,17.7,C,,,43.3,,5.0,C,131.5,T,128.6,M,0.8,N,0.4,M"""
-          mda = '$SHMDA,%.4f,I,%.4f,B,%.1f,C,,C,%.1f,,,C,,T,,M,,N,,M' % (sense.pressure * 29.5301 / 1000,
-                                                                         sense.pressure / 1000,
-                                                                         sense.temp,
-                                                                         sense.humidity)
+          """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
+          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( sense.pressure / 1000.)
           mda += "*" + NMEAParser.nmeaChecksum(mda) + "\r\n"
           AVNLog.debug("SenseHat:MDA %s", mda)
           self.writeData(mda)
+          """$AVMTA,19.50,C*2B"""
+          mta = 'AVMTA,%.2f,C' % (sense.temp)
+          mta += "*" + NMEAParser.nmeaChecksum(mta) + "\r\n"
+          AVNLog.debug("SenseHat:MTA %s", mta)
+          self.writeData(mta)
         if self.getBoolParam('writeXdr'):
-          xdr = '$SHXDR,P,%.4f,B,SHPRESSURE,C,%.1f,C,SHTEMP,H,%.1f,P,SHHUMI' % (sense.pressure / 1000.,
-                                                                                sense.temp,
-                                                                                sense.humidity)
+          xdr = '$AVXDR,P,%.5f,B,Barometer' % (sense.pressure / 1000.)
           xdr += "*" + NMEAParser.nmeaChecksum(xdr) + "\r\n"
           AVNLog.debug("SenseHat:XDR %s", xdr)
           self.writeData(xdr)
+
+          xdr = '$AVXDR,C,%.2f,C,TempAir' % (sense.temp)
+          xdr += "*" + NMEAParser.nmeaChecksum(xdr) + "\r\n"
+          AVNLog.debug("SenseHat:XDR %s", xdr)
+          self.writeData(xdr)
+
+          xdr = '$AVXDR,H,%.2f,P,Humidity' % (sense.humidity)
+          xdr += "*" + NMEAParser.nmeaChecksum(xdr) + "\r\n"
+          AVNLog.debug("SenseHat:XDR %s", xdr)
+          self.writeData(xdr)
+
       except:
         AVNLog.info("exception while reading data from SenseHat %s", traceback.format_exc())
       wt = self.getFloatParam("interval")

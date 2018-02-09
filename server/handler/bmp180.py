@@ -210,14 +210,23 @@ class AVNBMP180Reader(AVNWorker):
       try:
         temperature,pressure = readBmp180(addr)
         if self.getBoolParam('writeMda'):
-          """$WIMDA,30.2269,I,1.0236,B,17.7,C,,,43.3,,5.0,C,131.5,T,128.6,M,0.8,N,0.4,M"""
-          mda = '$BMMDA,%.4f,I,%.4f,B,%.1f,C,,C,,,,C,,T,,M,,N,,M' % (pressure * 29.5301 / 1000., pressure / 1000.,temperature)
+          """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
+          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( pressure / 1000.)
           mda += "*" + NMEAParser.nmeaChecksum(mda) + "\r\n"
           AVNLog.debug("BMP180:MDA %s", mda)
           self.writeData(mda)
+          """$AVMTA,19.50,C*2B"""
+          mta = 'AVMTA,%.2f,C' % (temperature)
+          mta += "*" + NMEAParser.nmeaChecksum(mta) + "\r\n"
+          AVNLog.debug("BMP180:MTA %s", mta)
+          self.writeData(mta)
         if self.getBoolParam('writeXdr'):
-          xdr = '$BMXDR,P,%.4f,B,BMPRESSURE,C,%.1f,C,BMTEMP' % (pressure / 1000.,
-                                                                                temperature)
+          xdr = '$AVXDR,P,%.5f,B,Barometer' % (pressure / 1000.)
+          xdr += "*" + NMEAParser.nmeaChecksum(xdr) + "\r\n"
+          AVNLog.debug("BMP180:XDR %s", xdr)
+          self.writeData(xdr)
+
+          xdr = '$AVXDR,C,%.2f,C,TempAir' % (temperature)
           xdr += "*" + NMEAParser.nmeaChecksum(xdr) + "\r\n"
           AVNLog.debug("BMP180:XDR %s", xdr)
           self.writeData(xdr)

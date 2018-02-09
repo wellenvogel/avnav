@@ -184,9 +184,12 @@ class NMEAParser():
   @classmethod
   def nmeaChecksum(cls,part):
     chksum = 0
+    if part[0] == "$" or part[0] == "!":
+      part = part[1:]
     for s in part:
       chksum ^= ord(s)
-    return ("%X"%chksum).zfill(2)
+    #return ("%X"%chksum).zfill(2)
+    return ("%02X"%chksum)
 
   #parse a line of NMEA data and store it in the navdata array      
   def parseData(self,data):
