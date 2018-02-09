@@ -449,7 +449,7 @@ class AVNRouter(AVNWorker):
         self.setInfo("leg",routerInfo
                   ,AVNWorker.Status.RUNNING)
       try:
-        if self.currentLeg.anchorDistance is not None:
+        if self.currentLeg is not None and self.currentLeg.anchorDistance is not None:
           self.computeAnchor()
         else:
           self.startStopAlarm(False,'anchor')
