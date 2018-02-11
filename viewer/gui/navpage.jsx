@@ -301,8 +301,6 @@ Navpage.prototype.buttonUpdate=function(){
     this.handleToggleButton('LockPos',gpsLock);
     var courseUp=this.gui.map.getCourseUp();
     this.handleToggleButton('CourseUp',courseUp);
-    var anchorWatch=this.navobject.getRoutingHandler().getAnchorWatch()?true:false;
-    this.handleToggleButton('AnchorWatch',anchorWatch);
     if (this.selectedWp){
         var router=this.navobject.getRoutingHandler();
         if (router.isCurrentRoutingTarget(this.selectedWp)){
@@ -1120,22 +1118,6 @@ Navpage.prototype.btnWpPrevious=function(button,ev) {
     this.showWpButtons(next);
 };
 
-
-Navpage.prototype.btnAnchorWatch=function(button,ev) {
-    avnav.log("AnchorWatch clicked");
-    var router = this.navobject.getRoutingHandler();
-    if (router.getAnchorWatch()) {
-        router.anchorOff();
-        return;
-    }
-    var pos=this.navobject.getCurrentPosition();
-    if (! pos) return;
-    var def=this.gui.properties.getProperties().anchorWatchDefault;
-    OverlayDialog.valueDialogPromise("Set Anchor Watch",def,this.getDialogContainer(),"Radius(m)")
-        .then(function(value){
-            router.anchorOn(pos,value);
-        })
-};
 
 
 /**

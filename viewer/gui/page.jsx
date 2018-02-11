@@ -268,6 +268,7 @@ Page.prototype._showPage=function(){
     this._hideToast=false;
     this.showTime=new Date();
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
+    this.handleDefaultToggleButtons();
 };
 Page.prototype._hidePage=function(){
     if (this.intervalTimer >= 0){
@@ -293,6 +294,7 @@ Page.prototype.isAfterDeadTime=function(){
 Page.prototype._timerEvent=function(){
   if (this.isVisible()) {
       this.timerEvent();
+      this.handleDefaultToggleButtons();
   }
   else{
     if (this.intervalTimer >= 0){
@@ -508,11 +510,38 @@ Page.prototype.getAlarmWidget=function(){
     )
 };
 
+Page.prototype.handleDefaultToggleButtons=function() {
+    var anchorWatch = this.navobject.getRoutingHandler().getAnchorWatch() ? true : false;
+    this.handleToggleButton('AnchorWatch', anchorWatch);
+};
+
 /*-------------------------------------------------------
    default button
  */
 Page.prototype.btnCancel=function(){
   this.returnToLast();
+};
+
+Page.prototype.btnAnchorWatch=function(button,ev) {
+    avnav.log("AnchorWatch clicked");
+    let router = this.navobject.getRoutingHandler();
+    if (router.getAnchorWatch()) {
+        router.anchorOff();
+        this.handleDefaultToggleButtons();
+        return;
+    }
+    let pos=this.navobject.getCurrentPosition();
+    if (! pos) {
+        this.toast("no gps position");
+        return;
+    }
+    let def=this.gui.properties.getProperties().anchorWatchDefault;
+    let self=this;
+    OverlayDialog.valueDialogPromise("Set Anchor Watch",def,this.getDialogContainer(),"Radius(m)")
+        .then(function(value){
+            router.anchorOn(pos,value);
+            self.handleDefaultToggleButtons();
+        })
 };
 
 module.exports=Page;

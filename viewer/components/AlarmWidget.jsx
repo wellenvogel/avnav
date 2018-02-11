@@ -25,11 +25,12 @@ var AlarmWidget=React.createClass({
         </div>
         );
     },
-    onClick: function(){
+    onClick: function(ev){
         var self=this;
         if (this.props.onClick){
             this.props.onClick();
         }
+        ev.stopPropagation();
     }
 
 });

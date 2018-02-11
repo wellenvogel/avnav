@@ -56,6 +56,7 @@ Gpspage.prototype.getPageContent=function(){
     var self=this;
     var buttons=[
         {key:'GpsCenter'},
+        {key: "AnchorWatch",toggle:true},
         {key:'Cancel'}
     ];
     this.setButtons(buttons);
