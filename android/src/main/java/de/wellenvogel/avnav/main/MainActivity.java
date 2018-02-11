@@ -4,10 +4,12 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -60,6 +62,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     private IJsEventHandler jsEventHandler;
     private boolean exitRequested=false;
     private boolean running=false;
+    private BroadcastReceiver broadCastReceiverStop;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -295,6 +298,9 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         super.onDestroy();
         running=false;
         serviceNeedsRestart = true;
+        if  (broadCastReceiverStop != null){
+            unregisterReceiver(broadCastReceiverStop);
+        }
         if (exitRequested) {
             stopGpsService(true);
             System.exit(0);
@@ -331,6 +337,17 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
         updateWorkDir(workBase);
         updateWorkDir(new File(sharedPrefs.getString(Constants.CHARTDIR, "")));
+        IntentFilter filterStop=new IntentFilter(Constants.BC_STOPAPPL);
+        broadCastReceiverStop=new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                AvnLog.i("received stop appl");
+                MainActivity.this.exitRequested=true;
+                MainActivity.this.finish();
+
+            }
+        };
+        registerReceiver(broadCastReceiverStop,filterStop);
         running=true;
     }
 

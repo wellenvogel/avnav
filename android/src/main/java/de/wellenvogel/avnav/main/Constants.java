@@ -72,6 +72,7 @@ public class Constants {
     public static final String MODE_NONE="none";
 
     public static final String BC_STOPALARM="de.wellenvogel.avnav.STOPALARM";
+    public static final String BC_STOPAPPL="de.wellenvogel.avnav.STOPAPPL";
 
     public static final int LOCALNOTIFY=1;
     public static final int LOCKNOTIFY=2;

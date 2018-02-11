@@ -211,16 +211,22 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             Intent broadcastIntent=new Intent();
             broadcastIntent.setAction(Constants.BC_STOPALARM);
             PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx,1,broadcastIntent,PendingIntent.FLAG_CANCEL_CURRENT);
+            Intent broadcastIntentStop=new Intent();
+            broadcastIntentStop.setAction(Constants.BC_STOPAPPL);
+            PendingIntent stopAppl = PendingIntent.getBroadcast(ctx,1,broadcastIntentStop,PendingIntent.FLAG_CANCEL_CURRENT);
             RemoteViews nv=new RemoteViews(getPackageName(),R.layout.notification);
             nv.setOnClickPendingIntent(R.id.button2,stopAlarmPi);
+            nv.setOnClickPendingIntent(R.id.button3,stopAppl);
             nv.setOnClickPendingIntent(R.id.notification,contentIntent);
             //TODO: show/hide alarm button
             Alarm currentAlarm=getCurrentAlarm();
             if (currentAlarm != null){
                 nv.setViewVisibility(R.id.button2,View.VISIBLE);
+                nv.setViewVisibility(R.id.button3,View.GONE);
             }
             else{
-                nv.setViewVisibility(R.id.button2,View.INVISIBLE);
+                nv.setViewVisibility(R.id.button2,View.GONE);
+                nv.setViewVisibility(R.id.button3,View.VISIBLE);
             }
             NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this);
@@ -579,7 +585,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         if (routeHandler != null) routeHandler.stop();
         isRunning=false;
         handleNotification(false);
-        AvnLog.d(LOGPRFX, "service stopped");
+        AvnLog.i(LOGPRFX, "service stopped");
     }
 
     public void stopMe(boolean doShutdown){
@@ -588,6 +594,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         if (shouldStop){
             ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
                     cancel(watchdogIntent);
+            AvnLog.i(LOGPRFX,"alarm deregistered");
         }
         stopSelf();
     }
