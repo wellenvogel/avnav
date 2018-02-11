@@ -261,7 +261,7 @@ Settingspage.prototype.colorItemDialog=function(item){
                 className: "avn_colorPicker"
             };
             let v = this.props.height;
-            let margin=100;
+            let margin=200;
             if (v) {
                 pickerProperties.saturationHeight = v < pickerProperties.saturationHeight + margin ? v - margin : pickerProperties.saturationHeight;
             }
