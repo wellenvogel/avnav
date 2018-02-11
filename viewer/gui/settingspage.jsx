@@ -15,7 +15,8 @@ var keys={
     panelState: 'panelState', //{leftPanelVisible,rightPanelVisible,headline}
     sectionItems: 'sectionItems',
     activeItems: 'activeItems',
-    currentValues: 'currentValues'
+    currentValues: 'currentValues',
+    dialogSize: 'dialogSize'
 };
 
 var settingsSections={
@@ -256,8 +257,19 @@ Settingspage.prototype.colorItemDialog=function(item){
             var pickerProperties={
                 saturationWidth: 250,
                 saturationHeight: 250,
-                hueWidth: 30
+                hueWidth: 30,
+                className: "avn_colorPicker"
             };
+            let v = this.props.height;
+            let margin=100;
+            if (v) {
+                pickerProperties.saturationHeight = v < pickerProperties.saturationHeight + margin ? v - margin : pickerProperties.saturationHeight;
+            }
+            v = this.props.width;
+            margin=70;
+            if (v) {
+                pickerProperties.saturationWidth = v < pickerProperties.saturationWidth + margin ? v - margin : pickerProperties.saturationWidth;
+            }
             return (
                 <div className="avn_settingsDialog avn_colorDialog">
                     <h3><span >{item.label}</span></h3>
@@ -277,7 +289,12 @@ Settingspage.prototype.colorItemDialog=function(item){
         }
 
     });
-    OverlayDialog.dialog(Dialog,this.getDialogContainer());
+    var SizedDialog=ItemUpdater(Dialog,this.store,keys.dialogSize);
+    const updateSizes=function(box){
+        self.store.storeData(keys.dialogSize,{width:box.width,height:box.height});
+    };
+    self.store.storeData(keys.dialogSize,{}); //initially scale to max size
+    OverlayDialog.dialog(SizedDialog,this.getDialogContainer(),{positionCallback:updateSizes});
 };
 
 

@@ -99,55 +99,57 @@ var OverlayDialog=React.createClass({
     updateDimensions: function(){
         if (! this.state.content) return;
         var props=avnav.assign({},this.props,this.state);
-        if (props.positionCallback){
-            props.positionCallback(this.refs.container,this.refs.box);
-        }
-        else{
-            var assingToViewport=true;
-            if (props.parent){
-                try {
-                    //expected to be a dom element
-                    var containerRect = props.parent.getBoundingClientRect();
-                    avnav.assign(this.refs.container.style, {
-                        position: "fixed",
-                        top: containerRect.top + "px",
-                        left: containerRect.left + "px",
-                        width: containerRect.width + "px",
-                        height: containerRect.height + "px"
-                    });
-                    assingToViewport = false;
-                }catch(e){
-                    avnav.log("invalid parent for dialog: "+e);
-                }
-            }
-            if (assingToViewport){
+
+        var assingToViewport = true;
+        if (props.parent) {
+            try {
+                //expected to be a dom element
+                var containerRect = props.parent.getBoundingClientRect();
                 avnav.assign(this.refs.container.style, {
                     position: "fixed",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0
+                    top: containerRect.top + "px",
+                    left: containerRect.left + "px",
+                    width: containerRect.width + "px",
+                    height: containerRect.height + "px"
                 });
+                assingToViewport = false;
+            } catch (e) {
+                avnav.log("invalid parent for dialog: " + e);
             }
-            var rect=this.refs.container.getBoundingClientRect();
-            avnav.assign(this.refs.box.style,{
-                maxWidth: rect.width+"px",
-                maxHeight: rect.height+"px",
-                display: 'block',
-                position: 'fixed',
-                opacity: 0
-            });
-            var self=this;
-            window.setTimeout(function(){
-                if (! self.refs.box) return; //could have become invisible...
-                var boxRect=self.refs.box.getBoundingClientRect();
-                avnav.assign(self.refs.box.style,{
-                    left: (rect.width-boxRect.width)/2+"px",
-                    top: (rect.height-boxRect.height)/2+"px",
-                    opacity: 1
-                });
-            },0);
         }
+        if (assingToViewport) {
+            avnav.assign(this.refs.container.style, {
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0
+            });
+        }
+        var rect = this.refs.container.getBoundingClientRect();
+        avnav.assign(this.refs.box.style, {
+            maxWidth: rect.width + "px",
+            maxHeight: rect.height + "px",
+            display: 'block',
+            position: 'fixed',
+            opacity: 0
+        });
+        var self = this;
+        window.setTimeout(function () {
+            if (!self.refs.box) return; //could have become invisible...
+            var boxRect = self.refs.box.getBoundingClientRect();
+            avnav.assign(self.refs.box.style, {
+                left: (rect.width - boxRect.width) / 2 + "px",
+                top: (rect.height - boxRect.height) / 2 + "px",
+                opacity: 1
+            });
+            var props=avnav.assign({},self.props,self.state);
+            if (props.positionCallback) {
+                props.positionCallback(boxRect);
+            }
+
+        }, 0);
+
     },
     statics:{
         /**
