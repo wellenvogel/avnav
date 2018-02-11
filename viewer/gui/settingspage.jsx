@@ -8,6 +8,7 @@ var ItemList=require("../components/ItemList.jsx");
 var OverlayDialog=require('../components/OverlayDialog.jsx');
 var ColorPicker=require('../components/ColorPicker.jsx');
 var Page=require('./page.jsx');
+var assign=require('object-assign');
 require('react-color-picker/index.css');
 
 var keys={
@@ -313,7 +314,7 @@ Settingspage.prototype.resetValues=function(opt_defaults){
 };
 Settingspage.prototype.handlePanels=function(sectionName){
     var small=this.isSmall();
-    var panelState=this.store.getData(keys.panelState,{});
+    var panelState=assign({},this.store.getData(keys.panelState,{}));
     panelState.leftPanelVisible=false;
     panelState.rightPanelVisible=false;
     if (!small || !sectionName){
