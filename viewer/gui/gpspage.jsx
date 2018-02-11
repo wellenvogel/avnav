@@ -8,7 +8,9 @@ var ItemUpdater=require('../components/ItemUpdater.jsx');
 var navobjects=require('../nav/navobjects');
 var Formatter=require('../util/formatter');
 
-
+const keys={
+  anchorWatch:'anchorWatch' //TODO: should become global
+};
 
 /**
  *
@@ -75,36 +77,66 @@ Gpspage.prototype.getPageContent=function(){
         render: function(){
             return (
                 <div className="avn_panel_fill" onClick={this.goBack}>
-                    <div id='avi_gps_page_left' className="avn_gpsp_hfield">
-                        <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
-                            <div className='avn_gpsp_field_label'>WP-BRG</div>
-                            {self.createElememt('markerCourse',"\u00b0",4)}
+                    {!this.props.anchorWatch ?
+                        <div id='avi_gps_page_left' className="avn_gpsp_hfield">
+                            <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
+                                <div className='avn_gpsp_field_label'>WP-BRG</div>
+                                {self.createElememt('markerCourse', "\u00b0", 4)}
+                            </div>
+
+                            <div id='avi_gpsp_xte_field' className='avn_gpsp_vfield' data-avnfs="28">
+                                <div id='avi_gpsp_xte_label' className='avn_gpsp_field_label'>WP - XTE</div>
+                                <canvas id="avi_gpsp_xte"></canvas>
+                            </div>
+                            <div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div className='avn_gpsp_field_label'>WP-DST</div>
+                                {self.createElememt('markerDistance', 'nm', 5)}
+                            </div>
+                            <div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div className='avn_gpsp_field_label'>WP - ETA</div>
+                                {self.createElememt('markerEta', '', 8)}
+                            </div>
+                            <div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div id="avi_gpsp_route_dist">
+                                    <div className='avn_gpsp_field_label'>RTE dist</div>
+                                    {self.createElememt('routeRemain', 'nm', 5)}
+                                </div><div id="avi_gpsp_route_dist">
+                                    <div className='avn_gpsp_field_label'>RTE dist</div>
+                                    {self.createElememt('routeRemain', 'nm', 5)}
+                                </div>
+                                <div id="avi_gpsp_route_eta">
+                                    <div className='avn_gpsp_field_label'>RTE ETA</div>
+                                    {self.createElememt('routeEta', '', 8)}
+                                </div>
+                                <div id="avi_gpsp_route_eta">
+                                    <div className='avn_gpsp_field_label'>RTE ETA</div>
+                                    {self.createElememt('routeEta', '', 8)}
+                                </div>
+                            </div>
+
+                        </div>
+                        :
+                        <div id='avi_gps_page_left' className="avn_gpsp_hfield">
+                            <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
+                                <div className='avn_gpsp_field_label'>ACHR-BRG</div>
+                                {self.createElememt('anchorDirection', "\u00b0", 4)}
+                            </div>
+
+                            <div className='avn_gpsp_vfield' data-avnfs="28">
+                                <div className='avn_gpsp_field_label'>ACHR-DST</div>
+                                {self.createElememt('anchorDistance', 'm', 8)}
+                            </div>
+                            <div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div className='avn_gpsp_field_label'>ACHR-WATCH</div>
+                                {self.createElememt('anchorWatchDistance', 'm', 8)}
+                            </div>
+                            <div className='avn_gpsp_vfield' data-avnfs="30">
+                            </div>
+
+
                         </div>
 
-                        <div id='avi_gpsp_xte_field' className='avn_gpsp_vfield' data-avnfs="28">
-                            <div id='avi_gpsp_xte_label' className='avn_gpsp_field_label'>WP - XTE</div>
-                            <canvas id="avi_gpsp_xte"></canvas>
-                        </div>
-                        <div className='avn_gpsp_vfield' data-avnfs="15">
-                            <div className='avn_gpsp_field_label'>WP-DST</div>
-                            {self.createElememt('markerDistance','nm',5)}
-                        </div>
-                        <div className='avn_gpsp_vfield' data-avnfs="15">
-                            <div className='avn_gpsp_field_label'>WP - ETA</div>
-                            {self.createElememt('markerEta','',8)}
-                        </div>
-                        <div className='avn_gpsp_vfield' data-avnfs="15">
-                            <div id="avi_gpsp_route_dist">
-                                <div className='avn_gpsp_field_label'>RTE dist</div>
-                                {self.createElememt('routeRemain','nm',5)}
-                            </div>
-                            <div id="avi_gpsp_route_eta">
-                                <div className='avn_gpsp_field_label'>RTE ETA</div>
-                                {self.createElememt('routeEta','',8)}
-                            </div>
-                        </div>
-
-                    </div>
+                    }
                     <div id='avi_gps_page_right' className="avn_gpsp_hfield">
                         <div id='avi_gpsp_course' className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
                             <div className='avn_gpsp_field_label'>COG</div>
@@ -143,7 +175,7 @@ Gpspage.prototype.getPageContent=function(){
             self.computeLayout();
         }
     });
-    return Main;
+    return ItemUpdater(Main,this.store,keys.anchorWatch);
 };
 
 /**
@@ -294,6 +326,7 @@ Gpspage.prototype.navEvent=function(evt){
         color="";
     }
     $('#avi_gpsp_ais_status').css('background-color',color);
+    this.store.updateData(keys.anchorWatch,{anchorWatch:!!this.gui.navobject.getRoutingHandler().getAnchorWatch()});
 
 };
 

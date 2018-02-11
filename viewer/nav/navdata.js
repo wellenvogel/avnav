@@ -55,7 +55,11 @@ var NavData=function(propertyHandler){
 
     this.aisMode=navobjects.AisCenterMode.NONE;
 
-
+    /**
+     * @private
+     * @type {properties.NM}
+     */
+    this.NM=this.propertyHandler.getProperties().NM;
     /**
      * our computed values
      * @type {{centerCourse: number, centerDistance: number, centerMarkerCourse: number, centerMarkerDistance: number, markerCourse: number, markerDistance: number, markerVmg: number, markerEta: null, markerWp: navobjects.WayPoint, routeName: undefined, routeNumPoints: number, routeLen: number, routeRemain: number, routeEta: null, routeNextCourse: number, routeNextWp: undefined, markerXte: number, edRouteName: undefined, edRouteNumPoints: number, edRouteLen: number, edRouteRemain: number, edRouteEta: number}}
@@ -85,7 +89,10 @@ var NavData=function(propertyHandler){
         edRouteLen: 0,
         /* the next 2 will only be filled when the editing route is the current */
         edRouteRemain: 0,
-        edRouteEta:0
+        edRouteEta:0,
+        anchorWatchDistance: undefined,
+        anchorDistance: 0,
+        anchorDirection: 0
     };
     this.formattedValues={
         markerEta:"--:--:--",
@@ -113,7 +120,10 @@ var NavData=function(propertyHandler){
         edRouteLen: "--",
         edRouteRemain: "--",
         edRouteEta: "--:--:--",
-        statusImageUrl: this.propertyHandler.getProperties().statusUnknownImage
+        statusImageUrl: this.propertyHandler.getProperties().statusUnknownImage,
+        anchorWatchDistance:"---",
+        anchorDistance: "---",
+        anchorDirection: "---"
     };
     for (var k in this.formattedValues){
         this.registerValueProvider(k,this,this.getFormattedNavValue);
@@ -146,6 +156,19 @@ NavData.prototype.computeValues=function(){
         var centerdst=NavCompute.computeDistance(gps,this.maplatlon);
         this.data.centerCourse=centerdst.course;
         this.data.centerDistance=centerdst.dtsnm;
+        if (this.routeHandler.getAnchorWatch()){
+            let anchor=this.routeHandler.getCurrentLegStartWp();
+            this.data.anchorWatchDistance = this.routeHandler.getAnchorWatch();
+            if (anchor) {
+                let aleginfo=NavCompute.computeLegInfo(anchor,gps);
+                this.data.anchorDistance=aleginfo.markerDistance*this.NM;
+                this.data.anchorDirection=aleginfo.markerCourse;
+            }
+            else{
+                this.data.anchorDistance=0;
+                this.data.anchorDirection=0;
+            }
+        }
     }
     else{
         this.data.centerCourse=0;
@@ -154,6 +177,9 @@ NavData.prototype.computeValues=function(){
         this.data.markerDistance=0;
         this.data.markerEta=null;
         this.data.markerXte=undefined;
+        this.data.anchorDistance=0;
+        this.data.anchorDirection=0;
+        this.data.anchorWatchDistance=undefined;
     }
 
     //distance between marker and center
@@ -255,6 +281,9 @@ NavData.prototype.computeValues=function(){
     this.formattedValues.edRouteRemain=this.formatter.formatDecimal(this.data.edRouteRemain,4,1);
     this.formattedValues.edRouteEta=this.data.edRouteEta?this.formatter.formatTime(this.data.edRouteEta):"--:--:--";
     this.formattedValues.statusImageUrl=gps.valid?this.propertyHandler.getProperties().statusOkImage:this.propertyHandler.getProperties().statusErrorImage;
+    this.formattedValues.anchorWatchDistance=this.data.anchorWatchDistance!==undefined?this.formatter.formatDecimal(this.data.anchorWatchDistance,8,0):"";
+    this.formattedValues.anchorDistance=this.data.anchorWatchDistance!==undefined?this.formatter.formatDecimal(this.data.anchorDistance,8,0):"";
+    this.formattedValues.anchorDirection=this.data.anchorWatchDistance!==undefined?this.formatter.formatDecimal(this.data.anchorDirection,3,0):"";
 };
 
 NavData.prototype.formatLegData=function(legInfo){
