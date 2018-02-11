@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
@@ -32,6 +33,7 @@ import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import static android.app.Activity.RESULT_OK;
+import static android.content.Context.AUDIO_SERVICE;
 
 /**
  * Created by andreas on 11.12.16.
@@ -153,6 +155,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         }
     }
 
+
     private void showDialog(Bundle state, final AudioInfo dialogInfo){
 
         mDialogBuilder = new AlertDialog.Builder(getContext())
@@ -182,6 +185,7 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
                 player.reset();
                 if (internalDialogInfo == null) return;
                 try {
+                    player.setAudioStreamType(AudioManager.STREAM_NOTIFICATION);
                     setPlayerSource(player,internalDialogInfo,getContext());
                     player.prepare();
                     player.start();

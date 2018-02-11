@@ -15,6 +15,7 @@ import android.content.res.AssetFileDescriptor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.location.*;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
@@ -451,6 +452,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         super.onCreate();
         ctx = this;
         mediaPlayer=new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
@@ -583,6 +585,10 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     public void stopMe(boolean doShutdown){
         shouldStop=doShutdown;
         handleStop(doShutdown);
+        if (shouldStop){
+            ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
+                    cancel(watchdogIntent);
+        }
         stopSelf();
     }
 
@@ -802,6 +808,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                         mediaPlayer.stop();
                     }
                     mediaPlayer.reset();
+                    mediaPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION);
                     AudioEditTextPreference.setPlayerSource(mediaPlayer,sound,this);
                     mediaPlayer.setLooping(true);
                     mediaPlayer.prepare();
