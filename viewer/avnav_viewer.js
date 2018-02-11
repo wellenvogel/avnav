@@ -145,7 +145,8 @@ var propertyDefinitions=function(){
         autoZoom:new avnav.util.Property(true,"automatic zoom",avnav.util.PropertyType.CHECKBOX),
         nightMode: new avnav.util.Property( false,"NightMode",avnav.util.PropertyType.CHECKBOX),
         nightColorDim:new avnav.util.Property( 60,"Night Dim for Colors",avnav.util.PropertyType.RANGE,[5,100]), //should match @nightModeVale in less
-        smallBreak:new avnav.util.Property( 480,"portrait layout below (px)",avnav.util.PropertyType.RANGE,[200,9999]), 
+        smallBreak:new avnav.util.Property( 480,"portrait layout below (px)",avnav.util.PropertyType.RANGE,[200,9999]),
+        iosWorkaroundTime:new avnav.util.Property( 300,"time to ignore events after page show",avnav.util.PropertyType.RANGE,[0,1000]),
 
         style:{
             buttonSize:new avnav.util.Property( 60,"Button Size(px)",avnav.util.PropertyType.RANGE,[35,100]),

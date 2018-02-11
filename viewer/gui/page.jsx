@@ -79,6 +79,7 @@ var Page=function(name,options){
 
     }
     this.intervalTimer=-1;
+    this.showTime=undefined;
 };
 
 /**
@@ -265,6 +266,7 @@ Page.prototype._showPage=function(){
            self.gui.properties.getProperties().buttonUpdateTime);
     }
     this._hideToast=false;
+    this.showTime=new Date();
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
 };
 Page.prototype._hidePage=function(){
@@ -276,6 +278,13 @@ Page.prototype._hidePage=function(){
     OverlayDialog.hide();
     this.store.replaceSubKey(this.globalKeys.pageVisible,false,'visible');
 
+};
+Page.prototype.isAfterDeadTime=function(){
+    if (! this.showTime) return true;
+    let now=new Date();
+    let diff=now.getTime()-this.showTime.getTime();
+    let allowed=this.gui.properties.getProperties().iosWorkaroundTime;
+    if (diff > allowed) return true;
 };
 /**
  *

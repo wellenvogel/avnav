@@ -92,7 +92,7 @@ AisInfoPage.prototype.getPageContent=function(){
         {key:'aisPosition',label:'Position'}
     ];
     var onClick=function(){
-        self.returnToLast();
+        if (self.isAfterDeadTime()) self.returnToLast();
     };
     return React.createClass({
       render: function(){
