@@ -21,6 +21,7 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import de.wellenvogel.avnav.gps.Alarm;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.util.AvnLog;
 
@@ -35,6 +36,9 @@ public class WebServerFragment extends Fragment {
     private Button btSettings;
     private Button btLaunch;
     private Button btExit;
+    private View vAlarm;
+    private ImageView btAlarm;
+    private TextView txAlarm;
     private TextView txServer;
     private ImageView imgNmea;
     private TextView txNmea;
@@ -69,6 +73,9 @@ public class WebServerFragment extends Fragment {
         imgAis=(ImageView)rt.findViewById(R.id.imgAIS);
         txNmea=(TextView)rt.findViewById(R.id.txNmea);
         txAis=(TextView)rt.findViewById(R.id.txAIS);
+        txAlarm=(TextView)rt.findViewById(R.id.txAlarm);
+        vAlarm=rt.findViewById(R.id.vAlarm);
+        btAlarm=(ImageView) rt.findViewById(R.id.btAlarm);
         btServer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -97,6 +104,16 @@ public class WebServerFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 exitApp();
+            }
+        });
+        btAlarm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                GpsService service=((MainActivity)getActivity()).gpsService;
+                if (service != null){
+                    service.resetAllAlarms();
+                    updateStatus();
+                }
             }
         });
         if (webServer == null) webServer=new WebServer((MainActivity)getActivity());
@@ -213,6 +230,14 @@ public class WebServerFragment extends Fragment {
                 }
             } catch (Throwable e) {
                 //???
+            }
+            Alarm alarm=service.getCurrentAlarm();
+            if (alarm == null){
+                vAlarm.setVisibility(View.INVISIBLE);
+            }
+            else{
+                txAlarm.setText(alarm.name);
+                vAlarm.setVisibility(View.VISIBLE);
             }
         }
         String statusText="";

@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.media.AudioManager;
@@ -14,6 +15,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.preference.EditTextPreference;
 import android.provider.MediaStore;
 import android.util.AttributeSet;
@@ -26,8 +28,12 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
+import de.wellenvogel.avnav.gps.Alarm;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -126,7 +132,15 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         showDialog(state,null);
     }
 
-    public static void setPlayerSource(MediaPlayer player, String sound, Context context) throws Exception{
+    public static AudioInfo getAudioInfoForAlarmName(String name, Context context){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String sound = prefs.getString("alarm." + name, "");
+        if (sound.isEmpty()) {
+            return null;
+        }
+        return getAudioInfoForAlarm(sound,context);
+    }
+    public static AudioInfo getAudioInfoForAlarm(String sound, Context context){
         AudioInfo info=null;
         try{
             info=new AudioInfo(new JSONObject(sound));
@@ -136,6 +150,11 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
             info.type="default";
             info.uri=Uri.parse(ASSETS_URI_PREFIX+sound);
         }
+        return info;
+    }
+
+    public static void setPlayerSource(MediaPlayer player, String sound, Context context) throws Exception{
+        AudioInfo info=getAudioInfoForAlarm(sound, context);
         setPlayerSource(player,info,context);
     }
     public static void setPlayerSource(MediaPlayer player, AudioInfo info, Context context) throws Exception {
@@ -151,6 +170,33 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
                 }
             } else {
                 player.setDataSource(context, info.uri);
+            }
+        }
+    }
+    public static class AudioStream{
+        public long len;
+        public InputStream stream;
+        public AudioStream(long len,InputStream stream){
+            this.len=len;
+            this.stream=stream;
+        }
+    }
+    public static AudioStream getAlarmAudioStream(AudioInfo info, Context context) throws Exception {
+        if (info == null) return null;
+        if (info.path != null) {
+            File soundFile=new File(info.path);
+            if (! soundFile.isFile()) return null;
+            return new AudioStream(soundFile.length(),new FileInputStream(soundFile));
+        } else {
+            if (info.uri.toString().startsWith(ASSETS_URI_PREFIX)) {
+                String ap = "sounds/" + info.uri.toString().substring(ASSETS_URI_PREFIX.length());
+                AssetFileDescriptor af = context.getAssets().openFd(ap);
+                if (af == null) return null;
+                return new AudioStream(af.getDeclaredLength(),new AssetFileDescriptor.AutoCloseInputStream(af));
+            } else {
+                ParcelFileDescriptor fd=context.getContentResolver().openFileDescriptor(info.uri,"r");
+                if (fd == null) return null;
+                return new AudioStream(fd.getStatSize(),new ParcelFileDescriptor.AutoCloseInputStream(fd));
             }
         }
     }

@@ -42,6 +42,7 @@ import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.gps.IRouteHandlerProvider;
 import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.gps.TrackWriter;
+import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 
 /**
@@ -471,27 +472,18 @@ public class RequestHandler {
                     }
                 }
                 if (dltype != null && dltype.equals("alarm") && name != null) {
-                    SharedPreferences prefs = getSharedPreferences();
-                    String sound = prefs.getString("alarm." + name, "");
-                    if (!sound.isEmpty()) {
-                        if (sound.startsWith("/")) {
-                            File soundFile=new File(sound);
-                            if (soundFile.isFile()) {
-                                resp = new ExtendedWebResourceResponse((int) soundFile.length(), "audio/mpeg", "", new FileInputStream(soundFile));
-                            }
+                    AudioEditTextPreference.AudioInfo info=AudioEditTextPreference.getAudioInfoForAlarmName(name,activity);
+                    if (info != null){
+                        AudioEditTextPreference.AudioStream stream=AudioEditTextPreference.getAlarmAudioStream(info,activity);
+                        if (stream == null){
+                            AvnLog.e("unable to get audio stream for "+info.uri.toString());
                         }
-                        else{
-                            try {
-                                AssetFileDescriptor af = activity.assetManager.openFd("sounds/" + sound);
-                                if (af != null) {
-                                    InputStream iss= af.createInputStream();
-                                    iss.skip(af.getStartOffset());
-                                    resp = new ExtendedWebResourceResponse((int) af.getLength(), "audio/mpeg", "",iss);
-                                }
-                            }catch(Exception e){
-                                AvnLog.e("unable to load sound "+sound+": "+e.getMessage());
-                            }
+                        else {
+                            resp = new ExtendedWebResourceResponse((int) stream.len, "audio/mpeg", "", stream.stream);
                         }
+                    }
+                    else{
+                        AvnLog.e("unable to get audio info for "+name);
                     }
                 }
                 if (resp == null) {

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent" android:weightSum="1"
               android:paddingLeft="10dp" android:paddingRight="10dp">
@@ -88,14 +89,39 @@
         android:layout_weight="0"
         android:layout_gravity="bottom" >
 
-        <Button
-            style="@android:style/TextAppearance.DeviceDefault.Large"
+        <FrameLayout
+            android:id="@+id/vAlarm"
             android:layout_width="50px"
-            android:layout_height="wrap_content"
-            android:text="@string/settings"
-            android:id="@+id/button"
-            android:visibility="invisible"
-            android:layout_weight="1" />
+            android:layout_height="match_parent"
+            android:layout_gravity="bottom"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:visibility="invisible">
+
+            <TextView
+                android:id="@+id/txAlarm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_weight="1"
+                android:duplicateParentState="false"
+                android:editable="false"
+                android:paddingBottom="5dp"
+                android:paddingLeft="10dp"
+                android:text="gps" />
+
+            <ImageView
+                android:id="@+id/btAlarm"
+                style="@android:style/TextAppearance.DeviceDefault.Large"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:scaleType="centerInside"
+                android:src="@drawable/alarm256red"
+                android:visibility="visible" />
+
+        </FrameLayout>
 
         <Button
             style="@android:style/TextAppearance.DeviceDefault.Large"

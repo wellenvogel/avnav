@@ -778,7 +778,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             resetAlarm(alarm);
         }
     }
-    private Alarm getCurrentAlarm(){
+    public Alarm getCurrentAlarm(){
         if (alarmStatus.size() == 0) return null;
         Alarm activeAlarm=null;
         Alarm soundAlarm=null;
@@ -807,8 +807,8 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             }catch(Exception e){}
             return;
         }
-        String sound = prefs.getString("alarm." + a.name, "");
-        if (!sound.isEmpty()) {
+        AudioEditTextPreference.AudioInfo sound = AudioEditTextPreference.getAudioInfoForAlarmName(a.name,this);
+        if (sound != null) {
             try {
                 if (mediaPlayer != null) {
                     if (mediaPlayer.isPlaying()) {
