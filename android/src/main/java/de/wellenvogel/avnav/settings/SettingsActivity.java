@@ -208,7 +208,7 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
     //select a valid working directory - or exit
-    private boolean selectWorkingDirectory(final SelectWorkingDir callback, String current){
+    static boolean selectWorkingDirectory(final Activity activity, final SelectWorkingDir callback, String current, boolean force){
         File currentFile=null;
         if (current != null  && ! current.isEmpty()) {
             currentFile=new File(current);
@@ -221,22 +221,22 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             }
         }
-        if (currentFile != null && currentFile.canWrite()){
+        if (currentFile != null && currentFile.canWrite() && ! force){
             return true;
         }
         //seems that either the directory is not writable
         //or not set at all
-        final DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_selectlist);
-        final boolean emptyWorkdir=(current == null || current.isEmpty());
-        builder.setTitle((current!=null && ! current.isEmpty())?R.string.selectWorkDirWritable:R.string.selectWorkDir);
+        final DialogBuilder builder=new DialogBuilder(activity,R.layout.dialog_selectlist);
+        final boolean simpleTitle=(current == null || current.isEmpty() && force);
+        builder.setTitle(simpleTitle?R.string.selectWorkDirWritable:R.string.selectWorkDir);
         ArrayList<String> selections=new ArrayList<String>();
-        selections.add(getString(R.string.internalStorage));
+        selections.add(activity.getString(R.string.internalStorage));
         boolean hasExternal=false;
         String state=Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) hasExternal=true;
-        if (hasExternal) selections.add(getString(R.string.externalStorage));
-        selections.add(getString(R.string.selectStorage));
-        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,R.layout.list_item,selections);
+        if (hasExternal) selections.add(activity.getString(R.string.externalStorage));
+        selections.add(activity.getString(R.string.selectStorage));
+        ArrayAdapter<String> adapter=new ArrayAdapter<String>(activity,R.layout.list_item,selections);
         ListView lv=(ListView)builder.getContentView().findViewById(R.id.list_value);
         lv.setAdapter(adapter);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -245,7 +245,7 @@ public class SettingsActivity extends PreferenceActivity {
                 final boolean hasExternal=parent.getAdapter().getCount()>2;
                 if (position == (parent.getAdapter().getCount() -1)){
                     //last item selected - show file dialog
-                    SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(SettingsActivity.this, SimpleFileDialog.FolderChoose,
+                    SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(activity, SimpleFileDialog.FolderChoose,
                             new SimpleFileDialog.SimpleFileDialogListener() {
                                 @Override
                                 public void onChosenDir(File newDir) {
@@ -254,7 +254,7 @@ public class SettingsActivity extends PreferenceActivity {
                                     try {
                                         createWorkingDir(newDir);
                                     } catch (Exception ex) {
-                                        Toast.makeText(SettingsActivity.this, ex.getMessage(), Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(activity, ex.getMessage(), Toast.LENGTH_SHORT).show();
                                         return;
                                     }
                                     AvnLog.i(Constants.LOGPRFX, "select work directory " + newDir.getAbsolutePath());
@@ -269,10 +269,10 @@ public class SettingsActivity extends PreferenceActivity {
                                 }
                             });
                     FolderChooseDialog.Default_File_Name="avnav";
-                    FolderChooseDialog.dialogTitle=getString(emptyWorkdir?R.string.selectWorkDir:R.string.selectWorkDirWritable);
-                    FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
-                    FolderChooseDialog.newFolderText=getString(R.string.createFolder);
-                    File start=hasExternal?getExternalFilesDir(null):getFilesDir();
+                    FolderChooseDialog.dialogTitle=activity.getString(simpleTitle?R.string.selectWorkDir:R.string.selectWorkDirWritable);
+                    FolderChooseDialog.newFolderNameText=activity.getString(R.string.newFolderName);
+                    FolderChooseDialog.newFolderText=activity.getString(R.string.createFolder);
+                    File start=hasExternal?activity.getExternalFilesDir(null):activity.getFilesDir();
                     String startPath="";
                     try {
                         startPath=start.getCanonicalPath();
@@ -283,12 +283,12 @@ public class SettingsActivity extends PreferenceActivity {
                     FolderChooseDialog.chooseFile_or_Dir(false);
                     return;
                 }
-                File newDir=(position == 0)?getFilesDir():getExternalFilesDir(null);
+                File newDir=(position == 0)?activity.getFilesDir():activity.getExternalFilesDir(null);
                 try{
                     createWorkingDir(newDir);
                 }catch (Exception e){
                     builder.dismiss();
-                    Toast.makeText(SettingsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
                     callback.failed();
                 }
                 builder.dismiss();
@@ -357,7 +357,7 @@ public class SettingsActivity extends PreferenceActivity {
         e.putString(Constants.WORKDIR, workdir);
         e.putString(Constants.CHARTDIR, chartdir);
         e.apply();
-        rt=selectWorkingDirectory(new SelectWorkingDir() {
+        rt=selectWorkingDirectory(SettingsActivity.this,new SelectWorkingDir() {
             @Override
             public void directorySelected(File dir) {
                 try {
@@ -379,7 +379,7 @@ public class SettingsActivity extends PreferenceActivity {
                 resultNok();
             }
 
-        },workdir);
+        },workdir,false);
         //for robustness update all modes matching the current settings and version
         String nmeaMode=NmeaSettingsFragment.getNmeaMode(sharedPrefs);
         NmeaSettingsFragment.updateNmeaMode(sharedPrefs,nmeaMode);
