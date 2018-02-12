@@ -62,6 +62,7 @@ var propertyDefinitions=function(){
         readOnlyServer: new avnav.util.Property(false),
         onAndroid:new avnav.util.Property(false),
         NM: new avnav.util.Property(1852), //one mile
+        silenceSound: new avnav.util.Property("sounds/1-minute-of-silence.mp3"),
         buttonUpdateTime: new avnav.util.Property( 500), //timer for button updates
         slideTime: new avnav.util.Property( 300), //time in ms for upzoom
         slideLevels: new avnav.util.Property( 3), //start with that many lower zoom levels

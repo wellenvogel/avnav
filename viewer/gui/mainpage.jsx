@@ -33,6 +33,7 @@ var Mainpage=function(){
     this.soundHandler=undefined;
     this.soundRepeat=0;
     this.lastAlarmSound=undefined;
+    this.initialPlayCheck=0; //1: started, 2: ok
 };
 avnav.inherits(Mainpage,Page);
 
@@ -46,9 +47,42 @@ Mainpage.prototype.changeDim=function(newDim){
     this.gui.properties.updateLayout();
     $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
 };
+
+Mainpage.prototype.enableSound=function(){
+    if (this.initialPlayCheck >= 2) return;
+    if (avnav.android) return;
+    let self=this;
+    let hasSounds=self.gui.properties.getProperties().localAlarmSound;
+    if (! hasSounds) return;
+    if (this.soundHandler){
+        this.initialPlayCheck=1;
+        this.soundHandler.src=this.gui.properties.getProperties().silenceSound;
+        const askForSound=()=>{
+            if (! hasSounds) return;
+            self.toast("click to allow sounds",true,60000,()=>{
+                self.soundHandler.play();
+            })
+        };
+        try {
+            this.soundHandler.play().catch(askForSound);
+        }catch(e){
+            askForSound();
+        }
+    }
+};
 Mainpage.prototype.getPageContent=function(){
     var self=this;
     this.soundHandler=document.getElementById('avi_sound');
+    if (this.soundHandler) {
+        this.soundHandler.addEventListener('playing', () => {
+            if (self.initialPlayCheck < 2) {
+                self.initialPlayCheck = 2;
+                self.soundHandler.pause();
+            }
+        });
+        this.enableSound();
+    }
+
     var buttons=[
         {key:'ShowStatus'},
         {key:'ShowSettings'},
@@ -160,6 +194,7 @@ Mainpage.prototype.showPage=function(options){
     if (avnav.android || this.gui.properties.getProperties().readOnlyServer){
         this.selectOnPage('.avb_Connected').hide();
     }
+    this.enableSound();
 
 };
 
@@ -207,6 +242,8 @@ Mainpage.prototype.navEvent=function(evdata) {
 
 Mainpage.prototype.updateAlarmSound=function(){
    if (! this.soundHandler) return;
+   if (this.initialPlayCheck < 2) return;
+   if (avnav.android) return;
    var alarmState=this.navobject.getValue('alarmInfo');
    try {
        if (!alarmState || ! this.gui.properties.getProperties().localAlarmSound) {

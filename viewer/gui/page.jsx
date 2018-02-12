@@ -473,8 +473,8 @@ Page.prototype.goBack=function(){
     this.returnToLast();
 };
 
-Page.prototype.toast=function(html,opt_hide){
-    Overlay.Toast(html);
+Page.prototype.toast=function(html,opt_hide,opt_time,opt_callback){
+    Overlay.Toast(html,opt_time,opt_callback);
     this._hideToast=opt_hide||false;
 };
 Page.prototype.hideToast=function(){
