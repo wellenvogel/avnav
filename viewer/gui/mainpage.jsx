@@ -49,7 +49,7 @@ Mainpage.prototype.changeDim=function(newDim){
 };
 
 Mainpage.prototype.enableSound=function(){
-    if (this.initialPlayCheck >= 2) return;
+    if (this.initialPlayCheck >= 1) return;
     if (avnav.android) return;
     let self=this;
     let hasSounds=self.gui.properties.getProperties().localAlarmSound;
@@ -58,8 +58,10 @@ Mainpage.prototype.enableSound=function(){
         this.initialPlayCheck=1;
         this.soundHandler.src=this.gui.properties.getProperties().silenceSound;
         const askForSound=()=>{
+            self.initialPlayCheck=0;
             if (! hasSounds) return;
             self.toast("click to allow sounds",true,60000,()=>{
+                self.initialPlayCheck=1;
                 self.soundHandler.play();
             })
         };
