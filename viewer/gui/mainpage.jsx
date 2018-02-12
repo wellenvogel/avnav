@@ -38,7 +38,7 @@ var Mainpage=function(){
 avnav.inherits(Mainpage,Page);
 
 /**
- * changethe night mode
+ * change the night mode
  * @param {boolean} newDim
  */
 Mainpage.prototype.changeDim=function(newDim){
