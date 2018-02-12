@@ -63,6 +63,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     private boolean exitRequested=false;
     private boolean running=false;
     private BroadcastReceiver broadCastReceiverStop;
+    private boolean startDialogVisible=false;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -79,7 +80,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            MainActivity.this.goBack();
+            goBack();
         }
     };
 
@@ -90,7 +91,11 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            MainActivity.this.handleRestart(msg.what == ICallback.CB_RESTART_SETTINGS,false);
+            if (msg.what == ICallback.CB_EXIT){
+                endApp();
+                return;
+            }
+            handleRestart(msg.what == ICallback.CB_RESTART_SETTINGS,false);
         }
     };
 
@@ -388,8 +393,16 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        AvnLog.d("main: pause");
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        AvnLog.d("main: onResume");
+        if (startDialogVisible) return;
         int version=0;
         boolean startSomething=true;
         SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
@@ -409,11 +422,11 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    if (which == DialogInterface.BUTTON_POSITIVE){
-                        handleRestart(true,false);
-                    }
+                    startDialogVisible=false;
+                    handleRestart(true,false);
                 }
             });
+            startDialogVisible=true;
             if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
         }
         try {
@@ -435,15 +448,18 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                     builder.setNegativeButton(R.string.settings, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            startDialogVisible=false;
                             handleRestart(true,false);
                         }
                     });
                     builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            startDialogVisible=false;
                             handleRestart(false,false);
                         }
                     });
+                    startDialogVisible=true;
                     builder.show();
                 }
             }catch (Exception e){}

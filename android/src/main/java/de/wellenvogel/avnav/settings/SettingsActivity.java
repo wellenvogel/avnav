@@ -128,6 +128,7 @@ public class SettingsActivity extends PreferenceActivity {
     public static interface SelectWorkingDir{
         public void directorySelected(File dir);
         public void failed();
+        public void cancel();
     }
 
     //select a valid working directory - or exit
@@ -224,7 +225,7 @@ public class SettingsActivity extends PreferenceActivity {
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                System.exit(1);
+                callback.cancel();
             }
         });
         builder.show();
@@ -303,6 +304,12 @@ public class SettingsActivity extends PreferenceActivity {
             public void failed() {
                 callback.callback(ICallback.CB_RESTART_SETTINGS);
             }
+
+            @Override
+            public void cancel() {
+                callback.callback(ICallback.CB_EXIT);
+            }
+
         },workdir);
         //for robustness update all modes matching the current settings and version
         String nmeaMode=NmeaSettingsFragment.getNmeaMode(sharedPrefs);

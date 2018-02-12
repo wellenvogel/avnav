@@ -220,7 +220,8 @@ public class DialogBuilder {
                 listener.onClick(dialog,which);
             }
         });
-        builder.hideButton(R.id.Button2);
+        builder.hideButton(DialogInterface.BUTTON_NEGATIVE);
+        builder.hideButton(DialogInterface.BUTTON_NEUTRAL);
         builder.show();
         return builder;
     }

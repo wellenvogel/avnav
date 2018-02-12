@@ -396,7 +396,8 @@ public class SimpleFileDialog
                             // Navigate into the sub-directory
                             if (sel.equals(".."))
                             {
-                                currentDir = currentDir.getParentFile();
+                                File parent=currentDir.getParentFile();
+                                if (parent != null) currentDir = parent;
                             }
                             else
                             {
