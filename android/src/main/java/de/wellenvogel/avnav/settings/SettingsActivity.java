@@ -7,13 +7,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.*;
 
-import android.provider.OpenableColumns;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,12 +26,10 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.ICallback;
 import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
@@ -111,7 +106,88 @@ public class SettingsActivity extends PreferenceActivity {
         return installed;
     }
 
-    public static void createWorkingDir(Activity activity,File workdir) throws Exception{
+    public static boolean needsInitialSettings(Context context){
+        SharedPreferences sharedPrefs = context.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
+        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
+        String workdir=sharedPrefs.getString(Constants.WORKDIR,"");
+        boolean workDirOk=true;
+        if (workdir.isEmpty()){
+            workDirOk=false;
+        }
+        else{
+            try{
+                createWorkingDir(new File(workdir));
+            }catch (Exception e){
+                workDirOk=false;
+            }
+        }
+        return (mode.isEmpty() || startPendig|| workdir.isEmpty());
+    }
+
+    private boolean checkForInitialDialogs(){
+        boolean startSomething=true;
+        SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
+        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
+        if (mode.isEmpty() || startPendig) {
+            startSomething=false;
+            int title;
+            int message;
+            if (startPendig) {
+                title=R.string.somethingWrong;
+                message=R.string.somethingWrongMessage;
+            } else {
+                title=R.string.firstStart;
+                message=R.string.firstStartMessage;
+            }
+            DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    handleInitialSettings();
+                }
+            });
+            if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
+        }
+        int version=0;
+        try {
+            version = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+        }
+        if (! startSomething) return false;
+        if (version != 0 ){
+            try {
+                int lastVersion = sharedPrefs.getInt(Constants.VERSION, 0);
+                //TODO: handle other version changes
+                if (lastVersion == 0 ){
+                    sharedPrefs.edit().putInt(Constants.VERSION,version).commit();
+                    startSomething=false;
+                    DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
+                    builder.setTitle(R.string.newVersionTitle);
+                    builder.setText(R.id.question,R.string.newVersionMessage);
+                    builder.setNegativeButton(R.string.settings, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            resultNok();
+                        }
+                    });
+                    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (needsInitialSettings(SettingsActivity.this)){
+                                handleInitialSettings();
+                            }
+                        }
+                    });
+                    builder.show();
+                }
+            }catch (Exception e){}
+        }
+        return startSomething;
+    }
+
+    public static void createWorkingDir(File workdir) throws Exception{
         if (! workdir.isDirectory()){
             workdir.mkdirs();
         }
@@ -132,14 +208,14 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
     //select a valid working directory - or exit
-    public static boolean selectWorkingDirectory(final Activity activity, final SelectWorkingDir callback, String current){
+    private boolean selectWorkingDirectory(final SelectWorkingDir callback, String current){
         File currentFile=null;
         if (current != null  && ! current.isEmpty()) {
             currentFile=new File(current);
             if (!currentFile.isDirectory()) {
                 //maybe we can just create it...
                 try {
-                    createWorkingDir(activity, currentFile);
+                    createWorkingDir(currentFile);
                 } catch (Exception e1) {
                     currentFile=null;
                 }
@@ -150,17 +226,17 @@ public class SettingsActivity extends PreferenceActivity {
         }
         //seems that either the directory is not writable
         //or not set at all
-        final DialogBuilder builder=new DialogBuilder(activity,R.layout.dialog_selectlist);
+        final DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_selectlist);
         final boolean emptyWorkdir=(current == null || current.isEmpty());
-        builder.setTitle(current!=null?R.string.selectWorkDirWritable:R.string.selectWorkDir);
+        builder.setTitle((current!=null && ! current.isEmpty())?R.string.selectWorkDirWritable:R.string.selectWorkDir);
         ArrayList<String> selections=new ArrayList<String>();
-        selections.add(activity.getString(R.string.internalStorage));
+        selections.add(getString(R.string.internalStorage));
         boolean hasExternal=false;
         String state=Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) hasExternal=true;
-        if (hasExternal) selections.add(activity.getString(R.string.externalStorage));
-        selections.add(activity.getString(R.string.selectStorage));
-        ArrayAdapter<String> adapter=new ArrayAdapter<String>(activity,R.layout.list_item,selections);
+        if (hasExternal) selections.add(getString(R.string.externalStorage));
+        selections.add(getString(R.string.selectStorage));
+        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,R.layout.list_item,selections);
         ListView lv=(ListView)builder.getContentView().findViewById(R.id.list_value);
         lv.setAdapter(adapter);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -169,37 +245,34 @@ public class SettingsActivity extends PreferenceActivity {
                 final boolean hasExternal=parent.getAdapter().getCount()>2;
                 if (position == (parent.getAdapter().getCount() -1)){
                     //last item selected - show file dialog
-                    SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(activity, SimpleFileDialog.FolderChoose,
+                    SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(SettingsActivity.this, SimpleFileDialog.FolderChoose,
                             new SimpleFileDialog.SimpleFileDialogListener() {
                                 @Override
                                 public void onChosenDir(File newDir) {
                                     builder.dismiss();
                                     // The code in this function will be executed when the dialog OK button is pushed
                                     try {
-                                        createWorkingDir(activity, newDir);
+                                        createWorkingDir(newDir);
                                     } catch (Exception ex) {
-                                        Toast.makeText(activity, ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                        callback.failed();
+                                        Toast.makeText(SettingsActivity.this, ex.getMessage(), Toast.LENGTH_SHORT).show();
                                         return;
                                     }
                                     AvnLog.i(Constants.LOGPRFX, "select work directory " + newDir.getAbsolutePath());
-                                    callback.directorySelected(newDir);
                                 }
                                 @Override
                                 public void onCancel() {
-
+                                    callback.cancel();
                                 }
 
                                 @Override
                                 public void onDefault() {
-
                                 }
                             });
                     FolderChooseDialog.Default_File_Name="avnav";
-                    FolderChooseDialog.dialogTitle=activity.getString(emptyWorkdir?R.string.selectWorkDir:R.string.selectWorkDirWritable);
-                    FolderChooseDialog.newFolderNameText=activity.getString(R.string.newFolderName);
-                    FolderChooseDialog.newFolderText=activity.getString(R.string.createFolder);
-                    File start=hasExternal?activity.getExternalFilesDir(null):activity.getFilesDir();
+                    FolderChooseDialog.dialogTitle=getString(emptyWorkdir?R.string.selectWorkDir:R.string.selectWorkDirWritable);
+                    FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
+                    FolderChooseDialog.newFolderText=getString(R.string.createFolder);
+                    File start=hasExternal?getExternalFilesDir(null):getFilesDir();
                     String startPath="";
                     try {
                         startPath=start.getCanonicalPath();
@@ -210,12 +283,12 @@ public class SettingsActivity extends PreferenceActivity {
                     FolderChooseDialog.chooseFile_or_Dir(false);
                     return;
                 }
-                File newDir=(position == 0)?activity.getFilesDir():activity.getExternalFilesDir(null);
+                File newDir=(position == 0)?getFilesDir():getExternalFilesDir(null);
                 try{
-                    createWorkingDir(activity,newDir);
+                    createWorkingDir(newDir);
                 }catch (Exception e){
                     builder.dismiss();
-                    Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SettingsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     callback.failed();
                 }
                 builder.dismiss();
@@ -234,19 +307,17 @@ public class SettingsActivity extends PreferenceActivity {
 
     /**
      * check the current settings
-     * @param activity
      * @return false when a new dialog had been opened
      */
-    public static boolean handleInitialSettings(final Activity activity, final ICallback callback){
+    private boolean handleInitialSettings(){
         boolean rt=true;
-        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.expert_preferences,true);
-        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.nmea_preferences,true);
-        final SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.expert_preferences,true);
+        PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.nmea_preferences,true);
+        final SharedPreferences sharedPrefs = this.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         final SharedPreferences.Editor e=sharedPrefs.edit();
         if (! sharedPrefs.contains(Constants.ALARMSOUNDS)){
             e.putBoolean(Constants.ALARMSOUNDS,true);
         }
-        boolean defaultsSet=false;
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
         if (mode.equals("")) {
             e.putBoolean(Constants.SHOWDEMO,true);
@@ -255,9 +326,9 @@ public class SettingsActivity extends PreferenceActivity {
             e.putBoolean(Constants.INTERNALGPS,true);
             //never set before
             if (currentapiVersion < Constants.OSVERSION_XWALK ) {
-                if (! isXwalRuntimeInstalled(activity)){
-                    (new XwalkDownloadHandler(activity)).showDownloadDialog(activity.getString(R.string.xwalkNotFoundTitle),
-                            activity.getString(R.string.xwalkShouldUse) + Constants.XWALKVERSION, false);
+                if (! isXwalRuntimeInstalled(this)){
+                    (new XwalkDownloadHandler(this)).showDownloadDialog(this.getString(R.string.xwalkNotFoundTitle),
+                            this.getString(R.string.xwalkShouldUse) + Constants.XWALKVERSION, false);
                     rt=false;
                 }
                 else {
@@ -267,10 +338,10 @@ public class SettingsActivity extends PreferenceActivity {
         }
         else {
             if (mode.equals(Constants.MODE_XWALK)){
-                if (! isXwalRuntimeInstalled(activity) ){
+                if (! isXwalRuntimeInstalled(this) ){
                     if (currentapiVersion < Constants.OSVERSION_XWALK) {
-                        (new XwalkDownloadHandler(activity)).showDownloadDialog(activity.getString(R.string.xwalkNotFoundTitle),
-                                activity.getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, false);
+                        (new XwalkDownloadHandler(this)).showDownloadDialog(this.getString(R.string.xwalkNotFoundTitle),
+                                this.getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, false);
                         rt=false;
                     }
                     else {
@@ -286,7 +357,7 @@ public class SettingsActivity extends PreferenceActivity {
         e.putString(Constants.WORKDIR, workdir);
         e.putString(Constants.CHARTDIR, chartdir);
         e.apply();
-        rt=selectWorkingDirectory(activity, new SelectWorkingDir() {
+        rt=selectWorkingDirectory(new SelectWorkingDir() {
             @Override
             public void directorySelected(File dir) {
                 try {
@@ -294,20 +365,18 @@ public class SettingsActivity extends PreferenceActivity {
                     e.putString(Constants.WORKDIR,dir.getCanonicalPath());
                     e.apply();
                 } catch (IOException e1) {
-                    Toast.makeText(activity, e1.getMessage(), Toast.LENGTH_SHORT).show();
-                    callback.callback(ICallback.CB_RESTART_SETTINGS);
+                    Toast.makeText(SettingsActivity.this, e1.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-                callback.callback(ICallback.CB_SETTINGS_OK);
+                resultOk();
             }
 
             @Override
             public void failed() {
-                callback.callback(ICallback.CB_RESTART_SETTINGS);
             }
 
             @Override
             public void cancel() {
-                callback.callback(ICallback.CB_EXIT);
+                resultNok();
             }
 
         },workdir);
@@ -317,26 +386,26 @@ public class SettingsActivity extends PreferenceActivity {
         String aisMode=NmeaSettingsFragment.getAisMode(sharedPrefs);
         NmeaSettingsFragment.updateAisMode(sharedPrefs,aisMode);
         try {
-            int version = activity.getPackageManager()
-                    .getPackageInfo(activity.getPackageName(), 0).versionCode;
+            int version = this.getPackageManager()
+                    .getPackageInfo(this.getPackageName(), 0).versionCode;
             if (sharedPrefs.getInt(Constants.VERSION,-1)!= version){
                 e.putInt(Constants.VERSION,version);
             }
         } catch (Exception ex) {
         }
         e.commit();
-        NmeaSettingsFragment.checkGpsEnabled(activity, false);
+        NmeaSettingsFragment.checkGpsEnabled(this, false);
         return rt;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home){
-            finish();
+            resultOk();
             return true;
         }
         if (item.getItemId() == R.id.action_ok){
-            finish();
+            resultOk();
             return true;
         }
         if (item.getItemId()== R.id.action_about) {
@@ -366,14 +435,34 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
+    private void resultOk(){
+        Intent result=new Intent();
+        setResult(Activity.RESULT_OK,result);
+        finish();
+    }
+    private void resultNok(){
+        Intent result=new Intent();
+        setResult(Activity.RESULT_CANCELED,result);
+        finish();
+    }
+    @Override
     protected void onResume() {
         View toolbar=findViewById(R.id.toolbar);
         if (toolbar == null) injectToolbar();
         getToolbar().setOnMenuItemClickListener(this);
         super.onResume();
+        if (getIntent().getBooleanExtra(Constants.EXTRA_INITIAL,false)){
+            if (checkForInitialDialogs()){
+                handleInitialSettings();
+            }
+            AvnLog.i("initial settings call");
+
+        }
         updateHeaderSummaries(true);
-
-
     }
     @Override
     public boolean onIsMultiPane() {

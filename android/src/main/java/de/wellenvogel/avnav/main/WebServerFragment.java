@@ -91,7 +91,7 @@ public class WebServerFragment extends Fragment {
         btSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity) getActivity()).showSettings();
+                ((MainActivity) getActivity()).showSettings(false);
             }
         });
         btLaunch.setOnClickListener(new View.OnClickListener() {
@@ -271,7 +271,7 @@ public class WebServerFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home){
-            ((MainActivity) getActivity()).showSettings();
+            ((MainActivity) getActivity()).showSettings(false);
             return true;
         }
         if (item.getItemId() == R.id.action_about){

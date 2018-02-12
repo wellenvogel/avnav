@@ -58,7 +58,10 @@ public class Constants {
     public static final String XWALKVERSION="10.39.235.16";
     public static final String LOGPRFX="avnav";
     public static final int    OSVERSION_XWALK=19;  //if below this version we should have xwalk
+    //request codes in main activity
     public static final int ROUTE_OPEN_REQUEST=0;
+    public static final int SETTINGS_REQUEST=1;
+
     public static final String TRACKINTERVAL ="track.interval";
     public static final String TRACKDISTANCE ="track.distance";
     public static final String TRACKMINTIME ="track.mintime";
@@ -78,4 +81,6 @@ public class Constants {
     public static final int LOCKNOTIFY=2;
 
     public static final long WATCHDOGTIME=30000; //ms
+
+    public static final String EXTRA_INITIAL="initial"; //boolean extra
 }

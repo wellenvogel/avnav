@@ -933,7 +933,7 @@ public class RequestHandler {
 
         @JavascriptInterface
         public void showSettings(){
-            activity.showSettings();
+            activity.showSettings(false);
         }
 
         @JavascriptInterface

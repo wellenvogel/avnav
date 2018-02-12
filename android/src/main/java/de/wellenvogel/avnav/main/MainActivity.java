@@ -45,7 +45,7 @@ import de.wellenvogel.avnav.util.DialogBuilder;
 /**
  * Created by andreas on 06.01.15.
  */
-public class MainActivity extends XWalkActivity implements IDialogHandler,IMediaUpdater,SharedPreferences.OnSharedPreferenceChangeListener, ICallback {
+public class MainActivity extends XWalkActivity implements IDialogHandler,IMediaUpdater,SharedPreferences.OnSharedPreferenceChangeListener {
 
     private String lastStartMode=null; //The last mode we used to select the fragment
     SharedPreferences sharedPrefs;
@@ -84,20 +84,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         }
     };
 
-    //asynchronously trigger a restart
-    //used when returning from dialogs
-    //msg.what == 1 - force settings again
-    private Handler restartHandler=new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == ICallback.CB_EXIT){
-                endApp();
-                return;
-            }
-            handleRestart(msg.what == ICallback.CB_RESTART_SETTINGS,false);
-        }
-    };
 
 
     public void updateMtp(File file){
@@ -114,13 +100,24 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != Constants.ROUTE_OPEN_REQUEST) return;
-        if (resultCode != RESULT_OK) {
-            // Exit without doing anything else
-            return;
-        } else {
-            Uri returnUri = data.getData();
-            if (requestHandler != null) requestHandler.saveRoute(returnUri);
+        switch (requestCode) {
+            case Constants.ROUTE_OPEN_REQUEST:
+                if (resultCode != RESULT_OK) {
+                    // Exit without doing anything else
+                    return;
+                } else {
+                    Uri returnUri = data.getData();
+                    if (requestHandler != null) requestHandler.saveRoute(returnUri);
+                }
+                break;
+            case Constants.SETTINGS_REQUEST:
+                if (resultCode != RESULT_OK){
+                    endApp();
+                    return;
+                }
+                break;
+            default:
+                AvnLog.e("unknown activity result " + requestCode);
         }
     }
 
@@ -231,10 +228,11 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
      */
 
 
-    void showSettings(){
+    void showSettings(boolean initial){
         serviceNeedsRestart=true;
         Intent sintent= new Intent(this,SettingsActivity.class);
-        startActivity(sintent);
+        sintent.putExtra(Constants.EXTRA_INITIAL,initial);
+        startActivityForResult(sintent,Constants.SETTINGS_REQUEST);
     }
 
     //to be called e.g. from js
@@ -361,7 +359,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     }
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        serviceNeedsRestart = true;
+        if (! key.equals(Constants.WAITSTART)) serviceNeedsRestart = true;
         Log.d(Constants.LOGPRFX, "preferences changed");
         if (key.equals(Constants.WORKDIR)){
             updateWorkDir(new File(sharedPreferences.getString(Constants.WORKDIR,"")));
@@ -404,80 +402,23 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         AvnLog.d("main: onResume");
         if (startDialogVisible) return;
         int version=0;
-        boolean startSomething=true;
-        SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
-        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
-        if (mode.isEmpty() || startPendig) {
-            startSomething=false;
-            int title;
-            int message;
-            if (startPendig) {
-                title=R.string.somethingWrong;
-                message=R.string.somethingWrongMessage;
-            } else {
-                title=R.string.firstStart;
-                message=R.string.firstStartMessage;
-            }
-            DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    startDialogVisible=false;
-                    handleRestart(true,false);
-                }
-            });
-            startDialogVisible=true;
-            if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
+        if (SettingsActivity.needsInitialSettings(this)){
+            showSettings(true);
+            return;
         }
-        try {
-            version = getPackageManager()
-                    .getPackageInfo(getPackageName(), 0).versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
+        if (! handleRestart()){
+            showSettings(true);
+            return;
         }
-        if (! startSomething) return;
-        if (version != 0 ){
-            try {
-                int lastVersion = sharedPrefs.getInt(Constants.VERSION, 0);
-                //TODO: handle other version changes
-                if (lastVersion == 0 ){
-                    sharedPrefs.edit().putInt(Constants.VERSION,version).commit();
-                    startSomething=false;
-                    DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
-                    builder.setTitle(R.string.newVersionTitle);
-                    builder.setText(R.id.question,R.string.newVersionMessage);
-                    builder.setNegativeButton(R.string.settings, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            startDialogVisible=false;
-                            handleRestart(true,false);
-                        }
-                    });
-                    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            startDialogVisible=false;
-                            handleRestart(false,false);
-                        }
-                    });
-                    startDialogVisible=true;
-                    builder.show();
-                }
-            }catch (Exception e){}
-        }
-        if (! startSomething) return;
-        handleRestart(false,false);
+        startFragmentOrActivity(false);
     }
 
-    private void handleRestart(boolean forceSettings, boolean noSettings){
-        if (serviceNeedsRestart) Log.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
-        if (serviceNeedsRestart) stopGpsService(false);
-        boolean startSomething=true;
-        if (! noSettings) startSomething=SettingsActivity.handleInitialSettings(this, this);
-        if (serviceNeedsRestart) {
-            if (! startGpsService()) forceSettings=true;
-        }
+    private boolean handleRestart(){
+        if (!serviceNeedsRestart) return true;
+        AvnLog.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
+        stopGpsService(false);
         requestHandler.update();
-        if (startSomething) startFragmentOrActivity(forceSettings);
+        return startGpsService();
     }
 
     /**
@@ -491,7 +432,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             //TODO: show info dialog
             lastStartMode=null;
             jsEventHandler=null;
-            showSettings();
+            showSettings(false);
             return;
         }
         if (lastStartMode == null || !lastStartMode.equals(mode)){
@@ -579,11 +520,4 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         mediaUpdateHandler.sendMessage(msg);
     }
 
-    //called back from file dialog in settings
-    //1 - force settings again
-    //0 - normal
-    @Override
-    public void callback(int id) {
-        restartHandler.sendEmptyMessage(id);
-    }
 }

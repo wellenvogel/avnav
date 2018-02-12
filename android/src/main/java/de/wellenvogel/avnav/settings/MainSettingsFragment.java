@@ -37,7 +37,7 @@ public class MainSettingsFragment extends SettingsFragment {
                                     // The code in this function will be executed when the dialog OK button is pushed
                                     ((EditTextPreference)preference).setText(chosenDir.getAbsolutePath());
                                     try {
-                                        SettingsActivity.createWorkingDir(getActivity(), chosenDir);
+                                        SettingsActivity.createWorkingDir(chosenDir);
                                     } catch (Exception ex) {
                                         Toast.makeText(getActivity(), ex.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
