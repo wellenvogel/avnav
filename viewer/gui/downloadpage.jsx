@@ -251,7 +251,7 @@ Downloadpage.prototype.getPageContent=function(){
             if (props.server) showRas=true;
         }
         var showDownload=false;
-        if (self.type == "track" || self.type == "route" || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
+        if (self.type === "track" || self.type === "route" || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
             showDownload=true;
         }
         var cls="avn_download_list_entry";
@@ -269,8 +269,10 @@ Downloadpage.prototype.getPageContent=function(){
                 ev.stopPropagation();
                 self.deleteItem(props);
             }}/>}
-            <div className="avn_download_listdate">{dp.timeText}</div>
-            <div className="avn_download_listinfo">{dp.infoText}</div>
+            <div className="avn_download_itemwrapper">
+                <div className="avn_download_listdate">{dp.timeText}</div>
+                <div className="avn_download_listinfo">{dp.infoText}</div>
+            </div>
             {showRas && <div className="avn_download_listrasimage"></div>}
             { showDownload && <button className="avn_download_btnDownload avn_smallButton" onClick={
                 function(ev){

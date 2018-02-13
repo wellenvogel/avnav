@@ -1065,6 +1065,12 @@ button.avb_RoutePageDownload{
    download/upload page
 -------------------------------------------------------------*/
 
+#avi_downloadpage .avn_left_panel .avn_listWrapper{
+  .avn_listContainer{
+    padding-left: 1em;
+    padding-right: 1em;
+  }
+}
 
 
 .avn_download_list_entry{
@@ -1073,12 +1079,23 @@ button.avb_RoutePageDownload{
 .avn_download_listinfo{
   .avm_listEntryItem();
   .flex(1);
+  max-width: 17em;
+  display: inline-block;
+  @media(max-width: 35em){
+    display: block;
+  }
+  @media(min-width: 45em){
+    max-width: 27em;
+  }
+  @media(min-width: 55em){
+    max-width: 37em;
+  }
 }
 .avn_download_listdate{
   .mdText2();
   .avm_listEntryItem();
-  margin-left: 1em;
   width: 11.5em;
+  display: inline-block;
 }
 .avn_download_active_entry .avn_download_listdate{
   margin-left: 3.7em; //room for the delete button
@@ -1090,6 +1107,11 @@ button.avb_RoutePageDownload{
 
 .avn_download_btnDownload{
   .avm_listEntryItem();
+}
+.avn_download_itemwrapper{
+    flex: 1;
+    padding-left: 0.8em;
+    padding-right: 0.8em;
 }
 
 
@@ -1777,6 +1799,9 @@ button.avb_SettingsAndroid {
 #avi_mainpage .avn_listWrapper{
   margin-top: auto;
   margin-bottom: auto;
+  .avn_listContainer{
+    padding-left: 1em;
+  }
 }
 
 
