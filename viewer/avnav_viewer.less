@@ -4,6 +4,8 @@
 @widgetFontSize: 14px;
 @navLeftWidgetWidth: 8.8em;
 
+@listWidth: 80em;
+
 @nightModeValue:60;
 @nightModePercent: 60%;
 
@@ -1066,9 +1068,16 @@ button.avb_RoutePageDownload{
 -------------------------------------------------------------*/
 
 #avi_downloadpage .avn_left_panel .avn_listWrapper{
+  .flex-display();
+  .flex-direction(row);
+  .flex-justify-content(space-around);
   .avn_listContainer{
     padding-left: 1em;
     padding-right: 1em;
+  }
+  .avn_scrollWrapper{
+    max-width:@listWidth;
+    .flex(1);
   }
 }
 
@@ -1079,23 +1088,11 @@ button.avb_RoutePageDownload{
 .avn_download_listinfo{
   .avm_listEntryItem();
   .flex(1);
-  max-width: 17em;
-  display: inline-block;
-  @media(max-width: 35em){
-    display: block;
-  }
-  @media(min-width: 45em){
-    max-width: 27em;
-  }
-  @media(min-width: 55em){
-    max-width: 37em;
-  }
 }
 .avn_download_listdate{
   .mdText2();
   .avm_listEntryItem();
   width: 11.5em;
-  display: inline-block;
 }
 .avn_download_active_entry .avn_download_listdate{
   margin-left: 3.7em; //room for the delete button
@@ -1109,9 +1106,14 @@ button.avb_RoutePageDownload{
   .avm_listEntryItem();
 }
 .avn_download_itemwrapper{
-    flex: 1;
+    .flex(1);
     padding-left: 0.8em;
     padding-right: 0.8em;
+  .flex-display();
+  .flex-direction(row);
+  @media(max-width: 35em){
+    .flex-direction(column);
+  }
 }
 
 
