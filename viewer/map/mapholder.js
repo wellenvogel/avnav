@@ -862,6 +862,7 @@ avnav.map.MapHolder.prototype.pointFromMap=function(point){
  */
 avnav.map.MapHolder.prototype.setCenter=function(point){
     if (! point) return;
+    if (! this.getView()) return;
     this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
 };
 

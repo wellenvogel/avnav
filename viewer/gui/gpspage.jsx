@@ -156,7 +156,12 @@ Gpspage.prototype.getPageContent=function(){
                         </div>
                         <div className='avn_gpsp_vfield' data-avnfs="15">
                             <div className='avn_gpsp_field_label'>AIS</div>
-                            <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22" onClick={function(){self.gui.showPage('aisinfopage')}}>
+                            <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22" onClick={
+                                function(ev){
+                                    ev.stopPropagation();
+                                    self.gui.showPage('aisinfopage');
+                                }
+                            }>
                                 <div id="avi_gpsp_ais_status"></div>
                                 <div id='avi_gpsp_ais'></div>
                                 <span id="avi_aisStatusText"></span>

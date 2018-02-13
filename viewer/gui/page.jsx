@@ -159,7 +159,7 @@ Page.prototype._initPage=function(){
         render: function(){
             if (!this.props.visible) return null;
             return (
-                <div className="avn_page">
+                <div className="avn_pageWrapper">
                     <Measure
                         bounds="true"
                         onResize={function (item) {
@@ -233,12 +233,6 @@ Page.prototype.handlePage=function(evdata){
         this.initDisplayObjects();
         this.initFocusHandler();
         this.initExternalLinks();
-        if (this.options && this.options.returnOnClick){
-            var test=this.selectOnPage('.avn_left_panel');
-            this.selectOnPage('.avn_left_panel').on('click',function(){
-                self.goBack();
-            });
-        }
         $(document).on(avnav.gui.BackEvent.EVENT_TYPE,function(ev,evdata){
            if (evdata.name && evdata.name==self.name){
                self.goBack();

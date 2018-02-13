@@ -21,7 +21,6 @@ var AisInfoPage=function(){
     Page.call(this,'aisinfopage',
         {
             eventlist:[navobjects.NavEvent.EVENT_TYPE],
-            returnOnClick: true
         }
     );
     /**

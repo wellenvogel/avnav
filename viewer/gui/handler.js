@@ -175,8 +175,8 @@ avnav.gui.Handler.prototype.returnToLast = function (page, opt_options) {
 
 avnav.gui.Handler.prototype.showPage = function (name, options) {
     if (!name) return false;
-    if (name == this.page) return false;
-    if (name == "mainpage") this.history=[]; //empty history if we reach the mainpage
+    if (name === this.page) return false;
+    if (name === "mainpage") this.history=[]; //empty history if we reach the mainpage
     else  if (! options || (! options.skipHistory && ! options.returning) ) {
             this.history.push(this.page);
     }
