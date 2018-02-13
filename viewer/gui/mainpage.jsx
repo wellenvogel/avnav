@@ -29,6 +29,11 @@ var Mainpage=function(){
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE,function(){
         self.fillList();
     });
+    $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,(ev,evdata)=>{
+        if (evdata.key && evdata.key === 'rescan'){
+            self.fillList();
+        }
+    });
     this.store=new Store();
     this.soundHandler=undefined;
     this.soundRepeat=0;

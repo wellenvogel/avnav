@@ -418,6 +418,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         AvnLog.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
         stopGpsService(false);
         requestHandler.update();
+        sendEventToJs("rescan",0);
         return startGpsService();
     }
 
