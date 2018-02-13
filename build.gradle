@@ -500,7 +500,7 @@ task uploadRelease{
         dependsOn uploadWindows
     }
     if (buildAndroid){
-        uploadAndroidRelease
+        dependsOn uploadAndroidRelease
     }
 }
 
