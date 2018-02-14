@@ -509,8 +509,9 @@ and we double the configuration:
 /etc/network/interfaces.d - config for wlan-ap
 /etc/dnsmasq.conf.d
 
- 
- 
+  ========== starting with 2018-02-13 =============================
+with raspbian 2017-11-29 ntp is missing - need to install this by hand
+
  
  
  

@@ -29,7 +29,7 @@
 	 If you set useGpsd to false, you can use this feeder on system where you don't have gpsd
 	 like on Windows. In this case the decoding is limited to the internal decoder.
 	 -->
-<AVNGpsdFeeder useGpsd="true" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
+<AVNGpsdFeeder useGpsd="true" listenerPort="4020" port="2948" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
 
 
 
