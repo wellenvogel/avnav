@@ -269,6 +269,8 @@ class GpsdReader(threading.Thread):
         for k in report.keys():
           ddata[k]=report.get(k)
         ddata['source']="gpsd"
+        if ddata.get('tag') is None:
+          ddata['tag']='gpsd'
         entry=AVNDataEntry.fromData(ddata)
         if not entry is None:
           self.navdata.addEntry(entry)
