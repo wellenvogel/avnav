@@ -235,8 +235,8 @@ Mainpage.prototype.navEvent=function(evdata) {
     this.updateAlarmSound();
     if (!this.visible) return;
     if (evdata.type == navobjects.NavEventType.GPS) {
-        var nmeaStatus = this.navobject.getValue("aisStatusColor");
-        var aisStatus = this.navobject.getValue("nmeaStatusColor");
+        var aisStatus = this.navobject.getValue("aisStatusColor");
+        var nmeaStatus = this.navobject.getValue("nmeaStatusColor");
 
         this.store.storeData(keys.status, {
             nmeaStatusText: this.navobject.getValue('nmeaStatusText'),
