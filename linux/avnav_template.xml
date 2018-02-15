@@ -3,7 +3,7 @@
      we do not have a gpsd and we can only directly use serial readers -->
 <AVNServer>
 <AVNConfig loglevel="INFO"
-	logfile="BASEDIR/log/avnav.log" 
+	logfile="#DATADIR#/log/avnav.log" 
 	debugToLog="true"/>
 <Readers>
 <!--<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />-->
@@ -61,7 +61,7 @@
 </Readers>
 <!-- provide your data at this port for e.g. OpenCPN -->
 <AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="100"/>
-<AVNTrackWriter interval="10" distance="100" trackdir="BASEDIR/tracks"/>
+<AVNTrackWriter interval="10" distance="100" trackdir="#DATADIR#/tracks"/>
 <AVNHttpServer navurl="/viewer/avnav_navi.php" httpPort="8080" upzoom="0"
                chartbase="maps" empty="nonexistent">
 <!-- chartbaseurl="http://$host/Karten/anav"> -->
@@ -72,10 +72,10 @@
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
     <!--  routing handler -->
-<AVNRouter routesdir="BASEDIR/routes"></AVNRouter>
+<AVNRouter routesdir="#DATADIR#/routes"></AVNRouter>
 <!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
 <AVNNmeaLogger></AVNNmeaLogger>
-<AVNImporter importDir="BASEDIR/import"></AVNImporter>
+<AVNImporter importDir="#DATADIR#/import"></AVNImporter>
 <AVNWpaHandler></AVNWpaHandler>
 <AVNCommandHandler>
 	<Command name="sound" command="mpg123 -q" repeat="1"/>

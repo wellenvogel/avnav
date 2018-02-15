@@ -98,7 +98,7 @@ if [ "$xmlfile" = "" ] ; then
   xmlfile=$basedir/avnav_server.xml
   if [ ! -f "$xmlfile" ] ; then
     echo "creating initial $xmlfile"
-    sed -e "s?BASEDIR?$basedir?" -e "s?AVNAVDIR?$avnavdir?" "$template" > $xmlfile || err "unable to create $xmlfile"
+    sed -e "s?#DATADIR#?$basedir?" -e "s?#AVNAVDIR#?$avnavdir?" "$template" > $xmlfile || err "unable to create $xmlfile"
   fi
 fi
 
