@@ -401,14 +401,26 @@ change #FSCKFIX=no
 to FSCKFIX=yes
 
 ====================== prevent resize on newer raspbian images ===================
+1. prevent initial resize
 https://www.raspberrypi.org/blog/another-update-raspbian/
 http://raspberrypi.stackexchange.com/questions/47773/disable-auto-file-system-expansion-in-new-jessie-image-2016-05-10
 edit cmdline.txt in the boot partition and remove init=/usr/lib/raspi-config/init_resize.sh
 
+2. install everything
+
+3. prepare resize of fs
 to enable resize again, follow the steps described at https://www.raspberrypi.org/forums/viewtopic.php?t=174434&p=1113971
 sudo wget -O /etc/init.d/resize2fs_once https://github.com/RPi-Distro/pi-gen/raw/dev/stage2/01-sys-tweaks/files/resize2fs_once
 sudo chmod +x /etc/init.d/resize2fs_once
 sudo systemctl enable resize2fs_once
+
+4. shutdown and get the image (raspi.sh -m completeCopy)
+5. mount the image (raspi.sh -m mount) and edit part1/cmdline.txt 
+to add again init=/usr/lib/raspi-config/init_resize.sh
+6. unmount the image (raspi.sh -m umount)
+7. copy image to sd (raspi.sh -m completeCopy) 
+test...
+
 
 
 ====================== after 2016/03/12 ==========================================
@@ -511,6 +523,10 @@ and we double the configuration:
 
   ========== starting with 2018-02-13 =============================
 with raspbian 2017-11-29 ntp is missing - need to install this by hand
+change gpsd port to 2948 to avoid conflicts with the gpsd running by the system
+systemctl disable gpsd
+seems that we have to remove ntp entries from /etc/ntp.conf
+
 
  
  
