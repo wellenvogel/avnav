@@ -77,7 +77,9 @@ var plugins = [
 ];
 if (process.env.AVNAV_VERSION_FILE){
     plugins.push(new webpack.NormalModuleReplacementPlugin(/version\.js/,process.env.AVNAV_VERSION_FILE));
+    console.log("using version "+process.env.AVNAV_VERSION_FILE);
 }
+//console.log(process.env);
 
 module.exports = {
     //see http://humaan.com/getting-started-with-webpack-and-react-es6-style/
