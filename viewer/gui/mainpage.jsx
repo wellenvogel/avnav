@@ -94,7 +94,7 @@ Mainpage.prototype.getPageContent=function(){
         {key:'ShowStatus'},
         {key:'ShowSettings'},
         {key:'ShowDownload'},
-        {key:'Connected',toggle:true},
+        {key:'Connected',toggle:true, android:false},
         {key:'ShowGps'},
         {key:'Night',toggle:true},
         {key:'MainInfo'},
@@ -131,7 +131,7 @@ Mainpage.prototype.getPageContent=function(){
                        </div>
                    </div>
                    <div className="avn_mainpage_link" >
-                       <div className="avn_label"> AVNav Version <span id="avi_mainpage_version">develop</span></div>
+                       <div className="avn_label"> AVNav Version <span id="avi_mainpage_version">{window.avnav_version}</span></div>
                        <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="avn_extlink">www.wellenvogel.de/software/avnav/index.php</a></div>
                    </div>
                </div>
