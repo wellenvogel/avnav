@@ -527,6 +527,17 @@ change gpsd port to 2948 to avoid conflicts with the gpsd running by the system
 systemctl disable gpsd
 seems that we have to remove ntp entries from /etc/ntp.conf
 
+we have wpa_supplicant running on wlan-ap - still unclear where it comes from
+-> dhcpcd
+systemctl stop dhcpcd
+systemctl disable dhcpcd
+many TIME_WAIT sockets - some tuning - see 
+http://www.linuxbrigade.com/reduce-time_wait-socket-connections/
+sudo sysctl -w net.ipv4.tcp_fin_timeout=30
+sudo sysctl -w net.ipv4.tcp_tw_recycle=1
+sudo sysctl -w net.ipv4.tcp_tw_reuse=1
+
+
 
  
  

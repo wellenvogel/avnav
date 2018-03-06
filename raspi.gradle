@@ -76,6 +76,7 @@ ospackage {
     into('/etc/network/interfaces.d'){
         from('raspberry'){
             include('lo')
+            include('eth0')
             include('wlan0')
             include('wlan1')
             include('wlan-av1')
