@@ -16,6 +16,7 @@ if (isProduction) {
 var copyList=[
     {from: './avnav_viewer.html'},
     {from: './info.html'},
+    {from: './manifest.json'},
     {from: './privacy-en.html'},
     {from: './privacy-de.html'},
     {from: './webpack-loader.js',to:'loader.js'},
