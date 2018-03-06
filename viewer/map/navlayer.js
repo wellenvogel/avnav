@@ -180,6 +180,7 @@ avnav.map.NavLayer.prototype.computeTarget=function(pos,course,dist){
  * @param {number} course
  */
 avnav.map.NavLayer.prototype.setBoatPosition=function(pos,course) {
+    if (course === undefined) course=0;
     this.boatStyle.rotation=course*Math.PI/180;
     this.lastBoatCourse=course;
     this.boatPosition = this.mapholder.transformToMap(pos);
