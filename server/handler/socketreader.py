@@ -109,6 +109,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
       AVNLog.info("successfully connected to %s:%d",self.getStringParam('host'),self.getIntParam('port'))
       try:
         self.readSocket(sock,'main')
+        time.sleep(2)
       except:
         AVNLog.info("exception while reading from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
 avnav_handlerList.registerHandler(AVNSocketReader)

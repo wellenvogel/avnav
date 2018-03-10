@@ -126,14 +126,19 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       seq=0
       socket.sendall("avnav_server %s\r\n"%(VERSION))
       while True:
+        hasSend=False
         seq,data=self.feeder.fetchFromHistory(seq,10)
         if len(data)>0:
           for line in data:
             if NMEAParser.checkFilter(line, filter):
               socket.sendall(line)
+              hasSend=True
         else:
           time.sleep(0.1)
         pass
+        if not hasSend:
+          #just throw an exception if the reader potentially closed the socket
+          socket.getpeername()
     except Exception as e:
       AVNLog.info("exception in client connection %s",traceback.format_exc())
     AVNLog.info("client disconnected")
@@ -192,6 +197,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
             clientHandler.daemon=True
             clientHandler.start()
           else:
+            AVNLog.error("connection from %s not allowed", unicode(addr))
             try:
               outsock.close()
             except:
