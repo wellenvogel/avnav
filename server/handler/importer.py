@@ -253,8 +253,8 @@ class AVNImporter(AVNWorker):
       po=self.runConverter(name,args)
 
     if po is None:
-      AVNLog.error("unable to start conversion for %s",name)
-      self.setInfo("converter","start for %s failed",AVNWorker.Status.ERROR)
+      AVNLog.error("unable to start conversion for %s - don't know how to handle it",name)
+      self.setInfo("converter","start for %s failed - don't know how to handle"%(name,),AVNWorker.Status.ERROR)
       return
     #dummy - simply remember the time when we started
     self.runningConversions[name]=[po,tmpOutName]
