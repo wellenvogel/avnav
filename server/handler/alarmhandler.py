@@ -40,6 +40,13 @@ import threading
 import signal
 import shlex
 
+hasGpio=False
+try:
+  import RPi.GPIO as GPIO
+  hasGpio=True
+except:
+  pass
+
 from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
@@ -60,7 +67,8 @@ class AVNAlarmHandler(AVNWorker):
     if child is None:
       return {
         'defaultCommand':'sound',
-        'defaultParameter':''
+        'defaultParameter':'',
+        'stopAlarmPin':'' #when going low - stop alarm
       }
     if child == "Alarm":
       return {
@@ -89,6 +97,8 @@ class AVNAlarmHandler(AVNWorker):
   def getName(self):
     return "AlarmHandler"
 
+  def _gpioCmd(self,channel):
+    self.stopAll()
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
     self.commandHandler=self.findHandlerByName("AVNCommandHandler")
@@ -96,12 +106,21 @@ class AVNAlarmHandler(AVNWorker):
       self.setInfo('main',"no command handler found",self.Status.ERROR)
       return
     self.setInfo('main',"running",self.Status.NMEA)
+    gpioPin=self.getIntParam('stopAlarmPin',False)
+    if gpioPin != 0:
+      if not hasGpio:
+        AVNLog.error("gpio pin for stopAlarm defined but no GPIO support found")
+      else:
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(gpioPin,GPIO.IN,pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(gpioPin,GPIO.FALLING,callback=self._gpioCmd,bouncetime=100)
+        AVNLog.info("set gpio pin %d as reset alarm",gpioPin)
     while True:
       time.sleep(0.5)
       deletes=[]
       for k in self.runningAlarms.keys():
         info = self.runningAlarms.get(k)
-        if not self.commandHandler.isCommandRunning(info['command']):
+        if not self.commandHandler.isCommandRunning(info):
           if info['autoclean']:
             deletes.append(k)
           if info['repeat'] > 1:
@@ -182,6 +201,14 @@ class AVNAlarmHandler(AVNWorker):
     self.runningAlarms[name] = alarmid
     return True
 
+  def stopAll(self):
+    '''stop all alarms'''
+    AVNLog.info("stopAllAlarms")
+    list=self.getRunningAlarms()
+    if list is None:
+      return
+    for name in list.keys():
+      self.stopAlarm(name)
   def stopAlarm(self, name):
     '''stop a named command'''
     cmd = self.findAlarm(name,True)
