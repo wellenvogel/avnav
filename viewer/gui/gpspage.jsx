@@ -9,7 +9,8 @@ var navobjects=require('../nav/navobjects');
 var Formatter=require('../util/formatter');
 
 const keys={
-  anchorWatch:'anchorWatch' //TODO: should become global
+  anchorWatch:'anchorWatch', //TODO: should become global
+  secondPage: 'second'
 };
 
 /**
@@ -32,6 +33,8 @@ Gpspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.gui.navobject.setAisCenterMode(navobjects.AisCenterMode.GPS);
     this.gui.navobject.getAisHandler().setTrackedTarget(0);
+    this.store.storeData(keys.secondPage,false);
+    this.handleToggleButton('Gps2',false);
     this.computeLayout();
 };
 
@@ -58,6 +61,7 @@ Gpspage.prototype.getPageContent=function(){
     var self=this;
     var buttons=[
         {key:'GpsCenter'},
+        {key: "Gps2",toggle:true},
         {key: "AnchorWatch",toggle:true},
         {key:'Cancel'}
     ];
@@ -137,38 +141,74 @@ Gpspage.prototype.getPageContent=function(){
                         </div>
 
                     }
-                    <div id='avi_gps_page_right' className="avn_gpsp_hfield">
-                        <div id='avi_gpsp_course' className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
-                            <div className='avn_gpsp_field_label'>COG</div>
-                            {self.createElememt('gpsCourse',"\u00b0",4)}
-                        </div>
-                        <div id='avi_gpsp_speed' className='avn_gpsp_vfield' data-avnfs="28">
-                            <div className='avn_gpsp_field_label'>SOG</div>
-                            {self.createElememt('gpsSpeed','kn',5)}
-                        </div>
-                        <div className='avn_gpsp_vfield' data-avnfs="15">
-                            <div className='avn_gpsp_field_label'>Local Time</div>
-                            {self.createElememt('gpsTime','',8)}
-                        </div>
-                        <div className='avn_gpsp_vfield' data-avnfs="15">
-                            <div className='avn_gpsp_field_label'>Pos</div>
-                            {self.createElememt('gpsPosition','',15)}
-                        </div>
-                        <div className='avn_gpsp_vfield' data-avnfs="15">
-                            <div className='avn_gpsp_field_label'>AIS</div>
-                            <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22" onClick={
-                                function(ev){
-                                    ev.stopPropagation();
-                                    self.gui.showPage('aisinfopage');
-                                }
-                            }>
-                                <div id="avi_gpsp_ais_status"></div>
-                                <div id='avi_gpsp_ais'></div>
-                                <span id="avi_aisStatusText"></span>
+                    {!this.props[keys.secondPage] ?
+                        <div id='avi_gps_page_right' className="avn_gpsp_hfield">
+                            <div id='avi_gpsp_course' className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
+                                <div className='avn_gpsp_field_label'>COG</div>
+                                {self.createElememt('gpsCourse', "\u00b0", 4)}
+                            </div>
+                            <div id='avi_gpsp_speed' className='avn_gpsp_vfield' data-avnfs="28">
+                                <div className='avn_gpsp_field_label'>SOG</div>
+                                {self.createElememt('gpsSpeed', 'kn', 5)}
+                            </div>
+                            < div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div className='avn_gpsp_field_label'>Local Time</div>
+                                {self.createElememt('gpsTime', '', 8)}
+                            </div>
+                            <div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div className='avn_gpsp_field_label'>Pos</div>
+                                {self.createElememt('gpsPosition', '', 15)}
+                            </div>
+                            <div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div className='avn_gpsp_field_label'>AIS</div>
+                                <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22" onClick={
+                                    function (ev) {
+                                        ev.stopPropagation();
+                                        self.gui.showPage('aisinfopage');
+                                    }
+                                }>
+                                    <div id="avi_gpsp_ais_status"></div>
+                                    <div id='avi_gpsp_ais'></div>
+                                    <span id="avi_aisStatusText"></span>
+                                </div>
                             </div>
                         </div>
+                        :
+                        <div id='avi_gps_page_right' className="avn_gpsp_hfield">
+                            <div id='avi_gpsp_course' className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
+                                <div className='avn_gpsp_field_label'>COG</div>
+                                {self.createElememt('gpsCourse', "\u00b0", 4)}
+                            </div>
+                            <div id='avi_gpsp_speed' className='avn_gpsp_vfield' data-avnfs="28">
+                                <div className='avn_gpsp_field_label'>SOG</div>
+                                {self.createElememt('gpsSpeed', 'kn', 5)}
+                            </div>
 
-                    </div>
+                            < div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div className='avn_gpsp_field_label'>Wind Angle</div>
+                                {self.createElememt('windAngle', "\u00b0", 5)}
+                            </div>
+                            <div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div className='avn_gpsp_field_label'>WindSpeed</div>
+                                {self.createElememt('windSpeed', 'm/s', 4)}
+                            </div>
+                            <div className='avn_gpsp_vfield' data-avnfs="15">
+                                <div className='avn_gpsp_field_label'>AIS</div>
+                                <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22" onClick={
+                                    function (ev) {
+                                        ev.stopPropagation();
+                                        self.gui.showPage('aisinfopage');
+                                    }
+                                }>
+                                    <div id="avi_gpsp_ais_status"></div>
+                                    <div id='avi_gpsp_ais'></div>
+                                    <span id="avi_aisStatusText"></span>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    }
                     {self.getAlarmWidget()}
                 </div>
             );
@@ -180,7 +220,7 @@ Gpspage.prototype.getPageContent=function(){
             self.computeLayout();
         }
     });
-    return ItemUpdater(Main,this.store,keys.anchorWatch);
+    return ItemUpdater(Main,this.store,[keys.anchorWatch,keys.secondPage]);
 };
 
 /**
@@ -343,6 +383,11 @@ Gpspage.prototype.btnGpsCenter=function (button,ev){
         this.gui.map.setCenter(pos);
     }
     this.returnToLast();
+};
+Gpspage.prototype.btnGps2=function (button,ev){
+    let old=this.store.getData(keys.secondPage,false);
+    this.store.storeData(keys.secondPage,!old);
+    this.handleToggleButton('Gps2',!old);
 };
 
 
