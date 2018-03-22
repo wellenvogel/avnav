@@ -66,6 +66,7 @@ var Page=function(name,options){
     });
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         myself.updateDisplayObjects();
+        myself.store.callProviderCallbacks(); //some WA until we really can handle this directly from the navobject
     });
     if (this.options) {
         if (this.options.eventlist) {
@@ -228,6 +229,7 @@ Page.prototype.handlePage=function(evdata){
          * @type {NavData}
          */
         this.navobject=evdata.navobject;
+        this.store.registerDataProvider(this.navobject);
         this.isInitialized=true;
         this._initPage();
         this.initDisplayObjects();

@@ -14,16 +14,15 @@ var EditRouteWidget=React.createClass({
         wide:   React.PropTypes.bool //display info side by side
     },
     _getValues:function(){
-        var approaching=this.props.store.getRoutingHandler().getApproaching();
         return{
-            name:this.props.store.getValue('edRouteName'),
-            remain:this.props.store.getValue('edRouteRemain'),
-            eta:this.props.store.getValue('edRouteEta'),
-            numPoints:this.props.store.getValue('edRouteNumPoints'),
-            len:this.props.store.getValue('edRouteLen'),
-            isApproaching: approaching,
-            editingActive: this.props.store.getRoutingHandler().isEditingActiveRoute(),
-            hasRoute: this.props.store.getRoutingHandler().getRoute() !== undefined
+            name:this.props.store.getData('edRouteName'),
+            remain:this.props.store.getData('edRouteRemain'),
+            eta:this.props.store.getData('edRouteEta'),
+            numPoints:this.props.store.getData('edRouteNumPoints'),
+            len:this.props.store.getData('edRouteLen'),
+            isApproaching: this.props.store.getData('isApproaching'),
+            editingActive: this.props.store.getData('isEditingActiveRoute'),
+            hasRoute: this.props.store.getData('edRouteName') !== undefined
         };
     },
     getInitialState: function(){

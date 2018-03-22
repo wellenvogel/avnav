@@ -68,7 +68,9 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
         aisShiptype:'shiptype',
         aisCallsign: 'callsign',
         aisPosition: 'position',
-        aisHeading: 'heading'
+        aisHeading: 'heading',
+        aisWarning: 'warning',
+        aisNearest: 'nearest'
     };
 
     this.formattedData={};
@@ -191,6 +193,14 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
         destination: {
             headline: 'destination',
             format: function(v){ var d=v.destination; if (d) return d; return "unknown";}
+        },
+        warning:{
+            headline: 'warning',
+            format: function(v){ return v.warning||false}
+        },
+        nearest:{
+            headline: 'nearest',
+            format: function(v){ return v.nearest||false}
         }
 
     };

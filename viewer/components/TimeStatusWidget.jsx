@@ -3,17 +3,17 @@
  */
 
 var React=require("react");
-var NavData=require('../nav/navdata');
+var Store=require('../util/store');
 var TimeStatusWidget=React.createClass({
     propTypes:{
         onClick: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(NavData).isRequired,
+        store: React.PropTypes.instanceOf(Store).isRequired,
         classes: React.PropTypes.string
     },
     _getValues:function(){
         return{
-            time:this.props.store.getValue('gpsTime'),
-            statusUrl:this.props.store.getValue('statusImageUrl')
+            time:this.props.store.getData('gpsTime'),
+            statusUrl:this.props.store.getData('statusImageUrl')
         };
     },
     getInitialState: function(){

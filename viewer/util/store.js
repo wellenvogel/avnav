@@ -61,7 +61,7 @@ var Store=function(){
      * @type {{}}
      */
 
-    this.dataProvider={}
+    this.dataProvider=[];
 };
 /**
  * find a callback in the list of registered callbacks
@@ -84,7 +84,8 @@ Store.prototype._findCallback=function(callback){
  * @private
  */
 Store.prototype._contains=function(keylist,arr){
-    if (! keylist || keylist.length == 0) return true;
+    if (! keylist || keylist.length === 0) return true;
+    if (! arr || arr.length === 0) return true;
     var found=false;
     keylist.forEach(function(key){
        arr.forEach(function(el){
@@ -103,6 +104,7 @@ Store.prototype.register=function(callback/*,...*/){
     var args=Array.prototype.slice.call(arguments,1);
     var keys=[];
     args.forEach(function(arg){
+        if (arg === undefined) return;
        keys=keys.concat(arg);
     });
     if (! callback) return;
@@ -143,7 +145,7 @@ Store.prototype.callCallbacks=function(keys){
     var self=this;
     this.callbacks.forEach(function(cbItem){
        if (self._contains(keys,cbItem.keys)){
-           cbItem.callback.dataChanged(this);
+           cbItem.callback.dataChanged(self);
        }
     });
 };
@@ -180,7 +182,7 @@ Store.prototype.updateData=function(key,data,opt_subkey){
         newData=data(oldData);
     }
     else {
-        if (!oldData) newData = data;
+        if (!oldData || oldData instanceof Array) newData = data;
         else {
             newData=avnav.assign({},oldData, data);
         }
@@ -234,8 +236,9 @@ Store.prototype.updateSubItem=function(key,itemKey,value,opt_subkey){
 Store.prototype.getData=function(key,opt_default){
     var rt=this.data[key];
     if (rt !== undefined) return rt;
-    for (provider in this.dataProvider){
-        rt=provider.getData(key);
+    for (let i in this.dataProvider){
+        if (this.dataProvider[i].getData === undefined) continue;
+        rt=this.dataProvider[i].getData(key);
         if (rt !== undefined) return rt;
     }
     return opt_default;
@@ -253,10 +256,39 @@ Store.prototype.resetData=function(){
  * @param {DataProvider} provider
  */
 Store.prototype.registerDataProvider=function(provider){
-    this.dataProvider[provider]=true;
+    for (let i in this.dataProvider){
+        if (this.dataProvider[i] === provider) return;
+    }
+    this.dataProvider.push(provider);
 };
 Store.prototype.deregisterDataProvider=function(provider){
-    this.dataProvider[provider]=undefined;
+    for (let i in this.dataProvider){
+        if (this.dataProvider[i] === provider)  {
+            this.dataProvider.splice(i,1);
+            return;
+        }
+    }
+};
+/**
+ * call the callbacks for all data items being provided by data providers
+ */
+Store.prototype.callProviderCallbacks=function(){
+    let done={};
+    for (let i in this.dataProvider){
+        let provider=this.dataProvider[i];
+        let keys=[];
+        if (provider.listKeys){
+            keys=provider.listKeys();
+            let callbackKeys=[];
+            keys.forEach((el)=>{if (!done[el]) callbackKeys.push(el);});
+            this.callCallbacks(callbackKeys);
+            callbackKeys.forEach((el)=>{done[el]=true;})
+        }
+        else{
+            this.callCallbacks([]);
+            return; //called all
+        }
+    }
 };
 
 

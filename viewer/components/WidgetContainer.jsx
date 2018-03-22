@@ -235,8 +235,21 @@ var WidgetContainer=React.createClass({
             this.renderedItems=[];
             return {};
         },
+        compareItemList: function(newItemList){
+            if ( newItemList === undefined && this.props.itemList !== undefined) return false;
+            if ( newItemList === undefined && this.props.itemList === undefined) return true;
+            if ( newItemList.length !== this.props.itemList.length) return false;
+            for (var i=0;i< newItemList.length;i++){
+                if (newItemList[i] !== this.props.itemList[i]) return false;
+            }
+            return true;
+        },
         componentWillReceiveProps:function(nextProps){
-            if (nextProps.renewSequence !== undefined && nextProps.renewSequence != this.props.renewSequence){
+            var itemsChanged=! this.compareItemList(nextProps.itemList);
+            if (itemsChanged){
+                console.log("items changed on "+this);
+            }
+            if (itemsChanged || nextProps.renewSequence !== undefined && nextProps.renewSequence != this.props.renewSequence){
                 this.itemInfo={};
                 this.layouts={};
             }

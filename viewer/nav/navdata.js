@@ -115,6 +115,8 @@ var NavData=function(propertyHandler){
         routeNextCourse: "---",
         routeNextPosition: "---",
         routeNextName: "---",
+        isApproaching: false,
+        isEditingActiveRoute: false,
         edRouteName: "default",
         edRouteNumPoints: "--",
         edRouteLen: "--",
@@ -194,6 +196,7 @@ NavData.prototype.computeValues=function(){
     }
     //route data
     var curRoute=this.routeHandler.getCurrentLeg().currentRoute;
+    this.data.isApproaching=this.routeHandler.getApproaching();
     if (this.routeHandler.hasActiveRoute()) {
         this.data.routeName = curRoute.name;
         this.data.routeNumPoints = curRoute.points.length;
@@ -237,9 +240,11 @@ NavData.prototype.computeValues=function(){
         this.data.edRouteLen=this.data.routeLen;
         this.data.edRouteRemain=this.data.routeRemain;
         this.data.edRouteEta=this.data.routeEta;
+        this.data.editingActiveRoute=true;
     }
     else {
         var edRoute=this.routeHandler.getRoute();
+        this.data.editingActiveRoute=false;
         this.data.edRouteRemain=0;
         this.data.edRouteEta=undefined;
         this.data.edRouteName=edRoute?edRoute.name:undefined;
@@ -267,15 +272,16 @@ NavData.prototype.computeValues=function(){
     this.formattedValues.centerPosition=this.formatter.formatLonLats(
         this.maplatlon
     );
-    this.formattedValues.routeName=this.data.routeName||"default";
+    this.formattedValues.routeName=this.data.routeName;
     this.formattedValues.routeNumPoints=this.formatter.formatDecimal(this.data.routeNumPoints,4,0);
     this.formattedValues.routeLen=this.formatter.formatDecimal(this.data.routeLen,4,1);
     this.formattedValues.routeRemain=this.formatter.formatDecimal(this.data.routeRemain,4,1);
     this.formattedValues.routeEta=this.data.routeEta?this.formatter.formatTime(this.data.routeEta):"--:--:--";
     this.formattedValues.routeNextCourse=(this.data.routeNextCourse !== undefined)?this.formatter.formatDecimal(this.data.routeNextCourse,3,0):"---";
     this.formattedValues.routeNextName=this.data.routeNextWp?this.data.routeNextWp.name:"";
-
-    this.formattedValues.edRouteName=this.data.edRouteName||"default";
+    this.formattedValues.isApproaching=this.data.isApproaching||false;
+    this.formattedValues.isEditingActiveRoute=this.data.editingActiveRoute;
+    this.formattedValues.edRouteName=this.data.edRouteName;
     this.formattedValues.edRouteNumPoints=this.formatter.formatDecimal(this.data.edRouteNumPoints,4,0);
     this.formattedValues.edRouteLen=this.formatter.formatDecimal(this.data.edRouteLen,4,1);
     this.formattedValues.edRouteRemain=this.formatter.formatDecimal(this.data.edRouteRemain,4,1);
@@ -355,6 +361,13 @@ NavData.prototype.getData=function(key,opt_default){
     return rt;
 };
 
+NavData.prototype.listKeys=function(){
+    let rt=[];
+    for (let k in this.valueMap){
+        rt.push(k);
+    }
+    return rt;
+};
 /**
  * get the value of a display item
  * @param {string} name

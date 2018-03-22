@@ -15,23 +15,24 @@ var AisTargetWidget=React.createClass({
         updateCallback: React.PropTypes.func
     },
     _getValues:function(){
-        var aisTarget=this.props.store.getAisHandler().getNearestAisTarget();
+        var mmsi=this.props.store.getData('aisMmsi');
         var color;
         var aisProperties={};
-        if (aisTarget && aisTarget.mmsi){
-            aisProperties.warning=aisTarget.warning;
-            if (aisTarget.nearest) aisProperties.nearest=true;
+        if (mmsi && mmsi !== ""){
+            aisProperties.warning=this.props.store.getData('aisWarning')||false;
+            aisProperties.nearest=this.props.store.getData('aisNearest')||false;
         }
+        else mmsi=undefined;
         color=this.props.propertyHandler.getAisColor(aisProperties);
-        var front=this.props.store.getValue('aisFront');
+        var front=this.props.store.getData('aisFront');
         if (front == "" || front == " ") front="X";
         return{
-            dst:this.props.store.getValue('aisDst'),
-            cpa:this.props.store.getValue('aisCpa'),
-            tcpa:this.props.store.getValue('aisTcpa'),
+            dst:this.props.store.getData('aisDst'),
+            cpa:this.props.store.getData('aisCpa'),
+            tcpa:this.props.store.getData('aisTcpa'),
             front:front,
             color: color,
-            mmsi:aisTarget?aisTarget.mmsi:undefined
+            mmsi:mmsi
         };
     },
     getInitialState: function(){

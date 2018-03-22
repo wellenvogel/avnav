@@ -14,14 +14,13 @@ var ActiveRouteWidget=React.createClass({
         updateCallback: React.PropTypes.func
     },
     _getValues:function(){
-        var approaching=this.props.store.getRoutingHandler().getApproaching();
         return{
-            name:this.props.store.getValue('routeName'),
-            remain:this.props.store.getValue('routeRemain'),
-            eta:this.props.store.getValue('routeEta'),
-            next:this.props.store.getValue('routeNextCourse'),
-            nextName: this.props.store.getValue('routeNextName'), //if empty: do not show...
-            isApproaching: approaching
+            name:this.props.store.getData('routeName'),
+            remain:this.props.store.getData('routeRemain'),
+            eta:this.props.store.getData('routeEta'),
+            next:this.props.store.getData('routeNextCourse'),
+            nextName: this.props.store.getData('routeNextName'), //if empty: do not show...
+            isApproaching: this.props.store.getData('isApproaching')
         };
     },
     getInitialState: function(){

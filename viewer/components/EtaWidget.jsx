@@ -13,8 +13,8 @@ var EtaWidget=React.createClass({
     },
     _getValues:function(){
         return{
-            eta:this.props.store.getValue('markerEta'),
-            name:this.props.store.getValue('markerName')
+            eta:this.props.store.getData('markerEta'),
+            name:this.props.store.getData('markerName')
         };
     },
     getInitialState: function(){

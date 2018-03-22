@@ -12,11 +12,11 @@ var CenterDisplayWidget=React.createClass({
     },
     _getValues:function(){
         return{
-            markerCourse:this.props.store.getValue('centerMarkerCourse'),
-            markerDistance:this.props.store.getValue('centerMarkerDistance'),
-            centerCourse:this.props.store.getValue('centerCourse'),
-            centerDistance:this.props.store.getValue('centerDistance'),
-            centerPosition: this.props.store.getValue('centerPosition')
+            markerCourse:this.props.store.getData('centerMarkerCourse'),
+            markerDistance:this.props.store.getData('centerMarkerDistance'),
+            centerCourse:this.props.store.getData('centerCourse'),
+            centerDistance:this.props.store.getData('centerDistance'),
+            centerPosition: this.props.store.getData('centerPosition')
         };
     },
     getInitialState: function(){

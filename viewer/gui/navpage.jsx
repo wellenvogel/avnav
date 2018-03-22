@@ -113,7 +113,7 @@ var Navpage=function(){
     this.widgetLists[keys.leftWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {name:'CenterDisplay'},
-        {name:'Zoom',store: self.store, dataKey:keys.zoom},
+        {name:'Zoom'},
         {name:'Wind'},
         {name:'AisTarget'},
         {name:'ActiveRoute'},
@@ -126,7 +126,7 @@ var Navpage=function(){
         {name:'AisTarget',mode:'small'},
         {name:'EditRoute',wide:true},
         {name:'LargeTime'},
-        {name:'Zoom', store: self.store, dataKey:keys.zoom}
+        {name:'Zoom'}
     ];
     this.widgetLists[keys.bottomLeftWidgets]=[
         //['BRG','DST','ETA','WpPosition']
@@ -274,20 +274,28 @@ Navpage.prototype.widgetVisibility=function(){
     var clockVisible=this.gui.properties.getProperties().showClock;
     var zoomVisible=this.gui.properties.getProperties().showZoom && ! routingVisible;
     var windVisible=this.gui.properties.getProperties().showWind;
-    this.store.updateData(keys.topWidgets,{
-        CenterDisplay:centerVisible && isSmall && ! routingVisible,
-        EditRoute:isSmall && routingVisible,
-        AisTarget:aisVisible && isSmall && ! routingVisible,
-        LargeTime:clockVisible && isSmall && ! routingVisible,
-        Zoom: isSmall && zoomVisible,
-        Wind: isSmall && windVisible && ! routingVisible
-    },'visibilityFlags');
+    if (!isSmall){
+        this.store.updateData(keys.topWidgets,[],'itemList');
+        this.store.updateData(keys.leftWidgets,this.widgetLists[keys.leftWidgets],'itemList');
+    }
+    else {
+        this.store.updateData(keys.leftWidgets,[],'itemList');
+        this.store.updateData(keys.topWidgets, this.widgetLists[keys.topWidgets], 'itemList');
+    }
+    this.store.updateData(keys.topWidgets, {
+        CenterDisplay: centerVisible && !routingVisible,
+        EditRoute: routingVisible,
+        AisTarget: aisVisible && !routingVisible,
+        LargeTime: clockVisible && !routingVisible,
+        Zoom: zoomVisible,
+        Wind: windVisible && !routingVisible
+    }, 'visibilityFlags');
     this.store.updateData(keys.leftWidgets,{
-        CenterDisplay:centerVisible && !isSmall && ! routingVisible,
-        AisTarget:aisVisible && !isSmall && ! routingVisible,
-        LargeTime:clockVisible && !isSmall && ! routingVisible,
-        Zoom: !isSmall && zoomVisible,
-        Wind: !isSmall && windVisible,
+        CenterDisplay:centerVisible  && ! routingVisible,
+        AisTarget:aisVisible  && ! routingVisible,
+        LargeTime:clockVisible  && ! routingVisible,
+        Zoom: zoomVisible,
+        Wind: windVisible,
         ActiveRoute: routeVisible && ! routingVisible
     },'visibilityFlags');
 };
@@ -439,7 +447,7 @@ Navpage.prototype.getPageContent=function(){
         self.mapEvent(evdata);
     });
     var widgetCreator=function(widget){
-        var store=widget.store||self.navobject;
+        var store=widget.store||self.store;
         return WidgetFactory.createWidget(widget,{propertyHandler:self.gui.properties, store:store});
     };
     var buttonUpdater={
