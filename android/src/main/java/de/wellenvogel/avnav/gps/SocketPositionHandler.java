@@ -10,6 +10,7 @@ import net.sf.marineapi.nmea.sentence.GGASentence;
 import net.sf.marineapi.nmea.sentence.GLLSentence;
 import net.sf.marineapi.nmea.sentence.GSASentence;
 import net.sf.marineapi.nmea.sentence.GSVSentence;
+import net.sf.marineapi.nmea.sentence.MWVSentence;
 import net.sf.marineapi.nmea.sentence.PositionSentence;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
 import net.sf.marineapi.nmea.sentence.Sentence;
@@ -17,6 +18,7 @@ import net.sf.marineapi.nmea.sentence.SentenceValidator;
 import net.sf.marineapi.nmea.sentence.TimeSentence;
 import net.sf.marineapi.nmea.util.DataStatus;
 import net.sf.marineapi.nmea.util.Position;
+import net.sf.marineapi.nmea.util.Units;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +30,7 @@ import java.io.InputStreamReader;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.TimeZone;
 
 import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
@@ -43,6 +46,7 @@ import de.wellenvogel.avnav.util.AvnUtil;
 public abstract class SocketPositionHandler extends GpsDataProvider {
     private long lastAisCleanup=0;
     private boolean stopped=false;
+    private JSONObject auxiliaryData=new JSONObject();
 
     class GSVStore{
         public static final int MAXGSV=20; //max number of gsv sentences without one that is the last
@@ -163,6 +167,9 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                                 AvnLog.d("ignore "+line+" due to filter");
                             }
                             if (nmeaLogger != null) nmeaLogger.logNmea(line);
+                            if (line.matches(".*MWV.*")){
+                                AvnLog.d("MWV");
+                            }
                             //NMEA
                             if (SentenceValidator.isValid(line)) {
                                 try {
@@ -197,6 +204,20 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                                         stat.numUsed=((GSASentence)s).getSatelliteIds().length;
                                         AvnLog.d(name+": GSA sentence, used="+stat.numUsed);
                                         continue;
+                                    }
+                                    if (s instanceof MWVSentence){
+                                        MWVSentence m=(MWVSentence)s;
+                                        AvnLog.d(name+": MWV sentence");
+                                        auxiliaryData.put("windAngle",m.getAngle());
+                                        auxiliaryData.put("windReference",m.isTrue()?"T":"R");
+                                        double speed=m.getSpeed();
+                                        if (m.getSpeedUnit().equals(Units.KMH)){
+                                            speed=speed/3.6;
+                                        }
+                                        if (m.getSpeedUnit().equals(Units.KNOT)){
+                                            speed=speed/3600.0*1852.0;
+                                        }
+                                        auxiliaryData.put("windSpeed",speed);
                                     }
                                     Position p = null;
                                     if (s instanceof PositionSentence) {
@@ -422,7 +443,14 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
 
     @Override
     public JSONObject getGpsData() throws JSONException {
-        return getGpsData(getLocation());
+        JSONObject rt=getGpsData(getLocation());
+        Iterator<String> akeys=auxiliaryData.keys();
+        while (akeys.hasNext()){
+            String k=akeys.next();
+            if (rt.has(k)) continue;
+            rt.put(k,auxiliaryData.get(k));
+        }
+        return rt;
     }
 
     @Override
