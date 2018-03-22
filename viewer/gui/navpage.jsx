@@ -280,7 +280,7 @@ Navpage.prototype.widgetVisibility=function(){
         AisTarget:aisVisible && isSmall && ! routingVisible,
         LargeTime:clockVisible && isSmall && ! routingVisible,
         Zoom: isSmall && zoomVisible,
-        Wind: isSmall && windVisible
+        Wind: isSmall && windVisible && ! routingVisible
     },'visibilityFlags');
     this.store.updateData(keys.leftWidgets,{
         CenterDisplay:centerVisible && !isSmall && ! routingVisible,
