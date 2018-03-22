@@ -59,7 +59,7 @@
 
 
 <!-- for testing purposes: connect to a socket for reading NMEA data -->
-<!-- <AVNSocketReader host="avnav" port="34567"/> -->
+<AVNSocketReader host="10.222.10.79" port="34567"/> 
 <AVNSocketReader host="localhost" port="34568"/>
 	<AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
 </Readers>

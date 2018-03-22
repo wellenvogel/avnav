@@ -114,6 +114,7 @@ var Navpage=function(){
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {name:'CenterDisplay'},
         {name:'Zoom',store: self.store, dataKey:keys.zoom},
+        {name:'Wind'},
         {name:'AisTarget'},
         {name:'ActiveRoute'},
         {name:'LargeTime'}
@@ -121,6 +122,7 @@ var Navpage=function(){
     this.widgetLists[keys.topWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {name:'CenterDisplay',mode:'small'},
+        {name:'Wind'},
         {name:'AisTarget',mode:'small'},
         {name:'EditRoute',wide:true},
         {name:'LargeTime'},
@@ -271,18 +273,21 @@ Navpage.prototype.widgetVisibility=function(){
     }
     var clockVisible=this.gui.properties.getProperties().showClock;
     var zoomVisible=this.gui.properties.getProperties().showZoom && ! routingVisible;
+    var windVisible=this.gui.properties.getProperties().showWind;
     this.store.updateData(keys.topWidgets,{
         CenterDisplay:centerVisible && isSmall && ! routingVisible,
         EditRoute:isSmall && routingVisible,
         AisTarget:aisVisible && isSmall && ! routingVisible,
         LargeTime:clockVisible && isSmall && ! routingVisible,
-        Zoom: isSmall && zoomVisible
+        Zoom: isSmall && zoomVisible,
+        Wind: isSmall && windVisible
     },'visibilityFlags');
     this.store.updateData(keys.leftWidgets,{
         CenterDisplay:centerVisible && !isSmall && ! routingVisible,
         AisTarget:aisVisible && !isSmall && ! routingVisible,
         LargeTime:clockVisible && !isSmall && ! routingVisible,
         Zoom: !isSmall && zoomVisible,
+        Wind: !isSmall && windVisible,
         ActiveRoute: routeVisible && ! routingVisible
     },'visibilityFlags');
 };

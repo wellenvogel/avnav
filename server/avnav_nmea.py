@@ -246,6 +246,27 @@ class NMEAParser():
         gpsdate=darray[9]
         self.addToNavData(rt, self.gpsTimeToTime(gpstime, gpsdate))
         return True
+      if tag == 'MWV':
+        '''
+        $--MWV,x.x,a,x.x,a*hh<CR><LF>
+        Field Number:
+        1) Wind Angle, 0 to 360 degrees
+        2) Reference, R = Relative, T = True
+        3) Wind Speed
+        4) Wind Speed Units, K/M/N
+        5) Status, A = Data Valid
+        6) Checksum
+        '''
+        rt['windAngle']=float(darray[1])
+        rt['windReference']=darray[2]
+        #we keep the speed im m/s
+        windspeed=float(darray[3])
+        if (darray[4] == 'K'):
+          windspeed=windspeed/3.6
+        if (darray[4] == 'N'):
+          windspeed=windspeed*self.NM/3600
+        rt['windSpeed']=windspeed
+        self.addToNavData(rt,None)
         
     except Exception:
         AVNLog.info(" error parsing nmea data "+unicode(data)+"\n"+traceback.format_exc())

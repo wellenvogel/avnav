@@ -33,7 +33,10 @@ var GpsData=function(propertyHandler,navobject){
         aisStatusColor: "red",
         aisStatusText: "???",
         clock: "00:00",
-        alarmInfo:""
+        alarmInfo:"",
+        windAngle:"000.0",
+        windSpeed: "---",
+        windReference: 'R'
     };
     /** {avnav.util.Formatter} @private */
     this.formatter=new avnav.util.Formatter();
@@ -154,6 +157,15 @@ GpsData.prototype.handleGpsResponse=function(data, status){
                 }
             }
         }catch(e){}
+    }
+    try {
+        formattedData.windAngle = (data.windAngle !== undefined) ? data.windAngle.toFixed(1) : '000.0';
+        formattedData.windSpeed = (data.windSpeed !== undefined) ? data.windSpeed.toFixed(2) : '00.00';
+        formattedData.windReference = data.windReference || 'R';
+    }catch(e){
+        formattedData.windReference='R';
+        formattedData.windSpeed='00.00';
+        formattedData.windAngle='000.0';
     }
     this.formattedData=formattedData;
 };

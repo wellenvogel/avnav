@@ -8,7 +8,7 @@ var AisTargetWidget=require('./AisTargetWidget.jsx');
 var ActiveRouteWidget=require('./ActiveRouteWidget.jsx');
 var EditRouteWidget=require('./EditRouteWidget.jsx');
 var CenterDisplayWidget=require('./CenterDisplayWidget.jsx');
-var Formatter=require('../util/formatter');
+var WindWidget=require('./WindWidget');
 var widgetList=[
     {
         name: 'SOG',
@@ -119,6 +119,11 @@ var widgetList=[
         name: 'CenterDisplay',
         caption: 'Center',
         wclass: CenterDisplayWidget
+    },
+    {
+        name: 'WindDisplay',
+        caption: 'Wind',
+        wclass: WindWidget
     },
 ];
 

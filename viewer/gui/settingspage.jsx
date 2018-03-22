@@ -22,7 +22,7 @@ var keys={
 var settingsSections={
     Layer:      ["layers.ais","layers.track","layers.nav","layers.boat","layers.grid","layers.compass","layers.measures"],
     UpdateTimes:["positionQueryTimeout","trackQueryTimeout","aisQueryTimeout" ],
-    Layout:     ["baseFontSize","widgetFontSize","smallBreak","allowTwoWidgetRows","showClock","showZoom","autoZoom","style.buttonSize","nightFade","nightChartFade","localAlarmSound","iosWorkaroundTime"],
+    Layout:     ["baseFontSize","widgetFontSize","smallBreak","allowTwoWidgetRows","showClock","showZoom","showWind","autoZoom","style.buttonSize","nightFade","nightChartFade","localAlarmSound","iosWorkaroundTime"],
     AIS:        ["aisDistance","aisWarningCpa","aisWarningTpa","aisTextSize","style.aisNormalColor","style.aisNearestColor","style.aisWarningColor"],
     Navigation: ["bearingColor","bearingWidth","navCircleColor","navCircleWidth","navCircle1Radius","navCircle2Radius","navCircle3Radius",
                     "courseAverageTolerance","gpsXteMax","courseAverageInterval","speedAverageInterval","positionAverageInterval","anchorWatchDefault","anchorCircleWidth","anchorCircleColor"],
