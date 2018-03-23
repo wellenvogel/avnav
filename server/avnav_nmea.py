@@ -284,7 +284,7 @@ class NMEAParser():
         rt['depthBelowtransducer']=float(darray[1])
         if float(darray[2]) >= 0:
           rt['depthBelowWaterline']=float(darray[1])+float(darray[2])
-        elif:
+        else:
           rt['depthBelowKeel']=float(darray[1])+float(darray[2])
         self.addToNavData(rt,None)
         return True
