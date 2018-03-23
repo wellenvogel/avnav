@@ -394,7 +394,7 @@ NavData.prototype.getValueNames=function(){
  */
 NavData.prototype.gpsEvent=function(){
     this.computeValues();
-    this.callCallbacks();
+    this.callCallbacks(this.getValueNames());
     $(document).trigger(navobjects.NavEvent.EVENT_TYPE,new navobjects.NavEvent (
         navobjects.NavEventType.GPS,
         this.getValueNames(),
@@ -407,7 +407,7 @@ NavData.prototype.gpsEvent=function(){
  * called back from trackhandler
  */
 NavData.prototype.trackEvent=function(){
-    this.callCallbacks();
+    this.callCallbacks(this.getValueNames());
     $(document).trigger(navobjects.NavEvent.EVENT_TYPE,new navobjects.NavEvent (
         navobjects.NavEventType.TRACK,
         [],
@@ -420,7 +420,7 @@ NavData.prototype.trackEvent=function(){
  * called back from aishandler
  */
 NavData.prototype.aisEvent=function(){
-    this.callCallbacks();
+    this.callCallbacks(this.getValueNames());
     $(document).trigger(navobjects.NavEvent.EVENT_TYPE,new navobjects.NavEvent (
         navobjects.NavEventType.AIS,
         [],
@@ -504,7 +504,7 @@ NavData.prototype.resetTrack=function(){
  * @param {navobjects.NavEventSource} source
  */
 NavData.prototype.triggerUpdateEvent=function(source){
-    this.callCallbacks();
+    this.callCallbacks(this.getValueNames());
     $(document).trigger(navobjects.NavEvent.EVENT_TYPE,
         new navobjects.NavEvent(navobjects.NavEventType.GPS,this.getValueNames(),source,this)
     );

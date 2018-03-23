@@ -145,7 +145,7 @@ Store.prototype.callCallbacks=function(keys){
     var self=this;
     this.callbacks.forEach(function(cbItem){
        if (self._contains(keys,cbItem.keys)){
-           cbItem.callback.dataChanged(self);
+           cbItem.callback.dataChanged(self,keys);
        }
     });
 };
@@ -250,6 +250,15 @@ Store.prototype.reset=function(){
 Store.prototype.resetData=function(){
     this.data={};
 };
+/**
+ * callback function for data provider
+ * @param provider
+ * @param keys
+ * @private
+ */
+Store.prototype.dataChanged=function(provider,keys){
+    this.callCallbacks(keys);
+};
 
 /**
  * register a data provider
@@ -260,33 +269,19 @@ Store.prototype.registerDataProvider=function(provider){
         if (this.dataProvider[i] === provider) return;
     }
     this.dataProvider.push(provider);
+    let self=this;
+    if (provider.register){
+        provider.register(this)
+    }
 };
 Store.prototype.deregisterDataProvider=function(provider){
+    if (provider.deregister){
+        provider.deregister(this)
+    }
     for (let i in this.dataProvider){
         if (this.dataProvider[i] === provider)  {
             this.dataProvider.splice(i,1);
             return;
-        }
-    }
-};
-/**
- * call the callbacks for all data items being provided by data providers
- */
-Store.prototype.callProviderCallbacks=function(){
-    let done={};
-    for (let i in this.dataProvider){
-        let provider=this.dataProvider[i];
-        let keys=[];
-        if (provider.listKeys){
-            keys=provider.listKeys();
-            let callbackKeys=[];
-            keys.forEach((el)=>{if (!done[el]) callbackKeys.push(el);});
-            this.callCallbacks(callbackKeys);
-            callbackKeys.forEach((el)=>{done[el]=true;})
-        }
-        else{
-            this.callCallbacks([]);
-            return; //called all
         }
     }
 };
