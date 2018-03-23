@@ -85,7 +85,7 @@
     <string name="labelSettingsTrackLength">track length(h)</string>
     <string name="labelSettingsDefaults">reset to defaults</string>
     <string name="labelSettingsAisLifetime">AIS info invalid after (s)</string>
-    <string name="labelSettingsPosAge">position invalid after(s)</string>
+    <string name="labelSettingsPosAge">NMEA invalid after(s)</string>
     <string name="labelSettingsIpConnectTime">IP connect timeout(s)</string>
     <string name="labelSettingsOwnMMSI">filter own MMSI</string>
     <string name="btSettingsAudioMedia">Media</string>

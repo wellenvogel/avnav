@@ -46,7 +46,29 @@ import de.wellenvogel.avnav.util.AvnUtil;
 public abstract class SocketPositionHandler extends GpsDataProvider {
     private long lastAisCleanup=0;
     private boolean stopped=false;
-    private JSONObject auxiliaryData=new JSONObject();
+    class AuxiliaryEntry{
+        public long timestamp;
+        public JSONObject data=new JSONObject();
+    }
+    private HashMap<String,AuxiliaryEntry> auxiliaryData=new HashMap<String,AuxiliaryEntry>();
+
+    private void addAuxiliaryData(String key, AuxiliaryEntry entry){
+        entry.timestamp=System.currentTimeMillis();
+        auxiliaryData.put(key,entry);
+    }
+    private void mergeAuxiliaryData(JSONObject json) throws JSONException {
+        long minTimestamp=System.currentTimeMillis()-properties.postionAge*1000;
+        //TODO: consider timestamp
+        for (AuxiliaryEntry e: auxiliaryData.values()){
+            if (e.timestamp < minTimestamp) continue;
+            Iterator<String> akeys=e.data.keys();
+            while (akeys.hasNext()){
+                String k=akeys.next();
+                if (json.has(k)) continue;
+                json.put(k,e.data.get(k));
+            }
+        }
+    }
 
     class GSVStore{
         public static final int MAXGSV=20; //max number of gsv sentences without one that is the last
@@ -208,8 +230,9 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                                     if (s instanceof MWVSentence){
                                         MWVSentence m=(MWVSentence)s;
                                         AvnLog.d(name+": MWV sentence");
-                                        auxiliaryData.put("windAngle",m.getAngle());
-                                        auxiliaryData.put("windReference",m.isTrue()?"T":"R");
+                                        AuxiliaryEntry e=new AuxiliaryEntry();
+                                        e.data.put("windAngle",m.getAngle());
+                                        e.data.put("windReference",m.isTrue()?"T":"R");
                                         double speed=m.getSpeed();
                                         if (m.getSpeedUnit().equals(Units.KMH)){
                                             speed=speed/3.6;
@@ -217,7 +240,9 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                                         if (m.getSpeedUnit().equals(Units.KNOT)){
                                             speed=speed/3600.0*1852.0;
                                         }
-                                        auxiliaryData.put("windSpeed",speed);
+                                        e.data.put("windSpeed",speed);
+                                        addAuxiliaryData(s.getSentenceId(),e);
+                                        continue;
                                     }
                                     Position p = null;
                                     if (s instanceof PositionSentence) {
@@ -444,12 +469,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
     @Override
     public JSONObject getGpsData() throws JSONException {
         JSONObject rt=getGpsData(getLocation());
-        Iterator<String> akeys=auxiliaryData.keys();
-        while (akeys.hasNext()){
-            String k=akeys.next();
-            if (rt.has(k)) continue;
-            rt.put(k,auxiliaryData.get(k));
-        }
+        mergeAuxiliaryData(rt);
         return rt;
     }
 
@@ -476,7 +496,9 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
 
     @Override
     JSONObject getGpsData(Location curLoc) throws JSONException {
-        return super.getGpsData(curLoc);
+        JSONObject rt= super.getGpsData(curLoc);
+        mergeAuxiliaryData(rt);
+        return rt;
     }
 
     /**
