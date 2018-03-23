@@ -24,6 +24,7 @@ var keys={
     waypointList: 'waypointList',
     waypointSelections: 'selections',
     leftWidgets: 'leftWidgets',
+    leftWidgetsSmall: 'leftWidgetsSmall',
     topWidgets: 'topWidgets',
     bottomLeftWidgets: 'bottomLeft',
     bottomRightWidgets: 'bottomRight',
@@ -39,7 +40,7 @@ var wpKeyFlags={
     routeActive: 'routeActive',
     wpActive: 'wpActive'
 };
-var widgetKeys=[keys.leftWidgets, keys.bottomLeftWidgets, keys.bottomRightWidgets,keys.topWidgets];
+var widgetKeys=[keys.leftWidgets, keys.bottomLeftWidgets, keys.bottomRightWidgets,keys.topWidgets, keys.leftWidgetsSmall];
 var selectors={
     selected: 'avn_route_info_active_point',
     centered: 'avn_route_info_centered'
@@ -118,6 +119,9 @@ var Navpage=function(){
         {name:'AisTarget'},
         {name:'ActiveRoute'},
         {name:'LargeTime'}
+    ];
+    this.widgetLists[keys.leftWidgetsSmall]=[
+        {name:'ActiveRoute'},
     ];
     this.widgetLists[keys.topWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
@@ -279,7 +283,7 @@ Navpage.prototype.widgetVisibility=function(){
         this.store.updateData(keys.leftWidgets,this.widgetLists[keys.leftWidgets],'itemList');
     }
     else {
-        this.store.updateData(keys.leftWidgets,[],'itemList');
+        this.store.updateData(keys.leftWidgets,this.widgetLists[keys.leftWidgetsSmall],'itemList');
         this.store.updateData(keys.topWidgets, this.widgetLists[keys.topWidgets], 'itemList');
     }
     this.store.updateData(keys.topWidgets, {
