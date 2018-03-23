@@ -115,6 +115,7 @@ var Navpage=function(){
         {name:'CenterDisplay'},
         {name:'Zoom'},
         {name:'Wind'},
+        {name: 'Depth'},
         {name:'AisTarget'},
         {name:'ActiveRoute'},
         {name:'LargeTime'}
@@ -123,6 +124,7 @@ var Navpage=function(){
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {name:'CenterDisplay',mode:'small'},
         {name:'Wind'},
+        {name:'Depth'},
         {name:'AisTarget',mode:'small'},
         {name:'EditRoute',wide:true},
         {name:'LargeTime'},
@@ -274,6 +276,7 @@ Navpage.prototype.widgetVisibility=function(){
     var clockVisible=this.gui.properties.getProperties().showClock;
     var zoomVisible=this.gui.properties.getProperties().showZoom && ! routingVisible;
     var windVisible=this.gui.properties.getProperties().showWind;
+    var depthVisible=this.gui.properties.getProperties().showDepth;
     if (!isSmall){
         this.store.updateData(keys.topWidgets,[],'itemList');
         this.store.updateData(keys.leftWidgets,this.widgetLists[keys.leftWidgets],'itemList');
@@ -288,7 +291,8 @@ Navpage.prototype.widgetVisibility=function(){
         AisTarget: aisVisible && !routingVisible,
         LargeTime: clockVisible && !routingVisible,
         Zoom: zoomVisible,
-        Wind: windVisible && !routingVisible
+        Wind: windVisible && !routingVisible,
+        Depth: depthVisible && !routingVisible
     }, 'visibilityFlags');
     this.store.updateData(keys.leftWidgets,{
         CenterDisplay:centerVisible  && ! routingVisible,
@@ -296,6 +300,7 @@ Navpage.prototype.widgetVisibility=function(){
         LargeTime:clockVisible  && ! routingVisible,
         Zoom: zoomVisible,
         Wind: windVisible,
+        Depth: depthVisible, 
         ActiveRoute: routeVisible && ! routingVisible
     },'visibilityFlags');
 };

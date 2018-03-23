@@ -9,6 +9,7 @@ var ActiveRouteWidget=require('./ActiveRouteWidget.jsx');
 var EditRouteWidget=require('./EditRouteWidget.jsx');
 var CenterDisplayWidget=require('./CenterDisplayWidget.jsx');
 var WindWidget=require('./WindWidget');
+var DepthWidget=require('./DepthWidget');
 var widgetList=[
     {
         name: 'SOG',
@@ -125,6 +126,12 @@ var widgetList=[
         caption: 'Wind',
         wclass: WindWidget
     },
+    {
+        name: 'DepthDisplay',
+        caption: 'Depth',
+        wclass: DepthWidget
+    },
+
 ];
 
 module.exports=widgetList;
