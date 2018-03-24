@@ -64,20 +64,6 @@ var Page=function(name,options){
         }
         myself.handlePage(evdata);
     });
-    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
-        myself.updateDisplayObjects();
-    });
-    if (this.options) {
-        if (this.options.eventlist) {
-            $.each(this.options.eventlist, function (index, item) {
-                $(document).on(item, function (ev, evdata) {
-                    if (!myself.visible) return;
-                    myself.fillData(false);
-                });
-            });
-        }
-
-    }
     this.intervalTimer=-1;
     this.showTime=undefined;
 };
@@ -231,7 +217,6 @@ Page.prototype.handlePage=function(evdata){
         this.store.registerDataProvider(this.navobject);
         this.isInitialized=true;
         this._initPage();
-        this.initDisplayObjects();
         this.initFocusHandler();
         this.initExternalLinks();
         $(document).on(avnav.gui.BackEvent.EVENT_TYPE,function(ev,evdata){
@@ -246,7 +231,6 @@ Page.prototype.handlePage=function(evdata){
         if (this.visible){
             this._showPage();
             this.showPage(evdata.options);
-            this.updateDisplayObjects();
         }
         else {
             this._hidePage();
@@ -314,37 +298,6 @@ Page.prototype.timerEvent=function(){
 Page.prototype.getPageContent=function(){
     
 };
-/**
- * initially fill the list of items that will be update on nav events
- */
-Page.prototype.initDisplayObjects=function(){
-    var names=this.navobject.getValueNames();
-    var self=this;
-    for (var i=0;i< names.length;i++){
-        this.getDiv().find('.avd_'+names[i]).each(function(idx,el){
-            if (self.displayItems[names[i]] === undefined){
-                self.displayItems[names[i]]=[];
-            }
-            self.displayItems[names[i]].push(el);
-        });
-    }
-};
-
-/**
- * update all display items from navobject
- */
-Page.prototype.updateDisplayObjects=function(){
-    var name;
-    for (name in this.displayItems){
-        var ellist=this.displayItems[name];
-        var el;
-        for (el in ellist) {
-            var val = this.navobject.getValue(name);
-            $(ellist[el]).text(val);
-        }
-    }
-};
-
 
 /**
  * function to handle back-keys
@@ -494,7 +447,7 @@ Page.prototype.getAlarmWidget=function(){
     return React.createElement(
         AlarmHandler,{
             onClick: function(){
-                var alarms=self.navobject.getValue(key);
+                var alarms=self.navobject.getData(key);
                 if (alarms) {
                     alarms.split(",").forEach(function(k) {
                         self.navobject.getGpsHandler().stopAlarm(k);

@@ -1,12 +1,13 @@
 /**
  * Created by andreas on 04.05.14.
  */
-var AisTarget=require('./navobjects').Ais;
-var Formatter=require('../util/formatter');
-var NavCompute=require('./navcompute');
-var navobjects=require('./navobjects');
-var NavData=require('./navdata');
-
+let AisTarget=require('./navobjects').Ais;
+let Formatter=require('../util/formatter');
+let NavCompute=require('./navcompute');
+let navobjects=require('./navobjects');
+let NavData=require('./navdata');
+let Base=require('../base');
+let StoreApi=require('../util/storeapi');
 /**
  * the handler for the ais data
  * query the server...
@@ -14,7 +15,8 @@ var NavData=require('./navdata');
  * @param {NavData} navdata
  * @constructor
  */
-var AisData=function(propertyHandler,navdata, opt_noQuery){
+let AisData=function(propertyHandler,navdata, opt_noQuery){
+    this.base_.call(this);
     /** @private */
     this.propertyHandler=propertyHandler;
     /** @private */
@@ -73,10 +75,9 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
         aisNearest: 'nearest'
     };
 
-    this.formattedData={};
-    for (var i in this.formattedDataDescription){
-        this.formattedData[i]="";
-        this.navobject.registerValueProvider(i,this,this.getFormattedAisValue)
+    this.storeKeys=[];
+    for (let i in this.formattedDataDescription){
+        this.storeKeys.push(i);
     }
 
     /**
@@ -85,7 +86,7 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
      * @type {AisTarget}
      */
     this.nearestAisTarget={};
-    var self=this;
+    let self=this;
 
     /**
      * the formatter for AIS data
@@ -112,7 +113,7 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
         cpa:{
             headline: 'cpa',
             format: function(v){
-                var tval=parseFloat(v.tcpa||0);
+                let tval=parseFloat(v.tcpa||0);
                 //no cpa if tcpa < 0
                 //if (tval < 0) return "-----";
                 return self.formatter.formatDecimal(parseFloat(v.cpa||0),3,2);}
@@ -120,15 +121,15 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
         tcpa:{
             headline: 'tcpa',
             format: function(v){
-                var tval=parseFloat(v.tcpa||0);
-                var sign="";
+                let tval=parseFloat(v.tcpa||0);
+                let sign="";
                 if (tval < 0) {
                     sign="-";
                     tval=-tval;
                 }
-                var h=Math.floor(tval/3600);
-                var m=Math.floor((tval-h*3600)/60);
-                var s=tval-3600*h-60*m;
+                let h=Math.floor(tval/3600);
+                let m=Math.floor((tval-h*3600)/60);
+                let s=tval-3600*h-60*m;
                 return sign+self.formatter.formatDecimal(h,2,0).replace(" ","0")+':'+self.formatter.formatDecimal(m,2,0).replace(" ","0")+':'+self.formatter.formatDecimal(s,2,0).replace(" ","0");
             }
         },
@@ -159,7 +160,7 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
         shiptype:{
             headline: 'type',
             format: function(v){
-                var t=0;
+                let t=0;
                 try{
                     t=parseInt(v.shiptype||0);
                 }catch (e){}
@@ -192,7 +193,7 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
         },
         destination: {
             headline: 'destination',
-            format: function(v){ var d=v.destination; if (d) return d; return "unknown";}
+            format: function(v){ let d=v.destination; if (d) return d; return "unknown";}
         },
         warning:{
             headline: 'warning',
@@ -212,7 +213,7 @@ var AisData=function(propertyHandler,navdata, opt_noQuery){
     this.formatter=new Formatter();
     if (! opt_noQuery) this.startQuery();
 };
-
+Base.inherits(AisData,StoreApi);
 /**
  *
  * @param boatPos boat pos, course, speed
@@ -224,8 +225,8 @@ AisData.prototype._computeAisTarget=function(boatPos,ais,properties){
     ais.warning=false;
     ais.tracking=false;
     ais.nearest=false;
-    var dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
-    var cpadata = NavCompute.computeCpa({
+    let dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
+    let cpadata = NavCompute.computeCpa({
             lon: boatPos.lon,
             lat: boatPos.lat,
             course: boatPos.course || 0,
@@ -259,16 +260,16 @@ AisData.prototype._computeAisTarget=function(boatPos,ais,properties){
  */
 AisData.prototype.handleAisData=function() {
     /** @type {navobjects.GpsInfo}*/
-    var boatPos = this.navobject.getGpsHandler().getGpsData();
-    var properties=this.propertyHandler.getProperties();
-    var trackedTarget=null; //ref to tracked target
-    var aisWarningAis = null;
+    let boatPos = this.navobject.getGpsHandler().getGpsData();
+    let properties=this.propertyHandler.getProperties();
+    let trackedTarget=null; //ref to tracked target
+    let aisWarningAis = null;
     if (boatPos.valid) {
-        var foundTrackedTarget = false;
-        for (var aisidx in this.currentAis) {
-            var ais = this.currentAis[aisidx];
+        let foundTrackedTarget = false;
+        for (let aisidx in this.currentAis) {
+            let ais = this.currentAis[aisidx];
             this._computeAisTarget(boatPos,ais,properties);
-            var warningCpa=properties.aisWarningCpa/this.NM;
+            let warningCpa=properties.aisWarningCpa/this.NM;
             if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && Math.abs(ais.tcpa) < properties.aisWarningTpa) {
                 if (aisWarningAis) {
                     if (ais.tcpa >=0) {
@@ -311,6 +312,7 @@ AisData.prototype.handleAisData=function() {
     else {
         this.nearestAisTarget={};
     }
+    this.callCallbacks(this.storeKeys);
     this.navobject.aisEvent();
 };
 /**
@@ -351,9 +353,9 @@ AisData.prototype.getFormattedAisValue=function(dname){
  * @returns {string}
  */
 AisData.prototype.formatAisValue=function(dname,aisobject){
-    var key=this.formattedDataDescription[dname];
-    if (! key) return "";
-    if (aisobject === undefined) return "";
+    let key=this.formattedDataDescription[dname];
+    if (! key) return ;
+    if (aisobject === undefined) return ;
     return this.aisparam[key].format(aisobject);
 };
 
@@ -361,10 +363,10 @@ AisData.prototype.formatAisValue=function(dname,aisobject){
  * @private
  */
 AisData.prototype.startQuery=function() {
-    var url = this.propertyHandler.getProperties().navUrl+"?request=ais";
-    var timeout = this.propertyHandler.getProperties().aisQueryTimeout; //in ms
-    var center=this.navobject.getAisCenter();
-    var self=this;
+    let url = this.propertyHandler.getProperties().navUrl+"?request=ais";
+    let timeout = this.propertyHandler.getProperties().aisQueryTimeout; //in ms
+    let center=this.navobject.getAisCenter();
+    let self=this;
     if (! center){
         window.clearTimeout(this.timer);
         this.timer=window.setTimeout(function(){
@@ -382,14 +384,14 @@ AisData.prototype.startQuery=function() {
         success: function(data,status){
             self.aisErrors=0;
             self.lastAisQuery=new Date().getTime();
-            var aisList=[];
+            let aisList=[];
             if (data['class'] && data['class'] == "error") aisList=[];
             else aisList=data;
             self.currentAis=aisList;
             try {
                 self.handleAisData();
             }catch (e){
-                var x=e;
+                let x=e;
             }
             window.clearTimeout(self.timer);
             self.timer=window.setTimeout(function(){self.startQuery();},timeout);
@@ -426,7 +428,7 @@ AisData.prototype.getAisByMmsi=function(mmsi){
     if (mmsi == 0 || mmsi == null){
         return this.nearestAisTarget;
     }
-    for (var i in this.currentAis){
+    for (let i in this.currentAis){
         if (this.currentAis[i].mmsi == mmsi) return this.currentAis[i];
     }
     return undefined;
@@ -437,7 +439,7 @@ AisData.prototype.getAisByMmsi=function(mmsi){
  * @returns {*}
  */
 AisData.prototype.getAisPositionByMmsi=function(mmsi){
-    var ais=this.getAisByMmsi(mmsi);
+    let ais=this.getAisByMmsi(mmsi);
     if (! ais) return undefined;
     return new navobjects.Point(parseFloat(ais.lon||0),parseFloat(ais.lat||0));
 };
@@ -467,4 +469,9 @@ AisData.prototype.setTrackedTarget=function(mmsi){
     this.handleAisData();
 };
 
+AisData.prototype.getDataLocal=function(key,opt_default){
+    let rt=this.getFormattedAisValue(key);
+    if (rt !== undefined) return rt;
+    return opt_default;
+};
 module.exports=AisData;

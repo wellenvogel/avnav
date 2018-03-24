@@ -359,7 +359,7 @@ Gpspage.prototype.navEvent=function(evt){
     var nearestTarget = this.navobject.getAisHandler().getNearestAisTarget();
     var color="";
     if (this.gui.properties.getProperties().layers.ais && nearestTarget.cpa ){
-        var txt="CPA: "+this.navobject.getValue('aisCpa')+"nm&nbsp;TCPA: "+this.navobject.getValue('aisTcpa');
+        var txt="CPA: "+this.navobject.getData('aisCpa')+"nm&nbsp;TCPA: "+this.navobject.getData('aisTcpa');
         $('#avi_gpsp_ais').html(txt);
         color=this.gui.properties.getAisColor({
             nearest: true,

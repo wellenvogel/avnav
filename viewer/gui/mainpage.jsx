@@ -235,13 +235,13 @@ Mainpage.prototype.navEvent=function(evdata) {
     this.updateAlarmSound();
     if (!this.visible) return;
     if (evdata.type == navobjects.NavEventType.GPS) {
-        var aisStatus = this.navobject.getValue("aisStatusColor");
-        var nmeaStatus = this.navobject.getValue("nmeaStatusColor");
+        var aisStatus = this.navobject.getData("aisStatusColor");
+        var nmeaStatus = this.navobject.getData("nmeaStatusColor");
 
         this.store.storeData(keys.status, {
-            nmeaStatusText: this.navobject.getValue('nmeaStatusText'),
+            nmeaStatusText: this.navobject.getData('nmeaStatusText'),
             nmeaStatusSrc: this.getImgSrc(nmeaStatus),
-            aisStatusText: this.navobject.getValue('aisStatusText'),
+            aisStatusText: this.navobject.getData('aisStatusText'),
             aisStatusSrc: this.getImgSrc(aisStatus)
         });
     }
@@ -251,7 +251,7 @@ Mainpage.prototype.updateAlarmSound=function(){
    if (! this.soundHandler) return;
    if (this.initialPlayCheck < 2) return;
    if (avnav.android) return;
-   var alarmState=this.navobject.getValue('alarmInfo');
+   var alarmState=this.navobject.getData('alarmInfo');
    try {
        if (!alarmState || ! this.gui.properties.getProperties().localAlarmSound) {
            this.soundRepeat=0;

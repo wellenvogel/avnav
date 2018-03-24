@@ -1,154 +1,21 @@
-/**
- * Created by andreas on 20.11.16.
- * a simple interface to register for value updates
- * following the reactjs store concept
- */
-/** @interface */
-var UpdateCallback=function(){
-
-};
-
-var shallowCompare=require('./shallowcompare');
-/**
- * @param {object} store
- */
-UpdateCallback.prototype.dataChanged=function(store){
-    throw new Error("dataChanged not implemented");
-};
-
-/** @interface */
-var DataProvider=function(){
-
-};
-/**
- *
- * @param {string} key
- */
-DataProvider.prototype.getData=function(key){
-    throw new Error("getData not implemented");
-};
-
- /**
- * a callback description
- * @param {UpdateCallback} callback the object having a "dataChanged" function
- * @param {string[]} keys the keys (can be empty - call back for all)
- * @constructor
- */
-var CallbackDescriptor=function(callback,keys){
-    this.callback=callback;
-    this.keys=keys;
-};
+let StoreApi=require('./storeapi');
+let Base=require('../base');
 /**
  * @class
  * @constructor
  */
-var Store=function(){
-    /**
-     * @private
-     * @type {CallbackDescriptor[]}
-     */
-    this.callbacks=[];
+let Store=function(){
+    StoreApi.call(this);
     /**
      * the data we store for each key
      * @private
      * @type {{}}
      */
     this.data={};
-    /**
-     * registered data provider
-     * they will be called if no data is found internally
-     * @private
-     * @type {{}}
-     */
+};
+Base.inherits(Store,StoreApi);
 
-    this.dataProvider=[];
-};
-/**
- * find a callback in the list of registered callbacks
- * @param {UpdateCallback} callback
- * @returns {number} - -1 if not found
- * @private
- */
-Store.prototype._findCallback=function(callback){
-    var i;
-    for (i=0;i< this.callbacks.length;i++){
-        if (this.callbacks[i].callback == callback) return i;
-    }
-    return -1;
-};
-/**
- * check if at least one of the keys in kyelist is contained in arr
- * returns true also if the keylist is empty
- * @param keylist
- * @param arr
- * @private
- */
-Store.prototype._contains=function(keylist,arr){
-    if (! keylist || keylist.length === 0) return true;
-    if (! arr || arr.length === 0) return true;
-    var found=false;
-    keylist.forEach(function(key){
-       arr.forEach(function(el){
-           if (el == key) found=true;
-       })
-    });
-    return found;
-};
 
-/**
- * register a callback handler
- * @param {UpdateCallback} callback
- * @param list of keys
- */
-Store.prototype.register=function(callback/*,...*/){
-    var args=Array.prototype.slice.call(arguments,1);
-    var keys=[];
-    args.forEach(function(arg){
-        if (arg === undefined) return;
-       keys=keys.concat(arg);
-    });
-    if (! callback) return;
-    var idx=this._findCallback(callback);
-    if (idx <0){
-        this.callbacks.push(new CallbackDescriptor(callback,keys));
-        return true;
-    }
-    var description=this.callbacks[idx];
-    if (! description.keys) description.keys=keys;
-    else {
-        keys.forEach(function(key){
-            var found=false;
-            description.keys.forEach(function(existing){
-                if (existing == key) found=true;
-            });
-            if (! found) description.keys.push(key);
-        });
-    }
-    return true;
-};
-/**
- * deregister a callback object
- * @param {UpdateCallback} callback
- * @returns {boolean}
- */
-Store.prototype.deregister=function(callback){
-    var idx=this._findCallback(callback);
-    if (idx < 0) return false;
-    this.callbacks.splice(idx,1);
-    return true;
-};
-/**
- * fire the callbacks
- * @param keys - an array of keys
- */
-Store.prototype.callCallbacks=function(keys){
-    var self=this;
-    this.callbacks.forEach(function(cbItem){
-       if (self._contains(keys,cbItem.keys)){
-           cbItem.callback.dataChanged(self,keys);
-       }
-    });
-};
 /**
  * store a data item for a key and trigger the registered callbacks
  * @param key
@@ -160,7 +27,6 @@ Store.prototype.storeData=function(key,data){
     this.callCallbacks([key]);
 };
 
-Store.prototype.equalsData=shallowCompare;
 /**
  * update data in the store
  * the data needs to be an object!
@@ -171,13 +37,13 @@ Store.prototype.equalsData=shallowCompare;
  * @param {string} opt_subkey if set - only update this data
  */
 Store.prototype.updateData=function(key,data,opt_subkey){
-    var oldData=this.data[key];
+    let oldData=this.data[key];
     if (opt_subkey){
         if (! this.data[key]) this.data[key]={};
         if (! (this.data[key] instanceof Object)) throw new Error("data for key "+key+" must be an object for subkey handling");
         oldData=this.data[key][opt_subkey];
     }
-    var newData;
+    let newData;
     if (typeof(data) === 'function'){
         newData=data(oldData);
     }
@@ -187,7 +53,7 @@ Store.prototype.updateData=function(key,data,opt_subkey){
             newData=avnav.assign({},oldData, data);
         }
     }
-    var hasChanged=!this.equalsData(oldData,newData);
+    let hasChanged=!this.equalsData(oldData,newData);
     if (opt_subkey){
         this.data[key][opt_subkey]=newData;
     }
@@ -204,7 +70,7 @@ Store.prototype.updateData=function(key,data,opt_subkey){
  * @param subKey
  */
 Store.prototype.replaceSubKey=function(key,data,subKey){
-    var oldData=this.data[key];
+    let oldData=this.data[key];
     if (oldData && ! (oldData instanceof Object)) throw new Error("can only update objects, key="+key);
     if (! oldData) oldData={};
     oldData[subKey]=data;
@@ -219,7 +85,7 @@ Store.prototype.replaceSubKey=function(key,data,subKey){
  * @param value
  */
 Store.prototype.updateSubItem=function(key,itemKey,value,opt_subkey){
-    var val={};
+    let val={};
     val[itemKey]=value;
     this.updateData(key,function(oldData){
         if (oldData && ! (oldData instanceof Object)) throw new Error("item "+key+" needs to be an object");
@@ -233,58 +99,16 @@ Store.prototype.updateSubItem=function(key,itemKey,value,opt_subkey){
  * @param opt_default an optional default value
  * @returns {*}
  */
-Store.prototype.getData=function(key,opt_default){
-    var rt=this.data[key];
+Store.prototype.getDataLocal=function(key,opt_default){
+    let rt=this.data[key];
     if (rt !== undefined) return rt;
-    for (let i in this.dataProvider){
-        if (this.dataProvider[i].getData === undefined) continue;
-        rt=this.dataProvider[i].getData(key);
-        if (rt !== undefined) return rt;
-    }
     return opt_default;
 };
-Store.prototype.reset=function(){
-    this.callbacks=[];
+Store.prototype.resetLocal=function(){
     this.data={};
 };
 Store.prototype.resetData=function(){
     this.data={};
 };
-/**
- * callback function for data provider
- * @param provider
- * @param keys
- * @private
- */
-Store.prototype.dataChanged=function(provider,keys){
-    this.callCallbacks(keys);
-};
-
-/**
- * register a data provider
- * @param {DataProvider} provider
- */
-Store.prototype.registerDataProvider=function(provider){
-    for (let i in this.dataProvider){
-        if (this.dataProvider[i] === provider) return;
-    }
-    this.dataProvider.push(provider);
-    let self=this;
-    if (provider.register){
-        provider.register(this)
-    }
-};
-Store.prototype.deregisterDataProvider=function(provider){
-    if (provider.deregister){
-        provider.deregister(this)
-    }
-    for (let i in this.dataProvider){
-        if (this.dataProvider[i] === provider)  {
-            this.dataProvider.splice(i,1);
-            return;
-        }
-    }
-};
-
 
 module.exports=Store;

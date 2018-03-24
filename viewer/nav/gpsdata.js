@@ -1,8 +1,10 @@
 /**
  * Created by andreas on 04.05.14.
  */
-var navobjects=require('./navobjects');
-var NavData=require('./navdata');
+let navobjects=require('./navobjects');
+let NavData=require('./navdata');
+let StoreApi=require('../util/storeapi');
+let Base=require('../base');
 
 
 /**
@@ -12,7 +14,8 @@ var NavData=require('./navdata');
  * @param {NavData} navobject
  * @constructor
  */
-var GpsData=function(propertyHandler,navobject){
+let GpsData=function(propertyHandler,navobject){
+    this.base_.call(this);
     /** @private */
     this.propertyHandler=propertyHandler;
     /** @private */
@@ -51,22 +54,21 @@ var GpsData=function(propertyHandler,navobject){
     this.lonAverageData=[];
     this.startQuery();
     this.alarms=undefined;
-    for (var k in this.formattedData){
-        this.navobject.registerValueProvider(k,this,this.getFormattedGpsValue);
-    }
+
 };
+Base.inherits(GpsData,StoreApi);
 
 GpsData.prototype.average=function(gpsdata){
-    var rt=avnav.assign({},gpsdata);
-    var av;
-    var i;
-    var self=this;
+    let rt=avnav.assign({},gpsdata);
+    let av;
+    let i;
+    let self=this;
     ['course','speed','lat','lon'].forEach(function(type) {
-        var key=type;
+        let key=type;
         if (type == 'lat' || type == 'lon'){
             key='position';
         }
-        var avData=self[type+"AverageData"];
+        let avData=self[type+"AverageData"];
         av=self.propertyHandler.getProperties()[key+"AverageInterval"];
         rt[key+"Average"]=(av>0);
         if (av) {
@@ -75,7 +77,7 @@ GpsData.prototype.average=function(gpsdata){
                 avData.shift();
             }
             if (avData.length > 0) {
-                var nv=0;
+                let nv=0;
                 for (i = 0; i < avData.length; i++) {
                      nv+= avData[i];
                 }
@@ -92,7 +94,7 @@ GpsData.prototype.average=function(gpsdata){
  * @private
  */
 GpsData.prototype.handleGpsResponse=function(data, status){
-    var gpsdata=new navobjects.GpsInfo();
+    let gpsdata=new navobjects.GpsInfo();
     gpsdata.valid=false;
     if (status) {
         gpsdata.rtime = null;this.latAverageData=[];
@@ -116,7 +118,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
     }
     gpsdata.raw=data.raw;
     this.gpsdata=gpsdata;
-    var formattedData={};
+    let formattedData={};
     if (status) {
         formattedData.gpsPosition = this.formatter.formatLonLats(gpsdata);
         formattedData.gpsCourse = this.formatter.formatDecimal(gpsdata.course || 0, 3, 0);
@@ -143,7 +145,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
             formattedData.aisStatusText=data.raw.status.ais.source+":"+data.raw.status.ais.info;
         }
     }catch(e){}
-    var key;
+    let key;
     if (data.raw && data.raw.alarms){
         try{
             formattedData.alarmInfo=undefined;
@@ -174,9 +176,9 @@ GpsData.prototype.handleGpsResponse=function(data, status){
  * @private
  */
 GpsData.prototype.startQuery=function(){
-    var url=this.propertyHandler.getProperties().navUrl;
-    var timeout=this.propertyHandler.getProperties().positionQueryTimeout;
-    var self=this;
+    let url=this.propertyHandler.getProperties().navUrl;
+    let timeout=this.propertyHandler.getProperties().positionQueryTimeout;
+    let self=this;
     $.ajax({
         url: url,
         dataType: 'json',
@@ -210,9 +212,9 @@ GpsData.prototype.startQuery=function(){
 };
 
 GpsData.prototype.stopAlarm=function(type){
-    var url=this.propertyHandler.getProperties().navUrl+"?request=alarm&stop="+type;
-    var timeout=this.propertyHandler.getProperties().positionQueryTimeout;
-    var self=this;
+    let url=this.propertyHandler.getProperties().navUrl+"?request=alarm&stop="+type;
+    let timeout=this.propertyHandler.getProperties().positionQueryTimeout;
+    let self=this;
     $.ajax({
         url: url,
         dataType: 'json',
@@ -267,7 +269,7 @@ GpsData.prototype.getGpsData=function(){
  * @param name
  * @returns {*}
  */
-GpsData.prototype.getFormattedGpsValue=function(name){
+GpsData.prototype.getDataLocal=function(name){
     return this.formattedData[name];
 };
 
@@ -276,8 +278,8 @@ GpsData.prototype.getFormattedGpsValue=function(name){
  * @returns {Array}
  */
 GpsData.prototype.getValueNames=function(){
-    var rt=new Array();
-    for (var k in this.formattedData){
+    let rt=new Array();
+    for (let k in this.formattedData){
         rt.push(k);
     }
     return rt;

@@ -455,7 +455,8 @@ Navpage.prototype.getPageContent=function(){
         return WidgetFactory.createWidget(widget,{propertyHandler:self.gui.properties, store:store});
     };
     var buttonUpdater={
-      dataChanged: function(){
+      dataChanged: function(store, keys){
+          if (! keys || keys.length < 1) return; //ignore any global updates
           self.createButtons();
       }
     };

@@ -18,11 +18,7 @@ var keys={
  * @constructor
  */
 var AisInfoPage=function(){
-    Page.call(this,'aisinfopage',
-        {
-            eventlist:[navobjects.NavEvent.EVENT_TYPE],
-        }
-    );
+    Page.call(this,'aisinfopage');
     /**
      * @private
      * @type {AisHandler}
@@ -56,11 +52,16 @@ AisInfoPage.prototype.createItem=function(label,key,opt_addClass){
             </div>
         );
     };
-    return React.createElement(ItemUpdater(Item,this.store,keys.aisItem));
+    return React.createElement(ItemUpdater(Item,this.store,[keys.aisItem,keys.count]));
+};
+AisInfoPage.prototype.dataChanged=function(store,stkeys){
+    this.fillData(false);
 };
 AisInfoPage.prototype.getPageContent=function(){
     var self=this;
     this.aishandler=this.navobject.getAisHandler();
+    this.store.storeData(keys.count,0);
+    this.aishandler.register(this);
     var buttons=[
         {key:'AisInfoNearest'},
         {key:'AisInfoLocate'},
@@ -74,7 +75,7 @@ AisInfoPage.prototype.getPageContent=function(){
     var Status=function(props){
         return <img src={props.src} style={{transform:'rotate('+props.rotation+'deg)'}} className="avn_Status"/>
     };
-    var StatusItem=ItemUpdater(Status,this.store,keys.status);
+    var StatusItem=ItemUpdater(Status,this.store,[keys.status,keys.count]);
     var displayItems=[
         {key:'aisMmsi',label:'MMSI'},
         {key:'aisName',label:'Name'},

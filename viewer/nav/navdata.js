@@ -27,16 +27,11 @@ var NavData=function(propertyHandler){
      * @type {Formatter}
      */
     this.formatter=new Formatter();
-    /**
-     * a map from the display names to the function that provides the data
-     * @type {{}}
-     * @private
-     */
-    this.valueMap={};
     /** @type {GpsData}
      * @private
      */
     this.gpsdata=new GpsData(propertyHandler,this);
+    this.registerDataProvider(this.gpsdata);
     /**
      * @private
      * @type {TrackData}
@@ -46,6 +41,7 @@ var NavData=function(propertyHandler){
      * @type {AisData|exports|module.exports}
      */
     this.aisHandler=new AisData(propertyHandler,this);
+    this.registerDataProvider(this.aisHandler);
     this.routeHandler=new RouteData(propertyHandler,this);
     /**
      * @private
@@ -127,9 +123,6 @@ var NavData=function(propertyHandler){
         anchorDistance: "---",
         anchorDirection: "---"
     };
-    for (var k in this.formattedValues){
-        this.registerValueProvider(k,this,this.getFormattedNavValue);
-    }
 };
 
 avnav.inherits(NavData,Store);
@@ -355,29 +348,13 @@ NavData.prototype.getComputedValues=function(){
     return this.data;
 };
 
-NavData.prototype.getData=function(key,opt_default){
-    var rt=this.getValue(key);
+NavData.prototype.getDataLocal=function(key,opt_default){
+    var rt=this.getFormattedNavValue(key);
     if (rt === undefined) return opt_default;
     return rt;
 };
 
-NavData.prototype.listKeys=function(){
-    let rt=[];
-    for (let k in this.valueMap){
-        rt.push(k);
-    }
-    return rt;
-};
-/**
- * get the value of a display item
- * @param {string} name
- * @returns {string}
- */
-NavData.prototype.getValue=function(name){
-    var handler=this.valueMap[name];
-    if(handler) return handler.provider.call(handler.context,name);
-    return "undef";
-};
+
 /**
  * get a list of known display names
  */
@@ -442,15 +419,7 @@ NavData.prototype.routeEvent=function(){
     ));
     this.triggerUpdateEvent(navobjects.NavEventSource.NAV);
 };
-/**
- * register the provider of a display value
- * @param {string} name
- * @param {object} providerContext
- * @param {function} provider
- */
-NavData.prototype.registerValueProvider=function(name,providerContext,provider){
-    this.valueMap[name]={provider:provider,context:providerContext};
-};
+
 
 /**
  * set the current map center position

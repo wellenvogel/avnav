@@ -165,4 +165,4 @@ if (! window.SVGElement){
     window.SVGElement=function(){};
 }
 
-
+module.exports=avnav;
