@@ -270,44 +270,44 @@ class NMEAParser():
         return True
       if tag == 'DPT':
         '''
-        DPT - Depth of water
-        1   2   3
-        |   |   |
- $--DPT,x.x,x.x*hh<CR><LF>
- Field Number: 
- 1) Depth, meters
- 2) Offset from transducer,
-     positive means distance from tansducer to water line
-     negative means distance from transducer to keel
- 3) Checksum
+               DPT - Depth of water
+               1   2   3
+               |   |   |
+        $--DPT,x.x,x.x*hh<CR><LF>
+        Field Number:
+        1) Depth, meters
+        2) Offset from transducer,
+            positive means distance from tansducer to water line
+            negative means distance from transducer to keel
+        3) Checksum
         '''
-        rt['depthBelowtransducer']=float(darray[1])
+        rt['depthBelowTransducer'] = float(darray[1])
         if float(darray[2]) >= 0:
-          rt['depthBelowWaterline']=float(darray[1])+float(darray[2])
+          rt['depthBelowWaterline'] = float(darray[1]) + float(darray[2])
         else:
-          rt['depthBelowKeel']=float(darray[1])+float(darray[2])
-        self.addToNavData(rt,None)
+          rt['depthBelowKeel'] = float(darray[1]) + float(darray[2])
+        self.addToNavData(rt, None)
         return True
       if tag == 'DBT':
         '''
-        DBT - Depth below transducer
-        1   2 3   4 5   6 7
-        |   | |   | |   | |
- $--DBT,x.x,f,x.x,M,x.x,F*hh<CR><LF>
- Field Number: 
-  1) Depth, feet
-  2) f = feet
-  3) Depth, meters
-  4) M = meters
-  5) Depth, Fathoms
-  6) F = Fathoms
-  7) Checksum 
+                DBT - Depth below transducer
+                1   2 3   4 5   6 7
+                |   | |   | |   | |
+        $--DBT,x.x,f,x.x,M,x.x,F*hh<CR><LF>
+        Field Number:
+         1) Depth, feet
+         2) f = feet
+         3) Depth, meters
+         4) M = meters
+         5) Depth, Fathoms
+         6) F = Fathoms
+         7) Checksum
         '''
-        rt['depthBelowtransducer']=float(darray[3])
-        self.addToNavData(rt,None)
+        rt['depthBelowTransducer'] = float(darray[3])
+        self.addToNavData(rt, None)
         return True
     except Exception:
-        AVNLog.info(" error parsing nmea data "+unicode(data)+"\n"+traceback.format_exc())
+      AVNLog.info(" error parsing nmea data " + unicode(data) + "\n" + traceback.format_exc())
   
   #parse one line of AIS data 
   #taken from ais.py and adapted to our input handling     
