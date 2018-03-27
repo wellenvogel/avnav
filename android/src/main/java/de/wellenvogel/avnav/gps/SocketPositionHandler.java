@@ -5,6 +5,8 @@ import android.location.Location;
 import android.util.Log;
 
 import net.sf.marineapi.nmea.parser.SentenceFactory;
+import net.sf.marineapi.nmea.sentence.DBTSentence;
+import net.sf.marineapi.nmea.sentence.DPTSentence;
 import net.sf.marineapi.nmea.sentence.DateSentence;
 import net.sf.marineapi.nmea.sentence.GGASentence;
 import net.sf.marineapi.nmea.sentence.GLLSentence;
@@ -189,9 +191,6 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                                 AvnLog.d("ignore "+line+" due to filter");
                             }
                             if (nmeaLogger != null) nmeaLogger.logNmea(line);
-                            if (line.matches(".*MWV.*")){
-                                AvnLog.d("MWV");
-                            }
                             //NMEA
                             if (SentenceValidator.isValid(line)) {
                                 try {
@@ -241,6 +240,31 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                                             speed=speed/3600.0*1852.0;
                                         }
                                         e.data.put("windSpeed",speed);
+                                        addAuxiliaryData(s.getSentenceId(),e);
+                                        continue;
+                                    }
+                                    if (s instanceof DPTSentence){
+                                        DPTSentence d=(DPTSentence)s;
+                                        AvnLog.d(name+": DPT sentence");
+                                        AuxiliaryEntry e=new AuxiliaryEntry();
+                                        double depth=d.getDepth();
+                                        e.data.put("depthBelowTransducer",depth);
+                                        double offset=d.getOffset();
+                                        if (offset >= 0){
+                                            e.data.put("depthBelowWaterline",depth+offset);
+                                        }
+                                        else{
+                                            e.data.put("depthBelowKeel",depth+offset);
+                                        }
+                                        addAuxiliaryData(s.getSentenceId(),e);
+                                        continue;
+                                    }
+                                    if (s instanceof DBTSentence){
+                                        DBTSentence d=(DBTSentence)s;
+                                        AvnLog.d(name+": DBT sentence");
+                                        AuxiliaryEntry e=new AuxiliaryEntry();
+                                        double depth=d.getDepth();
+                                        e.data.put("depthBelowTransducer",depth);
                                         addAuxiliaryData(s.getSentenceId(),e);
                                         continue;
                                     }
