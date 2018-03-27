@@ -1334,7 +1334,12 @@ button.avb_AisInfoList {
   .avn_iconButton('images/icons-new/ic_list.svg');
 }
 
-
+/*-------------------------------------------------------------
+   aispage
+-------------------------------------------------------------*/
+#avi_aispage .avn_listWrapper{
+  .flex(1);
+}
 
 /*-------------------------------------------------------------
    status page
@@ -1374,8 +1379,7 @@ button.avb_AisInfoList {
   overflow-x: hidden;
   .flex-display();
   .flex-direction(column);
-  -webkit-box-flex: 1; //old safari otherwise extends this...
-  -ms-flex:1;
+
 }
 
 .avn_listWrapper .avn_listContainer {
@@ -2035,6 +2039,7 @@ button.avb_MainAndroid {
   padding-bottom: 1em;
   .avn_selectList{
     .flex(1);
+    .flex-basis(auto);
     overflow: auto;
   }
   .avn_row{
