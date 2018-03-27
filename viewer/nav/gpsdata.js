@@ -42,6 +42,10 @@ let GpsData=function(propertyHandler,navobject){
         windReference: 'R',
         depthBelowtransducer: "0000.00"
     };
+    this.storeKeys=[];
+    for (let k in this.formattedData){
+        this.storeKeys.push(k);
+    }
     /** {avnav.util.Formatter} @private */
     this.formatter=new avnav.util.Formatter();
     this.timer=null;
@@ -259,6 +263,7 @@ GpsData.prototype.handleGpsStatus=function(success){
         this.validPosition=true;
     }
     this.navobject.gpsEvent();
+    this.callCallbacks(this.storeKeys);
 };
 
 /**

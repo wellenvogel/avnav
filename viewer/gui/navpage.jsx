@@ -115,8 +115,8 @@ var Navpage=function(){
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {name:'CenterDisplay'},
         {name:'Zoom'},
-        {name:'Wind'},
-        {name: 'Depth'},
+        {name:'WindDisplay'},
+        {name: 'DepthDisplay'},
         {name:'AisTarget'},
         {name:'ActiveRoute'},
         {name:'LargeTime'}
@@ -127,8 +127,8 @@ var Navpage=function(){
     this.widgetLists[keys.topWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {name:'CenterDisplay',mode:'small'},
-        {name:'Wind'},
-        {name:'Depth'},
+        {name:'WindDisplay'},
+        {name:'DepthDisplay'},
         {name:'AisTarget',mode:'small'},
         {name:'EditRoute',wide:true},
         {name:'LargeTime'},

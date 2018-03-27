@@ -1,8 +1,8 @@
 /**
  * Created by andreas on 25.11.16.
  */
-var Store=require('../util/store');
-var React=require('react');
+let Store=require('../util/store');
+let React=require('react');
 /**
  * a simple item updater
  * that will register at a store with a key and will update its child based on the data
@@ -16,19 +16,19 @@ var React=require('react');
  * @returns {*} the wrapped react class
  * @constructor
  */
-var Updater=function(Item,store,opt_storeKey) {
-    var getStoreKeys=function(){
+let Updater=function(Item,store,opt_storeKey) {
+    let getStoreKeys=function(){
         if (opt_storeKey === undefined) return;
         if (opt_storeKey instanceof Array) return opt_storeKey;
         else return [opt_storeKey]
     };
-    var itemUpdater = React.createClass({
+    let itemUpdater = React.createClass({
         getInitialState: function () {
-            var st={};
+            let st={};
             if (! opt_storeKey) return {update:1};
             getStoreKeys().forEach(function(key){
-                var v=store.getData(key);
-                if (typeof(v) != "object"){
+                let v=store.getData(key);
+                if (typeof(v) !== "object"){
                     v={};
                     v[key]=store.getData(key);
                 }
@@ -36,15 +36,16 @@ var Updater=function(Item,store,opt_storeKey) {
             });
             return st;
         },
-        dataChanged: function () {
-            var st={};
+        dataChanged: function (store,keys) {
+            let st={};
             if (! opt_storeKey) {
                 this.setState({update:1});
                 return;
             }
+            if (! keys || keys.length < 1) return; //if we have provided some keys - ignore any global callback
             getStoreKeys().forEach(function(key){
-                var v=store.getData(key);
-                if (typeof(v) != "object"){
+                let v=store.getData(key);
+                if (typeof(v) !== "object"){
                     v={};
                     v[key]=store.getData(key);
                 }
@@ -59,7 +60,7 @@ var Updater=function(Item,store,opt_storeKey) {
             store.deregister(this);
         },
         render: function () {
-            var props = avnav.assign({}, this.props, this.state);
+            let props = avnav.assign({}, this.props, this.state);
             return <Item {...props}/>
         }
     });

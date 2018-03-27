@@ -123,6 +123,10 @@ var NavData=function(propertyHandler){
         anchorDistance: "---",
         anchorDirection: "---"
     };
+    this.storeKeys=[];
+    for (let k in this.formattedValues){
+        this.storeKeys.push(k);
+    }
 };
 
 avnav.inherits(NavData,Store);
@@ -359,11 +363,7 @@ NavData.prototype.getDataLocal=function(key,opt_default){
  * get a list of known display names
  */
 NavData.prototype.getValueNames=function(){
-    var rt=[];
-    for (var k in this.valueMap){
-        rt.push(k);
-    }
-    return rt;
+    return this.storeKeys;
 };
 
 /**

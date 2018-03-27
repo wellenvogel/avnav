@@ -1,16 +1,15 @@
 /**
  * Created by andreas on 20.11.16.
  */
-var Widget=require('./Widget.jsx');
-var EtaWidget=require('./EtaWidget.jsx');
-var TimeStatusWidget=require('./TimeStatusWidget.jsx');
-var AisTargetWidget=require('./AisTargetWidget.jsx');
-var ActiveRouteWidget=require('./ActiveRouteWidget.jsx');
-var EditRouteWidget=require('./EditRouteWidget.jsx');
-var CenterDisplayWidget=require('./CenterDisplayWidget.jsx');
-var WindWidget=require('./WindWidget');
-var DepthWidget=require('./DepthWidget');
-var widgetList=[
+let Widget=require('./Widget.jsx');
+let EtaWidget=require('./EtaWidget.jsx');
+let TimeStatusWidget=require('./TimeStatusWidget.jsx');
+let AisTargetWidget=require('./AisTargetWidget.jsx');
+let ActiveRouteWidget=require('./ActiveRouteWidget.jsx');
+let EditRouteWidget=require('./EditRouteWidget.jsx');
+let CenterDisplayWidget=require('./CenterDisplayWidget.jsx');
+let WindWidget=require('./WindWidget');
+let widgetList=[
     {
         name: 'SOG',
         default: "0.0",
@@ -128,8 +127,10 @@ var widgetList=[
     },
     {
         name: 'DepthDisplay',
-        caption: 'Depth',
-        wclass: DepthWidget
+        caption: 'DPT',
+        dataKey: 'depthBelowTransducer',
+        classes: 'avn_windWidget',
+        unit: 'm'
     },
 
 ];
