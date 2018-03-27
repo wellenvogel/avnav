@@ -39,7 +39,8 @@ let GpsData=function(propertyHandler,navobject){
         alarmInfo:"",
         windAngle:"000.0",
         windSpeed: "---",
-        windReference: 'R'
+        windReference: 'R',
+        depthBelowtransducer: "0000.00"
     };
     /** {avnav.util.Formatter} @private */
     this.formatter=new avnav.util.Formatter();
@@ -168,6 +169,11 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         formattedData.windReference='R';
         formattedData.windSpeed='00.00';
         formattedData.windAngle='000.0';
+    }
+    try {
+        formattedData.depthBelowTransducer = ( data.depthBelowTransducer !== undefined) ? data.depthBelowTransducer.toFixed(2) : '0000.00';
+    }catch(e){
+        formattedData.depthBelowTransducer = '0000.00';
     }
     this.formattedData=formattedData;
 };
