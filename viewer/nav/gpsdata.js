@@ -40,7 +40,7 @@ let GpsData=function(propertyHandler,navobject){
         windAngle:"000.0",
         windSpeed: "---",
         windReference: 'R',
-        depthBelowtransducer: "0000.00"
+        depthBelowTransducer: "0000.00"
     };
     this.storeKeys=[];
     for (let k in this.formattedData){
