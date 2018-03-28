@@ -82,6 +82,7 @@ Gpspage.prototype.getPageContent=function(){
             return (
                 <div className="avn_panel_fill" onClick={this.goBack}>
                     {!this.props.anchorWatch ?
+                        !this.props[keys.secondPage]?
                         <div id='avi_gps_page_left' className="avn_gpsp_hfield">
                             <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
                                 <div className='avn_gpsp_field_label'>WP-BRG</div>
@@ -104,13 +105,6 @@ Gpspage.prototype.getPageContent=function(){
                                 <div id="avi_gpsp_route_dist">
                                     <div className='avn_gpsp_field_label'>RTE dist</div>
                                     {self.createElememt('routeRemain', 'nm', 5)}
-                                </div><div id="avi_gpsp_route_dist">
-                                    <div className='avn_gpsp_field_label'>RTE dist</div>
-                                    {self.createElememt('routeRemain', 'nm', 5)}
-                                </div>
-                                <div id="avi_gpsp_route_eta">
-                                    <div className='avn_gpsp_field_label'>RTE ETA</div>
-                                    {self.createElememt('routeEta', '', 8)}
                                 </div>
                                 <div id="avi_gpsp_route_eta">
                                     <div className='avn_gpsp_field_label'>RTE ETA</div>
@@ -119,6 +113,37 @@ Gpspage.prototype.getPageContent=function(){
                             </div>
 
                         </div>
+                            :
+                            <div id='avi_gps_page_left' className="avn_gpsp_hfield">
+                                <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
+                                    <div className='avn_gpsp_field_label'>WP-BRG</div>
+                                    {self.createElememt('markerCourse', "\u00b0", 4)}
+                                </div>
+
+                                <div id='avi_gpsp_xte_field' className='avn_gpsp_vfield' data-avnfs="28">
+                                    <div id='avi_gpsp_xte_label' className='avn_gpsp_field_label'>WP - XTE</div>
+                                    <canvas id="avi_gpsp_xte"></canvas>
+                                </div>
+                                <div className='avn_gpsp_vfield' data-avnfs="15">
+                                    <div className='avn_gpsp_field_label'>WP-DST</div>
+                                    {self.createElememt('markerDistance', 'nm', 5)}
+                                </div>
+                                <div className='avn_gpsp_vfield' data-avnfs="15">
+                                    <div className='avn_gpsp_field_label'>DEPTH</div>
+                                    {self.createElememt('depthBelowTransducer', 'm', 5)}
+                                </div>
+                                <div className='avn_gpsp_vfield' data-avnfs="15">
+                                    <div id="avi_gpsp_route_dist">
+                                        <div className='avn_gpsp_field_label'>RTE dist</div>
+                                        {self.createElememt('routeRemain', 'nm', 5)}
+                                    </div>
+                                    <div id="avi_gpsp_route_eta">
+                                        <div className='avn_gpsp_field_label'>RTE ETA</div>
+                                        {self.createElememt('routeEta', '', 8)}
+                                    </div>
+                                </div>
+
+                            </div>
                         :
                         <div id='avi_gps_page_left' className="avn_gpsp_hfield">
                             <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
