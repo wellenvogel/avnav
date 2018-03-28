@@ -43,6 +43,7 @@ class WidgetFactory{
     createWidget(props,opt_properties){
         if (! props.name) return;
         var e=this.findWidget(props.name);
+        if (! e) return;
         var RenderWidget=e.wclass||Widget;
         var mergedProps=assign({},e,props,opt_properties);
         if (mergedProps.key === undefined) mergedProps.key=props.name;

@@ -347,7 +347,9 @@ var WidgetContainer=React.createClass({
                         style: style
                     };
                     var props=avnav.assign({},item,itemProperties);
-                    return LayoutMonitor(self.props.itemCreator(props,self.props.store),
+                    var item=self.props.itemCreator(props,self.props.store);
+                    if (! item) return;
+                    return LayoutMonitor(item,
                         function(rect,opt_force){
                         self.updateItemInfo(itemKey, rect, opt_force);});
                 },

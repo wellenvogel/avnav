@@ -156,7 +156,14 @@ Page.prototype._initPage=function(){
                         }
                         children={function (mp) {
                             return (
-                                <div className="avn_left_panel" ref={mp.measureRef}>
+                                <div className="avn_left_panel" ref={function(item){
+                                    //mp.measureRef(item);
+                                    if (item) {
+                                        mp.measureRef(item);
+                                        let r=item.getBoundingClientRect();
+                                        self.leftPanelChanged(r);
+                                    }
+                                }}>
                                     <Content/>
                                 </div>
                             );

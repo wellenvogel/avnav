@@ -93,6 +93,7 @@ module.exports=React.createClass({
                     if (self.props.itemCreator){
                         //give the creator the chance to finally control all properties
                         itemClass=self.props.itemCreator(prop);
+                        if (! itemClass) return null;
                         return React.createElement(itemClass,prop);
                     }
                     else{
