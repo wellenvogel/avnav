@@ -11,7 +11,7 @@ var EditRouteWidget=React.createClass({
         onClick: React.PropTypes.func,
         store: React.PropTypes.object.isRequired,
         classes: React.PropTypes.string,
-        wide:   React.PropTypes.bool //display info side by side
+        mode:   React.PropTypes.string //display info side by side if small
     },
     _getValues:function(){
         return{
@@ -50,7 +50,7 @@ var EditRouteWidget=React.createClass({
             )
         }
         var rname;
-        if (this.props.wide){
+        if (this.props.mode === "small"){
             rname=this.state.name;
         }
         else {

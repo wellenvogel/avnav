@@ -126,11 +126,11 @@ var Navpage=function(){
     ];
     this.widgetLists[keys.topWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
-        {name:'CenterDisplay',mode:'small'},
+        {name:'CenterDisplay'},
         {name:'WindDisplay'},
         {name:'DepthDisplay'},
-        {name:'AisTarget',mode:'small'},
-        {name:'EditRoute',wide:true},
+        {name:'AisTarget'},
+        {name:'EditRoute'},
         {name:'LargeTime'},
         {name:'Zoom'}
     ];
@@ -291,16 +291,16 @@ Navpage.prototype.widgetVisibility=function(){
         AisTarget: aisVisible && !routingVisible,
         LargeTime: clockVisible && !routingVisible,
         Zoom: zoomVisible,
-        Wind: windVisible && !routingVisible,
-        Depth: depthVisible && !routingVisible
+        WindDisplay: windVisible && !routingVisible,
+        DepthDisplay: depthVisible && !routingVisible
     }, 'visibilityFlags');
     this.store.updateData(keys.leftWidgets,{
         CenterDisplay:centerVisible  && ! routingVisible,
         AisTarget:aisVisible  && ! routingVisible,
         LargeTime:clockVisible  && ! routingVisible,
         Zoom: zoomVisible,
-        Wind: windVisible,
-        Depth: depthVisible, 
+        WindDisplay: windVisible && ! routingVisible,
+        DepthDisplay: depthVisible && ! routingVisible,
         ActiveRoute: routeVisible && ! routingVisible
     },'visibilityFlags');
 };
@@ -577,6 +577,7 @@ Navpage.prototype.getPageContent=function(){
         itemCreator: widgetCreator,
         setContainerWidth: true,
         setContainerHeight: true,
+        childProperties: {mode:'small'},
         layoutParameter: {
             inverted: false,
             scale: true,

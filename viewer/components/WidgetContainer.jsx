@@ -222,6 +222,7 @@ var WidgetContainer=React.createClass({
             itemList: React.PropTypes.array.isRequired,
             itemCreator: React.PropTypes.func.isRequired,
             layoutParameter: React.PropTypes.object,
+            childProperties: React.PropTypes.object, //forward to itemlist
             dummy: React.PropTypes.any,
             renewSequence: React.PropTypes.number,
             className: React.PropTypes.string,
@@ -357,6 +358,7 @@ var WidgetContainer=React.createClass({
             else listProps.style={};
             if (this.props.setContainerWidth) listProps.style.width=this.container.width||0;
             if (this.props.setContainerHeight ) listProps.style.height=this.container.height||0;
+            if (this.props.childProperties) listProps.childProperties=this.props.childProperties;
             var rt=(
                 <ItemList {...listProps}
                     />
