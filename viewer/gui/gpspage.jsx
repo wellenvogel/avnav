@@ -33,8 +33,10 @@ Gpspage.prototype.showPage=function(options){
     if (!this.gui) return;
     this.gui.navobject.setAisCenterMode(navobjects.AisCenterMode.GPS);
     this.gui.navobject.getAisHandler().setTrackedTarget(0);
-    this.store.storeData(keys.secondPage,false);
-    this.handleToggleButton('Gps2',false);
+    let secondPage=false;
+    if (options && options.secondPage) secondPage=true;
+    this.store.storeData(keys.secondPage,secondPage);
+    this.handleToggleButton('Gps2',secondPage);
     this.computeLayout();
 };
 

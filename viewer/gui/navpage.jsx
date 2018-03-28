@@ -267,10 +267,6 @@ Navpage.prototype.widgetVisibility=function(){
         this.gui.map.setCompassOffset(0);
     }
     var aisVisible=this.gui.properties.getProperties().layers.ais;
-    if (aisVisible) {
-        var aisTarget=this.navobject.getAisHandler().getNearestAisTarget();
-        aisVisible=(aisTarget && aisTarget.mmsi)?true:false;
-    }
     var routeVisible=this.gui.properties.getProperties().layers.nav;
     if (routeVisible) routeVisible=this.navobject.getRoutingHandler().hasActiveRoute();
     var centerVisible=this.gui.properties.getProperties().layers.measures;
@@ -640,20 +636,29 @@ Navpage.prototype.isWidgetInList=function(widgetDescription,listKey){
 Navpage.prototype.widgetClick=function(widgetDescription){
     if (widgetDescription.name == "AisTarget" && widgetDescription.mmsi){
         this.gui.showPage("aisinfopage",{mmsi:widgetDescription.mmsi});
+        return;
     }
     if (widgetDescription.name == "ActiveRoute"){
         this.navobject.getRoutingHandler().startEditingRoute();
         this.gui.showPage("routepage");
+        return;
     }
     if (widgetDescription.name == "CenterDisplay"){
         this.hidetime=0;
         this.widgetVisibility();
+        return;
     }
     if (widgetDescription.name == "EditRoute"){
         this.gui.showPage("routepage");
+        return;
     }
     if (widgetDescription.name == "Zoom"){
         this.gui.map.checkAutoZoom(true);
+        return;
+    }
+    if (widgetDescription.name == 'WindDisplay' || widgetDescription.name == 'DepthDisplay'){
+        this.gui.showPage("gpspage",{secondPage:true});
+        return;
     }
     if (this.isWidgetInList(widgetDescription,keys.bottomLeftWidgets)){
         var wp=this.navobject.getRoutingHandler().getCurrentLegTarget();

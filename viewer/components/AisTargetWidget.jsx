@@ -4,6 +4,7 @@
 
 var React=require("react");
 var NavData=require('../nav/navdata');
+let compare=require('../util/shallowcompare');
 
 var AisTargetWidget=React.createClass({
     propTypes:{
@@ -42,7 +43,9 @@ var AisTargetWidget=React.createClass({
 
     },
     componentWillReceiveProps: function(nextProps) {
-        this.setState(this._getValues());
+        let nState=this._getValues();
+        if (compare(this.state,nState)) return;
+        this.setState(nState);
     },
     componentDidUpdate: function(){
         if (this.lastNotified != this.lastRendered) {

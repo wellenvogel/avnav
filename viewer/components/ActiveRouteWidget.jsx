@@ -4,6 +4,7 @@
 
 var React=require("react");
 var NavData=require('../nav/navdata');
+var compare=require('../util/shallowcompare');
 
 var ActiveRouteWidget=React.createClass({
     propTypes:{
@@ -30,7 +31,8 @@ var ActiveRouteWidget=React.createClass({
     },
     componentWillReceiveProps: function(nextProps) {
         var nextState=this._getValues();
-        if (this.state.isApproaching != nextState.isApproaching){
+        if (compare(this.state,nextState)) return;
+        if (this.state.isApproaching !== nextState.isApproaching){
             this.doLayoutUpdate=true;
         }
         this.setState(nextState);
