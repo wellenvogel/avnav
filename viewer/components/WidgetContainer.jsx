@@ -22,6 +22,7 @@ var LayoutParameters=function(options){
     if (options.maxSize !== undefined && !options.scale){
         this.scaleContainer=true;
     }
+    if (options.weightList) this.weightList=options.weightList;
 };
 LayoutParameters.prototype.positionProperties=function(position,multiPosition){
     var rt={left:'',top:'',bottom:'',right:''};
@@ -105,6 +106,9 @@ ItemWrapper.prototype.getKey=function(){
  *     otherMargin: margin in px for other direction
  *     startMargin: margin in px for the main start
  *     scale: if set - scale items
+ *     weightList: use weigths for the items
+ *                 if set - do never skip an item but make it bigger/smaller to fit
+ *                 if the list is shorter then the itemlist others will get weight 1
  * @returns and object with container: main,other and styles - an object of element styles
  */
 var layout=function(itemList,parameters) {
@@ -134,6 +138,21 @@ var layout=function(itemList,parameters) {
     var otherMargin=options.otherMargin||0;
     var startMargin=options.startMargin||0;
     var containerMain=undefined;
+    var weights=[];
+    let weigthSum=0.0;
+    if (layoutParameter.weightList){
+        maxRowCol=1;
+
+        for (let i=0;i<itemList.length;i++){
+            if (i <= layoutParameter.weightList.length){
+                weights[i]=layoutParameter.weightList[i];
+            }
+            else{
+                weights[i]=1;
+            }
+            weigthSum+=weights[i];
+        }
+    }
     for (rowColIndex=0;rowColIndex<maxRowCol;rowColIndex++){
         var accumulatedMargin=startMargin;
         visibleItems=[];
@@ -143,7 +162,7 @@ var layout=function(itemList,parameters) {
         for(i=lastVisible+increment;i>=0 && i < numItems;i+=increment){
             item=itemList[i];
             if ((item.getValue(layoutParameter.scalingProperty)+accumulatedWidthHeight +mainMargin)> maxWidthHeight &&
-                maxWidthHeight >0){
+                maxWidthHeight >0 && !layoutParameter.weightList){
                 break;
             }
             lastVisible=i;
@@ -159,11 +178,11 @@ var layout=function(itemList,parameters) {
         }
         if (visibleItems.length < 1) continue;
         var vLen=visibleItems.length;
-        var first=(options.outerSize > 0 && visibleItems.length > 1 && options.outerSize < maxWidthHeight/2 && options.scale);
+        var first=(options.outerSize > 0 && ! layoutParameter.weightList && visibleItems.length > 1 && options.outerSize < maxWidthHeight/2 && options.scale);
         var usableOuterElementSize=first?options.outerSize:0;
         //if we resize the outer element - remove the outer one from the width for the factor
         var factor=1;
-        if (options.scale) {
+        if (options.scale && ! layoutParameter.weightList) {
             //scale handling: as we do not scale margins, we have to subtract n times margin from both
             //the other size and the computed size
             var scaleMaxSize=maxWidthHeight-accumulatedMargin;
@@ -181,7 +200,13 @@ var layout=function(itemList,parameters) {
         var elementPosition=startMargin;
         for (i=vLen-1;i>=0;i--){
             item=visibleItems[i];
-            var niWidthHeight=first?usableOuterElementSize:(item.getValue(layoutParameter.scalingProperty)*factor);
+            var niWidthHeight;
+            if (!layoutParameter.weightList || weigthSum<= 0){
+                niWidthHeight=first?usableOuterElementSize:(item.getValue(layoutParameter.scalingProperty)*factor);
+            }
+            else{
+                niWidthHeight=parseFloat(weights[i])/parseFloat(weigthSum)*(maxWidthHeight-accumulatedMargin);
+            }
             styles[item.getKey()]={
                 position:'absolute',
                 opacity:1,

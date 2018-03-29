@@ -27,7 +27,7 @@ var CenterDisplayWidget=React.createClass({
     },
     render: function(){
         var self=this;
-        var classes="avn_widget avn_centerWidget "+this.props.classes||"";
+        var classes="avn_widget avn_centerWidget "+this.props.classes||""+ " "+this.props.className||"";
         var small = (this.props.mode == "small");
         var tableClass="";
         if (small) tableClass="avn_widgetDataFirst";

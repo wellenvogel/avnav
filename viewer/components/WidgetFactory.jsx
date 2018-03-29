@@ -55,7 +55,7 @@ class WidgetFactory{
         if (e) {
             return React.createClass({
                 render: function(){
-                    var wprops=assign({},mergedProps,this.props);
+                    var wprops=assign({},this.props,mergedProps);
                     return <RenderWidget {...wprops}/>
                 }
             });

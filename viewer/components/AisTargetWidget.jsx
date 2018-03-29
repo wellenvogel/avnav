@@ -2,11 +2,11 @@
  * Created by andreas on 23.02.16.
  */
 
-var React=require("react");
-var NavData=require('../nav/navdata');
+let React=require("react");
+let NavData=require('../nav/navdata');
 let compare=require('../util/shallowcompare');
 
-var AisTargetWidget=React.createClass({
+let AisTargetWidget=React.createClass({
     propTypes:{
         //formatter: React.PropTypes.func,
         onItemClick: React.PropTypes.func,
@@ -16,16 +16,16 @@ var AisTargetWidget=React.createClass({
         updateCallback: React.PropTypes.func
     },
     _getValues:function(){
-        var mmsi=this.props.store.getData('aisMmsi');
-        var color;
-        var aisProperties={};
+        let mmsi=this.props.store.getData('aisMmsi');
+        let color;
+        let aisProperties={};
         if (mmsi && mmsi !== ""){
             aisProperties.warning=this.props.store.getData('aisWarning')||false;
             aisProperties.nearest=this.props.store.getData('aisNearest')||false;
         }
         else mmsi=undefined;
         color=this.props.propertyHandler.getAisColor(aisProperties);
-        var front=this.props.store.getData('aisFront');
+        let front=this.props.store.getData('aisFront');
         if (front == "" || front == " ") front="X";
         return{
             dst:this.props.store.getData('aisDst'),
@@ -56,12 +56,12 @@ var AisTargetWidget=React.createClass({
         }
     },
     render: function(){
-        var self=this;
-        var classes="avn_widget avn_aisTargetWidget "+this.props.classes||"";
-        var small = (this.props.mode == "small");
-        if (this.state.mmsi !== undefined) {
-            var style=avnav.assign({},this.props.style,{backgroundColor:this.state.color});
-            if (this.lastRendered != 1){
+        let self=this;
+        let classes="avn_widget avn_aisTargetWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let small = (this.props.mode === "small" || this.props.mode === "gps");
+        if (this.state.mmsi !== undefined || this.props.mode === "gps") {
+            let style=avnav.assign({},this.props.style,{backgroundColor:this.state.color});
+            if (this.lastRendered !== 1){
               //if we did not render the last time, we always render without any with/height
                 delete style.width;
                 delete style.height;
@@ -84,14 +84,18 @@ var AisTargetWidget=React.createClass({
                         <span className="avn_ais_data">{this.state.cpa}</span>
                         <span className="avn_unit">nm</span>
                     </div> }
+                    {this.state.mmsi !== undefined &&
                     <div className="avn_widgetData">
                         <span className='avn_label '>T</span>
                         <span className="avn_ais_data">{this.state.tcpa}</span>
                         <span className="avn_unit">h</span>
                     </div>
+                    }
+                    {this.state.mmsi !== undefined &&
                     <div className="avn_widgetData">
                         <span className='avn_ais_front avn_ais_data'>{this.state.front}</span>
                     </div>
+                    }
                 </div>
             );
         }

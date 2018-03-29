@@ -24,7 +24,7 @@ var TimeStatusWidget=React.createClass({
     },
     render: function(){
         var self=this;
-        var classes="avn_widget avn_timeStatusWidget "+this.props.classes||"";
+        var classes="avn_widget avn_timeStatusWidget "+this.props.classes||""+ " "+this.props.className||"";
         var imgSrc=this.state.statusUrl;
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>

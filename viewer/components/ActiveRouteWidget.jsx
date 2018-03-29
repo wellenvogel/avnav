@@ -51,7 +51,7 @@ var ActiveRouteWidget=React.createClass({
     },
     render: function(){
         var self=this;
-        var classes="avn_widget avn_activeRouteWidget "+this.props.classes||"";
+        var classes="avn_widget avn_activeRouteWidget "+this.props.classes||""+ " "+this.props.className||"";
         if (this.state.isApproaching) classes +=" avn_route_display_approach ";
         if (this.state.isApproaching != this.lastApproaching){
             this.doLayoutUpdate=true;

@@ -33,6 +33,7 @@ var Widget=React.createClass({
         var self=this;
         var classes="avn_widget "+this.props.classes||"";
         if (this.state.average) classes+=" avn_average";
+        if (this.props.className) classes+=" "+this.props.className;
         var val=this.state.val;
         if (val === undefined || val == "") {
             val=this.props.default||"";

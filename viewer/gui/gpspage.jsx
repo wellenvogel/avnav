@@ -42,6 +42,16 @@ widgetLists[keys.widgetLists.page1.right]=[
     {name:"AisTarget"}
 ];
 
+const layoutBaseParam={
+    layoutWidth: 600, //the widgets are prepared for this width, others will scale the font
+    layoutHeight: 600,
+    baseWeight: 15, //the base weight
+    baseWidgetFontSize: 22, //font size for 600x600
+};
+
+//the weights for the 2 panels
+const weightList=[2*layoutBaseParam.baseWeight,2*layoutBaseParam.baseWeight,
+    layoutBaseParam.baseWeight,layoutBaseParam.baseWeight,layoutBaseParam.baseWeight];
 
 
 
@@ -120,36 +130,48 @@ Gpspage.prototype.getPageContent=function(){
             self.returnToLast();
         },
         render: function(){
-            let widgetCreator=function(widget){
-                return WidgetFactory.createWidget(widget,{propertyHandler:self.gui.properties,store: self.store});
+            let widgetCreator=function(widget,list){
+                let addClass;
+                for (let i=0;i<list.length;i++){
+                    if (list[i].name === widget.name){
+                        if (i < weightList.length && weightList[i] > layoutBaseParam.baseWeight){
+                            addClass="avn_doubleHeight";
+                        }
+                        break;
+                    }
+                }
+                return WidgetFactory.createWidget(widget,
+                    {propertyHandler:self.gui.properties,store: self.store, className:addClass,mode:'gps'});
             };
             //we have based our layout on 1000x600px and now scale the font
-            let fw=self.leftPanelWidth/1000||0;
-            let fh=self.leftPanelHeight/600||0;
-            let fontSize=22;
+            let fw=self.leftPanelWidth/layoutBaseParam.layoutWidth||0;
+            let fh=self.leftPanelHeight/layoutBaseParam.layoutHeight||0;
+            let fontSize=layoutBaseParam.baseWidgetFontSize;
             if (fw > 0 && fh > 0){
                 fontSize=fontSize*Math.min(fh,fw);
             }
             let p1leftProp={
               className: 'avn_gpsLeftContainer',
-              itemCreator: widgetCreator,
+              itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists.page1.left]);},
               itemList: widgetLists[keys.widgetLists.page1.left],
               style: { fontSize: fontSize},
               layoutParameter:{
                   direction: 'bottom',
                   scale: true,
                   maxSize: self.leftPanelHeight,
+                  weightList: weightList
               }
             };
             let p1RightProp={
                 className: 'avn_gpsRightContainer',
-                itemCreator: widgetCreator,
+                itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists.page1.right]);},
                 itemList: widgetLists[keys.widgetLists.page1.right],
                 style: { fontSize: fontSize},
                 layoutParameter:{
                     direction: 'bottom',
                     scale: true,
                     maxSize: self.leftPanelHeight,
+                    weightList: weightList
                 }
             };
             return (

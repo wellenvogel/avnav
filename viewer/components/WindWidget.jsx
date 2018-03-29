@@ -30,7 +30,7 @@ var WindWidget=React.createClass({
     },
     render: function(){
         var self = this;
-        var classes = "avn_widget avn_windWidget " + this.props.classes || "";
+        var classes = "avn_widget avn_windWidget " + this.props.classes || ""+ " "+this.props.className||"";
         var style = this.props.style || {};
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>

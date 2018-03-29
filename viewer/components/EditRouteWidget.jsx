@@ -38,7 +38,7 @@ var EditRouteWidget=React.createClass({
     },
     render: function(){
         var self=this;
-        var classes="avn_widget avn_editingRouteWidget "+this.props.classes||"";
+        var classes="avn_widget avn_editingRouteWidget "+this.props.classes||""+ " "+this.props.className||"";
         if (this.state.editingActive) classes +=" avn_activeRoute ";
         else classes+=" avn_otherRoute";
         if (! this.state.hasRoute){

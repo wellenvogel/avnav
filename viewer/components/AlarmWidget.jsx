@@ -14,7 +14,7 @@ var AlarmWidget=React.createClass({
     },
     render: function(){
         var self=this;
-        var classes="avn_widget avn_alarmWidget "+this.props.classes||"";
+        var classes="avn_widget avn_alarmWidget "+this.props.classes||""+ " "+this.props.className||"";
         if (! this.props.alarmInfo) return <div/>;
         return (
         <div className={classes} onClick={this.onClick} style={this.props.style}>
