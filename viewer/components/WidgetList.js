@@ -9,6 +9,7 @@ let ActiveRouteWidget=require('./ActiveRouteWidget.jsx');
 let EditRouteWidget=require('./EditRouteWidget.jsx');
 let CenterDisplayWidget=require('./CenterDisplayWidget.jsx');
 let WindWidget=require('./WindWidget');
+let XteWidget=require('./XteWidget');
 let widgetList=[
     {
         name: 'SOG',
@@ -131,6 +132,12 @@ let widgetList=[
         dataKey: 'depthBelowTransducer',
         classes: 'avn_windWidget',
         unit: 'm'
+    },
+    {
+        name: 'XteDisplay',
+        caption: 'XTE',
+        wclass: XteWidget,
+        dataKey: 'markerXte'
     },
 
 ];

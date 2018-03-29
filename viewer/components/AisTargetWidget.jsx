@@ -3,14 +3,14 @@
  */
 
 let React=require("react");
-let NavData=require('../nav/navdata');
+let Store=require('../util/storeapi');
 let compare=require('../util/shallowcompare');
 
 let AisTargetWidget=React.createClass({
     propTypes:{
         //formatter: React.PropTypes.func,
         onItemClick: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(NavData).isRequired,
+        store: React.PropTypes.instanceOf(Store).isRequired,
         propertyHandler: React.PropTypes.object.isRequired,
         classes: React.PropTypes.string,
         updateCallback: React.PropTypes.func
