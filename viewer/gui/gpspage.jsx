@@ -33,7 +33,7 @@ widgetLists[keys.widgetLists.page1.left]=[
     {name:"XteDisplay"},
     {name:"DST"},
     {name:"ETA"},
-    {name: "ActiveRoute"}
+    {name: "RteCombine"}
 ];
 widgetLists[keys.widgetLists.page1.right]=[
     {name:"COG"},

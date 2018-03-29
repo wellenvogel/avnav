@@ -35,6 +35,7 @@ let XteWidget=React.createClass({
             <div className={classes} onClick={this.props.onClick} style={style}>
                 <canvas className='avn_widgetData' ref={self.canvasRef}></canvas>
                 <div className='avn_widgetInfoLeft'>XTE</div>
+                <div className='avn_widgetInfoRight'>nm</div>
             </div>
 
         );
@@ -54,7 +55,7 @@ let XteWidget=React.createClass({
         let context=canvas.getContext('2d');
         let formatter=new Formatter();
         let xteMax=this.props.propertyHandler.getProperties().gpsXteMax;
-        let xteText=formatter.formatDecimal(xteMax,1,1)+"nm";
+        let xteText=formatter.formatDecimal(xteMax,1,1);
         let color=canvas.style.color;
         context.fillStyle =color;
         context.strokeStyle=color;

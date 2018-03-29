@@ -77,6 +77,22 @@ let widgetList=[
         dataKey: 'markerCourse'
     },
     {
+        name: 'RteDistance',
+        default: "---",
+        unit: "nm",
+        caption: 'RTE-Dst',
+        classes: 'avn_rteWidget',
+        dataKey: 'routeRemain'
+    },
+    {
+        name: 'RteEta',
+        default: "---",
+        unit: "h",
+        caption: 'RTE-ETA',
+        classes: 'avn_rteWidget',
+        dataKey: 'routeEta'
+    },
+    {
         name: 'LargeTime',
         default: "--:--",
         caption: 'Time',
@@ -139,6 +155,12 @@ let widgetList=[
         wclass: XteWidget,
         dataKey: 'markerXte'
     },
+    {
+        name: 'RteCombine',
+        caption: '',
+        children: [{name:'RteDistance'},{name:'RteEta'}]
+    },
+
 
 ];
 

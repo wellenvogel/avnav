@@ -423,6 +423,7 @@ html,body {
 @bottomSmallFont: 1em;
 @bottomBigFont: 3em;
 @bottomBigFontDouble: ( 1.8 * @bottomBigFont);
+@gpsMiddleFont: 2em;
 
 .avn_widget{
   position: relative;
@@ -497,6 +498,11 @@ html,body {
     font-size: @bottomBigFontDouble;
   }
 }
+.avn_gpsp_hfield .avn_distanceWidget{
+  .avn_widgetData{
+    font-size: @gpsMiddleFont;
+  }
+}
 .avn_speedWidget{
   width: 9.6em;
   .avn_widgetData{
@@ -519,6 +525,18 @@ html,body {
     text-align: center;
     overflow: hidden;
     white-space: nowrap;
+  }
+}
+.avn_gpsp_hfield .avn_etaWidget{
+  .flex-display();
+  .flex-direction(row);
+  .flex-justify-content(flex-end);
+  .flex-align-items(center);
+  .avn_widgetData{
+    margin-top: 0;
+    display: inline-block;
+    margin-left: 1em;
+    font-size: 0.75 * @gpsMiddleFont;
   }
 }
 .avn_timeStatusWidget{
@@ -719,6 +737,13 @@ html,body {
     width: 90%;
     height: 90%;
   }
+}
+
+.avn_combinedWidget{
+  padding: 0 !important;
+  margin: 0 !important;
+  .flex-display();
+  .flex-direction(row);
 }
 
 /*-------------------------------------------------------------

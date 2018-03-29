@@ -41,22 +41,33 @@ class WidgetFactory{
         return -1;
     }
     createWidget(props,opt_properties){
+        let self=this;
         if (! props.name) return;
         var e=this.findWidget(props.name);
         if (! e) return;
-        var RenderWidget=e.wclass||Widget;
         var mergedProps=assign({},e,props,opt_properties);
         if (mergedProps.key === undefined) mergedProps.key=props.name;
         var dataKey;
         if (mergedProps.dataKey) dataKey=mergedProps.dataKey;
-        if (mergedProps.store){
-            RenderWidget=ItemUpdater(RenderWidget,mergedProps.store,dataKey);
-        }
         if (e) {
             return React.createClass({
                 render: function(){
                     var wprops=assign({},this.props,mergedProps);
-                    return <RenderWidget {...wprops}/>
+                    if (mergedProps.children){
+                        return <div {...mergedProps} className="avn_widget avn_combinedWidget">
+                            {mergedProps.children.map((item)=>{
+                                let Item=self.createWidget(item,opt_properties);
+                                return <Item />
+                            })}
+                        </div>
+                    }
+                    else {
+                        var RenderWidget=mergedProps.wclass||Widget;
+                        if (mergedProps.store) {
+                            RenderWidget = ItemUpdater(RenderWidget, mergedProps.store, dataKey);
+                        }
+                        return <RenderWidget {...wprops}/>
+                    }
                 }
             });
         }
