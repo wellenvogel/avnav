@@ -108,6 +108,11 @@ Gpspage.prototype.createElememt=function(key,unit,rel){
     return React.createElement(ItemUpdater(Element,self.gui.navobject,key));
 };
 
+Gpspage.prototype.onItemClick=function(item){
+  if (item && item.name=== "AisTarget"){
+      this.gui.showPage("aisinfopage");
+  }
+};
 Gpspage.prototype.getPageContent=function(){
     let self=this;
     let buttons=[
@@ -155,6 +160,7 @@ Gpspage.prototype.getPageContent=function(){
               itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists.page1.left]);},
               itemList: widgetLists[keys.widgetLists.page1.left],
               style: { fontSize: fontSize},
+              onItemClick: (item) => {self.onItemClick(item);},
               layoutParameter:{
                   direction: 'bottom',
                   scale: true,
@@ -167,6 +173,7 @@ Gpspage.prototype.getPageContent=function(){
                 itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists.page1.right]);},
                 itemList: widgetLists[keys.widgetLists.page1.right],
                 style: { fontSize: fontSize},
+                onItemClick: (item) => {self.onItemClick(item);},
                 layoutParameter:{
                     direction: 'bottom',
                     scale: true,

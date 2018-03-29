@@ -105,7 +105,8 @@ let AisTargetWidget=React.createClass({
         }
 
     },
-    click:function(){
+    click:function(ev){
+        ev.stopPropagation();
         this.props.onItemClick(avnav.assign({},this.props,this.state));
     }
 
