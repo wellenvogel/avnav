@@ -18,9 +18,17 @@ const keys={
           left: 'wlp1left',
           right: 'wlp1right'
       },
+      page1a:{
+          left: 'wlp1aleft',
+          right: 'wlp1aright'
+      },
       page2:{
           left: 'wlp2left',
           right: 'wlp2right'
+      },
+      page2a:{
+          left: 'wlp2aleft',
+          right: 'wlp2aright'
       }
   }  
     
@@ -35,11 +43,57 @@ widgetLists[keys.widgetLists.page1.left]=[
     {name:"ETA"},
     {name: "RteCombine"}
 ];
+
 widgetLists[keys.widgetLists.page1.right]=[
     {name:"COG"},
     {name:"SOG"},
     {name:"TimeStatus"},
     {name:"Position"},
+    {name:"AisTarget"}
+];
+widgetLists[keys.widgetLists.page1a.left]=[
+    {name:"AnchorBearing"},
+    {name:"AnchorDistance"},
+    {name:"AnchorWatchDistance"},
+    {name: 'Empty'},
+    {name: 'Empty'}
+];
+
+widgetLists[keys.widgetLists.page1a.right]=[
+    {name:"COG"},
+    {name:"SOG"},
+    {name:"TimeStatus"},
+    {name:"Position"},
+    {name:"AisTarget"}
+];
+
+widgetLists[keys.widgetLists.page2.left]=[
+    {name:"BRG"},
+    {name:"XteDisplay"},
+    {name:"DST"},
+    {name:"DepthDisplay"},
+    {name: "RteCombine"}
+];
+widgetLists[keys.widgetLists.page2.right]=[
+    {name:"COG"},
+    {name:"SOG"},
+    {name:"WindAngle"},
+    {name:"WindSpeed"},
+    {name:"AisTarget"}
+];
+widgetLists[keys.widgetLists.page2a.left]=[
+    {name:"AnchorBearing"},
+    {name:"AnchorDistance"},
+    {name:"AnchorWatchDistance"},
+    {name: "DepthDisplay"},
+    {name: 'Empty'}
+];
+
+widgetLists[keys.widgetLists.page2a.right]=[
+    {name:"COG"},
+    {name:"SOG"},
+    {name:"WindAngle"},
+    {name:"WindSpeed"},
     {name:"AisTarget"}
 ];
 
@@ -156,10 +210,13 @@ Gpspage.prototype.getPageContent=function(){
             if (fw > 0 && fh > 0){
                 fontSize=fontSize*Math.min(fh,fw);
             }
+            let pageKey='page1';
+            if (this.props[keys.secondPage]) pageKey='page2';
+            if (this.props[keys.anchorWatch]) pageKey+='a';
             let p1leftProp={
               className: 'avn_gpsLeftContainer',
-              itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists.page1.left]);},
-              itemList: widgetLists[keys.widgetLists.page1.left],
+              itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists[pageKey].left]);},
+              itemList: widgetLists[keys.widgetLists[pageKey].left],
               style: { fontSize: fontSize},
               onItemClick: (item) => {self.onItemClick(item);},
               layoutParameter:{
@@ -171,8 +228,8 @@ Gpspage.prototype.getPageContent=function(){
             };
             let p1RightProp={
                 className: 'avn_gpsRightContainer',
-                itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists.page1.right]);},
-                itemList: widgetLists[keys.widgetLists.page1.right],
+                itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists[pageKey].right]);},
+                itemList: widgetLists[keys.widgetLists[pageKey].right],
                 style: { fontSize: fontSize},
                 onItemClick: (item) => {self.onItemClick(item);},
                 layoutParameter:{
@@ -184,104 +241,12 @@ Gpspage.prototype.getPageContent=function(){
             };
             return (
                 <div className="avn_panel_fill" onClick={this.goBack}>
-                    {!this.props.anchorWatch ?
-                        !this.props[keys.secondPage]?
-                        <div id='avi_gps_page_left' className="avn_gpsp_hfield">
-                            <WidgetContainer {...p1leftProp}/>
-                        </div>
-                            :
-                            <div id='avi_gps_page_left' className="avn_gpsp_hfield">
-                                <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
-                                    <div className='avn_gpsp_field_label'>WP-BRG</div>
-                                    {self.createElememt('markerCourse', "\u00b0", 4)}
-                                </div>
-
-                                <div id='avi_gpsp_xte_field' className='avn_gpsp_vfield' data-avnfs="28">
-                                    <div id='avi_gpsp_xte_label' className='avn_gpsp_field_label'>WP - XTE</div>
-                                    <canvas id="avi_gpsp_xte"></canvas>
-                                </div>
-                                <div className='avn_gpsp_vfield' data-avnfs="15">
-                                    <div className='avn_gpsp_field_label'>WP-DST</div>
-                                    {self.createElememt('markerDistance', 'nm', 5)}
-                                </div>
-                                <div className='avn_gpsp_vfield' data-avnfs="15">
-                                    <div className='avn_gpsp_field_label'>DEPTH</div>
-                                    {self.createElememt('depthBelowTransducer', 'm', 5)}
-                                </div>
-                                <div className='avn_gpsp_vfield' data-avnfs="15">
-                                    <div id="avi_gpsp_route_dist">
-                                        <div className='avn_gpsp_field_label'>RTE dist</div>
-                                        {self.createElememt('routeRemain', 'nm', 5)}
-                                    </div>
-                                    <div id="avi_gpsp_route_eta">
-                                        <div className='avn_gpsp_field_label'>RTE ETA</div>
-                                        {self.createElememt('routeEta', '', 8)}
-                                    </div>
-                                </div>
-
-                            </div>
-                        :
-                        <div id='avi_gps_page_left' className="avn_gpsp_hfield">
-                            <div className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
-                                <div className='avn_gpsp_field_label'>ACHR-BRG</div>
-                                {self.createElememt('anchorDirection', "\u00b0", 4)}
-                            </div>
-
-                            <div className='avn_gpsp_vfield' data-avnfs="28">
-                                <div className='avn_gpsp_field_label'>ACHR-DST</div>
-                                {self.createElememt('anchorDistance', 'm', 8)}
-                            </div>
-                            <div className='avn_gpsp_vfield' data-avnfs="15">
-                                <div className='avn_gpsp_field_label'>ACHR-WATCH</div>
-                                {self.createElememt('anchorWatchDistance', 'm', 8)}
-                            </div>
-                            <div className='avn_gpsp_vfield' data-avnfs="30">
-                            </div>
-
-
-                        </div>
-
-                    }
-                    {!this.props[keys.secondPage] ?
-                        <div id='avi_gps_page_right' className="avn_gpsp_hfield">
-                            <WidgetContainer {...p1RightProp}/>
-                        </div>
-                        :
-                        <div id='avi_gps_page_right' className="avn_gpsp_hfield">
-                            <div id='avi_gpsp_course' className='avn_gpsp_vfield avn_gpsp_cunit' data-avnfs="28">
-                                <div className='avn_gpsp_field_label'>COG</div>
-                                {self.createElememt('gpsCourse', "\u00b0", 4)}
-                            </div>
-                            <div id='avi_gpsp_speed' className='avn_gpsp_vfield' data-avnfs="28">
-                                <div className='avn_gpsp_field_label'>SOG</div>
-                                {self.createElememt('gpsSpeed', 'kn', 5)}
-                            </div>
-
-                            < div className='avn_gpsp_vfield' data-avnfs="15">
-                                <div className='avn_gpsp_field_label'>Wind Angle</div>
-                                {self.createElememt('windAngle', "\u00b0", 5)}
-                            </div>
-                            <div className='avn_gpsp_vfield' data-avnfs="15">
-                                <div className='avn_gpsp_field_label'>WindSpeed</div>
-                                {self.createElememt('windSpeed', 'm/s', 4)}
-                            </div>
-                            <div className='avn_gpsp_vfield' data-avnfs="15">
-                                <div className='avn_gpsp_field_label'>AIS</div>
-                                <div id="avi_gpsp_aisframe" className="avn_gpsp_value" data-avnrel="22" onClick={
-                                    function (ev) {
-                                        ev.stopPropagation();
-                                        self.gui.showPage('aisinfopage');
-                                    }
-                                }>
-                                    <div id="avi_gpsp_ais_status"></div>
-                                    <div id='avi_gpsp_ais'></div>
-                                    <span id="avi_aisStatusText"></span>
-                                </div>
-                            </div>
-
-
-                        </div>
-                    }
+                    <div id='avi_gps_page_left' className="avn_gpsp_hfield">
+                        <WidgetContainer {...p1leftProp}/>
+                    </div>
+                    <div id='avi_gps_page_right' className="avn_gpsp_hfield">
+                        <WidgetContainer {...p1RightProp}/>
+                    </div>
                     {self.getAlarmWidget()}
                 </div>
             );

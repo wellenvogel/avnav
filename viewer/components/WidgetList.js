@@ -10,14 +10,13 @@ let EditRouteWidget=require('./EditRouteWidget.jsx');
 let CenterDisplayWidget=require('./CenterDisplayWidget.jsx');
 let WindWidget=require('./WindWidget');
 let XteWidget=require('./XteWidget');
+let EmptyWidget=require('./EmptyWidget');
 let widgetList=[
     {
         name: 'SOG',
         default: "0.0",
         unit: "kn",
         caption: 'SOG',
-        //formatter: function(val){ return Formatter.formatDecimal(val,4,1);},
-        wclass: Widget,
         classes: 'avn_speedWidget',
         dataKey: 'gpsSpeed',
         averageKey: 'gpsSpeedAverage'
@@ -27,8 +26,6 @@ let widgetList=[
         default: "---",
         unit: "\u00b0",
         caption: 'COG',
-        //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
-        wclass: Widget,
         classes: 'avn_courseWidget',
         dataKey: 'gpsCourse',
         averageKey: 'gpsCourseAverage'
@@ -38,8 +35,6 @@ let widgetList=[
         name: 'Position',
         default: "-------------",
         caption: 'BOAT',
-        //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
-        wclass: Widget,
         classes: 'avn_posWidget',
         dataKey: 'gpsPosition',
         averageKey: 'gpsPositionAverage'
@@ -61,8 +56,6 @@ let widgetList=[
         default: "----",
         unit: "nm",
         caption: 'DST',
-        //formatter: function(val){ return Formatter.formatDecimal(val,4,1);},
-        wclass: Widget,
         classes: 'avn_distanceWidget',
         dataKey: 'markerDistance'
     },
@@ -71,11 +64,50 @@ let widgetList=[
         default: "---",
         unit: "\u00b0",
         caption: 'BRG',
-        //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
-        wclass: Widget,
         classes: 'avn_courseWidget',
         dataKey: 'markerCourse'
     },
+    {
+        name: 'WindAngle',
+        default: "---",
+        unit: "\u00b0",
+        caption: 'Wind Angle',
+        classes: 'avn_windAngleWidget',
+        dataKey: 'windAngle'
+    },
+    {
+        name: 'WindSpeed',
+        default: "---",
+        unit: "m/s",
+        caption: 'Wind Speed',
+        classes: 'avn_windSpeedWidget',
+        dataKey: 'windSpeed'
+    },
+    {
+        name: 'AnchorBearing',
+        default: "---",
+        unit: "\u00b0",
+        caption: 'ACHR-BRG',
+        dataKey: 'anchorDirection',
+        classes: 'avn_largeWidget'
+    },
+    {
+        name: 'AnchorDistance',
+        default: "---",
+        unit: "m",
+        caption: 'ACHR-DST',
+        dataKey: 'anchorDistance',
+        classes: 'avn_largeWidget'
+    },
+    {
+        name: 'AnchorWatchDistance',
+        default: "---",
+        unit: "m",
+        caption: 'ACHR-WATCH',
+        dataKey: 'anchorWatchDistance',
+        classes: 'avn_largeWidget'
+    },
+
     {
         name: 'RteDistance',
         default: "---",
@@ -146,7 +178,7 @@ let widgetList=[
         name: 'DepthDisplay',
         caption: 'DPT',
         dataKey: 'depthBelowTransducer',
-        classes: 'avn_windWidget',
+        classes: 'avn_depthWidget',
         unit: 'm'
     },
     {
@@ -154,6 +186,10 @@ let widgetList=[
         caption: 'XTE',
         wclass: XteWidget,
         dataKey: 'markerXte'
+    },
+    {
+        name: 'Empty',
+        wclass: EmptyWidget,
     },
     {
         name: 'RteCombine',

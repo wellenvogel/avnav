@@ -422,6 +422,7 @@ html,body {
 @bottomBaseFont: 0.71em;
 @bottomSmallFont: 1em;
 @bottomBigFont: 3em;
+@leftWidgetFont: 1.7em;
 @bottomBigFontDouble: ( 1.8 * @bottomBigFont);
 @gpsMiddleFont: 2em;
 
@@ -478,46 +479,67 @@ html,body {
   }
 }
 .avn_courseWidget{
+  .avn_largeWidget();
+}
+
+.avn_largeWidget{
   width: 7.2em;
   .avn_widgetData{
     font-size: @bottomBigFont;
     text-align: right;
     padding-right: 0.1em;
   }
-  &.avn_doubleHeight .avn_widgetData{
-    font-size: @bottomBigFontDouble;
-  }
-}
-.avn_distanceWidget{
-  width: 9.6em;
-  .avn_widgetData{
-    font-size: @bottomBigFont;
-    text-align: right;
-  }
-  &.avn_doubleHeight .avn_widgetData{
-    font-size: @bottomBigFontDouble;
-  }
-}
-.avn_gpsp_hfield .avn_distanceWidget{
-  .avn_widgetData{
-    font-size: @gpsMiddleFont;
-  }
-}
-.avn_speedWidget{
-  width: 9.6em;
-  .avn_widgetData{
-    font-size: @bottomBigFont;
-    text-align: right;
+  .avn_gpsp_hfield &{
+    .flex-display();
+    .flex-direction(row);
+    .flex-justify-content(flex-end);
+    .flex-align-items(center);
+    .avn_widgetData{
+      margin-top: 0;
+      display: inline-block;
+    }
   }
   &.avn_doubleHeight .avn_widgetData{
     font-size: @bottomBigFontDouble;
   }
 }
-.avn_etaWidget{
-  width: 6.5em;
+
+.avn_smallWidget{
+  width: 7.2em;
   .avn_widgetData{
     font-size: @bottomSmallFont;
     margin-top: 0.55em;
+    text-align: right;
+    padding-right: 0.1em;
+  }
+  .avn_gpsp_hfield &{
+    .flex-display();
+    .flex-direction(row);
+    .flex-justify-content(flex-end);
+    .flex-align-items(center);
+    .avn_widgetData{
+      margin-top: 0;
+      display: inline-block;
+      font-size: @gpsMiddleFont;
+    }
+  }
+  &.avn_doubleHeight .avn_widgetData{
+    font-size: @bottomBigFont;
+  }
+}
+.avn_distanceWidget{
+  .avn_largeWidget();
+  width: 9.6em;
+}
+
+.avn_speedWidget{
+  .avn_largeWidget();
+  width: 9.6em;
+}
+.avn_etaWidget{
+  .avn_smallWidget();
+  width: 6.5em;
+  .avn_widgetData{
     text-align: center;
   }
   .avn_markerName {
@@ -526,26 +548,16 @@ html,body {
     overflow: hidden;
     white-space: nowrap;
   }
-}
-.avn_gpsp_hfield .avn_etaWidget{
-  .flex-display();
-  .flex-direction(row);
-  .flex-justify-content(flex-end);
-  .flex-align-items(center);
-  .avn_widgetData{
-    margin-top: 0;
-    display: inline-block;
-    margin-left: 1em;
-    font-size: 0.75 * @gpsMiddleFont;
+  .avn_gpsp_hfield &{
+    .avn_widgetData{
+      font-size: 0.75 * @gpsMiddleFont;
+    }
   }
 }
+
 .avn_timeStatusWidget{
+  .avn_smallWidget();
   width: 6.5em;
-  .avn_widgetData{
-    font-size: @bottomSmallFont;
-    margin-top: 2em;
-    text-align: center;
-  }
   .avn_boatPositionStatus{
     width: 1.8em;
     height: 1.8em;
@@ -554,25 +566,31 @@ html,body {
     margin-left: -0.9em;
     display: block;
   }
+  .avn_widgetData{
+    margin-top: 1.5em;
+    text-align: center;
+  }
+  .avn_gpsp_hfield &{
+    .avn_boatPositionStatus{
+      position: inherit;
+      margin-left: 0;
+      display: inline-block;
+      vertical-align: middle;
+      left:inherit;
+    }
+    .avn_widgetData{
+      font-size: 2 * @bottomSmallFont;
+      display: inline-block;
+      float: right;
+      text-align: right;
+      margin-top: inherit;
+      vertical-align: middle;
+    }
+  }
+
 }
 
-.avn_gpsp_hfield .avn_timeStatusWidget{
-  .avn_boatPositionStatus{
-    position: inherit;
-    margin-left: 0;
-    display: inline-block;
-    vertical-align: middle;
-    left:inherit;
-  }
-  .avn_widgetData{
-    font-size: 2 * @bottomSmallFont;
-    display: inline-block;
-    float: right;
-    text-align: right;
-    margin-top: inherit;
-    vertical-align: middle;
-  }
-}
+
 
 .avn_timeWidget{
   .avn_widgetData{
@@ -595,6 +613,7 @@ html,body {
 }
 
 .avn_aisTargetWidget{
+  .avn_smallWidget();
   .avn_ais_front{
     font-size: 1.5em;
     display: inline-block;
@@ -612,19 +631,14 @@ html,body {
   .avn_label{
     margin-right: 0.2em;
   }
-}
-.avn_gpsp_hfield .avn_aisTargetWidget{
-  .flex-display();
-  .flex-direction(row);
-  .flex-justify-content(flex-end);
-  .flex-align-items(center);
-  .avn_widgetData{
-    margin-top: 0;
-    display: inline-block;
+
+  .avn_gpsp_hfield & .avn_widgetData{
+    font-size: @bottomSmallFont;
+    .avn_ais_front{
+      font-size: 1em;
+    }
   }
-  > .avn_widgetData ~ .avn_widgetData{
-    margin-left: 1em;
-  }
+
 }
 
 .avn_centerWidget{
@@ -691,7 +705,8 @@ html,body {
 }
 
 .avn_zoomWidget .avn_widgetData {
-  font-size: 1.5em;
+  .avn_smallWidget();
+  font-size: @leftWidgetFont;
   text-align: center;
   padding-top: 0.3em;
 }
@@ -711,23 +726,21 @@ html,body {
 }
 
 .avn_windWidget {
+  .avn_smallWidget();
   .avn_windInner {
     position: relative;
-    height: 1.9em;
+    height: ( @leftWidgetFont * 1.1)
   }
   .avn_widgetData{
-    font-size: 1.7em;
+    font-size: @leftWidgetFont;
     text-align: center;
   }
 }
 
 .avn_depthWidget {
-  .avn_depthInner {
-    position: relative;
-    height: 1.9em;
-  }
+  .avn_smallWidget();
   .avn_widgetData{
-    font-size: 1.7em;
+    font-size: @leftWidgetFont;
     text-align: center;
   }
 }
@@ -1645,7 +1658,7 @@ button.avb_WpaCancel {
     border-top: 1px solid;
     .nightBackFade(#E2DFDF);
     width: 100%;
-    font-size: 0.9em;
+    font-size: 0.7em;
   }
   .avn_widget{
     padding-top: 1.3em;
