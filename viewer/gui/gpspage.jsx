@@ -71,14 +71,14 @@ widgetLists[keys.widgetLists.page2.left]=[
     {name:"BRG"},
     {name:"XteDisplay"},
     {name:"DST"},
-    {name:"DepthDisplay"},
+    {name:"ETA"},
     {name: "RteCombine"}
 ];
 widgetLists[keys.widgetLists.page2.right]=[
     {name:"COG"},
+    {name:"WindGraphics"},
     {name:"SOG"},
-    {name:"WindAngle"},
-    {name:"WindSpeed"},
+    {name:"DepthDisplay"},
     {name:"AisTarget"}
 ];
 widgetLists[keys.widgetLists.page2a.left]=[

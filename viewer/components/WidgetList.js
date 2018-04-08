@@ -11,6 +11,7 @@ let CenterDisplayWidget=require('./CenterDisplayWidget.jsx');
 let WindWidget=require('./WindWidget');
 let XteWidget=require('./XteWidget');
 let EmptyWidget=require('./EmptyWidget');
+let WindGraphics=require('./WindGraphics');
 let widgetList=[
     {
         name: 'SOG',
@@ -186,6 +187,12 @@ let widgetList=[
         caption: 'XTE',
         wclass: XteWidget,
         dataKey: 'markerXte'
+    },
+    {
+        name: 'WindGraphics',
+        caption: 'Wind',
+        wclass: WindGraphics,
+        dataKey: ['windAngle','windSpeed']
     },
     {
         name: 'Empty',
