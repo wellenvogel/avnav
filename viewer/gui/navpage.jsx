@@ -127,7 +127,6 @@ var Navpage=function(){
     this.widgetLists[keys.topWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {name:'CenterDisplay'},
-        {name:'WindDisplay'},
         {name:'DepthDisplay'},
         {name:'AisTarget'},
         {name:'EditRoute'},
