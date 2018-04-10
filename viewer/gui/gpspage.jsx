@@ -55,7 +55,7 @@ widgetLists[keys.widgetLists.page1a.left]=[
     {name:"AnchorBearing"},
     {name:"AnchorDistance"},
     {name:"AnchorWatchDistance"},
-    {name: 'Empty'},
+    {name: 'DepthDisplay'},
     {name: 'Empty'}
 ];
 
@@ -86,14 +86,14 @@ widgetLists[keys.widgetLists.page2a.left]=[
     {name:"AnchorDistance"},
     {name:"AnchorWatchDistance"},
     {name: "DepthDisplay"},
-    {name: 'Empty'}
+    {name: 'Position'}
 ];
 
 widgetLists[keys.widgetLists.page2a.right]=[
     {name:"COG"},
+    {name:"WindGraphics"},
     {name:"SOG"},
-    {name:"WindAngle"},
-    {name:"WindSpeed"},
+    {name:"TimeStatus"},
     {name:"AisTarget"}
 ];
 
@@ -136,7 +136,6 @@ Gpspage.prototype.showPage=function(options){
     if (options && options.secondPage) secondPage=true;
     this.store.storeData(keys.secondPage,secondPage);
     this.handleToggleButton('Gps2',secondPage);
-    this.computeLayout();
 };
 
 
@@ -177,14 +176,14 @@ Gpspage.prototype.getPageContent=function(){
         {key:'Cancel'}
     ];
     this.setButtons(buttons);
-    $(window).on('resize',function(){
-        self.computeLayout();
-    });
-    
-    
-    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
-        self.navEvent(evdata);
-    });
+
+    let changeHandler=function(){};
+    changeHandler.dataChanged=function(store,storekeys){
+        self.store.updateData(keys.anchorWatch,{anchorWatch:!!self.gui.navobject.getRoutingHandler().getAnchorWatch()});
+    };
+
+    this.store.register(changeHandler);
+
     let Main=React.createClass({
         goBack: function(){
             self.returnToLast();
@@ -250,105 +249,13 @@ Gpspage.prototype.getPageContent=function(){
                     {self.getAlarmWidget()}
                 </div>
             );
-        },
-        componentDidMount: function(){
-            self.computeLayout();
-        },
-        componentDidUpdate: function(){
-            self.computeLayout();
         }
     });
     return ItemUpdater(Main,this.store,[keys.anchorWatch,keys.secondPage]);
 };
 
-/**
- * compute the layout for the page
- * we assum n columns of class avn_gpsp_vfield
- * within each solumn we have n boxes of class avn_gpsp_hfield each having
- *   an attr avnfs given the height weight of this field
- * within eacho of such boxes we assume n avn_gpsp_value floating left each
- * having an attr avnrel given a relative with (nearly character units)
- * @private
- */
-Gpspage.prototype.computeLayout=function(){
-    let numhfields=0;
-    this.getDiv().find('.avn_gpsp_hfield').each(function(i,el){
-        numhfields++;
-    });
-    if (numhfields == 0) return;
-    let hfieldw=100/numhfields;
-    this.getDiv().find('.avn_gpsp_hfield').each(function(i,el){
-        $(el).css('width',hfieldw+"%");
-        let vwidth=$(el).width();
-        let vheight=$(el).height();
-        let numhfields=0;
-        let weigthsum=0;
-        let vfieldweights=[];
-        let vfieldlengths=[];
-        $(el).find('.avn_gpsp_vfield').each(function(idx,hel){
-            numhfields++;
-            vfieldweights[idx]=parseFloat($(hel).attr('data-avnfs'));
-            weigthsum+=vfieldweights[idx];
-            let len=0;
-            $(hel).find('.avn_gpsp_value').each(function(vidx,vel){
-                len+=parseFloat($(vel).attr('data-avnrel'));
-            });
-            vfieldlengths[idx]=len;
-        });
-        $(el).find('.avn_gpsp_vfield').each(function(idx,hel){
-            let relheight=vfieldweights[idx]/weigthsum*100;
-            $(hel).css('height',relheight+"%");
-            let fontbase=relheight*vheight*0.7/100;
-            let labelbase=fontbase;
-            let padding=0;
-            if ((fontbase * vfieldlengths[idx]) > vwidth ){
-                let nfontbase = vwidth/(vfieldlengths[idx]);
-                padding=(fontbase-nfontbase)/2;
-                fontbase=nfontbase;
-            }
-            $(hel).find('.avn_gpsp_value').each(function(vidx,vel){
-                $(vel).css('font-size',fontbase+"px");
-                $(vel).css('padding-top',padding+"px");
-            });
-            $(hel).find('.avn_gpsp_unit').each(function(vidx,vel){
-                $(vel).css('font-size',fontbase*0.3+"px");
-            });
-            $(hel).find('.avn_gpsp_field_label').each(function(vidx,vel){
-                $(vel).css('font-size',labelbase*0.2+"px");
-            });
-        });
-
-    });
-    let xh=$('#avi_gpsp_xte_field').height()-$('#avi_gpsp_xte_label').height();
-    try {
-        let canvas=document.getElementById('avi_gpsp_xte');
-        canvas.height = xh;
-        canvas.style.height=xh+"px";
-        canvas.width=$('#avi_gpsp_xte').width();
-    }catch(e){}
-
-};
 
 
-Gpspage.prototype.navEvent=function(evt){
-    let nearestTarget = this.navobject.getAisHandler().getNearestAisTarget();
-    let color="";
-    if (this.gui.properties.getProperties().layers.ais && nearestTarget.cpa ){
-        let txt="CPA: "+this.navobject.getData('aisCpa')+"nm&nbsp;TCPA: "+this.navobject.getData('aisTcpa');
-        $('#avi_gpsp_ais').html(txt);
-        color=this.gui.properties.getAisColor({
-            nearest: true,
-            warning: nearestTarget.warning
-        });
-    }
-    else {
-        $('#avi_gpsp_ais').text("");
-        color="";
-    }
-    $('#avi_gpsp_ais_status').css('background-color',color);
-    this.store.updateData(keys.anchorWatch,{anchorWatch:!!this.gui.navobject.getRoutingHandler().getAnchorWatch()});
-
-};
 
 //-------------------------- Buttons ----------------------------------------
 Gpspage.prototype.btnGpsCenter=function (button,ev){
