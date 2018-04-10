@@ -146,6 +146,7 @@ var propertyDefinitions=function(){
         showWind:new avnav.util.Property(true,"show wind",avnav.util.PropertyType.CHECKBOX),
         showDepth:new avnav.util.Property(true,"show depth",avnav.util.PropertyType.CHECKBOX),
         autoZoom:new avnav.util.Property(true,"automatic zoom",avnav.util.PropertyType.CHECKBOX),
+        windKnots:new avnav.util.Property(true,"wind knots",avnav.util.PropertyType.CHECKBOX),
         nightMode: new avnav.util.Property( false,"NightMode",avnav.util.PropertyType.CHECKBOX),
         nightColorDim:new avnav.util.Property( 60,"Night Dim for Colors",avnav.util.PropertyType.RANGE,[5,100]), //should match @nightModeVale in less
         smallBreak:new avnav.util.Property( 480,"portrait layout below (px)",avnav.util.PropertyType.RANGE,[200,9999]),

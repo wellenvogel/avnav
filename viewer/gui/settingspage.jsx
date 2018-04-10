@@ -26,7 +26,7 @@ var settingsSections={
     Layout:     ["baseFontSize","smallBreak","allowTwoWidgetRows","autoZoom","style.buttonSize","nightFade","nightChartFade","localAlarmSound","iosWorkaroundTime"],
     AIS:        ["aisDistance","aisWarningCpa","aisWarningTpa","aisTextSize","style.aisNormalColor","style.aisNearestColor","style.aisWarningColor"],
     Navigation: ["bearingColor","bearingWidth","navCircleColor","navCircleWidth","navCircle1Radius","navCircle2Radius","navCircle3Radius",
-                    "courseAverageTolerance","gpsXteMax","courseAverageInterval","speedAverageInterval","positionAverageInterval","anchorWatchDefault","anchorCircleWidth","anchorCircleColor"],
+                    "courseAverageTolerance","gpsXteMax","courseAverageInterval","speedAverageInterval","positionAverageInterval","anchorWatchDefault","anchorCircleWidth","anchorCircleColor","windKnots"],
     Track:      ["trackColor","trackWidth","trackInterval","initialTrackLength"],
     Route:      ["routeColor","routeWidth","routingTextSize","routeApproach","routeShowLL"]
 };

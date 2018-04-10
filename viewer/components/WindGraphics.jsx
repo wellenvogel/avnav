@@ -31,10 +31,24 @@ let WindGraphics=React.createClass({
         let classes = "avn_widget avn_WindGraphics " + this.props.classes || ""+ " "+this.props.className||"";
         let style = this.props.style || {};
         setTimeout(self.drawWind,0);
+        let formatter=new Formatter();
+        let windSpeed="";
+        let showKnots=this.props.propertyHandler.getProperties().windKnots;
+        try{
+            windSpeed=parseFloat(this.props.store.getData('windSpeed'));
+            if (showKnots){
+                let nm=this.props.propertyHandler.getProperties().NM;
+                windSpeed=windSpeed*3600/nm;
+            }
+            if (windSpeed < 10) windSpeed=formatter.formatDecimal(windSpeed,1,2);
+            else windSpeed=formatter.formatDecimal(windSpeed,3,0);
+        }catch(e){}
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
                 <canvas className='avn_widgetData' ref={self.canvasRef}></canvas>
                 <div className='avn_widgetInfoLeft'>Wind</div>
+                <div className='avn_widgetInfoRight'>{showKnots?"kn":"m/s"}</div>
+                <div className="avn_windSpeed">{windSpeed}</div>
             </div>
 
         );
@@ -65,9 +79,10 @@ let WindGraphics=React.createClass({
         let f1=w/width;
         let f2=h/height;
         let f=Math.min(f1,f2);
+        let fontSize=f*height/5;
         let mvx=(w-width*f)/2;
         let mvy=(h-height*f)/2;
-        ctx.translate(mvx>0?mvx:0,mvy>0?mvy:0); //move the drawing to the middle
+        ctx.translate(mvx>0?0.9*mvx:0,mvy>0?mvy:0); //move the drawing to the middle
         ctx.scale(f,f);
 
 
@@ -128,9 +143,8 @@ let WindGraphics=React.createClass({
             ctx.stroke();
         }
         // Create text
-        ctx.font = "20px Arial";
-        ctx.fillText(winddirection + "°",width/2*0.85,height/2*0.95);
-        ctx.fillText(windspeed + "m/s",width/2*0.85,height/2*1.15);
+        ctx.font = fontSize+"px Arial";
+        ctx.fillText(formatter.formatDecimal(winddirection,3,0) + "°",width/2*0.7,height/2*1.15);
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2 ,height / 2);
         // Rotate
