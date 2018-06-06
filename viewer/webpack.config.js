@@ -47,10 +47,10 @@ images.forEach(function(el){
 });
 
 if (isProduction) {
-    copyList.push({from: '../libraries/ol3201/ol.js', to:'libraries/ol.js'})
+    copyList.push({from: 'node_modules/openlayers/dist/ol.js', to:'libraries/ol.js'})
 }
 else{
-    copyList.push({from: '../libraries/ol3201/ol-debug.js', to: 'libraries/ol.js'})
+    copyList.push({from: 'node_modules/openlayers/dist/ol-debug.js', to: 'libraries/ol.js'})
 }
 
 var devtool="inline-source-map";
