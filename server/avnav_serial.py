@@ -231,7 +231,7 @@ class SerialReader():
       baud=int(self.param['baud'])
       maxerrors=int(self.param['numerrors'])
       minbaud=int(self.param.get('minbaud') or baud)
-      rates=(38400,19200,9600,4800)
+      rates=(115200,57600,38400,19200,9600,4800)
       autobaud=False
       if minbaud != baud and minbaud != 0:
         autobaud=True
