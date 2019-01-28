@@ -193,7 +193,7 @@ class NMEAParser():
 
   #parse a line of NMEA data and store it in the navdata array      
   def parseData(self,data):
-    darray=data.split(",")
+    darray=data.split("*")[0].split(",")
     if len(darray) < 1 or (darray[0][0:1] != "$" and darray[0][0:1] != '!') :
       AVNLog.debug("invalid nmea data (len<1) "+data+" - ignore")
       return False
