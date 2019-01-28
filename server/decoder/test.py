@@ -49,6 +49,7 @@ class TestDecoder:
           if count%10 == 0:
             self.logger.log("store new value %d"%(count))
             self.dataStore.storeData(self.PATH,count)
+            self.dataStore.storeData("wrong.path",count)
           pass
       else:
         time.sleep(0.1)
