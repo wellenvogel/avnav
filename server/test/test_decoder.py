@@ -1,28 +1,30 @@
 import os
+import threading
 import time
 import inspect
 import sys
 import traceback
 
 from avnav_util import AVNUtil
+from avnav_api import AVNApi
 
 allData={}
 
-class Logger:
-  def log(self,str):
-    print "###%s"%(str)
-
-class Feeder:
-  def fetchFromHistory(self,seq,num):
-    time.sleep(0.5)
-    return ['aha','soso']
-
-class DataStore:
+class ApiImpl(AVNApi):
   def __init__(self):
-    self.patterns=None
+    self.patterns = None # type: dict
+
+  def log(self, str, *args):
+    print "###%s" % (str % args)
+
+  def fetchFromQueue(self, sequence, number=10):
+    time.sleep(0.5)
+    return sequence+2,['aha','soso']
+
   def setPattern(self,pattern):
     self.patterns=pattern
-  def storeData(self,path,value,timestamp=None):
+
+  def addData(self,path,value):
     if self.patterns is not None:
       matches=False
       for p in self.patterns:
@@ -30,16 +32,18 @@ class DataStore:
           matches=True
           break
       if not matches:
-        print "@@ERROR: inavlid path %s"%(path)
+        print "@@ERROR: invalid path %s"%(path)
         return
     print "@@DATA@@:%s->%s"%(path,value)
 
 import os, glob, imp
+
 MANDATORY_METHODS=['initialize','run']
+PREFIX="avnav_decoder_sys_"
 modules = {}
 for path in glob.glob(os.path.join(os.path.dirname(__file__),'..','decoder','[!_]*.py')):
     name, ext = os.path.splitext(os.path.basename(path))
-    modules[name] = imp.load_source("avnav_decoder_sys_"+name, path)
+    modules[name] = imp.load_source(PREFIX+name, path)
 print modules
 
 print "AllModules="
@@ -51,20 +55,25 @@ for module in modules:
     ic=inspect.isclass(obj)
     print "X: %s.%s => %s"%(module,name,ic)
     if ic:
+      print "C: %s <=> %s"%(obj.__module__,PREFIX+module)
+      if obj.__module__ != (PREFIX+module):
+        continue
       hasMethods=True
       for m in MANDATORY_METHODS:
+        if not hasattr(obj,m):
+          continue
         mObj=getattr(obj,m)
         if not callable(mObj):
           hasMethods=False
           break
       if hasMethods:
         print "starting %s"%(name)
-        store = DataStore()
+        api = ApiImpl()
         startDecoder=True
         x=None
         try:
           x=obj()
-          d=x.initialize(Logger(),store,Feeder())
+          d=x.initialize(api)
           mData=d.get('data')
           if mData is None:
             raise Exception("no 'data' field in init result")
@@ -77,13 +86,15 @@ for module in modules:
                 if allData.get(path) is not None:
                   raise Exception("entry for %s already defined: %s"%(path,allData.get(path)))
                 allData[path]=entry
-                store.setPattern(mData)
+                api.setPattern(mData)
         except :
           print "##ERROR: cannot start %s:%s"%(name,traceback.format_exc())
           startDecoder=False
         if startDecoder and x is not None:
           try:
-            x.run()
+            dt=threading.Thread(target=x.run)
+            dt.setDaemon(True)
+            dt.start()
           except:
             print "##ERROR: cannot start %s, errors in run %s"%(name,traceback.format_exc())
 
