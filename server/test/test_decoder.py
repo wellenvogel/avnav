@@ -13,9 +13,16 @@ allData={}
 class ApiImpl(AVNApi):
   def __init__(self):
     self.patterns = None # type: dict
+    self.prefix=''
 
   def log(self, str, *args):
-    print "###%s" % (str % args)
+    print "###LOG### %s%s" % (self.prefix,str % args)
+
+  def error(self, str, *args):
+    print "###ERROR# %s%s" % (self.prefix,str % args)
+
+  def debug(self, str, *args):
+    print "###DEBUG# %s%s" % (self.prefix,str % args)
 
   def fetchFromQueue(self, sequence, number=10):
     time.sleep(0.5)
@@ -38,25 +45,27 @@ class ApiImpl(AVNApi):
 
 import os, glob, imp
 
-MANDATORY_METHODS=['initialize','run']
-PREFIX="avnav_decoder_sys_"
-modules = {}
-for path in glob.glob(os.path.join(os.path.dirname(__file__),'..','decoder','[!_]*.py')):
+def loadModulesFromDir(dir,logger,prefix=''):
+  modules = {}
+  for path in glob.glob(os.path.join(dir, '[!_]*.py')):
     name, ext = os.path.splitext(os.path.basename(path))
-    modules[name] = imp.load_source(PREFIX+name, path)
-print modules
+    try:
+      modules[prefix+name] = imp.load_source(prefix + name, path)
+      logger.log("loaded %s as %s",path, prefix+name)
+    except:
+      logger.error("unable to load %s:%s",path,traceback.format_exc())
+    return modules
 
-print "AllModules="
-print sys.modules.keys()
-
-for module in modules:
-  for name in dir(modules[module]):
-    obj=getattr(modules[module],name)
+def instantiateHandlersFromModule(modulename,module,allData,logger):
+  rt=[] #the list of instantiated objects
+  MANDATORY_METHODS = ['initialize', 'run']
+  for name in dir(module):
+    obj=getattr(module,name)
     ic=inspect.isclass(obj)
-    print "X: %s.%s => %s"%(module,name,ic)
+    logger.debug("X: %s.%s => %s"%(module,name,ic))
     if ic:
-      print "C: %s <=> %s"%(obj.__module__,PREFIX+module)
-      if obj.__module__ != (PREFIX+module):
+      logger.debug("C: %s <=> %s"%(obj.__module__,module))
+      if obj.__module__ != (modulename):
         continue
       hasMethods=True
       for m in MANDATORY_METHODS:
@@ -67,13 +76,14 @@ for module in modules:
           hasMethods=False
           break
       if hasMethods:
-        print "starting %s"%(name)
+        logger.log("creating %s"%(name))
         api = ApiImpl()
+        api.prefix="(%s): "%name
         startDecoder=True
-        x=None
+        handlerInstance=None
         try:
-          x=obj()
-          d=x.initialize(api)
+          handlerInstance=obj()
+          d=handlerInstance.initialize(api)
           mData=d.get('data')
           if mData is None:
             raise Exception("no 'data' field in init result")
@@ -86,17 +96,35 @@ for module in modules:
                 if allData.get(path) is not None:
                   raise Exception("entry for %s already defined: %s"%(path,allData.get(path)))
                 allData[path]=entry
-                api.setPattern(mData)
+            api.setPattern(mData)
         except :
-          print "##ERROR: cannot start %s:%s"%(name,traceback.format_exc())
+          logger.error("##ERROR: cannot start %s:%s"%(name,traceback.format_exc()))
           startDecoder=False
-        if startDecoder and x is not None:
-          try:
-            dt=threading.Thread(target=x.run)
-            dt.setDaemon(True)
-            dt.start()
-          except:
-            print "##ERROR: cannot start %s, errors in run %s"%(name,traceback.format_exc())
+        if startDecoder:
+          rt.append(handlerInstance)
+  return rt
+
+PREFIX="avnav_decoder_sys_"
+logger=ApiImpl()
+modules=loadModulesFromDir(os.path.join(os.path.dirname(__file__),'..','decoder'),logger,PREFIX)
+
+print modules
+
+allHandlers=[]
+for modulname in modules:
+  handlers=instantiateHandlersFromModule(modulname,modules[modulname],allData,logger)
+  allHandlers+=handlers
+
+print "created %d handlers"%len(allHandlers)
+
+for handler in allHandlers:
+    try:
+      dt=threading.Thread(target=handler.run)
+      dt.setDaemon(True)
+      dt.start()
+      print "###INFO: started %s"%handler
+    except:
+      print "##ERROR: cannot start %s, errors in run %s"%(handler,traceback.format_exc())
 
 print "Parameter Listing:"
 for p in allData.keys():
