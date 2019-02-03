@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2013,2019 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -25,8 +25,6 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-__author__="Andreas"
-__date__ ="$29.06.2014 21:23:34$"
 
 import json
 import threading
@@ -36,93 +34,63 @@ import traceback
 from avnav_util import *
 
 #a data entry
-#data is the decoded string
+#data is the decoded dict
+#for AIS the key is BASE_KEY_AIS.<mmsi>
 class AVNDataEntry():
-  EMPTY_CLASS="EMPTY"
+  SOURCE_KEY_AIS='AIS'
+  SOURCE_KEY_GPS='GPS'
+  SOURCE_KEY_OTHER='OTHER'
+  BASE_KEY_GPS='gps'
+  BASE_KEY_AIS='ais'
   #AIS messages we store
   knownAISTypes=(1,2,3,5,18,19,24)
-  def __init__(self):
-    self.key=self.createKey(self.EMPTY_CLASS,'')
-    self.data={'class':self.EMPTY_CLASS,'time':None}
-    self.timestamp=None
-    self.source=None
+  def __init__(self,key,data,timestamp=None,isAis=False):
+    self.key=key  # type: str
+    self.data=data # type: dict
+    if timestamp is not None:
+      self.timestamp=timestamp # type: timestamp
+    else:
+      self.timestamp=AVNUtil.utcnow()
+    self.source=None # type: str
+    self._isAis=isAis # type: bool
+    self._sourceKey=self.SOURCE_KEY_AIS if isAis else self.SOURCE_KEY_OTHER # type: str
+    if self.key.startswith(self.BASE_KEY_GPS) and not self.isAis():
+      self.source=self.SOURCE_KEY_GPS
+    self._priority=0 #set a priority to allow for higher prio to overwrite
 
-  #create a key from prefix and suffix
-  @classmethod
-  def createKey(cls,prefix,suffix):
-    return prefix+"-"+suffix
-    
-  #create from the json decoded data
-  #data must contain a class member and for TPV a type member
-  @classmethod
-  def fromData(cls,data):
-    dcls=data.get('class');
-    if dcls is None:
-      AVNLog.debug("data %s does not contain a class - ignore",unicode(data))
-      return None
-    if dcls == 'TPV':
-      tag=data.get('tag')
-      if tag is None:
-        AVNLog.debug("no tag for TPV in %s - ignore",unicode(data))
-        return None
-      rt=AVNDataEntry()
-      rt.key=cls.createKey(dcls, tag)
-      rt.data=data
-      rt.source=data.get('source')
-      AVNLog.ld("data item created",rt)
-      return rt
-    if dcls == 'SKY':
-      rt=AVNDataEntry()
-      rt.key=cls.createKey(dcls,'')
-      rt.data=data
-      rt.source=data.get('source')
-      AVNLog.ld("data item created",rt)
-      return rt
-    if dcls == 'AIS':
-      try:
-        type=int(data.get('type'))
-      except:
-        AVNLog.ld("no type in AIS data",data)
-        return None
-      if not type in cls.knownAISTypes:
-        AVNLog.debug("ignore type %d in AIS data %s",type,unicode(data))
-        return None
-      mmsi=data.get('mmsi')
-      if mmsi is None:
-        AVNLog.debug("AIS data without mmsi - ignore: %s",unicode(data))
-        return None
-      rt=AVNDataEntry()
-      rt.key=cls.createKey(dcls, str(mmsi))
-      rt.data=data
-      rt.source=data.get('source')
-      AVNLog.ld("data item created",rt)
-      return rt
-        
-    #we should not arrive here...
-    AVNLog.debug("unknown class in %s - ignore",unicode(data))
-    return None
-    
-  
-  #decode from json
-  @classmethod
-  def fromJson(cls,jsondata):
-    data=None
-    try:
-      data=json.loads(jsondata)
-    except:
-      AVNLog.debug("unable to parse json data %s : %s",jsondata,traceback.format_exc())
-      return None
-    return cls.fromData(data)
-  
   def __unicode__(self):
-    rt="AVNDataEntry: %s(ts=%f)=%s" % (self.key,(self.timestamp if self.timestamp is not None else 0),pprint.pformat(self.data))
+    rt="AVNDataEntry: %s(ts=%s)=%s" % (self.key,(self.timestamp if self.timestamp is not None else 0),pprint.pformat(self.data))
     return rt
   def toJson(self):
+    rt={
+      'key':self.key,
+      'source':self.source,
+      'timestamp':self.timestamp,
+      'data':self.data,
+      'isAis':self._isAis
+    }
     return json.dumps(self.data)
+  def setSource(self,source):
+    self.source=source
+  def isAis(self):
+    return self._isAis
+  def getSourceKey(self):
+    return self._sourceKey
+  def setPriority(self,priority=0):
+    """
+    set the priority of an entry
+    @param priority: the priority, 0 being lowest (default)
+    @type priority: int
+    @return:
+    """
+    self._priority=priority
+
+  def getPriority(self):
+    return self._priority
   
 
 #the main List of navigational items received
-class AVNNavData():
+class AVNStore():
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
@@ -133,6 +101,11 @@ class AVNNavData():
     self.ownMMSI=ownMMSI
     self.prefixCounter={} #contains the number of entries for TPV, AIS,...
     self.lastSources={} #contains the last source for each class
+    # a description of the already registered keys
+    # TODO: prevent data without registered key
+    self.registeredKeys={} # type: dict
+    self.keySources={}
+
 
   
   #add an entry to the list
@@ -141,10 +114,14 @@ class AVNNavData():
   #this avoids confusion when we have to change the system time...
   #this is always done by the main thread!
   def addEntry(self,navEntry):
-    if navEntry.timestamp is None:
-      navEntry.timestamp=AVNUtil.utcnow()
+    """
+
+    @param navEntry: the entry to be added
+    @type  navEntry: AVNDataEntry
+    @return:
+    """
     AVNLog.ld("AVNNavData add entry",navEntry)
-    if navEntry.data['class'] == 'AIS':
+    if navEntry.isAis():
       mmsi=None
       try:
         mmsi=str(navEntry.data['mmsi'])
@@ -153,11 +130,16 @@ class AVNNavData():
       if self.ownMMSI != '' and mmsi is not None and self.ownMMSI == mmsi:
           AVNLog.debug("omitting own AIS message mmsi %s",self.ownMMSI)
           return
+    else:
+      if self.registeredKeys.get(navEntry.key) is None:
+        AVNLog.error("key %s is not registered in store" % navEntry.key)
+        raise Exception("key %s is not registered in store" % navEntry.key)
     self.listLock.acquire()
-    if navEntry.key in self.list:
+    key=navEntry.key
+    if key in self.list:
       #for AIS type 5/24 messages we merge them with an existing message
       #for others we merge back...
-      if navEntry.data['class'] == 'AIS':
+      if navEntry.isAis():
         if navEntry.data.get('type')=='5' or navEntry.data.get('type')=='24':
           AVNLog.debug("merging AIS type 5/24 with existing message")
           for k in self.ais5mergeFields:
@@ -174,26 +156,28 @@ class AVNNavData():
               navEntry.data[k]=v
           self.list[navEntry.key]=navEntry
         #always replace here and merge back
-        self.lastSources[navEntry.data['class']]=navEntry.source
+        self.lastSources[navEntry.getSourceKey()]=navEntry.source
         self.listLock.release()
-        x=navEntry.key
         return
       else:
-        if self.list[navEntry.key].timestamp > navEntry.timestamp:
-          AVNLog.debug("not adding entry, older ts %s",unicode(navEntry))
+        if self.list[key].timestamp > navEntry.timestamp or self.list[key].priority > navEntry.getPriority():
+          AVNLog.debug("not adding entry, older ts %s/lower priority",unicode(navEntry))
           self.listLock.release()
           return
-    self.list[navEntry.key]=navEntry
-    self.lastSources[navEntry.data['class']]=navEntry.source
-    
+    self.list[key]=navEntry
+    self.lastSources[navEntry.getSourceKey()]=navEntry.source
     AVNLog.debug("adding entry %s",unicode(navEntry))
     self.listLock.release()
   #check for an entry being expired
   #the list must already being locked!
   #returns the entry or None
-  def __checkExpired__(self,entry,key):
+  def __checkExpired__(self,entry,key=None):
+    if entry is None:
+      return None
+    if key is None:
+      key=entry.key
     et=AVNUtil.utcnow()-self.expiryTime
-    if entry.data['class']=='AIS':
+    if entry.isAis():
       et=AVNUtil.utcnow()-self.aisExpiryTime
     if entry.timestamp < et:
       AVNLog.debug("remove expired entry %s, et=%s ",unicode(entry),unicode(et))
@@ -211,12 +195,11 @@ class AVNNavData():
     rt={}
     if len(suffixlist) == 0:
       #return all
-      searchprefix=AVNDataEntry.createKey(prefix,'')
-      prfxlen=len(searchprefix)
-      self.listLock.acquire();
+      searchprefix=prefix
+      self.listLock.acquire()
       for k in self.list.keys():
         e=self.list[k]
-        if e.key[0:prfxlen]==searchprefix:
+        if e.key.startswith(searchprefix):
           rt[e.key]=e
       nrt={}
       for k in rt.keys():
@@ -230,8 +213,9 @@ class AVNNavData():
       self.listLock.release()
       return nrt
     for sfx in suffixlist:
-      k=AVNDataEntry.createKey(prefix, sfx)
+      k=prefix+"."+sfx
       entry=self.list.get(k)
+      entry=self.__checkExpired__(entry)
       if entry is not None:
         rt[k]=entry
     return rt
@@ -242,23 +226,19 @@ class AVNNavData():
     AVNLog.ld("collected entries",rt)
     return json.dumps(rt)
   
-  def getMergedEntries(self,prefix,suffixlist):
+  def getMergedEntries(self,prefix,suffixlist,isAis=False):
     fe=self.getFilteredEntries(prefix, suffixlist)
-    rt=AVNDataEntry()
-    rt.key=rt.createKey(prefix, '')
+    rt=AVNDataEntry(prefix,{},isAis=isAis)
+    rt.key=prefix
     for kf in fe:
       e=fe[kf]
+      if e.isAis() != isAis:
+        continue
       if rt.timestamp is None:
         rt.timestamp=e.timestamp
       newer=False
       if e.timestamp > rt.timestamp:
         newer=True
-      k='class'
-      if not k in rt.data or rt.data[k] == rt.EMPTY_CLASS:
-        rt.data[k]=e.data[k]
-      if e.data[k] != rt.data[k] and rt.data[k] != rt.EMPTY_CLASS:
-        AVNLog.debug("mixing different classes in merge, ignore %s",unicode(e))
-        continue
       for k in e.data.keys():
         if not (k in rt.data) or newer or rt.data.get(k) is None:
           rt.data[k] = e.data[k]
@@ -281,9 +261,25 @@ class AVNNavData():
     if rt is None:
       rt=""
     return rt
+
+  def registerKey(self,key,keyDescription,source=None):
+    """
+    register a new key description
+    raise an exception if there is already a key with the same name or a prefix of it
+    @param key:
+    @param keyDescription:
+    @return:
+    """
+    for existing in self.registeredKeys.keys():
+      if existing == key or key.startswith(existing):
+        raise Exception("key %s already registered from %s:%s"%(key,existing,self.registeredKeys[existing]))
+    self.registeredKeys[key]=keyDescription
+    self.keySources[key]=source
+
+
   
   def __unicode__(self):
-    rt="AVNNavData \n"
+    rt="%s \n"%self.__class__.__name__
     idx=0
     self.listLock.acquire()
     for k in self.list.keys():

@@ -25,7 +25,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+import re
 import threading
 import copy
 from avnav_util import Enum
@@ -191,12 +191,12 @@ class AVNWorker(threading.Thread):
     pass
   #should be overridden
   def getName(self):
-    return "BaseWorker"
+    return re.sub("^AVN", "", self.getConfigName())
   
   #get the XML tag in the config file that describes this worker
   @classmethod
   def getConfigName(cls):
-    raise Exception("getConfigName must be overridden by derived class")
+    return cls.__name__
   #return the default cfg values
   #if the parameter child is set, the parameter for a child node
   #must be returned, child nodes are added to the parameter dict
@@ -220,6 +220,11 @@ class AVNWorker(threading.Thread):
   @classmethod
   def parseConfig(cls,attrs,default):
     sparam=copy.deepcopy(default)
+    if len(sparam.keys()) == 0:
+      #special case: accept all attributes
+      for k in attrs.keys():
+        sparam[k]=attrs[k]
+      return sparam
     for k in sparam.keys():
       dv=sparam[k]
       if (isinstance(dv,str)):

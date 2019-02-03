@@ -49,7 +49,7 @@ import xml.etree.ElementTree as ET
 from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
-from avnav_data import *
+from avnav_store import *
 from avnav_nmea import *
 import avnav_handlerList
 

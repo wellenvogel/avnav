@@ -6,14 +6,11 @@ from avnav_api import AVNApi
 
 class TestDecoder:
   PATH="gps.test"
-  def __init__(self):
-    self.api = None # type: AVNApi
 
-  def initialize(self,api):
+  @classmethod
+  def pluginInfo(cls):
     """
-    initialize a decoder
-    @param api: the api to communicate with avnav
-    @type  api: AVNApi
+    the description for the module
     @return: a dict with the content described below
              mandatory parts:
                * description
@@ -24,19 +21,30 @@ class TestDecoder:
                  * unit to be displayed
                  * maxvalue - a value being the max number /string to size GUI elements
     """
-    self.api=api
     return {
       'description': 'a test decoder',
-      'name': self.__class__.__name__,
+      'name': cls.__name__,
       'data': [
         {
-          'path':self.PATH,
-          'description':'output of testdecoder',
-          'unit':'',
-          'maxvalue':'0000'
+          'path': cls.PATH,
+          'description': 'output of testdecoder',
+          'unit': '',
+          'maxvalue': '0000'
         }
       ]
     }
+
+  def __init__(self,api):
+    """
+        initialize a decoder
+        do any checks here and throw an exception on error
+        do not yet start any threads!
+        @param api: the api to communicate with avnav
+        @type  api: AVNApi
+    """
+    self.api = api # type: AVNApi
+
+
 
   def run(self):
     """

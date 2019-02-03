@@ -30,6 +30,9 @@ import optparse
 import signal
 import datetime
 
+from avnav_nmea import NMEAParser
+from avnav_store import AVNStore
+
 try:
   import create_overview
 except:
@@ -42,7 +45,7 @@ except:
 from avnav_util import *
 from avnav_config import *
 import avnav_handlerList
-from avnav_data import *
+from avnav_store import *
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 
 loggingInitialized=False
@@ -168,7 +171,8 @@ def main(argv):
             httpServer.registerRequestHandler(h,handledCommands[h],handler)
         else:
           httpServer.registerRequestHandler('api',handledCommands,handler)
-  navData=AVNNavData(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
+  navData=AVNStore(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
+  NMEAParser.registerKeys(navData)
   level=logging.INFO
   filename=os.path.join(datadir,"log","avnav.log")
   if not options.verbose is None:
@@ -225,7 +229,7 @@ def main(argv):
         navData.reset()
         hasFix=False
       lastutc=curutc
-      curTPV=navData.getMergedEntries("TPV", [])
+      curTPV=navData.getMergedEntries(AVNDataEntry.BASE_KEY_GPS, [])
       if ( not curTPV.data.get('lat') is None) and (not curTPV.data.get('lon') is None):
         #we have some position
         if not hasFix:
@@ -282,7 +286,7 @@ def main(argv):
           AVNLog.warn("lost GPS fix")
         hasFix=False
       #AVNLog.debug("entries for TPV: "+unicode(curTPV))
-      curAIS=navData.getMergedEntries("AIS",[])
+      curAIS=navData.getMergedEntries(AVNDataEntry.BASE_KEY_AIS,[])
       #AVNLog.debug("entries for AIS: "+unicode(curAIS))
   except Exception as e:
     AVNLog.error("Exception in main %s",traceback.format_exc())

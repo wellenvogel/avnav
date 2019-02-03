@@ -30,7 +30,7 @@ import datetime
 import traceback
 import pprint
 from avnav_util import *
-from avnav_data import *
+from avnav_store import *
 hasAisDecoder=False
 try:
   import ais
@@ -43,21 +43,50 @@ __date__ ="$29.06.2014 21:28:01$"
 #an NMEA parser
 #parses some simple NMEA setences and uses ais from the gpsd project to parse AIS setences
 #adds parsed data to a navdata struct
+class Key:
+  def __init__(self,key,description,unit=None):
+    self.key=key
+    self.description=description
+    self.unit=unit
 
 class NMEAParser():
   NM=AVNUtil.NM
   #AIS field translations
   aisFieldTranslations={'msgtype':'type'}
-  
+
+  #we will add the GPS base to all entries
+  GPS_DATA=[
+    Key('lat','gps latitude'),
+    Key('lon','gps longitude'),
+    Key('mode','nmea mode 0/2'),
+    Key('track','course','°'),
+    Key('speed','speed in m/s','m/s'),
+    Key('windAngle','wind direction','°'),
+    Key('windReference','wind reference: R or T'),
+    Key('windSpeed','wind speed in m/s','m/s'),
+    Key('depthBelowTransducer','depthBelowTransducer in m','m'),
+    Key('depthBelowWaterline','depthBelowWaterlinein m','m'),
+    Key('depthBelowKeel','depthBelowKeel in m','m'),
+    Key('source','source of GPS info')
+  ]
+
+  @classmethod
+  def registerKeys(cls,navdata):
+    for key in cls.GPS_DATA:
+      key.key=AVNDataEntry.BASE_KEY_GPS+"."+key.key
+      navdata.registerKey(key.key,key.__dict__,cls.__name__)
   
   def __init__(self,navdata):
     self.payloads = {'A':'', 'B':''}    #AIS paylod data
-    self.navdata=navdata
+    self.navdata=navdata # type: AVNStore
+
+
   #------------------ some nmea data specific methods -------------------
   #add a valid dataset to nav data
   #timedate is a datetime object as returned by gpsTimeToTime
   #fill this additionally into the time part of data
-  def addToNavData(self,data,timedate):
+  def addToNavData(self,data,timedate=None,priority=None):
+    t=None
     if timedate is not None:
       t=timedate.isoformat()
       #seems that isoformat does not well harmonize with OpenLayers.Date
@@ -65,9 +94,14 @@ class NMEAParser():
       #as we are at GMT we should have a "Z" at the end
       if not t[-1:]=="Z":
         t+="Z"
-      data['time']=t
-    de=AVNDataEntry.fromData(data)
-    self.navdata.addEntry(de)
+    for dk in data.keys():
+      if dk == 'class':
+        continue
+      key=AVNDataEntry.BASE_KEY_GPS+"."+dk
+      de=AVNDataEntry(key,data[dk],t)
+      if priority is not None:
+        de.setPriority(priority)
+      self.navdata.addEntry(de)
     
   #returns an datetime object containing the current gps time
   @classmethod
@@ -244,7 +278,7 @@ class NMEAParser():
         rt['speed']=float(darray[7] or '0')*self.NM/3600
         rt['track']=float(darray[8] or '0')
         gpsdate=darray[9]
-        self.addToNavData(rt, self.gpsTimeToTime(gpstime, gpsdate))
+        self.addToNavData(rt, self.gpsTimeToTime(gpstime, gpsdate),priority=1)
         return True
       if tag == 'MWV':
         '''
@@ -416,7 +450,10 @@ class NMEAParser():
         rt[name]=val
       except:
         pass
-    de=AVNDataEntry.fromData(rt)
-    if de is not None:
-      self.navdata.addEntry(de)
+    mmsi=rt.get('mmsi')
+    if mmsi is None:
+      AVNLog.debug("ignoring AIS data without mmsi, %s"%rt)
+      return
+    de=AVNDataEntry(AVNDataEntry.BASE_KEY_AIS+"."+str(mmsi),rt,isAis=True)
+    self.navdata.addEntry(de)
     
