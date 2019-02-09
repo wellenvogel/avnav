@@ -494,9 +494,9 @@ class AVNRouter(AVNWorker):
     if not self.currentLeg.active:
       self.startStopAlarm(False)
       return
-    curTPV=self.navdata.getMergedEntries("TPV", [])
-    lat=curTPV.data.get('lat')
-    lon=curTPV.data.get('lon')
+    curGps=self.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS,1)
+    lat=curGps.get('lat')
+    lon=curGps.get('lon')
     if lat is None or lon is None:
       self.startStopAlarm(False)
       return
@@ -590,10 +590,10 @@ class AVNRouter(AVNWorker):
         self.WpNr+=1
 
       if self.startWp is not None and self.endWp is not None:
-        curTPV=self.navdata.getMergedEntries("TPV", [])
-        lat=curTPV.data.get('lat')
-        lon=curTPV.data.get('lon')
-        kn=curTPV.data.get('speed')
+        curGps=self.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS,1)
+        lat=curGps.get('lat')
+        lon=curGps.get('lon')
+        kn=curGps.get('speed')
         if kn is None:
           kn=0
         else:
@@ -640,9 +640,9 @@ class AVNRouter(AVNWorker):
       will only be called if self.currentLeg.anchorDistance is not none
   '''
   def computeAnchor(self):
-    curTPV = self.navdata.getMergedEntries("TPV", [])
-    lat = curTPV.data.get('lat')
-    lon = curTPV.data.get('lon')
+    curGps = self.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS,1)
+    lat = curGps.get('lat')
+    lon = curGps.get('lon')
     if lat is None or lon is None:
       self.startStopAlarm(False,'anchor')
       if self.activatedAlarms.get('gps') is None:

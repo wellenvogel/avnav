@@ -229,18 +229,18 @@ def main(argv):
         navData.reset()
         hasFix=False
       lastutc=curutc
-      curTPV=navData.getMergedEntries(AVNDataEntry.BASE_KEY_GPS, [])
-      if ( not curTPV.data.get('lat') is None) and (not curTPV.data.get('lon') is None):
+      curGpsData=navData.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS)
+      if ( not curGpsData.get('lat') is None) and (not curGpsData.get('lon') is None):
         #we have some position
         if not hasFix:
-          AVNLog.info("new GPS fix lat=%f lon=%f, time=%s, currentTime=%s",curTPV.data.get('lat'),curTPV.data.get('lon'),curTPV.data.get('time'),curutc.isoformat())
+          AVNLog.info("new GPS fix lat=%f lon=%f, time=%s, currentTime=%s",curGpsData.data.get('lat'),curGpsData.data.get('lon'),curGpsData.data.get('time'),curutc.isoformat())
           hasFix=True
         #settime handling
-        curTPVtime=curTPV.data.get('time')
-        if not curTPVtime is None:
+        curGpsTime=curGpsData.get('time')
+        if not curGpsTime is None:
           try:
-            AVNLog.debug("checking time diffs - new gpsts=%s",curTPVtime)
-            curts=AVNUtil.gt(curTPVtime)
+            AVNLog.debug("checking time diffs - new gpsts=%s",curGpsTime)
+            curts=AVNUtil.gt(curGpsTime)
             AVNLog.debug("time diff check system utc %s - gps utc %s",curutc.isoformat(),curts.isoformat())
             allowedDiff=baseConfig.getIntParam('systimediff')
             settimecmd=baseConfig.getStringParam('settimecmd')
@@ -286,8 +286,7 @@ def main(argv):
           AVNLog.warn("lost GPS fix")
         hasFix=False
       #AVNLog.debug("entries for TPV: "+unicode(curTPV))
-      curAIS=navData.getMergedEntries(AVNDataEntry.BASE_KEY_AIS,[])
-      #AVNLog.debug("entries for AIS: "+unicode(curAIS))
+
   except Exception as e:
     AVNLog.error("Exception in main %s",traceback.format_exc())
     sighandler(None, None)

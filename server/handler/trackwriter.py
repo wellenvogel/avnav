@@ -36,6 +36,7 @@ import sys
 import traceback
 
 from avnav_config import AVNConfig
+from avnav_store import AVNDataEntry
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
@@ -304,7 +305,7 @@ class AVNTrackWriter(AVNWorker):
     loopCount=0
     while True:
       loopCount+=1
-      currentTime=datetime.datetime.utcnow();
+      currentTime=datetime.datetime.utcnow()
       if initial:
         theConverter=threading.Thread(target=self.converter)
         theConverter.daemon=True
@@ -343,22 +344,22 @@ class AVNTrackWriter(AVNWorker):
         if loopCount >= 10:
           self.cleanupTrack()
           loopCount=0
-        gpsdata=self.navdata.getMergedEntries('TPV',[])
-        lat=gpsdata.data.get('lat')
-        lon=gpsdata.data.get('lon')
+        gpsdata=self.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS,1)
+        lat=gpsdata.get('lat')
+        lon=gpsdata.get('lon')
         if not lat is None and not lon is None:
           if lastLat is None or lastLon is None:
-            AVNLog.ld("write track entry",gpsdata.data)
-            self.writeLine(f,currentTime,gpsdata.data)
+            AVNLog.ld("write track entry",gpsdata)
+            self.writeLine(f,currentTime,gpsdata)
             self.track.append((currentTime,lat,lon))
             lastLat=lat
             lastLon=lon
           else:
             dist=AVNUtil.distance((lastLat,lastLon), (lat,lon))*AVNUtil.NM
             if dist >= self.getFloatParam('mindistance'):
-              gpsdata.data['distance']=dist
-              AVNLog.ld("write track entry",gpsdata.data)
-              self.writeLine(f,currentTime,gpsdata.data)
+              gpsdata['distance']=dist
+              AVNLog.ld("write track entry",gpsdata)
+              self.writeLine(f,currentTime,gpsdata)
               self.track.append((currentTime,lat,lon))
               lastLat=lat
               lastLon=lon

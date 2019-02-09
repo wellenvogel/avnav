@@ -669,26 +669,26 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     return json.dumps(frt)
   
   def handleGpsRequest(self,requestParam):
-    rtv=self.server.navdata.getMergedEntries("TPV",[])
+    rtv=self.server.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS)
     #we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
     status="red"
-    mode=rtv.data.get('mode')
+    mode=rtv.get('mode')
     if mode is not None:
       if int(mode) == 1:
         status="yellow"
       if int(mode) == 2 or int(mode) == 3:
-        if rtv.data.get("lat") is not None and rtv.data.get('lon') is not None:
+        if rtv.get("lat") is not None and rtv.get('lon') is not None:
           status="green"
         else:
           status="yellow"
-    src=self.server.navdata.getLastSource('TPV')
+    src=self.server.navdata.getLastSource(AVNDataEntry.SOURCE_KEY_GPS)
     #TODO: add info from sky
-    sky=self.server.navdata.getMergedEntries("SKY",[])
+    sky=self.server.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_SKY)
     visible=0
     used=0
     try:
-      if sky.data.get("satellites") is not None:
-        for sv in sky.data['satellites']:
+      if sky.get("satellites") is not None:
+        for sv in sky['satellites']:
           visible=visible+1
           if sv['used']:
             used=used+1
@@ -696,20 +696,20 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       AVNLog.info("unable to get sat count: %s",traceback.format_exc())
     statusNmea={"status":status,"source":src,"info":"Sat %d visible/%d used"%(visible,used)}
     status="red"
-    numAis=self.server.navdata.getCounter('AIS')
+    numAis=self.server.navdata.getCounter(AVNDataEntry.SOURCE_KEY_AIS)
     if numAis > 0:
       status="green"
-    src=self.server.navdata.getLastSource('AIS')
+    src=self.server.navdata.getLastSource(AVNDataEntry.SOURCE_KEY_AIS)
     statusAis={"status":status,"source":src,"info":"%d targets"%(numAis)}
-    rtv.data["raw"]={"status":{"nmea":statusNmea,"ais":statusAis}}
+    rtv["raw"]={"status":{"nmea":statusNmea,"ais":statusAis}}
     alarmHandler = self.server.findHandlerByName("AVNAlarmHandler")
     if alarmHandler is not None:
       alarmInfo={}
       alarms=alarmHandler.getRunningAlarms()
       for k in alarms.keys():
         alarmInfo[k]={'running':True,'alarm':k}
-      rtv.data['raw']['alarms']=alarmInfo
-    return json.dumps(rtv.data)
+      rtv['raw']['alarms']=alarmInfo
+    return json.dumps(rtv)
 
 
   def handleStatusRequest(self,requestParam):

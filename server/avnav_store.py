@@ -42,6 +42,7 @@ class AVNDataEntry():
   SOURCE_KEY_OTHER='OTHER'
   BASE_KEY_GPS='gps'
   BASE_KEY_AIS='ais'
+  BASE_KEY_SKY = 'sky'
   #AIS messages we store
   knownAISTypes=(1,2,3,5,18,19,24)
   def __init__(self,key,data,timestamp=None,isAis=False):
@@ -91,6 +92,18 @@ class AVNDataEntry():
 
 #the main List of navigational items received
 class AVNStore():
+  class DataEntry:
+    def __init__(self,value,source=None,priority=0):
+      self.value=value
+      self.timestamp=AVNUtil.utcnow()
+      self.source=source
+      self.priority=priority
+
+  class AisDataEntry:
+    def __init__(self,data):
+      self.value=data
+      self.timestamp = AVNUtil.utcnow()
+      self.source=AVNDataEntry.SOURCE_KEY_AIS
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
@@ -106,145 +119,143 @@ class AVNStore():
     self.registeredKeys={} # type: dict
     self.keySources={}
 
+  def __isExpired__(self,entry,now=None):
+    if now is None:
+      now=AVNUtil.utcnow()
+    et = now - self.expiryTime
+    return entry.timestamp < et
+  def __isAisExpired__(self,aisEntry,now=None):
+    if now is None:
+      now=AVNUtil.utcnow()
+    et=now - self.aisExpiryTime
+    return aisEntry.timestamp < et
 
-  
-  #add an entry to the list
-  #do not add if there is already such an entry with newer timestamp
-  #timestamps always relate to our system time - never directly to the GPS time!
-  #this avoids confusion when we have to change the system time...
-  #this is always done by the main thread!
-  def addEntry(self,navEntry):
+  def setValue(self,key,value,source=None,priority=0):
     """
-
-    @param navEntry: the entry to be added
-    @type  navEntry: AVNDataEntry
+    set a data value
+    @param key: the key to be set
+    @param value: either a string/number/boolean or a dict
+                  if the value is a dict, all its keys will be added to the provided key and the values will be set
+    @param source: optional a source key
     @return:
     """
-    AVNLog.ld("AVNNavData add entry",navEntry)
-    if navEntry.isAis():
-      mmsi=None
-      try:
-        mmsi=str(navEntry.data['mmsi'])
-      except:
-        pass
-      if self.ownMMSI != '' and mmsi is not None and self.ownMMSI == mmsi:
-          AVNLog.debug("omitting own AIS message mmsi %s",self.ownMMSI)
-          return
-    else:
-      if self.registeredKeys.get(navEntry.key) is None:
-        AVNLog.error("key %s is not registered in store" % navEntry.key)
-        raise Exception("key %s is not registered in store" % navEntry.key)
+    AVNLog.ld("AVNNavData set value key=%s", key, value)
     self.listLock.acquire()
-    key=navEntry.key
-    if key in self.list:
-      #for AIS type 5/24 messages we merge them with an existing message
-      #for others we merge back...
-      if navEntry.isAis():
-        if navEntry.data.get('type')=='5' or navEntry.data.get('type')=='24':
-          AVNLog.debug("merging AIS type 5/24 with existing message")
-          for k in self.ais5mergeFields:
-            v=navEntry.data.get(k)
-            if v is not None:
-              self.list[navEntry.key].data[k]=v
-          if self.list[navEntry.key].timestamp < navEntry.timestamp:
-            self.list[navEntry.key].timestamp = navEntry.timestamp
+    isDict=False
+    dataValue=value
+    try:
+      keylist=['']
+      if type(value) == dict:
+        keylist=value.keys()
+        isDict=True
+      for kext in keylist:
+        if isDict:
+          key=key+'.'+kext
+          dataValue=value[kext]
+        if self.registeredKeys.get(key) is None:
+          AVNLog.error("key %s is not registered in store" % key)
+          raise Exception("key %s is not registered in store" % key)
+        existing=self.list.get(key)
+        doUpdate=True
+        if existing is not None:
+          if not self.__isExpired__(existing) and existing.priority > priority:
+            doUpdate=False
+        if doUpdate:
+          self.list[key]=AVNStore.DataEntry(dataValue, priority=priority)
+          sourceKey=AVNDataEntry.SOURCE_KEY_OTHER
+          if key.startswith(AVNDataEntry.BASE_KEY_GPS):
+            sourceKey=AVNDataEntry.SOURCE_KEY_GPS
+          self.lastSources[AVNDataEntry.SOURCE_KEY_OTHER]=source
         else:
-          AVNLog.debug("merging AIS with existing message")
-          for k in self.ais5mergeFields:
-            v=self.list[navEntry.key].data.get(k)
-            if v is not None:
-              navEntry.data[k]=v
-          self.list[navEntry.key]=navEntry
-        #always replace here and merge back
-        self.lastSources[navEntry.getSourceKey()]=navEntry.source
-        self.listLock.release()
-        return
-      else:
-        if self.list[key].timestamp > navEntry.timestamp or self.list[key].priority > navEntry.getPriority():
-          AVNLog.debug("not adding entry, older ts %s/lower priority",unicode(navEntry))
-          self.listLock.release()
-          return
-    self.list[key]=navEntry
-    self.lastSources[navEntry.getSourceKey()]=navEntry.source
-    AVNLog.debug("adding entry %s",unicode(navEntry))
-    self.listLock.release()
-  #check for an entry being expired
-  #the list must already being locked!
-  #returns the entry or None
-  def __checkExpired__(self,entry,key=None):
-    if entry is None:
-      return None
-    if key is None:
-      key=entry.key
-    et=AVNUtil.utcnow()-self.expiryTime
-    if entry.isAis():
-      et=AVNUtil.utcnow()-self.aisExpiryTime
-    if entry.timestamp < et:
-      AVNLog.debug("remove expired entry %s, et=%s ",unicode(entry),unicode(et))
-      del self.list[key]
-      return None
-    return entry
-  #find an entry - return None if none found or expired...
-  def getEntry(self,key):
-    self.listLock.acquire()
-    rt=self.list.get(key)
-    rt=self.__checkExpired__(rt, key)
-    self.listLock.release()
-    return rt
-  def getFilteredEntries(self,prefix,suffixlist):
-    rt={}
-    if len(suffixlist) == 0:
-      #return all
-      searchprefix=prefix
-      self.listLock.acquire()
-      for k in self.list.keys():
-        e=self.list[k]
-        if e.key.startswith(searchprefix):
-          rt[e.key]=e
-      nrt={}
-      for k in rt.keys():
-        e=self.__checkExpired__(rt[k], k)
-        if e is not None:
-          nrt[k]=e
-      #update the number of entries for this prefix for fast status queries
-      ocv=len(rt.keys())
-      self.prefixCounter[prefix]=ocv
-      AVNLog.debug("NavData: count for %s=%d"%(prefix,ocv))
+          AVNLog.debug("AVNavData: keeping existing entry for %s",key)
+    except :
       self.listLock.release()
-      return nrt
-    for sfx in suffixlist:
-      k=prefix+"."+sfx
-      entry=self.list.get(k)
-      entry=self.__checkExpired__(entry)
-      if entry is not None:
-        rt[k]=entry
-    return rt
-  def getFilteredEntriesAsJson(self,prefix,suffixlist):
+      raise
+    self.listLock.release()
+
+  def setAisValue(self,mmsi,data,source=None):
+    """
+    add an AIS entry
+    @param mmsi:
+    @param data:
+    @return:
+    """
+    AVNLog.debug("AVNavData add ais %d:%s",mmsi,data)
+    if self.ownMMSI != '' and mmsi is not None and self.ownMMSI == mmsi:
+      AVNLog.debug("omitting own AIS message mmsi %s", self.ownMMSI)
+      return
+    key=AVNDataEntry.BASE_KEY_AIS+".%d"%mmsi
+    now=AVNUtil.utcnow()
+    self.listLock.acquire()
+    existing=self.list.get(key)
+    if existing is None:
+      existing=AVNStore.AisDataEntry({'mmsi':mmsi})
+      self.list[key]=existing
+    if data.get('type') == '5' or data.get('type') == '24':
+      #add new items to existing entry
+      AVNLog.debug("merging AIS type 5/24 with existing message")
+      for k in self.ais5mergeFields:
+        v = data.get(k)
+        if v is not None:
+          existing.value[k] = v
+          existing.timestamp=now
+    else:
+      AVNLog.debug("merging AIS with existing message")
+      newData=data.copy()
+      for k in self.ais5mergeFields:
+        v = existing.value.get(k)
+        if v is not None:
+          newData[k] = v
+      existing.value=newData
+      existing.timestamp=now
+    self.lastSources[AVNDataEntry.SOURCE_KEY_AIS]=source
+    self.listLock.release()
+
+  def getAisData(self):
     rt=[]
-    for e in self.getFilteredEntries(prefix, suffixlist).values():
-      rt.append(e.data)
-    AVNLog.ld("collected entries",rt)
-    return json.dumps(rt)
-  
-  def getMergedEntries(self,prefix,suffixlist,isAis=False):
-    fe=self.getFilteredEntries(prefix, suffixlist)
-    rt=AVNDataEntry(prefix,{},isAis=isAis)
-    rt.key=prefix
-    for kf in fe:
-      e=fe[kf]
-      if e.isAis() != isAis:
+    keysToRemove=[]
+    now=AVNUtil.utcnow()
+    self.listLock.acquire()
+    for key in self.list.keys():
+      if key.startswith(AVNDataEntry.BASE_KEY_AIS):
+        aisEntry=self.list[key]
+        if self.__isAisExpired__(aisEntry,now):
+          keysToRemove.append(key)
+        else:
+          rt.append(aisEntry)
+    for rkey in keysToRemove:
+      del self.list[rkey]
+    self.listLock.release()
+    return rt
+
+  def getDataByPrefix(self,prefix,levels=None):
+    """
+    get all entries with a certain prefix
+    the prefix must exactly be a part of the key until a . (but not including it)
+    @param prefix: the prefix
+    @param levels: the number of levels to be returned (default: all)
+    @return: a dict with all entries, keys having the prefix removed
+    """
+    prefix=prefix+"."
+    plen=len(prefix)
+    rt={}
+    self.listLock.acquire()
+    now=AVNUtil.utcnow()
+    keysToRemove=[]
+    for key in self.list.keys():
+      if not key.startswith(prefix):
         continue
-      if rt.timestamp is None:
-        rt.timestamp=e.timestamp
-      newer=False
-      if e.timestamp > rt.timestamp:
-        newer=True
-      for k in e.data.keys():
-        if not (k in rt.data) or newer or rt.data.get(k) is None:
-          rt.data[k] = e.data[k]
-    AVNLog.ld("getMergedEntries",prefix,suffixlist,rt)
-    return rt   
-  
+      entry=self.list[key]
+      if self.__isExpired__(entry,now):
+        keysToRemove.append(key)
+      else:
+        nkey=key[plen:]
+        rt[nkey]=entry.value
+    for rkey in keysToRemove:
+      del self.list[rkey]
+    self.listLock.release()
+    return rt
+
   #delete all entries from the list (e.g. when we have to set the time)
   def reset(self): 
     self.listLock.acquire()
@@ -283,6 +294,6 @@ class AVNStore():
     idx=0
     self.listLock.acquire()
     for k in self.list.keys():
-      rt+="   (%03d:%s)%s=%s\n" % (idx,time.strftime("%Y/%m/%d-%H:%M:%S ",time.gmtime(self.list[k].timestamp)),self.list[k].key,self.list[k].data)
+      rt+="   (%03d:%s)%s=%s\n" % (idx,time.strftime("%Y/%m/%d-%H:%M:%S ",time.gmtime(self.list[k].timestamp)),k,self.list[k].value)
     self.listLock.release()  
     return rt
