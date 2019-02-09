@@ -207,6 +207,7 @@ avnav_handlerList.registerHandler(AVNGpsd)
       
 #a reader thread for the gpsd reader
 class GpsdReader(threading.Thread):
+  GPSD_KEYS=['lat','lon','time','track','speed','mode']
   def __init__(self, navdata,port,name,infoHandler,errorHandler=None):
     self.navdata=navdata
     threading.Thread.__init__(self)
@@ -265,16 +266,35 @@ class GpsdReader(threading.Thread):
         self.lasttime=time.time()
         #gpsd has an extremly broken interface - it has a dictwrapper that not really can act as a dict
         #so we have to copy over...
-        ddata={}
-        for k in report.keys():
-          ddata[k]=report.get(k)
-        ddata['source']="gpsd"
-        if ddata.get('tag') is None:
-          ddata['tag']='gpsd'
-        self.navdata.setValue(AVNStore.BASE_KEY_GPS,ddata,ddata['source'])
-        if not hasNMEA:
-          self.infoHandler.setInfo(infoName,"receiving NMEA",AVNWorker.Status.NMEA)
-          hasNMEA=True
+        cl=report.get('class')
+        if cl== 'TPV':
+          ddata={}
+          for k in self.GPSD_KEYS:
+            v=report.get(k)
+            if v is not None:
+              ddata[k]=v
+          if len(ddata) == 0:
+            continue
+          ddata['source']="gpsd"
+          if ddata.get('tag') is None:
+            ddata['tag']='gpsd'
+          try:
+            self.navdata.setValue(AVNStore.BASE_KEY_GPS,ddata,ddata['source'])
+            if not hasNMEA:
+              self.infoHandler.setInfo(infoName,"receiving NMEA",AVNWorker.Status.NMEA)
+              hasNMEA=True
+          except:
+            AVNLog.debug("exception storing gpsd data %s",traceback.format_exc())
+        if cl == 'AIS':
+          aisdata={}
+          for k in report.keys():
+            aisdata[k]=report[k]
+          mmsi=aisdata.get('mmsi')
+          if mmsi is not None:
+            try:
+              self.navdata.setAisValue(str(mmsi), aisdata, 'gpsd')
+            except:
+              AVNLog.debug("exception storing ais data %s", traceback.format_exc())
       if self.stop:
         try:
           AVNLog.info("stopping gpsd reader")
