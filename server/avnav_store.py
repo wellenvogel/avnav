@@ -60,7 +60,9 @@ class AVNStore():
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
     self.list={}
+    self.aisList={}
     self.listLock=threading.Lock()
+    self.aisLock = threading.Lock()
     self.expiryTime=expiryTime
     self.aisExpiryTime=aisExpiryTime
     self.ownMMSI=ownMMSI
@@ -140,11 +142,11 @@ class AVNStore():
       return
     key=AVNStore.BASE_KEY_AIS+"."+mmsi
     now=AVNUtil.utcnow()
-    self.listLock.acquire()
-    existing=self.list.get(key)
+    self.aisLock.acquire()
+    existing=self.aisList.get(key)
     if existing is None:
       existing=AVNStore.AisDataEntry({'mmsi':mmsi})
-      self.list[key]=existing
+      self.aisList[key]=existing
     if data.get('type') == '5' or data.get('type') == '24':
       #add new items to existing entry
       AVNLog.debug("merging AIS type 5/24 with existing message")
@@ -163,23 +165,22 @@ class AVNStore():
       existing.value=newData
       existing.timestamp=now
     self.lastSources[AVNStore.SOURCE_KEY_AIS]=source
-    self.listLock.release()
+    self.aisLock.release()
 
   def getAisData(self):
     rt=[]
     keysToRemove=[]
     now=AVNUtil.utcnow()
-    self.listLock.acquire()
-    for key in self.list.keys():
-      if key.startswith(AVNStore.BASE_KEY_AIS):
-        aisEntry=self.list[key]
-        if self.__isAisExpired__(aisEntry,now):
-          keysToRemove.append(key)
-        else:
-          rt.append(aisEntry.value)
+    self.aisLock.acquire()
+    for key in self.aisLists.keys():
+      aisEntry=self.list[key]
+      if self.__isAisExpired__(aisEntry,now):
+        keysToRemove.append(key)
+      else:
+        rt.append(aisEntry.value)
     for rkey in keysToRemove:
-      del self.list[rkey]
-    self.listLock.release()
+      del self.aisList[rkey]
+    self.aisLock.release()
     return rt
 
   def getDataByPrefix(self,prefix,levels=None):
@@ -214,13 +215,13 @@ class AVNStore():
   def reset(self): 
     self.listLock.acquire()
     self.list.clear()
+    self.aisList.clear()
     self.listLock.release()
 
-  def getCounter(self,prefix):
-    cv=self.prefixCounter.get(prefix)
-    if cv is None:
-      cv=0
-    return cv
+  def getAisCounter(self):
+    return len(self.aisList)
+
+
   def getLastSource(self,cls):
     rt=self.lastSources.get(cls)
     if rt is None:

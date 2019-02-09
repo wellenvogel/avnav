@@ -696,7 +696,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       AVNLog.info("unable to get sat count: %s",traceback.format_exc())
     statusNmea={"status":status,"source":src,"info":"Sat %d visible/%d used"%(visible,used)}
     status="red"
-    numAis=self.server.navdata.getCounter(AVNStore.SOURCE_KEY_AIS)
+    numAis=self.server.navdata.getAisCounter()
     if numAis > 0:
       status="green"
     src=self.server.navdata.getLastSource(AVNStore.SOURCE_KEY_AIS)

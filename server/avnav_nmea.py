@@ -95,7 +95,7 @@ class NMEAParser():
   #timedate is a datetime object as returned by gpsTimeToTime
   #fill this additionally into the time part of data
   def addToNavData(self,data,priority=0):
-    self.navdata.setValue(AVNStore.BASE_KEY_GPS,data,priority)
+    self.navdata.setValue(AVNStore.BASE_KEY_GPS,data,source='internal',priority=priority)
     
   #returns an datetime object containing the current gps time
   @classmethod
@@ -449,5 +449,5 @@ class NMEAParser():
     if mmsi is None:
       AVNLog.debug("ignoring AIS data without mmsi, %s"%rt)
       return
-    self.navdata.setAisValue(mmsi,rt)
+    self.navdata.setAisValue(mmsi,rt,'server')
     
