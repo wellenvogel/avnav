@@ -208,6 +208,18 @@ avnav_handlerList.registerHandler(AVNGpsd)
 #a reader thread for the gpsd reader
 class GpsdReader(threading.Thread):
   GPSD_KEYS=['lat','lon','time','track','speed','mode']
+
+  @classmethod
+  def filterToDict(cls,input,filter):
+    rt={}
+    for key in filter:
+      v=input.get(key)
+      if v is not None:
+        rt[key]=v
+    return rt
+
+
+
   def __init__(self, navdata,port,name,infoHandler,errorHandler=None):
     self.navdata=navdata
     threading.Thread.__init__(self)
@@ -268,11 +280,7 @@ class GpsdReader(threading.Thread):
         #so we have to copy over...
         cl=report.get('class')
         if cl== 'TPV':
-          ddata={}
-          for k in self.GPSD_KEYS:
-            v=report.get(k)
-            if v is not None:
-              ddata[k]=v
+          ddata=self.filterToDict(report,self.GPSD_KEYS)
           if len(ddata) == 0:
             continue
           ddata['source']="gpsd"
@@ -295,6 +303,20 @@ class GpsdReader(threading.Thread):
               self.navdata.setAisValue(str(mmsi), aisdata, 'gpsd')
             except:
               AVNLog.debug("exception storing ais data %s", traceback.format_exc())
+        if cl == 'SKY':
+          try:
+            base=self.filterToDict(report,NMEAParser.SKY_BASE_KEYS)
+            self.navdata.setValue(AVNStore.BASE_KEY_SKY,base,source='gpsd')
+            sats=report.get('satellites')
+            #we rely on the store to remove outdated sats...
+            if sats is not None:
+              for sat in sats:
+                entry=self.filterToDict(sat,NMEAParser.SKY_SATELLITE_KEYS)
+                PRN=entry.get('PRN')
+                if PRN is not None:
+                  self.navdata.setValue(AVNStore.BASE_KEY_SKY+".satellites."+str(PRN),entry,source='gpsd',noCheck=True)
+          except:
+            AVNLog.debug("exception storing sky data %s", traceback.format_exc())
       if self.stop:
         try:
           AVNLog.info("stopping gpsd reader")

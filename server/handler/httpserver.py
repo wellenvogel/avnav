@@ -684,17 +684,21 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     src=self.server.navdata.getLastSource(AVNStore.SOURCE_KEY_GPS)
     #TODO: add info from sky
     sky=self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_SKY)
-    visible=0
-    used=0
+    visible=set()
+    used=set()
     try:
-      if sky.get("satellites") is not None:
-        for sv in sky['satellites']:
-          visible=visible+1
-          if sv['used']:
-            used=used+1
+      for key in sky.keys():
+        if not key.startswith("satellites"):
+          continue
+        karr=key.split('.')
+        if len(karr) < 3:
+          continue
+        visible.add(karr[1])
+        if karr[2] == 'used' and sky[key]:
+          used.add(karr[1])
     except:
       AVNLog.info("unable to get sat count: %s",traceback.format_exc())
-    statusNmea={"status":status,"source":src,"info":"Sat %d visible/%d used"%(visible,used)}
+    statusNmea={"status":status,"source":src,"info":"Sat %d visible/%d used"%(len(visible),len(used))}
     status="red"
     numAis=self.server.navdata.getAisCounter()
     if numAis > 0:

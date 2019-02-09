@@ -50,6 +50,8 @@ class Key:
     self.unit=unit
 
 class NMEAParser():
+  SKY_BASE_KEYS = ['gdop', 'tdop', 'vdop', 'hdop', 'pdop']
+  SKY_SATELLITE_KEYS = ['ss', 'el', 'PRN', 'az', 'used']
   NM=AVNUtil.NM
   #AIS field translations
   aisFieldTranslations={'msgtype':'type'}
@@ -77,6 +79,10 @@ class NMEAParser():
     for key in cls.GPS_DATA:
       key.key=AVNStore.BASE_KEY_GPS+"."+key.key
       navdata.registerKey(key.key,key.__dict__,cls.__name__)
+    for key in cls.SKY_BASE_KEYS:
+      navdata.registerKey(AVNStore.BASE_KEY_SKY + "."+key, {'description': 'sat base info'}, cls.__name__)
+    #we use the PRN as additional key behind
+    navdata.registerKey(AVNStore.BASE_KEY_SKY+".satellites",{'description':'sat status'},cls.__name__)
   
   def __init__(self,navdata):
     self.payloads = {'A':'', 'B':''}    #AIS paylod data

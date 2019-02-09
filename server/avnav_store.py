@@ -84,13 +84,14 @@ class AVNStore():
     et=now - self.aisExpiryTime
     return aisEntry.timestamp < et
 
-  def setValue(self,key,value,source=None,priority=0):
+  def setValue(self,key,value,source=None,priority=0, noCheck=False):
     """
     set a data value
     @param key: the key to be set
     @param value: either a string/number/boolean or a dict
                   if the value is a dict, all its keys will be added to the provided key and the values will be set
     @param source: optional a source key
+    @param noCheck: do not check the keys (evil...)
     @return:
     """
     AVNLog.ld("AVNNavData set value key=%s", key, value)
@@ -108,7 +109,7 @@ class AVNStore():
           dataValue=value[kext]
         else:
           listKey=key
-        if self.registeredKeys.get(listKey) is None:
+        if not noCheck and self.registeredKeys.get(listKey) is None:
           AVNLog.error("key %s is not registered in store" % listKey)
           raise Exception("key %s is not registered in store" % listKey)
         existing=self.list.get(listKey)
@@ -123,7 +124,7 @@ class AVNStore():
             sourceKey=AVNStore.SOURCE_KEY_GPS
           self.lastSources[sourceKey]=source
         else:
-          AVNLog.debug("AVNavData: keeping existing entry for %s",key)
+          AVNLog.debug("AVNavData: keeping existing entry for %s",listKey)
     except :
       self.listLock.release()
       AVNLog.error("exception in writing data: %",traceback.format_exc())
