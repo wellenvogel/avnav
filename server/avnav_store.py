@@ -126,6 +126,7 @@ class AVNStore():
           AVNLog.debug("AVNavData: keeping existing entry for %s",key)
     except :
       self.listLock.release()
+      AVNLog.error("exception in writing data: %",traceback.format_exc())
       raise
     self.listLock.release()
 
@@ -136,7 +137,7 @@ class AVNStore():
     @param data:
     @return:
     """
-    AVNLog.debug("AVNavData add ais %d:%s",mmsi,data)
+    AVNLog.debug("AVNavData add ais %s",mmsi)
     if self.ownMMSI != '' and mmsi is not None and self.ownMMSI == mmsi:
       AVNLog.debug("omitting own AIS message mmsi %s", self.ownMMSI)
       return
@@ -167,19 +168,25 @@ class AVNStore():
     self.lastSources[AVNStore.SOURCE_KEY_AIS]=source
     self.aisLock.release()
 
+
   def getAisData(self):
     rt=[]
     keysToRemove=[]
     now=AVNUtil.utcnow()
     self.aisLock.acquire()
-    for key in self.aisLists.keys():
-      aisEntry=self.list[key]
-      if self.__isAisExpired__(aisEntry,now):
-        keysToRemove.append(key)
-      else:
-        rt.append(aisEntry.value)
-    for rkey in keysToRemove:
-      del self.aisList[rkey]
+    try:
+      for key in self.aisList.keys():
+        aisEntry=self.aisList[key]
+        if self.__isAisExpired__(aisEntry,now):
+          keysToRemove.append(key)
+        else:
+          rt.append(aisEntry.value)
+      for rkey in keysToRemove:
+        del self.aisList[rkey]
+    except:
+      AVNLog.error("error when reading AIS data %s",traceback.format_exc())
+      self.aisLock.release()
+      raise
     self.aisLock.release()
     return rt
 

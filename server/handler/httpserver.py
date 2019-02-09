@@ -628,7 +628,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
           text=e.message+"\n"+traceback.format_exc()
-          AVNLog.ld("unable to process request for navrequest ",text)
+          AVNLog.error("unable to process request for navrequest %s"%text)
           self.send_response(500,text)
           self.end_headers()
           return

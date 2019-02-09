@@ -269,10 +269,10 @@ class AVNUtil():
   @classmethod
   def convertAIS(cls,aisdata):
     rt=aisdata.copy()
-    rt['lat']=float(aisdata['lat'])/600000
-    rt['lon']=float(aisdata['lon'])/600000
-    rt['speed']=float(aisdata['speed'])/10  
-    rt['course']=float(aisdata['course'])/10  
+    rt['lat']=float(aisdata.get('lat') or 0)/600000
+    rt['lon']=float(aisdata.get('lon') or 0)/600000
+    rt['speed']=float(aisdata.get('speed') or 0)/10
+    rt['course']=float(aisdata.get('course') or 0)/10
     rt['mmsi']=unicode(aisdata['mmsi'])
     return rt
   
