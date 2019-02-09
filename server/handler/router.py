@@ -494,7 +494,7 @@ class AVNRouter(AVNWorker):
     if not self.currentLeg.active:
       self.startStopAlarm(False)
       return
-    curGps=self.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS,1)
+    curGps=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
     lat=curGps.get('lat')
     lon=curGps.get('lon')
     if lat is None or lon is None:
@@ -590,7 +590,7 @@ class AVNRouter(AVNWorker):
         self.WpNr+=1
 
       if self.startWp is not None and self.endWp is not None:
-        curGps=self.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS,1)
+        curGps=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
         lat=curGps.get('lat')
         lon=curGps.get('lon')
         kn=curGps.get('speed')
@@ -640,7 +640,7 @@ class AVNRouter(AVNWorker):
       will only be called if self.currentLeg.anchorDistance is not none
   '''
   def computeAnchor(self):
-    curGps = self.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS,1)
+    curGps = self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
     lat = curGps.get('lat')
     lon = curGps.get('lon')
     if lat is None or lon is None:

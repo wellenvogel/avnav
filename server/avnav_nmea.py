@@ -67,41 +67,35 @@ class NMEAParser():
     Key('depthBelowTransducer','depthBelowTransducer in m','m'),
     Key('depthBelowWaterline','depthBelowWaterlinein m','m'),
     Key('depthBelowKeel','depthBelowKeel in m','m'),
-    Key('source','source of GPS info')
+    Key('source','source of GPS info'),
+    Key('tag','the original NMEA record'),
+    Key('time','the received GPS time')
   ]
 
   @classmethod
   def registerKeys(cls,navdata):
     for key in cls.GPS_DATA:
-      key.key=AVNDataEntry.BASE_KEY_GPS+"."+key.key
+      key.key=AVNStore.BASE_KEY_GPS+"."+key.key
       navdata.registerKey(key.key,key.__dict__,cls.__name__)
   
   def __init__(self,navdata):
     self.payloads = {'A':'', 'B':''}    #AIS paylod data
     self.navdata=navdata # type: AVNStore
 
-
+  def formatTime(self,ts):
+    t = ts.isoformat()
+    # seems that isoformat does not well harmonize with OpenLayers.Date
+    # they expect at leas a timezone info
+    # as we are at GMT we should have a "Z" at the end
+    if not t[-1:] == "Z":
+      t += "Z"
+    return t
   #------------------ some nmea data specific methods -------------------
   #add a valid dataset to nav data
   #timedate is a datetime object as returned by gpsTimeToTime
   #fill this additionally into the time part of data
-  def addToNavData(self,data,timedate=None,priority=None):
-    t=None
-    if timedate is not None:
-      t=timedate.isoformat()
-      #seems that isoformat does not well harmonize with OpenLayers.Date
-      #they expect at leas a timezone info
-      #as we are at GMT we should have a "Z" at the end
-      if not t[-1:]=="Z":
-        t+="Z"
-    for dk in data.keys():
-      if dk == 'class':
-        continue
-      key=AVNDataEntry.BASE_KEY_GPS+"."+dk
-      de=AVNDataEntry(key,data[dk],t)
-      if priority is not None:
-        de.setPriority(priority)
-      self.navdata.addEntry(de)
+  def addToNavData(self,data,priority=0):
+    self.navdata.setValue(AVNStore.BASE_KEY_GPS,data,priority)
     
   #returns an datetime object containing the current gps time
   @classmethod
@@ -239,7 +233,7 @@ class NMEAParser():
       return self.ais_packet_scanner(data)
       
     tag=darray[0][3:]
-    rt={'class':'TPV','tag':tag}
+    rt={'tag':tag}
     #currently we only take the time from RMC
     #as only with this one we have really a valid complete timestamp
     try:
@@ -248,7 +242,7 @@ class NMEAParser():
         rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
         rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
         rt['mode']=int(darray[6] or '0')
-        self.addToNavData(rt, None)
+        self.addToNavData(rt)
         return True
       if tag=='GLL':
         rt['mode']=1
@@ -256,7 +250,7 @@ class NMEAParser():
           rt['mode']= (0 if (darray[6] != 'A') else 2)
         rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
         rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
-        self.addToNavData(rt, None)
+        self.addToNavData(rt)
         return True
       if tag=='VTG':
         mode=darray[2]
@@ -266,7 +260,7 @@ class NMEAParser():
           rt['speed']=float(darray[5] or '0')*self.NM/3600
         else:
           rt['speed']=float(darray[3]or '0')*self.NM/3600
-        self.addToNavData(rt, None)
+        self.addToNavData(rt)
         return True
       if tag=='RMC':
         #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
@@ -277,8 +271,9 @@ class NMEAParser():
         rt['lon']=self.nmeaPosToFloat(darray[5],darray[6])
         rt['speed']=float(darray[7] or '0')*self.NM/3600
         rt['track']=float(darray[8] or '0')
-        gpsdate=darray[9]
-        self.addToNavData(rt, self.gpsTimeToTime(gpstime, gpsdate),priority=1)
+        gpsdate = darray[9]
+        rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
+        self.addToNavData(rt,priority=1)
         return True
       if tag == 'MWV':
         '''
@@ -300,7 +295,7 @@ class NMEAParser():
         if (darray[4] == 'N'):
           windspeed=windspeed*self.NM/3600
         rt['windSpeed']=windspeed
-        self.addToNavData(rt,None)
+        self.addToNavData(rt)
         return True
       if tag == 'DPT':
         '''
@@ -320,7 +315,7 @@ class NMEAParser():
           rt['depthBelowWaterline'] = float(darray[1]) + float(darray[2])
         else:
           rt['depthBelowKeel'] = float(darray[1]) + float(darray[2])
-        self.addToNavData(rt, None)
+        self.addToNavData(rt)
         return True
       if tag == 'DBT':
         '''
@@ -338,7 +333,7 @@ class NMEAParser():
          7) Checksum
         '''
         rt['depthBelowTransducer'] = float(darray[3])
-        self.addToNavData(rt, None)
+        self.addToNavData(rt)
         return True
     except Exception:
       AVNLog.info(" error parsing nmea data " + unicode(data) + "\n" + traceback.format_exc())
@@ -454,6 +449,5 @@ class NMEAParser():
     if mmsi is None:
       AVNLog.debug("ignoring AIS data without mmsi, %s"%rt)
       return
-    de=AVNDataEntry(AVNDataEntry.BASE_KEY_AIS+"."+str(mmsi),rt,isAis=True)
-    self.navdata.addEntry(de)
+    self.navdata.setAisValue(mmsi,rt)
     

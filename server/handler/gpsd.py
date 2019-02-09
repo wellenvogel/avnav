@@ -271,12 +271,10 @@ class GpsdReader(threading.Thread):
         ddata['source']="gpsd"
         if ddata.get('tag') is None:
           ddata['tag']='gpsd'
-        entry=AVNDataEntry.fromData(ddata)
-        if not entry is None:
-          self.navdata.addEntry(entry)
-          if not hasNMEA:
-            self.infoHandler.setInfo(infoName,"receiving NMEA",AVNWorker.Status.NMEA)
-            hasNMEA=True
+        self.navdata.setValue(AVNStore.BASE_KEY_GPS,ddata,ddata['source'])
+        if not hasNMEA:
+          self.infoHandler.setInfo(infoName,"receiving NMEA",AVNWorker.Status.NMEA)
+          hasNMEA=True
       if self.stop:
         try:
           AVNLog.info("stopping gpsd reader")

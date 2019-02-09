@@ -31,7 +31,7 @@ import inspect
 import time
 
 from avnav_api import AVNApi
-from avnav_store import AVNStore, AVNDataEntry
+from avnav_store import AVNStore, AVNStore
 
 hasGpio=False
 try:
@@ -89,8 +89,7 @@ class ApiImpl(AVNApi):
       if not matches:
         AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
         return False
-    dataEntry = AVNDataEntry(path, value)
-    self.store.addEntry(dataEntry)
+    self.store.setValue(path,value,self.prefix)
 
   def getConfigValue(self, key, default=None):
     childcfg=self.phandler.getParamValue(self.prefix) #for now we use the prefix as cfg name

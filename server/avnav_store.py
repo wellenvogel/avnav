@@ -33,65 +33,17 @@ import time
 import traceback
 from avnav_util import *
 
-#a data entry
-#data is the decoded dict
-#for AIS the key is BASE_KEY_AIS.<mmsi>
-class AVNDataEntry():
-  SOURCE_KEY_AIS='AIS'
-  SOURCE_KEY_GPS='GPS'
-  SOURCE_KEY_OTHER='OTHER'
-  BASE_KEY_GPS='gps'
-  BASE_KEY_AIS='ais'
-  BASE_KEY_SKY = 'sky'
-  #AIS messages we store
-  knownAISTypes=(1,2,3,5,18,19,24)
-  def __init__(self,key,data,timestamp=None,isAis=False):
-    self.key=key  # type: str
-    self.data=data # type: dict
-    if timestamp is not None:
-      self.timestamp=timestamp # type: timestamp
-    else:
-      self.timestamp=AVNUtil.utcnow()
-    self.source=None # type: str
-    self._isAis=isAis # type: bool
-    self._sourceKey=self.SOURCE_KEY_AIS if isAis else self.SOURCE_KEY_OTHER # type: str
-    if self.key.startswith(self.BASE_KEY_GPS) and not self.isAis():
-      self.source=self.SOURCE_KEY_GPS
-    self._priority=0 #set a priority to allow for higher prio to overwrite
-
-  def __unicode__(self):
-    rt="AVNDataEntry: %s(ts=%s)=%s" % (self.key,(self.timestamp if self.timestamp is not None else 0),pprint.pformat(self.data))
-    return rt
-  def toJson(self):
-    rt={
-      'key':self.key,
-      'source':self.source,
-      'timestamp':self.timestamp,
-      'data':self.data,
-      'isAis':self._isAis
-    }
-    return json.dumps(self.data)
-  def setSource(self,source):
-    self.source=source
-  def isAis(self):
-    return self._isAis
-  def getSourceKey(self):
-    return self._sourceKey
-  def setPriority(self,priority=0):
-    """
-    set the priority of an entry
-    @param priority: the priority, 0 being lowest (default)
-    @type priority: int
-    @return:
-    """
-    self._priority=priority
-
-  def getPriority(self):
-    return self._priority
-  
 
 #the main List of navigational items received
 class AVNStore():
+  SOURCE_KEY_AIS = 'AIS'
+  SOURCE_KEY_GPS = 'GPS'
+  SOURCE_KEY_OTHER = 'OTHER'
+  BASE_KEY_GPS = 'gps'
+  BASE_KEY_AIS = 'ais'
+  BASE_KEY_SKY = 'sky'
+  # AIS messages we store
+  knownAISTypes = (1, 2, 3, 5, 18, 19, 24)
   class DataEntry:
     def __init__(self,value,source=None,priority=0):
       self.value=value
@@ -103,7 +55,7 @@ class AVNStore():
     def __init__(self,data):
       self.value=data
       self.timestamp = AVNUtil.utcnow()
-      self.source=AVNDataEntry.SOURCE_KEY_AIS
+      self.source=AVNStore.SOURCE_KEY_AIS
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
@@ -150,22 +102,24 @@ class AVNStore():
         isDict=True
       for kext in keylist:
         if isDict:
-          key=key+'.'+kext
+          listKey=key+'.'+kext
           dataValue=value[kext]
-        if self.registeredKeys.get(key) is None:
-          AVNLog.error("key %s is not registered in store" % key)
-          raise Exception("key %s is not registered in store" % key)
-        existing=self.list.get(key)
+        else:
+          listKey=key
+        if self.registeredKeys.get(listKey) is None:
+          AVNLog.error("key %s is not registered in store" % listKey)
+          raise Exception("key %s is not registered in store" % listKey)
+        existing=self.list.get(listKey)
         doUpdate=True
         if existing is not None:
           if not self.__isExpired__(existing) and existing.priority > priority:
             doUpdate=False
         if doUpdate:
-          self.list[key]=AVNStore.DataEntry(dataValue, priority=priority)
-          sourceKey=AVNDataEntry.SOURCE_KEY_OTHER
-          if key.startswith(AVNDataEntry.BASE_KEY_GPS):
-            sourceKey=AVNDataEntry.SOURCE_KEY_GPS
-          self.lastSources[AVNDataEntry.SOURCE_KEY_OTHER]=source
+          self.list[listKey]=AVNStore.DataEntry(dataValue, priority=priority)
+          sourceKey=AVNStore.SOURCE_KEY_OTHER
+          if key.startswith(AVNStore.BASE_KEY_GPS):
+            sourceKey=AVNStore.SOURCE_KEY_GPS
+          self.lastSources[sourceKey]=source
         else:
           AVNLog.debug("AVNavData: keeping existing entry for %s",key)
     except :
@@ -184,7 +138,7 @@ class AVNStore():
     if self.ownMMSI != '' and mmsi is not None and self.ownMMSI == mmsi:
       AVNLog.debug("omitting own AIS message mmsi %s", self.ownMMSI)
       return
-    key=AVNDataEntry.BASE_KEY_AIS+".%d"%mmsi
+    key=AVNStore.BASE_KEY_AIS+"."+mmsi
     now=AVNUtil.utcnow()
     self.listLock.acquire()
     existing=self.list.get(key)
@@ -208,7 +162,7 @@ class AVNStore():
           newData[k] = v
       existing.value=newData
       existing.timestamp=now
-    self.lastSources[AVNDataEntry.SOURCE_KEY_AIS]=source
+    self.lastSources[AVNStore.SOURCE_KEY_AIS]=source
     self.listLock.release()
 
   def getAisData(self):
@@ -217,12 +171,12 @@ class AVNStore():
     now=AVNUtil.utcnow()
     self.listLock.acquire()
     for key in self.list.keys():
-      if key.startswith(AVNDataEntry.BASE_KEY_AIS):
+      if key.startswith(AVNStore.BASE_KEY_AIS):
         aisEntry=self.list[key]
         if self.__isAisExpired__(aisEntry,now):
           keysToRemove.append(key)
         else:
-          rt.append(aisEntry)
+          rt.append(aisEntry.value)
     for rkey in keysToRemove:
       del self.list[rkey]
     self.listLock.release()

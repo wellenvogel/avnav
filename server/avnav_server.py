@@ -229,11 +229,11 @@ def main(argv):
         navData.reset()
         hasFix=False
       lastutc=curutc
-      curGpsData=navData.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS)
+      curGpsData=navData.getDataByPrefix(AVNStore.BASE_KEY_GPS)
       if ( not curGpsData.get('lat') is None) and (not curGpsData.get('lon') is None):
         #we have some position
         if not hasFix:
-          AVNLog.info("new GPS fix lat=%f lon=%f, time=%s, currentTime=%s",curGpsData.data.get('lat'),curGpsData.data.get('lon'),curGpsData.data.get('time'),curutc.isoformat())
+          AVNLog.info("new GPS fix lat=%f lon=%f, time=%s, currentTime=%s",curGpsData.get('lat'),curGpsData.get('lon'),curGpsData.get('time'),curutc.isoformat())
           hasFix=True
         #settime handling
         curGpsTime=curGpsData.get('time')

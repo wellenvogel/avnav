@@ -194,9 +194,8 @@ GpsData.prototype.startQuery=function(){
         dataType: 'json',
         cache:	false,
         success: function(data,status){
-            if (data['class'] != null && data['class'] == "TPV" &&
-                data.tag != null && data.lon != null && data.lat != null &&
-                data['mode'] != null && data['mode'] >=1){
+            if ( data.lon != null && data.lat != null &&
+                data.mode != null && data.mode >=1){
                 self.handleGpsResponse(data,true);
                 avnav.log("gpsdata: "+self.formattedData.gpsPosition);
                 self.handleGpsStatus(true);

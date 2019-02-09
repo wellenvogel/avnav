@@ -36,7 +36,7 @@ import sys
 import traceback
 
 from avnav_config import AVNConfig
-from avnav_store import AVNDataEntry
+from avnav_store import AVNStore
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
@@ -344,7 +344,7 @@ class AVNTrackWriter(AVNWorker):
         if loopCount >= 10:
           self.cleanupTrack()
           loopCount=0
-        gpsdata=self.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS,1)
+        gpsdata=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
         lat=gpsdata.get('lat')
         lon=gpsdata.get('lon')
         if not lat is None and not lon is None:

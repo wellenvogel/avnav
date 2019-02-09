@@ -635,7 +635,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   #return AIS targets
   #parameter: lat,lon,distance (in NM) - limit to this distance      
   def handleAISRequest(self,requestParam):
-    rt=self.server.navdata.getFilteredEntries("AIS",[])
+    rt=self.server.navdata.getAisData()
     lat=None
     lon=None
     dist=None
@@ -649,9 +649,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     if not lat is None and not lon is None and not dist is None:
       dest=(lat,lon)
       AVNLog.debug("limiting AIS to lat=%f,lon=%f,dist=%f",lat,lon,dist)
-      for entry in rt.values():
+      for entry in rt:
         try:
-          fentry=AVNUtil.convertAIS(entry.data)        
+          fentry=AVNUtil.convertAIS(entry)
           mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
           if mdist<=dist:
             fentry['distance']=mdist
@@ -661,15 +661,15 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         except:
           AVNLog.debug("unable to convert ais data: %s",traceback.format_exc())
     else:
-      for entry in rt.values():
+      for entry in rt:
         try:
-          frt.append(AVNUtil.convertAIS(entry.data))
+          frt.append(AVNUtil.convertAIS(entry))
         except Exception as e:
           AVNLog.debug("unable to convert ais data: %s",traceback.format_exc())
     return json.dumps(frt)
   
   def handleGpsRequest(self,requestParam):
-    rtv=self.server.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_GPS)
+    rtv=self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
     #we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
     status="red"
     mode=rtv.get('mode')
@@ -681,9 +681,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           status="green"
         else:
           status="yellow"
-    src=self.server.navdata.getLastSource(AVNDataEntry.SOURCE_KEY_GPS)
+    src=self.server.navdata.getLastSource(AVNStore.SOURCE_KEY_GPS)
     #TODO: add info from sky
-    sky=self.server.navdata.getDataByPrefix(AVNDataEntry.BASE_KEY_SKY)
+    sky=self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_SKY)
     visible=0
     used=0
     try:
@@ -696,10 +696,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       AVNLog.info("unable to get sat count: %s",traceback.format_exc())
     statusNmea={"status":status,"source":src,"info":"Sat %d visible/%d used"%(visible,used)}
     status="red"
-    numAis=self.server.navdata.getCounter(AVNDataEntry.SOURCE_KEY_AIS)
+    numAis=self.server.navdata.getCounter(AVNStore.SOURCE_KEY_AIS)
     if numAis > 0:
       status="green"
-    src=self.server.navdata.getLastSource(AVNDataEntry.SOURCE_KEY_AIS)
+    src=self.server.navdata.getLastSource(AVNStore.SOURCE_KEY_AIS)
     statusAis={"status":status,"source":src,"info":"%d targets"%(numAis)}
     rtv["raw"]={"status":{"nmea":statusNmea,"ais":statusAis}}
     alarmHandler = self.server.findHandlerByName("AVNAlarmHandler")
