@@ -72,6 +72,9 @@ class ApiImpl(AVNApi):
   def fetchFromQueue(self, sequence, number=10):
     return self.queue.fetchFromHistory(sequence,number)
 
+  def addNMEA(self, nmea):
+    return self.queue.addNMEA(self, nmea)
+
   def addKey(self,data):
     key=data.get('path')
     if key is None:
@@ -90,6 +93,12 @@ class ApiImpl(AVNApi):
         AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
         return False
     self.store.setValue(path,value,self.prefix)
+  def getDataByPrefix(self, prefix):
+    return self.store.getDataByPrefix(prefix)
+
+  def getSingleValue(self, key):
+    return self.store.getSingleValue(key)
+
 
   def getConfigValue(self, key, default=None):
     childcfg=self.phandler.getParamValue(self.prefix) #for now we use the prefix as cfg name

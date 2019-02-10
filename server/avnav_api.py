@@ -73,14 +73,13 @@ class AVNApi:
     """
     raise NotImplemented()
 
-  def addNMEA(self, nmea, timestamp=None):
+  def addNMEA(self, nmea):
     """
     add NMEA data to the queue
     caution: you should never add a new NMEA record for each record you received by fetchFromQueue
              as the would quickly fill up the queue
     @param nmea: the completely formatted NMEA record
     @type  nmea: str
-    @param timestamp: optional timestamp (otherwise the current time is used)
     @return: None
     """
     raise NotImplemented()
@@ -94,3 +93,21 @@ class AVNApi:
     @param value: the value to be stored
     @return: True on success, will raise an Exception if the key is not allowed
     """
+  def getDataByPrefix(self,prefix):
+    """
+    get a data item from the internal store
+    prefix must be a part of the key (without trailing .)
+    @param prefix: the prefix
+    @type  prefix: str
+    @return: a dict with the values found (potentially hierarchical)
+    """
+    raise NotImplemented()
+
+  def getSingleValue(self,key):
+    """
+    get a single value from the store
+    @param key: the key
+    @type  key: str
+    @return: the value
+    """
+    raise NotImplemented()
