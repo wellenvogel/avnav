@@ -314,7 +314,7 @@ class GpsdReader(threading.Thread):
                 entry=self.filterToDict(sat,NMEAParser.SKY_SATELLITE_KEYS)
                 PRN=entry.get('PRN')
                 if PRN is not None:
-                  self.navdata.setValue(AVNStore.BASE_KEY_SKY+".satellites."+str(PRN),entry,source='gpsd',noCheck=True)
+                  self.navdata.setValue(AVNStore.BASE_KEY_SKY+".satellites."+str(PRN),entry,source='gpsd')
           except:
             AVNLog.debug("exception storing sky data %s", traceback.format_exc())
       if self.stop:

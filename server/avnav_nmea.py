@@ -79,10 +79,12 @@ class NMEAParser():
     for key in cls.GPS_DATA:
       key.key=AVNStore.BASE_KEY_GPS+"."+key.key
       navdata.registerKey(key.key,key.__dict__,cls.__name__)
+    #TODO: add description for sat keys
     for key in cls.SKY_BASE_KEYS:
       navdata.registerKey(AVNStore.BASE_KEY_SKY + "."+key, {'description': 'sat base info'}, cls.__name__)
     #we use the PRN as additional key behind
-    navdata.registerKey(AVNStore.BASE_KEY_SKY+".satellites",{'description':'sat status'},cls.__name__)
+    for satkey in cls.SKY_SATELLITE_KEYS:
+      navdata.registerKey(AVNStore.BASE_KEY_SKY+".satellites.*."+satkey,{'description':'sat status entry'},cls.__name__)
   
   def __init__(self,navdata):
     self.payloads = {'A':'', 'B':''}    #AIS paylod data

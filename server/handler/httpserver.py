@@ -687,15 +687,12 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     visible=set()
     used=set()
     try:
-      for key in sky.keys():
-        if not key.startswith("satellites"):
-          continue
-        karr=key.split('.')
-        if len(karr) < 3:
-          continue
-        visible.add(karr[1])
-        if karr[2] == 'used' and sky[key]:
-          used.add(karr[1])
+      satellites=sky.get('satellites')
+      if satellites is not None:
+        for sat in satellites.keys():
+          visible.add(sat)
+          if satellites[sat].get('used'):
+            used.add(sat)
     except:
       AVNLog.info("unable to get sat count: %s",traceback.format_exc())
     statusNmea={"status":status,"source":src,"info":"Sat %d visible/%d used"%(len(visible),len(used))}
