@@ -39,6 +39,17 @@ var Mainpage=function(){
     this.soundRepeat=0;
     this.lastAlarmSound=undefined;
     this.initialPlayCheck=0; //1: started, 2: ok
+    this.fixedButtons=[
+        {key:'ShowStatus'},
+        {key:'ShowSettings'},
+        {key:'ShowDownload'},
+        {key:'Connected',toggle:true, android:false},
+        {key:'ShowGps'},
+        {key:'Night',toggle:true},
+        {key:'MainInfo'},
+        {key:'MainCancel',android:true}
+    ];
+    this.currentButtons=this.fixedButtons;
 };
 avnav.inherits(Mainpage,Page);
 
@@ -90,17 +101,7 @@ Mainpage.prototype.getPageContent=function(){
         this.enableSound();
     }
 
-    var buttons=[
-        {key:'ShowStatus'},
-        {key:'ShowSettings'},
-        {key:'ShowDownload'},
-        {key:'Connected',toggle:true, android:false},
-        {key:'ShowGps'},
-        {key:'Night',toggle:true},
-        {key:'MainInfo'},
-        {key:'MainCancel',android:true}
-        ];
-    this.setButtons(buttons);
+    this.setButtons(this.fixedButtons);
     var Headline=function(props){
         return <div className="avn_left_top">AvNav</div>
     };
@@ -191,6 +192,40 @@ Mainpage.prototype.fillList=function(){
 
     });
 };
+Mainpage.prototype.readAddOns=function(){
+    var page=this;
+    var url=this.gui.properties.getProperties().navUrl+"?request=readAddons";
+    $.ajax({
+        url: url,
+        dataType: 'json',
+        cache: false,
+        error: function(ev){
+            page.toast("unable to read addons: "+ev.responseText);
+        },
+        success: function(data){
+            if (data.status != 'OK'){
+                page.toast("reading addons failed: "+data.info);
+                return;
+            }
+            var items=[];
+            for (var e in data.data){
+                var button=data.data[e];
+                var entry={
+                    key:button.key,
+                    url:button.url,
+                    icon: button.icon,
+                    title: button.title
+                };
+                if (entry.key){
+                    items.push(entry);
+                }
+            }
+            page.currentButtons=page.fixedButtons.concat(items);
+            page.setButtons(page.currentButtons)
+        }
+
+    });
+};
 Mainpage.prototype.showPage=function(options){
     if (!this.gui) return;
     var ncon=this.gui.properties.getProperties().connectedMode;
@@ -198,6 +233,7 @@ Mainpage.prototype.showPage=function(options){
     ncon=this.gui.properties.getProperties().nightMode;
     this.handleToggleButton('.avb_Night',ncon);
     this.fillList();
+    this.readAddOns();
     if (avnav.android || this.gui.properties.getProperties().readOnlyServer){
         this.selectOnPage('.avb_Connected').hide();
     }
@@ -329,6 +365,15 @@ Mainpage.prototype.btnMainInfo=function (button,ev) {
 Mainpage.prototype.btnMainCancel=function (button,ev) {
     avnav.log("main cancel clicked");
     avnav.android.goBack();
+};
+Mainpage.prototype.btnAny=function(key){
+    var self=this;
+    this.currentButtons.forEach(function(buttonDef){
+      if (buttonDef.key == key && buttonDef.url !== undefined){
+          console.log("found button url for "+key+" "+buttonDef.url);
+          self.gui.showPage('addonpage',{url:buttonDef.url,title:buttonDef.title});
+      }
+  })
 };
 /**
  * create the page instance

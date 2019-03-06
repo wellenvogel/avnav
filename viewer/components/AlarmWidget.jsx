@@ -9,7 +9,7 @@ var key='alarmInfo';
 var AlarmWidget=React.createClass({
     propTypes:{
         classes: React.PropTypes.string,
-        onClick: React.PropTypes.function,
+        onClick: React.PropTypes.func,
         alarmInfo: React.PropTypes.string
     },
     render: function(){

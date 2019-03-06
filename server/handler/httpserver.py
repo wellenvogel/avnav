@@ -85,6 +85,12 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
               'extension':None,
               'type':None
               }
+    if child == 'UserTool':
+      return {
+        'url':None, #we replace $HOST...
+        'title':None,
+        'icon':None, #an icon below $datadir/user
+      }
     if not child is None:
       return None
     rt={
@@ -119,6 +125,8 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       pathmappings={}
       for mapping in marray:
         pathmappings[mapping['urlpath']]=AVNUtil.prependBase(AVNUtil.replaceParam(os.path.expanduser(mapping['path']),replace),self.basedir)
+    if pathmappings.get('user') is None:
+      pathmappings['user']=os.path.join(datadir,'user')
     self.pathmappings=pathmappings
     charturl=cfgparam['chartbase']
     if charturl is not None:
@@ -134,6 +142,24 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if mtypes is not None:
       for mtype in mtypes:
         self.overwrite_map[mtype['extension']]=mtype['type']
+    addons=cfgparam.get('UserTool')
+    self.addons=[]
+    if addons is not None:
+      addonkey=1
+      for addon in addons:
+        if addon.get('url') is not None and addon.get('icon') is not None:
+          iconpath=os.path.join(self.pathmappings['user'],addon['icon'])
+          if not os.path.exists(iconpath):
+            AVNLog.error("icon path %s for %s not found, ignoring entry",iconpath,addon['url'])
+            continue
+          newAddon={
+            'key':"addon%d"%addonkey,
+            'url':addon['url'],
+            'icon':'/user/'+addon['icon'],
+            'title':addon.get('title')
+          }
+          self.addons.append(newAddon)
+          addonkey+=1
     server_address=(cfgparam['httpHost'],int(cfgparam['httpPort']))
     AVNWorker.__init__(self, cfgparam)
     self.type=AVNWorker.Type.HTTPSERVER
@@ -605,6 +631,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleListChartRequest(requestParam)
       elif requestType=='listdir':
         rtj=self.handleListDir(requestParam)
+      elif requestType=='readAddons':
+        rtj=self.handleAddonRequest(requestParam)
       elif requestType=='download':
         #download requests are special
         # the dow not return json...
@@ -1036,5 +1064,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         #TODO: how to avoid timeout here?
         shutil.rmtree(dirname)
         return json.dumps(rt)
+
+  def handleAddonRequest(self,param):
+    return json.dumps({
+      'status':'OK',
+      'data':self.server.addons
+    })
 
 

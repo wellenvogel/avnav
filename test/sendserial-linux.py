@@ -36,6 +36,8 @@ def sendSerial(file,numout,sleeptime,baudout=4800):
         raise "EOF on "+file
     except:
       print "Exception on r/w: "+str(sys.exc_info()[0])
+      f.close()
+      f=open(file,"r")
         
   
 

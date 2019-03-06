@@ -10,7 +10,7 @@
     settimeperiod="3600"/>
 <Readers>
 <!--<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />-->
-<AVNGpsdFeeder useGpsd="false" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
+<AVNGpsdFeeder useGpsd="true" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
 <!-- <AVNSerialReader name="com4reader" port="3" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
 <!--<AVNSerialReader useFeeder="true" name="com8reader" port="7" baud="38400" minbaud="4800"/>-->
@@ -20,8 +20,9 @@
 	 this avoids the need for more or less broken rfcomm stuff
 	  -->
 
-<AVNBlueToothReader maxDevices="5" >
+<!--<AVNBlueToothReader maxDevices="5" >
 </AVNBlueToothReader>
+-->
 
 <!-- udev based detection of serial devices
 	 we can have an autodetection here but can also add defined devices
@@ -59,7 +60,7 @@
 
 
 <!-- for testing purposes: connect to a socket for reading NMEA data -->
-<AVNSocketReader host="10.222.10.79" port="34567"/> 
+<!--<AVNSocketReader host="10.222.10.79" port="34567"/> -->
 <AVNSocketReader host="localhost" port="34568"/>
 	<AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
 </Readers>
@@ -77,6 +78,7 @@
 	<Directory urlpath="test" path="../../leaflet-test"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
+	<UserTool url="http://www.wellenvogel.de" title="Homepage" icon="icons/wb_sunny.svg"></UserTool>
 </AVNHttpServer>
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>

@@ -4,6 +4,10 @@
 var Store=require('../util/store');
 var ItemList=require('./ItemList.jsx');
 var React=require('react');
+var assign=require('object-assign');
+
+//properties to be filtered away from the buttons
+const FILTER_PROPERTIES=['url','icon','android','toggle','title','addClass','onItemClick'];
 /**
  * a button list
  * it will use an ItemList
@@ -25,13 +29,14 @@ var ButtonList= React.createClass({
     onItemClick: function(item){
         if (! this.props.buttonHandler) return;
         var proto = Object.getPrototypeOf(this.props.buttonHandler);
-        var f = proto['btnAny'];
+        var f = proto['btn' + item.key];
         if (f) {
             f.call(this.props.buttonHandler);
+            return;
         }
-        f = proto['btn' + item.key];
+        f = proto['btnAny'];
         if (f) {
-            f.call(this.props.buttonHandler);
+            f.call(this.props.buttonHandler,item.key);
         }
     },
     computeButtonList:function(from){
@@ -60,7 +65,18 @@ var ButtonList= React.createClass({
             item.addClass=item.addClass?(item.addClass+" "+addClass):addClass;
             newItemList.push(item);
         }
-        return avnav.assign({},from,{itemList:newItemList,onItemClick: this.onItemClick,itemClass:'button'});
+        var buttonCreator=function(props){
+            if (props.icon !== undefined) {
+                props.style=assign({},props.style,{backgroundImage:"url("+props.icon+")"});
+                delete props.icon;
+            }
+            FILTER_PROPERTIES.forEach(function(fe){
+               if (props[fe] !== undefined) delete props[fe];
+            });
+            return 'button';
+
+        };
+        return avnav.assign({},from,{itemList:newItemList,onItemClick: this.onItemClick,itemCreator:buttonCreator});
     },
     render: function () {
         var props=this.computeButtonList(this.props);
