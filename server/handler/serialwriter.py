@@ -138,7 +138,7 @@ class SerialWriter(SerialReader):
     return f  
   
   def writeLine(self,serialDevice,data):
-   
+
     return serialDevice.write(data.encode('ascii','ignore'))
 
    
