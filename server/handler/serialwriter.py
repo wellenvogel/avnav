@@ -138,8 +138,8 @@ class SerialWriter(SerialReader):
     return f  
   
   def writeLine(self,serialDevice,data):
-    #if not os.name=='posix':
-    return serialDevice.write(data)
+   
+    return serialDevice.write(data.encode('ascii','ignore'))
 
    
   #the run method - just try forever  
