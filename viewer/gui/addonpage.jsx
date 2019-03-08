@@ -7,8 +7,8 @@ var React=require('react');
 
 
 var keys={
-    url:'url',
-    title:'title'
+    title:'title',
+    index:'index'
 };
 
 
@@ -19,15 +19,33 @@ var keys={
 var AddonPage=function(){
     avnav.gui.Page.call(this,'addonpage');
     this.statusQuery=0; //sequence counter
+    this.addOns=[];
+    this.fixedButtons=[
+        {key:'Cancel'}
+    ];
 };
 avnav.inherits(AddonPage,avnav.gui.Page);
 
 
+AddonPage.prototype.changeItem=function(active){
+    for (var i=0;i<this.addOns.length;i++){
+        if (i == active) {
+            this.addOns[i].toggle=true;
+            this.store.storeData(keys.title,this.addOns[i].title||"AddOns")
+        }
+        else this.addOns[i].toggle=false;
+    }
+    this.setButtons(this.addOns.concat(this.fixedButtons));
+    this.store.storeData(keys.index,active);
+};
 
 AddonPage.prototype.showPage=function(options){
-    if (! options.url) return;
-    this.url=options.url;
-    this.title=options.title||"Addon";
+    if (! options.addOns || options.addOns.length < 1) {
+        this.returnToLast();
+        return;
+    }
+    this.addOns=options.addOns;
+    this.changeItem(this.store.getData(keys.index,0));
 };
 
 
@@ -41,14 +59,15 @@ AddonPage.prototype.getPageContent=function(){
         {key:'Cancel'}
     ];
     this.setButtons(buttons);
-    var Frame=function(props){
+    var Frame=ItemUpdater(function(props){
+        if (props.index === undefined) return null;
         return<div className="addonFrame avn_flexFill avn_flexColumn">
-                <iframe src={self.url} className="avn_flexFill"/>
+                <iframe src={self.addOns[props.index].url} className="avn_flexFill"/>
             </div>
-        };
-    var Headline=function(props){
-        return <div className="avn_left_top">{self.title}</div>
-    };
+        },this.store,keys.index);
+    var Headline=ItemUpdater(function(props){
+        return <div className="avn_left_top">{props.title}</div>
+    },this.store,keys.title);
     return React.createClass({
         render: function(){
             return(
@@ -63,7 +82,15 @@ AddonPage.prototype.getPageContent=function(){
 };
 
 //-------------------------- Buttons ----------------------------------------
-
+AddonPage.prototype.btnAny=function(key){
+    for (var i=0;i<this.addOns.length;i++){
+        if (this.addOns[i].key == key ){
+            if (i != this.store.getData(keys.index)){
+                this.changeItem(i);
+            }
+        }
+    }
+};
 
 (function(){
     //create an instance of the status page handler

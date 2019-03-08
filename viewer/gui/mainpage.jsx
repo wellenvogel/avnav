@@ -49,7 +49,11 @@ var Mainpage=function(){
         {key:'MainInfo'},
         {key:'MainCancel',android:true}
     ];
+    this.addOnButtons=[
+        {key:'MainAddOns'}
+    ];
     this.currentButtons=this.fixedButtons;
+    this.addOns=[];
 };
 avnav.inherits(Mainpage,Page);
 
@@ -193,6 +197,7 @@ Mainpage.prototype.fillList=function(){
     });
 };
 Mainpage.prototype.readAddOns=function(){
+    if (typeof (avnav.android) !== 'undefined') return; //on addons on android for now
     var page=this;
     var url=this.gui.properties.getProperties().navUrl+"?request=readAddons";
     $.ajax({
@@ -220,8 +225,11 @@ Mainpage.prototype.readAddOns=function(){
                     items.push(entry);
                 }
             }
-            page.currentButtons=page.fixedButtons.concat(items);
-            page.setButtons(page.currentButtons)
+            page.addOns=items;
+            if (items.length > 0) {
+                page.currentButtons = page.fixedButtons.concat(page.addOnButtons);
+                page.setButtons(page.currentButtons)
+            }
         }
 
     });
@@ -366,15 +374,13 @@ Mainpage.prototype.btnMainCancel=function (button,ev) {
     avnav.log("main cancel clicked");
     avnav.android.goBack();
 };
-Mainpage.prototype.btnAny=function(key){
-    var self=this;
-    this.currentButtons.forEach(function(buttonDef){
-      if (buttonDef.key == key && buttonDef.url !== undefined){
-          console.log("found button url for "+key+" "+buttonDef.url);
-          self.gui.showPage('addonpage',{url:buttonDef.url,title:buttonDef.title});
-      }
-  })
+
+Mainpage.prototype.btnMainAddOns=function(){
+    avnav.log("main addons clicked");
+    this.gui.showPage('addonpage',{addOns:this.addOns});
+
 };
+
 /**
  * create the page instance
  */
