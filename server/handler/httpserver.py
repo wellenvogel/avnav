@@ -1067,11 +1067,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
   def handleAddonRequest(self,param):
     host=self.headers.get('host')
-    host,dummy=host.split(':')
+    hostparts=host.split(':')
     outData=[]
     for addon in self.server.addons:
       newAddon=addon.copy()
-      newAddon['url']=addon['url'].replace('$HOST',host)
+      newAddon['url']=addon['url'].replace('$HOST',hostparts[0])
       outData.append(newAddon)
     return json.dumps({
       'status':'OK',
