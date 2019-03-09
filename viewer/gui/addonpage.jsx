@@ -31,7 +31,7 @@ AddonPage.prototype.changeItem=function(active){
     for (var i=0;i<this.addOns.length;i++){
         if (i == active) {
             this.addOns[i].toggle=true;
-            this.store.storeData(keys.title,this.addOns[i].title||"AddOns")
+            this.store.storeData(keys.title,this.addOns[i].title)
         }
         else this.addOns[i].toggle=false;
     }
@@ -66,6 +66,7 @@ AddonPage.prototype.getPageContent=function(){
             </div>
         },this.store,keys.index);
     var Headline=ItemUpdater(function(props){
+        if (!props.title) return null;
         return <div className="avn_left_top">{props.title}</div>
     },this.store,keys.title);
     return React.createClass({

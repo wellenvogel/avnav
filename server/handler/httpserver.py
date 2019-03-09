@@ -88,7 +88,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if child == 'UserTool':
       return {
         'url':None, #we replace $HOST...
-        'title':None,
+        'title':'',
         'icon':None, #an icon below $datadir/user
       }
     if not child is None:
@@ -1072,6 +1072,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     for addon in self.server.addons:
       newAddon=addon.copy()
       newAddon['url']=addon['url'].replace('$HOST',hostparts[0])
+      if newAddon.get('title') == '':
+        del newAddon['title']
       outData.append(newAddon)
     return json.dumps({
       'status':'OK',
