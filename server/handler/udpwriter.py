@@ -52,12 +52,12 @@ class AVNUdpWriter(AVNWorker,SocketReader):
     if child is None:
       
       rt={
-          'address'   : '192.168.30.255',                 
-          'port'      : None,       #local listener port
+          'host'      : 'localhost',                 
+          'port'      : 2000,       #port
           'name'      : '',
-          'feederName': '',    #if set, use this feeder
+          'feederName': '',         #if set, use this feeder
           'broadcast' : 'true',
-          'filter'    : ''       #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
+          'filter'    : ''          #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
          }
       return rt
     return None
@@ -70,12 +70,12 @@ class AVNUdpWriter(AVNWorker,SocketReader):
   #  return rt
 
   def __init__(self,param):
-    for p in ('port','address'):
+    for p in ('port','host'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for udp writer")
     AVNWorker.__init__(self, param)
     if param.get('name') is None:
-      self.param['name']="UdpWriter-%s-%d"%(self.getStringParam('address'),int(self.getIntParam('port'))) 
+      self.param['name']="UdpWriter-%s-%d"%(self.getStringParam('host'),int(self.getIntParam('port'))) 
     
   def getName(self):
     return self.getStringParam('name')
@@ -99,7 +99,7 @@ class AVNUdpWriter(AVNWorker,SocketReader):
        cs.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
        if self.getBoolParam('broadcast'):
          cs.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)   
-       addr=self.getStringParam('address')
+       addr=self.getStringParam('host')
        port=int(self.getIntParam('port'))
        filterstr=self.getStringParam('filter')
        filter=None
