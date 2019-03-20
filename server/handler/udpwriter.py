@@ -42,7 +42,7 @@ import avnav_handlerList
 
 #a worker to output data via a UDP socket
 
-class AVNUdpWriter(AVNWorker,SocketReader):
+class AVNUdpWriter(AVNWorker):
   @classmethod
   def getConfigName(cls):
     return "AVNUdpWriter"
@@ -62,12 +62,6 @@ class AVNUdpWriter(AVNWorker,SocketReader):
       return rt
     return None
 
-  #@classmethod
-  #def createInstance(cls, cfgparam):
-  #  if cfgparam.get('name') is None:
-  #    cfgparam['name']="UdpWriter"
-  #  rt=AVNUdpWriter(cfgparam)
-  #  return rt
 
   def __init__(self,param):
     for p in ('port','host'):
@@ -88,7 +82,6 @@ class AVNUdpWriter(AVNWorker,SocketReader):
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)", self.getName(), feedername or "")
     self.feeder=feeder
-    self.feederWrite = feeder.addNMEA
     AVNWorker.start(self)
   
 
