@@ -6,6 +6,8 @@
 #lower right: 1-1.5:1.0
 #currently we use upper left
 KERNELS=="1-1.2:1.0",SUBSYSTEM=="net",NAME="wlan-av1"
+#for pi3B+ - thanks to free-x
+KERNELS=="1-1.1.2:1.0",SUBSYSTEM=="net",NAME="wlan-av1"
 
 #to fix a dongle to also work as access point if there are some conflicts
 #just select an USB port that you would like to plug it
