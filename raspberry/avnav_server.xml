@@ -142,6 +142,10 @@
 -->
 <AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
 
+<!-- UDP Broadcaster for Navionics
+<AVNUdpWriter host="192.168.30.255" port="2000" filter=""/>
+-->
+
 </Workers>
 
 <!-- the Web server
