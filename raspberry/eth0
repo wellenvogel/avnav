@@ -1,8 +1,2 @@
 allow-hotplug eth0
 iface eth0 inet dhcp
-
-auto eth0:0
-iface eth0:0 inet static
-address 192.168.80.10
-netmask 255.255.255.0
-broadcast 192.168.80.255

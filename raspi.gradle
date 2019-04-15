@@ -131,6 +131,11 @@ ospackage {
             include('8192cu.conf')
         }
     }
+    into('/etc/avahi/services'){
+        from('raspberry'){
+            include('avnav-avahi.service')
+        }
+    }
 
     postInstall file('raspberry/postinstall')
     preInstall file('raspberry/preinstall')
@@ -146,6 +151,7 @@ task raspiDeb(type: Deb) {
     doFirst{
         version=project.packageVersion
         def vFile=file("$buildDir/$versionFileName")
+        logger.info("vfile=${vFile}")
 	if (! vFile.getParentFile().exists()) vFile.getParentFile().mkdirs()
         vFile.withWriter {wr->
             wr.println "AVNAV_VERSION=\"$version\""

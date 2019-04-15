@@ -537,6 +537,11 @@ sudo sysctl -w net.ipv4.tcp_fin_timeout=30
 sudo sysctl -w net.ipv4.tcp_tw_recycle=1
 sudo sysctl -w net.ipv4.tcp_tw_reuse=1
 
+========== starting 2019-04-13 =============================
+avahi conf included
+you can use "Bonjour Search" from app store on IOS to connect
+
+
 
 
  
