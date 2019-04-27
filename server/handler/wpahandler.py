@@ -229,7 +229,7 @@ class AVNWpaHandler(AVNWorker):
       return rt
     except Exception:
       AVNLog.error("exception in WPAHandler:getStatus: %s",traceback.format_exc())
-      return {'wpa_state','COMMANDERROR'}
+      return {'wpa_state':'COMMANDERROR'}
 
   def getHandledCommands(self):
     return "wpa"
