@@ -541,6 +541,10 @@ sudo sysctl -w net.ipv4.tcp_tw_reuse=1
 avahi conf included
 you can use "Bonjour Search" from app store on IOS to connect
 
+for using serial: use raspi-config to enable the serial port (but no console):
+enable_uart=1 in /boot/config.txt
+remove serial console from /boot/cmdline.txt
+
 
 
 

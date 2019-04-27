@@ -49,6 +49,7 @@ ospackage {
             include 'shutdown.sh'
             include 'restore-iptables.sh'
             include 'sound.sh'
+            include 'restart-wlan-av1.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'

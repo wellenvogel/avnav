@@ -51,6 +51,7 @@ class AVNWpaHandler(AVNWorker):
     self.lastScan=datetime.datetime.utcnow()
     self.scanLock=threading.Lock()
     self.getRequestParam=AVNUtil.getHttpRequestParam
+    self.commandHandler = None
   @classmethod
   def getConfigName(cls):
     return "AVNWpaHandler"
@@ -61,7 +62,8 @@ class AVNWpaHandler(AVNWorker):
     return {
             'ownSocket':'/tmp/avnav-wpa-ctrl', #my own socket endpoint
             'wpaSocket':"/var/run/wpa_supplicant/wlan-av1", #the wpa control socket
-            'ownSsid':'avnav,avnav1,avnav2'
+            'ownSsid':'avnav,avnav1,avnav2',
+            'restartCommand':'restartWlan'
     }
   @classmethod
   def preventMultiInstance(cls):
@@ -71,6 +73,7 @@ class AVNWpaHandler(AVNWorker):
 
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
+    self.commandHandler = self.findHandlerByName("AVNCommandHandler")
     wpaSocket=self.getStringParam('wpaSocket')
     ownSocket=self.getStringParam('ownSocket')
     while True:
@@ -149,6 +152,15 @@ class AVNWpaHandler(AVNWorker):
     except Exception:
       AVNLog.error("exception in WPAHandler:getList: %s",traceback.format_exc())
       return rt
+
+  def restartCommand(self):
+    if self.commandHandler is None:
+      return
+    cmd=self.getStringParam('restartCommand')
+    if cmd is None or cmd == '':
+      return
+    AVNLog.info("running wlan restart command")
+    self.commandHandler.startCommand(cmd)
   def removeNetwork(self,id):
     rt={'status':'no WLAN'}
     wpaHandler=self.wpaHandler
@@ -172,6 +184,7 @@ class AVNWpaHandler(AVNWorker):
       AVNLog.debug("wpa enable network",id)
       wpaHandler.enableNetwork(id)
       wpaHandler.saveConfig()
+      self.restartCommand()
       return {'status':'OK'}
     except Exception as e:
       AVNLog.error("exception in WPAHandler:enableNetwork: %s",traceback.format_exc())
@@ -199,6 +212,7 @@ class AVNWpaHandler(AVNWorker):
       AVNLog.debug("wpa connect",param)
       wpaHandler.connect(param)
       wpaHandler.saveConfig()
+      self.restartCommand()
       return {'status':'OK'}
     except Exception as e:
       AVNLog.error("exception in WPAHandler:connect: %s",traceback.format_exc())
