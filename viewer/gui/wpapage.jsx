@@ -11,7 +11,8 @@ var ItemUpdater=require('../components/ItemUpdater.jsx');
 
 var keys={
     itemListKey:'wpaItemns',
-    interfaceKey:'interface'
+    interfaceKey:'interface',
+    showAccess: 'showAccess' //if this is set, we can allow incoming traffic by setting this as id_str
 };
 
 /**
@@ -77,6 +78,7 @@ Wpapage.prototype.hidePage=function(){
 Wpapage.prototype.showWpaData=function(data){
     var self=this;
     this.store.storeData(keys.interfaceKey,{status:data.status});
+    this.store.storeData(keys.showAccess,data.showAccess);
     var i;
     var itemList=[];
     for (i in data.list){
@@ -85,6 +87,7 @@ Wpapage.prototype.showWpaData=function(data){
         if (ssid === undefined) continue;
         var displayItem={};
         displayItem.ssid=item.ssid;
+        displayItem.allowAccess=item.allowAccess;
         displayItem.id=item['network id'];
         displayItem.level=item['signal level'];
         displayItem.flags=item.flags+' '+item['network flags'];
@@ -133,7 +136,7 @@ Wpapage.prototype.getPageContent=function() {
     ];
     this.setButtons(buttons);
     var wpaClickHandler=function(item){
-        self.showWpaDialog(item.ssid,item.id);
+        self.showWpaDialog(item.ssid,item.id,item.allowAccess);
     };
     var listEntryClass=React.createClass({
         propTypes:{
@@ -219,16 +222,19 @@ Wpapage.prototype.getPageContent=function() {
 
 };
 
-Wpapage.prototype.showWpaDialog=function(ssid,id){
+Wpapage.prototype.showWpaDialog=function(ssid,id,allowAccess){
+    var self=this;
     var Dialog=React.createClass({
         propTypes:{
             closeCallback:React.PropTypes.func.isRequired,
-            resultCallback: React.PropTypes.func.isRequired
+            resultCallback: React.PropTypes.func.isRequired,
+            showAccess: React.PropTypes.bool
 
         },
         getInitialState: function(){
             return{
-                psk: ''
+                psk: '',
+                allowAccess: allowAccess
             }
         },
         valueChange: function(event){
@@ -236,10 +242,16 @@ Wpapage.prototype.showWpaDialog=function(ssid,id){
                 psk: event.target.value
             }) ;
         },
+        accessChange: function(event){
+            var newAccess=! this.state.allowAccess;
+            this.setState({
+                allowAccess: newAccess
+            }) ;
+        },
         buttonClick: function(event){
             var button=event.target.name;
             this.props.closeCallback();
-            if (button != "cancel")  this.props.resultCallback(button,this.state.psk);
+            if (button != "cancel")  this.props.resultCallback(button,this.state.psk,this.state.allowAccess);
         },
         render: function(){
             return (
@@ -250,6 +262,12 @@ Wpapage.prototype.showWpaDialog=function(ssid,id){
                                 <label >Password
                                 <input type="password" name="psk" onChange={this.valueChange} value={this.state.psk}/>
                                 </label>
+                                {this.props.showAccess?
+                                    <label onClick={this.accessChange}>External access
+                                        <span className={'avnCheckbox'+(this.state.allowAccess?' checked':'')}/>
+                                    </label>
+                                :null
+                                }
                             </div>
                             {id >=0 && <button name="remove" onClick={this.buttonClick}>Remove</button>}
                             <button name="cancel" onClick={this.buttonClick}>Cancel</button>
@@ -262,23 +280,37 @@ Wpapage.prototype.showWpaDialog=function(ssid,id){
             );
         }
     });
-    var self=this;
     OverlayDialog.dialog(Dialog,this.getDialogContainer(),{
-       resultCallback: function(type,psk){
+       resultCallback: function(type,psk,allowAccess){
            var data={
                id: id,
                ssid: ssid
            };
            if (type== 'connect') {
                data.psk=psk;
+               if (allowAccess){
+                   data.allowAccess=allowAccess;
+               }
                self.sendRequest('connect', 'connect to ' + avnav.util.Helper.escapeHtml(data.ssid), data);
                return;
            }
-           if (type == 'remove' || type == 'disable'|| type == 'enable'){
+           if (type == 'enable'){
+               if (allowAccess){
+                   data.allowAccess=allowAccess;
+               }
+               if (psk && psk != ""){
+                   //allow to change the PSK with enable 
+                   data.psk=psk;
+               }
                self.sendRequest(type,type+' '+avnav.util.Helper.escapeHtml(data.ssid),data);
                return;
            }
-       }
+           if (type == 'remove' || type == 'disable'){
+               self.sendRequest(type,type+' '+avnav.util.Helper.escapeHtml(data.ssid),data);
+               return;
+           }
+       },
+       showAccess: self.store.getDataLocal(keys.showAccess,false)
     });
 };
 

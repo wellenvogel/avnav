@@ -42,14 +42,14 @@ ospackage {
     into ('/usr/lib/avnav/raspberry') {
         from('raspberry'){
             fileMode 0755
-            include 'check_parts'
             include 'check_wlan'
             include 'hostapd'
             include 'settime.sh'
             include 'shutdown.sh'
             include 'restore-iptables.sh'
             include 'sound.sh'
-            include 'restart-wlan-av1.sh'
+            include 'check-wlan-av1.pl'
+            include 'iptables-ext.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'
@@ -70,7 +70,7 @@ ospackage {
     }
     into('/usr/lib/systemd/system'){
         from('raspberry'){
-            include('avnav-check-parts.service')
+            include('avnav-check-wlan.service')
             include('avnav-iptables.service')
         }
     }
@@ -100,12 +100,6 @@ ospackage {
             include('iptables.ipv4.nat')
         }
     }
-    into('/usr/sbin'){
-        from('raspberry'){
-            include('hostapd.edimax')
-            fileMode 0755
-        }
-    }
     into('/etc/udev/rules.d'){
         from('raspberry'){
             include('010-avnav-net.rules')
@@ -128,7 +122,6 @@ ospackage {
     }
     into('/etc/modprobe.d'){
         from('raspberry'){
-            include('r8188eu.conf')
             include('8192cu.conf')
         }
     }

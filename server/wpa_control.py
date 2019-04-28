@@ -167,11 +167,13 @@ class WpaControl():
 
   '''run a command that returns some data
      with caching'''
-  def commandWithCache(self,command):
-    data=self.getCachedValue(command)
+  def commandWithCache(self,command,cache_key=None):
+    if cache_key is None:
+      cache_key=command
+    data=self.getCachedValue(cache_key)
     if data is None:
       data=self.runFreeCommand(command)
-      self.cacheValue(command,data)
+      self.cacheValue(cache_key,data)
     return data
 
   def startScan(self):
@@ -187,7 +189,19 @@ class WpaControl():
     return True
   def listNetworks(self):
     data=self.commandWithCache("LIST_NETWORKS")
-    return self.tableToDict(data)
+    rt=self.tableToDict(data)
+    for net in rt:
+      id=net.get('network id')
+      try:
+        if id is not None:
+          id_str=self.commandWithCache("GET_NETWORK %s id_str"%(id))
+          if id_str is not None:
+            id_str=id_str.rstrip()
+            if id_str != 'FAIL':
+              net['id_str']=id_str.replace('"','')
+      except:
+        pass
+    return rt
   def addNetwork(self):
     data=self.runFreeCommand("ADD_NETWORK")
     if data.strip() == "FAIL":
@@ -293,6 +307,7 @@ class WpaControl():
     scan['network id']=id.get('network id')
     scan['is known']=True
     scan['network flags']=id.get('flags')
+    scan['id_str']=id.get('id_str')
     return scan
 
 

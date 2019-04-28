@@ -38,6 +38,7 @@ import json
 import datetime
 import threading
 
+from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 from wpa_control import WpaControl
@@ -45,6 +46,8 @@ import avnav_handlerList
 
 #a handler to set up a wpa claient
 class AVNWpaHandler(AVNWorker):
+  PRIVATE_NAME = "wlan-internal" #name to be set as id_str for wlans that should allow incoming traffic
+  P_FWCOMMAND="firewallCommand"
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.wpaHandler=None
@@ -63,7 +66,8 @@ class AVNWpaHandler(AVNWorker):
             'ownSocket':'/tmp/avnav-wpa-ctrl', #my own socket endpoint
             'wpaSocket':"/var/run/wpa_supplicant/wlan-av1", #the wpa control socket
             'ownSsid':'avnav,avnav1,avnav2',
-            'restartCommand':'restartWlan'
+            #cls.P_FWCOMMAND': '',
+            cls.P_FWCOMMAND:'sudo -n $BASEDIR/../raspberry/iptables-ext.sh wlan-av1'
     }
   @classmethod
   def preventMultiInstance(cls):
@@ -76,6 +80,8 @@ class AVNWpaHandler(AVNWorker):
     self.commandHandler = self.findHandlerByName("AVNCommandHandler")
     wpaSocket=self.getStringParam('wpaSocket')
     ownSocket=self.getStringParam('ownSocket')
+    watcherThread=threading.Thread(target=self.allowDenyWatcher,name="firewallWatcher")
+    watcherThread.start()
     while True:
       try:
         newWpaSocket=self.getStringParam('wpaSocket')
@@ -111,6 +117,40 @@ class AVNWpaHandler(AVNWorker):
         pass
       time.sleep(5)
       
+  def allowDenyWatcher(self):
+    """
+    checks for the current active LAN to have id_str="wlan-internal"
+    and open the firewall in this case using the allowDenyCommand
+    @return:
+    """
+    statusName="FwHandler"
+    cmd=self.getStringParam(self.P_FWCOMMAND)
+    if cmd is None or cmd == "":
+      self.setInfo(statusName, "no  command", AVNWorker.Status.INACTIVE)
+      return
+    cmdparam=cmd.split(" ")
+    command=[]
+    for par in cmdparam:
+      command.append(AVNUtil.replaceParam(par, AVNConfig.filterBaseParam(self.getParam())))
+    self.setInfo(statusName,"running",AVNWorker.Status.NMEA)
+    while True:
+      try:
+        status=self.getStatus()
+        if status.get('wpa_state') is not None and status.get('wpa_state') == 'COMPLETED':
+          mode="deny"
+          if status.get('id_str') is not None and status.get('id_str') == self.PRIVATE_NAME:
+            mode="allow"
+          rt=AVNUtil.runCommand(command+[mode],statusName+"-command")
+          if rt != 0:
+            if rt is None:
+              rt=-1
+            AVNLog.error("%s: unable to run firewall command for mode %s, return %d"%(statusName,mode,rt))
+            self.setInfo(statusName,"unable to run firewall command for %s, return %d"%(mode,rt),AVNWorker.Status.ERROR)
+          else:
+            self.setInfo(statusName, "firewall command for %s" % (mode), AVNWorker.Status.NMEA)
+      except:
+        AVNLog.error("%s: exception %s"%(statusName,traceback.format_exc()))
+      time.sleep(10)
 
   def startScan(self):
     if self.wpaHandler is None:
@@ -138,29 +178,21 @@ class AVNWpaHandler(AVNWorker):
     try:
       list=wpaHandler.scanResultWithInfo()
       ownSSid=self.getStringParam('ownSsid')
-      if ownSSid is not None and ownSSid != "":
-        #remove own ssid
-        for net in list:
-          netSsid=net.get('ssid')
+      #remove own ssid
+      for net in list:
+        netSsid=net.get('ssid')
+        if ownSSid is not None and ownSSid != "":
           if netSsid is not None and netSsid in ownSSid.split(","):
             continue
-          rt.append(net)
-      else:
-        rt=list
-      AVNLog.debug("wpa list",rt)
+        id_str=net.get('id_str')
+        if id_str is not None and id_str == self.PRIVATE_NAME:
+          net['allowAccess']=True
+        rt.append(net)
+      AVNLog.debug("wpa list %s",rt)
       return rt
     except Exception:
       AVNLog.error("exception in WPAHandler:getList: %s",traceback.format_exc())
       return rt
-
-  def restartCommand(self):
-    if self.commandHandler is None:
-      return
-    cmd=self.getStringParam('restartCommand')
-    if cmd is None or cmd == '':
-      return
-    AVNLog.info("running wlan restart command")
-    self.commandHandler.startCommand(cmd)
   def removeNetwork(self,id):
     rt={'status':'no WLAN'}
     wpaHandler=self.wpaHandler
@@ -175,16 +207,17 @@ class AVNWpaHandler(AVNWorker):
       AVNLog.error("exception in WPAHandler:removeNetwork: %s",traceback.format_exc())
       return {'status':'commandError','info':str(e)}
 
-  def enableNetwork(self,id):
+  def enableNetwork(self,id,param=None):
     rt={'status':'no WLAN'}
     wpaHandler=self.wpaHandler
     if wpaHandler is None:
       return rt
     try:
       AVNLog.debug("wpa enable network",id)
+      if param is not None:
+        self.wpaHandler.configureNetwork(id,param)
       wpaHandler.enableNetwork(id)
       wpaHandler.saveConfig()
-      self.restartCommand()
       return {'status':'OK'}
     except Exception as e:
       AVNLog.error("exception in WPAHandler:enableNetwork: %s",traceback.format_exc())
@@ -212,7 +245,6 @@ class AVNWpaHandler(AVNWorker):
       AVNLog.debug("wpa connect",param)
       wpaHandler.connect(param)
       wpaHandler.saveConfig()
-      self.restartCommand()
       return {'status':'OK'}
     except Exception as e:
       AVNLog.error("exception in WPAHandler:connect: %s",traceback.format_exc())
@@ -225,6 +257,8 @@ class AVNWpaHandler(AVNWorker):
       return rt
     try:
       rt=wpaHandler.status()
+      if rt.get('id_str') is not None and rt.get('id_str') == self.PRIVATE_NAME:
+        rt['allowAccess']=True
       AVNLog.debug("wpa status",rt)
       return rt
     except Exception:
@@ -246,10 +280,23 @@ class AVNWpaHandler(AVNWorker):
     if command == 'status':
       rt=json.dumps(self.getStatus())
     if command == 'all':
-      rt=json.dumps({'status':self.getStatus(),'list':self.getList()})
+      cmd=self.getStringParam(self.P_FWCOMMAND)
+      rt={'status':self.getStatus(),'list':self.getList()}
+      if cmd is not None and cmd != "":
+        rt['showAccess']=True
+      rt=json.dumps(rt)
     if command == 'enable':
       id=self.getRequestParam(requestparam,'id')
-      rt=json.dumps(self.enableNetwork(id))
+      updateParam={}
+      psk=self.getRequestParam(requestparam,'psk')
+      if psk is not None and psk != "":
+        updateParam['psk']=psk
+      allowAccess=self.getRequestParam(requestparam,'allowAccess')
+      if allowAccess is not None and allowAccess == 'true':
+        updateParam['id_str']=self.PRIVATE_NAME
+      else:
+        updateParam['id_str']=''
+      rt=json.dumps(self.enableNetwork(id,updateParam))
     if command == 'disable':
       id=self.getRequestParam(requestparam,'id')
       rt=json.dumps(self.disableNetwork(id))
@@ -263,11 +310,14 @@ class AVNWpaHandler(AVNWorker):
         if v is not None and v != "":
           param[k]=v
       key=self.getRequestParam(requestparam,"psk")
-      if key is None or key == "":
+      id = self.getRequestParam(requestparam, 'id')
+      if ( key is None or key == "" )  and id is None:
         param['key_mgmt'] = "NONE"
       else:
         param['key_mgmt'] = "WPA-PSK"
-
+      allowAccess=self.getRequestParam(requestparam,'allowAccess')
+      if allowAccess is not None and allowAccess == 'true':
+        param['id_str']=self.PRIVATE_NAME
       rt=json.dumps(self.connect(param))
     if rt is None:
       raise Exception("unknown command %s"%(command))

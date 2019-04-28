@@ -87,7 +87,10 @@
 <!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
 <AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter importDir="../data_linux/import"></AVNImporter>
-<AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan0"></AVNWpaHandler>
+<AVNWpaHandler 
+wpaSocket="/var/run/wpa_supplicant/wlx0013eff503f2"
+allowDenyCommand="sudo $BASEDIR/../raspberry/iptables-ext.sh wlx0013eff503f2"
+></AVNWpaHandler>
 <AVNCommandHandler>
 	<Command name="test" command="sleep 4"/>
 	<Command name="shutdown" command="echo shutdown triggered"/>

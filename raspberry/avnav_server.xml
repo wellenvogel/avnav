@@ -198,14 +198,16 @@
 -->
 <AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter importDir="/home/pi/avnav/data/import"></AVNImporter>
-<AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan-av1"></AVNWpaHandler>
+<!-- add the following property to AVNWpaHandler to be able to allow external access for wlan client
+     firewallCommand="sudo -n $BASEDIR/../raspberry/iptables-ext.sh wlan-av1"
+-->
+<AVNWpaHandler 
+    wpaSocket="/var/run/wpa_supplicant/wlan-av1"
+    >
+</AVNWpaHandler>
 <AVNCommandHandler >
 	<Command name="shutdown" command="sudo shutdown -P"/>
 	<Command name="sound" command="/bin/sh $BASEDIR/../raspberry/sound.sh 90%" repeat="1"/>
-    <!-- uncomment the next line if you run a realtek based WLAN stick and cannot reconnect to 
-         an external LAN 
-         could lead to problems if you also run your access point based on such a stick -->
-    <!--<Command name="restartWlan" command="sudo $BASEDIR/../raspberry/restart-wlan-av1.sh"/>-->
 </AVNCommandHandler>
 <AVNAlarmHandler>
 		<Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/>
