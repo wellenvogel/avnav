@@ -142,6 +142,7 @@ Wpapage.prototype.getPageContent=function() {
         propTypes:{
             ssid: React.PropTypes.string.isRequired,
             level:React.PropTypes.string,
+            allowAccess:React.PropTypes.bool,
             id: React.PropTypes.any.isRequired,
             flags: React.PropTypes.string.isRequired,
             activeItem: React.PropTypes.bool
@@ -165,6 +166,7 @@ Wpapage.prototype.getPageContent=function() {
                         <span className='avn_wpa_item_detail'>Signal:{level}</span>
                         <span className='avn_wpa_item_detail'>{this.props.id >=0?'configured':''}</span>
                         { disabled && <span className='avn_wpa_item_detail'>disabled</span>}
+                        { (this.props.allowAccess && self.store.getData(keys.showAccess,false))  && <span className='avn_wpa_item_detail'>ext access</span>}
                         { this.props.activeItem  && <span className='avn_wpa_item_detail'>active</span>}
                     </div>
                 </div>
@@ -184,7 +186,16 @@ Wpapage.prototype.getPageContent=function() {
                 );
             }
             var info=status.ssid?"["+status.ssid+"]":"";
-            if (status.ip_address) info+=", IP: "+status.ip_address;
+            var showAccess=self.store.getData(keys.showAccess,false);
+            if (status.ip_address) {
+                info+=", IP: "+status.ip_address;
+                if (this.props.status.allowAccess && showAccess){
+                    info+=", ext access"
+                }
+                if (showAccess){
+                    info+=", firewall "+((status.fwStatus === 0)?"ok":"failed");
+                }
+            }
             else info+=" waiting for IP...";
             return (
                 <div className="avn_wpa_interface">

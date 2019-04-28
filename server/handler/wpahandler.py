@@ -44,10 +44,18 @@ from avnav_worker import *
 from wpa_control import WpaControl
 import avnav_handlerList
 
+class FwInfo:
+  def __init__(self,ssid,mode,status):
+    self.ssid=ssid
+    self.mode=mode
+    self.status=status
+
 #a handler to set up a wpa claient
 class AVNWpaHandler(AVNWorker):
   PRIVATE_NAME = "wlan-internal" #name to be set as id_str for wlans that should allow incoming traffic
   P_FWCOMMAND="firewallCommand"
+  COMMAND_REPEAT=10 #10 seconds for repeat on error
+  COMMAND_REPEAT_OK=1800 #30 minutes for repeat on ok
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.wpaHandler=None
@@ -55,6 +63,7 @@ class AVNWpaHandler(AVNWorker):
     self.scanLock=threading.Lock()
     self.getRequestParam=AVNUtil.getHttpRequestParam
     self.commandHandler = None
+    self.lastFwInfo=None
   @classmethod
   def getConfigName(cls):
     return "AVNWpaHandler"
@@ -133,24 +142,40 @@ class AVNWpaHandler(AVNWorker):
     for par in cmdparam:
       command.append(AVNUtil.replaceParam(par, AVNConfig.filterBaseParam(self.getParam())))
     self.setInfo(statusName,"running",AVNWorker.Status.NMEA)
+    lastNet=None
+    lastMode=None
+    lastResult=-1
+    lastSuccess=AVNUtil.utcnow()
     while True:
       try:
         status=self.getStatus()
         if status.get('wpa_state') is not None and status.get('wpa_state') == 'COMPLETED':
+          ssid=status.get('ssid')
           mode="deny"
           if status.get('id_str') is not None and status.get('id_str') == self.PRIVATE_NAME:
             mode="allow"
-          rt=AVNUtil.runCommand(command+[mode],statusName+"-command")
-          if rt != 0:
-            if rt is None:
-              rt=-1
-            AVNLog.error("%s: unable to run firewall command for mode %s, return %d"%(statusName,mode,rt))
-            self.setInfo(statusName,"unable to run firewall command for %s, return %d"%(mode,rt),AVNWorker.Status.ERROR)
-          else:
-            self.setInfo(statusName, "firewall command for %s" % (mode), AVNWorker.Status.NMEA)
+          waittime=0
+          if lastMode == mode and lastNet == ssid:
+            if lastResult != 0:
+              waittime=self.COMMAND_REPEAT
+            else:
+              waittime=self.COMMAND_REPEAT_OK
+          if (AVNUtil.utcnow() - lastSuccess) >= waittime:
+            lastNet=ssid
+            lastMode=mode
+            AVNLog.info("running command %s %s",command,mode)
+            lastResult=AVNUtil.runCommand(command+[mode],statusName+"-command")
+            if lastResult != 0:
+              if lastResult is None:
+                lastResult=-1
+              AVNLog.error("%s: unable to run firewall command on %s for mode %s, return %d"%(statusName,ssid,mode,lastResult))
+              self.setInfo(statusName,"unable to run firewall command on %s for %s, return %d"%(ssid,mode,lastResult),AVNWorker.Status.ERROR)
+            else:
+              self.setInfo(statusName, "firewall command on %s for %s ok" % (ssid,mode), AVNWorker.Status.NMEA)
+            self.lastFwInfo=FwInfo(ssid,mode,lastResult)
       except:
         AVNLog.error("%s: exception %s"%(statusName,traceback.format_exc()))
-      time.sleep(10)
+      time.sleep(5)
 
   def startScan(self):
     if self.wpaHandler is None:
@@ -259,6 +284,14 @@ class AVNWpaHandler(AVNWorker):
       rt=wpaHandler.status()
       if rt.get('id_str') is not None and rt.get('id_str') == self.PRIVATE_NAME:
         rt['allowAccess']=True
+      hasFwResult=False
+      if self.lastFwInfo is not None:
+        if self.lastFwInfo.ssid == rt.get('ssid'):
+          rt['fwStatus']=self.lastFwInfo.status
+          rt['fwMode']=self.lastFwInfo.mode
+          hasFwResult=True
+      if not hasFwResult:
+        rt['fwStatus']=-1
       AVNLog.debug("wpa status",rt)
       return rt
     except Exception:
@@ -318,6 +351,8 @@ class AVNWpaHandler(AVNWorker):
       allowAccess=self.getRequestParam(requestparam,'allowAccess')
       if allowAccess is not None and allowAccess == 'true':
         param['id_str']=self.PRIVATE_NAME
+      else:
+        param['id_str'] = ''
       rt=json.dumps(self.connect(param))
     if rt is None:
       raise Exception("unknown command %s"%(command))
