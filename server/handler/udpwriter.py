@@ -106,6 +106,8 @@ class AVNUdpWriter(AVNWorker):
             for line in data:
                if NMEAParser.checkFilter(line, filter):
                  cs.sendto(line,(addr,port)) 
+          else:
+            time.sleep(0.1)
        cs.close()
 
 avnav_handlerList.registerHandler(AVNUdpWriter)
