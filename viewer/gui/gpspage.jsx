@@ -9,6 +9,7 @@ let navobjects=require('../nav/navobjects');
 let Formatter=require('../util/formatter');
 let WidgetContainer=require('../components/WidgetContainer');
 let WidgetFactory=require('../components/WidgetFactory');
+let shallowCompare=require('../util/shallowcompare');
 
 const keys={
   anchorWatch:'anchorWatch', //TODO: should become global
@@ -38,7 +39,7 @@ const keys={
 const widgetLists={};
 widgetLists[keys.widgetLists.page1.left]=[
     {name:"BRG"},
-    {name:"XteDisplay"},
+    {name:"XteDisplay",compareState:true},
     {name:"DST"},
     {name:"ETA"},
     {name: "RteCombine"}
@@ -69,7 +70,7 @@ widgetLists[keys.widgetLists.page1a.right]=[
 
 widgetLists[keys.widgetLists.page2.left]=[
     {name:"BRG"},
-    {name:"XteDisplay"},
+    {name:"XteDisplay",compareState:true},
     {name:"DST"},
     {name:"ETA"},
     {name: "RteCombine"}
@@ -188,6 +189,9 @@ Gpspage.prototype.getPageContent=function(){
         goBack: function(){
             self.returnToLast();
         },
+        shouldComponentUpdate: function(nextProps, nextState){
+            return ! shallowCompare(nextProps, this.props);
+        },
         render: function(){
             let widgetCreator=function(widget,list){
                 let addClass;
@@ -251,7 +255,7 @@ Gpspage.prototype.getPageContent=function(){
             );
         }
     });
-    return ItemUpdater(Main,this.store,[keys.anchorWatch,keys.secondPage]);
+    return ItemUpdater(Main,this.store,[keys.anchorWatch,keys.secondPage],true);
 };
 
 
