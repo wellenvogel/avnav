@@ -66,6 +66,8 @@ var Page=function(name,options){
     });
     this.intervalTimer=-1;
     this.showTime=undefined;
+    this.leftPanelBounds={};
+    this.lastRef=undefined;
 };
 
 /**
@@ -147,9 +149,9 @@ Page.prototype._initPage=function(){
             return (
                 <div className="avn_pageWrapper">
                     <Measure
-                        bounds="true"
+                        bounds={true}
                         onResize={function (item) {
-                            self.leftPanelChanged(item.bounds);
+                            if (! self.leftPanelCallback(item.bounds)) return;
                             var buttonFontSize=self.gui.properties.getButtonFontSize();
                             self.store.updateData(self.globalKeys.buttons,{fontSize:buttonFontSize});
                         }
@@ -159,9 +161,12 @@ Page.prototype._initPage=function(){
                                 <div className="avn_left_panel" ref={function(item){
                                     //mp.measureRef(item);
                                     if (item) {
-                                        mp.measureRef(item);
+                                        if (item !== self.lastRef){
+                                            mp.measureRef(item);
+                                            self.lastRef=item;
+                                        }
                                         let r=item.getBoundingClientRect();
-                                        self.leftPanelChanged(r);
+                                        self.leftPanelCallback(r);
                                     }
                                 }}>
                                     <Content/>
@@ -181,6 +186,19 @@ Page.prototype._initPage=function(){
     ReactDOM.render(React.createElement(PageData,{}),this.getDiv()[0]);
     return true;
     
+};
+
+Page.prototype.leftPanelCallback=function(bounds){
+    if (bounds){
+        let old=this.leftPanelBounds;
+        if (bounds.width == old.width &&
+            bounds.height == old.height &&
+            bounds.left == old.left &&
+            bounds.top == old.top) return false;
+    }
+    this.leftPanelBounds=bounds;
+    this.leftPanelChanged(bounds);
+    return true;
 };
 /**
  * function will be called whenever the size of the left panel changes

@@ -14,6 +14,7 @@ let shallowCompare=require('../util/shallowcompare');
 const keys={
   anchorWatch:'anchorWatch', //TODO: should become global
   secondPage: 'second',
+  layoutCount: 'layout',
   widgetLists: {
       page1:{
           left: 'wlp1left',
@@ -136,6 +137,7 @@ Gpspage.prototype.showPage=function(options){
     let secondPage=false;
     if (options && options.secondPage) secondPage=true;
     this.store.storeData(keys.secondPage,secondPage);
+    this.store.storeData(keys.layoutCount,1);
     this.handleToggleButton('Gps2',secondPage);
 };
 
@@ -147,6 +149,7 @@ Gpspage.prototype.hidePage=function(){
 Gpspage.prototype.leftPanelChanged=function(rect){
     this.leftPanelHeight=rect.height;
     this.leftPanelWidth=rect.width;
+    this.store.storeData(keys.layoutCount,this.store.getData(keys.layoutCount,0)+1);
 };
 
 Gpspage.prototype.createElememt=function(key,unit,rel){
@@ -255,7 +258,7 @@ Gpspage.prototype.getPageContent=function(){
             );
         }
     });
-    return ItemUpdater(Main,this.store,[keys.anchorWatch,keys.secondPage],true);
+    return ItemUpdater(Main,this.store,[keys.anchorWatch,keys.secondPage,keys.layoutCount],true);
 };
 
 
