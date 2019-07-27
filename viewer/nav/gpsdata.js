@@ -5,6 +5,8 @@ let navobjects=require('./navobjects');
 let NavData=require('./navdata');
 let StoreApi=require('../util/storeapi');
 let Base=require('../base');
+let globalStore=require('../util/globalstore.jsx');
+let keys=require('../util/keys.jsx');
 
 
 /**
@@ -93,6 +95,26 @@ GpsData.prototype.average=function(gpsdata){
     });
     return rt;
 };
+
+GpsData.prototype.writeToStore=function(){
+    let bk=keys.nav.gps;
+    let d=this.gpsdata;
+    globalStore.storeData(bk.lat,d.lat);
+    globalStore.storeData(bk.lon,d.lon);
+    globalStore.storeData(bk.course,d.course);
+    globalStore.storeData(bk.rtime,d.rtime);
+    globalStore.storeData(bk.raw,d.raw);
+    globalStore.storeData(bk.valid,d.valid);
+    globalStore.storeData(bk.speed,d.speed);
+    globalStore.storeData(bk.windAngle,d.windAngle);
+    globalStore.storeData(bk.windSpeed,d.windSpeed);
+    globalStore.storeData(bk.windReference,d.windReference);
+    globalStore.storeData(bk.positionAverageOn,d.positionAverage);
+    globalStore.storeData(bk.speedAverageOn,d.speedAverage);
+    globalStore.storeData(bk.courseAverageOn,d.courseAverage);
+    globalStore.storeData(bk.sequence,globalStore.getData(bk.sequence,0)+1);
+
+};
 /**
  *
  * @param data
@@ -110,6 +132,9 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         if (gpsdata.course === undefined) gpsdata.course = data.track;
         gpsdata.speed = data.speed * 3600 / this.NM;
         gpsdata=this.average(gpsdata);
+        gpsdata.windAngle = (data.windAngle !== undefined) ? data.windAngle : 0;
+        gpsdata.windSpeed = (data.windSpeed !== undefined) ? data.windSpeed : 0;
+        gpsdata.windReference = data.windReference || 'R';
         gpsdata.valid = true;
         this.alarms=data.alarms;
     }
@@ -166,9 +191,9 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         }catch(e){}
     }
     try {
-        formattedData.windAngle = (data.windAngle !== undefined) ? data.windAngle.toFixed(1) : '000.0';
-        formattedData.windSpeed = (data.windSpeed !== undefined) ? data.windSpeed.toFixed(2) : '00.00';
-        formattedData.windReference = data.windReference || 'R';
+        formattedData.windAngle = this.gpsdata.windAngle.toFixed(1);
+        formattedData.windSpeed = this.gpsdata.windSpeed.toFixed(2);
+        formattedData.windReference = this.gpsdata.windReference;
     }catch(e){
         formattedData.windReference='R';
         formattedData.windSpeed='00.00';
@@ -180,6 +205,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         formattedData.depthBelowTransducer = '0000.00';
     }
     this.formattedData=formattedData;
+    this.writeToStore();
 };
 
 /**

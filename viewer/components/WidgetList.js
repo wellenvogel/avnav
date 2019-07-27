@@ -12,6 +12,10 @@ let WindWidget=require('./WindWidget');
 let XteWidget=require('./XteWidget');
 let EmptyWidget=require('./EmptyWidget');
 let WindGraphics=require('./WindGraphics');
+let DirectWidget=require('./DirectWidget.jsx');
+let keys=require('../util/keys.jsx');
+let Formatter=require('../util/formatter');
+let fi=new Formatter();
 let widgetList=[
     {
         name: 'SOG',
@@ -19,8 +23,10 @@ let widgetList=[
         unit: "kn",
         caption: 'SOG',
         classes: 'avn_speedWidget',
-        dataKey: 'gpsSpeed',
-        averageKey: 'gpsSpeedAverage'
+        dataKey: keys.nav.gps.speed,
+        averageKey: keys.nav.gps.speedAverageOn,
+        formatter: function(v){return fi.formatDecimal(v || 0, 2, 1)},
+        wclass: DirectWidget
     },
     {
         name: 'COG',

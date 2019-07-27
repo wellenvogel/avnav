@@ -3,6 +3,8 @@ var assign=require("object-assign");
 var widgetList=require('./WidgetList');
 var Widget=require('./Widget.jsx');
 var ItemUpdater=require('./ItemUpdater.jsx');
+var DirectWidget=require('./DirectWidget.jsx');
+let globalStore=require('../util/globalstore.jsx');
 
 
 class WidgetFactory{
@@ -64,7 +66,15 @@ class WidgetFactory{
                     else {
                         var RenderWidget=mergedProps.wclass||Widget;
                         if (mergedProps.store) {
-                            RenderWidget = ItemUpdater(RenderWidget, mergedProps.store, dataKey);
+                            if (RenderWidget === DirectWidget){
+                                var tf=function(state){
+                                    return {value:state[dataKey],isAverage:state[mergedProps.averageKey]}
+                                };
+                                RenderWidget = ItemUpdater(RenderWidget, globalStore, [dataKey,mergedProps.averageKey],tf);
+                            }
+                            else {
+                                RenderWidget = ItemUpdater(RenderWidget, mergedProps.store, dataKey);
+                            }
                         }
                         return <RenderWidget {...wprops}/>
                     }

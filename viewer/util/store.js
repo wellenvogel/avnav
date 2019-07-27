@@ -22,9 +22,10 @@ Base.inherits(Store,StoreApi);
  * @param data
  */
 Store.prototype.storeData=function(key,data){
+    let hasChanged=!this.equalsData(this.data[key],data);
     this.data[key]=data;
     //this could be improved by checking for changes...
-    this.callCallbacks([key]);
+    if (hasChanged)this.callCallbacks([key]);
 };
 
 /**

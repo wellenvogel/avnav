@@ -13,10 +13,13 @@ let React=require('react');
  * @param {string||string[]} opt_storeKey the key(s) to register at the store and fetch data
  *         if any of the returned items is not an object, the value will be assigned to a key with the
  *         name of the store key
+ * @param {function} a translate function to convert the data fetched from the store into
+ *        properties of the wrapped component
+ *        will receive the state object as parameter
  * @returns {*} the wrapped react class
  * @constructor
  */
-let Updater=function(Item,store,opt_storeKey) {
+let Updater=function(Item,store,opt_storeKey,opt_translater) {
     let getStoreKeys=function(){
         if (opt_storeKey === undefined) return;
         if (opt_storeKey instanceof Array) return opt_storeKey;
@@ -27,6 +30,7 @@ let Updater=function(Item,store,opt_storeKey) {
             let st={};
             if (! opt_storeKey) return {update:1};
             getStoreKeys().forEach(function(key){
+                if (key === undefined) return;
                 let v=store.getData(key);
                 if (typeof(v) !== "object"){
                     v={};
@@ -60,7 +64,11 @@ let Updater=function(Item,store,opt_storeKey) {
             store.deregister(this);
         },
         render: function () {
-            let props = avnav.assign({}, this.props, this.state);
+            let props = {};
+            if (! opt_translater)
+                props=avnav.assign({}, this.props, this.state);
+            else
+                props=avnav.assign({},this.props, opt_translater(this.state))
             return <Item {...props}/>
         }
     });

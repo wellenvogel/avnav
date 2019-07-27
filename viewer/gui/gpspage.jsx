@@ -10,6 +10,7 @@ let Formatter=require('../util/formatter');
 let WidgetContainer=require('../components/WidgetContainer');
 let WidgetFactory=require('../components/WidgetFactory');
 let shallowCompare=require('../util/shallowcompare');
+let gkeys=require('../util/keys.jsx');
 
 const keys={
   anchorWatch:'anchorWatch', //TODO: should become global
