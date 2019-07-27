@@ -101,6 +101,7 @@ GpsData.prototype.writeToStore=function(){
     let d=this.gpsdata;
     globalStore.storeData(bk.lat,d.lat);
     globalStore.storeData(bk.lon,d.lon);
+    globalStore.storeData(bk.position,{lat:d.lat,lon:d.lon});
     globalStore.storeData(bk.course,d.course);
     globalStore.storeData(bk.rtime,d.rtime);
     globalStore.storeData(bk.raw,d.raw);
@@ -139,6 +140,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         this.alarms=data.alarms;
     }
     else{
+        gpsdata={valid:false};
         //clean average data
         this.speedAverageData=[];
         this.courseAverageData=[];

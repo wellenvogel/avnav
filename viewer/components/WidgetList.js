@@ -23,9 +23,12 @@ let widgetList=[
         unit: "kn",
         caption: 'SOG',
         classes: 'avn_speedWidget',
-        dataKey: keys.nav.gps.speed,
-        averageKey: keys.nav.gps.speedAverageOn,
-        formatter: function(v){return fi.formatDecimal(v || 0, 2, 1)},
+        storeKeys: {
+            value: keys.nav.gps.speed,
+            isAverage: keys.nav.gps.speedAverageOn
+        },
+        formatter:'formatDecimal',
+        formatterParameters: [2, 1],
         wclass: DirectWidget
     },
     {
@@ -34,8 +37,13 @@ let widgetList=[
         unit: "\u00b0",
         caption: 'COG',
         classes: 'avn_courseWidget',
-        dataKey: 'gpsCourse',
-        averageKey: 'gpsCourseAverage'
+        storeKeys:{
+            value: keys.nav.gps.course,
+            isAverage:keys.nav.gps.courseAverageOn
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [3,0],
+        wclass: DirectWidget
 
     },
     {
@@ -43,8 +51,12 @@ let widgetList=[
         default: "-------------",
         caption: 'BOAT',
         classes: 'avn_posWidget',
-        dataKey: 'gpsPosition',
-        averageKey: 'gpsPositionAverage'
+        storeKeys:{
+            value: keys.nav.gps.position,
+            isAverage: keys.nav.gps.positionAverageOn
+        },
+        formatter: 'formatLonLats',
+        wclass:DirectWidget
 
     },
     {

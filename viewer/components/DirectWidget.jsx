@@ -15,7 +15,9 @@ class DirectWidget extends React.Component{
         var classes="avn_widget "+this.props.classes||"";
         if (this.props.isAverage) classes+=" avn_average";
         if (this.props.className) classes+=" "+this.props.className;
-        var val=this.props.formatter(this.props.value);
+        var val;
+        if (this.props.value !== undefined) val=this.props.formatter(this.props.value);
+        else val=this.props.default||'0';
         var style=this.props.style||{};
         return (
         <div className={classes} onClick={this.props.onClick} style={style}>
@@ -36,10 +38,11 @@ DirectWidget.propTypes={
     caption: PropTypes.string,
     value: PropTypes.number,
     isAverage: PropTypes.boolean,
-    formatter: PropTypes.func,
+    formatter: PropTypes.func.required,
     onClick: PropTypes.func,
     classes: PropTypes.string,
-    style: PropTypes.object
+    style: PropTypes.object,
+    default: PropTypes.string
 };
 
 module.exports=DirectWidget;

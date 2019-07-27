@@ -4,12 +4,15 @@ var widgetList=require('./WidgetList');
 var Widget=require('./Widget.jsx');
 var ItemUpdater=require('./ItemUpdater.jsx');
 var DirectWidget=require('./DirectWidget.jsx');
-let globalStore=require('../util/globalstore.jsx');
+const globalStore=require('../util/globalstore.jsx');
+const Formatter=require('../util/formatter');
+
 
 
 class WidgetFactory{
     constructor(){
         this.createWidget=this.createWidget.bind(this);
+        this.formatter=new Formatter();
     }
     /**
      * find a complete widget description
@@ -51,6 +54,17 @@ class WidgetFactory{
         if (mergedProps.key === undefined) mergedProps.key=props.name;
         var dataKey;
         if (mergedProps.dataKey) dataKey=mergedProps.dataKey;
+        if (mergedProps.formatter){
+            if (typeof mergedProps.formatter === 'string'){
+                let ff=this.formatter[mergedProps.formatter];
+                if (typeof ff !== 'function'){
+                    throw new Error("invalid formatter "+mergedProps.formatter)
+                }
+                mergedProps.formatter=function(v){
+                    return ff.apply(self.formatter,[v].concat(mergedProps.formatterParameters||[]));
+                }
+            }
+        }
         if (e) {
             return React.createClass({
                 render: function(){
@@ -67,10 +81,19 @@ class WidgetFactory{
                         var RenderWidget=mergedProps.wclass||Widget;
                         if (mergedProps.store) {
                             if (RenderWidget === DirectWidget){
+                                let keylist=[];
+                                let storeKeys=mergedProps.storeKeys;
                                 var tf=function(state){
-                                    return {value:state[dataKey],isAverage:state[mergedProps.averageKey]}
+                                    let rt={};
+                                    for (let k in storeKeys){
+                                        rt[k]=state[storeKeys[k]]
+                                    }
+                                    return rt;
                                 };
-                                RenderWidget = ItemUpdater(RenderWidget, globalStore, [dataKey,mergedProps.averageKey],tf);
+                                for (let k in storeKeys){
+                                    keylist.push(storeKeys[k]);
+                                }
+                                RenderWidget = ItemUpdater(RenderWidget, globalStore, keylist,tf);
                             }
                             else {
                                 RenderWidget = ItemUpdater(RenderWidget, mergedProps.store, dataKey);

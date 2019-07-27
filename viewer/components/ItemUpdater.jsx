@@ -13,13 +13,14 @@ let React=require('react');
  * @param {string||string[]} opt_storeKey the key(s) to register at the store and fetch data
  *         if any of the returned items is not an object, the value will be assigned to a key with the
  *         name of the store key
- * @param {function} a translate function to convert the data fetched from the store into
+ * @param {function} opt_translator a translate function to convert the data fetched from the store into
  *        properties of the wrapped component
  *        will receive the state object as parameter
+ *        if this function is provided, the store items are provided "as is" with their keys in the state object
  * @returns {*} the wrapped react class
  * @constructor
  */
-let Updater=function(Item,store,opt_storeKey,opt_translater) {
+let Updater=function(Item,store,opt_storeKey,opt_translator) {
     let getStoreKeys=function(){
         if (opt_storeKey === undefined) return;
         if (opt_storeKey instanceof Array) return opt_storeKey;
@@ -32,7 +33,7 @@ let Updater=function(Item,store,opt_storeKey,opt_translater) {
             getStoreKeys().forEach(function(key){
                 if (key === undefined) return;
                 let v=store.getData(key);
-                if (typeof(v) !== "object"){
+                if (typeof(v) !== "object" || opt_translator){
                     v={};
                     v[key]=store.getData(key);
                 }
@@ -49,7 +50,7 @@ let Updater=function(Item,store,opt_storeKey,opt_translater) {
             if (! keys || keys.length < 1) return; //if we have provided some keys - ignore any global callback
             getStoreKeys().forEach(function(key){
                 let v=store.getData(key);
-                if (typeof(v) !== "object"){
+                if (typeof(v) !== "object" || opt_translator){
                     v={};
                     v[key]=store.getData(key);
                 }
@@ -65,10 +66,10 @@ let Updater=function(Item,store,opt_storeKey,opt_translater) {
         },
         render: function () {
             let props = {};
-            if (! opt_translater)
+            if (! opt_translator)
                 props=avnav.assign({}, this.props, this.state);
             else
-                props=avnav.assign({},this.props, opt_translater(this.state))
+                props=avnav.assign({},this.props, opt_translator(this.state));
             return <Item {...props}/>
         }
     });

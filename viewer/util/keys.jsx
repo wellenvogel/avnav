@@ -11,6 +11,7 @@ let keys={
         gps:{
             lat:K,
             lon:K,
+            position: K,
             course: K,
             speed: K,
             rtime: K,
