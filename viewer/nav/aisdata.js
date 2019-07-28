@@ -7,7 +7,8 @@ let NavCompute=require('./navcompute');
 let navobjects=require('./navobjects');
 let NavData=require('./navdata');
 let Base=require('../base');
-let StoreApi=require('../util/storeapi');
+let globalStore=require('../util/globalstore.jsx');
+let keys=require('../util/keys.jsx');
 /**
  * the handler for the ais data
  * query the server...
@@ -16,7 +17,6 @@ let StoreApi=require('../util/storeapi');
  * @constructor
  */
 let AisData=function(propertyHandler,navdata, opt_noQuery){
-    this.base_.call(this);
     /** @private */
     this.propertyHandler=propertyHandler;
     /** @private */
@@ -53,32 +53,6 @@ let AisData=function(propertyHandler,navdata, opt_noQuery){
      */
     this.NM=this.propertyHandler.getProperties().NM;
 
-    /**
-     * this is a translation between the display names and the aisparam values
-     * @type {{aisDst: string, aisSog: string, aisCog: string, aisCpa: string, aisTcpa: string, aisMmsi: string, aisName: string, aisDestination: string, aisFront: string, aisShiptype: string}}
-     */
-    this.formattedDataDescription={
-        aisDst:'distance',
-        aisSog:'speed',
-        aisCog:'course',
-        aisCpa:'cpa',
-        aisTcpa:'tcpa',
-        aisMmsi:'mmsi',
-        aisName:'shipname',
-        aisDestination:'destination',
-        aisFront:'passFront',
-        aisShiptype:'shiptype',
-        aisCallsign: 'callsign',
-        aisPosition: 'position',
-        aisHeading: 'heading',
-        aisWarning: 'warning',
-        aisNearest: 'nearest'
-    };
-
-    this.storeKeys=[];
-    for (let i in this.formattedDataDescription){
-        this.storeKeys.push(i);
-    }
 
     /**
      * the nearest target - being returned when values are queried
@@ -86,125 +60,8 @@ let AisData=function(propertyHandler,navdata, opt_noQuery){
      * @type {AisTarget}
      */
     this.nearestAisTarget={};
-    let self=this;
 
-    /**
-     * the formatter for AIS data
-     * @private
-     * @type {{distance: {headline: string, format: format}, speed: {headline: string, format: format}, course: {headline: string, format: format}, cpa: {headline: string, format: format}, tcpa: {headline: string, format: format}, passFront: {headline: string, format: format}, shipname: {headline: string, format: format}, callsign: {headline: string, format: format}, mmsi: {headline: string, format: format}, shiptype: {headline: string, format: format}, position: {headline: string, format: format}, destination: {headline: string, format: format}}}
-     */
-    this.aisparam={
-        distance:{
-            headline: 'dist(nm)',
-            format: function(v){ return self.formatter.formatDecimal(parseFloat(v.distance||0),3,2);}
-        },
-        heading:{
-            headline: 'hdg',
-            format: function(v){ return self.formatter.formatDecimal(parseFloat(v.headingTo||0),3,0);}
-        },
-        speed: {
-            headline: 'speed(kn)',
-            format: function(v){ return self.formatter.formatDecimal(parseFloat(v.speed||0),3,1);}
-        },
-        course:	{
-            headline: 'course',
-            format: function(v){ return self.formatter.formatDecimal(parseFloat(v.course||0),3,0);}
-        },
-        cpa:{
-            headline: 'cpa',
-            format: function(v){
-                let tval=parseFloat(v.tcpa||0);
-                //no cpa if tcpa < 0
-                //if (tval < 0) return "-----";
-                return self.formatter.formatDecimal(parseFloat(v.cpa||0),3,2);}
-        },
-        tcpa:{
-            headline: 'tcpa',
-            format: function(v){
-                let tval=parseFloat(v.tcpa||0);
-                let sign="";
-                if (tval < 0) {
-                    sign="-";
-                    tval=-tval;
-                }
-                let h=Math.floor(tval/3600);
-                let m=Math.floor((tval-h*3600)/60);
-                let s=tval-3600*h-60*m;
-                return sign+self.formatter.formatDecimal(h,2,0).replace(" ","0")+':'+self.formatter.formatDecimal(m,2,0).replace(" ","0")+':'+self.formatter.formatDecimal(s,2,0).replace(" ","0");
-            }
-        },
-        passFront:{
-            headline: 'pass',
-            format: function(v){
-                if (! v.cpa) return "-";
-                if (v.passFront !== undefined){
-                    if (v.passFront > 0) return "Front";
-                    if (v.passFront < 0) return "Pass";
-                    return "Back";
-                }
-                return "Done";
-            }
-        },
-        shipname:{
-            headline: 'name',
-            format: function(v){ return v.shipname;}
-        },
-        callsign:{
-            headline: 'call',
-            format: function(v){ return v.callsign;}
-        },
-        mmsi: {
-            headline: 'mmsi',
-            format: function(v){ return v.mmsi;}
-        },
-        shiptype:{
-            headline: 'type',
-            format: function(v){
-                let t=0;
-                try{
-                    t=parseInt(v.shiptype||0);
-                }catch (e){}
-                if (t>=20 && t<=29) return "WIG";
-                if (t==30) return "Fishing";
-                if (t==31 || t==32) return "Towing";
-                if (t==33) return "Dredging";
-                if (t==34) return "Diving";
-                if (t==35) return "Military";
-                if (t ==36)return "Sail";
-                if (t==37) return "Pleasure";
-                if (t>=40 && t<=49) return "HighSp";
-                if (t==50) return "Pilot";
-                if (t==51) return "SAR";
-                if (t==52) return "Tug";
-                if (t==53) return "PortT";
-                if (t==54) return "AntiPol";
-                if (t==55) return "Law";
-                if (t==58) return "Medical";
-                if (t>=60 && t<=69) return "Passenger";
-                if (t>=70 && t<=79) return "Cargo";
-                if (t>=80 && t<=89) return "Tanker";
-                if (t>=91 && t<=94) return "Hazard";
-                return "Other";
-            }
-        },
-        position:{
-            headline: 'position',
-            format: function(v){return self.formatter.formatLonLats({lon:v.lon,lat:v.lat});}
-        },
-        destination: {
-            headline: 'destination',
-            format: function(v){ let d=v.destination; if (d) return d; return "unknown";}
-        },
-        warning:{
-            headline: 'warning',
-            format: function(v){ return v.warning||false}
-        },
-        nearest:{
-            headline: 'nearest',
-            format: function(v){ return v.nearest||false}
-        }
 
-    };
 
     /**
      * @private
@@ -213,7 +70,6 @@ let AisData=function(propertyHandler,navdata, opt_noQuery){
     this.formatter=new Formatter();
     if (! opt_noQuery) this.startQuery();
 };
-Base.inherits(AisData,StoreApi);
 /**
  *
  * @param boatPos boat pos, course, speed
@@ -312,7 +168,9 @@ AisData.prototype.handleAisData=function() {
     else {
         this.nearestAisTarget={};
     }
-    this.callCallbacks(this.storeKeys);
+    globalStore.storeData(keys.nav.ais.nearest,this.nearestAisTarget);
+    globalStore.storeData(keys.nav.ais.list);
+    globalStore.storeData(keys.nav.ais.updateCount,globalStore.getData(keys.nav.ais.updateCount,0)+1)
     this.navobject.aisEvent();
 };
 /**
@@ -329,34 +187,6 @@ AisData.prototype.aisSort=function(a,b) {
     } catch (err) {
         return 0;
     }
-};
-/**
- * get the formatter for AIS data
- * @returns {{distance: {headline: string, format: format}, speed: {headline: string, format: format}, course: {headline: string, format: format}, cpa: {headline: string, format: format}, tcpa: {headline: string, format: format}, passFront: {headline: string, format: format}, shipname: {headline: string, format: format}, callsign: {headline: string, format: format}, mmsi: {headline: string, format: format}, shiptype: {headline: string, format: format}, position: {headline: string, format: format}, destination: {headline: string, format: format}}}
- */
-AisData.prototype.getAisFormatter=function(){
-    return this.aisparam;
-};
-/**
- *
- * @param dname
- * @returns {string}
- */
-AisData.prototype.getFormattedAisValue=function(dname){
-    return this.formatAisValue(dname,this.nearestAisTarget);
-};
-
-/**
- *
- * @param dname
- * @param aisobject an AIS entry like returned by getAisByMMsi
- * @returns {string}
- */
-AisData.prototype.formatAisValue=function(dname,aisobject){
-    let key=this.formattedDataDescription[dname];
-    if (! key) return ;
-    if (aisobject === undefined) return ;
-    return this.aisparam[key].format(aisobject);
 };
 
 /**
@@ -469,9 +299,4 @@ AisData.prototype.setTrackedTarget=function(mmsi){
     this.handleAisData();
 };
 
-AisData.prototype.getDataLocal=function(key,opt_default){
-    let rt=this.getFormattedAisValue(key);
-    if (rt !== undefined) return rt;
-    return opt_default;
-};
 module.exports=AisData;

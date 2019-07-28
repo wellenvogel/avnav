@@ -9,6 +9,7 @@ var ItemList=require('../components/ItemList.jsx');
 var ReactDOM=require('react-dom');
 var React=require('react');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
+var AisFormatter=require('../nav/aisformatter.jsx');
 
 var keys={
     aisTargets: 'ais',
@@ -34,11 +35,6 @@ var Aispage=function(){
      * @type {AisHandler}
      */
     this.aishandler=null;
-    /**
-     * @privvate
-     * @type {undefined}
-     */
-    this.aisFormatter=undefined;
 
     this.store=new Store();
     var self=this;
@@ -69,7 +65,6 @@ var aisInfos=[
 ];
 Aispage.prototype.getPageContent=function(){
     this.aishandler=this.navobject.getAisHandler();
-    this.aisFormatter=this.aishandler.getAisFormatter();
     var self=this;
     var buttons=[
         {key:"AisNearest"},
@@ -79,8 +74,8 @@ Aispage.prototype.getPageContent=function(){
     this.setButtons(buttons);
 
     var AisItem=function(props){
-        var fmt=self.aisFormatter;
-        var fb=fmt.passFront.format(props);
+        var fmt=AisFormatter;
+        var fb=fmt.format('passFront',props);
         var style={
             color:props.color
         };
@@ -92,8 +87,8 @@ Aispage.prototype.getPageContent=function(){
                 </div>
                 <div className="avn_aisData">
                     <div className="avn_aisData1">
-                        {fmt.mmsi.format(props)}&nbsp;
-                        {fmt.shipname.format(props)}
+                        {fmt.format('mmsi',props)}&nbsp;
+                        {fmt.format('shipname',props)}
                     </div>
                     { aisInfos.map(function(info1){
                         return <div className="avn_infoLine">
@@ -102,7 +97,7 @@ Aispage.prototype.getPageContent=function(){
                                     return (
                                         <span className="avn_aisInfoElement">
                                                 <span className="avn_aisLabel">{info.label}: </span>
-                                                <span className="avn_aisData">{fmt[info.name].format(props)}{info.unit !== undefined && info.unit}</span>
+                                                <span className="avn_aisData">{fmt.format(info.name,props)}{info.unit !== undefined && info.unit}</span>
                                             </span>
                                     );
                                 })

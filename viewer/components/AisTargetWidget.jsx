@@ -2,65 +2,52 @@
  * Created by andreas on 23.02.16.
  */
 
-let React=require("react");
-let Store=require('../util/storeapi');
-let compare=require('../util/shallowcompare');
+import  React from "react";
+import PropTypes from 'prop-types';
+import compare from '../util/shallowcompare';
+import keys from '../util/keys.jsx';
+import Formatter from '../util/formatter.js';
+import PropertyHandler from '../util/propertyhandler.js';
+import AisFormatter from '../nav/aisformatter.jsx';
+import assign from 'object-assign';
 
-let AisTargetWidget=React.createClass({
-    propTypes:{
-        //formatter: React.PropTypes.func,
-        onItemClick: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(Store).isRequired,
-        propertyHandler: React.PropTypes.object.isRequired,
-        classes: React.PropTypes.string,
-        updateCallback: React.PropTypes.func
-    },
-    _getValues:function(){
-        let mmsi=this.props.store.getData('aisMmsi');
-        let color;
-        let aisProperties={};
-        if (mmsi && mmsi !== ""){
-            aisProperties.warning=this.props.store.getData('aisWarning')||false;
-            aisProperties.nearest=this.props.store.getData('aisNearest')||false;
-        }
-        else mmsi=undefined;
-        color=this.props.propertyHandler.getAisColor(aisProperties);
-        let front=this.props.store.getData('aisFront');
-        if (front == "" || front == " ") front="X";
-        return{
-            dst:this.props.store.getData('aisDst'),
-            cpa:this.props.store.getData('aisCpa'),
-            tcpa:this.props.store.getData('aisTcpa'),
-            front:front,
-            color: color,
-            mmsi:mmsi
-        };
-    },
-    getInitialState: function(){
+let fmt=new Formatter();
+
+class AisTargetWidget extends React.Component{
+    constructor(props){
+        super(props);
         this.lastRendered=0;
         this.lastNotified=-1;
-        return this._getValues();
-
-    },
-    componentWillReceiveProps: function(nextProps) {
-        let nState=this._getValues();
-        if (compare(this.state,nState)) return;
-        this.setState(nState);
-    },
-    componentDidUpdate: function(){
+        this.click=this.click.bind(this);
+    }
+    shouldComponentUpdate(nextProps,nextState){
+        return ! compare(this.props.current,nextProps.current);
+    }
+    componentDidUpdate(){
         if (this.lastNotified != this.lastRendered) {
             if (this.props.updateCallback) {
                 this.props.updateCallback();
             }
             this.lastNotified=this.lastRendered;
         }
-    },
-    render: function(){
+    }
+    render(){
+        if (! this.props.current){
+            return <div/>
+        }
+        let current=this.props.current;
         let self=this;
         let classes="avn_widget avn_aisTargetWidget "+this.props.classes||""+ " "+this.props.className||"";
         let small = (this.props.mode === "small" || this.props.mode === "gps");
-        if (this.state.mmsi !== undefined || this.props.mode === "gps") {
-            let style=avnav.assign({},this.props.style,{backgroundColor:this.state.color});
+        let aisProperties={};
+        if (current.mmsi && current.mmsi !== ""){
+            aisProperties.warning=current.warning||false;
+            aisProperties.nearest=current.nearest||false;
+        }
+        let color=PropertyHandler.getAisColor(aisProperties);
+        let front=current.front?"F":"B";
+        if (current.mmsi !== undefined || this.props.mode === "gps") {
+            let style=assign({},this.props.style,{backgroundColor:color});
             if (this.lastRendered !== 1){
               //if we did not render the last time, we always render without any with/height
                 delete style.width;
@@ -76,24 +63,24 @@ let AisTargetWidget=React.createClass({
 
                     { ! small && <div className="avn_widgetData avn_widgetDataFirst">
                         <span className='avn_label '>D</span>
-                        <span className="avn_ais_data">{this.state.dst}</span>
+                        <span className="avn_ais_data">{AisFormatter.format('distance',current)}</span>
                         <span className="avn_unit">nm</span>
                     </div> }
                     { ! small && <div className="avn_widgetData">
                         <span className='avn_label '>C</span>
-                        <span className="avn_ais_data">{this.state.cpa}</span>
+                        <span className="avn_ais_data">{AisFormatter.format('cpa',current)}</span>
                         <span className="avn_unit">nm</span>
                     </div> }
-                    {this.state.mmsi !== undefined &&
+                    {current.mmsi !== undefined &&
                     <div className="avn_widgetData">
                         <span className='avn_label '>T</span>
-                        <span className="avn_ais_data">{this.state.tcpa}</span>
+                        <span className="avn_ais_data">{AisFormatter.format('tcpa',current)}</span>
                         <span className="avn_unit">h</span>
                     </div>
                     }
-                    {this.state.mmsi !== undefined &&
+                    {current.mmsi !== undefined &&
                     <div className="avn_widgetData">
-                        <span className='avn_ais_front avn_ais_data'>{this.state.front}</span>
+                        <span className='avn_ais_front avn_ais_data'>{front}</span>
                     </div>
                     }
                 </div>
@@ -104,12 +91,25 @@ let AisTargetWidget=React.createClass({
             return null;
         }
 
-    },
-    click:function(ev){
+    }
+    click(ev){
         ev.stopPropagation();
-        this.props.onItemClick(avnav.assign({},this.props,this.state));
+        this.props.onItemClick(assign({},this.props,{mmsi:this.props.current?this.props.current.mmsi:undefined}));
     }
 
-});
+}
+
+AisTargetWidget.storeKeys={
+    current: keys.nav.ais.nearest
+};
+
+AisTargetWidget.propTypes={
+    //formatter: React.PropTypes.func,
+    onItemClick: PropTypes.func,
+    classes: PropTypes.string,
+    updateCallback: PropTypes.func,
+    current: PropTypes.object,
+    mode: PropTypes.string
+};
 
 module.exports=AisTargetWidget;

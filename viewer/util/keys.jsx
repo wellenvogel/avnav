@@ -62,6 +62,11 @@ let keys={
             remain: K,
             eta: K,
             isActive: K
+        },
+        ais:{
+            nearest: K, //to be displayed
+            list:K,
+            updateCount:K
         }
     }
 };

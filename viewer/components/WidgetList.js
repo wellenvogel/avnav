@@ -220,7 +220,8 @@ let widgetList=[
     {
         name: 'AisTarget',
         caption: 'AIS',
-        wclass: AisTargetWidget
+        wclass: AisTargetWidget,
+        storeKeys: AisTargetWidget.storeKeys
     },
     {
         name: 'ActiveRoute',
