@@ -23,6 +23,7 @@ let keys={
             positionAverageOn:K,
             speedAverageOn: K,
             courseAverageOn: K,
+            depthBelowTransducer: K,
             sequence: K //will be incremented as last operation on each receive
         },
         center:{
@@ -36,7 +37,9 @@ let keys={
             distance: K,
             eta: K,
             xte: K,
-            vmg: K
+            vmg: K,
+            position: K,
+            name: K
         },
         anchor:{
             active: K,

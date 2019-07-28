@@ -113,6 +113,7 @@ GpsData.prototype.writeToStore=function(){
     globalStore.storeData(bk.positionAverageOn,d.positionAverage);
     globalStore.storeData(bk.speedAverageOn,d.speedAverage);
     globalStore.storeData(bk.courseAverageOn,d.courseAverage);
+    globalStore.storeData(bk.depthBelowTransducer,d.depthBelowTransducer);
     globalStore.storeData(bk.sequence,globalStore.getData(bk.sequence,0)+1);
 
 };

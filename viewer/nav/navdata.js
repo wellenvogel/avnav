@@ -259,6 +259,7 @@ NavData.prototype.computeValues=function(){
         markerEta: keys.nav.wp.eta,
         markerXte: keys.nav.wp.xte,
         markerVmg: keys.nav.wp.vmg,
+        markerWp: keys.nav.wp.position,
         anchorDirection: keys.nav.anchor.direction,
         anchorDistance: keys.nav.anchor.distance,
         anchorWatchDistance: keys.nav.anchor.watchDistance,
@@ -275,6 +276,7 @@ NavData.prototype.computeValues=function(){
         edRouteEta: keys.nav.editRoute.eta,
         editingActiveRoute: keys.nav.editRoute.isActive
     });
+    globalStore.storeData(keys.nav.wp.name,this.data.markerWp?this.data.markerWp.name:'');
     //now create text values
     var legDataFormatted=this.formatLegData(this.data);
     avnav.assign(this.formattedValues,legDataFormatted);

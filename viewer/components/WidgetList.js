@@ -66,7 +66,7 @@ let widgetList=[
         name: 'ETA',
         caption: 'ETA',
         wclass: EtaWidget,
-        classes: 'avn_etaWidget'
+        storeKeys: EtaWidget.storeKeys
     },
     {
         name: 'DST',
@@ -74,7 +74,12 @@ let widgetList=[
         unit: "nm",
         caption: 'DST',
         classes: 'avn_distanceWidget',
-        dataKey: 'markerDistance'
+        storeKeys:{
+            value: keys.nav.wp.distance
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [3,1]
+
     },
     {
         name: 'BRG',
@@ -82,7 +87,23 @@ let widgetList=[
         unit: "\u00b0",
         caption: 'BRG',
         classes: 'avn_courseWidget',
-        dataKey: 'markerCourse'
+        storeKeys:{
+            value: keys.nav.wp.course
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [3,0]
+    },
+    {
+        name: 'VMG',
+        default: "0.0",
+        unit: "kn",
+        caption: 'VMG',
+        classes: 'avn_speedWidget',
+        storeKeys: {
+            value: keys.nav.wp.vmg
+        },
+        formatter:'formatDecimal',
+        formatterParameters: [2, 1]
     },
     {
         name: 'WindAngle',
@@ -90,7 +111,11 @@ let widgetList=[
         unit: "\u00b0",
         caption: 'Wind Angle',
         classes: 'avn_windAngleWidget',
-        dataKey: 'windAngle'
+        storeKeys:{
+            value:keys.nav.gps.windAngle
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [3,0]
     },
     {
         name: 'WindSpeed',
@@ -98,14 +123,22 @@ let widgetList=[
         unit: "m/s",
         caption: 'Wind Speed',
         classes: 'avn_windSpeedWidget',
-        dataKey: 'windSpeed'
+        storeKeys:{
+            value:keys.nav.gps.windSpeed
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [2,1]
     },
     {
         name: 'AnchorBearing',
         default: "---",
         unit: "\u00b0",
         caption: 'ACHR-BRG',
-        dataKey: 'anchorDirection',
+        storeKeys:{
+            value:keys.nav.anchor.direction
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [3,0],
         classes: 'avn_largeWidget'
     },
     {
@@ -113,7 +146,11 @@ let widgetList=[
         default: "---",
         unit: "m",
         caption: 'ACHR-DST',
-        dataKey: 'anchorDistance',
+        storeKeys:{
+            value:keys.nav.anchor.distance
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [3,1],
         classes: 'avn_largeWidget'
     },
     {
@@ -121,7 +158,11 @@ let widgetList=[
         default: "---",
         unit: "m",
         caption: 'ACHR-WATCH',
-        dataKey: 'anchorWatchDistance',
+        storeKeys:{
+            value:keys.nav.anchor.watchDistance
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [3,1],
         classes: 'avn_largeWidget'
     },
 
@@ -131,7 +172,11 @@ let widgetList=[
         unit: "nm",
         caption: 'RTE-Dst',
         classes: 'avn_rteWidget',
-        dataKey: 'routeRemain'
+        storeKeys:{
+            value:keys.nav.route.remain
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [3,1]
     },
     {
         name: 'RteEta',
@@ -139,25 +184,31 @@ let widgetList=[
         unit: "h",
         caption: 'RTE-ETA',
         classes: 'avn_rteWidget',
-        dataKey: 'routeEta'
+        storeKeys:{
+            value:keys.nav.route.eta
+        },
+        formatter: 'formatTime'
     },
     {
         name: 'LargeTime',
         default: "--:--",
         caption: 'Time',
-        wclass: Widget,
         classes: 'avn_timeWidget',
+        storeKeys:{
+            value:keys.nav.gps.rtime
+        },
+        formatter: 'formatClock',
         dataKey: 'clock'
     },
     {
         name: 'WpPosition',
         default: "-------------",
         caption: 'MRK',
-        //formatter: function(val){ return Formatter.formatDecimal(val,3,0);},
-        wclass: Widget,
         classes: 'avn_posWidget',
-        dataKey: 'markerPosition'
-
+        storeKeys:{
+            value:keys.nav.wp.position
+        },
+        formatter: 'formatLonLats'
     },
     {
         name: 'Zoom',
@@ -196,7 +247,12 @@ let widgetList=[
         caption: 'DPT',
         dataKey: 'depthBelowTransducer',
         classes: 'avn_depthWidget',
-        unit: 'm'
+        unit: 'm',
+        storeKeys:{
+            value:keys.nav.gps.depthBelowTransducer
+        },
+        formatter: 'formatDecimal',
+        formatterParameters: [3,1]
     },
     {
         name: 'XteDisplay',

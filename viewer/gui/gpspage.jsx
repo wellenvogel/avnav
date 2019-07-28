@@ -259,7 +259,7 @@ Gpspage.prototype.getPageContent=function(){
             );
         }
     });
-    return ItemUpdater(Main,this.store,[keys.anchorWatch,keys.secondPage,keys.layoutCount],true);
+    return ItemUpdater(Main,this.store,[keys.anchorWatch,keys.secondPage,keys.layoutCount]);
 };
 
 
