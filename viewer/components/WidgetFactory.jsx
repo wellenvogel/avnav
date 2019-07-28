@@ -78,24 +78,27 @@ class WidgetFactory{
                         </div>
                     }
                     else {
-                        var RenderWidget=mergedProps.wclass||Widget;
-                        if (mergedProps.store) {
-                            if (RenderWidget === DirectWidget){
-                                let keylist=[];
-                                let storeKeys=mergedProps.storeKeys;
-                                var tf=function(state){
-                                    let rt={};
-                                    for (let k in storeKeys){
-                                        rt[k]=state[storeKeys[k]]
-                                    }
-                                    return rt;
-                                };
+                        var RenderWidget;
+                        if (mergedProps.storeKeys){
+                            //new style widgets
+                            RenderWidget=mergedProps.wclass||DirectWidget;
+                            let keylist=[];
+                            let storeKeys=mergedProps.storeKeys;
+                            var tf=function(state){
+                                let rt={};
                                 for (let k in storeKeys){
-                                    keylist.push(storeKeys[k]);
+                                    rt[k]=state[storeKeys[k]]
                                 }
-                                RenderWidget = ItemUpdater(RenderWidget, globalStore, keylist,tf);
+                                return rt;
+                            };
+                            for (let k in storeKeys){
+                                keylist.push(storeKeys[k]);
                             }
-                            else {
+                            RenderWidget = ItemUpdater(RenderWidget, globalStore, keylist,tf);
+                        }
+                        else {
+                            RenderWidget=mergedProps.wclass||Widget;
+                            if (mergedProps.store) {
                                 RenderWidget = ItemUpdater(RenderWidget, mergedProps.store, dataKey);
                             }
                         }

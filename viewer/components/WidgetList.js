@@ -28,8 +28,7 @@ let widgetList=[
             isAverage: keys.nav.gps.speedAverageOn
         },
         formatter:'formatDecimal',
-        formatterParameters: [2, 1],
-        wclass: DirectWidget
+        formatterParameters: [2, 1]
     },
     {
         name: 'COG',
@@ -42,8 +41,7 @@ let widgetList=[
             isAverage:keys.nav.gps.courseAverageOn
         },
         formatter: 'formatDecimal',
-        formatterParameters: [3,0],
-        wclass: DirectWidget
+        formatterParameters: [3, 0]
 
     },
     {
@@ -55,14 +53,14 @@ let widgetList=[
             value: keys.nav.gps.position,
             isAverage: keys.nav.gps.positionAverageOn
         },
-        formatter: 'formatLonLats',
-        wclass:DirectWidget
+        formatter: 'formatLonLats'
 
     },
     {
         name: 'TimeStatus',
         caption: 'GPS',
-        wclass: TimeStatusWidget
+        wclass: TimeStatusWidget,
+        storeKeys: TimeStatusWidget.storeKeys
     },
     {
         name: 'ETA',

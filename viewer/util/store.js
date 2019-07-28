@@ -21,11 +21,32 @@ Base.inherits(Store,StoreApi);
  * @param key
  * @param data
  */
-Store.prototype.storeData=function(key,data){
+Store.prototype.storeData=function(key,data,opt_no_callbacks){
     let hasChanged=!this.equalsData(this.data[key],data);
     this.data[key]=data;
     //this could be improved by checking for changes...
-    if (hasChanged)this.callCallbacks([key]);
+    if (hasChanged && ! opt_no_callbacks)this.callCallbacks([key]);
+    return hasChanged;
+};
+
+/**
+ * update several values from an object with given translations
+ * for the keys
+ * @param data
+ * @param keyTranslations objectKey:storeKey
+ */
+Store.prototype.updateValuesObject=function(data,keyTranslations){
+    let changeKeys=[];
+    for (let k in keyTranslations){
+        let storeKey=keyTranslations[k];
+        let hasChanged=this.storeData(storeKey,data[k],true);
+        if (hasChanged){
+            changeKeys.push(storeKey);
+        }
+    }
+    if (changeKeys.length > 0){
+        this.callCallbacks(changeKeys);
+    }
 };
 
 /**

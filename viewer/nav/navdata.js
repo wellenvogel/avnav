@@ -251,6 +251,30 @@ NavData.prototype.computeValues=function(){
         this.data.edRouteLen=edRoute?this.routeHandler.computeLength(0,edRoute):0;
     }
 
+    globalStore.updateValuesObject(this.data,{
+        centerCourse: keys.nav.center.course,
+        centerDistance: keys.nav.center.distance,
+        markerCourse: keys.nav.wp.course,
+        markerDistance: keys.nav.wp.distance,
+        markerEta: keys.nav.wp.eta,
+        markerXte: keys.nav.wp.xte,
+        markerVmg: keys.nav.wp.vmg,
+        anchorDirection: keys.nav.anchor.direction,
+        anchorDistance: keys.nav.anchor.distance,
+        anchorWatchDistance: keys.nav.anchor.watchDistance,
+        centerMarkerCourse: keys.nav.center.markerCourse,
+        centerMarkerDistance: keys.nav.center.markerDistance,
+        routeName: keys.nav.route.name,
+        routeNumPoints: keys.nav.route.numPoints,
+        routeLen: keys.nav.route.len,
+        routeEta: keys.nav.route.eta,
+        routeNextCourse: keys.nav.route.nextCourse,
+        edRouteName: keys.nav.editRoute.name,
+        edRouteNumPoints: keys.nav.editRoute.numPoints,
+        edRouteLen: keys.nav.editRoute.len,
+        edRouteEta: keys.nav.editRoute.eta,
+        editingActiveRoute: keys.nav.editRoute.isActive
+    });
     //now create text values
     var legDataFormatted=this.formatLegData(this.data);
     avnav.assign(this.formattedValues,legDataFormatted);

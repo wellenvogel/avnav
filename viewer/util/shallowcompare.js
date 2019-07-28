@@ -12,6 +12,9 @@ var ShallowCompare=function(oldData,newData){
     if (newData instanceof Array && oldData instanceof Array){
         return equalsArrays(oldData,newData)
     }
+    if (newData instanceof Date && oldData instanceof Date){
+        return newData.getTime() == oldData.getTime()
+    }
     if (newData instanceof Object && oldData instanceof Object){
         return equalsObjects(newData,oldData);
     }

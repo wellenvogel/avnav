@@ -23,7 +23,42 @@ let keys={
             positionAverageOn:K,
             speedAverageOn: K,
             courseAverageOn: K,
-            sequence: K, //will be incremented as last operation on each receive
+            sequence: K //will be incremented as last operation on each receive
+        },
+        center:{
+            course: K,
+            distance: K,
+            markerCourse: K,
+            markerDistance: K
+        },
+        wp:{
+            course: K,
+            distance: K,
+            eta: K,
+            xte: K,
+            vmg: K
+        },
+        anchor:{
+            active: K,
+            distance: K,
+            direction:K,
+            watchDistance: K
+        },
+        route:{
+            name: K,
+            numPoints: K,
+            len:K,
+            remain: K,
+            eta: K,
+            nextCourse: K
+        },
+        editRoute:{
+            name: K,
+            numPoints: K,
+            len: K,
+            remain: K,
+            eta: K,
+            isActive: K
         }
     }
 };
