@@ -53,7 +53,8 @@ let keys={
             len:K,
             remain: K,
             eta: K,
-            nextCourse: K
+            nextCourse: K,
+            isApproaching: K
         },
         editRoute:{
             name: K,
@@ -67,6 +68,12 @@ let keys={
             nearest: K, //to be displayed
             list:K,
             updateCount:K
+        }
+    },
+    gui:{
+        navpage:{
+            zoom: K,
+            requiredZoom: K //the zoom that we would like to get
         }
     }
 };

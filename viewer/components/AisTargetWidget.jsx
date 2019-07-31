@@ -45,7 +45,7 @@ class AisTargetWidget extends React.Component{
             aisProperties.nearest=current.nearest||false;
         }
         let color=PropertyHandler.getAisColor(aisProperties);
-        let front=current.front?"F":"B";
+        let front=AisFormatter.format('passFront',current);
         if (current.mmsi !== undefined || this.props.mode === "gps") {
             let style=assign({},this.props.style,{backgroundColor:color});
             if (this.lastRendered !== 1){

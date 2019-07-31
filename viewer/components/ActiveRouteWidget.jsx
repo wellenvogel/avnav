@@ -2,73 +2,51 @@
  * Created by andreas on 23.02.16.
  */
 
-var React=require("react");
-var NavData=require('../nav/navdata');
-var compare=require('../util/shallowcompare');
+import React from "react";
+import compare from '../util/shallowcompare';
+import PropTypes from 'prop-types';
+import keys from '../util/keys.jsx';
+import Formatter from '../util/formatter.js';
 
-var ActiveRouteWidget=React.createClass({
-    propTypes:{
-        //formatter: React.PropTypes.func,
-        onClick: React.PropTypes.func,
-        store: React.PropTypes.object.isRequired,
-        classes: React.PropTypes.string,
-        updateCallback: React.PropTypes.func
-    },
-    _getValues:function(){
-        return{
-            name:this.props.store.getData('routeName'),
-            remain:this.props.store.getData('routeRemain'),
-            eta:this.props.store.getData('routeEta'),
-            next:this.props.store.getData('routeNextCourse'),
-            nextName: this.props.store.getData('routeNextName'), //if empty: do not show...
-            isApproaching: this.props.store.getData('isApproaching')
-        };
-    },
-    getInitialState: function(){
-        var rt=this._getValues();
-        this.lastApproaching=rt.isApproaching;
-        return rt;
-    },
-    componentWillReceiveProps: function(nextProps) {
-        var nextState=this._getValues();
-        if (compare(this.state,nextState)) return;
-        if (this.state.isApproaching !== nextState.isApproaching){
-            this.doLayoutUpdate=true;
+let fmt=new Formatter();
+
+class ActiveRouteWidget extends React.Component{
+    constructor(props){
+        super(props);
+        this.lastApproaching=props.isApproaching;
+    }
+    shouldComponentUpdate(nextProps,nextState){
+        for (let k in ActiveRouteWidget.storeKeys){
+            if (this.props[k] !== nextProps[k]) return true;
         }
-        this.setState(nextState);
-    },
-    componentDidUpdate: function(){
+        return false;
+    }
+    componentDidUpdate(){
         if (this.props.updateCallback && this.doLayoutUpdate){
             this.doLayoutUpdate=false;
             this.props.updateCallback();
         }
-    },
-    componentDidMount: function(){
-        avnav.log("mount ActiveRouteWidget")
-    },
-    componentWillUnmount: function(){
-        avnav.log("unmount ActiveRouteWidget")
-    },
-    render: function(){
-        var self=this;
-        var classes="avn_widget avn_activeRouteWidget "+this.props.classes||""+ " "+this.props.className||"";
-        if (this.state.isApproaching) classes +=" avn_route_display_approach ";
-        if (this.state.isApproaching != this.lastApproaching){
+    }
+    render(){
+        let self=this;
+        let classes="avn_widget avn_activeRouteWidget "+this.props.classes||""+ " "+this.props.className||"";
+        if (this.props.isApproaching) classes +=" avn_route_display_approach ";
+        if (this.props.isApproaching != this.lastApproaching){
             this.doLayoutUpdate=true;
-            this.lastApproaching=this.state.isApproaching;
+            this.lastApproaching=this.props.isApproaching;
         }
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style}>
             <div className="avn_widgetInfoLeft">RTE</div>
-            <div className="avn_routeName">{this.state.name}</div>
+            <div className="avn_routeName">{this.props.routeName}</div>
             <div>
-                <span className="avn_routeRemain">{this.state.remain}</span>
+                <span className="avn_routeRemain">{fmt.formatDecimal(this.props.remain,3,1)}</span>
                 <span className='avn_unit'>nm</span>
             </div>
-            <div className="avn_routeEta">{this.state.eta}</div>
-            { this.state.isApproaching ?
+            <div className="avn_routeEta">{fmt.formatTime(this.props.eta)}</div>
+            { this.props.isApproaching ?
                 <div className="avn_routeNext">
-                    <span className="avn_routeNextCourse">{this.state.next}</span>
+                    <span className="avn_routeNextCourse">{fmt.formatDecimal(this.props.nextCourse,3,0)}</span>
                     <span className='avn_unit'>&#176;</span>
                 </div>
                 : <div></div>
@@ -77,6 +55,26 @@ var ActiveRouteWidget=React.createClass({
         );
     }
 
-});
+}
+
+ActiveRouteWidget.propTypes={
+    //formatter: React.PropTypes.func,
+    onClick: PropTypes.func,
+    classes: PropTypes.string,
+    updateCallback: PropTypes.func,
+    isAproaching: PropTypes.bool,
+    routeName: PropTypes.string,
+    eta: PropTypes.objectOf(Date),
+    remain: PropTypes.number,
+    nextCourse: PropTypes.number
+
+};
+ActiveRouteWidget.storeKeys={
+    isApproaching: keys.nav.route.isApproaching,
+    routeName: keys.nav.route.name,
+    eta: keys.nav.route.eta,
+    remain: keys.nav.route.remain,
+    nextCourse: keys.nav.route.nextCourse
+};
 
 module.exports=ActiveRouteWidget;

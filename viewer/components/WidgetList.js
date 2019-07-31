@@ -13,6 +13,7 @@ let XteWidget=require('./XteWidget');
 let EmptyWidget=require('./EmptyWidget');
 let WindGraphics=require('./WindGraphics');
 let DirectWidget=require('./DirectWidget.jsx');
+let ZoomWidget=require('./ZoomWidget.jsx');
 let keys=require('../util/keys.jsx');
 let Formatter=require('../util/formatter');
 let fi=new Formatter();
@@ -212,10 +213,9 @@ let widgetList=[
     },
     {
         name: 'Zoom',
-        default: "--",
         caption: 'Zoom',
-        classes: 'avn_zoomWidget',
-        dataKey: 'zoom'
+        wclass: ZoomWidget,
+        storeKeys: ZoomWidget.storeKeys
     },
     {
         name: 'AisTarget',
@@ -225,8 +225,8 @@ let widgetList=[
     },
     {
         name: 'ActiveRoute',
-        caption: 'RTE',
-        wclass: ActiveRouteWidget
+        wclass: ActiveRouteWidget,
+        storeKeys: ActiveRouteWidget.storeKeys
     },
     {
         name: 'EditRoute',
