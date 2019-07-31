@@ -19,6 +19,8 @@ var Page=require('./page.jsx');
 var ButtonList=require('../components/ButtonList.jsx');
 var Measure=require('react-measure').default;
 var Helper=require('../util/helper');
+var gkeys=require('../util/keys.jsx');
+var globalStore=require('../util/globalstore.jsx');
 
 var keys={
     waypointList: 'waypointList',
@@ -30,7 +32,6 @@ var keys={
     bottomRightWidgets: 'bottomRight',
     routingVisible: 'routingVisible',
     isSmall: 'isSmall',
-    zoom: 'zoom',
     wpButtons: 'wpButtons',
     widgetDimensionsFull: 'fullDimensions',
     widgetDimensionsHalf: 'halfDimensions'
@@ -340,12 +341,10 @@ Navpage.prototype.buttonUpdate=function(){
  */
 Navpage.prototype._updateZoom=function(){
     var bzoom=this.getMap().getZoom();
-    var zoom=this.formatter.formatDecimalOpt(bzoom.current,2,1);
-    if (bzoom.current != bzoom.required) zoom+="("+this.formatter.formatDecimalOpt(bzoom.required,2,1)+")";
-    var old=this.store.getData(keys.zoom,0);
-    if (old != zoom){
-        this.store.storeData(keys.zoom,zoom);
-    }
+    globalStore.updateValuesObject(bzoom,{
+        current: gkeys.gui.navpage.zoom,
+        required: gkeys.gui.navpage.requiredZoom
+    });
 };
 Navpage.prototype.timerEvent=function(){
     if (this.wpHidetime > 0 && this.wpHidetime <= new Date().getTime()){
