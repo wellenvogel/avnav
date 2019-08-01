@@ -16,6 +16,7 @@ let DirectWidget=require('./DirectWidget.jsx');
 let ZoomWidget=require('./ZoomWidget.jsx');
 let keys=require('../util/keys.jsx');
 let Formatter=require('../util/formatter');
+let AlarmWidget=require('./AlarmWidget.jsx');
 let fi=new Formatter();
 let widgetList=[
     {
@@ -273,6 +274,11 @@ let widgetList=[
         name: 'RteCombine',
         caption: '',
         children: [{name:'RteDistance'},{name:'RteEta'}]
+    },
+    {
+        name: 'Alarm',
+        wclass:AlarmWidget,
+        storeKeys: AlarmWidget.storeKeys
     }
 
 

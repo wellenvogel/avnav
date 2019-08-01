@@ -7,6 +7,7 @@ import compare from '../util/shallowcompare';
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
+import Helper from '../util/helper.js';
 
 let fmt=new Formatter();
 
@@ -16,10 +17,7 @@ class ActiveRouteWidget extends React.Component{
         this.lastApproaching=props.isApproaching;
     }
     shouldComponentUpdate(nextProps,nextState){
-        for (let k in ActiveRouteWidget.storeKeys){
-            if (this.props[k] !== nextProps[k]) return true;
-        }
-        return false;
+        return Helper.compareProperties(this.props,nextProps,ActiveRouteWidget.storeKeys);
     }
     componentDidUpdate(){
         if (this.props.updateCallback && this.doLayoutUpdate){

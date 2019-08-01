@@ -7,12 +7,13 @@ import PropTypes from "prop-types";
 import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
 import PropertyHandler from '../util/propertyhandler.js';
+import Helper from '../util/helper.js';
 
 const fmt=new Formatter();
 
 class TimeStatusWidget extends React.Component{
     shouldComponentUpdate(nextProps,nextState) {
-        return (this.props.time != nextProps.time || this.props.gpsValid != nextProps.gpsValid);
+        return Helper.compareProperties(this.props,nextProps,TimeStatusWidget.storeKeys);
     }
     render(){
         var self=this;

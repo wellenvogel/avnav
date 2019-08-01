@@ -4,11 +4,11 @@
 
 import React from "react";
 import PropTypes from 'prop-types';
+import Helper from '../util/helper.js';
 
 class DirectWidget extends React.Component{
     shouldComponentUpdate(nextProps,nextState) {
-        if (this.props.value != nextProps.value || this.props.isAverage != nextProps.isAverage) return true;
-        return false;
+        return Helper.compareProperties(this.props,nextProps,{value:1,isAverage:1});
     }
     render(){
         var self=this;

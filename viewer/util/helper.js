@@ -1,7 +1,9 @@
 /**
  * Created by andreas on 04.05.14.
+
  */
 
+let compare=require('./shallowcompare');
 /**
  *
  * @constructor
@@ -82,6 +84,22 @@ Helper.addEntryToListItem=function(list,keyname,keyvalue,key,value){
           item[key]=value;
       }
   })  
+};
+
+/**
+ * helper for shouldComponentUpdate
+ * @param oldVals
+ * @param newVals
+ * @param keyObject
+ * @returns {boolean} true if properties differ
+ */
+
+Helper.compareProperties=function(oldVals,newVals,keyObject){
+    if (! oldVals !== ! newVals) return true;
+    for (let k in keyObject){
+        if ( ! compare(oldVals[k],newVals[k])) return true;
+    }
+    return false;
 };
 
 Helper.entityMap = {

@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import PropertyHandler from '../util/propertyhandler.js';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
+import Helper from '../util/helper.js';
 
 let fmt=new Formatter();
 
@@ -18,10 +19,7 @@ class XteWidget extends React.Component{
         this.drawXte=this.drawXte.bind(this);
     }
     shouldComponentUpdate(nextProps,nextState){
-        for (let k in XteWidget.storeKeys){
-            if (this.props[k] !== nextProps[k]) return true;
-        }
-        return false;
+        return Helper.compareProperties(this.props,nextProps, XteWidget.storeKeys);
     }
     render(){
         let self = this;

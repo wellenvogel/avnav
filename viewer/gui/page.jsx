@@ -14,7 +14,10 @@ var ButtonList=require('../components/ButtonList.jsx');
 var assign=require('object-assign');
 var equals=require('shallow-equals');
 var Measure=require('react-measure').default;
-var Alarm=require('../components/AlarmWidget.jsx');
+var WidgetFactory=require('../components/WidgetFactory.jsx');
+var keys=require('../util/keys.jsx');
+var globalStore=require('../util/globalstore.jsx');
+
 
 
 /**
@@ -467,16 +470,15 @@ Page.prototype.isSmall=function(){
 
 Page.prototype.getAlarmWidget=function(){
     var self=this;
-    var key="alarmInfo";
-    var AlarmHandler=ItemUpdater(Alarm,this.navobject,key);
+    var AlarmHandler=WidgetFactory.createWidget({name: 'Alarm'});
     return React.createElement(
         AlarmHandler,{
             onClick: function(){
-                var alarms=self.navobject.getData(key);
+                var alarms=globalStore.getData(keys.nav.gps.alarms);
                 if (alarms) {
-                    alarms.split(",").forEach(function(k) {
+                    for (let k in alarms){
                         self.navobject.getGpsHandler().stopAlarm(k);
-                    });
+                    };
                 }
             }
         }

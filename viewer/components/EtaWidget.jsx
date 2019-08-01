@@ -6,13 +6,14 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
+import Helper from '../util/helper.js';
 
 let fmt=new Formatter();
 
 class EtaWidget extends React.Component{
 
     shouldComponentUpdate(nextProps,nextState) {
-        return (this.props.eta != nextProps.eta || this.props.wpname != nextProps.wpname);
+       return Helper.compareProperties(this.props,nextProps,EtaWidget.storeKeys);
     }
     render(){
         let eta=this.props.eta?fmt.formatTime(this.props.eta):'--:--:--';

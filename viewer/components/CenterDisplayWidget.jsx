@@ -6,15 +6,13 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
+import Helper from '../util/helper.js';
 
 let fmt=new Formatter();
 
 class CenterDisplayWidget extends React.Component{
     shouldComponentUpdate(nextProps,nextState) {
-        for (let k in CenterDisplayWidget.storeKeys){
-            if (nextProps[k] !== this.props[k]) return true;
-        }
-        return false;
+        return Helper.compareProperties(this.props,nextProps,CenterDisplayWidget.storeKeys);
     }
     render(){
         var classes="avn_widget avn_centerWidget "+this.props.classes||""+ " "+this.props.className||"";

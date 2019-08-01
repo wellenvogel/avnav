@@ -24,6 +24,7 @@ let keys={
             speedAverageOn: K,
             courseAverageOn: K,
             depthBelowTransducer: K,
+            alarms: K,
             sequence: K //will be incremented as last operation on each receive
         },
         center:{

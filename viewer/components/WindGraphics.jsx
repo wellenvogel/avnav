@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
+import Helper from '../util/helper.js';
 
 let fmt=new Formatter();
 
@@ -17,10 +18,7 @@ class WindGraphics extends React.Component{
         this.drawWind=this.drawWind.bind(this);
     }
     shouldComponentUpdate(nextProps,nextState){
-        for (let k in WindGraphics.storeKeys){
-            if (this.props[k] !== nextProps[k]) return true;
-        }
-        return false;
+        return Helper.compareProperties(this.props,nextProps,WindGraphics.storeKeys);
     }
     render(){
         let self = this;

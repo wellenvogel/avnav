@@ -6,16 +6,14 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js'
+import Helper from '../util/helper.js';
 
 let fmt=new Formatter();
 
 class EditRouteWidget extends React.Component{
 
     shouldComponentUpdate(nextProps,nextState){
-        for (let k in EditRouteWidget.storeKeys){
-            if (nextProps[k] != this.props[k]) return true;
-        }
-        return false;
+        return Helper.compareProperties(this.props,nextProps, EditRouteWidget.storeKeys);
     }
     render(){
         let classes="avn_widget avn_editingRouteWidget "+this.props.classes||""+ " "+this.props.className||"";
@@ -69,7 +67,7 @@ EditRouteWidget.propTypes={
     mode:   PropTypes.string, //display info side by side if small
     routeName:   PropTypes.string,
     remain: PropTypes.number,
-    eta:    PropTypes.date,
+    eta:    PropTypes.objectOf(Date),
     numPoints: PropTypes.number,
     len:    PropTypes.number,
     isApproaching: PropTypes.bool,

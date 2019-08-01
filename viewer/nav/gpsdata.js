@@ -99,21 +99,24 @@ GpsData.prototype.average=function(gpsdata){
 GpsData.prototype.writeToStore=function(){
     let bk=keys.nav.gps;
     let d=this.gpsdata;
-    globalStore.storeData(bk.lat,d.lat);
-    globalStore.storeData(bk.lon,d.lon);
+    globalStore.updateValuesObject(d,{
+        lat:bk.lat,
+        lon:bk.lon,
+        course:bk.course,
+        rtime:bk.rtime,
+        raw: bk.raw,
+        valid:bk.valid,
+        speed:bk.speed,
+        windAngle:bk.windAngle,
+        windSpeed:bk.windSpeed,
+        windReference:bk.windReference,
+        positionAverage:bk.positionAverageOn,
+        speedAverage: bk.speedAverageOn,
+        courseAverage: bk.courseAverageOn,
+        depthBelowTransducer: bk.depthBelowTransducer
+    });
     globalStore.storeData(bk.position,{lat:d.lat,lon:d.lon});
-    globalStore.storeData(bk.course,d.course);
-    globalStore.storeData(bk.rtime,d.rtime);
-    globalStore.storeData(bk.raw,d.raw);
-    globalStore.storeData(bk.valid,d.valid);
-    globalStore.storeData(bk.speed,d.speed);
-    globalStore.storeData(bk.windAngle,d.windAngle);
-    globalStore.storeData(bk.windSpeed,d.windSpeed);
-    globalStore.storeData(bk.windReference,d.windReference);
-    globalStore.storeData(bk.positionAverageOn,d.positionAverage);
-    globalStore.storeData(bk.speedAverageOn,d.speedAverage);
-    globalStore.storeData(bk.courseAverageOn,d.courseAverage);
-    globalStore.storeData(bk.depthBelowTransducer,d.depthBelowTransducer);
+    globalStore.storeData(bk.alarms,d.raw?d.raw.alarms:undefined);
     globalStore.storeData(bk.sequence,globalStore.getData(bk.sequence,0)+1);
 
 };

@@ -7,14 +7,12 @@ import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
+import Helper from '../util/helper.js';
 let fmt=new Formatter();
 
 class WindWidget extends React.Component{
     shouldComponentUpdate(nextProps,nextState){
-        for (let k in WindWidget.storeKeys){
-            if (this.props[k] !== nextProps[k]) return true;
-        }
-        return false;
+        return Helper.compareProperties(this.props,nextProps,WindWidget.storeKeys);
     }
     render(){
         let classes = "avn_widget avn_windWidget " + this.props.classes || ""+ " "+this.props.className||"";
