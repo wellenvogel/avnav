@@ -2,52 +2,38 @@
  * Created by andreas on 23.02.16.
  */
 
-var React=require("react");
-var Store=require('../util/store');
-var Formatter=require('../util/formatter');
+import React from "react";
+import PropTypes from 'prop-types';
+import Formatter from '../util/formatter';
+import keys from '../util/keys.jsx';
+import PropertyHandler from '../util/propertyhandler.js';
+let fmt=new Formatter();
 
-var WindWidget=React.createClass({
-    propTypes:{
-        //formatter: React.PropTypes.func,
-        onItemClick: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(Store).isRequired,
-        classes: React.PropTypes.string,
-        updateCallback: React.PropTypes.func
-    },
-    _getValues:function(){
-        return{
-            windAngle: this.props.store.getData('windAngle'),
-            windSpeed: this.props.store.getData('windSpeed'),
-            windReference: this.props.store.getData('windReference')
-        };
-    },
-    getInitialState: function(){
-        return this._getValues();
-
-    },
-    componentWillReceiveProps: function(nextProps) {
-        this.setState(this._getValues());
-    },
-    render: function(){
-        var self = this;
-        var classes = "avn_widget avn_windWidget " + this.props.classes || ""+ " "+this.props.className||"";
-        var style = this.props.style || {};
+class WindWidget extends React.Component{
+    shouldComponentUpdate(nextProps,nextState){
+        for (let k in WindWidget.storeKeys){
+            if (this.props[k] !== nextProps[k]) return true;
+        }
+        return false;
+    }
+    render(){
+        let classes = "avn_widget avn_windWidget " + this.props.classes || ""+ " "+this.props.className||"";
+        let style = this.props.style || {};
         let windSpeed="";
-        let showKnots=this.props.propertyHandler.getProperties().windKnots;
-        let formatter=new Formatter();
+        let showKnots=PropertyHandler.getProperties().windKnots;
         try{
-            windSpeed=parseFloat(this.state.windSpeed);
+            windSpeed=parseFloat(this.props.windSpeed);
             if (showKnots){
-                let nm=this.props.propertyHandler.getProperties().NM;
+                let nm=PropertyHandler.getProperties().NM;
                 windSpeed=windSpeed*3600/nm;
             }
-            if (windSpeed < 10) windSpeed=formatter.formatDecimal(windSpeed,1,2);
-            else windSpeed=formatter.formatDecimal(windSpeed,3,0);
+            if (windSpeed < 10) windSpeed=fmt.formatDecimal(windSpeed,1,2);
+            else windSpeed=fmt.formatDecimal(windSpeed,3,0);
         }catch(e){}
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
                 <div className="avn_windInner">
-                    <div className='avn_widgetData'>{this.state.windAngle}</div>
+                    <div className='avn_widgetData'>{fmt.formatDecimal(this.props.windAngle,3,0)}</div>
                     <div className='avn_widgetInfoLeft'>WD</div>
                     <div className='avn_widgetInfoRight'>°</div>
                 </div>
@@ -60,11 +46,23 @@ var WindWidget=React.createClass({
 
         );
 
-    },
-    click:function(){
-        this.props.onItemClick(avnav.assign({},this.props,this.state));
     }
 
-});
+
+}
+
+WindWidget.propTypes={
+    onClick: PropTypes.func,
+    classes:    PropTypes.string,
+    windAngle:  PropTypes.number,
+    windSpeed:  PropTypes.number,
+    windReference: PropTypes.string
+};
+
+WindWidget.storeKeys={
+    windAngle: keys.nav.gps.windAngle,
+    windSpeed: keys.nav.gps.windSpeed,
+    windReference: keys.nav.gps.windReference
+};
 
 module.exports=WindWidget;

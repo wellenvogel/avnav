@@ -72,6 +72,11 @@ CenterDisplayWidget.storeKeys={
 
 CenterDisplayWidget.propTypes={
     onClick: PropTypes.func,
-    classes: PropTypes.string
+    classes: PropTypes.string,
+    markerCourse:PropTypes.number,
+    markerDistance:PropTypes.number,
+    centerCourse:PropTypes.number,
+    centerDistance:PropTypes.number,
+    centerPosition: PropTypes.object
 };
 module.exports=CenterDisplayWidget;

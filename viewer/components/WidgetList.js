@@ -240,7 +240,8 @@ let widgetList=[
     {
         name: 'WindDisplay',
         caption: 'Wind',
-        wclass: WindWidget
+        wclass: WindWidget,
+        storeKeys: WindWidget.storeKeys
     },
     {
         name: 'DepthDisplay',
