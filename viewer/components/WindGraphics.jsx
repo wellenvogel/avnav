@@ -2,46 +2,41 @@
  * Created by andreas on 23.02.16.
  */
 
-let React=require("react");
-let Store=require('../util/storeapi');
-let Formatter=require('../util/formatter');
+import React from "react";
+import PropTypes from 'prop-types';
+import Formatter from '../util/formatter';
+import keys from '../util/keys.jsx';
+import PropertyHandler from '../util/propertyhandler.js';
 
-let WindGraphics=React.createClass({
-    propTypes:{
-        onItemClick: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(Store).isRequired,
-        classes: React.PropTypes.string,
-        updateCallback: React.PropTypes.func,
-        propertyHandler: React.PropTypes.object.isRequired,
-    },
-    _getValues:function(){
-        return{
+let fmt=new Formatter();
 
-        };
-    },
-    getInitialState: function(){
-        return this._getValues();
-
-    },
-    componentWillReceiveProps: function(nextProps) {
-        this.setState(this._getValues());
-    },
-    render: function(){
+class WindGraphics extends React.Component{
+    constructor(props){
+        super(props);
+        this.canvasRef=this.canvasRef.bind(this);
+        this.drawWind=this.drawWind.bind(this);
+    }
+    shouldComponentUpdate(nextProps,nextState){
+        for (let k in WindGraphics.storeKeys){
+            if (this.props[k] !== nextProps[k]) return true;
+        }
+        return false;
+    }
+    render(){
         let self = this;
         let classes = "avn_widget avn_WindGraphics " + this.props.classes || ""+ " "+this.props.className||"";
         let style = this.props.style || {};
         setTimeout(self.drawWind,0);
-        let formatter=new Formatter();
         let windSpeed="";
-        let showKnots=this.props.propertyHandler.getProperties().windKnots;
+        let showKnots=PropertyHandler.getProperties().windKnots;
         try{
-            windSpeed=parseFloat(this.props.store.getData('windSpeed'));
+            windSpeed=parseFloat(this.props.windSpeed);
             if (showKnots){
-                let nm=this.props.propertyHandler.getProperties().NM;
+                let nm=PropertyHandler.getProperties().NM;
                 windSpeed=windSpeed*3600/nm;
             }
-            if (windSpeed < 10) windSpeed=formatter.formatDecimal(windSpeed,1,2);
-            else windSpeed=formatter.formatDecimal(windSpeed,3,0);
+            if (windSpeed < 10) windSpeed=fmt.formatDecimal(windSpeed,1,2);
+            else windSpeed=fmt.formatDecimal(windSpeed,3,0);
         }catch(e){}
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
@@ -53,17 +48,14 @@ let WindGraphics=React.createClass({
 
         );
 
-    },
-    click:function(){
-        this.props.onItemClick(avnav.assign({},this.props,this.state));
-    },
-    canvasRef:function(item){
+    }
+    canvasRef(item){
         let self=this;
         this.canvas=item;
         console.log("canvas ref");
         setTimeout(self.drawWind,0);
-    },
-    drawWind:function(){
+    }
+    drawWind(){
         let canvas=this.canvas;
         if (! canvas) return;
         let ctx=canvas.getContext('2d');
@@ -97,8 +89,8 @@ let WindGraphics=React.createClass({
         let angle_offset = 0;		// Angle offset for scala, Center 0° is north
 
         // Create random value for wind direction and wind speed
-        let winddirection = parseFloat(this.props.store.getData('windAngle'));
-        let windspeed = parseFloat(this.props.store.getData('windSpeed'));
+        let winddirection = parseFloat(this.props.windAngle);
+        let windspeed = parseFloat(this.props.windSpeed);
 
         // Calculation of pointer rotation
         let angle = ((angle_scala) / (value_max - value_min) * winddirection) + angle_offset;
@@ -159,6 +151,16 @@ let WindGraphics=React.createClass({
         ctx.stroke();
     }
 
-});
+}
 
+WindGraphics.propTypes={
+    onClick: PropTypes.func,
+    classes: PropTypes.string,
+    windSpeed: PropTypes.number,
+    windAngle: PropTypes.number
+};
+WindGraphics.storeKeys={
+    windSpeed: keys.nav.gps.windSpeed,
+    windAngle: keys.nav.gps.windAngle
+};
 module.exports=WindGraphics;

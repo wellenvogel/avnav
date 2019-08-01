@@ -2,25 +2,25 @@
  * Created by andreas on 23.02.16.
  */
 
-var React=require("react");
+import React from "react";
+import PropTypes from 'prop-types';
 
-var EmptyWidget=React.createClass({
-    propTypes: {
-        name: React.PropTypes.string,
-        onClick: React.PropTypes.func,
-        classes: React.PropTypes.string
-    },
-    render: function(){
-        var self=this;
-        var classes="avn_widget "+this.props.classes||"";
+class EmptyWidget extends React.Component{
+    render(){
+        let classes="avn_widget "+this.props.classes||"";
         if (this.props.className) classes+=" "+this.props.className;
-        var style=this.props.style||{};
+        let style=this.props.style||{};
         return (
         <div className={classes} onClick={this.props.onClick} style={style}>
         </div>
         );
     }
 
-});
+}
+
+EmptyWidget.propTypes={
+        onClick: PropTypes.func,
+        classes: PropTypes.string
+};
 
 module.exports=EmptyWidget;

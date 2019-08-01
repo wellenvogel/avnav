@@ -263,19 +263,18 @@ let widgetList=[
     },
     {
         name: 'WindGraphics',
-        caption: 'Wind',
         wclass: WindGraphics,
-        dataKey: ['windAngle','windSpeed']
+        storeKeys: WindGraphics.storeKeys
     },
     {
         name: 'Empty',
-        wclass: EmptyWidget,
+        wclass: EmptyWidget
     },
     {
         name: 'RteCombine',
         caption: '',
         children: [{name:'RteDistance'},{name:'RteEta'}]
-    },
+    }
 
 
 ];
