@@ -14,6 +14,12 @@ var React=require('react');
 var assign=require('object-assign');
 
 
+const getKey=function(obj){
+    let rt=obj.key;
+    if (rt !== undefined) return rt;
+    rt=obj.name;
+    return rt;
+};
 
 module.exports=React.createClass({
     propTypes:{
@@ -42,8 +48,8 @@ module.exports=React.createClass({
             if (allitems[idx].visible === undefined || allitems[idx].visible){
                 vis=true;
             }
-            if (self.props.visibilityFlags && allitems[idx].key){
-                var flag=self.props.visibilityFlags[allitems[idx].key];
+            if (self.props.visibilityFlags && getKey(allitems[idx])){
+                var flag=self.props.visibilityFlags[getKey(allitems[idx])];
                 if (flag !== undefined){
                     vis=flag;
                 }
@@ -59,11 +65,11 @@ module.exports=React.createClass({
                     addClass+=" ";
                     var isSet = false;
                     var k;
-                    var key = entry.key;
+                    var key = getKey(entry);
                     if (key !== undefined) {
                         if (self.props.selectors) {
                             for (k in self.props.selectors) {
-                                isSet = self.props.selectors[k] == entry.key;
+                                isSet = self.props.selectors[k] == getKey(entry);
                                 if (isSet) {
                                     addClass += " " + k;
                                 }
@@ -89,6 +95,7 @@ module.exports=React.createClass({
                     prop.onItemClick=clickHandler;
                     prop.addClass=addClass;
                     prop.className=addClass;
+                    prop.key=getKey(entry);
                     var itemClass;
                     if (self.props.itemCreator){
                         //give the creator the chance to finally control all properties

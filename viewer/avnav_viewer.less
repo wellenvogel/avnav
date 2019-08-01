@@ -432,6 +432,10 @@ html,body {
 @bottomBigFontDouble: ( 1.8 * @bottomBigFont);
 @gpsMiddleFont: 2em;
 
+@verticalWidgetHeight: 3.8em;
+@verticalContainerHeight: 4em;
+@verticalContainerDoubleHeight: 7.9em;
+
 .avn_widget{
   position: relative;
   z-index: 100;
@@ -444,10 +448,25 @@ html,body {
   pointer-events: all;
   background: white;
   .nightColors();
+  .flex-shrink(0);
+  .flex-grow(1);
+  margin-bottom: 0.1em;
+  margin-top: 0.1em;
+  margin-left: 0.1em;
+  margin-right: 0.1em;
 }
 
 .avn_widgetContainer{
   font-size: @widgetFontSize;
+  .flex-display();
+  .flex-wrap(wrap);
+}
+.avn_widgetContainer_vertical{
+  .avn_widgetContainer();
+  height: @verticalContainerHeight;
+  .double{
+    height: @verticalContainerDoubleHeight;
+  }
 }
 
 .avn_widgetInfo{
@@ -847,6 +866,9 @@ html,body {
 }
 
 #avi_navpage .avn_topRightWidgets{
+  .flex-direction(row);
+  height: 4.3em;
+  overflow: hidden;
   .avn_widget{
     height: 4em;
     width: 8em;
@@ -894,19 +916,21 @@ html,body {
 }
 
 .avn_nav_bottom .avn_widget{
-  height: 3.8em;
+  height: @verticalWidgetHeight;
+  margin-right: 0;
+  margin-left: 0.2em;
 }
 
 .avn_nav_bottom .leftBottomMarker{
   width: 50%;
   position: relative;
-  height: 1em;
+  .flex-direction(row-reverse);
 }
 
 .avn_nav_bottom .leftBottomPosition{
   width: 50%;
   position: relative;
-  height: 1em;
+ .flex-direction(row);
 }
 
 
@@ -967,8 +991,7 @@ html,body {
   overflow: hidden;
   background-color: @colorMain;
   .nightColors();
-  pointer-events: none;
-  width: @navLeftWidgetWidth;
+  .flex-direction(column);
 }
 
 #avi_navpage .avn_leftFrame{
@@ -982,10 +1005,6 @@ html,body {
 
 
 #avi_navpage .avn_navLeftContainer .avn_widget{
-  margin-left: 0;
-  margin-right: 0;
-  margin-top: 0;
-  margin-bottom: 0.15em;
   width:@navLeftWidgetWidth;
 
 }

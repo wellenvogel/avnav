@@ -7,7 +7,7 @@ let React=require('react');
 let ItemUpdater=require('../components/ItemUpdater.jsx');
 let navobjects=require('../nav/navobjects');
 let Formatter=require('../util/formatter');
-let WidgetContainer=require('../components/WidgetContainer');
+let ItemList=require('../components/ItemList.jsx');
 let WidgetFactory=require('../components/WidgetFactory');
 let shallowCompare=require('../util/shallowcompare');
 let gkeys=require('../util/keys.jsx');
@@ -249,10 +249,10 @@ Gpspage.prototype.getPageContent=function(){
             return (
                 <div className="avn_panel_fill" onClick={this.goBack}>
                     <div id='avi_gps_page_left' className="avn_gpsp_hfield">
-                        <WidgetContainer {...p1leftProp}/>
+                        <ItemList {...p1leftProp}/>
                     </div>
                     <div id='avi_gps_page_right' className="avn_gpsp_hfield">
-                        <WidgetContainer {...p1RightProp}/>
+                        <ItemList {...p1RightProp}/>
                     </div>
                     {self.getAlarmWidget()}
                 </div>

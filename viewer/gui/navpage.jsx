@@ -6,7 +6,7 @@ var React=require('react');
 var ReactDOM=require('react-dom');
 var WaypointList=require('../components/ItemList.jsx');
 var WaypointItem=require('../components/WayPointItem.jsx');
-var WidgetContainer=require('../components/WidgetContainer.jsx');
+var ItemList=require('../components/ItemList.jsx');
 var navobjects=require('../nav/navobjects');
 var routeobjects=require('../nav/routeobjects');
 var WaypointDialog=require('../components/WaypointDialog.jsx');
@@ -488,9 +488,9 @@ Navpage.prototype.getPageContent=function(){
     var RoutePanel=ItemUpdater(routePanel,this.store,[keys.routingVisible,keys.isSmall]);
     var isSmall=this.isSmall();
     var numWRows=this.gui.properties.getProperties().allowTwoWidgetRows?2:1;
-    var LeftBottomMarker=ItemUpdater(WidgetContainer,this.store,keys.bottomLeftWidgets);
+    var LeftBottomMarker=ItemUpdater(ItemList,this.store,keys.bottomLeftWidgets);
     self.store.updateData(keys.bottomLeftWidgets,{
-        className: "leftBottomMarker",
+        className: "leftBottomMarker avn_widgetContainer_vertical",
         onItemClick: self.widgetClick,
         itemCreator: widgetCreator,
         itemList: this.widgetLists[keys.bottomLeftWidgets],
@@ -506,9 +506,9 @@ Navpage.prototype.getPageContent=function(){
             maxRowCol: numWRows,
             maxSize:self.panelWidth/2+widgetMargin/2}
         });
-    var LeftBottomPosition=ItemUpdater(WidgetContainer,this.store,keys.bottomRightWidgets);
+    var LeftBottomPosition=ItemUpdater(ItemList,this.store,keys.bottomRightWidgets);
     self.store.updateData(keys.bottomRightWidgets,{
-        className: 'leftBottomPosition',
+        className: 'leftBottomPosition avn_widgetContainer_vertical',
         onItemClick: self.widgetClick,
         itemList:this.widgetLists[keys.bottomRightWidgets],
         itemCreator: widgetCreator,
@@ -525,33 +525,10 @@ Navpage.prototype.getPageContent=function(){
             maxSize: self.panelWidth/2+widgetMargin/2
         }
     });
-    var NavLeftContent = function (props) {
-        return <Measure
-            bounds="true"
-            onResize={function (rect) {
-                var small=self.isSmall();
-                self.store.updateData(keys.bottomLeftWidgets,{
-                    outerSize: small?0:rect.bounds.width
-                },'layoutParameter');
-                self.store.updateData(keys.bottomRightWidgets,{
-                    outerSize: small?0:rect.bounds.width
-                },'layoutParameter');
-            }
-            }
-            children={
-                function (mp) {
-                    return (
-                        <div ref={mp.measureRef}>
-                            <WidgetContainer {...props}/>
-                        </div>
-                    );
-                }
-            }
-        />
-    };
-    var NavLeftContainer=ItemUpdater(NavLeftContent,this.store,keys.leftWidgets);
+
+    var NavLeftContainer=ItemUpdater(ItemList,this.store,keys.leftWidgets);
     self.store.updateData(keys.leftWidgets,{
-        className: "avn_navLeftContainer",
+        className: "avn_navLeftContainer avn_widgetContainer",
         onItemClick: self.widgetClick,
         itemList:this.widgetLists[keys.leftWidgets],
         itemCreator: widgetCreator,
@@ -567,9 +544,9 @@ Navpage.prototype.getPageContent=function(){
             inverseAlignment: false
         }
     });
-    var TopWidgets=ItemUpdater(WidgetContainer,this.store,keys.topWidgets);
+    var TopWidgets=ItemUpdater(ItemList,this.store,keys.topWidgets);
     self.store.updateData(keys.topWidgets, {
-        className: "avn_topRightWidgets",
+        className: "avn_topRightWidgets avn_widgetContainer",
         onItemClick: self.widgetClick,
         itemList:this.widgetLists[keys.topWidgets],
         itemCreator: widgetCreator,
@@ -603,12 +580,12 @@ Navpage.prototype.getPageContent=function(){
                         <TopWidgets/>
                         <RoutePanel/>
                         <WpButtons/>
-                        <div className="avn_leftFrame" style={{paddingRight: widgetMargin}}>
+                        <div className="avn_leftFrame" >
                             <NavLeftContainer />
                         </div>
                         {Alarm}
                     </div>
-                    <div className="avn_nav_bottom avn_widgetContainer" style={{paddingTop:widgetMargin}}>
+                    <div className="avn_nav_bottom" >
                         <LeftBottomMarker />
                         <LeftBottomPosition />
                     </div>
