@@ -2,31 +2,28 @@
  * Created by andreas on 23.02.16.
  */
 
-let React=require("react");
-let Store=require('../util/storeapi');
-let Formatter=require('../util/formatter');
+import React from "react";
+import PropTypes from 'prop-types';
+import PropertyHandler from '../util/propertyhandler.js';
+import Formatter from '../util/formatter';
+import keys from '../util/keys.jsx';
 
-let XteWidget=React.createClass({
-    propTypes:{
-        onItemClick: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(Store).isRequired,
-        classes: React.PropTypes.string,
-        updateCallback: React.PropTypes.func,
-        propertyHandler: React.PropTypes.object.isRequired,
-    },
-    _getValues:function(){
-        return{
+let fmt=new Formatter();
 
-        };
-    },
-    getInitialState: function(){
-        return this._getValues();
+class XteWidget extends React.Component{
 
-    },
-    componentWillReceiveProps: function(nextProps) {
-        this.setState(this._getValues());
-    },
-    render: function(){
+    constructor(props){
+        super(props);
+        this.canvasRef=this.canvasRef.bind(this);
+        this.drawXte=this.drawXte.bind(this);
+    }
+    shouldComponentUpdate(nextProps,nextState){
+        for (let k in XteWidget.storeKeys){
+            if (this.props[k] !== nextProps[k]) return true;
+        }
+        return false;
+    }
+    render(){
         let self = this;
         let classes = "avn_widget avn_xteWidget " + this.props.classes || ""+ " "+this.props.className||"";
         let style = this.props.style || {};
@@ -40,22 +37,17 @@ let XteWidget=React.createClass({
 
         );
 
-    },
-    click:function(){
-        this.props.onItemClick(avnav.assign({},this.props,this.state));
-    },
-    canvasRef:function(item){
+    }
+    canvasRef(item){
         this.canvas=item;
-        console.log("canvas ref");
         setTimeout(self.drawXte,0);
-    },
-    drawXte:function(){
+    }
+    drawXte(){
         let canvas=this.canvas;
         if (! canvas) return;
         let context=canvas.getContext('2d');
-        let formatter=new Formatter();
-        let xteMax=this.props.propertyHandler.getProperties().gpsXteMax;
-        let xteText=formatter.formatDecimal(xteMax,1,1);
+        let xteMax=PropertyHandler.getProperties().gpsXteMax;
+        let xteText=fmt.formatDecimal(xteMax,1,1);
         let color=canvas.style.color;
         context.fillStyle =color;
         context.strokeStyle=color;
@@ -98,9 +90,9 @@ let XteWidget=React.createClass({
         context.lineTo(0.5*w,linebase+0.5*middleHeight);
         context.stroke();
         context.closePath();
-        let curXte=this.props.store.getData('markerXte');
+        let curXte=this.props.markerXte;
         if (curXte === undefined) return;
-        let xtepos=parseFloat(curXte.replace(/ /,''))/xteMax;
+        let xtepos=parseFloat(curXte)/xteMax;
         if (xtepos < -1.1) xtepos=-1.1;
         if (xtepos > 1.1) xtepos=1.1;
         xtepos=xtepos*(right-left)/2+left+(right-left)/2;
@@ -113,6 +105,17 @@ let XteWidget=React.createClass({
         context.closePath();
     }
 
-});
+}
+
+XteWidget.propTypes={
+    onClick: PropTypes.func,
+    classes: PropTypes.string,
+    markerXte: PropTypes.number
+
+};
+
+XteWidget.storeKeys={
+    markerXte: keys.nav.wp.xte
+};
 
 module.exports=XteWidget;

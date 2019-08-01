@@ -257,9 +257,8 @@ let widgetList=[
     },
     {
         name: 'XteDisplay',
-        caption: 'XTE',
         wclass: XteWidget,
-        dataKey: 'markerXte'
+        storeKeys: XteWidget.storeKeys
     },
     {
         name: 'WindGraphics',
