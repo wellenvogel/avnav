@@ -1,15 +1,16 @@
 /**
  * Created by andreas on 25.11.16.
  */
-let Store=require('../util/store');
-let React=require('react');
+import StoreApi from '../util/storeapi';
+import React from 'react';
+import assign from 'object-assign';
 /**
  * a simple item updater
  * that will register at a store with a key and will update its child based on the data
  * it retrieved from the store
  * all properties are forwarded to the children, mixed with the values fetched from the store
  * @param {*} Item the item (html or react class) that should be wrapped
- * @param {Store} store the store
+ * @param {StoreApi} store the store
  * @param {string||string[]} opt_storeKey the key(s) to register at the store and fetch data
  *         if any of the returned items is not an object, the value will be assigned to a key with the
  *         name of the store key
@@ -26,10 +27,15 @@ let Updater=function(Item,store,opt_storeKey,opt_translator) {
         if (opt_storeKey instanceof Array) return opt_storeKey;
         else return [opt_storeKey]
     };
-    let itemUpdater = React.createClass({
-        getInitialState: function () {
+    class itemUpdater extends React.Component{
+        constructor(props) {
+            super(props);
+            this.state={};
             let st={};
-            if (! opt_storeKey) return {update:1};
+            if (! opt_storeKey) {
+                this.state= {update: 1};
+                return;
+            }
             getStoreKeys().forEach(function(key){
                 if (key === undefined) return;
                 let v=store.getData(key);
@@ -37,11 +43,14 @@ let Updater=function(Item,store,opt_storeKey,opt_translator) {
                     v={};
                     v[key]=store.getData(key);
                 }
-                avnav.assign(st,v);
+                assign(st,v);
             });
-            return st;
-        },
-        dataChanged: function (store,keys) {
+            this.state=st;
+            this.dataChanged=this.dataChanged.bind(this);
+            return;
+
+        }
+        dataChanged(store,keys) {
             let st={};
             if (! opt_storeKey) {
                 this.setState({update:1});
@@ -54,25 +63,25 @@ let Updater=function(Item,store,opt_storeKey,opt_translator) {
                     v={};
                     v[key]=store.getData(key);
                 }
-                avnav.assign(st,v);
+                assign(st,v);
             });
             this.setState(st);
-        },
-        componentDidMount: function () {
+        }
+        componentDidMount() {
             store.register(this, opt_storeKey);
-        },
-        componentWillUnmount: function () {
+        }
+        componentWillUnmount() {
             store.deregister(this);
-        },
-        render: function () {
+        }
+        render() {
             let props = {};
             if (! opt_translator)
-                props=avnav.assign({}, this.props, this.state);
+                props=assign({}, this.props, this.state);
             else
-                props=avnav.assign({},this.props, opt_translator(this.state));
+                props=assign({},this.props, opt_translator(this.state));
             return <Item {...props}/>
         }
-    });
+    };
     return itemUpdater;
 };
 
