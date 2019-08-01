@@ -463,7 +463,7 @@ Navpage.prototype.getPageContent=function(){
     this.resetWidgetLayouts();
     this.computeLayoutParam(); //initially fill the stores
     var RoutePoints=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);
-    var RouteInfo=ItemUpdater(EditRouteWidget,self.navobject);
+    var RouteInfo=WidgetFactory.createWidget({name:'EditRoute'});
     var widgetMargin=this.gui.properties.getProperties().style.widgetMargin;
     var routePanel = function (props) {
         if (!props.routingVisible || props.isSmall) return null;

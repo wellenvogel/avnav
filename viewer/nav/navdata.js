@@ -276,6 +276,7 @@ NavData.prototype.computeValues=function(){
         edRouteNumPoints: keys.nav.editRoute.numPoints,
         edRouteLen: keys.nav.editRoute.len,
         edRouteEta: keys.nav.editRoute.eta,
+        edRouteRemain: keys.nav.editRoute.remain,
         editingActiveRoute: keys.nav.editRoute.isActive
     });
     globalStore.storeData(keys.nav.wp.name,this.data.markerWp?this.data.markerWp.name:'');

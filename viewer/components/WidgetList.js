@@ -198,8 +198,7 @@ let widgetList=[
         storeKeys:{
             value:keys.nav.gps.rtime
         },
-        formatter: 'formatClock',
-        dataKey: 'clock'
+        formatter: 'formatClock'
     },
     {
         name: 'WpPosition',
@@ -219,7 +218,6 @@ let widgetList=[
     },
     {
         name: 'AisTarget',
-        caption: 'AIS',
         wclass: AisTargetWidget,
         storeKeys: AisTargetWidget.storeKeys
     },
@@ -230,8 +228,8 @@ let widgetList=[
     },
     {
         name: 'EditRoute',
-        caption: 'EDRTE',
-        wclass: EditRouteWidget
+        wclass: EditRouteWidget,
+        storeKeys: EditRouteWidget.storeKeys
     },
     {
         name: 'CenterDisplay',
