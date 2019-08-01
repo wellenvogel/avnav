@@ -280,6 +280,7 @@ NavData.prototype.computeValues=function(){
         editingActiveRoute: keys.nav.editRoute.isActive
     });
     globalStore.storeData(keys.nav.wp.name,this.data.markerWp?this.data.markerWp.name:'');
+    globalStore.storeData(keys.nav.center.position,this.maplatlon);
     //now create text values
     var legDataFormatted=this.formatLegData(this.data);
     avnav.assign(this.formattedValues,legDataFormatted);

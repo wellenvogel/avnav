@@ -234,7 +234,8 @@ let widgetList=[
     {
         name: 'CenterDisplay',
         caption: 'Center',
-        wclass: CenterDisplayWidget
+        wclass: CenterDisplayWidget,
+        storeKeys: CenterDisplayWidget.storeKeys
     },
     {
         name: 'WindDisplay',

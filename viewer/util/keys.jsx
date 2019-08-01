@@ -30,7 +30,8 @@ let keys={
             course: K,
             distance: K,
             markerCourse: K,
-            markerDistance: K
+            markerDistance: K,
+            position: K
         },
         wp:{
             course: K,
