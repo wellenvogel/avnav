@@ -458,7 +458,6 @@ Navpage.prototype.getPageContent=function(){
       }
     };
     this.store.register(buttonUpdater,keys.routingVisible);
-    this.computeLayoutParam(); //initially fill the stores
     var RoutePoints=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);
     var RouteInfo=WidgetFactory.createWidget({name:'EditRoute'});
     var widgetMargin=this.gui.properties.getProperties().style.widgetMargin;
@@ -535,7 +534,7 @@ Navpage.prototype.getPageContent=function(){
                     </div>
                     <div className="avn_nav_bottom" >
                         <LeftBottom {...leftBottomProperties} className={leftBottomProperties.className + bottomDouble} />
-                        <RightBottom {...rightBottomProperties} className={leftBottomProperties.className + bottomDouble}/>
+                        <RightBottom {...rightBottomProperties} className={rightBottomProperties.className + bottomDouble}/>
                     </div>
                 </div>
             );
@@ -611,9 +610,6 @@ Navpage.prototype.navEvent=function(evdata){
     if (! this.visible) return;
     if (evdata.type == navobjects.NavEventType.ROUTE){
         if (this.routingVisible())this.updateRoutePoints();
-    }
-    if (evdata.type == navobjects.NavEventType.AIS){
-        this.widgetVisibility();
     }
 };
 /**
@@ -729,26 +725,7 @@ Navpage.prototype.hideRouting=function(opt_noStop) {
 };
 
 
-Navpage.prototype.computeLayoutParam=function(){
-    //TODO: optimize to decide if we need to change
-    var self=this;
-    var isSmall=this.isSmall();
-    var widgetMargin=this.gui.properties.getProperties().style.widgetMargin;
-    var maxRowCol=this.gui.properties.getProperties().allowTwoWidgetRows?2:1;
 
-    this.store.updateData(keys.bottomLeftWidgets,{
-        maxRowCol: maxRowCol,
-        maxSize:self.panelWidth/2+widgetMargin/2
-    },'layoutParameter');
-    this.store.updateData(keys.bottomRightWidgets,{
-        maxRowCol: maxRowCol,
-        maxSize: self.panelWidth/2+widgetMargin/2
-    },'layoutParameter');
-    this.store.updateData(keys.topWidgets,{
-        maxSize: self.panelWidth
-    },'layoutParameter');
-
-};
 
 Navpage.prototype.leftPanelChanged=function(rect){
     var self=this;
@@ -762,7 +739,6 @@ Navpage.prototype.leftPanelChanged=function(rect){
     this.store.updateData(keys.wpButtons,{fontSize:buttonFontSize});
     if (! doUpdate) return;
     this.getMap().renderTo(this.mapdom);
-    self.computeLayoutParam();
     self.widgetVisibility();
     window.setTimeout(function(){
         self.scrollRoutePoints();
