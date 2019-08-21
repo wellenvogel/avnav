@@ -463,9 +463,9 @@ html,body {
 }
 .avn_widgetContainer_vertical{
   .avn_widgetContainer();
-  height: @verticalContainerHeight;
-  .double{
-    height: @verticalContainerDoubleHeight;
+  max-height: @verticalContainerHeight;
+  &.two_rows{
+    max-height: @verticalContainerDoubleHeight;
   }
 }
 

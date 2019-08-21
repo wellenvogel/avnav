@@ -73,11 +73,18 @@ let keys={
         }
     },
     gui:{
+        global:{
+            smallDisplay: K,
+            pageName: K,
+            pageOptions:K
+        },
         navpage:{
             zoom: K,
             requiredZoom: K, //the zoom that we would like to get
             topWidgets: K, //the list of top widgets to be displayed
-            leftWidgets: K //the list of left widgets
+            leftWidgets: K, //the list of left widgets,
+            bottomLeftWidgets: K,
+            bottomRightWidgets: K
         }
     }
 };

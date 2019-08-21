@@ -307,6 +307,10 @@ Navpage.prototype.widgetVisibility=function(){
                 DepthDisplay: depthVisible && !routingVisible  && ! isSmall,
                 ActiveRoute: routeVisible && !routingVisible
             }));
+    //currently no filtering for the bottom widgets
+    globalStore.storeData(gkeys.gui.navpage.bottomLeftWidgets,this.widgetLists[keys.bottomLeftWidgets]);
+    globalStore.storeData(gkeys.gui.navpage.bottomRightWidgets,this.widgetLists[keys.bottomRightWidgets]);
+
 };
 /**
  * the periodic timer call
@@ -478,34 +482,20 @@ Navpage.prototype.getPageContent=function(){
                 </div>
         );
     };
-    var RoutePanel=ItemUpdater(routePanel,this.store,[keys.routingVisible,keys.isSmall]);
-    var isSmall=this.isSmall();
-    var numWRows=this.gui.properties.getProperties().allowTwoWidgetRows?2:1;
-    var LeftBottomMarker=ItemUpdater(ItemList,this.store,keys.bottomLeftWidgets);
-    self.store.updateData(keys.bottomLeftWidgets,{
+    let RoutePanel=ItemUpdater(routePanel,this.store,[keys.routingVisible,keys.isSmall]);
+    let numWRows=this.gui.properties.getProperties().allowTwoWidgetRows?2:1;
+    let LeftBottom=ItemUpdater(ItemList,globalStore,{itemList:gkeys.gui.navpage.bottomLeftWidgets});
+    let leftBottomProperties={
         className: "leftBottomMarker avn_widgetContainer_vertical",
         onItemClick: self.widgetClick,
-        itemCreator: widgetCreator,
-        itemList: this.widgetLists[keys.bottomLeftWidgets],
-        setContainerHeight: true,
-        layoutParameter:{
-            inverted: false,
-            direction: 'left',
-            scale: true,
-            mainMargin: widgetMargin,
-            otherMargin: widgetMargin,
-            startMargin: 0,
-            outerSize: 0,
-            maxRowCol: numWRows,
-            maxSize:self.panelWidth/2+widgetMargin/2}
-        });
-    var LeftBottomPosition=ItemUpdater(ItemList,this.store,keys.bottomRightWidgets);
-    self.store.updateData(keys.bottomRightWidgets,{
+        itemCreator: widgetCreator
+    };
+    let RightBottom=ItemUpdater(ItemList,globalStore,{itemList:gkeys.gui.navpage.bottomRightWidgets});
+    let rightBottomProperties={
         className: 'leftBottomPosition avn_widgetContainer_vertical',
         onItemClick: self.widgetClick,
-        itemList:this.widgetLists[keys.bottomRightWidgets],
         itemCreator: widgetCreator
-    });
+    };
 
     var NavLeftContainer=ItemUpdater(ItemList,globalStore,{itemList:gkeys.gui.navpage.leftWidgets});
     let navLeftProperties={
@@ -530,6 +520,7 @@ Navpage.prototype.getPageContent=function(){
     var Alarm=self.getAlarmWidget();
     return React.createClass({
         render: function(){
+            let bottomDouble=self.gui.properties.getProperties().allowTwoWidgetRows?" two_rows":"";
             return (
                 <div className="avn_panel_fill_flex">
                     <div id='avi_map_navpage' ref="map" className='avn_panel avn_map'/>
@@ -543,8 +534,8 @@ Navpage.prototype.getPageContent=function(){
                         {Alarm}
                     </div>
                     <div className="avn_nav_bottom" >
-                        <LeftBottomMarker />
-                        <LeftBottomPosition />
+                        <LeftBottom {...leftBottomProperties} className={leftBottomProperties.className + bottomDouble} />
+                        <RightBottom {...rightBottomProperties} className={leftBottomProperties.className + bottomDouble}/>
                     </div>
                 </div>
             );

@@ -6,6 +6,8 @@ avnav.provide('avnav.gui.Handler');
 avnav.provide('avnav.gui.PageEvent');
 avnav.provide('avnav.gui.AndroidEvent');
 var NavData=require('../nav/navdata');
+var keys=require('../util/keys.jsx');
+var globalStore=require('../util/globalstore.jsx');
 /**
  * the page change event
  * @param {avnav.gui.Handler} gui
@@ -181,6 +183,8 @@ avnav.gui.Handler.prototype.showPage = function (name, options) {
             this.history.push(this.page);
     }
     this.removeAllActiveInputs();
+    globalStore.storeData(keys.gui.global.pageName,name);
+    globalStore.storeData(keys.gui.global.pageOptions,options);
     $('.avn_page').hide();
     $('#avi_' + name).show();
     var oldname = this.page;
