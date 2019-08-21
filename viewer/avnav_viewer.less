@@ -547,6 +547,9 @@ html,body {
       display: inline-block;
       font-size: @gpsMiddleFont;
     }
+    .avn_doubleHeight{
+      .flex-grow(2); //the default is 1
+    }
   }
   &.avn_doubleHeight .avn_widgetData{
     font-size: @bottomBigFont;
@@ -1705,6 +1708,7 @@ button.avb_WpaCancel {
   width: 100%;
   height: 100%;
   position: relative;
+  flex-direction: column;
   .avn_widgetInfoLeft {
     left: 0;
     padding-left: 8px;

@@ -21,6 +21,7 @@ var Measure=require('react-measure').default;
 var Helper=require('../util/helper');
 var gkeys=require('../util/keys.jsx');
 var globalStore=require('../util/globalstore.jsx');
+var compare=require('../util/shallowcompare');
 
 var keys={
     waypointList: 'waypointList',
@@ -158,6 +159,7 @@ var Navpage=function(){
      * @type {undefined}
      */
     this.lastLockWp=undefined;
+    this.lastCenter=undefined;
 
 };
 avnav.inherits(Navpage,Page);
@@ -677,12 +679,16 @@ Navpage.prototype.mapEvent=function(evdata){
     if (! this.visible) return;
     this._updateZoom();
     if (evdata.type == avnav.map.EventType.MOVE) {
-        //show the center display if not visible
-        if (!this.routingVisible()) {
-            this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
-            this.widgetVisibility();
-            return;
+        var nCenter=this.gui.map.getCenter();
+        if (! compare(this.lastCenter,nCenter)) {
+            this.lastCenter=nCenter;
+            //show the center display if not visible
+            if (!this.routingVisible()) {
+                this.hidetime = new Date().getTime() + this.gui.properties.getProperties().centerDisplayTimeout;
+                this.widgetVisibility();
+                return;
 
+            }
         }
     }
     if (evdata.type == avnav.map.EventType.SELECTAIS){

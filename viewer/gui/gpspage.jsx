@@ -221,30 +221,18 @@ Gpspage.prototype.getPageContent=function(){
             if (this.props[keys.secondPage]) pageKey='page2';
             if (this.props[keys.anchorWatch]) pageKey+='a';
             let p1leftProp={
-              className: 'avn_gpsLeftContainer',
+              className: 'avn_gpsLeftContainer avn_widgetContainer',
               itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists[pageKey].left]);},
               itemList: widgetLists[keys.widgetLists[pageKey].left],
               style: { fontSize: fontSize},
-              onItemClick: (item) => {self.onItemClick(item);},
-              layoutParameter:{
-                  direction: 'bottom',
-                  scale: true,
-                  maxSize: self.leftPanelHeight,
-                  weightList: weightList
-              }
+              onItemClick: (item) => {self.onItemClick(item);}
             };
             let p1RightProp={
-                className: 'avn_gpsRightContainer',
+                className: 'avn_gpsRightContainer avn_widgetContainer',
                 itemCreator: (widget)=>{ return widgetCreator(widget,widgetLists[keys.widgetLists[pageKey].right]);},
                 itemList: widgetLists[keys.widgetLists[pageKey].right],
                 style: { fontSize: fontSize},
-                onItemClick: (item) => {self.onItemClick(item);},
-                layoutParameter:{
-                    direction: 'bottom',
-                    scale: true,
-                    maxSize: self.leftPanelHeight,
-                    weightList: weightList
-                }
+                onItemClick: (item) => {self.onItemClick(item);}
             };
             return (
                 <div className="avn_panel_fill" onClick={this.goBack}>

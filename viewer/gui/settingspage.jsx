@@ -9,6 +9,7 @@ var OverlayDialog=require('../components/OverlayDialog.jsx');
 var ColorPicker=require('../components/ColorPicker.jsx');
 var Page=require('./page.jsx');
 var assign=require('object-assign');
+var Properties=require('../util/properties.jsx');
 require('react-color-picker/index.css');
 
 var keys={
@@ -77,14 +78,14 @@ Settingspage.prototype.getPageContent=function(){
         return <div className={properties.addClass+ " avn_list_entry"} onClick={properties.onClick}>{properties.name}</div>
     };
     var SettingsItem=function(properties){
-        if (properties.type == avnav.util.PropertyType.CHECKBOX) {
+        if (properties.type == Properties.PropertyType.CHECKBOX) {
             return <div className={properties.addClass+ " avn_list_entry"}
                         onClick={function(){self.changeValue(properties.name,!properties.value);}}>
                 <div className="avn_settingsLabel">{properties.label}</div>
                 <span className={'avnCheckbox'+(properties.value?' checked':'')}/>
             </div>
         }
-        if(properties.type == avnav.util.PropertyType.RANGE){
+        if(properties.type == Properties.PropertyType.RANGE){
             return <div className={properties.addClass+ " avn_list_entry"}
                         onClick={function(ev){
                             self.rangeItemDialog(properties);
@@ -93,7 +94,7 @@ Settingspage.prototype.getPageContent=function(){
                 <div className="avn_value">{properties.value}</div>
             </div>;
         }
-        if(properties.type == avnav.util.PropertyType.COLOR){
+        if(properties.type == Properties.PropertyType.COLOR){
             var style={
                 backgroundColor: properties.value
             };
