@@ -255,7 +255,6 @@ Navpage.prototype.showPage=function(options){
         this.createButtons();
     }
     this.widgetVisibility();
-    this.resetWidgetLayouts();
 };
 
 Navpage.prototype.widgetVisibility=function(){
@@ -368,17 +367,7 @@ Navpage.prototype.hidePage=function(){
     if (map) map.renderTo(null);
 };
 
-Navpage.prototype.resetWidgetLayouts=function() {
-    var self=this;
-    var fontSize=this.gui.properties.getValueByName("widgetFontSize");
-    for (var i in widgetKeys) {
-        var key=widgetKeys[i];
-        //re-layout all widgets
-        var oldSeq = self.store.getData(key, {}).renewSequence || 0;
-        self.store.replaceSubKey(key, oldSeq + 1, 'renewSequence');
-        self.store.updateData(key,{fontSize:fontSize},"style");
-    }
-};
+
 
 Navpage.prototype.createButtons=function()
 {
@@ -462,7 +451,6 @@ Navpage.prototype.getPageContent=function(){
       }
     };
     this.store.register(buttonUpdater,keys.routingVisible);
-    this.resetWidgetLayouts();
     this.computeLayoutParam(); //initially fill the stores
     var RoutePoints=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);
     var RouteInfo=WidgetFactory.createWidget({name:'EditRoute'});
@@ -513,19 +501,7 @@ Navpage.prototype.getPageContent=function(){
         className: 'leftBottomPosition avn_widgetContainer_vertical',
         onItemClick: self.widgetClick,
         itemList:this.widgetLists[keys.bottomRightWidgets],
-        itemCreator: widgetCreator,
-        setContainerHeight: true,
-        layoutParameter:{
-            inverted: false,
-            scale: true,
-            direction: 'right',
-            mainMargin: widgetMargin,
-            otherMargin: widgetMargin,
-            startMargin: 0,
-            outerSize: 0,
-            maxRowCol: numWRows,
-            maxSize: self.panelWidth/2+widgetMargin/2
-        }
+        itemCreator: widgetCreator
     });
 
     var NavLeftContainer=ItemUpdater(ItemList,this.store,keys.leftWidgets);
@@ -533,39 +509,15 @@ Navpage.prototype.getPageContent=function(){
         className: "avn_navLeftContainer avn_widgetContainer",
         onItemClick: self.widgetClick,
         itemList:this.widgetLists[keys.leftWidgets],
-        itemCreator: widgetCreator,
-        setContainerHeight: true,
-        setContainerWidth: false,
-        layoutParameter: {
-            inverted: false,
-            scale: false,
-            mainMargin: widgetMargin,
-            otherMargin: widgetMargin,
-            maxSize: 0,
-            direction: 'bottom',
-            inverseAlignment: false
-        }
+        itemCreator: widgetCreator
     });
     var TopWidgets=ItemUpdater(ItemList,this.store,keys.topWidgets);
     self.store.updateData(keys.topWidgets, {
         className: "avn_topRightWidgets avn_widgetContainer",
         onItemClick: self.widgetClick,
-        itemList:this.widgetLists[keys.topWidgets],
+        itemList: this.widgetLists[keys.topWidgets],
         itemCreator: widgetCreator,
-        setContainerWidth: true,
-        setContainerHeight: true,
-        childProperties: {mode:'small'},
-        layoutParameter: {
-            inverted: false,
-            scale: true,
-            direction: 'right',
-            mainMargin: widgetMargin,
-            otherMargin: widgetMargin,
-            startMargin: 0,
-            outerSize: 0,
-            maxRowCol: 1,
-            maxSize: this.panelWidth
-        }
+        childProperties: {mode: 'small'}
     });
     var WpButtons=ItemUpdater(ButtonList,this.store,keys.wpButtons);
     self.store.updateData(keys.wpButtons,{
@@ -815,6 +767,7 @@ Navpage.prototype.leftPanelChanged=function(rect){
     var buttonFontSize=this.gui.properties.getButtonFontSize();
     this.store.updateData(keys.wpButtons,{fontSize:buttonFontSize});
     if (! doUpdate) return;
+    this.getMap().renderTo(this.mapdom);
     self.computeLayoutParam();
     self.widgetVisibility();
     window.setTimeout(function(){

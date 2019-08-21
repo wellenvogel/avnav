@@ -86,17 +86,7 @@ class WidgetFactory{
                         storeKeys=RenderWidget.storeKeys;
                     }
                     if (storeKeys) {
-                        var tf = function (state) {
-                            let rt = {};
-                            for (let k in storeKeys) {
-                                rt[k] = state[storeKeys[k]]
-                            }
-                            return rt;
-                        };
-                        for (let k in storeKeys) {
-                            keylist.push(storeKeys[k]);
-                        }
-                        RenderWidget = ItemUpdater(RenderWidget, globalStore, keylist, tf);
+                        RenderWidget = ItemUpdater(RenderWidget, globalStore, storeKeys);
                     }
                     return <RenderWidget {...wprops}/>
                 }

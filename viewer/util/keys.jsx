@@ -75,7 +75,8 @@ let keys={
     gui:{
         navpage:{
             zoom: K,
-            requiredZoom: K //the zoom that we would like to get
+            requiredZoom: K, //the zoom that we would like to get
+            topWidgets: K
         }
     }
 };
