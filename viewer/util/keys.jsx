@@ -76,7 +76,8 @@ let keys={
         navpage:{
             zoom: K,
             requiredZoom: K, //the zoom that we would like to get
-            topWidgets: K
+            topWidgets: K, //the list of top widgets to be displayed
+            leftWidgets: K //the list of left widgets
         }
     }
 };

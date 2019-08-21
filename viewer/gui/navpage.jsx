@@ -123,9 +123,6 @@ var Navpage=function(){
         {name:'ActiveRoute'},
         {name:'LargeTime'}
     ];
-    this.widgetLists[keys.leftWidgetsSmall]=[
-        {name:'ActiveRoute'},
-    ];
     this.widgetLists[keys.topWidgets]=[
         //items: ['CenterDisplay','AisTarget','ActiveRoute','LargeTime'],
         {name:'CenterDisplay'},
@@ -192,6 +189,7 @@ Navpage.prototype.showPage=function(options){
         brightness=this.gui.properties.getProperties().nightChartFade/100;
     }
     this.buttonUpdate();
+    this.widgetVisibility();
     if (options && options.url) {
         newMap=true;
         if (this.options_){
@@ -254,7 +252,6 @@ Navpage.prototype.showPage=function(options){
     if (! options || ! options.returning){
         this.createButtons();
     }
-    this.widgetVisibility();
 };
 
 Navpage.prototype.widgetVisibility=function(){
@@ -286,24 +283,30 @@ Navpage.prototype.widgetVisibility=function(){
         this.store.updateData(keys.leftWidgets,this.widgetLists[keys.leftWidgetsSmall],'itemList');
         this.store.updateData(keys.topWidgets, this.widgetLists[keys.topWidgets], 'itemList');
     }
-    this.store.updateData(keys.topWidgets, {
-        CenterDisplay: centerVisible && !routingVisible,
-        EditRoute: routingVisible,
-        AisTarget: aisVisible && !routingVisible,
-        LargeTime: clockVisible && !routingVisible,
-        Zoom: zoomVisible,
-        WindDisplay: windVisible && !routingVisible,
-        DepthDisplay: depthVisible && !routingVisible
-    }, 'visibilityFlags');
-    this.store.updateData(keys.leftWidgets,{
-        CenterDisplay:centerVisible  && ! routingVisible,
-        AisTarget:aisVisible  && ! routingVisible,
-        LargeTime:clockVisible  && ! routingVisible,
-        Zoom: zoomVisible,
-        WindDisplay: windVisible && ! routingVisible,
-        DepthDisplay: depthVisible && ! routingVisible,
-        ActiveRoute: routeVisible && ! routingVisible
-    },'visibilityFlags');
+    globalStore.storeData(gkeys.gui.navpage.topWidgets,
+        WidgetFactory.filterListByName(this.widgetLists[keys.topWidgets],
+            {
+                CenterDisplay: centerVisible && !routingVisible && isSmall,
+                EditRoute: routingVisible && isSmall,
+                AisTarget: aisVisible && !routingVisible && isSmall,
+                LargeTime: clockVisible && !routingVisible && isSmall,
+                Zoom: zoomVisible && isSmall,
+                WindDisplay: windVisible && !routingVisible && isSmall,
+                DepthDisplay: depthVisible && !routingVisible && isSmall
+            }
+        ));
+
+    globalStore.storeData(gkeys.gui.navpage.leftWidgets,
+        WidgetFactory.filterListByName(this.widgetLists[keys.leftWidgets],
+            {
+                CenterDisplay: centerVisible && !routingVisible && ! isSmall,
+                AisTarget: aisVisible && !routingVisible  && ! isSmall,
+                LargeTime: clockVisible && !routingVisible && ! isSmall,
+                Zoom: zoomVisible  && ! isSmall,
+                WindDisplay: windVisible && !routingVisible  && ! isSmall,
+                DepthDisplay: depthVisible && !routingVisible  && ! isSmall,
+                ActiveRoute: routeVisible && !routingVisible
+            }));
 };
 /**
  * the periodic timer call
@@ -504,21 +507,21 @@ Navpage.prototype.getPageContent=function(){
         itemCreator: widgetCreator
     });
 
-    var NavLeftContainer=ItemUpdater(ItemList,this.store,keys.leftWidgets);
-    self.store.updateData(keys.leftWidgets,{
+    var NavLeftContainer=ItemUpdater(ItemList,globalStore,{itemList:gkeys.gui.navpage.leftWidgets});
+    let navLeftProperties={
         className: "avn_navLeftContainer avn_widgetContainer",
         onItemClick: self.widgetClick,
-        itemList:this.widgetLists[keys.leftWidgets],
-        itemCreator: widgetCreator
-    });
-    var TopWidgets=ItemUpdater(ItemList,this.store,keys.topWidgets);
-    self.store.updateData(keys.topWidgets, {
+        itemCreator: widgetCreator,
+        hideOnEmpty: true
+    };
+    var TopWidgets=ItemUpdater(ItemList,globalStore,{itemList:gkeys.gui.navpage.topWidgets});
+    let topWidgetProperties={
         className: "avn_topRightWidgets avn_widgetContainer",
         onItemClick: self.widgetClick,
-        itemList: this.widgetLists[keys.topWidgets],
         itemCreator: widgetCreator,
+        hideOnEmpty: true,
         childProperties: {mode: 'small'}
-    });
+    };
     var WpButtons=ItemUpdater(ButtonList,this.store,keys.wpButtons);
     self.store.updateData(keys.wpButtons,{
         className: "avn_wpbuttons",
@@ -531,11 +534,11 @@ Navpage.prototype.getPageContent=function(){
                 <div className="avn_panel_fill_flex">
                     <div id='avi_map_navpage' ref="map" className='avn_panel avn_map'/>
                     <div className="avn_flexFill">
-                        <TopWidgets/>
+                        <TopWidgets {...topWidgetProperties}/>
                         <RoutePanel/>
                         <WpButtons/>
                         <div className="avn_leftFrame" >
-                            <NavLeftContainer />
+                            <NavLeftContainer {...navLeftProperties}/>
                         </div>
                         {Alarm}
                     </div>

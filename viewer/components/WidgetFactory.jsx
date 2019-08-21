@@ -116,5 +116,22 @@ class WidgetFactory{
         this.widgetDefinitions.push(definition);
     }
 }
+/**
+ * filter a list of widget descriptiion by name
+ * @param list the list
+ * @param filterObject an object with {'name1':true,'name2':false} entries
+ *        missing entries are treated as true
+ */
+WidgetFactory.prototype.filterListByName=function(list,filterObject){
+    let rt=[];
+    list.forEach((el)=>{
+        if (el.name) {
+            if (filterObject[el.name] !== false){
+                rt.push(el);
+            }
+        }
+    });
+    return rt;
+};
 
 module.exports=new WidgetFactory();

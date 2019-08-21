@@ -35,10 +35,13 @@ module.exports=React.createClass({
         childProperties: React.PropTypes.object,
         className: React.PropTypes.string,
         style: React.PropTypes.object,
-        hidden: React.PropTypes.bool
+        hidden: React.PropTypes.bool,
+        hideOnEmpty: React.PropTypes.bool
     },
     render: function(){
         var allitems=this.props.itemList||[];
+        if (this.props.hideOnEmpty && allitems.length < 1) return null;
+        if (this.props.hidden) return null;
         var self=this;
         var className="avn_listContainer";
         if (this.props.className) className+=" "+this.props.className;
@@ -56,7 +59,6 @@ module.exports=React.createClass({
             }
             if (vis)items.push(allitems[idx]);
         }
-        if (this.props.hidden) return null;
         return(
             <div className={className} style={this.props.style}>
                 { items.map(function (entry) {
