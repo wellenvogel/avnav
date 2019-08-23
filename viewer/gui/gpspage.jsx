@@ -103,13 +103,11 @@ widgetLists[keys.widgetLists.page2a.right]=[
 const layoutBaseParam={
     layoutWidth: 600, //the widgets are prepared for this width, others will scale the font
     layoutHeight: 600,
-    baseWeight: 15, //the base weight
-    baseWidgetFontSize: 22, //font size for 600x600
+    baseWidgetFontSize: 21, //font size for 600x600
 };
 
 //the weights for the 2 panels
-const weightList=[2*layoutBaseParam.baseWeight,2*layoutBaseParam.baseWeight,
-    layoutBaseParam.baseWeight,layoutBaseParam.baseWeight,layoutBaseParam.baseWeight];
+const weightList=[2,2,1,1,1];
 
 
 
@@ -126,6 +124,8 @@ let Gpspage=function(){
     this.formatter=new Formatter();
     this.leftPanelHeight=0;
     this.leftPanelWidth=0;
+    this.weightSum=0;
+    weightList.forEach((w)=>this.weightSum+=w);
 };
 avnav.inherits(Gpspage,Page);
 
@@ -198,17 +198,20 @@ Gpspage.prototype.getPageContent=function(){
         },
         render: function(){
             let widgetCreator=function(widget,list){
-                let addClass;
+                let style={};
                 for (let i=0;i<list.length;i++){
                     if (list[i].name === widget.name){
-                        if (i < weightList.length && weightList[i] > layoutBaseParam.baseWeight){
-                            addClass="avn_doubleHeight";
+                        if (i < weightList.length){
+                            style.height=(weightList[i]/self.weightSum*100)+"%";
+                        }
+                        else{
+                            style.height=0;
                         }
                         break;
                     }
                 }
                 return WidgetFactory.createWidget(widget,
-                    {propertyHandler:self.gui.properties,store: self.store, className:addClass,mode:'gps'});
+                    {propertyHandler:self.gui.properties,store: self.store, style:style,mode:'gps'});
             };
             //we have based our layout on 1000x600px and now scale the font
             let fw=self.leftPanelWidth/layoutBaseParam.layoutWidth||0;
