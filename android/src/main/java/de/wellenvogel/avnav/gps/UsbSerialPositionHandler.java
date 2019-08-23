@@ -4,9 +4,13 @@ import android.content.Context;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.location.Location;
+import android.util.Log;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
+
+import net.sf.marineapi.nmea.sentence.RMCSentence;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -146,6 +150,12 @@ public class UsbSerialPositionHandler extends SocketPositionHandler {
         public String getId() {
             return dev.getDeviceName();
         }
+
+        @Override
+        public void sendData(String data) throws IOException {
+            if (serialPort == null) return;
+            serialPort.write(data.getBytes());
+        }
     }
 
     UsbSerialPositionHandler(Context ctx, UsbDevice device,String baud, Properties prop){
@@ -162,5 +172,17 @@ public class UsbSerialPositionHandler extends SocketPositionHandler {
     public String getName() {
         return "USBSerial";
     }
+    @Override
+    public void sendPosition(Location curLoc) {
+        if (! properties.sendPosition) return;
+        if (curLoc == null) return;
+        RMCSentence out= positionToRmc(curLoc);
+        try {
+            socket.sendData(out.toSentence()+"\r\n");
+        } catch (IOException e) {
+            Log.e(LOGPRFX,"unable to send position",e);
+        }
+    }
+
 
 }

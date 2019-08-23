@@ -104,6 +104,9 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     PendingIntent watchdogIntent=null;
     private static final String WATCHDOGACTION="restart";
 
+    private PositionWriter positionWriter;
+    private Thread positionWriterThread;
+
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context ctx, Intent intent) {
@@ -152,6 +155,44 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     public IBinder onBind(Intent arg0)
     {
         return mBinder;
+    }
+
+    private class PositionWriter implements Runnable{
+        private boolean stop=false;
+        @Override
+        public void run() {
+            while (! stop) {
+                GpsDataProvider locationProvider = null;
+                Location location = null;
+                for (GpsDataProvider provider : getAllProviders()) {
+                    if (isProviderActive(provider) && provider.handlesNmea()) {
+                        location = provider.getLocation();
+                        locationProvider = provider;
+                        break;
+                    }
+                }
+                for (GpsDataProvider provider : getAllProviders()) {
+                    if (provider != null && provider != locationProvider) {
+                        try {
+                            if (location != null) provider.sendPosition(location);
+                        }catch (Throwable t){
+                            AvnLog.e("error when writing position at "+provider.getName(),t);
+                        }
+                    }
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
+        public void doStop(){
+            stop=true;
+        }
+        public boolean isStopped(){
+            return stop;
+        }
     }
 
     /**
@@ -372,6 +413,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     prop.readAis=aisMode.equals(Constants.MODE_IP);
                     prop.readNmea=nmeaMode.equals(Constants.MODE_IP);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
+                    prop.sendPosition=prefs.getBoolean(Constants.IPSENDPOS,false);
                     externalProvider=new IpPositionHandler(this,addr,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
@@ -404,6 +446,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     prop.readNmea=nmeaMode.equals(Constants.MODE_BLUETOOTH);
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
+                    prop.sendPosition=prefs.getBoolean(Constants.BTSENDPOS,false);
                     bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
@@ -437,6 +480,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     prop.readNmea=nmeaMode.equals(Constants.MODE_USB);
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
+                    prop.sendPosition=prefs.getBoolean(Constants.USBSENDPOS,false);
                     usbProvider =new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
@@ -449,6 +493,12 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                 AvnLog.d(LOGPRFX,"stopping usbProvider service");
                 usbProvider.stop();
             }
+        }
+        if (positionWriter == null || positionWriter.isStopped()) {
+            positionWriter = new PositionWriter();
+            positionWriterThread = new Thread(positionWriter);
+            positionWriterThread.setDaemon(true);
+            positionWriterThread.start();
         }
         isRunning=true;
         return Service.START_REDELIVER_INTENT;
@@ -515,7 +565,9 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         handleNotification(true);
         checkTrackWriter();
         for (GpsDataProvider provider: getAllProviders()) {
-            if (provider != null) provider.check();
+            if (provider != null) {
+                provider.check();
+            }
         }
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         if (!prefs.getBoolean(Constants.ALARMSOUNDS,true)) {
@@ -583,6 +635,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
         loadSequence++;
         if (routeHandler != null) routeHandler.stop();
+        if (positionWriter != null) positionWriter.doStop();
         isRunning=false;
         handleNotification(false);
         AvnLog.i(LOGPRFX, "service stopped");

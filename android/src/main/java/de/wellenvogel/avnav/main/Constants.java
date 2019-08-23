@@ -15,14 +15,17 @@ public class Constants {
     public static final String IPAIS="ip.ais";
     public static final String IPADDR="ip.addr";
     public static final String IPPORT="ip.port";
+    public static final String IPSENDPOS="ip.sendpos";
     public static final String BTNMEA="bt.nmea";
     public static final String BTAIS="bt.ais";
     public static final String BTDEVICE="bt.device";
     public static final String BTOFFSET="bt.offset";
+    public static final String BTSENDPOS="bt.sendpos";
     public static final String USBDEVICE="usb.device";
     public static final String USBNMEA="usb.nmea";
     public static final String USBAIS="usb.ais";
     public static final String USBBAUD="usb.baud";
+    public static final String USBSENDPOS="usb.sendpos";
     public static final String IPCONNTIMEOUT="ip.conntimeout";
     public static final String IPPOSAGE="ip.posAge";
     public static final String AISLIFETIME ="ais.Lifetime";

@@ -2,6 +2,14 @@ package de.wellenvogel.avnav.gps;
 
 import android.location.Location;
 import android.util.Log;
+
+import net.sf.marineapi.nmea.parser.SentenceFactory;
+import net.sf.marineapi.nmea.sentence.RMCSentence;
+import net.sf.marineapi.nmea.sentence.TalkerId;
+import net.sf.marineapi.nmea.util.DataStatus;
+import net.sf.marineapi.nmea.util.FaaMode;
+import net.sf.marineapi.nmea.util.Position;
+
 import de.wellenvogel.avnav.util.AvnLog;
 
 import org.json.JSONArray;
@@ -65,6 +73,7 @@ public abstract class GpsDataProvider {
         long timeOffset=0;
         String ownMmsi=null;
         String nmeaFilter=null;
+        boolean sendPosition=false;
     };
 
     /**
@@ -111,6 +120,14 @@ public abstract class GpsDataProvider {
      * should be used to check (e.g. check if provider enabled or socket can be opened)
      */
     public void check(){}
+
+    /**
+     * send out the current position if enabled
+     * @param curLoc
+     */
+    public void sendPosition(Location curLoc){
+
+    }
 
     /**
      * service function to convert an android location
@@ -204,6 +221,20 @@ public abstract class GpsDataProvider {
         cal.setTimeInMillis(timestamp);
         net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE)+1,cal.get(Calendar.SECOND));
         return rt;
+    }
+
+    public static RMCSentence positionToRmc(Location location){
+        SentenceFactory sf = SentenceFactory.getInstance();
+        RMCSentence rmc = (RMCSentence) sf.createParser(TalkerId.GP, "RMC");
+        Position pos = new Position(location.getLatitude(), location.getLongitude());
+        rmc.setPosition(pos);
+        rmc.setSpeed(location.getSpeed() * msToKn);
+        rmc.setCourse(location.getBearing());
+        rmc.setMode(FaaMode.DGPS);
+        rmc.setDate(toSfDate(location.getTime()));
+        rmc.setTime(toSfTime(location.getTime()));
+        rmc.setStatus(DataStatus.ACTIVE);
+        return rmc;
     }
 
 }

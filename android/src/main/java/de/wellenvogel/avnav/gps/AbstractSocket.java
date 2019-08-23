@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.gps;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +12,8 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.UUID;
+
+import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 12.03.15.
@@ -22,6 +25,8 @@ public class AbstractSocket {
     private int timeout;
     private BluetoothSocket btSocket;
     private BluetoothDevice btDevice;
+    protected long lastWrite=0;
+    public static long WRITE_TIMEOUT=5000; //5 seconds
 
     /**
      * connect the socket
@@ -41,7 +46,39 @@ public class AbstractSocket {
         return btSocket.getInputStream();
     }
 
+    public void sendData(String data) throws IOException {
+        if (lastWrite != 0){
+            close();
+            return;
+        }
+        lastWrite= System.currentTimeMillis();
+        if (ipSocket != null || btSocket != null) AvnLog.i("writing position "+data);
+        if (ipSocket != null) ipSocket.getOutputStream().write(data.getBytes());
+        if (btSocket != null) btSocket.getOutputStream().write(data.getBytes());
+        lastWrite=0;
+    }
+
+    /**
+     * write timeout check
+     * closes the socket on timeout
+     * @return true if closed
+     */
+    public boolean check(){
+        if (lastWrite == 0) return false;
+        long now=System.currentTimeMillis();
+        if (now > (lastWrite+WRITE_TIMEOUT)){
+            Log.e("abstract socket","closing due to write timeout");
+            try {
+                close();
+            } catch (IOException e) {
+            }
+            return true;
+        }
+        return false;
+    }
+
     public void close() throws IOException {
+        lastWrite=0;
         if (ipSocket!=null) {
             try {
                 ipSocket.close();

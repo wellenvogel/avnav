@@ -516,6 +516,9 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
             });
             cleanupThread.start();
         }
+        if(socket.check()){
+            AvnLog.e(name+": closing socket due to write timeout");
+        }
     }
 
     @Override
@@ -578,5 +581,17 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
             }
         }
         return item;
+    }
+
+    @Override
+    public void sendPosition(Location curLoc) {
+        if (! properties.sendPosition) return;
+        if (curLoc == null) return;
+        RMCSentence out= positionToRmc(curLoc);
+        try {
+            socket.sendData(out.toSentence()+"\r\n");
+        } catch (IOException e) {
+            Log.e(LOGPRFX,"unable to send position",e);
+        }
     }
 }

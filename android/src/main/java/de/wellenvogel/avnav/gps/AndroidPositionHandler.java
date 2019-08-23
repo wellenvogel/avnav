@@ -81,16 +81,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         if (nmeaLogger != null) {
             try {
                 //build an NMEA RMC record and write out
-                SentenceFactory sf = SentenceFactory.getInstance();
-                RMCSentence rmc = (RMCSentence) sf.createParser(TalkerId.GP, "RMC");
-                Position pos = new Position(location.getLatitude(), location.getLongitude());
-                rmc.setPosition(pos);
-                rmc.setSpeed(location.getSpeed() * msToKn);
-                rmc.setCourse(location.getBearing());
-                rmc.setMode(FaaMode.DGPS);
-                rmc.setDate(toSfDate(location.getTime()));
-                rmc.setTime(toSfTime(location.getTime()));
-                rmc.setStatus(DataStatus.ACTIVE);
+                RMCSentence rmc=positionToRmc(location);
                 nmeaLogger.logNmea(rmc.toSentence());
             }catch(Exception e){
                 AvnLog.e("unable to log NMEA data: "+e);
