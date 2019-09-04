@@ -234,7 +234,7 @@ task raspiDeb(type: GradleBuild){
 
 task releaseRpm(type: Rpm) {
     group taskgroup
-    arch = I386
+    arch = NOARCH
     dependsOn pkgVersion
 }
 
