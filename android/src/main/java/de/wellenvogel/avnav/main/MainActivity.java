@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.main;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -17,6 +18,7 @@ import android.content.res.AssetManager;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -24,6 +26,8 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -64,6 +68,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     private boolean running=false;
     private BroadcastReceiver broadCastReceiverStop;
     private boolean startDialogVisible=false;
+    private static final int REQUEST_LOCATION=1;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -158,7 +163,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         if (sharedPrefs.getBoolean(Constants.INTERNALGPS,false)) {
             LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
             boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
+            if (Build.VERSION.SDK_INT >= 23) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this,R.string.needsGpsPermisssions,Toast.LENGTH_LONG).show();
+                    //requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
+                    return false;
+                }
+            }
             // check if enabled and if not send user to the GSP settings
             // Better solution would be to display a dialog and suggesting to
             // go to the settings
@@ -179,9 +191,11 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         intent.putExtra(GpsService.PROP_TRACKDIR, trackDir.getAbsolutePath());
         //TODO: add other parameters here
         startService(intent);
+        bindService(intent,mConnection,BIND_AUTO_CREATE);
         serviceNeedsRestart=false;
         return true;
     }
+
 
     private void stopGpsService(boolean unbind){
         if (gpsService !=null){
@@ -330,12 +344,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
         serviceNeedsRestart=true;
-        if (gpsService == null) {
-            Intent intent = new Intent(this, GpsService.class);
-            intent.putExtra(GpsService.PROP_CHECKONLY, true);
-            startService(intent);
-            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-        }
         requestHandler=new RequestHandler(this);
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
         updateWorkDir(workBase);

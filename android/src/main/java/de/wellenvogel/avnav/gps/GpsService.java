@@ -59,7 +59,6 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
 
     private static final String CHANNEL_ID = "main" ;
     public static String PROP_TRACKDIR="track.dir";
-    public static String PROP_CHECKONLY="checkonly";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
@@ -328,9 +327,6 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
-        if (intent != null && intent.getBooleanExtra(PROP_CHECKONLY,false)){
-            return Service.START_REDELIVER_INTENT;
-        }
         boolean isWatchdog=false;
         if (intent != null && intent.getAction() != null && intent.getAction().equals(WATCHDOGACTION)) isWatchdog=true;
         if (isWatchdog) AvnLog.i("service onStartCommand, watchdog=true");
@@ -406,7 +402,11 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             if (internalProvider == null || internalProvider.isStopped()) {
                 AvnLog.d(LOGPRFX,"start internal provider");
                 GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                internalProvider=new AndroidPositionHandler(this,1000*AvnUtil.getLongPref(prefs,Constants.GPSOFFSET,prop.timeOffset));
+                try {
+                    internalProvider = new AndroidPositionHandler(this, 1000 * AvnUtil.getLongPref(prefs, Constants.GPSOFFSET, prop.timeOffset));
+                }catch (Exception i){
+                    Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
+                }
             }
         }
         else {

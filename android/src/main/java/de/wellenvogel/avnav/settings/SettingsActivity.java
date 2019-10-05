@@ -43,6 +43,8 @@ import de.wellenvogel.avnav.util.DialogBuilder;
 
 public class SettingsActivity extends PreferenceActivity {
 
+    private boolean requestGps=false;
+
     public static interface ActivityResultCallback{
         /**
          * called on activity result
@@ -84,6 +86,7 @@ public class SettingsActivity extends PreferenceActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestGps=true;
         injectToolbar();
         getToolbar().setOnMenuItemClickListener(this);
         //handleInitialSettings(this, true);
@@ -394,7 +397,8 @@ public class SettingsActivity extends PreferenceActivity {
         } catch (Exception ex) {
         }
         e.commit();
-        NmeaSettingsFragment.checkGpsEnabled(this, false);
+        NmeaSettingsFragment.checkGpsEnabled(this, false,requestGps);
+        requestGps=false;
         return rt;
     }
 
