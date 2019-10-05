@@ -2,7 +2,6 @@ package de.wellenvogel.avnav.util;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.support.v7.internal.view.menu.ActionMenuItem;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,7 +37,9 @@ public class ActionBarHandler {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.onMenuItemClick(new ActionMenuItem(mToolbar.getContext(),0,android.R.id.home,0,0,"home"));
+                MenuItem home=mToolbar.getMenu().findItem(android.R.id.home);
+                if (home != null)
+                    listener.onMenuItemClick(home);
             }
         });
         return this;
@@ -53,7 +54,9 @@ public class ActionBarHandler {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.onOptionsItemSelected(new ActionMenuItem(mToolbar.getContext(),0,android.R.id.home,0,0,"home"));
+                MenuItem home=mToolbar.getMenu().findItem(android.R.id.home);
+                if (home != null)
+                    listener.onOptionsItemSelected(home);
             }
         });
         return this;
@@ -68,7 +71,9 @@ public class ActionBarHandler {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.onOptionsItemSelected(new ActionMenuItem(mToolbar.getContext(),0,android.R.id.home,0,0,"home"));
+                MenuItem home=mToolbar.getMenu().findItem(android.R.id.home);
+                if (home != null)
+                    listener.onOptionsItemSelected(home);
             }
         });
         return this;
