@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.main;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -36,6 +37,7 @@ import org.xwalk.core.XWalkActivity;
 
 import java.io.File;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
@@ -127,8 +129,18 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     }
 
     private boolean startGpsService(){
-
-
+        if (Build.VERSION.SDK_INT >= 26) {
+            ActivityManager activityManager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
+            List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
+            if (runningAppProcesses != null) {
+                int importance = runningAppProcesses.get(0).importance;
+                // higher importance has lower number (?)
+                if (importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND){
+                    AvnLog.e("still in background while trying to start service");
+                    return false;
+                }
+            }
+        }
         if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
                 ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
                 ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false) &&

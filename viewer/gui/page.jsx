@@ -250,18 +250,18 @@ Page.prototype.handlePage=function(evdata){
            }
         });
     }
-    if (this.visible != this.isVisible()){
-        //visibility changed
-        this.visible=this.isVisible();
-        if (this.visible){
-            this._showPage();
-            this.showPage(evdata.options);
-        }
-        else {
-            this._hidePage();
-            this.hidePage();
-        }
+
+
+    this.visible = (evdata.newpage == self.name);
+    if (this.visible) {
+        this._showPage();
+        this.showPage(evdata.options);
     }
+    else {
+        this._hidePage();
+        this.hidePage();
+    }
+
 };
 Page.prototype._showPage=function(){
     var self=this;
