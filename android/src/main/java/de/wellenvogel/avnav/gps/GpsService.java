@@ -261,7 +261,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
     }
 
-    private void handleNotification(boolean start){
+    private void handleNotification(boolean start, boolean startForeground){
         if (start) {
             createNotificationChannel();
             Intent notificationIntent = new Intent(this, Dummy.class);
@@ -311,9 +311,12 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             }
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            Notification not=notificationBuilder.getNotification();
-            mNotificationManager.notify(NOTIFY_ID,
-                    not);
+            if (startForeground){
+                startForeground(NOTIFY_ID,notificationBuilder.build());
+            }
+            else{
+                mNotificationManager.notify(NOTIFY_ID,notificationBuilder.build());
+            }
 
         }
         else{
@@ -334,7 +337,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             AvnLog.i("service onStartCommand");
         }
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        handleNotification(true);
+        handleNotification(true,true);
         //we rely on the activity to check before...
         File newTrackDir=new File(new File(prefs.getString(Constants.WORKDIR,"")),"tracks");
         boolean loadTrack=true;
@@ -542,7 +545,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             public void onReceive(Context context, Intent intent) {
                 AvnLog.i("received stop alarm");
                 resetAllAlarms();
-                handleNotification(true);
+                handleNotification(true,false);
             }
         };
         registerReceiver(broadCastReceiver,filter);
@@ -581,7 +584,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
 
     private void timerAction(){
         checkAnchor();
-        handleNotification(true);
+        handleNotification(true,false);
         checkTrackWriter();
         for (GpsDataProvider provider: getAllProviders()) {
             if (provider != null) {
@@ -656,7 +659,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         if (routeHandler != null) routeHandler.stop();
         if (positionWriter != null) positionWriter.doStop();
         isRunning=false;
-        handleNotification(false);
+        handleNotification(false,false);
         AvnLog.i(LOGPRFX, "service stopped");
     }
 

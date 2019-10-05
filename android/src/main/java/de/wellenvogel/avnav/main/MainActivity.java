@@ -201,8 +201,12 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         File trackDir=new File(sharedPrefs.getString(Constants.WORKDIR,""),"tracks");
         Intent intent = new Intent(this, GpsService.class);
         intent.putExtra(GpsService.PROP_TRACKDIR, trackDir.getAbsolutePath());
-        //TODO: add other parameters here
-        startService(intent);
+        if (Build.VERSION.SDK_INT >= 26){
+            startForegroundService(intent);
+        }
+        else {
+            startService(intent);
+        }
         bindService(intent,mConnection,BIND_AUTO_CREATE);
         serviceNeedsRestart=false;
         return true;

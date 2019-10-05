@@ -617,6 +617,13 @@ public class RequestHandler {
                 }
                 fout=o;
             }
+            if (type.equals("readAddons")){
+                handled=true;
+                JSONObject o=new JSONObject();
+                o.put("status","OK");
+                o.put("data",new JSONArray());
+                fout=o;
+            }
             if (!handled){
                 AvnLog.d(Constants.LOGPRFX,"unhandled nav request "+type);
             }
