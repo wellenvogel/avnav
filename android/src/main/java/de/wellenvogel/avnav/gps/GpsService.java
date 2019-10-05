@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.gps;
 
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -56,6 +57,7 @@ import java.util.Map;
 public class GpsService extends Service implements INmeaLogger,IRouteHandlerProvider {
 
 
+    private static final String CHANNEL_ID = "main" ;
     public static String PROP_TRACKDIR="track.dir";
     public static String PROP_CHECKONLY="checkonly";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
@@ -244,8 +246,25 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
     }
 
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
     private void handleNotification(boolean start){
         if (start) {
+            createNotificationChannel();
             Intent notificationIntent = new Intent(this, Dummy.class);
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                     notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -270,7 +289,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                 nv.setViewVisibility(R.id.button3,View.VISIBLE);
             }
             NotificationCompat.Builder notificationBuilder =
-                    new NotificationCompat.Builder(this);
+                    new NotificationCompat.Builder(this,CHANNEL_ID);
             notificationBuilder.setSmallIcon(R.drawable.sailboat);
             notificationBuilder.setContentTitle(getString(R.string.notifyTitle));
             if (currentAlarm == null) {

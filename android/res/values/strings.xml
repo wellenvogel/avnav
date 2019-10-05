@@ -119,5 +119,7 @@
     <string name="enableExternalAccess">WebServer External Access</string>
     <string name="alarmSounds">Alarm sounds</string>
     <string name="select">Select</string>
+    <string name="channel_name">Information</string>
+    <string name="channel_description">All app notifications</string>
 
 </resources>
