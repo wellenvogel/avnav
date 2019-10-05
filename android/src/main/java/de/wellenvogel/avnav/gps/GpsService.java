@@ -413,7 +413,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     prop.readAis=aisMode.equals(Constants.MODE_IP);
                     prop.readNmea=nmeaMode.equals(Constants.MODE_IP);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    prop.sendPosition=prefs.getBoolean(Constants.IPSENDPOS,false);
+                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
                     externalProvider=new IpPositionHandler(this,addr,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
@@ -446,7 +446,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     prop.readNmea=nmeaMode.equals(Constants.MODE_BLUETOOTH);
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    prop.sendPosition=prefs.getBoolean(Constants.BTSENDPOS,false);
+                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
                     bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
@@ -480,7 +480,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     prop.readNmea=nmeaMode.equals(Constants.MODE_USB);
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    prop.sendPosition=prefs.getBoolean(Constants.USBSENDPOS,false);
+                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
                     usbProvider =new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());

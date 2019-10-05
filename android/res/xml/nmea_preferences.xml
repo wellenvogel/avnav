@@ -11,25 +11,20 @@
         android:key="aisInput"
         android:persistent="false">
     </de.wellenvogel.avnav.settings.OwnDialogListPreference>
+    <CheckBoxPreference
+        android:key="ais.sendpos"
+        android:defaultValue="false"
+        android:title="@string/labelSettingsAisSendPos"
+        android:widgetLayout="@layout/preference_checkbox"/>
     <de.wellenvogel.avnav.settings.CheckEditTextPreference
         android:key="ip.addr"
         android:title="@string/labelSettingsIpAddress"/>
     <de.wellenvogel.avnav.settings.CheckEditTextPreference
         android:key="ip.port"
         android:title="@string/labelSettingsIpPort"/>
-    <CheckBoxPreference
-        android:key="ip.sendpos"
-        android:defaultValue="false"
-        android:title="@string/labelSettingsIpSendPos"
-        android:widgetLayout="@layout/preference_checkbox"/>
     <de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference
         android:title="@string/selectBlueTooth"
         android:key="bt.device"/>
-    <CheckBoxPreference
-        android:key="bt.sendpos"
-        android:defaultValue="false"
-        android:title="@string/labelSettingsBtSendPos"
-        android:widgetLayout="@layout/preference_checkbox"/>
     <de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference
         android:title="@string/selectUsb"
         android:key="usb.device"/>
@@ -37,11 +32,6 @@
         android:title="@string/labelSettingsUsbBaud"
         android:key="usb.baud"
         />
-    <CheckBoxPreference
-        android:key="usb.sendpos"
-        android:defaultValue="false"
-        android:title="@string/labelSettingsUsbSendPos"
-        android:widgetLayout="@layout/preference_checkbox"/>
     <de.wellenvogel.avnav.settings.ClearableEditTextPreference
         android:key="ais.own"
         android:numeric="integer"

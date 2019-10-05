@@ -73,15 +73,13 @@
     <string name="labelSettingsActivity">Android Settings</string>
     <string name="labelSettingsMain">Main Settings</string>
     <string name="labelSettingsUsbBaud">USB Baudrate</string>
-    <string name="labelSettingsUsbSendPos">send own position via USB</string>
     <string name="labelSettingsAisInput">AIS Source</string>
+    <string name="labelSettingsAisSendPos">send own position on AIS device</string>
     <string name="labelSettingsNone">Off</string>
     <string name="labelSettingsExpert">Expert Settings</string>
     <string name="labelSettingsGpsOffset">offset internal gps by(s)</string>
     <string name="labelSettingsIpGpsOffset">offset IP gps time by(s)</string>
-    <string name="labelSettingsIpSendPos">send own position on IP</string>
     <string name="labelSettingsBtGpsOffset">offset bluetooth gps time by(s)</string>
-    <string name="labelSettingsBtSendPos">send own position on bluetooth</string>
     <string name="labelSettingsTrackInterval">write the track file every(s)</string>
     <string name="labelSettingsTrackMinDist">min trackpoint distance(m)</string>
     <string name="labelSettingsTrackMinTime">min time between track points(s)</string>
