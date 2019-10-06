@@ -62,7 +62,6 @@ public class NmeaSettingsFragment extends SettingsFragment {
     private BluetoothAdapter bluetoothAdapter;
     private UsbManager usbManager;
     private PendingIntent mPermissionIntent;
-    private boolean recheckGps=false;
     private static final String ACTION_USB_PERMISSION =
             "de.wellenvogel.avnav.USB_PERMISSION";
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
@@ -90,7 +89,6 @@ public class NmeaSettingsFragment extends SettingsFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        recheckGps=true;
         mPermissionIntent = PendingIntent.getBroadcast(this.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         getActivity().registerReceiver(mUsbReceiver, filter);
@@ -107,7 +105,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
                     String nval=(String)newValue;
                     updateNmeaMode(prefs, nval);
                     ((ListPreference)preference).setSummary(getModeEntrieNmea(getActivity().getResources(),nval));
-                    if (nval.equals(MODE_INTERNAL)) checkGpsEnabled(getActivity(),true,true);
+                    if (nval.equals(MODE_INTERNAL)) SettingsActivity.checkGpsEnabled(getActivity(),true,true);
                     return true;
                 }
             });
@@ -251,8 +249,6 @@ public class NmeaSettingsFragment extends SettingsFragment {
     public void onResume() {
         super.onResume();
         fillData(getActivity());
-        checkGpsEnabled(getActivity(),false,recheckGps);
-        recheckGps=false;
     }
 
     @Override
@@ -261,39 +257,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
         getActivity().unregisterReceiver(mUsbReceiver);
     }
 
-    public static void checkGpsEnabled(final Activity activity, boolean force,boolean doRequest) {
-        if (! force) {
-            SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-            String nmeaMode = getNmeaMode(prefs);
-            if (!nmeaMode.equals(MODE_INTERNAL)) return;
-        }
-        LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
-        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                    PackageManager.PERMISSION_GRANTED) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.ACCESS_FINE_LOCATION) && doRequest)
-                {
-                    activity.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 99);
-                }
 
-            }
-        }
-        // check if enabled and if not send user to the GSP settings
-        // Better solution would be to display a dialog and suggesting to
-        // go to the settings
-        if (!enabled && doRequest) {
-            DialogBuilder.confirmDialog(activity, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (which == DialogInterface.BUTTON_POSITIVE){
-                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                        activity.startActivity(intent);
-                    }
-                }
-            });
-        }
-    }
 
     private ArrayList<String> getBlueToothDevices(){
         ArrayList<String> rt=new ArrayList<String>();

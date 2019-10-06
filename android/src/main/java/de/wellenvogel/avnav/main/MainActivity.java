@@ -141,63 +141,9 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                 }
             }
         }
-        if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
-                ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
-                ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false) &&
-                ! sharedPrefs.getBoolean(Constants.USBNMEA,false)){
-            Toast.makeText(this, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
-            try {
-                InetSocketAddress addr = GpsDataProvider.convertAddress(
-                        sharedPrefs.getString(Constants.IPADDR, ""),
-                        sharedPrefs.getString(Constants.IPPORT, ""));
-            } catch (Exception i) {
-                Toast.makeText(this, R.string.invalidIp, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-        if (sharedPrefs.getBoolean(Constants.BTAIS,false)||sharedPrefs.getBoolean(Constants.BTNMEA,false)){
-            String btdevice=sharedPrefs.getString(Constants.BTDEVICE,"");
-            if (BluetoothPositionHandler.getDeviceForName(btdevice) == null){
-                Toast.makeText(this, getText(R.string.noSuchBluetoothDevice)+":"+btdevice, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-        if (sharedPrefs.getBoolean(Constants.USBNMEA,false)||sharedPrefs.getBoolean(Constants.USBAIS,false)){
-            String usbDevice=sharedPrefs.getString(Constants.USBDEVICE,"");
-            if (UsbSerialPositionHandler.getDeviceForName(this,usbDevice) == null){
-                Toast.makeText(this, getText(R.string.noSuchUsbDevice)+":"+usbDevice, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-        if (sharedPrefs.getBoolean(Constants.INTERNALGPS,false)) {
-            LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
-            boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            if (Build.VERSION.SDK_INT >= 23) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                        PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this,R.string.needsGpsPermisssions,Toast.LENGTH_LONG).show();
-                    //requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
-                    return false;
-                }
-            }
-            // check if enabled and if not send user to the GSP settings
-            // Better solution would be to display a dialog and suggesting to
-            // go to the settings
-            if (!enabled) {
-                DialogBuilder.confirmDialog(this, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == DialogInterface.BUTTON_POSITIVE){
-                            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                            startActivity(intent);
-                        }
-                    }
-                });
-            }
-        }
+
+        if (! SettingsActivity.checkSettings(this,false)) return false;
+
         File trackDir=new File(sharedPrefs.getString(Constants.WORKDIR,""),"tracks");
         Intent intent = new Intent(this, GpsService.class);
         intent.putExtra(GpsService.PROP_TRACKDIR, trackDir.getAbsolutePath());

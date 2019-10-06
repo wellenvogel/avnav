@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.settings;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -7,10 +8,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.*;
 
+import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,10 +31,14 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
+import de.wellenvogel.avnav.gps.GpsDataProvider;
+import de.wellenvogel.avnav.gps.UsbSerialPositionHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
@@ -36,6 +46,8 @@ import de.wellenvogel.avnav.main.XwalkDownloadHandler;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.DialogBuilder;
+
+import static de.wellenvogel.avnav.main.Constants.MODE_INTERNAL;
 
 /**
  * Created by andreas on 03.09.15.
@@ -91,6 +103,7 @@ public class SettingsActivity extends PreferenceActivity {
         getToolbar().setOnMenuItemClickListener(this);
         //handleInitialSettings(this, true);
         updateHeaderSummaries(true);
+        checkSettings(this,true);
 
 
     }
@@ -107,6 +120,88 @@ public class SettingsActivity extends PreferenceActivity {
             installed = false;
         }
         return installed;
+    }
+
+    public static boolean checkGpsEnabled(final Activity activity, boolean force,boolean doRequest) {
+        if (! force) {
+            SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+            String nmeaMode = NmeaSettingsFragment.getNmeaMode(prefs);
+            if (!nmeaMode.equals(MODE_INTERNAL)) return true;
+        }
+        LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
+        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.ACCESS_FINE_LOCATION) && doRequest)
+                {
+                    activity.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 99);
+                    return false;
+                }
+                Toast.makeText(activity,R.string.needsGpsPermisssions,Toast.LENGTH_LONG).show();
+                return false;
+
+            }
+        }
+        // check if enabled and if not send user to the GSP settings
+        // Better solution would be to display a dialog and suggesting to
+        // go to the settings
+        if (!enabled && doRequest) {
+            DialogBuilder.confirmDialog(activity, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (which == DialogInterface.BUTTON_POSITIVE){
+                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        activity.startActivity(intent);
+                    }
+                }
+            });
+            return false;
+        }
+        return true;
+    }
+    /**
+     * check if all settings are correct
+     * @param activity
+     * @param startDialogs if this is set, start permission or other dialogs, otherwise check only
+     * @return true if settings are ok
+     */
+    public static boolean checkSettings(Activity activity, boolean startDialogs){
+        if (needsInitialSettings(activity)) return false;
+        SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
+                ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
+                ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false) &&
+                ! sharedPrefs.getBoolean(Constants.USBNMEA,false)){
+            Toast.makeText(activity, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
+            try {
+                InetSocketAddress addr = GpsDataProvider.convertAddress(
+                        sharedPrefs.getString(Constants.IPADDR, ""),
+                        sharedPrefs.getString(Constants.IPPORT, ""));
+            } catch (Exception i) {
+                Toast.makeText(activity, R.string.invalidIp, Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        if (sharedPrefs.getBoolean(Constants.BTAIS,false)||sharedPrefs.getBoolean(Constants.BTNMEA,false)){
+            String btdevice=sharedPrefs.getString(Constants.BTDEVICE,"");
+            if (BluetoothPositionHandler.getDeviceForName(btdevice) == null){
+                Toast.makeText(activity, activity.getText(R.string.noSuchBluetoothDevice)+":"+btdevice, Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        if (sharedPrefs.getBoolean(Constants.USBNMEA,false)||sharedPrefs.getBoolean(Constants.USBAIS,false)){
+            String usbDevice=sharedPrefs.getString(Constants.USBDEVICE,"");
+            if (UsbSerialPositionHandler.getDeviceForName(activity,usbDevice) == null){
+                Toast.makeText(activity, activity.getText(R.string.noSuchUsbDevice)+":"+usbDevice, Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        if (! checkGpsEnabled(activity,false,startDialogs)) return false;
+        return true;
     }
 
     public static boolean needsInitialSettings(Context context){
@@ -370,7 +465,7 @@ public class SettingsActivity extends PreferenceActivity {
                 } catch (IOException e1) {
                     Toast.makeText(SettingsActivity.this, e1.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-                resultOk();
+                checkResult();
             }
 
             @Override
@@ -397,7 +492,7 @@ public class SettingsActivity extends PreferenceActivity {
         } catch (Exception ex) {
         }
         e.commit();
-        NmeaSettingsFragment.checkGpsEnabled(this, false,requestGps);
+        checkGpsEnabled(this, false,requestGps);
         requestGps=false;
         return rt;
     }
@@ -405,11 +500,11 @@ public class SettingsActivity extends PreferenceActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home){
-            resultOk();
+            checkResult();
             return true;
         }
         if (item.getItemId() == R.id.action_ok){
-            resultOk();
+            checkResult();
             return true;
         }
         if (item.getItemId()== R.id.action_about) {
@@ -443,7 +538,8 @@ public class SettingsActivity extends PreferenceActivity {
         super.onNewIntent(intent);
         setIntent(intent);
     }
-    private void resultOk(){
+    private void checkResult(){
+        if (! checkSettings(this,true)) return;
         Intent result=new Intent();
         setResult(Activity.RESULT_OK,result);
         finish();
