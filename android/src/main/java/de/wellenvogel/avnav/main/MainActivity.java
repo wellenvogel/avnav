@@ -69,8 +69,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     private boolean exitRequested=false;
     private boolean running=false;
     private BroadcastReceiver broadCastReceiverStop;
-    private boolean startDialogVisible=false;
-    private static final int REQUEST_LOCATION=1;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -142,7 +140,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             }
         }
 
-        if (! SettingsActivity.checkSettings(this,false)) return false;
+        if (! SettingsActivity.checkSettings(this,false,true)) return false;
 
         File trackDir=new File(sharedPrefs.getString(Constants.WORKDIR,""),"tracks");
         Intent intent = new Intent(this, GpsService.class);
@@ -370,9 +368,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     protected void onResume() {
         super.onResume();
         AvnLog.d("main: onResume");
-        if (startDialogVisible) return;
-        int version=0;
-        if (SettingsActivity.needsInitialSettings(this)){
+        if (!SettingsActivity.checkSettings(this,false,false)){
             showSettings(true);
             return;
         }

@@ -100,23 +100,6 @@ public class MainSettingsFragment extends SettingsFragment {
                 }
             });
         }
-        final ListPreference modeSelector=(ListPreference) findPreference(Constants.RUNMODE);
-        if (modeSelector != null){
-            modeSelector.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    String nval=(String)newValue;
-                    if (nval.equals(Constants.MODE_XWALK)){
-                        if (! SettingsActivity.isXwalRuntimeInstalled(getActivity())) {
-                            (new XwalkDownloadHandler(getActivity())).showDownloadDialog(getActivity().getString(R.string.xwalkNotFoundTitle),
-                                    getActivity().getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, false);
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-            });
-        }
         setDefaults(R.xml.main_preferences,true);
     }
 
@@ -164,12 +147,7 @@ public class MainSettingsFragment extends SettingsFragment {
         ListPreference l = getRunMode();
         if (l != null) {
             Resources r = getResources();
-            if (SettingsActivity.isXwalRuntimeInstalled(getActivity()) || android.os.Build.VERSION.SDK_INT < Constants.OSVERSION_XWALK) {
-                l.setEntryValues(new String[]{Constants.MODE_NORMAL, Constants.MODE_XWALK, Constants.MODE_SERVER});
-            }
-            else {
-                l.setEntryValues(new String[]{Constants.MODE_NORMAL,  Constants.MODE_SERVER});
-            }
+            l.setEntryValues(new String[]{Constants.MODE_NORMAL,  Constants.MODE_SERVER});
             String e[]=new String[l.getEntryValues().length];
             int index=0;
             SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
@@ -190,7 +168,6 @@ public class MainSettingsFragment extends SettingsFragment {
         if (mode == null) return "";
         Resources r=a.getResources();
         if (mode.equals(Constants.MODE_NORMAL)) return r.getString(R.string.runNormal);
-        if (mode.equals(Constants.MODE_XWALK)) return r.getString(R.string.runCrosswalk);
         if (mode.equals(Constants.MODE_SERVER)) return r.getString(R.string.useExtBrowser);
         return "";
     }

@@ -105,7 +105,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
                     String nval=(String)newValue;
                     updateNmeaMode(prefs, nval);
                     ((ListPreference)preference).setSummary(getModeEntrieNmea(getActivity().getResources(),nval));
-                    if (nval.equals(MODE_INTERNAL)) SettingsActivity.checkGpsEnabled(getActivity(),true,true);
+                    if (nval.equals(MODE_INTERNAL)) SettingsActivity.checkGpsEnabled(getActivity(),true,true,true);
                     return true;
                 }
             });
