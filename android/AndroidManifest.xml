@@ -60,6 +60,16 @@
             android:name="de.wellenvogel.avnav.gps.GpsService"
             android:label="AvnavGps" />
 
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="de.wellenvogel.avnav.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true" >
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider_path" />
+        </provider>
+
     </application>
 
 </manifest>

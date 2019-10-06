@@ -8,6 +8,7 @@ import android.content.res.Resources;
 import android.location.Location;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
@@ -64,6 +65,7 @@ public class RequestHandler {
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
     private IMediaUpdater updater=null;
+    private final static String FILE_PROVIDER_AUTHORITY="de.wellenvogel.avnav.fileprovider";
     //routes
     private IRouteHandlerProvider routeHandler=null;
 
@@ -820,10 +822,11 @@ public class RequestHandler {
             Log.e(Constants.LOGPRFX,"file "+name+" not found");
             return;
         }
-        Uri data=Uri.fromFile(file);
+        Uri data= FileProvider.getUriForFile(activity,FILE_PROVIDER_AUTHORITY,file);
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_STREAM, data);
+        shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         shareIntent.setType("application/gpx+xml");
         String title=res.getText(R.string.selectApp)+" "+name;
         activity.startActivity(Intent.createChooser(shareIntent, title));
