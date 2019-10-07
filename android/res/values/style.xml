@@ -17,17 +17,13 @@
         <item name="android:activatedBackgroundIndicator">@drawable/list_selector</item>
         <item name="toolbarStyle">@style/MyActionBarTheme</item>
         <item name="toolbarNavigationButtonStyle">@style/myToolbarNavigationButtonStyle</item>
-
-
     </style>
-
     <style name="MyActionText" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
         <item name="android:textColor">@color/colorTextWhite</item>
     </style>
     <style name="DialogTitle" parent="@style/TextAppearance.AppCompat.Title">
         <item name="android:textColor">@color/colorText</item>
     </style>
-
     <style name="DialogSecond" parent="@style/TextAppearance.AppCompat.Medium">
         <item name="android:textColor">@color/colorTextSecondary</item>
     </style>
