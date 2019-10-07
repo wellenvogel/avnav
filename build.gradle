@@ -444,11 +444,11 @@ def ks=System.getenv("ANDROID_KEYSTORE")
 def sign="-unsigned"
 if (ks) sign=""
 task uploadAndroidRelease(type: UploadTask){
-    inputFile=file("android/build/outputs/apk/avnav-release$sign-${avnavVersion}.apk")
+    inputFile=file("android/build/outputs/apk/release/avnav-release$sign-${avnavVersion}.apk")
     dependsOn assembleReleaseAndroid
 }
 task uploadAndroidBeta(type: UploadTask){
-    inputFile=file("android/build/outputs/apk/avnav-beta$sign-${avnavVersion}.apk")
+    inputFile=file("android/build/outputs/apk/beta/avnav-beta$sign-${avnavVersion}.apk")
     dependsOn assembleBetaAndroid
 }
 
