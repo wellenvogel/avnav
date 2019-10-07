@@ -54,7 +54,7 @@ android {
         versionCode Integer.parseInt(project.avnavVersion)
         manifestPlaceholders(['label':'avNav'])
         targetSdkVersion 26
-        minSdkVersion 14
+        minSdkVersion 19
     }
     lintOptions {
         abortOnError false
