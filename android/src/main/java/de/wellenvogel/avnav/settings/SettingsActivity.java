@@ -141,6 +141,25 @@ public class SettingsActivity extends PreferenceActivity {
         checkSettings(this,true,true);
     }
 
+    public static boolean checkStoragePermission(final Activity activity,boolean doRequest, boolean showToasts){
+        if (Build.VERSION.SDK_INT < 23) return true;
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+            boolean alreadyAsked=prefs.getBoolean(Constants.STORAGE_PERMISSION_REQUESTED,false);
+            if ((! alreadyAsked || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.READ_EXTERNAL_STORAGE) )&& doRequest)
+            {
+                prefs.edit().putBoolean(Constants.STORAGE_PERMISSION_REQUESTED,true).apply();
+                activity.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 99);
+                return false;
+            }
+            if (showToasts)Toast.makeText(activity,R.string.needsStoragePermisssions,Toast.LENGTH_LONG).show();
+            return false;
+
+        }
+        return true;
+    }
+
     public static boolean checkGpsEnabled(final Activity activity, boolean force,boolean doRequest,boolean showToasts) {
         SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         if (! force) {
@@ -200,6 +219,18 @@ public class SettingsActivity extends PreferenceActivity {
         if (! checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs,activity))){
             if (showToasts)Toast.makeText(activity, R.string.selectWorkDirWritable, Toast.LENGTH_SHORT).show();
             return false;
+        }
+        String chartDir=sharedPrefs.getString(Constants.CHARTDIR,"");
+        if (! chartDir.isEmpty()){
+            //no permissions if below our app dirs
+            boolean checkPermissions=true;
+            if (chartDir.startsWith(AvnUtil.workdirStringToFile(Constants.INTERNAL_WORKDIR,activity).getAbsolutePath())) checkPermissions=false;
+            if (chartDir.startsWith(AvnUtil.workdirStringToFile(Constants.EXTERNAL_WORKDIR,activity).getAbsolutePath())) checkPermissions=false;
+            if (checkPermissions){
+                if (! checkStoragePermission(activity,startDialogs,showToasts)){
+                    return false;
+                }
+            }
         }
         if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
             try {
@@ -315,70 +346,13 @@ public class SettingsActivity extends PreferenceActivity {
             }
         }
     }
-    public static interface SelectWorkingDir{
-        public void directorySelected(File dir);
-        public void failed();
-        public void cancel();
-    }
 
-    static private boolean externalStorageAvailable(){
+    static public boolean externalStorageAvailable(){
         String state=Environment.getExternalStorageState();
         return (Environment.MEDIA_MOUNTED.equals(state));
     }
 
-    //select a valid working directory - or exit
-    static boolean selectWorkingDirectory(final Activity activity, final SelectWorkingDir callback, String current, boolean force){
-        File currentFile=null;
-        if (current != null  && ! current.isEmpty()) {
-            currentFile=new File(current);
-            if (!currentFile.isDirectory()) {
-                //maybe we can just create it...
-                try {
-                    createWorkingDir(currentFile);
-                } catch (Exception e1) {
-                    currentFile=null;
-                }
-            }
-        }
-        if (currentFile != null && currentFile.canWrite() && ! force){
-            return true;
-        }
-        //seems that either the directory is not writable
-        //or not set at all
-        final DialogBuilder builder=new DialogBuilder(activity,R.layout.dialog_selectlist);
-        final boolean simpleTitle=(current == null || current.isEmpty() && force);
-        builder.setTitle(simpleTitle?R.string.selectWorkDirWritable:R.string.selectWorkDir);
-        ArrayList<String> selections=new ArrayList<String>();
-        selections.add(activity.getString(R.string.internalStorage));
-        boolean hasExternal=false;
-        if (externalStorageAvailable()) selections.add(activity.getString(R.string.externalStorage));
-        ArrayAdapter<String> adapter=new ArrayAdapter<String>(activity,R.layout.list_item,selections);
-        ListView lv=(ListView)builder.getContentView().findViewById(R.id.list_value);
-        lv.setAdapter(adapter);
-        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                File newDir=(position == 0)?activity.getFilesDir():activity.getExternalFilesDir(null);
-                try{
-                    createWorkingDir(newDir);
-                }catch (Exception e){
-                    builder.dismiss();
-                    Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
-                    callback.failed();
-                }
-                builder.dismiss();
-                callback.directorySelected(newDir);
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                callback.cancel();
-            }
-        });
-        builder.show();
-        return false;
-    }
+
 
     /**
      * check the current settings

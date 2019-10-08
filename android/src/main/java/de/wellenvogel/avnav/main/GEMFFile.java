@@ -1,13 +1,20 @@
 package de.wellenvogel.avnav.main;
 
+import android.content.Context;
+import android.net.Uri;
+import android.os.ParcelFileDescriptor;
+
 import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,8 +43,7 @@ public class GEMFFile {
 	// Constants
 	// ===========================================================
 
-	private static final long FILE_SIZE_LIMIT = 1 * 1024 * 1024 * 1024; // 1GB
-	private static final int FILE_COPY_BUFFER_SIZE = 1024;
+
 
 	private static final int VERSION = 4;
 	private static final int TILE_SIZE = 256;
@@ -51,10 +57,15 @@ public class GEMFFile {
 	// ===========================================================
 
 	// Path to first GEMF file (additional files as <basename>-1, <basename>-2, ...
-	private final String mLocation;
+	private String mLocation="";
+
+
+
+	private Context mContext;
+	private Uri mUri;
 
 	// All GEMF file parts for this archive
-	private final List<RandomAccessFile> mFiles = new ArrayList<RandomAccessFile>();
+	private final List<AbstractFile> mFiles = new ArrayList<AbstractFile>();
 	private final List<String> mFileNames = new ArrayList<String>();
 
 	// Tile ranges represented within this archive
@@ -68,6 +79,82 @@ public class GEMFFile {
 
 
 	private Object lock=new Object();
+
+	static interface AbstractFile{
+		public void close() throws IOException;
+		int read(byte[] buffer, int offset, int length) throws IOException;
+		int readInt() throws IOException;
+		long readLong() throws IOException;
+		long length() throws IOException;
+		void seek(long offset) throws IOException;
+		int read() throws IOException;
+	}
+
+	class GRandomAcccesFile extends RandomAccessFile implements AbstractFile{
+
+		public GRandomAcccesFile(File file, String mode) throws FileNotFoundException {
+			super(file, mode);
+		}
+		public GRandomAcccesFile(String name) throws FileNotFoundException{
+			super(name,"r");
+		}
+	}
+
+	class StreamAbstractFile implements AbstractFile{
+
+		private FileChannel channel;
+		private long length=0;
+		StreamAbstractFile(FileInputStream is,long length) throws IOException{
+			channel=is.getChannel();
+			this.length=length;
+		}
+
+		@Override
+		public void close() throws IOException {
+			channel.close();
+		}
+
+		@Override
+		public int read(byte[] buffer, int offset, int length) throws IOException {
+			return channel.read(ByteBuffer.wrap(buffer,offset,length));
+		}
+
+		@Override
+		public int readInt() throws IOException {
+			ByteBuffer rt=ByteBuffer.allocate(Integer.SIZE/Byte.SIZE);
+			int rd=channel.read(rt);
+			if (rd<rt.limit()) throw new IOException("unable to read int");
+			return rt.getInt(0);
+		}
+
+		@Override
+		public long readLong() throws IOException {
+			ByteBuffer rt=ByteBuffer.allocate(Long.SIZE/Byte.SIZE);
+			int rd=channel.read(rt);
+			if (rd<rt.limit()) throw new IOException("unable to read long");
+			return rt.getLong(0);
+		}
+
+		@Override
+		public long length() throws IOException {
+			return length;
+		}
+
+		@Override
+		public void seek(long offset) throws IOException {
+			channel.position(offset);
+		}
+
+		@Override
+		public int read() throws IOException {
+			ByteBuffer out=ByteBuffer.allocate(1);
+			int num=channel.read(out);
+			if (num == 1){
+				return  out.get(0);
+			}
+			return -1;
+		}
+	}
 
 
 	// ===========================================================
@@ -98,317 +185,14 @@ public class GEMFFile {
 		readHeader();
 	}
 
-
-	/*
-	 * Constructor to create new GEMF file from directory of sources/tiles.
-	 *
-	 * @param pLocation
-	 * 		String object representing path to first GEMF archive file.
-	 * 		Additional files (if archive size exceeds FILE_SIZE_LIMIT
-	 * 		will be created with numerical suffixes, eg: test.gemf-1, test.gemf-2.
-	 * @param pSourceFolders
-	 * 		Each specified folder will be imported into the GEMF archive as a seperate
-	 * 		source. The name of the folder will be the name of the source in the archive.
-	 */
-	public GEMFFile (final String pLocation, final List<File> pSourceFolders)
-		throws FileNotFoundException, IOException {
-		/*
-		 * 1. For each source folder
-		 *   1. Create array of zoom levels, X rows, Y rows
-		 * 2. Build index data structure index[source][zoom][range]
-		 *   1. For each S-Z-X find list of Ys values
-		 *   2. For each S-Z-X-Ys set, find complete X ranges
-		 *   3. For each S-Z-Xr-Ys set, find complete Y ranges, create Range record
-		 * 3. Write out index
-		 *   1. Header
-		 *   2. Sources
-		 *   3. For each Range
-		 *     1. Write Range record
-		 * 4. For each Range record
-		 *   1. For each Range entry
-		 *     1. If over file size limit, start new data file
-		 *     2. Write tile data
-		 */
-
-		this.mLocation = pLocation;
-
-		// Create in-memory array of sources, X and Y values.
-		final LinkedHashMap<String, LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, File>>>> dirIndex =
-			new LinkedHashMap<String, LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, File>>>>();
-
-		for (final File sourceDir: pSourceFolders) {
-
-			final LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, File>>> zList =
-				new LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, File>>>();
-
-			for (final File zDir: sourceDir.listFiles()) {
-				// Make sure the directory name is just a number
-				try {
-					Integer.parseInt(zDir.getName());
-				} catch (final NumberFormatException e) {
-					continue;
-				}
-
-				final LinkedHashMap<Integer, LinkedHashMap<Integer, File>> xList =
-					new LinkedHashMap<Integer, LinkedHashMap<Integer, File>>();
-
-				for (final File xDir: zDir.listFiles()) {
-
-					// Make sure the directory name is just a number
-					try {
-						Integer.parseInt(xDir.getName());
-					} catch (final NumberFormatException e) {
-						continue;
-					}
-
-					final LinkedHashMap<Integer, File> yList = new LinkedHashMap<Integer, File>();
-					for (final File yFile: xDir.listFiles()) {
-
-						try {
-							Integer.parseInt(yFile.getName().substring(
-									0, yFile.getName().indexOf('.')));
-						} catch (final NumberFormatException e) {
-							continue;
-						}
-
-						yList.put(Integer.parseInt(yFile.getName().substring(
-								0, yFile.getName().indexOf('.'))), yFile);
-					}
-
-					xList.put(new Integer(xDir.getName()), yList);
-				}
-
-				zList.put(Integer.parseInt(zDir.getName()), xList);
-			}
-
-			dirIndex.put(sourceDir.getName(), zList);
-		}
-
-		// Create a source index list
-		final LinkedHashMap<String, Integer> sourceIndex = new LinkedHashMap<String, Integer>();
-		final LinkedHashMap<Integer, String> indexSource = new LinkedHashMap<Integer, String>();
-		int si = 0;
-		for (final String source: dirIndex.keySet()) {
-			sourceIndex.put(source, new Integer(si));
-			indexSource.put(new Integer(si), source);
-			++si;
-		}
-
-		// Create the range objects
-		final List<GEMFRange> ranges = new ArrayList<GEMFRange>();
-
-		for (final String source: dirIndex.keySet()) {
-			for (final Integer zoom: dirIndex.get(source).keySet()) {
-
-				// Get non-contiguous Y sets for each Z/X
-				final LinkedHashMap<List<Integer>, List<Integer>> ySets =
-					new LinkedHashMap<List<Integer>, List<Integer>>();
-
-				for (final Integer x: new TreeSet<Integer>(dirIndex.get(source).get(zoom).keySet())) {
-
-					final List<Integer> ySet = new ArrayList<Integer>();
-					for (final Integer y: dirIndex.get(source).get(zoom).get(x).keySet()) {
-						ySet.add(y);
-					}
-
-					if (ySet.size() == 0) {
-						continue;
-					}
-
-					Collections.sort(ySet);
-
-					if (! ySets.containsKey(ySet)) {
-						ySets.put(ySet, new ArrayList<Integer>());
-					}
-
-					ySets.get(ySet).add(x);
-				}
-
-				// For each Y set find contiguous X sets
-				final LinkedHashMap<List<Integer>, List<Integer>> xSets =
-					new LinkedHashMap<List<Integer>, List<Integer>>();
-
-				for (final List<Integer> ySet: ySets.keySet()) {
-
-					final TreeSet<Integer> xList = new TreeSet<Integer>(ySets.get(ySet));
-
-					List<Integer> xSet = new ArrayList<Integer>();
-					for(int i = xList.first(); i < xList.last() + 1; ++i) {
-						if (xList.contains(new Integer(i))) {
-							xSet.add(new Integer(i));
-						} else {
-							if (xSet.size() > 0) {
-								xSets.put(ySet, xSet);
-								xSet = new ArrayList<Integer>();
-							}
-						}
-					}
-
-					if (xSet.size() > 0) {
-						xSets.put(ySet, xSet);
-					}
-				}
-
-				// For each contiguous X set, find contiguous Y sets and create GEMFRange object
-				for (final List<Integer> xSet: xSets.keySet()) {
-
-					final TreeSet<Integer> yList = new TreeSet<Integer>(xSet);
-					final TreeSet<Integer> xList = new TreeSet<Integer>(ySets.get(xSet));
-
-					GEMFRange range = new GEMFFile.GEMFRange();
-					range.zoom = zoom;
-					range.sourceIndex = sourceIndex.get(source);
-					range.xMin = xList.first();
-					range.xMax = xList.last();
-
-					for(int i = yList.first(); i < yList.last() + 1; ++i) {
-						if (yList.contains(new Integer(i))) {
-							if (range.yMin == null) {
-								range.yMin = i;
-							}
-							range.yMax = i;
-						} else {
-
-							if (range.yMin != null) {
-								ranges.add(range);
-
-								range = new GEMFFile.GEMFRange();
-								range.zoom = zoom;
-								range.sourceIndex = sourceIndex.get(source);
-								range.xMin = xList.first();
-								range.xMax = xList.last();
-							}
-						}
-					}
-
-					if (range.yMin != null) {
-						ranges.add(range);
-					}
-				}
-			}
-		}
-
-
-		// Calculate size of header for computation of data offsets
-		int source_list_size = 0;
-		for (final String source: sourceIndex.keySet()) {
-			source_list_size += (U32_SIZE + U32_SIZE + source.length());
-		}
-
-		long offset =
-			U32_SIZE + // GEMF Version
-			U32_SIZE + // Tile size
-			U32_SIZE + // Number of sources
-			source_list_size +
-			ranges.size() * ((U32_SIZE * 6) + U64_SIZE) +
-			U32_SIZE; // Number of ranges
-
-		// Calculate offset for each range in the data set
-		for (final GEMFRange range: ranges) {
-			range.offset = offset;
-
-			for (int x = range.xMin; x < range.xMax + 1; ++x) {
-				for (int y = range.yMin; y < range.yMax + 1; ++y) {
-					offset += (U32_SIZE + U64_SIZE);
-				}
-			}
-		}
-
-		final long headerSize = offset;
-
-		RandomAccessFile gemfFile = new RandomAccessFile(pLocation, "rw");
-
-		// Write version header
-		gemfFile.writeInt(VERSION);
-
-		// Write file size header
-		gemfFile.writeInt(TILE_SIZE);
-
-		// Write number of sources
-		gemfFile.writeInt(sourceIndex.size());
-
-		// Write source list
-		for (final String source: sourceIndex.keySet()) {
-			gemfFile.writeInt(sourceIndex.get(source));
-			gemfFile.writeInt(source.length());
-			gemfFile.write(source.getBytes());
-		}
-
-		// Write number of ranges
-		gemfFile.writeInt(ranges.size());
-
-		// Write range objects
-		for (final GEMFRange range: ranges) {
-			gemfFile.writeInt(range.zoom);
-			gemfFile.writeInt(range.xMin);
-			gemfFile.writeInt(range.xMax);
-			gemfFile.writeInt(range.yMin);
-			gemfFile.writeInt(range.yMax);
-			gemfFile.writeInt(range.sourceIndex);
-			gemfFile.writeLong(range.offset);
-		}
-
-		// Write file offset list
-		for (final GEMFRange range: ranges) {
-			for (int x = range.xMin; x < range.xMax + 1; ++x) {
-				for (int y = range.yMin; y < range.yMax + 1; ++y) {
-					gemfFile.writeLong(offset);
-					final long fileSize = dirIndex.get(
-							indexSource.get(
-									range.sourceIndex)).get(range.zoom).get(x).get(y).length();
-					gemfFile.writeInt((int)fileSize);
-					offset += fileSize;
-				}
-			}
-		}
-
-		//
-		// Write tiles
-		//
-
-		final byte[] buf = new byte[FILE_COPY_BUFFER_SIZE];
-
-		long currentOffset = headerSize;
-		int fileIndex = 0;
-
-		for (final GEMFRange range: ranges) {
-			for (int x = range.xMin; x < range.xMax + 1; ++x) {
-				for (int y = range.yMin; y < range.yMax + 1; ++y) {
-
-					final long fileSize = dirIndex.get(
-							indexSource.get(range.sourceIndex)).get(range.zoom).get(x).get(y).length();
-
-					if (currentOffset + fileSize > FILE_SIZE_LIMIT) {
-						gemfFile.close();
-						++fileIndex;
-						gemfFile = new RandomAccessFile(pLocation + "-" + fileIndex, "rw");
-						currentOffset = 0;
-					} else {
-						currentOffset += fileSize;
-					}
-
-					final FileInputStream tile = new FileInputStream(
-							dirIndex.get(
-									indexSource.get(
-											range.sourceIndex)).get(range.zoom).get(x).get(y));
-
-					int read = tile.read(buf, 0, FILE_COPY_BUFFER_SIZE);
-					while (read != -1) {
-						gemfFile.write(buf, 0, read);
-						read = tile.read(buf, 0, FILE_COPY_BUFFER_SIZE);
-					}
-
-					tile.close();
-				}
-			}
-		}
-
-		gemfFile.close();
-
-		// Complete construction of GEMFFile object
-		openFiles();
+	public GEMFFile(Uri contentUri,Context context) throws IOException{
+		mUri=contentUri;
+		mContext=context;
+		openFilesUri();
 		readHeader();
 	}
+
+
 
 
 	// ===========================================================
@@ -420,7 +204,7 @@ public class GEMFFile {
 	 * Close open GEMF file handles.
 	 */
 	public void close() throws IOException {
-		for (final RandomAccessFile file: mFiles) {
+		for (final AbstractFile file: mFiles) {
 			file.close();
 		}
 	}
@@ -434,7 +218,7 @@ public class GEMFFile {
 		// Populate the mFiles array
 
 		final File base = new File(mLocation);
-		mFiles.add(new RandomAccessFile(base, "r"));
+		mFiles.add(new GRandomAcccesFile(base, "r"));
 		mFileNames.add(base.getPath());
 
 		int i = 0;
@@ -442,8 +226,37 @@ public class GEMFFile {
 			i = i + 1;
 			final File nextFile = new File(mLocation + "-" + i);
 			if (nextFile.exists()) {
-				mFiles.add(new RandomAccessFile(nextFile, "r"));
+				mFiles.add(new GRandomAcccesFile(nextFile, "r"));
 				mFileNames.add(nextFile.getPath());
+			} else {
+				break;
+			}
+		}
+	}
+
+	private AbstractFile fileFromContentUri(Uri uri) throws IOException{
+		ParcelFileDescriptor fdi=mContext.getContentResolver().openFileDescriptor(uri,"r");
+		if (fdi == null) throw new FileNotFoundException("URI: "+uri+" not found");
+		return new StreamAbstractFile(new FileInputStream(fdi.getFileDescriptor()),fdi.getStatSize());
+	}
+
+	private void openFilesUri() throws IOException {
+		// Populate the mFiles array
+		mFiles.add(fileFromContentUri(mUri));
+		mFileNames.add(mUri.toString());
+
+		int i = 0;
+		for(;;) {
+			i = i + 1;
+			Uri nextUri=Uri.parse(mUri.toString()+"-"+i);
+			AbstractFile nextFile=null;
+			try {
+				nextFile = fileFromContentUri(nextUri);
+			}catch (IOException e) {
+			}
+			if (nextFile != null){
+				mFiles.add(nextFile);
+				mFileNames.add(nextUri.toString());
 			} else {
 				break;
 			}
@@ -456,10 +269,10 @@ public class GEMFFile {
 	 * not thread safe!
 	 */
 	private void readHeader() throws IOException {
-		final RandomAccessFile baseFile = mFiles.get(0);
+		final AbstractFile baseFile = mFiles.get(0);
 
 		// Get file sizes
-		for (final RandomAccessFile file : mFiles) {
+		for (final AbstractFile file : mFiles) {
 			mFileSizes.add(file.length());
 		}
 
@@ -513,6 +326,7 @@ public class GEMFFile {
 	 * Returns the base name of the first file in the GEMF archive.
 	 */
 	public String getName() {
+		if (mUri != null) return mUri.getLastPathSegment();
 		return mLocation;
 	}
 
@@ -579,14 +393,13 @@ public class GEMFFile {
 			//here we need to lock for reading the offset...
 			synchronized (lock) {
 				// Read tile record from header, get offset and size of data record
-				final RandomAccessFile baseFile = mFiles.get(0);
+				final AbstractFile baseFile = mFiles.get(0);
 				baseFile.seek(offset);
 				dataOffset = baseFile.readLong();
 				dataLength = baseFile.readInt();
 			}
 
 			// Seek to correct data file and offset.
-			RandomAccessFile pDataFile = mFiles.get(0);
 			int index = 0;
 			if (dataOffset > mFileSizes.get(0))	{
 				final int fileListCount = mFileSizes.size();
@@ -598,12 +411,15 @@ public class GEMFFile {
 					index += 1;
 				}
 
-				pDataFile = mFiles.get(index);
 			}
-
-
-
-			return new GEMFInputStream(mFileNames.get(index), dataOffset, dataLength);
+			String name=mFileNames.get(index);
+			if (name == null) return null;
+			if (mUri == null) {
+				return new GEMFInputStream(new GRandomAcccesFile(name), dataOffset, dataLength);
+			}
+			else{
+				return new GEMFInputStream(fileFromContentUri(Uri.parse(name)),dataOffset,dataLength);
+			}
 
 		} catch (final java.io.IOException e) {
 			AvnLog.d(Constants.LOGPRFX, "exception when searching for offset: " + e.getLocalizedMessage());
@@ -651,17 +467,18 @@ public class GEMFFile {
 	// in memory.
 	class GEMFInputStream extends InputStream {
 
-		RandomAccessFile raf=null;
+		AbstractFile raf=null;
 		int remainingBytes;
 		int length;
 
-		GEMFInputStream(final String filePath, final long offset, final int length) throws IOException {
-			this.raf = new RandomAccessFile(filePath, "r");
+		GEMFInputStream(AbstractFile raf, final long offset, final int length) throws IOException {
+			this.raf = raf;
 			raf.seek(offset);
 
 			this.remainingBytes = length;
 			this.length=length;
 		}
+
 
 		@Override
 		public int available() {
@@ -686,9 +503,10 @@ public class GEMFFile {
 		}
 
 		@Override
-		public int read(final byte[] buffer, final int offset, final int length) throws IOException {
-			if (raf == null) return -1;
-			final int read = raf.read(buffer, offset, length > remainingBytes ? remainingBytes : length);
+		public int read(final byte[] buffer, final int offset, int length) throws IOException {
+			if (raf == null ) return -1;
+
+			int read= raf.read(buffer, offset, length > remainingBytes ? remainingBytes : length);
 			//AvnAvnLog.d(AvNav.LOGPRFX,"read returns "+read);
 
 			remainingBytes -= read;

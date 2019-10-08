@@ -122,5 +122,6 @@
     <string name="channel_name">Information</string>
     <string name="channel_description">All app notifications</string>
     <string name="needsGpsPermisssions">avnav needs location access</string>
+    <string name="needsStoragePermisssions">avnav needs external storage access for chart dir</string>
 
 </resources>

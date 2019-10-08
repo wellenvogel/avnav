@@ -84,6 +84,7 @@ public class RequestHandler {
     class GemfChart{
         public static final long INACTIVE_CLOSE=100000; //100s
         public File realFile;
+        public Uri contentUri; //alternative to realFile
         public GemfHandler gemf;
         public String key;
         public long lastModified;
@@ -94,10 +95,21 @@ public class RequestHandler {
             this.lastModified=last;
             this.lastTouched=System.currentTimeMillis();
         }
+        public GemfChart(Uri f,String key,long last){
+            contentUri=f;
+            this.key=key;
+            this.lastModified=last;
+            this.lastTouched=System.currentTimeMillis();
+        }
         synchronized  GemfHandler getGemf() throws IOException{
             if (gemf == null){
                 AvnLog.i("RequestHandler","open gemf file "+key);
-                gemf=new GemfHandler(new GEMFFile(realFile),key);
+                if (contentUri != null){
+                    gemf=new GemfHandler(new GEMFFile(contentUri,RequestHandler.this.getGpsService()),key);
+                }
+                else {
+                    gemf = new GemfHandler(new GEMFFile(realFile), key);
+                }
             }
             this.lastTouched=System.currentTimeMillis();
             return gemf;
@@ -725,7 +737,7 @@ public class RequestHandler {
     }
 
     private void updateChartList(){
-        HashMap<String,File> newGemfFiles=new HashMap<String, File>();
+        HashMap<String,GemfChart> newGemfFiles=new HashMap<String, GemfChart>();
         File chartDir = new File(getWorkDir(), "charts");
         readChartDir(chartDir,"1",newGemfFiles);
         String secondChartDirStr=getSharedPreferences().getString(Constants.CHARTDIR,"");
@@ -738,14 +750,15 @@ public class RequestHandler {
         //now we have all current charts - compare to the existing list and create/delete entries
         //currently we assume only one thread to change the chartlist...
         for (String url : newGemfFiles.keySet()){
-            File realFile=newGemfFiles.get(url);
-            Long lastModified=realFile.lastModified();
+            GemfChart chart=newGemfFiles.get(url);
+            Long lastModified=chart.lastModified;
             if (gemfFiles.get(url) == null ){
-                gemfFiles.put(url,new GemfChart(realFile,url,realFile.lastModified()));
+                gemfFiles.put(url,chart);
             }
             else{
                 if (gemfFiles.get(url).lastModified < lastModified){
-                    gemfFiles.get(url).update(lastModified);
+                    gemfFiles.get(url).close();
+                    gemfFiles.put(url,chart);
                 }
             }
         }
@@ -764,7 +777,7 @@ public class RequestHandler {
         }
     }
 
-    private void readChartDir(File chartDir,String index,HashMap<String,File> arr) {
+    private void readChartDir(File chartDir,String index,HashMap<String,GemfChart> arr) {
         if (chartDir == null) return;
         if (! chartDir.isDirectory()) return;
         File[] files=chartDir.listFiles();
@@ -775,13 +788,13 @@ public class RequestHandler {
                     String gemfName = f.getName();
                     gemfName = gemfName.substring(0, gemfName.length() - GEMFEXTENSION.length());
                     String urlName=REALCHARTS + "/"+index+"/gemf/" + gemfName;
-                    arr.put(urlName,f);
+                    arr.put(urlName,new GemfChart(f,urlName,f.lastModified()));
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
                 }
                 if (f.getName().endsWith(".xml")){
                     String name=f.getName().substring(0,f.getName().length()-".xml".length());
                     String urlName=REALCHARTS+"/"+index+"/avnav/"+name;
-                    arr.put(urlName,f);
+                    arr.put(urlName,new GemfChart(f,urlName,f.lastModified()));
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
                 }
             } catch (Exception e) {

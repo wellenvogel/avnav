@@ -2,9 +2,11 @@ package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -33,6 +35,11 @@ public class MainSettingsFragment extends SettingsFragment {
         if (myChartPref != null) {
             myChartPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 public boolean onPreferenceClick(final Preference preference) {
+                    if (! SettingsActivity.checkStoragePermission(getActivity(),true,true)){
+                        return true;
+                    }
+                    Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                    startActivityForResult(intent, 9999);
                     //open browser or intent here
                     SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(getActivity(), SimpleFileDialog.FolderChoose,
                             new SimpleFileDialog.SimpleFileDialogListener() {
@@ -60,19 +67,26 @@ public class MainSettingsFragment extends SettingsFragment {
                     String startDir=myChartPref.getText();
                     File workDir= AvnUtil.getWorkDir(null,getActivity());
                     try{
-                        if (startDir.isEmpty()) {
-                            startDir = workDir.getCanonicalPath();
-                        }
+
+                            if (SettingsActivity.externalStorageAvailable()){
+                                File extDir=Environment.getExternalStorageDirectory();
+                                if (extDir.getParentFile() != null) extDir=extDir.getParentFile();
+                                startDir=extDir.getAbsolutePath();
+                            }
+                            else {
+                                startDir = workDir.getAbsolutePath();
+                            }
+
                         FolderChooseDialog.setStartDir(startDir);
                     } catch (Exception e) {
                         e.printStackTrace();
                         myChartPref.setText("");
                         try{
-                            FolderChooseDialog.setStartDir(workDir.getCanonicalPath());
+                            FolderChooseDialog.setStartDir(workDir.getAbsolutePath());
                         }catch (Exception e1){}
                         return true;
                     }
-                    FolderChooseDialog.chooseFile_or_Dir(false);
+                    if (false) FolderChooseDialog.chooseFile_or_Dir(false);
                     return true;
                 }
             });
@@ -162,5 +176,10 @@ public class MainSettingsFragment extends SettingsFragment {
         SharedPreferences prefs = a.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         String runMode = prefs.getString(Constants.RUNMODE, Constants.MODE_NORMAL);
         return a.getResources().getString(R.string.runMode)+":"+modeToLabel(a,runMode);
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode,resultCode,data);
+        int x=1;
     }
 }
