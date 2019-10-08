@@ -5,10 +5,10 @@
         android:key="runmode"
         android:title="@string/runMode">
     </de.wellenvogel.avnav.settings.OwnDialogListPreference>
-    <de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference
+    <de.wellenvogel.avnav.settings.OwnDialogListPreference
         android:key="workdir"
         android:title="@string/selectDirLabel">
-    </de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference>
+    </de.wellenvogel.avnav.settings.OwnDialogListPreference>
     <de.wellenvogel.avnav.settings.ExternalDialogEditTextPreference
         android:key="chartdir"
         android:title="@string/selectChartDirLabel">

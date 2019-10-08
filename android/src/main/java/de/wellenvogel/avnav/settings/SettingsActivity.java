@@ -45,18 +45,17 @@ import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 
 import static de.wellenvogel.avnav.main.Constants.MODE_INTERNAL;
+import static de.wellenvogel.avnav.main.Constants.MODE_NORMAL;
 
 /**
  * Created by andreas on 03.09.15.
  */
 
 public class SettingsActivity extends PreferenceActivity {
-
-    private boolean requestGps=false;
-
     public static interface ActivityResultCallback{
         /**
          * called on activity result
@@ -95,17 +94,47 @@ public class SettingsActivity extends PreferenceActivity {
         return true;
     }
 
+    private static void handleMigrations(Activity activity){
+        SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit=sharedPrefs.edit();
+        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
+        if (mode.equals(Constants.MODE_XWALK)){
+            AvnLog.i("changing xwalk mode to normal");
+            edit.putString(Constants.RUNMODE,Constants.MODE_NORMAL).apply();
+        }
+        String workDir=sharedPrefs.getString(Constants.WORKDIR,"");
+        if (! workDir.isEmpty()){
+            try {
+                String internal = activity.getFilesDir().getCanonicalPath();
+                String external = activity.getExternalFilesDir(null).getCanonicalPath();
+                if (workDir.equals(internal)){
+                    edit.putString(Constants.WORKDIR,Constants.INTERNAL_WORKDIR);
+                    AvnLog.i("migrating workdir to internal");
+                }
+                if (workDir.equals(external)){
+                    edit.putString(Constants.WORKDIR,Constants.EXTERNAL_WORKDIR);
+                    AvnLog.i("migrating workdir to external");
+                }
+            }catch(IOException e){
+                AvnLog.e("Exception while migrating workdir",e);
+            }
+        }
+        edit.apply();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestGps=true;
         injectToolbar();
         getToolbar().setOnMenuItemClickListener(this);
-        //handleInitialSettings(this, true);
-        updateHeaderSummaries(true);
-        if (needsInitialSettings(this)){
-            handleInitialSettings(this);
+        //migrate if there was Xwalk
+        SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
+        if (mode.equals(Constants.MODE_XWALK)){
+            AvnLog.i("changing xwalk mode to normal");
+            sharedPrefs.edit().putString(Constants.RUNMODE,Constants.MODE_NORMAL).apply();
         }
+        updateHeaderSummaries(true);
         if (checkForInitialDialogs()){
             return;
         }
@@ -159,6 +188,7 @@ public class SettingsActivity extends PreferenceActivity {
      * @return true if settings are ok
      */
     public static boolean checkSettings(Activity activity, boolean startDialogs, boolean showToasts){
+        handleMigrations(activity);
         SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
                 ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
@@ -167,11 +197,10 @@ public class SettingsActivity extends PreferenceActivity {
             if (showToasts) Toast.makeText(activity, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
             return false;
         }
-        if (! checkOrCreateWorkDir(sharedPrefs.getString(Constants.WORKDIR,""))){
+        if (! checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs,activity))){
             if (showToasts)Toast.makeText(activity, R.string.selectWorkDirWritable, Toast.LENGTH_SHORT).show();
             return false;
         }
-        if (needsInitialSettings(activity)) handleInitialSettings(activity);
         if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
             try {
                 InetSocketAddress addr = GpsDataProvider.convertAddress(
@@ -200,25 +229,16 @@ public class SettingsActivity extends PreferenceActivity {
         return true;
     }
 
-    private static boolean checkOrCreateWorkDir(String workdir) {
-        if (workdir.isEmpty()) {
-            return false;
-        }
+    private static boolean checkOrCreateWorkDir(File workdir) {
+        if (workdir.equals(new File(""))) return false;
         try {
-            createWorkingDir(new File(workdir));
+            createWorkingDir(workdir);
         } catch (Exception e) {
             return false;
         }
         return true;
     }
 
-    private static boolean needsInitialSettings(Context context){
-        SharedPreferences sharedPrefs = context.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
-        String workdir=sharedPrefs.getString(Constants.WORKDIR,"");
-        if (!checkOrCreateWorkDir(workdir)) return true;
-        return (mode.isEmpty() || mode.equals(Constants.MODE_XWALK) );
-    }
 
     private boolean checkForInitialDialogs(){
         boolean showsDialog=false;
@@ -233,6 +253,7 @@ public class SettingsActivity extends PreferenceActivity {
                 title=R.string.somethingWrong;
                 message=R.string.somethingWrongMessage;
             } else {
+                handleInitialSettings(this);
                 title=R.string.firstStart;
                 message=R.string.firstStartMessage;
             }
@@ -300,6 +321,11 @@ public class SettingsActivity extends PreferenceActivity {
         public void cancel();
     }
 
+    static private boolean externalStorageAvailable(){
+        String state=Environment.getExternalStorageState();
+        return (Environment.MEDIA_MOUNTED.equals(state));
+    }
+
     //select a valid working directory - or exit
     static boolean selectWorkingDirectory(final Activity activity, final SelectWorkingDir callback, String current, boolean force){
         File currentFile=null;
@@ -325,57 +351,13 @@ public class SettingsActivity extends PreferenceActivity {
         ArrayList<String> selections=new ArrayList<String>();
         selections.add(activity.getString(R.string.internalStorage));
         boolean hasExternal=false;
-        String state=Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) hasExternal=true;
-        if (hasExternal) selections.add(activity.getString(R.string.externalStorage));
-        selections.add(activity.getString(R.string.selectStorage));
+        if (externalStorageAvailable()) selections.add(activity.getString(R.string.externalStorage));
         ArrayAdapter<String> adapter=new ArrayAdapter<String>(activity,R.layout.list_item,selections);
         ListView lv=(ListView)builder.getContentView().findViewById(R.id.list_value);
         lv.setAdapter(adapter);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final boolean hasExternal=parent.getAdapter().getCount()>2;
-                if (position == (parent.getAdapter().getCount() -1)){
-                    //last item selected - show file dialog
-                    SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(activity, SimpleFileDialog.FolderChoose,
-                            new SimpleFileDialog.SimpleFileDialogListener() {
-                                @Override
-                                public void onChosenDir(File newDir) {
-                                    builder.dismiss();
-                                    // The code in this function will be executed when the dialog OK button is pushed
-                                    try {
-                                        createWorkingDir(newDir);
-                                    } catch (Exception ex) {
-                                        Toast.makeText(activity, ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                        return;
-                                    }
-                                    AvnLog.i(Constants.LOGPRFX, "select work directory " + newDir.getAbsolutePath());
-                                }
-                                @Override
-                                public void onCancel() {
-                                    callback.cancel();
-                                }
-
-                                @Override
-                                public void onDefault() {
-                                }
-                            });
-                    FolderChooseDialog.Default_File_Name="avnav";
-                    FolderChooseDialog.dialogTitle=activity.getString(simpleTitle?R.string.selectWorkDir:R.string.selectWorkDirWritable);
-                    FolderChooseDialog.newFolderNameText=activity.getString(R.string.newFolderName);
-                    FolderChooseDialog.newFolderText=activity.getString(R.string.createFolder);
-                    File start=hasExternal?activity.getExternalFilesDir(null):activity.getFilesDir();
-                    String startPath="";
-                    try {
-                        startPath=start.getCanonicalPath();
-                        FolderChooseDialog.setStartDir(startPath);
-                    } catch (Exception e) {
-                        return;
-                    }
-                    FolderChooseDialog.chooseFile_or_Dir(false);
-                    return;
-                }
                 File newDir=(position == 0)?activity.getFilesDir():activity.getExternalFilesDir(null);
                 try{
                     createWorkingDir(newDir);
@@ -424,14 +406,10 @@ public class SettingsActivity extends PreferenceActivity {
             }
         }
         String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
-        String chartdir=sharedPrefs.getString(Constants.CHARTDIR, new File(new File(workdir), "charts").getAbsolutePath());
+        String chartdir=sharedPrefs.getString(Constants.CHARTDIR, "");
         e.putString(Constants.RUNMODE, mode);
         if (workdir.isEmpty()){
-            try {
-                workdir=activity.getFilesDir().getCanonicalPath();
-            } catch (IOException ex) {
-                AvnLog.e("unable to get files path",ex);
-            }
+            workdir=Constants.INTERNAL_WORKDIR;
         }
         e.putString(Constants.WORKDIR, workdir);
         e.putString(Constants.CHARTDIR, chartdir);
@@ -453,13 +431,22 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
     @Override
+    public void onBackPressed(){
+        if (!isMultiPane() && ! hasHeaders()){
+            super.onBackPressed();
+            return;
+        }
+        checkResult();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home){
-            checkResult();
+            onBackPressed();
             return true;
         }
         if (item.getItemId() == R.id.action_ok){
-            checkResult();
+            onBackPressed();
             return true;
         }
         if (item.getItemId()== R.id.action_about) {
@@ -518,7 +505,8 @@ public class SettingsActivity extends PreferenceActivity {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         boolean preferMultiPane=false;
-        if (metrics.widthPixels >= 900) preferMultiPane=true;
+        float scaledWidth=metrics.widthPixels/metrics.density;
+        if (scaledWidth >= 480) preferMultiPane=true;
         return preferMultiPane;
     }
 

@@ -46,6 +46,7 @@ import de.wellenvogel.avnav.gps.UsbSerialPositionHandler;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
@@ -142,7 +143,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
 
         if (! SettingsActivity.checkSettings(this,false,true)) return false;
 
-        File trackDir=new File(sharedPrefs.getString(Constants.WORKDIR,""),"tracks");
+        File trackDir=new File(AvnUtil.getWorkDir(sharedPrefs,this),"tracks");
         Intent intent = new Intent(this, GpsService.class);
         intent.putExtra(GpsService.PROP_TRACKDIR, trackDir.getAbsolutePath());
         if (Build.VERSION.SDK_INT >= 26){
@@ -299,15 +300,11 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         mToolbar=new ActionBarHandler(this,R.menu.main_activity_actions);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.expert_preferences, false);
-        workdir=sharedPrefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath() + "/avnav");
-        workBase=new File(workdir);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
         serviceNeedsRestart=true;
         requestHandler=new RequestHandler(this);
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
-        updateWorkDir(workBase);
-        updateWorkDir(new File(sharedPrefs.getString(Constants.CHARTDIR, "")));
         IntentFilter filterStop=new IntentFilter(Constants.BC_STOPAPPL);
         broadCastReceiverStop=new BroadcastReceiver() {
             @Override
@@ -330,26 +327,31 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         if (! key.equals(Constants.WAITSTART)) serviceNeedsRestart = true;
         Log.d(Constants.LOGPRFX, "preferences changed");
         if (key.equals(Constants.WORKDIR)){
-            updateWorkDir(new File(sharedPreferences.getString(Constants.WORKDIR,"")));
+            updateWorkDir(AvnUtil.getWorkDir(sharedPreferences,this));
         }
         if (key.equals(Constants.CHARTDIR)){
-            updateWorkDir(new File(sharedPreferences.getString(Constants.CHARTDIR,"")));
+            updateWorkDir(sharedPreferences.getString(Constants.CHARTDIR,""));
         }
     }
 
+    private void updateWorkDir(String dirname){
+        if (dirname == null || dirname.isEmpty()) return;
+        updateWorkDir(new File(dirname));
+    }
+
     private void updateWorkDir(File workDir){
+        if (workDir == null) return;
         final File baseDir=workDir;
         if (! baseDir.isDirectory()) return;
         Thread initialUpdater=new Thread(new Runnable() {
             @Override
             public void run() {
-                if (baseDir.isDirectory()) return;
-                triggerUpdateMtp(baseDir);
+                if (!baseDir.isDirectory()) return;
                 for (File uf: baseDir.listFiles()){
-                    if (uf.exists()) triggerUpdateMtp(uf);
+                    if (uf.isFile() && uf.exists()) triggerUpdateMtp(uf);
                     if (uf.isDirectory()) {
                         for (File df : uf.listFiles()) {
-                            triggerUpdateMtp(df);
+                            if (df.exists() && df.isFile()) triggerUpdateMtp(df);
                         }
                     }
                 }
@@ -376,6 +378,8 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             showSettings(true);
             return;
         }
+        updateWorkDir(AvnUtil.getWorkDir(null,this));
+        updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR,""));
         startFragmentOrActivity(false);
     }
 

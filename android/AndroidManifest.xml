@@ -53,7 +53,7 @@
         <activity
             android:name="de.wellenvogel.avnav.settings.SettingsActivity"
             android:label="@string/labelSettingsActivity"
-            android:theme="@style/AppTheme"
+            android:theme="@style/PreferencesStyle"
             />
 
         <service

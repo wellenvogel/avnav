@@ -12,11 +12,13 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 /**
  * Created by andreas on 24.10.15.
@@ -26,33 +28,7 @@ public class MainSettingsFragment extends SettingsFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.main_preferences);
-        final EditTextPreference myPref = (EditTextPreference) findPreference(Constants.WORKDIR);
-        if (myPref != null) {
-            myPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                public boolean onPreferenceClick(final Preference preference) {
-                    SettingsActivity.selectWorkingDirectory(getActivity(), new SettingsActivity.SelectWorkingDir() {
-                        @Override
-                        public void directorySelected(File dir) {
-                            try {
-                                myPref.setText(dir.getCanonicalPath());
-                            } catch (IOException e1) {
-                                Toast.makeText(getActivity(), e1.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        }
-
-                        @Override
-                        public void failed() {
-                        }
-
-                        @Override
-                        public void cancel() {
-                        }
-
-                    },myPref.getText(),true);
-                    return true;
-                }
-            });
-        }
+        final ListPreference myPref = (ListPreference) findPreference(Constants.WORKDIR);
         final EditTextPreference myChartPref = (EditTextPreference) findPreference(Constants.CHARTDIR);
         if (myChartPref != null) {
             myChartPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -82,16 +58,17 @@ public class MainSettingsFragment extends SettingsFragment {
                     FolderChooseDialog.newFolderNameText=getString(R.string.newFolderName);
                     FolderChooseDialog.newFolderText=getString(R.string.createFolder);
                     String startDir=myChartPref.getText();
-                    if (startDir.isEmpty()){
-                        startDir=myPref.getText();
-                    }
-                    try {
+                    File workDir= AvnUtil.getWorkDir(null,getActivity());
+                    try{
+                        if (startDir.isEmpty()) {
+                            startDir = workDir.getCanonicalPath();
+                        }
                         FolderChooseDialog.setStartDir(startDir);
                     } catch (Exception e) {
                         e.printStackTrace();
                         myChartPref.setText("");
                         try{
-                            FolderChooseDialog.setStartDir(myPref.getText());
+                            FolderChooseDialog.setStartDir(workDir.getCanonicalPath());
                         }catch (Exception e1){}
                         return true;
                     }
@@ -127,11 +104,7 @@ public class MainSettingsFragment extends SettingsFragment {
             return false;
         }
         if (pref.getKey().equals(Constants.WORKDIR)){
-            //the workdir will potentially be set asynchronously
-            EditTextPreference ep=(EditTextPreference)pref;
-            String nval=prefs.getString(pref.getKey(),"");
-            ep.setText(nval);
-            ep.setSummary(nval);
+            updateListSummary((ListPreference)pref);
         }
         return true;
     }
@@ -159,6 +132,19 @@ public class MainSettingsFragment extends SettingsFragment {
             l.setEntries(e);
             l.setValueIndex(index);
             updateListSummary(l);
+        }
+        ListPreference wd=(ListPreference)getPreferenceScreen().findPreference(Constants.WORKDIR);
+        if (wd != null){
+            wd.setEntryValues(new String[]{Constants.INTERNAL_WORKDIR,Constants.EXTERNAL_WORKDIR});
+            SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+            String workdir = prefs.getString(Constants.WORKDIR, Constants.INTERNAL_WORKDIR);
+            wd.setEntries(new String[]{
+                    getResources().getString(R.string.internalStorage),
+                    getResources().getString(R.string.externalStorage)
+            });
+            if (workdir.equals(Constants.INTERNAL_WORKDIR)) wd.setValueIndex(0);
+            if (workdir.equals(Constants.EXTERNAL_WORKDIR)) wd.setValueIndex(1);
+            updateListSummary(wd);
         }
     }
     private void updateListSummary(ListPreference l){

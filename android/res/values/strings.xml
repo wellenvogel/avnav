@@ -11,7 +11,7 @@
     <string name="cancel">Cancel</string>
     <string name="back">Back</string>
     <string name="selectWorkDir">select working Dir</string>
-    <string name="selectWorkDirWritable">Your old workdir ist not writable, select a new one</string>
+    <string name="selectWorkDirWritable">Your old workdir ist not writable/does not exist, select a new one</string>
     <string name="selectChartDir">select additional chart dir</string>
     <string name="internalStorage">Internal Storage</string>
     <string name="externalStorage">External Storage</string>

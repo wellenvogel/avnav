@@ -45,6 +45,7 @@ import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.gps.TrackWriter;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 /**
  * Created by andreas on 22.11.15.
@@ -170,7 +171,7 @@ public class RequestHandler {
         }
     }
     private File getWorkDir(){
-        return new File(getSharedPreferences().getString(Constants.WORKDIR,""));
+        return AvnUtil.getWorkDir(getSharedPreferences(),activity);
     }
     private GpsService getGpsService(){
         return activity.gpsService;

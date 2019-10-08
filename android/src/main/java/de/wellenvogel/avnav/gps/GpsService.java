@@ -339,7 +339,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         handleNotification(true,true);
         //we rely on the activity to check before...
-        File newTrackDir=new File(new File(prefs.getString(Constants.WORKDIR,"")),"tracks");
+        File newTrackDir=new File(AvnUtil.getWorkDir(prefs,this),"tracks");
         boolean loadTrack=true;
         if (trackDir != null && trackDir.getAbsolutePath().equals(newTrackDir.getAbsolutePath())){
             //seems to be a restart - so do not load again
@@ -387,7 +387,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         else{
             trackLoading=false;
         }
-        File routeDir=new File(new File(prefs.getString(Constants.WORKDIR,"")),"routes");
+        File routeDir=new File(AvnUtil.getWorkDir(prefs,this),"routes");
         if (routeHandler == null || routeHandler.isStopped()) {
             routeHandler = new RouteHandler(routeDir);
             routeHandler.setMediaUpdater(mediaUpdater);

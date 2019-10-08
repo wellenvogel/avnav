@@ -85,4 +85,8 @@ public class Constants {
     public static final long WATCHDOGTIME=30000; //ms
 
     public static final String EXTRA_INITIAL="initial"; //boolean extra
+
+    //workdir settings
+    public static final String INTERNAL_WORKDIR="workdir_internal";
+    public static final String EXTERNAL_WORKDIR="workdir_external";
 }
