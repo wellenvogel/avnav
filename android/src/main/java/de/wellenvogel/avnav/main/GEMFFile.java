@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.main;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 
@@ -103,10 +104,10 @@ public class GEMFFile {
 	class StreamAbstractFile implements AbstractFile{
 
 		private FileChannel channel;
-		private long length=0;
-		StreamAbstractFile(FileInputStream is,long length) throws IOException{
-			channel=is.getChannel();
-			this.length=length;
+		private ParcelFileDescriptor descriptor;
+		StreamAbstractFile(ParcelFileDescriptor descriptor) throws IOException{
+			this.descriptor=descriptor;
+			channel=(new FileInputStream(descriptor.getFileDescriptor())).getChannel();
 		}
 
 		@Override
@@ -137,7 +138,7 @@ public class GEMFFile {
 
 		@Override
 		public long length() throws IOException {
-			return length;
+			return descriptor.getStatSize();
 		}
 
 		@Override
@@ -235,9 +236,9 @@ public class GEMFFile {
 	}
 
 	private AbstractFile fileFromContentUri(Uri uri) throws IOException{
+
 		ParcelFileDescriptor fdi=mContext.getContentResolver().openFileDescriptor(uri,"r");
-		if (fdi == null) throw new FileNotFoundException("URI: "+uri+" not found");
-		return new StreamAbstractFile(new FileInputStream(fdi.getFileDescriptor()),fdi.getStatSize());
+		return new StreamAbstractFile(fdi);
 	}
 
 	private void openFilesUri() throws IOException {
@@ -252,7 +253,7 @@ public class GEMFFile {
 			AbstractFile nextFile=null;
 			try {
 				nextFile = fileFromContentUri(nextUri);
-			}catch (IOException e) {
+			}catch (Exception e) {
 			}
 			if (nextFile != null){
 				mFiles.add(nextFile);

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.EditTextPreference;
@@ -26,6 +27,7 @@ import de.wellenvogel.avnav.util.AvnUtil;
  * Created by andreas on 24.10.15.
  */
 public class MainSettingsFragment extends SettingsFragment {
+    private static final int CHARTDIR_REQUEST=99;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,8 +40,11 @@ public class MainSettingsFragment extends SettingsFragment {
                     if (! SettingsActivity.checkStoragePermission(getActivity(),true,true)){
                         return true;
                     }
-                    Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                    startActivityForResult(intent, 9999);
+                    if (Build.VERSION.SDK_INT >= 21) {
+                        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                        startActivityForResult(intent, CHARTDIR_REQUEST);
+                        return true;
+                    }
                     //open browser or intent here
                     SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(getActivity(), SimpleFileDialog.FolderChoose,
                             new SimpleFileDialog.SimpleFileDialogListener() {
@@ -86,7 +91,7 @@ public class MainSettingsFragment extends SettingsFragment {
                         }catch (Exception e1){}
                         return true;
                     }
-                    if (false) FolderChooseDialog.chooseFile_or_Dir(false);
+                    FolderChooseDialog.chooseFile_or_Dir(false);
                     return true;
                 }
             });
@@ -179,7 +184,14 @@ public class MainSettingsFragment extends SettingsFragment {
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode,resultCode,data);
-        int x=1;
+        if (requestCode == CHARTDIR_REQUEST && resultCode == Activity.RESULT_OK){
+            getActivity().getContentResolver().takePersistableUriPermission(data.getData(),
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            EditTextPreference myChartPref = (EditTextPreference) findPreference(Constants.CHARTDIR);
+            if (myChartPref != null){
+                myChartPref.setText(data.getDataString());
+            }
+        }
+
     }
 }

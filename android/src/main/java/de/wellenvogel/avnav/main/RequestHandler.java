@@ -5,10 +5,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
 import android.os.ParcelFileDescriptor;
+import android.provider.DocumentsContract;
 import android.support.v4.content.FileProvider;
+import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
@@ -46,6 +50,8 @@ import de.wellenvogel.avnav.gps.TrackWriter;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+
+import static android.support.v4.graphics.TypefaceCompatUtil.closeQuietly;
 
 /**
  * Created by andreas on 22.11.15.
@@ -105,7 +111,7 @@ public class RequestHandler {
             if (gemf == null){
                 AvnLog.i("RequestHandler","open gemf file "+key);
                 if (contentUri != null){
-                    gemf=new GemfHandler(new GEMFFile(contentUri,RequestHandler.this.getGpsService()),key);
+                    gemf=new GemfHandler(new GEMFFile(contentUri,RequestHandler.this.activity),key);
                 }
                 else {
                     gemf = new GemfHandler(new GEMFFile(realFile), key);
@@ -739,12 +745,11 @@ public class RequestHandler {
     private void updateChartList(){
         HashMap<String,GemfChart> newGemfFiles=new HashMap<String, GemfChart>();
         File chartDir = new File(getWorkDir(), "charts");
-        readChartDir(chartDir,"1",newGemfFiles);
+        readChartDir(chartDir.getAbsolutePath(),"1",newGemfFiles);
         String secondChartDirStr=getSharedPreferences().getString(Constants.CHARTDIR,"");
         if (! secondChartDirStr.isEmpty()){
-            File secondChartDir=new File(secondChartDirStr);
-            if (! secondChartDir.equals(chartDir)){
-                readChartDir(secondChartDir,"2",newGemfFiles);
+            if (! secondChartDirStr.equals(getWorkDir().getAbsolutePath())){
+                readChartDir(secondChartDirStr,"2",newGemfFiles);
             }
         }
         //now we have all current charts - compare to the existing list and create/delete entries
@@ -770,15 +775,31 @@ public class RequestHandler {
             }
             else{
                 GemfChart chart=gemfFiles.get(url);
-                if (chart.closeInactive()){
-                    AvnLog.i("closing gemf file "+url);
-                }
+                //if (chart.closeInactive()){
+                //    AvnLog.i("closing gemf file "+url);
+                //}
             }
         }
     }
 
-    private void readChartDir(File chartDir,String index,HashMap<String,GemfChart> arr) {
-        if (chartDir == null) return;
+    private void readChartDir(String chartDirStr,String index,HashMap<String,GemfChart> arr) {
+        if (chartDirStr == null) return;
+        if (Build.VERSION.SDK_INT >= 21) {
+            if (chartDirStr.startsWith("content:")) {
+                //see https://github.com/googlesamples/android-DirectorySelection/blob/master/Application/src/main/java/com/example/android/directoryselection/DirectorySelectionFragment.java
+                //and https://stackoverflow.com/questions/36862675/android-sd-card-write-permission-using-saf-storage-access-framework
+                Uri dirUri = Uri.parse(chartDirStr);
+                DocumentFile dirFile=DocumentFile.fromTreeUri(activity,dirUri);
+                for (DocumentFile f : dirFile.listFiles()){
+                    if (f.getName().endsWith(".gemf")){
+                        String urlName = REALCHARTS + "/" + index + "/gemf/" + f.getName();
+                        arr.put(urlName, new GemfChart(f.getUri(), urlName, f.lastModified()));
+                    }
+                }
+                return;
+            }
+        }
+        File chartDir=new File(chartDirStr);
         if (! chartDir.isDirectory()) return;
         File[] files=chartDir.listFiles();
         if (files == null) return;
