@@ -165,8 +165,6 @@ Page.prototype._initPage=function(){
                                             mp.measureRef(item);
                                             self.lastRef=item;
                                         }
-                                        let r=item.getBoundingClientRect();
-                                        self.leftPanelCallback(r);
                                     }
                                 }}>
                                     <Content/>
@@ -196,7 +194,7 @@ Page.prototype.leftPanelCallback=function(bounds){
             bounds.left == old.left &&
             bounds.top == old.top) return false;
     }
-    this.leftPanelBounds=bounds;
+    this.leftPanelBounds=assign({},bounds);
     this.leftPanelChanged(bounds);
     return true;
 };
@@ -272,6 +270,8 @@ Page.prototype._showPage=function(){
     this._hideToast=false;
     this.showTime=new Date();
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
+    var buttonFontSize=self.gui.properties.getButtonFontSize();
+    self.store.updateData(self.globalKeys.buttons,{fontSize:buttonFontSize});
     this.handleDefaultToggleButtons();
 };
 Page.prototype._hidePage=function(){
