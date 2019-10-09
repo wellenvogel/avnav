@@ -43,6 +43,9 @@ public class Constants {
     public static final String GPSALARM="alarm.gps";
     public static final String GPS_PERMISSION_REQUESTED="permissions.gps";
     public static final String STORAGE_PERMISSION_REQUESTED="permissions.storage";
+
+    public static final String REALCHARTS="charts";
+    public static final String CHARTPREFIX="charts";
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{

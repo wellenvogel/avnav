@@ -234,7 +234,7 @@ public class WebServer {
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
             registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
-            registry.register("/"+ RequestHandler.CHARTPREFIX+"*",chartRequestHandler);
+            registry.register("/"+ Constants.CHARTPREFIX+"*",chartRequestHandler);
 
             registry.register("*",baseRequestHandler);
 

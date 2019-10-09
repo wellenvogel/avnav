@@ -67,9 +67,13 @@ public class AvnUtil {
     }
     public static File getWorkDir(SharedPreferences pref, Context context){
         if (pref == null){
-            pref=context.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+            pref=getSharedPreferences(context);
         }
         String wd=pref.getString(Constants.WORKDIR,"");
         return workdirStringToFile(wd,context);
+    }
+
+    public static SharedPreferences getSharedPreferences(Context ctx){
+        return ctx.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
     }
 }

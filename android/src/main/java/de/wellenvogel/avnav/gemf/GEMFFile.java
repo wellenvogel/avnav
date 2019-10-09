@@ -1,14 +1,14 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.gemf;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+import android.support.v4.provider.DocumentFile;
 
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,7 +17,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -63,7 +62,7 @@ public class GEMFFile {
 
 
 	private Context mContext;
-	private Uri mUri;
+	private DocumentFile mDocument;
 
 	// All GEMF file parts for this archive
 	private final List<AbstractFile> mFiles = new ArrayList<AbstractFile>();
@@ -186,8 +185,8 @@ public class GEMFFile {
 		readHeader();
 	}
 
-	public GEMFFile(Uri contentUri,Context context) throws IOException{
-		mUri=contentUri;
+	public GEMFFile(DocumentFile document, Context context) throws IOException{
+		mDocument =document;
 		mContext=context;
 		openFilesUri();
 		readHeader();
@@ -243,21 +242,21 @@ public class GEMFFile {
 
 	private void openFilesUri() throws IOException {
 		// Populate the mFiles array
-		mFiles.add(fileFromContentUri(mUri));
-		mFileNames.add(mUri.toString());
-
+		mFiles.add(fileFromContentUri(mDocument.getUri()));
+		mFileNames.add(mDocument.getUri().toString());
+		DocumentFile directory=mDocument.getParentFile();
 		int i = 0;
 		for(;;) {
 			i = i + 1;
-			Uri nextUri=Uri.parse(mUri.toString()+"-"+i);
-			AbstractFile nextFile=null;
-			try {
-				nextFile = fileFromContentUri(nextUri);
-			}catch (Exception e) {
+			String nextName=mDocument.getName()+"-"+i;
+			DocumentFile nextFile=directory.findFile(nextName);
+			AbstractFile nextEntry=null;
+			if (nextFile != null) {
+				nextEntry = fileFromContentUri(nextFile.getUri());
 			}
-			if (nextFile != null){
-				mFiles.add(nextFile);
-				mFileNames.add(nextUri.toString());
+			if (nextEntry != null){
+				mFiles.add(nextEntry);
+				mFileNames.add(nextFile.getUri().toString());
 			} else {
 				break;
 			}
@@ -327,7 +326,7 @@ public class GEMFFile {
 	 * Returns the base name of the first file in the GEMF archive.
 	 */
 	public String getName() {
-		if (mUri != null) return mUri.getLastPathSegment();
+		if (mDocument != null) return mDocument.getName();
 		return mLocation;
 	}
 
@@ -415,7 +414,7 @@ public class GEMFFile {
 			}
 			String name=mFileNames.get(index);
 			if (name == null) return null;
-			if (mUri == null) {
+			if (mDocument == null) {
 				return new GEMFInputStream(new GRandomAcccesFile(name), dataOffset, dataLength);
 			}
 			else{
