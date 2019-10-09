@@ -895,6 +895,7 @@ Navpage.prototype.updateRoutePoints=function(opt_initial,opt_centerActive){
             {showLatLon: this.gui.properties.getProperties().routeShowLL},'options');
     }
     var activeWp=route.getPointAtIndex(active);
+    self.selectedWp=activeWp;
     if (opt_initial && activeWp){
         var sel={};
         sel[selectors.selected]=active;
