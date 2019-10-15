@@ -123,5 +123,14 @@
     <string name="channel_description">All app notifications</string>
     <string name="needsGpsPermisssions">avnav needs location access</string>
     <string name="needsStoragePermisssions">avnav needs external storage access for chart dir</string>
+    <string name="importRouteTitle">Avnav Import Route</string>
+    <string name="importRouteText">Import Route?</string>
+    <string name="receiveMustStart">you must start avnav first to receive data</string>
+    <string name="receiveOnlyGpx">can only receive .gpx files</string>
+    <string name="receiveNoValidRoute">This gpx is no valid route, no rte tag</string>
+    <string name="receiveUnableToRead">unable to read route file</string>
+    <string name="receiveUnableToImport">unable to import</string>
+    <string name="importFailed">import failed</string>
+    <string name="receiveAlreadyExists">Route already exists</string>
 
 </resources>
