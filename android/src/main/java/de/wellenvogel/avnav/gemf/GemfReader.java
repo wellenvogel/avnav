@@ -28,7 +28,7 @@ public class GemfReader {
     public GemfReader(Activity a){
         activity=a;
     }
-    public void updateChartList(){
+    public synchronized void updateChartList(){
         HashMap<String, GemfChart> newGemfFiles=new HashMap<String, GemfChart>();
         SharedPreferences prefs=AvnUtil.getSharedPreferences(activity);
         File workDir=AvnUtil.getWorkDir(prefs,activity);
@@ -132,11 +132,7 @@ public class GemfReader {
         try {
             for (String url : gemfFiles.keySet()) {
                 GemfChart chart = gemfFiles.get(url);
-                JSONObject e = new JSONObject();
-                e.put("name", url.replaceAll(".*/", ""));
-                e.put("time", chart.getLastModified() / 1000);
-                e.put("url", "/"+ Constants.CHARTPREFIX + "/"+url);
-                arr.put(e);
+                arr.put(chart.toJson());
             }
         } catch (Exception e) {
             Log.e(Constants.LOGPRFX, "exception readind chartlist:", e);

@@ -5,11 +5,15 @@ import android.os.ParcelFileDescriptor;
 import android.support.v4.provider.DocumentFile;
 import android.view.inputmethod.ExtractedText;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 
@@ -106,5 +110,14 @@ public class GemfChart {
             InputStream rt=f.gemfOverview();
             return new RequestHandler.ExtendedWebResourceResponse(-1,"text/xml","",rt);
         }
+    }
+
+    public JSONObject toJson() throws JSONException {
+        JSONObject e = new JSONObject();
+        e.put("name", key.replaceAll(".*/", ""));
+        e.put("time", getLastModified() / 1000);
+        e.put("url", "/"+ Constants.CHARTPREFIX + "/"+key);
+        e.put("canDelete",canDelete());
+        return e;
     }
 }

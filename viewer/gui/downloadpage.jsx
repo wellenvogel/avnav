@@ -25,6 +25,11 @@ var FileInfo=function(name,type,time){
      * @type {number} ms timestamp
      */
     this.time=time||0;
+    /**
+     *
+     * @type {boolean}
+     */
+    this.canDelete=true;
 
 };
 
@@ -258,13 +263,17 @@ Downloadpage.prototype.getPageContent=function(){
         if (props.active){
             cls+=" avn_download_active_entry";
         }
+        var showDelete=true;
+        if (props.canDelete !== undefined){
+            showDelete=props.canDelete;
+        }
         return(
         <div className={cls} onClick={function(ev){
             if (self.selectItemCallback){
                self.selectItemCallback(props);
             }
         }}>
-            {! props.active &&<button className="avn_download_btnDelete avn_smallButton" onClick={function(ev){
+            {(showDelete && ! props.active) &&<button className="avn_download_btnDelete avn_smallButton" onClick={function(ev){
                 ev.preventDefault();
                 ev.stopPropagation();
                 self.deleteItem(props);

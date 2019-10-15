@@ -478,6 +478,7 @@ public class RequestHandler {
                         File chartfile=chart.deleteFile();
                         if (updater != null) updater.triggerUpdateMtp(chartfile);
                         o.put("status","OK");
+                        gemfReader.updateChartList();
                     }
                 }
                 handled=true;
