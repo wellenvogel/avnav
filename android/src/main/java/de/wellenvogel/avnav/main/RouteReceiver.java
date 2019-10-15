@@ -151,6 +151,7 @@ public class RouteReceiver extends Activity {
             }
             os.close();
             is.close();
+            sendBroadcast(new Intent(Constants.BC_TRIGGER));
             startMain();
         } catch (Exception e) {
             AvnLog.e("import route failed: ",e);

@@ -112,6 +112,9 @@ var Downloadpage=function(){
         if (evdata.key && avnav.util.Helper.startsWith(evdata.key,"route")){
             self._updateDisplay();
         }
+        if (evdata.key == "routeUpdate"){
+            self.fillData();
+        }
     });
 
 };

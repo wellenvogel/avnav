@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.main;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Fragment;
@@ -14,35 +13,24 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import org.xwalk.core.XWalkActivity;
 
 import java.io.File;
-import java.net.InetSocketAddress;
 import java.util.List;
 
-import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
-import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
-import de.wellenvogel.avnav.gps.UsbSerialPositionHandler;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -70,6 +58,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     private boolean exitRequested=false;
     private boolean running=false;
     private BroadcastReceiver broadCastReceiverStop;
+    private BroadcastReceiver routeChangedReceiver;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -279,6 +268,9 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         if  (broadCastReceiverStop != null){
             unregisterReceiver(broadCastReceiverStop);
         }
+        if (routeChangedReceiver != null){
+            unregisterReceiver(routeChangedReceiver);
+        }
         if (exitRequested) {
             stopGpsService(true);
             System.exit(0);
@@ -316,6 +308,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             }
         };
         registerReceiver(broadCastReceiverStop,filterStop);
+        routeChangedReceiver =new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                sendEventToJs("routeUpdate",1);
+            }
+        };
+        IntentFilter triggerFilter=new IntentFilter((Constants.BC_ROUTECHANGE));
+        registerReceiver(routeChangedReceiver,triggerFilter);
         running=true;
     }
 

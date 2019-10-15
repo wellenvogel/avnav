@@ -30,6 +30,10 @@ import de.wellenvogel.avnav.util.AvnLog;
  */
 public class RouteHandler {
 
+    public static interface UpdateReceiver{
+        public void updated();
+    }
+
     private static final String LEGFILE="currentLeg.json";
     private static final int MAXROUTESIZE=500000;
     private static final String header="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"+
@@ -44,6 +48,7 @@ public class RouteHandler {
     private static final String rtpntName="<name>%s</name>";
 
     private IMediaUpdater mediaUpdater;
+    private UpdateReceiver updateReceiver;
     private long startSequence=1;
 
     private static String escapeXml(String in){
@@ -255,15 +260,24 @@ public class RouteHandler {
     private RoutingLeg currentLeg;
 
 
-    public RouteHandler(File routedir){
+    public RouteHandler(File routedir,UpdateReceiver updater){
         this.routedir=routedir;
         stopParser=true;
+        updateReceiver=updater;
     }
 
     public void stop(){
         stopParser=true;
         synchronized (parserLock){
             AvnLog.i("stopping parser");
+            parserLock.notifyAll();
+        }
+    }
+
+    public void triggerParser(){
+        if (stopParser) return;
+        AvnLog.i("retrigger parser");
+        synchronized (parserLock){
             parserLock.notifyAll();
         }
     }
@@ -288,6 +302,7 @@ public class RouteHandler {
             AvnLog.i("routes directory parser started");
             HashMap<String,RouteInfo> localList=new HashMap<String, RouteInfo>();
             while (! stopParser && sequence == startSequence){
+                boolean mustUpdate=false;
                 if (routedir.isDirectory()) {
                     for (File f : routedir.listFiles()) {
                         if (!f.isFile()) continue;
@@ -306,6 +321,7 @@ public class RouteHandler {
                             mustParse = true;
                         }
                         if (mustParse) {
+                            mustUpdate=true;
                             try {
                                 Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
                                 RouteInfo info = rt.getInfo();
@@ -324,6 +340,9 @@ public class RouteHandler {
                 }
                 synchronized (parserLock){
                     routeInfos=localList;
+                    if (mustUpdate){
+                        update();
+                    }
                     try {
                         parserLock.wait(5000);
                     } catch (InterruptedException e) {
@@ -431,16 +450,21 @@ public class RouteHandler {
 
 
     }
+    private void update(){
+        if (updateReceiver != null) updateReceiver.updated();
+    }
 
     private void deleteRouteInfo(String name){
         synchronized (parserLock){
             routeInfos.remove(name);
         }
+        update();
     }
     private void addRouteInfo(Route route){
         synchronized (parserLock){
             routeInfos.put(route.name,route.getInfo());
         }
+        update();
     }
 
     public Map<String,RouteInfo> getRouteInfo(){

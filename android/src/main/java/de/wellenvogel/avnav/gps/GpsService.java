@@ -54,7 +54,7 @@ import java.util.Map;
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service implements INmeaLogger,IRouteHandlerProvider {
+public class GpsService extends Service implements INmeaLogger, IRouteHandlerProvider, RouteHandler.UpdateReceiver {
 
 
     private static final String CHANNEL_ID = "main" ;
@@ -101,6 +101,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     private MediaPlayer mediaPlayer=null;
     private boolean gpsLostAlarmed=false;
     private BroadcastReceiver broadCastReceiver;
+    private BroadcastReceiver triggerReceiver; //trigger rescans...
     private boolean shouldStop=false;
     PendingIntent watchdogIntent=null;
     private static final String WATCHDOGACTION="restart";
@@ -144,6 +145,11 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             }
         }
 
+    }
+
+    @Override
+    public void updated() {
+        sendBroadcast(new Intent(Constants.BC_ROUTECHANGE));
     }
 
     public class GpsServiceBinder extends Binder{
@@ -389,7 +395,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
         File routeDir=new File(AvnUtil.getWorkDir(prefs,this),"routes");
         if (routeHandler == null || routeHandler.isStopped()) {
-            routeHandler = new RouteHandler(routeDir);
+            routeHandler = new RouteHandler(routeDir,this);
             routeHandler.setMediaUpdater(mediaUpdater);
             routeHandler.start();
         }
@@ -549,6 +555,14 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             }
         };
         registerReceiver(broadCastReceiver,filter);
+        triggerReceiver=new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (routeHandler != null) routeHandler.triggerParser();
+            }
+        };
+        IntentFilter triggerFilter=new IntentFilter((Constants.BC_TRIGGER));
+        registerReceiver(triggerReceiver,triggerFilter);
         Intent watchdog = new Intent(getApplicationContext(), GpsService.class);
         watchdog.setAction(WATCHDOGACTION);
         watchdogIntent=PendingIntent.getService(
@@ -698,6 +712,9 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
         if (broadCastReceiver != null){
             unregisterReceiver(broadCastReceiver);
+        }
+        if (triggerReceiver != null){
+            unregisterReceiver(triggerReceiver);
         }
         if (shouldStop){
             ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
