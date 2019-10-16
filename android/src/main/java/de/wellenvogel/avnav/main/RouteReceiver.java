@@ -11,13 +11,16 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.util.Xml;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.TwoLineListItem;
 
 
 import org.xmlpull.v1.XmlPullParser;
@@ -65,22 +68,62 @@ public class RouteReceiver extends Activity {
             this.error=error;
         }
     }
+    class MyAdapter extends BaseAdapter {
 
-    class ListAdapter extends ArrayAdapter<ListItem>{
-        public ListAdapter(@NonNull Context context, int resource, List<ListItem> items) {
-            super(context, resource,items);
+        private Context context;
+        private List<ListItem> items;
+
+        public MyAdapter(Context context, List<ListItem> items) {
+            this.context = context;
+            this.items = items;
         }
 
-        @NonNull
         @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            View v=super.getView(position, convertView, parent);
-            if (! getItem(position).ok){
-                ((TextView)v).setPaintFlags(((TextView)v).getPaintFlags()| Paint.STRIKE_THRU_TEXT_FLAG);
+        public int getCount() {
+            return items.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return items.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            View twoLineListItem;
+
+            if (convertView == null) {
+                LayoutInflater inflater = (LayoutInflater) context
+                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                twoLineListItem =  inflater.inflate(
+                        android.R.layout.simple_list_item_2, null);
+            } else {
+                twoLineListItem = convertView;
             }
-            return v;
+
+            TextView text1 = twoLineListItem.findViewById(android.R.id.text1);
+            TextView text2 = twoLineListItem.findViewById(android.R.id.text2);
+
+            text1.setText(items.get(position).toString());
+            if (items.get(position).ok) {
+                text2.setText("");
+                text1.setPaintFlags((text1).getPaintFlags()& ~Paint.STRIKE_THRU_TEXT_FLAG);
+            }
+            else{
+                text2.setText(items.get(position).error);
+                text1.setPaintFlags((text1).getPaintFlags()| Paint.STRIKE_THRU_TEXT_FLAG);
+            }
+
+            return twoLineListItem;
         }
     }
+
     private static final int ACTION_EXIT=0;
     private static final int ACTION_MAIN=1;
     private static final int ACTION_IMPORT=2;
@@ -114,7 +157,7 @@ public class RouteReceiver extends Activity {
             return;
         }
         names = new ArrayList<>();
-        ListAdapter adapter = new ListAdapter(this, android.R.layout.simple_list_item_1, names);
+        MyAdapter adapter = new MyAdapter(this, names);
         receiverInfo.setAdapter(adapter);
         Intent intent = getIntent();
         String action = intent.getAction();
