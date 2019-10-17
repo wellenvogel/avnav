@@ -30,7 +30,7 @@ var Mainpage=function(){
         self.fillList();
     });
     $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,(ev,evdata)=>{
-        if (evdata.key && evdata.key === 'rescan'){
+        if (evdata.key && evdata.key === 'reloadData'){
             self.fillList();
         }
     });

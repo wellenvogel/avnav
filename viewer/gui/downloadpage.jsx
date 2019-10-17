@@ -109,10 +109,7 @@ var Downloadpage=function(){
     this.selectItemCallback=undefined;
     var self=this;
     $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,function(ev,evdata){
-        if (evdata.key && avnav.util.Helper.startsWith(evdata.key,"route")){
-            self._updateDisplay();
-        }
-        if (evdata.key == "routeUpdate"){
+        if (evdata.key == "reloadData"){
             self.fillData();
         }
     });

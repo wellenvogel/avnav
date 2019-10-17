@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.gemf;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
@@ -42,14 +43,17 @@ public class GemfReader {
         }
         //now we have all current charts - compare to the existing list and create/delete entries
         //currently we assume only one thread to change the chartlist...
+        boolean modified=false;
         for (String url : newGemfFiles.keySet()){
             GemfChart chart=newGemfFiles.get(url);
             long lastModified=chart.getLastModified();
             if (gemfFiles.get(url) == null ){
                 gemfFiles.put(url,chart);
+                modified=true;
             }
             else{
                 if (gemfFiles.get(url).getLastModified() < lastModified){
+                    modified=true;
                     gemfFiles.get(url).close();
                     gemfFiles.put(url,chart);
                 }
@@ -60,13 +64,18 @@ public class GemfReader {
             String url=it.next();
             if (newGemfFiles.get(url) == null){
                 it.remove();
+                modified=true;
             }
             else{
                 GemfChart chart=gemfFiles.get(url);
                 if (chart.closeInactive()){
                     AvnLog.i("closing gemf file "+url);
+                    modified=true;
                 }
             }
+        }
+        if (modified){
+            activity.sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
         }
     }
 

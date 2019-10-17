@@ -12,13 +12,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.location.*;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -42,7 +40,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -149,7 +146,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
 
     @Override
     public void updated() {
-        sendBroadcast(new Intent(Constants.BC_ROUTECHANGE));
+        sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
     }
 
     public class GpsServiceBinder extends Binder{

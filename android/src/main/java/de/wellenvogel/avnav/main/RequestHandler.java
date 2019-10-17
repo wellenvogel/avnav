@@ -883,7 +883,7 @@ public class RequestHandler {
             }
             AvnLog.i("saving route");
             getRouteHandler().saveRoute(new FileInputStream(pfd.getFileDescriptor()), false);
-            activity.sendEventToJs("routeImported", 1);
+            activity.sendEventToJs(Constants.JS_RELOAD, 1);
         } catch (Exception e) {
             Toast.makeText(activity.getApplicationContext(), "unable save route: "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();

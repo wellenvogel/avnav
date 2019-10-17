@@ -58,7 +58,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     private boolean exitRequested=false;
     private boolean running=false;
     private BroadcastReceiver broadCastReceiverStop;
-    private BroadcastReceiver routeChangedReceiver;
+    private BroadcastReceiver reloadReceiver;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -268,8 +268,8 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         if  (broadCastReceiverStop != null){
             unregisterReceiver(broadCastReceiverStop);
         }
-        if (routeChangedReceiver != null){
-            unregisterReceiver(routeChangedReceiver);
+        if (reloadReceiver != null){
+            unregisterReceiver(reloadReceiver);
         }
         if (exitRequested) {
             stopGpsService(true);
@@ -308,14 +308,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             }
         };
         registerReceiver(broadCastReceiverStop,filterStop);
-        routeChangedReceiver =new BroadcastReceiver() {
+        reloadReceiver =new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                sendEventToJs("routeUpdate",1);
+                sendEventToJs(Constants.JS_RELOAD,1);
             }
         };
-        IntentFilter triggerFilter=new IntentFilter((Constants.BC_ROUTECHANGE));
-        registerReceiver(routeChangedReceiver,triggerFilter);
+        IntentFilter triggerFilter=new IntentFilter((Constants.BC_RELOAD_DATA));
+        registerReceiver(reloadReceiver,triggerFilter);
         running=true;
     }
 
@@ -388,7 +388,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         AvnLog.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
         stopGpsService(false);
         requestHandler.update();
-        sendEventToJs("rescan",0);
+        sendEventToJs(Constants.JS_RELOAD,0);
         return startGpsService();
     }
 
@@ -425,14 +425,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             lastStartMode=mode;
         }
         else{
-            sendEventToJs("propertyChange",0); //this will some pages cause to reload...
+            sendEventToJs(Constants.JS_PROPERTY_CHANGE,0); //this will some pages cause to reload...
         }
     }
 
     @Override
     public void onBackPressed(){
         final int num=goBackSequence+1;
-        sendEventToJs("backPressed",num);
+        sendEventToJs(Constants.JS_BACK,num);
         //as we cannot be sure that the JS code will for sure handle
         //our back pressed (maybe a different page has been loaded) , we wait at most 200ms for it to ack this
         //otherwise we really go back here

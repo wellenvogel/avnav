@@ -83,7 +83,7 @@ public class Constants {
     public static final String BC_STOPALARM="de.wellenvogel.avnav.STOPALARM";
     public static final String BC_STOPAPPL="de.wellenvogel.avnav.STOPAPPL";
     public static final String BC_TRIGGER="de.wellenvogel.avnav.TRIGGER";
-    public static final String BC_ROUTECHANGE="de.wellenvogel.avnav.ROUTECHANGE";
+    public static final String BC_RELOAD_DATA ="de.wellenvogel.avnav.RELOAD_DATA";
 
     public static final int LOCALNOTIFY=1;
     public static final int LOCKNOTIFY=2;
@@ -95,4 +95,9 @@ public class Constants {
     //workdir settings
     public static final String INTERNAL_WORKDIR="workdir_internal";
     public static final String EXTERNAL_WORKDIR="workdir_external";
+
+    //js events
+    public static final String JS_RELOAD="reloadData";
+    public static final String JS_BACK="backPressed";
+    public static final String JS_PROPERTY_CHANGE="propertyChange";
 }
