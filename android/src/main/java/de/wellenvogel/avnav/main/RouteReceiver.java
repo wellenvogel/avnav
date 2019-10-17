@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
@@ -128,6 +129,43 @@ public class RouteReceiver extends Activity {
     private static final int ACTION_IMPORT=1;
     private int nextButtonAction=ACTION_EXIT;
     private List<ListItem> names;
+    private MyAdapter adapter;
+
+    class CheckFilesTask extends AsyncTask<Void,Void,Void>{
+        private List<Uri> uris;
+        private List<ListItem> output;
+        CheckFilesTask(List<Uri> uris,List<ListItem> output){
+            super();
+            this.uris=uris;
+            this.output=output;
+        }
+        @Override
+        protected Void doInBackground(Void... voids) {
+            for (Uri uri: uris){
+                checkRouteFile(uri,output);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            super.onPostExecute(v);
+            findViewById(R.id.receiveProgressBar).setVisibility(View.GONE);
+            findViewById(R.id.receiverInfo).setVisibility(View.VISIBLE);
+            if (names.size() < 1) {
+                Toast.makeText(RouteReceiver.this, R.string.receiveUnableToImport, Toast.LENGTH_LONG).show();
+                finish();
+            }
+            if (names.size() == 1 && !names.get(0).ok) {
+                Toast.makeText(RouteReceiver.this, names.get(0).error, Toast.LENGTH_LONG).show();
+                finish();
+                return;
+            }
+            adapter.notifyDataSetChanged();
+            nextButtonAction = ACTION_IMPORT;
+        }
+
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -154,7 +192,7 @@ public class RouteReceiver extends Activity {
             return;
         }
         names = new ArrayList<>();
-        MyAdapter adapter = new MyAdapter(this, names);
+        adapter = new MyAdapter(this, names);
         receiverInfo.setAdapter(adapter);
         Intent intent = getIntent();
         String action = intent.getAction();
@@ -162,28 +200,23 @@ public class RouteReceiver extends Activity {
         if (Intent.ACTION_SEND.equals(action))
             routeUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (Intent.ACTION_VIEW.equals(action)) routeUri = intent.getData();
+        ArrayList<Uri> items=new ArrayList<>();
         if (routeUri != null) {
-            checkRouteFile(routeUri, names);
+            items.add(routeUri);
         } else {
             if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
                 List<Uri> uriList = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
                 for (Uri uri : uriList) {
-                    checkRouteFile(uri, names);
+                    items.add(uri);
                 }
             }
         }
-
-        if (names.size() < 1) {
+        if (items.size() < 1) {
             Toast.makeText(this, R.string.receiveUnableToImport, Toast.LENGTH_LONG).show();
             finish();
         }
-        if (names.size() == 1 && !names.get(0).ok) {
-            Toast.makeText(this, names.get(0).error, Toast.LENGTH_LONG).show();
-            finish();
-            return;
-        }
-        adapter.notifyDataSetChanged();
-        nextButtonAction = ACTION_IMPORT;
+        CheckFilesTask t=new CheckFilesTask(items,names);
+        t.execute();
 
     }
 
@@ -242,29 +275,48 @@ public class RouteReceiver extends Activity {
         return item;
     }
 
-    private void startImport(){
-        try {
-            for (ListItem item : names) {
-                File outFile = item.outFile;
-                if (outFile == null) continue;
-                FileOutputStream os = new FileOutputStream(outFile);
-                InputStream is = getContentResolver().openInputStream(item.routeUri);
-                byte buffer[] = new byte[10000];
-                int rt = 0;
-                while ((rt = is.read(buffer)) > 0) {
-                    os.write(buffer, 0, rt);
+    class ImportTask extends AsyncTask<Void,Void,Boolean>{
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            try {
+                for (ListItem item : names) {
+                    File outFile = item.outFile;
+                    if (outFile == null) continue;
+                    FileOutputStream os = new FileOutputStream(outFile);
+                    InputStream is = getContentResolver().openInputStream(item.routeUri);
+                    byte buffer[] = new byte[10000];
+                    int rt = 0;
+                    while ((rt = is.read(buffer)) > 0) {
+                        os.write(buffer, 0, rt);
+                    }
+                    os.close();
+                    is.close();
                 }
-                os.close();
-                is.close();
+            } catch (Exception e) {
+                AvnLog.e("import route failed: ",e);
+                Toast.makeText(RouteReceiver.this,getString(R.string.importFailed),Toast.LENGTH_LONG).show();
+                return false;
             }
-            sendBroadcast(new Intent(Constants.BC_TRIGGER));
-            startMain();
-        } catch (Exception e) {
-            AvnLog.e("import route failed: ",e);
-            Toast.makeText(this,getString(R.string.importFailed),Toast.LENGTH_LONG).show();
-            finish();
-            return;
+            return true;
         }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if (aBoolean){
+                sendBroadcast(new Intent(Constants.BC_TRIGGER));
+                startMain();
+            }
+            else{
+                finish();
+            }
+        }
+    }
+
+    private void startImport(){
+        findViewById(R.id.receiveProgressBar).setVisibility(View.VISIBLE);
+        new ImportTask().execute();
     }
 
     private void startMain(){

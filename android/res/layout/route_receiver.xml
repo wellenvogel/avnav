@@ -7,6 +7,13 @@
     <include android:id="@+id/toolbar"
         layout="@layout/toolbar"/>
 
+    <ProgressBar
+        android:id="@+id/receiveProgressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true" />
+
     <TextView
         android:id="@+id/infoText"
         android:layout_width="match_parent"
