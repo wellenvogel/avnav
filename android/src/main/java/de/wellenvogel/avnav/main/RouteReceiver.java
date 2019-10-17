@@ -125,18 +125,15 @@ public class RouteReceiver extends Activity {
     }
 
     private static final int ACTION_EXIT=0;
-    private static final int ACTION_MAIN=1;
-    private static final int ACTION_IMPORT=2;
+    private static final int ACTION_IMPORT=1;
     private int nextButtonAction=ACTION_EXIT;
-    private ListView receiverInfo;
-    private Button button;
     private List<ListItem> names;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.route_receiver);
-        receiverInfo = findViewById(R.id.receiverInfo);
-        button = findViewById(R.id.btReceiverOk);
+        ListView receiverInfo = findViewById(R.id.receiverInfo);
+        Button button = findViewById(R.id.btReceiverOk);
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -223,9 +220,6 @@ public class RouteReceiver extends Activity {
     private void buttonAction(){
         if (nextButtonAction == ACTION_EXIT){
             finish();
-        }
-        if (nextButtonAction == ACTION_MAIN){
-            startMain();
         }
         if (nextButtonAction == ACTION_IMPORT){
             startImport();
