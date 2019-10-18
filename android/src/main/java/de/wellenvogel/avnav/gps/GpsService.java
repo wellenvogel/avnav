@@ -105,6 +105,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
 
     private PositionWriter positionWriter;
     private Thread positionWriterThread;
+    private RouteHandler.RoutePoint lastAlarmWp=null;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -595,6 +596,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
 
     private void timerAction(){
         checkAnchor();
+        checkApproach();
         handleNotification(true,false);
         checkTrackWriter();
         for (GpsDataProvider provider: getAllProviders()) {
@@ -635,6 +637,24 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
             return;
         }
         setAlarm(Alarm.ANCHOR.name);
+    }
+    private void checkApproach(){
+        if (routeHandler == null) return;
+        Location current=getLocation();
+        if (current == null){
+            resetAlarm(Alarm.WAYPOINT.name);
+            return;
+        }
+        if (! routeHandler.handleApproach(current)){
+            lastAlarmWp=null;
+            resetAlarm(Alarm.WAYPOINT.name);
+            return;
+        }
+        if (lastAlarmWp == routeHandler.getCurrentTarget() ){
+            return;
+        }
+        lastAlarmWp=routeHandler.getCurrentTarget();
+        setAlarm(Alarm.WAYPOINT.name);
     }
 
     /**
@@ -906,7 +926,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
                     mediaPlayer.reset();
                     mediaPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION);
                     AudioEditTextPreference.setPlayerSource(mediaPlayer,sound,this);
-                    mediaPlayer.setLooping(true);
+                    mediaPlayer.setLooping(a.repeat > 0);
                     mediaPlayer.prepare();
                     mediaPlayer.start();
                 }

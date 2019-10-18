@@ -114,6 +114,7 @@
     <string name="labelSettingsServerPort">port for external browser mode</string>
     <string name="labelSettingsAnchorAlarm">Sound for anchor alarm</string>
     <string name="labelSettingsGpsAlarm">Sound for gps alarm</string>
+    <string name="labelSettingsWpAlarm">Sound for waypoint alarm</string>
     <string name="reset">Reset</string>
     <string name="webserver">AvNav Server</string>
     <string name="enableExternalAccess">WebServer External Access</string>
