@@ -2,9 +2,12 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Fragment;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -51,7 +54,7 @@ public class WebServerFragment extends Fragment {
     private long timerSequence=0;
     private Handler handler = new Handler();
     private Runnable runnable;
-
+    private NsdManager.RegistrationListener registrationListener;
 
 
     @Override
@@ -177,24 +180,65 @@ public class WebServerFragment extends Fragment {
 
     private void startWebServer(boolean force){
         if (serverRunning && ! force) return;
+        int port=-1;
         try {
             SharedPreferences prefs=((MainActivity)getActivity()).sharedPrefs;
-            webServer.startServer(prefs.getString(Constants.WEBSERVERPORT,"34567"),prefs.getBoolean(Constants.EXTERNALACCESS,false));
+            port=webServer.startServer(prefs.getString(Constants.WEBSERVERPORT,"34567"),prefs.getBoolean(Constants.EXTERNALACCESS,false));
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
         serverRunning=true;
         AvnLog.d(LOGPRFX, "starting webserver");
+        if (port > 0)
+            registerAvahi(port);
         btLaunch.setEnabled(true);
         btServer.setText(R.string.stopServer);
 
+    }
+
+    private void registerAvahi(int port){
+        NsdServiceInfo info=new NsdServiceInfo();
+        info.setPort(port);
+        info.setServiceType("_http._tcp");
+        info.setServiceName("avnav-android");
+        NsdManager manager=(NsdManager)getActivity().getSystemService(Context.NSD_SERVICE);
+        registrationListener=new NsdManager.RegistrationListener() {
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                AvnLog.e("registering avahi service failed: "+errorCode);
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+
+            }
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                AvnLog.i("registered avahi "+serviceInfo.getServiceName());
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
+
+            }
+        };
+        manager.registerService(info, NsdManager.PROTOCOL_DNS_SD,registrationListener);
+    }
+
+    private void unregisterAvahi(){
+        if (registrationListener == null) return;
+        NsdManager manager=(NsdManager)getActivity().getSystemService(Context.NSD_SERVICE);
+        manager.unregisterService(registrationListener);
+        registrationListener=null;
     }
 
     private void stopWebServer(){
         if (! serverRunning) return;
         serverRunning=false;
         AvnLog.d(LOGPRFX,"stopping webserver");
+        unregisterAvahi();
         webServer.stopServer();
         txServer.setText("server stopped");
         btLaunch.setEnabled(false);
