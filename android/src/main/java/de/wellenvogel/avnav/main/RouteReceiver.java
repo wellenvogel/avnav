@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.provider.DocumentFile;
 import android.support.v7.widget.Toolbar;
 import android.util.Xml;
 import android.view.LayoutInflater;
@@ -36,6 +37,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -52,17 +54,25 @@ public class RouteReceiver extends Activity {
         public Uri routeUri;
         public File outFile;
         public String error;
+        public String outName;
+        private void setOutName(){
+            DocumentFile df=DocumentFile.fromSingleUri(RouteReceiver.this,routeUri);
+            if (df != null) outName=df.getName();
+            else outName=routeUri.getLastPathSegment();
+        }
         ListItem(Uri u){
             routeUri=u;
             ok=true;
+            setOutName();
         }
         ListItem(Uri u,String error){
             routeUri=u;
+            setOutName();
             ok=false;
             this.error=error;
         }
         public String toString(){
-            return routeUri.getLastPathSegment();
+            return outName;
         }
         public void setError(String error){
             ok=false;
@@ -156,13 +166,15 @@ public class RouteReceiver extends Activity {
                 Toast.makeText(RouteReceiver.this, R.string.receiveUnableToImport, Toast.LENGTH_LONG).show();
                 finish();
             }
-            if (names.size() == 1 && !names.get(0).ok) {
-                Toast.makeText(RouteReceiver.this, names.get(0).error, Toast.LENGTH_LONG).show();
-                finish();
-                return;
-            }
             adapter.notifyDataSetChanged();
-            nextButtonAction = ACTION_IMPORT;
+            boolean hasImports=false;
+            for (ListItem item:names){
+                if (item.ok){
+                    hasImports=true;
+                    break;
+                }
+            }
+            if (hasImports) nextButtonAction = ACTION_IMPORT;
         }
 
     }
@@ -221,31 +233,29 @@ public class RouteReceiver extends Activity {
     }
 
     private void checkRouteFile(Uri routeUri,List<ListItem> list){
-        if (! routeUri.getLastPathSegment().endsWith(".gpx")){
-            list.add(new ListItem(routeUri,getString(R.string.receiveOnlyGpx)));
-            return;
-        }
+        RouteHandler.Route rt=null;
         try {
             InputStream is=getContentResolver().openInputStream(routeUri);
-            XmlPullParser parser= Xml.newPullParser();
-            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-            parser.setInput(is, null);
-            boolean foundRte=false;
-            while (! foundRte && parser.next() != XmlPullParser.END_TAG){
-                if (parser.getEventType() != XmlPullParser.START_TAG) continue;
-                if (parser.getName().equals("rte")){
-                    foundRte=true;
-                }
-            }
-            if (! foundRte){
+            rt=RouteHandler.parseRouteStream(is,false);
+            if (rt == null){
                 list.add(new ListItem(routeUri,getString(R.string.receiveNoValidRoute)));
                 return;
             }
-        } catch (XmlPullParserException | IOException e) {
+        } catch ( IOException e) {
             list.add(new ListItem(routeUri,getString(R.string.receiveUnableToRead)));
             return;
         }
         ListItem item=new ListItem(routeUri);
+        if (!item.outName.endsWith(".gpx")){
+            if (rt.name != null){
+                item.outName=rt.name+".gpx";
+            }
+            else{
+                item.setError(getString(R.string.receiveOnlyGpx));
+                list.add(item);
+                return;
+            }
+        }
         getAndCheckOutfile(item);
         list.add(item);
     }
@@ -266,7 +276,7 @@ public class RouteReceiver extends Activity {
             item.setError(getString(R.string.receiveMustStart));
             return item;
         }
-        File outFile=new File(outDir,item.routeUri.getLastPathSegment());
+        File outFile=new File(outDir,item.toString());
         if (outFile.exists()){
             item.setError(getString(R.string.receiveAlreadyExists));
             return item;

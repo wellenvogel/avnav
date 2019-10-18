@@ -373,9 +373,16 @@ public class RouteHandler {
         return rt;
     }
 
-    private class RouteParser {
-        private Route route=new Route();
+    public static Route parseRouteStream(InputStream is,boolean returnEmpty){
+        return new RouteParser().parseRouteFile(is,returnEmpty);
+    }
+
+    private static class RouteParser {
+        private Route route=null;
         public Route parseRouteFile(InputStream in){
+            return parseRouteFile(in,true);
+        }
+        public Route parseRouteFile(InputStream in,boolean returnEmpty){
             XmlPullParserFactory pullParserFactory;
             try {
                 pullParserFactory = XmlPullParserFactory.newInstance();
@@ -388,6 +395,14 @@ public class RouteHandler {
             } catch (IOException e) {
                 e.printStackTrace();
             };
+            if (route == null && returnEmpty){
+                return new Route();
+            }
+            return route;
+        }
+
+        private Route getRoute(){
+            if (route == null) route=new Route();
             return route;
         }
 
@@ -429,7 +444,7 @@ public class RouteHandler {
                             }
                             else {
                                 try {
-                                    route.name = parser.nextText();
+                                    getRoute().name = parser.nextText();
                                 }catch (XmlPullParserException i){}
                             }
 
@@ -440,7 +455,7 @@ public class RouteHandler {
                         if (name.equalsIgnoreCase("gpx")) gpxSeen=false;
                         if (name.equalsIgnoreCase("rte")) rteSeen=false;
                         if (name.equalsIgnoreCase("rtept") && currentRoutePoint != null) {
-                            route.points.add(currentRoutePoint);
+                            getRoute().points.add(currentRoutePoint);
                             currentRoutePoint=null;
                         }
                 }

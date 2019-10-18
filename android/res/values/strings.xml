@@ -127,7 +127,7 @@
     <string name="importRouteText">Import Route?</string>
     <string name="receiveMustStart">you must start avnav first to receive data</string>
     <string name="receiveOnlyGpx">can only receive .gpx files</string>
-    <string name="receiveNoValidRoute">This gpx is no valid route, no rte tag</string>
+    <string name="receiveNoValidRoute">This file is no valid route, no rte tag</string>
     <string name="receiveUnableToRead">unable to read route file</string>
     <string name="receiveUnableToImport">unable to import</string>
     <string name="importFailed">import failed</string>
