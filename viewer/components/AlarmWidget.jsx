@@ -5,7 +5,6 @@
 var React=require("react");
 
 
-var key='alarmInfo';
 var AlarmWidget=React.createClass({
     propTypes:{
         classes: React.PropTypes.string,

@@ -295,7 +295,16 @@ Mainpage.prototype.updateAlarmSound=function(){
    if (! this.soundHandler) return;
    if (this.initialPlayCheck < 2) return;
    if (avnav.android) return;
-   var alarmState=this.navobject.getData('alarmInfo');
+   var alarmState=this.navobject.getData('alarmSound');
+   var repeat=10000;
+   if (alarmState !== undefined) {
+       var nameAndRepeat = alarmState.split(",");
+       alarmState = nameAndRepeat[0];
+       if (nameAndRepeat.length > 1) {
+           repeat = nameAndRepeat[1] + 0;
+       }
+   }
+
    try {
        if (!alarmState || ! this.gui.properties.getProperties().localAlarmSound) {
            this.soundRepeat=0;
@@ -310,7 +319,7 @@ Mainpage.prototype.updateAlarmSound=function(){
            this.lastAlarmSound=alarmState;
            self.soundHandler.src=self.gui.properties.getProperties().navUrl+"?request=download&type=alarm&name="+encodeURIComponent(alarmState);
            self.soundHandler.play();
-           self.soundRepeat=10000;
+           self.soundRepeat=repeat;
        }
        if (this.soundHandler.ended){
            if (this.soundRepeat > 0){

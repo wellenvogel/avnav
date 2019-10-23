@@ -945,7 +945,7 @@ RouteData.prototype._checkNextWp=function(){
             //should we wait for some time???
             if (nextWp) {
                 this.currentLeg.to=nextWp;
-                this.routeOn();
+                this._legChanged();
                 if (this.isEditingActiveRoute()) {
                     this.editingWp = nextWp;
                 }
