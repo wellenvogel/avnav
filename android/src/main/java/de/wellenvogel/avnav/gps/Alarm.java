@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 public class Alarm {
     public String command;
-    public int repeat=1;
+    public int repeat=10000;
     public boolean running=false;
     public String name;
     private Alarm(String name){
