@@ -264,7 +264,7 @@ public class RouteHandler {
             JSONObject rt=new JSONObject();
             if (from != null) rt.put("from",from.toJson());
             if (to != null) rt.put("to",to.toJson());
-            if (route != null) rt.put("route",route.toJson());
+            if (route != null) rt.put("currentRoute",route.toJson());
             if (currentTarget > 0) rt.put("currentTarget",currentTarget);
             if (approachDistance > 0) rt.put("approachDistance",approachDistance);
             if (anchorDistance > 0) rt.put("anchorDistance",anchorDistance);
