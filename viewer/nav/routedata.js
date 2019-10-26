@@ -911,6 +911,7 @@ RouteData.prototype._checkNextWp=function(){
     var nextWpNum=this.currentLeg.getCurrentTargetIdx()+1;
     var nextWp=this.currentLeg.currentRoute.getPointAtIndex(nextWpNum);
     var approach=this.propertyHandler.getProperties().routeApproach;
+    var tolerance=approach/10; //we allow some position error...
     try {
         var dst = NavCompute.computeDistance(boat, this.currentLeg.to);
         //TODO: some handling for approach
@@ -929,17 +930,21 @@ RouteData.prototype._checkNextWp=function(){
             }
             //check if the distance to own wp increases and to the nex decreases
             var diffcurrent=dst.dts-this.lastDistanceToCurrent;
-            if (diffcurrent <= 0){
+            if (diffcurrent <= tolerance){
                 //still decreasing
-                this.lastDistanceToCurrent=dst.dts;
-                this.lastDistanceToNext=nextDst.dts;
+                if (diffcurrent <= 0) {
+                    this.lastDistanceToCurrent = dst.dts;
+                    this.lastDistanceToNext = nextDst.dts;
+                }
                 return;
             }
             var diffnext=nextDst.dts-this.lastDistanceToNext;
-            if (diffnext > 0){
+            if (nextWp && (diffnext > -tolerance)){
                 //increases to next
-                this.lastDistanceToCurrent=dst.dts;
-                this.lastDistanceToNext=nextDst.dts;
+                if (diffnext > 0) {
+                    this.lastDistanceToCurrent = dst.dts;
+                    this.lastDistanceToNext = nextDst.dts;
+                }
                 return;
             }
             //should we wait for some time???

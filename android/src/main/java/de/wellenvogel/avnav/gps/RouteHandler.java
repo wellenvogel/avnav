@@ -635,13 +635,14 @@ public class RouteHandler {
             resetLast();
             return false;
         }
+        double tolerance=leg.approachDistance/10; //some tolerance for positions
         int nextIdx=-1;
         if (leg.getRoute() != null) {
             nextIdx=leg.getRoute().getNextTarget(leg.currentTarget);
         }
         float nextDistance=0;
         RoutePoint nextTarget=null;
-        if (nextIdx > 0 ) {
+        if (nextIdx >= 0 ) {
             nextTarget = leg.getRoute().points.get(nextIdx);
             nextDistance = nextTarget.distanceTo(currentPosition);
         }
@@ -651,16 +652,20 @@ public class RouteHandler {
             lastDistanceToNext=nextDistance;
             return true;
         }
-        if (currentDistance <= lastDistanceToCurrent){
+        if (currentDistance <= (lastDistanceToCurrent + tolerance)){
             //still approaching wp
-            lastDistanceToCurrent=currentDistance;
-            lastDistanceToNext=nextDistance;
+            if (currentDistance <= lastDistanceToCurrent) {
+                lastDistanceToCurrent = currentDistance;
+                lastDistanceToNext = nextDistance;
+            }
             return true;
         }
-        if (nextDistance > lastDistanceToNext){
+        if (nextIdx >= 0 && (nextDistance > (lastDistanceToNext - tolerance))){
             //still not approaching next wp
-            lastDistanceToCurrent=currentDistance;
-            lastDistanceToNext=nextDistance;
+            if (nextDistance > lastDistanceToNext) {
+                lastDistanceToCurrent = currentDistance;
+                lastDistanceToNext = nextDistance;
+            }
             return true;
         }
         if (nextTarget == null){
