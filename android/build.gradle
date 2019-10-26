@@ -52,7 +52,7 @@ android {
         applicationId "de.wellenvogel.avnav.main"
         versionName "avnav-$avnavVersion"
         versionCode Integer.parseInt(project.avnavVersion)
-        manifestPlaceholders(['label':'avNav'])
+        manifestPlaceholders(['label':'avNav','providerScope':'.release'])
         targetSdkVersion 29
         minSdkVersion 19
     }
@@ -115,7 +115,7 @@ android {
         }
         debug {
             applicationIdSuffix ".debug"
-            manifestPlaceholders( ['label':'avNav-debug'])
+            manifestPlaceholders( ['label':'avNav-debug','providerScope':'.debug'])
         }
         beta {
             if (System.getenv("ANDROID_KEYSTORE") != null) {
@@ -125,7 +125,7 @@ android {
                 signingConfig buildTypes.debug.signingConfig
             }
             applicationIdSuffix ".beta"
-            manifestPlaceholders(['label':'avNav-beta'])
+            manifestPlaceholders(['label':'avNav-beta','providerScope':'.debug'])
         }
     }
     applicationVariants.all { variant ->
