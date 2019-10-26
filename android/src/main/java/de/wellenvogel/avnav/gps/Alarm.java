@@ -45,7 +45,7 @@ public class Alarm {
     }
     public static Alarm ANCHOR=new Alarm("anchor");
     public static Alarm GPS=new Alarm("gps");
-    public static Alarm WAYPOINT=new Alarm("waypoint",0);
+    public static Alarm WAYPOINT=new Alarm("waypoint",3);
     public static Alarm createAlarm(String name){
         if (name == null) return null;
         for (Alarm a: new Alarm[]{ANCHOR,GPS,WAYPOINT}){

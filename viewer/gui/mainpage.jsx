@@ -301,7 +301,7 @@ Mainpage.prototype.updateAlarmSound=function(){
        var nameAndRepeat = alarmState.split(",");
        alarmState = nameAndRepeat[0];
        if (nameAndRepeat.length > 1) {
-           repeat = nameAndRepeat[1] + 0;
+           repeat = parseInt(nameAndRepeat[1]);
        }
    }
 

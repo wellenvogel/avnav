@@ -96,6 +96,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
     private Object loggerLock=new Object();
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
     private MediaPlayer mediaPlayer=null;
+    private int mediaRepeatCount=0;
     private boolean gpsLostAlarmed=false;
     private BroadcastReceiver broadCastReceiver;
     private BroadcastReceiver triggerReceiver; //trigger rescans...
@@ -542,6 +543,15 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
                 return true;
             }
         });
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mediaRepeatCount--;
+                if (mediaRepeatCount > 0){
+                    mediaPlayer.start();
+                }
+            }
+        });
 
         IntentFilter filter=new IntentFilter(Constants.BC_STOPALARM);
         broadCastReceiver=new BroadcastReceiver() {
@@ -926,7 +936,8 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
                     mediaPlayer.reset();
                     mediaPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION);
                     AudioEditTextPreference.setPlayerSource(mediaPlayer,sound,this);
-                    mediaPlayer.setLooping(a.repeat > 0);
+                    mediaRepeatCount=a.repeat;
+                    mediaPlayer.setLooping(false);
                     mediaPlayer.prepare();
                     mediaPlayer.start();
                 }
