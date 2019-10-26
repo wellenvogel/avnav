@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.provider.DocumentsContract;
 import android.widget.Toast;
 
 import java.io.File;
@@ -41,7 +43,16 @@ public class MainSettingsFragment extends SettingsFragment {
                         return true;
                     }
                     if (Build.VERSION.SDK_INT >= 21) {
+                        String current=myChartPref.getText();
                         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                        if (Build.VERSION.SDK_INT >= 26) {
+                            try {
+                                Uri oldUri = Uri.parse(current);
+                                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, oldUri);
+                            } catch (Throwable t) {
+                                AvnLog.e("unable to set old storage root: " + t);
+                            }
+                        }
                         startActivityForResult(intent, CHARTDIR_REQUEST);
                         return true;
                     }
