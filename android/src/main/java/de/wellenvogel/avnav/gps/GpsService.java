@@ -1083,7 +1083,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
     public JSONObject getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
         for (GpsDataProvider handler: getAllProviders()) {
-            if (handler != null) {
+            if (isProviderActive(handler)) {
                 try {
                     rt.put(handler.getHandlerStatus());
                 }catch (JSONException e){
