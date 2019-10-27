@@ -786,17 +786,7 @@ public class RequestHandler {
                 return returnStatus(e.getMessage());
             }
         }
-
-        @JavascriptInterface
-        public String getLeg(){
-            if (getRouteHandler() == null) return "";
-            try {
-                return getRouteHandler().getLeg().toString();
-            } catch (Exception e) {
-                AvnLog.i("unable to get leg "+e.getLocalizedMessage());
-            }
-            return "";
-        }
+        
         @JavascriptInterface
         public void goBack(){
             activity.backHandler.sendEmptyMessage(1);
