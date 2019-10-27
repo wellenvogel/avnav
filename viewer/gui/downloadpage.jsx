@@ -487,6 +487,7 @@ Downloadpage.prototype.fillData=function(initial){
     return this.fillDataRoutes(initial);
 };
 Downloadpage.prototype.fillDataServer=function(initial){
+    if (! this.gui) return;
     var self=this;
     this.files=[];
     var url = self.gui.properties.getProperties().navUrl + "?request=listdir&type="+this.type;
