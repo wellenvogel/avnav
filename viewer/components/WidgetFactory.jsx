@@ -80,7 +80,6 @@ class WidgetFactory{
                 }
                 else {
                     let RenderWidget = mergedProps.wclass || DirectWidget;
-                    let keylist = [];
                     let storeKeys = mergedProps.storeKeys;
                     if (! storeKeys){
                         storeKeys=RenderWidget.storeKeys;

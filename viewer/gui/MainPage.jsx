@@ -1,13 +1,38 @@
 /**
  * Created by andreas on 02.05.14.
  */
-var Page=require('./page.jsx');
-var navobjects=require('../nav/navobjects');
-var Store=require('../util/store');
+
+import navobjects from '../nav/navobjects';
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ItemList=require("../components/ItemList.jsx");
 var ReactDOM=require("react-dom");
 var React=require("react");
+
+class MainPage extends React.Component{
+    constructor(props){
+        super(props);
+        this.soundHandler=undefined;
+        this.soundRepeat=0;
+        this.lastAlarmSound=undefined;
+        this.initialPlayCheck=0; //1: started, 2: ok
+        this.fixedButtons=[
+            {key:'ShowStatus'},
+            {key:'ShowSettings'},
+            {key:'ShowDownload'},
+            {key:'Connected',toggle:true, android:false},
+            {key:'ShowGps'},
+            {key:'Night',toggle:true},
+            {key:'MainInfo'},
+            {key:'MainCancel',android:true}
+        ];
+        this.addOnButtons=[
+            {key:'MainAddOns'}
+        ];
+        this.currentButtons=this.fixedButtons;
+        this.addOns=[];
+    }
+}
+
 var keys={
     chartlist:'charts',
     status:'status'
@@ -20,8 +45,6 @@ var keys={
 var Mainpage=function(){
     Page.call(this,'mainpage');
     var self=this;
-    this.lastNmeaStatus=null;
-    this.lastAisStatus=null;
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
@@ -35,25 +58,7 @@ var Mainpage=function(){
         }
     });
     this.store=new Store();
-    this.soundHandler=undefined;
-    this.soundRepeat=0;
-    this.lastAlarmSound=undefined;
-    this.initialPlayCheck=0; //1: started, 2: ok
-    this.fixedButtons=[
-        {key:'ShowStatus'},
-        {key:'ShowSettings'},
-        {key:'ShowDownload'},
-        {key:'Connected',toggle:true, android:false},
-        {key:'ShowGps'},
-        {key:'Night',toggle:true},
-        {key:'MainInfo'},
-        {key:'MainCancel',android:true}
-    ];
-    this.addOnButtons=[
-        {key:'MainAddOns'}
-    ];
-    this.currentButtons=this.fixedButtons;
-    this.addOns=[];
+
 };
 avnav.inherits(Mainpage,Page);
 
