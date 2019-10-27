@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
@@ -13,6 +14,7 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.provider.DocumentsContract;
+import android.support.annotation.NonNull;
 import android.widget.Toast;
 
 import java.io.File;
@@ -30,6 +32,22 @@ import de.wellenvogel.avnav.util.AvnUtil;
  */
 public class MainSettingsFragment extends SettingsFragment {
     private static final int CHARTDIR_REQUEST=99;
+
+    private void runCharDirRequest(EditTextPreference myChartPref){
+        if (Build.VERSION.SDK_INT >= 21) {
+            String current=myChartPref.getText();
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            if (Build.VERSION.SDK_INT >= 26) {
+                try {
+                    Uri oldUri = Uri.parse(current);
+                    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, oldUri);
+                } catch (Throwable t) {
+                    AvnLog.e("unable to set old storage root: " + t);
+                }
+            }
+            startActivityForResult(intent, CHARTDIR_REQUEST);
+        }
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,21 +57,18 @@ public class MainSettingsFragment extends SettingsFragment {
         if (myChartPref != null) {
             myChartPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 public boolean onPreferenceClick(final Preference preference) {
-                    if (! SettingsActivity.checkStoragePermission(getActivity(),true,true)){
+                    if (! ((SettingsActivity)getActivity()).checkStoragePermssionWitResult(true,true, new SettingsActivity.PermissionResult() {
+                        @Override
+                        public void result(String[] permissions, int[] grantResults) {
+                            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                                runCharDirRequest(myChartPref);
+                        }
+                    }))
+                    {
                         return true;
                     }
                     if (Build.VERSION.SDK_INT >= 21) {
-                        String current=myChartPref.getText();
-                        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                        if (Build.VERSION.SDK_INT >= 26) {
-                            try {
-                                Uri oldUri = Uri.parse(current);
-                                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, oldUri);
-                            } catch (Throwable t) {
-                                AvnLog.e("unable to set old storage root: " + t);
-                            }
-                        }
-                        startActivityForResult(intent, CHARTDIR_REQUEST);
+                        runCharDirRequest(myChartPref);
                         return true;
                     }
                     //open browser or intent here
@@ -109,6 +124,7 @@ public class MainSettingsFragment extends SettingsFragment {
         }
         setDefaults(R.xml.main_preferences,true);
     }
+
 
     @Override
     public void onResume() {

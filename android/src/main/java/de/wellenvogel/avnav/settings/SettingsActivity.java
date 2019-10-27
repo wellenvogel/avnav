@@ -15,6 +15,7 @@ import android.os.Environment;
 import android.preference.*;
 
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
@@ -33,8 +34,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
@@ -56,6 +59,12 @@ import static de.wellenvogel.avnav.main.Constants.MODE_NORMAL;
  */
 
 public class SettingsActivity extends PreferenceActivity {
+    private static int PERMSSION_REQUEST_CODE=1000;
+
+    private static synchronized int getNextPermissionRequestCode(){
+        PERMSSION_REQUEST_CODE++;
+        return PERMSSION_REQUEST_CODE;
+    }
     public static interface ActivityResultCallback{
         /**
          * called on activity result
@@ -70,8 +79,8 @@ public class SettingsActivity extends PreferenceActivity {
     private HashSet<ActivityResultCallback> callbacks=new HashSet<ActivityResultCallback>();
 
     private List<Header> headers=null;
-    private static final int currentapiVersion = android.os.Build.VERSION.SDK_INT;
     private ActionBarHandler mToolbar;
+    private HashMap<Integer,PermissionResult> resultHandler=new HashMap<>();
 
 
     public ActionBarHandler getToolbar(){
@@ -95,13 +104,17 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
     private static void handleMigrations(Activity activity){
-        SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor edit=sharedPrefs.edit();
+        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.expert_preferences,true);
+        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.nmea_preferences,true);
+        final SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor edit=sharedPrefs.edit();
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
         if (mode.equals(Constants.MODE_XWALK)){
             AvnLog.i("changing xwalk mode to normal");
             edit.putString(Constants.RUNMODE,Constants.MODE_NORMAL).apply();
         }
+        //set default values for settings
+        final Map<String,?> currentValues=sharedPrefs.getAll();
         String workDir=sharedPrefs.getString(Constants.WORKDIR,"");
         if (! workDir.isEmpty()){
             try {
@@ -125,6 +138,7 @@ public class SettingsActivity extends PreferenceActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        resultHandler.clear();
         injectToolbar();
         getToolbar().setOnMenuItemClickListener(this);
         //migrate if there was Xwalk
@@ -141,7 +155,20 @@ public class SettingsActivity extends PreferenceActivity {
         checkSettings(this,true,true);
     }
 
+    public interface PermissionResult{
+        void result(String[] permissions, int[] grantResults);
+    }
+    public boolean checkStoragePermssionWitResult(boolean doRequest,boolean showToasts, PermissionResult handler){
+        int requestCode=getNextPermissionRequestCode();
+        if (handler != null){
+            resultHandler.put(requestCode,handler);
+        }
+        return checkStoragePermission(this,doRequest,showToasts,requestCode);
+    }
     public static boolean checkStoragePermission(final Activity activity,boolean doRequest, boolean showToasts){
+        return checkStoragePermission(activity,doRequest,showToasts, getNextPermissionRequestCode());
+    }
+    private static boolean checkStoragePermission(final Activity activity,boolean doRequest, boolean showToasts, int requestCode){
         if (Build.VERSION.SDK_INT < 23) return true;
         if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) !=
                 PackageManager.PERMISSION_GRANTED) {
@@ -150,7 +177,7 @@ public class SettingsActivity extends PreferenceActivity {
             if ((! alreadyAsked || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.READ_EXTERNAL_STORAGE) )&& doRequest)
             {
                 prefs.edit().putBoolean(Constants.STORAGE_PERMISSION_REQUESTED,true).apply();
-                activity.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 99);
+                activity.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, requestCode);
                 return false;
             }
             if (showToasts)Toast.makeText(activity,R.string.needsStoragePermisssions,Toast.LENGTH_LONG).show();
@@ -284,7 +311,7 @@ public class SettingsActivity extends PreferenceActivity {
                 title=R.string.somethingWrong;
                 message=R.string.somethingWrongMessage;
             } else {
-                handleInitialSettings(this);
+                handleInitialSettings();
                 title=R.string.firstStart;
                 message=R.string.firstStartMessage;
             }
@@ -358,10 +385,8 @@ public class SettingsActivity extends PreferenceActivity {
      * check the current settings
      * @return false when a new dialog had been opened
      */
-    private static void handleInitialSettings(Activity activity){
-        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.expert_preferences,true);
-        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.nmea_preferences,true);
-        final SharedPreferences sharedPrefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+    private void handleInitialSettings(){
+        final SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         final SharedPreferences.Editor e=sharedPrefs.edit();
         if (! sharedPrefs.contains(Constants.ALARMSOUNDS)){
             e.putBoolean(Constants.ALARMSOUNDS,true);
@@ -394,8 +419,8 @@ public class SettingsActivity extends PreferenceActivity {
         String aisMode=NmeaSettingsFragment.getAisMode(sharedPrefs);
         NmeaSettingsFragment.updateAisMode(sharedPrefs,aisMode);
         try {
-            int version = activity.getPackageManager()
-                    .getPackageInfo(activity.getPackageName(), 0).versionCode;
+            int version = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0).versionCode;
             if (sharedPrefs.getInt(Constants.VERSION,-1)!= version){
                 e.putInt(Constants.VERSION,version);
             }
@@ -527,6 +552,7 @@ public class SettingsActivity extends PreferenceActivity {
     protected void onDestroy() {
         super.onDestroy();
         callbacks.clear();
+        resultHandler.clear();
     }
 
     @Override
@@ -539,6 +565,16 @@ public class SettingsActivity extends PreferenceActivity {
 
 
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        PermissionResult rs=resultHandler.get(requestCode);
+        if (rs != null){
+            resultHandler.remove(requestCode);
+            rs.result(permissions,grantResults);
+        }
     }
 
     public void registerActivityResultCallback(ActivityResultCallback cb){

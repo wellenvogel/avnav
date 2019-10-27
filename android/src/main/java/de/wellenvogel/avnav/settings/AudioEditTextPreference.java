@@ -348,6 +348,8 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         ((SettingsActivity)getContext()).registerActivityResultCallback(this);
     }
 
+
+
     /**
      * for pre KitKat devices we try to keep the path in the settings
      * to avoid any access rights problems when accessing the file url
