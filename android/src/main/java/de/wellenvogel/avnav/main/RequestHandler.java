@@ -64,7 +64,7 @@ public class RequestHandler {
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
     private IMediaUpdater updater=null;
-    private final static String FILE_PROVIDER_AUTHORITY="de.wellenvogel.avnav.fileprovider";
+    private final static String FILE_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".provider";
     //routes
     private IRouteHandlerProvider routeHandler=null;
 
@@ -786,7 +786,7 @@ public class RequestHandler {
                 return returnStatus(e.getMessage());
             }
         }
-        
+
         @JavascriptInterface
         public void goBack(){
             activity.backHandler.sendEmptyMessage(1);
