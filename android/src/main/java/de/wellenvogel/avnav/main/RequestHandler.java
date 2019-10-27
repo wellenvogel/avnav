@@ -330,6 +330,7 @@ public class RequestHandler {
                         if (legData != null){
                             try {
                                 getRouteHandler().setLeg(legData);
+                                getGpsService().timerAction();
                             }catch (Exception e){
                                 o.put("status",e.getMessage());
                             }
@@ -768,6 +769,7 @@ public class RequestHandler {
             if (getRouteHandler() == null) return returnStatus("not initialized");
             try {
                 getRouteHandler().setLeg(legData);
+                getGpsService().timerAction();
                 return returnStatus("OK");
             } catch (Exception e) {
                 AvnLog.i("unable to save leg "+e.getLocalizedMessage());
@@ -780,6 +782,7 @@ public class RequestHandler {
             if (getRouteHandler() == null) return returnStatus("not initialized");
             try {
                 getRouteHandler().unsetLeg();
+                getGpsService().timerAction();
                 return returnStatus("OK");
             } catch (Exception e) {
                 AvnLog.i("unable to unset leg "+e.getLocalizedMessage());

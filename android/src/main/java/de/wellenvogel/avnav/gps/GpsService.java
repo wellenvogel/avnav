@@ -546,7 +546,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                mediaRepeatCount--;
+                if (mediaRepeatCount > 0) mediaRepeatCount--;
                 if (mediaRepeatCount > 0){
                     mediaPlayer.start();
                 }
@@ -604,7 +604,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
         }
     };
 
-    private void timerAction(){
+    public void timerAction(){
         checkAnchor();
         checkApproach();
         handleNotification(true,false);
@@ -885,6 +885,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
         Alarm a=alarmStatus.get(type);
         if (a != null && a.isPlaying){
             if (mediaPlayer != null) mediaPlayer.stop();
+            mediaRepeatCount=0;
         }
         alarmStatus.remove(type);
     }
