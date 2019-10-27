@@ -62,19 +62,6 @@ public class Info extends Activity {
         setText("viewer/info.html",R.id.txInfo);
         setText("viewer/license.html",R.id.txLicense);
         setText("viewer/privacy-en.html",R.id.txPrivacy);
-        TextView xwalk=(TextView)findViewById(R.id.txXwalk);
-        boolean xw= SettingsActivity.isXwalRuntimeInstalled(this);
-        xwalk.setText("XWALK V "+ Constants.XWALKVERSION+" \n("+(xw?"installed":"not installed")+")");
-        Button xwalxDl=(Button)findViewById(R.id.btDownloadXwalk);
-        if (xw) xwalxDl.setVisibility(View.INVISIBLE);
-        else xwalxDl.setVisibility(View.VISIBLE);
-        xwalxDl.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                downloadHandler.showDownloadDialog(getString(R.string.xwalkNotFoundTitle),
-                        getString(R.string.xwalkNotFoundText)+ Constants.XWALKVERSION,false);
-            }
-        });
         //TextView view=(TextView)findViewById(R.id.txInfo);
         //view.setMovementMethod(LinkMovementMethod.getInstance());
         ActionBarHandler toolbar=new ActionBarHandler(this,R.menu.info_activity_actions);

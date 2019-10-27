@@ -348,6 +348,8 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
         ((SettingsActivity)getContext()).registerActivityResultCallback(this);
     }
 
+
+
     /**
      * for pre KitKat devices we try to keep the path in the settings
      * to avoid any access rights problems when accessing the file url
@@ -415,13 +417,18 @@ public class AudioEditTextPreference extends EditTextPreference implements Setti
             needsPath=false;
         }
         if (uri.toString().startsWith("content:")){
-            MediaMetadataRetriever retr=new MediaMetadataRetriever();
-            retr.setDataSource(getContext(),uri);
             AudioInfo info=new AudioInfo();
             info.uri=uri;
             info.type="media";
-            if (isRingtone) info.type="ringtone";
-            info.displayName=retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            if (isRingtone){
+                info.type="ringtone";
+                info.displayName=RingtoneManager.getRingtone(getContext(),uri).getTitle(getContext());
+            }
+            else {
+                MediaMetadataRetriever retr = new MediaMetadataRetriever();
+                retr.setDataSource(getContext(), uri);
+                info.displayName = retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            }
             if (needsPath) info.path= getRealPathFromURI(uri);
             showDialog(null,info);
             return true;

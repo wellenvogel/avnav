@@ -1,6 +1,12 @@
 package de.wellenvogel.avnav.util;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
+
+import java.io.File;
+
+import de.wellenvogel.avnav.main.Constants;
 
 /**
  * Created by andreas on 26.11.15.
@@ -48,5 +54,26 @@ public class AvnUtil {
             }
         }
         return null;
+    }
+
+    public static File workdirStringToFile(String wd, Context context){
+        if (wd.equals(Constants.INTERNAL_WORKDIR)){
+            return context.getFilesDir();
+        }
+        if (wd.equals(Constants.EXTERNAL_WORKDIR)){
+            return context.getExternalFilesDir(null);
+        }
+        return new File(wd);
+    }
+    public static File getWorkDir(SharedPreferences pref, Context context){
+        if (pref == null){
+            pref=getSharedPreferences(context);
+        }
+        String wd=pref.getString(Constants.WORKDIR,"");
+        return workdirStringToFile(wd,context);
+    }
+
+    public static SharedPreferences getSharedPreferences(Context ctx){
+        return ctx.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
     }
 }

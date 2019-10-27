@@ -1,9 +1,10 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.gemf;
 
+import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -52,6 +53,12 @@ public class GemfHandler {
         gemf=file;
     }
 
+    public RequestHandler.ExtendedWebResourceResponse getChartData(int x,int y, int z,int sourceIndex){
+        GEMFFile.GEMFInputStream str=getInputStream(x,y,z,sourceIndex);
+        if (str == null)
+            return null;
+        return new RequestHandler.ExtendedWebResourceResponse(str.getLength(),"image/png","",str);
+    }
 
     public GEMFFile.GEMFInputStream getInputStream(int x,int y, int z,int sourceIndex) {
         GEMFFile.GEMFInputStream rt = gemf.getInputStream(x, y, z,sourceIndex);

@@ -736,7 +736,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       alarmInfo={}
       alarms=alarmHandler.getRunningAlarms()
       for k in alarms.keys():
+        info=alarmHandler.findAlarm(k,True)
         alarmInfo[k]={'running':True,'alarm':k}
+        if info:
+          alarmInfo[k]['repeat']=info.get('repeat')
       rtv['raw']['alarms']=alarmInfo
     return json.dumps(rtv)
 

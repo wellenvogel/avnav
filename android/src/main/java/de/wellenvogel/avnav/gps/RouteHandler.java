@@ -12,9 +12,11 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Formatter;
@@ -30,6 +32,10 @@ import de.wellenvogel.avnav.util.AvnLog;
  */
 public class RouteHandler {
 
+    public static interface UpdateReceiver{
+        public void updated();
+    }
+
     private static final String LEGFILE="currentLeg.json";
     private static final int MAXROUTESIZE=500000;
     private static final String header="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"+
@@ -44,7 +50,11 @@ public class RouteHandler {
     private static final String rtpntName="<name>%s</name>";
 
     private IMediaUpdater mediaUpdater;
+    private UpdateReceiver updateReceiver;
     private long startSequence=1;
+
+    private Float lastDistanceToCurrent=null;
+    private Float lastDistanceToNext=null;
 
     private static String escapeXml(String in){
         String rt=in.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;").replace("'","&apos;");
@@ -160,6 +170,12 @@ public class RouteHandler {
             return rt;
         }
 
+        public int getNextTarget(int currentTarget){
+            if (currentTarget < 0) return -1;
+            if (currentTarget >= (points.size()-1)) return -1;
+            return currentTarget+1;
+        }
+
         public RouteInfo getInfo(){
             RouteInfo rt=new RouteInfo();
             rt.numpoints=points.size();
@@ -244,7 +260,20 @@ public class RouteHandler {
             }
             jsonData=o;
         }
-        JSONObject getJsonData(){return jsonData;}
+        JSONObject getJsonData() throws JSONException{
+            JSONObject rt=new JSONObject();
+            if (from != null) rt.put("from",from.toJson());
+            if (to != null) rt.put("to",to.toJson());
+            if (route != null) rt.put("currentRoute",route.toJson());
+            if (currentTarget > 0) rt.put("currentTarget",currentTarget);
+            if (approachDistance > 0) rt.put("approachDistance",approachDistance);
+            if (anchorDistance > 0) rt.put("anchorDistance",anchorDistance);
+            rt.put("active",active);
+            return rt;
+        }
+        JSONObject toJson() throws JSONException {
+            return getJsonData();
+        }
     }
 
 
@@ -255,15 +284,24 @@ public class RouteHandler {
     private RoutingLeg currentLeg;
 
 
-    public RouteHandler(File routedir){
+    public RouteHandler(File routedir,UpdateReceiver updater){
         this.routedir=routedir;
         stopParser=true;
+        updateReceiver=updater;
     }
 
     public void stop(){
         stopParser=true;
         synchronized (parserLock){
             AvnLog.i("stopping parser");
+            parserLock.notifyAll();
+        }
+    }
+
+    public void triggerParser(){
+        if (stopParser) return;
+        AvnLog.i("retrigger parser");
+        synchronized (parserLock){
             parserLock.notifyAll();
         }
     }
@@ -288,6 +326,7 @@ public class RouteHandler {
             AvnLog.i("routes directory parser started");
             HashMap<String,RouteInfo> localList=new HashMap<String, RouteInfo>();
             while (! stopParser && sequence == startSequence){
+                boolean mustUpdate=false;
                 if (routedir.isDirectory()) {
                     for (File f : routedir.listFiles()) {
                         if (!f.isFile()) continue;
@@ -306,6 +345,7 @@ public class RouteHandler {
                             mustParse = true;
                         }
                         if (mustParse) {
+                            mustUpdate=true;
                             try {
                                 Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
                                 RouteInfo info = rt.getInfo();
@@ -324,6 +364,9 @@ public class RouteHandler {
                 }
                 synchronized (parserLock){
                     routeInfos=localList;
+                    if (mustUpdate){
+                        update();
+                    }
                     try {
                         parserLock.wait(5000);
                     } catch (InterruptedException e) {
@@ -354,9 +397,16 @@ public class RouteHandler {
         return rt;
     }
 
-    private class RouteParser {
-        private Route route=new Route();
+    public static Route parseRouteStream(InputStream is,boolean returnEmpty){
+        return new RouteParser().parseRouteFile(is,returnEmpty);
+    }
+
+    private static class RouteParser {
+        private Route route=null;
         public Route parseRouteFile(InputStream in){
+            return parseRouteFile(in,true);
+        }
+        public Route parseRouteFile(InputStream in,boolean returnEmpty){
             XmlPullParserFactory pullParserFactory;
             try {
                 pullParserFactory = XmlPullParserFactory.newInstance();
@@ -369,6 +419,14 @@ public class RouteHandler {
             } catch (IOException e) {
                 e.printStackTrace();
             };
+            if (route == null && returnEmpty){
+                return new Route();
+            }
+            return route;
+        }
+
+        private Route getRoute(){
+            if (route == null) route=new Route();
             return route;
         }
 
@@ -410,7 +468,7 @@ public class RouteHandler {
                             }
                             else {
                                 try {
-                                    route.name = parser.nextText();
+                                    getRoute().name = parser.nextText();
                                 }catch (XmlPullParserException i){}
                             }
 
@@ -421,7 +479,7 @@ public class RouteHandler {
                         if (name.equalsIgnoreCase("gpx")) gpxSeen=false;
                         if (name.equalsIgnoreCase("rte")) rteSeen=false;
                         if (name.equalsIgnoreCase("rtept") && currentRoutePoint != null) {
-                            route.points.add(currentRoutePoint);
+                            getRoute().points.add(currentRoutePoint);
                             currentRoutePoint=null;
                         }
                 }
@@ -431,16 +489,21 @@ public class RouteHandler {
 
 
     }
+    private void update(){
+        if (updateReceiver != null) updateReceiver.updated();
+    }
 
     private void deleteRouteInfo(String name){
         synchronized (parserLock){
             routeInfos.remove(name);
         }
+        update();
     }
     private void addRouteInfo(Route route){
         synchronized (parserLock){
             routeInfos.put(route.name,route.getInfo());
         }
+        update();
     }
 
     public Map<String,RouteInfo> getRouteInfo(){
@@ -509,6 +572,11 @@ public class RouteHandler {
     public void setLeg(String data) throws Exception{
         AvnLog.i("setLeg");
         currentLeg =new RoutingLeg(new JSONObject(data));
+        saveCurrentLeg();
+    }
+
+    private void saveCurrentLeg() throws JSONException, IOException {
+        String data=currentLeg.toJson().toString();
         File legFile=new File(routedir,LEGFILE);
         FileOutputStream os=new FileOutputStream(legFile);
         os.write(data.getBytes("UTF-8"));
@@ -550,6 +618,79 @@ public class RouteHandler {
         File legFile=new File(routedir,LEGFILE);
         if (legFile.isFile()) legFile.delete();
         currentLeg =null;
+    }
+
+    private void resetLast(){
+        lastDistanceToNext=null;
+        lastDistanceToCurrent=null;
+    }
+    public boolean handleApproach(Location currentPosition){
+        RoutingLeg leg=this.currentLeg;
+        if (leg == null || ! leg.active ||currentPosition == null ) {
+            resetLast();
+            return false;
+        }
+        float currentDistance=leg.to.distanceTo(currentPosition);
+        if (currentDistance > leg.approachDistance){
+            resetLast();
+            return false;
+        }
+        double tolerance=leg.approachDistance/10; //some tolerance for positions
+        int nextIdx=-1;
+        if (leg.getRoute() != null) {
+            nextIdx=leg.getRoute().getNextTarget(leg.currentTarget);
+        }
+        float nextDistance=0;
+        RoutePoint nextTarget=null;
+        if (nextIdx >= 0 ) {
+            nextTarget = leg.getRoute().points.get(nextIdx);
+            nextDistance = nextTarget.distanceTo(currentPosition);
+        }
+        if (lastDistanceToCurrent == null || lastDistanceToNext == null){
+            //first time..
+            lastDistanceToCurrent=currentDistance;
+            lastDistanceToNext=nextDistance;
+            return true;
+        }
+        if (currentDistance <= (lastDistanceToCurrent + tolerance)){
+            //still approaching wp
+            if (currentDistance <= lastDistanceToCurrent) {
+                lastDistanceToCurrent = currentDistance;
+                lastDistanceToNext = nextDistance;
+            }
+            return true;
+        }
+        if (nextIdx >= 0 && (nextDistance > (lastDistanceToNext - tolerance))){
+            //still not approaching next wp
+            if (nextDistance > lastDistanceToNext) {
+                lastDistanceToCurrent = currentDistance;
+                lastDistanceToNext = nextDistance;
+            }
+            return true;
+        }
+        if (nextTarget == null){
+            //switch of routing
+            leg.active=false;
+        }
+        else {
+            //switch to next wp
+            leg.currentTarget = nextIdx;
+            leg.from = leg.to;
+            leg.to = nextTarget;
+        }
+        resetLast();
+        try {
+            saveCurrentLeg();
+        } catch (Exception e) {
+            AvnLog.e("error saving current leg ",e);
+        }
+        return false;
+    }
+
+    public RoutePoint getCurrentTarget(){
+        if (currentLeg == null) return null;
+        if (! currentLeg.active) return null;
+        return currentLeg.to;
     }
 
     public boolean checkAnchor(Location currentPosition){

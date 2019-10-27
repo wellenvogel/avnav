@@ -11,7 +11,7 @@
     <string name="cancel">Cancel</string>
     <string name="back">Back</string>
     <string name="selectWorkDir">select working Dir</string>
-    <string name="selectWorkDirWritable">Your old workdir ist not writable, select a new one</string>
+    <string name="selectWorkDirWritable">Your old workdir ist not writable/does not exist, select a new one</string>
     <string name="selectChartDir">select additional chart dir</string>
     <string name="internalStorage">Internal Storage</string>
     <string name="externalStorage">External Storage</string>
@@ -74,6 +74,7 @@
     <string name="labelSettingsMain">Main Settings</string>
     <string name="labelSettingsUsbBaud">USB Baudrate</string>
     <string name="labelSettingsAisInput">AIS Source</string>
+    <string name="labelSettingsAisSendPos">send own position on AIS device</string>
     <string name="labelSettingsNone">Off</string>
     <string name="labelSettingsExpert">Expert Settings</string>
     <string name="labelSettingsGpsOffset">offset internal gps by(s)</string>
@@ -113,10 +114,24 @@
     <string name="labelSettingsServerPort">port for external browser mode</string>
     <string name="labelSettingsAnchorAlarm">Sound for anchor alarm</string>
     <string name="labelSettingsGpsAlarm">Sound for gps alarm</string>
+    <string name="labelSettingsWpAlarm">Sound for waypoint alarm</string>
     <string name="reset">Reset</string>
     <string name="webserver">AvNav Server</string>
     <string name="enableExternalAccess">WebServer External Access</string>
     <string name="alarmSounds">Alarm sounds</string>
     <string name="select">Select</string>
+    <string name="channel_name">Information</string>
+    <string name="channel_description">All app notifications</string>
+    <string name="needsGpsPermisssions">avnav needs location access</string>
+    <string name="needsStoragePermisssions">avnav needs external storage access for chart dir</string>
+    <string name="importRouteTitle">Avnav Import Route</string>
+    <string name="importRouteText">Import Route?</string>
+    <string name="receiveMustStart">you must start avnav first to receive data</string>
+    <string name="receiveOnlyGpx">can only receive .gpx files</string>
+    <string name="receiveNoValidRoute">This file is no valid route, no rte tag</string>
+    <string name="receiveUnableToRead">unable to read route file</string>
+    <string name="receiveUnableToImport">unable to import</string>
+    <string name="importFailed">import failed</string>
+    <string name="receiveAlreadyExists">Route already exists</string>
 
 </resources>

@@ -3,11 +3,11 @@ package de.wellenvogel.avnav.main;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.AssetFileDescriptor;
 import android.content.res.Resources;
 import android.location.Location;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
@@ -33,9 +33,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
+import de.wellenvogel.avnav.gemf.GemfChart;
+import de.wellenvogel.avnav.gemf.GemfHandler;
+import de.wellenvogel.avnav.gemf.GemfReader;
 import de.wellenvogel.avnav.gps.Alarm;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
@@ -44,6 +46,7 @@ import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.gps.TrackWriter;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 /**
  * Created by andreas on 22.11.15.
@@ -52,11 +55,8 @@ public class RequestHandler {
     public static final String URLPREFIX="file://android_asset/";
     public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
     protected static final String NAVURL="viewer/avnav_navi.php";
-    protected static final String CHARTPREFIX="charts";
     private static final String DEMOCHARTS="demo"; //urls will start with CHARTPREFIX/DEMOCHARTS
-    private static final String REALCHARTS="charts";
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
-    private static final String GEMFEXTENSION =".gemf";
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     private MainActivity activity;
     protected JavaScriptApi mJavaScriptApi=new JavaScriptApi();
@@ -64,12 +64,15 @@ public class RequestHandler {
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
     private IMediaUpdater updater=null;
+    private final static String FILE_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".provider";
     //routes
     private IRouteHandlerProvider routeHandler=null;
 
     private Thread chartHandler=null;
     private boolean chartHandlerRunning=false;
     private final Object chartHandlerMonitor=new Object();
+
+    private GemfReader gemfReader;
 
     public static class ServerInfo{
         public InetSocketAddress address;
@@ -78,54 +81,10 @@ public class RequestHandler {
     }
 
 
-    class GemfChart{
-        public static final long INACTIVE_CLOSE=100000; //100s
-        public File realFile;
-        public GemfHandler gemf;
-        public String key;
-        public long lastModified;
-        public long lastTouched;
-        public GemfChart(File f,String key,long last){
-            realFile=f;
-            this.key=key;
-            this.lastModified=last;
-            this.lastTouched=System.currentTimeMillis();
-        }
-        synchronized  GemfHandler getGemf() throws IOException{
-            if (gemf == null){
-                AvnLog.i("RequestHandler","open gemf file "+key);
-                gemf=new GemfHandler(new GEMFFile(realFile),key);
-            }
-            this.lastTouched=System.currentTimeMillis();
-            return gemf;
-        }
-        synchronized void close(){
-            if (gemf != null){
-                gemf.close();
-                gemf=null;
-            }
-        }
-
-        synchronized boolean closeInactive(){
-            if (gemf == null) return false;
-            if (lastTouched < (System.currentTimeMillis() -INACTIVE_CLOSE)) {
-                this.close();
-                return true;
-            }
-            return false;
-        }
-
-        public synchronized void update(Long lastModified) {
-            close();
-            this.lastModified=lastModified;
-        }
-    }
-    //mapping of url name to real filename
-    private HashMap<String,GemfChart> gemfFiles =new HashMap<String, GemfChart>();
-
     RequestHandler(MainActivity activity){
         this.activity=activity;
         this.updater=activity;
+        this.gemfReader=new GemfReader(activity);
         ownMimeMap.put("js", "text/javascript");
         startHandler();
     }
@@ -139,7 +98,7 @@ public class RequestHandler {
                     public void run() {
                         AvnLog.i("RequestHandler: chartHandler thread is starting");
                         while (chartHandlerRunning) {
-                            updateChartList();
+                            gemfReader.updateChartList();
                             try {
                                 synchronized (chartHandlerMonitor){
                                     chartHandlerMonitor.wait(5000);
@@ -168,7 +127,7 @@ public class RequestHandler {
         }
     }
     private File getWorkDir(){
-        return new File(getSharedPreferences().getString(Constants.WORKDIR,""));
+        return AvnUtil.getWorkDir(getSharedPreferences(),activity);
     }
     private GpsService getGpsService(){
         return activity.gpsService;
@@ -210,7 +169,7 @@ public class RequestHandler {
                 if (fname.startsWith(NAVURL)){
                     return handleNavRequest(url,null);
                 }
-                if (fname.startsWith(CHARTPREFIX)){
+                if (fname.startsWith(Constants.CHARTPREFIX)){
                     return handleChartRequest(fname);
                 }
                 InputStream is=activity.assetManager.open(fname.replaceAll("\\?.*",""));
@@ -281,7 +240,7 @@ public class RequestHandler {
                 try {
                     out.put("status", "OK");
                     JSONArray arr = new JSONArray();
-                    readAllCharts(arr);
+                    gemfReader.readAllCharts(arr);
                     if (getSharedPreferences().getBoolean(Constants.SHOWDEMO,false)){
                         String demoCharts[]=activity.assetManager.list("charts");
                         for (String demo: demoCharts){
@@ -290,8 +249,8 @@ public class RequestHandler {
                             AvnLog.d(Constants.LOGPRFX,"found demo chart "+demo);
                             JSONObject e = new JSONObject();
                             e.put("name", name);
-                            e.put("url", "/"+CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
-                            e.put("charturl","/"+ CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
+                            e.put("url", "/"+ Constants.CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
+                            e.put("charturl","/"+ Constants.CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
                             arr.put(e);
                         }
                     }
@@ -371,6 +330,7 @@ public class RequestHandler {
                         if (legData != null){
                             try {
                                 getRouteHandler().setLeg(legData);
+                                getGpsService().timerAction();
                             }catch (Exception e){
                                 o.put("status",e.getMessage());
                             }
@@ -442,7 +402,7 @@ public class RequestHandler {
                 }
                 if (dirtype.equals("chart")){
                     handled=true;
-                    readAllCharts(items);
+                    gemfReader.readAllCharts(items);
                 }
                 if (handled){
                     JSONObject o=new JSONObject();
@@ -511,15 +471,15 @@ public class RequestHandler {
                 }
                 if (dtype.equals("chart")) {
                     String charturl=uri.getQueryParameter("url");
-                    GemfChart chart= gemfFiles.get(charturl.substring(CHARTPREFIX.length()+2));
+                    GemfChart chart= gemfReader.getChartDescription(charturl.substring(Constants.CHARTPREFIX.length()+2));
                     if (chart == null){
                         o.put("status","chart "+name+" not found");
                     }
                     else {
-                        File chartfile=chart.realFile;
-                        chartfile.delete();
+                        File chartfile=chart.deleteFile();
                         if (updater != null) updater.triggerUpdateMtp(chartfile);
                         o.put("status","OK");
+                        gemfReader.updateChartList();
                     }
                 }
                 handled=true;
@@ -617,6 +577,13 @@ public class RequestHandler {
                 }
                 fout=o;
             }
+            if (type.equals("readAddons")){
+                handled=true;
+                JSONObject o=new JSONObject();
+                o.put("status","OK");
+                o.put("data",new JSONArray());
+                fout=o;
+            }
             if (!handled){
                 AvnLog.d(Constants.LOGPRFX,"unhandled nav request "+type);
             }
@@ -633,7 +600,7 @@ public class RequestHandler {
     }
 
     ExtendedWebResourceResponse handleChartRequest(String fname){
-        fname=fname.substring(CHARTPREFIX.length()+1);
+        fname=fname.substring(Constants.CHARTPREFIX.length()+1);
         InputStream rt=null;
         fname = fname.replaceAll("\\?.*", "");
         String mimeType=mimeType(fname);
@@ -645,25 +612,23 @@ public class RequestHandler {
                     AvnLog.d(Constants.LOGPRFX,"overview request "+fname);
                     fname=fname.substring(0,fname.length()-OVERVIEW.length()-1); //just the pure name
                     fname+=".xml";
-                    rt=activity.assetManager.open(CHARTPREFIX+"/"+fname);
+                    rt=activity.assetManager.open(Constants.CHARTPREFIX+"/"+fname);
                     len=-1;
                 }
                 else throw new Exception("unable to handle demo request for "+fname);
             }
-            if (fname.startsWith(REALCHARTS)) {
+            if (fname.startsWith(Constants.REALCHARTS)) {
                 //the name will be REALCHARTS/index/type/name/param
                 //type being either avnav or gemf
                 String baseAndUrl[] = fname.split("/", 5);
                 if (baseAndUrl.length < 5) throw new Exception("invalid chart request "+fname);
                 String key=baseAndUrl[0]+"/"+baseAndUrl[1]+"/"+baseAndUrl[2]+"/"+baseAndUrl[3];
-                GemfChart chart= gemfFiles.get(key);
+                GemfChart chart= gemfReader.getChartDescription(key);
                 if (chart == null) throw new Exception("request a file that is not in the list: "+fname);
                 if (baseAndUrl[2].equals("gemf")) {
                     if (baseAndUrl[4].equals(OVERVIEW)) {
                         try {
-                            GemfHandler f = chart.getGemf();
-                            rt=f.gemfOverview();
-                            len=-1;
+                            return chart.getOverview();
                         }catch (Exception e){
                             Log.e(Constants.LOGPRFX,"unable to read gemf file "+fname+": "+e.getLocalizedMessage());
                         }
@@ -674,28 +639,17 @@ public class RequestHandler {
                         if (param.length < 4) {
                             throw new Exception("invalid parameter for gemf call " + fname);
                         }
-                        mimeType = "image/png";
-                        //TODO: handle sources
                         int z = Integer.parseInt(param[1]);
                         int x = Integer.parseInt(param[2]);
                         int y = Integer.parseInt(param[3].replaceAll("\\.png", ""));
-                        GEMFFile.GEMFInputStream gs = f.getInputStream(x, y, z, Integer.parseInt(param[0]));
-                        if (gs == null) return null;
-                        rt = gs;
-                        len = gs.getLength();
-
+                        return f.getChartData(x,y,z,Integer.parseInt(param[0]));
                     }
                 }
                 else if (baseAndUrl[2].equals("avnav")){
                     if (!baseAndUrl[4].equals(OVERVIEW)){
                         throw new Exception("only overview supported for xml files: "+fname);
                     }
-                    File avnav=chart.realFile;
-                    if (! avnav.isFile()){
-                        Log.e(Constants.LOGPRFX,"invalid query for xml file "+fname);
-                    }
-                    rt=new FileInputStream(avnav);
-                    len=(int)avnav.length();
+                    return chart.getOverview();
                 }
                 else {
                     Log.e(Constants.LOGPRFX,"invalid chart request "+fname);
@@ -714,88 +668,10 @@ public class RequestHandler {
         return null;
     }
 
-    private void updateChartList(){
-        HashMap<String,File> newGemfFiles=new HashMap<String, File>();
-        File chartDir = new File(getWorkDir(), "charts");
-        readChartDir(chartDir,"1",newGemfFiles);
-        String secondChartDirStr=getSharedPreferences().getString(Constants.CHARTDIR,"");
-        if (! secondChartDirStr.isEmpty()){
-            File secondChartDir=new File(secondChartDirStr);
-            if (! secondChartDir.equals(chartDir)){
-                readChartDir(secondChartDir,"2",newGemfFiles);
-            }
-        }
-        //now we have all current charts - compare to the existing list and create/delete entries
-        //currently we assume only one thread to change the chartlist...
-        for (String url : newGemfFiles.keySet()){
-            File realFile=newGemfFiles.get(url);
-            Long lastModified=realFile.lastModified();
-            if (gemfFiles.get(url) == null ){
-                gemfFiles.put(url,new GemfChart(realFile,url,realFile.lastModified()));
-            }
-            else{
-                if (gemfFiles.get(url).lastModified < lastModified){
-                    gemfFiles.get(url).update(lastModified);
-                }
-            }
-        }
-        Iterator<String> it=gemfFiles.keySet().iterator();
-        while (it.hasNext()){
-            String url=it.next();
-            if (newGemfFiles.get(url) == null){
-                it.remove();
-            }
-            else{
-                GemfChart chart=gemfFiles.get(url);
-                if (chart.closeInactive()){
-                    AvnLog.i("closing gemf file "+url);
-                }
-            }
-        }
-    }
 
-    private void readChartDir(File chartDir,String index,HashMap<String,File> arr) {
-        if (chartDir == null) return;
-        if (! chartDir.isDirectory()) return;
-        File[] files=chartDir.listFiles();
-        if (files == null) return;
-        for (File f : files) {
-            try {
-                if (f.getName().endsWith(GEMFEXTENSION)){
-                    String gemfName = f.getName();
-                    gemfName = gemfName.substring(0, gemfName.length() - GEMFEXTENSION.length());
-                    String urlName=REALCHARTS + "/"+index+"/gemf/" + gemfName;
-                    arr.put(urlName,f);
-                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
-                }
-                if (f.getName().endsWith(".xml")){
-                    String name=f.getName().substring(0,f.getName().length()-".xml".length());
-                    String urlName=REALCHARTS+"/"+index+"/avnav/"+name;
-                    arr.put(urlName,f);
-                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding url "+urlName+" for "+f.getAbsolutePath());
-                }
-            } catch (Exception e) {
-                Log.e(Constants.LOGPRFX, "exception handling file " + f.getAbsolutePath());
-            }
-        }
-    }
 
-    private void readAllCharts(JSONArray arr) {
-        //here we will have more dirs in the future...
-        try {
-            for (String url : gemfFiles.keySet()) {
-                GemfChart chart = gemfFiles.get(url);
-                JSONObject e = new JSONObject();
-                e.put("name", url.replaceAll(".*/", ""));
-                e.put("time", chart.lastModified / 1000);
-                e.put("url", "/"+CHARTPREFIX + "/"+url);
-                arr.put(e);
-            }
-        } catch (Exception e) {
-            Log.e(Constants.LOGPRFX, "exception readind chartlist:", e);
-        }
 
-    }
+
 
 
 
@@ -813,10 +689,11 @@ public class RequestHandler {
             Log.e(Constants.LOGPRFX,"file "+name+" not found");
             return;
         }
-        Uri data=Uri.fromFile(file);
+        Uri data= FileProvider.getUriForFile(activity,FILE_PROVIDER_AUTHORITY,file);
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_STREAM, data);
+        shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         shareIntent.setType("application/gpx+xml");
         String title=res.getText(R.string.selectApp)+" "+name;
         activity.startActivity(Intent.createChooser(shareIntent, title));
@@ -892,6 +769,7 @@ public class RequestHandler {
             if (getRouteHandler() == null) return returnStatus("not initialized");
             try {
                 getRouteHandler().setLeg(legData);
+                getGpsService().timerAction();
                 return returnStatus("OK");
             } catch (Exception e) {
                 AvnLog.i("unable to save leg "+e.getLocalizedMessage());
@@ -904,6 +782,7 @@ public class RequestHandler {
             if (getRouteHandler() == null) return returnStatus("not initialized");
             try {
                 getRouteHandler().unsetLeg();
+                getGpsService().timerAction();
                 return returnStatus("OK");
             } catch (Exception e) {
                 AvnLog.i("unable to unset leg "+e.getLocalizedMessage());
@@ -911,16 +790,6 @@ public class RequestHandler {
             }
         }
 
-        @JavascriptInterface
-        public String getLeg(){
-            if (getRouteHandler() == null) return "";
-            try {
-                return getRouteHandler().getLeg().toString();
-            } catch (Exception e) {
-                AvnLog.i("unable to get leg "+e.getLocalizedMessage());
-            }
-            return "";
-        }
         @JavascriptInterface
         public void goBack(){
             activity.backHandler.sendEmptyMessage(1);
@@ -1007,7 +876,7 @@ public class RequestHandler {
             }
             AvnLog.i("saving route");
             getRouteHandler().saveRoute(new FileInputStream(pfd.getFileDescriptor()), false);
-            activity.sendEventToJs("routeImported", 1);
+            activity.sendEventToJs(Constants.JS_RELOAD, 1);
         } catch (Exception e) {
             Toast.makeText(activity.getApplicationContext(), "unable save route: "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();

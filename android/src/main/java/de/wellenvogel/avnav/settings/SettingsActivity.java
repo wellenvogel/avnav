@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.settings;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -7,10 +8,16 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.*;
 
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,24 +32,39 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
+import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
+import de.wellenvogel.avnav.gps.GpsDataProvider;
+import de.wellenvogel.avnav.gps.UsbSerialPositionHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.main.XwalkDownloadHandler;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
+
+import static de.wellenvogel.avnav.main.Constants.MODE_INTERNAL;
+import static de.wellenvogel.avnav.main.Constants.MODE_NORMAL;
 
 /**
  * Created by andreas on 03.09.15.
  */
 
 public class SettingsActivity extends PreferenceActivity {
+    private static int PERMSSION_REQUEST_CODE=1000;
 
+    private static synchronized int getNextPermissionRequestCode(){
+        PERMSSION_REQUEST_CODE++;
+        return PERMSSION_REQUEST_CODE;
+    }
     public static interface ActivityResultCallback{
         /**
          * called on activity result
@@ -57,8 +79,8 @@ public class SettingsActivity extends PreferenceActivity {
     private HashSet<ActivityResultCallback> callbacks=new HashSet<ActivityResultCallback>();
 
     private List<Header> headers=null;
-    private static final int currentapiVersion = android.os.Build.VERSION.SDK_INT;
     private ActionBarHandler mToolbar;
+    private HashMap<Integer,PermissionResult> resultHandler=new HashMap<>();
 
 
     public ActionBarHandler getToolbar(){
@@ -81,70 +103,222 @@ public class SettingsActivity extends PreferenceActivity {
         return true;
     }
 
+    private static void handleMigrations(Activity activity){
+        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.expert_preferences,true);
+        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.nmea_preferences,true);
+        final SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor edit=sharedPrefs.edit();
+        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
+        if (mode.equals(Constants.MODE_XWALK)){
+            AvnLog.i("changing xwalk mode to normal");
+            edit.putString(Constants.RUNMODE,Constants.MODE_NORMAL).apply();
+        }
+        //set default values for settings
+        final Map<String,?> currentValues=sharedPrefs.getAll();
+        String workDir=sharedPrefs.getString(Constants.WORKDIR,"");
+        if (! workDir.isEmpty()){
+            try {
+                String internal = activity.getFilesDir().getCanonicalPath();
+                String external = activity.getExternalFilesDir(null).getCanonicalPath();
+                if (workDir.equals(internal)){
+                    edit.putString(Constants.WORKDIR,Constants.INTERNAL_WORKDIR);
+                    AvnLog.i("migrating workdir to internal");
+                }
+                if (workDir.equals(external)){
+                    edit.putString(Constants.WORKDIR,Constants.EXTERNAL_WORKDIR);
+                    AvnLog.i("migrating workdir to external");
+                }
+            }catch(IOException e){
+                AvnLog.e("Exception while migrating workdir",e);
+            }
+        }
+        edit.apply();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        resultHandler.clear();
         injectToolbar();
         getToolbar().setOnMenuItemClickListener(this);
-        //handleInitialSettings(this, true);
+        //migrate if there was Xwalk
+        SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
+        if (mode.equals(Constants.MODE_XWALK)){
+            AvnLog.i("changing xwalk mode to normal");
+            sharedPrefs.edit().putString(Constants.RUNMODE,Constants.MODE_NORMAL).apply();
+        }
         updateHeaderSummaries(true);
-
-
-    }
-    public static boolean isXwalRuntimeInstalled(Context ctx){
-        return isAppInstalled(ctx, Constants.XWALKAPP, Constants.XWALKVERSION);
-    }
-    public static boolean isAppInstalled(Context ctx,String packageName, String version) {
-        PackageManager pm = ctx.getPackageManager();
-        boolean installed = false;
-        try {
-            PackageInfo pi=pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
-            if (pi.versionName.equals(version)) installed = true;
-        } catch (PackageManager.NameNotFoundException e) {
-            installed = false;
+        if (checkForInitialDialogs()){
+            return;
         }
-        return installed;
+        checkSettings(this,true,true);
     }
 
-    public static boolean needsInitialSettings(Context context){
-        SharedPreferences sharedPrefs = context.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
-        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
-        String workdir=sharedPrefs.getString(Constants.WORKDIR,"");
-        boolean workDirOk=true;
-        if (workdir.isEmpty()){
-            workDirOk=false;
+    public interface PermissionResult{
+        void result(String[] permissions, int[] grantResults);
+    }
+    public boolean checkStoragePermssionWitResult(boolean doRequest,boolean showToasts, PermissionResult handler){
+        int requestCode=getNextPermissionRequestCode();
+        if (handler != null){
+            resultHandler.put(requestCode,handler);
         }
-        else{
-            try{
-                createWorkingDir(new File(workdir));
-            }catch (Exception e){
-                workDirOk=false;
+        return checkStoragePermission(this,doRequest,showToasts,requestCode);
+    }
+    public static boolean checkStoragePermission(final Activity activity,boolean doRequest, boolean showToasts){
+        return checkStoragePermission(activity,doRequest,showToasts, getNextPermissionRequestCode());
+    }
+    private static boolean checkStoragePermission(final Activity activity,boolean doRequest, boolean showToasts, int requestCode){
+        if (Build.VERSION.SDK_INT < 23) return true;
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+            boolean alreadyAsked=prefs.getBoolean(Constants.STORAGE_PERMISSION_REQUESTED,false);
+            if ((! alreadyAsked || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.READ_EXTERNAL_STORAGE) )&& doRequest)
+            {
+                prefs.edit().putBoolean(Constants.STORAGE_PERMISSION_REQUESTED,true).apply();
+                activity.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, requestCode);
+                return false;
+            }
+            if (showToasts)Toast.makeText(activity,R.string.needsStoragePermisssions,Toast.LENGTH_LONG).show();
+            return false;
+
+        }
+        return true;
+    }
+
+    public static boolean checkGpsEnabled(final Activity activity, boolean force,boolean doRequest,boolean showToasts) {
+        SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        if (! force) {
+            String nmeaMode = NmeaSettingsFragment.getNmeaMode(prefs);
+            if (!nmeaMode.equals(MODE_INTERNAL)) return true;
+        }
+        LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
+        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                boolean alreadyAsked=prefs.getBoolean(Constants.GPS_PERMISSION_REQUESTED,false);
+                if ((! alreadyAsked || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.ACCESS_FINE_LOCATION) )&& doRequest)
+                {
+                    prefs.edit().putBoolean(Constants.GPS_PERMISSION_REQUESTED,true).apply();
+                    activity.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 99);
+                    return false;
+                }
+                if (showToasts)Toast.makeText(activity,R.string.needsGpsPermisssions,Toast.LENGTH_LONG).show();
+                return false;
+
             }
         }
-        return (mode.isEmpty() || startPendig|| workdir.isEmpty());
+        // check if enabled and if not send user to the GSP settings
+        // Better solution would be to display a dialog and suggesting to
+        // go to the settings
+        if (!enabled && doRequest) {
+            DialogBuilder.confirmDialog(activity, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (which == DialogInterface.BUTTON_POSITIVE){
+                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        activity.startActivity(intent);
+                    }
+                }
+            });
+            return false;
+        }
+        return true;
+    }
+    /**
+     * check if all settings are correct
+     * @param activity
+     * @param startDialogs if this is set, start permission or other dialogs, otherwise check only
+     * @return true if settings are ok
+     */
+    public static boolean checkSettings(Activity activity, boolean startDialogs, boolean showToasts){
+        handleMigrations(activity);
+        SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
+                ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
+                ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false) &&
+                ! sharedPrefs.getBoolean(Constants.USBNMEA,false)){
+            if (showToasts) Toast.makeText(activity, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (! checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs,activity))){
+            if (showToasts)Toast.makeText(activity, R.string.selectWorkDirWritable, Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        String chartDir=sharedPrefs.getString(Constants.CHARTDIR,"");
+        if (! chartDir.isEmpty()){
+            //no permissions if below our app dirs
+            boolean checkPermissions=true;
+            if (chartDir.startsWith(AvnUtil.workdirStringToFile(Constants.INTERNAL_WORKDIR,activity).getAbsolutePath())) checkPermissions=false;
+            if (chartDir.startsWith(AvnUtil.workdirStringToFile(Constants.EXTERNAL_WORKDIR,activity).getAbsolutePath())) checkPermissions=false;
+            if (checkPermissions){
+                if (! checkStoragePermission(activity,startDialogs,showToasts)){
+                    return false;
+                }
+            }
+        }
+        if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
+            try {
+                InetSocketAddress addr = GpsDataProvider.convertAddress(
+                        sharedPrefs.getString(Constants.IPADDR, ""),
+                        sharedPrefs.getString(Constants.IPPORT, ""));
+            } catch (Exception i) {
+                if (showToasts)Toast.makeText(activity, R.string.invalidIp, Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        if (sharedPrefs.getBoolean(Constants.BTAIS,false)||sharedPrefs.getBoolean(Constants.BTNMEA,false)){
+            String btdevice=sharedPrefs.getString(Constants.BTDEVICE,"");
+            if (BluetoothPositionHandler.getDeviceForName(btdevice) == null){
+                if (showToasts)Toast.makeText(activity, activity.getText(R.string.noSuchBluetoothDevice)+":"+btdevice, Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        if (sharedPrefs.getBoolean(Constants.USBNMEA,false)||sharedPrefs.getBoolean(Constants.USBAIS,false)){
+            String usbDevice=sharedPrefs.getString(Constants.USBDEVICE,"");
+            if (UsbSerialPositionHandler.getDeviceForName(activity,usbDevice) == null){
+                if (showToasts)Toast.makeText(activity, activity.getText(R.string.noSuchUsbDevice)+":"+usbDevice, Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        if (! checkGpsEnabled(activity,false,startDialogs,showToasts)) return false;
+        return true;
     }
 
+    private static boolean checkOrCreateWorkDir(File workdir) {
+        if (workdir.equals(new File(""))) return false;
+        try {
+            createWorkingDir(workdir);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+
     private boolean checkForInitialDialogs(){
-        boolean startSomething=true;
+        boolean showsDialog=false;
         SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         String mode=sharedPrefs.getString(Constants.RUNMODE, "");
         boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
         if (mode.isEmpty() || startPendig) {
-            startSomething=false;
+            showsDialog=true;
             int title;
             int message;
             if (startPendig) {
                 title=R.string.somethingWrong;
                 message=R.string.somethingWrongMessage;
             } else {
+                handleInitialSettings();
                 title=R.string.firstStart;
                 message=R.string.firstStartMessage;
             }
             DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    handleInitialSettings();
+                    checkSettings(SettingsActivity.this,true,true);
                 }
             });
             if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
@@ -155,14 +329,14 @@ public class SettingsActivity extends PreferenceActivity {
                     .getPackageInfo(getPackageName(), 0).versionCode;
         } catch (PackageManager.NameNotFoundException e) {
         }
-        if (! startSomething) return false;
+        if (showsDialog) return true;
         if (version != 0 ){
             try {
                 int lastVersion = sharedPrefs.getInt(Constants.VERSION, 0);
                 //TODO: handle other version changes
                 if (lastVersion == 0 ){
                     sharedPrefs.edit().putInt(Constants.VERSION,version).commit();
-                    startSomething=false;
+                    showsDialog=true;
                     DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
                     builder.setTitle(R.string.newVersionTitle);
                     builder.setText(R.id.question,R.string.newVersionMessage);
@@ -175,19 +349,17 @@ public class SettingsActivity extends PreferenceActivity {
                     builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            if (needsInitialSettings(SettingsActivity.this)){
-                                handleInitialSettings();
-                            }
+                            checkResult();
                         }
                     });
                     builder.show();
                 }
             }catch (Exception e){}
         }
-        return startSomething;
+        return showsDialog;
     }
 
-    public static void createWorkingDir(File workdir) throws Exception{
+    private static void createWorkingDir(File workdir) throws Exception{
         if (! workdir.isDirectory()){
             workdir.mkdirs();
         }
@@ -201,211 +373,79 @@ public class SettingsActivity extends PreferenceActivity {
             }
         }
     }
-    public static interface SelectWorkingDir{
-        public void directorySelected(File dir);
-        public void failed();
-        public void cancel();
-    }
 
-    //select a valid working directory - or exit
-    static boolean selectWorkingDirectory(final Activity activity, final SelectWorkingDir callback, String current, boolean force){
-        File currentFile=null;
-        if (current != null  && ! current.isEmpty()) {
-            currentFile=new File(current);
-            if (!currentFile.isDirectory()) {
-                //maybe we can just create it...
-                try {
-                    createWorkingDir(currentFile);
-                } catch (Exception e1) {
-                    currentFile=null;
-                }
-            }
-        }
-        if (currentFile != null && currentFile.canWrite() && ! force){
-            return true;
-        }
-        //seems that either the directory is not writable
-        //or not set at all
-        final DialogBuilder builder=new DialogBuilder(activity,R.layout.dialog_selectlist);
-        final boolean simpleTitle=(current == null || current.isEmpty() && force);
-        builder.setTitle(simpleTitle?R.string.selectWorkDirWritable:R.string.selectWorkDir);
-        ArrayList<String> selections=new ArrayList<String>();
-        selections.add(activity.getString(R.string.internalStorage));
-        boolean hasExternal=false;
+    static public boolean externalStorageAvailable(){
         String state=Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) hasExternal=true;
-        if (hasExternal) selections.add(activity.getString(R.string.externalStorage));
-        selections.add(activity.getString(R.string.selectStorage));
-        ArrayAdapter<String> adapter=new ArrayAdapter<String>(activity,R.layout.list_item,selections);
-        ListView lv=(ListView)builder.getContentView().findViewById(R.id.list_value);
-        lv.setAdapter(adapter);
-        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final boolean hasExternal=parent.getAdapter().getCount()>2;
-                if (position == (parent.getAdapter().getCount() -1)){
-                    //last item selected - show file dialog
-                    SimpleFileDialog FolderChooseDialog = new SimpleFileDialog(activity, SimpleFileDialog.FolderChoose,
-                            new SimpleFileDialog.SimpleFileDialogListener() {
-                                @Override
-                                public void onChosenDir(File newDir) {
-                                    builder.dismiss();
-                                    // The code in this function will be executed when the dialog OK button is pushed
-                                    try {
-                                        createWorkingDir(newDir);
-                                    } catch (Exception ex) {
-                                        Toast.makeText(activity, ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                        return;
-                                    }
-                                    AvnLog.i(Constants.LOGPRFX, "select work directory " + newDir.getAbsolutePath());
-                                }
-                                @Override
-                                public void onCancel() {
-                                    callback.cancel();
-                                }
-
-                                @Override
-                                public void onDefault() {
-                                }
-                            });
-                    FolderChooseDialog.Default_File_Name="avnav";
-                    FolderChooseDialog.dialogTitle=activity.getString(simpleTitle?R.string.selectWorkDir:R.string.selectWorkDirWritable);
-                    FolderChooseDialog.newFolderNameText=activity.getString(R.string.newFolderName);
-                    FolderChooseDialog.newFolderText=activity.getString(R.string.createFolder);
-                    File start=hasExternal?activity.getExternalFilesDir(null):activity.getFilesDir();
-                    String startPath="";
-                    try {
-                        startPath=start.getCanonicalPath();
-                        FolderChooseDialog.setStartDir(startPath);
-                    } catch (Exception e) {
-                        return;
-                    }
-                    FolderChooseDialog.chooseFile_or_Dir(false);
-                    return;
-                }
-                File newDir=(position == 0)?activity.getFilesDir():activity.getExternalFilesDir(null);
-                try{
-                    createWorkingDir(newDir);
-                }catch (Exception e){
-                    builder.dismiss();
-                    Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
-                    callback.failed();
-                }
-                builder.dismiss();
-                callback.directorySelected(newDir);
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                callback.cancel();
-            }
-        });
-        builder.show();
-        return false;
+        return (Environment.MEDIA_MOUNTED.equals(state));
     }
+
+
 
     /**
      * check the current settings
      * @return false when a new dialog had been opened
      */
-    private boolean handleInitialSettings(){
-        boolean rt=true;
-        PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.expert_preferences,true);
-        PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.nmea_preferences,true);
-        final SharedPreferences sharedPrefs = this.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+    private void handleInitialSettings(){
+        final SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         final SharedPreferences.Editor e=sharedPrefs.edit();
         if (! sharedPrefs.contains(Constants.ALARMSOUNDS)){
             e.putBoolean(Constants.ALARMSOUNDS,true);
         }
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
-        if (mode.equals("")) {
+        if (mode.equals("")){
             e.putBoolean(Constants.SHOWDEMO,true);
             e.putString(Constants.IPADDR, "192.168.20.10");
             e.putString(Constants.IPPORT,"34567");
             e.putBoolean(Constants.INTERNALGPS,true);
-            //never set before
-            if (currentapiVersion < Constants.OSVERSION_XWALK ) {
-                if (! isXwalRuntimeInstalled(this)){
-                    (new XwalkDownloadHandler(this)).showDownloadDialog(this.getString(R.string.xwalkNotFoundTitle),
-                            this.getString(R.string.xwalkShouldUse) + Constants.XWALKVERSION, false);
-                    rt=false;
-                }
-                else {
-                    mode=Constants.MODE_XWALK;
-                }
-            }
+            mode=Constants.MODE_NORMAL;
         }
         else {
             if (mode.equals(Constants.MODE_XWALK)){
-                if (! isXwalRuntimeInstalled(this) ){
-                    if (currentapiVersion < Constants.OSVERSION_XWALK) {
-                        (new XwalkDownloadHandler(this)).showDownloadDialog(this.getString(R.string.xwalkNotFoundTitle),
-                                this.getString(R.string.xwalkNotFoundText) + Constants.XWALKVERSION, false);
-                        rt=false;
-                    }
-                    else {
-                        mode= Constants.MODE_NORMAL;
-                    }
-                }
+                mode= Constants.MODE_NORMAL;
             }
         }
         String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
-        String chartdir=sharedPrefs.getString(Constants.CHARTDIR, new File(new File(workdir), "charts").getAbsolutePath());
-        if (mode.isEmpty()) mode=Constants.MODE_NORMAL;
+        String chartdir=sharedPrefs.getString(Constants.CHARTDIR, "");
         e.putString(Constants.RUNMODE, mode);
+        if (workdir.isEmpty()){
+            workdir=Constants.INTERNAL_WORKDIR;
+        }
         e.putString(Constants.WORKDIR, workdir);
         e.putString(Constants.CHARTDIR, chartdir);
         e.apply();
-        rt=selectWorkingDirectory(SettingsActivity.this,new SelectWorkingDir() {
-            @Override
-            public void directorySelected(File dir) {
-                try {
-                    SharedPreferences.Editor e=sharedPrefs.edit();
-                    e.putString(Constants.WORKDIR,dir.getCanonicalPath());
-                    e.apply();
-                } catch (IOException e1) {
-                    Toast.makeText(SettingsActivity.this, e1.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-                resultOk();
-            }
-
-            @Override
-            public void failed() {
-            }
-
-            @Override
-            public void cancel() {
-                resultNok();
-            }
-
-        },workdir,false);
         //for robustness update all modes matching the current settings and version
         String nmeaMode=NmeaSettingsFragment.getNmeaMode(sharedPrefs);
         NmeaSettingsFragment.updateNmeaMode(sharedPrefs,nmeaMode);
         String aisMode=NmeaSettingsFragment.getAisMode(sharedPrefs);
         NmeaSettingsFragment.updateAisMode(sharedPrefs,aisMode);
         try {
-            int version = this.getPackageManager()
-                    .getPackageInfo(this.getPackageName(), 0).versionCode;
+            int version = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0).versionCode;
             if (sharedPrefs.getInt(Constants.VERSION,-1)!= version){
                 e.putInt(Constants.VERSION,version);
             }
         } catch (Exception ex) {
         }
         e.commit();
-        NmeaSettingsFragment.checkGpsEnabled(this, false);
-        return rt;
+    }
+
+    @Override
+    public void onBackPressed(){
+        if (!isMultiPane() && ! hasHeaders()){
+            super.onBackPressed();
+            return;
+        }
+        checkResult();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home){
-            resultOk();
+            onBackPressed();
             return true;
         }
         if (item.getItemId() == R.id.action_ok){
-            resultOk();
+            onBackPressed();
             return true;
         }
         if (item.getItemId()== R.id.action_about) {
@@ -439,7 +479,8 @@ public class SettingsActivity extends PreferenceActivity {
         super.onNewIntent(intent);
         setIntent(intent);
     }
-    private void resultOk(){
+    private void checkResult(){
+        if (! checkSettings(this,true,true)) return;
         Intent result=new Intent();
         setResult(Activity.RESULT_OK,result);
         finish();
@@ -455,13 +496,6 @@ public class SettingsActivity extends PreferenceActivity {
         if (toolbar == null) injectToolbar();
         getToolbar().setOnMenuItemClickListener(this);
         super.onResume();
-        if (getIntent().getBooleanExtra(Constants.EXTRA_INITIAL,false)){
-            if (checkForInitialDialogs()){
-                handleInitialSettings();
-            }
-            AvnLog.i("initial settings call");
-
-        }
         updateHeaderSummaries(true);
     }
     @Override
@@ -470,7 +504,8 @@ public class SettingsActivity extends PreferenceActivity {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         boolean preferMultiPane=false;
-        if (metrics.widthPixels >= 900) preferMultiPane=true;
+        float scaledWidth=metrics.widthPixels/metrics.density;
+        if (scaledWidth >= 480) preferMultiPane=true;
         return preferMultiPane;
     }
 
@@ -517,6 +552,7 @@ public class SettingsActivity extends PreferenceActivity {
     protected void onDestroy() {
         super.onDestroy();
         callbacks.clear();
+        resultHandler.clear();
     }
 
     @Override
@@ -529,6 +565,16 @@ public class SettingsActivity extends PreferenceActivity {
 
 
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        PermissionResult rs=resultHandler.get(requestCode);
+        if (rs != null){
+            resultHandler.remove(requestCode);
+            rs.result(permissions,grantResults);
+        }
     }
 
     public void registerActivityResultCallback(ActivityResultCallback cb){

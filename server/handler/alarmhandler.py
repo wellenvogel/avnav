@@ -119,13 +119,11 @@ class AVNAlarmHandler(AVNWorker):
       time.sleep(0.5)
       deletes=[]
       for k in self.runningAlarms.keys():
-        info = self.runningAlarms.get(k)
-        if not self.commandHandler.isCommandRunning(info):
-          if info['autoclean']:
+        id = self.runningAlarms.get(k)
+        if not self.commandHandler.isCommandRunning(id):
+          info=self.findAlarm(k,True)
+          if info is not None and info.get("autoclean"):
             deletes.append(k)
-          if info['repeat'] > 1:
-            info['repeat'] = info['repeat'] -1
-            self._startAlarmCmd(info)
       for k in deletes:
         try:
           del self.runningAlarms[k]
@@ -242,8 +240,8 @@ class AVNAlarmHandler(AVNWorker):
         rt[n]=cmd.get('command')
     for k in self.runningAlarms.keys():
       if rt.get(k) is None:
-        cmd=self.runningAlarms.get(k)
-        rt[k]=cmd['command']
+        info=self.findAlarm(k,True)
+        rt[k]=info.get('command')
     return rt
 
   def getHandledCommands(self):
@@ -298,7 +296,11 @@ class AVNAlarmHandler(AVNWorker):
         if not name in status and not 'all' in status :
           continue
         running=self.runningAlarms.get(name)
-        rt[name]={'alarm':name,'running':True if running is not None else False}
+        config=self.findAlarm(name,True)
+        rt[name]={'alarm':name,
+                  'running':True if running is not None else False,
+                  'repeat': config.get('repeat')
+                  }
       return rt
     rt={'status':'ok'}
     mode="start"

@@ -7,7 +7,7 @@ buildscript{
 		mavenCentral()
 	}
     dependencies{
-        classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.6.1'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:7.5.0'
     }
 }
 
@@ -140,10 +140,10 @@ ospackage {
 
 
 assert project.hasProperty('packageVersion'),"please provide the package version via -PpackageVersion=xxx"
+version=project.packageVersion
 task raspiDeb(type: Deb) {
     group taskgroup
     doFirst{
-        version=project.packageVersion
         def vFile=file("$buildDir/$versionFileName")
         logger.info("vfile=${vFile}")
 	if (! vFile.getParentFile().exists()) vFile.getParentFile().mkdirs()

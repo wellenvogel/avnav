@@ -185,7 +185,11 @@ GpsData.prototype.handleGpsResponse=function(data, status){
     if (data.raw && data.raw.alarms){
         try{
             formattedData.alarmInfo=undefined;
+            formattedData.alarmSound=undefined;
             for (key in data.raw.alarms){
+                if (! formattedData.alarmSound){
+                    formattedData.alarmSound=key+","+data.raw.alarms[key].repeat
+                }
                 if (formattedData.alarmInfo) {
                     formattedData.alarmInfo+=",";
                     formattedData.alarmInfo+=key;
@@ -195,6 +199,10 @@ GpsData.prototype.handleGpsResponse=function(data, status){
                 }
             }
         }catch(e){}
+    }
+    else{
+        formattedData.alarmInfo=undefined;
+        formattedData.alarmSound=undefined;
     }
     try {
         formattedData.windAngle = this.gpsdata.windAngle.toFixed(1);

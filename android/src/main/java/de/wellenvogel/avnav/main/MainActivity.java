@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -12,34 +13,28 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import org.xwalk.core.XWalkActivity;
 
 import java.io.File;
-import java.net.InetSocketAddress;
+import java.util.List;
 
-import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
-import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
-import de.wellenvogel.avnav.gps.UsbSerialPositionHandler;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 
 /**
@@ -63,7 +58,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     private boolean exitRequested=false;
     private boolean running=false;
     private BroadcastReceiver broadCastReceiverStop;
-    private boolean startDialogVisible=false;
+    private BroadcastReceiver reloadReceiver;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -122,66 +117,35 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     }
 
     private boolean startGpsService(){
+        if (Build.VERSION.SDK_INT >= 26) {
+            ActivityManager activityManager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
+            List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
+            if (runningAppProcesses != null) {
+                int importance = runningAppProcesses.get(0).importance;
+                // higher importance has lower number (?)
+                if (importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND){
+                    AvnLog.e("still in background while trying to start service");
+                    return false;
+                }
+            }
+        }
 
+        if (! SettingsActivity.checkSettings(this,false,true)) return false;
 
-        if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
-                ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
-                ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false) &&
-                ! sharedPrefs.getBoolean(Constants.USBNMEA,false)){
-            Toast.makeText(this, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
-            try {
-                InetSocketAddress addr = GpsDataProvider.convertAddress(
-                        sharedPrefs.getString(Constants.IPADDR, ""),
-                        sharedPrefs.getString(Constants.IPPORT, ""));
-            } catch (Exception i) {
-                Toast.makeText(this, R.string.invalidIp, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-        if (sharedPrefs.getBoolean(Constants.BTAIS,false)||sharedPrefs.getBoolean(Constants.BTNMEA,false)){
-            String btdevice=sharedPrefs.getString(Constants.BTDEVICE,"");
-            if (BluetoothPositionHandler.getDeviceForName(btdevice) == null){
-                Toast.makeText(this, getText(R.string.noSuchBluetoothDevice)+":"+btdevice, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-        if (sharedPrefs.getBoolean(Constants.USBNMEA,false)||sharedPrefs.getBoolean(Constants.USBAIS,false)){
-            String usbDevice=sharedPrefs.getString(Constants.USBDEVICE,"");
-            if (UsbSerialPositionHandler.getDeviceForName(this,usbDevice) == null){
-                Toast.makeText(this, getText(R.string.noSuchUsbDevice)+":"+usbDevice, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-        if (sharedPrefs.getBoolean(Constants.INTERNALGPS,false)) {
-            LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
-            boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-            // check if enabled and if not send user to the GSP settings
-            // Better solution would be to display a dialog and suggesting to
-            // go to the settings
-            if (!enabled) {
-                DialogBuilder.confirmDialog(this, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == DialogInterface.BUTTON_POSITIVE){
-                            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                            startActivity(intent);
-                        }
-                    }
-                });
-            }
-        }
-        File trackDir=new File(sharedPrefs.getString(Constants.WORKDIR,""),"tracks");
+        File trackDir=new File(AvnUtil.getWorkDir(sharedPrefs,this),"tracks");
         Intent intent = new Intent(this, GpsService.class);
         intent.putExtra(GpsService.PROP_TRACKDIR, trackDir.getAbsolutePath());
-        //TODO: add other parameters here
-        startService(intent);
+        if (Build.VERSION.SDK_INT >= 26){
+            startForegroundService(intent);
+        }
+        else {
+            startService(intent);
+        }
+        bindService(intent,mConnection,BIND_AUTO_CREATE);
         serviceNeedsRestart=false;
         return true;
     }
+
 
     private void stopGpsService(boolean unbind){
         if (gpsService !=null){
@@ -304,6 +268,9 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         if  (broadCastReceiverStop != null){
             unregisterReceiver(broadCastReceiverStop);
         }
+        if (reloadReceiver != null){
+            unregisterReceiver(reloadReceiver);
+        }
         if (exitRequested) {
             stopGpsService(true);
             System.exit(0);
@@ -325,21 +292,11 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         mToolbar=new ActionBarHandler(this,R.menu.main_activity_actions);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.expert_preferences, false);
-        workdir=sharedPrefs.getString(Constants.WORKDIR, Environment.getExternalStorageDirectory().getAbsolutePath() + "/avnav");
-        workBase=new File(workdir);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
         serviceNeedsRestart=true;
-        if (gpsService == null) {
-            Intent intent = new Intent(this, GpsService.class);
-            intent.putExtra(GpsService.PROP_CHECKONLY, true);
-            startService(intent);
-            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-        }
         requestHandler=new RequestHandler(this);
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
-        updateWorkDir(workBase);
-        updateWorkDir(new File(sharedPrefs.getString(Constants.CHARTDIR, "")));
         IntentFilter filterStop=new IntentFilter(Constants.BC_STOPAPPL);
         broadCastReceiverStop=new BroadcastReceiver() {
             @Override
@@ -351,6 +308,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             }
         };
         registerReceiver(broadCastReceiverStop,filterStop);
+        reloadReceiver =new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                sendEventToJs(Constants.JS_RELOAD,1);
+            }
+        };
+        IntentFilter triggerFilter=new IntentFilter((Constants.BC_RELOAD_DATA));
+        registerReceiver(reloadReceiver,triggerFilter);
         running=true;
     }
 
@@ -362,26 +327,31 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         if (! key.equals(Constants.WAITSTART)) serviceNeedsRestart = true;
         Log.d(Constants.LOGPRFX, "preferences changed");
         if (key.equals(Constants.WORKDIR)){
-            updateWorkDir(new File(sharedPreferences.getString(Constants.WORKDIR,"")));
+            updateWorkDir(AvnUtil.getWorkDir(sharedPreferences,this));
         }
         if (key.equals(Constants.CHARTDIR)){
-            updateWorkDir(new File(sharedPreferences.getString(Constants.CHARTDIR,"")));
+            updateWorkDir(sharedPreferences.getString(Constants.CHARTDIR,""));
         }
     }
 
+    private void updateWorkDir(String dirname){
+        if (dirname == null || dirname.isEmpty()) return;
+        updateWorkDir(new File(dirname));
+    }
+
     private void updateWorkDir(File workDir){
+        if (workDir == null) return;
         final File baseDir=workDir;
         if (! baseDir.isDirectory()) return;
         Thread initialUpdater=new Thread(new Runnable() {
             @Override
             public void run() {
-                if (baseDir.isDirectory()) return;
-                triggerUpdateMtp(baseDir);
+                if (!baseDir.isDirectory()) return;
                 for (File uf: baseDir.listFiles()){
-                    if (uf.exists()) triggerUpdateMtp(uf);
+                    if (uf.isFile() && uf.exists()) triggerUpdateMtp(uf);
                     if (uf.isDirectory()) {
                         for (File df : uf.listFiles()) {
-                            triggerUpdateMtp(df);
+                            if (df.exists() && df.isFile()) triggerUpdateMtp(df);
                         }
                     }
                 }
@@ -400,9 +370,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     protected void onResume() {
         super.onResume();
         AvnLog.d("main: onResume");
-        if (startDialogVisible) return;
-        int version=0;
-        if (SettingsActivity.needsInitialSettings(this)){
+        if (!SettingsActivity.checkSettings(this,false,false)){
             showSettings(true);
             return;
         }
@@ -410,6 +378,8 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             showSettings(true);
             return;
         }
+        updateWorkDir(AvnUtil.getWorkDir(null,this));
+        updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR,""));
         startFragmentOrActivity(false);
     }
 
@@ -418,7 +388,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         AvnLog.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
         stopGpsService(false);
         requestHandler.update();
-        sendEventToJs("rescan",0);
+        sendEventToJs(Constants.JS_RELOAD,0);
         return startGpsService();
     }
 
@@ -455,14 +425,14 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             lastStartMode=mode;
         }
         else{
-            sendEventToJs("propertyChange",0); //this will some pages cause to reload...
+            sendEventToJs(Constants.JS_PROPERTY_CHANGE,0); //this will some pages cause to reload...
         }
     }
 
     @Override
     public void onBackPressed(){
         final int num=goBackSequence+1;
-        sendEventToJs("backPressed",num);
+        sendEventToJs(Constants.JS_BACK,num);
         //as we cannot be sure that the JS code will for sure handle
         //our back pressed (maybe a different page has been loaded) , we wait at most 200ms for it to ack this
         //otherwise we really go back here

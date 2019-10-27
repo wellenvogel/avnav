@@ -168,8 +168,6 @@ Page.prototype._initPage=function(){
                                             mp.measureRef(item);
                                             self.lastRef=item;
                                         }
-                                        let r=item.getBoundingClientRect();
-                                        self.leftPanelCallback(r);
                                     }
                                 }}>
                                     <Content/>
@@ -199,7 +197,7 @@ Page.prototype.leftPanelCallback=function(bounds){
             bounds.left == old.left &&
             bounds.top == old.top) return false;
     }
-    this.leftPanelBounds=bounds;
+    this.leftPanelBounds=assign({},bounds);
     this.leftPanelChanged(bounds);
     globalStore.storeData(keys.gui.global.smallDisplay,this.isSmall());
     return true;
@@ -254,18 +252,18 @@ Page.prototype.handlePage=function(evdata){
            }
         });
     }
-    if (this.visible != this.isVisible()){
-        //visibility changed
-        this.visible=this.isVisible();
-        if (this.visible){
-            this._showPage();
-            this.showPage(evdata.options);
-        }
-        else {
-            this._hidePage();
-            this.hidePage();
-        }
+
+
+    this.visible = (evdata.newpage == self.name);
+    if (this.visible) {
+        this._showPage();
+        this.showPage(evdata.options);
     }
+    else {
+        this._hidePage();
+        this.hidePage();
+    }
+
 };
 Page.prototype._showPage=function(){
     var self=this;
@@ -276,6 +274,8 @@ Page.prototype._showPage=function(){
     this._hideToast=false;
     this.showTime=new Date();
     this.store.replaceSubKey(this.globalKeys.pageVisible,true,'visible');
+    var buttonFontSize=self.gui.properties.getButtonFontSize();
+    self.store.updateData(self.globalKeys.buttons,{fontSize:buttonFontSize});
     this.handleDefaultToggleButtons();
 };
 Page.prototype._hidePage=function(){

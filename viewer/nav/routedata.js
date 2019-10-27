@@ -54,23 +54,7 @@ var RouteData=function(propertyHandler,navobject){
     }catch(e){
         avnav.log("Exception reading currentLeg "+e);
     }
-    if (avnav.android){
-        var data=avnav.android.getLeg();
-        if (data && data != ""){
-            avnav.log("android: get leg from server");
-            try {
-                var nLeg = new routeobjects.Leg();
-                nLeg.fromJsonString(data);
-                this.currentLeg=nLeg;
-            }catch (e){
-                avnav.log("unable to get leg from server");
-                this.currentLeg=new routeobjects.Leg();
-            }
-        }
-        else{
-            this.currentLeg=new routeobjects.leg();
-        }
-    }
+
     if (this.currentLeg.name && ! this.currentLeg.currentRoute){
         //migrate from old stuff
         var route=this._loadRoute(this.currentLeg.name,true);
@@ -911,6 +895,7 @@ RouteData.prototype._checkNextWp=function(){
     var nextWpNum=this.currentLeg.getCurrentTargetIdx()+1;
     var nextWp=this.currentLeg.currentRoute.getPointAtIndex(nextWpNum);
     var approach=this.propertyHandler.getProperties().routeApproach;
+    var tolerance=approach/10; //we allow some position error...
     try {
         var dst = NavCompute.computeDistance(boat, this.currentLeg.to);
         //TODO: some handling for approach
@@ -929,23 +914,27 @@ RouteData.prototype._checkNextWp=function(){
             }
             //check if the distance to own wp increases and to the nex decreases
             var diffcurrent=dst.dts-this.lastDistanceToCurrent;
-            if (diffcurrent <= 0){
+            if (diffcurrent <= tolerance){
                 //still decreasing
-                this.lastDistanceToCurrent=dst.dts;
-                this.lastDistanceToNext=nextDst.dts;
+                if (diffcurrent <= 0) {
+                    this.lastDistanceToCurrent = dst.dts;
+                    this.lastDistanceToNext = nextDst.dts;
+                }
                 return;
             }
             var diffnext=nextDst.dts-this.lastDistanceToNext;
-            if (diffnext > 0){
+            if (nextWp && (diffnext > -tolerance)){
                 //increases to next
-                this.lastDistanceToCurrent=dst.dts;
-                this.lastDistanceToNext=nextDst.dts;
+                if (diffnext > 0) {
+                    this.lastDistanceToCurrent = dst.dts;
+                    this.lastDistanceToNext = nextDst.dts;
+                }
                 return;
             }
             //should we wait for some time???
             if (nextWp) {
                 this.currentLeg.to=nextWp;
-                this.routeOn();
+                this._legChanged();
                 if (this.isEditingActiveRoute()) {
                     this.editingWp = nextWp;
                 }
@@ -1153,11 +1142,7 @@ RouteData.prototype._startQuery=function() {
     var url = this.propertyHandler.getProperties().navUrl+"?request=routing&command=getleg";
     var timeout = this.propertyHandler.getProperties().routeQueryTimeout; //in ms!
     var self = this;
-    if (avnav.android){
-        var leg=avnav.android.getLeg();
-        this._handleLegResponse(leg);
-    }
-    if (! this.connectMode || avnav.android){
+    if (! this.connectMode ){
         self.timer=window.setTimeout(function() {
             self._startQuery();
         },timeout);

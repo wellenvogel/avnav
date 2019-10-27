@@ -9,11 +9,20 @@ import org.json.JSONObject;
 
 public class Alarm {
     public String command;
-    public int repeat=1;
+    public int repeat=10000;
     public boolean running=false;
     public String name;
     private Alarm(String name){
         this.name=name;
+    }
+    private Alarm(String name, int repeat){
+        this.name=name;
+        this.repeat=repeat;
+    }
+    private Alarm copy(){
+        Alarm rt=new Alarm(name,repeat);
+        rt.command=command;
+        return rt;
     }
     public boolean isPlaying=false;
     public JSONObject toJson() throws JSONException {
@@ -36,10 +45,11 @@ public class Alarm {
     }
     public static Alarm ANCHOR=new Alarm("anchor");
     public static Alarm GPS=new Alarm("gps");
+    public static Alarm WAYPOINT=new Alarm("waypoint",3);
     public static Alarm createAlarm(String name){
         if (name == null) return null;
-        for (Alarm a: new Alarm[]{ANCHOR,GPS}){
-            if (a.name.equals(name)) return new Alarm(name);
+        for (Alarm a: new Alarm[]{ANCHOR,GPS,WAYPOINT}){
+            if (a.name.equals(name)) return a.copy();
         }
         return null;
     }

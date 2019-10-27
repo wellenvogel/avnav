@@ -134,8 +134,8 @@ var Routepage=function(){
         self.navEvent(evdata);
     });
     $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,function(ev,evdata){
-        if (evdata.key && avnav.util.Helper.startsWith(evdata.key,"route")){
-            self.androidEvent(evdata.key,evdata.id);
+        if (evdata.key == 'reloadData'){
+            self.fillData(false);
         }
     });
 };
@@ -332,9 +332,7 @@ Routepage.prototype.navEvent=function(ev){
     }
 
 };
-Routepage.prototype.androidEvent=function(key,id){
-    this.fillData(false);
-};
+
 Routepage.prototype.goBack=function(){
     this.btnRoutePageCancel();
 };

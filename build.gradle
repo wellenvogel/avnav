@@ -10,7 +10,7 @@ buildscript{
 	}
     dependencies{
         classpath localGroovy()
-        classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.6.1'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:7.5.0'
         classpath 'commons-net:commons-net:3.3'
         classpath 'org.eclipse.jgit:org.eclipse.jgit:4.6.0.201612231935-r'
     }
@@ -77,12 +77,14 @@ apply plugin: 'java'
 
 apply plugin: 'nebula.ospackage-base'
 
-task testGit<<{
-    try {
-        checkGitVersion((project.avnavRelease ? "release-" : "") + project.avnavVersion)
-    }catch (Error t){
-        if (!project.hasProperty("avnavIgnoreGit")) throw t;
-        logger.lifecycle "### ignoring failed GIT check ###"
+task testGit{
+    doLast() {
+        try {
+            checkGitVersion((project.avnavRelease ? "release-" : "") + project.avnavVersion)
+        } catch (Error t) {
+            if (!project.hasProperty("avnavIgnoreGit")) throw t;
+            logger.lifecycle "### ignoring failed GIT check ###"
+        }
     }
 }
 
@@ -116,13 +118,15 @@ def guiVersionFile=new File(project.buildDir,"avnav_gui_version.py")
 def serverVersionFile=new File(project.buildDir,"avnav_server_version.py")
 
 
-task pkgVersion<<{
-    ospackage.version=project.avnavVersion
-    println "package version $ospackage.version"
-    [guiVersionFile,serverVersionFile].each{
-        if (! it.getParentFile().isDirectory()) it.getParentFile().mkdirs()
-        it.withWriter {wr->
-            wr.println("AVNAV_VERSION=\"$ospackage.version\"")
+task pkgVersion{
+    doLast() {
+        ospackage.version = project.avnavVersion
+        println "package version $ospackage.version"
+        [guiVersionFile, serverVersionFile].each {
+            if (!it.getParentFile().isDirectory()) it.getParentFile().mkdirs()
+            it.withWriter { wr ->
+                wr.println("AVNAV_VERSION=\"$ospackage.version\"")
+            }
         }
     }
 }
@@ -134,8 +138,10 @@ task windowsBuild(type: org.gradle.api.tasks.GradleBuild){
         assert onWindows,"we cannot run the windowsBuild task as we are not on windows"
     }
 }
-task noWindowsBuild<<{
-    println "###unable to build the windows installer as we are not running on windows###"
+task noWindowsBuild{
+    doLast() {
+        println "###unable to build the windows installer as we are not running on windows###"
+    }
 }
 def emptyBase=new File(project.buildDir,"empty")
 ospackage {
@@ -438,11 +444,11 @@ def ks=System.getenv("ANDROID_KEYSTORE")
 def sign="-unsigned"
 if (ks) sign=""
 task uploadAndroidRelease(type: UploadTask){
-    inputFile=file("android/build/outputs/apk/avnav-release$sign-${avnavVersion}.apk")
+    inputFile=file("android/build/outputs/apk/release/avnav-release$sign-${avnavVersion}.apk")
     dependsOn assembleReleaseAndroid
 }
 task uploadAndroidBeta(type: UploadTask){
-    inputFile=file("android/build/outputs/apk/avnav-beta$sign-${avnavVersion}.apk")
+    inputFile=file("android/build/outputs/apk/beta/avnav-beta$sign-${avnavVersion}.apk")
     dependsOn assembleBetaAndroid
 }
 

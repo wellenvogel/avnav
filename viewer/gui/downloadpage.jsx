@@ -25,6 +25,11 @@ var FileInfo=function(name,type,time){
      * @type {number} ms timestamp
      */
     this.time=time||0;
+    /**
+     *
+     * @type {boolean}
+     */
+    this.canDelete=true;
 
 };
 
@@ -104,8 +109,8 @@ var Downloadpage=function(){
     this.selectItemCallback=undefined;
     var self=this;
     $(document).on(avnav.gui.AndroidEvent.EVENT_TYPE,function(ev,evdata){
-        if (evdata.key && avnav.util.Helper.startsWith(evdata.key,"route")){
-            self._updateDisplay();
+        if (evdata.key == "reloadData"){
+            self.fillData();
         }
     });
 
@@ -258,13 +263,17 @@ Downloadpage.prototype.getPageContent=function(){
         if (props.active){
             cls+=" avn_download_active_entry";
         }
+        var showDelete=true;
+        if (props.canDelete !== undefined){
+            showDelete=props.canDelete;
+        }
         return(
         <div className={cls} onClick={function(ev){
             if (self.selectItemCallback){
                self.selectItemCallback(props);
             }
         }}>
-            {! props.active &&<button className="avn_download_btnDelete avn_smallButton" onClick={function(ev){
+            {(showDelete && ! props.active) &&<button className="avn_download_btnDelete avn_smallButton" onClick={function(ev){
                 ev.preventDefault();
                 ev.stopPropagation();
                 self.deleteItem(props);
@@ -478,6 +487,7 @@ Downloadpage.prototype.fillData=function(initial){
     return this.fillDataRoutes(initial);
 };
 Downloadpage.prototype.fillDataServer=function(initial){
+    if (! this.gui) return;
     var self=this;
     this.files=[];
     var url = self.gui.properties.getProperties().navUrl + "?request=listdir&type="+this.type;

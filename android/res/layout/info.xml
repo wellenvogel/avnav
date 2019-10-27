@@ -30,16 +30,6 @@
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
         >
-        <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="langer langer text ahahaha"
-                android:id="@+id/txXwalk" android:paddingBottom="10dp"/>
-        <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/btXwalDownload"
-                android:id="@+id/btDownloadXwalk"/>
     </LinearLayout>
     <LinearLayout
         android:orientation="horizontal"

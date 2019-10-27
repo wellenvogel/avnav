@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.gps;
 
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -11,13 +12,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.location.*;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -41,7 +40,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -53,11 +51,11 @@ import java.util.Map;
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service implements INmeaLogger,IRouteHandlerProvider {
+public class GpsService extends Service implements INmeaLogger, IRouteHandlerProvider, RouteHandler.UpdateReceiver {
 
 
+    private static final String CHANNEL_ID = "main" ;
     public static String PROP_TRACKDIR="track.dir";
-    public static String PROP_CHECKONLY="checkonly";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
@@ -98,11 +96,17 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     private Object loggerLock=new Object();
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
     private MediaPlayer mediaPlayer=null;
+    private int mediaRepeatCount=0;
     private boolean gpsLostAlarmed=false;
     private BroadcastReceiver broadCastReceiver;
+    private BroadcastReceiver triggerReceiver; //trigger rescans...
     private boolean shouldStop=false;
     PendingIntent watchdogIntent=null;
     private static final String WATCHDOGACTION="restart";
+
+    private PositionWriter positionWriter;
+    private Thread positionWriterThread;
+    private RouteHandler.RoutePoint lastAlarmWp=null;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -142,6 +146,11 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
 
     }
 
+    @Override
+    public void updated() {
+        sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
+    }
+
     public class GpsServiceBinder extends Binder{
       public GpsService getService(){
           return GpsService.this;
@@ -152,6 +161,44 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     public IBinder onBind(Intent arg0)
     {
         return mBinder;
+    }
+
+    private class PositionWriter implements Runnable{
+        private boolean stop=false;
+        @Override
+        public void run() {
+            while (! stop) {
+                GpsDataProvider locationProvider = null;
+                Location location = null;
+                for (GpsDataProvider provider : getAllProviders()) {
+                    if (isProviderActive(provider) && provider.handlesNmea()) {
+                        location = provider.getLocation();
+                        locationProvider = provider;
+                        break;
+                    }
+                }
+                for (GpsDataProvider provider : getAllProviders()) {
+                    if (provider != null && provider != locationProvider) {
+                        try {
+                            if (location != null) provider.sendPosition(location);
+                        }catch (Throwable t){
+                            AvnLog.e("error when writing position at "+provider.getName(),t);
+                        }
+                    }
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
+        public void doStop(){
+            stop=true;
+        }
+        public boolean isStopped(){
+            return stop;
+        }
     }
 
     /**
@@ -203,8 +250,25 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
     }
 
-    private void handleNotification(boolean start){
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void handleNotification(boolean start, boolean startForeground){
         if (start) {
+            createNotificationChannel();
             Intent notificationIntent = new Intent(this, Dummy.class);
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                     notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -229,7 +293,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                 nv.setViewVisibility(R.id.button3,View.VISIBLE);
             }
             NotificationCompat.Builder notificationBuilder =
-                    new NotificationCompat.Builder(this);
+                    new NotificationCompat.Builder(this,CHANNEL_ID);
             notificationBuilder.setSmallIcon(R.drawable.sailboat);
             notificationBuilder.setContentTitle(getString(R.string.notifyTitle));
             if (currentAlarm == null) {
@@ -252,9 +316,12 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             }
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            Notification not=notificationBuilder.getNotification();
-            mNotificationManager.notify(NOTIFY_ID,
-                    not);
+            if (startForeground){
+                startForeground(NOTIFY_ID,notificationBuilder.build());
+            }
+            else{
+                mNotificationManager.notify(NOTIFY_ID,notificationBuilder.build());
+            }
 
         }
         else{
@@ -268,9 +335,6 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
-        if (intent != null && intent.getBooleanExtra(PROP_CHECKONLY,false)){
-            return Service.START_REDELIVER_INTENT;
-        }
         boolean isWatchdog=false;
         if (intent != null && intent.getAction() != null && intent.getAction().equals(WATCHDOGACTION)) isWatchdog=true;
         if (isWatchdog) AvnLog.i("service onStartCommand, watchdog=true");
@@ -278,9 +342,9 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             AvnLog.i("service onStartCommand");
         }
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        handleNotification(true);
+        handleNotification(true,true);
         //we rely on the activity to check before...
-        File newTrackDir=new File(new File(prefs.getString(Constants.WORKDIR,"")),"tracks");
+        File newTrackDir=new File(AvnUtil.getWorkDir(prefs,this),"tracks");
         boolean loadTrack=true;
         if (trackDir != null && trackDir.getAbsolutePath().equals(newTrackDir.getAbsolutePath())){
             //seems to be a restart - so do not load again
@@ -328,9 +392,9 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         else{
             trackLoading=false;
         }
-        File routeDir=new File(new File(prefs.getString(Constants.WORKDIR,"")),"routes");
+        File routeDir=new File(AvnUtil.getWorkDir(prefs,this),"routes");
         if (routeHandler == null || routeHandler.isStopped()) {
-            routeHandler = new RouteHandler(routeDir);
+            routeHandler = new RouteHandler(routeDir,this);
             routeHandler.setMediaUpdater(mediaUpdater);
             routeHandler.start();
         }
@@ -346,7 +410,11 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             if (internalProvider == null || internalProvider.isStopped()) {
                 AvnLog.d(LOGPRFX,"start internal provider");
                 GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                internalProvider=new AndroidPositionHandler(this,1000*AvnUtil.getLongPref(prefs,Constants.GPSOFFSET,prop.timeOffset));
+                try {
+                    internalProvider = new AndroidPositionHandler(this, 1000 * AvnUtil.getLongPref(prefs, Constants.GPSOFFSET, prop.timeOffset));
+                }catch (Exception i){
+                    Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
+                }
             }
         }
         else {
@@ -372,6 +440,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     prop.readAis=aisMode.equals(Constants.MODE_IP);
                     prop.readNmea=nmeaMode.equals(Constants.MODE_IP);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
+                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
                     externalProvider=new IpPositionHandler(this,addr,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
@@ -404,6 +473,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     prop.readNmea=nmeaMode.equals(Constants.MODE_BLUETOOTH);
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
+                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
                     bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
@@ -437,6 +507,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     prop.readNmea=nmeaMode.equals(Constants.MODE_USB);
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
+                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
                     usbProvider =new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
@@ -449,6 +520,12 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                 AvnLog.d(LOGPRFX,"stopping usbProvider service");
                 usbProvider.stop();
             }
+        }
+        if (positionWriter == null || positionWriter.isStopped()) {
+            positionWriter = new PositionWriter();
+            positionWriterThread = new Thread(positionWriter);
+            positionWriterThread.setDaemon(true);
+            positionWriterThread.start();
         }
         isRunning=true;
         return Service.START_REDELIVER_INTENT;
@@ -466,6 +543,15 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                 return true;
             }
         });
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                if (mediaRepeatCount > 0) mediaRepeatCount--;
+                if (mediaRepeatCount > 0){
+                    mediaPlayer.start();
+                }
+            }
+        });
 
         IntentFilter filter=new IntentFilter(Constants.BC_STOPALARM);
         broadCastReceiver=new BroadcastReceiver() {
@@ -473,10 +559,18 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
             public void onReceive(Context context, Intent intent) {
                 AvnLog.i("received stop alarm");
                 resetAllAlarms();
-                handleNotification(true);
+                handleNotification(true,false);
             }
         };
         registerReceiver(broadCastReceiver,filter);
+        triggerReceiver=new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (routeHandler != null) routeHandler.triggerParser();
+            }
+        };
+        IntentFilter triggerFilter=new IntentFilter((Constants.BC_TRIGGER));
+        registerReceiver(triggerReceiver,triggerFilter);
         Intent watchdog = new Intent(getApplicationContext(), GpsService.class);
         watchdog.setAction(WATCHDOGACTION);
         watchdogIntent=PendingIntent.getService(
@@ -510,12 +604,15 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
     };
 
-    private void timerAction(){
+    public void timerAction(){
         checkAnchor();
-        handleNotification(true);
+        checkApproach();
+        handleNotification(true,false);
         checkTrackWriter();
         for (GpsDataProvider provider: getAllProviders()) {
-            if (provider != null) provider.check();
+            if (provider != null) {
+                provider.check();
+            }
         }
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         if (!prefs.getBoolean(Constants.ALARMSOUNDS,true)) {
@@ -551,6 +648,24 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
         setAlarm(Alarm.ANCHOR.name);
     }
+    private void checkApproach(){
+        if (routeHandler == null) return;
+        Location current=getLocation();
+        if (current == null){
+            resetAlarm(Alarm.WAYPOINT.name);
+            return;
+        }
+        if (! routeHandler.handleApproach(current)){
+            lastAlarmWp=null;
+            resetAlarm(Alarm.WAYPOINT.name);
+            return;
+        }
+        if (lastAlarmWp == routeHandler.getCurrentTarget() ){
+            return;
+        }
+        lastAlarmWp=routeHandler.getCurrentTarget();
+        setAlarm(Alarm.WAYPOINT.name);
+    }
 
     /**
      * will be called whe we intend to really stop
@@ -583,8 +698,9 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
         loadSequence++;
         if (routeHandler != null) routeHandler.stop();
+        if (positionWriter != null) positionWriter.doStop();
         isRunning=false;
-        handleNotification(false);
+        handleNotification(false,false);
         AvnLog.i(LOGPRFX, "service stopped");
     }
 
@@ -623,6 +739,9 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         }
         if (broadCastReceiver != null){
             unregisterReceiver(broadCastReceiver);
+        }
+        if (triggerReceiver != null){
+            unregisterReceiver(triggerReceiver);
         }
         if (shouldStop){
             ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
@@ -766,6 +885,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
         Alarm a=alarmStatus.get(type);
         if (a != null && a.isPlaying){
             if (mediaPlayer != null) mediaPlayer.stop();
+            mediaRepeatCount=0;
         }
         alarmStatus.remove(type);
     }
@@ -817,7 +937,8 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
                     mediaPlayer.reset();
                     mediaPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION);
                     AudioEditTextPreference.setPlayerSource(mediaPlayer,sound,this);
-                    mediaPlayer.setLooping(true);
+                    mediaRepeatCount=a.repeat;
+                    mediaPlayer.setLooping(false);
                     mediaPlayer.prepare();
                     mediaPlayer.start();
                 }
@@ -963,7 +1084,7 @@ public class GpsService extends Service implements INmeaLogger,IRouteHandlerProv
     public JSONObject getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
         for (GpsDataProvider handler: getAllProviders()) {
-            if (handler != null) {
+            if (isProviderActive(handler)) {
                 try {
                     rt.put(handler.getHandlerStatus());
                 }catch (JSONException e){

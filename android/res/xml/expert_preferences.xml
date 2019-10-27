@@ -66,6 +66,11 @@
         android:defaultValue="anchorAlarm.mp3"
         android:inputType="text"
         android:title="@string/labelSettingsGpsAlarm"/>
+    <de.wellenvogel.avnav.settings.AudioEditTextPreference
+        android:key="alarm.waypoint"
+        android:defaultValue="waypointAlarm.mp3"
+        android:inputType="text"
+        android:title="@string/labelSettingsWpAlarm"/>
     <Preference
         android:title="@string/labelSettingsDefaults"
         android:key="prefs.default"></Preference>

@@ -46,16 +46,18 @@ class MyNpm extends NpmTask{
 }
 project.ext.avnavVersion=null
 File versionFile=new File(project.buildDir,"version.js")
-task pkgVersion<< {
-    if (!project.hasProperty('packageVersion')) {
-        SimpleDateFormat f = new SimpleDateFormat('YYYYMMdd')
-        project.avnavVersion=f.format(new Date())
-    } else {
-        project.avnavVersion = packageVersion
-    }
-    if (! versionFile.getParentFile().isDirectory()) versionFile.getParentFile().mkdirs()
-    versionFile.withWriter {wr->
-        wr.println("window.avnav_version=\"$project.avnavVersion\";")
+task pkgVersion {
+    doLast {
+        if (!project.hasProperty('packageVersion')) {
+            SimpleDateFormat f = new SimpleDateFormat('YYYYMMdd')
+            project.avnavVersion = f.format(new Date())
+        } else {
+            project.avnavVersion = packageVersion
+        }
+        if (!versionFile.getParentFile().isDirectory()) versionFile.getParentFile().mkdirs()
+        versionFile.withWriter { wr ->
+            wr.println("window.avnav_version=\"$project.avnavVersion\";")
+        }
     }
 }
 

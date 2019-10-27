@@ -8,26 +8,30 @@
         <item name="android:scrollbarDefaultDelayBeforeFade">1000</item>
         <item name="android:scrollbarStyle">insideInset</item>
     </style>
-    <style name="AppTheme" parent="@android:style/Theme.Holo.Light.NoActionBar">
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
+    <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
         <item name="android:windowBackground">@color/colorBackground</item>
         <item name="android:textColorPrimary">@color/colorText</item>
         <item name="android:textColorSecondary">@color/colorTextSecondary</item>
         <item name="android:activatedBackgroundIndicator">@drawable/list_selector</item>
-
-
+        <item name="toolbarStyle">@style/MyActionBarTheme</item>
+        <item name="toolbarNavigationButtonStyle">@style/myToolbarNavigationButtonStyle</item>
     </style>
-
-    <style name="MyActionText" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+    <style name="MyActionText" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
         <item name="android:textColor">@color/colorTextWhite</item>
     </style>
-    <style name="DialogTitle" parent="@android:style/TextAppearance.Holo.DialogWindowTitle">
+    <style name="DialogTitle" parent="@style/TextAppearance.AppCompat.Title">
         <item name="android:textColor">@color/colorText</item>
     </style>
-
-    <style name="DialogSecond" parent="@android:style/TextAppearance.Holo.Medium">
+    <style name="DialogSecond" parent="@style/TextAppearance.AppCompat.Medium">
         <item name="android:textColor">@color/colorTextSecondary</item>
     </style>
+    <style name="PreferencesStyle" parent="AppTheme">
+        <item name="android:activatedBackgroundIndicator">@drawable/list_selector</item>
+        <item name="android:textColorSecondaryInverse">@color/colorTextSecondary</item>
+        <item name="android:textColorPrimaryInverse">@color/colorText</item>
+    </style>
+
 
 </resources>

@@ -15,6 +15,7 @@ public class Constants {
     public static final String IPAIS="ip.ais";
     public static final String IPADDR="ip.addr";
     public static final String IPPORT="ip.port";
+    public static final String AISSENDPOS="ais.sendpos";
     public static final String BTNMEA="bt.nmea";
     public static final String BTAIS="bt.ais";
     public static final String BTDEVICE="bt.device";
@@ -40,11 +41,18 @@ public class Constants {
     public static final String WEBSERVERPORT="web.port";
     public static final String ANCHORALARM="alarm.anchor";
     public static final String GPSALARM="alarm.gps";
+    public static final String WAYPOINTALARM="alarm.waypoint";
+    public static final String GPS_PERMISSION_REQUESTED="permissions.gps";
+    public static final String STORAGE_PERMISSION_REQUESTED="permissions.storage";
+
+    public static final String REALCHARTS="charts";
+    public static final String CHARTPREFIX="charts";
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{
             ANCHORALARM,
-            GPSALARM
+            GPSALARM,
+            WAYPOINTALARM
     };
     public static final String PREFNAME="AvNav";
     //dummy file to make the media scanner see or directories...
@@ -76,6 +84,8 @@ public class Constants {
 
     public static final String BC_STOPALARM="de.wellenvogel.avnav.STOPALARM";
     public static final String BC_STOPAPPL="de.wellenvogel.avnav.STOPAPPL";
+    public static final String BC_TRIGGER="de.wellenvogel.avnav.TRIGGER";
+    public static final String BC_RELOAD_DATA ="de.wellenvogel.avnav.RELOAD_DATA";
 
     public static final int LOCALNOTIFY=1;
     public static final int LOCKNOTIFY=2;
@@ -83,4 +93,13 @@ public class Constants {
     public static final long WATCHDOGTIME=30000; //ms
 
     public static final String EXTRA_INITIAL="initial"; //boolean extra
+
+    //workdir settings
+    public static final String INTERNAL_WORKDIR="workdir_internal";
+    public static final String EXTERNAL_WORKDIR="workdir_external";
+
+    //js events
+    public static final String JS_RELOAD="reloadData";
+    public static final String JS_BACK="backPressed";
+    public static final String JS_PROPERTY_CHANGE="propertyChange";
 }

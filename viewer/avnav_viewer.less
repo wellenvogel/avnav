@@ -1238,6 +1238,7 @@ button.avb_RoutePageDownload{
   .avn_scrollWrapper{
     max-width:@listWidth;
     .flex(1);
+    overflow-y: auto;
   }
 }
 
@@ -1518,13 +1519,11 @@ button.avb_AisInfoList {
 .avn_listWrapper {
   overflow-y: auto;
   overflow-x: hidden;
-  .flex-display();
-  .flex-direction(column);
 
 }
 
 .avn_listWrapper .avn_listContainer {
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   .flex(1);
 }

@@ -206,7 +206,8 @@ public class SimpleFileDialog
             //if (! currentDir.equals(m_sdcardDirectory) )
             if (! currentDir.equals("/")) {
                 File parent=new File(dirFile,"..");
-                dirs.add(new FileEntry("..",parent.canWrite(),true));
+
+                    dirs.add(new FileEntry("..",parent.canWrite(),true));
             }
 
             File [] list=dirFile.listFiles();
@@ -397,7 +398,9 @@ public class SimpleFileDialog
                             if (sel.equals(".."))
                             {
                                 File parent=currentDir.getParentFile();
-                                if (parent != null) currentDir = parent;
+                                if (parent != null) {
+                                    if (parent.canRead()) currentDir = parent;
+                                }
                             }
                             else
                             {

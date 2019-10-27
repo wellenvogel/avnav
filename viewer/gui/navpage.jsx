@@ -40,7 +40,9 @@ var keys={
 var wpKeyFlags={
     currentTarget:'currentTarget',
     routeActive: 'routeActive',
-    wpActive: 'wpActive'
+    wpActive: 'wpActive',
+    routingVisible: 'routingVisible',
+    lastRoutePoint: 'lastRoutePoint'
 };
 var widgetKeys=[keys.leftWidgets, keys.bottomLeftWidgets, keys.bottomRightWidgets,keys.topWidgets, keys.leftWidgetsSmall];
 var selectors={
@@ -327,10 +329,11 @@ Navpage.prototype.buttonUpdate=function(){
     this.handleToggleButton('LockPos',gpsLock);
     var courseUp=this.gui.map.getCourseUp();
     this.handleToggleButton('CourseUp',courseUp);
+    var router=this.navobject.getRoutingHandler();
     if (this.selectedWp){
-        var router=this.navobject.getRoutingHandler();
         if (router.isCurrentRoutingTarget(this.selectedWp)){
             this.store.updateSubItem(keys.wpButtons,wpKeyFlags.currentTarget,true,'visibilityFlags');
+            this.store.updateSubItem(keys.wpButtons,wpKeyFlags.lastRoutePoint,router.getPointAtOffset(this.selectedWp,1)?false:true,'visibilityFlags');
         }
         else{
             this.store.updateSubItem(keys.wpButtons,wpKeyFlags.currentTarget,false,'visibilityFlags')
@@ -342,6 +345,7 @@ Navpage.prototype.buttonUpdate=function(){
             this.store.updateSubItem(keys.wpButtons,wpKeyFlags.routeActive,false,'visibilityFlags');
         }
     }
+    this.store.updateSubItem(keys.wpButtons,wpKeyFlags.routingVisible,this.routingVisible(),'visibilityFlags');
 };
 /**
  *
@@ -426,10 +430,12 @@ Navpage.prototype.wpButtons=function(onoff){
         {key:'WpNext'},
         {key:'WpPrevious'}
     ];
-    var btGoto={key:'WpGoto'};
     Helper.addEntryToListItem(wpButtons,"key","WpGoto",wpKeyFlags.currentTarget,false);
+    Helper.addEntryToListItem(wpButtons,"key","WpGoto",wpKeyFlags.routingVisible,false);
     Helper.addEntryToListItem(wpButtons,"key","NavNext",wpKeyFlags.currentTarget,true);
     Helper.addEntryToListItem(wpButtons,"key","NavNext",wpKeyFlags.routeActive,true);
+    Helper.addEntryToListItem(wpButtons,"key","NavNext",wpKeyFlags.routingVisible,false);
+    Helper.addEntryToListItem(wpButtons,"key","NavNext",wpKeyFlags.lastRoutePoint,false);
     Helper.addEntryToListItem(wpButtons,"key","WpNext",wpKeyFlags.routeActive,true);
     Helper.addEntryToListItem(wpButtons,"key","WpPrevious",wpKeyFlags.routeActive,true);
     this.store.updateSubItem(keys.wpButtons,'itemList',wpButtons);
@@ -800,6 +806,7 @@ Navpage.prototype.updateRoutePoints=function(opt_initial,opt_centerActive){
             {showLatLon: this.gui.properties.getProperties().routeShowLL},'options');
     }
     var activeWp=route.getPointAtIndex(active);
+    self.selectedWp=activeWp;
     if (opt_initial && activeWp){
         var sel={};
         sel[selectors.selected]=active;

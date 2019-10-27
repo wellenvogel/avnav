@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.settings;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
@@ -10,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
@@ -21,17 +23,21 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
+import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -99,7 +105,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
                     String nval=(String)newValue;
                     updateNmeaMode(prefs, nval);
                     ((ListPreference)preference).setSummary(getModeEntrieNmea(getActivity().getResources(),nval));
-                    if (nval.equals(MODE_INTERNAL)) checkGpsEnabled(getActivity(),true);
+                    if (nval.equals(MODE_INTERNAL)) SettingsActivity.checkGpsEnabled(getActivity(),true,true,true);
                     return true;
                 }
             });
@@ -243,7 +249,6 @@ public class NmeaSettingsFragment extends SettingsFragment {
     public void onResume() {
         super.onResume();
         fillData(getActivity());
-        checkGpsEnabled(getActivity(),false);
     }
 
     @Override
@@ -252,29 +257,7 @@ public class NmeaSettingsFragment extends SettingsFragment {
         getActivity().unregisterReceiver(mUsbReceiver);
     }
 
-    public static void checkGpsEnabled(final Activity activity, boolean force) {
-        if (! force) {
-            SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-            String nmeaMode = getNmeaMode(prefs);
-            if (!nmeaMode.equals(MODE_INTERNAL)) return;
-        }
-        LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
-        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        // check if enabled and if not send user to the GSP settings
-        // Better solution would be to display a dialog and suggesting to
-        // go to the settings
-        if (!enabled) {
-            DialogBuilder.confirmDialog(activity, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (which == DialogInterface.BUTTON_POSITIVE){
-                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                        activity.startActivity(intent);
-                    }
-                }
-            });
-        }
-    }
+
 
     private ArrayList<String> getBlueToothDevices(){
         ArrayList<String> rt=new ArrayList<String>();
