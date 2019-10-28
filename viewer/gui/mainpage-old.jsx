@@ -118,29 +118,29 @@ Mainpage.prototype.getPageContent=function(){
     };
     var ChartItem=function(props){
         return (
-            <div className="avn_mainpage_select_item" onClick={props.onClick}>
+            <div className="chartItem" onClick={props.onClick}>
                 <img src="images/Chart60.png"/>
-                <span className="avn_mainName">{props.name}</span>
-                <span className="avn_more"/>
+                <span className="">{props.name}</span>
+                <span className="more"/>
             </div>
         );
     };
     var BottomLine=Dynamic(function(props){
        return (
-           <div className='avn_left_bottom '>
-               <div className="avn_mainpage_leftbottominner">
-                   <div className='avn_mainpage_status'>
-                       <div className='avn_label '>
-                           <img  className='avn_status_image_small' src={props.nmeaStatusSrc}/>
+           <div className='footer'>
+               <div className='inner'>
+                   <div className='status'>
+                       <div >
+                           <img  className='status_image' src={props.nmeaStatusSrc}/>
                            NMEA&nbsp;{props.nmeaStatusText}
                        </div>
-                       <div className='avn_label'>
-                           <img id='avi_mainAisStatusImage' className='avn_status_image_small' src={props.aisStatusSrc}/>
+                       <div >
+                           <img  className='status_image' src={props.aisStatusSrc}/>
                            AIS&nbsp;{props.aisStatusText}
                        </div>
                    </div>
-                   <div className="avn_mainpage_link" >
-                       <div className="avn_label"> AVNav Version <span id="avi_mainpage_version">{window.avnav_version}</span></div>
+                   <div className="link" >
+                       <div > AVNav Version <span >{window.avnav_version}</span></div>
                        <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="avn_extlink">www.wellenvogel.de/software/avnav/index.php</a></div>
                    </div>
                </div>
@@ -156,7 +156,6 @@ Mainpage.prototype.getPageContent=function(){
                         <ChartList className="mainContent"
                                    itemClass={ChartItem}
                                    onItemClick={chartSelected}
-                                   className=""
                                    itemList={[]}
                                    storeKeys={keys.chartlist}
                                    updateFunction={flatten}

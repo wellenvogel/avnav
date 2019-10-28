@@ -12,8 +12,9 @@
   box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
-
+//----------------------------------------------------------------------------------------
 //general page set up
+//----------------------------------------------------------------------------------------
 .page{
   .flex-display();
   .flex-direction(row);
@@ -41,6 +42,79 @@
   .flex(1);
 }
 
+.footer{
+    background-color: @colorSecond;
+  .nightColors();
+  .flex-shrink(0);
+}
+
 .listContainer.scrollable{
   overflow: auto;
+}
+
+
+//----------------------------------------------------------------------------------------
+//mainpage
+//----------------------------------------------------------------------------------------
+#avi_mainpage{
+  .chartItem{
+    cursor: pointer;
+    vertical-align: middle !important;
+    overflow: hidden;
+    width: 20em;
+    height: 2em;
+    display: inline-block;
+    margin-right: 3em;
+    padding: 1em;
+    line-height: 2em;
+    border-bottom: 1px solid;
+    border-color: rgba(0, 0, 0, 0.3);
+    box-sizing: content-box;
+    .more {
+      display: inline-block;
+      float: right;
+      width: 1em;
+      height: 1em;
+      background-image: url('images/icons-new/ic_chevron_right.svg');
+      background-size: 100% 100%;
+      opacity: 0.6;
+    }
+    img {
+      .nightOPacity();
+      width: 1em;
+      height: 1em;
+      border-radius: 50%;
+      margin-right: 1em;
+      vertical-align: middle;
+    }
+
+  }
+  .footer{
+    .inner{
+      font-size: 0.8em;
+      padding-top: 0.8em;
+      .status{
+        padding-left: 1em;
+        padding-right: 1em;
+        text-align: left;
+        z-index: 10;
+        white-space: nowrap;
+        display: inline-block;
+        margin-bottom: 0.2em;
+      }
+      .status_image {
+        width: 1.5em;
+        height: 1.5em;
+        vertical-align: middle;
+        .nightOPacity();
+      }
+      .link{
+        text-align: right;
+        padding-right: 1em;
+        white-space: nowrap;
+        display: inline-block;
+        float: right;
+      }
+    }
+  }
 }
