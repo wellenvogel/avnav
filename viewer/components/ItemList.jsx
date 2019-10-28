@@ -33,9 +33,13 @@ class ItemList extends React.Component{
         let className = "listContainer";
         if (this.props.scrollable) className+=" scrollable";
         if (this.props.className) className += " " + this.props.className;
+        let style={};
+        if (this.props.fontSize){
+            style[fontSize]=this.props.fontSize;
+        }
         let Content=function(props) {
             return (
-                <div className={props.className}>
+                <div className={props.className} style={style}>
                     {allitems.map(function (entry) {
                     let itemProps = assign({}, entry);
                     let key = getKey(entry);
@@ -83,7 +87,8 @@ ItemList.propTypes={
         itemList:       PropTypes.array,
         className:      PropTypes.string,
         scrollable:     PropTypes.bool,
-        hideOnEmpty:    PropTypes.bool
+        hideOnEmpty:    PropTypes.bool,
+        fontSize:      PropTypes.any
 };
 
 module.exports=ItemList;

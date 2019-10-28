@@ -1,7 +1,7 @@
 /*
  * add updates from the store to components
  * it adds 2 properties to the component:
- * storeKeys: either an array of keys or an object with the keys being the keys of the store
+ * storeKeys: either an array of keys or an object with the keys being the keys of state and the values the store keys
  * and the values being the keys for the state
  * updateFunction: optional - a function that will receive the values as fetched from the store
  * (possibly already translated if storeKeys was an object) and the list of keys and must return the new state
@@ -26,7 +26,7 @@ module.exports= function(Component,opt_store){
         getStoreKeys(){
             if (!this.props.storeKeys) return [];
             if (this.props.storeKeys instanceof Array) return this.props.storeKeys;
-            if (this.props.storeKeys instanceof Object) return Object.keys(this.props.storeKeys);
+            if (this.props.storeKeys instanceof Object) return Object.values(this.props.storeKeys);
             return [this.props.storeKeys];
         }
         getTranslatedStoreValues(){
@@ -41,7 +41,9 @@ module.exports= function(Component,opt_store){
             this.setState(this.getTranslatedStoreValues()||{});
         }
         componentDidMount(){
-            store.register(this,this.getStoreKeys())
+            let keys=this.getStoreKeys();
+            if (keys.length < 1) return;
+            store.register(this,keys);
         }
         componnetWillUnmount(){
             store.deregister(this);
@@ -53,4 +55,4 @@ module.exports= function(Component,opt_store){
         }
     };
     return Dynamic;
-}
+};

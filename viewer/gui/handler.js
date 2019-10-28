@@ -8,6 +8,8 @@ avnav.provide('avnav.gui.AndroidEvent');
 var NavData=require('../nav/navdata');
 var keys=require('../util/keys.jsx');
 var globalStore=require('../util/globalstore.jsx');
+
+
 /**
  * the page change event
  * @param {avnav.gui.Handler} gui
@@ -84,6 +86,7 @@ avnav.gui.Handler = function (properties, navobject, map) {
     this.history=[];
     this.lasth = $(window).height();
     this.lastw = $(window).width();
+    globalStore.storeData(keys.gui.global.onAndroid,avnav.android?true:false);
     $(window).on('resize', function () {
         try {
             if (Object.keys(self.activeInputs).length > 0) {
@@ -185,6 +188,7 @@ avnav.gui.Handler.prototype.showPage = function (name, options) {
     this.removeAllActiveInputs();
     globalStore.storeData(keys.gui.global.pageName,name);
     globalStore.storeData(keys.gui.global.pageOptions,options);
+    if (name === 'mainpage') return;
     $('.avn_page').hide();
     $('#avi_' + name).show();
     var oldname = this.page;

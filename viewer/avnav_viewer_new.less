@@ -18,13 +18,23 @@
 .page{
   .flex-display();
   .flex-direction(row);
+
+  //intermediate
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
 }
 
 .buttonContainer{
-
+  display: block;
+  position: relative;
+  .nightBackFade(@colorMain);
 }
 
 .leftPart{
+  .flex(1);
   .flex-display();
   .flex-direction(column);
 }

@@ -172,22 +172,24 @@ StoreApi.prototype.getData=function(key,opt_default){
  */
 StoreApi.prototype.getMultiple=function(keys){
     let self=this;
-    let translate=false;
     let storeKeys=keys;
+    let rt={};
     if (! (storeKeys instanceof Array)){
         if (storeKeys instanceof Object){
-            storeKeys=Object.keys(storeKeys);
+            for (let k in storeKeys){
+                let v=self.getData(storeKeys[k]);
+                if (v !== undefined) rt[k]=v;
+            }
+            return rt;
         }
         else {
             storeKeys = [storeKeys];
         }
     }
-    let rt={};
     storeKeys.forEach((key)=>{
         let v=self.getData(key);
         if (v !== undefined) {
-            if (translate) rt[keys[key]]=v;
-            else rt[key]=v;
+            rt[key]=v;
         }
     });
     return rt;

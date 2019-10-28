@@ -37,13 +37,7 @@ var ReactDOM=require('react-dom');
 var OverlayDialog=require('./components/OverlayDialog.jsx');
 var propertyHandler=require('./util/propertyhandler');
 ol.DEFAULT_TILE_CACHE_HIGH_WATER_MARK=256;
-
-
-
-/**
- * currently we must require all pages somewhere
- */
-
+var MainPage=require('./gui/MainPage.jsx');
 
 
 
@@ -114,6 +108,10 @@ avnav.main=function() {
             hideCallback: function(id){gui.removeActiveInput(id);}
         }),
         document.getElementById('avi_dialog_container'));
+
+    ReactDOM.render(React.createElement(MainPage,{}),document.getElementById('avi_new_pages'));
+
+    avnav.guiHandler=gui; //intermediate...
     gui.showPage("mainpage");
     //ios browser sometimes has issues with less...
     setTimeout(function(){

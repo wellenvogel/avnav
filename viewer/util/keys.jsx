@@ -76,7 +76,11 @@ let keys={
         global:{
             smallDisplay: K,
             pageName: K,
-            pageOptions:K
+            pageOptions:K,
+            onAndroid:K,
+            connected: K,
+            nightMode: K,
+            buttonFontSize: K,
         },
         navpage:{
             zoom: K,
@@ -85,6 +89,11 @@ let keys={
             leftWidgets: K, //the list of left widgets,
             bottomLeftWidgets: K,
             bottomRightWidgets: K
+        },
+        mainpage:{
+            chartList: K,
+            status: K,
+            addOns: K,
         }
     }
 };
