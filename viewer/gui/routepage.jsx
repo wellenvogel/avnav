@@ -3,7 +3,7 @@
  */
 var React=require('react');
 var ReactDOM=require('react-dom');
-var WaypointList=require('../components/ItemList.jsx');
+var WaypointList=require('../components/ItemListOld.jsx');
 var WaypointItem=require('../components/WayPointListItem.jsx');
 var Formatter=require('../util/formatter');
 var NavCompute=require('../nav/navcompute');

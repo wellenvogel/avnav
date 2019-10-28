@@ -4,9 +4,9 @@
 
 var React=require('react');
 var ReactDOM=require('react-dom');
-var WaypointList=require('../components/ItemList.jsx');
+var WaypointList=require('../components/ItemListOld.jsx');
 var WaypointItem=require('../components/WayPointItem.jsx');
-var ItemList=require('../components/ItemList.jsx');
+var ItemList=require('../components/ItemListOld.jsx');
 var navobjects=require('../nav/navobjects');
 var routeobjects=require('../nav/routeobjects');
 var WaypointDialog=require('../components/WaypointDialog.jsx');
@@ -353,7 +353,7 @@ Navpage.prototype.buttonUpdate=function(){
  */
 Navpage.prototype._updateZoom=function(){
     var bzoom=this.getMap().getZoom();
-    globalStore.updateValuesObject(bzoom,{
+    globalStore.storeMultiple(bzoom,{
         current: gkeys.gui.navpage.zoom,
         required: gkeys.gui.navpage.requiredZoom
     });

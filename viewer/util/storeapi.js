@@ -166,6 +166,32 @@ StoreApi.prototype.getData=function(key,opt_default){
     }
     return opt_default;
 };
+/**
+ * fetch an object containing the keys provided as parameter
+ * @param keys single key or array or object (keys used and being translated)
+ */
+StoreApi.prototype.getMultiple=function(keys){
+    let self=this;
+    let translate=false;
+    let storeKeys=keys;
+    if (! (storeKeys instanceof Array)){
+        if (storeKeys instanceof Object){
+            storeKeys=Object.keys(storeKeys);
+        }
+        else {
+            storeKeys = [storeKeys];
+        }
+    }
+    let rt={};
+    storeKeys.forEach((key)=>{
+        let v=self.getData(key);
+        if (v !== undefined) {
+            if (translate) rt[keys[key]]=v;
+            else rt[key]=v;
+        }
+    });
+    return rt;
+};
 StoreApi.prototype.reset=function(){
     if (this.resetLocal){
         this.resetLocal();

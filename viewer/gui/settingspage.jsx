@@ -4,7 +4,7 @@
 var React=require('react');
 var ReactDOM=require('react-dom');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
-var ItemList=require("../components/ItemList.jsx");
+var ItemList=require("../components/ItemListOld.jsx");
 var OverlayDialog=require('../components/OverlayDialog.jsx');
 var ColorPicker=require('../components/ColorPicker.jsx');
 var Page=require('./page.jsx');

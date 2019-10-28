@@ -29,16 +29,18 @@ Store.prototype.storeData=function(key,data,opt_no_callbacks){
     return hasChanged;
 };
 
+
+
 /**
  * update several values from an object with given translations
  * for the keys
  * @param data
- * @param keyTranslations objectKey:storeKey
+ * @param keyTranslations objectKey:storeKey - can be undefined - no translations
  */
-Store.prototype.updateValuesObject=function(data,keyTranslations){
+Store.prototype.storeMultiple=function(data,keyTranslations){
     let changeKeys=[];
-    for (let k in keyTranslations){
-        let storeKey=keyTranslations[k];
+    for (let k in (keyTranslations !== undefined)?keyTranslations:data){
+        let storeKey=(keyTranslations!==undefined)? keyTranslations[k]:k;
         let hasChanged=this.storeData(storeKey,data[k],true);
         if (hasChanged){
             changeKeys.push(storeKey);

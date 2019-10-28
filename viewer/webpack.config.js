@@ -86,7 +86,8 @@ module.exports = {
     //see http://humaan.com/getting-started-with-webpack-and-react-es6-style/
     entry: getEntrySources([
         './webpack-main.js',
-        './avnav_viewer.less'
+        './avnav_viewer.less',
+        './avnav_viewer_new.less'
     ]),
     //entry: './app/main.jsx',
     publicPath: 'http://localhost:8081/viewer',
@@ -114,7 +115,7 @@ module.exports = {
             },
             {
                 test: /\.less$/,
-                exclude: /avnav_viewer\.less/,
+                exclude: /avnav_viewer.*\.less/,
                 loader: ExtractTextPlugin.extract("style-loader","css-loader?-url&modules&"+cssLoaderQuery+"!less-loader")
 
             },
@@ -129,9 +130,10 @@ module.exports = {
             },
 
             {
-                test: /avnav_viewer\.less$/,
+                test: /avnav_viewer.*\.less$/,
                 loader: ExtractTextPlugin.extract('style-loader','css-loader?-url!less-loader')
             },
+
             {
                 test: /images[\\\/].*\.png$|images[\\\/].*\.svg$/,
                 loader: 'file-loader',

@@ -2,7 +2,7 @@
  * Created by andreas on 25.11.16.
  */
 var Store=require('../util/store');
-var ItemList=require('./ItemList.jsx');
+var ItemList=require('./ItemListOld.jsx');
 var React=require('react');
 var assign=require('object-assign');
 

@@ -5,7 +5,7 @@ var Page=require('./page.jsx');
 var React=require('react');
 var ReactDOM=require('react-dom');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
-var ItemList=require('../components/ItemList.jsx');
+var ItemList=require('../components/ItemListOld.jsx');
 var Store=require('../util/store');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 

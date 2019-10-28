@@ -251,7 +251,7 @@ NavData.prototype.computeValues=function(){
         this.data.edRouteLen=edRoute?this.routeHandler.computeLength(0,edRoute):0;
     }
 
-    globalStore.updateValuesObject(this.data,{
+    globalStore.storeMultiple(this.data,{
         centerCourse: keys.nav.center.course,
         centerDistance: keys.nav.center.distance,
         markerCourse: keys.nav.wp.course,

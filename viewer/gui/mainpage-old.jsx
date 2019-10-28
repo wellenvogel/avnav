@@ -8,10 +8,16 @@ var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ItemList=require("../components/ItemList.jsx");
 var ReactDOM=require("react-dom");
 var React=require("react");
+var Dynamic=require('../hoc/Dynamic.jsx');
 var keys={
     chartlist:'charts',
     status:'status'
 };
+
+const flatten=function(object,key){
+    return object[key];
+};
+
 
 /**
  *
@@ -105,7 +111,7 @@ Mainpage.prototype.getPageContent=function(){
 
     this.setButtons(this.fixedButtons);
     var Headline=function(props){
-        return <div className="avn_left_top">AvNav</div>
+        return <div className="header">AvNav</div>
     };
     var chartSelected=function(item){
         self.showNavpage(item);
@@ -119,7 +125,7 @@ Mainpage.prototype.getPageContent=function(){
             </div>
         );
     };
-    var BottomLine=function(props){
+    var BottomLine=Dynamic(function(props){
        return (
            <div className='avn_left_bottom '>
                <div className="avn_mainpage_leftbottominner">
@@ -140,23 +146,24 @@ Mainpage.prototype.getPageContent=function(){
                </div>
            </div>
        )
-    };
-    var BottomLineItem=ItemUpdater(BottomLine,this.store,keys.status);
-    var ChartList=ItemUpdater(ItemList,this.store,keys.chartlist);
+    },this.store);
+    var ChartList=Dynamic(ItemList,this.store);
     return React.createClass({
         render: function(){
             return(
-                <div className="avn_panel_fill_flex">
+                <div className="leftPart">
                     <Headline/>
-                    <div className="avn_listWrapper">
-                        <ChartList itemClass={ChartItem}
+                        <ChartList className="mainContent"
+                                   itemClass={ChartItem}
                                    onItemClick={chartSelected}
                                    className=""
                                    itemList={[]}
+                                   storeKeys={keys.chartlist}
+                                   updateFunction={flatten}
+                                   scrollable={true}
                         />
-                    </div>
                     {self.getAlarmWidget()}
-                    <BottomLineItem/>
+                    <BottomLine storeKeys={keys.status} updateFunction={flatten}/>
                 </div>
             );
         }

@@ -6,7 +6,7 @@ var routeobjects=require('../nav/routeobjects');
 var RouteHandler=require('../nav/routedata');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
-var ItemList=require('../components/ItemList.jsx');
+var ItemList=require('../components/ItemListOld.jsx');
 var React=require('react');
 
 

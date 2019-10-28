@@ -1,7 +1,7 @@
 /**
  * Created by Andreas on 27.04.2014.
  */
-var ItemList=require('../components/ItemList.jsx');
+var ItemList=require('../components/ItemListOld.jsx');
 var React=require('react');
 
 var keys={

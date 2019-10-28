@@ -10,8 +10,9 @@
  * ths onIemClick will directly pass through
  */
 
-var React=require('react');
-var assign=require('object-assign');
+import React from 'react';
+import PropTypes from 'prop-types';
+import assign from 'object-assign';
 
 
 const getKey=function(obj){
@@ -21,107 +22,68 @@ const getKey=function(obj){
     return rt;
 };
 
-module.exports=React.createClass({
-    propTypes:{
-        onItemClick:    React.PropTypes.func,
-        itemClass:  React.PropTypes.any, //one of itemClass or itemCreator must be set
-        itemCreator:React.PropTypes.func,
-        updateCallback: React.PropTypes.func,
-        selectors:  React.PropTypes.object, //if a value from this object matches an item key
-                                            //the key will be added as an additional class
-        visibilityFlags: React.PropTypes.object, //if there is an entry for a particular item key
-                                            //this will be considered for visibility
-        itemList: React.PropTypes.array,
-        childProperties: React.PropTypes.object,
-        className: React.PropTypes.string,
-        style: React.PropTypes.object,
-        hidden: React.PropTypes.bool,
-        hideOnEmpty: React.PropTypes.bool
-    },
-    render: function(){
-        var allitems=this.props.itemList||[];
+class ItemList extends React.Component{
+    constructor(props){
+        super(props);
+    }
+    render() {
+        let allitems = this.props.itemList || [];
         if (this.props.hideOnEmpty && allitems.length < 1) return null;
-        if (this.props.hidden) return null;
-        var self=this;
-        var className="avn_listContainer";
-        if (this.props.className) className+=" "+this.props.className;
-        var items=[];
-        for (var idx in allitems){
-            var vis=false;
-            if (allitems[idx].visible === undefined || allitems[idx].visible){
-                vis=true;
-            }
-            if (self.props.visibilityFlags && getKey(allitems[idx])){
-                var flag=self.props.visibilityFlags[getKey(allitems[idx])];
-                if (flag !== undefined){
-                    vis=flag;
-                }
-            }
-            if (vis)items.push(allitems[idx]);
-        }
-        return(
-            <div className={className} style={this.props.style}>
-                { items.map(function (entry) {
-                    var opts = {};
-                    var addClass = entry.addClass||"";
-                    addClass+=" ";
-                    var isSet = false;
-                    var k;
-                    var key = getKey(entry);
-                    if (key !== undefined) {
-                        if (self.props.selectors) {
-                            for (k in self.props.selectors) {
-                                isSet = self.props.selectors[k] == getKey(entry);
-                                if (isSet) {
-                                    addClass += " " + k;
-                                }
-                            }
+        let self = this;
+        let className = "listContainer";
+        if (this.props.scrollable) className+=" scrollable";
+        if (this.props.className) className += " " + this.props.className;
+        let Content=function(props) {
+            return (
+                <div className={props.className}>
+                    {allitems.map(function (entry) {
+                    let itemProps = assign({}, entry);
+                    let key = getKey(entry);
+                    itemProps.key = key;
+                    if (!itemProps.onClick && self.props.onItemClick) {
+                        itemProps.onClick = function (data) {
+                            self.props.onItemClick(entry, data);
                         }
                     }
-                    var prop=assign({},entry,self.props.childProperties);
-                    var clickHandler=function(opt_item,opt_data){
-                        if (! self.props.onItemClick) return;
-                        if (!opt_item) opt_item=prop;
-                        self.props.onItemClick(opt_item,opt_data);
-                        return false;
-                    };
-                    prop.onClick=function(data){
-                        if (data.preventDefault){
-                            data.preventDefault();
-                            clickHandler(prop);
-                        }
-                        else{
-                            clickHandler(prop,data);
-                        }
-                    };
-                    prop.onItemClick=clickHandler;
-                    prop.addClass=addClass;
-                    prop.className=addClass;
-                    prop.key=getKey(entry);
-                    var itemClass;
-                    if (self.props.itemCreator){
-                        //give the creator the chance to finally control all properties
-                        itemClass=self.props.itemCreator(prop);
-                        if (! itemClass) return null;
-                        return React.createElement(itemClass,prop);
+                    let ItemClass;
+                    if (self.props.itemCreator) {
+                        ItemClass = self.props.itemCreator(entry);
+                        if (!ItemClass) return null;
+                        return <ItemClass {...itemProps}/>
                     }
-                    else{
-                        itemClass=self.props.itemClass;
+                    else {
+                        ItemClass = self.props.itemClass;
                     }
-                    return React.createElement(itemClass,prop);
+                    return <ItemClass {...itemProps}/>
                 })}
-            </div>
-        );
-
-    },
-    componentDidUpdate: function(prevProp,prevState){
-        if (this.props.updateCallback){
-            this.props.updateCallback();
+                </div>
+            );
+        };
+        if (this.props.scrollable) {
+            return (
+                <div className={className}>
+                    <Content className="listScroll"/>
+                </div>
+            );
         }
-    },
-    componentDidMount: function(prevProp,prevState){
-        if (this.props.updateCallback){
-            this.props.updateCallback();
+        else {
+            return (
+                <Content className={className}/>
+            );
         }
     }
-});
+
+
+}
+
+ItemList.propTypes={
+    onItemClick:    PropTypes.func,
+        itemClass:      PropTypes.any, //one of itemClass or itemCreator must be set
+        itemCreator:    PropTypes.func,
+        itemList:       PropTypes.array,
+        className:      PropTypes.string,
+        scrollable:     PropTypes.bool,
+        hideOnEmpty:    PropTypes.bool
+};
+
+module.exports=ItemList;

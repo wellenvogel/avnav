@@ -4,7 +4,7 @@
 
 import navobjects from '../nav/navobjects';
 var ItemUpdater=require('../components/ItemUpdater.jsx');
-var ItemList=require("../components/ItemList.jsx");
+var ItemList=require("../components/ItemListOld.jsx");
 var ReactDOM=require("react-dom");
 var React=require("react");
 

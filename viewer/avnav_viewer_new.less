@@ -1,0 +1,46 @@
+//we try to set up some new styling
+//consequently using flexbos
+@import "flexbox.less";
+@import "defines.less";
+
+*{
+  .border-box();
+}
+//have the border inside
+.border-box{
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+//general page set up
+.page{
+  .flex-display();
+  .flex-direction(row);
+}
+
+.buttonContainer{
+
+}
+
+.leftPart{
+  .flex-display();
+  .flex-direction(column);
+}
+
+.header{
+  height: @headlineHeight;
+  padding: 1em;
+  .nightBackFade(@colorMain);
+  .nightForeColor(white,@nightColor);
+  font-weight: bold;
+  .flex-shrink(0);
+}
+
+.mainContent{
+  .flex(1);
+}
+
+.listContainer.scrollable{
+  overflow: auto;
+}

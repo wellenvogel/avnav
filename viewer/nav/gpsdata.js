@@ -99,7 +99,7 @@ GpsData.prototype.average=function(gpsdata){
 GpsData.prototype.writeToStore=function(){
     let bk=keys.nav.gps;
     let d=this.gpsdata;
-    globalStore.updateValuesObject(d,{
+    globalStore.storeMultiple(d,{
         lat:bk.lat,
         lon:bk.lon,
         course:bk.course,

@@ -4,7 +4,7 @@
 
 var React=require('react');
 var ReactDOM=require('react-dom');
-var WaypointList=require('../components/ItemList.jsx');
+var WaypointList=require('../components/ItemListOld.jsx');
 var WaypointItem=require('../components/WayPointItem.jsx');
 var WidgetContainer=require('../components/WidgetContainer.jsx');
 var navobjects=require('../nav/navobjects');
