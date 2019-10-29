@@ -12,6 +12,7 @@ import keys from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
+import Page from '../components/Page.jsx';
 
 const DynamicList = Dynamic(ItemList);
 const flatten = function (object, key) {
@@ -116,9 +117,6 @@ class MainPage extends React.Component {
 
     render() {
         let self = this;
-        let Headline = function (props) {
-            return <div className="header">AvNav</div>
-        };
         let ChartItem = function (props) {
             return (
                 <div className="chartItem" onClick={props.onClick}>
@@ -151,31 +149,22 @@ class MainPage extends React.Component {
                 </div>
             )
         });
-        let ChartList = Dynamic(ItemList);
-        let Buttons = function (props) {
-            return <DynamicList
-                itemClass={Dynamic(Visible(Button))}
-                className="buttonContainer"
-                itemList={self.buttons}
-                storeKeys={{fontSize:keys.gui.global.buttonFontSize}}
-                />
-        };
-
         return (
-            <div className="page" id="avi_mainpage">
-                <div className="leftPart">
-                    <Headline/>
-                    <ChartList className="mainContent"
+            <Page id="avi_mainpage"
+                  title="AvNav"
+                  mainContent={
+                    <DynamicList className="mainContent"
                                itemClass={ChartItem}
                                onItemClick={showNavpage}
                                itemList={[]}
                                storeKeys={{itemList:keys.gui.mainpage.chartList}}
                                scrollable={true}
                         />
+                        }
+                  bottomContent={
                     <BottomLine storeKeys={keys.status} updateFunction={flatten}/>
-                </div>
-                <Buttons/>
-            </div>
+                    }
+                  buttonList={self.buttons}/>
         );
 
 
