@@ -72,9 +72,8 @@ avnav.main=function() {
     else {
         propertyHandler.setValueByName('routingServerError',true);
     }
-    var navdata=new NavData(propertyHandler);
-    var mapholder=new avnav.map.MapHolder(propertyHandler,navdata);
-    var gui=new avnav.gui.Handler(propertyHandler,navdata,mapholder);
+    var mapholder=new avnav.map.MapHolder(propertyHandler,NavData);
+    var gui=new avnav.gui.Handler(propertyHandler,NavData,mapholder);
 
     if (getParam('onAndroid')){
         propertyHandler.setValueByName('onAndroid',true);

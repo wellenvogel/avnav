@@ -12,6 +12,7 @@ var NavCompute=require('./navcompute');
 var navobjects=require('./navobjects');
 var globalStore=require('../util/globalstore.jsx');
 var keys=require('../util/keys.jsx');
+var PropertyHandler=require('../util/propertyhandler');
 
 
 /**
@@ -19,10 +20,8 @@ var keys=require('../util/keys.jsx');
  * @param {avnav.util.PropertyHandler} propertyHandler
  * @constructor
  */
-var NavData=function(propertyHandler){
+var NavData=function(){
     this.base_.apply(this,arguments);
-    /** @private */
-    this.propertyHandler=propertyHandler;
 
     /**
      * @private
@@ -32,19 +31,19 @@ var NavData=function(propertyHandler){
     /** @type {GpsData}
      * @private
      */
-    this.gpsdata=new GpsData(propertyHandler,this);
+    this.gpsdata=new GpsData(PropertyHandler,this);
     this.registerDataProvider(this.gpsdata);
     /**
      * @private
      * @type {TrackData}
      */
-    this.trackHandler=new TrackData(propertyHandler,this);
+    this.trackHandler=new TrackData(PropertyHandler,this);
     /**
      * @type {AisData|exports|module.exports}
      */
-    this.aisHandler=new AisData(propertyHandler,this);
+    this.aisHandler=new AisData(PropertyHandler,this);
     this.registerDataProvider(this.aisHandler);
-    this.routeHandler=new RouteData(propertyHandler,this);
+    this.routeHandler=new RouteData(PropertyHandler,this);
     /**
      * @private
      * @type {navobjects.Point}
@@ -57,7 +56,7 @@ var NavData=function(propertyHandler){
      * @private
      * @type {properties.NM}
      */
-    this.NM=this.propertyHandler.getProperties().NM;
+    this.NM=PropertyHandler.getProperties().NM;
     /**
      * our computed values
      * @type {{centerCourse: number, centerDistance: number, centerMarkerCourse: number, centerMarkerDistance: number, markerCourse: number, markerDistance: number, markerVmg: number, markerEta: null, markerWp: navobjects.WayPoint, routeName: undefined, routeNumPoints: number, routeLen: number, routeRemain: number, routeEta: null, routeNextCourse: number, routeNextWp: undefined, markerXte: number, edRouteName: undefined, edRouteNumPoints: number, edRouteLen: number, edRouteRemain: number, edRouteEta: number}}
@@ -120,7 +119,7 @@ var NavData=function(propertyHandler){
         edRouteLen: "--",
         edRouteRemain: "--",
         edRouteEta: "--:--:--",
-        statusImageUrl: this.propertyHandler.getProperties().statusUnknownImage,
+        statusImageUrl: PropertyHandler.getProperties().statusUnknownImage,
         anchorWatchDistance:"---",
         anchorDistance: "---",
         anchorDirection: "---"
@@ -315,7 +314,7 @@ NavData.prototype.computeValues=function(){
     this.formattedValues.edRouteLen=this.formatter.formatDecimal(this.data.edRouteLen,4,1);
     this.formattedValues.edRouteRemain=this.formatter.formatDecimal(this.data.edRouteRemain,4,1);
     this.formattedValues.edRouteEta=this.data.edRouteEta?this.formatter.formatTime(this.data.edRouteEta):"--:--:--";
-    this.formattedValues.statusImageUrl=gps.valid?this.propertyHandler.getProperties().statusOkImage:this.propertyHandler.getProperties().statusErrorImage;
+    this.formattedValues.statusImageUrl=gps.valid?PropertyHandler.getProperties().statusOkImage:PropertyHandler.getProperties().statusErrorImage;
     this.formattedValues.anchorWatchDistance=this.data.anchorWatchDistance!==undefined?this.formatter.formatDecimal(this.data.anchorWatchDistance,8,0):"";
     this.formattedValues.anchorDistance=this.data.anchorWatchDistance!==undefined?this.formatter.formatDecimal(this.data.anchorDistance,8,0):"";
     this.formattedValues.anchorDirection=this.data.anchorWatchDistance!==undefined?this.formatter.formatDecimal(this.data.anchorDirection,3,0):"";
@@ -517,7 +516,7 @@ NavData.prototype.getCurrentPosition=function(){
     return new navobjects.Point(gps.lon,gps.lat);
 };
 
-module.exports=NavData;
+module.exports=new NavData();
 
 
 
