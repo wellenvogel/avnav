@@ -11,6 +11,7 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
+import history from '../util/history.js';
 
 const DynamicList = Dynamic(ItemList);
 const flatten = function (object, key) {
@@ -21,23 +22,24 @@ const flatten = function (object, key) {
 class MainPage extends React.Component {
     constructor(props) {
         super(props);
+        let self=this;
         this.buttons = [
             {
                 name: 'ShowStatus',
                 onClick: ()=> {
-                    showPage('statuspage')
+                    history.push('statuspage')
                 }
             },
             {
                 name: 'ShowSettings',
                 onClick: ()=> {
-                    showPage('settingspage')
+                    history.push('settingspage')
                 }
             },
             {
                 name: 'ShowDownload',
                 onClick: ()=> {
-                    showPage('downloadpage')
+                    history.push('downloadpage')
                 }
             },
             {
@@ -60,7 +62,7 @@ class MainPage extends React.Component {
             {
                 name: 'ShowGps',
                 onClick: ()=> {
-                    showPage('gpspage')
+                    history.push('gpspage')
                 }
             },
             {
@@ -78,7 +80,7 @@ class MainPage extends React.Component {
             {
                 name: 'MainInfo',
                 onClick: ()=> {
-                    showPage('infopage')
+                    history.push('infopage')
                 }
             },
             {
@@ -98,13 +100,14 @@ class MainPage extends React.Component {
                     };
                 },
                 onClick: ()=> {
-                    showPage('addonpage')
+                    history.push('addonpage')
                 }
             }
         ];
         globalStore.storeData(keys.gui.mainpage.chartList, []);
         globalStore.storeData(keys.gui.mainpage.addOns, [])
     }
+
 
     componentDidMount() {
         readAddOns();
@@ -244,7 +247,7 @@ const readAddOns = function () {
         }
 
     });
-}
+};
 
 /**
  * the click handler for the charts
@@ -252,14 +255,10 @@ const readAddOns = function () {
  */
 const showNavpage = function (entry) {
     avnav.log("activating navpage with url " + entry.url);
-    showPage('navpage', {url: entry.url, charturl: entry.charturl});
+    history.push('navpage', {url: entry.url, charturl: entry.charturl});
 
 };
 
-const showPage = function (name, props) {
-    avnav.log("activating page " + name);
-    avnav.guiHandler.showPage(name, props);
-};
 
 
 module.exports = MainPage;

@@ -45,7 +45,7 @@ module.exports= function(Component,opt_store){
             if (keys.length < 1) return;
             store.register(this,keys);
         }
-        componnetWillUnmount(){
+        componentWillUnmount(){
             store.deregister(this);
         }
         render(){

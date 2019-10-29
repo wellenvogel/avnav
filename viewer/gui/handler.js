@@ -8,6 +8,7 @@ avnav.provide('avnav.gui.AndroidEvent');
 var NavData=require('../nav/navdata');
 var keys=require('../util/keys.jsx');
 var globalStore=require('../util/globalstore.jsx');
+var history=require('../util/history');
 
 
 /**
@@ -158,6 +159,8 @@ avnav.gui.Handler.prototype.removeAllActiveInputs = function () {
  * @returns {boolean|*}
  */
 avnav.gui.Handler.prototype.returnToLast = function (page, opt_options) {
+    history.pop();
+    return;
     var spage;
     if (this.history.length == 0){
         if (page) spage=page;
@@ -177,8 +180,11 @@ avnav.gui.Handler.prototype.returnToLast = function (page, opt_options) {
  *        if skipHistory is set or returning is set - do not push to history
  * @returns {boolean}
  */
-
 avnav.gui.Handler.prototype.showPage = function (name, options) {
+    history.push(name,options); //TODO: options
+};
+
+avnav.gui.Handler.prototype.showPageInternal = function (name, options) {
     if (!name) return false;
     if (name === this.page) return false;
     if (name === "mainpage") this.history=[]; //empty history if we reach the mainpage

@@ -37,7 +37,8 @@ var ReactDOM=require('react-dom');
 var OverlayDialog=require('./components/OverlayDialog.jsx');
 var propertyHandler=require('./util/propertyhandler');
 ol.DEFAULT_TILE_CACHE_HIGH_WATER_MARK=256;
-var MainPage=require('./gui/MainPage.jsx');
+var App=require('./App.jsx');
+var history=require('./util/history');
 
 
 
@@ -103,16 +104,16 @@ avnav.main=function() {
         $('#avi_mainpage_version').text(avnav.android.getVersion());
         avnav.android.applicationStarted();
     }
+    avnav.guiHandler=gui; //intermediate...
+    history.push('mainpage');
     ReactDOM.render(React.createElement(OverlayDialog,{
             showCallback: function(id){gui.addActiveInput(id);},
             hideCallback: function(id){gui.removeActiveInput(id);}
         }),
         document.getElementById('avi_dialog_container'));
 
-    ReactDOM.render(React.createElement(MainPage,{}),document.getElementById('avi_new_pages'));
+    ReactDOM.render(<App/>,document.getElementById('avi_new_pages'));
 
-    avnav.guiHandler=gui; //intermediate...
-    gui.showPage("mainpage");
     //ios browser sometimes has issues with less...
     setTimeout(function(){
         propertyHandler.updateLayout();
