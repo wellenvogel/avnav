@@ -13,12 +13,16 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
+import Toast from '../util/overlay.js';
 
 const DynamicList = Dynamic(ItemList);
-const flatten = function (object, key) {
-    return object[key];
-};
 
+
+const getImgSrc=function(color){
+    if (color == "red") return PropertyHandler.getProperties().statusErrorImage;
+    if (color == "green") return PropertyHandler.getProperties().statusOkImage;
+    if (color == "yellow")return PropertyHandler.getProperties().statusYellowImage;
+};
 
 class MainPage extends React.Component {
     constructor(props) {
@@ -127,17 +131,30 @@ class MainPage extends React.Component {
             );
         };
         let BottomLine = Dynamic(function (props) {
+            //we have the raw nmea in "raw"
+            let nmeaColor="yellow";
+            let aisColor="yellow";
+            let nmeaText="";
+            let aisText="";
+            if (props.raw && props.raw.status && props.raw.status.nmea){
+                nmeaColor=props.raw.status.nmea.status;
+                nmeaText=props.raw.status.nmea.source+":"+props.raw.status.nmea.info;
+            }
+            if (props.raw && props.raw.status && props.raw.status.ais){
+                aisColor = props.raw.status.ais.status;
+                aisText=props.raw.status.ais.source+":"+props.raw.status.ais.info;
+            }
             return (
                 <div className='footer'>
                     <div className='inner'>
                         <div className='status'>
                             <div >
-                                <img className='status_image' src={props.nmeaStatusSrc}/>
-                                NMEA&nbsp;{props.nmeaStatusText}
+                                <img className='status_image' src={getImgSrc(nmeaColor)}/>
+                                NMEA&nbsp;{nmeaText}
                             </div>
                             <div >
-                                <img className='status_image' src={props.aisStatusSrc}/>
-                                AIS&nbsp;{props.aisStatusText}
+                                <img className='status_image' src={getImgSrc(aisColor)}/>
+                                AIS&nbsp;{aisText}
                             </div>
                         </div>
                         <div className="link">
@@ -162,7 +179,7 @@ class MainPage extends React.Component {
                         />
                         }
                   bottomContent={
-                    <BottomLine storeKeys={keys.status} updateFunction={flatten}/>
+                    <BottomLine storeKeys={{raw:keys.nav.gps.raw}} />
                     }
                   buttonList={self.buttons}/>
         );
@@ -181,11 +198,11 @@ const fillList = function () {
         dataType: 'json',
         cache: false,
         error: function (ev) {
-            alert("unable to read chart list: " + ev.responseText);
+            Toast.Toast("unable to read chart list: " + ev.responseText);
         },
         success: function (data) {
             if (data.status != 'OK') {
-                alert("reading chartlist failed: " + data.info);
+                Toast.Toast("reading chartlist failed: " + data.info);
                 return;
             }
             let items = [];
@@ -212,11 +229,11 @@ const readAddOns = function () {
         dataType: 'json',
         cache: false,
         error: function (ev) {
-            alert("unable to read addons: " + ev.responseText);
+            Toast.Toast("unable to read addons: " + ev.responseText);
         },
         success: function (data) {
             if (data.status != 'OK') {
-                alert("reading addons failed: " + data.info);
+                Toast.Toast("reading addons failed: " + data.info);
                 return;
             }
             let items = [];
