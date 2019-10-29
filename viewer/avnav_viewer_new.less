@@ -62,6 +62,177 @@
   overflow: auto;
 }
 
+//----------------------------------------------------------------------------------------
+//buttons
+//----------------------------------------------------------------------------------------
+.buttonBase(){
+  margin: 0.2em 0.2em 0.2em 0.2em;
+  border-top-right-radius: 0.3em;
+  border-top-left-radius: 0.3em;
+  border-bottom-right-radius: 0.3em;
+  border-bottom-left-radius: 0.3em;
+  border: 1px solid;
+  background-position: center center;
+  background-size: 80% 80%;
+  background-repeat: no-repeat;
+  text-decoration: none;
+  .nightBorderFade(#D3D3D3);
+  .nightBackFade(#E6E6E6);
+  //position: relative;
+  cursor: pointer;
+  outline: none;
+  display: block;
+}
+
+button.button{
+  .buttonBase();
+  width: 4em;
+  height: 4em;
+  font-size: @normalButtonFont;
+
+}
+button.active{
+  border: 0.3em solid ;
+  .nightBorderFade(@colorGreen);
+}
+
+.iconButton(@icon){
+  background-image: url(@icon);
+}
+
+button{
+  &.Cancel {
+    .iconButton('images/icons-new/ic_clear.svg');
+  }
+
+  &.Ok {
+    .iconButton('images/icons-new/ic_done.svg');
+
+  }
+  &.Forward {
+    .iconButton('images/icons-new/ic_arrow_forward.svg');
+  }
+  &.Back {
+    .iconButton('images/icons-new/ic_arrow_back.svg');
+  }
+  &.Edit {
+    .iconButton('images/icons-new/ic_edit.svg');
+  }
+
+  &.ZoomIn {
+    .iconButton('images/icons-new/ic_zoom_in.svg');
+  }
+  &.ZoomOut {
+    .iconButton('images/icons-new/ic_zoom_out.svg');
+  }
+  &.LockPos  {
+    .iconButton('images/icons-new/boat.svg');
+  }
+
+  &.LockMarker {
+    .iconButton('images/icons-new/waypoint.svg');
+  }
+
+  &.StopNav {
+    .iconButton('images/icons-new/stop-nav.svg');
+  }
+  &.CourseUp {
+    .iconButton('images/icons-new/compass.svg');
+  }
+  &.ShowRoutePanel {
+    .iconButton('images/icons-new/route.svg');
+  }
+  &.ShowGps {
+    .iconButton('images/icons-new/data.svg');
+
+  }
+  &.AnchorWatch {
+    .iconButton('images/icons-new/anchor.svg');
+
+  }
+
+  &.CancelNav {
+    .iconButton('images/icons-new/ic_clear.svg');
+
+  }
+
+  /*- nav page routing panel --*/
+  &.NavAdd {
+    .iconButton('images/icons-new/wpplus.svg');
+  }
+  &.NavDelete {
+    .iconButton('images/icons-new/wpminus.svg');
+  }
+  &.NavToCenter {
+    .iconButton('images/icons-new/wpcenter.svg');
+  }
+  &.NavGoto {
+    .iconButton('images/icons-new/wpgoto.svg');
+  }
+  &.NavInvert {
+    .iconButton('images/icons-new/invertroute.svg');
+  }
+  &.NavDeleteAll {
+    .iconButton('images/icons-new/ic_delete.svg');
+  }
+
+  &.NavNext {
+    .iconButton('images/icons-new/nextwp.svg');
+  }
+
+  &.WpLocate{
+    .iconButton('images/icons-new/center.svg');
+  }
+  &.WpPrevious{
+    .iconButton('images/icons-new/ic_arrow_back.svg');
+  }
+  &.WpNext{
+    .iconButton('images/icons-new/ic_arrow_forward.svg');
+  }
+
+  &.WpGoto {
+    .iconButton('images/icons-new/wpgoto.svg');
+  }
+  &.WpEdit {
+    .iconButton('images/icons-new/ic_edit.svg');
+  }
+
+  &.ShowStatus {
+    .iconButton('images/icons-new/status.svg');
+  }
+
+  &.ShowSettings {
+    .iconButton('images/icons-new/ic_settings.svg');
+  }
+
+  &.Connected {
+    .iconButton('images/icons-new/plug.svg');
+  }
+
+  &.Night {
+    .iconButton('images/icons-new/night.svg');
+  }
+
+  &.ShowDownload {
+    .iconButton('images/icons-new/ic_file_download.svg');
+  }
+
+  &.MainCancel {
+    .iconButton('images/icons-new/ic_clear.svg');
+  }
+
+  &.MainAndroid {
+    .iconButton('images/icons-new/ic_android.svg');
+  }
+  &.MainInfo{
+    .iconButton('images/icons-new/ic_info.svg');
+  }
+
+  &.MainAddOns{
+    .iconButton('images/icons-new/apps.svg');
+  }
+
+}
 
 //----------------------------------------------------------------------------------------
 //mainpage

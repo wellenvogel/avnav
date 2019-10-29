@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 
 const Button=function(props){
     let className=props.className||"";
-    className+=" avn_button avb_"+props.name;
+    className+=" button "+props.name;
     if (props.toggle !== undefined){
-        className+=props.toggle?" avb_toggleButton avn_buttonActive":" avb_toggleButton avn_button_inactive";
+        className+=props.toggle?" active":" inactive";
     }
     let {toggle,...forward}=props;
     return(
