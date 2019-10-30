@@ -63,7 +63,7 @@ avnav.main=function() {
     $("body").show();
 
     if (getParam('log')) avnav.debugMode=true;
-    propertyHandler.loadUserData();
+    propertyHandler.initialize();
     var navurl=getParam('navurl');
     if (navurl){
         propertyHandler.setValueByName('navUrl',navurl);

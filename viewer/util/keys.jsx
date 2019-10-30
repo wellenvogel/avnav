@@ -78,9 +78,7 @@ let keys={
             pageName: K,
             pageOptions:K,
             onAndroid:K,
-            connected: K,
-            nightMode: K,
-            buttonFontSize: K,
+            propertySequence:K
         },
         navpage:{
             zoom: K,
@@ -95,6 +93,14 @@ let keys={
             status: K,
             addOns: K,
         }
+    },
+    //all keys below this one are synced with the property handler
+    //so we can only have values here that correspond to available properties
+    properties:{
+        connectedMode: K,
+        nightMode: K,
+        buttonFontSize: K
+
     }
 };
 

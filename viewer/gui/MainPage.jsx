@@ -49,19 +49,17 @@ class MainPage extends React.Component {
             },
             {
                 name: 'Connected',
-                storeKeys: [keys.gui.global.onAndroid, keys.gui.global.connected],
+                storeKeys: [keys.gui.global.onAndroid, keys.properties.connectedMode],
                 updateFunction: (state, skeys) => {
                     return {
                         visible: !state[keys.gui.global.onAndroid],
-                        toggle: state[keys.gui.global.connected]
+                        toggle: state[keys.properties.connectedMode]
                     }
                 },
                 onClick: ()=> {
-                    let con = globalStore.getData(keys.gui.global.connected, false);
+                    let con = globalStore.getData(keys.properties.connectedMode, false);
                     con = !con;
-                    PropertyHandler.setValueByName("connectedMode", con);
-                    PropertyHandler.saveUserData();
-                    globalStore.storeData(keys.gui.global.connected, con);
+                    globalStore.storeData(keys.properties.connectedMode, con);
                 }
             },
             {
@@ -72,14 +70,11 @@ class MainPage extends React.Component {
             },
             {
                 name: 'Night',
-                storeKeys: {toggle: keys.gui.global.nightMode},
+                storeKeys: {toggle: keys.properties.nightMode},
                 onClick: ()=> {
-                    let mode = globalStore.getData(keys.gui.global.nightMode, false);
+                    let mode = globalStore.getData(keys.properties.nightMode, false);
                     mode = !mode;
-                    PropertyHandler.setValueByName('nightMode', mode);
-                    PropertyHandler.saveUserData();
-                    PropertyHandler.updateLayout();
-                    globalStore.storeData(keys.gui.global.nightMode, mode);
+                    globalStore.storeData(keys.properties.nightMode, mode);
                 }
             },
             {
@@ -167,7 +162,10 @@ class MainPage extends React.Component {
             )
         });
         return (
-            <Page id="avi_mainpage"
+            <Page
+                  className={this.props.className}
+                  style={this.props.style}
+                  id="avi_mainpage"
                   title="AvNav"
                   mainContent={
                     <DynamicList className="mainContent"

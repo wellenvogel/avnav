@@ -323,7 +323,7 @@ Settingspage.prototype.resetValues=function(opt_defaults){
         items.forEach(function(item){
             var description=self.gui.properties.getDescriptionByName(item);
             var value;
-            if (! opt_defaults)value =self.gui.properties.getValue(description);
+            if (! opt_defaults)value =PropertyHandler.getValue(description);
             else value= description.defaultv;
             newValues[item]=value;
         })

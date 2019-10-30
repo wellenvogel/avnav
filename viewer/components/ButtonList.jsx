@@ -12,5 +12,5 @@ module.exports=function(props){
     return <DynamicList {...props}
         className={className}
         itemClass={Dynamic(Visible(Button))}
-        storeKeys={{fontSize:keys.gui.global.buttonFontSize}}/>
+        storeKeys={{fontSize:keys.properties.buttonFontSize}}/>
 };

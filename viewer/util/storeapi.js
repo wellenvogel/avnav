@@ -92,14 +92,22 @@ StoreApi.prototype._contains=function(keylist,arr){
 /**
  * register a callback handler
  * @param {UpdateCallback} callback
- * @param list of keys
+ * @param list of keys, can be an object with the values being the keys
  */
 StoreApi.prototype.register=function(callback/*,...*/){
     let args=Array.prototype.slice.call(arguments,1);
     let keys=[];
     args.forEach(function(arg){
         if (arg === undefined) return;
-       keys=keys.concat(arg);
+        if (arg instanceof Array){
+            keys=keys.concat(arg)
+        }
+        else if (arg instanceof Object){
+            for (let k in arg){
+               keys.push(arg[k])
+            }
+        }
+        else  keys=keys.concat(arg);
     });
     if (! callback) return;
     let idx=this._findCallback(callback);
@@ -134,13 +142,15 @@ StoreApi.prototype.deregister=function(callback){
 /**
  * fire the callbacks
  * @param keys - an array of keys
+ * @param opt_omitHandler e reference to a handler to be omitted
  */
-StoreApi.prototype.callCallbacks=function(keys){
+StoreApi.prototype.callCallbacks=function(keys,opt_omitHandler){
     let self=this;
     this.callbacks.forEach(function(cbItem){
-       if (self._contains(keys,cbItem.keys)){
+        if (opt_omitHandler && opt_omitHandler === cbItem.callback)return;
+        if (self._contains(keys,cbItem.keys)){
            cbItem.callback.dataChanged(self,keys);
-       }
+        }
     });
 };
 

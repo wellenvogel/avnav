@@ -5,6 +5,7 @@ import history from './util/history.js';
 import Dynamic from './hoc/Dynamic.jsx';
 import keys from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
+import PropertyHandler from './util/propertyhandler.js';
 
 //legacy support - hand over to the "old" gui handler
 class Other extends React.Component{
@@ -46,7 +47,10 @@ class Router extends Component {
         if (Page === undefined){
             Page=Other;
         }
-        return <Page options={this.props.options} location={this.props.location}/>
+        let className=this.props.nightMode?"nightMode":"";
+        let style={};
+        if (this.props.nightMode) style['opacity']=PropertyHandler.getValueByName('nightFade');
+        return <Page className={className} style={style} options={this.props.options} location={this.props.location}/>
     }
 }
 
@@ -56,7 +60,9 @@ module.exports=function(props){
     return <DynamicRouter
             storeKeys={{
                 location: keys.gui.global.pageName,
-                options: keys.gui.global.pageOptions
+                options: keys.gui.global.pageOptions,
+                nightMode: keys.properties.nightMode,
+                sequence: keys.gui.global.propertySequence
             }}
         />
 };

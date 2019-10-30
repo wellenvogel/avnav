@@ -20,12 +20,13 @@ Base.inherits(Store,StoreApi);
  * store a data item for a key and trigger the registered callbacks
  * @param key
  * @param data
+ * @param opt_noCallbacks: either true to omit all callbacks or a callback reference to omit this
  */
-Store.prototype.storeData=function(key,data,opt_no_callbacks){
+Store.prototype.storeData=function(key,data,opt_noCallbacks){
     let hasChanged=!this.equalsData(this.data[key],data);
     this.data[key]=data;
     //this could be improved by checking for changes...
-    if (hasChanged && ! opt_no_callbacks)this.callCallbacks([key]);
+    if (hasChanged && ! (opt_noCallbacks === true) )this.callCallbacks([key],opt_noCallbacks);
     return hasChanged;
 };
 
@@ -36,8 +37,9 @@ Store.prototype.storeData=function(key,data,opt_no_callbacks){
  * for the keys
  * @param data
  * @param keyTranslations objectKey:storeKey - can be undefined - no translations
+ * @param opt_noCallbacks: either true to omit all callbacks or a callback reference to omit this
  */
-Store.prototype.storeMultiple=function(data,keyTranslations){
+Store.prototype.storeMultiple=function(data,keyTranslations,opt_noCallbacks){
     let changeKeys=[];
     for (let k in (keyTranslations !== undefined)?keyTranslations:data){
         let storeKey=(keyTranslations!==undefined)? keyTranslations[k]:k;
@@ -46,8 +48,8 @@ Store.prototype.storeMultiple=function(data,keyTranslations){
             changeKeys.push(storeKey);
         }
     }
-    if (changeKeys.length > 0){
-        this.callCallbacks(changeKeys);
+    if (changeKeys.length > 0 && (opt_noCallbacks !== true)){
+        this.callCallbacks(changeKeys,opt_noCallbacks);
     }
 };
 

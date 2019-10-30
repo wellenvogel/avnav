@@ -26,7 +26,7 @@ class Page extends React.Component {
         let className = "page";
         if (props.className) className += " " + props.className;
         let Alarm=this.alarmWidget;
-        return <div className={className} id={props.id}>
+        return <div className={className} id={props.id} style={props.style}>
             <div className="leftPart">
                 {props.title ? <Headline title={props.title}/> : null}
                 {props.mainContent ? props.mainContent : null}
@@ -48,7 +48,8 @@ Page.propTypes={
     title: PropTypes.string,
     mainContent: PropTypes.any,
     bottomContent: PropTypes.any,
-    buttonList: PropTypes.any
+    buttonList: PropTypes.any,
+    style: PropTypes.object
 };
 
 module.exports=Page;
