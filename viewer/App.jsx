@@ -73,10 +73,10 @@ class App extends React.Component {
         if (! current) return;
         let small = current.width < PropertyHandler.getProperties().smallBreak;
         globalStore.storeData(keys.gui.global.smallDisplay,small); //set small before we change dimensions...
-        globalStore.storeData(keys.gui.global.dimensions,{width:current.width,height:current.height});
+        globalStore.storeData(keys.gui.global.windowDimensions,{width:current.width,height:current.height});
     }
     componentDidMount(){
-        let iv=window.setInterval(this.checkSizes,100000);
+        let iv=window.setInterval(this.checkSizes,1000);
         this.checkSizes();
         this.setState({interval:iv});
         window.addEventListener('resize',this.checkSizes)

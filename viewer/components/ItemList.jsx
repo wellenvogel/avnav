@@ -35,7 +35,7 @@ class ItemList extends React.Component{
         if (this.props.className) className += " " + this.props.className;
         let style={};
         if (this.props.fontSize){
-            style[fontSize]=this.props.fontSize;
+            style.fontSize=this.props.fontSize;
         }
         let Content=function(props) {
             return (
