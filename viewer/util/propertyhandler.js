@@ -26,12 +26,12 @@ avnav.util.PropertyChangeEvent=PropertyChangeEvent;
 
 const applyLayoutLegacy=(nightMode,nightFade,baseFontSize,widgetFontSize,buttonFontSize)=>{
     if (!nightMode) {
-        $('html').removeClass('nightMode');
-        $('body').css('opacity', '1');
+        $('#old_pages').removeClass('nightMode');
+        $('#old_pages').css('opacity', '1');
     }
     else {
-        $('html').addClass('nightMode');
-        $('body').css('opacity', nightFade / 100)
+        $('#old_pages').addClass('nightMode');
+        $('#old_pages').css('opacity', nightFade / 100)
     }
     $(".avn_button").css('font-size', buttonFontSize + "px");
     $(".avn_dialog button").css('font-size', buttonFontSize + "px");
@@ -159,10 +159,10 @@ class PropertyHandler {
      * @param {Property} descr
      * @returns {boolean}
      */
-    setValue(descr, value) {
+    setValue(descr, value,opt_omitStore) {
         if (descr === undefined || !( descr instanceof Properties.Property)) return false;
         descr.path[descr.pname] = value;
-        return this.setUserDataByDescr(descr, value);
+        return this.setUserDataByDescr(descr, value,opt_omitStore);
     }
 
     /**
@@ -297,12 +297,13 @@ class PropertyHandler {
             let description=this.storeProperties[propKey];
             if (! description) continue;
             if (values[propKey] != this.getValue(description)){
-                this.setUserDataByDescr(description,values[propKey],true);
+                this.setValue(description,values[propKey],true);
                 hasChanges=true;
             }
         }
         if (hasChanges){
             this.saveUserData();
+            this.updateLayout();
         }
     }
 

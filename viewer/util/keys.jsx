@@ -81,6 +81,7 @@ let keys={
             propertySequence:K,
             hasActiveInputs: K,
             currentDialog: K, //holds the data for the currently visible dialog - if any
+            windowDimensions: K,
         },
         navpage:{
             zoom: K,

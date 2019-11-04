@@ -198,7 +198,6 @@ Page.prototype.leftPanelCallback=function(bounds){
     }
     this.leftPanelBounds=assign({},bounds);
     this.leftPanelChanged(bounds);
-    globalStore.storeData(keys.gui.global.smallDisplay,this.isSmall());
     return true;
 };
 /**
