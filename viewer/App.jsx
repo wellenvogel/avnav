@@ -6,6 +6,7 @@ import Dynamic from './hoc/Dynamic.jsx';
 import keys from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
+import OverlayDialog from './components/OverlayDialog.jsx';
 
 //legacy support - hand over to the "old" gui handler
 class Other extends React.Component{
@@ -57,6 +58,7 @@ class Router extends Component {
 const DynamicRouter=Dynamic(Router);
 
 module.exports=function(props){
+    const Dialogs=OverlayDialog.getDialogContainer;
     return <React.Fragment>
             <DynamicRouter
             storeKeys={{
@@ -66,5 +68,6 @@ module.exports=function(props){
                 sequence: keys.gui.global.propertySequence
             }}
             />
+            <Dialogs/>
            </React.Fragment>
 };

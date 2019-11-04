@@ -79,7 +79,8 @@ let keys={
             pageOptions:K,
             onAndroid:K,
             propertySequence:K,
-            hasActiveInputs: K
+            hasActiveInputs: K,
+            currentDialog: K, //holds the data for the currently visible dialog - if any
         },
         navpage:{
             zoom: K,

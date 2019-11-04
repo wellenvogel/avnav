@@ -105,12 +105,6 @@ avnav.main=function() {
     }
     avnav.guiHandler=gui; //intermediate...
     history.push('mainpage');
-    ReactDOM.render(React.createElement(OverlayDialog,{
-            showCallback: function(id){gui.addActiveInput(id);},
-            hideCallback: function(id){gui.removeActiveInput(id);}
-        }),
-        document.getElementById('avi_dialog_container'));
-
     ReactDOM.render(<App/>,document.getElementById('new_pages'));
 
     //ios browser sometimes has issues with less...

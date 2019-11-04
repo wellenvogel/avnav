@@ -7,47 +7,135 @@
  * the static methods will return promises for simple dialog handling
  */
 
-var React=require('react');
-var reactCreateClass=require('create-react-class');
-var Promise=require('promise');
-var PropTypes=require('prop-types');
-var id=0;
-var getNextId=function(){
+import React from 'react';
+import Promise from 'promise';
+import PropTypes from 'prop-types';
+import assign from 'object-assign';
+import DialogDisplay from './OverlayDialogDisplay.jsx';
+import Dynamic from '../hoc/Dynamic.jsx';
+import InputMonitor from '../hoc/InputMonitor.jsx';
+import globalStore from '../util/globalstore.jsx';
+import ItemList from '../components/ItemList.jsx';
+import keys from '../util/keys.jsx';
+
+let id=1;
+
+const nextId=()=> {
     id++;
     return id;
 };
-var OverlayDialogListInstance=undefined;
-var dialogInstanceId='###overlayDialog###'; //will be used to store this as
-                                            //"active input" to prevent resizes
-var OverlayDialog=reactCreateClass({
-    propTypes:{
-        showCallback: PropTypes.func,
-        hideCallback: PropTypes.func
-    },
-    getInitialState: function(){
-        return {
+/**
+ *
+ * @param key
+ * @param properties
+ *        if properties contains a cancelCallback this will be called if the dialog
+ *        is removed from "outside"
+ */
+const addDialog=(key,properties)=> {
+    let currentDialogs=assign({},globalStore.getData(keys.gui.global.currentDialog,{}));
+    let timeout=undefined;
+    if (properties && properties.timeout){
+        timeout=window.setTimeout(removeDialog(opt_key),properties.timeout);
+    }
+    currentDialogs[key]=assign({timeoutHandler:timeout},properties);
+    globalStore.storeData(keys.gui.global.currentDialog,currentDialogs);
+};
 
-        };
-    },
-    render: function(){
-        if (! this.state.content) {
-            if (this.props.hideCallback) this.props.hideCallback(dialogInstanceId);
-            return null;
+const removeDialog=(key,opt_omitCancel)=> {
+    let currentDialogs=assign({},globalStore.getData(keys.gui.global.currentDialog,{}));
+    let old=currentDialogs[key];
+    if (old !== undefined) {
+        delete currentDialogs[key];
+        if (old.timeoutHandler) {
+            window.clearTimeout(old.timeout);
         }
-        if (this.props.showCallback) this.props.showCallback(dialogInstanceId);
-        var id=this.state._contentId;
-        var self=this;
-        var hide=function(){
-            self.hide(id);
-        };
-        var props=avnav.assign({},this.state,{closeCallback:hide});
-        props.content=undefined;
-        props._contentId=undefined;
-        return(
-            <div ref="container" className="avn_overlay_cover_active">
-                <div ref="box" className="avn_dialog">{React.createElement(this.state.content,props)}</div>
-            </div>
-        );
+    }
+    globalStore.storeData(keys.gui.global.currentDialog,currentDialogs);
+    if (old && old.cancelCallback && ! opt_omitCancel) {
+        //do this after we updated the store to avoid endless loops
+        //if someone calls removeDialog in the cancel callback
+        old.cancelCallback();
+    }
+    return old !== undefined;
+};
+
+
+const createValueDialog=function(title,value,okCallback,cancelCallback,opt_label) {
+    class Dialog extends React.Component{
+        constructor(props){
+            super(props);
+            this.state={value:value};
+            this.valueChanged=this.valueChanged.bind(this);
+        }
+        valueChanged(event) {
+            this.setState({value: event.target.value});
+        }
+        render () {
+            return (
+                <div>
+                    <h3 className="avn_dialogTitle">{title || 'Input'}</h3>
+                    <div>
+                        <div className="avn_row"><label>{opt_label || ''}</label>
+                            <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
+                        </div>
+                    </div>
+                    <button name="ok" onClick={()=>okCallback(this.state.value)}>Ok</button>
+                    <button name="cancel" onClick={cancelCallback}>Cancel</button>
+                    <div className="avn_clear"></div>
+                </div>
+            );
+        }
+    };
+    return Dialog;
+};
+
+var createSelectDialog=function(title,list,okCallback,cancelCallback) {
+    return (props)=> {
+            return (
+                <div className="avn_selectDialog">
+                    <h3 className="avn_dialogTitle">{title || ''}</h3>
+                    <div className="avn_selectList">
+                        {list.map(function(elem){
+                            return(
+                                <div className={"avn_list_entry "+(elem.selected && 'avn_selectedItem')} onClick={function(){
+                                okCallback(elem);
+                            }}>{elem.label}</div>);
+                        })}
+                    </div>
+                    <div className="avn_buttons">
+                        <button name="cancel" onClick={cancelCallback}>Cancel</button>
+                        <div className="avn_clear"></div>
+                    </div>
+                </div>
+            );
+
+    };
+};
+
+                                            //"active input" to prevent resizes
+const Dialogs = {
+    /**
+     * get the react elemnt that will handle all the dialogs
+     */
+    getDialogContainer: (props) => {
+        let Item = InputMonitor(DialogDisplay);
+        let List = Dynamic(ItemList);
+        return <List {...props}
+            itemClass={Item}
+            storeKeys={{
+                items:keys.gui.global.currentDialog
+            }}
+            updateFunction={(state)=>{
+                let items=[];
+                for (let k in state.items){
+                    let ip=assign({key:k},state.items[k]);
+                    //delete properties we only handle internally
+                    delete ip.timeoutHandler;
+                    items.push(ip);
+                }
+                return {itemList:items};
+            }}
+            />;
     },
     /**
      * show a dialog
@@ -56,363 +144,198 @@ var OverlayDialog=reactCreateClass({
      * @param properties
      * @returns {*} the content element id
      */
-    show: function(content,properties){
-        var id=getNextId();
-        this.setState(avnav.assign({},this.props,properties||{},{content:content,_contentId:id}));
-        if (properties.timeout){
-            window.setTimeout(this.hide,properties.timeout);
-        }
-        return id;
+    show: (content, properties, opt_key)=> {
+        if (!opt_key) opt_key = nextId();
+        addDialog(opt_key, {
+            content: content,
+            parent: properties ? properties.parent : undefined,
+            cancelCallback: properties ? properties.cancelCallback : undefined,
+            closeCallback: ()=>{removeDialog(opt_key)},
+            onClick: ()=>{removeDialog(opt_key)}
+        });
+        return opt_key;
+
+    },
+    hide: (id)=> {
+        removeDialog(id);
+    },
+
+    /**
+     * show an alert message with close button
+     * @param text
+     * @param opt_parent if set the HTML parent element
+     * @returns {Promise}
+     */
+    alert: function (text, opt_parent) {
+        return new Promise(function (resolve, reject) {
+            let id = nextId();
+            const okFunction = ()=> {
+                removeDialog(id,true);
+                resolve();
+            };
+            const html = function () {
+                return (
+                    <div>
+                        <h3 className="avn_dialogTitle">Alert</h3>
+
+                        <div className="avn_dialogText">{text}</div>
+                        <button name="ok" onClick={okFunction}>Ok</button>
+                        <div className="avn_clear"></div>
+                    </div>
+                );
+            };
+            Dialogs.show(html, {
+                cancelCallback: function () {
+                    resolve();
+                },
+                parent: opt_parent
+            }, id);
+        });
     },
     /**
-     *
-     * @param opt_id if set - only hide if we are showing this element
+     * show a confirmation dialog
+     * @param {string} text
+     * @param  opt_parent if set the dialog parent
+     * @param {string} opt_title if set the title
+     * @returns {Promise}
      */
-    hide: function(opt_id){
-        var oldState=this.state;
-        //only hide if this is either called globally or if
-        //we still show the object that we should hide
-        if (oldState._contentId && opt_id !== undefined && oldState._contentId != opt_id ) return;
-        if (oldState.cancelCallback && oldState._contentId){
-            oldState.cancelCallback();
-        }
-        var newState={};
-        for (var k in oldState){
-            newState[k]=undefined;
-        }
-        this.setState(newState);
-    },
-    componentDidMount: function(){
-        OverlayDialogListInstance=this;
-        window.addEventListener('resize',this.updateDimensions);
-    },
-    componentWillUnmount: function(){
-        var oldState=this.state;
-        if (oldState.cancelCallback){
-            oldState.cancelCallback();
-        }
-        window.removeEventListener('resize',this.updateDimensions);
-        if (this.props.hideCallback) this.props.hideCallback(dialogInstanceId);
-        OverlayDialogListInstance=undefined;
-    },
-    componentDidUpdate: function(){
-        this.updateDimensions();
-    },
-    updateDimensions: function(){
-        if (! this.state.content) return;
-        var props=avnav.assign({},this.props,this.state);
-
-        var assingToViewport = true;
-        if (props.parent) {
-            try {
-                //expected to be a dom element
-                var containerRect = props.parent.getBoundingClientRect();
-                avnav.assign(this.refs.container.style, {
-                    position: "fixed",
-                    top: containerRect.top + "px",
-                    left: containerRect.left + "px",
-                    width: containerRect.width + "px",
-                    height: containerRect.height + "px"
-                });
-                assingToViewport = false;
-            } catch (e) {
-                avnav.log("invalid parent for dialog: " + e);
-            }
-        }
-        if (assingToViewport) {
-            avnav.assign(this.refs.container.style, {
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0
-            });
-        }
-        var rect = this.refs.container.getBoundingClientRect();
-        avnav.assign(this.refs.box.style, {
-            maxWidth: rect.width + "px",
-            maxHeight: rect.height + "px",
-            display: 'block',
-            position: 'fixed',
-            opacity: 0
-        });
-        var self = this;
-        window.setTimeout(function () {
-            if (!self.refs.box) return; //could have become invisible...
-            var boxRect = self.refs.box.getBoundingClientRect();
-            avnav.assign(self.refs.box.style, {
-                left: (rect.width - boxRect.width) / 2 + "px",
-                top: (rect.height - boxRect.height) / 2 + "px",
-                opacity: 1
-            });
-            var props=avnav.assign({},self.props,self.state);
-            if (props.positionCallback) {
-                props.positionCallback(boxRect);
-            }
-
-        }, 0);
-
-    },
-    statics:{
-        /**
-         * show an alert message with close button
-         * @param text
-         * @param opt_parent if set the HTML parent element
-         * @returns {Promise}
-         */
-        alert:function(text,opt_parent){
-            return new Promise(function (resolve, reject) {
-                var html = reactCreateClass({
-                    propTypes: {
-                        closeCallback: PropTypes.func
-                    },
-                    okFunction:function(el){
-                        if (this.props.closeCallback) this.props.closeCallback();
-                        resolve();
-                    },
-                    render: function () {
-                        return (
-                            <div>
-                                <h3 className="avn_dialogTitle">Alert</h3>
-                                <div className="avn_dialogText">{text}</div>
-                                <button name="ok" onClick={this.okFunction}>Ok</button>
-                                <div className="avn_clear"></div>
-                            </div>
-                        );
-                    }
-                });
-                if (OverlayDialogListInstance == null) {
-                    reject(new Error("not initialzed"));
-                    return;
-                }
-                OverlayDialogListInstance.show(html,
-                    {
-                        cancelCallback: function(){
-                            resolve();
-                        },
-                        parent: opt_parent
-
-                    });
-            });
-        },
-        /**
-         * show a confirmation dialog
-         * @param {string} text
-         * @param  opt_parent if set the dialog parent
-         * @param {string} opt_title if set the title
-         * @returns {Promise}
-         */
-        confirm: function(text,opt_parent,opt_title){
-            return new Promise(function (resolve, reject) {
-                var html=reactCreateClass({
-                    propTypes: {
-                        closeCallback: PropTypes.func
-                    },
-                    okFunction:function(el){
-                        resolve(1);
-                        if (this.props.closeCallback) this.props.closeCallback();
-                    },
-                    cancelFunction:function(el){
-                        if (this.props.closeCallback) this.props.closeCallback();
-                        reject();
-                    },
-                    render: function(){
-                        return (
-                            <div>
-                                <h3 className="avn_dialogTitle">{opt_title||''}</h3>
-                                <div className="avn_dialogText">{text}</div>
-                                <button name="ok" onClick={this.okFunction}>Ok</button>
-                                <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
-                                <div className="avn_clear"></div>
-                            </div>
-                        );
-                    }
-                });
-                if (OverlayDialogListInstance == null) {
-                    reject(new Error("not initialzed"));
-                    return;
-                }
-                OverlayDialogListInstance.show(html,
-                    {
-                        cancelCallback: function(){
-                            reject();
-                        },
-                        parent: opt_parent
-
-                    });
-            });
-        },
-        /**
-         * a simple input value dialog
-         * @param {string} title the title text to be displayed
-         * @param {string} value the initial value
-         * @param {function} okCallback the callback when OK is clicked, value as parameter
-         *                   return false to keep the dialog open
-         *                   the callback will receive an asynchronous close function as
-         *                   second parameter
-         * @param opt_parent if set the parent HTML element
-         * @param opt_label if set an additional label
-         * @param opt_cancelCallback - if set a callback function being invoked on cancel
-         * @returns {*|OverlayDialog}
-         */
-        valueDialog: function(title,value,okCallback,opt_parent,opt_label,opt_cancelCallback){
-            if (OverlayDialogListInstance == null) {
-                throw new Error("not initialzed");
-            }
-            var id;
-            var Dialog=createValueDialog(title,value,okCallback,opt_label,opt_cancelCallback);
-            id=OverlayDialog.dialog(Dialog,opt_parent);
-            return id;
-        },
-        /**
-         * create a value dialog as a promise
-         * this will always fullfill if the user clicks ok
-         * to implement checking and asynchronous close use the valueDialog method
-         * @param title
-         * @param value
-         * @param opt_parent
-         * @param opt_label
-         * @returns {Promise}
-         */
-        valueDialogPromise: function(title,value,opt_parent,opt_label){
-            return new Promise(function(resolve,reject){
-                var Dialog=createValueDialog(title,value,function(value){
-                    resolve(value);
-                    return true;
-                },opt_label,function(){
-                    reject();
-                });
-                OverlayDialog.dialog(Dialog,opt_parent);
-            })
-        },
-        /**
-         * create a value dialog as a promise
-         * this will always fullfill if the user clicks ok
-         * to implement checking and asynchronous close use the valueDialog method
-         * @param title
-         * @param list
-         * @param opt_parent
-         * @returns {Promise}
-         */
-        selectDialogPromise: function(title,list,opt_parent){
-            return new Promise(function(resolve,reject){
-                var Dialog=createSelectDialog(title,list,function(value){
-                    resolve(value);
-                    return true;
-                },function(){
-                    reject();
-                });
-                OverlayDialog.dialog(Dialog,opt_parent);
-            })
-        },
-        /**
-         * create an arbitrary dialog
-         * @param html the react class to show (or the html string)
-         * @param opt_parent
-         * @param opt_options
-         * @returns {object} the react element that we are showing - use this for hiding
-         */
-        dialog: function(html,opt_parent,opt_options){
-            if (OverlayDialogListInstance == null) {
-                throw new Error("not initialzed");
-            }
-            var options=avnav.assign({},opt_options||{},{parent:opt_parent});
-            return OverlayDialogListInstance.show(html,options);
-        },
-        /**
-         * hide the current dialog
-         */
-        hide: function(opt_item){
-            if (OverlayDialogListInstance) OverlayDialogListInstance.hide(opt_item);
-        }
-    }
-});
-
-var createValueDialog=function(title,value,okCallback,opt_label,opt_cancelCallback) {
-    if (OverlayDialogListInstance == null) {
-        throw new Error("not initialzed");
-    }
-    var Dialog = reactCreateClass({
-        propTypes: {
-            closeCallback: PropTypes.func
-        },
-        getInitialState: function () {
-            return {value: value};
-        },
-        valueChanged: function (event) {
-            this.setState({value: event.target.value});
-        },
-        closeFunction: function (opt_skip) {
-            if (this.props.closeCallback) this.props.closeCallback();
-            if (! opt_skip && opt_cancelCallback) opt_cancelCallback();
-        },
-        okFunction: function (event) {
-            var rt = okCallback(this.state.value, this.closeFunction);
-            if (rt && this.props.closeCallback) this.props.closeCallback();
-        },
-        cancelFunction: function (event) {
-            this.closeFunction();
-        },
-        render: function () {
-            var html = (
-                <div>
-                    <h3 className="avn_dialogTitle">{title || 'Input'}</h3>
+    confirm: function (text, opt_parent, opt_title) {
+        return new Promise(function (resolve, reject) {
+            let id = nextId();
+            const okFunction = (el)=> {
+                removeDialog(id,true);
+                resolve(1);
+            };
+            const cancelFunction = (el)=> {
+                removeDialog(id,true);
+                reject();
+            };
+            var html = function (props) {
+                return (
                     <div>
-                        <div className="avn_row"><label>{opt_label || ''}</label>
-                            <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
-                        </div>
+                        <h3 className="avn_dialogTitle">{opt_title || ''}</h3>
+
+                        <div className="avn_dialogText">{text}</div>
+                        <button name="ok" onClick={okFunction}>Ok</button>
+                        <button name="cancel" onClick={cancelFunction}>Cancel</button>
+                        <div className="avn_clear"></div>
                     </div>
-                    <button name="ok" onClick={this.okFunction}>Ok</button>
-                    <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
-                    <div className="avn_clear"></div>
-                </div>
-            );
-            return html;
-        }
-    });
-    return Dialog;
+                );
+            };
+            Dialogs.show(html, {
+                cancelCallback: function () {
+                    reject();
+                },
+                parent: opt_parent
+            });
+        });
+
+    },
+    /**
+     * a simple input value dialog
+     * @param {string} title the title text to be displayed
+     * @param {string} value the initial value
+     * @param {function} okCallback the callback when OK is clicked, value as parameter
+     *                   return false to keep the dialog open
+     *                   the callback will receive an asynchronous close function as
+     *                   second parameter
+     * @param opt_parent if set the parent HTML element
+     * @param opt_label if set an additional label
+     * @param opt_cancelCallback - if set a callback function being invoked on cancel
+     * @returns {*|OverlayDialog}
+     */
+    valueDialog: function (title, value, okCallback, opt_parent, opt_label, opt_cancelCallback) {
+        let id = nextId();
+        const ok = (value)=> {
+            removeDialog(id,true);
+            okCallback(value);
+        };
+        const cancel = ()=> {
+            if (removeDialog(id,true) && opt_cancelCallback) opt_cancelCallback();
+        };
+        var Dialog = createValueDialog(title, value, ok, cancel, opt_label);
+        Dialogs.show(html, {
+            parent: opt_parent,
+            cancelCallback: ()=> {
+                if (opt_cancelCallback) opt_cancelCallback();
+            }
+        });
+    },
+    /**
+     * create a value dialog as a promise
+     * this will always fullfill if the user clicks ok
+     * to implement checking and asynchronous close use the valueDialog method
+     * @param title
+     * @param value
+     * @param opt_parent
+     * @param opt_label
+     * @returns {Promise}
+     */
+    valueDialogPromise: function (title, value, opt_parent, opt_label) {
+        let id = nextId();
+        return new Promise(function (resolve, reject) {
+            var Dialog = createValueDialog(title, value, (value)=> {
+                removeDialog(id,true);
+                resolve(value);
+                return true;
+            }, ()=> {
+                removeDialog(id,true);
+                reject();
+            }, opt_label);
+            Dialogs.show(Dialog, {
+                parent: opt_parent,
+                cancelCallback: ()=> {
+                    reject();
+                }
+            }, id);
+        })
+    },
+    /**
+     * create a value dialog as a promise
+     * this will always fullfill if the user clicks ok
+     * to implement checking and asynchronous close use the valueDialog method
+     * @param title
+     * @param list
+     * @param opt_parent
+     * @returns {Promise}
+     */
+    selectDialogPromise: function (title, list, opt_parent) {
+        return new Promise(function (resolve, reject) {
+            let id = nextId();
+            let Dialog = createSelectDialog(title, list, (value)=> {
+                removeDialog(id,true);
+                resolve(value);
+            }, ()=> {
+                removeDialog(id,true);
+                reject();
+            });
+            Dialogs.show(Dialog, {
+                    parent: opt_parent,
+                    cancelCallback: ()=> {
+                        reject();
+                    }
+                },
+                id);
+        })
+    },
+    /**
+     * create an arbitrary dialog
+     * @param html the react class to show (or the html string)
+     * @param opt_parent
+     * @param opt_options
+     * @returns {object} the react element that we are showing - use this for hiding
+     */
+    dialog: function (html, opt_parent, opt_options) {
+        let id = nextId();
+        const cancel = ()=> {
+            if (removeDialog(id,true) && opt_options && opt_options.cancelCallback) {
+                opt_options.cancelCallback();
+            }
+        };
+        let options = assign({}, opt_options || {}, {parent: opt_parent, cancelCallback: cancel});
+        return Dialogs.show(html, options, id);
+    }
+
 };
 
-var createSelectDialog=function(title,list,okCallback,opt_cancelCallback) {
-    if (OverlayDialogListInstance == null) {
-        throw new Error("not initialzed");
-    }
-    var Dialog = reactCreateClass({
-        propTypes: {
-            closeCallback: PropTypes.func
-        },
-        closeFunction: function (opt_skip) {
-            if (this.props.closeCallback) this.props.closeCallback();
-            if (! opt_skip && opt_cancelCallback) opt_cancelCallback();
-        },
-        okFunction: function (item) {
-            var rt = okCallback(item, this.closeFunction);
-            if (rt && this.props.closeCallback) this.props.closeCallback();
-        },
-        cancelFunction: function () {
-            this.closeFunction();
-        },
-        render: function () {
-            var self=this;
-            return (
-                <div className="avn_selectDialog">
-                    <h3 className="avn_dialogTitle">{title || ''}</h3>
-                    <div className="avn_selectList">
-                        {list.map(function(elem){
-                            return(
-                            <div className={"avn_list_entry "+(elem.selected && 'avn_selectedItem')} onClick={function(){
-                                self.okFunction(elem);
-                            }}>{elem.label}</div>);
-                        })}
-                    </div>
-                    <div className="avn_buttons">
-                        <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
-                        <div className="avn_clear"></div>
-                     </div>
-                </div>
-            );
-        }
-    });
-    return Dialog;
-};
-module.exports= OverlayDialog;
+module.exports=Dialogs;
