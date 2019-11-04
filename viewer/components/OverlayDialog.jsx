@@ -295,13 +295,17 @@ const Dialogs = {
     },
     /**
      * create an arbitrary dialog
+     * it will provide a closeFunction property to the html
+     * by calling this function the dialog will be dismissed
      * @param html the react class to show (or the html string)
      * @param opt_parent
+     * @param opt_cancelCallback a callback to be invoked if the dialog is closed from outside
+     * @param opt_timeout if set - auto dismiss the dialog after opt_timeout ms
      * @returns dialogId
      */
-    dialog: function (html, opt_parent,opt_cancelCallback) {
+    dialog: function (html, opt_parent,opt_cancelCallback,opt_timeout) {
         let id = nextId();
-        return addDialog(id,html,opt_parent,opt_cancelCallback);
+        return addDialog(id,html,opt_parent,opt_cancelCallback,opt_timeout);
     },
 
     hide: function(){
