@@ -215,36 +215,63 @@ Wpapage.prototype.getPageContent=function() {
 
 Wpapage.prototype.showWpaDialog=function(ssid,id,allowAccess){
     var self=this;
-    var Dialog=React.createClass({
-        propTypes:{
-            closeCallback:PropTypes.func.isRequired,
-            resultCallback: PropTypes.func.isRequired,
-            showAccess: PropTypes.bool
-
-        },
-        getInitialState: function(){
-            return{
-                psk: '',
-                allowAccess: allowAccess
+    const resultCallback=function(type,psk,allowAccess){
+        var data={
+            id: id,
+            ssid: ssid
+        };
+        if (type== 'connect') {
+            data.psk=psk;
+            if (allowAccess){
+                data.allowAccess=allowAccess;
             }
-        },
-        valueChange: function(event){
+            self.sendRequest('connect', 'connect to ' + avnav.util.Helper.escapeHtml(data.ssid), data);
+            return;
+        }
+        if (type == 'enable'){
+            if (allowAccess){
+                data.allowAccess=allowAccess;
+            }
+            if (psk && psk != ""){
+                //allow to change the PSK with enable
+                data.psk=psk;
+            }
+            self.sendRequest(type,type+' '+avnav.util.Helper.escapeHtml(data.ssid),data);
+            return;
+        }
+        if (type == 'remove' || type == 'disable'){
+            self.sendRequest(type,type+' '+avnav.util.Helper.escapeHtml(data.ssid),data);
+            return;
+        }
+    };
+    class Dialog extends React.Component{
+        constructor(props){
+            super(props);
+            this.state={
+                psk: '',
+                allowAccess: self.store.getDataLocal(keys.showAccess,false)
+            };
+            this.valueChange=this.valueChange.bind(this);
+            this.accessChange=this.accessChange.bind(this);
+            this.buttonClick=this.buttonClick.bind(this);
+        }
+        valueChange(event){
             this.setState({
                 psk: event.target.value
             }) ;
-        },
-        accessChange: function(event){
-            var newAccess=! this.state.allowAccess;
+        }
+        accessChange(event){
+            let newAccess=! this.state.allowAccess;
             this.setState({
                 allowAccess: newAccess
             }) ;
-        },
-        buttonClick: function(event){
-            var button=event.target.name;
+        }
+        buttonClick(event){
+            let button=event.target.name;
             this.props.closeCallback();
-            if (button != "cancel")  this.props.resultCallback(button,this.state.psk,this.state.allowAccess);
-        },
-        render: function(){
+            if (button != "cancel")  resultCallback(button,this.state.psk,this.state.allowAccess);
+        }
+        render(){
             return (
                     <div className="avi_wpa_dialog">
                         <div>
@@ -270,39 +297,11 @@ Wpapage.prototype.showWpaDialog=function(ssid,id,allowAccess){
                     </div>
             );
         }
-    });
-    OverlayDialog.dialog(Dialog,this.getDialogContainer(),{
-       resultCallback: function(type,psk,allowAccess){
-           var data={
-               id: id,
-               ssid: ssid
-           };
-           if (type== 'connect') {
-               data.psk=psk;
-               if (allowAccess){
-                   data.allowAccess=allowAccess;
-               }
-               self.sendRequest('connect', 'connect to ' + avnav.util.Helper.escapeHtml(data.ssid), data);
-               return;
-           }
-           if (type == 'enable'){
-               if (allowAccess){
-                   data.allowAccess=allowAccess;
-               }
-               if (psk && psk != ""){
-                   //allow to change the PSK with enable 
-                   data.psk=psk;
-               }
-               self.sendRequest(type,type+' '+avnav.util.Helper.escapeHtml(data.ssid),data);
-               return;
-           }
-           if (type == 'remove' || type == 'disable'){
-               self.sendRequest(type,type+' '+avnav.util.Helper.escapeHtml(data.ssid),data);
-               return;
-           }
-       },
-       showAccess: self.store.getDataLocal(keys.showAccess,false)
-    });
+    };
+    Dialog.propTypes={
+        closeCallback:PropTypes.func.isRequired
+    };
+    OverlayDialog.dialog(Dialog,this.getDialogContainer());
 };
 
 //-------------------------- Buttons ----------------------------------------

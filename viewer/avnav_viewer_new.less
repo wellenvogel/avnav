@@ -59,8 +59,8 @@
   .flex-shrink(0);
 }
 
-.listContainer.scrollable{
-  overflow: auto;
+.clear {
+  clear: both;
 }
 
 //----------------------------------------------------------------------------------------
@@ -242,6 +242,104 @@ button{
   }
 
 }
+
+//----------------------------------------------------------------------------------------
+//dialogs
+//----------------------------------------------------------------------------------------
+.overlay_cover_active {
+  background-color: rgba(0, 0, 0, 0.35);
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 120;
+}
+
+
+
+.dialog {
+  z-index: 121;
+  overflow: hidden;
+  padding: 1em;
+  background-color: white;
+  border-radius: 3px;
+  .nightColors();
+  font-size: 1.3em;
+  .mdShadow2();
+
+  button {
+    float: right;
+  }
+
+  input {
+    display: table-cell;
+    font-size: inherit;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    margin-left: 1em;
+    width: 20em;
+    border: none;
+    border-bottom: 1px solid;
+    .nightBorderColorGR();
+  }
+
+  label {
+    display: table-cell;
+    text-align: right;
+    .mdText2();
+  }
+
+  button{
+    .buttonBase();
+    margin-top: 0.5em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    font-size: @normalButtonFont;
+    padding: 1em;
+    width: inherit;
+    .nightColors();
+    background-color: rgba(255, 255, 255, 0.0);
+    border: none;
+    .nightForeColor(@colorMain,@nightColor);
+  }
+
+  .selectDialog {
+    .flex-display();
+    .flex-direction(column);
+    overflow: hidden;
+    max-height: inherit;
+    padding-bottom: 1em;
+    .selectList {
+      .flex(1);
+      .flex-basis(auto);
+      overflow: auto;
+    }
+
+    .selectedItem {
+      .nightBackFade(@colorSelection);
+    }
+  }
+
+}
+//----------------------------------------------------------------------------------------
+//lists
+//----------------------------------------------------------------------------------------
+.listContainer.scrollable{
+  overflow: auto;
+}
+.listEntry{
+  overflow: hidden;
+  position: relative;
+  border-bottom: 1px solid;
+  padding: 1em;
+  .nightBorderColorGR(30);
+  .flex-display();
+}
+
+
 
 //----------------------------------------------------------------------------------------
 //mainpage

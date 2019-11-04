@@ -21,8 +21,14 @@ class OverlayDialog extends React.Component {
     render() {
         let Content=this.props.content;
         return (
-            <div ref="container" className="avn_overlay_cover_active" onClick={this.props.onClick}>
-                <div ref="box" className="avn_dialog"><Content closeCallback={this.props.closeCallback}/></div>
+            <div ref="container" className="overlay_cover_active" onClick={this.props.onClick}>
+                <div ref="box" className="dialog" onClick={
+                    (ev)=>{
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    }
+                }>
+                    <Content closeCallback={this.props.closeCallback}/></div>
             </div>
         );
     }

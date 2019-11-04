@@ -27,18 +27,25 @@ const nextId=()=> {
 /**
  *
  * @param key
- * @param properties
- *        if properties contains a cancelCallback this will be called if the dialog
+ * @param opt_cancelCallback this will be called if the dialog
  *        is removed from "outside"
  */
-const addDialog=(key,properties)=> {
+const addDialog=(key,content,opt_parent,opt_cancelCallback,opt_timeout)=> {
+    if (! key) key=nextId();
+    let properties={
+        content:content,
+        parent:opt_parent,
+        cancelCallback:opt_cancelCallback,
+        closeCallback: ()=>{removeDialog(key)},
+        onClick: ()=>{removeDialog(key)}
+    };
     let currentDialogs=assign({},globalStore.getData(keys.gui.global.currentDialog,{}));
-    let timeout=undefined;
-    if (properties && properties.timeout){
-        timeout=window.setTimeout(removeDialog(opt_key),properties.timeout);
+    if (opt_timeout){
+        properties.timeoutHandler=window.setTimeout(removeDialog(key),opt_timeout);
     }
-    currentDialogs[key]=assign({timeoutHandler:timeout},properties);
+    currentDialogs[key]=properties;
     globalStore.storeData(keys.gui.global.currentDialog,currentDialogs);
+    return key;
 };
 
 const removeDialog=(key,opt_omitCancel)=> {
@@ -59,6 +66,11 @@ const removeDialog=(key,opt_omitCancel)=> {
     return old !== undefined;
 };
 
+const removeAll=()=>{
+    //no callbacks...
+    globalStore.storeData(keys.gui.global.currentDialog,{});
+};
+
 
 const createValueDialog=function(title,value,okCallback,cancelCallback,opt_label) {
     class Dialog extends React.Component{
@@ -73,15 +85,15 @@ const createValueDialog=function(title,value,okCallback,cancelCallback,opt_label
         render () {
             return (
                 <div>
-                    <h3 className="avn_dialogTitle">{title || 'Input'}</h3>
+                    <h3 className="dialogTitle">{title || 'Input'}</h3>
                     <div>
-                        <div className="avn_row"><label>{opt_label || ''}</label>
+                        <div className="row"><label>{opt_label || ''}</label>
                             <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
                         </div>
                     </div>
                     <button name="ok" onClick={()=>okCallback(this.state.value)}>Ok</button>
                     <button name="cancel" onClick={cancelCallback}>Cancel</button>
-                    <div className="avn_clear"></div>
+                    <div className="clear"></div>
                 </div>
             );
         }
@@ -92,19 +104,19 @@ const createValueDialog=function(title,value,okCallback,cancelCallback,opt_label
 var createSelectDialog=function(title,list,okCallback,cancelCallback) {
     return (props)=> {
             return (
-                <div className="avn_selectDialog">
-                    <h3 className="avn_dialogTitle">{title || ''}</h3>
-                    <div className="avn_selectList">
+                <div className="selectDialog">
+                    <h3 className="dialogTitle">{title || ''}</h3>
+                    <div className="selectList">
                         {list.map(function(elem){
                             return(
-                                <div className={"avn_list_entry "+(elem.selected && 'avn_selectedItem')} onClick={function(){
+                                <div className={"listEntry "+(elem.selected && 'selectedItem')} onClick={function(){
                                 okCallback(elem);
                             }}>{elem.label}</div>);
                         })}
                     </div>
-                    <div className="avn_buttons">
+                    <div className="dialogButtons">
                         <button name="cancel" onClick={cancelCallback}>Cancel</button>
-                        <div className="avn_clear"></div>
+                        <div className="clear"></div>
                     </div>
                 </div>
             );
@@ -137,28 +149,7 @@ const Dialogs = {
             }}
             />;
     },
-    /**
-     * show a dialog
-     * content must be a react element
-     * @param content
-     * @param properties
-     * @returns {*} the content element id
-     */
-    show: (content, properties, opt_key)=> {
-        if (!opt_key) opt_key = nextId();
-        addDialog(opt_key, {
-            content: content,
-            parent: properties ? properties.parent : undefined,
-            cancelCallback: properties ? properties.cancelCallback : undefined,
-            closeCallback: ()=>{removeDialog(opt_key)},
-            onClick: ()=>{removeDialog(opt_key)}
-        });
-        return opt_key;
 
-    },
-    hide: (id)=> {
-        removeDialog(id);
-    },
 
     /**
      * show an alert message with close button
@@ -176,20 +167,17 @@ const Dialogs = {
             const html = function () {
                 return (
                     <div>
-                        <h3 className="avn_dialogTitle">Alert</h3>
+                        <h3 className="dialogTitle">Alert</h3>
 
-                        <div className="avn_dialogText">{text}</div>
+                        <div className="dialogText">{text}</div>
                         <button name="ok" onClick={okFunction}>Ok</button>
-                        <div className="avn_clear"></div>
+                        <div className="clear"></div>
                     </div>
                 );
             };
-            Dialogs.show(html, {
-                cancelCallback: function () {
+            addDialog(id,html,opt_parent,()=> {
                     resolve();
-                },
-                parent: opt_parent
-            }, id);
+                });
         });
     },
     /**
@@ -213,21 +201,18 @@ const Dialogs = {
             var html = function (props) {
                 return (
                     <div>
-                        <h3 className="avn_dialogTitle">{opt_title || ''}</h3>
+                        <h3 className="dialogTitle">{opt_title || ''}</h3>
 
-                        <div className="avn_dialogText">{text}</div>
+                        <div className="dialogText">{text}</div>
                         <button name="ok" onClick={okFunction}>Ok</button>
                         <button name="cancel" onClick={cancelFunction}>Cancel</button>
-                        <div className="avn_clear"></div>
+                        <div className="clear"></div>
                     </div>
                 );
             };
-            Dialogs.show(html, {
-                cancelCallback: function () {
+            addDialog(id,html,opt_parent,()=> {
                     reject();
-                },
-                parent: opt_parent
-            });
+                });
         });
 
     },
@@ -253,13 +238,10 @@ const Dialogs = {
         const cancel = ()=> {
             if (removeDialog(id,true) && opt_cancelCallback) opt_cancelCallback();
         };
-        var Dialog = createValueDialog(title, value, ok, cancel, opt_label);
-        Dialogs.show(html, {
-            parent: opt_parent,
-            cancelCallback: ()=> {
+        let html= createValueDialog(title, value, ok, cancel, opt_label);
+        addDialog(id,html,opt_parent,()=> {
                 if (opt_cancelCallback) opt_cancelCallback();
-            }
-        });
+            });
     },
     /**
      * create a value dialog as a promise
@@ -282,12 +264,9 @@ const Dialogs = {
                 removeDialog(id,true);
                 reject();
             }, opt_label);
-            Dialogs.show(Dialog, {
-                parent: opt_parent,
-                cancelCallback: ()=> {
+            addDialog(id,Dialog,opt_parent,()=> {
                     reject();
-                }
-            }, id);
+                });
         })
     },
     /**
@@ -309,32 +288,27 @@ const Dialogs = {
                 removeDialog(id,true);
                 reject();
             });
-            Dialogs.show(Dialog, {
-                    parent: opt_parent,
-                    cancelCallback: ()=> {
+            addDialog(id,Dialog, opt_parent,()=> {
                         reject();
-                    }
-                },
-                id);
+                    });
         })
     },
     /**
      * create an arbitrary dialog
      * @param html the react class to show (or the html string)
      * @param opt_parent
-     * @param opt_options
-     * @returns {object} the react element that we are showing - use this for hiding
+     * @returns dialogId
      */
-    dialog: function (html, opt_parent, opt_options) {
+    dialog: function (html, opt_parent,opt_cancelCallback) {
         let id = nextId();
-        const cancel = ()=> {
-            if (removeDialog(id,true) && opt_options && opt_options.cancelCallback) {
-                opt_options.cancelCallback();
-            }
-        };
-        let options = assign({}, opt_options || {}, {parent: opt_parent, cancelCallback: cancel});
-        return Dialogs.show(html, options, id);
+        return addDialog(id,html,opt_parent,opt_cancelCallback);
+    },
+
+    hide: function(){
+        removeAll();
     }
+
+
 
 };
 

@@ -157,19 +157,7 @@ Routepage.prototype.getPageContent=function(){
     ];
     this.setButtons(buttons);
     var self=this;
-    var Heading = ItemUpdater(React.createClass({
-        render: function(){
-            return (
-                <div className="avn_routeCurrent" onClick={this.props.onClick}>
-                    <div className="avn_routeName">{this.props.name||''}</div>
-                    <div className="avn_routeInfo">{this.props.numPoints||0}Points,{this.props.len||0}nm</div>
-                    <span className="avn_more"> </span>
-                </div>
-            );
-        }
-    }), this.store, keys.routeInfo);
-    var headingProperties={
-        onClick: function () {
+    let onHeadingClick= function () {
             var okCallback = function (values, closeFunction) {
                 var name=values.name||"";
                 if (name == self.currentRoute.name) return true;
@@ -193,8 +181,17 @@ Routepage.prototype.getPageContent=function(){
             };
             OverlayDialog.dialog(createNewRoute(self.currentRoute.name,self._isEditingActive,
                 okCallback), self.getDialogContainer());
-        }
     };
+    var Heading = ItemUpdater(function(props){
+        return (
+            <div className="avn_routeCurrent" onClick={onHeadingClick}>
+                <div className="avn_routeName">{props.name||''}</div>
+                <div className="avn_routeInfo">{props.numPoints||0}Points,{props.len||0}nm</div>
+                <span className="avn_more"> </span>
+            </div>
+        );
+    }
+    , this.store, keys.routeInfo);
     var List=ItemUpdater(WaypointList,this.store,[keys.waypointList,keys.waypointSelections]);
     var listProperties={
         onItemClick:function(item,opt_data){
@@ -219,7 +216,7 @@ Routepage.prototype.getPageContent=function(){
                 return(
                     <div className="avn_panel_fill_flex">
                         <HeadLine/>
-                        <Heading {...headingProperties}/>
+                        <Heading/>
                         <div className="avn_listWrapper">
                             <List {...listProperties}/>
                         </div>
@@ -297,10 +294,13 @@ Routepage.prototype.waypointClicked=function(item,param){
         }
         return false;
     };
-    OverlayDialog.dialog(WayPointDialog,this.getDialogContainer(),{
-        waypoint:wp,
-        okCallback:wpChanged
-    });
+    let RenderDialog=function(props){
+        return <WayPointDialog
+            {...props}
+            waypoint={wp}
+            okCallback={wpChanged}/>
+    };
+    OverlayDialog.dialog(RenderDialog,this.getDialogContainer());
 };
 Routepage.prototype.updateSelection=function(key,value){
     this.store.updateSubItem(keys.waypointSelections,key,value,'selectors');

@@ -875,10 +875,13 @@ Navpage.prototype.showWaypointDialog=function(wp){
         }
         return (nwp !== undefined);
     };
-    OverlayDialog.dialog(WaypointDialog,self.getDialogContainer(),{
-        waypoint:wp,
-        okCallback: ok
-    });
+    let RenderDialog=function(props){
+        return <WaypointDialog
+            {...props}
+            waypoint={wp}
+            okCallback={ok}/>
+    };
+    OverlayDialog.dialog(RenderDialog,self.getDialogContainer());
 };
 
 
