@@ -189,14 +189,18 @@ Gpspage.prototype.getPageContent=function(){
 
     this.store.register(changeHandler);
 
-    let Main=React.createClass({
-        goBack: function(){
+    class Main extends React.Component{
+        constructor(props){
+            super(props);
+            this.goBack=this.goBack.bind(this);
+        }
+        goBack(){
             self.returnToLast();
-        },
-        shouldComponentUpdate: function(nextProps, nextState){
+        }
+        shouldComponentUpdate(nextProps, nextState){
             return ! shallowCompare(nextProps, this.props);
-        },
-        render: function(){
+        }
+        render(){
             let widgetCreator=function(widget,list){
                 let style={};
                 for (let i=0;i<list.length;i++){
@@ -249,7 +253,7 @@ Gpspage.prototype.getPageContent=function(){
                 </div>
             );
         }
-    });
+    };
     return ItemUpdater(Main,this.store,[keys.anchorWatch,keys.secondPage,keys.layoutCount]);
 };
 

@@ -146,9 +146,8 @@ Page.prototype._initPage=function(){
     this.store.replaceSubKey(this.globalKeys.buttons,buttonFontSize,'fontSize');
     this.changeButtonVisibilityFlag("android",avnav.android?true:false);
     var Buttons=ItemUpdater(ButtonList,this.store,this.globalKeys.buttons);
-    var PageData=ItemUpdater(React.createClass({
-        render: function(){
-            if (!this.props.visible) return null;
+    var PageData=ItemUpdater(function(props){
+            if (!props.visible) return null;
             return (
                 <div className="avn_pageWrapper">
                     <Measure
@@ -179,10 +178,10 @@ Page.prototype._initPage=function(){
                 </div>
             );
         }
-    }),this.store,this.globalKeys.pageVisible);
+    ,this.store,this.globalKeys.pageVisible);
     var pageDiv=this.getDiv();
     if (!pageDiv.length){
-        $('body').append($('<div id="avi_'+this.name+'" class="avn_page avn_hidden"></div>'));
+        $('#old_pages').append($('<div id="avi_'+this.name+'" class="avn_page avn_hidden"></div>'));
     }
     ReactDOM.render(React.createElement(PageData,{}),this.getDiv()[0]);
     return true;

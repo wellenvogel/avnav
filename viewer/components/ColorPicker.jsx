@@ -6,6 +6,7 @@
 'use strict';
 
 var React      = require('react');
+var reactCreateClass=require('create-react-class');
 var assign = require('object-assign');
 var colorUtils = require('../node_modules/react-color-picker/lib/utils/color').default;
 var defaultColor = require('../node_modules/react-color-picker/lib/defaultColor').default;
@@ -19,7 +20,7 @@ var toHsv = colorUtils.toHsv;
 
 function emptyFn(){}
 
-var RESULT = React.createClass({
+var RESULT = reactCreateClass({
 
     displayName: 'ColorPicker',
 

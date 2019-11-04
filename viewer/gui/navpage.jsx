@@ -523,8 +523,11 @@ Navpage.prototype.getPageContent=function(){
         buttonHandler: self
     });
     var Alarm=self.getAlarmWidget();
-    return React.createClass({
-        render: function(){
+    class Main extends React.Component{
+        constructor(props){
+            super(props)
+        }
+        render(){
             let bottomDouble=self.gui.properties.getProperties().allowTwoWidgetRows?" two_rows":"";
             return (
                 <div className="avn_panel_fill_flex">
@@ -544,13 +547,14 @@ Navpage.prototype.getPageContent=function(){
                     </div>
                 </div>
             );
-        },
-        componentDidMount:function(){
+        }
+        componentDidMount(){
             self.mapdom=this.refs.map;
             var map=self.getMap();
             if (map) map.renderTo(self.mapdom);
         }
-    });
+    };
+    return Main;
 };
 Navpage.prototype.isWidgetInList=function(widgetDescription,listKey){
     var list=this.widgetLists[listKey];

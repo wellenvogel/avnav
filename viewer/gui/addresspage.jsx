@@ -106,8 +106,7 @@ Addresspage.prototype.getPageContent=function(){
     var Headline=function(props){
         return <div className="avn_left_top">Server Addresses</div>
     };
-    return React.createClass({
-        render: function(){
+    return function(props){
             return(
                 <div className="avn_panel_fill_flex">
                     <Headline/>
@@ -117,8 +116,7 @@ Addresspage.prototype.getPageContent=function(){
                     {self.getAlarmWidget()}
                 </div>
             );
-        }
-    });
+        };
 };
 
 //-------------------------- Buttons ----------------------------------------

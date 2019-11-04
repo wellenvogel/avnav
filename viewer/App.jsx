@@ -57,12 +57,14 @@ class Router extends Component {
 const DynamicRouter=Dynamic(Router);
 
 module.exports=function(props){
-    return <DynamicRouter
+    return <React.Fragment>
+            <DynamicRouter
             storeKeys={{
                 location: keys.gui.global.pageName,
                 options: keys.gui.global.pageOptions,
                 nightMode: keys.properties.nightMode,
                 sequence: keys.gui.global.propertySequence
             }}
-        />
+            />
+           </React.Fragment>
 };

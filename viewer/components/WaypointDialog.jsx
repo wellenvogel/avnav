@@ -4,6 +4,8 @@
  */
 
 var React=require('react');
+var reactCreateClass=require('create-react-class');
+var PropTypes=require('prop-types');
 var navobjects=require('../nav/navobjects');
 
 /**
@@ -12,11 +14,11 @@ var navobjects=require('../nav/navobjects');
  *           okCallback: function to be called ok ok with the new waypoint as parameter, return true to close
  *           hideCallback: function to be called when the dialog is hidden (but not on unmount)
  */
-var WaypointDialog = React.createClass({
+var WaypointDialog = reactCreateClass({
     propTypes: {
-        waypoint: React.PropTypes.instanceOf(navobjects.WayPoint).isRequired,
-        okCallback: React.PropTypes.func.isRequired,
-        closeCallback:React.PropTypes.func
+        waypoint: PropTypes.instanceOf(navobjects.WayPoint).isRequired,
+        okCallback: PropTypes.func.isRequired,
+        closeCallback:PropTypes.func
 
     },
     getInitialState: function () {

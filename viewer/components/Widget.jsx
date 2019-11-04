@@ -3,19 +3,21 @@
  */
 
 var React=require("react");
+var reactCreateClass=require('create-react-class');
 var Store=require('../util/store');
+var PropTypes=require('prop-types');
 
-var Widget=React.createClass({
+var Widget=reactCreateClass({
     propTypes:{
-        name: React.PropTypes.string,
-        unit: React.PropTypes.string,
-        caption: React.PropTypes.string,
-        dataKey:React.PropTypes.string,
-        averageKey: React.PropTypes.string,
-        //formatter: React.PropTypes.func,
-        onClick: React.PropTypes.func,
-        store: React.PropTypes.instanceOf(Store).isRequired,
-        classes: React.PropTypes.string
+        name: PropTypes.string,
+        unit: PropTypes.string,
+        caption: PropTypes.string,
+        dataKey:PropTypes.string,
+        averageKey: PropTypes.string,
+        //formatter: PropTypes.func,
+        onClick: PropTypes.func,
+        store: PropTypes.instanceOf(Store).isRequired,
+        classes: PropTypes.string
     },
     getInitialState: function(){
         return{

@@ -69,8 +69,7 @@ AddonPage.prototype.getPageContent=function(){
         if (!props.title) return null;
         return <div className="avn_left_top">{props.title}</div>
     },this.store,keys.title);
-    return React.createClass({
-        render: function(){
+    return function(props){
             return(
                 <div className="avn_panel_fill_flex">
                     <Headline/>
@@ -78,8 +77,7 @@ AddonPage.prototype.getPageContent=function(){
                     {self.getAlarmWidget()}
                 </div>
             );
-        }
-    });
+        };
 };
 
 //-------------------------- Buttons ----------------------------------------

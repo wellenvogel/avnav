@@ -8,7 +8,9 @@
  */
 
 var React=require('react');
+var reactCreateClass=require('create-react-class');
 var Promise=require('promise');
+var PropTypes=require('prop-types');
 var id=0;
 var getNextId=function(){
     id++;
@@ -17,10 +19,10 @@ var getNextId=function(){
 var OverlayDialogListInstance=undefined;
 var dialogInstanceId='###overlayDialog###'; //will be used to store this as
                                             //"active input" to prevent resizes
-var OverlayDialog=React.createClass({
+var OverlayDialog=reactCreateClass({
     propTypes:{
-        showCallback: React.PropTypes.func,
-        hideCallback: React.PropTypes.func
+        showCallback: PropTypes.func,
+        hideCallback: PropTypes.func
     },
     getInitialState: function(){
         return {
@@ -160,9 +162,9 @@ var OverlayDialog=React.createClass({
          */
         alert:function(text,opt_parent){
             return new Promise(function (resolve, reject) {
-                var html = React.createClass({
+                var html = reactCreateClass({
                     propTypes: {
-                        closeCallback: React.PropTypes.func
+                        closeCallback: PropTypes.func
                     },
                     okFunction:function(el){
                         if (this.props.closeCallback) this.props.closeCallback();
@@ -202,9 +204,9 @@ var OverlayDialog=React.createClass({
          */
         confirm: function(text,opt_parent,opt_title){
             return new Promise(function (resolve, reject) {
-                var html=React.createClass({
+                var html=reactCreateClass({
                     propTypes: {
-                        closeCallback: React.PropTypes.func
+                        closeCallback: PropTypes.func
                     },
                     okFunction:function(el){
                         resolve(1);
@@ -330,9 +332,9 @@ var createValueDialog=function(title,value,okCallback,opt_label,opt_cancelCallba
     if (OverlayDialogListInstance == null) {
         throw new Error("not initialzed");
     }
-    var Dialog = React.createClass({
+    var Dialog = reactCreateClass({
         propTypes: {
-            closeCallback: React.PropTypes.func
+            closeCallback: PropTypes.func
         },
         getInitialState: function () {
             return {value: value};
@@ -375,9 +377,9 @@ var createSelectDialog=function(title,list,okCallback,opt_cancelCallback) {
     if (OverlayDialogListInstance == null) {
         throw new Error("not initialzed");
     }
-    var Dialog = React.createClass({
+    var Dialog = reactCreateClass({
         propTypes: {
-            closeCallback: React.PropTypes.func
+            closeCallback: PropTypes.func
         },
         closeFunction: function (opt_skip) {
             if (this.props.closeCallback) this.props.closeCallback();

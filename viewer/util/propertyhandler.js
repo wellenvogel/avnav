@@ -62,16 +62,8 @@ const extend=(obj, ext)=> {
         }
         else obj[k] = ext[k];
     }
-}
-
-/**
- * get the current value of a property
- * @param {Property} descr
- */
-const getValue=(descr)=> {
-    if (descr === undefined || !( descr instanceof Properties.Property)) return undefined;
-    return descr.path[descr.pname];
 };
+
 
 /**
  * a storage handler for properties and userData
@@ -105,6 +97,7 @@ class PropertyHandler {
         this.getAisColor=this.getAisColor.bind(this);
         this.incrementSequence=this.incrementSequence.bind(this);
         this.dataChanged=this.dataChanged.bind(this);
+        this.getValue=this.getValue.bind(this);
     }
 
     incrementSequence(){
@@ -173,13 +166,23 @@ class PropertyHandler {
     }
 
     /**
+     * get the current value of a property
+     * @param {Property} descr
+     */
+    getValue(descr){
+        if (descr === undefined || !( descr instanceof Properties.Property)) return undefined;
+        return descr.path[descr.pname];
+    }
+
+
+    /**
      * get a property value by its name (separated by .)
      * @param {string} name
      * @returns {*}
      */
     getValueByName(name) {
         let descr = this.getDescriptionByName(name); //ensure that this is really a property
-        return getValue(descr);
+        return this.getValue(descr);
     }
 
 ;
@@ -279,7 +282,7 @@ class PropertyHandler {
         for (let propKey in keys.properties){
             let descr=this.storeProperties[propKey];
             if (! descr) continue;
-            storeData[propKey]=getValue(descr);
+            storeData[propKey]=this.getValue(descr);
         }
         globalStore.storeMultiple(storeData,keys.properties,this);
         this.updateLayout();
@@ -293,7 +296,7 @@ class PropertyHandler {
         for (let propKey in values){
             let description=this.storeProperties[propKey];
             if (! description) continue;
-            if (values[propKey] != getValue(description)){
+            if (values[propKey] != this.getValue(description)){
                 this.setUserDataByDescr(description,values[propKey],true);
                 hasChanges=true;
             }
@@ -308,17 +311,17 @@ class PropertyHandler {
      */
     updateLayout() {
         applyLayoutLegacy(
-            getValue(this.propertyDescriptions.nightMode),
-            getValue(this.propertyDescriptions.nightFade),
-            getValue(this.propertyDescriptions.baseFontSize),
+            this.getValue(this.propertyDescriptions.nightMode),
+            this.getValue(this.propertyDescriptions.nightFade),
+            this.getValue(this.propertyDescriptions.baseFontSize),
             this.getButtonFontSize()
         );
         this.incrementSequence();
     }
 
     getButtonFontSize() {
-        let numButtons = getValue(this.propertyDescriptions.maxButtons);
-        let currentButtonHeight = getValue(this.propertyDescriptions.style.buttonSize);
+        let numButtons = this.getValue(this.propertyDescriptions.maxButtons);
+        let currentButtonHeight = this.getValue(this.propertyDescriptions.style.buttonSize);
         let scale=1;
         let height = window.innerHeight;
         if (height !== undefined) {
@@ -349,8 +352,8 @@ class PropertyHandler {
             rt = this.getValueByName(colorName);
         }
         if (rt === undefined) return rt;
-        if ((addNightFade === undefined || addNightFade) && getValue(this.propertyDescriptions.nightMode)) {
-            let nf = getValue(this.propertyDescriptions.nightColorDim);
+        if ((addNightFade === undefined || addNightFade) && this.getValue(this.propertyDescriptions.nightMode)) {
+            let nf = this.getValue(this.propertyDescriptions.nightColorDim);
             return hex2rgba(rt, nf / 100);
         }
         return rt;

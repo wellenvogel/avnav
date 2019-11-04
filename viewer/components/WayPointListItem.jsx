@@ -2,16 +2,18 @@
  * Created by andreas on 10.10.16.
  */
 var React=require('react');
+var reactCreateClass=require('create-react-class');
+var PropTypes=require('prop-types');
 
-module.exports=React.createClass({
+module.exports=reactCreateClass({
     propTypes:{
-        idx: React.PropTypes.number,
-        name: React.PropTypes.string,
-        latlon: React.PropTypes.string,
-        course: React.PropTypes.string,
-        distance: React.PropTypes.string,
-        addClass: React.PropTypes.string,
-        onClick:  React.PropTypes.func.isRequired
+        idx: PropTypes.number,
+        name: PropTypes.string,
+        latlon: PropTypes.string,
+        course: PropTypes.string,
+        distance: PropTypes.string,
+        addClass: PropTypes.string,
+        onClick:  PropTypes.func.isRequired
     },
     getDefaultProps(){
         return{

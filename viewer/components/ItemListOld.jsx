@@ -11,6 +11,8 @@
  */
 
 var React=require('react');
+var reactCreateClass=require('create-react-class');
+var PropTypes=require('prop-types');
 var assign=require('object-assign');
 
 
@@ -21,22 +23,21 @@ const getKey=function(obj){
     return rt;
 };
 
-module.exports=React.createClass({
+module.exports=reactCreateClass({
     propTypes:{
-        onItemClick:    React.PropTypes.func,
-        itemClass:  React.PropTypes.any, //one of itemClass or itemCreator must be set
-        itemCreator:React.PropTypes.func,
-        updateCallback: React.PropTypes.func,
-        selectors:  React.PropTypes.object, //if a value from this object matches an item key
+        onItemClick:    PropTypes.func,
+        itemClass:  PropTypes.any, //one of itemClass or itemCreator must be set
+        itemCreator:PropTypes.func,
+        updateCallback: PropTypes.func,
+        selectors:  PropTypes.object, //if a value from this object matches an item key
                                             //the key will be added as an additional class
-        visibilityFlags: React.PropTypes.object, //if there is an entry for a particular item key
-                                            //this will be considered for visibility
-        itemList: React.PropTypes.array,
-        childProperties: React.PropTypes.object,
-        className: React.PropTypes.string,
-        style: React.PropTypes.object,
-        hidden: React.PropTypes.bool,
-        hideOnEmpty: React.PropTypes.bool
+        visibilityFlags: PropTypes.object, //if there is an entry for a particular item key                                            //this will be considered for visibility
+        itemList: PropTypes.array,
+        childProperties: PropTypes.object,
+        className: PropTypes.string,
+        style: PropTypes.object,
+        hidden: PropTypes.bool,
+        hideOnEmpty: PropTypes.bool
     },
     render: function(){
         var allitems=this.props.itemList||[];

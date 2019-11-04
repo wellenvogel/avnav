@@ -276,8 +276,8 @@ RtEditPage.prototype.getPageContent=function(){
         className: "avn_wpbuttons",
         buttonHandler: self
     };
-    return React.createClass({
-        render: function(){
+    class Main extends React.Component{
+        render(){
             return (
                 <div className="avn_panel_fill">
                     <div id='avi_map_navpage' ref="map" className='avn_panel avn_map'>
@@ -293,13 +293,14 @@ RtEditPage.prototype.getPageContent=function(){
                     </div>
                 </div>
             );
-        },
-        componentDidMount:function(){
+        }
+        componentDidMount(){
             self.mapdom=this.refs.map;
             var map=self.getMap();
             if (map) map.renderTo(self.mapdom);
         }
-    });
+    };
+    return Main;
 };
 RtEditPage.prototype.isWidgetInList=function(widgetDescription,listKey){
     var list=this.widgetLists[listKey];

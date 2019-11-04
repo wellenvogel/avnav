@@ -234,11 +234,9 @@ Downloadpage.prototype.getPageContent=function(){
         {key:'Cancel'}
     ];
     this.setButtons(buttons);
-    var HeadLine=ItemUpdater(React.createClass({
-        render: function(){
-                return <div className="avn_left_top"><div>{this.props.value}</div></div>
-        }
-    }),this.store,keys.type);
+    var HeadLine=ItemUpdater(function(props){
+                return <div className="avn_left_top"><div>{props.value}</div></div>
+    },this.store,keys.type);
     //TODO: handle if (this.gui.properties.getProperties().connectedMode || (this.type == "route" && ! infos[id].server)) {
     var DownloadItem=function(props){
         var dp={};
@@ -327,8 +325,7 @@ Downloadpage.prototype.getPageContent=function(){
             </form>
         )
     },this.store,keys.uploadForm);
-    return React.createClass({
-        render: function () {
+    return function (props) {
             return(
                 <div className="avn_panel_fill_flex">
                     <HeadLine/>
@@ -351,8 +348,7 @@ Downloadpage.prototype.getPageContent=function(){
                     <UploadIndicator/>
                 </div>
             );
-        }
-    });
+        };
 };
 Downloadpage.prototype.showPage=function(options) {
     if (!this.gui) return;

@@ -67,30 +67,28 @@ class WidgetFactory{
                 }
             }
         }
-        return React.createClass({
-            render: function () {
-                var wprops = assign({}, this.props, mergedProps);
-                if (mergedProps.children) {
-                    return <div {...mergedProps} className="avn_widget avn_combinedWidget">
-                        {mergedProps.children.map((item)=> {
-                            let Item = self.createWidget(item, opt_properties);
-                            return <Item />
-                        })}
-                    </div>
-                }
-                else {
-                    let RenderWidget = mergedProps.wclass || DirectWidget;
-                    let storeKeys = mergedProps.storeKeys;
-                    if (! storeKeys){
-                        storeKeys=RenderWidget.storeKeys;
-                    }
-                    if (storeKeys) {
-                        RenderWidget = ItemUpdater(RenderWidget, globalStore, storeKeys);
-                    }
-                    return <RenderWidget {...wprops}/>
-                }
+        return function (props) {
+            var wprops = assign({}, props, mergedProps);
+            if (mergedProps.children) {
+                return <div {...mergedProps} className="avn_widget avn_combinedWidget">
+                    {mergedProps.children.map((item)=> {
+                        let Item = self.createWidget(item, opt_properties);
+                        return <Item />
+                    })}
+                </div>
             }
-        });
+            else {
+                let RenderWidget = mergedProps.wclass || DirectWidget;
+                let storeKeys = mergedProps.storeKeys;
+                if (!storeKeys) {
+                    storeKeys = RenderWidget.storeKeys;
+                }
+                if (storeKeys) {
+                    RenderWidget = ItemUpdater(RenderWidget, globalStore, storeKeys);
+                }
+                return <RenderWidget {...wprops}/>
+            }
+        };
     }
     getWidget(index){
         if (index < 0 || index >= this.widgetDefinitions.length) return undefined;

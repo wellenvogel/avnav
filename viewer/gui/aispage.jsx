@@ -125,8 +125,7 @@ Aispage.prototype.getPageContent=function(){
         );
     },this.store,keys.summary);
     var AisList=ItemUpdater(ItemList,this.store,keys.aisTargets);
-    return React.createClass({
-        render: function() {
+    return function(props) {
             return (
                 <div className="avn_panel_fill_flex">
                     <div className="avn_left_top">
@@ -146,8 +145,7 @@ Aispage.prototype.getPageContent=function(){
                         </div>
                     {self.getAlarmWidget()}
                 </div>);
-        }
-    });
+        };
 };
 
 Aispage.prototype.showPage=function(options) {

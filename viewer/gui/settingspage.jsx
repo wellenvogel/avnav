@@ -10,6 +10,7 @@ var ColorPicker=require('../components/ColorPicker.jsx');
 var Page=require('./page.jsx');
 var assign=require('object-assign');
 var Properties=require('../util/properties.jsx');
+var PropertyHandler=require('../util/propertyhandler');
 require('react-color-picker/index.css');
 
 var keys={
@@ -120,16 +121,15 @@ Settingspage.prototype.getPageContent=function(){
     };
     var SectionList=ItemUpdater(ItemList,this.store,keys.sectionItems);
     var SettingsList=ItemUpdater(ItemList,this.store,keys.activeItems);
-    var Settings=ItemUpdater(React.createClass({
-        render: function(){
-            var leftVisibile=this.props.leftPanelVisible;
-            var rightVisible=this.props.rightPanelVisible;
+    var Settings=ItemUpdater(function(props){
+            var leftVisibile=props.leftPanelVisible;
+            var rightVisible=props.rightPanelVisible;
             var leftClass="avn_leftSection";
             if (! rightVisible) leftClass+=" avn_expand";
             return (
                 <div className="avn_panel_fill_flex">
                     <div className="avn_left_top">
-                        <div>{this.props.headline}</div>
+                        <div>{props.headline}</div>
                     </div>
                     <div className="avn_flexRow">
                     { leftVisibile && <div className={leftClass}><SectionList
@@ -148,22 +148,26 @@ Settingspage.prototype.getPageContent=function(){
                 </div>
             );
         }
-    }),this.store,keys.panelState);
+    ,this.store,keys.panelState);
     return Settings;
 };
 
 Settingspage.prototype.rangeItemDialog=function(item){
     var self=this;
-    var Dialog=React.createClass({
-        valueChange: function(ev){
-            this.setState({value: ev.target.value});
-        },
-        getInitialState: function(){
-            return({
+    class Dialog extends React.Component{
+        constructor(props){
+            super(props);
+            this.state={
                 value: item.value
-            });
-        },
-        buttonClick:function(ev){
+            };
+            this.valueChange=this.valueChange.bind(this);
+            this.buttonClick=this.buttonClick.bind(this);
+        }
+        valueChange(ev){
+            this.setState({value: ev.target.value});
+        }
+
+        buttonClick(ev){
             var button=ev.target.name;
             if (button == 'ok'){
                 if (this.state.value < item.values[0]|| this.state.value > item.values[1]){
@@ -174,14 +178,14 @@ Settingspage.prototype.rangeItemDialog=function(item){
             }
             if (button == 'reset'){
                 this.setState({
-                    value: self.gui.properties.getDescriptionByName(item.name).defaultv
+                    value: PropertyHandler.getDescriptionByName(item.name).defaultv
                 });
                 return;
             }
             self.hideToast();
             this.props.closeCallback();
-        },
-        render:function() {
+        }
+        render() {
             var range=item.values[0]+"..."+item.values[1];
             return(
                     <div className="avn_settingsDialog">
@@ -203,7 +207,7 @@ Settingspage.prototype.rangeItemDialog=function(item){
                     </div>
             );
         }
-    });
+    };
     OverlayDialog.dialog(Dialog,this.getDialogContainer(),{
 
     });
@@ -218,39 +222,44 @@ Settingspage.prototype.changeValue=function(name,value){
 Settingspage.prototype.colorItemDialog=function(item){
     var self=this;
     var colorDialogInstance;
-    var Dialog=React.createClass({
-        valueChange: function(ev){
-            this.setState({value: ev.target.value});
-        },
-        getInitialState: function(){
-            return({
+    class Dialog extends React.Component{
+        constructor(props){
+            super(props);
+            this.state={
                 value: item.value
-            });
-        },
-        buttonClick:function(ev){
+            };
+            this.valueChange=this.valueChange.bind(this);
+            this.buttonClick=this.buttonClick.bind(this);
+            this.onDrag=this.onDrag.bind(this);
+            this.colorInput=this.colorInput.bind(this);
+        }
+        valueChange(ev){
+            this.setState({value: ev.target.value});
+        }
+        buttonClick(ev){
             var button=ev.target.name;
             if (button == 'ok'){
                 self.changeValue(item.name,this.state.value);
             }
             if (button == 'reset'){
                 this.setState({
-                    value: self.gui.properties.getDescriptionByName(item.name).defaultv
+                    value: PropertyHandler.getDescriptionByName(item.name).defaultv
                 });
                 return;
             }
             this.props.closeCallback();
-        },
-        onDrag: function(color,c){
+        }
+        onDrag(color,c){
             this.setState({
                 value: color
             })
-        },
-        colorInput: function(ev){
+        }
+        colorInput(ev){
             this.setState({
                 value:ev.target.value
             })
-        },
-        render:function() {
+        }
+        render() {
             var style={
                 backgroundColor:this.state.value,
                 width: 30,
@@ -287,10 +296,10 @@ Settingspage.prototype.colorItemDialog=function(item){
                     <button name="reset" onClick={this.buttonClick}>Reset</button>
                     <div className="avn_clear"></div>
                 </div>
-            );this.sectionItems[selectedIndex].name
+            );
         }
 
-    });
+    };
     var SizedDialog=ItemUpdater(Dialog,this.store,keys.dialogSize);
     const updateSizes=function(box){
         self.store.storeData(keys.dialogSize,{width:box.width,height:box.height});
@@ -321,7 +330,7 @@ Settingspage.prototype.resetValues=function(opt_defaults){
     for (var section in sectionList){
         var items=settingsSections[section];
         items.forEach(function(item){
-            var description=self.gui.properties.getDescriptionByName(item);
+            var description=PropertyHandler.getDescriptionByName(item);
             var value;
             if (! opt_defaults)value =PropertyHandler.getValue(description);
             else value= description.defaultv;
@@ -367,7 +376,7 @@ Settingspage.prototype.createItemList=function(sectionName){
     var newItemList=[];
     var description;
     items.forEach(function(item){
-        description=self.gui.properties.getDescriptionByName(item);
+        description=PropertyHandler.getDescriptionByName(item);
         newItemList.push(avnav.assign({},{
             name:item},description,{value:values[item]}));
     });
@@ -410,11 +419,11 @@ Settingspage.prototype.btnSettingsOK=function(button,ev){
     var currentData=this.store.getData(keys.currentValues);
     for (var idx in currentData){
         var val=currentData[idx];
-        this.gui.properties.setValueByName(idx,val);
+        PropertyHandler.setValueByName(idx,val);
     }
-    this.gui.properties.saveUserData(); //write changes to cookie
-    this.gui.properties.updateLayout();  //update the layout based on less
-    $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(this.gui.properties));
+    PropertyHandler.saveUserData(); //write changes to cookie
+    PropertyHandler.updateLayout();  //update the layout based on less
+    $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE,new avnav.util.PropertyChangeEvent(PropertyHandler));
     this.gui.showPage('mainpage');
 };
 

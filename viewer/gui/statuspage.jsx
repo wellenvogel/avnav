@@ -153,13 +153,11 @@ Statuspage.prototype.getPageContent=function(){
             )
         }
     },this.store,keys.statusItems);
-    return React.createClass({
-        render: function(){
+    return function(props){
             return(
                 <Body/>
             );
-        }
-    });
+        };
 };
 
 //-------------------------- Buttons ----------------------------------------

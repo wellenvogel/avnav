@@ -78,7 +78,8 @@ let keys={
             pageName: K,
             pageOptions:K,
             onAndroid:K,
-            propertySequence:K
+            propertySequence:K,
+            hasActiveInputs: K
         },
         navpage:{
             zoom: K,

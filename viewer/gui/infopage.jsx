@@ -3,6 +3,7 @@
  */
 var ItemList=require('../components/ItemListOld.jsx');
 var React=require('react');
+var ItemUpdater=require('../components/ItemUpdater.jsx');
 
 var keys={
   info:'info'
@@ -74,11 +75,14 @@ Infopage.prototype.getPageContent=function(){
     let Headline=function(props){
         return <div className="avn_left_top">License and Privacy Info</div>
     };
-    return React.createClass({
-        getInitialState: function(){
-            return {}
-        },
-        render: function(){
+    class Main extends React.Component{
+        constructor(props){
+            super(props);
+            this.showLicense=this.showLicense.bind(this);
+            this.showPrivacy=this.showPrivacy.bins(this);
+        }
+
+        render(){
             let rc=this;
             return(
                 <div className="avn_panel_fill_flex">
@@ -89,42 +93,35 @@ Infopage.prototype.getPageContent=function(){
                     </div>
                     <div className="avn_listWrapper">
                         <div className="avn_infoFrame" ref="infoFrame">
-                            <div className="avn_infoText" dangerouslySetInnerHTML={{__html: this.state.info}} ref="info">
+                            <div className="avn_infoText" dangerouslySetInnerHTML={{__html: this.props.info}} ref="info">
                             </div>
-                            <div className="avn_licenseText" dangerouslySetInnerHTML={{__html: this.state.license}} >
+                            <div className="avn_licenseText" dangerouslySetInnerHTML={{__html: this.props.license}} >
                             </div>
-                            <div className="avn_privacyText" dangerouslySetInnerHTML={{__html: this.state.privacy}} ref="privacy">
+                            <div className="avn_privacyText" dangerouslySetInnerHTML={{__html: this.props.privacy}} ref="privacy">
                             </div>
                         </div>
                     </div>
                     {self.getAlarmWidget()}
                 </div>
             );
-        },
-        componentDidMount: function () {
-            self.store.register(this, keys.info);
-        },
-        componentWillUnmount: function () {
-            self.store.deregister(this);
-        },
-        dataChanged: function () {
-            this.setState(self.store.getData(keys.info,{}));
-        },
-        showLicense:function(){
+        }
+
+        showLicense(){
             let target=this.refs.info;
             if (! target) return;
             let parent=this.refs.infoFrame;
             if (! parent) return;
             parent.scrollTop=0;
-        },
-        showPrivacy:function(){
+        }
+        showPrivacy(){
             let target=this.refs.privacy;
             if (! target) return;
             let parent=this.refs.infoFrame;
             if (! parent) return;
             parent.scrollTop=target.offsetTop;
         }
-    });
+    };
+    return ItemUpdater(Main,self.store,keys.info);
 };
 
 //-------------------------- Buttons ----------------------------------------

@@ -2,6 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 var React=require('react');
+var PropTypes=require('prop-types');
 var ReactDOM=require('react-dom');
 var WaypointList=require('../components/ItemListOld.jsx');
 var WaypointItem=require('../components/WayPointListItem.jsx');
@@ -27,36 +28,39 @@ var selectors={
 };
 
 var createNewRoute=function(name,isActive,okCallback) {
-    var Dialog = React.createClass({
-        propTypes: {
-            closeCallback: React.PropTypes.func,
-        },
-        getInitialState: function () {
-            return {
+    class Dialog extends React.Component{
+        constructor(props){
+            super(props);
+            this.state={
                 name: name,
                 activate: isActive,
                 copyPoints: true
             };
-        },
-        nameChanged: function (event) {
+            this.nameChanged=this.nameChanged.bind(this);
+            this.changeValue=this.changeValue.bind(this);
+            this.closeFunction=this.closeFunction.bind(this);
+            this.okFunction=this.okFunction.bind(this);
+            this.cancelFunction=this.cancelFunction.bind(this);
+        }
+        nameChanged(event) {
             this.setState({name: event.target.value});
-        },
-        changeValue: function (name,newValue) {
+        }
+        changeValue(name,newValue) {
             var ns={};
             ns[name]=newValue;
             this.setState(ns);
-        },
-        closeFunction: function (opt_skip) {
+        }
+        closeFunction (opt_skip) {
             if (this.props.closeCallback) this.props.closeCallback();
-        },
-        okFunction: function (event) {
+        }
+        okFunction(event) {
             var rt = okCallback(this.state, this.closeFunction);
             if (rt && this.props.closeCallback) this.props.closeCallback();
-        },
-        cancelFunction: function (event) {
+        }
+        cancelFunction(event) {
             this.closeFunction();
-        },
-        render: function () {
+        }
+        render () {
             var self=this;
             var html = (
                 <div className="avn_editRouteName">
@@ -90,7 +94,7 @@ var createNewRoute=function(name,isActive,okCallback) {
             );
             return html;
         }
-    });
+    };
     return Dialog;
 };
 
@@ -202,18 +206,16 @@ Routepage.prototype.getPageContent=function(){
             avnav.util.Helper.scrollItemIntoView('.avn_route_info_active_point','#avi_routepage .avn_left_panel .avn_listContainer')
         }
     };
-    var HeadLine=ItemUpdater(React.createClass({
-        render: function(){
-            if (this.props.editingActive){
+    var HeadLine=ItemUpdater(function(props){
+            if (props.editingActive){
                 return <div className="avn_active_headline avn_left_top"><div>Active Route</div></div>
             }
             else{
                 return <div className="avn_left_top"><div>Inactive Route</div></div>
             }
         }
-    }),this.store,keys.editingActive);
-    return React.createClass({
-            render: function () {
+    ,this.store,keys.editingActive);
+    return function (props) {
                 return(
                     <div className="avn_panel_fill_flex">
                         <HeadLine/>
@@ -224,8 +226,7 @@ Routepage.prototype.getPageContent=function(){
                         {self.getAlarmWidget()}
                     </div>
                 );
-            }
-        });
+            };
 };
 Routepage.prototype.showPage=function(options) {
     if (!this.gui) return;

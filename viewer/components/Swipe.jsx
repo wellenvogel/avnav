@@ -3,7 +3,8 @@
  * modified from https://github.com/leandrowd/react-easy-swipe/blob/master/src/react-swipe.js
  */
 
-import React, { Component, PropTypes } from 'react';
+import React, { Component} from 'react';
+import PropTypes from 'prop-types';
 
 class ReactSwipe extends Component {
     static propTypes = {

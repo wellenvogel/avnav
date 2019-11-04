@@ -86,12 +86,15 @@ AisInfoPage.prototype.getPageContent=function() {
     var onClick = function () {
         if (self.isAfterDeadTime()) self.returnToLast();
     };
-    let Content = React.createClass({
-        shouldComponentUpdate: function (nextProps, nextState) {
+    class Content extends React.Component{
+        constructor(props){
+            super(props);
+        }
+        shouldComponentUpdate(nextProps, nextState) {
             return !compare(this.props.current, nextProps.current) ||
                 this.props.src != nextProps.src;
-        },
-        render: function () {
+        }
+        render () {
             let this_=this;
             return (
                 <div className="avn_panel_fill_flex">
@@ -110,8 +113,8 @@ AisInfoPage.prototype.getPageContent=function() {
                     {self.getAlarmWidget()}
                 </div> );
         }
-    });
-    Content = ItemUpdater(Content,globalStore, [keys.nav.ais.updateCount], function (state) {
+    };
+    let UContent = ItemUpdater(Content,globalStore, [keys.nav.ais.updateCount], function (state) {
             var status = 'normal';
             var currentTarget = self.getCurrentTarget();
             if (currentTarget) {
@@ -129,7 +132,7 @@ AisInfoPage.prototype.getPageContent=function() {
                 rotation: currentTarget?currentTarget.course:0
             }
         });
-    return Content;
+    return UContent;
 };
 AisInfoPage.prototype.showPage=function(options) {
     if (!this.gui) return;

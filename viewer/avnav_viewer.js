@@ -111,7 +111,7 @@ avnav.main=function() {
         }),
         document.getElementById('avi_dialog_container'));
 
-    ReactDOM.render(<App/>,document.getElementById('avi_new_pages'));
+    ReactDOM.render(<App/>,document.getElementById('new_pages'));
 
     //ios browser sometimes has issues with less...
     setTimeout(function(){

@@ -3,6 +3,7 @@
  */
 var Page=require('./page.jsx');
 var React=require('react');
+var PropTypes=require('prop-types');
 var ReactDOM=require('react-dom');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
 var ItemList=require('../components/ItemListOld.jsx');
@@ -138,48 +139,30 @@ Wpapage.prototype.getPageContent=function() {
     var wpaClickHandler=function(item){
         self.showWpaDialog(item.ssid,item.id,item.allowAccess);
     };
-    var listEntryClass=React.createClass({
-        propTypes:{
-            ssid: React.PropTypes.string.isRequired,
-            level:React.PropTypes.string,
-            allowAccess:React.PropTypes.bool,
-            id: React.PropTypes.any.isRequired,
-            flags: React.PropTypes.string.isRequired,
-            activeItem: React.PropTypes.bool
-        },
-        onClick: function(ev){
-            wpaClickHandler(this.props);
-        },
-        render: function(){
-            var level=this.props.level;
+    var listEntryClass=function(props){
+            var level=props.level;
             try {
                 level = parseInt(level);
             }catch(e){}
             if (level >= 0) level=level+"%";
             else level=level+"dBm";
-            var disabled=(this.props.flags !== undefined && this.props.flags.match(/DISABLED/));
-            var addClass=this.props.activeItem?'avn_wpa_active_item':'';
+            var disabled=(props.flags !== undefined && props.flags.match(/DISABLED/));
+            var addClass=props.activeItem?'avn_wpa_active_item':'';
             return(
-                <div className={'avn_wpa_item '+addClass} onClick={this.onClick}>
-                    <span className='avn_wpa_ssid'>{this.props.ssid}</span>
+                <div className={'avn_wpa_item '+addClass} onClick={()=>{wpaClickHandler(props)}}>
+                    <span className='avn_wpa_ssid'>{props.ssid}</span>
                     <div className='avn_wpa_item_details_container'>
                         <span className='avn_wpa_item_detail'>Signal:{level}</span>
-                        <span className='avn_wpa_item_detail'>{this.props.id >=0?'configured':''}</span>
+                        <span className='avn_wpa_item_detail'>{props.id >=0?'configured':''}</span>
                         { disabled && <span className='avn_wpa_item_detail'>disabled</span>}
-                        { (this.props.allowAccess && self.store.getData(keys.showAccess,false))  && <span className='avn_wpa_item_detail'>ext access</span>}
-                        { this.props.activeItem  && <span className='avn_wpa_item_detail'>active</span>}
+                        { (props.allowAccess && self.store.getData(keys.showAccess,false))  && <span className='avn_wpa_item_detail'>ext access</span>}
+                        { props.activeItem  && <span className='avn_wpa_item_detail'>active</span>}
                     </div>
                 </div>
             );
-        }
-
-    });
-    var HeaderClass=ItemUpdater(React.createClass({
-        propTypes:{
-            status: React.PropTypes.object
-        },
-        render: function(){
-            var status=this.props.status||{};
+        };
+    var HeaderClass=ItemUpdater(function(props){
+            var status=props.status||{};
             if (!status.wpa_state){
                 return(
                   <div>Waiting for interface...</div>
@@ -189,7 +172,7 @@ Wpapage.prototype.getPageContent=function() {
             var showAccess=self.store.getData(keys.showAccess,false);
             if (status.ip_address) {
                 info+=", IP: "+status.ip_address;
-                if (this.props.status.allowAccess && showAccess){
+                if (props.status.allowAccess && showAccess){
                     info+=", ext access"
                 }
                 if (showAccess){
@@ -205,13 +188,11 @@ Wpapage.prototype.getPageContent=function() {
                     }
                 </div>
             );
-        }
-    }),this.store,keys.interfaceKey);
+        },this.store,keys.interfaceKey);
 
     var NetworkList=ItemUpdater(ItemList,this.store,keys.itemListKey);
 
-    var leftPanel=React.createClass({
-        render:function(props) {
+    var leftPanel=function(props) {
             return(
                 <div className="avn_panel_fill_flex">
                     <div className='avn_left_top'>
@@ -227,8 +208,7 @@ Wpapage.prototype.getPageContent=function() {
                     {self.getAlarmWidget()}
                 </div>
             );
-        }
-    });
+        };
     return leftPanel;
 
 };
@@ -237,9 +217,9 @@ Wpapage.prototype.showWpaDialog=function(ssid,id,allowAccess){
     var self=this;
     var Dialog=React.createClass({
         propTypes:{
-            closeCallback:React.PropTypes.func.isRequired,
-            resultCallback: React.PropTypes.func.isRequired,
-            showAccess: React.PropTypes.bool
+            closeCallback:PropTypes.func.isRequired,
+            resultCallback: PropTypes.func.isRequired,
+            showAccess: PropTypes.bool
 
         },
         getInitialState: function(){

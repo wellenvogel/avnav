@@ -1,6 +1,8 @@
 var React=require('react');
+var reactCreateClass=require('create-react-class');
 var ReactDOM=require('react-dom');
 var assign=require('object-assign');
+var PropTypes=require('prop-types');
 require('../base.js');
 var NavCompute=require('../nav/navcompute');
 var Formatter=require('../util/formatter');
@@ -103,7 +105,7 @@ var saveShipPos=function(ship){
     current.ship=ship;
     window.localStorage.setItem("aistest",JSON.stringify(current));
 };
-var Main=React.createClass({
+var Main=reactCreateClass({
     getInitialState: function(){
         return({
             ship: {lat:"0",lon:"0",factor:"1"}
@@ -184,7 +186,7 @@ var Main=React.createClass({
     }
 });
 
-var List=React.createClass({
+var List=reactCreateClass({
     getInitialState: function(){
         return {list:store.getData(keys.items)};
     },
@@ -210,15 +212,15 @@ var List=React.createClass({
     }
 });
 
-var Ship=React.createClass({
+var Ship=reactCreateClass({
     propTypes:{
-        valueChanged: React.PropTypes.func,
-        x: React.PropTypes.any,
-        y: React.PropTypes.any,
-        course: React.PropTypes.any,
-        speed: React.PropTypes.any,
-        color: React.PropTypes.string,
-        info: React.PropTypes.string
+        valueChanged: PropTypes.func,
+        x: PropTypes.any,
+        y: PropTypes.any,
+        course: PropTypes.any,
+        speed: PropTypes.any,
+        color: PropTypes.string,
+        info: PropTypes.string
     },
     getInitialState: function(){
         return{
@@ -358,9 +360,9 @@ var getDistanceXY=function(X,Y) {
     return curdistance;
 };
 
-var MousePositionHandler=React.createClass({
+var MousePositionHandler=reactCreateClass({
     propTypes:{
-        index: React.PropTypes.number.isRequired
+        index: PropTypes.number.isRequired
     },
     getInitialState:function(){
         return store.getData(keys.mouse+this.props.index,{});
@@ -391,10 +393,10 @@ var MousePositionHandler=React.createClass({
 
 });
 
-var SingleItem=React.createClass({
+var SingleItem=reactCreateClass({
     propTypes:{
-        id: React.PropTypes.number.isRequired,
-        removeHandler: React.PropTypes.func
+        id: PropTypes.number.isRequired,
+        removeHandler: PropTypes.func
     },
     getInitialState: function(){
         var saved=getData()[this.props.id];

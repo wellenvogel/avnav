@@ -165,7 +165,7 @@ class MainPage extends React.Component {
             <Page
                   className={this.props.className}
                   style={this.props.style}
-                  id="avi_mainpage"
+                  id="mainpage"
                   title="AvNav"
                   mainContent={
                     <DynamicList className="mainContent"

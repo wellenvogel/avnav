@@ -4,6 +4,8 @@
 var Store=require('../util/store');
 var ItemList=require('./ItemListOld.jsx');
 var React=require('react');
+var reactCreateClass=require('create-react-class');
+var PropTypes=require('prop-types');
 var assign=require('object-assign');
 
 //properties to be filtered away from the buttons
@@ -18,13 +20,13 @@ const FILTER_PROPERTIES=['url','icon','android','toggle','title','addClass','onI
  * @returns {*} the wrapped react class
  * @constructor
  */
-var ButtonList= React.createClass({
+var ButtonList= reactCreateClass({
     propTypes: {
-        itemList: React.PropTypes.array.isRequired,
-        buttonHandler: React.PropTypes.object.isRequired,
-        visibilityFlags: React.PropTypes.object, //each key given will be compared with the item keys to decide the visibility
-        fontSize: React.PropTypes.number.isRequired,
-        className: React.PropTypes.string
+        itemList: PropTypes.array.isRequired,
+        buttonHandler: PropTypes.object.isRequired,
+        visibilityFlags: PropTypes.object, //each key given will be compared with the item keys to decide the visibility
+        fontSize: PropTypes.number.isRequired,
+        className: PropTypes.string
     },
     onItemClick: function(item){
         if (! this.props.buttonHandler) return;
