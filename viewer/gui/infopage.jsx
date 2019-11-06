@@ -79,7 +79,7 @@ Infopage.prototype.getPageContent=function(){
         constructor(props){
             super(props);
             this.showLicense=this.showLicense.bind(this);
-            this.showPrivacy=this.showPrivacy.bins(this);
+            this.showPrivacy=this.showPrivacy.bind(this);
         }
 
         render(){

@@ -85,9 +85,11 @@ if (process.env.AVNAV_VERSION_FILE){
 module.exports = {
     //see http://humaan.com/getting-started-with-webpack-and-react-es6-style/
     entry: getEntrySources([
+        '@babel/polyfill',
         './webpack-main.js',
         './avnav_viewer.less',
-        './avnav_viewer_new.less'
+        './avnav_viewer_new.less',
+        'whatwg-fetch'
     ]),
     //entry: './app/main.jsx',
     publicPath: 'http://localhost:8081/viewer',

@@ -55,9 +55,11 @@
     "webpack": "^1.13.1"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.7.0",
     "create-react-class": "^15.6.3",
     "react": "^16.11",
     "react-measure": "^2.0.2",
-    "shallow-equal": "^1.0.0"
+    "shallow-equal": "^1.0.0",
+    "whatwg-fetch": "^3.0.0"
   }
 }
