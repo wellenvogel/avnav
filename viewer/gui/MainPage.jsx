@@ -14,6 +14,7 @@ import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../util/overlay.js';
+import Requests from '../util/requests.js';
 
 const DynamicList = Dynamic(ItemList);
 
@@ -100,7 +101,7 @@ class MainPage extends React.Component {
                     };
                 },
                 onClick: ()=> {
-                    history.push('addonpage')
+                    history.push('addonpage',{addOns:globalStore.getData(keys.gui.mainpage.addOns,[])})
                 }
             }
         ];
@@ -190,22 +191,10 @@ class MainPage extends React.Component {
 
 
 const fillList = function () {
-    let url = PropertyHandler.getProperties().navUrl + "?request=listCharts";
-    $.ajax({
-        url: url,
-        dataType: 'json',
-        cache: false,
-        error: function (ev) {
-            Toast.Toast("unable to read chart list: " + ev.responseText);
-        },
-        success: function (data) {
-            if (data.status != 'OK') {
-                Toast.Toast("reading chartlist failed: " + data.info);
-                return;
-            }
+    Requests.getJson("?request=listCharts").then((json)=>{
             let items = [];
-            for (let e in data.data) {
-                let chartEntry = data.data[e];
+            for (let e in json.data) {
+                let chartEntry = json.data[e];
                 let listEntry = {
                     key: chartEntry.name,
                     name: chartEntry.name,
@@ -215,28 +204,17 @@ const fillList = function () {
                 items.push(listEntry);
             }
             globalStore.storeData(keys.gui.mainpage.chartList, items);
-        }
-
-    });
+        },
+        (error)=>{
+            Toast.Toast("unable to read chart list: "+error);
+        });
 };
 const readAddOns = function () {
     if (globalStore.getData(keys.gui.global.onAndroid, false)) return;
-    let url = PropertyHandler.getProperties().navUrl + "?request=readAddons";
-    $.ajax({
-        url: url,
-        dataType: 'json',
-        cache: false,
-        error: function (ev) {
-            Toast.Toast("unable to read addons: " + ev.responseText);
-        },
-        success: function (data) {
-            if (data.status != 'OK') {
-                Toast.Toast("reading addons failed: " + data.info);
-                return;
-            }
+    Requests.getJson("?request=readAddons").then((json)=>{
             let items = [];
-            for (let e in data.data) {
-                let button = data.data[e];
+            for (let e in json.data) {
+                let button = json.data[e];
                 let entry = {
                     key: button.key,
                     url: button.url,
@@ -248,9 +226,10 @@ const readAddOns = function () {
                 }
             }
             globalStore.storeData(keys.gui.mainpage.addOns, items);
-        }
-
-    });
+        },
+        (error)=>{
+            Toast.Toast("reading addons failed: " + error);
+        });
 };
 
 /**
