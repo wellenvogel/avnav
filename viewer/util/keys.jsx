@@ -44,7 +44,6 @@ let keys={
             name: K
         },
         anchor:{
-            active: K,
             distance: K,
             direction:K,
             watchDistance: K

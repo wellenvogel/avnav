@@ -49,7 +49,10 @@ class GpsPage extends React.Component{
             },
             {
                 name: "AnchorWatch",
-                storeKeys: {toggle:keys.nav.anchor.active},
+                storeKeys: {watchDistance:keys.nav.anchor.watchDistance},
+                updateFunction:(state)=>{
+                    return {toggle:state.watchDistance !== undefined}
+                },
                 onClick: ()=>{
                     GuiHelpers.anchorWatchDialog(undefined);
                 }

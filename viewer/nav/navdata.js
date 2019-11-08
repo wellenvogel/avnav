@@ -169,6 +169,9 @@ NavData.prototype.computeValues=function(){
                 this.data.anchorDirection=0;
             }
         }
+        else{
+            this.data.anchorWatchDistance=undefined;
+        }
     }
     else{
         this.data.centerCourse=0;
