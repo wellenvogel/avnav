@@ -5,6 +5,7 @@ import history from './util/history.js';
 import Dynamic from './hoc/Dynamic.jsx';
 import keys from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
+import InfoPage from './gui/InfoPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -41,7 +42,8 @@ class MainWrapper extends React.Component{
     }
 }
 const pages={
-    mainpage: MainWrapper
+    mainpage: MainWrapper,
+    infopage: InfoPage
 };
 class Router extends Component {
     render() {

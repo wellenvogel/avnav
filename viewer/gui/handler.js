@@ -195,6 +195,7 @@ avnav.gui.Handler.prototype.showPageInternal = function (name, options) {
     globalStore.storeData(keys.gui.global.pageName,name);
     globalStore.storeData(keys.gui.global.pageOptions,options);
     if (name === 'mainpage') return;
+    if (name === 'infopage') return;
     $('.avn_page').hide();
     $('#avi_' + name).show();
     var oldname = this.page;

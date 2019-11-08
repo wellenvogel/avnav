@@ -1,6 +1,26 @@
 import PropertyHandler from './propertyhandler.js';
 import Promise from 'promise';
+import assign from 'object-assign';
 'use strict';
+
+const prepare=(url,options,defaults)=>{
+    if (!url) {
+        return [undefined,undefined];
+    }
+    let ioptions=assign({},defaults,options);
+    if ( !(ioptions && ioptions.useNavUrl !== undefined && !ioptions.useNavUrl)){
+        url=PropertyHandler.getProperties().navUrl+url;
+    }
+    let headers=undefined;
+    if ( !(ioptions && ioptions.noCache !== undefined && !ioptions.noCache)){
+        headers=new Headers();
+        headers.append('pragma', 'no-cache');
+        headers.append('cache-control', 'no-cache');
+    }
+    let requestOptions={};
+    if (headers) requestOptions.headers=headers;
+    return [url,requestOptions];
+};
 let RequestHandler={
     /**
      * do a json get request
@@ -11,23 +31,13 @@ let RequestHandler={
      *        noCache   - (default: true) - prevent caching
      */
     getJson:(url,options)=>{
+        let [rurl,requestOptions]=prepare(url,options);
         return new Promise((resolve,reject)=>{
-           if (!url) {
-               reject("missing url");
-               return;
-           }
-           if ( !(options && options.useNavUrl !== undefined && !options.useNavUrl)){
-               url=PropertyHandler.getProperties().navUrl+url;
-           }
-           let headers=undefined;
-           if ( !(options && options.noCache !== undefined && !options.noCache)){
-               headers=new Headers();
-               headers.append('pragma', 'no-cache');
-               headers.append('cache-control', 'no-cache');
-           }
-           let requestOptions={};
-           if (headers) requestOptions.headers=headers;
-           fetch(url,requestOptions).then(
+            if (!rurl) {
+                reject("missing url");
+                return;
+            }
+           fetch(rurl,requestOptions).then(
                 (response)=>{
                     if (response.ok){
                         return response.json();
@@ -50,6 +60,39 @@ let RequestHandler={
                    reject(jsonError);
                });
         });
+    },
+    /**
+     * do a json get request
+     * @param url
+     * @param options:
+     *        useNavUrl - (default: true) - prepend the navUrl to the provided url
+     *        checkOk   - (default: true) - check if the response has a status field and this is set to "OK"
+     *        noCache   - (default: true) - prevent caching
+     */
+    getHtmlOrText:(url,options)=>{
+        let [rurl,requestOptions]=prepare(url,options,{useNavUrl:false,noCache:false});
+        return new Promise((resolve,reject)=>{
+          if (!rurl) {
+              reject("missing url");
+              return;
+          }
+          fetch(rurl,requestOptions).then(
+              (response)=>{
+                  if (response.ok){
+                      return response.text();
+                  }
+                  else{
+                      reject(response.statusText);
+                  }
+              },
+              (error)=>{
+                  reject(error.message);
+              }).then((text)=>{
+                 resolve(text);
+              },(error)=>{
+                  reject(error);
+              });
+      });
     }
 };
 Object.freeze(RequestHandler);
