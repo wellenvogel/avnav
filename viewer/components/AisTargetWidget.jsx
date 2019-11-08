@@ -94,7 +94,7 @@ class AisTargetWidget extends React.Component{
     }
     click(ev){
         ev.stopPropagation();
-        this.props.onItemClick(assign({},this.props,{mmsi:this.props.current?this.props.current.mmsi:undefined}));
+        this.props.onClick(assign({},this.props,{mmsi:this.props.current?this.props.current.mmsi:undefined}));
     }
 
 }
@@ -105,7 +105,7 @@ AisTargetWidget.storeKeys={
 
 AisTargetWidget.propTypes={
     //formatter: React.PropTypes.func,
-    onItemClick: PropTypes.func,
+    onClick: PropTypes.func,
     classes: PropTypes.string,
     updateCallback: PropTypes.func,
     current: PropTypes.object,

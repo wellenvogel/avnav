@@ -10,6 +10,8 @@ import GpsPage from './gui/GpsPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
+import Requests from './util/requests.js';
+import Toast from './util/overlay.js';
 
 //legacy support - hand over to the "old" gui handler
 class Other extends React.Component{
@@ -83,7 +85,18 @@ class App extends React.Component {
         let iv=window.setInterval(this.checkSizes,1000);
         this.checkSizes();
         this.setState({interval:iv});
-        window.addEventListener('resize',this.checkSizes)
+        window.addEventListener('resize',this.checkSizes);
+        Requests.getJson("layout/default.json",{useNavUrl:false,checkOk:false}).then(
+            (json)=>{
+                globalStore.storeData(keys.gui.global.layout,json);
+                let ls=globalStore.getData(keys.gui.global.layoutSequence,0);
+                globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
+            },
+            (error)=>{
+               Toast.Toast("unable to load application layout: "+error);
+            }
+        );
+
     }
     componentWillUnmount(){
         window.removeEventListener('resize',this.checkSizes);

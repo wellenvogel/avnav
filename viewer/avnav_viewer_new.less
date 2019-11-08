@@ -456,3 +456,51 @@ button{
   }
 
 }
+
+#gpspage{
+  .leftPart{
+    .flex-direction(row);
+    height: 100%;
+  }
+  .hfield{
+    width: 50%;
+    height: 100%;
+    .widgetContainer{
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      >.avn_widget{
+        width: 100%
+      }
+    }
+    .avn_widget{
+      .flex-grow(0);
+      .flex-shrink(0);
+      padding-top: 1.3em;
+      margin: 0;
+    }
+    .avn_widgetInfoLeft {
+      left: 0;
+      padding-left: 8px;
+      border-bottom: 1px solid;
+      border-top: 1px solid;
+      .nightBackFade(#E2DFDF);
+      width: 100%;
+      font-size: 0.7em;
+    }
+    .avn_widgetData{
+      margin-top: 0;
+      display: inline-block;
+    }
+    .avn_combinedWidget{
+      .flex-display();
+      .flex-direction(row);
+      .avn_widget {
+        height: 100%;
+        .flex-grow(1);
+      }
+    }
+  }
+
+}
