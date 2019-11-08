@@ -18,12 +18,41 @@ import MapHolder from '../map/mapholder.js';
 import GuiHelpers from './helpers.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 
-
+//from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
+function resizeFont() {
+    let elements  = document.querySelectorAll('.resize');
+    if (elements.length < 0) {
+        return;
+    }
+    let _len = elements.length;
+    for (let _i = 0; _i < _len; _i++) {
+        let el = elements[_i];
+        el.style.fontSize = "100%";
+        if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) {
+            //scale down
+            for (let size = 100; (el.scrollHeight > el.clientHeight ||  el.scrollWidth > el.clientWidth) && size > 10 ; size -= 10) {
+                el.style.fontSize = size + '%';
+            }
+        }
+        else{
+            let lastSize=100;
+            for (let size = 100; el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight && size < 200 ; size += 10) {
+                lastSize=size;
+                el.style.fontSize = size + '%';
+            }
+            if (lastSize > 100){
+                //maybe we went multi-line...
+                lastSize-=10;
+                el.style.fontSize = lastSize + '%';
+            }
+        }
+    }
+}
 const widgetCreator=(widget,weightSum)=>{
     let {weight,...widgetProps}=widget;
     if (weight === undefined) weight=1;
     let height=weight/weightSum*100;
-    return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps'});
+    return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps',className:''});
 };
 
 const getPanelList=(panelType)=>{
@@ -110,7 +139,11 @@ class GpsPage extends React.Component{
 
     componentDidMount(){
         let self=this;
+        resizeFont();
 
+    }
+    componentDidUpdate(){
+        resizeFont();
     }
     render(){
         let self=this;

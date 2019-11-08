@@ -21,7 +21,9 @@ class DirectWidget extends React.Component{
         var style=this.props.style||{};
         return (
         <div className={classes} onClick={this.props.onClick} style={style}>
+            <div className="resize">
             <div className='avn_widgetData'>{val}</div>
+            </div>
             <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
             {this.props.unit !== undefined?
                 <div className='avn_widgetInfoRight'>{this.props.unit}</div>

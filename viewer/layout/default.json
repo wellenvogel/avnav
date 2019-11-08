@@ -1,15 +1,15 @@
 {
   "gpspage1": {
     "left_no_anchor":[
-      {"name":"BRG","weight":2},
-      {"name":"XteDisplay","compareState":true,"weight":2},
-      {"name":"DST"},
+      {"name":"BRG","weight":1.5},
+      {"name":"DST","weight":1.5},
+      {"name":"XteDisplay","compareState":true,"weight":1},
       {"name":"ETA"},
       {"name": "RteCombine"}
     ],
     "right_no_anchor":[
-      {"name":"COG","weight":2},
-      {"name":"SOG","weight":2},
+      {"name":"COG","weight":1.5},
+      {"name":"SOG","weight":1.5},
       {"name":"TimeStatus"},
       {"name":"Position"},
       {"name":"AisTarget"}
