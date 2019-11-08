@@ -4,22 +4,20 @@
  * as all the ol3 stuff is hard to use or broken...
  */
 
-avnav.provide('avnav.map.Drawing');
-avnav.provide('avnav.map.DrawingPositionConverter');
 
 
 /**
  * an interface for converting between lat/lon and css pixel
  * @constructor
  */
-avnav.map.DrawingPositionConverter=function(){
+const DrawingPositionConverter=function(){
 };
 /**
  * to be overloaded
  * @param {ol.Coordinate} point
  * @returns {undefined}
  */
-avnav.map.DrawingPositionConverter.prototype.coordToPixel=function(point){
+DrawingPositionConverter.prototype.coordToPixel=function(point){
     return undefined;
 };
 /**
@@ -27,17 +25,17 @@ avnav.map.DrawingPositionConverter.prototype.coordToPixel=function(point){
  * @param pixel
  * @returns {ol.Coordinate}
  */
-avnav.map.DrawingPositionConverter.prototype.pixelToCoord=function(pixel){
+DrawingPositionConverter.prototype.pixelToCoord=function(pixel){
     return new ol.Coordinate();
 };
 
 /**
  * 2d drawing functions
  * @constructor
- * @param {avnav.map.DrawingPositionConverter} converter
+ * @param {DrawingPositionConverter} converter
  * @param {number} opt_ratio - device pixel ratio
  */
-avnav.map.Drawing=function(converter,opt_ratio){
+const Drawing=function(converter,opt_ratio){
     /**
      * the device pixel ratio
      * @private
@@ -54,7 +52,7 @@ avnav.map.Drawing=function(converter,opt_ratio){
     this.rotation=0;
     /**
      * @private
-     * @type {avnav.map.DrawingPositionConverter}
+     * @type {DrawingPositionConverter}
      */
     this.converter=converter;
     /**
@@ -77,7 +75,7 @@ avnav.map.Drawing=function(converter,opt_ratio){
  * @param opt_styles - see drawLineToContext
  * @return the center in css pixel
  */
-avnav.map.Drawing.prototype.drawCircleToContext=function(center,other,opt_styles){
+Drawing.prototype.drawCircleToContext=function(center,other,opt_styles){
     if (! this.context) return;
     this.setLineStyles(opt_styles);
     var rt=this.pointToCssPixel(center);
@@ -107,7 +105,7 @@ avnav.map.Drawing.prototype.drawCircleToContext=function(center,other,opt_styles
  *             backgroundCircle: a color for an optional background circle
  * @return {ol.Coordinate} the css pixel coordinates of the object
  */
-avnav.map.Drawing.prototype.drawImageToContext=function(point,image,opt_options){
+Drawing.prototype.drawImageToContext=function(point,image,opt_options){
     if (! this.context) return;
     if (image.naturalHeight == 0 || image.naturalWidth == 0) return; //silently ignore error
     var rt=this.pointToCssPixel(point);
@@ -173,7 +171,7 @@ avnav.map.Drawing.prototype.drawImageToContext=function(point,image,opt_options)
  * @param y2 end y
  * @param dashLen the len in device pixel
  */
-avnav.map.Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
+Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
     this.context.moveTo(x1, y1);
     var dX = x2 - x1;
     var dY = y2 - y1;
@@ -201,7 +199,7 @@ avnav.map.Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
  * @param pe: pixel from line end for peak
  * @param open: if true - open arrow
  */
-avnav.map.Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe,open){
+Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe,open){
     var dx=x2-x1;
     var dy=y2-y1;
     if (Math.abs(dx)<0.0001) return;
@@ -239,7 +237,7 @@ avnav.map.Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe,open){
  *          dashed: - if set draw a dashed line
  * @return {Array.<ol.Coordinate>} the css pixel coordinates of the points
  */
-avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
+Drawing.prototype.drawLineToContext=function(points,opt_style){
     if (! points || points.length < 2) return;
     if (! this.context) return;
     var rt=[];
@@ -297,7 +295,7 @@ avnav.map.Drawing.prototype.drawLineToContext=function(points,opt_style){
  * @param radius - radius in css pixel
  * @param opt_style - see draw line, additionally background for a fill color
  */
-avnav.map.Drawing.prototype.drawBubbleToContext=function(point,radius,opt_style){
+Drawing.prototype.drawBubbleToContext=function(point,radius,opt_style){
     if (! this.context) return;
     var rt=[];
     this.setLineStyles(opt_style);
@@ -333,7 +331,7 @@ avnav.map.Drawing.prototype.drawBubbleToContext=function(point,radius,opt_style)
  *      fixX: use this as x position (ignore point[0])
  *      fixY: use this as y position (ignore point[1])
  */
-avnav.map.Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
+Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
     if (!this.context) return;
     if (! point) return;
     var doFill=true;
@@ -383,14 +381,14 @@ avnav.map.Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
  * get the drawing context
  * @returns {CanvasRenderingContext2D}
  */
-avnav.map.Drawing.prototype.getContext=function(){
+Drawing.prototype.getContext=function(){
     return this.context;
 };
 /**
  * get the device-pixel ratio
  * @returns {number}
  */
-avnav.map.Drawing.prototype.getDevPixelRatio=function(){
+Drawing.prototype.getDevPixelRatio=function(){
     return this.devPixelRatio;
 };
 
@@ -398,7 +396,7 @@ avnav.map.Drawing.prototype.getDevPixelRatio=function(){
  * get the current view rotation
  * @returns {number}
  */
-avnav.map.Drawing.prototype.getRotation=function(){
+Drawing.prototype.getRotation=function(){
     return this.rotation;
 };
 /**
@@ -407,7 +405,7 @@ avnav.map.Drawing.prototype.getRotation=function(){
  *
  * @returns {ol.Coordinate}
  */
-avnav.map.Drawing.prototype.pointToCssPixel=function(coord) {
+Drawing.prototype.pointToCssPixel=function(coord) {
     var rt = this.converter.coordToPixel(coord);
     return rt;
 };
@@ -417,7 +415,7 @@ avnav.map.Drawing.prototype.pointToCssPixel=function(coord) {
  * @param {ol.Coordinate} pixel
  * @returns {ol.Coordinate}
  */
-avnav.map.Drawing.prototype.pixelToDevice=function(pixel) {
+Drawing.prototype.pixelToDevice=function(pixel) {
     var rt=[];
     rt[0]=pixel[0]*this.devPixelRatio;
     rt[1]=pixel[1]*this.devPixelRatio;
@@ -428,13 +426,13 @@ avnav.map.Drawing.prototype.pixelToDevice=function(pixel) {
  * handle changed properties
  * @param evdata
  */
-avnav.map.Drawing.prototype.propertyChange=function(evdata){
+Drawing.prototype.propertyChange=function(evdata){
 };
 /**
  * set the current devPixelRatio
  * @param {number} ratio
  */
-avnav.map.Drawing.prototype.setDevPixelRatio=function(ratio){
+Drawing.prototype.setDevPixelRatio=function(ratio){
     this.devPixelRatio=ratio;
 };
 
@@ -442,22 +440,27 @@ avnav.map.Drawing.prototype.setDevPixelRatio=function(ratio){
  * set the context
  * @param {CanvasRenderingContext2D} context
  */
-avnav.map.Drawing.prototype.setContext=function(context){
+Drawing.prototype.setContext=function(context){
     this.context=context;
 };
 /**
  * set the rotation of the view
  * @param angle
  */
-avnav.map.Drawing.prototype.setRotation=function(angle){
+Drawing.prototype.setRotation=function(angle){
     this.rotation=angle;
 };
 
-avnav.map.Drawing.prototype.setLineStyles=function(opt_style){
+Drawing.prototype.setLineStyles=function(opt_style){
     if (opt_style){
         if (opt_style.color) this.context.strokeStyle=opt_style.color;
         if (opt_style.width) this.context.lineWidth=opt_style.width;
         if (opt_style.cap) this.context.lineCap=opt_style.cap;
         if (opt_style.join) this.context.lineJoin=opt_style.join;
     }
+};
+
+module.exports={
+    Drawing,
+    DrawingPositionConverter
 };

@@ -2,34 +2,31 @@
  * Created by andreas on 18.05.14.
  */
 
-avnav.provide('avnav.map.NavLayer');
 var NavCompute=require('../nav/navcompute');
 var navobjects=require('../nav/navobjects');
-var NavData=require('../nav/navobjects');
+var NavData=require('../nav/navdata');
 var anchor=require('../images/icons-new/anchor.svg');
 
 
 
 /**
  * a cover for the layer that contaisn the booat, the current wp and the route between them
- * @param {avnav.map.MapHolder} mapholder
- * @param {NavData} navobject
+ * @param {MapHolder} mapholder
  * @constructor
  */
-avnav.map.NavLayer=function(mapholder,navobject){
+const NavLayer=function(mapholder){
     var self=this;
     /**
      * @private
-     * @type {avnav.map.MapHolder}
+     * @type {MapHolder}
      */
     this.mapholder=mapholder;
     /**
      * @private
      * @type {NavData}
      */
-    this.navobject=navobject;
-
-    var self=this;
+    this.navobject=NavData;
+    
     /**
      * the last boat course
      * @private
@@ -96,7 +93,7 @@ avnav.map.NavLayer=function(mapholder,navobject){
  * set the style(s)
  * @private
  */
-avnav.map.NavLayer.prototype.setStyle=function() {
+NavLayer.prototype.setStyle=function() {
     this.circleStyle={
             color: this.mapholder.properties.getProperties().navCircleColor,
             width: this.mapholder.properties.getProperties().navCircleWidth
@@ -114,7 +111,7 @@ avnav.map.NavLayer.prototype.setStyle=function() {
  * @param {ol.Coordinate} center in map coordinates
  * @param {avnav.map.Drawing} drawing
  */
-avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
+NavLayer.prototype.onPostCompose=function(center,drawing){
     var prop=this.mapholder.getProperties().getProperties();
     var anchorDistance=this.navobject.getRoutingHandler().getAnchorWatch();
     if (prop.layers.boat) {
@@ -166,7 +163,7 @@ avnav.map.NavLayer.prototype.onPostCompose=function(center,drawing){
  * @param {number} course in degrees
  * @param {number} dist in m
  */
-avnav.map.NavLayer.prototype.computeTarget=function(pos,course,dist){
+NavLayer.prototype.computeTarget=function(pos,course,dist){
     var point=new navobjects.Point();
     point.fromCoord(this.mapholder.transformFromMap(pos));
     var tp=NavCompute.computeTarget(point,course,dist);
@@ -179,7 +176,7 @@ avnav.map.NavLayer.prototype.computeTarget=function(pos,course,dist){
  * @param {ol.Coordinate} pos
  * @param {number} course
  */
-avnav.map.NavLayer.prototype.setBoatPosition=function(pos,course) {
+NavLayer.prototype.setBoatPosition=function(pos,course) {
     if (course === undefined) course=0;
     this.boatStyle.rotation=course*Math.PI/180;
     this.lastBoatCourse=course;
@@ -187,6 +184,8 @@ avnav.map.NavLayer.prototype.setBoatPosition=function(pos,course) {
 };
 
 
-avnav.map.NavLayer.prototype.propertyChange=function(evdata){
+NavLayer.prototype.propertyChange=function(evdata){
     this.setStyle();
 };
+
+module.exports=NavLayer;

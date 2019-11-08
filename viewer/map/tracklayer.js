@@ -1,29 +1,27 @@
 /**
  * Created by andreas on 18.05.14.
  */
-
-avnav.provide('avnav.map.TrackLayer');
+    
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 
 
 /**
  * a cover for the layer that the track
- * @param {avnav.map.MapHolder} mapholder
- * @param {NavData} navobject
+ * @param {MapHolder} mapholder
  * @constructor
  */
-avnav.map.TrackLayer=function(mapholder,navobject){
+const TrackLayer=function(mapholder){
     /**
      * @private
-     * @type {avnav.map.MapHolder}
+     * @type {MapHolder}
      */
     this.mapholder=mapholder;
     /**
      * @private
      * @type {NavData}
      */
-    this.navobject=navobject;
+    this.navobject=NavData;
     /**
      * @private
      * @type {boolean}
@@ -46,7 +44,6 @@ avnav.map.TrackLayer=function(mapholder,navobject){
      */
     this.lineStyle={};
     this.setStyle();
-    var self=this;
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
@@ -60,7 +57,7 @@ avnav.map.TrackLayer=function(mapholder,navobject){
  * set the style for the track line
  * @private
  */
-avnav.map.TrackLayer.prototype.setStyle=function() {
+TrackLayer.prototype.setStyle=function() {
     this.lineStyle = {
             color: this.mapholder.properties.getProperties().trackColor,
             width: this.mapholder.properties.getProperties().trackWidth
@@ -71,7 +68,7 @@ avnav.map.TrackLayer.prototype.setStyle=function() {
  * the handler for new data
  * @param evdata
  */
-avnav.map.TrackLayer.prototype.navEvent=function(evdata){
+TrackLayer.prototype.navEvent=function(evdata){
     if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) {
         this.currentTrack=[];
@@ -121,13 +118,15 @@ avnav.map.TrackLayer.prototype.navEvent=function(evdata){
  * @param {ol.Coordinate} center
  * @param {avnav.map.Drawing} drawing
  */
-avnav.map.TrackLayer.prototype.onPostCompose=function(center,drawing){
+TrackLayer.prototype.onPostCompose=function(center,drawing){
     if (! this.visible) return;
     drawing.drawLineToContext(this.trackPoints,this.lineStyle);
 };
-avnav.map.TrackLayer.prototype.propertyChange=function(evdata) {
+TrackLayer.prototype.propertyChange=function(evdata) {
     this.visible=this.mapholder.getProperties().getProperties().layers.track;
     this.setStyle();
     this.currentTrack=[]; //trigger a complete redraw
     this.trackPoints=[];
 };
+
+module.exports=TrackLayer;

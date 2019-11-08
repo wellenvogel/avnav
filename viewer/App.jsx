@@ -6,6 +6,7 @@ import Dynamic from './hoc/Dynamic.jsx';
 import keys from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
 import InfoPage from './gui/InfoPage.jsx';
+import GpsPage from './gui/GpsPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -43,7 +44,8 @@ class MainWrapper extends React.Component{
 }
 const pages={
     mainpage: MainWrapper,
-    infopage: InfoPage
+    infopage: InfoPage,
+    gpspage: GpsPage
 };
 class Router extends Component {
     render() {

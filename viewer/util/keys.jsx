@@ -95,7 +95,11 @@ let keys={
             chartList: K,
             status: K,
             addOns: K,
+        },
+        gpspage:{
+            pageNumber:K,
         }
+
     },
     //all keys below this one are synced with the property handler
     //so we can only have values here that correspond to available properties

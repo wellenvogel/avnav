@@ -39,6 +39,7 @@ var propertyHandler=require('./util/propertyhandler');
 ol.DEFAULT_TILE_CACHE_HIGH_WATER_MARK=256;
 var App=require('./App.jsx');
 var history=require('./util/history');
+var MapHolder=require('./map/mapholder');
 
 
 
@@ -72,8 +73,7 @@ avnav.main=function() {
     else {
         propertyHandler.setValueByName('routingServerError',true);
     }
-    var mapholder=new avnav.map.MapHolder(propertyHandler,NavData);
-    var gui=new avnav.gui.Handler(propertyHandler,NavData,mapholder);
+    var gui=new avnav.gui.Handler(propertyHandler,NavData,MapHolder);
 
     if (getParam('onAndroid')){
         propertyHandler.setValueByName('onAndroid',true);

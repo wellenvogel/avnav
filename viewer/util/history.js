@@ -18,11 +18,11 @@ class History{
             this.push(location,options);
             return;
         }
-        this.history.splice(-1,1,{location:location,options:options});
+        this.history.splice(-1,1,{location:location,options:options||{}});
         this.updateStore();
     }
     push(location,options){
-        this.history.push({location:location,options:options});
+        this.history.push({location:location,options:options||{}});
         this.updateStore();
     }
     pop(){

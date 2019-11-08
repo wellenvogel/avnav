@@ -192,10 +192,9 @@ avnav.gui.Handler.prototype.showPageInternal = function (name, options) {
             this.history.push(this.page);
     }
     this.removeAllActiveInputs();
-    globalStore.storeData(keys.gui.global.pageName,name);
-    globalStore.storeData(keys.gui.global.pageOptions,options);
     if (name === 'mainpage') return;
     if (name === 'infopage') return;
+    if (name === 'gpspage') return;
     $('.avn_page').hide();
     $('#avi_' + name).show();
     var oldname = this.page;

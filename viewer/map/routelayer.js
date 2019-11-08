@@ -1,29 +1,27 @@
 /**
  * Created by andreas on 14.07.14.
  */
-
-avnav.provide('avnav.map.RouteLayer');
+    
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 var RouteHandler=require('../nav/routedata');
 
 /**
  * a cover for the layer with routing data
- * @param {avnav.map.MapHolder} mapholder
- * @param {NavData} navobject
+ * @param {MapHolder} mapholder
  * @constructor
  */
-avnav.map.RouteLayer=function(mapholder,navobject){
+const RouteLayer=function(mapholder){
     /**
      * @private
-     * @type {avnav.map.MapHolder}
+     * @type {MapHolder}
      */
     this.mapholder=mapholder;
     /**
      * @private
      * @type {NavData}
      */
-    this.navobject=navobject;
+    this.navobject=NavData;
 
     /**
      * @private
@@ -83,7 +81,7 @@ avnav.map.RouteLayer=function(mapholder,navobject){
  * set the styles
  * @private
  */
-avnav.map.RouteLayer.prototype.setStyle=function() {
+RouteLayer.prototype.setStyle=function() {
     this.lineStyle = {
             color: this.mapholder.properties.getProperties().routeColor,
             width: this.mapholder.properties.getProperties().routeWidth,
@@ -141,7 +139,7 @@ avnav.map.RouteLayer.prototype.setStyle=function() {
  * the handler for new data
  * @param evdata
  */
-avnav.map.RouteLayer.prototype.navEvent=function(evdata){
+RouteLayer.prototype.navEvent=function(evdata){
     if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) {
         return;
@@ -154,7 +152,7 @@ avnav.map.RouteLayer.prototype.navEvent=function(evdata){
  * @param {ol.Coordinate} center
  * @param {avnav.map.Drawing} drawing
  */
-avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
+RouteLayer.prototype.onPostCompose=function(center,drawing) {
     this.routePixel = [];
     this.wpPixel=[];
     if (!this.visible) return;
@@ -225,7 +223,7 @@ avnav.map.RouteLayer.prototype.onPostCompose=function(center,drawing) {
  * @param pixel
  * @returns {navobjects.WayPoint} or undefined
  */
-avnav.map.RouteLayer.prototype.findTarget=function(pixel){
+RouteLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance
     var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
     if (! this.routePixel) return undefined;
@@ -245,8 +243,10 @@ avnav.map.RouteLayer.prototype.findTarget=function(pixel){
     }
     return undefined;
 };
-avnav.map.RouteLayer.prototype.propertyChange=function(evdata) {
+RouteLayer.prototype.propertyChange=function(evdata) {
     this.visible=this.mapholder.getProperties().getProperties().layers.nav;
     this.setStyle();
     this.mapholder.triggerRender();
 };
+
+module.exports=RouteLayer;

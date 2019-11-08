@@ -1,29 +1,27 @@
 /**
  * Created by andreas on 18.05.14.
  */
-
-avnav.provide('avnav.map.AisLayer');
+    
 var navobjects=require('../nav/navobjects');
-var NavData=require('../nav/navobjects');
+var NavData=require('../nav/navdata');
 
 
 /**
  * a cover for the layer with the AIS display
- * @param {avnav.map.MapHolder} mapholder
- * @param {NavData} navobject
+ * @param {MapHolder} mapholder
  * @constructor
  */
-avnav.map.AisLayer=function(mapholder,navobject){
+const AisLayer=function(mapholder){
     /**
      * @private
-     * @type {avnav.map.MapHolder}
+     * @type {MapHolder}
      */
     this.mapholder=mapholder;
     /**
      * @private
      * @type {NavData}
      */
-    this.navobject=navobject;
+    this.navobject=NavData;
     var self=this;
     /**
      * @private
@@ -80,7 +78,7 @@ avnav.map.AisLayer=function(mapholder,navobject){
  * @param {string} color - the css color
  * @returns {*} - an image data uri
  */
-avnav.map.AisLayer.prototype.createIcon=function(color){
+AisLayer.prototype.createIcon=function(color){
     var canvas = document.createElement("canvas");
     if (! canvas) return undefined;
     canvas.width=100;
@@ -121,7 +119,7 @@ avnav.map.AisLayer.prototype.createIcon=function(color){
  * compute the icons for the AIS display
  * @private
  */
-avnav.map.AisLayer.prototype.createAllIcons=function(){
+AisLayer.prototype.createAllIcons=function(){
     var style=this.mapholder.getProperties().getProperties().style;
     this.nearestImage.src=this.createIcon(style.aisNearestColor);
     this.warningImage.src=this.createIcon(style.aisWarningColor);
@@ -131,7 +129,7 @@ avnav.map.AisLayer.prototype.createAllIcons=function(){
  * find the AIS target that has been clicked
  * @param {ol.Coordinate} pixel the css pixel from the event
  */
-avnav.map.AisLayer.prototype.findTarget=function(pixel){
+AisLayer.prototype.findTarget=function(pixel){
     avnav.log("findAisTarget "+pixel[0]+","+pixel[1]);
     var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
     var idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
@@ -140,7 +138,7 @@ avnav.map.AisLayer.prototype.findTarget=function(pixel){
 };
 
 
-avnav.map.AisLayer.prototype.setStyles=function(){
+AisLayer.prototype.setStyles=function(){
     this.textStyle= {
         stroke: '#fff',
         color: '#000',
@@ -161,7 +159,7 @@ avnav.map.AisLayer.prototype.setStyles=function(){
  * an event fired from the AIS handler
  * @param evdata
  */
-avnav.map.AisLayer.prototype.navEvent=function(evdata){
+AisLayer.prototype.navEvent=function(evdata){
     if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) return;
     if (evdata.type == navobjects.NavEventType.AIS){
@@ -176,7 +174,7 @@ avnav.map.AisLayer.prototype.navEvent=function(evdata){
  * @param {ol.Coordinate} center
  * @param {avnav.map.Drawing} drawing
  */
-avnav.map.AisLayer.prototype.onPostCompose=function(center,drawing){
+AisLayer.prototype.onPostCompose=function(center,drawing){
     if (! this.visible) return;
     var i;
     var pixel=[];
@@ -206,7 +204,7 @@ avnav.map.AisLayer.prototype.onPostCompose=function(center,drawing){
  * handle changed properties
  * @param evdata
  */
-avnav.map.AisLayer.prototype.propertyChange=function(evdata){
+AisLayer.prototype.propertyChange=function(evdata){
     this.visible=this.mapholder.getProperties().getProperties().layers.ais;
     this.createAllIcons();
     this.setStyles();
@@ -216,7 +214,7 @@ avnav.map.AisLayer.prototype.propertyChange=function(evdata){
  * @param {string} type: nearest,warning,normal
  * @returns {string} the icon as a data url
  */
-avnav.map.AisLayer.prototype.getAisIcon=function(type){
+AisLayer.prototype.getAisIcon=function(type){
     var style=this.mapholder.getProperties().getProperties().style;
     if (type == 'nearest'){
         return this.createIcon(style.aisNearestColor);
@@ -226,3 +224,5 @@ avnav.map.AisLayer.prototype.getAisIcon=function(type){
     }
     return this.createIcon(style.aisNormalColor);
 };
+
+module.exports=AisLayer;

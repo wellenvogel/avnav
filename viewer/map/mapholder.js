@@ -1,13 +1,20 @@
 /**
  * Created by andreas on 03.05.14.
  */
-avnav.provide('avnav.map.MapHolder');
-avnav.provide('avnav.map.LayerTypes');
+
 avnav.provide('avnav.map.MapEvent');
 
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 var OverlayDialog=require('../components/OverlayDialog.jsx');
+var PropertyHandler=require('../util/propertyhandler');
+var AisLayer=require('./aislayer');
+var NavLayer=require('./navlayer');
+var TrackLayer=require('./tracklayer');
+var RouteLayer=require('./routelayer');
+var Drawing=require('./drawing').Drawing;
+var DrawingPositionConverter=require('./drawing').DrawingPositionConverter;
+
 
 
 
@@ -17,7 +24,7 @@ var OverlayDialog=require('../components/OverlayDialog.jsx');
  * the types of the layers
  * @type {{TCHART: number, TNAV: number}}
  */
-avnav.map.LayerTypes={
+const LayerTypes={
     TCHART:0,
     TNAV:1,
     TTRACK:2,
@@ -57,9 +64,9 @@ avnav.map.MapEvent.EVENT_TYPE="mapevent";
  * @param navobject
  * @constructor
  */
-avnav.map.MapHolder=function(properties,navobject){
+const MapHolder=function(){
 
-    avnav.map.DrawingPositionConverter.call(this);
+    DrawingPositionConverter.call(this);
     /** @private
      * @type {ol.Map}
      * */
@@ -67,11 +74,11 @@ avnav.map.MapHolder=function(properties,navobject){
     /** @private
      * @type {NavData}
      * */
-    this.navobject=navobject;
+    this.navobject=NavData;
     /** @private
      *  @type {avnav.properties.PropertyHandler}
      *  */
-    this.properties=properties;
+    this.properties=PropertyHandler;
     
     this.defaultDiv=document.createElement('div');
     
@@ -104,10 +111,10 @@ avnav.map.MapHolder=function(properties,navobject){
     this.transformFromMap=ol.proj.getTransform("EPSG:3857","EPSG:4326");
     this.transformToMap=ol.proj.getTransform("EPSG:4326","EPSG:3857");
 
-    this.aislayer=new avnav.map.AisLayer(this,this.navobject);
-    this.navlayer=new avnav.map.NavLayer(this,this.navobject);
-    this.tracklayer=new avnav.map.TrackLayer(this,this.navobject);
-    this.routinglayer=new avnav.map.RouteLayer(this,this.navobject);
+    this.aislayer=new AisLayer(this);
+    this.navlayer=new NavLayer(this);
+    this.tracklayer=new TrackLayer(this);
+    this.routinglayer=new RouteLayer(this);
     this.minzoom=32;
     this.maxzoom=0;
     this.center=[0,0];
@@ -127,9 +134,9 @@ avnav.map.MapHolder=function(properties,navobject){
     this.slideIn=0; //when set we step by step zoom in
     /**
      * @private
-     * @type {avnav.map.Drawing}
+     * @type {Drawing}
      */
-    this.drawing=new avnav.map.Drawing(this);
+    this.drawing=new Drawing(this);
     /**
      * @private
      * @type {avnav.util.Formatter}
@@ -167,13 +174,13 @@ avnav.map.MapHolder=function(properties,navobject){
 
 };
 
-avnav.inherits(avnav.map.MapHolder,avnav.map.DrawingPositionConverter);
+avnav.inherits(MapHolder,DrawingPositionConverter);
 /**
  * @inheritDoc
  * @param {ol.Coordinate} point
  * @returns {ol.Coordinate}
  */
-avnav.map.MapHolder.prototype.coordToPixel=function(point){
+MapHolder.prototype.coordToPixel=function(point){
     return this.olmap.getPixelFromCoordinate(point);
 };
 /**
@@ -181,7 +188,7 @@ avnav.map.MapHolder.prototype.coordToPixel=function(point){
  * @param {ol.Coordinate} pixel
  * @returns {ol.Coordinate}
  */
-avnav.map.MapHolder.prototype.pixelToCoord=function(pixel){
+MapHolder.prototype.pixelToCoord=function(pixel){
     return this.olmap.getCoordinateFromPixel(pixel);
 };
 
@@ -189,7 +196,7 @@ avnav.map.MapHolder.prototype.pixelToCoord=function(pixel){
  * get the property handler
  * @returns {avnav.properties.PropertyHandler}
  */
-avnav.map.MapHolder.prototype.getProperties=function(){
+MapHolder.prototype.getProperties=function(){
     return this.properties;
 };
 
@@ -199,7 +206,7 @@ avnav.map.MapHolder.prototype.getProperties=function(){
  * @returns {ol.View2D}
  */
 
-avnav.map.MapHolder.prototype.getView=function(){
+MapHolder.prototype.getView=function(){
     if (!this.olmap)return null;
     var mview=this.olmap.getView();
     return mview;
@@ -208,7 +215,7 @@ avnav.map.MapHolder.prototype.getView=function(){
  * get the current map zoom level
  * @returns {number|Number|*}
  */
-avnav.map.MapHolder.prototype.getZoom=function(){
+MapHolder.prototype.getZoom=function(){
     var v=this.olmap?this.olmap.getView():undefined;
     if (! v ) return {required:this.requiredZoom,current: this.zoom};
     return {required:this.requiredZoom,current: v.getZoom()};
@@ -218,7 +225,7 @@ avnav.map.MapHolder.prototype.getZoom=function(){
  * render the map to a new div
  * @param div if null - render to a default div (i.e. invisible)
  */
-avnav.map.MapHolder.prototype.renderTo=function(div){
+MapHolder.prototype.renderTo=function(div){
     if (! this.olmap) return;
     if (!div) div=this.defaultDiv;
     this.olmap.setTarget(div);
@@ -226,7 +233,7 @@ avnav.map.MapHolder.prototype.renderTo=function(div){
 };
 
 
-avnav.map.MapHolder.prototype.loadMap=function(options,opt_force){
+MapHolder.prototype.loadMap=function(options,opt_force){
     var self=this;
     var chartbase = options.charturl;
     var list = options.url;
@@ -273,7 +280,7 @@ avnav.map.MapHolder.prototype.loadMap=function(options,opt_force){
  * @param {string} baseurl - the baseurl to be used
  */
 
-avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
+MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     var self=this;
     var layers=this.parseLayerlist(layerdata,baseurl);
     var layersreverse=[];
@@ -401,7 +408,7 @@ avnav.map.MapHolder.prototype.initMap=function(div,layerdata,baseurl){
  * increase/decrease the map zoom
  * @param number
  */
-avnav.map.MapHolder.prototype.changeZoom=function(number){
+MapHolder.prototype.changeZoom=function(number){
     var curzoom=this.requiredZoom; //this.getView().getZoom();
     curzoom+=number;
     if (curzoom < this.minzoom ) curzoom=this.minzoom;
@@ -417,7 +424,7 @@ avnav.map.MapHolder.prototype.changeZoom=function(number){
  * @private
  * @param newZoom
  */
-avnav.map.MapHolder.prototype.setZoom=function(newZoom){
+MapHolder.prototype.setZoom=function(newZoom){
     if (! this.olmap) return;
     this.mapZoom=newZoom;
     if (this.olmap.getView().getZoom() != newZoom) {
@@ -429,7 +436,7 @@ avnav.map.MapHolder.prototype.setZoom=function(newZoom){
  * draw the grid
  * @private
  */
-avnav.map.MapHolder.prototype.drawGrid=function() {
+MapHolder.prototype.drawGrid=function() {
     if (!this.properties.getProperties().layers.grid) return;
     if (!this.olmap) return;
     var style = {
@@ -483,7 +490,7 @@ avnav.map.MapHolder.prototype.drawGrid=function() {
  * draw the north marker
  * @private
  */
-avnav.map.MapHolder.prototype.drawNorth=function() {
+MapHolder.prototype.drawNorth=function() {
     if (!this.properties.getProperties().layers.compass) return;
     if (!this.olmap) return;
     this.drawing.drawImageToContext([0,0],this.northImage, {
@@ -503,7 +510,7 @@ avnav.map.MapHolder.prototype.drawNorth=function() {
  * @param {String} attr
  * @private
  */
-avnav.map.MapHolder.prototype.e2f=function(elem,attr){
+MapHolder.prototype.e2f=function(elem,attr){
     return parseFloat($(elem).attr(attr));
 };
 
@@ -511,7 +518,7 @@ avnav.map.MapHolder.prototype.e2f=function(elem,attr){
  * get the mode of the course up display
  * @returns {boolean}
  */
-avnav.map.MapHolder.prototype.getCourseUp=function(){
+MapHolder.prototype.getCourseUp=function(){
     return this.courseUp;
 };
 
@@ -519,7 +526,7 @@ avnav.map.MapHolder.prototype.getCourseUp=function(){
  * map locked to GPS
  * @returns {boolean}
  */
-avnav.map.MapHolder.prototype.getGpsLock=function(){
+MapHolder.prototype.getGpsLock=function(){
     return this.gpsLocked;
 };
 
@@ -528,7 +535,7 @@ avnav.map.MapHolder.prototype.getGpsLock=function(){
  * @param {navobjects.NavEvent} evdata
  * @constructor
  */
-avnav.map.MapHolder.prototype.navEvent=function(evdata){
+MapHolder.prototype.navEvent=function(evdata){
     if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
     if (evdata.type == navobjects.NavEventType.GPS){
         var gps=this.navobject.getGpsHandler().getGpsData();
@@ -551,7 +558,13 @@ avnav.map.MapHolder.prototype.navEvent=function(evdata){
     }
 };
 
-avnav.map.MapHolder.prototype.checkAutoZoom=function(opt_force){
+MapHolder.prototype.centerToGps=function(){
+    var gps=this.navobject.getGpsHandler().getGpsData();
+    if (! gps.valid) return;
+    this.setCenter(gps);
+};
+
+MapHolder.prototype.checkAutoZoom=function(opt_force){
     var enabled= this.properties.getProperties().autoZoom||opt_force;
     if (! this.olmap) return;
     if (! enabled ||  !(this.gpsLocked||opt_force)) {
@@ -629,12 +642,12 @@ avnav.map.MapHolder.prototype.checkAutoZoom=function(opt_force){
  * @param {string} baseurl - the baseurl
  * @returns {Array.<ol.layer.Layer>} list of Layers
  */
-avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
+MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
     var self=this;
     var ll=[];
     $(layerdata).find('TileMap').each(function(ln,tm){
         var rt={};
-        rt.type=avnav.map.LayerTypes.TCHART;
+        rt.type=LayerTypes.TCHART;
         //complete tile map entry here
         rt.inversy=false;
         rt.wms=false;
@@ -843,7 +856,7 @@ avnav.map.MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
  * @param {ol.Coordinate} point
  * @returns {Array.<number>|*}
  */
-avnav.map.MapHolder.prototype.pointToMap=function(point){
+MapHolder.prototype.pointToMap=function(point){
     return this.transformToMap(point);
 };
 
@@ -852,7 +865,7 @@ avnav.map.MapHolder.prototype.pointToMap=function(point){
  * @param {ol.Coordinate} point
  * @returns {Array.<number>|*}
  */
-avnav.map.MapHolder.prototype.pointFromMap=function(point){
+MapHolder.prototype.pointFromMap=function(point){
     return this.transformFromMap(point);
 };
 
@@ -860,7 +873,7 @@ avnav.map.MapHolder.prototype.pointFromMap=function(point){
  * set the map center
  * @param {navobjects.Point} point
  */
-avnav.map.MapHolder.prototype.setCenter=function(point){
+MapHolder.prototype.setCenter=function(point){
     if (! point) return;
     if (! this.getView()) return;
     this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
@@ -870,7 +883,7 @@ avnav.map.MapHolder.prototype.setCenter=function(point){
  * get the current center in lat/lon
  * @returns {navobjects.Point}
  */
-avnav.map.MapHolder.prototype.getCenter=function(){
+MapHolder.prototype.getCenter=function(){
     var rt=new navobjects.Point();
     rt.fromCoord(this.pointFromMap(this.getView().getCenter()));
     return rt;
@@ -880,7 +893,7 @@ avnav.map.MapHolder.prototype.getCenter=function(){
  * @param {navobjects.Point}point1
  * @param {navobjects.Point}point2
  */
-avnav.map.MapHolder.prototype.pixelDistance=function(point1,point2){
+MapHolder.prototype.pixelDistance=function(point1,point2){
     if (! this.olmap) return 0;
     var coord1=this.pointToMap(point1.toCoord());
     var coord2=this.pointToMap(point2.toCoord());
@@ -897,7 +910,7 @@ avnav.map.MapHolder.prototype.pixelDistance=function(point1,point2){
  * set the map rotation
  * @param {number} rotation in degrees
  */
-avnav.map.MapHolder.prototype.setMapRotation=function(rotation){
+MapHolder.prototype.setMapRotation=function(rotation){
     this.getView().setRotation(rotation==0?0:(360-rotation)*Math.PI/180);
 };
 
@@ -906,7 +919,7 @@ avnav.map.MapHolder.prototype.setMapRotation=function(rotation){
  * @param on
  * @returns {boolean} the newl set value
  */
-avnav.map.MapHolder.prototype.setCourseUp=function(on){
+MapHolder.prototype.setCourseUp=function(on){
     var old=this.courseUp;
     if (old == on) return on;
     if (on){
@@ -924,7 +937,7 @@ avnav.map.MapHolder.prototype.setCourseUp=function(on){
     }
 };
 
-avnav.map.MapHolder.prototype.setGpsLock=function(lock){
+MapHolder.prototype.setGpsLock=function(lock){
     if (lock == this.gpsLocked) return;
     var gps=this.navobject.getGpsHandler().getGpsData();
     if (! gps.valid && lock) return;
@@ -939,7 +952,7 @@ avnav.map.MapHolder.prototype.setGpsLock=function(lock){
  * click event handler
  * @param {ol.MapBrowserEvent} evt
  */
-avnav.map.MapHolder.prototype.onClick=function(evt){
+MapHolder.prototype.onClick=function(evt){
     var wp=this.routinglayer.findTarget(evt.pixel);
     if (wp){
         setTimeout(function() {
@@ -965,12 +978,12 @@ avnav.map.MapHolder.prototype.onClick=function(evt){
  * @private
  * @param evt
  */
-avnav.map.MapHolder.prototype.onDoubleClick=function(evt){
+MapHolder.prototype.onDoubleClick=function(evt){
     evt.preventDefault();
     this.getView().setCenter(this.pixelToCoord(evt.pixel));
 };
 
-avnav.map.MapHolder.prototype.onZoomChange=function(evt){
+MapHolder.prototype.onZoomChange=function(evt){
     evt.preventDefault();
     avnav.log("zoom changed");
     if (this.mapZoom >=0){
@@ -994,7 +1007,7 @@ avnav.map.MapHolder.prototype.onZoomChange=function(evt){
  * @param {number}
  * @return {number} the matching index or -1
  */
-avnav.map.MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
+MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
     avnav.log("findTarget "+pixel[0]+","+pixel[1]);
     var tolerance=opt_tolerance||10;
     var xmin=pixel[0]-tolerance;
@@ -1027,7 +1040,7 @@ avnav.map.MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
  * @param evt
  * @private
  */
-avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
+MapHolder.prototype.onMoveEnd=function(evt){
     var newCenter= this.pointFromMap(this.getView().getCenter());
     if (this.setCenterFromMove(newCenter)) {
         this.saveCenter();
@@ -1044,7 +1057,7 @@ avnav.map.MapHolder.prototype.onMoveEnd=function(evt){
  * @param newCenter
  * @param {boolean}force
  */
-avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
+MapHolder.prototype.setCenterFromMove=function(newCenter,force){
     if (this.center && newCenter && this.center[0]==newCenter[0] && this.center[1] == newCenter[1] &&
         this.zoom == this.getView().getZoom() && ! force) return;
     this.center=newCenter;
@@ -1063,7 +1076,7 @@ avnav.map.MapHolder.prototype.setCenterFromMove=function(newCenter,force){
  *
  * @param {ol.render.Event} evt
  */
-avnav.map.MapHolder.prototype.onPostCompose=function(evt){
+MapHolder.prototype.onPostCompose=function(evt){
     var newCenter=this.pointFromMap(evt.frameState.viewState.center);
     if (this.setCenterFromMove(newCenter)) this.saveCenter();
     if (this.opacity != this.lastOpacity){
@@ -1090,7 +1103,7 @@ avnav.map.MapHolder.prototype.onPostCompose=function(evt){
  * we start at a lower level and then zoom up in several steps...
  * @param start - when set, do not zoom up but start timeout
  */
-avnav.map.MapHolder.prototype.doSlide=function(start){
+MapHolder.prototype.doSlide=function(start){
     if (! start) {
         if (! this.slideIn) return;
         this.changeZoom(1);
@@ -1109,14 +1122,14 @@ avnav.map.MapHolder.prototype.doSlide=function(start){
 /**
  * tell the map that it's size has changed
  */
-avnav.map.MapHolder.prototype.updateSize=function(){
+MapHolder.prototype.updateSize=function(){
     if (this.olmap) this.olmap.updateSize();
 };
 
 /**
  * trigger an new map rendering
  */
-avnav.map.MapHolder.prototype.triggerRender=function(){
+MapHolder.prototype.triggerRender=function(){
     if (this.olmap) this.olmap.render();
 };
 
@@ -1124,7 +1137,7 @@ avnav.map.MapHolder.prototype.triggerRender=function(){
  * save the current center and zoom
  * @private
  */
-avnav.map.MapHolder.prototype.saveCenter=function(){
+MapHolder.prototype.saveCenter=function(){
     var raw=JSON.stringify({center:this.center,zoom:this.zoom,requiredZoom: this.requiredZoom});
     localStorage.setItem(this.properties.getProperties().centerName,raw);
 };
@@ -1133,7 +1146,7 @@ avnav.map.MapHolder.prototype.saveCenter=function(){
  * set the visibility of the routing - this controls if we can select AIS targets
  * @param on
  */
-avnav.map.MapHolder.prototype.setRoutingActive=function(on){
+MapHolder.prototype.setRoutingActive=function(on){
     var old=this.routingActive;
     this.routingActive=on;
     if (old != on) this.triggerRender();
@@ -1143,11 +1156,11 @@ avnav.map.MapHolder.prototype.setRoutingActive=function(on){
  * check if the routing display is visible
  * @return {boolean}
  */
-avnav.map.MapHolder.prototype.getRoutingActive=function(){
+MapHolder.prototype.getRoutingActive=function(){
     return this.routingActive;
 };
 
-avnav.map.MapHolder.prototype.setBrightness=function(brightness){
+MapHolder.prototype.setBrightness=function(brightness){
     this.opacity=brightness;
 };
 /**
@@ -1155,11 +1168,13 @@ avnav.map.MapHolder.prototype.setBrightness=function(brightness){
  * @param {string} type: nearest,warning,normal
  * @returns {string} the icon as a data url
  */
-avnav.map.MapHolder.prototype.getAisIcon=function(type){
+MapHolder.prototype.getAisIcon=function(type){
     return this.aislayer.getAisIcon(type);
 };
 
-avnav.map.MapHolder.prototype.setCompassOffset=function(y){
+MapHolder.prototype.setCompassOffset=function(y){
    this.compassOffset=y;
 };
+
+module.exports=new MapHolder();
 
