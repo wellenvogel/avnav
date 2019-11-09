@@ -26,6 +26,12 @@ class SoundHandler extends React.Component{
                       onEnded={self.playerFinished}
             />
     }
+
+    /**
+     * to handle the mobile restrictions
+     * we check if we can play a sound - if not, we display a toast and let the user interact
+     * on that to start the sound inside a user transaction
+     */
     askForSound(){
         let self=this;
         if (this.state.initialized) return;
@@ -45,9 +51,10 @@ class SoundHandler extends React.Component{
     checkSound(){
         let self=this;
         if (! this.refs.audio) return;
-        let src=this.props.src;
+        let enabled=this.props.enabled === undefined || this.props.enabled;
+        let src=enabled?this.props.src:undefined;
         this.repeatCount=this.props.repeat;
-        if (! src && ! this.state.initialized) {
+        if (! src && ! this.state.initialized && enabled) {
             src = PropertyHandler.getProperties().silenceSound;
             this.repeatCount = 10000;
         }
@@ -81,7 +88,8 @@ class SoundHandler extends React.Component{
 
 SoundHandler.propTypes={
     src: PropTypes.string,
-    repeat: PropTypes.number
+    repeat: PropTypes.number,
+    enabled: PropTypes.bool
 };
 
 module.exports=SoundHandler;

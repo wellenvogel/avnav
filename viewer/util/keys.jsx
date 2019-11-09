@@ -107,7 +107,8 @@ let keys={
     properties:{
         connectedMode: K,
         nightMode: K,
-        buttonFontSize: K
+        buttonFontSize: K,
+        localAlarmSound: K
 
     }
 };

@@ -17,17 +17,20 @@ import SoundHandler from './components/SoundHandler.jsx';
 const DynamicSound=Dynamic(SoundHandler);
 
 //to feed the sound with the alarm sound we have
-const alarmStoreKeys={alarms:keys.nav.gps.alarms};
+const alarmStoreKeys={alarms:keys.nav.gps.alarms,enabled:keys.properties.localAlarmSound};
 const computeAlarmSound=(state)=>{
-    if (!state.alarms) return {src:undefined,repeat:undefined};
+    let off={src:undefined,repeat:undefined};
+    if (! state.enabled) return {enabled:false,...off};
+    if (!state.alarms) return {enabled:true,...off};
     for (let k in state.alarms){
         //only use the first alarm
         return {
             src: PropertyHandler.getProperties().navUrl+"?request=download&type=alarm&name="+encodeURIComponent(k),
-            repeat: state.alarms[k].repeat
+            repeat: state.alarms[k].repeat,
+            enabled:true
         };
     }
-    return {src:undefined,repeat:undefined};
+    return {enabled:true,...off};
 };
 //legacy support - hand over to the "old" gui handler
 class Other extends React.Component{
