@@ -30,14 +30,18 @@ const widgetCreator=(widget,weightSum)=>{
 };
 
 const getPanelList=(panelType)=>{
-    //TODO: some fallback handling...
-    let layout=globalStore.getData(keys.gui.global.layout);
-    if (! layout) return;
     let basename="gpspage"+globalStore.getData(keys.gui.gpspage.pageNumber,1);
+    let page=GuiHelpers.getPageFromLayout(basename);
+    if (! page){
+        //fallback to page 1
+        page=GuiHelpers.getPageFromLayout("gpspage1");
+    }
+    if (! page) return;
     let name=panelType;
-    name+=globalStore.getData(keys.nav.anchor.watchDistance)!==undefined?"_anchor":"_no_anchor";
-    if (! layout[basename]) return;
-    return layout[basename][name];
+    name+=globalStore.getData(keys.nav.anchor.watchDistance)!==undefined?"_anchor":"_not_anchor";
+    if (page[name]) return page[name];
+    //fallback to panel without suffix
+    if (page[panelType]) return page[panelType];
 };
 
 const getWeightSum=(list)=>{
@@ -55,6 +59,7 @@ const layoutBaseParam={
     layoutHeight: 600,
     baseWidgetFontSize: 21, //font size for 600x600
 };
+const layoutBase="gpspage";
 
 class GpsPage extends React.Component{
     constructor(props){
@@ -76,14 +81,68 @@ class GpsPage extends React.Component{
                 }
             },
             {
-                name: "Gps2",
-                storeKeys:{pageNumber:keys.gui.gpspage.pageNumber},
-                updateFunction:(state)=>{return {toggle:state.pageNumber != 1 && state.pageNumber !== undefined}},
+                name: "Gps1",
+                storeKeys:{
+                    pageNumber:keys.gui.gpspage.pageNumber,
+                    layoutSequence:keys.gui.global.layoutSequence},
+                updateFunction:(state)=>{return {
+                    toggle:state.pageNumber == 1 || state.pageNumber === undefined,
+                    visible: GuiHelpers.getPageFromLayout(layoutBase+"1")!==undefined
+                }},
                 onClick:()=>{
-                    let page=globalStore.getData(keys.gui.gpspage.pageNumber,1);
-                    if (page == 1) page=2;
-                    else page=1;
-                    globalStore.storeData(keys.gui.gpspage.pageNumber,page);
+                    globalStore.storeData(keys.gui.gpspage.pageNumber,1);
+                }
+            },
+            {
+                name: "Gps2",
+                storeKeys:{
+                    pageNumber:keys.gui.gpspage.pageNumber,
+                    layoutSequence:keys.gui.global.layoutSequence},
+                updateFunction:(state)=>{return {
+                    toggle:state.pageNumber == 2,
+                    visible: GuiHelpers.getPageFromLayout(layoutBase+"2")!==undefined
+                }},
+                onClick:()=>{
+                    globalStore.storeData(keys.gui.gpspage.pageNumber,2);
+                }
+            },
+            {
+                name: "Gps3",
+                storeKeys:{
+                    pageNumber:keys.gui.gpspage.pageNumber,
+                    layoutSequence:keys.gui.global.layoutSequence},
+                updateFunction:(state)=>{return {
+                    toggle:state.pageNumber == 3,
+                    visible: GuiHelpers.getPageFromLayout(layoutBase+"3")!==undefined
+                }},
+                onClick:()=>{
+                    globalStore.storeData(keys.gui.gpspage.pageNumber,3);
+                }
+            },
+            {
+                name: "Gps4",
+                storeKeys:{
+                    pageNumber:keys.gui.gpspage.pageNumber,
+                    layoutSequence:keys.gui.global.layoutSequence},
+                updateFunction:(state)=>{return {
+                    toggle:state.pageNumber == 4,
+                    visible: GuiHelpers.getPageFromLayout(layoutBase+"4")!==undefined
+                }},
+                onClick:()=>{
+                    globalStore.storeData(keys.gui.gpspage.pageNumber,4);
+                }
+            },
+            {
+                name: "Gps5",
+                storeKeys:{
+                    pageNumber:keys.gui.gpspage.pageNumber,
+                    layoutSequence:keys.gui.global.layoutSequence},
+                updateFunction:(state)=>{return {
+                    toggle:state.pageNumber == 5,
+                    visible: GuiHelpers.getPageFromLayout(layoutBase+"5")!==undefined
+                }},
+                onClick:()=>{
+                    globalStore.storeData(keys.gui.gpspage.pageNumber,5);
                 }
             },
             {

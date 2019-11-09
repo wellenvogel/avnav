@@ -126,6 +126,13 @@ button.active{
   background-image: url(@icon);
 }
 
+.textButton(@text){
+  &:after {
+    content: @text;
+    font-size: 2.3em;
+  }
+}
+
 button{
   &.Cancel {
     .iconButton('images/icons-new/ic_clear.svg');
@@ -262,8 +269,20 @@ button{
     .iconButton('images/icons-new/center.svg');
   }
 
+  &.Gps1{
+    .textButton('1');
+  }
   &.Gps2{
-    .iconButton('images/icons-new/ic_arrow_forward.svg');
+    .textButton('2');
+  }
+  &.Gps3{
+    .textButton('3');
+  }
+  &.Gps4{
+    .textButton('4');
+  }
+  &.Gps5{
+    .textButton('5');
   }
 
 }
@@ -503,6 +522,7 @@ span.valuePrefix{
       margin-top: 0;
       display: block;
       white-space: pre;
+      text-align: right;
     }
     .avn_combinedWidget{
       .flex-display();

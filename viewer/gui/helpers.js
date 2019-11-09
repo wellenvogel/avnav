@@ -2,6 +2,8 @@ import NavData from '../nav/navdata.js';
 import Toast from '../util/overlay.js';
 import PropertyHandler from '../util/propertyhandler.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
+import globalStore from '../util/globalstore.jsx';
+import keys from '../util/keys.jsx';
 
 
 const anchorWatchDialog = (overlayContainer)=> {
@@ -55,10 +57,26 @@ const resizeByQuerySelector=(querySelector)=>{
     } 
 };
 
+const getPageFromLayout=(pagename)=>{
+    let layout=globalStore.getData(keys.gui.global.layout);
+    if (! layout) return;
+    if (typeof(layout) !== 'object') return;
+    let page=layout[pagename];
+    if (typeof(page) !== 'object') return;
+    return page;
+};
+
+const getPanelFromLayout=(pagename,panelname)=>{
+    let page=getPageFromLayout(pagename);
+    if (! page) return;
+    return page[panelname];
+};
+
 
 module.exports={
     anchorWatchDialog,
     resizeElementFont,
-    resizeByQuerySelector
-    
+    resizeByQuerySelector,
+    getPageFromLayout,
+    getPanelFromLayout
 };

@@ -1,17 +1,48 @@
 {
   "gpspage1": {
-    "left_no_anchor":[
+    "left":[
       {"name":"BRG","weight":1.5},
       {"name":"DST","weight":1.5},
       {"name":"XteDisplay","compareState":true,"weight":1},
       {"name":"ETA"},
       {"name": "RteCombine"}
     ],
-    "right_no_anchor":[
+    "left_anchor":[
+      {"name":"AnchorBearing","weight":1.5},
+      {"name":"AnchorDistance","weight":1.5},
+      {"name":"AnchorWatchDistance"},
+      {"name":"DepthDisplay"},
+      {"name": "Empty"}
+    ],
+    "right":[
       {"name":"COG","weight":1.5},
       {"name":"SOG","weight":1.5},
       {"name":"TimeStatus"},
       {"name":"Position"},
+      {"name":"AisTarget"}
+    ]
+
+  },
+  "gpspage2": {
+    "left":[
+      {"name":"BRG","weight":1.5},
+      {"name":"XteDisplay","compareState":true,"weight":1.5},
+      {"name":"DST"},
+      {"name":"ETA"},
+      {"name": "RteCombine"}
+    ],
+    "left_anchor":[
+      {"name":"AnchorBearing","weight":1.5},
+      {"name":"AnchorDistance","weight":1.5},
+      {"name":"AnchorWatchDistance"},
+      {"name":"DepthDisplay"},
+      {"name": "Empty"}
+    ],
+    "right":[
+      {"name":"COG","weight":1.5},
+      {"name":"WindGraphics","weight":1.5},
+      {"name":"SOG","weight":1},
+      {"name":"DepthDisplay"},
       {"name":"AisTarget"}
     ]
 
