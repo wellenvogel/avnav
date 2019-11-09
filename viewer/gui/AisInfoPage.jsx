@@ -33,18 +33,30 @@ const displayItems = [
     {name: 'position', label: 'Position'}
 ];
 
-const createItem=(config,current)=>{
+const createUpdateFunction=(config,mmsi)=>{
+    return (state)=>{
+        if (!mmsi) return {current:undefined,...config};
+        return {current:AisHandler.getAisByMmsi(mmsi),...config};
+    }
+};
+const storeKeys={
+    aisSequence:keys.nav.ais.updateCount
+};
+const createItem=(config,mmsi)=>{
     let cl="aisData";
     if (config.addClass)cl+=" "+config.addClass;
-    let currentData=current;
-    return  (props)=> {
+    return Dynamic((props)=> {
         return (
         <div className="row">
             <div className='label '>{props.label}</div>
-            <div className={cl}>{AisFormatter.format(props.name, currentData)}</div>
+            <div className={cl}>{AisFormatter.format(props.name, props.current)}</div>
         </div>
         );
-    };
+    },{
+        storeKeys:storeKeys,
+        updateFunction:createUpdateFunction(config,mmsi)
+
+    });
 };
 class AisInfoPage extends React.Component{
     constructor(props){
@@ -95,18 +107,19 @@ class AisInfoPage extends React.Component{
     }
 
     componentDidMount(){
+        let self=this;
         this.checkNoTarget();
+        this.timer=window.setInterval(self.checkNoTarget,5000);
     }
     componentDidUpdate(){
         this.checkNoTarget();
     }
+    componentWillUnmount(){
+        if (this.timer) window.clearTimeout(this.timer);
+    }
     render(){
         let self=this;
         const Status = function (props) {
-            return <img src={props.src} style={{transform:'rotate('+props.rotation+'deg)'}} className="status"/>
-        };
-        //gets current
-        const MainContent=(props)=> {
             let status="normal";
             let src="";
             let rotation=0;
@@ -118,13 +131,19 @@ class AisInfoPage extends React.Component{
                 rotation=props.current.course||0;
             }
             src=MapHolder.getAisIcon(status);
+            return <img src={src} style={{transform:'rotate('+rotation+'deg)'}} className="status"/>
+        };
+        const RenderStatus=Dynamic(Status);
+        //gets mmsi
+        const MainContent=(props)=> {
             return(
             <React.Fragment>
-                <Status
-                    src={src}
-                    rotation={rotation}/>
+                <RenderStatus
+                    storeKeys={storeKeys}
+                    updateFunction={createUpdateFunction({},props.mmsi)}
+                    />
                 <ItemList
-                    itemCreator={(config)=>{return createItem(config,props.current)}}
+                    itemCreator={(config)=>{return createItem(config,props.mmsi)}}
                     itemList={displayItems}
                     scrollable={true}
                     className="infoList"
@@ -134,8 +153,6 @@ class AisInfoPage extends React.Component{
             );
         };
 
-        const MainRender=Dynamic(MainContent);
-
         return (
             <Page
                 className={this.props.className}
@@ -143,15 +160,8 @@ class AisInfoPage extends React.Component{
                 id="aisinfopage"
                 title="AIS Info"
                 mainContent={
-                            <MainRender
-                                storeKeys={{
-                                    aisSequence:keys.nav.ais.updateCount,
-                                }}
-                                updateFunction={(state)=>{
-                                    let empty={current:undefined};
-                                    if (!self.props.options || ! self.props.options.mmsi) return empty;
-                                    return {current:AisHandler.getAisByMmsi(self.props.options.mmsi)};
-                                }}
+                            <MainContent
+                                mmsi={this.props.options?this.props.options.mmsi:undefined}
                             />
                         }
                 buttonList={self.buttons}/>
