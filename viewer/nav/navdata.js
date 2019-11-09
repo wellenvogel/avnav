@@ -5,7 +5,6 @@
 var Store=require('../util/store');
 var TrackData=require('./trackdata');
 var GpsData=require('./gpsdata');
-var AisData=require('./aisdata');
 var RouteData=require('./routedata');
 var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
@@ -17,7 +16,6 @@ var PropertyHandler=require('../util/propertyhandler');
 
 /**
  *
- * @param {avnav.util.PropertyHandler} propertyHandler
  * @constructor
  */
 var NavData=function(){
@@ -41,8 +39,6 @@ var NavData=function(){
     /**
      * @type {AisData|exports|module.exports}
      */
-    this.aisHandler=new AisData(PropertyHandler,this);
-    this.registerDataProvider(this.aisHandler);
     this.routeHandler=new RouteData(PropertyHandler,this);
     /**
      * @private
@@ -489,13 +485,6 @@ NavData.prototype.getGpsHandler=function(){
  */
 NavData.prototype.getTrackHandler=function(){
     return this.trackHandler;
-};
-/**
- * get the AIS data handler
- * @returns {AisData|*}
- */
-NavData.prototype.getAisHandler=function(){
-    return this.aisHandler;
 };
 
 NavData.prototype.resetTrack=function(){

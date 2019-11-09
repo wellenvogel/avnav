@@ -34,7 +34,7 @@ var Aispage=function(){
      * @private
      * @type {AisHandler}
      */
-    this.aishandler=null;
+    this.aishandler=AisHandler;
 
     this.store=new Store();
     var self=this;
@@ -64,7 +64,6 @@ var aisInfos=[
     ]
 ];
 Aispage.prototype.getPageContent=function(){
-    this.aishandler=this.navobject.getAisHandler();
     var self=this;
     var buttons=[
         {key:"AisNearest"},

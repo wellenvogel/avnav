@@ -68,6 +68,7 @@ let keys={
         ais:{
             nearest: K, //to be displayed
             list:K,
+            trackedMmsi: K,
             updateCount:K
         }
     },
@@ -99,6 +100,9 @@ let keys={
         },
         gpspage:{
             pageNumber:K,
+        },
+        aispage:{
+            sortField:K,
         }
 
     },

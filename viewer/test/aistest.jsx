@@ -20,15 +20,11 @@ var ACOLOR='rgb(60, 64, 58)';
 var MCOLOR='rgb(6, 106, 236)';
 
 
-var aisTestData=new AisData({
-        getProperties: function(){
+var aisTestData=AisData;
+aisTestData.getProperties= function(){
             return{ NM:NM}
-        }
-    },
-    {
-        registerValueProvider: function(){}
-    },
-    true);
+        };
+aisTestData.registerValueProvider=function(){}
 var store=new Store();
 var keys={
     items: 'items',

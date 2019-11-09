@@ -22,6 +22,7 @@ var Helper=require('../util/helper');
 var gkeys=require('../util/keys.jsx');
 var globalStore=require('../util/globalstore.jsx');
 var compare=require('../util/shallowcompare');
+var AisData=require('../nav/aisdata');
 
 var keys={
     waypointList: 'waypointList',
@@ -561,9 +562,11 @@ Navpage.prototype.isWidgetInList=function(widgetDescription,listKey){
     }
     return false;
 };
-Navpage.prototype.widgetClick=function(widgetDescription){
-    if (widgetDescription.name == "AisTarget" && widgetDescription.mmsi){
-        this.gui.showPage("aisinfopage",{mmsi:widgetDescription.mmsi});
+Navpage.prototype.widgetClick=function(widgetDescription,opt_data){
+    if (widgetDescription.name == "AisTarget"){
+        let mmsi=(opt_data && opt_data.mmsi)?opt_data.mmsi:widgetDescription.mmsi;
+        if (! mmsi) return;
+        this.gui.showPage("aisinfopage",{mmsi:mmsi});
         return;
     }
     if (widgetDescription.name == "ActiveRoute"){
@@ -642,7 +645,7 @@ Navpage.prototype.mapEvent=function(evdata){
         var aisparam=evdata.parameter.aisparam;
         if (! aisparam) return;
         if (aisparam.mmsi){
-            this.navobject.getAisHandler().setTrackedTarget(aisparam.mmsi);
+            AisData.setTrackedTarget(aisparam.mmsi);
             this.gui.showPage('aisinfopage',{mmsi: aisparam.mmsi});
         }
     }

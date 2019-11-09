@@ -23,7 +23,7 @@ var AisInfoPage=function(){
      * @private
      * @type {AisHandler}
      */
-    this.aishandler=null;
+    this.aishandler=AisHandler;
 
     /**
      * @private
@@ -54,7 +54,6 @@ AisInfoPage.prototype.createItem=function(label,key,current,opt_addClass){
 };
 AisInfoPage.prototype.getPageContent=function() {
     var self = this;
-    this.aishandler = this.navobject.getAisHandler();
     var buttons = [
         {key: 'AisInfoNearest'},
         {key: 'AisInfoLocate'},

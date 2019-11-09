@@ -4,6 +4,7 @@
     
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
+var AisData=require('../nav/aisdata');
 
 
 /**
@@ -163,7 +164,7 @@ AisLayer.prototype.navEvent=function(evdata){
     if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
     if (! this.visible) return;
     if (evdata.type == navobjects.NavEventType.AIS){
-        this.aisdata=this.navobject.getAisHandler().getAisData().slice(0);
+        this.aisdata=AisData.getAisData().slice(0);
         this.pixel=[];
     }
     this.mapholder.triggerRender();

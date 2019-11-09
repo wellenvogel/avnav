@@ -285,6 +285,13 @@ button{
     .textButton('5');
   }
 
+  &.AisNearest {
+    .iconButton('images/icons-new/ais-nearest.svg');
+  }
+  &.AisSort {
+    .iconButton('images/icons-new/sort.svg');
+  }
+
 }
 
 //----------------------------------------------------------------------------------------
@@ -537,4 +544,48 @@ span.valuePrefix{
     height: 100%;
   }
 
+}
+
+#aispage{
+  .aisListItem{
+    .listEntry();
+    .aisItemFB{
+      width:4em;
+      min-width: 4em;
+    }
+    .fb1{
+      font-size: 2.5em;
+      font-weight: bold;
+    }
+    .aisData{
+      padding-left: 1em;
+      padding-right: 1em;
+      .aisData1{
+        font-weight: bold;
+        margin-bottom: 0.2em;
+      }
+      .infoLine{
+        margin-bottom: 0.2em;
+      }
+    }
+  }
+
+  .aisSummary{
+    .nightBackFade(@colorSecond);
+    padding-top: 0.5em;
+    padding-left: 1em;
+    padding-bottom: 0.5em;
+    span{
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 1em;
+    }
+    .aisWarning{
+      display: inline-block;
+      width: 1.8em;
+      height: 1.8em;
+      margin-right: 1em;
+      vertical-align: middle;
+    }
+  }
 }

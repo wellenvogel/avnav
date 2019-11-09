@@ -17,6 +17,7 @@ var WidgetFactory=require('../components/WidgetFactory.jsx');
 var EditRouteWidget=require('../components/EditRouteWidget.jsx');
 var Page=require('./page.jsx');
 var ButtonList=require('../components/ButtonListOld.jsx');
+var AisData=require('../nav/aisdata');
 
 var keys={
     waypointList: 'waypointList',
@@ -375,7 +376,7 @@ RtEditPage.prototype.mapEvent=function(evdata){
         var aisparam=evdata.parameter.aisparam;
         if (! aisparam) return;
         if (aisparam.mmsi){
-            this.navobject.getAisHandler().setTrackedTarget(aisparam.mmsi);
+            AisData.setTrackedTarget(aisparam.mmsi);
             this.gui.showPage('aisinfopage',{mmsi: aisparam.mmsi});
         }
     }

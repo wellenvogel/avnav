@@ -81,7 +81,8 @@ class ItemList extends React.Component{
 }
 
 ItemList.propTypes={
-    onItemClick:    PropTypes.func,
+        onItemClick:    PropTypes.func, //will be called with 2 parameters:
+                                        //1st: the item description, 2nd: the data provided by the item
         itemClass:      PropTypes.any, //one of itemClass or itemCreator must be set
         itemCreator:    PropTypes.func,
         itemList:       PropTypes.array,

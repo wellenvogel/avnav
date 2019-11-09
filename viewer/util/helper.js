@@ -116,23 +116,11 @@ Helper.escapeHtml=function(string) {
         return Helper.entityMap[s];
     });
 };
-/**
- * scroll a dom element into the view
- * @param element a DOM element
- * @param parent a jquery selector
- */
-Helper.scrollIntoView=function(element,parent){
-    //ensure element is visible
-    var eltop = $(element).position().top;
-    var ph = $(parent).height();
-    var eh = $(element).height();
-    if (eltop < 0)element.scrollIntoView(true);
-    if ((eltop + eh) > (ph)) element.scrollIntoView(false);
-};
+
 
 Helper.scrollItemIntoView=function(itemSelector,parent){
   $(parent).find(itemSelector).each(function(i,el){
-      Helper.scrollIntoView(el,parent);
+      el.scrollIntoView();
   });
 };
 

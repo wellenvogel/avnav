@@ -1,14 +1,14 @@
 /**
  * Created by andreas on 04.05.14.
  */
+let NavData=require('./navdata');
 let AisTarget=require('./navobjects').Ais;
 let Formatter=require('../util/formatter');
 let NavCompute=require('./navcompute');
 let navobjects=require('./navobjects');
-let NavData=require('./navdata');
-let Base=require('../base');
 let globalStore=require('../util/globalstore.jsx');
 let keys=require('../util/keys.jsx');
+let PropertyHandler=require('../util/propertyhandler');
 /**
  * the handler for the ais data
  * query the server...
@@ -16,11 +16,11 @@ let keys=require('../util/keys.jsx');
  * @param {NavData} navdata
  * @constructor
  */
-let AisData=function(propertyHandler,navdata, opt_noQuery){
+let AisData=function( opt_noQuery){
     /** @private */
-    this.propertyHandler=propertyHandler;
+    this.propertyHandler=PropertyHandler;
     /** @private */
-    this.navobject=navdata;
+    this.navobject=NavData;
     /** @private
      * @type {Array.<AisTarget>}
      * */
@@ -169,7 +169,7 @@ AisData.prototype.handleAisData=function() {
         this.nearestAisTarget={};
     }
     globalStore.storeData(keys.nav.ais.nearest,this.nearestAisTarget);
-    globalStore.storeData(keys.nav.ais.list);
+    globalStore.storeData(keys.nav.ais.list,this.currentAis);
     globalStore.storeData(keys.nav.ais.updateCount,globalStore.getData(keys.nav.ais.updateCount,0)+1)
     this.navobject.aisEvent();
 };
@@ -296,7 +296,8 @@ AisData.prototype.getTrackedTarget=function(){
 AisData.prototype.setTrackedTarget=function(mmsi){
     if (this.trackedAIStarget == mmsi) return;
     this.trackedAIStarget=mmsi;
+    globalStore.storeData(keys.nav.ais.trackedMmsi,mmsi);
     this.handleAisData();
 };
 
-module.exports=AisData;
+module.exports=new AisData();
