@@ -11,7 +11,7 @@ import Formatter from '../util/formatter';
 class WidgetFactory{
     constructor(){
         this.createWidget=this.createWidget.bind(this);
-        this.formatter=new Formatter();
+        this.formatter=Formatter;
         this.widgetDefinitions=[];
         //create a copy of the widget list for adding/removing
         for (let k=0;k<widgetList.length;k++){

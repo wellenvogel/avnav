@@ -9,7 +9,6 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import Helper from '../util/helper.js';
 
-let fmt=new Formatter();
 
 class ActiveRouteWidget extends React.Component{
     constructor(props){
@@ -38,13 +37,13 @@ class ActiveRouteWidget extends React.Component{
             <div className="avn_widgetInfoLeft">RTE</div>
             <div className="avn_routeName">{this.props.routeName}</div>
             <div>
-                <span className="avn_routeRemain">{fmt.formatDecimal(this.props.remain,3,1)}</span>
+                <span className="avn_routeRemain">{Formatter.formatDecimal(this.props.remain,3,1)}</span>
                 <span className='avn_unit'>nm</span>
             </div>
-            <div className="avn_routeEta">{fmt.formatTime(this.props.eta)}</div>
+            <div className="avn_routeEta">{Formatter.formatTime(this.props.eta)}</div>
             { this.props.isApproaching ?
                 <div className="avn_routeNext">
-                    <span className="avn_routeNextCourse">{fmt.formatDecimal(this.props.nextCourse,3,0)}</span>
+                    <span className="avn_routeNextCourse">{Formatter.formatDecimal(this.props.nextCourse,3,0)}</span>
                     <span className='avn_unit'>&#176;</span>
                 </div>
                 : <div></div>

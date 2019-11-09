@@ -8,7 +8,6 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import Helper from '../util/helper.js';
 
-let fmt=new Formatter();
 
 class CenterDisplayWidget extends React.Component{
     shouldComponentUpdate(nextProps,nextState) {
@@ -22,33 +21,33 @@ class CenterDisplayWidget extends React.Component{
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
                 <div className="avn_widgetInfoLeft">Center</div>
-            { ! small && <div className="avn_centerPosition">{fmt.formatLonLats(this.props.centerPosition)}</div>}
+            { ! small && <div className="avn_centerPosition">{Formatter.formatLonLats(this.props.centerPosition)}</div>}
                 <div className={"avn_table "+tableClass}>
                     <div className="avn_row">
                         <div className="avn_label avn_marker"></div>
                         <div className="avn_center_value">
-                            <span>{fmt.formatDecimal(this.props.markerCourse,3,0)}</span>
+                            <span>{Formatter.formatDecimal(this.props.markerCourse,3,0)}</span>
                             <span className="avn_unit">&#176;</span>
                         </div>
                         <div className="avn_center_value">
                             /
                         </div>
                         <div className="avn_center_value">
-                            <span>{fmt.formatDecimal(this.props.markerDistance,3,1)}</span>
+                            <span>{Formatter.formatDecimal(this.props.markerDistance,3,1)}</span>
                             <span className="avn_unit">nm</span>
                         </div>
                     </div>
                     <div className="avn_row">
                         <div className="avn_label avn_boat"></div>
                         <div className="avn_center_value">
-                            <span >{fmt.formatDecimal(this.props.centerCourse,3,0)}</span>
+                            <span >{Formatter.formatDecimal(this.props.centerCourse,3,0)}</span>
                             <span className="avn_unit">&#176;</span>
                         </div>
                         <div className="avn_center_value">
                             /
                         </div>
                         <div className="avn_center_value">
-                            <span >{fmt.formatDecimal(this.props.centerDistance,3,1)}</span>
+                            <span >{Formatter.formatDecimal(this.props.centerDistance,3,1)}</span>
                             <span className="avn_unit">nm</span>
 
                         </div>

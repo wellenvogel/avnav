@@ -7,8 +7,6 @@ import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 
-let fmt=new Formatter();
-
 class ZoomWidget extends React.Component{
     shouldComponentUpdate(nextProps,nextState) {
         if (this.props.zoom != nextProps.zoom || this.props.requiredZoom != nextProps.requiredZoom) return true;
@@ -20,11 +18,11 @@ class ZoomWidget extends React.Component{
         let style=this.props.style||{};
         let val=this.props.default||'--';
         if (this.props.zoom !== undefined) {
-            val=fmt.formatDecimalOpt(this.props.zoom, 2, 1);
+            val=Formatter.formatDecimalOpt(this.props.zoom, 2, 1);
         }
         let rzoom=undefined;
         if (this.props.requiredZoom && this.props.requiredZoom != this.props.zoom){
-            rzoom=fmt.formatDecimalOpt(this.props.requiredZoom,2,1);
+            rzoom=Formatter.formatDecimalOpt(this.props.requiredZoom,2,1);
         }
         return (
         <div className={classes} onClick={this.props.onClick} style={style}>

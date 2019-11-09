@@ -9,7 +9,6 @@ import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import Helper from '../util/helper.js';
 
-let fmt=new Formatter();
 
 class XteWidget extends React.Component{
 
@@ -45,7 +44,7 @@ class XteWidget extends React.Component{
         if (! canvas) return;
         let context=canvas.getContext('2d');
         let xteMax=PropertyHandler.getProperties().gpsXteMax;
-        let xteText=fmt.formatDecimal(xteMax,1,1);
+        let xteText=Formatter.formatDecimal(xteMax,1,1);
         let color=canvas.style.color;
         context.fillStyle =color;
         context.strokeStyle=color;

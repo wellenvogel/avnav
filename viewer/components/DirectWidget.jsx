@@ -5,6 +5,7 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import Helper from '../util/helper.js';
+import Value from './Value.jsx';
 
 class DirectWidget extends React.Component{
     shouldComponentUpdate(nextProps,nextState) {
@@ -19,10 +20,13 @@ class DirectWidget extends React.Component{
         if (this.props.value !== undefined) val=this.props.formatter(this.props.value);
         else val=this.props.default||'0';
         var style=this.props.style||{};
+
         return (
         <div className={classes} onClick={this.props.onClick} style={style}>
             <div className="resize">
-            <div className='avn_widgetData'>{val}</div>
+            <div className='avn_widgetData'>
+                <Value value={val}/>
+            </div>
             </div>
             <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
             {this.props.unit !== undefined?

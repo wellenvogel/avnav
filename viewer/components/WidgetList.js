@@ -15,9 +15,8 @@ let WindGraphics=require('./WindGraphics');
 let DirectWidget=require('./DirectWidget.jsx');
 let ZoomWidget=require('./ZoomWidget.jsx');
 let keys=require('../util/keys.jsx');
-let Formatter=require('../util/formatter');
 let AlarmWidget=require('./AlarmWidget.jsx');
-let fi=new Formatter();
+
 let widgetList=[
     {
         name: 'SOG',
@@ -79,8 +78,7 @@ let widgetList=[
         storeKeys:{
             value: keys.nav.wp.distance
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,1]
+        formatter: 'formatDistance',
 
     },
     {
@@ -151,8 +149,7 @@ let widgetList=[
         storeKeys:{
             value:keys.nav.anchor.distance
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,1],
+        formatter: 'formatDistance',
         classes: 'avn_largeWidget'
     },
     {
@@ -177,8 +174,7 @@ let widgetList=[
         storeKeys:{
             value:keys.nav.route.remain
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,1]
+        formatter: 'formatDistance'
     },
     {
         name: 'RteEta',

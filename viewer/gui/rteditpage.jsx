@@ -75,11 +75,6 @@ var RtEditPage=function(){
      * @type {routeobjects.Route}
      */
     this.lastRoute=new routeobjects.Route("");
-    /**
-     * @private
-     * @type {avnav.util.Formatter}
-     */
-    this.formatter=new avnav.util.Formatter();
 
 
     this.store=new Store();

@@ -14,6 +14,7 @@ var TrackLayer=require('./tracklayer');
 var RouteLayer=require('./routelayer');
 var Drawing=require('./drawing').Drawing;
 var DrawingPositionConverter=require('./drawing').DrawingPositionConverter;
+var Formatter=require('../util/formatter');
 
 
 
@@ -137,11 +138,7 @@ const MapHolder=function(){
      * @type {Drawing}
      */
     this.drawing=new Drawing(this);
-    /**
-     * @private
-     * @type {avnav.util.Formatter}
-     */
-    this.formatter=new avnav.util.Formatter();
+
     this.northImage=new Image();
     this.northImage.src='images/nadel_mit.png';
     /**
@@ -469,7 +466,7 @@ MapHolder.prototype.drawGrid=function() {
     for(var x=Math.floor(xrange[0]);x<=xrange[1];x+=raster){
         this.drawing.drawLineToContext([this.pointToMap([x,yrange[0]]),this.pointToMap([x,yrange[1]])],style);
         if (drawText) {
-            var text = this.formatter.formatLonLatsDecimal(x, 'lon');
+            var text = Formatter.formatLonLatsDecimal(x, 'lon');
             this.drawing.drawTextToContext(this.pointToMap([x, yrange[0]]), text, textStyle);
         }
     }
@@ -480,7 +477,7 @@ MapHolder.prototype.drawGrid=function() {
     for (var y=Math.floor(yrange[0]);y <= yrange[1];y+=raster){
         this.drawing.drawLineToContext([this.pointToMap([xrange[0],y]),this.pointToMap([xrange[1],y])],style);
         if (drawText) {
-            var text = this.formatter.formatLonLatsDecimal(y, 'lat');
+            var text = Formatter.formatLonLatsDecimal(y, 'lat');
             this.drawing.drawTextToContext(this.pointToMap([xrange[0], y]), text, textStyle);
         }
     }

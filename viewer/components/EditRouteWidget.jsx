@@ -8,7 +8,6 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js'
 import Helper from '../util/helper.js';
 
-let fmt=new Formatter();
 
 class EditRouteWidget extends React.Component{
 
@@ -41,19 +40,19 @@ class EditRouteWidget extends React.Component{
             <div className="avn_routeName">{rname}</div>
             <div className="avn_routeInfoLine">
                 <span className="avn_route_label">PTS:</span>
-                <span className="avn_routeInfo">{fmt.formatDecimal(this.props.numPoints,3)}</span>
+                <span className="avn_routeInfo">{Formatter.formatDecimal(this.props.numPoints,3)}</span>
             </div>
             <div className="avn_routeInfoLine">
                 <span className="avn_route_label">DST:</span>
-                <span className="avn_routeInfo">{fmt.formatDecimal(this.props.len,3,1)}</span>
+                <span className="avn_routeInfo">{Formatter.formatDecimal(this.props.len,3,1)}</span>
             </div>
             <div className="avn_routeInfoLine">
                 <span className="avn_route_label">RTG:</span>
-                <span className="avn_routeInfo">{fmt.formatDecimal(this.props.remain,3,1)}</span>
+                <span className="avn_routeInfo">{Formatter.formatDecimal(this.props.remain,3,1)}</span>
             </div>
             <div className="avn_routeInfoLine">
                 <span className="avn_route_label">ETA:</span>
-                <span className="avn_routeInfo avd_edRouteEta">{fmt.formatTime(this.props.eta)}</span>
+                <span className="avn_routeInfo avd_edRouteEta">{Formatter.formatTime(this.props.eta)}</span>
             </div>
         </div>
         );

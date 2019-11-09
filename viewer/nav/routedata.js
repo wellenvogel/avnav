@@ -139,7 +139,7 @@ var RouteData=function(propertyHandler,navobject){
      * @private
      * @type {Formatter}
      */
-    this.formatter=new Formatter();
+    this.formatter=Formatter;
 
     var self=this;
     $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){

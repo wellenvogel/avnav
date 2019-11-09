@@ -27,7 +27,7 @@ var NavData=function(){
      * @private
      * @type {Formatter}
      */
-    this.formatter=new Formatter();
+    this.formatter=Formatter;
     /** @type {GpsData}
      * @private
      */

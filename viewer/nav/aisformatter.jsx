@@ -4,30 +4,29 @@
 
 import Formatter from '../util/formatter.js';
 
-const fmt=new Formatter();
 const aisparam={
     distance: {
         headline: 'dist(nm)',
             format: function (v) {
-            return fmt.formatDecimal(parseFloat(v.distance || 0), 3, 2);
+            return Formatter.formatDecimal(parseFloat(v.distance || 0), 3, 2);
         }
     },
     heading: {
         headline: 'hdg',
             format: function (v) {
-            return fmt.formatDecimal(parseFloat(v.headingTo || 0), 3, 0);
+            return Formatter.formatDecimal(parseFloat(v.headingTo || 0), 3, 0);
         }
     },
     speed: {
         headline: 'speed(kn)',
             format: function (v) {
-            return fmt.formatDecimal(parseFloat(v.speed || 0), 3, 1);
+            return Formatter.formatDecimal(parseFloat(v.speed || 0), 3, 1);
         }
     },
     course: {
         headline: 'course',
             format: function (v) {
-            return fmt.formatDecimal(parseFloat(v.course || 0), 3, 0);
+            return Formatter.formatDecimal(parseFloat(v.course || 0), 3, 0);
         }
     },
     cpa: {
@@ -36,7 +35,7 @@ const aisparam={
             let tval = parseFloat(v.tcpa || 0);
             //no cpa if tcpa < 0
             //if (tval < 0) return "-----";
-            return fmt.formatDecimal(parseFloat(v.cpa || 0), 3, 2);
+            return Formatter.formatDecimal(parseFloat(v.cpa || 0), 3, 2);
         }
     },
     tcpa: {
@@ -51,7 +50,7 @@ const aisparam={
             let h = Math.floor(tval / 3600);
             let m = Math.floor((tval - h * 3600) / 60);
             let s = tval - 3600 * h - 60 * m;
-            return sign + fmt.formatDecimal(h, 2, 0).replace(" ", "0") + ':' + fmt.formatDecimal(m, 2, 0).replace(" ", "0") + ':' + fmt.formatDecimal(s, 2, 0).replace(" ", "0");
+            return sign + Formatter.formatDecimal(h, 2, 0).replace(" ", "0") + ':' + Formatter.formatDecimal(m, 2, 0).replace(" ", "0") + ':' + Formatter.formatDecimal(s, 2, 0).replace(" ", "0");
         }
     },
     passFront: {
@@ -118,7 +117,7 @@ const aisparam={
     position: {
         headline: 'position',
             format: function (v) {
-            return fmt.formatLonLats({lon: v.lon, lat: v.lat});
+            return Formatter.formatLonLats({lon: v.lon, lat: v.lat});
         }
     },
     destination: {

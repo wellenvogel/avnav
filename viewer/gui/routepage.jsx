@@ -112,9 +112,9 @@ var Routepage=function(){
     this.routingHandler=undefined;
     /**
      * @private
-     * @type {avnav.util.Formatter}
+     * @type {Formatter}
      */
-    this.formatter=new Formatter();
+    this.formatter=Formatter;
 
     /**
      * if we loaded a route we will keep it here and set this as editing

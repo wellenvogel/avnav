@@ -4,6 +4,7 @@
 
 var navobjects=require('./navobjects');
 var NavCompute=require('./navcompute');
+var Formatter=require('../util/formatter');
 var routeobjects={};
 
 
@@ -472,7 +473,7 @@ routeobjects.Route.prototype.checkName=function(name){
 };
 
 routeobjects.Route.prototype._createNameFromId=function(id){
-    return "WP"+avnav.util.Formatter.prototype.formatDecimal(id,2,0);
+    return "WP"+Formatter.formatDecimal(id,2,0);
 };
 routeobjects.Route.prototype.findFreeName=function(){
     var i=this.points.length;
@@ -602,18 +603,17 @@ routeobjects.FormattedPoint=function(){
 routeobjects.Route.prototype.getFormattedPoints=function(){
     var rt=[];
     var i=0;
-    var formatter=new avnav.util.Formatter();
     for (i=0;i<this.points.length;i++){
         var formatted=new routeobjects.FormattedPoint();
         formatted.idx=i;
         formatted.name=this.points[i].name?this.points[i].name:i+"";
         formatted.course="---";
         formatted.distance="---";
-        formatted.latlon=formatter.formatLonLats(this.points[i]);
+        formatted.latlon=Formatter.formatLonLats(this.points[i]);
         if (i>0) {
             var dst=NavCompute.computeDistance(this.points[i-1],this.points[i]);
-            formatted.course=formatter.formatDecimal(dst.course,3,0);
-            formatted.distance=formatter.formatDecimal(dst.dtsnm,3,1);
+            formatted.course=Formatter.formatDecimal(dst.course,3,0);
+            formatted.distance=Formatter.formatDecimal(dst.dtsnm,3,1);
         }
         rt.push(formatted);
     }

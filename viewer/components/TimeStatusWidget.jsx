@@ -9,8 +9,6 @@ import Formatter from "../util/formatter.js";
 import PropertyHandler from '../util/propertyhandler.js';
 import Helper from '../util/helper.js';
 
-const fmt=new Formatter();
-
 class TimeStatusWidget extends React.Component{
     shouldComponentUpdate(nextProps,nextState) {
         return Helper.compareProperties(this.props,nextProps,TimeStatusWidget.storeKeys);
@@ -21,7 +19,7 @@ class TimeStatusWidget extends React.Component{
         var imgSrc=this.props.gpsValid? PropertyHandler.getProperties().statusOkImage:PropertyHandler.getProperties().statusErrorImage;
         var time="----";
         if (this.props.time !== undefined){
-            time=fmt.formatTime(this.props.time);
+            time=Formatter.formatTime(this.props.time);
         }
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>

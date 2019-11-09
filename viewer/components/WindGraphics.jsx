@@ -9,8 +9,6 @@ import keys from '../util/keys.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
 import Helper from '../util/helper.js';
 
-let fmt=new Formatter();
-
 class WindGraphics extends React.Component{
     constructor(props){
         super(props);
@@ -33,8 +31,8 @@ class WindGraphics extends React.Component{
                 let nm=PropertyHandler.getProperties().NM;
                 windSpeed=windSpeed*3600/nm;
             }
-            if (windSpeed < 10) windSpeed=fmt.formatDecimal(windSpeed,1,2);
-            else windSpeed=fmt.formatDecimal(windSpeed,3,0);
+            if (windSpeed < 10) windSpeed=Formatter.formatDecimal(windSpeed,1,2);
+            else windSpeed=Formatter.formatDecimal(windSpeed,3,0);
         }catch(e){}
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
@@ -57,7 +55,6 @@ class WindGraphics extends React.Component{
         let canvas=this.canvas;
         if (! canvas) return;
         let ctx=canvas.getContext('2d');
-        let formatter=new Formatter();
         // Set scale factor for all values
         let crect=canvas.getBoundingClientRect();
         let w=crect.width;
@@ -134,7 +131,7 @@ class WindGraphics extends React.Component{
         }
         // Create text
         ctx.font = fontSize+"px Arial";
-        ctx.fillText(formatter.formatDecimal(winddirection,3,0) + "°",width/2*0.7,height/2*1.15);
+        ctx.fillText(Formatter.formatDecimal(winddirection,3,0) + "°",width/2*0.7,height/2*1.15);
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2 ,height / 2);
         // Rotate

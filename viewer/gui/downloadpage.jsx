@@ -8,6 +8,7 @@ var OverlayDialog=require('../components/OverlayDialog.jsx');
 var ItemUpdater=require('../components/ItemUpdater.jsx');
 var ItemList=require('../components/ItemListOld.jsx');
 var React=require('react');
+var Formatter=require('../util/formatter');
 
 
 
@@ -57,11 +58,7 @@ var Downloadpage=function(){
     this.visibleListEntryClass="avn_download_visible_entry";
     this.activeListEntryClass="avn_download_active_entry";
 
-    /**
-     * @private
-     * @type {avnav.util.Formatter}
-     */
-    this.formatter=new avnav.util.Formatter();
+
     /**
      *
      * @type {Array:FileInfo}
@@ -241,15 +238,15 @@ Downloadpage.prototype.getPageContent=function(){
     var DownloadItem=function(props){
         var dp={};
         if (props.type == "route"){
-            dp.timeText=self.formatter.formatDateTime(new Date(props.time));
+            dp.timeText=Formatter.formatDateTime(new Date(props.time));
         }
         else{
-            dp.timeText=self.formatter.formatDateTime(new Date(props.time*1000));
+            dp.timeText=Formatter.formatDateTime(new Date(props.time*1000));
         }
         dp.infoText=props.name;
         var showRas=false;
         if (props.type == "route"){
-            dp.infoText+=","+self.formatter.formatDecimal(props.length,4,2)+
+            dp.infoText+=","+Formatter.formatDecimal(props.length,4,2)+
                 " nm, "+props.numpoints+" points";
             if (props.server) showRas=true;
         }

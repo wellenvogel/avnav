@@ -11,7 +11,6 @@ import PropertyHandler from '../util/propertyhandler.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import assign from 'object-assign';
 
-let fmt=new Formatter();
 
 class AisTargetWidget extends React.Component{
     constructor(props){

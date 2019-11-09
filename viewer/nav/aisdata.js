@@ -67,7 +67,7 @@ let AisData=function(propertyHandler,navdata, opt_noQuery){
      * @private
      * @type {Formatter}
      */
-    this.formatter=new Formatter();
+    this.formatter=Formatter;
     if (! opt_noQuery) this.startQuery();
 };
 /**

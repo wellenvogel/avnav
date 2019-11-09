@@ -121,7 +121,7 @@ let Gpspage=function(){
      * @private
      * @type {Formatter}
      */
-    this.formatter=new Formatter();
+    this.formatter=Formatter;
     this.leftPanelHeight=0;
     this.leftPanelWidth=0;
     this.weightSum=0;

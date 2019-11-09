@@ -7,6 +7,7 @@ let StoreApi=require('../util/storeapi');
 let Base=require('../base');
 let globalStore=require('../util/globalstore.jsx');
 let keys=require('../util/keys.jsx');
+let Formatter=require('../util/formatter');
 
 
 /**
@@ -48,8 +49,7 @@ let GpsData=function(propertyHandler,navobject){
     for (let k in this.formattedData){
         this.storeKeys.push(k);
     }
-    /** {avnav.util.Formatter} @private */
-    this.formatter=new avnav.util.Formatter();
+   
     this.timer=null;
     /** {Boolean} @private */
     this.validPosition=false;
@@ -156,11 +156,11 @@ GpsData.prototype.handleGpsResponse=function(data, status){
     this.gpsdata=gpsdata;
     let formattedData={};
     if (status) {
-        formattedData.gpsPosition = this.formatter.formatLonLats(gpsdata);
-        formattedData.gpsCourse = this.formatter.formatDecimal(gpsdata.course || 0, 3, 0);
-        formattedData.gpsSpeed = this.formatter.formatDecimal(gpsdata.speed || 0, 2, 1);
-        formattedData.gpsTime = this.formatter.formatTime(gpsdata.rtime || new Date());
-        formattedData.clock = this.formatter.formatClock(gpsdata.rtime || new Date());
+        formattedData.gpsPosition = Formatter.formatLonLats(gpsdata);
+        formattedData.gpsCourse = Formatter.formatDecimal(gpsdata.course || 0, 3, 0);
+        formattedData.gpsSpeed = Formatter.formatDecimal(gpsdata.speed || 0, 2, 1);
+        formattedData.gpsTime = Formatter.formatTime(gpsdata.rtime || new Date());
+        formattedData.clock = Formatter.formatClock(gpsdata.rtime || new Date());
         formattedData.gpsCourseAverage=gpsdata.courseAverage;
         formattedData.gpsSpeedAverage=gpsdata.speedAverage;
         formattedData.gpsPositionAverage=gpsdata.positionAverage;

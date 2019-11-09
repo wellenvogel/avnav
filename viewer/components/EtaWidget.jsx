@@ -8,7 +8,6 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import Helper from '../util/helper.js';
 
-let fmt=new Formatter();
 
 class EtaWidget extends React.Component{
 
@@ -16,7 +15,7 @@ class EtaWidget extends React.Component{
        return Helper.compareProperties(this.props,nextProps,EtaWidget.storeKeys);
     }
     render(){
-        let eta=this.props.eta?fmt.formatTime(this.props.eta):'--:--:--';
+        let eta=this.props.eta?Formatter.formatTime(this.props.eta):'--:--:--';
         let classes="avn_widget avn_etaWidget "+this.props.classes||""+ " "+this.props.className||"";
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
