@@ -189,24 +189,18 @@ class GpsPage extends React.Component{
             </React.Fragment>);
         };
 
-        let MainRender=Dynamic(MainContent);
-
-        return (
-            <Page
-                className={this.props.className}
-                style={this.props.style}
+        return <Page
+                className={self.props.className}
+                style={self.props.style}
                 id="gpspage"
                 mainContent={
-                            <MainRender
-                                storeKeys={{
-                                    pageNum:keys.gui.gpspage.pageNumber,
-                                    anchor: keys.nav.anchor.watchDistance
-                                }}
-                            />
+                            <MainContent/>
                         }
-                buttonList={self.buttons}/>
-        );
+                buttonList={self.buttons}
+                />;
+
     }
 }
 
-module.exports=GpsPage;
+module.exports=Dynamic(GpsPage,{storeKeys:{pageNum:keys.gui.gpspage.pageNumber,
+    anchor: keys.nav.anchor.watchDistance}});
