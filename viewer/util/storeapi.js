@@ -188,7 +188,7 @@ StoreApi.prototype.getMultiple=function(keys){
         if (storeKeys instanceof Object){
             for (let k in storeKeys){
                 let v=self.getData(storeKeys[k]);
-                if (v !== undefined) rt[k]=v;
+                rt[k]=v;
             }
             return rt;
         }
@@ -198,9 +198,7 @@ StoreApi.prototype.getMultiple=function(keys){
     }
     storeKeys.forEach((key)=>{
         let v=self.getData(key);
-        if (v !== undefined) {
-            rt[key]=v;
-        }
+        rt[key]=v;
     });
     return rt;
 };

@@ -9,6 +9,7 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
+import PropTypes from 'prop-types';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
@@ -29,8 +30,8 @@ const widgetCreator=(widget,weightSum)=>{
     return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps',className:''});
 };
 
-const getPanelList=(panelType)=>{
-    let basename="gpspage"+globalStore.getData(keys.gui.gpspage.pageNumber,1);
+const getPanelList=(panelType,anchor,pageNum)=>{
+    let basename="gpspage"+pageNum;
     let page=GuiHelpers.getPageFromLayout(basename);
     if (! page){
         //fallback to page 1
@@ -38,7 +39,7 @@ const getPanelList=(panelType)=>{
     }
     if (! page) return;
     let name=panelType;
-    name+=globalStore.getData(keys.nav.anchor.watchDistance)!==undefined?"_anchor":"_not_anchor";
+    name+=anchor!==undefined?"_anchor":"_not_anchor";
     if (page[name]) return page[name];
     //fallback to panel without suffix
     if (page[panelType]) return page[panelType];
@@ -181,8 +182,8 @@ class GpsPage extends React.Component{
     render(){
         let self=this;
         let MainContent=(props)=> {
-            let leftPanel=getPanelList('left');
-            let rightPanel=getPanelList('right');
+            let leftPanel=getPanelList('left',self.props.anchor,self.props.pageNum||1);
+            let rightPanel=getPanelList('right',self.props.anchor,self.props.pageNum||1);
             let leftSum=getWeightSum(leftPanel);
             let rightSum=getWeightSum(rightPanel);
             let dimensions=globalStore.getData(keys.gui.global.windowDimensions);
@@ -234,6 +235,11 @@ class GpsPage extends React.Component{
 
     }
 }
+
+GpsPage.propTypes={
+    anchor: PropTypes.number,
+    pageNum: PropTypes.number
+};
 
 module.exports=Dynamic(GpsPage,{storeKeys:{pageNum:keys.gui.gpspage.pageNumber,
     anchor: keys.nav.anchor.watchDistance}});
