@@ -291,6 +291,12 @@ button{
   &.AisSort {
     .iconButton('images/icons-new/sort.svg');
   }
+  &.AisInfoLocate {
+    .iconButton('images/icons-new/center.svg');
+  }
+  &.AisInfoList {
+    .iconButton('images/icons-new/ic_list.svg');
+  }
 
 }
 
@@ -586,6 +592,38 @@ span.valuePrefix{
       height: 1.8em;
       margin-right: 1em;
       vertical-align: middle;
+    }
+  }
+}
+
+#aisinfopage{
+  .status{
+    left: 3em;
+    top: ( 2em + @headlineHeight)  ;
+    position: absolute;
+    width: 1.5em;
+    height:inherit;
+  }
+  .infoList{
+    width: 100%;
+    max-width: 60em;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.2em;
+    margin-top: 0.5em;
+    .label {
+      display: inline-block;
+      text-align: right;
+      padding-right: 1em;
+      opacity: .6;
+      padding-bottom: .7em;
+      width: 50%;
+    }
+    .aisData {
+      display: inline-block;
+      text-align: left;
+      padding-bottom: .7em;
+      width: 50%;
     }
   }
 }
