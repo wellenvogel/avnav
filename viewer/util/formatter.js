@@ -117,6 +117,19 @@ const formatDistance=function(distance){
     return formatDecimal(number,5,0);
 };
 
+const formatSpeed=function(speed){
+    let number=parseFloat(speed);
+    if (isNaN(number)) return "  -"; //2 spaces
+    if (number < 100){
+        return formatDecimal(number,2,1);
+    }
+    return formatDecimal(number,3,0);
+};
+
+const formatDirection=function(dir){
+    return formatDecimal(dir,3,0);
+};
+
 /**
  *
  * @param {Date} curDate
@@ -163,5 +176,7 @@ module.exports={
     formatDecimal,
     formatLonLats,
     formatLonLatsDecimal,
-    formatDistance
+    formatDistance,
+    formatDirection,
+    formatSpeed
 };

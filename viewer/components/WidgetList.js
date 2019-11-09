@@ -28,8 +28,7 @@ let widgetList=[
             value: keys.nav.gps.speed,
             isAverage: keys.nav.gps.speedAverageOn
         },
-        formatter:'formatDecimal',
-        formatterParameters: [2, 1]
+        formatter:'formatSpeed'
     },
     {
         name: 'COG',
@@ -41,8 +40,7 @@ let widgetList=[
             value: keys.nav.gps.course,
             isAverage:keys.nav.gps.courseAverageOn
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3, 0]
+        formatter: 'formatDirection'
 
     },
     {
@@ -78,7 +76,7 @@ let widgetList=[
         storeKeys:{
             value: keys.nav.wp.distance
         },
-        formatter: 'formatDistance',
+        formatter: 'formatDistance'
 
     },
     {
@@ -90,8 +88,7 @@ let widgetList=[
         storeKeys:{
             value: keys.nav.wp.course
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,0]
+        formatter: 'formatDirection'
     },
     {
         name: 'VMG',
@@ -102,8 +99,8 @@ let widgetList=[
         storeKeys: {
             value: keys.nav.wp.vmg
         },
-        formatter:'formatDecimal',
-        formatterParameters: [2, 1]
+        formatter:'formatSpeed'
+
     },
     {
         name: 'WindAngle',
@@ -114,8 +111,7 @@ let widgetList=[
         storeKeys:{
             value:keys.nav.gps.windAngle
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,0]
+        formatter: 'formatDirection'
     },
     {
         name: 'WindSpeed',
@@ -137,8 +133,7 @@ let widgetList=[
         storeKeys:{
             value:keys.nav.anchor.direction
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,0],
+        formatter: 'formatDirection',
         classes: 'avn_largeWidget'
     },
     {

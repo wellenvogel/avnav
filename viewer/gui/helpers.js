@@ -33,7 +33,7 @@ const resizeElementFont=(el)=>{
     }
     else{
         let lastSize=100;
-        for (let size = 100; el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight && size < 200 ; size += 10) {
+        for (let size = 100; el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight && size <= 250 ; size += 10) {
             lastSize=size;
             el.style.fontSize = size + '%';
         }
