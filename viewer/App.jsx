@@ -12,7 +12,23 @@ import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
 import Toast from './util/overlay.js';
+import SoundHandler from './components/SoundHandler.jsx';
 
+const DynamicSound=Dynamic(SoundHandler);
+
+//to feed the sound with the alarm sound we have
+const alarmStoreKeys={alarms:keys.nav.gps.alarms};
+const computeAlarmSound=(state)=>{
+    if (!state.alarms) return {src:undefined,repeat:undefined};
+    for (let k in state.alarms){
+        //only use the first alarm
+        return {
+            src: PropertyHandler.getProperties().navUrl+"?request=download&type=alarm&name="+encodeURIComponent(k),
+            repeat: state.alarms[k].repeat
+        };
+    }
+    return {src:undefined,repeat:undefined};
+};
 //legacy support - hand over to the "old" gui handler
 class Other extends React.Component{
     constructor(props){
@@ -117,6 +133,10 @@ class App extends React.Component {
             }}
                 />
             <Dialogs/>
+            <DynamicSound
+                storeKeys={alarmStoreKeys}
+                updateFunction={computeAlarmSound}
+                />
         </div>
     };
 }

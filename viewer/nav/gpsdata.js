@@ -8,6 +8,7 @@ let Base=require('../base');
 let globalStore=require('../util/globalstore.jsx');
 let keys=require('../util/keys.jsx');
 let Formatter=require('../util/formatter');
+let assign=require('object-assign');
 
 
 /**
@@ -264,6 +265,10 @@ GpsData.prototype.stopAlarm=function(type){
     let url=this.propertyHandler.getProperties().navUrl+"?request=alarm&stop="+type;
     let timeout=this.propertyHandler.getProperties().positionQueryTimeout;
     let self=this;
+    //we also remove the alarm from the store to ensure that all widgets get updated
+    let alarms=assign({},globalStore.getData(keys.nav.gps.alarms));
+    delete alarms[type];
+    globalStore.storeData(keys.nav.gps.alarms,alarms);
     $.ajax({
         url: url,
         dataType: 'json',
