@@ -106,6 +106,9 @@ let keys={
         },
         addonpage:{
             activeAddOn:K,
+        },
+        addresspage:{
+            addressList:K
         }
 
     },
