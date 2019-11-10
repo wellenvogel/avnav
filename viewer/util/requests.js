@@ -11,6 +11,7 @@ const prepare=(url,options,defaults)=>{
     if ( !(ioptions && ioptions.useNavUrl !== undefined && !ioptions.useNavUrl)){
         url=PropertyHandler.getProperties().navUrl+url;
     }
+    if (ioptions.timeout === undefined) ioptions.timeout=PropertyHandler.getProperties().statusQueryTimeout;
     let headers=undefined;
     if ( !(ioptions && ioptions.noCache !== undefined && !ioptions.noCache)){
         headers=new Headers();
@@ -19,6 +20,7 @@ const prepare=(url,options,defaults)=>{
     }
     let requestOptions={};
     if (headers) requestOptions.headers=headers;
+    requestOptions.timeout=ioptions.timeout;
     return [url,requestOptions];
 };
 let RequestHandler={
@@ -29,6 +31,7 @@ let RequestHandler={
      *        useNavUrl - (default: true) - prepend the navUrl to the provided url
      *        checkOk   - (default: true) - check if the response has a status field and this is set to "OK"
      *        noCache   - (default: true) - prevent caching
+     *        timeout   - (default: statusQueryTimeout) - timeout
      */
     getJson:(url,options)=>{
         let [rurl,requestOptions]=prepare(url,options);
@@ -50,7 +53,7 @@ let RequestHandler={
                     reject(error.message);
                 }).then((json)=>{
                    if ( ! (options && options.checkOk !== undefined && ! options.checkOk)){
-                       if (! json.status || json.status !== 'OK'){
+                       if (! json.status || (json.status !== 'OK' && json.status != 'ok')){
                            reject("status: "+json.status);
                            return;
                        }

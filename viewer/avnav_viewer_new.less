@@ -297,6 +297,18 @@ button{
   &.AisInfoList {
     .iconButton('images/icons-new/ic_list.svg');
   }
+  &.StatusWpa {
+    .iconButton('images/icons-new/ic_rss_feed.svg');
+  }
+  &.StatusAndroid{
+    .iconButton('images/icons-new/ic_android.svg');
+  }
+  &.StatusAddresses{
+    .iconButton('images/icons-new/qrcode.svg');
+  }
+  &.StatusShutdown{
+    .iconButton('images/icons-new/ic_power.svg');
+  }
 
 }
 
@@ -649,5 +661,37 @@ span.valuePrefix{
     .listEntry();
     .flex-direction(column);
     padding: 2em;
+  }
+}
+
+#statuspage{
+  .status {
+    .listEntry();
+    .flex-direction(column);
+    padding-left: 1em;
+    margin-top: 5px;
+    line-height: 2em;
+  }
+  .childStatus {
+    padding-left: 1.5em;
+    margin-top: 3px;
+    .mdText2();
+    img {
+      width: 1em;
+      height: 1em;
+      margin-left: -1em;
+    }
+  }
+  .statusName {
+    padding-left: 3px;
+  }
+  .statusInfo {
+    padding-left: 3px;
+    word-wrap: break-word;
+  }
+  &.serverError{
+    .header {
+      .nightBackFade(@colorRed);
+    }
   }
 }

@@ -199,6 +199,7 @@ avnav.gui.Handler.prototype.showPageInternal = function (name, options) {
     if (name === 'aisinfopage') return;
     if (name === 'addonpage') return;
     if (name === 'addresspage') return;
+    if (name === 'statuspage') return;
     $('.avn_page').hide();
     $('#avi_' + name).show();
     var oldname = this.page;

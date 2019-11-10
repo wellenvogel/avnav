@@ -60,6 +60,6 @@
     "react": "^16.11",
     "react-measure": "^2.0.2",
     "shallow-equal": "^1.0.0",
-    "whatwg-fetch": "^3.0.0"
+    "whatwg-fetch-timeout": "^2.0.2-timeout"
   }
 }

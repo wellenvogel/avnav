@@ -11,6 +11,7 @@ import AisPage from './gui/AisPage.jsx';
 import AisInfoPage from './gui/AisInfoPage.jsx';
 import AddOnPage from './gui/AddOnPage.jsx';
 import AddressPage from './gui/AddressPage.jsx';
+import StatusPage from './gui/StatusPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -74,7 +75,8 @@ const pages={
     aispage: AisPage,
     aisinfopage:AisInfoPage,
     addonpage:AddOnPage,
-    addresspage:AddressPage
+    addresspage:AddressPage,
+    statuspage:StatusPage
 };
 class Router extends Component {
     render() {

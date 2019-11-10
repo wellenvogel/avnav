@@ -109,6 +109,13 @@ let keys={
         },
         addresspage:{
             addressList:K
+        },
+        statuspage:{
+            wpa:K,
+            addresses:K,
+            shutdown: K,
+            statusItems:    K,
+            serverError: K,
         }
 
     },
