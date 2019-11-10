@@ -37,7 +37,7 @@ const aisInfos=[
     ]
 ];
 const fieldToLabel=(field)=>{
-    var rt;
+    let rt;
     aisInfos.map(function(l1){
         l1.map(function(l2){
             if (l2.name == field) rt=l2.label;
@@ -114,7 +114,7 @@ const sortDialog=()=>{
     for (let i in list){
         if (list[i].value == sortField) list[i].selected=true;
     }
-    var p=OverlayDialog.selectDialogPromise('Sort Order',list);
+    let p=OverlayDialog.selectDialogPromise('Sort Order',list);
     p.then(function(selected){
         globalStore.storeData(keys.gui.aispage.sortField,selected.value);
     });
@@ -157,13 +157,14 @@ class AisPage extends React.Component{
     render(){
         let self=this;
         const AisItem=(props)=>{
-            var fmt=AisFormatter;
-            var fb=fmt.format('passFront',props);
-            var style={
+            let fmt=AisFormatter;
+            let fb=fmt.format('passFront',props);
+            let style={
                 color:props.color
             };
-            var cl=props.addClass;
+            let cl=props.addClass;
             if (props.warning) cl+=" "+WARNING_CLASS;
+            let aisInfoKey=1;
             return ( <div className={"aisListItem "+cl} onClick={props.onClick}>
                     <div className="aisItemFB" style={style}>
                         <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
@@ -174,11 +175,13 @@ class AisPage extends React.Component{
                             {fmt.format('shipname',props)}
                         </div>
                         { aisInfos.map(function(info1){
-                            return <div className="infoLine">
+                            aisInfoKey++;
+                            return <div className="infoLine" key={aisInfoKey}>
                                 {
                                     info1.map(function(info) {
+                                        aisInfoKey++;
                                         return (
-                                            <span className="avn_aisInfoElement">
+                                            <span className="avn_aisInfoElement" key={aisInfoKey}>
                                                 <span className="avn_aisLabel">{info.label}: </span>
                                                 <span className="avn_aisData">{fmt.format(info.name,props)}{info.unit !== undefined && info.unit}</span>
                                             </span>
@@ -194,7 +197,7 @@ class AisPage extends React.Component{
         };
         const AisList=Dynamic(ItemList);
         const Summary=Dynamic(function(props){
-            var color=PropertyHandler.getAisColor({
+            let color=PropertyHandler.getAisColor({
                 warning: true
             });
             return (

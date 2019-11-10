@@ -163,9 +163,10 @@ class GpsPage extends React.Component{
         ];
         this.onItemClick=this.onItemClick.bind(this);
     }
-    onItemClick(item){
+    onItemClick(item,data){
         if (item && item.name=== "AisTarget"){
-            history.push("aisinfopage");
+            let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
+            history.push("aisinfopage",{mmsi:mmsi});
             return;
         }
         history.pop();
@@ -203,14 +204,14 @@ class GpsPage extends React.Component{
                 itemCreator: (widget)=>{ return widgetCreator(widget,leftSum);},
                 itemList: leftPanel,
                 fontSize: fontSize,
-                onItemClick: (item) => {self.onItemClick(item);}
+                onItemClick: (item,data) => {self.onItemClick(item,data);}
             };
             let p1RightProp={
                 className: 'widgetContainer',
                 itemCreator: (widget)=>{ return widgetCreator(widget,rightSum);},
                 itemList: rightPanel,
                 fontSize: fontSize,
-                onItemClick: (item) => {self.onItemClick(item);}
+                onItemClick: (item,data) => {self.onItemClick(item,data);}
             };
             return(
             <React.Fragment>
