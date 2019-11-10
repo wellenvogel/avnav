@@ -103,6 +103,9 @@ let keys={
         },
         aispage:{
             sortField:K,
+        },
+        addonpage:{
+            activeAddOn:K,
         }
 
     },
