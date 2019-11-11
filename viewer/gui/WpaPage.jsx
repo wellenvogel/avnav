@@ -28,16 +28,16 @@ const ListEntry=(props)=>{
     if (level >= 0) level=level+"%";
     else level=level+"dBm";
     let disabled=(props.flags !== undefined && props.flags.match(/DISABLED/));
-    let addClass=props.activeItem?'avn_wpa_active_item':'';
+    let addClass=props.activeItem?'activeEntry':'';
     return(
-        <div className={'avn_wpa_item '+addClass} onClick={props.onClick} >
-            <span className='avn_wpa_ssid'>{props.ssid}</span>
-            <div className='avn_wpa_item_details_container'>
-                <span className='avn_wpa_item_detail'>Signal:{level}</span>
-                <span className='avn_wpa_item_detail'>{props.id >=0?'configured':''}</span>
-                { disabled && <span className='avn_wpa_item_detail'>disabled</span>}
-                { (props.allowAccess && props.showAccess)  && <span className='avn_wpa_item_detail'>ext access</span>}
-                { props.activeItem  && <span className='avn_wpa_item_detail'>active</span>}
+        <div className={'listEntry wpaNetwork '+addClass} onClick={props.onClick} >
+            <span className='ssid'>{props.ssid}</span>
+            <div className='detailsContainer'>
+                <span className='detail'>Signal:{level}</span>
+                <span className='detail'>{props.id >=0?'configured':''}</span>
+                { disabled && <span className='detail'>disabled</span>}
+                { (props.allowAccess && props.showAccess)  && <span className='detail'>ext access</span>}
+                { props.activeItem  && <span className='detail'>active</span>}
             </div>
         </div>
     );
@@ -65,10 +65,10 @@ const Interface = Dynamic((props)=> {
     }
     else info += " waiting for IP...";
     return (
-        <div className="avn_wpa_interface">
+        <div className="wpaInterface">
             <div>Interface: {status.wpa_state}</div>
             { (status.wpa_state == "COMPLETED") &&
-            <div className='avn_wpa_interface_detail'>{info}</div>
+            <div className='detail'>{info}</div>
             }
         </div>
     );
@@ -105,7 +105,7 @@ class Dialog extends React.Component{
     render(){
         let id=this.props.id;
         return (
-            <div className="avi_wpa_dialog">
+            <div className="wpaDialog">
                 <div>
                     <h3><span >{this.props.ssid}</span></h3>
                     <div>
@@ -124,7 +124,7 @@ class Dialog extends React.Component{
                     <button name="connect" onClick={this.buttonClick}>Connect</button>
                     {id >= 0 && <button name="enable" onClick={this.buttonClick}>Enable</button>}
                     {id >= 0 && <button name="disable" onClick={this.buttonClick}>Disable</button>}
-                    <div className="avn_clear"></div>
+                    <div className="clear"></div>
                 </div>
             </div>
         );
@@ -154,7 +154,7 @@ class WpaPage extends React.Component{
 
     }
 
-    doQuery(){
+    doQuery(timerSequence){
         let self=this;
         Requests.getJson("?request=wpa&command=all",{
             sequenceFunction:this.timer.currentSequence,
@@ -186,7 +186,7 @@ class WpaPage extends React.Component{
                 }
             }
             globalStore.storeData(keys.gui.wpapage.wpaItems,itemList);
-            self.timer.startTimer();
+            self.timer.startTimer(timerSequence);
 
         }).catch((error)=>{
             self.numErrors++;
@@ -194,7 +194,7 @@ class WpaPage extends React.Component{
                 self.numErrors=0;
                 Toast.Toast("Status query error: "+Helper.escapeHtml(error));
             }
-            self.timer.startTimer();
+            self.timer.startTimer(timerSequence);
         })
     }
     wpaRequest(request,message,param){

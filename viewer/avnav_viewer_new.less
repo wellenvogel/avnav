@@ -340,9 +340,6 @@ button{
   font-size: 1.3em;
   .mdShadow2();
 
-  button {
-    float: right;
-  }
 
   input {
     display: table-cell;
@@ -363,6 +360,7 @@ button{
   }
 
   button{
+    float: right;
     .buttonBase();
     margin-top: 0.5em;
     margin-left: 0.5em;
@@ -370,8 +368,7 @@ button{
     font-size: @normalButtonFont;
     padding: 1em;
     width: inherit;
-    .nightColors();
-    background-color: rgba(255, 255, 255, 0.0);
+    .nightBackColor(@colorSelection);
     border: none;
     .nightForeColor(@colorMain,@nightColor);
   }
@@ -407,6 +404,9 @@ button{
   padding: 1em;
   .nightBorderColorGR(30);
   .flex-display();
+}
+.activeEntry{
+  .nightBackColor(@colorSelection);
 }
 
 //----------------------------------------------------------------------------------------
@@ -628,7 +628,7 @@ span.valuePrefix{
       display: inline-block;
       text-align: right;
       padding-right: 1em;
-      opacity: .6;
+      .mdText2();
       padding-bottom: .7em;
       width: 50%;
     }
@@ -694,5 +694,53 @@ span.valuePrefix{
     .header {
       .nightBackFade(@colorRed);
     }
+  }
+}
+
+#wpapage {
+  .wpaInterface {
+    font-size: 1.2em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    .detail {
+      .mdText2();
+      margin-top: 0.3em;
+      font-size: 0.81em;
+    }
+  }
+  .wpaNetwork {
+    .detail {
+      font-size: 1em;
+      .mdText2();
+      line-height: 1.5em;
+      margin-right: 0.5em;
+    }
+    .ssid {
+      margin-right: 2em;
+      font-size: 1.2em;
+    }
+  }
+}
+
+.wpaDialog {
+  button[name=cancel] {
+    float: right;
+  }
+  button[name=connect] {
+    float: right;
+  }
+  button[name=disable] {
+    float: right;
+  }
+  button[name=remove] {
+    float: left;
+  }
+  label {
+    margin-bottom: 0.5em;
+    display: block;
+    text-align: left;
+  }
+  .avnCheckbox {
+    vertical-align: middle;
   }
 }

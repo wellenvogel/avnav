@@ -115,7 +115,10 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         sequence:0,
         timer:undefined
     };
-    const startTimer=()=>{
+    const startTimer=(sequence)=>{
+        if (sequence !== undefined && sequence != timerData.sequence) {
+            return;
+        }
         if (timerData.timer) {
             timerData.sequence++;
             window.clearTimeout(timerData.timer);
@@ -124,7 +127,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         timerData.timer=window.setTimeout(()=>{
             timerData.timer=undefined;
             if (currentSequence != timerData.sequence) return;
-            timercallback.apply(thisref);
+            timercallback.apply(thisref,[currentSequence]);
         },interval);
     };
     lifecycleSupport(thisref,(unmount)=>{
@@ -134,7 +137,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
             timerData.timer=undefined;
         }
         else if(opt_autostart){
-            timercallback.apply(thisref);
+            timercallback.apply(thisref,[timerData.sequence]);
         }
     });
     return {

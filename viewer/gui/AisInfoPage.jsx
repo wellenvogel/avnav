@@ -101,21 +101,15 @@ class AisInfoPage extends React.Component{
 
     }
 
-    checkNoTarget(){
+    checkNoTarget(timerSequence){
         let mmsi=this.props.options?this.props.options.mmsi:undefined;
         if (! mmsi || ! AisHandler.getAisByMmsi(mmsi)){
             history.pop();
+            return;
         }
+        this.timer.startTimer(timerSequence);
     }
 
-    componentDidMount(){
-        let self=this;
-    }
-    componentDidUpdate(){
-        this.checkNoTarget();
-    }
-    componentWillUnmount(){
-    }
     render(){
         let self=this;
         const Status = function (props) {

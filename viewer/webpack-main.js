@@ -50,6 +50,5 @@ window.avnav={};
     require('./gui/settingspage.jsx');
     require('./gui/routepage.jsx');
     require('./gui/downloadpage.jsx');
-    require('./gui/wpapage.jsx');
     require('./avnav_viewer.js');
 }());
