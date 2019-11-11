@@ -468,6 +468,7 @@ Navpage.prototype.getPageContent=function(){
         return (
             <div id="avi_route_info_navpage" className="avn_routeDisplay">
                 <RouteInfo store={self.navobject} onClick={function(){
+                    self.navobject.getRoutingHandler().setRouteForPage();
                     self.gui.showPage('routepage');
                 }}
                 />

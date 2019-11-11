@@ -27,7 +27,7 @@ class History{
     }
     pop(){
         this.history.splice(-1,1);
-        this.updateStore();
+        this.updateStore(true);
     }
 
     /**
@@ -37,10 +37,21 @@ class History{
         this.history.splice(1,this.history.length);
         this.updateStore();
     }
-    updateStore(){
+
+    /**
+     *
+     * @param opt_returning - legacy support with returning flag
+     */
+    updateStore(opt_returning){
         let topEntry={};
         if (this.history.length > 0){
             topEntry=this.history[this.history.length-1];
+            if (opt_returning){
+                if (! topEntry.options){
+                    topEntry.options={};
+                }
+                topEntry.options.returning=true;
+            }
         }
         this.store.storeMultiple(topEntry,{
             location:keys.gui.global.pageName,

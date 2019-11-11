@@ -4,10 +4,11 @@
 
 var routeobjects=require('./routeobjects');
 var navobjects=require('./navobjects');
-var NavData=require('./navobjects');
 var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
 var Overlay=require('../util/overlay');
+var globalStore=require('../util/globalstore.jsx');
+var keys=require('../util/keys.jsx');
 
 /**
  * the handler for the routing data
@@ -1000,6 +1001,7 @@ RouteData.prototype._saveChanges= function (oldWp, newWp){
             this.routeOff();
         }
     }
+    globalStore.storeData(keys.nav.routeHandler.editingRoute,this.editingRoute.clone());
     this.saveRoute();
     if (changeActive) this._legChanged();
     else {
@@ -1316,6 +1318,7 @@ RouteData.prototype._legChanged=function(){
     this._saveLegLocal();
     this.navobject.routeEvent();
     var self=this;
+    this.checkPageRouteActive();
     if (avnav.android){
         var rt=avnav.android.setLeg(this.currentLeg.toJsonString());
         if (rt){
@@ -1368,6 +1371,17 @@ RouteData.prototype._propertyChange=function(evdata) {
         }
         this.navobject.routeEvent();
     }
+};
+
+RouteData.prototype.setRouteForPage=function(opt_route){
+    let route=opt_route||this.editingRoute;
+    globalStore.storeData(keys.nav.routeHandler.routeForPage,route?route.clone():undefined);
+    this.checkPageRouteActive();
+};
+
+RouteData.prototype.checkPageRouteActive=function(){
+    let pageRoute=globalStore.getData(keys.nav.routeHandler.routeForPage);
+    globalStore.storeData(keys.nav.routeHandler.pageRouteIsActive,pageRoute && this.isActiveRoute(pageRoute.name));
 };
 module.exports=RouteData;
 

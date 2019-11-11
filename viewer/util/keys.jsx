@@ -57,6 +57,7 @@ let keys={
             nextCourse: K,
             isApproaching: K
         },
+        //better move this to a route object at routeHandler
         editRoute:{
             name: K,
             numPoints: K,
@@ -70,6 +71,11 @@ let keys={
             list:K,
             trackedMmsi: K,
             updateCount:K
+        },
+        routeHandler:{
+            routeForPage:K,
+            pageRouteIsActive: K,
+            editingRoute:K,  //a clone of the editing route - you cannot change this
         }
     },
     gui:{
@@ -121,6 +127,10 @@ let keys={
             interface:K,
             wpaItems:K,
             showAccess:K
+        },
+        routepage:{
+            initialName:K,
+            selectedPoint:K
         }
 
     },

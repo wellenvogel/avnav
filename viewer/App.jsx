@@ -13,6 +13,7 @@ import AddOnPage from './gui/AddOnPage.jsx';
 import AddressPage from './gui/AddressPage.jsx';
 import StatusPage from './gui/StatusPage.jsx';
 import WpaPage from './gui/WpaPage.jsx';
+import RoutePage from './gui/RoutePage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -78,7 +79,8 @@ const pages={
     addonpage:AddOnPage,
     addresspage:AddressPage,
     statuspage:StatusPage,
-    wpapage:WpaPage
+    wpapage:WpaPage,
+    routepage:RoutePage
 };
 class Router extends Component {
     render() {

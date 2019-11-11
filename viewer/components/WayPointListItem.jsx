@@ -13,19 +13,18 @@ module.exports=reactCreateClass({
         course: PropTypes.string,
         distance: PropTypes.string,
         addClass: PropTypes.string,
-        onClick:  PropTypes.func.isRequired
+        onClick:  PropTypes.func.isRequired,
+        selected: PropTypes.bool
     },
     getDefaultProps(){
         return{
         };
     },
-    onClick:function(opt_key){
-        if (this.props.onClick) this.props.onItemClick(this.props,opt_key);
-    },
     render: function(){
         var info;
         var self=this;
-        var classNames="avn_route_list_entry "+this.props.addClass||"";
+        var classNames="avn_route_list_entry "+this.props.addClass||""+" "+this.props.className||"";
+        if (self.props.selected) classNames+=" selected";
         return(
         <div className={classNames} onClick={self.props.onClick} >
             <button className="avn_route_btnDelete avn_smallButton"

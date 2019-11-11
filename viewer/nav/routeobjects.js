@@ -533,6 +533,7 @@ routeobjects.Route.prototype.swap=function() {
         this.points[i] = this.points[swap];
         this.points[swap] = old;
     }
+    return this;
 };
 /**
  * replace a route in place by another route
@@ -600,7 +601,7 @@ routeobjects.FormattedPoint=function(){
  * get a list of formatted waypoint info
  * @returns {routeobjects.FormattedPoint[]}
  */
-routeobjects.Route.prototype.getFormattedPoints=function(){
+routeobjects.Route.prototype.getFormattedPoints=function(opt_selectedIdx){
     var rt=[];
     var i=0;
     for (i=0;i<this.points.length;i++){
@@ -614,6 +615,9 @@ routeobjects.Route.prototype.getFormattedPoints=function(){
             var dst=NavCompute.computeDistance(this.points[i-1],this.points[i]);
             formatted.course=Formatter.formatDecimal(dst.course,3,0);
             formatted.distance=Formatter.formatDecimal(dst.dtsnm,3,1);
+        }
+        if (i == opt_selectedIdx){
+            formatted.selected=true;
         }
         rt.push(formatted);
     }

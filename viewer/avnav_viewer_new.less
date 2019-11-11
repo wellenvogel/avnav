@@ -76,6 +76,16 @@
   clear: both;
 }
 
+.more {
+  display: none;
+  float: right;
+  width: 1em;
+  height: 1em;
+  background-image: url('images/icons-new/ic_chevron_right.svg');
+  background-size: 100% 100%;
+  opacity: 0.6;
+}
+
 //----------------------------------------------------------------------------------------
 //legacy support
 //----------------------------------------------------------------------------------------
@@ -309,6 +319,12 @@ button{
   }
   &.StatusShutdown{
     .iconButton('images/icons-new/ic_power.svg');
+  }
+  &.RoutePageOk{
+    .iconButton('images/icons-new/ic_done.svg');
+  }
+  &.RoutePageDownload{
+    .iconButton('images/icons-new/ic_file_download.svg');
   }
 
 }
@@ -742,5 +758,39 @@ span.valuePrefix{
   }
   .avnCheckbox {
     vertical-align: middle;
+  }
+}
+
+#routepage{
+  &.activeRoute .header{
+    .nightBackFade(@colorRed);
+  }
+  .routeCurrent {
+    background-color: #CFD8DC;
+    padding: 1em;
+    padding-right: 1.5em;
+    height: 5.2em;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    .routeName{
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .routeInfo{
+      .mdText2();
+      margin-top: 0.7em;
+    }
+    .more{
+      display: inline-block;
+      position: absolute;
+      right: 0;
+      top: 1em;
+      height: 2em;
+      width: 2em;
+    }
+
+  }
+  .selected{
+    .nightBackColor(@colorSelection);
   }
 }
