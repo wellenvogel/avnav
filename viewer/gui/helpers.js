@@ -71,6 +71,74 @@ const getPanelFromLayout=(pagename,panelname)=>{
     if (! page) return;
     return page[panelname];
 };
+/**
+ * will call the provided callback on mount (param: false),umount(param: true), update(optional, param false)
+ * will be injected after the existing lifecycle methods
+ * @param thisref
+ * @param callback
+ * @param opt_onUpdate
+ */
+const lifecycleSupport=(thisref,callback,opt_onUpdate)=> {
+    let oldmount = thisref.componentDidMount;
+    let oldunmount = thisref.componentWillUnmount;
+    let oldupdate = thisref.componentDidUpdate;
+    const newmount = ()=> {
+        if (oldmount) oldmount.apply(thisref);
+        callback.apply(thisref,[false]);
+        };
+    const newunmount = ()=> {
+        if (oldunmount) oldunmount.apply(thisref);
+        callback.apply(thisref,[true]);
+    };
+    thisref.componentDidMount=newmount.bind(thisref);
+    thisref.componentWillUnmount=newunmount.bind(thisref);
+    if (opt_onUpdate){
+        const newupdate = ()=> {
+            if (oldupdate) oldupdate.apply(thisref);
+            callback.apply(thisref,[false]);
+        };
+    };
+};
+
+/**
+ * set up a lifecycle controlled timer
+ * @param thisref
+ * @param timercallback - will be called when timer fires
+ * @param interval - interval
+ * @param opt_autostart - call the callback in didMount
+ * @returns {{startTimer: Function, currentSequence: Function}}
+ *          to start the timer again - just call startTimer on the return
+ *          to get the current seqeunce - just call currentSequence (e.g. to throw away a fetch result)
+ */
+const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
+    let timerData={
+        sequence:0,
+        timer:undefined
+    };
+    const startTimer=()=>{
+        let currentSequence=timerData.sequence;
+        if (timerData.timer) window.clearInterval(timerData.timer);
+        timerData.timer=window.setInterval(()=>{
+            timerData.timer=undefined;
+            if (currentSequence != timerData.sequence) return;
+            timercallback.apply(thisref);
+        },interval);
+    };
+    lifecycleSupport(thisref,(unmount)=>{
+        timerData.sequence++;
+        if (unmount){
+            if (timerData.timer) window.clearInterval(timerData.timer);
+            timerData.timer=undefined;
+        }
+        else if(opt_autostart){
+            timercallback.apply(thisref);
+        }
+    });
+    return {
+        startTimer:startTimer,
+        currentSequence:()=>{return timerData.sequence}
+    };
+};
 
 
 module.exports={
@@ -78,5 +146,7 @@ module.exports={
     resizeElementFont,
     resizeByQuerySelector,
     getPageFromLayout,
-    getPanelFromLayout
+    getPanelFromLayout,
+    lifecycleSupport,
+    lifecycleTimer
 };

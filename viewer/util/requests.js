@@ -32,6 +32,8 @@ let RequestHandler={
      *        checkOk   - (default: true) - check if the response has a status field and this is set to "OK"
      *        noCache   - (default: true) - prevent caching
      *        timeout   - (default: statusQueryTimeout) - timeout
+     *        sequenceFunction - if set: a function to return a sequence - if the one returned from start
+     *                           does not match the on at the result we reject
      */
     getJson:(url,options)=>{
         let [rurl,requestOptions]=prepare(url,options);
@@ -40,7 +42,9 @@ let RequestHandler={
                 reject("missing url");
                 return;
             }
-           fetch(rurl,requestOptions).then(
+            let sequence=undefined;
+            if (options && options.sequenceFunction) sequence=options.sequenceFunction();
+            fetch(rurl,requestOptions).then(
                 (response)=>{
                     if (response.ok){
                         return response.json();
@@ -52,6 +56,9 @@ let RequestHandler={
                 (error)=>{
                     reject(error.message);
                 }).then((json)=>{
+                   if (sequence !== undefined){
+                       if (sequence != options.sequenceFunction()) reject("sequence changed");
+                   }
                    if ( ! (options && options.checkOk !== undefined && ! options.checkOk)){
                        if (! json.status || (json.status !== 'OK' && json.status != 'ok')){
                            reject("status: "+json.status);
@@ -79,6 +86,8 @@ let RequestHandler={
               reject("missing url");
               return;
           }
+          let sequence=undefined;
+          if (options && options.sequenceFunction) sequence=options.sequenceFunction();
           fetch(rurl,requestOptions).then(
               (response)=>{
                   if (response.ok){
@@ -91,6 +100,9 @@ let RequestHandler={
               (error)=>{
                   reject(error.message);
               }).then((text)=>{
+                  if (sequence !== undefined){
+                      if (sequence != options.sequenceFunction()) reject("sequence changed");
+                  }
                  resolve(text);
               },(error)=>{
                   reject(error);

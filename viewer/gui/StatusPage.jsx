@@ -15,6 +15,7 @@ import Page from '../components/Page.jsx';
 import Toast from '../util/overlay.js';
 import Requests from '../util/requests.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
+import GuiHelpers from './helpers.js';
 
 const statusTextToImageUrl=(text)=>{
     let rt=PropertyHandler.getProperties().statusIcons[text];
@@ -52,6 +53,8 @@ const MainContent=Dynamic((props)=>{
     );
 });
 
+
+
 class StatusPage extends React.Component{
     constructor(props){
         super(props);
@@ -63,6 +66,8 @@ class StatusPage extends React.Component{
         this.errors=0;
         globalStore.storeData(keys.gui.statuspage.serverError,false);
         globalStore.storeData(keys.gui.statuspage.statusItems,[]);
+        this.timer=GuiHelpers.lifecycleTimer(this,this.doQuery,PropertyHandler.getProperties().statusQueryTimeout,true);
+
     }
     queryResult(data){
             let self=this;
@@ -97,35 +102,26 @@ class StatusPage extends React.Component{
             });
     }
     doQuery(){
-        let currentSequence=this.querySequence;
         let self=this;
-        Requests.getJson("?request=status",{checkOk:false}).then(
+        Requests.getJson("?request=status",{checkOk:false,sequenceFunction:this.timer.currentSequence}).then(
             (json)=>{
-                if (self.querySequence != currentSequence) return;
                 self.queryResult(json);
-                self.timer=window.setTimeout(self.doQuery,PropertyHandler.getProperties().statusQueryTimeout);
+                self.timer.startTimer();
             },
             (error)=>{
-                if (self.querySequence != currentSequence) return;
                 globalStore.storeData(keys.gui.statuspage.statusItems,[]);
                 self.errors++;
                 if (self.errors > 5){
                     globalStore.storeData(keys.gui.statuspage.serverError,true);
                 }
-                self.timer=window.setTimeout(self.doQuery,PropertyHandler.getProperties().statusQueryTimeout);
+                self.timer.startTimer();
             });
     }
     componentDidMount(){
-        this.querySequence++;
         this.doQuery();
     }
     componentWillUnmount(){
         let self=this;
-        if (self.timer){
-            window.clearTimeout(self.timer);
-            delete self.timer;
-        }
-        self.querySequence++;
     }
     render(){
         let self=this;
