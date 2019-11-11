@@ -118,7 +118,6 @@ class StatusPage extends React.Component{
             });
     }
     componentDidMount(){
-        this.doQuery();
     }
     componentWillUnmount(){
         let self=this;

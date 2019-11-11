@@ -16,6 +16,7 @@ import Toast from '../util/overlay.js';
 import AisHandler from '../nav/aisdata.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import MapHolder from '../map/mapholder.js';
+import GuiHelpers from './helpers.js';
 
 const displayItems = [
     {name: 'mmsi', label: 'MMSI'},
@@ -96,6 +97,7 @@ class AisInfoPage extends React.Component{
             }
         ];
         this.checkNoTarget=this.checkNoTarget.bind(this);
+        this.timer=GuiHelpers.lifecycleTimer(this,this.checkNoTarget,5000,true);
 
     }
 
@@ -108,14 +110,11 @@ class AisInfoPage extends React.Component{
 
     componentDidMount(){
         let self=this;
-        this.checkNoTarget();
-        this.timer=window.setInterval(self.checkNoTarget,5000);
     }
     componentDidUpdate(){
         this.checkNoTarget();
     }
     componentWillUnmount(){
-        if (this.timer) window.clearTimeout(this.timer);
     }
     render(){
         let self=this;

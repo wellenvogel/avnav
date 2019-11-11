@@ -12,6 +12,7 @@ import AisInfoPage from './gui/AisInfoPage.jsx';
 import AddOnPage from './gui/AddOnPage.jsx';
 import AddressPage from './gui/AddressPage.jsx';
 import StatusPage from './gui/StatusPage.jsx';
+import WpaPage from './gui/WpaPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -76,7 +77,8 @@ const pages={
     aisinfopage:AisInfoPage,
     addonpage:AddOnPage,
     addresspage:AddressPage,
-    statuspage:StatusPage
+    statuspage:StatusPage,
+    wpapage:WpaPage
 };
 class Router extends Component {
     render() {

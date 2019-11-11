@@ -275,7 +275,7 @@ Wpapage.prototype.showWpaDialog=function(ssid,id,allowAccess){
             return (
                     <div className="avi_wpa_dialog">
                         <div>
-                            <h3><span >{ssid}</span></h3>
+                            <h3><span >{this.props.ssid}</span></h3>
                             <div>
                                 <label >Password
                                 <input type="password" name="psk" onChange={this.valueChange} value={this.state.psk}/>

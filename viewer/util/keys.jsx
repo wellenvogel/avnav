@@ -116,6 +116,11 @@ let keys={
             shutdown: K,
             statusItems:    K,
             serverError: K,
+        },
+        wpapage:{
+            interface:K,
+            wpaItems:K,
+            showAccess:K
         }
 
     },

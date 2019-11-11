@@ -116,9 +116,12 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         timer:undefined
     };
     const startTimer=()=>{
+        if (timerData.timer) {
+            timerData.sequence++;
+            window.clearTimeout(timerData.timer);
+        }
         let currentSequence=timerData.sequence;
-        if (timerData.timer) window.clearInterval(timerData.timer);
-        timerData.timer=window.setInterval(()=>{
+        timerData.timer=window.setTimeout(()=>{
             timerData.timer=undefined;
             if (currentSequence != timerData.sequence) return;
             timercallback.apply(thisref);
@@ -127,7 +130,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
     lifecycleSupport(thisref,(unmount)=>{
         timerData.sequence++;
         if (unmount){
-            if (timerData.timer) window.clearInterval(timerData.timer);
+            if (timerData.timer) window.clearTimeout(timerData.timer);
             timerData.timer=undefined;
         }
         else if(opt_autostart){
