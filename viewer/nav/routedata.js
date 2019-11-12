@@ -672,7 +672,6 @@ RouteData.prototype.anchorOff=function(){
  */
 RouteData.prototype._startRouting=function(mode,newWp,opt_keep_from){
     this.currentLeg.approachDistance=this.propertyHandler.getProperties().routeApproach+0;
-    this.currentLeg.active=true;
     var pfrom;
     var gps=this.navobject.getGpsHandler().getGpsData();
     var center=this.navobject.getMapCenter();
@@ -683,7 +682,31 @@ RouteData.prototype._startRouting=function(mode,newWp,opt_keep_from){
         pfrom=new navobjects.WayPoint();
         center.assign(pfrom);
     }
+    //check if we change the mode - in this case we always set a new from
+    if (!this.currentLeg.active){
+        opt_keep_from=false;
+    }
+    else{
+        if (this.currentLeg.name){
+            //we had a route
+            if (mode == routeobjects.RoutingMode.WP || mode == routeobjects.RoutingMode.WPINACTIVE){
+                opt_keep_from=false;
+            }
+            else{
+                if (newWp && newWp.routeName != this.currentLeg.name){
+                    //we switched to a new route
+                    opt_keep_from=false;
+                }
+            }
+        }
+        else{
+            if (mode == routeobjects.RoutingMode.ROUTE){
+                opt_keep_from=false;
+            }
+        }
+    }
     if (! opt_keep_from) this.currentLeg.from=pfrom;
+    this.currentLeg.active=false;
     if (mode == routeobjects.RoutingMode.WP){
         this.currentLeg.to=newWp;
         this.currentLeg.name=undefined;
