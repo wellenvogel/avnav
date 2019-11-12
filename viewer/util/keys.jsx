@@ -131,6 +131,10 @@ let keys={
         routepage:{
             initialName:K,
             selectedPoint:K
+        },
+        downloadpage:{
+            type:K,
+            currentItems:K
         }
 
     },

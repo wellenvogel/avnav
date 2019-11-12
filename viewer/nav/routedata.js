@@ -762,6 +762,7 @@ RouteData.prototype.routeOff=function(){
  * @param opt_failCallback
  */
 RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_callbackData){
+    var self=this;
     return this._remoteRouteOperation("listroutes",{
         okcallback:function(data,param){
             if ((data.status && data.status!='OK') || (!data.items)) {
@@ -777,6 +778,7 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
                 avnav.assign(ri, data.items[i]);
                 ri.server = true;
                 ri.time=ri.time*1e3; //we receive TS in s
+                if (self.isActiveRoute(ri.name)) ri.active=true;
                 items.push(ri);
             }
             okCallback(items, param.callbackdata);
@@ -810,6 +812,7 @@ RouteData.prototype.listRoutesLocal=function(){
                 if (route.points) rtinfo.numpoints=route.points.length;
                 rtinfo.length=this.computeLength(0,route);
                 rtinfo.time=route.time;
+                if (this.isActiveRoute(rtinfo.name)) rtinfo.active=true;
 
             } catch(e){}
             rt.push(rtinfo);

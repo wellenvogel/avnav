@@ -14,6 +14,7 @@ import AddressPage from './gui/AddressPage.jsx';
 import StatusPage from './gui/StatusPage.jsx';
 import WpaPage from './gui/WpaPage.jsx';
 import RoutePage from './gui/RoutePage.jsx';
+import DownloadPage from './gui/DownloadPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -80,7 +81,8 @@ const pages={
     addresspage:AddressPage,
     statuspage:StatusPage,
     wpapage:WpaPage,
-    routepage:RoutePage
+    routepage:RoutePage,
+    downloadpage:DownloadPage
 };
 class Router extends Component {
     render() {

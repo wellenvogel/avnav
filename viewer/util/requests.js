@@ -50,6 +50,9 @@ const handleJson=(rurl,requestOptions,options)=>{
                         return;
                     }
                 }
+                if (! json){
+                    reject("empty response");
+                }
                 if ( ! (options && options.checkOk !== undefined && ! options.checkOk)){
                     if (! json.status || (json.status !== 'OK' && json.status != 'ok')){
                         reject("status: "+json.status);

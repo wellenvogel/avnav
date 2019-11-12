@@ -590,6 +590,11 @@ routeobjects.RouteInfo=function(name, opt_server){
      * @type {number}
      */
     this.time=0;
+    /**
+     * active route (at the time of info creation...)
+     * @type {boolean}
+     */
+    this.active=false;
 };
 routeobjects.FormattedPoint=function(){
     this.idx=0;
