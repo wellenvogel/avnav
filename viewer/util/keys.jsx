@@ -136,6 +136,9 @@ let keys={
             type:K,
             currentItems:K,
             downloadParameters:K,
+            fileInputKey:K,
+            enableUpload:K,
+            uploadInfo:K,
         }
 
     },

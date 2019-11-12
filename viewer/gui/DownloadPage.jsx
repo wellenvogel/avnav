@@ -16,9 +16,12 @@ import Toast from '../util/overlay.js';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
+import routeobjects from '../nav/routeobjects.js';
 import Formatter from '../util/formatter.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
+import Helper from '../util/helper.js';
 
+const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
 
 const headlines={
@@ -217,16 +220,18 @@ const deleteItem=(info)=>{
 };
 
 const startServerDownload=(type,name,opt_url,opt_json)=>{
+    let action=undefined;
     let filename=name;
-    if (type == 'route') filename+=".gpx";
-    let action=PropertyHandler.getProperties().navUrl+"/"+filename;
-    let old=globalStore.getData(keys.gui.downloadpage.downloadParameters,{count:1}).count||0;
+    if (filename) {
+        if (type == 'route') filename += ".gpx";
+        action = PropertyHandler.getProperties().navUrl + "/" + filename;
+    }
     globalStore.storeData(keys.gui.downloadpage.downloadParameters,{
         name:name,
         url:opt_url,
         type: type,
         action:action,
-        count:old+1, //have a count to always trigger an update
+        count:(new Date()).getTime(), //have a count to always trigger an update
         json:opt_json
     });
 };
@@ -268,6 +273,156 @@ const download=(info)=>{
     }
 };
 
+const resetUpload=()=>{
+    globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
+};
+const runUpload=(ev)=>{
+    let type=globalStore.getData(keys.gui.downloadpage.type);
+    if (! type) return;
+    if (type == 'chart'){
+        return uploadChart(ev.target);
+    }
+    if (type == 'route'){
+        return uploadRoute(ev.target);
+    }
+    resetUpload();
+};
+
+const entryExists=(name)=>{
+    let current=globalStore.getData(keys.gui.downloadpage.currentItems,[]);
+    return findInfo(current,{name:name})>=0;
+};
+
+const uploadChart=(fileObject)=>{
+    if (fileObject.files && fileObject.files.length > 0) {
+        let file = fileObject.files[0];
+        if (! Helper.endsWith(file.name,".gemf")){
+            Toast.Toast("upload only for .gemf files");
+            resetUpload();
+            return;
+        }
+        let current=globalStore.getData(keys.gui.downloadpage.currentItems,[]);
+        for (let i=0;i<current.length;i++){
+            let fname=current[i].name+".gemf";
+            if (current[i].url && Helper.startsWith(current[i].url,"/gemf") && fname==file.name){
+                Toast.Toast("file "+file.name+" already exists");
+                resetUpload();
+                return;
+            }
+        }
+        resetUpload();
+        directUpload('chart',file);
+    }
+};
+
+const UploadIndicator = Dynamic((info)=> {
+    let props=info.uploadInfo;
+    if (! props || !props.xhdr) return null;
+    let percentComplete = props.total ? 100 * props.loaded / props.total : 0;
+    var doneStyle = {
+        width: percentComplete + "%"
+    };
+    return (
+        <div className="avn_download_progress">
+            <div className="avn_download_progress_container">
+                <div className="avn_download_progress_info">{props.loaded + "/" + props.total}</div>
+                <div className="avn_download_progress_display">
+                    <div className="avn_progress_bar_done" style={doneStyle}></div>
+                </div>
+            </div>
+            <button className="DownloadPageUploadCancel button" onClick={()=>{
+                if (props.xhdr) props.xhdr.abort();
+                }}
+                />
+        </div>
+    );
+}, {
+   storeKeys:{uploadInfo: keys.gui.downloadpage.uploadInfo}
+});
+const directUpload=(type,file)=>{
+    let url=PropertyHandler.getProperties().navUrl+ "?request=upload&type="+type+"&filename=" + encodeURIComponent(file.name);
+    Helper.uploadFile(url, file, {
+        self: self,
+        starthandler: function(param,xhdr){
+            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{
+                xhdr:xhdr
+            });
+        },
+        errorhandler: function (param, err) {
+            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
+            Toast.Toast("upload failed: " + err.statusText);
+        },
+        progresshandler: function (param, ev) {
+            if (ev.lengthComputable) {
+                let old=globalStore.getData(keys.gui.downloadpage.uploadInfo);
+                globalStore.storeData(keys.gui.downloadpage.uploadInfo,
+                    assign({},old,{
+                    total:ev.total,
+                    loaded: ev.loaded
+                }));
+            }
+        },
+        okhandler: function (param, data) {
+            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
+            setTimeout(function(){
+                fillData();
+            },1500);
+        }
+    });
+};
+
+const uploadRoute=(fileObject)=> {
+    if (fileObject.files && fileObject.files.length > 0) {
+        let file = fileObject.files[0];
+        resetUpload();
+        if (!Helper.endsWith(file.name, ".gpx")) {
+            Toast.Toast("only .gpx routes");
+            return false;
+        }
+        var rname = file.name.replace(".gpx", "");
+        if (file.size) {
+            if (file.size > MAXUPLOADSIZE) {
+                Toast.Toast("file is to big, max allowed: " + MAXUPLOADSIZE);
+                return;
+            }
+        }
+        if (!window.FileReader) {
+            Toast.Toast("your browser does not support FileReader, cannot upload");
+            return;
+        }
+        var reader = new FileReader();
+        reader.onloadend = ()=> {
+            var xml = reader.result;
+            if (!xml) {
+                Toast.Toast("unable to load file " + file.name);
+                return;
+            }
+            let route = undefined;
+            try {
+                route = new routeobjects.Route("");
+                route.fromXml(xml);
+            } catch (e) {
+                Toast.Toast("unable to parse route from " + file.name + ", error: " + e);
+                return;
+            }
+            if (!route.name || route.name == "") {
+                Toast.Toast("route from " + file.name + " has no route name");
+                return;
+            }
+            if (entryExists(route.name)) {
+                Toast.Toast("route with name " + route.name + " in file " + rname + " already exists");
+                return false;
+            }
+            if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
+            RouteHandler.saveRoute(route, function () {
+                fillData();
+            });
+
+        };
+        reader.readAsText(file);
+    }
+}
+
 class DownloadForm extends React.Component {
     constructor(props) {
         super(props);
@@ -304,6 +459,28 @@ const DynamicForm=Dynamic(DownloadForm,{
     }
 });
 
+class UploadForm extends React.Component{
+    constructor(props){
+        super(props);
+    }
+    componentDidMount(){
+        if (this.refs.fileInput) this.refs.fileInput.click();
+    }
+    componentDidUpdate(){
+        if (this.refs.fileInput) this.refs.fileInput.click();
+    }
+    render(){
+        if (!this.props.enableUpload) return null;
+        return(
+        <form className="hidden" method="post">
+            <input type="file" ref="fileInput" name="file" key={this.props.fileInputKey} onChange={this.props.startUpload}/>
+        </form>
+        );
+    }
+}
+
+const DynamicUploadForm=Dynamic(UploadForm);
+
 class DownloadPage extends React.Component{
     constructor(props){
         super(props);
@@ -315,7 +492,13 @@ class DownloadPage extends React.Component{
         }
         globalStore.storeData(keys.gui.downloadpage.type,type);
         globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
+        globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
+        globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
         fillData();
+    }
+    componentWillUnmount(){
+        let uploadInfo=globalStore.getData(keys.gui.downloadpage.uploadInfo,{});
+        if (uploadInfo.xhdr) uploadInfo.xhdr.abort();
     }
     getButtons(type){
         let allowTypeChange=! (this.props.options && this.props.options.allowChange === false);
@@ -341,7 +524,12 @@ class DownloadPage extends React.Component{
             {
                 name:'DownloadPageUpload',
                 visible: type == 'route' || type =='chart',
-                onClick:()=>{}
+                onClick:()=>{
+                    globalStore.storeMultiple({key:(new Date()).getTime(),enable:true},{
+                        key: keys.gui.downloadpage.fileInputKey,
+                        enable: keys.gui.downloadpage.enableUpload
+                    });
+                }
             },
             {
                 name: 'Cancel',
@@ -377,11 +565,19 @@ class DownloadPage extends React.Component{
                                 }}
                             />
                             <DynamicForm/>
+                            <DynamicUploadForm
+                                storeKeys={{
+                                    fileInputKey: keys.gui.downloadpage.fileInputKey,
+                                    enableUpload: keys.gui.downloadpage.enableUpload
+                                }}
+                                startUpload={runUpload}
+                            />
+                            <UploadIndicator/>
                             </React.Fragment>
                         }
                 buttonList={self.buttons}
                 storeKeys={{
-                    type:keys.gui.downloadpage.type,
+                    type:keys.gui.downloadpage.type
                 }}
                 updateFunction={(state)=>{
                     let rt={};
