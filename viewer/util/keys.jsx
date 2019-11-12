@@ -134,7 +134,8 @@ let keys={
         },
         downloadpage:{
             type:K,
-            currentItems:K
+            currentItems:K,
+            downloadParameters:K,
         }
 
     },

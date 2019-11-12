@@ -216,6 +216,94 @@ const deleteItem=(info)=>{
     });
 };
 
+const startServerDownload=(type,name,opt_url,opt_json)=>{
+    let filename=name;
+    if (type == 'route') filename+=".gpx";
+    let action=PropertyHandler.getProperties().navUrl+"/"+filename;
+    let old=globalStore.getData(keys.gui.downloadpage.downloadParameters,{count:1}).count||0;
+    globalStore.storeData(keys.gui.downloadpage.downloadParameters,{
+        name:name,
+        url:opt_url,
+        type: type,
+        action:action,
+        count:old+1, //have a count to always trigger an update
+        json:opt_json
+    });
+};
+
+const download=(info)=>{
+    if (info) {
+        if (avnav.android) {
+            if (info.type == "track") {
+                avnav.android.downloadTrack(info.name);
+                return;
+            }
+            if (info.type == "route") {
+                RouteHandler.fetchRoute(info.name, !info.server, (data)=> {
+                        avnav.android.downloadRoute(data.toJsonString());
+                    },
+                    (err)=> {
+                        Toast.Toast("unable to get route " + info.name);
+                    });
+            }
+            return;
+        }
+        else {
+            if (info.type == "track") startServerDownload(info.type,info.url ? info.url : info.name);
+            else {
+                if (info.type == "route") {
+                    if (info.server) startServerDownload(info.type,info.name);
+                    else {
+                        RouteHandler.fetchRoute(info.name, true, (data)=> {
+                                startServerDownload(info.type,info.name, undefined, data.toJsonString());
+                            },
+                            (err)=> {
+                                Toast.Toast("unable to get route " + info.name);
+                            });
+                    }
+                }
+                else startServerDownload(info.type,info.name + ".gemf", info.url);
+            }
+        }
+    }
+};
+
+class DownloadForm extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    componentDidMount(){
+        if (this.refs.form) this.refs.form.submit();
+    }
+    componentDidUpdate(){
+        if (this.refs.form) this.refs.form.submit();
+    }
+
+    render() {
+        let props=this.props.downloadParameters||{};
+        if (! props.action) return null;
+        return (
+            <form
+                className="hidden downloadForm"
+                action={props.action}
+                ref="form"
+                method="get"
+                >
+                <input type="hidden" name="request" value="download"/>
+                <input type="hidden" name="name" value={props.json?"":props.name}/>
+                <input type="hidden" name="url" value={props.url}/>
+                <input type="hidden" name="type" value={props.type}/>
+                {props.json ? <input type = "hidden" name="_json" value={props.json}/>:null}
+            </form>
+        );
+    }
+}
+const DynamicForm=Dynamic(DownloadForm,{
+    storeKeys:{
+        downloadParameters:keys.gui.downloadpage.downloadParameters
+    }
+});
+
 class DownloadPage extends React.Component{
     constructor(props){
         super(props);
@@ -226,6 +314,7 @@ class DownloadPage extends React.Component{
             type=props.options.downloadtype;
         }
         globalStore.storeData(keys.gui.downloadpage.type,type);
+        globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
         fillData();
     }
     getButtons(type){
@@ -269,6 +358,7 @@ class DownloadPage extends React.Component{
                 style={self.props.style}
                 id="downloadpage"
                 mainContent={
+                            <React.Fragment>
                             <DynamicList
                                 itemClass={DownloadItem}
                                 scrollable={true}
@@ -279,14 +369,19 @@ class DownloadPage extends React.Component{
                                 onItemClick={(item,data)=>{
                                     console.log("click on "+item.name+" type="+data);
                                     if (data == 'delete'){
-                                        deleteItem(item);
+                                        return deleteItem(item);
+                                    }
+                                    if (data == 'download'){
+                                        return download(item);
                                     }
                                 }}
                             />
+                            <DynamicForm/>
+                            </React.Fragment>
                         }
                 buttonList={self.buttons}
                 storeKeys={{
-                    type:keys.gui.downloadpage.type
+                    type:keys.gui.downloadpage.type,
                 }}
                 updateFunction={(state)=>{
                     let rt={};
