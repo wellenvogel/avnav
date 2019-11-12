@@ -131,6 +131,12 @@ button.button{
   font-size: @normalButtonFont;
 
 }
+button.smallButton{
+  .buttonBase();
+  width: 2em;
+  height: 2em;
+  font-size: 1rem;
+}
 button.active{
   border: 0.3em solid ;
   .nightBorderFade(@colorGreen);
@@ -816,9 +822,7 @@ span.valuePrefix{
     }
 
   }
-  .selected{
-    .nightBackColor(@colorSelection);
-  }
+
 }
 .editRouteName{
   label{
@@ -828,4 +832,63 @@ span.valuePrefix{
   .avnCheckbox{
     vertical-align: middle;
   }
+}
+
+#downloadpage{
+  .downloadItemData{
+    .flex(1);
+    padding-left: 0.8em;
+    padding-right: 0.8em;
+    .flex-display();
+    .flex-direction(row);
+    .flex-align-items(center);
+    @media(max-width: 35em){
+      .flex-direction(column);
+    }
+    .date{
+      .mdText2();
+      width: 11.5em;
+    }
+    .info{
+      .flex(1);
+    }
+  }
+  .listrasimage{
+    width:2em;
+    height:2em;
+    margin: 0.2em;
+    background-image: url(images/icons-new/plug.svg);
+    background-size: contain;
+  }
+  .downloadProgress{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1em 1em 1em 1em;
+    background-color: lightgrey;
+    .flex-display();
+    .nightColors();
+    .progressContainer{
+      .flex(1);
+    }
+    .progressDisplay {
+      margin: 0.5em 0.5em 0.5em 0.5em;
+      height: 2em;
+      display: block;
+      border: 1px solid;
+      margin-left: 1em;
+      margin-bottom: 1em;
+      margin-right: 1em;
+    }
+    .progressInfo{
+      display: block;
+      text-align: center;
+    }
+    .progressDone{
+      height: 100%;
+      .nightBackColor(blue);
+    }
+  }
+
 }

@@ -143,9 +143,9 @@ const DownloadItem=(props)=>{
     if (props.type === "track" || props.type === "route" || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
         showDownload=true;
     }
-    let  cls="avn_download_list_entry";
+    let  cls="listEntry";
     if (props.active){
-        cls+=" avn_download_active_entry";
+        cls+=" activeEntry";
     }
     let showDelete=!props.active;
     if (props.canDelete !== undefined){
@@ -155,17 +155,17 @@ const DownloadItem=(props)=>{
         <div className={cls} onClick={function(ev){
             props.onClick('select')
         }}>
-            {(showDelete && ! props.active) &&<button className="avn_download_btnDelete avn_smallButton" onClick={(ev)=>{
+            {(showDelete && ! props.active) &&<button className="Delete smallButton" onClick={(ev)=>{
                 ev.preventDefault();
                 ev.stopPropagation();
                 props.onClick('delete');
             }}/>}
-            <div className="avn_download_itemwrapper">
-                <div className="avn_download_listdate">{dp.timeText}</div>
-                <div className="avn_download_listinfo">{dp.infoText}</div>
+            <div className="downloadItemData">
+                <div className="date">{dp.timeText}</div>
+                <div className="info">{dp.infoText}</div>
             </div>
-            {showRas && <div className="avn_download_listrasimage"></div>}
-            { showDownload && <button className="avn_download_btnDownload avn_smallButton" onClick={
+            {showRas && <div className="listrasimage"></div>}
+            { showDownload && <button className="Download smallButton" onClick={
                 (ev)=>{
                     ev.stopPropagation();
                     ev.preventDefault();
@@ -323,11 +323,11 @@ const UploadIndicator = Dynamic((info)=> {
         width: percentComplete + "%"
     };
     return (
-        <div className="avn_download_progress">
-            <div className="avn_download_progress_container">
-                <div className="avn_download_progress_info">{props.loaded + "/" + props.total}</div>
-                <div className="avn_download_progress_display">
-                    <div className="avn_progress_bar_done" style={doneStyle}></div>
+        <div className="downloadProgress">
+            <div className="progressContainer">
+                <div className="progressInfo">{props.loaded||0 + "/" + props.total||0}</div>
+                <div className="progressDisplay">
+                    <div className="progressDone" style={doneStyle}></div>
                 </div>
             </div>
             <button className="DownloadPageUploadCancel button" onClick={()=>{
@@ -421,7 +421,7 @@ const uploadRoute=(fileObject)=> {
         };
         reader.readAsText(file);
     }
-}
+};
 
 class DownloadForm extends React.Component {
     constructor(props) {

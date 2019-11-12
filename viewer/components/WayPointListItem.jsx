@@ -24,7 +24,7 @@ module.exports=reactCreateClass({
         var info;
         var self=this;
         var classNames="avn_route_list_entry "+this.props.addClass||""+" "+this.props.className||"";
-        if (self.props.selected) classNames+=" selected";
+        if (self.props.selected) classNames+=" activeEntry";
         return(
         <div className={classNames} onClick={self.props.onClick} >
             <button className="avn_route_btnDelete avn_smallButton"
