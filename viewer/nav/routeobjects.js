@@ -5,6 +5,7 @@
 var navobjects=require('./navobjects');
 var NavCompute=require('./navcompute');
 var Formatter=require('../util/formatter');
+var assign=require('object-assign');
 var routeobjects={};
 
 
@@ -597,24 +598,41 @@ routeobjects.FormattedPoint=function(){
     this.course="---";
     this.distance="---";
 };
+
+routeobjects.RoutePoint=function(waypoint){
+    navobjects.WayPoint.call(this);
+    this.update(waypoint);
+    this.idx=0;
+    this.course=undefined;
+    this.distance=undefined;
+    this.selected=false;
+};
+avnav.inherits(routeobjects.RoutePoint,navobjects.WayPoint);
+routeobjects.formatRoutePoint=function(routePoint){
+    var rt=assign({},routePoint);
+    rt.distance=Formatter.formatDistance(routePoint.distance).replace(/^/g,"");
+    rt.course=Formatter.formatDirection(routePoint.course).replace(/^ /g,"");
+    rt.latlon=Formatter.formatLonLats(routePoint);
+    return rt;
+};
+
 /**
- * get a list of formatted waypoint info
- * @returns {routeobjects.FormattedPoint[]}
+ * get a list of waypoint info
+ * extended by distance, index and course
+ * @returns {routeobjects.RoutePoint[]}
  */
-routeobjects.Route.prototype.getFormattedPoints=function(opt_selectedIdx){
+routeobjects.Route.prototype.getRoutePoints=function(opt_selectedIdx){
     var rt=[];
     var i=0;
     for (i=0;i<this.points.length;i++){
-        var formatted=new routeobjects.FormattedPoint();
+        var formatted=new routeobjects.RoutePoint(this.points[i]);
         formatted.idx=i;
         formatted.name=this.points[i].name?this.points[i].name:i+"";
-        formatted.course="---";
-        formatted.distance="---";
-        formatted.latlon=Formatter.formatLonLats(this.points[i]);
+        formatted.routeName=this.name;
         if (i>0) {
             var dst=NavCompute.computeDistance(this.points[i-1],this.points[i]);
-            formatted.course=Formatter.formatDecimal(dst.course,3,0);
-            formatted.distance=Formatter.formatDecimal(dst.dtsnm,3,1);
+            formatted.course=dst.course;
+            formatted.distance=dst.dtsnm;
         }
         if (i == opt_selectedIdx){
             formatted.selected=true;

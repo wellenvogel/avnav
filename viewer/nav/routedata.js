@@ -498,20 +498,18 @@ RouteData.prototype.invertRoute=function(){
 /**
  * set a new route to be edited
  * @param {routeobjects.Route} route
- * @param opt_keepActive if set, the active route would be updated if we currently edit it
  */
 
-RouteData.prototype.setNewEditingRoute=function(route,opt_keepActive){
+RouteData.prototype.setNewEditingRoute=function(route,opt_force_activate){
     if (! route) return;
+    var keepActive=opt_force_activate||this.isActiveRoute(route.name);
     var currentTarget=undefined;
-    if (! opt_keepActive){
+    if (! keepActive){
         this.editingRoute=route.clone();
     }
     else {
-        if (this.isEditingActiveRoute()) {
-            currentTarget = this.getCurrentLegTarget();
-        }
-        if (! this.editingRoute) this.editingRoute=new routeobjects.Route();
+        currentTarget = this.getCurrentLegTarget();
+        this.startEditingRoute(); //this will set the editing to be equal the active
         this.editingRoute.assignFrom(route);
     }
     this._findBestMatchingPoint();

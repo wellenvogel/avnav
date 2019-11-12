@@ -48,7 +48,6 @@ window.avnav={};
     avnav.gui.Page=require('./gui/page.jsx');
     require('./gui/navpage.jsx');
     require('./gui/settingspage.jsx');
-    require('./gui/routepage.jsx');
     require('./gui/downloadpage.jsx');
     require('./avnav_viewer.js');
 }());

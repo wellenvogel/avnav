@@ -795,12 +795,15 @@ Navpage.prototype.updateRoutePoints=function(opt_initial,opt_centerActive){
     if (! rebuild) rebuild=this.lastRoute.differsTo(route);
     this.lastRoute=route.clone();
     if (rebuild){
-        var waypoints=route.getFormattedPoints();
+        var waypoints=route.getRoutePoints();
+        var displayPoints=[];
         waypoints.forEach(function(waypoint){
-           waypoint.key=waypoint.idx;
+            var displayPoint=routeobjects.formatRoutePoint(waypoint);
+            displayPoint.key=displayPoint.idx;
+            displayPoints.push(displayPoint);
         });
         this.store.storeData(keys.waypointList,{
-            itemList:waypoints,
+            itemList:displayPoints,
             options: {showLatLon: this.gui.properties.getProperties().routeShowLL}
         });
     }
