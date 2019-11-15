@@ -90,6 +90,7 @@ let keys={
             windowDimensions: K,
             layout: K, //the loaded layout object
             layoutSequence: K, //updated on layout load
+            reloadSequence: K //will be changed if new data from server
         },
         navpage:{
             zoom: K,

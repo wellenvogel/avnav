@@ -572,6 +572,7 @@ Navpage.prototype.widgetClick=function(widgetDescription,opt_data){
     }
     if (widgetDescription.name == "ActiveRoute"){
         this.navobject.getRoutingHandler().startEditingRoute();
+        this.navobject.getRoutingHandler().setRouteForPage();
         this.gui.showPage("routepage");
         return;
     }
@@ -581,6 +582,7 @@ Navpage.prototype.widgetClick=function(widgetDescription,opt_data){
         return;
     }
     if (widgetDescription.name == "EditRoute"){
+        this.navobject.getRoutingHandler().setRouteForPage();
         this.gui.showPage("routepage");
         return;
     }
@@ -839,6 +841,7 @@ Navpage.prototype.checkRouteWritable=function(){
     var ok=OverlayDialog.confirm("you cannot edit this route as you are disconnected. OK to select a new name",this.getDialogContainer());
     var self=this;
     ok.then(function(){
+        self.navobject.getRoutingHandler().setRouteForPage();
         self.gui.showPage('routepage');
     });
     return false;

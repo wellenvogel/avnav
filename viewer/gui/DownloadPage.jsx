@@ -118,10 +118,7 @@ const fillData=()=>{
 };
 
 const changeType=(newType)=>{
-    if (newType != globalStore.getData(keys.gui.downloadpage.type)) {
-        globalStore.storeData(keys.gui.downloadpage.type, newType);
-        fillData();
-    }
+    globalStore.storeData(keys.gui.downloadpage.type, newType);
 };
 
 const DownloadItem=(props)=>{
@@ -577,13 +574,16 @@ class DownloadPage extends React.Component{
                         }
                 buttonList={self.buttons}
                 storeKeys={{
-                    type:keys.gui.downloadpage.type
+                    type:keys.gui.downloadpage.type,
+                    reloadSequence:keys.gui.global.reloadSequence
                 }}
                 updateFunction={(state)=>{
                     let rt={};
                     rt.title=headlines[state.type];
                     rt.buttonList=self.getButtons(state.type);
                     rt.type=state.type;
+                    //as we will only be called if the type really changes - we can fill the display...
+                    fillData();
                     return rt;
                 }}
                 />
