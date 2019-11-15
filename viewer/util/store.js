@@ -39,11 +39,21 @@ Store.prototype.storeData=function(key,data,opt_noCallbacks){
  * @param keyTranslations objectKey:storeKey - can be undefined - no translations
  * @param opt_noCallbacks: either true to omit all callbacks or a callback reference to omit this
  */
-Store.prototype.storeMultiple=function(data,keyTranslations,opt_noCallbacks){
+Store.prototype.storeMultiple=function(data,keyTranslations,opt_noCallbacks,opt_omitUndefined){
+    let self=this;
     let changeKeys=[];
+    if (data === undefined && keyTranslations == undefined) return;
     for (let k in (keyTranslations !== undefined)?keyTranslations:data){
         let storeKey=(keyTranslations!==undefined)? keyTranslations[k]:k;
-        let hasChanged=this.storeData(storeKey,data[k],true);
+        let v=(data !== undefined)?data[k]:undefined;
+        if (typeof(storeKey) === 'object'){
+            let subChanged=self.storeMultiple(v,storeKey,true,opt_omitUndefined);
+            changeKeys=changeKeys.concat(subChanged);
+            continue;
+        }
+        let hasChanged=false;
+        if (v !== undefined || opt_omitUndefined !== true)
+            hasChanged=this.storeData(storeKey,v,true);
         if (hasChanged){
             changeKeys.push(storeKey);
         }
@@ -51,6 +61,7 @@ Store.prototype.storeMultiple=function(data,keyTranslations,opt_noCallbacks){
     if (changeKeys.length > 0 && (opt_noCallbacks !== true)){
         this.callCallbacks(changeKeys,opt_noCallbacks);
     }
+    return changeKeys;
 };
 
 /**

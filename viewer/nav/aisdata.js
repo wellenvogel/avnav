@@ -7,7 +7,7 @@ let Formatter=require('../util/formatter');
 let NavCompute=require('./navcompute');
 let navobjects=require('./navobjects');
 let globalStore=require('../util/globalstore.jsx');
-let keys=require('../util/keys.jsx');
+let keys=require('../util/keys.jsx').default;
 let PropertyHandler=require('../util/propertyhandler');
 /**
  * the handler for the ais data

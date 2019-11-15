@@ -8,7 +8,7 @@ var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
 var Overlay=require('../util/overlay');
 var globalStore=require('../util/globalstore.jsx');
-var keys=require('../util/keys.jsx');
+var keys=require('../util/keys.jsx').default;
 
 /**
  * the handler for the routing data

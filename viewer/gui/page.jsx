@@ -15,7 +15,7 @@ var assign=require('object-assign');
 var equals=require('shallow-equals');
 var Measure=require('react-measure').default;
 var WidgetFactory=require('../components/WidgetFactory.jsx');
-var keys=require('../util/keys.jsx');
+var keys=require('../util/keys.jsx').default;
 var globalStore=require('../util/globalstore.jsx');
 
 

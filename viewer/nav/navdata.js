@@ -10,7 +10,7 @@ var Formatter=require('../util/formatter');
 var NavCompute=require('./navcompute');
 var navobjects=require('./navobjects');
 var globalStore=require('../util/globalstore.jsx');
-var keys=require('../util/keys.jsx');
+var keys=require('../util/keys.jsx').default;
 var PropertyHandler=require('../util/propertyhandler');
 
 

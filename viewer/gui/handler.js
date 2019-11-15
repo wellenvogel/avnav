@@ -6,7 +6,7 @@ avnav.provide('avnav.gui.Handler');
 avnav.provide('avnav.gui.PageEvent');
 avnav.provide('avnav.gui.AndroidEvent');
 var NavData=require('../nav/navdata');
-var keys=require('../util/keys.jsx');
+var keys=require('../util/keys.jsx').default;
 var globalStore=require('../util/globalstore.jsx');
 var history=require('../util/history');
 

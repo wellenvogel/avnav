@@ -14,7 +14,7 @@ let EmptyWidget=require('./EmptyWidget');
 let WindGraphics=require('./WindGraphics');
 let DirectWidget=require('./DirectWidget.jsx');
 let ZoomWidget=require('./ZoomWidget.jsx');
-let keys=require('../util/keys.jsx');
+let keys=require('../util/keys.jsx').default;
 let AlarmWidget=require('./AlarmWidget.jsx');
 
 let widgetList=[

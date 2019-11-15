@@ -6,7 +6,7 @@ let NavData=require('./navdata');
 let StoreApi=require('../util/storeapi');
 let Base=require('../base');
 let globalStore=require('../util/globalstore.jsx');
-let keys=require('../util/keys.jsx');
+let keys=require('../util/keys.jsx').default;
 let Formatter=require('../util/formatter');
 let assign=require('object-assign');
 

@@ -1,3 +1,4 @@
+import Helper from './helper.js';
 /**
  * Created by andreas on 20.11.16.
  * a simple interface to register for value updates
@@ -31,12 +32,35 @@ DataProvider.prototype.getData=function(key){
  /**
  * a callback description
  * @param {UpdateCallback} callback the object having a "dataChanged" function
- * @param {string[]} keys the keys (can be empty - call back for all)
+ * @param {string[]||object} keys the keys (can be empty - call back for all)
+  *       if it is an object it should have a __path property for the real key
+  *       in this case it is considered to ba a prefix
  * @constructor
  */
 let CallbackDescriptor=function(callback,keys){
     this.callback=callback;
+    if ( (typeof(keys) === 'object' && typeof(keys.__path) !== undefined)){
+        this.keys=keys.__path;
+        this.prefix=true;
+    }
     this.keys=keys;
+    this.prefix=false;
+};
+CallbackDescriptor.prototype.isCallbackFor=function(keylist){
+    if (this.prefix){
+        for (let k in keylist){
+            if (Helper.startsWith(keylist[k],this.keys)) return true;
+        }
+        return false;
+    }
+    if (! keylist || keylist.length === 0) return true;
+    if (! this.keys || this.keys.length === 0) return true;
+    for (let k in this.keys){
+        for (let t in keylist){
+            if (this.keys[k] === keylist[t] ) return true;
+        }
+    }
+    return false;
 };
 /**
  * @class
@@ -70,24 +94,7 @@ StoreApi.prototype._findCallback=function(callback){
     }
     return -1;
 };
-/**
- * check if at least one of the keys in kyelist is contained in arr
- * returns true also if the keylist is empty
- * @param keylist
- * @param arr
- * @private
- */
-StoreApi.prototype._contains=function(keylist,arr){
-    if (! keylist || keylist.length === 0) return true;
-    if (! arr || arr.length === 0) return true;
-    let found=false;
-    keylist.forEach(function(key){
-       arr.forEach(function(el){
-           if (el == key) found=true;
-       })
-    });
-    return found;
-};
+
 
 /**
  * register a callback handler
@@ -148,7 +155,7 @@ StoreApi.prototype.callCallbacks=function(keys,opt_omitHandler){
     let self=this;
     this.callbacks.forEach(function(cbItem){
         if (opt_omitHandler && opt_omitHandler === cbItem.callback)return;
-        if (self._contains(keys,cbItem.keys)){
+        if (cbItem.isCallbackFor(keys)){
            cbItem.callback.dataChanged(self,keys);
         }
     });
@@ -187,7 +194,13 @@ StoreApi.prototype.getMultiple=function(keys){
     if (! (storeKeys instanceof Array)){
         if (storeKeys instanceof Object){
             for (let k in storeKeys){
-                let v=self.getData(storeKeys[k]);
+                let v=undefined;
+                if (typeof(storeKeys[k]) === 'object'){
+                    v=self.getMultiple(storeKeys[k]);
+                }
+                else {
+                    v = self.getData(storeKeys[k]);
+                }
                 rt[k]=v;
             }
             return rt;

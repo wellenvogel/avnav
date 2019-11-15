@@ -92,7 +92,7 @@ class Router extends Component {
         }
         let className="pageFrame "+ (this.props.nightMode?"nightMode":"");
         let style={};
-        if (this.props.nightMode) style['opacity']=PropertyHandler.getValueByName('nightFade')/100;
+        if (this.props.nightMode) style['opacity']=PropertyHandler.getProperties().nightFade/100;
         return <div className={className}>
                 <Page style={style} options={this.props.options} location={this.props.location}/>
             </div>

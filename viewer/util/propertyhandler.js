@@ -5,8 +5,37 @@
 import Properties from './properties.jsx';
 import Toast from './overlay.js';
 import globalStore from './globalstore.jsx';
-import keys from './keys.jsx';
+import keys,{getKeyDescriptions,Property,keyNodeToString,getDefaultKeyValues} from './keys.jsx';
 
+/**
+ * filter out some tree ob objects
+ * @param source
+ * @param filterFunction will be called with the current leaf from source and a
+ *        path being constructed of hierarchies concat by .
+ * @param opt_basepath to be prepended to the path
+ * @returns {undefined}
+ */
+const filterObjectTree=(source,filterFunction,opt_basepath)=>{
+    let rt=undefined;
+    let path=opt_basepath;
+    for (let k in source) {
+        let currentPath=path!==undefined?path+"."+k:k;
+        if (typeof(source[k]) === 'object') {
+            let sub=filterObjectTree(source[k],filterFunction,currentPath);
+            if (sub !== undefined) {
+                if (rt === undefined) rt={};
+                rt[k]=sub;
+            }
+        }
+        else {
+            if (filterFunction(source[k], currentPath)) {
+                if (rt === undefined) rt = {};
+                rt[k] = source[k];
+            }
+        }
+    }
+    return rt;
+};
 /**
  * an event being fired when properties are changed
  * @param {PropertyHandler} propertyHandler
@@ -75,29 +104,42 @@ const extend=(obj, ext)=> {
  */
 class PropertyHandler {
     constructor(propertyDescriptions) {
-        this.propertyDescriptions = propertyDescriptions;
-        this.currentProperties = {};
-        this.extractProperties(this.currentProperties, "", this.propertyDescriptions);
-        this.userData = {};
-        //a fast access to the properties that we sync with the store
-        this.storeProperties=undefined;
-        this.extractProperties=this.extractProperties.bind(this);
-        this.getDescriptionByName=this.getDescriptionByName.bind(this);
-        this.setValue=this.setValue.bind(this);
-        this.getValueByName=this.getValueByName.bind(this);
-        this.setUserDataByDescr=this.setUserDataByDescr.bind(this);
+        let self=this;
+        this.propertyDescriptions = getKeyDescriptions(true);
         this.setValueByName=this.setValueByName.bind(this);
         this.getProperties=this.getProperties.bind(this);
         this.saveUserData=this.saveUserData.bind(this);
         this.initialize=this.initialize.bind(this);
         this.updateLayout=this.updateLayout.bind(this);
         this.getButtonFontSize=this.getButtonFontSize.bind(this);
-        this.filterUserData=this.filterUserData.bind(this);
         this.getColor=this.getColor.bind(this);
         this.getAisColor=this.getAisColor.bind(this);
         this.incrementSequence=this.incrementSequence.bind(this);
         this.dataChanged=this.dataChanged.bind(this);
-        this.getValue=this.getValue.bind(this);
+        let defaults=getDefaultKeyValues();
+        globalStore.storeMultiple(defaults);
+        //register at the store for updates of our synced data
+        globalStore.register(this,keys.properties);
+        if (!window.localStorage) {
+            Toast.Toast("local storage is not available, seems that your browser is not HTML5... - application will not work");
+            return;
+        }
+        try {
+            let rawdata = localStorage.getItem(globalStore.getData(keys.properties.settingsName));
+            if (!rawdata) return;
+            let ndata = JSON.parse(rawdata);
+            if (ndata) {
+                let userData = filterObjectTree(ndata, (item, path)=> {
+                    let description = self.propertyDescriptions[path];
+                    if (!description) return;
+                    return item != globalStore.getData(path);
+                }, keyNodeToString(keys.properties));
+                globalStore.storeMultiple(userData, keys.properties, true, true);
+            }
+        }catch (e){
+            avnav.log("Exception reading user data "+e);
+        }
+        this.updateLayout();
     }
 
     incrementSequence(){
@@ -108,122 +150,10 @@ class PropertyHandler {
     }
 
 
-    /**
-     * extract (recursively) the current values of Property descriptions
-     * to an object structure (starting at base)
-     * call itself recursively
-     * @param {{}} base
-     * @param {string}path - the path to the object we are extracting (. sep)
-     * @param {{}} descriptions
-     */
-    extractProperties(base, path, descriptions) {
-        for (let k in descriptions) {
-            let d = descriptions[k];
-            let curpath = (path == "") ? k : path + "." + k;
-            if (d instanceof Properties.Property) {
-                base[k] = d.defaultv;
-                d.path = base; //set path to value holding object
-                d.pname = k;
-                d.completeName = curpath;
-            }
-            else {
-                if (d instanceof Object) {
-                    base[k] = {};
-                    this.extractProperties(base[k], curpath, d);
-                }
-            }
-        }
-    }
 
-    /**
-     * get a property description
-     * @param {string} name - path separated by .
-     * @returns Property
-     */
-    getDescriptionByName(name) {
-        let parr = name.split(".");
-        let current = this.propertyDescriptions;
-        for (let pidx in parr) {
-            current = current[parr[pidx]];
-            if (!current) return undefined;
-        }
-        if (current == this.propertyDescriptions) return undefined;
-        return current;
-    }
-
-    
-
-    /**
-     * set a property value (and write it to user data)
-     * @param value the value
-     * @param {Property} descr
-     * @returns {boolean}
-     */
-    setValue(descr, value,opt_omitStore) {
-        if (descr === undefined || !( descr instanceof Properties.Property)) return false;
-        descr.path[descr.pname] = value;
-        return this.setUserDataByDescr(descr, value,opt_omitStore);
-    }
-
-    /**
-     * get the current value of a property
-     * @param {Property} descr
-     */
-    getValue(descr){
-        if (descr === undefined || !( descr instanceof Properties.Property)) return undefined;
-        return descr.path[descr.pname];
-    }
-
-
-    /**
-     * get a property value by its name (separated by .)
-     * @param {string} name
-     * @returns {*}
-     */
-    getValueByName(name) {
-        let descr = this.getDescriptionByName(name); //ensure that this is really a property
-        return this.getValue(descr);
-    }
 
 ;
-    /**
-     * set a user data value (potentially creating intermediate objects)
-     * @param {Property} descr
-     * @param {string} value
-     * @returns {boolean}
-     */
-    setUserDataByDescr(descr, value,opt_omitStore) {
-        if (descr === undefined || !( descr instanceof Properties.Property)) return false;
-        let parr = descr.completeName.split(".");
-        let current = this.userData;
-        try {
-            for (let i = 0; i < (parr.length - 1); i++) {
-                let path = parr[i];
-                if (current[path] === undefined) {
-                    if (value == descr.defaultv) return true; //don't set user data when default...
-                    current[path] = {}
-                }
-                current = current[path];
-            }
-            let fname = parr[parr.length - 1];
-            if (value == descr.defaultv) {
-                if (current[fname] !== undefined) delete current[fname];
-            }
-            else {
-                current[parr[parr.length - 1]] = value;
-            }
-            if (! opt_omitStore ){
-                let storeKey=keys.properties[descr.completeName];
-                if (storeKey){
-                    globalStore.storeData(storeKey,value,this);
-                }
-            }
-            return true;
-        } catch (e) {
-            avnav.log("Exception when setting user data " + descr.completeName + ": " + e);
-        }
-        return false;
-    }
+
 
     /**
      * set a property value given the name
@@ -232,25 +162,25 @@ class PropertyHandler {
      * @returns {boolean}
      */
     setValueByName(name, value) {
-        let descr = this.getDescriptionByName(name); //ensure that this is really a property
-        return this.setValue(descr, value);
+        globalStore.storeData(keyNodeToString(keys.properties)+"."+name,value);
     }
 
 
     /**
      * get the current active properties
+     * @deprecated - expensive!
      * @returns {*}
      */
     getProperties() {
-        return this.currentProperties;
+        return globalStore.getMultiple(keys.properties);
     }
 
     /**
      * save the current settings
      */
-    saveUserData() {
-        let raw = JSON.stringify(this.userData);
-        localStorage.setItem(this.currentProperties.settingsName, raw);
+    saveUserData(data) {
+        let raw = JSON.stringify(data);
+        localStorage.setItem(globalStore.getData(keys.properties.settingsName), raw);
     }
 
 
@@ -259,52 +189,21 @@ class PropertyHandler {
      * this overwrites any current data
      */
     initialize() {
-        //register at the store for updates of our synced data
-        globalStore.register(this,keys.properties);
-        //keep a hash of the descriptions of the synced props for fast access
-        this.storeProperties={};
-        for (let propKey in keys.properties){
-            this.storeProperties[propKey]=this.getDescriptionByName(propKey);
-        }
-        if (!window.localStorage) {
-            Toast.Toast("local storage is not available, seems that your browser is not HTML5... - application will not work");
-            return;
-        }
-        let rawdata = localStorage.getItem(this.currentProperties.settingsName);
-        if (!rawdata) return;
-        let ndata = JSON.parse(rawdata);
-        if (ndata) {
-            this.userData = this.filterUserData(ndata);
-            extend(this.currentProperties, this.userData);
-        }
-        //fill initial data into the store
-        let storeData={};
-        for (let propKey in keys.properties){
-            let descr=this.storeProperties[propKey];
-            if (! descr) continue;
-            storeData[propKey]=this.getValue(descr);
-        }
-        globalStore.storeMultiple(storeData,keys.properties,this);
-        this.updateLayout();
+
 
     }
 
-    dataChanged(){
-        if (! this.storeProperties) return; //not initialized yet
-        let hasChanges=false;
+    dataChanged(store,storeKeys){
+        let self=this;
         let values=globalStore.getMultiple(keys.properties);
-        for (let propKey in values){
-            let description=this.storeProperties[propKey];
-            if (! description) continue;
-            if (values[propKey] != this.getValue(description)){
-                this.setValue(description,values[propKey],true);
-                hasChanges=true;
-            }
-        }
-        if (hasChanges){
-            this.saveUserData();
-            this.updateLayout();
-        }
+        this.saveUserData(
+            filterObjectTree(values,(item,path)=>{
+                let description=self.propertyDescriptions[path];
+                if (description === undefined) return false;
+                return item !== description.defaultv;
+            },keyNodeToString(keys.properties))
+        );
+        this.updateLayout();
     }
 
     /**
@@ -312,17 +211,17 @@ class PropertyHandler {
      */
     updateLayout() {
         applyLayoutLegacy(
-            this.getValue(this.propertyDescriptions.nightMode),
-            this.getValue(this.propertyDescriptions.nightFade),
-            this.getValue(this.propertyDescriptions.baseFontSize),
+            globalStore.getData(keys.properties.nightMode),
+            globalStore.getData(keys.properties.nightFade),
+            globalStore.getData(keys.properties.baseFontSize),
             this.getButtonFontSize()
         );
         this.incrementSequence();
     }
 
     getButtonFontSize() {
-        let numButtons = this.getValue(this.propertyDescriptions.maxButtons);
-        let currentButtonHeight = this.getValue(this.propertyDescriptions.style.buttonSize);
+        let numButtons = globalStore.getData(keys.properties.maxButtons);
+        let currentButtonHeight = globalStore.getData(keys.properties.style.buttonSize);
         let scale=1;
         let height = window.innerHeight;
         if (height !== undefined) {
@@ -333,34 +232,16 @@ class PropertyHandler {
         return currentButtonHeight * scale / 4;
     }
 
-    /**
-     * filter out only the allowed user data
-     * this filters only one level (for "old style" setUserData)
-     * @param data
-     * @returns {{}}
-     */
-    filterUserData(data) {
-        let allowed = {};
-        for (let key in this.propertyDescriptions) {
-            if (data[key] !== undefined)allowed[key] = data[key];
-        }
-        return allowed;
-    }
 
     getColor(colorName, addNightFade) {
-        let rt = this.getValueByName("style." + colorName);
-        if (rt === undefined) {
-            rt = this.getValueByName(colorName);
-        }
+        let rt = globalStore.getData(keyNodeToString(keys.properties.style)+"." + colorName);
         if (rt === undefined) return rt;
-        if ((addNightFade === undefined || addNightFade) && this.getValue(this.propertyDescriptions.nightMode)) {
-            let nf = this.getValue(this.propertyDescriptions.nightColorDim);
+        if ((addNightFade === undefined || addNightFade) && globalStore.getData(keys.properties.nightMode)) {
+            let nf = globalStore.getData(keys.properties.nightColorDim);
             return hex2rgba(rt, nf / 100);
         }
         return rt;
     }
-
-;
 
     getAisColor(currentObject) {
         let color = "";
@@ -385,7 +266,7 @@ class PropertyHandler {
 
 }
 
-module.exports=new PropertyHandler(Properties.propertyList);
+module.exports=new PropertyHandler();
 
 
 
