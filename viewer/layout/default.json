@@ -46,5 +46,37 @@
       {"name":"AisTarget"}
     ]
 
+  },
+  "navpage":{
+    "left_not_small":[
+      {"name":"CenterDisplay"},
+      {"name":"Zoom"},
+      {"name":"WindDisplay"},
+      {"name": "DepthDisplay"},
+      {"name":"AisTarget"},
+      {"name":"ActiveRoute"},
+      {"name":"LargeTime"}
+    ],
+    "top_small":[
+      {"name":"CenterDisplay"},
+      {"name":"DepthDisplay"},
+      {"name":"AisTarget"},
+      {"name":"EditRoute"},
+      {"name":"LargeTime"},
+      {"name":"Zoom"}
+    ],
+    "bottomLeft":[
+      {"name":"BRG"},
+      {"name":"DST"},
+      {"name":"ETA"},
+      {"name":"WpPosition"}
+    ],
+    "bottomRight":[
+      {"name":"COG"},
+      {"name":"SOG"},
+      {"name":"TimeStatus"},
+      {"name":"Position"}
+    ]
   }
+  
 }

@@ -572,7 +572,6 @@ class DownloadPage extends React.Component{
                             <UploadIndicator/>
                             </React.Fragment>
                         }
-                buttonList={self.buttons}
                 storeKeys={{
                     type:keys.gui.downloadpage.type,
                     reloadSequence:keys.gui.global.reloadSequence

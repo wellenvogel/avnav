@@ -968,3 +968,60 @@ span.valuePrefix{
   }
 
 }
+
+#navpage{
+  .widgetContainer{
+    .flex-display();
+    .avn_widget{
+      .flex-shrink(0);
+    }
+  }
+  .leftSection{
+    .flex-display();
+    .flex(1);
+    .flex-direction(column);
+    position: relative;
+    .map{
+      .flex(1);
+    }
+  }
+  .bottomSection{
+    z-index: 3;
+    background-color: @colorMain;
+    .nightColors();
+    .flex-display();
+    .flex-direction(row);
+    .flex-wrap(nowrap);
+    position: relative;
+    .bottomLeft{
+      width: 50%;
+      position: relative;
+      .flex-direction(row-reverse);
+    }
+    .bottomRight{
+      width: 50%;
+      position: relative;
+      .flex-direction(row);
+    }
+    height: @verticalContainerHeight;
+    &.twoRows{
+      height: @verticalContainerDoubleHeight;
+    }
+    .widgetContainer{
+      .flex-wrap(wrap);
+    }
+  }
+  .widgetContainer.left{
+    position: absolute;
+    bottom:0;
+    left:0;
+    overflow: hidden;
+    background-color: @colorMain;
+    .nightColors();
+    .flex-direction(column);
+    z-index: 3;
+    .avn_widget{
+      width: inherit;
+    }
+  }
+}

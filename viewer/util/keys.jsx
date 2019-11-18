@@ -120,6 +120,9 @@ let keys={
             editingRoute:K,  //a clone of the editing route - you cannot change this
         }
     },
+    map:{
+        lockPosition: K,
+        },
     gui:{
         global:{
             smallDisplay: K,
@@ -134,14 +137,6 @@ let keys={
             layoutSequence: K, //updated on layout load
             reloadSequence: K, //will be changed if new data from server
             buttonFontSize: K,
-        },
-        navpage:{
-            zoom: K,
-            requiredZoom: K, //the zoom that we would like to get
-            topWidgets: K, //the list of top widgets to be displayed
-            leftWidgets: K, //the list of left widgets,
-            bottomLeftWidgets: K,
-            bottomRightWidgets: K
         },
         mainpage:{
             chartList: K,
@@ -189,6 +184,10 @@ let keys={
             values:K,
             section:K,
             leftPanelVisible: K
+        },
+        navpage:{
+            mapurl:K,
+            chartbase:K,
         }
 
     },

@@ -15,6 +15,8 @@ var RouteLayer=require('./routelayer');
 var Drawing=require('./drawing').Drawing;
 var DrawingPositionConverter=require('./drawing').DrawingPositionConverter;
 var Formatter=require('../util/formatter');
+import keys from '../util/keys.jsx';
+import globalStore from '../util/globalstore.jsx';
 
 
 
@@ -307,6 +309,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         for (var i=0;i< layersreverse.length;i++){
             this.olmap.addLayer(layersreverse[i]);
         }
+        this.renderTo(div);
     }
     else {
         this.olmap = new ol.Map({
@@ -399,6 +402,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     var newCenter= this.pointFromMap(this.getView().getCenter());
     this.setCenterFromMove(newCenter,true);
     if (! this.getProperties().getProperties().layers.boat ) this.gpsLocked=false;
+    globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
 };
 
 /**
@@ -941,6 +945,7 @@ MapHolder.prototype.setGpsLock=function(lock){
     //we do not lock if the nav layer is not visible
     if (! this.getProperties().getProperties().layers.boat && lock) return;
     this.gpsLocked=lock;
+    globalStore.storeData(keys.map.lockPosition,lock);
     if (lock) this.setCenter(gps);
     this.checkAutoZoom();
 };

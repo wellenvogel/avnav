@@ -16,6 +16,7 @@ import WpaPage from './gui/WpaPage.jsx';
 import RoutePage from './gui/RoutePage.jsx';
 import DownloadPage from './gui/DownloadPage.jsx';
 import SettingsPage from './gui/SettingsPage.jsx';
+import NavPage from './gui/NavPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -84,7 +85,8 @@ const pages={
     wpapage:WpaPage,
     routepage:RoutePage,
     downloadpage:DownloadPage,
-    settingspage:SettingsPage
+    settingspage:SettingsPage,
+    navpage: NavPage
 };
 class Router extends Component {
     render() {
