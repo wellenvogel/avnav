@@ -170,6 +170,8 @@ const MapHolder=function(){
      * @private
      */
     this._chartbase=undefined;
+    globalStore.storeData(keys.map.courseUp,this.courseUp);
+    this.timer=undefined;
 
 };
 
@@ -225,9 +227,17 @@ MapHolder.prototype.getZoom=function(){
  * @param div if null - render to a default div (i.e. invisible)
  */
 MapHolder.prototype.renderTo=function(div){
+    if (this.timer && ! div){
+        window.clearInterval(this.timer);
+        this.timer=undefined;
+    }
     if (! this.olmap) return;
     if (!div) div=this.defaultDiv;
     this.olmap.setTarget(div);
+    let self=this;
+    if (! this.timer){
+        window.setInterval(()=>{self.timerFunction()},1000)
+    }
     this.olmap.updateSize();
 };
 
@@ -402,7 +412,17 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     var newCenter= this.pointFromMap(this.getView().getCenter());
     this.setCenterFromMove(newCenter,true);
     if (! this.getProperties().getProperties().layers.boat ) this.gpsLocked=false;
+    if (this.timer) window.clearInterval(this.timer);
+    this.timer=window.setInterval(()=>{self.timerFunction()},1000);
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
+};
+
+MapHolder.prototype.timerFunction=function(){
+    let xzoom=this.getZoom();
+    globalStore.storeMultiple(xzoom,{
+        required:keys.map.requiredZoom,
+        current:keys.map.currentZoom
+    });
 };
 
 /**
@@ -419,6 +439,7 @@ MapHolder.prototype.changeZoom=function(number){
     this.requiredZoom=curzoom;
     this.setZoom(curzoom);
     this.checkAutoZoom();
+    this.timerFunction();
 };
 /**
  * set the zoom at the map and remember the zoom we required
@@ -921,6 +942,7 @@ MapHolder.prototype.setMapRotation=function(rotation){
  * @returns {boolean} the newl set value
  */
 MapHolder.prototype.setCourseUp=function(on){
+    globalStore.storeData(keys.map.courseUp,on);
     var old=this.courseUp;
     if (old == on) return on;
     if (on){

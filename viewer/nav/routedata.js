@@ -147,6 +147,7 @@ var RouteData=function(propertyHandler,navobject){
 
 
     this._startQuery();
+    globalStore.storeData(keys.nav.routeHandler.isRouting,this.getLock()||false);
 };
 /*---------------------------------------------------------
  get raw data functions
@@ -1339,6 +1340,7 @@ RouteData.prototype._legChanged=function(){
     this.lastDistanceToCurrent=-1;
     this.lastDistanceToNext=-1;
     this._saveLegLocal();
+    globalStore.storeData(keys.nav.routeHandler.isRouting,this.getLock()||false);
     this.navobject.routeEvent();
     var self=this;
     this.checkPageRouteActive();

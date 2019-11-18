@@ -24,6 +24,7 @@ import WidgetFactory from '../components/WidgetFactory.jsx';
 import GuiHelpers from './helpers.js';
 import MapHolder from '../map/mapholder.js';
 import DirectWidget from '../components/DirectWidget.jsx';
+import navobjects from '../nav/navobjects.js';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -126,13 +127,46 @@ class NavPage extends React.Component{
                 }
             },
             {
-                name: "LockMarker", toggle: true
+                name: "LockMarker",
+                storeKeys: {
+                    visible: keys.nav.routeHandler.isRouting
+                },
+                updateFunction:(state)=>{return {visible:!state.visible}},
+                onClick:()=>{
+                    let center = NavHandler.getMapCenter();
+                    let currentLeg=RouteHandler.getCurrentLeg();
+                    let wp=new navobjects.WayPoint();
+                    //take over the wp name if this was a normal wp with a name
+                    //but do not take over if this was part of a route
+                    if (currentLeg && currentLeg.to && currentLeg.to.name && ! currentLeg.to.routeName){
+                        wp.name=currentLeg.to.name;
+                    }
+                    else{
+                        wp.name = 'Marker';
+                    }
+                    center.assign(wp);
+                    RouteHandler.wpOn(wp);
+                }
             },
             {
-                name: "StopNav", toggle: true
+                name: "StopNav",
+                storeKeys:{
+                    visible:keys.nav.routeHandler.isRouting
+                },
+                toggle:true,
+                onClick:()=>{
+                    RouteHandler.routeOff();
+                    MapHolder.triggerRender();
+                }
             },
             {
-                name: "CourseUp", toggle: true
+                name: "CourseUp",
+                storeKeys:{
+                    toggle: keys.map.courseUp
+                },
+                onClick:()=>{
+                    MapHolder.setCourseUp(!globalStore.getData(keys.map.courseUp,false))
+                }
             },
             {
                 name: "ShowRoutePanel"
@@ -146,6 +180,9 @@ class NavPage extends React.Component{
                     return {
                         toggle: state.watchDistance !== undefined
                     }
+                },
+                onClick:()=>{
+                    GuiHelpers.anchorWatchDialog(undefined);
                 }
             },
             {
