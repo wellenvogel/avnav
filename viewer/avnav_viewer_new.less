@@ -359,6 +359,17 @@ button{
   &.DownloadPageUploadCancel{
     .iconButton('images/icons-new/ic_clear.svg');
   }
+  &.SettingsOK {
+    .iconButton('images/icons-new/ic_done.svg');
+  }
+
+  &.SettingsDefaults {
+    .iconButton('images/icons-new/ic_delete.svg');
+  }
+
+  &.SettingsAndroid {
+    .iconButton('images/icons-new/ic_android.svg');
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -888,6 +899,70 @@ span.valuePrefix{
     .progressDone{
       height: 100%;
       .nightBackColor(blue);
+    }
+  }
+
+}
+
+#settingspage{
+    .leftSection{
+      .flex-display();
+      .flex-direction(row);
+    }
+    .sectionList{
+      border-right: 1px solid ;
+      margin-right: 2em;
+      .nightBorderColorGR();
+      width: 10em;
+      .flex-grow(0);
+      &.expand{
+        .flex-grow(1);
+      }
+    }
+    .settingsList{
+      .flex-grow(1);
+      overflow-x: hidden;
+      .label{
+        width: 10em;
+      }
+      .value {
+        .mdText2();
+      }
+      .colorValue{
+        width: 1.5em;
+        height: 1.5em;
+      }
+    }
+}
+
+.settingsDialog{
+  input{
+    width: 10em;
+  }
+  button[name=reset] {
+    float: left;
+  }
+  .settingsRange {
+    margin-bottom: 1em;
+    font-size: 0.8em;
+    .mdText2();
+  }
+  &.colorDialog {
+    .value {
+      margin-top: 1em;
+    }
+    .colorValue {
+      width: 50px;
+      height: 50px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .colorFrame {
+      margin-top: 1em;
+    }
+    .colorPicker {
+      .flex-display();
+      .flex-direction(row);
     }
   }
 

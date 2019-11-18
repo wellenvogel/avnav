@@ -6,7 +6,7 @@ import assign from 'object-assign';
 
 const K=999; //the real value does not matter
 
-const PropertyType={
+export const PropertyType={
     CHECKBOX:0,
     RANGE:1,
     LIST:2,
@@ -132,7 +132,8 @@ let keys={
             windowDimensions: K,
             layout: K, //the loaded layout object
             layoutSequence: K, //updated on layout load
-            reloadSequence: K //will be changed if new data from server
+            reloadSequence: K, //will be changed if new data from server
+            buttonFontSize: K,
         },
         navpage:{
             zoom: K,
@@ -182,6 +183,12 @@ let keys={
             fileInputKey:K,
             enableUpload:K,
             uploadInfo:K,
+        },
+        settingspage:{
+            hasChanges:K,
+            values:K,
+            section:K,
+            leftPanelVisible: K
         }
 
     },
@@ -189,7 +196,6 @@ let keys={
     //they will be written to local storage on change
     //and the store will be filled with initial values on start
     properties: {
-        buttonFontSize: K,
         layers: {
             ais: new Property(true, "AIS", PropertyType.CHECKBOX),
             track: new Property(true, "Track", PropertyType.CHECKBOX),
@@ -202,7 +208,6 @@ let keys={
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),
         readOnlyServer: new Property(false),
-        onAndroid: new Property(false),
         NM: new Property(1852), //one mile
         silenceSound: new Property("sounds/1-minute-of-silence.mp3"),
         buttonUpdateTime: new Property(500), //timer for button updates
@@ -330,35 +335,60 @@ function update_keys(base,name){
 
 update_keys(keys);
 
-export const getKeyDescriptions=(opt_propertiesOnly)=>{
-    if (! opt_propertiesOnly) return keyDescriptions;
-    let rt={};
-    for (let k in keyDescriptions){
-        if (keyDescriptions[k] instanceof Property){
-            rt[k]=keyDescriptions[k];
-        }
-    }
-    return rt;
-};
-/**
- * get the default values in a form suitable
- * for calling storeMultiple at the store API
- */
-export const getDefaultKeyValues=()=>{
-    let values={};
-    for (let k in keyDescriptions){
-        let description=keyDescriptions[k];
-        if (description.defaultv !== undefined){
-            values[k]=description.defaultv;
-        }
-    }
-    return values;
-};
 
-export const keyNodeToString=(keyNode)=>{
-    if (! keyNode) return;
-    if (typeof(keyNode.__path) === undefined) return;
-    return keyNode.__path;
+export const KeyHelper = {
+    keyNodeToString:(keyNode)=> {
+        if (!keyNode) return;
+        if (typeof(keyNode.__path) === undefined) return;
+        return keyNode.__path;
+    },
+    /**
+    * get the default values in a form suitable
+    * for calling storeMultiple at the store API
+    */
+    getDefaultKeyValues:()=> {
+        let values = {};
+        for (let k in keyDescriptions) {
+            let description = keyDescriptions[k];
+            if (description.defaultv !== undefined) {
+                values[k] = description.defaultv;
+            }
+        }
+        return values;
+    },
+    getKeyDescriptions:(opt_propertiesOnly)=> {
+        if (!opt_propertiesOnly) return keyDescriptions;
+        let rt = {};
+        for (let k in keyDescriptions) {
+            if (keyDescriptions[k] instanceof Property) {
+                rt[k] = keyDescriptions[k];
+            }
+        }
+        return rt;
+    },
+    /**
+     * return all the keys as an arry of strings
+     * the input can be any type that can be used in store functions
+     * @param keyObject: string, array of strings, key objects (keys being the values, can be nested)
+     */
+    flattenedKeys:(keyObject)=>{
+        if (keyObject instanceof Array) return keyObject;
+        if (keyObject instanceof Object){
+            let rt=[];
+            for (let k in keyObject){
+                let kv=keyObject[k];
+                if (kv instanceof Object){
+                    rt=rt.concat(KeyHelper.flattenedKeys(kv))
+                }
+                else{
+                    rt.push(kv);
+                }
+            }
+            return rt;
+        }
+        return [keyObject]
+
+    }
 };
 
 export default keys;

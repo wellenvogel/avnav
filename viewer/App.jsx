@@ -15,6 +15,7 @@ import StatusPage from './gui/StatusPage.jsx';
 import WpaPage from './gui/WpaPage.jsx';
 import RoutePage from './gui/RoutePage.jsx';
 import DownloadPage from './gui/DownloadPage.jsx';
+import SettingsPage from './gui/SettingsPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -82,7 +83,8 @@ const pages={
     statuspage:StatusPage,
     wpapage:WpaPage,
     routepage:RoutePage,
-    downloadpage:DownloadPage
+    downloadpage:DownloadPage,
+    settingspage:SettingsPage
 };
 class Router extends Component {
     render() {
@@ -115,6 +117,7 @@ class App extends React.Component {
         let small = current.width < PropertyHandler.getProperties().smallBreak;
         globalStore.storeData(keys.gui.global.smallDisplay,small); //set small before we change dimensions...
         globalStore.storeData(keys.gui.global.windowDimensions,{width:current.width,height:current.height});
+        globalStore.storeData(keys.gui.global.buttonFontSize,PropertyHandler.getButtonFontSize())
     }
     componentDidMount(){
         let iv=window.setInterval(this.checkSizes,1000);

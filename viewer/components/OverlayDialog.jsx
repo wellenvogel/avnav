@@ -295,7 +295,7 @@ const Dialogs = {
     },
     /**
      * create an arbitrary dialog
-     * it will provide a closeFunction property to the html
+     * it will provide a closeCallback property to the html
      * by calling this function the dialog will be dismissed
      * @param html the react class to show (or the html string)
      * @param opt_parent

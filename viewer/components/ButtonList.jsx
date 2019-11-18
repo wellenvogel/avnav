@@ -14,7 +14,7 @@ module.exports=function(props){
         className={className}
         itemClass={Dynamic(Visible(Button))}
         storeKeys={{
-            fontSize:keys.properties.buttonFontSize,
+            fontSize:keys.gui.global.buttonFontSize,
             dimensions: keys.gui.global.windowDimensions
             }}
         updateFunction={(state)=>{

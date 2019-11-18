@@ -1,4 +1,5 @@
 import Helper from './helper.js';
+import {KeyHelper} from './keys.jsx';
 /**
  * Created by andreas on 20.11.16.
  * a simple interface to register for value updates
@@ -39,21 +40,23 @@ DataProvider.prototype.getData=function(key){
  */
 let CallbackDescriptor=function(callback,keys){
     this.callback=callback;
-    if ( (typeof(keys) === 'object' && typeof(keys.__path) !== undefined)){
-        this.keys=keys.__path;
+    if ( KeyHelper.keyNodeToString(keys)){
+        this.keys=KeyHelper.keyNodeToString(keys);
         this.prefix=true;
     }
-    this.keys=keys;
-    this.prefix=false;
+     else {
+        this.keys = keys;
+        this.prefix = false;
+    }
 };
 CallbackDescriptor.prototype.isCallbackFor=function(keylist){
+    if (! keylist || keylist.length === 0) return true;
     if (this.prefix){
         for (let k in keylist){
             if (Helper.startsWith(keylist[k],this.keys)) return true;
         }
         return false;
     }
-    if (! keylist || keylist.length === 0) return true;
     if (! this.keys || this.keys.length === 0) return true;
     for (let k in this.keys){
         for (let t in keylist){
@@ -99,23 +102,28 @@ StoreApi.prototype._findCallback=function(callback){
 /**
  * register a callback handler
  * @param {UpdateCallback} callback
- * @param list of keys, can be an object with the values being the keys
+ * @param list of keys, can be an object with the values being the keys or a keyNode - registering a prefix
  */
 StoreApi.prototype.register=function(callback/*,...*/){
     let args=Array.prototype.slice.call(arguments,1);
     let keys=[];
-    args.forEach(function(arg){
-        if (arg === undefined) return;
-        if (arg instanceof Array){
-            keys=keys.concat(arg)
-        }
-        else if (arg instanceof Object){
-            for (let k in arg){
-               keys.push(arg[k])
+    if (args.length == 1 && KeyHelper.keyNodeToString(args[0])){
+        keys=args[0];
+    }
+    else {
+        args.forEach(function (arg) {
+            if (arg === undefined) return;
+            if (arg instanceof Array) {
+                keys = keys.concat(arg)
             }
-        }
-        else  keys=keys.concat(arg);
-    });
+            else if (arg instanceof Object) {
+                for (let k in arg) {
+                    keys.push(arg[k])
+                }
+            }
+            else  keys = keys.concat(arg);
+        });
+    }
     if (! callback) return;
     let idx=this._findCallback(callback);
     if (idx <0){

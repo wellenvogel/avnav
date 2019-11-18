@@ -40,6 +40,8 @@ ol.DEFAULT_TILE_CACHE_HIGH_WATER_MARK=256;
 var App=require('./App.jsx');
 var history=require('./util/history');
 var MapHolder=require('./map/mapholder');
+var keys=require('./util/keys.jsx').default;
+var globalStore=require('./util/globalstore.jsx');
 
 
 
@@ -64,43 +66,34 @@ avnav.main=function() {
     $("body").show();
 
     if (getParam('log')) avnav.debugMode=true;
-    propertyHandler.initialize();
     var navurl=getParam('navurl');
     if (navurl){
-        propertyHandler.setValueByName('navUrl',navurl);
-        propertyHandler.setValueByName('routingServerError',false);
+        globalStore.storeData(keys.properties.navUrl,navurl,true);
+        globalStore.storeData(keys.properties.routingServerError,false,true);
     }
     else {
-        propertyHandler.setValueByName('routingServerError',true);
+        globalStore.storeData(keys.properties.routingServerError,true,true);
     }
     var gui=new avnav.gui.Handler(propertyHandler,NavData,MapHolder);
 
     if (getParam('onAndroid')){
-        propertyHandler.setValueByName('onAndroid',true);
+        globalStore.storeData(keys.gui.global.onAndroid,true,true);
     }
     else {
-        propertyHandler.setValueByName('onAndroid',false);
+        globalStore.storeData(keys.gui.global.onAndroid,false,true);
     }
     var ro="readOnlyServer";
     if (getParam(ro) && getParam(ro) == "true"){
-        propertyHandler.setValueByName(ro,true);
-        propertyHandler.setValueByName('connectedMode',false);
-    }
-    else{
-
-        propertyHandler.setValueByName(ro,false);
-    }
-    if (avnav_version !== undefined){
-        $('#avi_mainpage_version').text(avnav_version);
+        globalStore.storeData(keys.properties.connectedMode,false,true);
     }
     //make the android API available as avnav.android
     if (window.avnavAndroid){
         avnav.log("android integration enabled");
-        propertyHandler.setValueByName('onAndroid',true);
+        globalStore.storeData(keys.gui.global.onAndroid,true,true);
         avnav.android=window.avnavAndroid;
-        propertyHandler.setValueByName('routingServerError',false);
-        propertyHandler.setValueByName('connectedMode',true);
-        $('#avi_mainpage_version').text(avnav.android.getVersion());
+        globalStore.storeData(keys.properties.routingServerError,false,true);
+        globalStore.storeData(keys.properties.connectedMode,true,true);
+        window.avnav_version=avnav.android.getVersion();
         avnav.android.applicationStarted();
     }
     avnav.guiHandler=gui; //intermediate...

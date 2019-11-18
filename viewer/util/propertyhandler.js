@@ -2,10 +2,9 @@
  * Created by andreas on 03.05.14.
  */
 
-import Properties from './properties.jsx';
 import Toast from './overlay.js';
 import globalStore from './globalstore.jsx';
-import keys,{getKeyDescriptions,Property,keyNodeToString,getDefaultKeyValues} from './keys.jsx';
+import keys,{KeyHelper} from './keys.jsx';
 
 /**
  * filter out some tree ob objects
@@ -78,21 +77,6 @@ const hex2rgba= (hex, opacity)=> {
     return rgba;
 };
 
-/**
- * extend object by extend, preserving any object structure
- * @param obj
- * @param ext
- */
-const extend=(obj, ext)=> {
-    for (let k in ext) {
-        if (ext[k] instanceof Object && !(ext[k] instanceof Array)) {
-            if (obj[k] === undefined) obj[k] = {};
-            extend(obj[k], ext[k]);
-        }
-        else obj[k] = ext[k];
-    }
-};
-
 
 /**
  * a storage handler for properties and userData
@@ -105,18 +89,16 @@ const extend=(obj, ext)=> {
 class PropertyHandler {
     constructor(propertyDescriptions) {
         let self=this;
-        this.propertyDescriptions = getKeyDescriptions(true);
-        this.setValueByName=this.setValueByName.bind(this);
+        this.propertyDescriptions = KeyHelper.getKeyDescriptions(true);
         this.getProperties=this.getProperties.bind(this);
         this.saveUserData=this.saveUserData.bind(this);
-        this.initialize=this.initialize.bind(this);
         this.updateLayout=this.updateLayout.bind(this);
         this.getButtonFontSize=this.getButtonFontSize.bind(this);
         this.getColor=this.getColor.bind(this);
         this.getAisColor=this.getAisColor.bind(this);
         this.incrementSequence=this.incrementSequence.bind(this);
         this.dataChanged=this.dataChanged.bind(this);
-        let defaults=getDefaultKeyValues();
+        let defaults=KeyHelper.getDefaultKeyValues();
         globalStore.storeMultiple(defaults);
         //register at the store for updates of our synced data
         globalStore.register(this,keys.properties);
@@ -133,7 +115,7 @@ class PropertyHandler {
                     let description = self.propertyDescriptions[path];
                     if (!description) return;
                     return item != globalStore.getData(path);
-                }, keyNodeToString(keys.properties));
+                }, KeyHelper.keyNodeToString(keys.properties));
                 globalStore.storeMultiple(userData, keys.properties, true, true);
             }
         }catch (e){
@@ -148,23 +130,6 @@ class PropertyHandler {
             this
         );
     }
-
-
-
-
-;
-
-
-    /**
-     * set a property value given the name
-     * @param {string} name
-     * @param value
-     * @returns {boolean}
-     */
-    setValueByName(name, value) {
-        globalStore.storeData(keyNodeToString(keys.properties)+"."+name,value);
-    }
-
 
     /**
      * get the current active properties
@@ -184,15 +149,6 @@ class PropertyHandler {
     }
 
 
-    /**
-     * load the user data from the cookie
-     * this overwrites any current data
-     */
-    initialize() {
-
-
-    }
-
     dataChanged(store,storeKeys){
         let self=this;
         let values=globalStore.getMultiple(keys.properties);
@@ -201,7 +157,7 @@ class PropertyHandler {
                 let description=self.propertyDescriptions[path];
                 if (description === undefined) return false;
                 return item !== description.defaultv;
-            },keyNodeToString(keys.properties))
+            },KeyHelper.keyNodeToString(keys.properties))
         );
         this.updateLayout();
     }
@@ -234,7 +190,7 @@ class PropertyHandler {
 
 
     getColor(colorName, addNightFade) {
-        let rt = globalStore.getData(keyNodeToString(keys.properties.style)+"." + colorName);
+        let rt = globalStore.getData(KeyHelper.keyNodeToString(keys.properties.style)+"." + colorName);
         if (rt === undefined) return rt;
         if ((addNightFade === undefined || addNightFade) && globalStore.getData(keys.properties.nightMode)) {
             let nf = globalStore.getData(keys.properties.nightColorDim);
