@@ -36,12 +36,40 @@ const widgetCreator=(widget,panel)=>{
     return WidgetFactory.createWidget(widget,{mode:panel,className:'',handleVisible:true});
 };
 
+const widgetClick=(item,data,panel)=>{
+    if (item.name == "AisTarget"){
+        let mmsi=(data && data.mmsi)?data.mmsi:widget.mmsi;
+        if (! mmsi) return;
+        history.push("aisinfopage",{mmsi:mmsi});
+        return;
+    }
+    if (item.name == "ActiveRoute"){
+        RouteHandler.startEditingRoute();
+        RouteHandler.setRouteForPage();
+        history.push("routepage");
+        return;
+    }
+    if (item.name == "Zoom"){
+        MapHolder.checkAutoZoom(true);
+        return;
+    }
+    if (item.name == 'WindDisplay' || item.name == 'DepthDisplay'){
+        history.push("gpspage",{secondPage:true});
+        return;
+    }
+    if (item.name =='COG' || item.name == 'SOG'|| item.name == 'TimeStatus'||item.name == 'Position'){
+        history.push('gpspage');
+        return;
+    }
+
+};
 const WidgetContainer=(props)=>{
     let {panel,isSmall,...other}=props;
     return <ItemList  {...props}
             className={"widgetContainer "+panel}
             itemCreator={(widget)=>{return widgetCreator(widget,panel)}}
             itemList={getPanelList(panel,isSmall)}
+            onItemClick={(item,data)=>{widgetClick(item,data,panel)}}
             />
 };
 
@@ -77,12 +105,13 @@ class NavPage extends React.Component{
 
     }
     componentWillUnmount(){
-
+        NavHandler.setAisCenterMode(navobjects.AisCenterMode.GPS);
     }
     componentDidMount(){
         let self=this;
         let url=globalStore.getData(keys.gui.navpage.mapurl);
         let chartBase=globalStore.getData(keys.gui.navpage.chartbase,url);
+        NavHandler.setAisCenterMode(navobjects.AisCenterMode.MAP);
         if (! url){
             Toast.Toast("no map selected");
             history.pop();

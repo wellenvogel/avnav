@@ -46,7 +46,7 @@ var NavData=function(){
      */
     this.maplatlon=new navobjects.Point(0,0);
 
-    this.aisMode=navobjects.AisCenterMode.NONE;
+    this.aisMode=navobjects.AisCenterMode.GPS;
 
     /**
      * @private

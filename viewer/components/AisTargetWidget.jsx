@@ -32,7 +32,7 @@ class AisTargetWidget extends React.Component{
     }
     render(){
         if (! this.props.current){
-            return <div/>
+            return null;
         }
         let current=this.props.current;
         let self=this;
