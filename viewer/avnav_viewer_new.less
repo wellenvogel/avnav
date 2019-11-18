@@ -975,6 +975,10 @@ span.valuePrefix{
     .avn_widget{
       .flex-shrink(0);
     }
+    overflow: hidden;
+    background-color: @colorMain;
+    .nightColors();
+    .flex-shrink(0);
   }
   .leftSection{
     .flex-display();
@@ -987,8 +991,6 @@ span.valuePrefix{
   }
   .bottomSection{
     z-index: 3;
-    background-color: @colorMain;
-    .nightColors();
     .flex-display();
     .flex-direction(row);
     .flex-wrap(nowrap);
@@ -1003,21 +1005,21 @@ span.valuePrefix{
       position: relative;
       .flex-direction(row);
     }
-    height: @verticalContainerHeight;
+    max-height: @verticalContainerHeight;
     &.twoRows{
-      height: @verticalContainerDoubleHeight;
+      max-height: @verticalContainerDoubleHeight;
     }
     .widgetContainer{
       .flex-wrap(wrap);
+    }
+    .avn_widget{
+      height: @verticalWidgetHeight;
     }
   }
   .widgetContainer.left{
     position: absolute;
     bottom:0;
     left:0;
-    overflow: hidden;
-    background-color: @colorMain;
-    .nightColors();
     .flex-direction(column);
     z-index: 3;
     .avn_widget{

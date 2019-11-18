@@ -23,6 +23,7 @@ import Helper from '../util/helper.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import GuiHelpers from './helpers.js';
 import MapHolder from '../map/mapholder.js';
+import DirectWidget from '../components/DirectWidget.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -31,7 +32,16 @@ const DynamicPage=Dynamic(Page);
 const DynamicList=Dynamic(ItemList);
 
 const widgetCreator=(widget,panel)=>{
-    return WidgetFactory.createWidget(widget,{mode:panel,className:''});
+    return WidgetFactory.createWidget(widget,{mode:panel,className:'',handleVisible:true});
+};
+
+const WidgetContainer=(props)=>{
+    let {panel,isSmall,...other}=props;
+    return <ItemList  {...props}
+            className={"widgetContainer "+panel}
+            itemCreator={(widget)=>{return widgetCreator(widget,panel)}}
+            itemList={getPanelList(panel,isSmall)}
+            />
 };
 
 const getPanelList=(panel,opt_isSmall)=>{
@@ -45,6 +55,8 @@ const getPanelList=(panel,opt_isSmall)=>{
     if (rt) return rt;
     return [];
 };
+
+
 class NavPage extends React.Component{
     constructor(props){
         super(props);
@@ -155,30 +167,28 @@ class NavPage extends React.Component{
                 mainContent={
                             <React.Fragment>
                             <div className="leftSection">
-                                <ItemList  className="widgetContainer left"
-                                    itemCreator={(widget)=>{return widgetCreator(widget,'left')}}
-                                    itemList={getPanelList('left',isSmall)}
+                                <WidgetContainer
+                                    panel="left"
+                                    isSmall={isSmall}
                                     onItemClick={self.widgetClick}
                                 />
-                                 <ItemList  className="widgetContainer top"
-                                    itemCreator={(widget)=>{return widgetCreator(widget,'top')}}
-                                    itemList={getPanelList('top',isSmall)}
+                                 <WidgetContainer
+                                    panel="top"
+                                    isSmall={isSmall}
                                     onItemClick={self.widgetClick}
                                 />
 
                                 <div className="map" ref="map"/>
                             </div>
-                            <div className="bottomSection">
-                                <ItemList
-                                    itemCreator={(widget)=>{return widgetCreator(widget,'bottomLeft')}}
-                                    className="widgetContainer bottomLeft"
-                                    itemList={getPanelList('bottomLeft',isSmall)}
+                            <div className={"bottomSection" + (globalStore.getData(keys.properties.allowTwoWidgetRows)?" twoRows":"")}>
+                                <WidgetContainer
+                                    panel='bottomLeft'
+                                    isSmall={isSmall}
                                     onItemClick={self.widgetClick}
                                     />
-                                <ItemList
-                                    itemCreator={(widget)=>{return widgetCreator(widget,'bottomRight')}}
-                                    className="widgetContainer bottomRight"
-                                    itemList={getPanelList('bottomRight',isSmall)}
+                                <WidgetContainer
+                                    panel="bottomRight"
+                                    isSmall={isSmall}
                                     onItemClick={self.widgetClick}
                                     />
                              </div>

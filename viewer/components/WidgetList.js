@@ -188,7 +188,8 @@ let widgetList=[
         caption: 'Time',
         classes: 'avn_timeWidget',
         storeKeys:{
-            value:keys.nav.gps.rtime
+            value:keys.nav.gps.rtime,
+            visible: keys.properties.showClock
         },
         formatter: 'formatClock'
     },
@@ -242,7 +243,8 @@ let widgetList=[
         classes: 'avn_depthWidget',
         unit: 'm',
         storeKeys:{
-            value:keys.nav.gps.depthBelowTransducer
+            value:keys.nav.gps.depthBelowTransducer,
+            visible: keys.properties.showDepth
         },
         formatter: 'formatDecimal',
         formatterParameters: [3,1]

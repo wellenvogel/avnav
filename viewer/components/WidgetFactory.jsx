@@ -5,6 +5,7 @@ import ItemUpdater from './ItemUpdater.jsx';
 import DirectWidget from './DirectWidget.jsx';
 import globalStore from '../util/globalstore.jsx';
 import Formatter from '../util/formatter';
+import Visible from '../hoc/Visible.jsx';
 
 
 
@@ -83,6 +84,10 @@ class WidgetFactory{
                 let storeKeys = mergedProps.storeKeys;
                 if (!storeKeys) {
                     storeKeys = RenderWidget.storeKeys;
+                }
+                if (wprops.handleVisible){
+                    RenderWidget=Visible(RenderWidget);
+                    delete wprops.handleVisible;
                 }
                 if (storeKeys) {
                     RenderWidget = ItemUpdater(RenderWidget, globalStore, storeKeys);

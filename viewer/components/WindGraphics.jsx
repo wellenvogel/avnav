@@ -156,6 +156,7 @@ WindGraphics.propTypes={
 };
 WindGraphics.storeKeys={
     windSpeed: keys.nav.gps.windSpeed,
-    windAngle: keys.nav.gps.windAngle
+    windAngle: keys.nav.gps.windAngle,
+    visible: keys.properties.showWind
 };
 module.exports=WindGraphics;

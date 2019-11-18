@@ -59,7 +59,8 @@ WindWidget.propTypes={
 WindWidget.storeKeys={
     windAngle: keys.nav.gps.windAngle,
     windSpeed: keys.nav.gps.windSpeed,
-    windReference: keys.nav.gps.windReference
+    windReference: keys.nav.gps.windReference,
+    visible: keys.properties.showWind
 };
 
 module.exports=WindWidget;
