@@ -317,6 +317,7 @@ class SettingsPage extends React.Component{
         let values=globalStore.getMultiple(this.flattenedKeys);
         globalStore.storeData(keys.gui.settingspage.values,values);
         globalStore.storeData(keys.gui.settingspage.hasChanges,false);
+        globalStore.storeData(keys.gui.settingspage.section,'Layer');
 
     }
     resetData(){
