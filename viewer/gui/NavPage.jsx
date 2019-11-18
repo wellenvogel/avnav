@@ -33,7 +33,14 @@ const DynamicPage=Dynamic(Page);
 const DynamicList=Dynamic(ItemList);
 
 const widgetCreator=(widget,panel)=>{
-    return WidgetFactory.createWidget(widget,{mode:panel,className:'',handleVisible:true});
+    let rt=WidgetFactory.createWidget(widget,{mode:panel,className:'',handleVisible:true});
+    if (widget.name=='CenterDisplay'){
+        rt=Dynamic(Visible(rt),{
+            storeKeys:{visible:keys.nav.routeHandler.isRouting},
+            updateFunction:(state)=>{return {visible:!state.visible}}
+        })
+    }
+    return rt;
 };
 
 const widgetClick=(item,data,panel)=>{

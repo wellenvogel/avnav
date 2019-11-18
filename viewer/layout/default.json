@@ -61,7 +61,7 @@
       {"name":"CenterDisplay"},
       {"name":"DepthDisplay"},
       {"name":"AisTarget"},
-      {"name":"EditRoute"},
+      {"name":"ActiveRoute"},
       {"name":"LargeTime"},
       {"name":"Zoom"}
     ],

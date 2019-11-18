@@ -13,25 +13,18 @@ import Helper from '../util/helper.js';
 class ActiveRouteWidget extends React.Component{
     constructor(props){
         super(props);
-        this.lastApproaching=props.isApproaching;
     }
     shouldComponentUpdate(nextProps,nextState){
         return Helper.compareProperties(this.props,nextProps,ActiveRouteWidget.storeKeys);
     }
     componentDidUpdate(){
-        if (this.props.updateCallback && this.doLayoutUpdate){
-            this.doLayoutUpdate=false;
-            this.props.updateCallback();
-        }
+
     }
     render(){
+        if (!this.props.routeName) return null;
         let self=this;
-        let classes="avn_widget avn_activeRouteWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let classes="avn_widget avn_activeRouteWidget "+this.props.className||"";
         if (this.props.isApproaching) classes +=" avn_route_display_approach ";
-        if (this.props.isApproaching != this.lastApproaching){
-            this.doLayoutUpdate=true;
-            this.lastApproaching=this.props.isApproaching;
-        }
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style}>
             <div className="avn_widgetInfoLeft">RTE</div>
@@ -57,7 +50,7 @@ class ActiveRouteWidget extends React.Component{
 ActiveRouteWidget.propTypes={
     //formatter: React.PropTypes.func,
     onClick: PropTypes.func,
-    classes: PropTypes.string,
+    className: PropTypes.string,
     updateCallback: PropTypes.func,
     isAproaching: PropTypes.bool,
     routeName: PropTypes.string,
@@ -71,7 +64,7 @@ ActiveRouteWidget.storeKeys={
     routeName: keys.nav.route.name,
     eta: keys.nav.route.eta,
     remain: keys.nav.route.remain,
-    nextCourse: keys.nav.route.nextCourse
+    nextCourse: keys.nav.route.nextCourse,
 };
 
 module.exports=ActiveRouteWidget;
