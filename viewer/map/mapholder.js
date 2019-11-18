@@ -356,6 +356,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             return self.onZoomChange(evt);
         });
     }
+    this.renderTo(div);
     var recenter=true;
     var view;
     if (this.requiredZoom) this.zoom=this.requiredZoom;
