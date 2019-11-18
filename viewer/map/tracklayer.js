@@ -4,6 +4,9 @@
     
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
+import keys from '../util/keys.jsx';
+import globalStore from '../util/globalstore.jsx';
+
 
 
 /**
@@ -47,9 +50,8 @@ const TrackLayer=function(mapholder){
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
-        self.propertyChange(evdata);
-    });
+    globalStore.register(this,keys.gui.global.propertySequence);
+
 
 
 };
@@ -122,7 +124,7 @@ TrackLayer.prototype.onPostCompose=function(center,drawing){
     if (! this.visible) return;
     drawing.drawLineToContext(this.trackPoints,this.lineStyle);
 };
-TrackLayer.prototype.propertyChange=function(evdata) {
+TrackLayer.prototype.dataChanged=function() {
     this.visible=this.mapholder.getProperties().getProperties().layers.track;
     this.setStyle();
     this.currentTrack=[]; //trigger a complete redraw

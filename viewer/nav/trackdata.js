@@ -1,5 +1,8 @@
 
 var navobjects=require('./navobjects');
+import keys from '../util/keys.jsx';
+import globalStore from '../util/globalstore.jsx';
+
 
 
 /**
@@ -49,9 +52,8 @@ var TrackData=function(propertyHandler,navobject){
     this.NM=this.propertyHandler.getProperties().NM;
     this.startQuery();
     var self=this;
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
-        self.propertyChange(evdata);
-    });
+    globalStore.register(this,keys.gui.global.propertySequence);
+
 };
 
 /**
@@ -174,7 +176,7 @@ TrackData.prototype.getTrackData=function(){
  * delete the current track and re-query
  * @param evdata
  */
-TrackData.prototype.propertyChange=function(evdata) {
+TrackData.prototype.dataChanged=function() {
     this.resetTrack();
 };
 /**

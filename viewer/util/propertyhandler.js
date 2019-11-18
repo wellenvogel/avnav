@@ -35,22 +35,6 @@ const filterObjectTree=(source,filterFunction,opt_basepath)=>{
     }
     return rt;
 };
-/**
- * an event being fired when properties are changed
- * @param {PropertyHandler} propertyHandler
- * @constructor
- */
-const PropertyChangeEvent=function(propertyHandler){
-    /**
-     *
-     * @type {PropertyHandler}
-     */
-    this.propertyHandler=propertyHandler;
-};
-PropertyChangeEvent.EVENT_TYPE="propertyevent";
-
-//compatibility
-avnav.util.PropertyChangeEvent=PropertyChangeEvent;
 
 const applyLayoutLegacy=(nightMode,nightFade,baseFontSize,widgetFontSize,buttonFontSize)=>{
     if (!nightMode) {
@@ -126,9 +110,7 @@ class PropertyHandler {
 
     incrementSequence(){
         globalStore.storeData(keys.gui.global.propertySequence,
-            globalStore.getData(keys.gui.global.propertySequence,0),
-            this
-        );
+            globalStore.getData(keys.gui.global.propertySequence,0)+1);
     }
 
     /**

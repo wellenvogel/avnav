@@ -143,9 +143,8 @@ var RouteData=function(propertyHandler,navobject){
     this.formatter=Formatter;
 
     var self=this;
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
-        self._propertyChange(evdata);
-    });
+    globalStore.register(this,keys.gui.global.propertySequence);
+
 
     this._startQuery();
 };
@@ -1380,7 +1379,7 @@ RouteData.prototype._legChanged=function(){
  * @private
  * @param evdata
  */
-RouteData.prototype._propertyChange=function(evdata) {
+RouteData.prototype.dataChanged=function() {
     var oldcon=this.connectMode;
     this.connectMode=this.propertyHandler.getProperties().connectedMode;
     this.readOnlyServer=this.propertyHandler.getProperties().readOnlyServer;

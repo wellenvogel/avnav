@@ -102,7 +102,7 @@ avnav.gui.Handler = function (properties, navobject, map) {
             $(document).trigger(avnav.gui.BackEvent.EVENT_TYPE, new avnav.gui.BackEvent(self.page));
         }
         if (evdata.key && evdata.key == "propertyChange") {
-            $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE, new avnav.util.PropertyChangeEvent(self.properties));
+            self.properties.updateLayout();
         }
     });
 
@@ -138,7 +138,6 @@ avnav.gui.Handler.prototype.removeActiveInput = function (id) {
                 self.lasth = ch;
                 self.lastw = cw;
                 self.properties.updateLayout();
-                $(document).trigger(avnav.util.PropertyChangeEvent.EVENT_TYPE, new avnav.util.PropertyChangeEvent(self.properties));
             }
         }
     }, 1000);

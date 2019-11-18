@@ -5,6 +5,8 @@
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 var AisData=require('../nav/aisdata');
+import keys from '../util/keys.jsx';
+import globalStore from '../util/globalstore.jsx';
 
 
 /**
@@ -67,9 +69,7 @@ const AisLayer=function(mapholder){
      * @type {boolean}
      */
     this.visible=this.mapholder.getProperties().getProperties().layers.ais;
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
-        self.propertyChange(evdata);
-    });
+    globalStore.register(this,keys.gui.global.propertySequence);
 
 };
 
@@ -205,7 +205,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
  * handle changed properties
  * @param evdata
  */
-AisLayer.prototype.propertyChange=function(evdata){
+AisLayer.prototype.dataChanged=function(){
     this.visible=this.mapholder.getProperties().getProperties().layers.ais;
     this.createAllIcons();
     this.setStyles();

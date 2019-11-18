@@ -6,6 +6,9 @@ var NavCompute=require('../nav/navcompute');
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 var anchor=require('../images/icons-new/anchor.svg');
+import keys from '../util/keys.jsx';
+import globalStore from '../util/globalstore.jsx';
+
 
 
 
@@ -83,10 +86,8 @@ const NavLayer=function(mapholder){
      */
     this.boatPosition=[0,0];
 
+    globalStore.register(this,keys.gui.global.propertySequence);
 
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
-        self.propertyChange(evdata);
-    });
 };
 
 /**
@@ -184,7 +185,7 @@ NavLayer.prototype.setBoatPosition=function(pos,course) {
 };
 
 
-NavLayer.prototype.propertyChange=function(evdata){
+NavLayer.prototype.dataChanged=function(){
     this.setStyle();
 };
 

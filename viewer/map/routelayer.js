@@ -5,6 +5,9 @@
 var navobjects=require('../nav/navobjects');
 var NavData=require('../nav/navdata');
 var RouteHandler=require('../nav/routedata');
+import keys from '../util/keys.jsx';
+import globalStore from '../util/globalstore.jsx';
+
 
 /**
  * a cover for the layer with routing data
@@ -71,9 +74,8 @@ const RouteLayer=function(mapholder){
     $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
         self.navEvent(evdata);
     });
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
-        self.propertyChange(evdata);
-    });
+    globalStore.register(this,keys.gui.global.propertySequence);
+
 
 
 };
@@ -243,7 +245,7 @@ RouteLayer.prototype.findTarget=function(pixel){
     }
     return undefined;
 };
-RouteLayer.prototype.propertyChange=function(evdata) {
+RouteLayer.prototype.dataChanged=function() {
     this.visible=this.mapholder.getProperties().getProperties().layers.nav;
     this.setStyle();
     this.mapholder.triggerRender();

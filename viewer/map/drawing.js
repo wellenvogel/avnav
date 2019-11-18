@@ -61,10 +61,6 @@ const Drawing=function(converter,opt_ratio){
      * @type {CanvasRenderingContext2D}
      */
     this.context=undefined;
-    var self=this;
-    $(document).on(avnav.util.PropertyChangeEvent.EVENT_TYPE, function(ev,evdata){
-        self.propertyChange(evdata);
-    });
 
 };
 
@@ -422,12 +418,7 @@ Drawing.prototype.pixelToDevice=function(pixel) {
     return rt;
 };
 
-/**
- * handle changed properties
- * @param evdata
- */
-Drawing.prototype.propertyChange=function(evdata){
-};
+
 /**
  * set the current devPixelRatio
  * @param {number} ratio
