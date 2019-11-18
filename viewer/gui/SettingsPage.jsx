@@ -251,7 +251,7 @@ const createSettingsItem=(item)=>{
         </div>)
     }
 };
-
+const DynamicPage=Dynamic(Page);
 class SettingsPage extends React.Component{
     constructor(props){
         super(props);
@@ -365,74 +365,85 @@ class SettingsPage extends React.Component{
     }
     componentDidMount(){
     }
-    render(){
-        let self=this;
-        let small=globalStore.getData(keys.gui.global.windowDimensions,{}).width
-            < globalStore.getData(keys.properties.smallBreak);
-        let leftVisible=!small || globalStore.getData(keys.gui.settingspage.leftPanelVisible);
-        let rightVisible=!small || ! globalStore.getData(keys.gui.settingspage.leftPanelVisible);
-        let MainContent=(props)=> {
-            let small=globalStore.getData(keys.gui.global.windowDimensions,{}).width
+
+    render() {
+        let self = this;
+        let MainContent = (props)=> {
+            let small = globalStore.getData(keys.gui.global.windowDimensions, {}).width
                 < globalStore.getData(keys.properties.smallBreak);
-            let leftVisible=!small || props.leftPanelVisible;
-            this.leftVisible=leftVisible; //intentionally no state - but we exactly need to know how this looked at the last render
-            let rightVisible=!small || ! props.leftPanelVisible;
-            let leftClass="sectionList";
-            if (! rightVisible) leftClass+=" expand";
-            let currentSection=globalStore.getData(keys.gui.settingspage.section,'Layer');
-            let sectionItems=[];
-            for (let s in settingsSections){
-                let item={name:s};
-                if (s === currentSection) item.activeItem=true;
+            let leftVisible = !small || props.leftPanelVisible;
+            self.leftVisible = leftVisible; //intentionally no state - but we exactly need to know how this looked at the last render
+            let rightVisible = !small || !props.leftPanelVisible;
+            let leftClass = "sectionList";
+            if (!rightVisible) leftClass += " expand";
+            let currentSection = globalStore.getData(keys.gui.settingspage.section, 'Layer');
+            let sectionItems = [];
+            for (let s in settingsSections) {
+                let item = {name: s};
+                if (s === currentSection) item.activeItem = true;
                 sectionItems.push(item);
             }
-            let settingsItems=[];
+            let settingsItems = [];
             if (settingsSections[currentSection]) {
-                for (let s in settingsSections[currentSection]){
-                    let key=settingsSections[currentSection][s];
-                    let description=KeyHelper.getKeyDescriptions()[key];
-                    let item=assign({},description,{
+                for (let s in settingsSections[currentSection]) {
+                    let key = settingsSections[currentSection][s];
+                    let description = KeyHelper.getKeyDescriptions()[key];
+                    let item = assign({}, description, {
                         name: key,
-                        value:props.values[key]});
+                        value: props.values[key]
+                    });
                     settingsItems.push(item);
                 }
             }
             return (
                 <div className="leftSection">
-                    { leftVisible?<ItemList
+                    { leftVisible ? <ItemList
                         className={leftClass}
                         scrollable={true}
                         itemClass={SectionItem}
                         onItemClick={self.sectionClick}
                         itemList={sectionItems}
-                        />:null}
+                        /> : null}
                     {rightVisible ? <ItemList
                         className="settingsList"
                         scrollable={true}
                         itemCreator={createSettingsItem}
                         itemList={settingsItems}
                         onItemClick={self.changeItem}
-                        />:null}
+                        /> : null}
                 </div>);
         };
-        let DynamicMain=Dynamic(MainContent);
+        let DynamicMain = Dynamic(MainContent);
+
         return (
-            <Page
-                className={this.props.className}
-                style={this.props.style}
+            <DynamicPage
+                className={self.props.className}
+                style={self.props.style}
                 id="settingspage"
-                title="Settings"
                 mainContent={
                             <DynamicMain
                                 storeKeys={{
-                                    leftPanelVisible:keys.gui.settingspage.leftPanelVisible,
-                                    section:keys.gui.settingspage.section,
-                                    values:keys.gui.settingspage.values
+                                    leftPanelVisible: keys.gui.settingspage.leftPanelVisible,
+                                    section: keys.gui.settingspage.section,
+                                    values: keys.gui.settingspage.values
                                 }}
                             />
                         }
-                buttonList={self.buttons}/>
-        );
+                buttonList={self.buttons}
+                storeKeys={{
+                        leftPanelVisible: keys.gui.settingspage.leftPanelVisible,
+                        section: keys.gui.settingspage.section
+                        }}
+                updateFunction={(state)=>{
+                    let small = globalStore.getData(keys.gui.global.windowDimensions, {}).width
+                        < globalStore.getData(keys.properties.smallBreak);
+                    let title="Settings";
+                    if (small && ! state.leftPanelVisible) title +=" "+state.section;
+                    return {
+                        title: title
+                    }
+                }}
+                />);
     }
 }
 
