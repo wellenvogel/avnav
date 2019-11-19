@@ -72,18 +72,6 @@ class NavPage extends React.Component{
         let self=this;
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
-        if (props.options && props.options.url ){
-            globalStore.storeMultiple(
-                {
-                    url: props.options.url,
-                    chartbase: props.options.chartbase
-                },
-                {
-                    url:keys.gui.navpage.mapurl,
-                    chartbase: keys.gui.navpage.chartbase}
-                ,this);
-        }
-
     }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);

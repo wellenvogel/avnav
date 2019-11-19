@@ -251,9 +251,22 @@ MapHolder.prototype.renderTo=function(div){
 /**
  *  entry function to load the map
  **/
+const storeKeys={
+    url:keys.map.url,
+    chartBase:keys.map.chartBase
+};
 
-MapHolder.prototype.loadMap=function(div,url,chartBase){
-    var self=this;
+MapHolder.prototype.setMapUrl=function(url,chartBase){
+    globalStore.storeMultiple(
+        {url:url,chartBase:chartBase}
+        ,
+        storeKeys)
+};
+
+MapHolder.prototype.loadMap=function(div){
+    let url=globalStore.getData(keys.map.url);
+    let chartBase=globalStore.getData(keys.map.chartBase);
+    let self=this;
     return new Promise((resolve,reject)=> {
         if (!url) {
             reject("no map selected");

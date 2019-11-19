@@ -127,6 +127,8 @@ let keys={
         currentZoom:K,
         requiredZoom:K,
         centerPosition:K,
+        url:K,
+        chartBase: K,
         },
     gui:{
         global:{
@@ -194,13 +196,10 @@ let keys={
             leftPanelVisible: K
         },
         navpage:{
-            mapurl:K,
-            chartbase:K,
+
         },
         editroutepage:{
             selectedWp:K,
-            mapurl:K,
-            chartbase:K,
         }
 
     },

@@ -66,7 +66,7 @@ class MapPage extends React.Component{
         let self=this;
         NavHandler.setAisCenterMode(navobjects.AisCenterMode.MAP);
         this.subscribeToken=MapHolder.subscribe(this.mapEvent);
-        MapHolder.loadMap(this.refs.map,this.props.mapUrl,this.props.chartBase).
+        MapHolder.loadMap(this.refs.map).
             then((result)=>{}).
             catch((error)=>{Toast.Toast(error)});
     }
@@ -129,8 +129,6 @@ MapPage.propertyTypes={
     panelCreator:       PropTypes.func.isRequired,  //will be called with the panel name + isSmall
                                                     //and must return the widget list
     onItemClick:        PropTypes.func.isRequired,  //like ItemList
-    mapUrl:             PropTypes.string.isRequired,
-    chartBase:          PropTypes.string,
     mapEventCallback:   PropTypes.func,
     id:                 PropTypes.string,
     overlayContent:     PropTypes.any               //overlay in the map container

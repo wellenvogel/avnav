@@ -90,17 +90,6 @@ class EditRoutePage extends React.Component{
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
         RouteHandler.startEditingRoute();
-        if (props.options && props.options.url ){
-            globalStore.storeMultiple(
-                {
-                    url: props.options.url,
-                    chartbase: props.options.chartbase
-                },
-                {
-                    url:keys.gui.editroutepage.mapurl,
-                    chartbase: keys.gui.editroutepage.chartbase}
-                ,this);
-        }
         globalStore.storeData(keys.gui.editroutepage.selectedWp,RouteHandler.getEditingWpIdx());
 
     }

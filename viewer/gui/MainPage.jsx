@@ -15,6 +15,7 @@ import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../util/overlay.js';
 import Requests from '../util/requests.js';
+import MapHolder from '../map/mapholder.js';
 
 const DynamicList = Dynamic(ItemList);
 
@@ -238,7 +239,8 @@ const readAddOns = function () {
  */
 const showNavpage = function (entry) {
     avnav.log("activating navpage with url " + entry.url);
-    history.push('navpage', {url: entry.url, charturl: entry.charturl});
+    MapHolder.setMapUrl(entry.url,entry.charturl);
+    history.push('navpage');
 
 };
 
