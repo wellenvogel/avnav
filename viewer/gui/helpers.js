@@ -66,10 +66,18 @@ const getPageFromLayout=(pagename)=>{
     return page;
 };
 
-const getPanelFromLayout=(pagename,panelname)=>{
+const getPanelFromLayout=(pagename,panel,opt_filtername,opt_filtervalue)=>{
     let page=getPageFromLayout(pagename);
     if (! page) return;
-    return page[panelname];
+    let panelname=panel;
+    if (opt_filtername) {
+        panelname += opt_filtervalue ? "_"+opt_filtername : "_not_"+opt_filtername;
+    }
+    let rt=page[panelname];
+    if (rt) return rt;
+    rt=page[panel];
+    if (rt) return rt;
+    return [];
 };
 /**
  * will call the provided callback on mount (param: false),umount(param: true), update(optional, param false)

@@ -11,7 +11,7 @@ import keys from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
-import Page from '../components/Page.jsx';
+import MapPage from '../components/MapPage.jsx';
 import Toast from '../util/overlay.js';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
@@ -29,19 +29,8 @@ import navobjects from '../nav/navobjects.js';
 const RouteHandler=NavHandler.getRoutingHandler();
 
 
-const DynamicPage=Dynamic(Page);
-const DynamicList=Dynamic(ItemList);
+const DynamicPage=Dynamic(MapPage);
 
-const widgetCreator=(widget,panel)=>{
-    let rt=WidgetFactory.createWidget(widget,{mode:panel,className:'',handleVisible:true});
-    if (widget.name=='CenterDisplay'){
-        rt=Dynamic(Visible(rt),{
-            storeKeys:{visible:keys.nav.routeHandler.isRouting},
-            updateFunction:(state)=>{return {visible:!state.visible}}
-        })
-    }
-    return rt;
-};
 
 const widgetClick=(item,data,panel)=>{
     if (item.name == "AisTarget"){
@@ -70,26 +59,9 @@ const widgetClick=(item,data,panel)=>{
     }
 
 };
-const WidgetContainer=(props)=>{
-    let {panel,isSmall,...other}=props;
-    return <ItemList  {...props}
-            className={"widgetContainer "+panel}
-            itemCreator={(widget)=>{return widgetCreator(widget,panel)}}
-            itemList={getPanelList(panel,isSmall)}
-            onItemClick={(item,data)=>{widgetClick(item,data,panel)}}
-            />
-};
 
 const getPanelList=(panel,opt_isSmall)=>{
-    let page=GuiHelpers.getPageFromLayout('navpage');
-    if (! page) return [];
-    let panelName=panel;
-    panelName+=opt_isSmall?"_small":"_not_small";
-    let rt=page[panelName];
-    if (rt) return rt;
-    rt=page[panel];
-    if (rt) return rt;
-    return [];
+    return GuiHelpers.getPanelFromLayout('navpage',panel,'small',opt_isSmall);
 };
 
 
@@ -117,22 +89,9 @@ class NavPage extends React.Component{
         console.log("mapevent: "+evdata.type);
     }
     componentWillUnmount(){
-        NavHandler.setAisCenterMode(navobjects.AisCenterMode.GPS);
-        MapHolder.renderTo();
-        if (this.subscribeToken !== undefined){
-            MapHolder.unsubscribe(this.subscribeToken);
-            this.subscribeToken=undefined;
-        }
     }
     componentDidMount(){
-        let self=this;
-        let url=globalStore.getData(keys.gui.navpage.mapurl);
-        let chartBase=globalStore.getData(keys.gui.navpage.chartbase,url);
-        NavHandler.setAisCenterMode(navobjects.AisCenterMode.MAP);
-        this.subscribeToken=MapHolder.subscribe(this.mapEvent);
-        MapHolder.loadMap(this.refs.map,url,chartBase).
-            then((result)=>{}).
-            catch((error)=>{Toast.Toast(error)});
+
     }
     getButtons(type){
         let rt=[
@@ -222,43 +181,18 @@ class NavPage extends React.Component{
     }
     render(){
         let self=this;
-        let isSmall=globalStore.getData(keys.gui.global.windowDimensions,{width:0}).width
-            < globalStore.getData(keys.properties.smallBreak);
+        let url=globalStore.getData(keys.gui.navpage.mapurl);
+        let chartBase=globalStore.getData(keys.gui.navpage.chartbase,url);
         return (
             <DynamicPage
                 className={self.props.className}
                 style={self.props.style}
                 id="navpage"
-                mainContent={
-                            <React.Fragment>
-                            <div className="leftSection">
-                                <WidgetContainer
-                                    panel="left"
-                                    isSmall={isSmall}
-                                    onItemClick={self.widgetClick}
-                                />
-                                 <WidgetContainer
-                                    panel="top"
-                                    isSmall={isSmall}
-                                    onItemClick={self.widgetClick}
-                                />
-
-                                <div className="map" ref="map"/>
-                            </div>
-                            <div className={"bottomSection" + (globalStore.getData(keys.properties.allowTwoWidgetRows)?" twoRows":"")}>
-                                <WidgetContainer
-                                    panel='bottomLeft'
-                                    isSmall={isSmall}
-                                    onItemClick={self.widgetClick}
-                                    />
-                                <WidgetContainer
-                                    panel="bottomRight"
-                                    isSmall={isSmall}
-                                    onItemClick={self.widgetClick}
-                                    />
-                             </div>
-                            </React.Fragment>
-                        }
+                mapEventCallback={self.mapEvent}
+                onItemClick={widgetClick}
+                mapUrl={url}
+                chartBase={chartBase}
+                panelCreator={getPanelList}
                 storeKeys={{
                     dummy:"xx"
                 }}
