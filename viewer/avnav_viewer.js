@@ -74,7 +74,6 @@ avnav.main=function() {
     else {
         globalStore.storeData(keys.properties.routingServerError,true,true);
     }
-    var gui=new avnav.gui.Handler(propertyHandler,NavData,MapHolder);
 
     if (getParam('onAndroid')){
         globalStore.storeData(keys.gui.global.onAndroid,true,true);
@@ -96,7 +95,6 @@ avnav.main=function() {
         window.avnav_version=avnav.android.getVersion();
         avnav.android.applicationStarted();
     }
-    avnav.guiHandler=gui; //intermediate...
     history.push('mainpage');
     ReactDOM.render(<App/>,document.getElementById('new_pages'));
 
