@@ -196,6 +196,11 @@ let keys={
         navpage:{
             mapurl:K,
             chartbase:K,
+        },
+        editroutepage:{
+            selectedWp:K,
+            mapurl:K,
+            chartbase:K,
         }
 
     },

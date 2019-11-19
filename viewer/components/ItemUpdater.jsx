@@ -83,6 +83,7 @@ let Updater=function(Item,store,opt_storeKey,opt_translator) {
             }
             this.state=st;
             this.dataChanged=this.dataChanged.bind(this);
+            store.register(this, this.storeKeys);
             return;
 
         }

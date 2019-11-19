@@ -16,6 +16,7 @@ let DirectWidget=require('./DirectWidget.jsx');
 let ZoomWidget=require('./ZoomWidget.jsx');
 let keys=require('../util/keys.jsx').default;
 let AlarmWidget=require('./AlarmWidget.jsx');
+let RoutePointsWidget=require('./RoutePointsWidget.jsx');
 
 let widgetList=[
     {
@@ -272,6 +273,11 @@ let widgetList=[
         name: 'Alarm',
         wclass:AlarmWidget,
         storeKeys: AlarmWidget.storeKeys
+    },
+    {
+        name: 'RoutePoints',
+        wclass: RoutePointsWidget,
+        storeKeys: RoutePointsWidget.storeKeys
     }
 
 

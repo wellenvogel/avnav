@@ -142,7 +142,7 @@ avnav.inherits(navobjects.WayPoint,navobjects.Point);
 
 navobjects.WayPoint.prototype.compare=function(point){
     if (! point) return false;
-    var rt= this.super_.compare.call(this,point);
+    var rt= navobjects.Point.prototype.compare.call(this,point);
     if (! rt) return rt;
     if (point instanceof navobjects.WayPoint ){
         return this.routeName == point.routeName;

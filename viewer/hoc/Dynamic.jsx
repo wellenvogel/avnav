@@ -21,6 +21,8 @@ module.exports= function(Component,opt_options){
             this.getTranslatedStoreValues=this.getTranslatedStoreValues.bind(this);
             this.getStoreKeys=this.getStoreKeys.bind(this);
             this.dataChanged=this.dataChanged.bind(this);
+            let keys=this.getStoreKeys();
+            if (keys) store.register(this,keys);
             this.state=this.getTranslatedStoreValues();
         }
         getStoreKeys(){

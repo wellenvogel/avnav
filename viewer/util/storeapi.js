@@ -130,17 +130,7 @@ StoreApi.prototype.register=function(callback/*,...*/){
         this.callbacks.push(new CallbackDescriptor(callback,keys));
         return true;
     }
-    let description=this.callbacks[idx];
-    if (! description.keys) description.keys=keys;
-    else {
-        keys.forEach(function(key){
-            let found=false;
-            description.keys.forEach(function(existing){
-                if (existing == key) found=true;
-            });
-            if (! found) description.keys.push(key);
-        });
-    }
+    this.callbacks[idx]=new CallbackDescriptor(callback,keys);
     return true;
 };
 /**

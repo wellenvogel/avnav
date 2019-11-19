@@ -77,6 +77,29 @@
       {"name":"TimeStatus"},
       {"name":"Position"}
     ]
+  },
+  "editroutepage":{
+    "left_not_small":[
+      {"name":"EditRoute"},
+      {"name":"RoutePoints"}
+    ],
+    "top_small":[
+      {"name":"EditRoute"},
+      {"name":"Zoom"}
+    ],
+    "bottomLeft":[
+      {"name":"BRG"},
+      {"name":"DST"},
+      {"name":"ETA"},
+      {"name":"WpPosition"}
+    ],
+    "bottomRight":[
+      {"name":"COG"},
+      {"name":"SOG"},
+      {"name":"TimeStatus"},
+      {"name":"Position"}
+    ]
   }
+
   
 }

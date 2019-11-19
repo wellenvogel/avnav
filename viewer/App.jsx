@@ -17,6 +17,7 @@ import RoutePage from './gui/RoutePage.jsx';
 import DownloadPage from './gui/DownloadPage.jsx';
 import SettingsPage from './gui/SettingsPage.jsx';
 import NavPage from './gui/NavPage.jsx';
+import EditRoutePage from './gui/EditRoutePage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -87,7 +88,8 @@ const pages={
     routepage:RoutePage,
     downloadpage:DownloadPage,
     settingspage:SettingsPage,
-    navpage: NavPage
+    navpage: NavPage,
+    editroutepage:EditRoutePage
 };
 class Router extends Component {
     render() {

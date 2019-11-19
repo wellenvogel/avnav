@@ -1,44 +1,42 @@
 /**
  * Created by andreas on 10.10.16.
  */
-var React=require('react');
-var reactCreateClass=require('create-react-class');
-var PropTypes=require('prop-types');
+import React from 'react';
+import reactCreateClass from 'create-react-class';
+import PropTypes from 'prop-types';
+import routeobjects from '../nav/routeobjects.js';
 
-module.exports=reactCreateClass({
-    propTypes:{
-        idx: PropTypes.number,
-        name: PropTypes.string,
-        latlon: PropTypes.string,
-        course: PropTypes.string,
-        distance: PropTypes.string,
-        addClass: PropTypes.string,
-        showLatLon: PropTypes.bool,
-        onItemClick:    PropTypes.func.isRequired
-    },
-    getDefaultProps(){
-        return{
-        };
-    },
-    onClick: function(){
-      if (this.props.onItemClick) this.props.onItemClick(this.props);
-    },
-    render: function(){
-        var info;
-        if (this.props.showLatLon){
-            info=<div className="avn_route_point_ll">{this.props.latlon}</div>;
+const WayPointItem =(props)=>{
+        let info;
+        let formatted=routeobjects.formatRoutePoint(props);
+        if (props.showLatLon){
+            info=<div className="avn_route_point_ll">{formatted.latlon}</div>;
         }
         else{
-            info=<div className="avn_route_point_course">{this.props.course}&#176;/{this.props.distance}nm</div>;
+            info=<div className="avn_route_point_course">{formatted.course}&#176;/{formatted.distance}nm</div>;
         }
-        var classNames="avn_route_info_point "+this.props.addClass||"";
+        let classNames="avn_route_info_point "+props.className||"";
+        if (props.selected) classNames+=" activeEntry";
         return(
-        <div className={classNames} onClick={this.onClick} data-waypoint-idx={this.props.idx}>
-            <div className="avn_route_info_name">{this.props.name}</div>
-            <span className="avn_more"></span>
+        <div className={classNames} onClick={()=>{if (props.onClick)props.onClick();}}>
+            <div className="avn_route_info_name">{props.name}</div>
+            <span className="more"></span>
             {info}
         </div>
         );
+};
 
-    }
-});
+WayPointItem.propTypes={
+        idx:        PropTypes.number,
+        name:       PropTypes.string,
+        lat:        PropTypes.number,
+        lon:        PropTypes.number,
+        course:     PropTypes.number,
+        distance:   PropTypes.number,
+        className:  PropTypes.string,
+        showLatLon: PropTypes.bool,
+        onClick:    PropTypes.func,
+        selected:   PropTypes.bool
+    };
+
+export default WayPointItem;

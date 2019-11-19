@@ -83,7 +83,6 @@ class NavPage extends React.Component{
                     chartbase: keys.gui.navpage.chartbase}
                 ,this);
         }
-        this.subscribeToken=undefined;
 
     }
     mapEvent(evdata,token){
@@ -117,6 +116,9 @@ class NavPage extends React.Component{
                 name: "LockPos",
                 storeKeys:{
                     toggle: keys.map.lockPosition
+                },
+                updateFunction:(state)=>{
+                    return state;
                 },
                 onClick:()=>{
                     let old=globalStore.getData(keys.map.lockPosition);
@@ -166,7 +168,16 @@ class NavPage extends React.Component{
                 }
             },
             {
-                name: "ShowRoutePanel"
+                name: "ShowRoutePanel",
+                onClick:()=>{
+                    history.push("editroutepage",
+                        {
+                            url:globalStore.getData(keys.gui.navpage.mapurl),
+                            chartbase:globalStore.getData(keys.gui.navpage.mapurl)
+                        }
+                    )
+                }
+
             },
             {
                 name: "AnchorWatch",

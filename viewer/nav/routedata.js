@@ -592,6 +592,7 @@ RouteData.prototype.startEditingRoute=function(){
         this.editingWp=this.currentLeg.to.clone();
         this.editingRoute=this.currentLeg.currentRoute;
         this.lastEditingName=this.editingRoute.name;
+        globalStore.storeData(keys.nav.routeHandler.editingRoute,this.editingRoute.clone());
         return;
     }
     if (! this.editingRoute){
@@ -599,10 +600,12 @@ RouteData.prototype.startEditingRoute=function(){
         this.serverRoute=this.editingRoute.clone();
         this.editingWp=this.editingRoute.getPointAtIndex(0);
         this.lastEditingName=this.editingRoute.name;
+        globalStore.storeData(keys.nav.routeHandler.editingRoute,this.editingRoute.clone());
         return;
     }
     this._findBestMatchingPoint();
     this.lastEditingName=this.editingRoute.name;
+    globalStore.storeData(keys.nav.routeHandler.editingRoute,this.editingRoute.clone());
     return;
 };
 /**
