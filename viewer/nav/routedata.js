@@ -1028,7 +1028,7 @@ RouteData.prototype._saveChanges= function (oldWp, newWp){
             this.routeOff();
         }
     }
-    globalStore.storeData(keys.nav.routeHandler.editingRoute,this.editingRoute.clone());
+    globalStore.storeData(keys.nav.routeHandler.editingRoute,this.editingRoute?this.editingRoute.clone():undefined);
     this.saveRoute();
     if (changeActive) this._legChanged();
     else {

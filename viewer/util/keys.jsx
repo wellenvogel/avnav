@@ -196,6 +196,7 @@ let keys={
             leftPanelVisible: K
         },
         navpage:{
+            selectedWp:K,
 
         },
         editroutepage:{

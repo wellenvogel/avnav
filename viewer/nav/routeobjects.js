@@ -222,6 +222,11 @@ routeobjects.Leg.prototype.hasRoute=function(){
     return this.currentRoute !== undefined;
 };
 
+routeobjects.Leg.prototype.isCurrentTarget=function(wp){
+    if (! this.isRouting()) return false;
+    if (this.to.compare(wp)) return true;
+};
+
 
 /**
  *

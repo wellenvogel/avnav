@@ -26,6 +26,8 @@ import MapHolder from '../map/mapholder.js';
 import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
 import AisData from '../nav/aisdata.js';
+import ButtonList from '../components/ButtonList.jsx';
+import WayPointDialog from '../components/WaypointDialog.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -58,31 +60,125 @@ const widgetClick=(item,data,panel)=>{
         history.push('gpspage');
         return;
     }
+    if (item.name == 'BRG'||item.name == 'DST'|| item.name=='ETA'|| item.name=='WpPosition'){
+        globalStore.storeData(keys.gui.navpage.selectedWp,RouteHandler.getCurrentLegTarget())
+    }
 
 };
 
 const getPanelList=(panel,opt_isSmall)=>{
     return GuiHelpers.getPanelFromLayout('navpage',panel,'small',opt_isSmall);
 };
-
+const startWaypointDialog=(item)=>{
+    const wpChanged=(newWp,close)=>{
+        let changedWp=WayPointDialog.updateWaypoint(item,newWp,(err)=>{
+            Toast(Helper.escapeHtml(err));
+        },RouteHandler);
+        if (changedWp) {
+            return true;
+        }
+        return false;
+    };
+    let RenderDialog=function(props){
+        return <WayPointDialog
+            {...props}
+            waypoint={item}
+            okCallback={wpChanged}/>
+    };
+    OverlayDialog.dialog(RenderDialog);
+};
 const waypointButtons=[
     {
-        name:'WpLocate'
+        name:'WpLocate',
+        onClick:()=>{
+            MapHolder.setCenter(globalStore.getData(keys.gui.navpage.selectedWp));
+            globalStore.storeData(keys.gui.navpage.selectedWp,undefined);
+        }
     },
     {
-        name:'WpEdit'
+        name:'WpEdit',
+        onClick:()=>{
+            startWaypointDialog(globalStore.getData(keys.gui.navpage.selectedWp));
+            globalStore.storeData(keys.gui.navpage.selectedWp,undefined);
+        }
     },
     {
-        name:'WpGoto'
+        name:'WpGoto',
+        storeKeys:{
+            leg:keys.nav.routeHandler.currentLeg,
+            selectedWp: keys.gui.navpage.selectedWp
+        },
+        updateFunction: (state)=> {
+            let rt={visible:false};
+            if (!(state.leg && state.leg.hasRoute())) return rt;
+            if (state.leg.isCurrentTarget(state.selectedWp)) return rt;
+            return {visible:true}
+        },
+        onClick:()=>{
+            let selected=globalStore.getData(keys.gui.navpage.selectedWp);
+            globalStore.storeData(keys.gui.navpage.selectedWp,undefined);
+            if (selected) RouteHandler.wpOn(selected);
+        }
+
     },
     {
-        name:'NavNext'
+        name:'NavNext',
+        storeKeys:{
+            leg:keys.nav.routeHandler.currentLeg,
+            selectedWp: keys.gui.navpage.selectedWp
+        },
+        updateFunction: (state)=> {
+            let rt={visible:false};
+            if (!(state.leg && state.leg.hasRoute())) return rt;
+            if (!state.leg.isCurrentTarget(state.selectedWp)) return rt;
+            if (!state.leg.currentRoute.getPointAtOffset(state.selectedWp,1)) return rt;
+            return {visible:true}
+        },
+        onClick:()=>{
+            let selected=globalStore.getData(keys.gui.navpage.selectedWp);
+            globalStore.storeData(keys.gui.navpage.selectedWp,undefined);
+            RouteHandler.wpOn(RouteHandler.getPointAtOffset(selected,1));
+
+        }
     },
     {
-        name:'WpNext'
+        name:'WpNext',
+        storeKeys:{
+            leg:keys.nav.routeHandler.currentLeg,
+            selectedWp: keys.gui.navpage.selectedWp
+        },
+        updateFunction: (state)=> {
+            let rt={visible:false};
+            if (!(state.leg && state.leg.hasRoute())) return rt;
+            if (!state.leg.currentRoute.getPointAtOffset(state.selectedWp,1)) return rt;
+            return {visible:true}
+        },
+        onClick:()=>{
+            let selected=globalStore.getData(keys.gui.navpage.selectedWp);
+            let next=RouteHandler.getPointAtOffset(selected,1);
+            globalStore.storeData(keys.gui.navpage.selectedWp,next);
+            MapHolder.setCenter(next);
+
+        }
     },
     {
-        name:'WpPrevious'
+        name:'WpPrevious',
+        storeKeys:{
+            leg:keys.nav.routeHandler.currentLeg,
+            selectedWp: keys.gui.navpage.selectedWp
+        },
+        updateFunction: (state)=> {
+            let rt={visible:false};
+            if (!(state.leg && state.leg.hasRoute())) return rt;
+            if (!state.leg.currentRoute.getPointAtOffset(state.selectedWp,-1)) return rt;
+            return {visible:true}
+        },
+        onClick:()=>{
+            let selected=globalStore.getData(keys.gui.navpage.selectedWp);
+            let next=RouteHandler.getPointAtOffset(selected,-1);
+            globalStore.storeData(keys.gui.navpage.selectedWp,next);
+            MapHolder.setCenter(next);
+        }
     }
 ];
 
@@ -226,11 +322,20 @@ class NavPage extends React.Component{
                 chartBase={chartBase}
                 panelCreator={getPanelList}
                 storeKeys={{
-                    dummy:"xx"
+                    selectedWp:keys.gui.navpage.selectedWp
                 }}
                 updateFunction={(state)=>{
-                    let rt={};
+                    let rt={
+                        buttonList:[],
+                        overlayContent:undefined
+                    };
                     rt.buttonList=self.getButtons();
+                    if (state.selectedWp){
+                        rt.overlayContent=<ButtonList
+                            itemList={waypointButtons}
+                            className="overlayContainer"
+                        />;
+                    }
                     return rt;
                 }}
                 />
