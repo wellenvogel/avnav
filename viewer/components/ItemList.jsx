@@ -39,7 +39,7 @@ class ItemList extends React.Component{
         }
         let Content=function(props) {
             return (
-                <div className={props.className} style={style}>
+                <div className={props.className} style={style} ref={(el)=>{if (self.props.listRef) self.props.listRef(el)}}>
                     {allitems.map(function (entry) {
                     let itemProps = assign({}, entry);
                     let key = getKey(entry);
@@ -65,7 +65,7 @@ class ItemList extends React.Component{
         };
         if (this.props.scrollable) {
             return (
-                <div className={className}>
+                <div className={className} >
                     <Content className="listScroll"/>
                 </div>
             );
@@ -89,7 +89,8 @@ ItemList.propTypes={
         className:      PropTypes.string,
         scrollable:     PropTypes.bool,
         hideOnEmpty:    PropTypes.bool,
-        fontSize:      PropTypes.any
+        fontSize:       PropTypes.any,
+        listRef:        PropTypes.func
 };
 
 module.exports=ItemList;

@@ -12,8 +12,11 @@ import ItemList from './ItemList.jsx';
 import WaypointItem from './WayPointItem.jsx';
 import assign from 'object-assign';
 
-
 class RoutePointsWidget extends React.Component{
+    constructor(props){
+        super(props);
+        this.scrollSelected=this.scrollSelected.bind(this);
+    }
 
     shouldComponentUpdate(nextProps,nextState){
         for (let k in RoutePointsWidget.propTypes){
@@ -23,6 +26,17 @@ class RoutePointsWidget extends React.Component{
         if (!nextProps.route != !this.props.Route) return true;
         if (!nextProps.route) return false;
         return nextProps.route.differsTo(this.props.route);
+    }
+    scrollSelected(){
+        if (! this.listRef) return;
+        let el=this.listRef.querySelector('.activeEntry');
+        if (el) el.scrollIntoView();
+    }
+    componentDidMount(){
+        this.scrollSelected();
+    }
+    componentDidUpdate(){
+        //this.scrollSelected();
     }
     render(){
         let self=this;
@@ -35,6 +49,7 @@ class RoutePointsWidget extends React.Component{
                       itemClass={WaypointItem}
                       scrollable={true}
                       onItemClick={(item,data)=>{if (self.props.onClick) self.props.onClick(item) }}
+                      listRef={(element)=>{self.listRef=element}}
                 />
         );
     }

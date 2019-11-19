@@ -1041,10 +1041,13 @@ span.valuePrefix{
     position: absolute;
     bottom:0;
     left:0;
+    overflow: hidden;
+    max-height: 100%;
     .flex-direction(column);
     z-index: 3;
     .avn_widget{
       width: inherit;
+      flex-shrink: inherit;
     }
   }
 }
