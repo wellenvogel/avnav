@@ -84,6 +84,16 @@ const getPanelList=(panel,opt_isSmall)=>{
     return rt;
 };
 
+const checkRouteWritable=function(){
+    if (RouteHandler.isRouteWritable()) return true;
+    let ok=OverlayDialog.confirm("you cannot edit this route as you are disconnected. OK to select a new name");
+    ok.then(function(){
+        RouteHandler.setRouteForPage();
+        history.push('routepage');
+    });
+    return false;
+};
+
 
 class EditRoutePage extends React.Component{
     constructor(props){
@@ -120,19 +130,49 @@ class EditRoutePage extends React.Component{
                 onClick:()=>{MapHolder.changeZoom(-1)}
             },
             {
-                name:"NavAdd"
+                name:"NavAdd",
+                onClick:()=>{
+                    if (!checkRouteWritable()) return;
+                    let center=MapHolder.getCenter();
+                    if (!center) return;
+                    let current=RouteHandler.getEditingWp();
+                    if (current){
+                        let distance=MapHolder.pixelDistance(center,current);
+                        if (distance < 8) return;
+                    }
+                    RouteHandler.addWp(-1,center);
+                }
             },
             {
-                name:"NavDelete"
+                name:"NavDelete",
+                onClick:()=>{
+                    if (!checkRouteWritable()) return;
+                    RouteHandler.deleteWp(-1);
+                }
             },
             {
-                name:"NavToCenter"
+                name:"NavToCenter",
+                onClick:()=>{
+                    if (!checkRouteWritable()) return;
+                    let center=MapHolder.getCenter();
+                    if (!center) return;
+                    RouteHandler.changeWpByIdx(-1,center);
+                }
             },
             {
-                name:"NavGoto"
+                name:"NavGoto",
+                onClick:()=>{
+                    if (!checkRouteWritable()) return;
+                    RouteHandler.wpOn(RouteHandler.getEditingWp());
+                    history.pop();
+                }
             },
             {
-                name:"NavInvert"
+                name:"NavInvert",
+                onClick:()=>{
+                    if (!checkRouteWritable()) return;
+                    RouteHandler.invertRoute();
+                }
             },
             {
                 name: 'Cancel',

@@ -444,7 +444,7 @@ RouteData.prototype.deleteWp=function(id){
     else{
         this._findBestMatchingPoint();
     }
-    this._saveChanges(old, newWp);
+    return this._saveChanges(old, newWp);
 };
 /**
  * change a point in the route
@@ -474,7 +474,7 @@ RouteData.prototype.addWp=function(id,point){
     id=this.getIdForMinusOne(id);
     if (! this.editingRoute) return;
     this.editingWp=this.editingRoute.addPoint(id,point);
-    this._saveChanges();
+    return this._saveChanges();
 };
 /**
  * delete all points from the route
@@ -483,7 +483,7 @@ RouteData.prototype.emptyRoute=function(){
     this.editingWp=undefined;
     if (! this.editingRoute) return;
     this.editingRoute.points=[];
-    this._saveChanges();
+    return this._saveChanges();
 };
 
 /**
@@ -492,7 +492,7 @@ RouteData.prototype.emptyRoute=function(){
 RouteData.prototype.invertRoute=function(){
     if (! this.editingRoute) return;
     this.editingRoute.swap();
-    this._saveChanges();
+    return this._saveChanges();
 };
 
 /**
