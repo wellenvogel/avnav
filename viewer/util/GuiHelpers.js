@@ -1,5 +1,5 @@
 import NavData from '../nav/navdata.js';
-import Toast from '../util/overlay.js';
+import Toast from '../components/Toast.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.jsx';
@@ -14,7 +14,7 @@ const anchorWatchDialog = (overlayContainer)=> {
     }
     let pos = NavData.getCurrentPosition();
     if (!pos) {
-        Toast.Toast("no gps position");
+        Toast("no gps position");
         return;
     }
     let def = PropertyHandler.getProperties().anchorWatchDefault;
@@ -121,7 +121,8 @@ const lifecycleSupport=(thisref,callback,opt_onUpdate)=> {
 const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
     let timerData={
         sequence:0,
-        timer:undefined
+        timer:undefined,
+        interval:interval
     };
     const startTimer=(sequence)=>{
         if (sequence !== undefined && sequence != timerData.sequence) {
@@ -131,12 +132,20 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
             timerData.sequence++;
             window.clearTimeout(timerData.timer);
         }
+        if (! timerData.interval) return;
         let currentSequence=timerData.sequence;
         timerData.timer=window.setTimeout(()=>{
             timerData.timer=undefined;
             if (currentSequence != timerData.sequence) return;
             timercallback.apply(thisref,[currentSequence]);
-        },interval);
+        },timerData.interval);
+    };
+    const setTimeout=(newInterval,opt_stop)=>{
+        timerData.interval=newInterval;
+        if (opt_stop){
+            if (timerData.timer) window.clearTimeout(timerData.timer);
+            timerData.timer=undefined;
+        }
     };
     lifecycleSupport(thisref,(unmount)=>{
         timerData.sequence++;
@@ -150,6 +159,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
     });
     return {
         startTimer:startTimer,
+        setTimeout:setTimeout,
         currentSequence:()=>{return timerData.sequence}
     };
 };

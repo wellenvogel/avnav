@@ -4,7 +4,6 @@
  */
 
 let compare=require('./shallowcompare');
-let Toast=require('./overlay');
 /**
  *
  * @constructor
@@ -67,7 +66,7 @@ Helper.uploadFile=function(url,file,param){
             }
         });
     }catch (e){
-        Toast.Toast("upload error: "+e);
+        throw new Exception("upload error: "+e);
     }
 };
 

@@ -476,6 +476,25 @@ span.valuePrefix{
   opacity: 0;
 }
 
+//--Toast--
+.toast{
+  height: auto;
+  position: fixed;
+  left: 50px;
+  bottom: 10px;
+  background-color: #383838;
+  color: #F0F0F0;
+  .nightColors();
+  font-size: 1.5em;
+  padding: 1em;
+  text-align: center;
+  border-radius: 2px;
+  -webkit-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+  -moz-box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+  box-shadow: 0px 0px 24px -1px rgba(56, 56, 56, 1);
+  z-index: 9999;
+}
+
 
 
 
@@ -969,7 +988,8 @@ span.valuePrefix{
 
 }
 
-#navpage{
+//-------------- pages with map and widgets ----------------------------
+.mapPage{
   .widgetContainer{
     .flex-display();
     .avn_widget{
@@ -1006,12 +1026,12 @@ span.valuePrefix{
       position: relative;
       .flex-direction(row);
     }
-    max-height: @verticalContainerHeight;
-    &.twoRows{
-      max-height: @verticalContainerDoubleHeight;
-    }
     .widgetContainer{
       .flex-wrap(wrap);
+      max-height: @verticalContainerHeight;
+      &.twoRows{
+        max-height: @verticalContainerDoubleHeight;
+      }
     }
     .avn_widget{
       height: @verticalWidgetHeight;

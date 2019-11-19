@@ -16,7 +16,7 @@ import Page from '../components/Page.jsx';
 import Toast from '../util/overlay.js';
 import Requests from '../util/requests.js';
 import MapHolder from '../map/mapholder.js';
-import GuiHelpers from './helpers.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container

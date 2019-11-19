@@ -16,7 +16,7 @@ import Toast from '../util/overlay.js';
 import AisHandler from '../nav/aisdata.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import MapHolder from '../map/mapholder.js';
-import GuiHelpers from './helpers.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 
 const displayItems = [
     {name: 'mmsi', label: 'MMSI'},

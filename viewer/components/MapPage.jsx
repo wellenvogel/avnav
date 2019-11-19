@@ -43,11 +43,6 @@ const widgetCreator=(widget,panel)=>{
     return rt;
 };
 
-
-
-
-
-
 class MapPage extends React.Component{
     constructor(props){
         super(props);
@@ -90,32 +85,38 @@ class MapPage extends React.Component{
         };
         return (
             <Page
-                className={self.props.className}
+                className={self.props.className?self.props.className+" mapPage":"mapPage"}
                 style={self.props.style}
                 id={self.props.id}
                 mainContent={
                             <React.Fragment>
                             <div className="leftSection">
                                 <WidgetContainer
+                                    fontSize={self.props.widgetFontSize+"px"}
                                     panel="left"
                                 />
                                  <WidgetContainer
+                                    fontSize={self.props.widgetFontSize+"px"}
                                     panel="top"
                                 />
 
                                 <div className="map" ref="map"/>
+                                {self.props.overlayContent?self.props.overlayContent:null}
                             </div>
                             <div className={"bottomSection" + (globalStore.getData(keys.properties.allowTwoWidgetRows)?" twoRows":"")}>
                                 <WidgetContainer
+                                    fontSize={self.props.widgetFontSize+"px"}
                                     panel='bottomLeft'
                                     />
                                 <WidgetContainer
+                                    fontSize={self.props.widgetFontSize+"px"}
                                     panel="bottomRight"
                                     />
                              </div>
                             </React.Fragment>
                         }
                 buttonList={self.props.buttonList}
+
                 />
 
         );
@@ -131,7 +132,12 @@ MapPage.propertyTypes={
     mapUrl:             PropTypes.string.isRequired,
     chartBase:          PropTypes.string,
     mapEventCallback:   PropTypes.func,
-    id:                 PropTypes.string
+    id:                 PropTypes.string,
+    overlayContent:     PropTypes.any               //overlay in the map container
 };
 
-module.exports=MapPage;
+module.exports=Dynamic(MapPage,{
+    storeKeys:{
+        widgetFontSize:keys.properties.widgetFontSize
+    }
+});

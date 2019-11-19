@@ -23,6 +23,7 @@ import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
 import Toast from './util/overlay.js';
 import SoundHandler from './components/SoundHandler.jsx';
+import {ToastDisplay} from './components/Toast.jsx';
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -146,7 +147,7 @@ class App extends React.Component {
     }
     render(){
         const Dialogs = OverlayDialog.getDialogContainer;
-        return <div className="app" ref="app">
+        return <div className="app" ref="app" style={{fontSize: this.props.fontSize+"px"}}>
             <DynamicRouter
                 storeKeys={{
                 location: keys.gui.global.pageName,
@@ -161,7 +162,12 @@ class App extends React.Component {
                 storeKeys={alarmStoreKeys}
                 updateFunction={computeAlarmSound}
                 />
+            <ToastDisplay/>
         </div>
     };
 }
-module.exports=App;
+module.exports=Dynamic(App,{
+  storeKeys:{
+      fontSize: keys.properties.baseFontSize
+  }
+});

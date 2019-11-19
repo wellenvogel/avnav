@@ -15,7 +15,7 @@ import Page from '../components/Page.jsx';
 import Toast from '../util/overlay.js';
 import Requests from '../util/requests.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
-import GuiHelpers from './helpers.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 
 const statusTextToImageUrl=(text)=>{
     let rt=PropertyHandler.getProperties().statusIcons[text];

@@ -21,10 +21,11 @@ import Formatter from '../util/formatter.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
-import GuiHelpers from './helpers.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
 import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
+import AisData from '../nav/aisdata.js';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -87,6 +88,15 @@ class NavPage extends React.Component{
     }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);
+        if (evdata.type === MapHolder.EventTypes.SELECTAIS){
+            let aisparam=evdata.aisparam;
+            if (!aisparam) return;
+            if (aisparam.mmsi){
+                AisData.setTrackedTarget(aisparam.mmsi);
+                history.push('aisinfopage',{mmsi:aisparam.mmsi});
+            }
+            return;
+        }
     }
     componentWillUnmount(){
     }

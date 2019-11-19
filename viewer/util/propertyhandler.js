@@ -36,20 +36,7 @@ const filterObjectTree=(source,filterFunction,opt_basepath)=>{
     return rt;
 };
 
-const applyLayoutLegacy=(nightMode,nightFade,baseFontSize,widgetFontSize,buttonFontSize)=>{
-    if (!nightMode) {
-        $('#old_pages').removeClass('nightMode');
-        $('#old_pages').css('opacity', '1');
-    }
-    else {
-        $('#old_pages').addClass('nightMode');
-        $('#old_pages').css('opacity', nightFade / 100)
-    }
-    $(".avn_button").css('font-size', buttonFontSize + "px");
-    $(".avn_dialog button").css('font-size', buttonFontSize + "px");
-    $('body').css('font-size', baseFontSize + "px");
-    $('.avn_widgetContainer').css('font-size', widgetFontSize + "px");
-};
+
 
 const hex2rgba= (hex, opacity)=> {
     let patt = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
@@ -76,7 +63,6 @@ class PropertyHandler {
         this.propertyDescriptions = KeyHelper.getKeyDescriptions(true);
         this.getProperties=this.getProperties.bind(this);
         this.saveUserData=this.saveUserData.bind(this);
-        this.updateLayout=this.updateLayout.bind(this);
         this.getButtonFontSize=this.getButtonFontSize.bind(this);
         this.getColor=this.getColor.bind(this);
         this.getAisColor=this.getAisColor.bind(this);
@@ -105,7 +91,7 @@ class PropertyHandler {
         }catch (e){
             avnav.log("Exception reading user data "+e);
         }
-        this.updateLayout();
+        this.incrementSequence();
     }
 
     incrementSequence(){
@@ -141,21 +127,9 @@ class PropertyHandler {
                 return item !== description.defaultv;
             },KeyHelper.keyNodeToString(keys.properties))
         );
-        this.updateLayout();
-    }
-
-    /**
-     * update the layout
-     */
-    updateLayout() {
-        applyLayoutLegacy(
-            globalStore.getData(keys.properties.nightMode),
-            globalStore.getData(keys.properties.nightFade),
-            globalStore.getData(keys.properties.baseFontSize),
-            this.getButtonFontSize()
-        );
         this.incrementSequence();
     }
+
 
     getButtonFontSize() {
         let numButtons = globalStore.getData(keys.properties.maxButtons);

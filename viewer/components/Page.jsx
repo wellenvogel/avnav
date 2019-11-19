@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Headline from './Headline.jsx';
 import ButtonList from './ButtonList.jsx';
-import Toast from '../util/overlay.js';
+import {hideToast} from '../components/Toast.jsx';
 import WidgetFactory from './WidgetFactory.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
@@ -37,7 +37,7 @@ class Page extends React.Component {
         </div>
     }
     componentWillUnmount(){
-        Toast.hideToast();
+        hideToast();
     }
 
 }

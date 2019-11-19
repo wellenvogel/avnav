@@ -14,7 +14,7 @@ import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../util/overlay.js';
 import MapHolder from '../map/mapholder.js';
-import GuiHelpers from './helpers.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 import Helper from '../util/helper.js';
 import WaypointListItem from '../components/WayPointListItem.jsx';
 import WayPointDialog from '../components/WaypointDialog.jsx';

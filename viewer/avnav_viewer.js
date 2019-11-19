@@ -100,7 +100,7 @@ avnav.main=function() {
 
     //ios browser sometimes has issues with less...
     setTimeout(function(){
-        propertyHandler.updateLayout();
+        propertyHandler.incrementSequence();
     },1000);
     avnav.log("avnav loaded");
 };

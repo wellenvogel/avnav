@@ -142,6 +142,9 @@ let keys={
             layoutSequence: K, //updated on layout load
             reloadSequence: K, //will be changed if new data from server
             buttonFontSize: K,
+            toastText:K,
+            toastTimeout:K,
+            toastCallback:K
         },
         mainpage:{
             chartList: K,

@@ -15,7 +15,7 @@ import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../util/overlay.js';
 import MapHolder from '../map/mapholder.js';
-import GuiHelpers from './helpers.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
 import Helper from '../util/helper.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
