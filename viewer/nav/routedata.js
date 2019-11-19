@@ -624,7 +624,7 @@ RouteData.prototype.wpOn=function(wp,opt_keep_from) {
         //check if this is our current active/editing one - if yes, start routing mode
         stwp.routeName=wp.routeName;
         var rt=this.getRouteByName(wp.routeName);
-        if (!(rt  && rt.getIndexFromPoint(stwp) >= 0)){
+        if (!(rt  && rt.getIndexFromPoint(stwp) >= 0)){route
             stwp.routeName=undefined;
         }
     }
@@ -654,12 +654,18 @@ RouteData.prototype.wpOnInactive=function(wp,opt_keep_from) {
  */
 
 RouteData.prototype.anchorOn=function(wp,distance){
+    if (! wp) return;
+    if (! (wp instanceof navobjects.WayPoint)){
+        var nwp=new navobjects.WayPoint();
+        nwp.update(wp);
+        wp=nwp;
+    }
     this.currentLeg.setAnchorWatch(wp,distance);
     this._legChanged();
 };
 RouteData.prototype.anchorOff=function(){
     this.currentLeg.anchorDistance=undefined;
-    this.currentLeg.to=new navobjects.Point(0,0);
+    this.currentLeg.to=new navobjects.WayPoint(0,0);
     this.currentLeg.active=false;
     this._legChanged();
 };

@@ -27,6 +27,7 @@ import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
 import AisData from '../nav/aisdata.js';
 import WayPointDialog from '../components/WaypointDialog.jsx';
+import ButtonList from '../components/ButtonList.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -51,6 +52,8 @@ const startWaypointDialog=(item)=>{
     OverlayDialog.dialog(RenderDialog);
 };
 
+
+
 const widgetClick=(item,data,panel)=>{
     if (item.name == "EditRoute"){
         RouteHandler.startEditingRoute();
@@ -60,8 +63,7 @@ const widgetClick=(item,data,panel)=>{
     }
     if (item.name == 'RoutePoints'){
         if (data && data.idx !== undefined){
-            RouteHandler.setEditingWpIdx(data.idx);
-            globalStore.storeData(keys.gui.editroutepage.selectedWp,data.idx);
+            setEditingWpIdx(data.idx);
             let last=globalStore.getData(keys.gui.editroutepage.lastCenteredWp);
             MapHolder.setCenter(RouteHandler.getEditingWp());
             globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,data.idx);
@@ -72,6 +74,11 @@ const widgetClick=(item,data,panel)=>{
     }
 
 
+};
+
+const setEditingWpIdx=(idx)=>{
+    RouteHandler.setEditingWpIdx(idx);
+    globalStore.storeData(keys.gui.editroutepage.selectedWp,idx);
 };
 
 const getPanelList=(panel,opt_isSmall)=>{
@@ -94,6 +101,54 @@ const checkRouteWritable=function(){
     return false;
 };
 
+const waypointButtons=[
+    {
+        name:'WpLocate',
+        onClick:()=>{
+            MapHolder.setCenter(RouteHandler.getEditingWp());
+        }
+    },
+    {
+        name:'WpEdit',
+        onClick:()=>{
+            startWaypointDialog(RouteHandler.getEditingWp());
+        }
+    },
+    {
+        name:'WpNext',
+        storeKeys:{
+            selectedWp: keys.gui.editroutepage.selectedWp
+        },
+        updateFunction: (state)=> {
+            let rt={visible:false};
+            if (!RouteHandler.getPointAtOffset(RouteHandler.getEditingWp(),1)) return rt;
+            return {visible:true}
+        },
+        onClick:()=>{
+            let selected=globalStore.getData(keys.gui.editroutepage.selectedWp);
+            setEditingWpIdx((selected||0)+1);
+            MapHolder.setCenter(RouteHandler.getEditingWp());
+
+        }
+    },
+    {
+        name:'WpPrevious',
+        storeKeys:{
+            selectedWp: keys.gui.editroutepage.selectedWp
+        },
+        updateFunction: (state)=> {
+            let rt={visible:false};
+            if (!RouteHandler.getPointAtOffset(RouteHandler.getEditingWp(),-1)) return rt;
+            return {visible:true}
+        },
+        onClick:()=>{
+            let selected=globalStore.getData(keys.gui.editroutepage.selectedWp);
+            setEditingWpIdx((selected||0)-1);
+            MapHolder.setCenter(RouteHandler.getEditingWp());
+        }
+    }
+];
+
 
 class EditRoutePage extends React.Component{
     constructor(props){
@@ -108,6 +163,8 @@ class EditRoutePage extends React.Component{
     }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);
+        RouteHandler.setEditingWp(evdata.wp);
+        globalStore.storeData(keys.gui.editroutepage.selectedWp,RouteHandler.getEditingWpIdx())
 
     }
     componentWillUnmount(){
@@ -185,6 +242,8 @@ class EditRoutePage extends React.Component{
         let self=this;
         let url=globalStore.getData(keys.gui.editroutepage.mapurl);
         let chartBase=globalStore.getData(keys.gui.editroutepage.chartbase,url);
+        let isSmall=globalStore.getData(keys.gui.global.windowDimensions,{width:0}).width
+            < globalStore.getData(keys.properties.smallBreak);
         return (
             <DynamicPage
                 className={self.props.className}
@@ -199,8 +258,17 @@ class EditRoutePage extends React.Component{
                     selectedWp:keys.gui.editroutepage.selectedWp
                 }}
                 updateFunction={(state)=>{
-                    let rt={};
+                    let rt={
+                        buttonList:[],
+                        overlayContent:undefined
+                    };
                     rt.buttonList=self.getButtons();
+                    if (isSmall){
+                    rt.overlayContent=<ButtonList
+                            itemList={waypointButtons}
+                            className="overlayContainer"
+                        />;
+                    }
                     return rt;
                 }}
                 />

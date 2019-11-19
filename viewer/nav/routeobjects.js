@@ -69,7 +69,7 @@ routeobjects.Leg=function(from, to, active, opt_routeName){
 };
 
 routeobjects.Leg.prototype.clone=function(){
-    var rt=new routeobjects.Leg(this.from.clone(),this.to.clone(),this.active,
+    var rt=new routeobjects.Leg(this.from?this.from.clone():undefined,this.to?this.to.clone():undefined,this.active,
         this.name?this.name.slice(0):undefined);
     rt.approach=false;
     rt.approachDistance=this.approachDistance;
