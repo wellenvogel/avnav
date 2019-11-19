@@ -145,7 +145,112 @@ let RequestHandler={
               },(error)=>{
                   reject(error);
               });
-      });
+        });
+    },
+
+    /**
+     * @param url {string}
+     * @param file {File}
+     * @param param parameter object
+     *        all handlers get the param object as first parameter
+     *        starthandler: will get the xhdr as second parameter - so it can be used for interrupts
+     *        progresshandler: progressfunction
+     *        okhandler: called when done
+     *        errorhandler: called on error
+     *        see https://mobiarch.wordpress.com/2012/08/21/html5-file-upload-with-progress-bar-using-jquery/
+     */
+    oldUploadFile: (url, file, param)=> {
+        var type = file.type;
+        if (!type || type == "") type = "application/octet-stream";
+        try {
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: file,
+                dataType: "json",
+                processData: false, //Work around #1
+                contentType: type, //Work around #2
+                beforeSend: function (xhdr, settings) {
+                    settings.data = file; //workaround for safari - see http://www.redmine.org/issues/13932
+                    if (param.starthandler) {
+                        param.starthandler(param, xhdr);
+                    }
+                },
+                success: function (data) {
+                    if (data.status && data.status != "OK") {
+                        if (param.errorhandler) {
+                            param.errorhandler(param, data.status);
+                        }
+                        return;
+                    }
+                    if (param.okhandler) {
+                        param.okhandler(param, data);
+                    }
+                },
+                error: function (err) {
+                    if (param.errorhandler) {
+                        param.errorhandler(param, err);
+                    }
+                },
+                //Work around #3
+                xhr: function () {
+                    var myXhr = $.ajaxSettings.xhr();
+                    if (myXhr.upload && param.progresshandler) {
+                        myXhr.upload.addEventListener('progress', function (ev) {
+                            param.progresshandler(param, ev);
+                        }, false);
+                    }
+                    return myXhr;
+                }
+            });
+        } catch (e) {
+            throw new Exception("upload error: " + e);
+        }
+    },
+    /**
+     * @param url {string}
+     * @param file {File}
+     * @param param parameter object
+     *        all handlers get the param object as first parameter
+     *        starthandler: will get the xhdr as second parameter - so it can be used for interrupts
+     *        progresshandler: progressfunction
+     *        okhandler: called when done
+     *        errorhandler: called on error
+     *        see https://mobiarch.wordpress.com/2012/08/21/html5-file-upload-with-progress-bar-using-jquery/
+     */
+    uploadFile: (url, file, param)=> {
+        let type = file.type;
+        if (!type || type == "") type = "application/octet-stream";
+        try {
+            let xhr=new XMLHttpRequest();
+            xhr.open('POST',url,true);
+            xhr.setRequestHeader('Content-Type', file.type);
+            xhr.addEventListener('load',(event)=>{
+                if (xhr.status != 200){
+                    if (param.errorhandler) param.errorhandler(param,xhr.statusText);
+                    return;
+                }
+                let json=undefined;
+                try {
+                    json = JSON.parse(xhr.responseText);
+                    if (! json.status || json.status != 'OK'){
+                        if (param.errorhandler) param.errorhandler(param,"invalid status: "+json.status);
+                        return;
+                    }
+                }catch (e){
+                    if (param.errorhandler) param.errorhandler(param,e);
+                    return;
+                }
+                if (param.okhandler) param.okhandler(param,json);
+            });
+            xhr.upload.addEventListener('progress',(event)=>{
+                if (param.progresshandler) param.progresshandler(param,event);
+            });
+            if (param.starthandler) param.starthandler(param,xhr);
+            xhr.send(file);
+        } catch (e) {
+            if (param.errorhandler) param.errorhandler(param,e);
+        }
     }
 };
 Object.freeze(RequestHandler);

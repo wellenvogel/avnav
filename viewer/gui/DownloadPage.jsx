@@ -329,6 +329,7 @@ const UploadIndicator = Dynamic((info)=> {
             </div>
             <button className="DownloadPageUploadCancel button" onClick={()=>{
                 if (props.xhdr) props.xhdr.abort();
+                globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
                 }}
                 />
         </div>
@@ -338,7 +339,7 @@ const UploadIndicator = Dynamic((info)=> {
 });
 const directUpload=(type,file)=>{
     let url=PropertyHandler.getProperties().navUrl+ "?request=upload&type="+type+"&filename=" + encodeURIComponent(file.name);
-    Helper.uploadFile(url, file, {
+    Requests.uploadFile(url, file, {
         self: self,
         starthandler: function(param,xhdr){
             globalStore.storeData(keys.gui.downloadpage.uploadInfo,{
