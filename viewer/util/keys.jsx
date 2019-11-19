@@ -125,7 +125,8 @@ let keys={
         lockPosition: K,
         courseUp: K,
         currentZoom:K,
-        requiredZoom:K
+        requiredZoom:K,
+        centerPosition:K,
         },
     gui:{
         global:{

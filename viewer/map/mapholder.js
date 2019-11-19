@@ -2,24 +2,26 @@
  * Created by andreas on 03.05.14.
  */
 
-avnav.provide('avnav.map.MapEvent');
 
-var navobjects=require('../nav/navobjects');
-var NavData=require('../nav/navdata');
-var OverlayDialog=require('../components/OverlayDialog.jsx');
-var PropertyHandler=require('../util/propertyhandler');
-var AisLayer=require('./aislayer');
-var NavLayer=require('./navlayer');
-var TrackLayer=require('./tracklayer');
-var RouteLayer=require('./routelayer');
-var Drawing=require('./drawing').Drawing;
-var DrawingPositionConverter=require('./drawing').DrawingPositionConverter;
-var Formatter=require('../util/formatter');
+import navobjects from '../nav/navobjects';
+import NavData from '../nav/navdata';
+import OverlayDialog from '../components/OverlayDialog.jsx';
+import PropertyHandler from '../util/propertyhandler';
+import AisLayer from './aislayer';
+import NavLayer from './navlayer';
+import TrackLayer from './tracklayer';
+import RouteLayer from './routelayer';
+import {Drawing,DrawingPositionConverter} from './drawing';
+import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
+import Promise from 'promise';
+import Requests from '../util/requests.js';
+import base from '../base.js';
+import PubSub from 'PubSub';
 
 
-
+const PSTOPIC="mapevent";
 
 
 
@@ -34,37 +36,15 @@ const LayerTypes={
     TAIS:3
 };
 
-avnav.map.EventType={
-    MOVE:0,
+const EventTypes={
     SELECTAIS:1,
     SELECTWP: 2
 };
 
-/**
- *
- * @param {avnav.map.EventType} type
- * @param opt_parameter
- * @constructor
- */
-avnav.map.MapEvent=function(type,opt_parameter){
-    /**
-     *
-     * @type {avnav.map.EventTypes}
-     */
-    this.type=type;
-    /**
-     *
-     * @type {*|{}}
-     */
-    this.parameter=opt_parameter||{};
-};
-avnav.map.MapEvent.EVENT_TYPE="mapevent";
 
 /**
  * the holder for our olmap
  * the holer remains alive all the time whereas the map could be recreated on demand
- * @param {avnav.util.PropertyHandler} properties
- * @param navobject
  * @constructor
  */
 const MapHolder=function(){
@@ -79,7 +59,7 @@ const MapHolder=function(){
      * */
     this.navobject=NavData;
     /** @private
-     *  @type {avnav.properties.PropertyHandler}
+     *  @type {PropertyHandler}
      *  */
     this.properties=PropertyHandler;
     
@@ -170,12 +150,39 @@ const MapHolder=function(){
      * @private
      */
     this._chartbase=undefined;
+    /**
+     * the last url
+     * @type {String}
+     * @private
+     */
+    this._url=undefined;
+
     globalStore.storeData(keys.map.courseUp,this.courseUp);
     this.timer=undefined;
-
+    this.pubSub=new PubSub();
 };
 
-avnav.inherits(MapHolder,DrawingPositionConverter);
+base.inherits(MapHolder,DrawingPositionConverter);
+
+MapHolder.prototype.EventTypes=EventTypes;
+
+/**
+ * register for map events
+ * @param callback a callback function, will be called with data and topic
+ *        data is {type:EventTypes,...}
+ * @returns {number} a token to be used for unsubscribe
+ */
+MapHolder.prototype.subscribe=function(callback){
+    return this.pubSub.subscribe(PSTOPIC,callback);
+};
+
+/**
+ * deregister from map events
+ * @param token - the value obtained from register
+ */
+MapHolder.prototype.unsubscribe=function(token){
+    return this.pubSub.unsubscribe(token);
+};
 /**
  * @inheritDoc
  * @param {ol.Coordinate} point
@@ -195,7 +202,7 @@ MapHolder.prototype.pixelToCoord=function(pixel){
 
 /**
  * get the property handler
- * @returns {avnav.properties.PropertyHandler}
+ * @returns {PropertyHandler}
  */
 MapHolder.prototype.getProperties=function(){
     return this.properties;
@@ -232,55 +239,54 @@ MapHolder.prototype.renderTo=function(div){
         this.timer=undefined;
     }
     if (! this.olmap) return;
-    if (!div) div=this.defaultDiv;
-    this.olmap.setTarget(div);
+    let mapDiv=div||this.defaultDiv;
+    this.olmap.setTarget(mapDiv);
     let self=this;
-    if (! this.timer){
-        window.setInterval(()=>{self.timerFunction()},1000)
+    if (! this.timer && div){
+        this.timer=window.setInterval(()=>{self.timerFunction()},1000)
     }
     this.olmap.updateSize();
 };
 
+/**
+ *  entry function to load the map
+ **/
 
-MapHolder.prototype.loadMap=function(options,opt_force){
+MapHolder.prototype.loadMap=function(div,url,chartBase){
     var self=this;
-    var chartbase = options.charturl;
-    var list = options.url;
-    if (!chartbase) {
-        chartbase = list;
-    }
-    if (! chartbase){
-        list=this._chartbase;
-        chartbase=this._chartbase;
-    }
-    if (! list){
-        throw Error("missing charturl when loading rteditpage");
-    }
-    if (!list.match(/^http:/)) {
-        if (list.match(/^\//)) {
-            list = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + list;
+    return new Promise((resolve,reject)=> {
+        if (!url) {
+            reject("no map selected");
+            return;
         }
-        else {
-            list = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + list;
+        if (this._url == url && this._chartbase == chartBase){
+            this.renderTo(div);
+            resolve(0);
+            return;
         }
-    }
-    if (list != this._chartbase || opt_force) {
-        //chartbase: optional url for charts
-        //list: the base url
-
-        var url = list + "/avnav.xml";
-        $.ajax({
-            url: url,
-            dataType: 'xml',
-            cache: false,
-            success: function (data) {
-                self.initMap(self.mapdom, data, chartbase);
-            },
-            error: function (ev) {
-                self.toast("unable to load charts " + ev.responseText);
+        let originalUrl=url;
+        if (!url.match(/^http:/)) {
+            if (url.match(/^\//)) {
+                url = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + url;
             }
-        });
-    }
+            else {
+                url = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + url;
+            }
+        }
+        url = url + "/avnav.xml";
+        Requests.getHtmlOrText(url, {useNavUrl: false}).then((data)=> {
+            self.initMap(div, data, chartBase);
+            self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
+            globalStore.getData(keys.properties.nightChartFade, 100) / 100
+                : 1);
+            this._url=originalUrl;
+            this._chartbase=chartBase;
+            resolve(1);
+        }).catch((error)=> {
+            reject("unable to load map: " + error);
+        })
+    });
+
 };
 /**
  * init the map (deinit an old one...)
@@ -378,8 +384,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         if (layers.length > 0) {
             lext=layers[0].avnavOptions.extent;
             if (lext !== undefined && !ol.extent.containsCoordinate(lext,this.pointToMap(this.center))){
-                var container=$('.avn_page:visible').find('.avn_left_panel')[0];
-                var ok=OverlayDialog.confirm("Position outside map, center to map now?",container);
+                var ok=OverlayDialog.confirm("Position outside map, center to map now?");
                 ok.then(function(){
                     if (layers.length > 0) {
                         var view = self.getView();
@@ -413,8 +418,6 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     var newCenter= this.pointFromMap(this.getView().getCenter());
     this.setCenterFromMove(newCenter,true);
     if (! this.getProperties().getProperties().layers.boat ) this.gpsLocked=false;
-    if (this.timer) window.clearInterval(this.timer);
-    this.timer=window.setInterval(()=>{self.timerFunction()},1000);
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
 };
 
@@ -534,7 +537,7 @@ MapHolder.prototype.drawNorth=function() {
  * @private
  */
 MapHolder.prototype.e2f=function(elem,attr){
-    return parseFloat($(elem).attr(attr));
+    return parseFloat(elem.getAttribute(attr));
 };
 
 /**
@@ -666,18 +669,29 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
  * @returns {Array.<ol.layer.Layer>} list of Layers
  */
 MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
-    var self=this;
-    var ll=[];
-    $(layerdata).find('TileMap').each(function(ln,tm){
+    let self=this;
+    let ll=[];
+    let xmlDoc=undefined;
+    if (window.DOMParser) {
+        // code for modern browsers
+        let parser = new DOMParser();
+        xmlDoc = parser.parseFromString(layerdata,"text/xml");
+    } else {
+        // code for old IE browsers
+        xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+        xmlDoc.async = false;
+        xmlDoc.loadXML(layerdata);
+    }
+    Array.from(xmlDoc.getElementsByTagName('TileMap')).forEach(function(tm){
         var rt={};
         rt.type=LayerTypes.TCHART;
         //complete tile map entry here
         rt.inversy=false;
         rt.wms=false;
-        var layer_profile=$(tm).attr('profile');
+        var layer_profile=tm.getAttribute('profile');
         if (layer_profile) {
             if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator' && layer_profile != 'wms') {
-                avnav.util.overlay.Toast('unsupported profile in tilemap.xml ' + layer_profile);
+                throw new Exception('unsupported profile in tilemap.xml ' + layer_profile);
                 return null;
             }
             if (layer_profile == 'global-mercator'){
@@ -688,13 +702,14 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 rt.wms=true;
             }
         }
-        rt.url=$(tm).attr('href');
-        rt.title = $(tm).attr('title');
-        rt.minZoom=parseInt($(tm).attr('minzoom'));
-        rt.maxZoom=parseInt($(tm).attr('maxzoom'));
-        rt.projection=$(tm).attr('projection'); //currently only for WMS
+        rt.url=tm.getAttribute('href');
+        rt.title = tm.getAttribute('title');
+        rt.minZoom=parseInt(tm.getAttribute('minzoom'));
+        rt.maxZoom=parseInt(tm.getAttribute('maxzoom'));
+        rt.projection=tm.getAttribute('projection'); //currently only for WMS
         //we store the layer region in EPSG:4326
-        $(tm).find(">BoundingBox").each(function(nr,bb){
+        Array.from(tm.children).forEach(function(bb){
+            if (bb.tagName != 'BoundingBox') return;
             rt.layerExtent = [self.e2f(bb,'minlon'),self.e2f(bb,'maxlat'),
                 self.e2f(bb,'maxlon'),self.e2f(bb,'minlat')];
         });
@@ -722,29 +737,33 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         //although we currently do not need the boundings
         //we just parse them...
         var boundings=[];
-        $(tm).find(">LayerBoundings >BoundingBox").each(function(nr,bb){
+        Array.from(tm.getElementsByTagName("LayerBoundings")).forEach((lb)=>{
+            Array.from(lb.getElementsByTagName("BoundingBox")).forEach((bb)=>{
             var bounds=[self.e2f(bb,'minlon'),self.e2f(bb,'maxlat'),
                 self.e2f(bb,'maxlon'),self.e2f(bb,'minlat')];
             boundings.push(bounds);
+            });
         });
         rt.boundings=boundings;
 
         var zoomLayerBoundings=[];
-        $(tm).find(">LayerZoomBoundings >ZoomBoundings").each(function(nr,zb){
-            var zoom=parseInt($(zb).attr('zoom'));
-            var zoomBoundings=[];
-            $(zb).find(">BoundingBox").each(function(nr,bb){
-                var bounds={
-                    minx:parseInt($(bb).attr('minx')),
-                    miny:parseInt($(bb).attr('miny')),
-                    maxx:parseInt($(bb).attr('maxx')),
-                    maxy:parseInt($(bb).attr('maxy'))
-                };
-                zoomBoundings.push(bounds);
+        Array.from(tm.getElementsByTagName("LayerZoomBoundings")).forEach((lzb)=> {
+            Array.from(lzb.getElementsByTagName("ZoomBoundings")).forEach((zb)=> {
+                var zoom = parseInt(zb.getAttribute('zoom'));
+                var zoomBoundings = [];
+                Array.from(zb.getElementsByTagName("BoundingBox")).forEach((bb)=> {
+                    var bounds = {
+                        minx: parseInt(bb.getAttribute('minx')),
+                        miny: parseInt(bb.getAttribute('miny')),
+                        maxx: parseInt(bb.getAttribute('maxx')),
+                        maxy: parseInt(bb.getAttribute('maxy'))
+                    };
+                    zoomBoundings.push(bounds);
+                });
+                if (zoomBoundings.length) {
+                    zoomLayerBoundings[zoom] = zoomBoundings;
+                }
             });
-            if (zoomBoundings.length){
-                zoomLayerBoundings[zoom]=zoomBoundings;
-            }
         });
         if (zoomLayerBoundings.length){
             rt.zoomLayerBoundings=zoomLayerBoundings;
@@ -753,7 +772,7 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         //now we have all our options - just create the layer from them
         var layerurl="";
         if (rt.url === undefined){
-            avnav.util.overlay.Toast("missing href in layer");
+            throw new Exception("missing href in layer");
             return null;
         }
         if (! rt.url.match(/^https*:/)){
@@ -763,18 +782,18 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         rt.extent=ol.extent.applyTransform(rt.layerExtent,self.transformToMap);
         if (rt.wms){
             var param={};
-            $(tm).find(">WMSParameter").each(function(nr,wp){
-                var n=$(wp).attr('name');
-                var v=$(wp).attr('value');
+            Array.from(tm.getElementsByTagName("WMSParameter")).forEach((wp)=>{
+                var n=wp.getAttribute('name');
+                var v=wp.getAttribute('value');
                 if (n !== undefined && v !== undefined){
                     param[n]=v;
                 }
             });
             rt.wmsparam=param;
             var layermap={};
-            $(tm).find(">WMSLayerMapping").each(function(nr,mapping){
-                var zooms=$(mapping).attr('zooms');
-                var layers=$(mapping).attr('layers');
+            Array.from(tm.getElementsByTagName("WMSLayerMapping")).forEach((mapping)=>{
+                var zooms=mapping.getAttribute('zooms');
+                var layers=mapping.getAttribute('layers');
                 var zarr=zooms.split(/,/);
                 var i;
                 for (i in zarr){
@@ -980,22 +999,13 @@ MapHolder.prototype.setGpsLock=function(lock){
 MapHolder.prototype.onClick=function(evt){
     var wp=this.routinglayer.findTarget(evt.pixel);
     if (wp){
-        setTimeout(function() {
-            $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
-                new avnav.map.MapEvent(avnav.map.EventType.SELECTWP, {wp: wp})
-            );
-        },0);
+        this.pubSub.publish(PSTOPIC,{type:this.EventTypes.SELECTWP,wp:wp})
     }
     evt.preventDefault();
     if (this.routingActive || wp) return false;
     var aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
-        setTimeout(function() {
-            $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
-                new avnav.map.MapEvent(avnav.map.EventType.SELECTAIS, {aisparam: aisparam})
-            );
-        },0);
-
+        this.pubSub.publish(PSTOPIC,{type:EventTypes.SELECTAIS,aisparam:aisparam});
     }
     return false;
 };
@@ -1029,7 +1039,7 @@ MapHolder.prototype.onZoomChange=function(evt){
  * @param pixel
  * @param  points in pixel coordinates - the entries are either an array of x,y or an object having the
  *         coordinates in a pixel element
- * @param {number}
+ * @param opt_tolerance {number}
  * @return {number} the matching index or -1
  */
 MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
@@ -1088,12 +1098,9 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
     this.center=newCenter;
     this.zoom=this.getView().getZoom();
     this.navobject.setMapCenter(this.center);
-    //only fire move events if we are not bound to GPS
-    if (! this.gpsLocked) {
-        $(document).trigger(avnav.map.MapEvent.EVENT_TYPE,
-            new avnav.map.MapEvent(avnav.map.EventType.MOVE, {})
-        );
-    }
+    let p=new navobjects.Point();
+    p.fromCoord(newCenter);
+    globalStore.storeData(keys.map.centerPosition,p);
     return true;
 };
 
@@ -1105,7 +1112,7 @@ MapHolder.prototype.onPostCompose=function(evt){
     var newCenter=this.pointFromMap(evt.frameState.viewState.center);
     if (this.setCenterFromMove(newCenter)) this.saveCenter();
     if (this.opacity != this.lastOpacity){
-        $(evt.context.canvas).css('opacity',this.opacity);
+        evt.context.canvas.style.opacity=this.opacity;
         this.lastOpacity=this.opacity;
     }
     this.drawing.setContext(evt.context);

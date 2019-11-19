@@ -98,6 +98,7 @@ class NavPage extends React.Component{
         super(props);
         let self=this;
         this.getButtons=this.getButtons.bind(this);
+        this.mapEvent=this.mapEvent.bind(this);
         if (props.options && props.options.url ){
             globalStore.storeMultiple(
                 {
@@ -109,38 +110,29 @@ class NavPage extends React.Component{
                     chartbase: keys.gui.navpage.chartbase}
                 ,this);
         }
+        this.subscribeToken=undefined;
 
+    }
+    mapEvent(evdata,token){
+        console.log("mapevent: "+evdata.type);
     }
     componentWillUnmount(){
         NavHandler.setAisCenterMode(navobjects.AisCenterMode.GPS);
+        MapHolder.renderTo();
+        if (this.subscribeToken !== undefined){
+            MapHolder.unsubscribe(this.subscribeToken);
+            this.subscribeToken=undefined;
+        }
     }
     componentDidMount(){
         let self=this;
         let url=globalStore.getData(keys.gui.navpage.mapurl);
         let chartBase=globalStore.getData(keys.gui.navpage.chartbase,url);
         NavHandler.setAisCenterMode(navobjects.AisCenterMode.MAP);
-        if (! url){
-            Toast.Toast("no map selected");
-            history.pop();
-            return;
-        }
-        if (!url.match(/^http:/)) {
-            if (url.match(/^\//)) {
-                url = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + url;
-            }
-            else {
-                url = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + url;
-            }
-        }
-        url = url+"/avnav.xml";
-        Requests.getHtmlOrText(url,{useNavUrl:false}).then((data)=>{
-            MapHolder.initMap(self.refs.map,data,chartBase);
-            MapHolder.setBrightness(globalStore.getData(keys.properties.nightMode)?
-                globalStore.getData(keys.properties.nightChartFade,100)/100
-            :1)
-        }).catch((error)=>{
-            Toast.Toast("unable to load map: "+error);
-        });
+        this.subscribeToken=MapHolder.subscribe(this.mapEvent);
+        MapHolder.loadMap(this.refs.map,url,chartBase).
+            then((result)=>{}).
+            catch((error)=>{Toast.Toast(error)});
     }
     getButtons(type){
         let rt=[
