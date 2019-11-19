@@ -200,6 +200,7 @@ let keys={
         },
         editroutepage:{
             selectedWp:K,
+            lastCenteredWp:K
         }
 
     },

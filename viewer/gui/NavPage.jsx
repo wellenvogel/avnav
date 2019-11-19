@@ -158,12 +158,7 @@ class NavPage extends React.Component{
             {
                 name: "ShowRoutePanel",
                 onClick:()=>{
-                    history.push("editroutepage",
-                        {
-                            url:globalStore.getData(keys.gui.navpage.mapurl),
-                            chartbase:globalStore.getData(keys.gui.navpage.mapurl)
-                        }
-                    )
+                    history.push("editroutepage");
                 }
 
             },

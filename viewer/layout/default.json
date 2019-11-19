@@ -57,11 +57,13 @@
       {"name":"ActiveRoute"},
       {"name":"LargeTime"}
     ],
+    "left_small":[
+      {"name":"ActiveRoute"}
+    ],
     "top_small":[
       {"name":"CenterDisplay"},
       {"name":"DepthDisplay"},
       {"name":"AisTarget"},
-      {"name":"ActiveRoute"},
       {"name":"LargeTime"},
       {"name":"Zoom"}
     ],

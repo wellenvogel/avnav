@@ -178,6 +178,8 @@ const storeRoute=(route,startNav)=>{
     let selectedIdx=globalStore.getData(keys.gui.routepage.selectedPoint,-1);
     RouteHandler.setNewEditingRoute(route);
     RouteHandler.setEditingWpIdx(selectedIdx);
+    let current=RouteHandler.getEditingWp();
+    if (current) MapHolder.setCenter(current);
     if (startNav){
         let targetWp=route.getPointAtIndex(selectedIdx);
         if (targetWp){

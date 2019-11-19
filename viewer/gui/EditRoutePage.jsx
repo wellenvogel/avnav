@@ -62,8 +62,10 @@ const widgetClick=(item,data,panel)=>{
         if (data && data.idx !== undefined){
             RouteHandler.setEditingWpIdx(data.idx);
             globalStore.storeData(keys.gui.editroutepage.selectedWp,data.idx);
+            let last=globalStore.getData(keys.gui.editroutepage.lastCenteredWp);
             MapHolder.setCenter(RouteHandler.getEditingWp());
-            if (data.selected){
+            globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,data.idx);
+            if (data.selected && last == data.idx){
                 startWaypointDialog(data);
             }
         }
@@ -91,6 +93,7 @@ class EditRoutePage extends React.Component{
         this.mapEvent=this.mapEvent.bind(this);
         RouteHandler.startEditingRoute();
         globalStore.storeData(keys.gui.editroutepage.selectedWp,RouteHandler.getEditingWpIdx());
+        globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,undefined);
 
     }
     mapEvent(evdata,token){
@@ -105,8 +108,6 @@ class EditRoutePage extends React.Component{
         MapHolder.setRoutingActive(true);
         this.lastGpsLock=MapHolder.getGpsLock();
         MapHolder.setGpsLock(false);
-        let current=RouteHandler.getEditingWp();
-        if (current) MapHolder.setCenter(current);
     }
     getButtons(type){
         let rt=[
