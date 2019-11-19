@@ -36,8 +36,8 @@ const widgetCreator=(widget,panel)=>{
     let rt=WidgetFactory.createWidget(widget,{mode:panel,className:'',handleVisible:true});
     if (widget.name=='CenterDisplay'){
         rt=Dynamic(Visible(rt),{
-            storeKeys:{visible:keys.nav.routeHandler.isRouting},
-            updateFunction:(state)=>{return {visible:!state.visible}}
+            storeKeys:{leg:keys.nav.routeHandler.currentLeg},
+            updateFunction:(state)=>{return {visible:!(state.leg && state.leg.isRouting())}}
         })
     }
     return rt;

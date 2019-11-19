@@ -118,7 +118,7 @@ let keys={
             routeForPage:K,
             pageRouteIsActive: K,
             editingRoute:K,  //a clone of the editing route - you cannot change this
-            isRouting: new D("either a route is active or routing to wp")
+            currentLeg: K,
         }
     },
     map:{

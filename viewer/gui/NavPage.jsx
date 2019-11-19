@@ -65,6 +65,27 @@ const getPanelList=(panel,opt_isSmall)=>{
     return GuiHelpers.getPanelFromLayout('navpage',panel,'small',opt_isSmall);
 };
 
+const waypointButtons=[
+    {
+        name:'WpLocate'
+    },
+    {
+        name:'WpEdit'
+    },
+    {
+        name:'WpGoto'
+    },
+    {
+        name:'NavNext'
+    },
+    {
+        name:'WpNext'
+    },
+    {
+        name:'WpPrevious'
+    }
+];
+
 
 class NavPage extends React.Component{
     constructor(props){
@@ -116,9 +137,12 @@ class NavPage extends React.Component{
             {
                 name: "LockMarker",
                 storeKeys: {
-                    visible: keys.nav.routeHandler.isRouting
+                    leg: keys.nav.routeHandler.currentLeg
                 },
-                updateFunction:(state)=>{return {visible:!state.visible}},
+                updateFunction:(state)=>{
+                    return {visible:!(state.leg && state.leg.isRouting())
+                    }
+                },
                 onClick:()=>{
                     let center = NavHandler.getMapCenter();
                     let currentLeg=RouteHandler.getCurrentLeg();
@@ -137,8 +161,12 @@ class NavPage extends React.Component{
             },
             {
                 name: "StopNav",
-                storeKeys:{
-                    visible:keys.nav.routeHandler.isRouting
+                storeKeys: {
+                    leg: keys.nav.routeHandler.currentLeg
+                },
+                updateFunction:(state)=>{
+                    return {visible:(state.leg && state.leg.isRouting())
+                    }
                 },
                 toggle:true,
                 onClick:()=>{

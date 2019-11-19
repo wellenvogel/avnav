@@ -147,7 +147,7 @@ var RouteData=function(propertyHandler,navobject){
 
 
     this._startQuery();
-    globalStore.storeData(keys.nav.routeHandler.isRouting,this.getLock()||false);
+    globalStore.storeData(keys.nav.routeHandler.currentLeg,this.currentLeg.clone());
 };
 /*---------------------------------------------------------
  get raw data functions
@@ -1343,7 +1343,10 @@ RouteData.prototype._legChanged=function(){
     this.lastDistanceToCurrent=-1;
     this.lastDistanceToNext=-1;
     this._saveLegLocal();
-    globalStore.storeData(keys.nav.routeHandler.isRouting,this.getLock()||false);
+    let old=globalStore.getData(keys.nav.routeHandler.currentLeg);
+    if (!old || old.differsTo(this.currentLeg)){
+        globalStore.storeData(keys.nav.routeHandler.currentLeg,this.currentLeg.clone());
+    }
     this.navobject.routeEvent();
     var self=this;
     this.checkPageRouteActive();

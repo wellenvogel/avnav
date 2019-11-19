@@ -213,6 +213,15 @@ routeobjects.Leg.prototype.setAnchorWatch=function(start,distance){
     this.anchorDistance=distance;
 };
 
+routeobjects.Leg.prototype.isRouting=function(){
+    return this.active && ! this.anchorWatchDistance;
+};
+
+routeobjects.Leg.prototype.hasRoute=function(){
+    if (!this.isRouting()) return false;
+    return this.currentRoute !== undefined;
+};
+
 
 /**
  *
