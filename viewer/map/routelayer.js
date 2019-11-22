@@ -4,7 +4,6 @@
     
 import navobjects from '../nav/navobjects';
 import NavData from '../nav/navdata';
-import RouteHandler from '../nav/routedata';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';

@@ -46,7 +46,6 @@ const widgetClick=(item,data,panel)=>{
     }
     if (item.name == "ActiveRoute"){
         if (!activeRoute.hasRoute()) return;
-        RouteHandler.startEditingRoute(); //TODO:remove this!
         activeRoute.syncTo(RouteEdit.MODES.EDIT); //not strictly necessary here...
         activeRoute.syncTo(RouteEdit.MODES.PAGE);
         history.push("routepage");

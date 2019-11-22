@@ -27,8 +27,10 @@ import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
+import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 
-const RouteHandler=NavHandler.getRoutingHandler();
+const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
+
 
 
 
@@ -36,8 +38,8 @@ const widgetCreator=(widget,panel)=>{
     let rt=WidgetFactory.createWidget(widget,{mode:panel,className:'',handleVisible:true});
     if (widget.name=='CenterDisplay'){
         rt=Dynamic(Visible(rt),{
-            storeKeys:{leg:keys.nav.routeHandler.currentLeg},
-            updateFunction:(state)=>{return {visible:!(state.leg && state.leg.isRouting())}}
+            storeKeys:activeRoute.getStoreKeys(),
+            updateFunction:(state)=>{return {visible:!StateHelper.hasActiveTarget(state)}}
         })
     }
     return rt;
