@@ -28,9 +28,11 @@ import navobjects from '../nav/navobjects.js';
 import AisData from '../nav/aisdata.js';
 import ButtonList from '../components/ButtonList.jsx';
 import WayPointDialog from '../components/WaypointDialog.jsx';
+import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
+const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 
 const DynamicPage=Dynamic(MapPage);
 
@@ -43,8 +45,10 @@ const widgetClick=(item,data,panel)=>{
         return;
     }
     if (item.name == "ActiveRoute"){
-        RouteHandler.startEditingRoute();
-        RouteHandler.setRouteForPage();
+        if (!activeRoute.hasRoute()) return;
+        RouteHandler.startEditingRoute(); //TODO:remove this!
+        activeRoute.syncTo(RouteEdit.MODES.EDIT); //not strictly necessary here...
+        activeRoute.syncTo(RouteEdit.MODES.PAGE);
         history.push("routepage");
         return;
     }
@@ -61,7 +65,7 @@ const widgetClick=(item,data,panel)=>{
         return;
     }
     if (item.name == 'BRG'||item.name == 'DST'|| item.name=='ETA'|| item.name=='WpPosition'){
-        globalStore.storeData(keys.gui.navpage.selectedWp,RouteHandler.getCurrentLegTarget())
+        globalStore.storeData(keys.gui.navpage.selectedWp,true)
     }
 
 };
@@ -69,12 +73,23 @@ const widgetClick=(item,data,panel)=>{
 const getPanelList=(panel,opt_isSmall)=>{
     return GuiHelpers.getPanelFromLayout('navpage',panel,'small',opt_isSmall);
 };
-const startWaypointDialog=(item)=>{
+/**
+ *
+ * @param item
+ * @param idx if undefined - just update the let "to" point
+ */
+const startWaypointDialog=(item,idx)=>{
     const wpChanged=(newWp,close)=>{
         let changedWp=WayPointDialog.updateWaypoint(item,newWp,(err)=>{
             Toast(Helper.escapeHtml(err));
-        },RouteHandler);
+        });
         if (changedWp) {
+            if (idx !== undefined){
+                activeRoute.changeSelectedWaypoint(changedWp,idx);
+            }
+            else{
+                activeRoute.changeTargetWaypoint(changedWp);
+            }
             return true;
         }
         return false;
@@ -91,92 +106,70 @@ const waypointButtons=[
     {
         name:'WpLocate',
         onClick:()=>{
-            MapHolder.setCenter(globalStore.getData(keys.gui.navpage.selectedWp));
-            globalStore.storeData(keys.gui.navpage.selectedWp,undefined);
+            MapHolder.setCenter(activeRoute.hasRoute()?activeRoute.getPointAt():activeRoute.getCurrentTarget());
+            globalStore.storeData(keys.gui.navpage.selectedWp,false);
         }
     },
     {
         name:'WpEdit',
         onClick:()=>{
-            startWaypointDialog(globalStore.getData(keys.gui.navpage.selectedWp));
-            globalStore.storeData(keys.gui.navpage.selectedWp,undefined);
+            if (activeRoute.hasRoute()){
+                startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex());
+            }
+            else {
+                startWaypointDialog(activeRoute.getCurrentTarget());
+            }
+            globalStore.storeData(keys.gui.navpage.selectedWp,false);
         }
     },
     {
         name:'WpGoto',
-        storeKeys:{
-            leg:keys.nav.routeHandler.currentLeg,
-            selectedWp: keys.gui.navpage.selectedWp
-        },
+        storeKeys:activeRoute.getStoreKeys(),
         updateFunction: (state)=> {
-            let rt={visible:false};
-            if (!(state.leg && state.leg.hasRoute())) return rt;
-            if (state.leg.isCurrentTarget(state.selectedWp)) return rt;
-            return {visible:true}
+            return {visible: !StateHelper.hasActiveTarget(state)}
         },
         onClick:()=>{
-            let selected=globalStore.getData(keys.gui.navpage.selectedWp);
-            globalStore.storeData(keys.gui.navpage.selectedWp,undefined);
+            let selected=activeRoute.getPointAt();
+            globalStore.storeData(keys.gui.navpage.selectedWp,false);
             if (selected) RouteHandler.wpOn(selected);
         }
 
     },
     {
         name:'NavNext',
-        storeKeys:{
-            leg:keys.nav.routeHandler.currentLeg,
-            selectedWp: keys.gui.navpage.selectedWp
-        },
+        storeKeys:activeRoute.getStoreKeys(),
         updateFunction: (state)=> {
-            let rt={visible:false};
-            if (!(state.leg && state.leg.hasRoute())) return rt;
-            if (!state.leg.isCurrentTarget(state.selectedWp)) return rt;
-            if (!state.leg.currentRoute.getPointAtOffset(state.selectedWp,1)) return rt;
-            return {visible:true}
+            return {visible:  StateHelper.selectedIsActiveTarget(state) &&  StateHelper.hasPointAtOffset(state,1)};
         },
         onClick:()=>{
-            let selected=globalStore.getData(keys.gui.navpage.selectedWp);
-            globalStore.storeData(keys.gui.navpage.selectedWp,undefined);
-            RouteHandler.wpOn(RouteHandler.getPointAtOffset(selected,1));
+            globalStore.storeData(keys.gui.navpage.selectedWp,false);
+            activeRoute.moveIndex(1);
+            RouteHandler.wpOn(activeRoute.getPointAt());
 
         }
     },
     {
         name:'WpNext',
-        storeKeys:{
-            leg:keys.nav.routeHandler.currentLeg,
-            selectedWp: keys.gui.navpage.selectedWp
-        },
+        storeKeys:activeRoute.getStoreKeys(),
         updateFunction: (state)=> {
-            let rt={visible:false};
-            if (!(state.leg && state.leg.hasRoute())) return rt;
-            if (!state.leg.currentRoute.getPointAtOffset(state.selectedWp,1)) return rt;
-            return {visible:true}
+            return {visible:StateHelper.hasPointAtOffset(state,1)};
         },
         onClick:()=>{
-            let selected=globalStore.getData(keys.gui.navpage.selectedWp);
-            let next=RouteHandler.getPointAtOffset(selected,1);
-            globalStore.storeData(keys.gui.navpage.selectedWp,next);
+            activeRoute.moveIndex(1);
+            let next=activeRoute.getPointAt();
             MapHolder.setCenter(next);
 
         }
     },
     {
         name:'WpPrevious',
-        storeKeys:{
-            leg:keys.nav.routeHandler.currentLeg,
-            selectedWp: keys.gui.navpage.selectedWp
-        },
+        storeKeys:activeRoute.getStoreKeys(),
         updateFunction: (state)=> {
-            let rt={visible:false};
-            if (!(state.leg && state.leg.hasRoute())) return rt;
-            if (!state.leg.currentRoute.getPointAtOffset(state.selectedWp,-1)) return rt;
-            return {visible:true}
+            return {visible:StateHelper.hasPointAtOffset(state,-1)}
         },
         onClick:()=>{
-            let selected=globalStore.getData(keys.gui.navpage.selectedWp);
-            let next=RouteHandler.getPointAtOffset(selected,-1);
-            globalStore.storeData(keys.gui.navpage.selectedWp,next);
+            activeRoute.moveIndex(1);
+            let next=activeRoute.getPointAt();
             MapHolder.setCenter(next);
         }
     }
@@ -189,6 +182,7 @@ class NavPage extends React.Component{
         let self=this;
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
+        activeRoute.setIndexToTarget();
     }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);
@@ -205,6 +199,7 @@ class NavPage extends React.Component{
     componentWillUnmount(){
     }
     componentDidMount(){
+        MapHolder.showEditingRoute(false);
 
     }
     getButtons(type){
@@ -232,37 +227,32 @@ class NavPage extends React.Component{
             },
             {
                 name: "LockMarker",
-                storeKeys: {
-                    leg: keys.nav.routeHandler.currentLeg
-                },
+                storeKeys: activeRoute.getStoreKeys(),
                 updateFunction:(state)=>{
-                    return {visible:!(state.leg && state.leg.isRouting())
-                    }
+                    return {visible:!StateHelper.hasActiveTarget(state)}
                 },
                 onClick:()=>{
                     let center = NavHandler.getMapCenter();
-                    let currentLeg=RouteHandler.getCurrentLeg();
+                    let current=activeRoute.getCurrentTarget();
                     let wp=new navobjects.WayPoint();
                     //take over the wp name if this was a normal wp with a name
                     //but do not take over if this was part of a route
-                    if (currentLeg && currentLeg.to && currentLeg.to.name && ! currentLeg.to.routeName){
-                        wp.name=currentLeg.to.name;
+                    if (current && current.name ){
+                        wp.name=current.name;
                     }
                     else{
                         wp.name = 'Marker';
                     }
+                    wp.routeName=undefined;
                     center.assign(wp);
                     RouteHandler.wpOn(wp);
                 }
             },
             {
                 name: "StopNav",
-                storeKeys: {
-                    leg: keys.nav.routeHandler.currentLeg
-                },
+                storeKeys: activeRoute.getStoreKeys(),
                 updateFunction:(state)=>{
-                    return {visible:(state.leg && state.leg.isRouting())
-                    }
+                    return {visible:StateHelper.hasActiveTarget(state)};
                 },
                 toggle:true,
                 onClick:()=>{

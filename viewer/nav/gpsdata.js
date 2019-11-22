@@ -116,7 +116,7 @@ GpsData.prototype.writeToStore=function(){
         courseAverage: bk.courseAverageOn,
         depthBelowTransducer: bk.depthBelowTransducer
     });
-    globalStore.storeData(bk.position,{lat:d.lat,lon:d.lon});
+    globalStore.storeData(bk.position,new navobjects.Point(d.lon,d.lat));
     globalStore.storeData(bk.alarms,d.raw?d.raw.alarms:undefined);
     globalStore.storeData(bk.sequence,globalStore.getData(bk.sequence,0)+1);
 

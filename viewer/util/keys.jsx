@@ -53,7 +53,7 @@ let keys={
         gps:{
             lat:K,
             lon:K,
-            position: K,
+            position: new D("an instance of navobjects.Point"),
             course: K,
             speed: K,
             rtime: K,
@@ -115,10 +115,13 @@ let keys={
             updateCount:K
         },
         routeHandler:{
-            routeForPage:K,
-            pageRouteIsActive: K,
-            editingRoute:K,  //a clone of the editing route - you cannot change this
-            currentLeg: K,
+            routeForPage: K,
+            pageRouteIndex: K,
+            editingRoute:K,
+            editingIndex: K,
+            activeRouteName: new D("set if there is currently an active route"),
+            currentLeg: new D("the current leg used for routing"),
+            currentIndex: new D("the index when working directly on the active route (currentLeg)")
         }
     },
     map:{

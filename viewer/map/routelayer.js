@@ -2,13 +2,24 @@
  * Created by andreas on 14.07.14.
  */
     
-var navobjects=require('../nav/navobjects');
-var NavData=require('../nav/navdata');
-var RouteHandler=require('../nav/routedata');
-import keys from '../util/keys.jsx';
+import navobjects from '../nav/navobjects';
+import NavData from '../nav/navdata';
+import RouteHandler from '../nav/routedata';
+import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
+import RouteEdit from '../nav/routeeditor.js';
 
+const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
+const editingRoute=new RouteEdit(RouteEdit.MODES.EDIT);
 
+class Callback{
+    constructor(callback){
+        this.callback=callback;
+    }
+    dataChanged(keys){
+        this.callback(keys);
+    }
+}
 /**
  * a cover for the layer with routing data
  * @param {MapHolder} mapholder
@@ -58,6 +69,13 @@ const RouteLayer=function(mapholder){
     this._routeName=undefined;
 
     /**
+     * decide whether we should show the editing route or the active
+     * @type {boolean}
+     * @private
+     */
+    this._displayEditing=false;
+
+    /**
      * @private
      * @type {ol.style.Style}
      */
@@ -70,10 +88,15 @@ const RouteLayer=function(mapholder){
     this.textStyle={};
     this.dashedStyle={};
     this.setStyle();
-    var self=this;
-    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
-        self.navEvent(evdata);
+    this.navChangedCb=new Callback((keys)=>{
+       self.mapholder.triggerRender();
     });
+    let navStoreKeys=[keys.nav.gps.position,keys.nav.gps.valid];
+    navStoreKeys=navStoreKeys.concat(
+        KeyHelper.flattenedKeys(activeRoute.getStoreKeys()),
+        KeyHelper.flattenedKeys(editingRoute.getStoreKeys())
+    );
+    globalStore.register(this.navChangedCb,navStoreKeys);
     globalStore.register(this,keys.gui.global.propertySequence);
 
 
@@ -85,18 +108,18 @@ const RouteLayer=function(mapholder){
  */
 RouteLayer.prototype.setStyle=function() {
     this.lineStyle = {
-            color: this.mapholder.properties.getProperties().routeColor,
-            width: this.mapholder.properties.getProperties().routeWidth,
+            color:  globalStore.getData(keys.properties.routeColor),
+            width:  globalStore.getData(keys.properties.routeWidth),
             arrow: {
-                width: this.mapholder.properties.getProperties().routeWidth*3,
-                length: this.mapholder.properties.getProperties().routeWidth*7,
+                width:  globalStore.getData(keys.properties.routeWidth*3),
+                length:  globalStore.getData(keys.properties.routeWidth*7),
                 offset: 20,
                 open: true
                 }
         };
     this.dashedStyle = {
-        color: this.mapholder.properties.getProperties().routeColor,
-        width: this.mapholder.properties.getProperties().routeWidth,
+        color:  globalStore.getData(keys.properties.routeColor),
+        width:  globalStore.getData(keys.properties.routeWidth),
         dashed: true
     };
     this.normalWpStyle={
@@ -110,9 +133,9 @@ RouteLayer.prototype.setStyle=function() {
         background: "red"
     };
     this.routeTargetStyle={
-        color: this.mapholder.properties.getProperties().bearingColor,
+        color:  globalStore.getData(keys.properties.bearingColor),
         width: 1,
-        background: this.mapholder.properties.getProperties().bearingColor
+        background:  globalStore.getData(keys.properties.bearingColor)
     };
 
     this.markerStyle={
@@ -123,30 +146,27 @@ RouteLayer.prototype.setStyle=function() {
     };
     this.markerStyle.image.src=this.markerStyle.src;
     this.courseStyle = {
-        color: this.mapholder.properties.getProperties().bearingColor,
-        width: this.mapholder.properties.getProperties().bearingWidth
+        color:  globalStore.getData(keys.properties.bearingColor),
+        width:  globalStore.getData(keys.properties.bearingWidth)
 
     };
     this.textStyle= {
         stroke: '#fff',
         color: '#000',
         width: 3,
-        font: this.mapholder.getProperties().getProperties().routingTextSize+'px Calibri,sans-serif',
+        font: globalStore.getData(keys.properties.routingTextSize)+'px Calibri,sans-serif',
         offsetY: 15
     };
 
 };
 
-/**
- * the handler for new data
- * @param evdata
- */
-RouteLayer.prototype.navEvent=function(evdata){
-    if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
-    if (! this.visible) {
-        return;
+
+RouteLayer.prototype.showEditingRoute=function(on){
+    let old=this._displayEditing;
+    this._displayEditing=on;
+    if (on != old){
+        this.mapholder.triggerRender();
     }
-    this.mapholder.triggerRender();
 };
 
 /**
@@ -158,20 +178,25 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
     this.routePixel = [];
     this.wpPixel=[];
     if (!this.visible) return;
-    var leg=this.navobject.getRoutingHandler().getCurrentLeg();
-    var gps=this.navobject.getGpsHandler().getGpsData();
-    var to=leg.to?this.mapholder.pointToMap(leg.to.toCoord()):undefined;
-    var from=leg.from?this.mapholder.pointToMap(leg.from.toCoord()):undefined;
-    var prop=this.mapholder.getProperties().getProperties();
-    var drawNav=prop.layers.boat&&prop.layers.nav;
-    var route=this.navobject.getRoutingHandler().getRoute();
-    var text,wp;
+    let currentEditor=this._displayEditing?editingRoute:activeRoute;
+    let gpsPosition=globalStore.getData(keys.nav.gps.position);
+    let gpsValid=globalStore.getData(keys.nav.gps.valid);
+    let toPoint=currentEditor.getCurrentTarget();
+    let to=toPoint?this.mapholder.pointToMap(toPoint.toCoord()):undefined;
+    let fromPoint=currentEditor.getCurrentFrom();
+    let from=fromPoint?this.mapholder.pointToMap(fromPoint.toCoord()):undefined;
+    let showBoat=globalStore.getData(keys.properties.layers.boat);
+    let showNav=globalStore.getData(keys.properties.layers.nav);
+    let wpSize=globalStore.getData(keys.properties.routeWpSize);
+    let drawNav=showBoat&&showNav;
+    let route=currentEditor.getRoute();
+    let text,wp;
     if (! drawNav ) {
         this.routePixel=[];
         return;
     }
-    if (leg.active && gps.valid ){
-        var line=[this.mapholder.pointToMap(gps.toCoord()),to];
+    if (from && to && gpsValid ){
+        var line=[this.mapholder.pointToMap(gpsPosition.toCoord()),to];
         drawing.drawLineToContext(line,this.courseStyle);
         if (from){
             line=[from,to];
@@ -181,23 +206,21 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
     if (to ){
         //only draw the current target wp if we do not have a route
         this.wpPixel.push(drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle));
-        if (leg.to.name){
-            drawing.drawTextToContext(to,leg.to.name,this.textStyle);
+        if (toPoint.name){
+            drawing.drawTextToContext(to,toPoint.name,this.textStyle);
         }
     }
 
-    var routeTarget=-1;
+    let routeTarget=-1;
     if ( route) {
-        this._routeName=route.name;
-        var currentRoutePoints=[];
-        var i;
-        for (i in route.points){
-            var p=this.mapholder.pointToMap(route.points[i].toCoord());
-            if (route.points[i].compare(leg.to)) routeTarget=i;
+        let currentRoutePoints=[];
+        for (let i in route.points){
+            let p=this.mapholder.pointToMap(route.points[i].toCoord());
+            if (route.points[i].compare(toPoint)) routeTarget=i;
             currentRoutePoints.push(p);
         }
         this.routePixel = drawing.drawLineToContext(currentRoutePoints, this.lineStyle);
-        var active = this.navobject.getRoutingHandler().getEditingWpIdx();
+        let active = currentEditor.getIndex();
         var i,style;
         for (i = 0; i < currentRoutePoints.length; i++) {
             style=this.normalWpStyle;
@@ -205,7 +228,7 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
             else {
                 if (i == routeTarget) style=this.routeTargetStyle;
             }
-            drawing.drawBubbleToContext(currentRoutePoints[i], prop.routeWpSize,
+            drawing.drawBubbleToContext(currentRoutePoints[i],wpSize,
                 style);
             wp=route.points[i];
             if (wp && wp.name) text=wp.name;
@@ -227,20 +250,18 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
  */
 RouteLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance
-    var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
-    if (! this.routePixel) return undefined;
-    var idx=this.mapholder.findTarget(pixel,this.routePixel,tolerance);
-    if (idx >= 0){
-        var rt=this.navobject.getRoutingHandler().getRouteByName(this._routeName);
-        if (! rt) return undefined;
-        return rt.getPointAtIndex(idx);
+    let tolerance=globalStore.getData(keys.properties.aisClickTolerance)/2;
+    let currentEditor=this._displayEditing?editingRoute:activeRoute;
+    if (this.routePixel) {
+        let idx = this.mapholder.findTarget(pixel, this.routePixel, tolerance);
+        if (idx >= 0) {
+            return currentEditor.getPointAt(idx);
+        }
     }
-    idx=this.mapholder.findTarget(pixel,this.wpPixel,tolerance);
-    if (idx == 0){
-        //only one wp...
-        var leg=this.navobject.getRoutingHandler().getCurrentLeg();
-        if (leg && leg.to){
-            return leg.to;
+    if (this.wpPixel) {
+        let idx = this.mapholder.findTarget(pixel, this.wpPixel, tolerance);
+        if (idx == 0) {
+            return currentEditor.getCurrentTarget();
         }
     }
     return undefined;

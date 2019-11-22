@@ -15,7 +15,7 @@ routeobjects.RoutingMode={
     WPINACTIVE: 2  //set the target waypoint but do not activate routing
 };
 
-routeobjects.Leg=function(from, to, active, opt_routeName){
+routeobjects.Leg=function(from, to, active){
     /**
      * start of leg
      * @type {navobjects.WayPoint}
@@ -35,12 +35,6 @@ routeobjects.Leg=function(from, to, active, opt_routeName){
      * @type {boolean}
      */
     this.active=active||false;
-    /**
-     * if set the route with this name is active
-     * @type {boolean}
-     */
-    this.name=opt_routeName;
-
     /**
      * whether we are currently approaching
      * @type {boolean}
@@ -66,11 +60,11 @@ routeobjects.Leg=function(from, to, active, opt_routeName){
     this.anchorDistance=undefined;
 
 
+
 };
 
 routeobjects.Leg.prototype.clone=function(){
-    var rt=new routeobjects.Leg(this.from?this.from.clone():undefined,this.to?this.to.clone():undefined,this.active,
-        this.name?this.name.slice(0):undefined);
+    var rt=new routeobjects.Leg(this.from?this.from.clone():undefined,this.to?this.to.clone():undefined,this.active);
     rt.approach=false;
     rt.approachDistance=this.approachDistance;
     rt.currentRoute=this.currentRoute?this.currentRoute.clone():undefined;
@@ -85,7 +79,7 @@ routeobjects.Leg.prototype.toJsonString=function(){
     var rt={
         from: this.from,
         to: this.to,
-        name: this.name,
+        name: this.getRouteName(),
         active: this.active,
         currentTarget: this.getCurrentTargetIdx(),
         approach: this.approach,
@@ -116,13 +110,11 @@ routeobjects.Leg.prototype.fromJson=function(raw){
     this.from=navobjects.WayPoint.fromPlain(raw.from);
     if (raw.to) this.to=navobjects.WayPoint.fromPlain(raw.to);
     this.active=raw.active||false;
-    this.name=raw.name;
     this.approach=raw.approach;
     this.approachDistance=raw.approachDistance;
     if (raw.currentRoute){
         this.currentRoute=new routeobjects.Route(raw.currentRoute.name);
         this.currentRoute.fromJson(raw.currentRoute);
-        this.name=this.currentRoute.name;
     }
     if (this.currentRoute){
         this.to.routeName=this.currentRoute.name;
@@ -135,7 +127,6 @@ routeobjects.Leg.prototype.fromJson=function(raw){
                 //this is some error - set the to to be outside of the route...
                 avnav.log("invalid leg with currentTarget, to outside route, deleting route");
                 this.currentRoute=undefined;
-                this.name=undefined;
                 this.to.routeName=undefined;
             }
         }
@@ -144,7 +135,6 @@ routeobjects.Leg.prototype.fromJson=function(raw){
             if (idx < 0){
                 avnav.log("invalid leg, to outside route, deleting route");
                 this.currentRoute=undefined;
-                this.name=undefined;
                 this.to.routeName=undefined;
             }
         }
@@ -203,15 +193,6 @@ routeobjects.Leg.prototype.getCurrentTargetIdx=function(){
     }
     return -1;
 };
-routeobjects.Leg.prototype.setAnchorWatch=function(start,distance){
-    this.from=start;
-    this.to=undefined;
-    this.active=false;
-    this.approach=false;
-    this.name=undefined;
-    this.currentRoute=undefined;
-    this.anchorDistance=distance;
-};
 
 routeobjects.Leg.prototype.isRouting=function(){
     return this.active && ! this.anchorWatchDistance;
@@ -226,6 +207,32 @@ routeobjects.Leg.prototype.isCurrentTarget=function(wp){
     if (! this.isRouting()) return false;
     if (this.to.compare(wp)) return true;
 };
+
+routeobjects.Leg.prototype.setNewTargetIndex=function(index,opt_from){
+    if (index === undefined || index < 0) return false;
+    if (! this.hasRoute()) return false;
+    let newTarget=this.route.getPointAtIndex(index);
+    if (! newTarget) return false;
+    this.to=newTarget;
+    if (opt_from) this.from=opt_from;
+    return true;
+};
+routeobjects.Leg.prototype.getRouteName=function(){
+    if (! this.hasRoute()) return;
+    return this.currentRoute.name;
+};
+
+
+routeobjects.Leg.prototype.setAnchorWatch=function(start,distance){
+    this.from=start;
+    this.to=undefined;
+    this.targetIndex=undefined;
+    this.active=false;
+    this.approach=false;
+    this.currentRoute=undefined;
+    this.anchorDistance=distance;
+};
+
 
 
 /**

@@ -624,7 +624,7 @@ RouteData.prototype.wpOn=function(wp,opt_keep_from) {
         //check if this is our current active/editing one - if yes, start routing mode
         stwp.routeName=wp.routeName;
         var rt=this.getRouteByName(wp.routeName);
-        if (!(rt  && rt.getIndexFromPoint(stwp) >= 0)){route
+        if (!(rt  && rt.getIndexFromPoint(stwp) >= 0)){
             stwp.routeName=undefined;
         }
     }

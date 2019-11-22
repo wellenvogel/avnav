@@ -11,6 +11,9 @@ import routeobjects from '../nav/routeobjects.js';
 import ItemList from './ItemList.jsx';
 import WaypointItem from './WayPointItem.jsx';
 import assign from 'object-assign';
+import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
+
+const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
 class RoutePointsWidget extends React.Component{
     constructor(props){
@@ -23,7 +26,7 @@ class RoutePointsWidget extends React.Component{
             if (k == 'route') continue;
             if (nextProps[k] !== this.props[k]) return true;
         }
-        if (!nextProps.route != !this.props.Route) return true;
+        if (!nextProps.route != !this.props.route) return true;
         if (!nextProps.route) return false;
         return nextProps.route.differsTo(this.props.route);
     }
@@ -40,12 +43,13 @@ class RoutePointsWidget extends React.Component{
     }
     render(){
         let self=this;
+        let [route,index,isActive]=StateHelper.getRouteIndexFlag(this.props);
         let classes="avn_widget avn_routePointsWidget "+this.props.className||"";
-        if (this.props.editingActive) classes +=" avn_activeRoute ";
+        if (isActive) classes +=" avn_activeRoute ";
 
         return (
             <ItemList className={classes}
-                      itemList={this.props.route?this.props.route.getRoutePoints(this.props.selectedPoint):[]}
+                      itemList={route?route.getRoutePoints(index):[]}
                       itemClass={WaypointItem}
                       scrollable={true}
                       onItemClick={(item,data)=>{if (self.props.onClick) self.props.onClick(item) }}
@@ -61,13 +65,12 @@ RoutePointsWidget.propTypes={
     className:      PropTypes.string,
     mode:           PropTypes.string, //display info side by side if small
     route:          PropTypes.objectOf(routeobjects.Route),
-    editingActive:  PropTypes.bool,
-    selectedPoint:  PropTypes.number
+    isActive:       PropTypes.bool,
+    index:          PropTypes.number
 };
 
-RoutePointsWidget.storeKeys={
-    route:          keys.nav.routeHandler.editingRoute,
-    editingActive:  keys.nav.editRoute.isActive
-};
+RoutePointsWidget.storeKeys=editor.getStoreKeys({
+
+});
 
 module.exports=RoutePointsWidget;

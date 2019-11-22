@@ -81,7 +81,7 @@ var WaypointDialog = reactCreateClass({
         return html;
     },
     statics: {
-        updateWaypoint: function (oldWp, newWp,errorFunction, router) {
+        updateWaypoint: function (oldWp, newWp,errorFunction) {
             var wp = oldWp.clone();
             var data = newWp;
             if (!data) return;
@@ -102,40 +102,13 @@ var WaypointDialog = reactCreateClass({
                 if (errorFunction)errorFunction("invalid coordinate, cannot convert");
                 doChange = false;
             }
-            if (!doChange) return;
-            if (!router) return wp;
             var ok = false;
             if (wp.routeName && wp.routeName != oldWp.routeName) {
                 if (errorFunction)errorFunction("internal error, route name changed");
                 doChange = false;
             }
-            if (wp.routeName && doChange) {
-                var rt = router.getRouteByName(oldWp.routeName);
-                if (rt) {
-                    var idx = rt.getIndexFromPoint(oldWp);
-                    if (idx < 0) {
-                        if (errorFunction)errorFunction("internal error, cannot find waypoint");
-                        doChange = false;
-                    }
-                    else {
-                        ok = rt.checkChangePossible(idx, wp);
-                        if (!ok) {
-                            if (errorFunction)errorFunction("name already exists, cannot change");
-                            doChange = false;
-                        }
-                    }
-                }
-            }
-            if (doChange) {
-                ok = router.changeWp(oldWp, wp);
-                if (ok) {
-                    return wp;
-                }
-                else {
-                    if (errorFunction)errorFunction("cannot change waypoint");
-                    return;
-                }
-            }
+            if (!doChange) return;
+            return wp;
         }
     }
 });

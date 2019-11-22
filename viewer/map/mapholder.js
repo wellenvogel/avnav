@@ -1205,6 +1205,14 @@ MapHolder.prototype.getRoutingActive=function(){
     return this.routingActive;
 };
 
+/**
+ * decide if we should show the editing route or the active route
+ * @param on
+ */
+MapHolder.prototype.showEditingRoute=function(on){
+    this.routinglayer.showEditingRoute(on);
+};
+
 MapHolder.prototype.setBrightness=function(brightness){
     this.opacity=brightness;
 };
