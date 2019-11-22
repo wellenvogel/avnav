@@ -560,6 +560,9 @@ class DownloadPage extends React.Component{
                                     if (data == 'download'){
                                         return download(item);
                                     }
+                                    if (self.props.options && self.props.options.selectItemCallback){
+                                        return self.props.options.selectItemCallback(item);
+                                    }
                                 }}
                             />
                             <DynamicForm/>

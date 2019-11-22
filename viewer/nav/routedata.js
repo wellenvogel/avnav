@@ -1355,7 +1355,6 @@ RouteData.prototype._legChanged=function(){
     }
     this.navobject.routeEvent();
     var self=this;
-    this.checkPageRouteActive();
     if (avnav.android){
         var rt=avnav.android.setLeg(this.currentLeg.toJsonString());
         if (rt){
@@ -1410,15 +1409,6 @@ RouteData.prototype.dataChanged=function() {
     }
 };
 
-RouteData.prototype.setRouteForPage=function(opt_route){
-    let route=opt_route||this.editingRoute;
-    globalStore.storeData(keys.nav.routeHandler.routeForPage,route?route.clone():undefined);
-    this.checkPageRouteActive();
-};
 
-RouteData.prototype.checkPageRouteActive=function(){
-    let pageRoute=globalStore.getData(keys.nav.routeHandler.routeForPage);
-    globalStore.storeData(keys.nav.routeHandler.pageRouteIsActive,pageRoute && this.isActiveRoute(pageRoute.name));
-};
 module.exports=RouteData;
 

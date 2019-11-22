@@ -23,6 +23,9 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import NavHandler from '../nav/navdata.js';
 import assign from 'object-assign';
 import RouteObjects from '../nav/routeobjects.js';
+import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
+
+const editor=new RouteEdit(RouteEdit.MODES.PAGE);
 
 const DynamicPage=Dynamic(Page);
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -101,25 +104,21 @@ const createNewRouteDialog=(name,okCallback)=> {
     return Dialog;
 };
 
-const getRouteAndCheck=(showWarning,allowReadOnly)=>{
-    let current=globalStore.getData(keys.nav.routeHandler.routeForPage);
-    if (!current) return;
-    if (globalStore.getData(keys.properties.connectedMode,false))return current.clone();
-    if (! current.server) return current.clone();
-    if (allowReadOnly) return current.clone();
-    if (showWarning === undefined || showWarning){
-        OverlayDialog.confirm("you cannot edit this route as you are disconnected. Please select a new name");
-    }
+
+const checkWritable=()=>{
+     if (!editor.isRouteWritable()){
+         OverlayDialog.confirm("you cannot edit this route as you are disconnected. Please select a new name");
+         return false;
+     }
+    return true;
 };
 
 const onHeadingClick=()=> {
-    let current = globalStore.getData(keys.nav.routeHandler.routeForPage);
+    if (!editor.hasRoute()) return;
     const okCallback = (values, closeFunction)=> {
-        if (!current) {
-            return true;
-        }
+        if (! editor.hasRoute()) return;
         let name = values.name || "";
-        if (name == current.name) return true;
+        if (name == editor.getRouteName()) return true;
         if (name != globalStore.getData(keys.gui.routepage.initialName)) {
             //check if a route with this name already exists
             RouteHandler.fetchRoute(name, false,
@@ -127,37 +126,36 @@ const onHeadingClick=()=> {
                     Toast.Toast("route with name " + name + " already exists");
                 },
                 (er)=> {
-                    let newRoute = current.clone();
+                    let newRoute = editor.getRoute().clone();
                     newRoute.setName(name);
                     if (!values.copyPoints) {
                         newRoute.points = [];
-                        globalStore.storeData(keys.gui.routepage.selectedPoint, -1);
                     }
                     if (!globalStore.getData(keys.properties.connectedMode, false)) newRoute.server = false;
-                    RouteHandler.setRouteForPage(newRoute);
+                    editor.setRouteAndIndex(newRoute,-1);
                     closeFunction();
                 });
             return false;
         }
         return true;
     };
-    OverlayDialog.dialog(createNewRouteDialog(current.name,
+    OverlayDialog.dialog(createNewRouteDialog(editor.getRouteName(),
         okCallback));
 };
 
 
-const startWaypointDialog=(item)=>{
+const startWaypointDialog=(item,index)=>{
     const wpChanged=(newWp,close)=>{
+        if (! checkWritable()) return;
         let changedWp=WayPointDialog.updateWaypoint(item,newWp,function(err){
             Toast.Toast(Helper.escapeHtml(err));
         });
         if (changedWp) {
-            let current=getRouteAndCheck(true);
-            if (!current.changePoint(item,changedWp)){
+            if (! editor.checkChangePossible(changedWp,index)){
                 Toast.Toast("unable to set waypoint, already exists");
                 return false;
             }
-            RouteHandler.setRouteForPage(current);
+            editor.changeSelectedWaypoint(changedWp,index);
             return true;
         }
         return false;
@@ -175,16 +173,12 @@ const storeRoute=(route,startNav)=>{
     if (globalStore.getData(keys.gui.routepage.initialName,"") != route.name){
         route.server=globalStore.getData(keys.properties.connectedMode,false);
     }
-    let selectedIdx=globalStore.getData(keys.gui.routepage.selectedPoint,-1);
-    RouteHandler.setNewEditingRoute(route);
-    RouteHandler.setEditingWpIdx(selectedIdx);
-    let current=RouteHandler.getEditingWp();
+    editor.setNewRoute(route); //potentially we changed the server flag - so write it again
+    editor.syncTo(RouteEdit.MODES.EDIT);
+    let current=editor.getPointAt();
     if (current) MapHolder.setCenter(current);
-    if (startNav){
-        let targetWp=route.getPointAtIndex(selectedIdx);
-        if (targetWp){
-            RouteHandler.wpOn(targetWp,true);
-        }
+    if (startNav && current){
+            RouteHandler.wpOn(current,true);
     }
     return true;
 };
@@ -209,18 +203,15 @@ class RoutePage extends React.Component{
             {
                 name:'NavInvert',
                 onClick: ()=>{
-                    let current=getRouteAndCheck();
-                    if (! current) return;
-                    RouteHandler.setRouteForPage(current.swap()); //double clone - but otherwise we modify inside store...
+                    if (! checkWritable())return;
+                    editor.invertRoute();
                 }
             },
             {
                 name:'NavDeleteAll',
                 onClick: ()=>{
-                    let current=getRouteAndCheck();
-                    if (! current) return;
-                    current.points=[];
-                    RouteHandler.setRouteForPage(current); //double clone - but otherwise we modify inside store...
+                    if (! checkWritable()) return;
+                    editor.deleteWaypoint();
                 }
             },
             {
@@ -232,7 +223,8 @@ class RoutePage extends React.Component{
                         selectItemCallback: (item)=>{
                             RouteHandler.fetchRoute(item.name,!item.server,
                                 (route)=>{
-                                    RouteHandler.setRouteForPage(route);
+                                    editor.setRouteAndIndex(route,0);
+                                    globalStore.storeData(keys.gui.routepage.initialName,route.name);
                                     history.pop();
                                 },
                                 function(err){
@@ -249,28 +241,22 @@ class RoutePage extends React.Component{
             }
         ];
         this.storeRouteAndReturn=this.storeRouteAndReturn.bind(this);
-        let current=globalStore.getData(keys.nav.routeHandler.routeForPage);
-        globalStore.storeData(keys.gui.routepage.initialName,current?current.name:"");
-        let selectedPoint=0;
-        if (current && RouteHandler.isEditingRoute(current.name)){
-            selectedPoint=RouteHandler.getEditingWpIdx();
-        }
-        globalStore.storeData(keys.gui.routepage.selectedPoint,selectedPoint);
+        globalStore.storeData(keys.gui.routepage.initialName,editor.getRouteName());
     }
 
 
     storeRouteAndReturn(startNav){
-        let self=this;
-        let current=globalStore.getData(keys.nav.routeHandler.routeForPage);
-        if (!current) {
+        if (!editor.hasRoute()){
             history.pop();
             return;
         }
-        if (current.name != globalStore.getData(keys.gui.routepage.initialName,"") ){
+        let currentName=editor.getRouteName();
+        let current=editor.getRoute();
+        if (currentName != globalStore.getData(keys.gui.routepage.initialName,"") ){
             //check if a route with this name already exists
-            RouteHandler.fetchRoute(current.name,!current.server,
+            RouteHandler.fetchRoute(currentName,!current.server,
                 function(data){
-                    Toast.Toast("route with name "+current.name+" already exists");
+                    Toast.Toast("route with name "+currentName+" already exists");
                 },
                 function(er){
                     if(storeRoute(current.clone(),startNav)) history.pop();
@@ -285,30 +271,30 @@ class RoutePage extends React.Component{
     render(){
         let self=this;
         const MainContent=Dynamic((props)=> {
-            if (! props.currentRoute) return null;
+            let [route,index,isActive]=StateHelper.getRouteIndexFlag(props);
+            if (! route) return null;
             return(
             <React.Fragment>
                 <Heading
                     onClick={onHeadingClick}
-                    currentRoute={props.currentRoute}
+                    currentRoute={route}
                     />
                 <ItemList
-                    itemList={props.currentRoute.getRoutePoints(props.selectedIdx)}
+                    itemList={route.getRoutePoints(index)}
                     itemClass={WaypointForList}
                     scrollable={true}
                     onItemClick={(item,data)=>{
                         if (data=='btnDelete'){
-                            let current=getRouteAndCheck(true);
-                            if (! current) return;
-                            current.deletePoint(item.idx);
-                            RouteHandler.setRouteForPage(current);
+                            if (!checkWritable()) return;
+                            editor.setNewIndex(item.idx);
+                            editor.deleteWaypoint();
                             return;
                         }
-                        if (item.selected){
-                            startWaypointDialog(item);
+                        if (item.idx == editor.getIndex()){
+                            startWaypointDialog(item,item.idx);
                             return;
                         }
-                        globalStore.storeData(keys.gui.routepage.selectedPoint,item.idx);
+                        editor.setNewIndex(item.idx);
                     }}
                     />
 
@@ -321,20 +307,16 @@ class RoutePage extends React.Component{
                 id="routepage"
                 mainContent={
                             <MainContent
-                                storeKeys={{
-                                    currentRoute: keys.nav.routeHandler.routeForPage,
-                                    selectedIdx: keys.gui.routepage.selectedPoint
-                                }}
+                                storeKeys={editor.getStoreKeys()}
                             />
                         }
                 buttonList={self.buttons}
-                storeKeys={{
-                    isActive:keys.nav.routeHandler.pageRouteIsActive
-                }}
+                storeKeys={editor.getStoreKeys()}
                 updateFunction={(state)=>{
+                    let isActive=StateHelper.isActiveRoute(state);
                     return{
-                        title:state.isActive?"Active Route":"Inactive Route",
-                        className:state.isActive?"activeRoute":""
+                        title:isActive?"Active Route":"Inactive Route",
+                        className:isActive?"activeRoute":""
                     };
                 }}
                 />

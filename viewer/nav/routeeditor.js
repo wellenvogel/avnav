@@ -148,7 +148,7 @@ class RouteEdit{
         else{
             data.index=0;
         }
-        if (storeKeys.leg && oldTarget){
+        if (this.storeKeys.leg && oldTarget){
             let newTarget=data.route.getPointAtIndex(data.route.findBestMatchingIdx());
             if (newTarget){
                 leg.to=newTarget;
@@ -206,9 +206,10 @@ class RouteEdit{
         }
         write(this.writeKeys,data);
     }
-    checkChangePossible(newPoint){
+    checkChangePossible(newPoint,opt_index){
         if (! this.writable) return false;
         let data=load(this.storeKeys);
+        if (opt_index !== undefined) data.index=opt_index;
         if (data.index < 0 || ! data.route) return false;
         return data.route.checkChangePossible(data.index,newPoint);
     }
