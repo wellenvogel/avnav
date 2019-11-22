@@ -321,9 +321,10 @@ class RouteEdit{
         let data=load(this.storeKeys);
         return StateHelper.hasRoute(data);
     }
-    isRouting(){
+    //the following functions will only return meaningful data if we have a leg...
+    hasActiveTarget(){
         let data=load(this.storeKeys);
-        return StateHelper.isActiveRoute(data);
+        return StateHelper.hasActiveTarget(data);
     }
     getCurrentTarget(){
         let data=load(this.storeKeys);
@@ -332,8 +333,18 @@ class RouteEdit{
     }
     getCurrentFrom(){
         let data=load(this.storeKeys);
-        if (!data.leg || ! data.leg.active) return undefined;
+        if (!data.leg ) return undefined;
         return data.leg.from;
+    }
+    anchorWatch(){
+        let data=load(this.storeKeys);
+        if (!data.leg) return;
+        return data.leg.anchorWatch();
+    }
+    isApproaching(){
+        let data=load(this.storeKeys);
+        if (data.leg) return false;
+        return leg.isApproaching();
     }
 }
 
@@ -342,7 +353,7 @@ RouteEdit.MODES={
         storeKeys: {
             route: keys.nav.routeHandler.routeForPage,
             index: keys.nav.routeHandler.pageRouteIndex,
-            activeName: keys.nav.routeHandler.activeRouteName
+            activeName: keys.nav.route.name
         },
         writable:true
     },
@@ -350,7 +361,7 @@ RouteEdit.MODES={
         storeKeys: {
             route: keys.nav.routeHandler.editingRoute,
             index: keys.nav.routeHandler.editingIndex,
-            activeName: keys.nav.routeHandler.activeRouteName
+            activeName: keys.nav.route.name
         },
         writable: true
     },
@@ -358,7 +369,7 @@ RouteEdit.MODES={
         storeKeys: {
             leg: keys.nav.routeHandler.currentLeg,
             index: keys.nav.routeHandler.currentIndex,
-            activeName: keys.nav.routeHandler.activeRouteName
+            activeName: keys.nav.route.name
         },
         writable:true
     }

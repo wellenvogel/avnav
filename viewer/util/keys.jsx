@@ -99,15 +99,7 @@ let keys={
             nextCourse: K,
             isApproaching: K
         },
-        //better move this to a route object at routeHandler
-        editRoute:{
-            name: K,
-            numPoints: K,
-            len: K,
-            remain: K,
-            eta: K,
-            isActive: K
-        },
+
         ais:{
             nearest: K, //to be displayed
             list:K,
@@ -119,7 +111,6 @@ let keys={
             pageRouteIndex: K,
             editingRoute:K,
             editingIndex: K,
-            activeRouteName: new D("set if there is currently an active route"),
             currentLeg: new D("the current leg used for routing"),
             currentIndex: new D("the index when working directly on the active route (currentLeg)")
         }

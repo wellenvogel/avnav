@@ -367,7 +367,7 @@ RouteData.prototype.setEditingWpIdx=function(id){
     var route=this.editingRoute;
     if (! route) return;
     this.editingWp=route.getPointAtIndex(id);
-    this.navobject.routeEvent();
+
 };
 /**
  * set the editing waypoint
@@ -376,7 +376,7 @@ RouteData.prototype.setEditingWpIdx=function(id){
  */
 RouteData.prototype.setEditingWp=function(wp){
     this.editingWp=wp;
-    this.navobject.routeEvent();
+   ;
 };
 RouteData.prototype.moveEditingWp=function(diff){
     var route=this.getRoute();
@@ -384,7 +384,7 @@ RouteData.prototype.moveEditingWp=function(diff){
     var nwp=route.getPointAtOffset(this.editingWp,diff);
     if (! nwp) return;
     this.editingWp=nwp;
-    this.navobject.routeEvent();
+
 };
 
 /**
@@ -1037,9 +1037,7 @@ RouteData.prototype._saveChanges= function (oldWp, newWp){
     globalStore.storeData(keys.nav.routeHandler.editingRoute,this.editingRoute?this.editingRoute.clone():undefined);
     this.saveRoute();
     if (changeActive) this._legChanged();
-    else {
-        this.navobject.routeEvent();
-    }
+
     return true;
 };
 
@@ -1087,7 +1085,7 @@ RouteData.prototype._handleLegResponse=function(data) {
             if (this.isEditingActiveRoute()){
                 this._findBestMatchingPoint();
             }
-            this.navobject.routeEvent();
+
         }
     }
 };
@@ -1229,7 +1227,7 @@ RouteData.prototype._startQuery=function() {
                         self.editingRoute = self.serverRoute.clone();
                         self.saveRoute();
                         self._findBestMatchingPoint();
-                        self.navobject.routeEvent();
+
                     }
 
                 }
@@ -1353,7 +1351,7 @@ RouteData.prototype._legChanged=function(){
     if (!old || old.differsTo(this.currentLeg)){
         globalStore.storeData(keys.nav.routeHandler.currentLeg,this.currentLeg.clone());
     }
-    this.navobject.routeEvent();
+
     var self=this;
     if (avnav.android){
         var rt=avnav.android.setLeg(this.currentLeg.toJsonString());
@@ -1405,7 +1403,7 @@ RouteData.prototype.dataChanged=function() {
         if (this.serverConnected && this.serverLeg){
             this.currentLeg=this.serverLeg.clone();
         }
-        this.navobject.routeEvent();
+
     }
 };
 

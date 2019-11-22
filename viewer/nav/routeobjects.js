@@ -232,6 +232,14 @@ routeobjects.Leg.prototype.setAnchorWatch=function(start,distance){
     this.currentRoute=undefined;
     this.anchorDistance=distance;
 };
+routeobjects.Leg.prototype.anchorWatch=function(){
+    return this.anchorDistance;
+};
+
+routeobjects.Leg.isApproaching=function(){
+    return this.active && this.approach;
+};
+
 
 
 

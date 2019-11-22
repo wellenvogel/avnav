@@ -1089,6 +1089,7 @@ MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
  * @private
  */
 MapHolder.prototype.onMoveEnd=function(evt){
+    return;
     var newCenter= this.pointFromMap(this.getView().getCenter());
     if (this.setCenterFromMove(newCenter)) {
         this.saveCenter();
