@@ -112,9 +112,9 @@ const MapHolder=function(){
     this.requiredZoom=-1;
     this.mapZoom=-1; //the last zoom we required from the map
     try {
-        var currentView = localStorage.getItem(globalStore.getData(keys.properties.centerName));
+        let currentView = localStorage.getItem(globalStore.getData(keys.properties.centerName));
         if (currentView) {
-            var decoded = JSON.parse(currentView);
+            let decoded = JSON.parse(currentView);
             this.center = decoded.center;
             this.zoom = decoded.zoom;
             this.requiredZoom=decoded.requiredZoom || this.zoom;
@@ -147,11 +147,12 @@ const MapHolder=function(){
      */
     this.lastOpacity=-1;
     this.compassOffset=0;
-    var self=this;
+    let self=this;
     let storeKeys=KeyHelper.flattenedKeys(keys.nav.gps).concat(
         KeyHelper.flattenedKeys(keys.nav.center),
         KeyHelper.flattenedKeys(keys.nav.wp),
-        KeyHelper.flattenedKeys(keys.nav.anchor)
+        KeyHelper.flattenedKeys(keys.nav.anchor),
+        KeyHelper.flattenedKeys(keys.nav.track)
     );
     this.navChanged=new Callback(()=>{
         self.navEvent();
@@ -231,7 +232,7 @@ MapHolder.prototype.getProperties=function(){
 
 MapHolder.prototype.getView=function(){
     if (!this.olmap)return null;
-    var mview=this.olmap.getView();
+    let mview=this.olmap.getView();
     return mview;
 };
 /**
@@ -239,7 +240,7 @@ MapHolder.prototype.getView=function(){
  * @returns {number|Number|*}
  */
 MapHolder.prototype.getZoom=function(){
-    var v=this.olmap?this.olmap.getView():undefined;
+    let v=this.olmap?this.olmap.getView():undefined;
     if (! v ) return {required:this.requiredZoom,current: this.zoom};
     return {required:this.requiredZoom,current: v.getZoom()};
 };
@@ -324,12 +325,12 @@ MapHolder.prototype.loadMap=function(div){
  */
 
 MapHolder.prototype.initMap=function(div,layerdata,baseurl){
-    var self=this;
-    var layers=this.parseLayerlist(layerdata,baseurl);
-    var layersreverse=[];
+    let self=this;
+    let layers=this.parseLayerlist(layerdata,baseurl);
+    let layersreverse=[];
     this.minzoom=32;
     this.maxzoom=0;
-    for (var i=layers.length- 1;i>=0;i--){
+    for (let i=layers.length- 1;i>=0;i--){
         layersreverse.push(layers[i]);
         if (layers[i].avnavOptions.minZoom < this.minzoom){
             this.minzoom=layers[i].avnavOptions.minZoom;
@@ -339,18 +340,18 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         }
     }
     if (this.olmap){
-        var oldlayers=this.olmap.getLayers();
+        let oldlayers=this.olmap.getLayers();
         if (oldlayers && oldlayers.getArray().length){
-            var olarray=[];
+            let olarray=[];
             //make a copy of the layerlist
             //as the original array is modified when deleting...
-            var olarray_in=oldlayers.getArray();
+            let olarray_in=oldlayers.getArray();
             olarray=olarray_in.slice(0);
-            for(var i=0;i<olarray.length;i++){
+            for(let i=0;i<olarray.length;i++){
                 this.olmap.removeLayer(olarray[i]);
             }
         }
-        for (var i=0;i< layersreverse.length;i++){
+        for (let i=0;i< layersreverse.length;i++){
             this.olmap.addLayer(layersreverse[i]);
         }
         this.renderTo(div);
@@ -391,8 +392,8 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         });
     }
     this.renderTo(div);
-    var recenter=true;
-    var view;
+    let recenter=true;
+    let view;
     if (this.requiredZoom) this.zoom=this.requiredZoom;
     if (this.center && this.zoom >0){
         //if we load a new map - try to restore old center and zoom
@@ -408,15 +409,15 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         this.requiredZoom=this.zoom;
         this.setZoom(this.zoom);
         recenter=false;
-        var lext;
+        let lext;
         if (layers.length > 0) {
             lext=layers[0].avnavOptions.extent;
             if (lext !== undefined && !ol.extent.containsCoordinate(lext,this.pointToMap(this.center))){
-                var ok=OverlayDialog.confirm("Position outside map, center to map now?");
+                let ok=OverlayDialog.confirm("Position outside map, center to map now?");
                 ok.then(function(){
                     if (layers.length > 0) {
-                        var view = self.getView();
-                        var lext = layers[0].avnavOptions.extent;
+                        let view = self.getView();
+                        let lext = layers[0].avnavOptions.extent;
                         if (lext !== undefined) view.fit(lext,self.olmap.getSize());
                         self.setZoom(self.minzoom);
                         self.center = self.pointFromMap(view.getCenter());
@@ -425,7 +426,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
 
                     }
                     self.saveCenter();
-                    var newCenter = self.pointFromMap(self.getView().getCenter());
+                    let newCenter = self.pointFromMap(self.getView().getCenter());
                     self.setCenterFromMove(newCenter, true);
                 });
             }
@@ -443,7 +444,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         }
     }
     this.saveCenter();
-    var newCenter= this.pointFromMap(this.getView().getCenter());
+    let newCenter= this.pointFromMap(this.getView().getCenter());
     this.setCenterFromMove(newCenter,true);
     if (! globalStore.getData(keys.properties.layers.boat) ) this.gpsLocked=false;
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
@@ -462,7 +463,7 @@ MapHolder.prototype.timerFunction=function(){
  * @param number
  */
 MapHolder.prototype.changeZoom=function(number){
-    var curzoom=this.requiredZoom; //this.getView().getZoom();
+    let curzoom=this.requiredZoom; //this.getView().getZoom();
     curzoom+=number;
     if (curzoom < this.minzoom ) curzoom=this.minzoom;
     if (curzoom > (this.maxzoom+globalStore.getData(keys.properties.maxUpscale)) ) {
@@ -493,37 +494,37 @@ MapHolder.prototype.setZoom=function(newZoom){
 MapHolder.prototype.drawGrid=function() {
     if (!globalStore.getData(keys.properties.layers.grid)) return;
     if (!this.olmap) return;
-    var style = {
+    let style = {
         width: 1,
         color: 'grey'
     };
-    var ctx = this.drawing.getContext();
+    let ctx = this.drawing.getContext();
     if (!ctx) return;
-    var pw=ctx.canvas.width;
-    var ph=ctx.canvas.height;
+    let pw=ctx.canvas.width;
+    let ph=ctx.canvas.height;
     //TODO: css pixel?
-    var ul = this.pointFromMap(this.olmap.getCoordinateFromPixel([0, 0]));
-    var ur = this.pointFromMap(this.olmap.getCoordinateFromPixel([pw, 0]));
-    var ll = this.pointFromMap(this.olmap.getCoordinateFromPixel([0, ph]));
-    var lr = this.pointFromMap(this.olmap.getCoordinateFromPixel([pw, ph]));
-    var xrange=[Math.min(ul[0],ur[0],ll[0],lr[0]),Math.max(ul[0],ur[0],ll[0],lr[0])];
-    var yrange=[Math.min(ul[1],ur[1],ll[1],lr[1]),Math.max(ul[1],ur[1],ll[1],lr[1])];
-    var xdiff=xrange[1]-xrange[0];
-    var ydiff=yrange[1]-yrange[0];
-    var raster= 5/60; //we draw in 5' raster
+    let ul = this.pointFromMap(this.olmap.getCoordinateFromPixel([0, 0]));
+    let ur = this.pointFromMap(this.olmap.getCoordinateFromPixel([pw, 0]));
+    let ll = this.pointFromMap(this.olmap.getCoordinateFromPixel([0, ph]));
+    let lr = this.pointFromMap(this.olmap.getCoordinateFromPixel([pw, ph]));
+    let xrange=[Math.min(ul[0],ur[0],ll[0],lr[0]),Math.max(ul[0],ur[0],ll[0],lr[0])];
+    let yrange=[Math.min(ul[1],ur[1],ll[1],lr[1]),Math.max(ul[1],ur[1],ll[1],lr[1])];
+    let xdiff=xrange[1]-xrange[0];
+    let ydiff=yrange[1]-yrange[0];
+    let raster= 5/60; //we draw in 5' raster
     if (xdiff/raster > pw/60 ) return; //at most every 50px
     if (ydiff/raster > ph/60 ) return; //at most every 50px
-    var drawText=this.drawing.getRotation()?false:true;
-    var textStyle={
+    let drawText=this.drawing.getRotation()?false:true;
+    let textStyle={
         color: 'grey',
         font: '12px Calibri,sans-serif',
         offsetY:7, //should compute this from the font...
         fixY:0
     };
-    for(var x=Math.floor(xrange[0]);x<=xrange[1];x+=raster){
+    for(let x=Math.floor(xrange[0]);x<=xrange[1];x+=raster){
         this.drawing.drawLineToContext([this.pointToMap([x,yrange[0]]),this.pointToMap([x,yrange[1]])],style);
         if (drawText) {
-            var text = Formatter.formatLonLatsDecimal(x, 'lon');
+            let text = Formatter.formatLonLatsDecimal(x, 'lon');
             this.drawing.drawTextToContext(this.pointToMap([x, yrange[0]]), text, textStyle);
         }
     }
@@ -531,10 +532,10 @@ MapHolder.prototype.drawGrid=function() {
     textStyle.offsetX=30; //should compute from font...
     textStyle.fixY=undefined;
     textStyle.fixX=0;
-    for (var y=Math.floor(yrange[0]);y <= yrange[1];y+=raster){
+    for (let y=Math.floor(yrange[0]);y <= yrange[1];y+=raster){
         this.drawing.drawLineToContext([this.pointToMap([xrange[0],y]),this.pointToMap([xrange[1],y])],style);
         if (drawText) {
-            var text = Formatter.formatLonLatsDecimal(y, 'lat');
+            let text = Formatter.formatLonLatsDecimal(y, 'lat');
             this.drawing.drawTextToContext(this.pointToMap([xrange[0], y]), text, textStyle);
         }
     }
@@ -586,18 +587,17 @@ MapHolder.prototype.getGpsLock=function(){
 
 /**
  * called with updates from nav
- * @param {navobjects.NavEvent} evdata
  * @constructor
  */
-MapHolder.prototype.navEvent = function (evdata) {
+MapHolder.prototype.navEvent = function () {
 
-    var gps = this.navobject.getGpsHandler().getGpsData();
+    let gps = this.navobject.getGpsHandler().getGpsData();
     if (!gps.valid) return;
     if (this.gpsLocked) {
         this.setCenter(gps);
         if (this.courseUp) {
-            var diff = (gps.course - this.averageCourse);
-            var tol = globalStore.getData(keys.properties.courseAverageTolerance);
+            let diff = (gps.course - this.averageCourse);
+            let tol = globalStore.getData(keys.properties.courseAverageTolerance);
             if (diff < tol && diff > -tol) diff = diff / 30; //slower rotate the map
             this.averageCourse += diff * globalStore.getData(keys.properties.courseAverageFactor);
             this.setMapRotation(this.averageCourse);
@@ -609,13 +609,13 @@ MapHolder.prototype.navEvent = function (evdata) {
 };
 
 MapHolder.prototype.centerToGps=function(){
-    var gps=this.navobject.getGpsHandler().getGpsData();
+    let gps=this.navobject.getGpsHandler().getGpsData();
     if (! gps.valid) return;
     this.setCenter(gps);
 };
 
 MapHolder.prototype.checkAutoZoom=function(opt_force){
-    var enabled= globalStore.getData(keys.properties.autoZoom)||opt_force;
+    let enabled= globalStore.getData(keys.properties.autoZoom)||opt_force;
     if (! this.olmap) return;
     if (! enabled ||  !(this.gpsLocked||opt_force)) {
         if (this.olmap.getView().getZoom() != this.requiredZoom){
@@ -628,29 +628,29 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
     }
     //check if we have tiles available for this zoom
     //otherwise change zoom but leave required as it is
-    var currentZoom=this.olmap.getView().getZoom();
-    var centerCoord=this.olmap.getView().getCenter();
-    var hasZoomInfo=false;
-    var zoomOk=false;
-    for (var tzoom=Math.floor(this.requiredZoom);tzoom >= this.minzoom;tzoom--){
+    let currentZoom=this.olmap.getView().getZoom();
+    let centerCoord=this.olmap.getView().getCenter();
+    let hasZoomInfo=false;
+    let zoomOk=false;
+    for (let tzoom=Math.floor(this.requiredZoom);tzoom >= this.minzoom;tzoom--){
         zoomOk=false;
-        var layers=this.olmap.getLayers().getArray();
-        for (var i=0;i<layers.length && ! zoomOk;i++){
-            var layer=layers[i];
+        let layers=this.olmap.getLayers().getArray();
+        for (let i=0;i<layers.length && ! zoomOk;i++){
+            let layer=layers[i];
             if (! layer.avnavOptions || ! layer.avnavOptions.zoomLayerBoundings) continue;
-            var source=layer.get('source');
+            let source=layer.get('source');
             if (!source || ! (source instanceof ol.source.XYZ)) continue;
             hasZoomInfo=true;
-            var boundings=layer.avnavOptions.zoomLayerBoundings;
-            var centerTile=source.getTileGrid().getTileCoordForCoordAndZ(centerCoord,tzoom);
-            var z = centerTile[0];
-            var x = centerTile[1];
-            var y = centerTile[2];
+            let boundings=layer.avnavOptions.zoomLayerBoundings;
+            let centerTile=source.getTileGrid().getTileCoordForCoordAndZ(centerCoord,tzoom);
+            let z = centerTile[0];
+            let x = centerTile[1];
+            let y = centerTile[2];
             y=-y-1; //we still have the old counting...
             //TODO: have a common function for this and the tileUrlFunction
             if (!boundings[z]) continue; //nothing at this zoom level
-            for (var bindex in boundings[z]) {
-                var zbounds = boundings[z][bindex];
+            for (let bindex in boundings[z]) {
+                let zbounds = boundings[z][bindex];
                 if (zbounds.minx <= x && zbounds.maxx >= x && zbounds.miny <= y && zbounds.maxy >= y) {
                     zoomOk = true;
                     break;
@@ -672,7 +672,7 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
         }
     }
     if (! zoomOk && hasZoomInfo){
-        var nzoom=tzoom+1;
+        let nzoom=tzoom+1;
         if (nzoom > this.requiredZoom) nzoom=this.requiredZoom;
         if (nzoom != this.olmap.getView().getZoom) {
             avnav.log("autozoom change to " + tzoom);
@@ -707,12 +707,12 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         xmlDoc.loadXML(layerdata);
     }
     Array.from(xmlDoc.getElementsByTagName('TileMap')).forEach(function(tm){
-        var rt={};
+        let rt={};
         rt.type=LayerTypes.TCHART;
         //complete tile map entry here
         rt.inversy=false;
         rt.wms=false;
-        var layer_profile=tm.getAttribute('profile');
+        let layer_profile=tm.getAttribute('profile');
         if (layer_profile) {
             if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator' && layer_profile != 'wms') {
                 throw new Exception('unsupported profile in tilemap.xml ' + layer_profile);
@@ -760,23 +760,23 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         */
         //although we currently do not need the boundings
         //we just parse them...
-        var boundings=[];
+        let boundings=[];
         Array.from(tm.getElementsByTagName("LayerBoundings")).forEach((lb)=>{
             Array.from(lb.getElementsByTagName("BoundingBox")).forEach((bb)=>{
-            var bounds=[self.e2f(bb,'minlon'),self.e2f(bb,'maxlat'),
+            let bounds=[self.e2f(bb,'minlon'),self.e2f(bb,'maxlat'),
                 self.e2f(bb,'maxlon'),self.e2f(bb,'minlat')];
             boundings.push(bounds);
             });
         });
         rt.boundings=boundings;
 
-        var zoomLayerBoundings=[];
+        let zoomLayerBoundings=[];
         Array.from(tm.getElementsByTagName("LayerZoomBoundings")).forEach((lzb)=> {
             Array.from(lzb.getElementsByTagName("ZoomBoundings")).forEach((zb)=> {
-                var zoom = parseInt(zb.getAttribute('zoom'));
-                var zoomBoundings = [];
+                let zoom = parseInt(zb.getAttribute('zoom'));
+                let zoomBoundings = [];
                 Array.from(zb.getElementsByTagName("BoundingBox")).forEach((bb)=> {
-                    var bounds = {
+                    let bounds = {
                         minx: parseInt(bb.getAttribute('minx')),
                         miny: parseInt(bb.getAttribute('miny')),
                         maxx: parseInt(bb.getAttribute('maxx')),
@@ -794,7 +794,7 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         }
 
         //now we have all our options - just create the layer from them
-        var layerurl="";
+        let layerurl="";
         if (rt.url === undefined){
             throw new Exception("missing href in layer");
             return null;
@@ -805,24 +805,24 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         else layerurl=rt.url;
         rt.extent=ol.extent.applyTransform(rt.layerExtent,self.transformToMap);
         if (rt.wms){
-            var param={};
+            let param={};
             Array.from(tm.getElementsByTagName("WMSParameter")).forEach((wp)=>{
-                var n=wp.getAttribute('name');
-                var v=wp.getAttribute('value');
+                let n=wp.getAttribute('name');
+                let v=wp.getAttribute('value');
                 if (n !== undefined && v !== undefined){
                     param[n]=v;
                 }
             });
             rt.wmsparam=param;
-            var layermap={};
+            let layermap={};
             Array.from(tm.getElementsByTagName("WMSLayerMapping")).forEach((mapping)=>{
-                var zooms=mapping.getAttribute('zooms');
-                var layers=mapping.getAttribute('layers');
-                var zarr=zooms.split(/,/);
-                var i;
+                let zooms=mapping.getAttribute('zooms');
+                let layers=mapping.getAttribute('layers');
+                let zarr=zooms.split(/,/);
+                let i;
                 for (i in zarr){
                     try {
-                        var zlevel=parseInt(zarr[i]);
+                        let zlevel=parseInt(zarr[i]);
                         layermap[zlevel]=layers;
                     }catch (ex){}
                 }
@@ -835,24 +835,24 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         //to avoid server round trips, we use a local image url
         //the more forward way would be to return undefined - but in this case
         //ol will NOT show the lower zoom tiles...
-        var invalidUrl='data:image/png;base64,i';
-        var source=undefined;
+        let invalidUrl='data:image/png;base64,i';
+        let source=undefined;
         //as WMS support is broken in OL3 (as always ol3 tries to be more intelligent than everybody...)
         //we always use an XYZ layer but directly construct the WMS tiles...
         source = new ol.source.XYZ({
             tileUrlFunction: function (coord) {
                 if (!coord) return undefined;
-                var zxy = coord;
-                var z = zxy[0];
-                var x = zxy[1];
-                var y = zxy[2];
+                let zxy = coord;
+                let z = zxy[0];
+                let x = zxy[1];
+                let y = zxy[2];
                 y=-y-1; //change for ol3-151 - commit af319c259b349c86a4d164c42cc4eb5884f896fb
 
                 if (rt.zoomLayerBoundings) {
-                    var found = false;
+                    let found = false;
                     if (!rt.zoomLayerBoundings[z]) return invalidUrl;
-                    for (var bindex in rt.zoomLayerBoundings[z]) {
-                        var zbounds = rt.zoomLayerBoundings[z][bindex];
+                    for (let bindex in rt.zoomLayerBoundings[z]) {
+                        let zbounds = rt.zoomLayerBoundings[z][bindex];
                         if (zbounds.minx <= x && zbounds.maxx >= x && zbounds.miny <= y && zbounds.maxy >= y) {
                             found = true;
                             break;
@@ -864,29 +864,29 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 }
                 if (rt.wms){
                     //construct the WMS url
-                    var grid=rt.source.getTileGrid();
+                    let grid=rt.source.getTileGrid();
                     //taken from tilegrid.js:
-                    //var origin = grid.getOrigin(z);
+                    //let origin = grid.getOrigin(z);
                     //the xyz source seems to have a very strange origin - x at -... but y at +...
                     //but we rely on the origin being ll
                     //not sure if this is correct for all projections...
-                    var origin=[-20037508.342789244,-20037508.342789244]; //unfortunately the ol3 stuff does not export this...
-                    var resolution = grid.getResolution(z);
-                    var tileSize = grid.getTileSize(z);
+                    let origin=[-20037508.342789244,-20037508.342789244]; //unfortunately the ol3 stuff does not export this...
+                    let resolution = grid.getResolution(z);
+                    let tileSize = grid.getTileSize(z);
                     y = (1 << z) - y - 1;
-                    var minX = origin[0] + x * tileSize * resolution;
-                    var minY = origin[1] + y * tileSize * resolution;
-                    var maxX = minX + tileSize * resolution;
-                    var maxY = minY + tileSize * resolution;
+                    let minX = origin[0] + x * tileSize * resolution;
+                    let minY = origin[1] + y * tileSize * resolution;
+                    let maxX = minX + tileSize * resolution;
+                    let maxY = minY + tileSize * resolution;
                     //now compute the bounding box
-                    var converter=ol.proj.getTransform("EPSG:3857",rt.projection||"EPSG:4326");
-                    var bbox=converter([minX,minY,maxX,maxY]);
-                    var rturl=layerurl+"SERVICE=WMS&REQUEST=GetMap&FORMAT=image/png&WIDTH="+tileSize+"&HEIGHT="+tileSize+"&SRS="+encodeURI(rt.projection);
-                    var k;
-                    var layers;
+                    let converter=ol.proj.getTransform("EPSG:3857",rt.projection||"EPSG:4326");
+                    let bbox=converter([minX,minY,maxX,maxY]);
+                    let rturl=layerurl+"SERVICE=WMS&REQUEST=GetMap&FORMAT=image/png&WIDTH="+tileSize+"&HEIGHT="+tileSize+"&SRS="+encodeURI(rt.projection);
+                    let k;
+                    let layers;
                     if (rt.wmslayermap[z]) layers=rt.wmslayermap[z];
                     for (k in rt.wmsparam){
-                        var v=rt.wmsparam[k];
+                        let v=rt.wmsparam[k];
                         if (layers && (k == "LAYERS"|| k== "layers")) {
                             v = layers;
                         }
@@ -908,7 +908,7 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         });
 
         rt.source=source;
-        var layer=new ol.layer.Tile({
+        let layer=new ol.layer.Tile({
             source: source
         });
         layer.avnavOptions=rt;
@@ -950,7 +950,7 @@ MapHolder.prototype.setCenter=function(point){
  * @returns {navobjects.Point}
  */
 MapHolder.prototype.getCenter=function(){
-    var rt=new navobjects.Point();
+    let rt=new navobjects.Point();
     rt.fromCoord(this.pointFromMap(this.getView().getCenter()));
     return rt;
 };
@@ -961,13 +961,13 @@ MapHolder.prototype.getCenter=function(){
  */
 MapHolder.prototype.pixelDistance=function(point1,point2){
     if (! this.olmap) return 0;
-    var coord1=this.pointToMap(point1.toCoord());
-    var coord2=this.pointToMap(point2.toCoord());
-    var pixel1=this.coordToPixel(coord1);
-    var pixel2=this.coordToPixel(coord2);
-    var dx=pixel1[0]-pixel2[0];
-    var dy=pixel1[1]-pixel2[1];
-    var dst=Math.sqrt(dy*dy+dx*dx);
+    let coord1=this.pointToMap(point1.toCoord());
+    let coord2=this.pointToMap(point2.toCoord());
+    let pixel1=this.coordToPixel(coord1);
+    let pixel2=this.coordToPixel(coord2);
+    let dx=pixel1[0]-pixel2[0];
+    let dy=pixel1[1]-pixel2[1];
+    let dst=Math.sqrt(dy*dy+dx*dx);
     return dst;
 };
 
@@ -987,10 +987,10 @@ MapHolder.prototype.setMapRotation=function(rotation){
  */
 MapHolder.prototype.setCourseUp=function(on){
     globalStore.storeData(keys.map.courseUp,on);
-    var old=this.courseUp;
+    let old=this.courseUp;
     if (old == on) return on;
     if (on){
-        var gps=this.navobject.getGpsHandler().getGpsData();
+        let gps=this.navobject.getGpsHandler().getGpsData();
         if (! gps.valid) return false;
         this.averageCourse=gps.course;
         this.setMapRotation(this.averageCourse);
@@ -1006,7 +1006,7 @@ MapHolder.prototype.setCourseUp=function(on){
 
 MapHolder.prototype.setGpsLock=function(lock){
     if (lock == this.gpsLocked) return;
-    var gps=this.navobject.getGpsHandler().getGpsData();
+    let gps=this.navobject.getGpsHandler().getGpsData();
     if (! gps.valid && lock) return;
     //we do not lock if the nav layer is not visible
     if (! globalStore.getData(keys.properties.layers.boat) && lock) return;
@@ -1021,13 +1021,13 @@ MapHolder.prototype.setGpsLock=function(lock){
  * @param {ol.MapBrowserEvent} evt
  */
 MapHolder.prototype.onClick=function(evt){
-    var wp=this.routinglayer.findTarget(evt.pixel);
+    let wp=this.routinglayer.findTarget(evt.pixel);
     if (wp){
         this.pubSub.publish(PSTOPIC,{type:this.EventTypes.SELECTWP,wp:wp})
     }
     evt.preventDefault();
     if (this.routingActive || wp) return false;
-    var aisparam=this.aislayer.findTarget(evt.pixel);
+    let aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
         this.pubSub.publish(PSTOPIC,{type:EventTypes.SELECTAIS,aisparam:aisparam});
     }
@@ -1046,7 +1046,7 @@ MapHolder.prototype.onZoomChange=function(evt){
     evt.preventDefault();
     avnav.log("zoom changed");
     if (this.mapZoom >=0){
-        var vZoom=this.getView().getZoom();
+        let vZoom=this.getView().getZoom();
         if (vZoom != this.mapZoom){
             if (vZoom < this.minzoom) vZoom=this.minzoom;
             if (vZoom > (this.maxzoom+globalStore.getData(keys.properties.maxUpscale)) ) {
@@ -1068,15 +1068,15 @@ MapHolder.prototype.onZoomChange=function(evt){
  */
 MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
     avnav.log("findTarget "+pixel[0]+","+pixel[1]);
-    var tolerance=opt_tolerance||10;
-    var xmin=pixel[0]-tolerance;
-    var xmax=pixel[0]+tolerance;
-    var ymin=pixel[1]-tolerance;
-    var ymax=pixel[1]+tolerance;
-    var i;
-    var rt=[];
+    let tolerance=opt_tolerance||10;
+    let xmin=pixel[0]-tolerance;
+    let xmax=pixel[0]+tolerance;
+    let ymin=pixel[1]-tolerance;
+    let ymax=pixel[1]+tolerance;
+    let i;
+    let rt=[];
     for (i=0;i<points.length;i++){
-        var current=points[i];
+        let current=points[i];
         if (!(current instanceof Array)) current=current.pixel;
         if (current[0]>=xmin && current[0] <=xmax && current[1] >=ymin && current[1] <= ymax){
             rt.push({idx:i,pixel:current});
@@ -1085,8 +1085,8 @@ MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
     if (rt.length){
         if (rt.length == 1) return rt[0].idx;
         rt.sort(function(a,b){
-            var da=(a.pixel[0]-pixel[0])*(a.pixel[0]-pixel[0])+(a.pixel[1]-pixel[1])*(a.pixel[1]-pixel[1]);
-            var db=(b.pixel[0]-pixel[0])*(b.pixel[0]-pixel[0])+(b.pixel[1]-pixel[1])*(b.pixel[1]-pixel[1]);
+            let da=(a.pixel[0]-pixel[0])*(a.pixel[0]-pixel[0])+(a.pixel[1]-pixel[1])*(a.pixel[1]-pixel[1]);
+            let db=(b.pixel[0]-pixel[0])*(b.pixel[0]-pixel[0])+(b.pixel[1]-pixel[1])*(b.pixel[1]-pixel[1]);
             return (da - db);
         });
         return rt[0].idx; //currently simply the first - could be the nearest...
@@ -1101,7 +1101,7 @@ MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
  */
 MapHolder.prototype.onMoveEnd=function(evt){
     return;
-    var newCenter= this.pointFromMap(this.getView().getCenter());
+    let newCenter= this.pointFromMap(this.getView().getCenter());
     if (this.setCenterFromMove(newCenter)) {
         this.saveCenter();
         avnav.log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
@@ -1134,7 +1134,7 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
  * @param {ol.render.Event} evt
  */
 MapHolder.prototype.onPostCompose=function(evt){
-    var newCenter=this.pointFromMap(evt.frameState.viewState.center);
+    let newCenter=this.pointFromMap(evt.frameState.viewState.center);
     if (this.setCenterFromMove(newCenter)) this.saveCenter();
     if (this.opacity != this.lastOpacity){
         evt.context.canvas.style.opacity=this.opacity;
@@ -1170,8 +1170,8 @@ MapHolder.prototype.doSlide=function(start){
     else {
         this.slideIn = start;
     }
-    var self=this;
-    var to=globalStore.getData(keys.properties.slideTime);
+    let self=this;
+    let to=globalStore.getData(keys.properties.slideTime);
     window.setTimeout(function(){
         self.doSlide();
     },to);
@@ -1195,7 +1195,7 @@ MapHolder.prototype.triggerRender=function(){
  * @private
  */
 MapHolder.prototype.saveCenter=function(){
-    var raw=JSON.stringify({center:this.center,zoom:this.zoom,requiredZoom: this.requiredZoom});
+    let raw=JSON.stringify({center:this.center,zoom:this.zoom,requiredZoom: this.requiredZoom});
     localStorage.setItem(globalStore.getData(keys.properties.centerName),raw);
 };
 
@@ -1204,7 +1204,7 @@ MapHolder.prototype.saveCenter=function(){
  * @param on
  */
 MapHolder.prototype.setRoutingActive=function(on){
-    var old=this.routingActive;
+    let old=this.routingActive;
     this.routingActive=on;
     if (old != on) this.triggerRender();
 };

@@ -65,11 +65,11 @@ const AisLayer=function(mapholder){
  * @returns {*} - an image data uri
  */
 AisLayer.prototype.createIcon=function(color){
-    var canvas = document.createElement("canvas");
+    let canvas = document.createElement("canvas");
     if (! canvas) return undefined;
     canvas.width=100;
     canvas.height=300;
-    var ctx=canvas.getContext('2d');
+    let ctx=canvas.getContext('2d');
     //drawing code created by http://www.professorcloud.com/svg-to-canvas/
     //from ais-nearest.svg
     ctx.strokeStyle = 'rgba(0,0,0,0)';
@@ -106,7 +106,7 @@ AisLayer.prototype.createIcon=function(color){
  * @private
  */
 AisLayer.prototype.createAllIcons=function(){
-    var style=globalStore.getMultiple(keys.properties.style);
+    let style=globalStore.getMultiple(keys.properties.style);
     this.nearestImage.src=this.createIcon(style.aisNearestColor);
     this.warningImage.src=this.createIcon(style.aisWarningColor);
     this.normalImage.src=this.createIcon(style.aisNormalColor);
@@ -117,8 +117,8 @@ AisLayer.prototype.createAllIcons=function(){
  */
 AisLayer.prototype.findTarget=function(pixel){
     avnav.log("findAisTarget "+pixel[0]+","+pixel[1]);
-    var tolerance=globalStore.getData(keys.properties.aisClickTolerance)/2;
-    var idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
+    let tolerance=globalStore.getData(keys.properties.aisClickTolerance)/2;
+    let idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
     if (idx >=0) return this.pixel[idx].ais;
     return undefined;
 };
@@ -149,26 +149,26 @@ AisLayer.prototype.setStyles=function(){
  */
 AisLayer.prototype.onPostCompose=function(center,drawing){
     if (! this.visible) return;
-    var i;
-    var pixel=[];
+    let i;
+    let pixel=[];
     let aisList=globalStore.getData(keys.nav.ais.list,[]);
     for (i in aisList){
-        var current=aisList[i];
-        var pos=current.mapPos;
+        let current=aisList[i];
+        let pos=current.mapPos;
         if (! pos){
             pos=this.mapholder.pointToMap((new navobjects.Point(current.lon,current.lat)).toCoord());
             current.mapPos=pos;
         }
-        var rotation=current.course||0;
-        var text=current.shipname;
+        let rotation=current.course||0;
+        let text=current.shipname;
         if (! text || text == "unknown") text=current.mmsi;
-        var icon = this.normalImage;
+        let icon = this.normalImage;
         if (current.nearest)
             icon = this.nearestImage;
         if (current.warning)
             icon = this.warningImage;
         this.targetStyle.rotation=rotation*Math.PI/180;
-        var curpix=drawing.drawImageToContext(pos,icon,this.targetStyle);
+        let curpix=drawing.drawImageToContext(pos,icon,this.targetStyle);
         pixel.push({pixel:curpix,ais:current});
         drawing.drawTextToContext(pos,text,this.textStyle);
     }

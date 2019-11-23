@@ -77,6 +77,15 @@ const findInfo=(list,item)=>{
     }
     return -1;
 };
+
+const itemSort=(a,b)=>{
+    if (a.time !== undefined && b.time !== undefined){
+        return b.time - a.time;
+    }
+    if (a.name > b.name) return 1;
+    if (a.name < b.name) return -1;
+    return 0;
+};
 const addItems=(items,opt_empty)=>{
     let current=opt_empty?[]:globalStore.getData(keys.gui.downloadpage.currentItems,[]);
     let newItems=[];
@@ -93,8 +102,10 @@ const addItems=(items,opt_empty)=>{
             newItems.push(items[i]);
         }
     }
+    newItems.sort(itemSort);
     globalStore.storeData(keys.gui.downloadpage.currentItems,newItems);
 };
+
 
 const fillDataRoutes=()=>{
     let localRoutes=RouteHandler.listRoutesLocal();

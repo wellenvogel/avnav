@@ -113,6 +113,9 @@ let keys={
             editingIndex: K,
             currentLeg: new D("the current leg used for routing"),
             currentIndex: new D("the index when working directly on the active route (currentLeg)")
+        },
+        track:{
+            currentTrack:K
         }
     },
     map:{

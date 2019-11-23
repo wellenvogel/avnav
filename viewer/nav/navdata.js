@@ -45,7 +45,7 @@ const NavData=function(){
      * @private
      * @type {TrackData}
      */
-    this.trackHandler=new TrackData(PropertyHandler,this);
+    this.trackHandler=new TrackData();
     /**
      * @type {AisData|exports|module.exports}
      */
@@ -232,7 +232,6 @@ NavData.prototype.computeValues=function() {
         },self.changeCallback);
         globalStore.storeData(keys.nav.wp.name, data.markerWp ? data.markerWp.name : '',self.changeCallback);
         globalStore.storeData(keys.nav.center.position, self.maplatlon,self.changeCallback);
-        this.triggerUpdateEvent(navobjects.NavEventSource.NAV);
     },0);
 };
 /**
@@ -307,7 +306,7 @@ NavData.prototype.setMapCenter=function(lonlat){
     if (p.compare(this.maplatlon)) return;
     p.assign(this.maplatlon);
     this.computeValues();
-    this.triggerUpdateEvent(navobjects.NavEventSource.MAP);
+
 };
 
 /**
@@ -337,15 +336,7 @@ NavData.prototype.resetTrack=function(){
     return this.trackHandler.resetTrack();
 };
 
-/**
- * send out an update event
- * @param {navobjects.NavEventSource} source
- */
-NavData.prototype.triggerUpdateEvent=function(source){
-    $(document).trigger(navobjects.NavEvent.EVENT_TYPE,
-        new navobjects.NavEvent(navobjects.NavEventType.GPS,[],source,this)
-    );
-};
+
 
 NavData.prototype.getCurrentPosition=function(){
     var gps=this.getGpsHandler().getGpsData();

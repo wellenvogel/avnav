@@ -1,22 +1,18 @@
 
-var navobjects=require('./navobjects');
+import navobjects from './navobjects';
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
+import Requests from '../util/requests.js';
 
 
 
 /**
  * the handler for the track data
  * query the server...
- * @param {avnav.util.PropertyHandler} propertyHandler
- * @param {NavData} navobject
  * @constructor
  */
-var TrackData=function(propertyHandler,navobject){
-    /** @private */
-    this.propertyHandler=propertyHandler;
-    /** @private */
-    this.navobject=navobject;
+const TrackData=function(){
+
     /** @private
      * @type {Array.<navobjects.TrackPoint>}
      * */
@@ -49,9 +45,8 @@ var TrackData=function(propertyHandler,navobject){
      * @type {number}
      */
     this.trackRequestSequence=0;
-    this.NM=this.propertyHandler.getProperties().NM;
+    this.NM=globalStore.getData(keys.properties.NM);
     this.startQuery();
-    var self=this;
     globalStore.register(this,keys.gui.global.propertySequence);
 
 };
@@ -62,49 +57,50 @@ var TrackData=function(propertyHandler,navobject){
  * @private
  */
 TrackData.prototype.handleTrackResponse=function(data){
-    var lastts=0;
+    let lastts=0;
     if (this.currentTrack.length>0){
         lastts=this.currentTrack[this.currentTrack.length-1].ts;
     }
-    var num=0;
-    for (var i=0;i<data.length;i++){
-        var cur=data[i];
+    let num=0;
+    for (let i=0;i<data.length;i++){
+        let cur=data[i];
         if (data[i].ts <= lastts) continue;
         this.currentTrack.push(new navobjects.TrackPoint(cur.lon,cur.lat,cur.ts)); //we could add course,speed...
         num++;
     }
     //cleanup old track data
-    var maxage=this.propertyHandler.getProperties().initialTrackLength*3600; //len is in h
-    var curgps=this.navobject.getGpsHandler().getGpsData();
-    var now=new Date();
+    let maxage=globalStore.getData(keys.properties.initialTrackLength)*3600; //len is in h
+    let curgps=globalStore.getMultiple(keys.nav.gps);
+    let now=new Date();
     if (curgps.rtime){
         //if we have a valid GPS time we take this as our current time for the track...
         now=curgps.rtime;
     }
-    var oldest=now.getTime()/1000-maxage;
+    let oldest=now.getTime()/1000-maxage;
     avnav.log("removing track data older then "+oldest);
     while (this.currentTrack.length > 0){
         if (this.currentTrack[0].ts > oldest) break;
         this.currentTrack.shift();
     }
+    globalStore.storeData(keys.nav.track.currentTrack,this.currentTrack.slice(0));
 };
 
 /**
  * @private
  */
 TrackData.prototype.startQuery=function() {
-    var url = this.propertyHandler.getProperties().navUrl+"?request=track";
-    var timeout = this.propertyHandler.getProperties().trackQueryTimeout; //in ms!
-    var interval=this.propertyHandler.getProperties().trackInterval; //in seconds
-    var self = this;
-    var now = new Date().getTime();
-    var maxItems = 0;
+    let url = "?request=track";
+    let timeout = globalStore.getData(keys.properties.trackQueryTimeout); //in ms!
+    let interval=globalStore.getData(keys.properties.trackInterval); //in seconds
+    let self = this;
+    let now = new Date().getTime();
+    let maxItems = 0;
     if (this.currentTrack.length == 0){
     // initialize the track
-        maxItems = this.propertyHandler.getProperties().initialTrackLength*3600/this.propertyHandler.getProperties().trackInterval;
+        maxItems = globalStore.getData(keys.properties.initialTrackLength)*3600/globalStore.getData(keys.properties.trackInterval);
     }
     else{
-        var tdiff=now-this.lastTrackQuery+2*timeout;
+        let tdiff=now-this.lastTrackQuery+2*timeout;
         tdiff=tdiff/1000; //tdiff in seconds
         maxItems=tdiff/interval;
         if (maxItems < 10) maxItems=10;
@@ -112,14 +108,11 @@ TrackData.prototype.startQuery=function() {
     maxItems=Math.floor(maxItems);
     if (maxItems == 0) maxItems=1;
     url+="&maxnum="+maxItems+"&interval="+interval;
-    var sequence=self.trackRequestSequence;
-    $.ajax({
-        url: url,
-        dataType: 'json',
-        cache:	false,
-        success: function(data,status){
+    let sequence=self.trackRequestSequence;
+    Requests.getJson(url,{checkOk:false,timeout:timeout}).then(
+        (data)=>{
             if (sequence != self.trackRequestSequence){
-              return;
+                return;
             }
             self.lastTrackQuery=new Date().getTime();
             self.handleTrackResponse(data);
@@ -128,17 +121,16 @@ TrackData.prototype.startQuery=function() {
             self.timer=window.setTimeout(function(){
                 self.startQuery();
             },timeout);
-        },
-        error: function(status,data,error){
+        }
+    ).catch(
+        (error)=>{
             avnav.log("query track error");
             self.handleTrackStatus(false);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
             },timeout);
-        },
-        timeout: 10000
-    });
-
+        }
+    );
 };
 
 /**
@@ -161,7 +153,6 @@ TrackData.prototype.handleTrackStatus=function(success){
         this.trackErrors=0;
         this.trackValid=true;
     }
-    this.navobject.trackEvent();
 };
 
 /**
@@ -184,7 +175,8 @@ TrackData.prototype.dataChanged=function() {
  */
 TrackData.prototype.resetTrack=function(){
     self.trackRequestSequence++;
-    this.currentTrack=[]
+    this.currentTrack=[];
+    globalStore.storeData(keys.nav.track.currentTrack,[]);
 };
 
 module.exports=TrackData;

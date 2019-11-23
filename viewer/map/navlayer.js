@@ -20,7 +20,6 @@ const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
  * @constructor
  */
 const NavLayer=function(mapholder){
-    var self=this;
     /**
      * @private
      * @type {MapHolder}
