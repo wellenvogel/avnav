@@ -681,7 +681,7 @@ RouteData.prototype._startRouting=function(mode,newWp,opt_keep_from){
     this.currentLeg.approachDistance=this.propertyHandler.getProperties().routeApproach+0;
     var pfrom;
     var gps=this.navobject.getGpsHandler().getGpsData();
-    var center=this.navobject.getMapCenter();
+    var center=globalStore.getData(keys.map.centerPosition);
     if (gps.valid){
         pfrom=new navobjects.WayPoint(gps.lon,gps.lat);
     }

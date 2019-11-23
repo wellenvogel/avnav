@@ -27,9 +27,8 @@ import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
-import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 
-const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
+
 
 
 
@@ -38,8 +37,8 @@ const widgetCreator=(widget,panel)=>{
     let rt=WidgetFactory.createWidget(widget,{mode:panel,className:'',handleVisible:true});
     if (widget.name=='CenterDisplay'){
         rt=Dynamic(Visible(rt),{
-            storeKeys:activeRoute.getStoreKeys(),
-            updateFunction:(state)=>{return {visible:!StateHelper.hasActiveTarget(state)}}
+            storeKeys:{locked:keys.map.lockPosition},
+            updateFunction:(state)=>{return {visible:!state.locked}}
         })
     }
     return rt;

@@ -4,9 +4,7 @@
 
 
 import navobjects from '../nav/navobjects';
-import NavData from '../nav/navdata';
 import OverlayDialog from '../components/OverlayDialog.jsx';
-import PropertyHandler from '../util/propertyhandler';
 import AisLayer from './aislayer';
 import NavLayer from './navlayer';
 import TrackLayer from './tracklayer';
@@ -61,14 +59,7 @@ const MapHolder=function(){
      * @type {ol.Map}
      * */
     this.olmap=null;
-    /** @private
-     * @type {NavData}
-     * */
-    this.navobject=NavData;
-    /** @private
-     *  @type {PropertyHandler}
-     *  */
-    this.properties=PropertyHandler;
+
     
     this.defaultDiv=document.createElement('div');
     
@@ -174,6 +165,7 @@ const MapHolder=function(){
     this._url=undefined;
 
     globalStore.storeData(keys.map.courseUp,this.courseUp);
+    globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
     this.timer=undefined;
     this.pubSub=new PubSub();
 };
@@ -214,14 +206,6 @@ MapHolder.prototype.coordToPixel=function(point){
  */
 MapHolder.prototype.pixelToCoord=function(pixel){
     return this.olmap.getCoordinateFromPixel(pixel);
-};
-
-/**
- * get the property handler
- * @returns {PropertyHandler}
- */
-MapHolder.prototype.getProperties=function(){
-    return this.properties;
 };
 
 
@@ -587,11 +571,11 @@ MapHolder.prototype.getGpsLock=function(){
 
 /**
  * called with updates from nav
- * @constructor
+ *
  */
 MapHolder.prototype.navEvent = function () {
 
-    let gps = this.navobject.getGpsHandler().getGpsData();
+    let gps = globalStore.getMultiple(keys.nav.gps);
     if (!gps.valid) return;
     if (this.gpsLocked) {
         this.setCenter(gps);
@@ -609,8 +593,8 @@ MapHolder.prototype.navEvent = function () {
 };
 
 MapHolder.prototype.centerToGps=function(){
-    let gps=this.navobject.getGpsHandler().getGpsData();
-    if (! gps.valid) return;
+    if (! globalStore.getData(keys.nav.gps.valid)) return;
+    let gps=globalStore.getData(keys.nav.gps.position);
     this.setCenter(gps);
 };
 
@@ -941,6 +925,9 @@ MapHolder.prototype.pointFromMap=function(point){
  */
 MapHolder.prototype.setCenter=function(point){
     if (! point) return;
+    if (this.gpsLocked){
+        globalStore.storeData(keys.map.centerPosition,point);
+    }
     if (! this.getView()) return;
     this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
 };
@@ -990,7 +977,7 @@ MapHolder.prototype.setCourseUp=function(on){
     let old=this.courseUp;
     if (old == on) return on;
     if (on){
-        let gps=this.navobject.getGpsHandler().getGpsData();
+        let gps=globalStore.getData(keys.nav.gps);
         if (! gps.valid) return false;
         this.averageCourse=gps.course;
         this.setMapRotation(this.averageCourse);
@@ -1006,13 +993,12 @@ MapHolder.prototype.setCourseUp=function(on){
 
 MapHolder.prototype.setGpsLock=function(lock){
     if (lock == this.gpsLocked) return;
-    let gps=this.navobject.getGpsHandler().getGpsData();
-    if (! gps.valid && lock) return;
+    if (! globalStore.getData(keys.nav.gps.valid) && lock) return;
     //we do not lock if the nav layer is not visible
     if (! globalStore.getData(keys.properties.layers.boat) && lock) return;
     this.gpsLocked=lock;
     globalStore.storeData(keys.map.lockPosition,lock);
-    if (lock) this.setCenter(gps);
+    if (lock) this.setCenter(globalStore.getData(keys.nav.gps.position));
     this.checkAutoZoom();
 };
 
@@ -1100,7 +1086,6 @@ MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
  * @private
  */
 MapHolder.prototype.onMoveEnd=function(evt){
-    return;
     let newCenter= this.pointFromMap(this.getView().getCenter());
     if (this.setCenterFromMove(newCenter)) {
         this.saveCenter();
@@ -1122,10 +1107,14 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
         this.zoom == this.getView().getZoom() && ! force) return;
     this.center=newCenter;
     this.zoom=this.getView().getZoom();
-    this.navobject.setMapCenter(this.center);
     let p=new navobjects.Point();
     p.fromCoord(newCenter);
-    globalStore.storeData(keys.map.centerPosition,p);
+    if (! this.gpsLocked) {
+        //we avoid some heavy redrawing when we move/zoom in locked
+        //mode
+        //instead we already set the position directly from the gps
+        globalStore.storeData(keys.map.centerPosition,p);
+    }
     return true;
 };
 
@@ -1134,8 +1123,6 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
  * @param {ol.render.Event} evt
  */
 MapHolder.prototype.onPostCompose=function(evt){
-    let newCenter=this.pointFromMap(evt.frameState.viewState.center);
-    if (this.setCenterFromMove(newCenter)) this.saveCenter();
     if (this.opacity != this.lastOpacity){
         evt.context.canvas.style.opacity=this.opacity;
         this.lastOpacity=this.opacity;

@@ -50,11 +50,7 @@ const NavData=function(){
      * @type {AisData|exports|module.exports}
      */
     this.routeHandler=new RouteData(PropertyHandler,this);
-    /**
-     * @private
-     * @type {navobjects.Point}
-     */
-    this.maplatlon=new navobjects.Point(0,0);
+
 
     this.aisMode=navobjects.AisCenterMode.GPS;
 
@@ -68,7 +64,10 @@ const NavData=function(){
     this.changeCallback=new Callback((keys)=>{self.computeValues();});
     globalStore.register(this.changeCallback,
         KeyHelper.flattenedKeys(activeRoute.getStoreKeys())
-            .concat(KeyHelper.flattenedKeys(this.gpsdata.getStoreKeys())));
+            .concat(
+                KeyHelper.flattenedKeys(this.gpsdata.getStoreKeys()),
+                [keys.map.centerPosition]
+            ));
 };
 
 /**
@@ -110,6 +109,7 @@ NavData.prototype.computeValues=function() {
     //copy the marker to data to make it available extern
     data.markerWp = this.routeHandler.getCurrentLegTarget();
     data.routeNextWp = this.routeHandler.getCurrentLegNextWp();
+    let maplatlon=globalStore.getData(keys.map.centerPosition)
     var rstart = activeRoute.getCurrentFrom();
     if (gps.valid) {
         if (activeRoute.hasActiveTarget()) {
@@ -122,7 +122,7 @@ NavData.prototype.computeValues=function() {
             data.markerEta = undefined;
             data.markerXte = undefined;
         }
-        var centerdst = NavCompute.computeDistance(gps, this.maplatlon);
+        var centerdst = NavCompute.computeDistance(gps, maplatlon);
         data.centerCourse = centerdst.course;
         data.centerDistance = centerdst.dtsnm;
         if (activeRoute.anchorWatch() !== undefined) {
@@ -157,7 +157,7 @@ NavData.prototype.computeValues=function() {
 
     //distance between marker and center
     if (data.markerWp) {
-        var mcdst = NavCompute.computeDistance(data.markerWp, this.maplatlon);
+        var mcdst = NavCompute.computeDistance(data.markerWp, maplatlon);
         data.centerMarkerCourse = mcdst.course;
         data.centerMarkerDistance = mcdst.dtsnm;
     }
@@ -206,6 +206,7 @@ NavData.prototype.computeValues=function() {
         data.routeNextCourse = undefined;
     }
     let self=this;
+    data.wpName=data.markerWp ? data.markerWp.name : '';
     //store the data asynchronously to avoid any locks
     window.setTimeout(()=> {
         globalStore.storeMultiple(data, {
@@ -229,31 +230,22 @@ NavData.prototype.computeValues=function() {
             routeEta: keys.nav.route.eta,
             routeNextCourse: keys.nav.route.nextCourse,
             isApproaching: keys.nav.route.isApproaching,
+            wpName:keys.nav.wp.name
         },self.changeCallback);
-        globalStore.storeData(keys.nav.wp.name, data.markerWp ? data.markerWp.name : '',self.changeCallback);
-        globalStore.storeData(keys.nav.center.position, self.maplatlon,self.changeCallback);
     },0);
-};
-/**
- * get the current map center (lon/lat)
- * @returns {navobjects.Point}
- */
-NavData.prototype.getMapCenter=function(){
-    return this.maplatlon;
 };
 
 /**
  * get the center for AIS queries
- * @returns {navobjects.Point|NavData.maplatlon|*}
+ * @returns {navobjects.Point}
  */
 NavData.prototype.getAisCenter=function(){
     if (this.aisMode == navobjects.AisCenterMode.NONE) return undefined;
     if (this.aisMode == navobjects.AisCenterMode.GPS) {
-        var data=this.gpsdata.getGpsData();
-        if (data.valid) return data;
+        if (globalStore.getData(keys.nav.gps.valid)) return globalStore.getData(keys.nav.gps.position);
         return undefined;
     }
-    return this.maplatlon;
+    return globalStore.getData(keys.map.centerPosition);
 };
 
 /**
@@ -266,48 +258,6 @@ NavData.prototype.setAisCenterMode=function(mode){
 
 
 
-
-
-
-
-/**
- * called back from trackhandler
- */
-NavData.prototype.trackEvent=function(){
-       $(document).trigger(navobjects.NavEvent.EVENT_TYPE,new navobjects.NavEvent (
-        navobjects.NavEventType.TRACK,
-        [],
-        navobjects.NavEventSource.NAV,
-        this
-    ));
-};
-
-/**
- * called back from aishandler
- */
-NavData.prototype.aisEvent=function(){
-    $(document).trigger(navobjects.NavEvent.EVENT_TYPE,new navobjects.NavEvent (
-        navobjects.NavEventType.AIS,
-        [],
-        navobjects.NavEventSource.NAV,
-        this
-    ));
-};
-
-
-
-/**
- * set the current map center position
- * @param {Array.<number>} lonlat
- */
-NavData.prototype.setMapCenter=function(lonlat){
-    var p=new navobjects.Point();
-    p.fromCoord(lonlat);
-    if (p.compare(this.maplatlon)) return;
-    p.assign(this.maplatlon);
-    this.computeValues();
-
-};
 
 /**
  * get the routing handler
@@ -324,13 +274,7 @@ NavData.prototype.getRoutingHandler=function(){
 NavData.prototype.getGpsHandler=function(){
     return this.gpsdata;
 };
-/**
- * get the track handler
- * @returns {TrackData}
- */
-NavData.prototype.getTrackHandler=function(){
-    return this.trackHandler;
-};
+
 
 NavData.prototype.resetTrack=function(){
     return this.trackHandler.resetTrack();
@@ -339,9 +283,9 @@ NavData.prototype.resetTrack=function(){
 
 
 NavData.prototype.getCurrentPosition=function(){
-    var gps=this.getGpsHandler().getGpsData();
-    if (! gps.valid) return;
-    return new navobjects.Point(gps.lon,gps.lat);
+    if (globalStore.getData(keys.nav.gps.valid)){
+        return globalStore.getData(keys.nav.gps.position);
+    }
 };
 
 module.exports=new NavData();

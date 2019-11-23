@@ -64,7 +64,7 @@ CenterDisplayWidget.storeKeys={
         markerDistance:keys.nav.center.markerDistance,
         centerCourse:keys.nav.center.course,
         centerDistance:keys.nav.center.distance,
-        centerPosition: keys.nav.center.position
+        centerPosition: keys.map.centerPosition
 };
 
 CenterDisplayWidget.propTypes={

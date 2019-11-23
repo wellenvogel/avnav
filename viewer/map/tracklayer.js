@@ -123,7 +123,7 @@ TrackLayer.prototype.onPostCompose=function(center,drawing){
     drawing.drawLineToContext(this.trackPoints,this.lineStyle);
 };
 TrackLayer.prototype.dataChanged=function() {
-    this.visible=this.mapholder.getProperties().getProperties().layers.track;
+    this.visible=globalStore.getData(keys.properties.layers.track);
     this.setStyle();
     this.currentTrack=[]; //trigger a complete redraw
     this.trackPoints=[];

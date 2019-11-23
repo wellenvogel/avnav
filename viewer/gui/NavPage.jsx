@@ -231,7 +231,7 @@ class NavPage extends React.Component{
                     return {visible:!StateHelper.hasActiveTarget(state)}
                 },
                 onClick:()=>{
-                    let center = NavHandler.getMapCenter();
+                    let center = globalStore.getData(keys.map.centerPosition);
                     let current=activeRoute.getCurrentTarget();
                     let wp=new navobjects.WayPoint();
                     //take over the wp name if this was a normal wp with a name
