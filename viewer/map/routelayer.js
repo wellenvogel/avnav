@@ -3,7 +3,6 @@
  */
     
 import navobjects from '../nav/navobjects';
-import NavData from '../nav/navdata';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
@@ -30,23 +29,13 @@ const RouteLayer=function(mapholder){
      * @type {MapHolder}
      */
     this.mapholder=mapholder;
-    /**
-     * @private
-     * @type {NavData}
-     */
-    this.navobject=NavData;
 
-    /**
-     * @private
-     * @type {RouteHandler}
-     */
-    this.routingDate=this.navobject.getRoutingHandler();
     /**
      * @private
      * @type {boolean}
      */
     this.visible=globalStore.getData(keys.properties.layers.nav);
-    var self=this;
+    let self=this;
 
 
     /**
@@ -180,9 +169,9 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
     let currentEditor=this._displayEditing?editingRoute:activeRoute;
     let gpsPosition=globalStore.getData(keys.nav.gps.position);
     let gpsValid=globalStore.getData(keys.nav.gps.valid);
-    let toPoint=currentEditor.getCurrentTarget();
+    let toPoint=activeRoute.getCurrentTarget();
     let to=toPoint?this.mapholder.pointToMap(toPoint.toCoord()):undefined;
-    let fromPoint=currentEditor.getCurrentFrom();
+    let fromPoint=activeRoute.getCurrentFrom();
     let from=fromPoint?this.mapholder.pointToMap(fromPoint.toCoord()):undefined;
     let showBoat=globalStore.getData(keys.properties.layers.boat);
     let showNav=globalStore.getData(keys.properties.layers.nav);
@@ -195,7 +184,7 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
         return;
     }
     if (from && to && gpsValid ){
-        var line=[this.mapholder.pointToMap(gpsPosition.toCoord()),to];
+        let line=[this.mapholder.pointToMap(gpsPosition.toCoord()),to];
         drawing.drawLineToContext(line,this.courseStyle);
         if (from){
             line=[from,to];
@@ -220,7 +209,7 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
         }
         this.routePixel = drawing.drawLineToContext(currentRoutePoints, this.lineStyle);
         let active = currentEditor.getIndex();
-        var i,style;
+        let i,style;
         for (i = 0; i < currentRoutePoints.length; i++) {
             style=this.normalWpStyle;
             if (i == active) style=this.activeWpStyle;
