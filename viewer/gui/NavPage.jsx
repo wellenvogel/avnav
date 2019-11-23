@@ -64,6 +64,7 @@ const widgetClick=(item,data,panel)=>{
         return;
     }
     if (item.name == 'BRG'||item.name == 'DST'|| item.name=='ETA'|| item.name=='WpPosition'){
+        activeRoute.setIndexToTarget();
         globalStore.storeData(keys.gui.navpage.selectedWp,true)
     }
 
@@ -125,7 +126,7 @@ const waypointButtons=[
         name:'WpGoto',
         storeKeys:activeRoute.getStoreKeys(),
         updateFunction: (state)=> {
-            return {visible: !StateHelper.hasActiveTarget(state)}
+            return {visible: !StateHelper.selectedIsActiveTarget(state)}
         },
         onClick:()=>{
             let selected=activeRoute.getPointAt();
@@ -167,7 +168,7 @@ const waypointButtons=[
             return {visible:StateHelper.hasPointAtOffset(state,-1)}
         },
         onClick:()=>{
-            activeRoute.moveIndex(1);
+            activeRoute.moveIndex(-1);
             let next=activeRoute.getPointAt();
             MapHolder.setCenter(next);
         }

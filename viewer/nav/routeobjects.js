@@ -76,6 +76,10 @@ routeobjects.Leg.prototype.clone=function(){
  * @returns {string}
  */
 routeobjects.Leg.prototype.toJsonString=function(){
+    return JSON.stringify(this.toJson());
+};
+
+routeobjects.Leg.prototype.toJson=function(){
     var rt={
         from: this.from,
         to: this.to,
@@ -89,7 +93,7 @@ routeobjects.Leg.prototype.toJsonString=function(){
     if (this.anchorDistance){
         rt.anchorDistance=this.anchorDistance;
     }
-    return JSON.stringify(rt);
+    return rt;
 };
 
 /**

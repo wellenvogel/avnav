@@ -4,11 +4,13 @@ import PropertyHandler from '../util/propertyhandler.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
+import RouteEdit from '../nav/routeeditor.js';
 
+const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
 const anchorWatchDialog = (overlayContainer)=> {
     let router = NavData.getRoutingHandler();
-    if (router.getAnchorWatch()) {
+    if (activeRoute.anchorWatch() !== undefined) {
         router.anchorOff();
         return;
     }

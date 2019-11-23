@@ -49,7 +49,7 @@ const NavData=function(){
     /**
      * @type {AisData|exports|module.exports}
      */
-    this.routeHandler=new RouteData(PropertyHandler,this);
+    this.routeHandler=new RouteData();
 
 
     this.aisMode=navobjects.AisCenterMode.GPS;
@@ -107,9 +107,9 @@ NavData.prototype.computeValues=function() {
     };
     var gps = globalStore.getMultiple(GpsData.getStoreKeys());
     //copy the marker to data to make it available extern
-    data.markerWp = this.routeHandler.getCurrentLegTarget();
-    data.routeNextWp = this.routeHandler.getCurrentLegNextWp();
-    let maplatlon=globalStore.getData(keys.map.centerPosition)
+    data.markerWp = activeRoute.getCurrentTarget();
+    data.routeNextWp = activeRoute.getNextWaypoint();
+    let maplatlon=globalStore.getData(keys.map.centerPosition,new navobjects.Point(0,0))
     var rstart = activeRoute.getCurrentFrom();
     if (gps.valid) {
         if (activeRoute.hasActiveTarget()) {

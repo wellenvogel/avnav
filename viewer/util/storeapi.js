@@ -152,7 +152,14 @@ StoreApi.prototype.deregister=function(callback){
 StoreApi.prototype.callCallbacks=function(keys,opt_omitHandler){
     let self=this;
     this.callbacks.forEach(function(cbItem){
-        if (opt_omitHandler && opt_omitHandler === cbItem.callback)return;
+        if (opt_omitHandler){
+            if (opt_omitHandler === cbItem.callback) return;
+            if (opt_omitHandler instanceof Array){
+                for (let k in opt_omitHandler){
+                    if (opt_omitHandler[k] == cbItem.callback) return;
+                }
+            }
+        }
         if (cbItem.isCallbackFor(keys)){
            cbItem.callback.dataChanged(self,keys);
         }

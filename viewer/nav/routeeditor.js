@@ -50,7 +50,7 @@ const load=(storeKeys,clone)=>{
     return rt;
 };
 
-const write=(storeKeys,data)=>{
+const write=(storeKeys,data,opt_omitCallbacks)=>{
     let storeData=globalStore.getMultiple(storeKeys);
     let hasChanged=false;
     if (storeKeys.leg){
@@ -67,7 +67,12 @@ const write=(storeKeys,data)=>{
         }
     }
     if (hasChanged){
-        globalStore.storeMultiple(data,storeKeys,guard);
+        if (opt_omitCallbacks === undefined || opt_omitCallbacks === true) {
+            globalStore.storeMultiple(data, storeKeys, guard);
+        }
+        else {
+            globalStore.storeMultiple(data, storeKeys, [guard].concat(opt_omitCallbacks));
+        }
     }
 };
 
@@ -257,6 +262,7 @@ class RouteEdit{
         else{
             data.index=data.leg.getCurrentTargetIdx();
         }
+        write(this.writeKeys,data);
     }
 
     /**
@@ -265,12 +271,12 @@ class RouteEdit{
      *                       from the store (and potentially already cloned)
      *                       return true to update the data in the store
      */
-    modify(modifyFunction){
+    modify(modifyFunction,omitCallbacks){
         this.checkWritable();
         let data=load(this.storeKeys,true);
         let doUpdate=modifyFunction(data);
         if (doUpdate){
-            write(this.writeKeys,data);
+            write(this.writeKeys,data,omitCallbacks);
         }
     }
 
@@ -336,6 +342,9 @@ class RouteEdit{
         let data=load(this.storeKeys);
         return StateHelper.hasRoute(data);
     }
+    getRawData(){
+        return load(this.storeKeys);
+    }
     //the following functions will only return meaningful data if we have a leg...
     hasActiveTarget(){
         let data=load(this.storeKeys);
@@ -345,6 +354,14 @@ class RouteEdit{
         let data=load(this.storeKeys);
         if (!data.leg || ! data.leg.active) return undefined;
         return data.leg.to;
+    }
+    getNextWaypoint(){
+        let data=load(this.storeKeys);
+        if (!data.leg || ! data.leg.active) return;
+        if (!data.route) return;
+        let currentIdx=data.route.getIndexFromPoint(data.leg.to);
+        if (currentIdx < 0) return;
+        return data.route.getPointAtIndex(currentIdx+1);
     }
     getCurrentFrom(){
         let data=load(this.storeKeys);

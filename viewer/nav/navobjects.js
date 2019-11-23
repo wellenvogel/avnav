@@ -3,29 +3,8 @@
  */
 var navobjects={};
 
-/**
- * the navevent type
- * @enum {number}
- */
-navobjects.NavEventType={
-    GPS:0,
-    AIS:1,
-    TRACK:2,
-    NAV:3,
-    ROUTE: 4
-};
 
 
-/**
- * a definition of the source that caused an event
- * to avoid endless loops
- * @enum {number}
- */
-navobjects.NavEventSource={
-    NAV:0,
-    GUI:1,
-    MAP:2
-};
 /**
  * the center mode for ais
  * @type {{NONE: number, GPS: number, MAP: number}}
@@ -39,35 +18,7 @@ navobjects.AisCenterMode={
 
 
 
-/**
- *
- * @param {navobjects.NavEventType} type
- * @param {Array.<string>} changedNames the display names that have changed data
- * @param {navobjects.NavEventSource} source
- * @param {NavData} navobject
- * @constructor
- */
-navobjects.NavEvent=function(type,changedNames,source,navobject){
-    /**
-     * @type {navobjects.NavEventType}
-     */
-    this.type=type;
-    /**
-     * the list of changed display elements
-     * @type {Array.<string>}
-     */
-    this.changedNames=changedNames;
-    /**
-     * @type {navobjects.NavEventSource}
-     */
-    this.source=source;
-    /**
-     * @type {NavData}
-     */
-    this.navobject=navobject;
-};
 
-navobjects.NavEvent.EVENT_TYPE="navevent";
 
 
 /**
