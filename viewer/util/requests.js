@@ -1,4 +1,5 @@
-import PropertyHandler from './propertyhandler.js';
+import globalStore from '../util/globalstore.jsx';
+import keys from '../util/keys.jsx';
 import Promise from 'promise';
 import assign from 'object-assign';
 'use strict';
@@ -9,9 +10,9 @@ const prepare=(url,options,defaults)=>{
     }
     let ioptions=assign({},defaults,options);
     if ( !(ioptions && ioptions.useNavUrl !== undefined && !ioptions.useNavUrl)){
-        url=PropertyHandler.getProperties().navUrl+url;
+        url=globalStore.getData(keys.properties.navUrl)+url;
     }
-    if (ioptions.timeout === undefined) ioptions.timeout=PropertyHandler.getProperties().statusQueryTimeout;
+    if (ioptions.timeout === undefined) ioptions.timeout=globalStore.getData(keys.properties.statusQueryTimeout);
     let headers=undefined;
     if ( !(ioptions && ioptions.noCache !== undefined && !ioptions.noCache)){
         headers=new Headers();

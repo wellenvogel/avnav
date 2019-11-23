@@ -2,9 +2,7 @@
  * Created by andreas on 18.05.14.
  */
     
-var navobjects=require('../nav/navobjects');
-var NavData=require('../nav/navdata');
-var AisData=require('../nav/aisdata');
+import navobjects from '../nav/navobjects';
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 
@@ -20,12 +18,7 @@ const AisLayer=function(mapholder){
      * @type {MapHolder}
      */
     this.mapholder=mapholder;
-    /**
-     * @private
-     * @type {NavData}
-     */
-    this.navobject=NavData;
-    var self=this;
+
     /**
      * @private
      * @type {ol.style.Stroke}
@@ -49,26 +42,18 @@ const AisLayer=function(mapholder){
      */
     this.normalImage=new Image();
     this.createAllIcons();
-    /**
-     * the ais data - this is a copy of the ais data array (elements are refs) form the aishandler
-     * @private
-     * @type {Array}
-     */
-    this.aisdata=[];
+
     /**
      * an array of pixel positions of the current ais data
      * @type {Array.<{pixel:ol.Coordinate,ais:{}}
      */
     this.pixel=[];
 
-    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
-        self.navEvent(evdata);
-    });
     /**
      *
      * @type {boolean}
      */
-    this.visible=this.mapholder.getProperties().getProperties().layers.ais;
+    this.visible=globalStore.getData(keys.properties.layers.ais);
     globalStore.register(this,keys.gui.global.propertySequence);
 
 };
@@ -121,7 +106,7 @@ AisLayer.prototype.createIcon=function(color){
  * @private
  */
 AisLayer.prototype.createAllIcons=function(){
-    var style=this.mapholder.getProperties().getProperties().style;
+    var style=globalStore.getMultiple(keys.properties.style);
     this.nearestImage.src=this.createIcon(style.aisNearestColor);
     this.warningImage.src=this.createIcon(style.aisWarningColor);
     this.normalImage.src=this.createIcon(style.aisNormalColor);
@@ -132,7 +117,7 @@ AisLayer.prototype.createAllIcons=function(){
  */
 AisLayer.prototype.findTarget=function(pixel){
     avnav.log("findAisTarget "+pixel[0]+","+pixel[1]);
-    var tolerance=this.mapholder.getProperties().getProperties().aisClickTolerance/2;
+    var tolerance=globalStore.getData(keys.properties.aisClickTolerance)/2;
     var idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
     if (idx >=0) return this.pixel[idx].ais;
     return undefined;
@@ -144,7 +129,7 @@ AisLayer.prototype.setStyles=function(){
         stroke: '#fff',
         color: '#000',
         width: 3,
-        font: this.mapholder.getProperties().getProperties().aisTextSize+'px Calibri,sans-serif',
+        font: globalStore.getData(keys.properties.aisTextSize)+'px Calibri,sans-serif',
         offsetY: 15
     };
     this.targetStyle={
@@ -156,19 +141,6 @@ AisLayer.prototype.setStyles=function(){
 };
 
 
-/**
- * an event fired from the AIS handler
- * @param evdata
- */
-AisLayer.prototype.navEvent=function(evdata){
-    if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
-    if (! this.visible) return;
-    if (evdata.type == navobjects.NavEventType.AIS){
-        this.aisdata=AisData.getAisData().slice(0);
-        this.pixel=[];
-    }
-    this.mapholder.triggerRender();
-};
 
 /**
  *
@@ -179,8 +151,9 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     if (! this.visible) return;
     var i;
     var pixel=[];
-    for (i in this.aisdata){
-        var current=this.aisdata[i];
+    let aisList=globalStore.getData(keys.nav.ais.list,[]);
+    for (i in aisList){
+        var current=aisList[i];
         var pos=current.mapPos;
         if (! pos){
             pos=this.mapholder.pointToMap((new navobjects.Point(current.lon,current.lat)).toCoord());
@@ -206,7 +179,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
  * @param evdata
  */
 AisLayer.prototype.dataChanged=function(){
-    this.visible=this.mapholder.getProperties().getProperties().layers.ais;
+    this.visible=globalStore.getData(keys.properties.layers.ais);
     this.createAllIcons();
     this.setStyles();
 };
@@ -216,14 +189,13 @@ AisLayer.prototype.dataChanged=function(){
  * @returns {string} the icon as a data url
  */
 AisLayer.prototype.getAisIcon=function(type){
-    var style=this.mapholder.getProperties().getProperties().style;
     if (type == 'nearest'){
-        return this.createIcon(style.aisNearestColor);
+        return this.createIcon(globalStore.getData(keys.properties.style.aisNearestColor));
     }
     if (type == 'warning'){
-        return this.createIcon(style.aisWarningColor);
+        return this.createIcon(globalStore.getData(keys.properties.style.aisWarningColor));
     }
-    return this.createIcon(style.aisNormalColor);
+    return this.createIcon(globalStore.getData(keys.properties.style.aisNormalColor));
 };
 
 module.exports=AisLayer;

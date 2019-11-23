@@ -45,7 +45,7 @@ const RouteLayer=function(mapholder){
      * @private
      * @type {boolean}
      */
-    this.visible=this.mapholder.getProperties().getProperties().layers.nav;
+    this.visible=globalStore.getData(keys.properties.layers.nav);
     var self=this;
 
 
@@ -266,7 +266,7 @@ RouteLayer.prototype.findTarget=function(pixel){
     return undefined;
 };
 RouteLayer.prototype.dataChanged=function() {
-    this.visible=this.mapholder.getProperties().getProperties().layers.nav;
+    this.visible=globalStore.getData(keys.properties.layers.nav);
     this.setStyle();
     this.mapholder.triggerRender();
 };

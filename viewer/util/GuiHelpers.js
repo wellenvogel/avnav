@@ -17,7 +17,7 @@ const anchorWatchDialog = (overlayContainer)=> {
         Toast("no gps position");
         return;
     }
-    let def = PropertyHandler.getProperties().anchorWatchDefault;
+    let def = globalStore.getData(keys.properties.anchorWatchDefault);
     OverlayDialog.valueDialogPromise("Set Anchor Watch", def, overlayContainer, "Radius(m)")
         .then(function (value) {
             router.anchorOn(pos, value);

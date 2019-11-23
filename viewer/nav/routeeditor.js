@@ -83,7 +83,7 @@ const write=(storeKeys,data)=>{
  * @constructor
  */
 class RouteEdit{
-    constructor(mode){
+    constructor(mode,opt_readOnly){
         this.storeKeys={};
         if (mode.storeKeys === undefined || mode.writable === undefined) throw new Error("invalid mode spec");
         let modeKeys=mode.storeKeys;
@@ -97,7 +97,7 @@ class RouteEdit{
             this.storeKeys.route=modeKeys.route;
             this.storeKeys.index=modeKeys.index;
         }
-        this.writable=mode.writable;
+        this.writable=mode.writable && ! opt_readOnly;
         this.writeKeys=assign({},this.storeKeys);
         this.storeKeys.activeName=modeKeys.activeName;
 
@@ -256,6 +256,21 @@ class RouteEdit{
         }
         else{
             data.index=data.leg.getCurrentTargetIdx();
+        }
+    }
+
+    /**
+     * do arbitrary changes on the data
+     * @param modifyFunction will be called with the data loaded
+     *                       from the store (and potentially already cloned)
+     *                       return true to update the data in the store
+     */
+    modify(modifyFunction){
+        this.checkWritable();
+        let data=load(this.storeKeys,true);
+        let doUpdate=modifyFunction(data);
+        if (doUpdate){
+            write(this.writeKeys,data);
         }
     }
 

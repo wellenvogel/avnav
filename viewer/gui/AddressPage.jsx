@@ -59,12 +59,12 @@ class AddressPage extends React.Component{
                     });
                 }
                 globalStore.storeData(keys.gui.addresspage.addressList,list);
-                self.timer=window.setTimeout(self.doQuery,PropertyHandler.getProperties().statusQueryTimeout);
+                self.timer=window.setTimeout(self.doQuery,globalStore.getData(keys.properties.statusQueryTimeout));
             },
             (error)=>{
                 if (self.querySequence != currentSequence) return;
                 globalStore.storeData(keys.gui.addresspage.addressList,[]);
-                self.timer=window.setTimeout(self.doQuery,PropertyHandler.getProperties().statusQueryTimeout);
+                self.timer=window.setTimeout(self.doQuery,globalStore.getData(keys.properties.statusQueryTimeout));
             });
     }
     componentDidMount(){

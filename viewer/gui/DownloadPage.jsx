@@ -221,7 +221,7 @@ const startServerDownload=(type,name,opt_url,opt_json)=>{
     let filename=name;
     if (filename) {
         if (type == 'route') filename += ".gpx";
-        action = PropertyHandler.getProperties().navUrl + "/" + filename;
+        action = globalStore.getData(keys.properties.navUrl) + "/" + filename;
     }
     globalStore.storeData(keys.gui.downloadpage.downloadParameters,{
         name:name,
@@ -338,7 +338,7 @@ const UploadIndicator = Dynamic((info)=> {
    storeKeys:{uploadInfo: keys.gui.downloadpage.uploadInfo}
 });
 const directUpload=(type,file)=>{
-    let url=PropertyHandler.getProperties().navUrl+ "?request=upload&type="+type+"&filename=" + encodeURIComponent(file.name);
+    let url=globalStore.getData(keys.properties.navUrl)+ "?request=upload&type="+type+"&filename=" + encodeURIComponent(file.name);
     Requests.uploadFile(url, file, {
         self: self,
         starthandler: function(param,xhdr){

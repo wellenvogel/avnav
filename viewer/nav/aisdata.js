@@ -1,26 +1,24 @@
 /**
  * Created by andreas on 04.05.14.
  */
-let NavData=require('./navdata');
-let AisTarget=require('./navobjects').Ais;
-let Formatter=require('../util/formatter');
-let NavCompute=require('./navcompute');
-let navobjects=require('./navobjects');
-let globalStore=require('../util/globalstore.jsx');
-let keys=require('../util/keys.jsx').default;
-let PropertyHandler=require('../util/propertyhandler');
+import NavData from './navdata';
+import navobjects from './navobjects';
+import Formatter from '../util/formatter';
+import NavCompute from './navcompute';
+import globalStore from '../util/globalstore.jsx';
+import keys from '../util/keys.jsx';
+import Requests from '../util/requests.js';
+
+
+const AisTarget=navobjects.Ais;
 /**
  * the handler for the ais data
  * query the server...
- * @param {avnav.util.PropertyHandler} propertyHandler
- * @param {NavData} navdata
  * @constructor
  */
 let AisData=function( opt_noQuery){
-    /** @private */
-    this.propertyHandler=PropertyHandler;
-    /** @private */
-    this.navobject=NavData;
+
+
     /** @private
      * @type {Array.<AisTarget>}
      * */
@@ -51,7 +49,7 @@ let AisData=function( opt_noQuery){
      * @private
      * @type {properties.NM}
      */
-    this.NM=this.propertyHandler.getProperties().NM;
+    this.NM=globalStore.getData(keys.properties.NM);
 
 
     /**
@@ -61,7 +59,7 @@ let AisData=function( opt_noQuery){
      */
     this.nearestAisTarget={};
 
-
+    globalStore.register(this,keys.nav.gps);
 
     /**
      * @private
@@ -74,13 +72,16 @@ let AisData=function( opt_noQuery){
  *
  * @param boatPos boat pos, course, speed
  * @param ais the ais target, will be modified
- * @param properties - the current properties
  * @private
  */
-AisData.prototype._computeAisTarget=function(boatPos,ais,properties){
+AisData.prototype._computeAisTarget=function(boatPos,ais){
     ais.warning=false;
     ais.tracking=false;
     ais.nearest=false;
+    let computeProperties=globalStore.getMultiple({
+        NM:keys.properties.NM,
+        minAISspeed: keys.properties.minAISspeed
+    });
     let dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
     let cpadata = NavCompute.computeCpa({
             lon: boatPos.lon,
@@ -94,7 +95,7 @@ AisData.prototype._computeAisTarget=function(boatPos,ais,properties){
             course: parseFloat(ais.course || 0),
             speed: parseFloat(ais.speed || 0)
         },
-        properties
+        computeProperties
     );
     ais.distance = dst.dtsnm;
     ais.headingTo = dst.course;
@@ -115,18 +116,16 @@ AisData.prototype._computeAisTarget=function(boatPos,ais,properties){
  * @private
  */
 AisData.prototype.handleAisData=function() {
-    /** @type {navobjects.GpsInfo}*/
-    let boatPos = this.navobject.getGpsHandler().getGpsData();
-    let properties=this.propertyHandler.getProperties();
+    let boatPos = globalStore.getMultiple(keys.nav.gps);
     let trackedTarget=null; //ref to tracked target
     let aisWarningAis = null;
     if (boatPos.valid) {
         let foundTrackedTarget = false;
         for (let aisidx in this.currentAis) {
             let ais = this.currentAis[aisidx];
-            this._computeAisTarget(boatPos,ais,properties);
-            let warningCpa=properties.aisWarningCpa/this.NM;
-            if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && Math.abs(ais.tcpa) < properties.aisWarningTpa) {
+            this._computeAisTarget(boatPos,ais);
+            let warningCpa=globalStore.getData(keys.properties.aisWarningCpa/this.NM);
+            if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && Math.abs(ais.tcpa) < globalStore.getData(keys.properties.aisWarningTpa)) {
                 if (aisWarningAis) {
                     if (ais.tcpa >=0) {
                         if (aisWarningAis.tcpa > ais.tcpa || aisWarningAis.tcpa < 0) aisWarningAis = ais;
@@ -168,10 +167,21 @@ AisData.prototype.handleAisData=function() {
     else {
         this.nearestAisTarget={};
     }
-    globalStore.storeData(keys.nav.ais.nearest,this.nearestAisTarget);
-    globalStore.storeData(keys.nav.ais.list,this.currentAis);
-    globalStore.storeData(keys.nav.ais.updateCount,globalStore.getData(keys.nav.ais.updateCount,0)+1)
-    this.navobject.aisEvent();
+    let storeKeys={
+        nearestAisTarget:   keys.nav.ais.nearest,
+        currentAis:         keys.nav.ais.list,
+        updateCount:        keys.nav.ais.updateCount
+    };
+    globalStore.storeMultiple({
+        nearestAisTarget:   this.nearestAisTarget,
+        currentAis:         this.currentAis.slice(0),
+        updateCount:        globalStore.getData(keys.nav.ais.updateCount,0)+1
+    },storeKeys);
+
+};
+
+AisData.prototype.dataChanged=function(){
+    this.handleAisData();
 };
 /**
  * sorter for the AIS data - sort by distance
@@ -193,10 +203,10 @@ AisData.prototype.aisSort=function(a,b) {
  * @private
  */
 AisData.prototype.startQuery=function() {
-    let url = this.propertyHandler.getProperties().navUrl+"?request=ais";
-    let timeout = this.propertyHandler.getProperties().aisQueryTimeout; //in ms
-    let center=this.navobject.getAisCenter();
+    let url = "?request=ais";
+    let center=NavData.getAisCenter();
     let self=this;
+    let timeout=globalStore.getData(keys.properties.aisQueryTimeout);
     if (! center){
         window.clearTimeout(this.timer);
         this.timer=window.setTimeout(function(){
@@ -206,12 +216,9 @@ AisData.prototype.startQuery=function() {
     }
     url+="&lon="+this.formatter.formatDecimal(center.lon,3,5);
     url+="&lat="+this.formatter.formatDecimal(center.lat,3,5);
-    url+="&distance="+this.formatter.formatDecimal(this.propertyHandler.getProperties().aisDistance||10,4,1);
-    $.ajax({
-        url: url,
-        dataType: 'json',
-        cache:	false,
-        success: function(data,status){
+    url+="&distance="+this.formatter.formatDecimal(globalStore.getData(keys.properties.aisDistance)||10,4,1);
+    Requests.getJson(url,{checkOk:false,timeout:timeout}).then(
+        (data)=>{
             self.aisErrors=0;
             self.lastAisQuery=new Date().getTime();
             let aisList=[];
@@ -225,29 +232,22 @@ AisData.prototype.startQuery=function() {
             }
             window.clearTimeout(self.timer);
             self.timer=window.setTimeout(function(){self.startQuery();},timeout);
-        },
-        error: function(status,data,error){
+        }
+    ).catch(
+        (error)=>{
             avnav.log("query ais error");
             self.aisErrors+=1;
-            if (self.aisErrors >= self.propertyHandler.getProperties().maxAisErrors){
+            if (self.aisErrors >= globalStore.getData(keys.properties.maxAisErrors)){
                 self.currentAis=[];
                 self.handleAisData();
             }
             window.clearTimeout(self.timer);
             self.timer=window.setTimeout(function(){self.startQuery();},timeout);
-        },
-        timeout: timeout
-    });
+        }
+    );
 };
 
 
-/**
- * return the current aisData
- * @returns {Array.<AisTarget>}
- */
-AisData.prototype.getAisData=function(){
-    return this.currentAis;
-};
 
 /**
  * get an ais target by mmsi, return undefined if not found
@@ -274,13 +274,7 @@ AisData.prototype.getAisPositionByMmsi=function(mmsi){
     return new navobjects.Point(parseFloat(ais.lon||0),parseFloat(ais.lat||0));
 };
 
-/**
- * get the raw data for the currently tracked target
- * @returns {AisTarget}
- */
-AisData.prototype.getNearestAisTarget=function(){
-    return this.nearestAisTarget;
-};
+
 
 /**
  * return the mmsi of the tracked target or 0

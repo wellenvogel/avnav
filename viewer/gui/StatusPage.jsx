@@ -18,8 +18,8 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 
 const statusTextToImageUrl=(text)=>{
-    let rt=PropertyHandler.getProperties().statusIcons[text];
-    if (! rt) rt=PropertyHandler.getProperties().statusIcons.INACTIVE;
+    let rt=globalStore.getData(keys.properties.statusIcons[text]);
+    if (! rt) rt=globalStore.getData(keys.properties.statusIcons.INACTIVE);
     return rt;
 };
 const ChildStatus=(props)=>{
@@ -66,7 +66,7 @@ class StatusPage extends React.Component{
         this.errors=0;
         globalStore.storeData(keys.gui.statuspage.serverError,false);
         globalStore.storeData(keys.gui.statuspage.statusItems,[]);
-        this.timer=GuiHelpers.lifecycleTimer(this,this.doQuery,PropertyHandler.getProperties().statusQueryTimeout,true);
+        this.timer=GuiHelpers.lifecycleTimer(this,this.doQuery,globalStore.getData(keys.properties.statusQueryTimeout),true);
 
     }
     queryResult(data){

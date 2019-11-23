@@ -37,7 +37,7 @@ const computeAlarmSound=(state)=>{
     for (let k in state.alarms){
         //only use the first alarm
         return {
-            src: PropertyHandler.getProperties().navUrl+"?request=download&type=alarm&name="+encodeURIComponent(k),
+            src: globalStore.getData(keys.properties.navUrl)+"?request=download&type=alarm&name="+encodeURIComponent(k),
             repeat: state.alarms[k].repeat,
             enabled:true
         };
@@ -99,7 +99,7 @@ class Router extends Component {
         }
         let className="pageFrame "+ (this.props.nightMode?"nightMode":"");
         let style={};
-        if (this.props.nightMode) style['opacity']=PropertyHandler.getProperties().nightFade/100;
+        if (this.props.nightMode) style['opacity']=globalStore.getData(keys.properties.nightFade)/100;
         return <div className={className}>
                 <Page style={style} options={this.props.options} location={this.props.location}/>
             </div>
@@ -119,7 +119,7 @@ class App extends React.Component {
         if (! this.refs.app) return;
         let current=this.refs.app.getBoundingClientRect();
         if (! current) return;
-        let small = current.width < PropertyHandler.getProperties().smallBreak;
+        let small = current.width <globalStore.getData(keys.properties.smallBreak);
         globalStore.storeData(keys.gui.global.smallDisplay,small); //set small before we change dimensions...
         globalStore.storeData(keys.gui.global.windowDimensions,{width:current.width,height:current.height});
         globalStore.storeData(keys.gui.global.buttonFontSize,PropertyHandler.getButtonFontSize())

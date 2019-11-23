@@ -13,7 +13,7 @@ import TrackLayer from './tracklayer';
 import RouteLayer from './routelayer';
 import {Drawing,DrawingPositionConverter} from './drawing';
 import Formatter from '../util/formatter';
-import keys from '../util/keys.jsx';
+import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import Promise from 'promise';
 import Requests from '../util/requests.js';
@@ -23,7 +23,14 @@ import PubSub from 'PubSub';
 
 const PSTOPIC="mapevent";
 
-
+class Callback{
+    constructor(callback){
+        this.callback=callback;
+    }
+    dataChanged(keys){
+        this.callback(keys);
+    }
+}
 
 /**
  * the types of the layers
@@ -105,7 +112,7 @@ const MapHolder=function(){
     this.requiredZoom=-1;
     this.mapZoom=-1; //the last zoom we required from the map
     try {
-        var currentView = localStorage.getItem(this.properties.getProperties().centerName);
+        var currentView = localStorage.getItem(globalStore.getData(keys.properties.centerName));
         if (currentView) {
             var decoded = JSON.parse(currentView);
             this.center = decoded.center;
@@ -141,9 +148,17 @@ const MapHolder=function(){
     this.lastOpacity=-1;
     this.compassOffset=0;
     var self=this;
-    $(document).on(navobjects.NavEvent.EVENT_TYPE, function(ev,evdata){
-        self.navEvent(evdata);
+    let storeKeys=KeyHelper.flattenedKeys(keys.nav.gps).concat(
+        KeyHelper.flattenedKeys(keys.nav.center),
+        KeyHelper.flattenedKeys(keys.nav.wp),
+        KeyHelper.flattenedKeys(keys.nav.anchor)
+    );
+    this.navChanged=new Callback(()=>{
+        self.navEvent();
     });
+    globalStore.register(this.navChanged,storeKeys);
+
+
     /**
      * the last base url
      * @type {String}
@@ -384,11 +399,11 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         view=this.getView();
         view.setCenter(this.pointToMap(this.center));
         if (this.zoom < this.minzoom) this.zoom=this.minzoom;
-        if (this.zoom > (this.maxzoom + this.properties.getProperties().maxUpscale))
-            this.zoom=this.maxzoom+this.properties.getProperties().maxUpscale;
-        if (this.zoom >= (this.minzoom+this.properties.getProperties().slideLevels)){
-            this.zoom-=this.properties.getProperties().slideLevels;
-            this.doSlide(this.properties.getProperties().slideLevels);
+        if (this.zoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale)))
+            this.zoom=this.maxzoom+globalStore.getData(keys.properties.maxUpscale);
+        if (this.zoom >= (this.minzoom+globalStore.getData(keys.properties.slideLevels))){
+            this.zoom-=globalStore.getData(keys.properties.slideLevels);
+            this.doSlide(globalStore.getData(keys.properties.slideLevels));
         }
         this.requiredZoom=this.zoom;
         this.setZoom(this.zoom);
@@ -430,7 +445,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     this.saveCenter();
     var newCenter= this.pointFromMap(this.getView().getCenter());
     this.setCenterFromMove(newCenter,true);
-    if (! this.getProperties().getProperties().layers.boat ) this.gpsLocked=false;
+    if (! globalStore.getData(keys.properties.layers.boat) ) this.gpsLocked=false;
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
 };
 
@@ -450,8 +465,8 @@ MapHolder.prototype.changeZoom=function(number){
     var curzoom=this.requiredZoom; //this.getView().getZoom();
     curzoom+=number;
     if (curzoom < this.minzoom ) curzoom=this.minzoom;
-    if (curzoom > (this.maxzoom+this.properties.getProperties().maxUpscale) ) {
-        curzoom=this.maxzoom+this.properties.getProperties().maxUpscale;
+    if (curzoom > (this.maxzoom+globalStore.getData(keys.properties.maxUpscale)) ) {
+        curzoom=this.maxzoom+globalStore.getData(keys.properties.maxUpscale);
     }
     this.requiredZoom=curzoom;
     this.setZoom(curzoom);
@@ -476,7 +491,7 @@ MapHolder.prototype.setZoom=function(newZoom){
  * @private
  */
 MapHolder.prototype.drawGrid=function() {
-    if (!this.properties.getProperties().layers.grid) return;
+    if (!globalStore.getData(keys.properties.layers.grid)) return;
     if (!this.olmap) return;
     var style = {
         width: 1,
@@ -530,7 +545,7 @@ MapHolder.prototype.drawGrid=function() {
  * @private
  */
 MapHolder.prototype.drawNorth=function() {
-    if (!this.properties.getProperties().layers.compass) return;
+    if (!globalStore.getData(keys.properties.layers.compass)) return;
     if (!this.olmap) return;
     this.drawing.drawImageToContext([0,0],this.northImage, {
         fixX: 45, //this.drawing.getContext().canvas.width-120,
@@ -574,27 +589,23 @@ MapHolder.prototype.getGpsLock=function(){
  * @param {navobjects.NavEvent} evdata
  * @constructor
  */
-MapHolder.prototype.navEvent=function(evdata){
-    if (evdata.source == navobjects.NavEventSource.MAP) return; //avoid endless loop
-    if (evdata.type == navobjects.NavEventType.GPS){
-        var gps=this.navobject.getGpsHandler().getGpsData();
-        if (! gps.valid) return;
-        this.navlayer.setBoatPosition(gps.toCoord(),gps.course);
-        if (this.gpsLocked) {
-            this.setCenter(gps);
-            var prop = this.properties.getProperties();
-            if (this.courseUp) {
-                var diff = (gps.course - this.averageCourse);
-                var tol = prop.courseAverageTolerance;
-                if (diff < tol && diff > -tol) diff = diff / 30; //slower rotate the map
-                this.averageCourse += diff * prop.courseAverageFactor;
-                this.setMapRotation(this.averageCourse);
-            }
-        }
-        this.checkAutoZoom();
-        if (this.olmap) this.olmap.render();
+MapHolder.prototype.navEvent = function (evdata) {
 
+    var gps = this.navobject.getGpsHandler().getGpsData();
+    if (!gps.valid) return;
+    if (this.gpsLocked) {
+        this.setCenter(gps);
+        if (this.courseUp) {
+            var diff = (gps.course - this.averageCourse);
+            var tol = globalStore.getData(keys.properties.courseAverageTolerance);
+            if (diff < tol && diff > -tol) diff = diff / 30; //slower rotate the map
+            this.averageCourse += diff * globalStore.getData(keys.properties.courseAverageFactor);
+            this.setMapRotation(this.averageCourse);
+        }
     }
+    this.checkAutoZoom();
+    if (this.olmap) this.olmap.render();
+
 };
 
 MapHolder.prototype.centerToGps=function(){
@@ -604,7 +615,7 @@ MapHolder.prototype.centerToGps=function(){
 };
 
 MapHolder.prototype.checkAutoZoom=function(opt_force){
-    var enabled= this.properties.getProperties().autoZoom||opt_force;
+    var enabled= globalStore.getData(keys.properties.autoZoom)||opt_force;
     if (! this.olmap) return;
     if (! enabled ||  !(this.gpsLocked||opt_force)) {
         if (this.olmap.getView().getZoom() != this.requiredZoom){
@@ -998,7 +1009,7 @@ MapHolder.prototype.setGpsLock=function(lock){
     var gps=this.navobject.getGpsHandler().getGpsData();
     if (! gps.valid && lock) return;
     //we do not lock if the nav layer is not visible
-    if (! this.getProperties().getProperties().layers.boat && lock) return;
+    if (! globalStore.getData(keys.properties.layers.boat) && lock) return;
     this.gpsLocked=lock;
     globalStore.storeData(keys.map.lockPosition,lock);
     if (lock) this.setCenter(gps);
@@ -1038,8 +1049,8 @@ MapHolder.prototype.onZoomChange=function(evt){
         var vZoom=this.getView().getZoom();
         if (vZoom != this.mapZoom){
             if (vZoom < this.minzoom) vZoom=this.minzoom;
-            if (vZoom > (this.maxzoom+this.properties.getProperties().maxUpscale) ) {
-                vZoom=this.maxzoom+this.properties.getProperties().maxUpscale;
+            if (vZoom > (this.maxzoom+globalStore.getData(keys.properties.maxUpscale)) ) {
+                vZoom=this.maxzoom+globalStore.getData(keys.properties.maxUpscale);
             }
             avnav.log("zoom required from map: " + vZoom);
             this.requiredZoom = vZoom;
@@ -1160,7 +1171,7 @@ MapHolder.prototype.doSlide=function(start){
         this.slideIn = start;
     }
     var self=this;
-    var to=this.properties.getProperties().slideTime;
+    var to=globalStore.getData(keys.properties.slideTime);
     window.setTimeout(function(){
         self.doSlide();
     },to);
@@ -1185,7 +1196,7 @@ MapHolder.prototype.triggerRender=function(){
  */
 MapHolder.prototype.saveCenter=function(){
     var raw=JSON.stringify({center:this.center,zoom:this.zoom,requiredZoom: this.requiredZoom});
-    localStorage.setItem(this.properties.getProperties().centerName,raw);
+    localStorage.setItem(globalStore.getData(keys.properties.centerName),raw);
 };
 
 /**

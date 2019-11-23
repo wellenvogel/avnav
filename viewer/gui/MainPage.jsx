@@ -21,9 +21,9 @@ const DynamicList = Dynamic(ItemList);
 
 
 const getImgSrc=function(color){
-    if (color == "red") return PropertyHandler.getProperties().statusErrorImage;
-    if (color == "green") return PropertyHandler.getProperties().statusOkImage;
-    if (color == "yellow")return PropertyHandler.getProperties().statusYellowImage;
+    if (color == "red") return globalStore.getData(keys.properties.statusErrorImage);
+    if (color == "green") return globalStore.getData(keys.properties.statusOkImage);
+    if (color == "yellow")return globalStore.getData(keys.properties.statusYellowImage);
 };
 
 class MainPage extends React.Component {
