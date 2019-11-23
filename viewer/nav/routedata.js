@@ -731,7 +731,7 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
     param.operation=operation;
     let promise=undefined;
     if (operation != "setroute"){
-        promise=Requests.getJson(url)
+        promise=Requests.getJson(url,{checkOk:false})
     }
     else{
         promise=Requests.postJson(url,data);

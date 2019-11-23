@@ -272,6 +272,8 @@ class NavPage extends React.Component{
             {
                 name: "ShowRoutePanel",
                 onClick:()=>{
+                    if (activeRoute.getIndex() < 0 ) activeRoute.setIndexToTarget();
+                    activeRoute.syncTo(RouteEdit.MODES.EDIT);
                     history.push("editroutepage");
                 }
 
