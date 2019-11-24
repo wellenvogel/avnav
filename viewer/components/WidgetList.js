@@ -163,7 +163,7 @@ let widgetList=[
 
     {
         name: 'RteDistance',
-        default: "---",
+        default: " ----- ",
         unit: "nm",
         caption: 'RTE-Dst',
         classes: 'avn_rteWidget',
@@ -174,7 +174,7 @@ let widgetList=[
     },
     {
         name: 'RteEta',
-        default: "---",
+        default: " --:--:-- ",
         unit: "h",
         caption: 'RTE-ETA',
         classes: 'avn_rteWidget',

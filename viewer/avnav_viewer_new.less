@@ -603,8 +603,12 @@ span.valuePrefix{
       width: 100%;
       padding: 0;
       margin: 0;
-      >.avn_widget{
-        width: 100%
+      .avn_widget:not(.avn_combinedWidget){
+        width: 100%;
+        .flex-display();
+        .flex-direction(column);
+        .flex(1);
+        .flex-justify-content(space-evenly);
       }
     }
     .avn_widget{
@@ -628,17 +632,28 @@ span.valuePrefix{
       white-space: pre;
       text-align: right;
     }
+    .avn_centeredWidget {
+      .avn_widgetData{
+        text-align: center;
+      }
+    }
     .avn_combinedWidget{
       .flex-display();
       .flex-direction(row);
       .avn_widget {
         height: 100%;
         .flex-grow(1);
+        .flex-shrink(1);
+        min-width: 0;
+        .flex(1);
       }
     }
   }
   .resize{
-    height: 100%;
+    .flex-display();
+    .flex-direction(column);
+    .flex(1);
+    .flex-justify-content(space-evenly);
   }
 
 }

@@ -15,20 +15,12 @@ import assign from 'object-assign';
 class AisTargetWidget extends React.Component{
     constructor(props){
         super(props);
-        this.lastRendered=0;
-        this.lastNotified=-1;
         this.click=this.click.bind(this);
     }
     shouldComponentUpdate(nextProps,nextState){
         return ! compare(this.props.current,nextProps.current);
     }
     componentDidUpdate(){
-        if (this.lastNotified != this.lastRendered) {
-            if (this.props.updateCallback) {
-                this.props.updateCallback();
-            }
-            this.lastNotified=this.lastRendered;
-        }
     }
     render(){
         if (! this.props.current){
@@ -36,7 +28,7 @@ class AisTargetWidget extends React.Component{
         }
         let current=this.props.current;
         let self=this;
-        let classes="avn_widget avn_aisTargetWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let classes="avn_widget avn_aisTargetWidget avn_centeredWidget "+this.props.classes||""+ " "+this.props.className||"";
         let small = (this.props.mode === "small" || this.props.mode === "gps");
         let aisProperties={};
         if (current.mmsi && current.mmsi !== ""){
@@ -47,12 +39,6 @@ class AisTargetWidget extends React.Component{
         let front=AisFormatter.format('passFront',current);
         if (current.mmsi !== undefined || this.props.mode === "gps") {
             let style=assign({},this.props.style,{backgroundColor:color});
-            if (this.lastRendered !== 1){
-              //if we did not render the last time, we always render without any with/height
-                delete style.width;
-                delete style.height;
-            }
-            this.lastRendered=1;
             return (
 
                 <div className={classes}
@@ -86,7 +72,6 @@ class AisTargetWidget extends React.Component{
             );
         }
         else{
-            this.lastRendered=0;
             return null;
         }
 
@@ -106,7 +91,6 @@ AisTargetWidget.propTypes={
     //formatter: React.PropTypes.func,
     onClick: PropTypes.func,
     classes: PropTypes.string,
-    updateCallback: PropTypes.func,
     current: PropTypes.object,
     mode: PropTypes.string
 };

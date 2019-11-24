@@ -16,7 +16,7 @@ class EtaWidget extends React.Component{
     }
     render(){
         let eta=this.props.eta?Formatter.formatTime(this.props.eta):'--:--:--';
-        let classes="avn_widget avn_etaWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let classes="avn_widget avn_etaWidget avn_centeredWidget "+this.props.classes||""+ " "+this.props.className||"";
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
             <div className='avn_widgetInfoLeft'>{this.props.caption}</div>

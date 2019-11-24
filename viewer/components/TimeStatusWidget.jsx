@@ -15,7 +15,7 @@ class TimeStatusWidget extends React.Component{
     }
     render(){
         var self=this;
-        var classes="avn_widget avn_timeStatusWidget "+this.props.classes||""+ " "+this.props.className||"";
+        var classes="avn_widget avn_timeStatusWidget avn_centeredWidget "+this.props.classes||""+ " "+this.props.className||"";
         var imgSrc=this.props.gpsValid? PropertyHandler.getProperties().statusOkImage:PropertyHandler.getProperties().statusErrorImage;
         var time="----";
         if (this.props.time !== undefined){
