@@ -236,13 +236,13 @@ RouteData.prototype.isActiveRoute=function(name){
  * @param {routeobjects.Route|undefined} rte
  * @param {function} opt_callback
  */
-RouteData.prototype.saveRoute=function(rte,opt_callback,opt_ignoreExisting) {
+RouteData.prototype.saveRoute=function(rte,opt_callback) {
     if (! rte) return;
     this._saveRouteLocal(rte);
     if (avnav.android){
         avnav.android.storeRoute(rte.toJsonString());
     }
-    if (this.connectMode) this._sendRoute(rte, opt_callback,opt_ignoreExisting);
+    if (this.connectMode) this._sendRoute(rte, opt_callback);
     else {
         if (opt_callback) setTimeout(function () {
             opt_callback(true);

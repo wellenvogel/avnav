@@ -977,7 +977,7 @@ MapHolder.prototype.setCourseUp=function(on){
     let old=this.courseUp;
     if (old == on) return on;
     if (on){
-        let gps=globalStore.getData(keys.nav.gps);
+        let gps=globalStore.getMultiple(keys.nav.gps);
         if (! gps.valid) return false;
         this.averageCourse=gps.course;
         this.setMapRotation(this.averageCourse);
