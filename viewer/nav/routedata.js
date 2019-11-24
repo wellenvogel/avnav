@@ -756,14 +756,18 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
     param.operation=operation;
     let promise=undefined;
     if (operation != "setroute"){
-        promise=Requests.getJson(url,{checkOk:false})
+        promise=Requests.getJson(url,{checkOk:false});
     }
     else{
         promise=Requests.postJson(url,data);
     }
     promise.then(
         (data)=>{
-           param.okcallback(data,param);
+            if (data.status !== undefined && data.status != 'OK'){
+                param.errorcallback("status: "+status,param);
+                return;
+            }
+            param.okcallback(data,param);
         }
     ).catch(
         (error)=>{

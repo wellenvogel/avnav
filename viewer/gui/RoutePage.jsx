@@ -224,7 +224,7 @@ class RoutePage extends React.Component{
                 name:'NavDeleteAll',
                 onClick: ()=>{
                     if (! checkWritable()) return;
-                    editor.deleteWaypoint();
+                    editor.emptyRoute();
                 }
             },
             {

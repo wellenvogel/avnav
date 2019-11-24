@@ -36,6 +36,9 @@ const handleJson=(rurl,requestOptions,options)=>{
         if (options && options.sequenceFunction) sequence=options.sequenceFunction();
         fetch(rurl,requestOptions).then(
             (response)=>{
+                if (response.status < 200 || response.status >= 300){
+                    reject(response.statusText);
+                }
                 if (response.ok){
                     return response.json();
                 }
@@ -127,6 +130,9 @@ let RequestHandler={
           if (options && options.sequenceFunction) sequence=options.sequenceFunction();
           fetch(rurl,requestOptions).then(
               (response)=>{
+                  if (response.status < 200 || response.status >= 300){
+                      reject(response.statusText);
+                  }
                   if (response.ok){
                       return response.text();
                   }

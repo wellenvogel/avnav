@@ -309,7 +309,7 @@ class AVNRouter(AVNWorker):
     return os.path.join(self.routesdir,name+u'.gpx')
 
   def saveRoute(self,route,ignoreExisting=False):
-    if ignoreExisting and self.routeInfos[route.name]:
+    if ignoreExisting and self.routeInfos.get(route.name) is not None:
       AVNLog.info("ignore existing route %s"%(route.name))
     self.updateRouteInfo(route)
     self.addRouteToList(route)

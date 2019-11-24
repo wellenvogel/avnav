@@ -146,7 +146,7 @@ class RouteEdit{
         this.checkWritable();
         let data=load(this.storeKeys,true);
         if (!data.route) return;
-        let old=data.route.getPointAt(data.index);
+        let old=data.route.getPointAtIndex(data.index);
         data.route.swap();
         if (old) data.index=route.getIndexFromPoint(old);
         write(this.writeKeys,data);
