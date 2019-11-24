@@ -308,7 +308,9 @@ class AVNRouter(AVNWorker):
   def getRouteFileName(self,name):
     return os.path.join(self.routesdir,name+u'.gpx')
 
-  def saveRoute(self,route):
+  def saveRoute(self,route,ignoreExisting=False):
+    if ignoreExisting and self.routeInfos[route.name]:
+      AVNLog.info("ignore existing route %s"%(route.name))
     self.updateRouteInfo(route)
     self.addRouteToList(route)
     if self.activeRouteName is not None and self.activeRouteName == route.name:
@@ -732,7 +734,8 @@ class AVNRouter(AVNWorker):
         raise Exception("missing route for setroute")
       route=self.routeFromJsonString(data)
       AVNLog.info("saving route %s with %d points"%(route.name,len(route.points)))
-      self.saveRoute(route)
+      ignoreExisting=self.getRequestParam(requestparam,'ignoreExisting')
+      self.saveRoute(route,True if (ignoreExisting is not None and ignoreExisting == "true") else False)
       return {'status':'OK'}
     if (command == 'getroute'):
       data=self.getRequestParam(requestparam, 'name')
