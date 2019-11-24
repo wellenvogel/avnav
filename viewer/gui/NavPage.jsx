@@ -46,9 +46,9 @@ const widgetClick=(item,data,panel)=>{
     }
     if (item.name == "ActiveRoute"){
         if (!activeRoute.hasRoute()) return;
-        activeRoute.syncTo(RouteEdit.MODES.EDIT); //not strictly necessary here...
-        activeRoute.syncTo(RouteEdit.MODES.PAGE);
-        history.push("routepage");
+        activeRoute.setIndexToTarget();
+        activeRoute.syncTo(RouteEdit.MODES.EDIT);
+        history.push("editroutepage");
         return;
     }
     if (item.name == "Zoom"){
