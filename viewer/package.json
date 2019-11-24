@@ -58,6 +58,7 @@
     "@babel/polyfill": "^7.7.0",
     "PubSub": "^3.6.0",
     "create-react-class": "^15.6.3",
+    "fetch-headers": "^2.0.0",
     "react": "^16.11",
     "react-measure": "^2.0.2",
     "shallow-equal": "^1.0.0",

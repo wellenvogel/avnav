@@ -289,13 +289,18 @@ MapHolder.prototype.loadMap=function(div){
         }
         url = url + "/avnav.xml";
         Requests.getHtmlOrText(url, {useNavUrl: false}).then((data)=> {
-            self.initMap(div, data, chartBase);
-            self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
-            globalStore.getData(keys.properties.nightChartFade, 100) / 100
-                : 1);
-            this._url=originalUrl;
-            this._chartbase=chartBase;
-            resolve(1);
+            try {
+                self.initMap(div, data, chartBase);
+                self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
+                globalStore.getData(keys.properties.nightChartFade, 100) / 100
+                    : 1);
+                this._url = originalUrl;
+                this._chartbase = chartBase;
+                resolve(1);
+            }catch (e){
+                console.log("map loding error: "+e+": "+e.stack);
+                throw e;
+            }
         }).catch((error)=> {
             reject("unable to load map: " + error);
         })
@@ -394,7 +399,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         this.requiredZoom=this.zoom;
         this.setZoom(this.zoom);
         recenter=false;
-        let lext;
+        let lext=undefined;
         if (layers.length > 0) {
             lext=layers[0].avnavOptions.extent;
             if (lext !== undefined && !ol.extent.containsCoordinate(lext,this.pointToMap(this.center))){
@@ -402,7 +407,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
                 ok.then(function(){
                     if (layers.length > 0) {
                         let view = self.getView();
-                        let lext = layers[0].avnavOptions.extent;
+                        lext = layers[0].avnavOptions.extent;
                         if (lext !== undefined) view.fit(lext,self.olmap.getSize());
                         self.setZoom(self.minzoom);
                         self.center = self.pointFromMap(view.getCenter());
@@ -420,8 +425,8 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     if (recenter) {
         if (layers.length > 0) {
             view = this.getView();
-            lext=layers[0].avnavOptions.extent;
-            if (lext !== undefined) view.fit(lext,self.olmap.getSize());
+            let lextx=layers[0].avnavOptions.extent;
+            if (lextx !== undefined) view.fit(lextx,self.olmap.getSize());
             this.setZoom(this.minzoom);
             this.center=this.pointFromMap(view.getCenter());
             this.zoom=view.getZoom();
@@ -707,7 +712,7 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         rt.maxZoom=parseInt(tm.getAttribute('maxzoom'));
         rt.projection=tm.getAttribute('projection'); //currently only for WMS
         //we store the layer region in EPSG:4326
-        Array.from(tm.children).forEach(function(bb){
+        Array.from(tm.childNodes).forEach(function(bb){
             if (bb.tagName != 'BoundingBox') return;
             rt.layerExtent = [self.e2f(bb,'minlon'),self.e2f(bb,'maxlat'),
                 self.e2f(bb,'maxlon'),self.e2f(bb,'minlat')];

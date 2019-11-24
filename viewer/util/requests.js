@@ -2,7 +2,8 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Promise from 'promise';
 import assign from 'object-assign';
-'use strict';
+import Headers from 'fetch-headers/headers-es5.min.js';
+
 
 const prepare=(url,options,defaults)=>{
     if (!url) {
