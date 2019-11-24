@@ -12,6 +12,10 @@ const anchorWatchDialog = (overlayContainer)=> {
     let router = NavData.getRoutingHandler();
     if (activeRoute.anchorWatch() !== undefined) {
         router.anchorOff();
+        //alarms will be stopped anyway by the server
+        //but this takes some seconds...
+        NavData.getGpsHandler().stopAlarm('anchor');
+        NavData.getGpsHandler().stopAlarm('gps');
         return;
     }
     let pos = NavData.getCurrentPosition();

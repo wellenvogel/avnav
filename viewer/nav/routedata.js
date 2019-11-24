@@ -333,6 +333,7 @@ RouteData.prototype.anchorOff=function(){
         data.leg.anchorDistance = undefined;
         data.leg.to = new navobjects.WayPoint(0, 0);
         data.leg.active = false;
+        return true;
     });
 };
 /**
