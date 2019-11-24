@@ -154,12 +154,13 @@ class App extends React.Component {
                 storeKeys={{
                 location: keys.gui.global.pageName,
                 options: keys.gui.global.pageOptions,
-                nightMode: keys.properties.nightMode,
                 sequence: keys.gui.global.propertySequence,
                 dimensions: keys.gui.global.windowDimensions
             }}
+                nightMode={this.props.nightMode}
                 />
-            <Dialogs/>
+            <Dialogs
+                className={this.props.nightMode?"nightMode":""}/>
             <DynamicSound
                 storeKeys={alarmStoreKeys}
                 updateFunction={computeAlarmSound}
@@ -170,6 +171,7 @@ class App extends React.Component {
 }
 module.exports=Dynamic(App,{
   storeKeys:{
-      fontSize: keys.properties.baseFontSize
+      fontSize: keys.properties.baseFontSize,
+      nightMode: keys.properties.nightMode,
   }
 });
