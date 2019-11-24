@@ -20,7 +20,7 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import Promise from 'promise';
 
 const settingsSections={
-    Layer:      [keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.measures],
+    Layer:      [keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout ],
     Widgets:    [keys.properties.widgetFontSize,keys.properties.showClock,keys.properties.showZoom,keys.properties.showWind,keys.properties.showDepth],
     Layout:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.allowTwoWidgetRows,keys.properties.autoZoom,keys.properties.style.buttonSize,keys.properties.nightFade,keys.properties.nightChartFade,keys.properties.localAlarmSound,keys.properties.iosWorkaroundTime],
