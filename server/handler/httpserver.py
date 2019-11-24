@@ -625,7 +625,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleAISRequest(requestParam)
       elif requestType=='status':
         rtj=self.handleStatusRequest(requestParam)
-      elif requestType=='debuglevel':
+      elif requestType=='debuglevel' or requestType=='loglevel':
         rtj=self.handleDebugLevelRequest(requestParam)
       elif requestType=='listCharts':
         rtj=self.handleListChartRequest(requestParam)
