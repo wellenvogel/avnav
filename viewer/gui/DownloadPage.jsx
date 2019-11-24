@@ -56,7 +56,6 @@ class FileInfo{
 };
 
 const fillDataServer=(type)=>{
-    addItems([],true);
     Requests.getJson("?request=listdir&type="+type).then((json)=>{
         let list=[];
         for (let i=0;i<json.items.length;i++){
@@ -65,8 +64,9 @@ const fillDataServer=(type)=>{
             fi.type=type;
             list.push(fi);
         }
-        addItems(list);
+        addItems(list,true);
     }).catch((error)=>{
+        addItems([],true);
         Toast.Toast("unable to load list of "+type+" from server: "+error);
     });
 };
@@ -597,6 +597,7 @@ class DownloadPage extends React.Component{
                     rt.buttonList=self.getButtons(state.type);
                     rt.type=state.type;
                     //as we will only be called if the type really changes - we can fill the display...
+                    addItems([],true);
                     fillData();
                     return rt;
                 }}
