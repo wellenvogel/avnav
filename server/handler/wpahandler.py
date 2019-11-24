@@ -100,6 +100,7 @@ class AVNWpaHandler(AVNWorker):
             self.wpaHandler=None
           wpaSocket=newWpaSocket
         if os.path.exists(wpaSocket):
+          AVNLog.debug("wpa socket %s exists, checking handler", wpaSocket)
           if self.wpaHandler is None:
             AVNLog.info("connecting to wpa_supplicant %s",wpaSocket)
             self.wpaHandler=WpaControl(wpaSocket,ownSocket)
@@ -112,6 +113,7 @@ class AVNWpaHandler(AVNWorker):
               AVNLog.error("wpa handler closed...")
               self.wpaHandler=None
         else:
+          AVNLog.debug("wpa socket %s does not exist",wpaSocket)
           if self.wpaHandler is not None:
             self.wpaHandler.close(False)
             self.wpaHandler=None
