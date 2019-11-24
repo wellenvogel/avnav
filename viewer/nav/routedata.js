@@ -68,7 +68,14 @@ var RouteData=function(){
     /** @private
      * @type {routeobjects.Leg}
      * */
-    this.serverLeg=new routeobjects.Leg();
+    this.lastReceivedLeg=undefined;
+    this.lastSentLeg=undefined;
+    /**
+     * @type {routeobjects.Route}
+     */
+    this.lastReceivedRoute=undefined;
+    this.lastSentRoute=undefined;
+
     //ensure that there is always a current leg and read from local storage
     activeRoute.modify((data)=>{
         let changed=false;
@@ -130,16 +137,7 @@ var RouteData=function(){
      */
 
     this.readOnlyServer=globalStore.getData(keys.properties.readOnlyServer);
-    /**
-     * this route is the editing route
-     * @type {routeobjects.Route}
-     */
-    this.serverRoute=undefined;
 
-    /**
-     *
-     */
-    this.serverLeg=undefined;
 
 
     /**legChanged
@@ -178,21 +176,34 @@ var RouteData=function(){
      */
     this.formatter=Formatter;
 
-    this.lastSendLeg=undefined;
 
     var self=this;
     globalStore.register(this,keys.gui.global.propertySequence);
 
     this.activeRouteChanged=new Callback(()=>{
         let raw=activeRoute.getRawData();
-        self._legChanged(raw.leg);
-        if (editingRoute.getRouteName() == activeRoute.getRouteName() && activeRoute.getRouteName() !== undefined){
+        self._legChangedLocally(raw.leg);
+        if (self.isEditingActiveRoute()){
             editingRoute.setRouteAndIndex(raw.route,raw.index);
         }
     });
     this.editingRouteChanged=new Callback(()=>{
         let route=editingRoute.getRoute();
-        self.saveRoute(route);
+        if (! route) return;
+        this._saveRouteLocal(route);
+        if (avnav.android){
+            avnav.android.storeRoute(route.toJsonString());
+        }
+        if (this.connectMode && ! this.isEditingActiveRoute()) {
+            if (route.differsTo(this.lastSentRoute)){
+                this.lastSentRoute=route.clone();
+            }
+            let ignoreExisting=false;
+            if (! this.lastReceivedRoute || this.lastReceivedRoute.name != route.name){
+                ignoreExisting=true;
+            }
+            this._sendRoute(route, undefined,ignoreExisting);
+        }
     });
     globalStore.register(this.activeRouteChanged,activeRoute.getStoreKeys());
     globalStore.register(this.editingRouteChanged,editingRoute.getStoreKeys());
@@ -225,13 +236,13 @@ RouteData.prototype.isActiveRoute=function(name){
  * @param {routeobjects.Route|undefined} rte
  * @param {function} opt_callback
  */
-RouteData.prototype.saveRoute=function(rte,opt_callback,opt_localOnly) {
-    var route=this._saveRouteLocal(rte);
-    if (! route ) return;
+RouteData.prototype.saveRoute=function(rte,opt_callback,opt_ignoreExisting) {
+    if (! rte) return;
+    this._saveRouteLocal(rte);
     if (avnav.android){
-        avnav.android.storeRoute(route.toJsonString());
+        avnav.android.storeRoute(rte.toJsonString());
     }
-    if (this.connectMode && ! opt_localOnly) this._sendRoute(route, opt_callback);
+    if (this.connectMode) this._sendRoute(rte, opt_callback,opt_ignoreExisting);
     else {
         if (opt_callback) setTimeout(function () {
             opt_callback(true);
@@ -245,7 +256,8 @@ RouteData.prototype.saveRoute=function(rte,opt_callback,opt_localOnly) {
  * @returns {boolean}
  */
 RouteData.prototype.isEditingActiveRoute=function(){
-    return activeRoute.getRouteName() == editingRoute.getRouteName();
+    let activeName=activeRoute.getRouteName();
+    return activeName && activeName == editingRoute.getRouteName();
 };
 
 
@@ -658,46 +670,47 @@ RouteData.prototype._checkNextWp=function(){
  * @private
  * @return {Boolean} - true if data has changed
  */
-RouteData.prototype._handleLegResponse=function(serverData) {
+RouteData.prototype._handleLegResponse = function (serverData) {
     if (!serverData) {
         this.serverConnected = false;
         return false;
     }
-    this.routeErrors=0;
-    this.serverConnected=true;
-    if (! serverData.from) return false;
-    var nleg=new routeobjects.Leg();
+    this.routeErrors = 0;
+    this.serverConnected = true;
+    if (!this.connectMode) return false;
+    if (!serverData.from) return false;
+    var nleg = new routeobjects.Leg();
     nleg.fromJson(serverData);
-    if (!nleg.differsTo(this.serverLeg)) {
+    //store locally if we did not send or if the leg changed
+    if (this.lastSentLeg && !nleg.differsTo(this.lastReceivedLeg)) {
         return false;
     }
-    this.serverLeg=nleg;
-
-    let self=this;
-
-    if (this.connectMode) {
-        activeRoute.modify((data)=> {
-            if (this.serverLeg.differsTo(data.leg)) {
-                data.leg = this.serverLeg.clone();
-                if (data.leg.name) {
-                    if (!data.leg.currentRoute) {
-                        var route = this._loadRoute(data.leg.name);
-                        if (route) {
-                            data.leg.currentRoute = route;
-                            delete data.leg.name;
-                        }
-                        else {
-                            data.leg.currentRoute = new routeobjects.Route(data.leg.name);
-                            delete data.leg.name;
-                        }
+    if (! this.lastSentLeg){
+        //we now allow to send our leg
+        this.lastSentLeg=nleg;
+    }
+    this.lastReceivedLeg = nleg;
+    activeRoute.modify((data)=> {
+        if (this.lastReceivedLeg.differsTo(data.leg)) {
+            data.leg = this.lastReceivedLeg.clone();
+            if (data.leg.name) {
+                if (!data.leg.currentRoute) {
+                    var route = this._loadRoute(data.leg.name);
+                    if (route) {
+                        data.leg.currentRoute = route;
+                        delete data.leg.name;
+                    }
+                    else {
+                        data.leg.currentRoute = new routeobjects.Route(data.leg.name);
+                        delete data.leg.name;
                     }
                 }
-                data.route=data.leg.currentRoute;
-                return true;
             }
+            data.route = data.leg.currentRoute;
+            return true;
+        }
 
-        });
-    }
+    });
 };
 /**
  *
@@ -733,6 +746,9 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
             }
             return;
         }
+        if (param.ignoreExisting){
+            url+="&ignoreExisting=true"
+        }
         data=param.route.toJson();
     }
     avnav.log("remoteRouteOperation, operation="+operation);
@@ -764,6 +780,10 @@ RouteData.prototype._startQuery=function() {
     var timeout =globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
     var self = this;
     if (! this.connectMode ){
+        this.lastReceivedLeg=undefined;
+        this.lastReceivedRoute=undefined;
+        this.lastSentRoute=undefined;
+        this.lastSentLeg=undefined;
         self.timer=window.setTimeout(function() {
             self._startQuery();
         },timeout);
@@ -795,9 +815,7 @@ RouteData.prototype._startQuery=function() {
     //we only query the route separately if it is currently not active
     if (! this.isEditingActiveRoute()) {
         if (! editingRoute.hasRoute()) return;
-        if (! this.connectMode) return;
         //we always query the server to let him overwrite what we have...
-        //if (! this.editingRoute.server) return;
         this._remoteRouteOperation("getroute",{
             name:editingRoute.getRouteName(),
             okcallback:function(data,param){
@@ -805,14 +823,16 @@ RouteData.prototype._startQuery=function() {
                 var nRoute = new routeobjects.Route();
                 nRoute.fromJson(data);
                 nRoute.server=true;
-                var change = nRoute.differsTo(self.serverRoute);
+                var change = nRoute.differsTo(self.lastReceivedRoute);
                 avnav.log("route data change=" + change);
                 if (change) {
-                    self.serverRoute = nRoute;
+                    self.lastReceivedRoute = nRoute;
                     editingRoute.modify((data)=> {
-                        if (data.route.differsTo(self.serverRoute)) {
+                        //maybe the editing route has changed in between...
+                        if (! data.route || data.route.name != nRoute.name) return;
+                        if (nRoute.differsTo(data.route)) {
                             let oldPoint=data.route.getPointAtIndex(data.index);
-                            data.route = self.serverRoute.clone();
+                            data.route = self.lastReceivedRoute.clone();
                             data.index=data.route.findBestMatchingIdx(oldPoint);
                             if (data.index < 0) data.index=0;
                             return true;
@@ -834,13 +854,8 @@ RouteData.prototype._startQuery=function() {
 /**
  * @private
  */
-RouteData.prototype._saveRouteLocal=function(opt_route, opt_keepTime) {
-    var route = opt_route;
-    if (!route) {
-        route = activeRoute.getRoute();
-        if (!route) return route;
-
-    }
+RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
+    if (! route) return;
     if (! opt_keepTime || ! route.time) route.time = new Date().getTime();
     var str = route.toJsonString();
     localStorage.setItem(globalStore.getData(keys.properties.routeName) + "." + route.name, str);
@@ -878,17 +893,6 @@ RouteData.prototype._loadRoute=function(name,opt_returnUndef){
     return rt;
 };
 
-/**
- * @private
- * try to set the active waypoint to the one that is closest to the position
- * we had before
- */
-RouteData.prototype._findBestMatchingPoint=function(){
-    if (! this.editingRoute) return;
-    if (! this.editingWp) return;
-    var idx=this.editingRoute.findBestMatchingIdx(this.editingWp);
-    this.editingWp=this.editingRoute.getPointAtIndex(idx);
-};
 
 
 /**
@@ -897,7 +901,7 @@ RouteData.prototype._findBestMatchingPoint=function(){
  * @param {routeobjects.Route} route
  * @param {function} opt_callback -. will be called on result, param: true on success
  */
-RouteData.prototype._sendRoute=function(route, opt_callback){
+RouteData.prototype._sendRoute=function(route, opt_callback,opt_ignoreExisting){
     //send route to server
     var self=this;
     var sroute=route.clone();
@@ -912,7 +916,8 @@ RouteData.prototype._sendRoute=function(route, opt_callback){
         errorcallback:function(status,param){
             if (globalStore.getData(keys.properties.routingServerError)) Overlay.Toast("unable to send route to server:" + errMsg);
             if (opt_callback) opt_callback(false);
-        }
+        },
+        ignoreExisting:opt_ignoreExisting
     });
 };
 
@@ -922,7 +927,7 @@ RouteData.prototype._sendRoute=function(route, opt_callback){
  * @returns {boolean}
  * @private
  */
-RouteData.prototype._legChanged=function(leg){
+RouteData.prototype._legChangedLocally=function(leg){
     //reset approach handling
     this.lastDistanceToCurrent=-1;
     this.lastDistanceToNext=-1;
@@ -940,17 +945,20 @@ RouteData.prototype._legChanged=function(leg){
         Overlay.Toast("unable to save leg: "+((rt && rt.status)?rt.status:""));
         return;
     }
-    if (! leg.differsTo(this.lastSendLeg)) return;
+    //do not allow to send until we received something
+    //this will sync us to the server when we connect (or connect again...)
+    if (! this.lastReceivedLeg) return;
+    if (! leg.differsTo(this.lastSentLeg)) return;
     let legJson=leg.toJson();
     if (this.connectMode){
-        this.lastSendLeg=leg;
+        this.lastSentLeg=leg;
         Requests.postJson("?request=routing&command=setleg",legJson).then(
             (data)=>{
                 avnav.log("new leg sent to server");
             }
         ).catch(
             (error)=>{
-                self.lastSendLeg=undefined;
+                self.lastSentLeg=undefined;
                 if (globalStore.getData(keys.properties.routingServerError)) Overlay.Toast("unable to send leg to server:" +errMsg);
             }
         );
@@ -961,22 +969,13 @@ RouteData.prototype._legChanged=function(leg){
 
 /**
  * @private
- * @param evdata
  */
 RouteData.prototype.dataChanged=function() {
     var oldcon=this.connectMode;
     this.connectMode=globalStore.getData(keys.properties.connectedMode);
     this.readOnlyServer=globalStore.getData(keys.properties.readOnlyServer);
     if (oldcon != this.connectMode && this.connectMode){
-        //newly connected
-        var oldActive;
-        if (this.serverConnected && this.serverRoute) {
-            this.editingRoute = this.serverRoute.clone();
-        }
-        if (this.serverConnected && this.serverLeg){
-            this.currentLeg=this.serverLeg.clone();
-        }
-
+        //TODO: send route.... if it was local before
     }
 };
 
