@@ -33,7 +33,6 @@
     var i, pair;
 
     var scripts = [
-        'libraries/jquery-1.11.0.min.js',
         'libraries/geo.js',
         'libraries/latlon.js',
         'libraries/ol.js',

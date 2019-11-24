@@ -17,6 +17,7 @@ import Promise from 'promise';
 import Requests from '../util/requests.js';
 import base from '../base.js';
 import PubSub from 'PubSub';
+import helper from '../util/helper.js';
 
 
 const PSTOPIC="mapevent";
@@ -679,17 +680,7 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
 MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
     let self=this;
     let ll=[];
-    let xmlDoc=undefined;
-    if (window.DOMParser) {
-        // code for modern browsers
-        let parser = new DOMParser();
-        xmlDoc = parser.parseFromString(layerdata,"text/xml");
-    } else {
-        // code for old IE browsers
-        xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-        xmlDoc.async = false;
-        xmlDoc.loadXML(layerdata);
-    }
+    let xmlDoc=helper.parseXml(layerdata);
     Array.from(xmlDoc.getElementsByTagName('TileMap')).forEach(function(tm){
         let rt={};
         rt.type=LayerTypes.TCHART;

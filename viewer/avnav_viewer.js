@@ -63,7 +63,7 @@ function getParam(key)
 avnav.main=function() {
     //some workaround for lees being broken on IOS browser
     //less.modifyVars();
-    $("body").show();
+    document.querySelector('body').style.display='block';
 
     if (getParam('log')) avnav.debugMode=true;
     var navurl=getParam('navurl');

@@ -2,10 +2,11 @@
  * Created by andreas on 28.04.16.
  */
 
-var navobjects=require('./navobjects');
-var NavCompute=require('./navcompute');
-var Formatter=require('../util/formatter');
-var assign=require('object-assign');
+import navobjects from './navobjects' ;
+import NavCompute from './navcompute' ;
+import Formatter from '../util/formatter' ;
+import assign from 'object-assign' ;
+import helper from '../util/helper.js';
 var routeobjects={};
 
 
@@ -312,14 +313,14 @@ routeobjects.Route.prototype.fromJson=function(parsed) {
     return this;
 };
 routeobjects.Route.prototype.toJson=function(){
-    var rt={};
+    let rt={};
     rt.name=this.name;
     rt.time=this.time;
     rt.server=this.server;
     rt.points=[];
-    var i;
+    let i;
     for (i=0;i<this.points.length;i++){
-        var rp=this.points[i].clone();
+        let rp=this.points[i].clone();
         rp.routeName=undefined;
         rt.points.push(rp);
     }
@@ -338,7 +339,7 @@ routeobjects.Route.prototype.differsTo=function(route2){
     if (! route2) return true;
     if (this.name != route2.name) return true;
     if (this.points.length != route2.points.length) return true;
-    var i;
+    let i;
     for (i=0;i<this.points.length;i++){
         if (this.points[i].lon != route2.points[i].lon) return true;
         if (this.points[i].lat != route2.points[i].lat) return true;
@@ -352,8 +353,8 @@ routeobjects.Route.prototype.differsTo=function(route2){
  * @returns {routeobjects.Route}
  */
 routeobjects.Route.prototype.clone=function(){
-    var str=this.toJsonString();
-    var rt=new routeobjects.Route();
+    let str=this.toJsonString();
+    let rt=new routeobjects.Route();
     rt.fromJsonString(str);
     rt.server=this.server;
     return rt;
@@ -364,16 +365,19 @@ routeobjects.Route.prototype.clone=function(){
  */
 routeobjects.Route.prototype.fromXml=function(xml){
     this.name=undefined;
-    var doc= $.parseXML(xml);
-    var self=this;
-    var i=0;
-    $(doc).find('rte:first').each(function(id,el){
-        self.name=$(el).find('>name').text();
-        $(el).find('rtept').each(function(pid,pel){
-            var pt=new navobjects.WayPoint(0,0);
-            pt.lon=parseFloat($(pel).attr('lon'));
-            pt.lat=parseFloat($(pel).attr('lat'));
-            pt.name=$(pel).find('>name').text();
+    let doc= helper.parseXml(xml);
+    let self=this;
+    let i=0;
+    let rte=doc.getElementsByTagName('rte')[0];
+    if (rte){
+        let name=rte.getElementsByTagName('name')[0];
+        if (name) self.name=name.textContent;
+        Array.from(rte.getElementsByTagName('rtept')).forEach(function(el){
+            let pt=new navobjects.WayPoint(0,0);
+            pt.lon=parseFloat(el.getAttribute('lon'));
+            pt.lat=parseFloat(el.getAttribute('lat'));
+            let pname=el.getElementsByTagName('name')[0];
+            if (pname) pt.name=pname.textContent;
             pt.routeName=self.name.slice(0);
             if (! pt.name){
                 pt.name=self.findFreeName();
@@ -381,16 +385,16 @@ routeobjects.Route.prototype.fromXml=function(xml){
             i++;
             self.points.push(pt);
         })
-    });
+    }
     return this;
 };
 
 routeobjects.Route.prototype.toXml=function(noUtf8){
-    var rt='<?xml version="1.0" encoding="UTF-8" standalone="no" ?>'+"\n"+
+    let rt='<?xml version="1.0" encoding="UTF-8" standalone="no" ?>'+"\n"+
         '<gpx version="1.1" creator="avnav">'+"\n"+
         '<rte>'+"\n";
     rt+="<name>"+(noUtf8?this.name:unescape(encodeURIComponent(this.name)))+"</name>\n";
-    var i;
+    let i;
     for (i=0;i<this.points.length;i++){
         rt+='<rtept lon="'+this.points[i].lon+'" lat="'+this.points[i].lat+'"><name>'+
             (noUtf8?this.points[i].name:unescape(encodeURIComponent(this.points[i].name)))+'</name></rtept>'+"\n";
@@ -431,7 +435,7 @@ routeobjects.Route.prototype.getPointAtIndex=function(idx){
 routeobjects.Route.prototype.getIndexFromPoint=function(point,opt_nameOnly){
     if (! point || point.name === undefined) return -1;
     if (point.routeName === undefined || point.routeName != this.name) return -1;
-    var i;
+    let i;
     for (i=0;i<this.points.length;i++){
         if (opt_nameOnly){
             if (this.points[i].name == point.name) return i;
@@ -450,7 +454,7 @@ routeobjects.Route.prototype.getIndexFromPoint=function(point,opt_nameOnly){
  */
 
 routeobjects.Route.prototype.getPointAtOffset=function(point, offset){
-    var idx=this.getIndexFromPoint(point);
+    let idx=this.getIndexFromPoint(point);
     if (idx < 0) return undefined;
     if ((idx+offset) < 0 || (idx+offset)>= this.points.length) return undefined;
     return this.points[idx+offset];
@@ -463,7 +467,7 @@ routeobjects.Route.prototype.getPointAtOffset=function(point, offset){
  * @returns {navobjects.WayPoint|undefined} the new point or undefined if no change (e.g. name already exists or point not in route)
  */
 routeobjects.Route.prototype.changePoint=function(oldPoint, newPoint){
-    var idx=this.getIndexFromPoint(oldPoint);
+    let idx=this.getIndexFromPoint(oldPoint);
     return this.changePointAtIndex(idx,newPoint);
 };
 /**
@@ -475,7 +479,7 @@ routeobjects.Route.prototype.changePoint=function(oldPoint, newPoint){
 routeobjects.Route.prototype.changePointAtIndex=function(idx, newPoint){
     if (idx < 0 || idx >= this.points.length) return undefined;
     newPoint=this._toWayPoint(newPoint);
-    var oldPoint=this.points[idx].clone();
+    let oldPoint=this.points[idx].clone();
     if (newPoint.name && newPoint.name != oldPoint.name){
         if (this.checkName(newPoint.name)) return undefined;
     }
@@ -491,9 +495,9 @@ routeobjects.Route.prototype.changePointAtIndex=function(idx, newPoint){
  */
 routeobjects.Route.prototype.checkChangePossible=function(idx, newWp){
     if (idx < 0 || idx > this.points.length) return false;
-    var current=this.points[idx];
+    let current=this.points[idx];
     if (current.name == newWp.name) return true;
-    var i=0;
+    let i=0;
     for (i=0;i<this.points.length;i++){
         if (i == idx ) continue;
         if (this.points[i].name == newWp.name) return false;
@@ -505,7 +509,7 @@ routeobjects.Route.prototype.checkChangePossible=function(idx, newWp){
  * @param name
  */
 routeobjects.Route.prototype.checkName=function(name){
-    var i=0;
+    let i=0;
     for (i=0;i< this.points.length;i++){
         if (this.points[i].name == name) return true;
     }
@@ -516,20 +520,20 @@ routeobjects.Route.prototype._createNameFromId=function(id){
     return "WP"+Formatter.formatDecimal(id,2,0);
 };
 routeobjects.Route.prototype.findFreeName=function(){
-    var i=this.points.length;
-    var j=0;
+    let i=this.points.length;
+    let j=0;
     for (j=0;j< this.points.length;j++){
         try {
             if (this.points[j].name) {
-                var nameVal=this.points[j].name.replace(/^[^0-9]*/, "").replace(/ .*/,"");
-                var nameNum = parseInt(nameVal);
+                let nameVal=this.points[j].name.replace(/^[^0-9]*/, "").replace(/ .*/,"");
+                let nameNum = parseInt(nameVal);
                 if (nameNum > i) i = nameNum;
             }
         }catch (e){}
     }
     i++;
     for (j=0;j< this.points.length+1;j++){
-        var name=this._createNameFromId(i);
+        let name=this._createNameFromId(i);
         if (! this.checkName(name)) return name;
         i++;
     }
@@ -538,7 +542,7 @@ routeobjects.Route.prototype.findFreeName=function(){
 };
 routeobjects.Route.prototype.addPoint=function(idx, point){
     point=this._toWayPoint(point);
-    var rp=point.clone();
+    let rp=point.clone();
     if (rp.name){
         if (this.checkName(rp.name)){
             avnav.log("name "+rp.name+" already exists in route, create a new one");
@@ -567,9 +571,9 @@ routeobjects.Route.prototype.setName=function(name){
  * invert the route
  */
 routeobjects.Route.prototype.swap=function() {
-    for (var i = 0; i < this.points.length / 2; i++) {
-        var swap = this.points.length - i - 1;
-        var old = this.points[i];
+    for (let i = 0; i < this.points.length / 2; i++) {
+        let swap = this.points.length - i - 1;
+        let old = this.points[i];
         this.points[i] = this.points[swap];
         this.points[swap] = old;
     }
@@ -585,7 +589,7 @@ routeobjects.Route.prototype.assignFrom=function(other){
     this.name=other.name;
     this.server=other.server;
     this.points=[];
-    for (var i=0;i<other.points.length;i++){
+    for (let i=0;i<other.points.length;i++){
         this.points.push(other.points[i].clone());
     }
     return true;
@@ -653,7 +657,7 @@ routeobjects.RoutePoint=function(waypoint){
 };
 avnav.inherits(routeobjects.RoutePoint,navobjects.WayPoint);
 routeobjects.formatRoutePoint=function(routePoint){
-    var rt=assign({},routePoint);
+    let rt=assign({},routePoint);
     rt.distance=Formatter.formatDistance(routePoint.distance).replace(/^/g,"");
     rt.course=Formatter.formatDirection(routePoint.course).replace(/^ /g,"");
     rt.latlon=Formatter.formatLonLats(routePoint);
@@ -666,15 +670,15 @@ routeobjects.formatRoutePoint=function(routePoint){
  * @returns {routeobjects.RoutePoint[]}
  */
 routeobjects.Route.prototype.getRoutePoints=function(opt_selectedIdx){
-    var rt=[];
-    var i=0;
+    let rt=[];
+    let i=0;
     for (i=0;i<this.points.length;i++){
-        var formatted=new routeobjects.RoutePoint(this.points[i]);
+        let formatted=new routeobjects.RoutePoint(this.points[i]);
         formatted.idx=i;
         formatted.name=this.points[i].name?this.points[i].name:i+"";
         formatted.routeName=this.name;
         if (i>0) {
-            var dst=NavCompute.computeDistance(this.points[i-1],this.points[i]);
+            let dst=NavCompute.computeDistance(this.points[i-1],this.points[i]);
             formatted.course=dst.course;
             formatted.distance=dst.dtsnm;
         }
@@ -691,14 +695,14 @@ routeobjects.Route.prototype.getRoutePoints=function(opt_selectedIdx){
  * @returns {number}
  */
 routeobjects.Route.prototype.computeLength=function(startIdx){
-    var rt=0;
+    let rt=0;
     if (startIdx < 0) startIdx=0;
     if (this.points.length < (startIdx+2)) return rt;
-    var last=this.points[startIdx];
+    let last=this.points[startIdx];
     startIdx++;
     for (;startIdx<this.points.length;startIdx++){
-        var next=this.points[startIdx];
-        var dst=NavCompute.computeDistance(last,next);
+        let next=this.points[startIdx];
+        let dst=NavCompute.computeDistance(last,next);
         rt+=dst.dtsnm;
         last=next;
     }
@@ -711,11 +715,11 @@ routeobjects.Route.prototype.computeLength=function(startIdx){
  * @returns {number} -1 if there are no points in the route
  */
 routeobjects.Route.prototype.findBestMatchingIdx=function(point){
-    var idx;
-    var mindistance=undefined;
-    var bestPoint=-1;
+    let idx;
+    let mindistance=undefined;
+    let bestPoint=-1;
     if (! point) return bestPoint;
-    var dst;
+    let dst;
     for (idx=0;idx<this.points.length;idx++){
         dst=NavCompute.computeDistance(point,this.points[idx]);
         if (bestPoint == -1 || dst.dts<mindistance){

@@ -59,6 +59,21 @@ Helper.escapeHtml=function(string) {
     });
 };
 
+Helper.parseXml=function(text){
+    let xmlDoc=undefined;
+    if (window.DOMParser) {
+        // code for modern browsers
+        let parser = new DOMParser();
+        xmlDoc = parser.parseFromString(text,"text/xml");
+    } else {
+        // code for old IE browsers
+        xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+        xmlDoc.async = false;
+        xmlDoc.loadXML(text);
+    }
+    return xmlDoc;
+};
+
 
 
 module.exports=Helper;

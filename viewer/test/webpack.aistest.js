@@ -8,7 +8,6 @@ var outDir="../build/test";
 
 var copyList=[
     {from: './test/aistest.html'},
-    {from: '../libraries/jquery/jquery-1.11.0.min.js',to:'libraries'},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
     {from: '../libraries/movable-type/latlon.js',to: 'libraries'}
     ];

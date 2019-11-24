@@ -23,7 +23,6 @@ var copyList=[
     {from: './util/polyfill.js',to:'polyfill.js'},
     {from: './images/icons-new/*svg'},
     {from: './images/icons-new/ic_*png'},
-    {from: '../libraries/jquery/jquery-1.11.0.min.js',to:'libraries'},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
     {from: '../libraries/movable-type/latlon.js',to: 'libraries'},
     {from: '../sounds/1-minute-of-silence.mp3',to: 'sounds'},

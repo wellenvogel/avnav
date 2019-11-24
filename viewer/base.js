@@ -135,30 +135,7 @@ avnav.isString=function(x){
     return (x instanceof String || typeof(x) === 'string');
 };
 //see http://stackoverflow.com/questions/1909753/vertically-align-div-no-tables
-(function ($) {
-    // VERTICALLY ALIGN FUNCTION
-    $.fn.vAlign = function () {
-        return this.each(function (i) {
-            var ah = $(this).height();
-            var ph = $(this).parent().height();
-            var mh = (ph - ah) / 2;
-            if (mh < 0) mh = 0;
-            $(this).css('margin-top', mh);
-        });
-    };
-})(jQuery);
-(function ($) {
-    // HORIZONTALLY ALIGN FUNCTION
-    $.fn.hAlign = function () {
-        return this.each(function (i) {
-            var ah = $(this).width();
-            var ph = $(this).parent().width();
-            var mh = (ph - ah) / 2;
-            if (mh < 0) mh = 0;
-            $(this).css('margin-left', mh);
-        });
-    };
-})(jQuery);
+
 
 if (! window.SVGElement){
     //old safari on Playbook - measure will not work without this
