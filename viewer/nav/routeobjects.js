@@ -425,14 +425,20 @@ routeobjects.Route.prototype.getPointAtIndex=function(idx){
 /**
  * get the index of a wp in the route
  * @param {navobjects.WayPoint} point
+ * @param opt_nameOnly {boolean} if set - compare names instead of coords
  * @returns {number} - -1 if not found
  */
-routeobjects.Route.prototype.getIndexFromPoint=function(point){
+routeobjects.Route.prototype.getIndexFromPoint=function(point,opt_nameOnly){
     if (! point || point.name === undefined) return -1;
     if (point.routeName === undefined || point.routeName != this.name) return -1;
     var i;
     for (i=0;i<this.points.length;i++){
-        if (this.points[i].compare(point)) return i;
+        if (opt_nameOnly){
+            if (this.points[i].name == point.name) return i;
+        }
+        else {
+            if (this.points[i].compare(point)) return i;
+        }
     }
     return -1;
 };

@@ -7,7 +7,7 @@ import Visible from '../hoc/Visible.jsx';
 import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
-import keys from '../util/keys.jsx';
+import keys,{KeyHelper} from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
@@ -26,6 +26,13 @@ import RouteObjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 
 const editor=new RouteEdit(RouteEdit.MODES.PAGE);
+const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
+
+const isActiveRoute=()=>{
+    let activeName=activeRoute.getRouteName();
+    if (activeName && activeName == editor.getRouteName()) return true;
+    return false;
+};
 
 const DynamicPage=Dynamic(Page);
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -173,10 +180,15 @@ const storeRoute=(route,startNav)=>{
     if (globalStore.getData(keys.gui.routepage.initialName,"") != route.name){
         route.server=globalStore.getData(keys.properties.connectedMode,false);
     }
-    editor.setNewRoute(route); //potentially we changed the server flag - so write it again
-    editor.syncTo(RouteEdit.MODES.EDIT);
+
     let current=editor.getPointAt();
     if (current) MapHolder.setCenter(current);
+    editor.setNewRoute(route); //potentially we changed the server flag - so write it again
+    editor.setNewIndex(editor.getIndexFromPoint(current,true));
+    editor.syncTo(RouteEdit.MODES.EDIT);
+    if (isActiveRoute()){
+        activeRoute.setNewRoute(route);
+    }
     if (startNav && current){
             RouteHandler.wpOn(current,true);
     }
@@ -187,6 +199,7 @@ class RoutePage extends React.Component{
     constructor(props){
         super(props);
         let self=this;
+        this.listRef=undefined;
         this.buttons=[
             {
                 name:'RoutePageOk',
@@ -244,6 +257,16 @@ class RoutePage extends React.Component{
         globalStore.storeData(keys.gui.routepage.initialName,editor.getRouteName());
     }
 
+    componentDidMount(){
+        if (this.listRef){
+            let el=this.listRef.querySelector('.activeEntry');
+            if (el){
+                let mode=GuiHelpers.scrollInContainer(this.listRef,el);
+                if (mode >= 1 || mode <= 2) el.scrollIntoView(mode==1);
+            }
+        }
+    }
+
 
     storeRouteAndReturn(startNav){
         if (!editor.hasRoute()){
@@ -296,6 +319,7 @@ class RoutePage extends React.Component{
                         }
                         editor.setNewIndex(item.idx);
                     }}
+                    listRef={(el)=>{self.listRef=el;}}
                     />
 
             </React.Fragment>
@@ -311,9 +335,10 @@ class RoutePage extends React.Component{
                             />
                         }
                 buttonList={self.buttons}
-                storeKeys={editor.getStoreKeys()}
+                storeKeys={KeyHelper.flattenedKeys(editor.getStoreKeys())
+                                    .concat(KeyHelper.flattenedKeys(activeRoute.getStoreKeys()))}
                 updateFunction={(state)=>{
-                    let isActive=StateHelper.isActiveRoute(state);
+                    let isActive=isActiveRoute();
                     return{
                         title:isActive?"Active Route":"Inactive Route",
                         className:isActive?"activeRoute":""

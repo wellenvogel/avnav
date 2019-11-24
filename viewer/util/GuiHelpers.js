@@ -166,6 +166,25 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
     };
 };
 
+//from https://stackoverflow.com/questions/487073/how-to-check-if-element-is-visible-after-scrolling
+//returns:
+//0 - no scroll
+//1 - scrollTop
+//2 - scrollBottom
+//3 - left
+//4 - right
+const scrollInContainer=(parent, element)=> {
+    if (!parent || ! element) return false;
+    var parentRect = parent.getBoundingClientRect();
+    var elRect = element.getBoundingClientRect();
+
+    if (elRect.top < parentRect.top) return 1;
+    if (elRect.bottom > parentRect.bottom) return 2;
+    if (elRect.left < parentRect.left) return 3;
+    if (elRect.right > parentRect.right) return 4;
+    return 0;
+};
+
 
 module.exports={
     anchorWatchDialog,
@@ -174,5 +193,6 @@ module.exports={
     getPageFromLayout,
     getPanelFromLayout,
     lifecycleSupport,
-    lifecycleTimer
+    lifecycleTimer,
+    scrollInContainer
 };

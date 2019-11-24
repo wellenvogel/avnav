@@ -39,7 +39,7 @@ class ItemList extends React.Component{
         }
         let Content=function(props) {
             return (
-                <div className={props.className} style={style} ref={(el)=>{if (self.props.listRef) self.props.listRef(el)}}>
+                <div className={props.className} style={style} ref={(el)=>{if (props.listRef) props.listRef(el)}}>
                     {allitems.map(function (entry) {
                     let itemProps = assign({}, entry);
                     let key = getKey(entry);
@@ -65,14 +65,14 @@ class ItemList extends React.Component{
         };
         if (this.props.scrollable) {
             return (
-                <div className={className} >
+                <div className={className} ref={(el)=>{if (self.props.listRef) self.props.listRef(el)}}>
                     <Content className="listScroll"/>
                 </div>
             );
         }
         else {
             return (
-                <Content className={className}/>
+                <Content className={className} listRef={self.props.listRef}/>
             );
         }
     }

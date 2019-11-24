@@ -7,7 +7,7 @@ import Visible from '../hoc/Visible.jsx';
 import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
-import keys from '../util/keys.jsx';
+import keys,{KeyHelper} from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
@@ -34,6 +34,16 @@ const RouteHandler=NavHandler.getRoutingHandler();
 
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
+const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
+
+const isActiveRoute=()=>{
+    let activeName=activeRoute.getRouteName();
+    if (activeName && activeName == editor.getRouteName()) return true;
+    return false;
+};
+const getCurrentEditor=()=>{
+    return isActiveRoute()?activeRoute:editor;
+};
 
 const DynamicPage=Dynamic(MapPage);
 const startWaypointDialog=(item,index)=>{
@@ -42,7 +52,7 @@ const startWaypointDialog=(item,index)=>{
             Toast(Helper.escapeHtml(err));
         });
         if (changedWp) {
-            editor.changeSelectedWaypoint(changedWp,index);
+            getCurrentEditor().changeSelectedWaypoint(changedWp,index);
             return true;
         }
         return false;
@@ -59,17 +69,18 @@ const startWaypointDialog=(item,index)=>{
 
 
 const widgetClick=(item,data,panel)=>{
+    let currentEditor=getCurrentEditor();
     if (item.name == "EditRoute"){
-        editor.syncTo(RouteEdit.MODES.PAGE);
+        currentEditor.syncTo(RouteEdit.MODES.PAGE);
         history.push("routepage");
         return;
     }
     if (item.name == 'RoutePoints'){
         if (data && data.idx !== undefined){
-            let lastSelected=editor.getIndex();
-            editor.setNewIndex(data.idx);
+            let lastSelected=currentEditor.getIndex();
+            currentEditor.setNewIndex(data.idx);
             let last=globalStore.getData(keys.gui.editroutepage.lastCenteredWp);
-            MapHolder.setCenter(editor.getPointAt());
+            MapHolder.setCenter(currentEditor.getPointAt());
             globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,data.idx);
             if (lastSelected == data.idx && last == data.idx){
                 startWaypointDialog(data,data.idx);
@@ -86,55 +97,62 @@ const getPanelList=(panel,opt_isSmall)=>{
 };
 
 const checkRouteWritable=function(){
-    if (editor.isRouteWritable()) return true;
+    let currentEditor=getCurrentEditor();
+    if (currentEditor.isRouteWritable()) return true;
     let ok=OverlayDialog.confirm("you cannot edit this route as you are disconnected. OK to select a new name");
     ok.then(function(){
-        editor.syncTo(RouteEdit.MODES.PAGE);
+        currentEditor.syncTo(RouteEdit.MODES.PAGE);
         history.push('routepage');
     });
     return false;
 };
 
-const waypointButtons=[
-    {
-        name:'WpLocate',
-        onClick:()=>{
-            MapHolder.setCenter(editor.getPointAt());
-            globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,editor.getIndex());
-        }
-    },
-    {
-        name:'WpEdit',
-        onClick:()=>{
-            startWaypointDialog(editor.getPointAt(),editor.getIndex());
-        }
-    },
-    {
-        name:'WpNext',
-        storeKeys:editor.getStoreKeys(),
-        updateFunction: (state)=> {
-            return {visible:StateHelper.hasPointAtOffset(state,1)};
+const getWaypointButtons=()=>{
+    let waypointButtons=[
+        {
+            name:'WpLocate',
+            onClick:()=>{
+                let currentEditor=getCurrentEditor();
+                MapHolder.setCenter(currentEditor.getPointAt());
+                globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
+            }
         },
-        onClick:()=>{
-            editor.moveIndex(1);
-            MapHolder.setCenter(editor.getPointAt());
-            globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,editor.getIndex());
+        {
+            name:'WpEdit',
+            onClick:()=>{
+                let currentEditor=getCurrentEditor();
+                startWaypointDialog(currentEditor.getPointAt(),currentEditor.getIndex());
+            }
+        },
+        {
+            name:'WpNext',
+            storeKeys:getCurrentEditor().getStoreKeys(),
+            updateFunction: (state)=> {
+                return {visible:StateHelper.hasPointAtOffset(state,1)};
+            },
+            onClick:()=>{
+                let currentEditor=getCurrentEditor();
+                currentEditor.moveIndex(1);
+                MapHolder.setCenter(currentEditor.getPointAt());
+                globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
 
-        }
-    },
-    {
-        name:'WpPrevious',
-        storeKeys:editor.getStoreKeys(),
-        updateFunction: (state)=> {
-            return {visible:StateHelper.hasPointAtOffset(-1)}
+            }
         },
-        onClick:()=>{
-            editor.moveIndex(-1);
-            MapHolder.setCenter(editor.getPointAt());
-            globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,editor.getIndex());
+        {
+            name:'WpPrevious',
+            storeKeys:getCurrentEditor().getStoreKeys(),
+            updateFunction: (state)=> {
+                return {visible:StateHelper.hasPointAtOffset(-1)}
+            },
+            onClick:()=>{
+                currentEditor.moveIndex(-1);
+                MapHolder.setCenter(currentEditor.getPointAt());
+                globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
+            }
         }
-    }
-];
+    ];
+    return waypointButtons;
+};
 
 const DEFAULT_ROUTE="default";
 
@@ -159,7 +177,8 @@ class EditRoutePage extends React.Component{
     }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);
-        editor.setNewIndex(editor.getIndexFromPoint(evdata.wp));
+        let currentEditor=getCurrentEditor();
+        currentEditor.setNewIndex(currentEditor.getIndexFromPoint(evdata.wp));
 
     }
     componentWillUnmount(){
@@ -188,20 +207,21 @@ class EditRoutePage extends React.Component{
                     if (!checkRouteWritable()) return;
                     let center=MapHolder.getCenter();
                     if (!center) return;
-                    let current=editor.getPointAt();
+                    let currentEditor=getCurrentEditor();
+                    let current=currentEditor.getPointAt();
                     if (current){
                         let distance=MapHolder.pixelDistance(center,current);
                         if (distance < 8) return;
                     }
-                    editor.addWaypoint(center);
-                    globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,editor.getIndex());
+                    currentEditor.addWaypoint(center);
+                    globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
                 }
             },
             {
                 name:"NavDelete",
                 onClick:()=>{
                     if (!checkRouteWritable()) return;
-                    editor.deleteWaypoint();
+                    getCurrentEditor().deleteWaypoint();
                 }
             },
             {
@@ -210,7 +230,8 @@ class EditRoutePage extends React.Component{
                     if (!checkRouteWritable()) return;
                     let center=MapHolder.getCenter();
                     if (!center) return;
-                    editor.changeSelectedWaypoint(center);
+                    let currentEditor=getCurrentEditor();
+                    currentEditor.changeSelectedWaypoint(center);
                     globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,editor.getIndex());
                 }
             },
@@ -218,7 +239,7 @@ class EditRoutePage extends React.Component{
                 name:"NavGoto",
                 onClick:()=>{
                     if (!checkRouteWritable()) return;
-                    RouteHandler.wpOn(editor.getPointAt());
+                    RouteHandler.wpOn(getCurrentEditor().getPointAt());
                     history.pop();
                 }
             },
@@ -226,7 +247,7 @@ class EditRoutePage extends React.Component{
                 name:"NavInvert",
                 onClick:()=>{
                     if (!checkRouteWritable()) return;
-                    editor.invertRoute();
+                    getCurrentEditor().invertRoute();
                 }
             },
             {
@@ -253,7 +274,7 @@ class EditRoutePage extends React.Component{
                 chartBase={chartBase}
                 panelCreator={getPanelList}
                 storeKeys={
-                    editor.getStoreKeys()
+                    [keys.nav.routeHandler.activeName]
                 }
                 updateFunction={(state)=>{
                     let rt={
@@ -263,7 +284,7 @@ class EditRoutePage extends React.Component{
                     rt.buttonList=self.getButtons();
                     if (isSmall){
                     rt.overlayContent=<ButtonList
-                            itemList={waypointButtons}
+                            itemList={getWaypointButtons()}
                             className="overlayContainer"
                         />;
                     }

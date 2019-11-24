@@ -12,6 +12,7 @@ import ItemList from './ItemList.jsx';
 import WaypointItem from './WayPointItem.jsx';
 import assign from 'object-assign';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
+import GuiHelper from '../util/GuiHelpers.js';
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
@@ -33,7 +34,11 @@ class RoutePointsWidget extends React.Component{
     scrollSelected(){
         if (! this.listRef) return;
         let el=this.listRef.querySelector('.activeEntry');
-        if (el) el.scrollIntoView();
+        if (el) {
+            let mode=GuiHelper.scrollInContainer(this.listRef,el);
+            if (mode < 1 || mode > 2) return;
+            el.scrollIntoView(mode==1);
+        }
     }
     componentDidMount(){
         this.scrollSelected();

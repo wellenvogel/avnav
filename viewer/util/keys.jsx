@@ -106,6 +106,7 @@ let keys={
             updateCount:K
         },
         routeHandler:{
+            activeName: K,
             routeForPage: K,
             pageRouteIndex: K,
             editingRoute:K,

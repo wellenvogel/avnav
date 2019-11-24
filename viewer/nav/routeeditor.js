@@ -38,14 +38,16 @@ const load=(storeKeys,clone)=>{
         return{
             leg:    newLeg,
             route:  newLeg.currentRoute,
-            index:  storeData.index
+            index:  storeData.index,
+            activeName: storeData.activeName
         }
     }
     let route=storeData.route;
     if (clone && route) route=route.clone();
     let rt={
         route:route,
-        index:storeData.index
+        index:storeData.index,
+        activeName: storeData.activeName
     };
     return rt;
 };
@@ -64,6 +66,15 @@ const write=(storeKeys,data,opt_omitCallbacks)=>{
         if (!hasChanged) {
             if (!data.route && route) hasChanged = true;
             if (data.route && !hasChanged) hasChanged = data.route.differsTo(route);
+        }
+    }
+    if (storeKeys.activeName){
+        let newName=data.route?data.route.name:undefined;
+        if (newName != data.activeName){
+            data.activeName=newName;
+        }
+        if (data.activeName != storeData.activeName){
+            hasChanged=true;
         }
     }
     if (hasChanged){
@@ -105,6 +116,9 @@ class RouteEdit{
         this.writable=mode.writable && ! opt_readOnly;
         this.writeKeys=assign({},this.storeKeys);
         this.storeKeys.activeName=modeKeys.activeName;
+        if (mode.writeActiveName){
+            this.writeKeys.activeName=modeKeys.activeName;
+        }
 
     }
     checkWritable(){
@@ -137,13 +151,18 @@ class RouteEdit{
         if (old) data.index=route.getIndexFromPoint(old);
         write(this.writeKeys,data);
     }
-    setNewRoute(route){
+    setNewRoute(route,opt_index){
         if (! route) return;
         this.checkWritable();
         let data=load(this.storeKeys,true);
         let oldTarget=undefined;
-        if (this.storeKeys.leg){
+        let oldNext=undefined;
+        let oldRouteName=undefined;
+        if (this.storeKeys.leg && data.route){
+            oldRouteName=data.route.name;
             oldTarget=data.leg.to;
+            let oldIndex=data.route.getIndexFromPoint(oldTarget);
+            if (oldIndex >= 0)  oldNext=route.getPointAtIndex(oldIndex+1);
         }
         let oldPoint=data.route?data.route.getPointAtIndex(data.index):undefined;
         data.route=route.clone();
@@ -154,14 +173,42 @@ class RouteEdit{
             data.index=0;
         }
         if (this.storeKeys.leg && oldTarget){
-            let newTarget=data.route.getPointAtIndex(data.route.findBestMatchingIdx());
-            if (newTarget){
-                leg.to=newTarget;
+            /**
+             * try hard to set the new target
+             * if the route name remains the same:
+             *   1st try to find the same name
+             *   2nd try to find the next name
+             *   bestMatching
+             * else
+             *   bestMatching
+             */
+            let newIndex=-1;
+            if (oldRouteName == data.route.name){
+                newIndex=data.route.getIndexFromPoint(oldTarget,true);
+                if (newIndex < 0 && oldNext){
+                    newIndex=data.route.getIndexFromPoint(oldNext,true);
+                }
+                if (newIndex < 0){
+                    newIndex=data.route.findBestMatchingIdx(oldTarget);
+                }
             }
             else{
-                leg.to=undefined;
-                leg.active=false;
+                newIndex=data.route.findBestMatchingIdx(oldTarget);
             }
+            let newTarget=data.route.getPointAtIndex(newIndex);
+            if (newTarget){
+                data.leg.to=newTarget;
+            }
+            else{
+                data.leg.to=undefined;
+                data.leg.active=false;
+            }
+        }
+        if (opt_index !== undefined){
+            data.index=opt_index;
+        }
+        if (!data.route.getPointAtIndex(data.index)){
+            data.index=0;
         }
         write(this.writeKeys,data);
     }
@@ -228,20 +275,7 @@ class RouteEdit{
         }
     }
     setRouteAndIndex(newRoute,newIndex){
-        this.checkWritable();
-        let data=load(this.storeKeys,true);
-        let oldTarget=undefined;
-        if (this.storeKeys.leg){
-            oldTarget=data.leg.to;
-        }
-        data.route= newRoute?newRoute.clone():undefined;
-        data.index=newIndex;
-        if (oldTarget){
-            let newTarget=data.route.getPointAtIndex(data.route.findBestMatchingIdx(oldTarget));
-            data.leg.to=newTarget;
-            if (! newTarget) data.leg.active=false;
-        }
-        write(this.writeKeys,data);
+        this.setNewRoute(newRoute,newIndex);
     }
     moveIndex(offset){
         this.checkWritable();
@@ -322,9 +356,12 @@ class RouteEdit{
         if (!data.route) return;
         return data.route.name;
     }
-    getIndexFromPoint(point){
+    getIndexFromPoint(point,opt_bestMatching){
         let data=load(this.storeKeys);
         if (!data.route) return -1;
+        if (opt_bestMatching){
+            return data.route.findBestMatchingIdx(point)
+        }
         return data.route.getIndexFromPoint(point);
     }
     getRoute(){
@@ -385,7 +422,7 @@ RouteEdit.MODES={
         storeKeys: {
             route: keys.nav.routeHandler.routeForPage,
             index: keys.nav.routeHandler.pageRouteIndex,
-            activeName: keys.nav.route.name
+            activeName: keys.nav.routeHandler.activeName
         },
         writable:true
     },
@@ -393,7 +430,7 @@ RouteEdit.MODES={
         storeKeys: {
             route: keys.nav.routeHandler.editingRoute,
             index: keys.nav.routeHandler.editingIndex,
-            activeName: keys.nav.route.name
+            activeName: keys.nav.routeHandler.activeName
         },
         writable: true
     },
@@ -401,9 +438,10 @@ RouteEdit.MODES={
         storeKeys: {
             leg: keys.nav.routeHandler.currentLeg,
             index: keys.nav.routeHandler.currentIndex,
-            activeName: keys.nav.route.name
+            activeName: keys.nav.routeHandler.activeName
         },
-        writable:true
+        writable:true,
+        writeActiveName: true
     }
 };
 /**

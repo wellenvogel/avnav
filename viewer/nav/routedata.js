@@ -25,6 +25,38 @@ class Callback{
     }
 }
 /**
+ * sync handling with the server
+ * basically the server has priority, i.e. we always wait until we got the info
+ * from the server before we send
+ * we sync:
+ *      * the current leg (activeRoute)
+ *      * the editingRoute (only if not equal to the activeRoute)
+ * we have 2 local members:
+ *      * lastSentLeg
+ *      * lastSentRoute
+ *      * lastReceivedLeg
+ *      * lastReceivedRoute
+ * if we are not connected:
+ *      * reset all members to undefined, do not send/receive
+ * if we are connected:
+ *      * query the current leg
+ *      * do not send the leg until we received one (lastReceivedLeg is set)
+ *      * only send the leg if different to lastSentLeg
+ *      * on errors reset lastSent/lastReceived leg
+ *
+ *      * if active and editing are equal:
+ *        - reset lastSentRoute/lastReceivedRoute
+ *        - do not send query for route, do not send route
+ *        - ignore answers for route
+ *      * if not equal:
+ *        - if lastReceivedRoute is empty or not our name
+ *          - send with "ignore existing"
+ *        - do route query
+ *  if we change to connected:
+ *      * trigger send for editing route with ignore existing
+ *
+ */
+/**
  * the handler for the routing data
  * query the server...
  * basically it can work in 2 modes:
@@ -146,45 +178,21 @@ var RouteData=function(){
      */
     this.formatter=Formatter;
 
+    this.lastSendLeg=undefined;
+
     var self=this;
     globalStore.register(this,keys.gui.global.propertySequence);
 
     this.activeRouteChanged=new Callback(()=>{
-        let leg=activeRoute.getRawData().leg;
-        self._legChanged(leg);
+        let raw=activeRoute.getRawData();
+        self._legChanged(raw.leg);
         if (editingRoute.getRouteName() == activeRoute.getRouteName() && activeRoute.getRouteName() !== undefined){
-            self.saveRoute(leg?leg.currentRoute:undefined);
-            editingRoute.modify((data)=>{
-                let oldSelected=data.route?data.route.getPointAtIndex(data.index):undefined;
-                data.route=(leg && leg.currentRoute)?leg.currentRoute.clone():undefined;
-                if (oldSelected){
-                    if (data.route) data.index=data.route.findBestMatchingIdx(oldSelected);
-                }
-                return true;
-            },self.editingRouteChanged)
+            editingRoute.setRouteAndIndex(raw.route,raw.index);
         }
     });
     this.editingRouteChanged=new Callback(()=>{
         let route=editingRoute.getRoute();
         self.saveRoute(route);
-        if (editingRoute.getRouteName() == activeRoute.getRouteName() && activeRoute.getRouteName() !== undefined){
-           activeRoute.modify((data)=>{
-               let oldTarget=data.leg?data.leg.to:undefined;
-               let oldSelected=data.route?data.route.getPointAtIndex(data.index):undefined;
-               data.route=route?route.clone():undefined;
-               if (oldTarget && data.route){
-                   let newIdx=data.route.findBestMatchingIdx(oldTarget);
-                   if (newIdx >= 0){
-                       data.leg.to=data.route.getPointAtIndex(newIdx);
-                   }
-               }
-               if (oldSelected && data.route){
-                   data.index=data.route.findBestMatchingIdx(oldSelected);
-               }
-               if (data.leg) self._legChanged(data.leg);
-               return true;
-           },self.activeRouteChanged)
-        }
     });
     globalStore.register(this.activeRouteChanged,activeRoute.getStoreKeys());
     globalStore.register(this.editingRouteChanged,editingRoute.getStoreKeys());
@@ -217,13 +225,13 @@ RouteData.prototype.isActiveRoute=function(name){
  * @param {routeobjects.Route|undefined} rte
  * @param {function} opt_callback
  */
-RouteData.prototype.saveRoute=function(rte,opt_callback) {
+RouteData.prototype.saveRoute=function(rte,opt_callback,opt_localOnly) {
     var route=this._saveRouteLocal(rte);
     if (! route ) return;
     if (avnav.android){
         avnav.android.storeRoute(route.toJsonString());
     }
-    if (this.connectMode) this._sendRoute(route, opt_callback);
+    if (this.connectMode && ! opt_localOnly) this._sendRoute(route, opt_callback);
     else {
         if (opt_callback) setTimeout(function () {
             opt_callback(true);
@@ -650,16 +658,16 @@ RouteData.prototype._checkNextWp=function(){
  * @private
  * @return {Boolean} - true if data has changed
  */
-RouteData.prototype._handleLegResponse=function(data) {
-    if (!data) {
+RouteData.prototype._handleLegResponse=function(serverData) {
+    if (!serverData) {
         this.serverConnected = false;
         return false;
     }
     this.routeErrors=0;
     this.serverConnected=true;
-    if (! data.from) return false;
+    if (! serverData.from) return false;
     var nleg=new routeobjects.Leg();
-    nleg.fromJson(data);
+    nleg.fromJson(serverData);
     if (!nleg.differsTo(this.serverLeg)) {
         return false;
     }
@@ -671,7 +679,6 @@ RouteData.prototype._handleLegResponse=function(data) {
         activeRoute.modify((data)=> {
             if (this.serverLeg.differsTo(data.leg)) {
                 data.leg = this.serverLeg.clone();
-                data.route=data.leg.currentRoute;
                 if (data.leg.name) {
                     if (!data.leg.currentRoute) {
                         var route = this._loadRoute(data.leg.name);
@@ -685,6 +692,7 @@ RouteData.prototype._handleLegResponse=function(data) {
                         }
                     }
                 }
+                data.route=data.leg.currentRoute;
                 return true;
             }
 
@@ -793,6 +801,7 @@ RouteData.prototype._startQuery=function() {
         this._remoteRouteOperation("getroute",{
             name:editingRoute.getRouteName(),
             okcallback:function(data,param){
+                if (self.isEditingActiveRoute()) return;
                 var nRoute = new routeobjects.Route();
                 nRoute.fromJson(data);
                 nRoute.server=true;
@@ -931,14 +940,17 @@ RouteData.prototype._legChanged=function(leg){
         Overlay.Toast("unable to save leg: "+((rt && rt.status)?rt.status:""));
         return;
     }
+    if (! leg.differsTo(this.lastSendLeg)) return;
     let legJson=leg.toJson();
     if (this.connectMode){
+        this.lastSendLeg=leg;
         Requests.postJson("?request=routing&command=setleg",legJson).then(
             (data)=>{
                 avnav.log("new leg sent to server");
             }
         ).catch(
             (error)=>{
+                self.lastSendLeg=undefined;
                 if (globalStore.getData(keys.properties.routingServerError)) Overlay.Toast("unable to send leg to server:" +errMsg);
             }
         );
