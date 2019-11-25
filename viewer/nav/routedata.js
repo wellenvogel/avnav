@@ -96,19 +96,20 @@ var RouteData=function(){
         }catch(e){
             avnav.log("Exception reading currentLeg "+e);
         }
+        if (data.leg.currentRoute){
+            this._saveRouteLocal(data.leg.currentRoute,true);
+        }
         if (data.leg.name && ! data.leg.currentRoute){
             //migrate from old stuff
             var route=this._loadRoute(data.leg.name,true);
             if (route){
                 data.leg.currentRoute=route;
-                delete data.leg.name;
-                changed=true;
             }
             else {
                 data.leg.currentRoute=new routeobjects.Route(data.leg.name);
-                delete data.leg.name;
-                changed=true;
             }
+            changed=true;
+            delete data.leg.name;
         }
         data.route=data.leg.currentRoute;
         return changed;
@@ -262,16 +263,6 @@ RouteData.prototype.isEditingActiveRoute=function(){
 
 
 
-/**
- * check whether the editing route is writable
- * @returns {boolean}
- */
-RouteData.prototype.isRouteWritable=function(){
-    if (this.connectMode) return true;
-    if (! this.editingRoute) return false;
-    return ! this.editingRoute.server;
-};
-
 
 
 /*---------------------------------------------------------
@@ -300,7 +291,6 @@ RouteData.prototype.wpOn=function(wp,opt_keep_from) {
         }
     }
     if (stwp.routeName){
-        this.editingWp=stwp.clone();
         this._startRouting(routeobjects.RoutingMode.ROUTE, stwp, opt_keep_from);
     }
     else {
@@ -455,7 +445,7 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
             var i;
             for (i = 0; i < data.items.length; i++) {
                 var ri = new routeobjects.RouteInfo();
-                avnav.assign(ri, data.items[i]);
+                assign(ri, data.items[i]);
                 ri.server = true;
                 ri.time=ri.time*1e3; //we receive TS in s
                 if (self.isActiveRoute(ri.name)) ri.active=true;
@@ -682,6 +672,7 @@ RouteData.prototype._handleLegResponse = function (serverData) {
     if (!serverData.from) return false;
     var nleg = new routeobjects.Leg();
     nleg.fromJson(serverData);
+    if (nleg.currentRoute) nleg.currentRoute.server=true;
     //store locally if we did not send or if the leg changed
     if (this.lastSentLeg && !nleg.differsTo(this.lastReceivedLeg)) {
         return false;
@@ -699,13 +690,12 @@ RouteData.prototype._handleLegResponse = function (serverData) {
                     var route = this._loadRoute(data.leg.name);
                     if (route) {
                         data.leg.currentRoute = route;
-                        delete data.leg.name;
                     }
                     else {
                         data.leg.currentRoute = new routeobjects.Route(data.leg.name);
-                        delete data.leg.name;
                     }
                 }
+                delete data.leg.name;
             }
             data.route = data.leg.currentRoute;
             return true;
@@ -938,6 +928,9 @@ RouteData.prototype._legChangedLocally=function(leg){
     this.lastDistanceToNext=-1;
     var raw=leg.toJsonString();
     localStorage.setItem(globalStore.getData(keys.properties.routingDataName),raw);
+    if (leg.currentRoute){
+        this._saveRouteLocal(leg.currentRoute,true);
+    }
     var self=this;
     if (avnav.android){
         var rt=avnav.android.setLeg(leg.toJsonString());

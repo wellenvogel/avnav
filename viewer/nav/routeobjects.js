@@ -338,6 +338,7 @@ routeobjects.Route.prototype.toJsonString=function(){
 routeobjects.Route.prototype.differsTo=function(route2){
     if (! route2) return true;
     if (this.name != route2.name) return true;
+    if (this.server != route2.server) return true;
     if (this.points.length != route2.points.length) return true;
     let i;
     for (i=0;i<this.points.length;i++){

@@ -107,19 +107,17 @@ const addItems=(items,opt_empty)=>{
 };
 
 
-const fillDataRoutes=()=>{
-    let localRoutes=RouteHandler.listRoutesLocal();
-    addItems(localRoutes,true);
-    if (globalStore.getData(keys.properties.connectedMode)) {
-        RouteHandler.listRoutesServer(
-             (routingInfos)=> {
-                addItems(routingInfos);
-            },
-            (err)=> {
-                Toast.Toast("unable to load routes from server: " + err);
-            }
-        );
-    }
+const fillDataRoutes = ()=> {
+    let localRoutes = RouteHandler.listRoutesLocal();
+    addItems(localRoutes, true);
+    RouteHandler.listRoutesServer(
+        (routingInfos)=> {
+            addItems(routingInfos);
+        },
+        (err)=> {
+            Toast.Toast("unable to load routes from server: " + err);
+        }
+    );
 };
 
 const fillData=()=>{
