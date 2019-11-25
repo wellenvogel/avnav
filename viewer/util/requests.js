@@ -2,7 +2,6 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Promise from 'promise';
 import assign from 'object-assign';
-import Headers from 'fetch-headers/headers-es5.min.js';
 
 
 const prepare=(url,options,defaults)=>{
@@ -16,9 +15,9 @@ const prepare=(url,options,defaults)=>{
     if (ioptions.timeout === undefined) ioptions.timeout=globalStore.getData(keys.properties.statusQueryTimeout);
     let headers=undefined;
     if ( !(ioptions && ioptions.noCache !== undefined && !ioptions.noCache)){
-        headers=new Headers();
-        headers.append('pragma', 'no-cache');
-        headers.append('cache-control', 'no-cache');
+        headers={};
+        headers['pragma']='no-cache';
+        headers['cache-control']='no-cache';
     }
     let requestOptions={};
     if (headers) requestOptions.headers=headers;
@@ -90,8 +89,8 @@ let RequestHandler={
     postJson:(url,body,options)=>{
         let [rurl,requestOptions]=prepare(url,options);
         requestOptions.method='POST';
-        if (!requestOptions.headers) requestOptions.headers=new Headers();
-        requestOptions.headers.append('content-type','application/json');
+        if (!requestOptions.headers) requestOptions.headers={};
+        requestOptions.headers['content-type']='application/json';
         let encodedBody=JSON.stringify(body);
         requestOptions.body=encodedBody;
         return handleJson(rurl,requestOptions,options);
