@@ -90,8 +90,8 @@ TrackData.prototype.handleTrackResponse=function(data){
  */
 TrackData.prototype.startQuery=function() {
     let url = "?request=track";
-    let timeout = globalStore.getData(keys.properties.trackQueryTimeout); //in ms!
-    let interval=globalStore.getData(keys.properties.trackInterval); //in seconds
+    let timeout = parseInt(globalStore.getData(keys.properties.trackQueryTimeout)); //in ms!
+    let interval=parseInt(globalStore.getData(keys.properties.trackInterval)); //in seconds
     let self = this;
     let now = new Date().getTime();
     let maxItems = 0;

@@ -2,6 +2,7 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Promise from 'promise';
 import assign from 'object-assign';
+import 'whatwg-fetch-timeout';
 
 
 const prepare=(url,options,defaults)=>{
@@ -12,7 +13,7 @@ const prepare=(url,options,defaults)=>{
     if ( !(ioptions && ioptions.useNavUrl !== undefined && !ioptions.useNavUrl)){
         url=globalStore.getData(keys.properties.navUrl)+url;
     }
-    if (ioptions.timeout === undefined) ioptions.timeout=globalStore.getData(keys.properties.statusQueryTimeout);
+    if (ioptions.timeout === undefined) ioptions.timeout=parseInt(globalStore.getData(keys.properties.statusQueryTimeout));
     let headers=undefined;
     if ( !(ioptions && ioptions.noCache !== undefined && !ioptions.noCache)){
         headers={};
@@ -56,6 +57,7 @@ const handleJson=(rurl,requestOptions,options)=>{
                 }
                 if (! json){
                     reject("empty response");
+                    return;
                 }
                 if ( ! (options && options.checkOk !== undefined && ! options.checkOk)){
                     if (! json.status || (json.status !== 'OK' && json.status != 'ok')){

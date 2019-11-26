@@ -206,7 +206,7 @@ AisData.prototype.startQuery=function() {
     let url = "?request=ais";
     let center=NavData.getAisCenter();
     let self=this;
-    let timeout=globalStore.getData(keys.properties.aisQueryTimeout);
+    let timeout=parseInt(globalStore.getData(keys.properties.aisQueryTimeout));
     if (! center){
         window.clearTimeout(this.timer);
         this.timer=window.setTimeout(function(){

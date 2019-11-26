@@ -106,7 +106,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         this.lonAverageData=[];
         this.alarms=undefined;
     }
-    gpsdata.raw=data.raw;
+    gpsdata.raw=data?data.raw:{};
     this.gpsdata=gpsdata;
     this.writeToStore();
 };
@@ -116,7 +116,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
  */
 GpsData.prototype.startQuery=function(){
     let self=this;
-    let timeout=globalStore.getData(keys.properties.positionQueryTimeout,1000);
+    let timeout=parseInt(globalStore.getData(keys.properties.positionQueryTimeout,1000));
     Requests.getJson("?request=gps",{checkOk:false}).then(
         (data)=>{
             if ( data.lon != null && data.lat != null &&
@@ -172,6 +172,7 @@ GpsData.prototype.handleGpsStatus=function(success){
         if (this.gpsErrors > globalStore.getData(keys.properties.maxGpsErrors)){
             avnav.log("lost gps");
             this.gpsdata.valid=false;
+            globalStore.storeData(keys.nav.gps.valid,false); //keep all the last values...
 
             //continue to count errrors...
         }

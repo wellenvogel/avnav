@@ -149,6 +149,7 @@ const formatTime=function(curDate){
  * @returns {string} hh:mm
  */
 const formatClock=function(curDate){
+    if (! curDate) return "--:--";
     var datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0");
     return datestr;

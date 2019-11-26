@@ -88,8 +88,7 @@ module.exports = {
         '@babel/polyfill',
         './webpack-main.js',
         './avnav_viewer.less',
-        './avnav_viewer_new.less',
-        'whatwg-fetch'
+        './avnav_viewer_new.less'
     ]),
     //entry: './app/main.jsx',
     publicPath: 'http://localhost:8081/viewer',
