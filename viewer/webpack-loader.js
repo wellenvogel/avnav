@@ -30,9 +30,9 @@
  */
 
 (function () {
-    var i, pair;
+    let i, pair;
 
-    var scripts = [
+    let scripts = [
         'libraries/geo.js',
         'libraries/latlon.js',
         'libraries/ol.js',
@@ -41,7 +41,7 @@
         'polyfill.js'
     ];
     for (i in scripts) {
-        var scriptname = scripts[i];
+        let scriptname = scripts[i];
         if (scriptname.match(/\.css/)){
             document.write('<link rel="stylesheet" type="text/css" href="'+scriptname+'"/>');
         }

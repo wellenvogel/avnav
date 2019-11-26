@@ -8,6 +8,7 @@ import NavCompute from './navcompute';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Requests from '../util/requests.js';
+import base from '../base.js';
 
 
 const AisTarget=navobjects.Ais;
@@ -235,7 +236,7 @@ AisData.prototype.startQuery=function() {
         }
     ).catch(
         (error)=>{
-            avnav.log("query ais error");
+            base.log("query ais error");
             self.aisErrors+=1;
             if (self.aisErrors >= globalStore.getData(keys.properties.maxAisErrors)){
                 self.currentAis=[];

@@ -473,7 +473,7 @@ MapHolder.prototype.setZoom=function(newZoom){
     if (! this.olmap) return;
     this.mapZoom=newZoom;
     if (this.olmap.getView().getZoom() != newZoom) {
-        avnav.log("set new zoom " + newZoom);
+        base.log("set new zoom " + newZoom);
         this.olmap.getView().setZoom(newZoom);
     }
 };
@@ -649,7 +649,7 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
         }
         if (zoomOk){
             if (tzoom != Math.floor(this.olmap.getView().getZoom())) {
-                avnav.log("autozoom change to "+tzoom);
+                base.log("autozoom change to "+tzoom);
                 if (opt_force) this.requiredZoom=tzoom;
                 this.setZoom(tzoom); //should set our zoom in the post render
             }
@@ -665,7 +665,7 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
         let nzoom=tzoom+1;
         if (nzoom > this.requiredZoom) nzoom=this.requiredZoom;
         if (nzoom != this.olmap.getView().getZoom) {
-            avnav.log("autozoom change to " + tzoom);
+            base.log("autozoom change to " + tzoom);
             if (opt_force) this.requiredZoom=nzoom;
             this.setZoom(nzoom);
         }
@@ -1026,7 +1026,7 @@ MapHolder.prototype.onDoubleClick=function(evt){
 
 MapHolder.prototype.onZoomChange=function(evt){
     evt.preventDefault();
-    avnav.log("zoom changed");
+    base.log("zoom changed");
     if (this.mapZoom >=0){
         let vZoom=this.getView().getZoom();
         if (vZoom != this.mapZoom){
@@ -1034,7 +1034,7 @@ MapHolder.prototype.onZoomChange=function(evt){
             if (vZoom > (this.maxzoom+globalStore.getData(keys.properties.maxUpscale)) ) {
                 vZoom=this.maxzoom+globalStore.getData(keys.properties.maxUpscale);
             }
-            avnav.log("zoom required from map: " + vZoom);
+            base.log("zoom required from map: " + vZoom);
             this.requiredZoom = vZoom;
             if (vZoom != this.getView().getZoom()) this.getView().setZoom(vZoom);
         }
@@ -1049,7 +1049,7 @@ MapHolder.prototype.onZoomChange=function(evt){
  * @return {number} the matching index or -1
  */
 MapHolder.prototype.findTarget=function(pixel,points,opt_tolerance){
-    avnav.log("findTarget "+pixel[0]+","+pixel[1]);
+    base.log("findTarget "+pixel[0]+","+pixel[1]);
     let tolerance=opt_tolerance||10;
     let xmin=pixel[0]-tolerance;
     let xmax=pixel[0]+tolerance;
@@ -1085,7 +1085,7 @@ MapHolder.prototype.onMoveEnd=function(evt){
     let newCenter= this.pointFromMap(this.getView().getCenter());
     if (this.setCenterFromMove(newCenter)) {
         this.saveCenter();
-        avnav.log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
+        base.log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
     }
 
 };

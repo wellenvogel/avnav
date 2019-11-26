@@ -12,14 +12,13 @@ class DirectWidget extends React.Component{
         return Helper.compareProperties(this.props,nextProps,{value:1,isAverage:1});
     }
     render(){
-        var self=this;
-        var classes="avn_widget "+this.props.classes||"";
+        let classes="avn_widget "+this.props.classes||"";
         if (this.props.isAverage) classes+=" avn_average";
         if (this.props.className) classes+=" "+this.props.className;
-        var val;
+        let val;
         if (this.props.value !== undefined) val=this.props.formatter(this.props.value);
         else val=this.props.default||'0';
-        var style=this.props.style||{};
+        let style=this.props.style||{};
 
         return (
         <div className={classes} onClick={this.props.onClick} style={style}>
@@ -44,7 +43,7 @@ DirectWidget.propTypes={
     caption: PropTypes.string,
     value: PropTypes.any,
     isAverage: PropTypes.bool,
-    formatter: PropTypes.func.required,
+    formatter: PropTypes.func.isRequired,
     onClick: PropTypes.func,
     classes: PropTypes.string,
     style: PropTypes.object,

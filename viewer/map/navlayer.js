@@ -104,7 +104,7 @@ const positionKeys={
  * draw the marker and course
  * we rely on the move end to really store the marker position
  * @param {ol.Coordinate} center in map coordinates
- * @param {avnav.map.Drawing} drawing
+ * @param {Drawing} drawing
  */
 NavLayer.prototype.onPostCompose=function(center,drawing){
     let anchorDistance=activeRoute.anchorWatch();

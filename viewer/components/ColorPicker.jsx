@@ -5,22 +5,22 @@
  */
 'use strict';
 
-var React      = require('react');
-var reactCreateClass=require('create-react-class');
-var assign = require('object-assign');
-var colorUtils = require('../node_modules/react-color-picker/lib/utils/color').default;
-var defaultColor = require('../node_modules/react-color-picker/lib/defaultColor').default;
-var toStringValue=require('../node_modules/react-color-picker/lib/utils/toStringValue').default;
+import React from 'react';
+import reactCreateClass from 'create-react-class';
+import assign from 'object-assign';
+import colorUtils  from '../node_modules/react-color-picker/lib/utils/color';
+import defaultColor  from '../node_modules/react-color-picker/lib/defaultColor';
+import toStringValue from '../node_modules/react-color-picker/lib/utils/toStringValue';
 
-var HueSpectrum= require('react-color-picker').HueSpectrum;
-var SaturationSpectrum = require('react-color-picker').SaturationSpectrum;
-var Swipe=require('../components/Swipe.jsx').default;
+import {SaturationSpectru,HueSpectrum} from 'react-color-picker';
+import Swipe from '../components/Swipe.jsx';
+import base from '../base.js';
 
-var toHsv = colorUtils.toHsv;
+let toHsv = colorUtils.toHsv;
 
 function emptyFn(){}
 
-var RESULT = reactCreateClass({
+let RESULT = reactCreateClass({
 
     displayName: 'ColorPicker',
 
@@ -51,7 +51,7 @@ var RESULT = reactCreateClass({
     },
     prepareProps: function(props){
 
-        var classes = [props.className || ''];
+        let classes = [props.className || ''];
         this.prepareClasses(classes);
         props.className = classes.join(' ');
 
@@ -60,22 +60,22 @@ var RESULT = reactCreateClass({
 
     render: function(){
 
-        var props = this.prepareProps(assign({}, this.props));
+        let props = this.prepareProps(assign({}, this.props));
 
-        var hueStyle = this.props.hueStyle || {};
+        let hueStyle = this.props.hueStyle || {};
 
         hueStyle.marginLeft = this.props.hueMargin;
 
 
-        var value = props.value?
+        let value = props.value?
             this.toColorValue(this.props.value):
             null;
 
-        var defaultValue = !value?
+        let defaultValue = !value?
             this.toColorValue(this.state.value || props.defaultValue || props.defaultColor):
             null;
 
-        var saturationConfig = {
+        let saturationConfig = {
             onDrag     : this.handleSaturationDrag,
             onChange   : this.handleSaturationChange,
             onMouseDown: this.handleSaturationMouseDown,
@@ -84,7 +84,7 @@ var RESULT = reactCreateClass({
             inPicker   : true
         };
 
-        var hueConfig = {
+        let hueConfig = {
             onDrag     : this.handleHueDrag,
             onChange   : this.handleHueChange,
             height     : props.hueHeight || props.saturationHeight,
@@ -124,39 +124,39 @@ var RESULT = reactCreateClass({
      */
     onHueSwipeStart: function(abs){
         this.swipe=this.toColorValue(this.props.value);
-        avnav.log("swipe start");
+        base.log("swipe start");
         return this.onSwipeH(abs.y);
     },
     onSatSwipeStart: function(abs){
         this.swipe=this.toColorValue(this.props.value);
-        avnav.log("swipe start");
+        base.log("swipe start");
         return this.onSwipeSV(abs.x,abs.y);
     },
     onSwipeH:function(newY){
         if (! this.swipe) return;
-        avnav.log("swipeH y="+newY+", oldh="+this.swipe.h);
-        var h=newY*360/(this.props.hueHeight||this.props.saturationHeight);
-        var hsv=avnav.assign({},this.swipe);
+        base.log("swipeH y="+newY+", oldh="+this.swipe.h);
+        let h=newY*360/(this.props.hueHeight||this.props.saturationHeight);
+        let hsv=assign({},this.swipe);
         hsv.h=h;
         if (hsv.h > 359) hsv.h=359;
         if (hsv.h < 0) hsv.h=0;
-        avnav.log("new h="+hsv.h);
+        base.log("new h="+hsv.h);
         this.handleDrag(hsv);
         return true;
     },
     onSwipeSV:function(newX,newY){
         if (! this.swipe) return;
-        avnav.log("Satswipe "+newX+","+newY+", olds="+this.swipe.s+",oldv="+this.swipe.v);
-        var s=newX/this.props.saturationWidth;
-        var v=(this.props.saturationHeight-newY)/this.props.saturationHeight;
-        var hsv=avnav.assign({},this.swipe);
+        base.log("Satswipe "+newX+","+newY+", olds="+this.swipe.s+",oldv="+this.swipe.v);
+        let s=newX/this.props.saturationWidth;
+        let v=(this.props.saturationHeight-newY)/this.props.saturationHeight;
+        let hsv=assign({},this.swipe);
         hsv.s=s;
         hsv.v=v;
         if (hsv.v > 1) hsv.v=1;
         if (hsv.v < 0) hsv.v=0;
         if (hsv.s > 1) hsv.s=1;
         if (hsv.s < 0) hsv.s=0;
-        avnav.log("new s="+hsv.s+", newv="+hsv.v);
+        base.log("new s="+hsv.s+", newv="+hsv.v);
         this.handleDrag(hsv);
         return true;
     },
@@ -181,7 +181,7 @@ var RESULT = reactCreateClass({
 
         color = assign({}, color);
 
-        var value = this.toStringValue(color)
+        let value = this.toStringValue(color)
 
             ;(this.props.onChange || emptyFn)(value, color)
     },

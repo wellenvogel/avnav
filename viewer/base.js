@@ -30,13 +30,11 @@
  * the base for our namespace
  * @type {{}}
  */
-if (window.avnav === undefined) {
-    window.avnav = {};
-}
 
+let base={};
 
-avnav.log=function(txt){
-    if (! avnav.debugMode) return;
+base.log=function(txt){
+    if (! avnav || ! avnav.debugMode) return;
     try{
         console.log(txt);
     }catch(e){}
@@ -47,7 +45,7 @@ avnav.log=function(txt){
  * @param child
  * @param parent
  */
-avnav.inherits = function (child, parent) {
+base.inherits = function (child, parent) {
     if (parent === undefined) {
         throw ("parent is undefined for inherit to " + child);
     }
@@ -56,90 +54,10 @@ avnav.inherits = function (child, parent) {
     child.prototype.base_ = parent;
 };
 
-/**
- *
- * @param {string|string[]} name
- */
-avnav.ensurePath = function (name) {
-    var names;
-    if (name instanceof Array) names=name;
-    else names= name.split('.');
-    if (names[0] != 'avnav') throw "first part of namespace must be avnav";
-    var i;
-    var current = avnav;
-    var path = names[0];
-    for (i = 1; i < names.length; i++) {
-        var cname = names[i];
-        if (!current[cname]) {
-            current[cname] = {};
-        }
-        else {
-            if (!current[cname] instanceof Object) throw path + "." + cname + " exists but is no object";
-        }
-        current = current[cname];
-        path = path + "." + cname;
-    }
-    return current;
-};
-/**
- *
- * @param {string} name
- */
-avnav.provide = function (name) {
-    var names = name.split('.');
-    if (names[0] != 'avnav') throw "first part of namespace must be avnav";
-    var i;
-    var current = avnav.ensurePath(names.slice(0,names.length-1));
-    if (current[names[names.length - 1]]) throw "name " + name + " already defined";
-};
-
-/**
- * one level clone
- * @param obj
- * @returns {{}}
- */
-avnav.clone = function (obj) {
-    var res = {};
-    if (obj) {
-        for (var key in obj) {
-            res[key] = obj[key];
-        }
-    }
-    return res;
-};
-
-avnav.assign = function (target, obj) {
-    if (!target) target = {};
-    Array.prototype.slice.call(arguments,1).forEach(function(arg) {
-        if (!arg) return ;
-        for (var key in arg) {
-            target[key] = arg[key];
-        }
-    });
-    return target;
-};
-avnav.arrayClone=function(arr){
-    var rt=[];
-    for (var i in arr){
-        var old=arr[i];
-        if (old instanceof Object){
-            rt.push(avnav.assign({},old));
-        }
-        else{
-            rt.push(old);
-        }
-    };
-    return rt;
-};
-avnav.isString=function(x){
-    return (x instanceof String || typeof(x) === 'string');
-};
-//see http://stackoverflow.com/questions/1909753/vertically-align-div-no-tables
-
 
 if (! window.SVGElement){
     //old safari on Playbook - measure will not work without this
     window.SVGElement=function(){};
 }
 
-module.exports=avnav;
+module.exports=base;

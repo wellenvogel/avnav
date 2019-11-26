@@ -116,7 +116,7 @@ TrackLayer.prototype.navEvent = function () {
 /**
  *
  * @param {ol.Coordinate} center
- * @param {avnav.map.Drawing} drawing
+ * @param {Drawing} drawing
  */
 TrackLayer.prototype.onPostCompose=function(center,drawing){
     if (! this.visible) return;

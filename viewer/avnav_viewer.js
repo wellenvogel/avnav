@@ -29,28 +29,31 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
                   http://ionicons.com/ (MIT license)
 */
 
-avnav.provide('avnav.main');
 
-var NavData=require('./nav/navdata');
-var React=require('react');
-var ReactDOM=require('react-dom');
-var OverlayDialog=require('./components/OverlayDialog.jsx');
-var propertyHandler=require('./util/propertyhandler');
+import NavData from './nav/navdata';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import OverlayDialog from './components/OverlayDialog.jsx';
+import propertyHandler from './util/propertyhandler';
 ol.DEFAULT_TILE_CACHE_HIGH_WATER_MARK=256;
-var App=require('./App.jsx');
-var history=require('./util/history');
-var MapHolder=require('./map/mapholder');
-var keys=require('./util/keys.jsx').default;
-var globalStore=require('./util/globalstore.jsx');
+import App from './App.jsx';
+import history from './util/history';
+import MapHolder from './map/mapholder';
+import keys from './util/keys.jsx';
+import globalStore from './util/globalstore.jsx';
+import base from './base.js';
 
 
 
+if (! window.avnav){
+    window.avnav={};
+}
 
 
 function getParam(key)
 {
     // Find the key and everything up to the ampersand delimiter
-    var value=RegExp(""+key+"[^&]+").exec(window.location.search);
+    let value=RegExp(""+key+"[^&]+").exec(window.location.search);
 
     // Return the unescaped value minus everything starting from the equals sign or an empty string
     return unescape(!!value ? value.toString().replace(/^[^=]+./,"") : "");
@@ -66,7 +69,7 @@ avnav.main=function() {
     document.querySelector('body').style.display='block';
 
     if (getParam('log')) avnav.debugMode=true;
-    var navurl=getParam('navurl');
+    let navurl=getParam('navurl');
     if (navurl){
         globalStore.storeData(keys.properties.navUrl,navurl,true);
         globalStore.storeData(keys.properties.routingServerError,false,true);
@@ -81,18 +84,18 @@ avnav.main=function() {
     else {
         globalStore.storeData(keys.gui.global.onAndroid,false,true);
     }
-    var ro="readOnlyServer";
+    let ro="readOnlyServer";
     if (getParam(ro) && getParam(ro) == "true"){
         globalStore.storeData(keys.properties.connectedMode,false,true);
     }
     //make the android API available as avnav.android
     if (window.avnavAndroid){
-        avnav.log("android integration enabled");
+        base.log("android integration enabled");
         globalStore.storeData(keys.gui.global.onAndroid,true,true);
         avnav.android=window.avnavAndroid;
         globalStore.storeData(keys.properties.routingServerError,false,true);
         globalStore.storeData(keys.properties.connectedMode,true,true);
-        window.avnav_version=avnav.android.getVersion();
+        avnav.version=avnav.android.getVersion();
         avnav.android.applicationStarted();
     }
     history.push('mainpage');
@@ -102,6 +105,6 @@ avnav.main=function() {
     setTimeout(function(){
         propertyHandler.incrementSequence();
     },1000);
-    avnav.log("avnav loaded");
+    base.log("avnav loaded");
 };
 

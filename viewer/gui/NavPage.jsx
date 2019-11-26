@@ -12,7 +12,7 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import MapPage from '../components/MapPage.jsx';
-import Toast from '../util/overlay.js';
+import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';

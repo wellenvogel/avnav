@@ -22,9 +22,8 @@ import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
-import Toast from './util/overlay.js';
 import SoundHandler from './components/SoundHandler.jsx';
-import {ToastDisplay} from './components/Toast.jsx';
+import Toast,{ToastDisplay} from './components/Toast.jsx';
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -49,17 +48,8 @@ class Other extends React.Component{
     constructor(props){
         super(props);
     }
-    componentDidMount(){
-        avnav.guiHandler.showPageInternal(this.props.location,this.props.options);
-    }
-    componentDidUpdate(){
-        avnav.guiHandler.showPageInternal(this.props.location,this.props.options);
-    }
-    componentWillUnmount(){
-        avnav.guiHandler.showPageInternal('none');
-    }
     render() {
-        return null;
+        return <h1>Unknown page</h1>;
     }
 }
 
@@ -136,7 +126,7 @@ class App extends React.Component {
                 globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
             },
             (error)=>{
-               Toast.Toast("unable to load application layout: "+error);
+               Toast("unable to load application layout: "+error);
             }
         );
 

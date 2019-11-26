@@ -3,6 +3,7 @@ import navobjects from './navobjects';
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import Requests from '../util/requests.js';
+import base from '../base.js';
 
 
 
@@ -77,7 +78,7 @@ TrackData.prototype.handleTrackResponse=function(data){
         now=curgps.rtime;
     }
     let oldest=now.getTime()/1000-maxage;
-    avnav.log("removing track data older then "+oldest);
+    base.log("removing track data older then "+oldest);
     while (this.currentTrack.length > 0){
         if (this.currentTrack[0].ts > oldest) break;
         this.currentTrack.shift();
@@ -116,7 +117,7 @@ TrackData.prototype.startQuery=function() {
             }
             self.lastTrackQuery=new Date().getTime();
             self.handleTrackResponse(data);
-            avnav.log("trackdatadata");
+            base.log("trackdatadata");
             self.handleTrackStatus(true);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
@@ -124,7 +125,7 @@ TrackData.prototype.startQuery=function() {
         }
     ).catch(
         (error)=>{
-            avnav.log("query track error");
+            base.log("query track error");
             self.handleTrackStatus(false);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
@@ -141,7 +142,7 @@ TrackData.prototype.handleTrackStatus=function(success){
     if (! success){
         this.trackErrors++;
         if (this.trackErrors > 10){
-            avnav.log("lost track");
+            base.log("lost track");
             this.trackValid=false;
             //continue to count errrors...
         }

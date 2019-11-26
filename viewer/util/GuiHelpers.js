@@ -179,8 +179,8 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
 //4 - right
 const scrollInContainer=(parent, element)=> {
     if (!parent || ! element) return false;
-    var parentRect = parent.getBoundingClientRect();
-    var elRect = element.getBoundingClientRect();
+    let parentRect = parent.getBoundingClientRect();
+    let elRect = element.getBoundingClientRect();
 
     if (elRect.top < parentRect.top) return 1;
     if (elRect.bottom > parentRect.bottom) return 2;

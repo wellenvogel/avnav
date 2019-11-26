@@ -6,12 +6,13 @@ import routeobjects from './routeobjects';
 import navobjects from './navobjects';
 import Formatter from '../util/formatter';
 import NavCompute from './navcompute';
-import Overlay from '../util/overlay';
+import Toast from '../components/Toast.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import RoutEdit from './routeeditor.js';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
+import base from '../base.js';
 
 const activeRoute=new RoutEdit(RoutEdit.MODES.ACTIVE);
 const editingRoute=new RoutEdit(RoutEdit.MODES.EDIT);
@@ -64,7 +65,7 @@ class Callback{
  * editing mode      - the editing route is different from the one in the leg
  * @constructor
  */
-var RouteData=function(){
+let RouteData=function(){
     /** @private
      * @type {routeobjects.Leg}
      * */
@@ -94,14 +95,14 @@ var RouteData=function(){
                 changed=true;
             }
         }catch(e){
-            avnav.log("Exception reading currentLeg "+e);
+            base.log("Exception reading currentLeg "+e);
         }
         if (data.leg.currentRoute){
             this._saveRouteLocal(data.leg.currentRoute,true);
         }
         if (data.leg.name && ! data.leg.currentRoute){
             //migrate from old stuff
-            var route=this._loadRoute(data.leg.name,true);
+            let route=this._loadRoute(data.leg.name,true);
             if (route){
                 data.leg.currentRoute=route;
             }
@@ -178,7 +179,7 @@ var RouteData=function(){
     this.formatter=Formatter;
 
 
-    var self=this;
+    let self=this;
     globalStore.register(this,keys.gui.global.propertySequence);
 
     this.activeRouteChanged=new Callback(()=>{
@@ -280,12 +281,12 @@ RouteData.prototype.wpOn=function(wp,opt_keep_from) {
         this.routeOff();
         return;
     }
-    var stwp=new navobjects.WayPoint.fromPlain(wp);
+    let stwp=new navobjects.WayPoint.fromPlain(wp);
     if (wp.routeName){
         //if the waypoint seems to be part of a route
         //check if this is our current active/editing one - if yes, start routing mode
         stwp.routeName=wp.routeName;
-        var rt=this._loadRoute(wp.routeName);
+        let rt=this._loadRoute(wp.routeName);
         if (!(rt  && rt.getIndexFromPoint(stwp) >= 0)){
             stwp.routeName=undefined;
         }
@@ -308,7 +309,7 @@ RouteData.prototype.wpOn=function(wp,opt_keep_from) {
 RouteData.prototype.anchorOn=function(wp,distance){
     if (! wp) return;
     if (! (wp instanceof navobjects.WayPoint)){
-        var nwp=new navobjects.WayPoint();
+        let nwp=new navobjects.WayPoint();
         nwp.update(wp);
         wp=nwp;
     }
@@ -338,9 +339,9 @@ RouteData.prototype._startRouting = function (mode, newWp, opt_keep_from) {
     activeRoute.modify((data)=> {
         if (data.leg) data.leg = new routeobjects.Leg();
         data.leg.approachDistance = globalStore.getData(keys.properties.routeApproach) + 0;
-        var pfrom;
-        var gps = globalStore.getData(keys.nav.gps.position);
-        var center = globalStore.getData(keys.map.centerPosition);
+        let pfrom;
+        let gps = globalStore.getData(keys.nav.gps.position);
+        let center = globalStore.getData(keys.map.centerPosition);
         if (globalStore.getData(keys.nav.gps.valid)) {
             pfrom = new navobjects.WayPoint(gps.lon, gps.lat);
         }
@@ -393,9 +394,9 @@ RouteData.prototype._startRouting = function (mode, newWp, opt_keep_from) {
         }
         if (mode == routeobjects.RoutingMode.ROUTE) {
             if (!newWp || !newWp.routeName) return;
-            var route = this._loadRoute(newWp.routeName);
+            let route = this._loadRoute(newWp.routeName);
             if (!route) return;
-            var idx = route.getIndexFromPoint(newWp);
+            let idx = route.getIndexFromPoint(newWp);
             if (idx < 0) return;
             data.leg.currentRoute = route;
             data.route=route;
@@ -432,7 +433,7 @@ RouteData.prototype.routeOff=function(){
  * @param opt_failCallback
  */
 RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_callbackData){
-    var self=this;
+    let self=this;
     return this._remoteRouteOperation("listroutes",{
         okcallback:function(data,param){
             if ((data.status && data.status!='OK') || (!data.items)) {
@@ -441,10 +442,10 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
                     return;
                 }
             }
-            var items = [];
-            var i;
+            let items = [];
+            let i;
             for (i = 0; i < data.items.length; i++) {
-                var ri = new routeobjects.RouteInfo();
+                let ri = new routeobjects.RouteInfo();
                 assign(ri, data.items[i]);
                 ri.server = true;
                 ri.time=ri.time*1e3; //we receive TS in s
@@ -468,10 +469,10 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
  * returns a list of RouteInfo
  */
 RouteData.prototype.listRoutesLocal=function(){
-    var rt=[];
-    var i=0;
-    var key,rtinfo,route;
-    var routeprfx=globalStore.getData(keys.properties.routeName)+".";
+    let rt=[];
+    let i=0;
+    let key,rtinfo,route;
+    let routeprfx=globalStore.getData(keys.properties.routeName)+".";
     for (i=0;i<localStorage.length;i++){
         key=localStorage.key(i);
         if (key.substr(0,routeprfx.length)==routeprfx){
@@ -497,7 +498,7 @@ RouteData.prototype.listRoutesLocal=function(){
  * @param opt_errorcallback
  */
 RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,opt_localonly){
-    var rt=this._loadRoute(name,true);
+    let rt=this._loadRoute(name,true);
     if ((! rt || rt.server) && ! this.connectMode && ! opt_localonly){
         if (opt_errorcallback){
             setTimeout(function(){
@@ -532,7 +533,7 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
  * @param opt_errorcallback
  */
 RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallback){
-    var route;
+    let route;
     if (localOnly || ! this.connectMode){
         route=this._loadRoute(name,true);
         if (route){
@@ -553,7 +554,7 @@ RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallb
         f_okcallback:okcallback,
         f_errorcallback:opt_errorcallback,
         okcallback: function(data,param){
-            var rt=new routeobjects.Route(param.name);
+            let rt=new routeobjects.Route(param.name);
             rt.fromJson(data);
             rt.server=true;
             if (rt.time) rt.time=rt.time*1000;
@@ -586,20 +587,20 @@ RouteData.prototype._checkNextWp=function(){
             this.isApproaching = false;
             return true;
         }
-        var boat = globalStore.getData(keys.nav.gps.position);
+        let boat = globalStore.getData(keys.nav.gps.position);
         //TODO: switch of routing?!
         if (!globalStore.getData(keys.nav.gps.valid)) return;
-        var nextWpNum = data.leg.getCurrentTargetIdx() + 1;
-        var nextWp = data.route.getPointAtIndex(nextWpNum);
-        var approach = globalStore.getData(keys.properties.routeApproach) + 0;
-        var tolerance = approach / 10; //we allow some position error...
+        let nextWpNum = data.leg.getCurrentTargetIdx() + 1;
+        let nextWp = data.route.getPointAtIndex(nextWpNum);
+        let approach = globalStore.getData(keys.properties.routeApproach) + 0;
+        let tolerance = approach / 10; //we allow some position error...
         try {
-            var dst = NavCompute.computeDistance(boat, data.leg.to);
+            let dst = NavCompute.computeDistance(boat, data.leg.to);
             //TODO: some handling for approach
             if (dst.dts <= approach) {
                 this.isApproaching = true;
                 data.leg.approach = true;
-                var nextDst = new navobjects.Distance();
+                let nextDst = new navobjects.Distance();
                 if (nextWp) {
                     nextDst = NavCompute.computeDistance(boat, nextWp);
                 }
@@ -610,7 +611,7 @@ RouteData.prototype._checkNextWp=function(){
                     return;
                 }
                 //check if the distance to own wp increases and to the nex decreases
-                var diffcurrent = dst.dts - this.lastDistanceToCurrent;
+                let diffcurrent = dst.dts - this.lastDistanceToCurrent;
                 if (diffcurrent <= tolerance) {
                     //still decreasing
                     if (diffcurrent <= 0) {
@@ -619,7 +620,7 @@ RouteData.prototype._checkNextWp=function(){
                     }
                     return;
                 }
-                var diffnext = nextDst.dts - this.lastDistanceToNext;
+                let diffnext = nextDst.dts - this.lastDistanceToNext;
                 if (nextWp && (diffnext > -tolerance)) {
                     //increases to next
                     if (diffnext > 0) {
@@ -631,13 +632,13 @@ RouteData.prototype._checkNextWp=function(){
                 //should we wait for some time???
                 if (nextWp) {
                     data.leg.to = nextWp;
-                    avnav.log("switching to next WP");
+                    base.log("switching to next WP");
                 }
                 else {
                     window.setTimeout(()=> {
                         this.routeOff();
                     },0);
-                    avnav.log("end of route reached");
+                    base.log("end of route reached");
                 }
             }
             else {
@@ -670,7 +671,7 @@ RouteData.prototype._handleLegResponse = function (serverData) {
     this.serverConnected = true;
     if (!this.connectMode) return false;
     if (!serverData.from) return false;
-    var nleg = new routeobjects.Leg();
+    let nleg = new routeobjects.Leg();
     nleg.fromJson(serverData);
     if (nleg.currentRoute) nleg.currentRoute.server=true;
     //store locally if we did not send or if the leg changed
@@ -687,7 +688,7 @@ RouteData.prototype._handleLegResponse = function (serverData) {
             data.leg = this.lastReceivedLeg.clone();
             if (data.leg.name) {
                 if (!data.leg.currentRoute) {
-                    var route = this._loadRoute(data.leg.name);
+                    let route = this._loadRoute(data.leg.name);
                     if (route) {
                         data.leg.currentRoute = route;
                     }
@@ -715,16 +716,16 @@ RouteData.prototype._handleLegResponse = function (serverData) {
  *
  */
 RouteData.prototype._remoteRouteOperation=function(operation, param) {
-    var url = "?request=routing&command=" + operation;
-    var data=undefined;
+    let url = "?request=routing&command=" + operation;
+    let data=undefined;
     if (operation == "getroute" || operation=="deleteroute") {
         url += "&name=" + encodeURIComponent(param.name);
     }
     if(operation=="setroute"){
         if (avnav.android){
-            avnav.log("android: setRoute");
-            var status=avnav.android.storeRoute(param.route.toJsonString());
-            var jstatus=JSON.parse(status);
+            base.log("android: setRoute");
+            let status=avnav.android.storeRoute(param.route.toJsonString());
+            let jstatus=JSON.parse(status);
             if (jstatus.status == "OK" && param.okcallback){
                 setTimeout(function(){
                    param.okcallback(jstatus,param);
@@ -742,7 +743,7 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
         }
         data=param.route.toJson();
     }
-    avnav.log("remoteRouteOperation, operation="+operation);
+    base.log("remoteRouteOperation, operation="+operation);
     param.operation=operation;
     let promise=undefined;
     if (operation != "setroute"){
@@ -771,9 +772,9 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
  */
 RouteData.prototype._startQuery=function() {
     this._checkNextWp();
-    var url = "?request=routing&command=getleg";
-    var timeout =globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
-    var self = this;
+    let url = "?request=routing&command=getleg";
+    let timeout =globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
+    let self = this;
     if (! this.connectMode ){
         this.lastReceivedLeg=undefined;
         this.lastReceivedRoute=undefined;
@@ -787,18 +788,18 @@ RouteData.prototype._startQuery=function() {
     else {
         Requests.getJson(url,{checkOk:false}).then(
             (data)=>{
-                var change = self._handleLegResponse(data);
-                avnav.log("leg data change=" + change);
+                let change = self._handleLegResponse(data);
+                base.log("leg data change=" + change);
                 self.timer = window.setTimeout(function () {
                     self._startQuery();
                 }, timeout);
             }
         ).catch(
             (error)=>{
-                avnav.log("query leg error");
+                base.log("query leg error");
                 self.routeErrors++;
                 if (self.routeErrors > 10) {
-                    avnav.log("lost route");
+                    base.log("lost route");
                     self.serverConnected = false;
                 }
                 self.timer = window.setTimeout(function () {
@@ -815,11 +816,11 @@ RouteData.prototype._startQuery=function() {
             name:editingRoute.getRouteName(),
             okcallback:function(data,param){
                 if (self.isEditingActiveRoute()) return;
-                var nRoute = new routeobjects.Route();
+                let nRoute = new routeobjects.Route();
                 nRoute.fromJson(data);
                 nRoute.server=true;
-                var change = nRoute.differsTo(self.lastReceivedRoute);
-                avnav.log("route data change=" + change);
+                let change = nRoute.differsTo(self.lastReceivedRoute);
+                base.log("route data change=" + change);
                 if (change) {
                     self.lastReceivedRoute = nRoute;
                     editingRoute.modify((data)=> {
@@ -852,7 +853,7 @@ RouteData.prototype._startQuery=function() {
 RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
     if (! route) return;
     if (! opt_keepTime || ! route.time) route.time = new Date().getTime();
-    var str = route.toJsonString();
+    let str = route.toJsonString();
     localStorage.setItem(globalStore.getData(keys.properties.routeName) + "." + route.name, str);
     return route;
 };
@@ -866,15 +867,15 @@ RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
  * @returns {routeobjects.Route}
  */
 RouteData.prototype._loadRoute=function(name,opt_returnUndef){
-    var rt=new routeobjects.Route(name);
+    let rt=new routeobjects.Route(name);
     try{
-        var raw=localStorage.getItem(globalStore.getData(keys.properties.routeName)+"."+name);
+        let raw=localStorage.getItem(globalStore.getData(keys.properties.routeName)+"."+name);
         if (! raw && name == this.DEFAULTROUTE){
             //fallback to load the old default route
             raw=localStorage.getItem(this.FALLBACKROUTENAME);
         }
         if (raw) {
-            avnav.log("route "+name+" successfully loaded");
+            base.log("route "+name+" successfully loaded");
             rt.fromJsonString(raw);
             if (this.readOnlyServer) rt.server=false;
             return rt;
@@ -898,18 +899,18 @@ RouteData.prototype._loadRoute=function(name,opt_returnUndef){
  */
 RouteData.prototype._sendRoute=function(route, opt_callback,opt_ignoreExisting){
     //send route to server
-    var self=this;
-    var sroute=route.clone();
+    let self=this;
+    let sroute=route.clone();
     if (sroute.time) sroute.time=sroute.time/1000;
     this._remoteRouteOperation("setroute",{
         route:route,
         self:self,
         okcallback:function(data,param){
-            avnav.log("route sent to server");
+            base.log("route sent to server");
             if (opt_callback)opt_callback(true);
         },
         errorcallback:function(status,param){
-            if (globalStore.getData(keys.properties.routingServerError)) Overlay.Toast("unable to send route to server:" + errMsg);
+            if (globalStore.getData(keys.properties.routingServerError)) Toast("unable to send route to server:" + errMsg);
             if (opt_callback) opt_callback(false);
         },
         ignoreExisting:opt_ignoreExisting
@@ -926,21 +927,21 @@ RouteData.prototype._legChangedLocally=function(leg){
     //reset approach handling
     this.lastDistanceToCurrent=-1;
     this.lastDistanceToNext=-1;
-    var raw=leg.toJsonString();
+    let raw=leg.toJsonString();
     localStorage.setItem(globalStore.getData(keys.properties.routingDataName),raw);
     if (leg.currentRoute){
         this._saveRouteLocal(leg.currentRoute,true);
     }
-    var self=this;
+    let self=this;
     if (avnav.android){
-        var rt=avnav.android.setLeg(leg.toJsonString());
+        let rt=avnav.android.setLeg(leg.toJsonString());
         if (rt){
             try{
                 rt=JSON.parse(rt);
                 if (rt.status && rt.status === "OK") return;
             }catch(e){}
         }
-        Overlay.Toast("unable to save leg: "+((rt && rt.status)?rt.status:""));
+        Toast("unable to save leg: "+((rt && rt.status)?rt.status:""));
         return;
     }
     //do not allow to send until we received something
@@ -952,12 +953,12 @@ RouteData.prototype._legChangedLocally=function(leg){
         this.lastSentLeg=leg;
         Requests.postJson("?request=routing&command=setleg",legJson).then(
             (data)=>{
-                avnav.log("new leg sent to server");
+                base.log("new leg sent to server");
             }
         ).catch(
             (error)=>{
                 self.lastSentLeg=undefined;
-                if (globalStore.getData(keys.properties.routingServerError)) Overlay.Toast("unable to send leg to server:" +errMsg);
+                if (globalStore.getData(keys.properties.routingServerError)) Toast("unable to send leg to server:" +errMsg);
             }
         );
     }
@@ -969,7 +970,7 @@ RouteData.prototype._legChangedLocally=function(leg){
  * @private
  */
 RouteData.prototype.dataChanged=function() {
-    var oldcon=this.connectMode;
+    let oldcon=this.connectMode;
     this.connectMode=globalStore.getData(keys.properties.connectedMode);
     this.readOnlyServer=globalStore.getData(keys.properties.readOnlyServer);
     if (oldcon != this.connectMode && this.connectMode){

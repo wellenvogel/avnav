@@ -1,5 +1,6 @@
 import Helper from './helper.js';
 import {KeyHelper} from './keys.jsx';
+import shallowCompare from './shallowcompare';
 /**
  * Created by andreas on 20.11.16.
  * a simple interface to register for value updates
@@ -10,7 +11,6 @@ let UpdateCallback=function(){
 
 };
 
-let shallowCompare=require('./shallowcompare');
 /**
  * @param {object} StoreApi
  */
@@ -18,17 +18,6 @@ UpdateCallback.prototype.dataChanged=function(StoreApi){
     throw new Error("dataChanged not implemented");
 };
 
-/** @interface */
-let DataProvider=function(){
-
-};
-/**
- *
- * @param {string} key
- */
-DataProvider.prototype.getData=function(key){
-    throw new Error("getData not implemented");
-};
 
  /**
  * a callback description
@@ -75,14 +64,6 @@ let StoreApi=function(){
      * @type {CallbackDescriptor[]}
      */
     this.callbacks=[];
-    /**
-     * registered data provider
-     * they will be called if no data is found internally
-     * @private
-     * @type {{}}
-     */
-
-    this.dataProvider=[];
 };
 /**
  * find a callback in the list of registered callbacks
@@ -181,11 +162,6 @@ StoreApi.prototype.getData=function(key,opt_default){
         rt=this.getDataLocal(key,opt_default);
     }
     if (rt !== undefined) return rt;
-    for (let i in this.dataProvider){
-        if (this.dataProvider[i].getData === undefined) continue;
-        rt=this.dataProvider[i].getData(key);
-        if (rt !== undefined) return rt;
-    }
     return opt_default;
 };
 /**
@@ -220,12 +196,7 @@ StoreApi.prototype.getMultiple=function(keys){
     });
     return rt;
 };
-StoreApi.prototype.reset=function(){
-    if (this.resetLocal){
-        this.resetLocal();
-    }
-    this.callbacks=[];
-};
+
 
 /**
  * callback function for data provider
@@ -237,31 +208,6 @@ StoreApi.prototype.dataChanged=function(provider,keys){
     this.callCallbacks(keys);
 };
 
-/**
- * register a data provider
- * @param {DataProvider} provider
- */
-StoreApi.prototype.registerDataProvider=function(provider){
-    for (let i in this.dataProvider){
-        if (this.dataProvider[i] === provider) return;
-    }
-    this.dataProvider.push(provider);
-    let self=this;
-    if (provider.register){
-        provider.register(this)
-    }
-};
-StoreApi.prototype.deregisterDataProvider=function(provider){
-    if (provider.deregister){
-        provider.deregister(this)
-    }
-    for (let i in this.dataProvider){
-        if (this.dataProvider[i] === provider)  {
-            this.dataProvider.splice(i,1);
-            return;
-        }
-    }
-};
 
 
 module.exports=StoreApi;

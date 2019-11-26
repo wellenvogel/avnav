@@ -13,11 +13,11 @@
 const formatLonLatsDecimal=function(coordinate,axis){
     coordinate = (coordinate+540)%360 - 180; // normalize for sphere being round
 
-    var abscoordinate = Math.abs(coordinate);
-    var coordinatedegrees = Math.floor(abscoordinate);
+    let abscoordinate = Math.abs(coordinate);
+    let coordinatedegrees = Math.floor(abscoordinate);
 
-    var coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
-    var numdecimal=2;
+    let coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
+    let numdecimal=2;
     //correctly handle the toFixed(x) - will do math rounding
     if (coordinateminutes.toFixed(numdecimal) == 60){
         coordinatedegrees+=1;
@@ -29,7 +29,7 @@ const formatLonLatsDecimal=function(coordinate,axis){
     if (coordinatedegrees < 100 && axis == 'lon'){
         coordinatedegrees = "0" + coordinatedegrees;
     }
-    var str = coordinatedegrees + "\u00B0";
+    let str = coordinatedegrees + "\u00B0";
 
     if( coordinateminutes < 10 ) {
         str +="0";
@@ -52,8 +52,8 @@ const formatLonLats=function(lonlat){
     if (! lonlat || isNaN(lonlat.lat) || isNaN(lonlat.lon)){
         return "-----";
     }
-    var ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
-    var ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
+    let ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
+    let ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
     return ns + ', ' + ew;
 };
 
@@ -67,7 +67,7 @@ const formatLonLats=function(lonlat){
  */
 
 const formatDecimal=function(number,fix,fract,addSpace){
-    var sign="";
+    let sign="";
     number=parseFloat(number);
     if (isNaN(number)){
         rt="";
@@ -82,8 +82,8 @@ const formatDecimal=function(number,fix,fract,addSpace){
         number=-number;
         sign="-";
     }
-    var rt=number.toFixed(fract);
-    var v=10;
+    let rt=number.toFixed(fract);
+    let v=10;
     fix-=1;
     while (fix > 0){
         if (number < v){
@@ -137,7 +137,7 @@ const formatDirection=function(dir){
  */
 const formatTime=function(curDate){
     if (! curDate) return "--:--:--";
-    var datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
+    let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
     return datestr;
@@ -150,7 +150,7 @@ const formatTime=function(curDate){
  */
 const formatClock=function(curDate){
     if (! curDate) return "--:--";
-    var datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
+    let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0");
     return datestr;
 };
@@ -160,7 +160,7 @@ const formatClock=function(curDate){
  * @returns {string}
  */
 const formatDateTime=function(curDate){
-    var datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
+    let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
         this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
         this.formatDecimal(curDate.getDate(),2,0)+" "+
         this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+

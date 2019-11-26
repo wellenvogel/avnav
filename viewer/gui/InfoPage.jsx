@@ -12,13 +12,11 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Toast from '../util/overlay.js';
 import Requests from '../util/requests.js';
 
 class InfoPage extends React.Component{
     constructor(props){
         super(props);
-        let self=this;
         this.buttons=[
             {
                 name: 'Cancel',

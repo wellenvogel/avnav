@@ -31,7 +31,7 @@ class EditRouteWidget extends React.Component{
                 </div>
             )
         }
-        var rname;
+        let rname=undefined;
         if (this.props.mode === "small"){
             rname=route.name;
         }

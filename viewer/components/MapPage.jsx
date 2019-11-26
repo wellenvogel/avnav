@@ -15,7 +15,7 @@ import PropTypes from 'prop-types';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Toast from '../util/overlay.js';
+import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
@@ -69,7 +69,7 @@ class MapPage extends React.Component{
         this.subscribeToken=MapHolder.subscribe(this.mapEvent);
         MapHolder.loadMap(this.refs.map).
             then((result)=>{}).
-            catch((error)=>{Toast.Toast(error)});
+            catch((error)=>{Toast(error)});
     }
     render(){
         let self=this;

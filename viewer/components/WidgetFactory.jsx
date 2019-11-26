@@ -1,7 +1,7 @@
 import React from "react";
 import assign from "object-assign";
 import widgetList from './WidgetList';
-import ItemUpdater from './ItemUpdater.jsx';
+import Dynamic from '../hoc/Dynamic.jsx';
 import DirectWidget from './DirectWidget.jsx';
 import globalStore from '../util/globalstore.jsx';
 import Formatter from '../util/formatter';
@@ -25,7 +25,7 @@ class WidgetFactory{
      * @returns {*}
      */
     findWidget(widget){
-        var i=this.findWidgetIndex(widget);
+        let i=this.findWidgetIndex(widget);
         if (i < 0) return undefined;
         return this.widgetDefinitions[i];
     }
@@ -90,7 +90,7 @@ class WidgetFactory{
                     delete wprops.handleVisible;
                 }
                 if (storeKeys) {
-                    RenderWidget = ItemUpdater(RenderWidget, globalStore, storeKeys);
+                    RenderWidget = Dynamic(RenderWidget, {storeKeys:storeKeys});
                 }
                 return <RenderWidget {...wprops}/>
             }

@@ -2,7 +2,6 @@
  * Created by andreas on 04.05.14.
  */
 
-import Store from '../util/store';
 import TrackData from './trackdata';
 import GpsData from './gpsdata';
 import RouteData from './routedata';
@@ -105,15 +104,15 @@ NavData.prototype.computeValues=function() {
         anchorDistance: 0,
         anchorDirection: 0
     };
-    var gps = globalStore.getMultiple(GpsData.getStoreKeys());
+    let gps = globalStore.getMultiple(GpsData.getStoreKeys());
     //copy the marker to data to make it available extern
     data.markerWp = activeRoute.getCurrentTarget();
     data.routeNextWp = activeRoute.getNextWaypoint();
     let maplatlon=globalStore.getData(keys.map.centerPosition,new navobjects.Point(0,0))
-    var rstart = activeRoute.getCurrentFrom();
+    let rstart = activeRoute.getCurrentFrom();
     if (gps.valid) {
         if (activeRoute.hasActiveTarget()) {
-            var legData = NavCompute.computeLegInfo(data.markerWp, gps, rstart);
+            let legData = NavCompute.computeLegInfo(data.markerWp, gps, rstart);
             assign(data, legData);
         }
         else {
@@ -122,7 +121,7 @@ NavData.prototype.computeValues=function() {
             data.markerEta = undefined;
             data.markerXte = undefined;
         }
-        var centerdst = NavCompute.computeDistance(gps, maplatlon);
+        let centerdst = NavCompute.computeDistance(gps, maplatlon);
         data.centerCourse = centerdst.course;
         data.centerDistance = centerdst.dtsnm;
         if (activeRoute.anchorWatch() !== undefined) {
@@ -157,7 +156,7 @@ NavData.prototype.computeValues=function() {
 
     //distance between marker and center
     if (data.markerWp) {
-        var mcdst = NavCompute.computeDistance(data.markerWp, maplatlon);
+        let mcdst = NavCompute.computeDistance(data.markerWp, maplatlon);
         data.centerMarkerCourse = mcdst.course;
         data.centerMarkerDistance = mcdst.dtsnm;
     }
@@ -166,7 +165,7 @@ NavData.prototype.computeValues=function() {
         data.centerMarkerDistance = undefined;
     }
     //route data
-    var curRoute = activeRoute.hasActiveTarget() ? activeRoute.getRoute() : undefined;
+    let curRoute = activeRoute.hasActiveTarget() ? activeRoute.getRoute() : undefined;
     data.isApproaching = activeRoute.isApproaching();
     if (curRoute) {
         data.routeName = curRoute.name;
@@ -175,10 +174,10 @@ NavData.prototype.computeValues=function() {
         let currentIndex = curRoute.getIndexFromPoint(data.markerWp);
         if (currentIndex < 0) currentIndex = 0;
         data.routeRemain = curRoute.computeLength(currentIndex) + data.markerDistance;
-        var routetime = gps.rtime ? gps.rtime.getTime() : 0;
+        let routetime = gps.rtime ? gps.rtime.getTime() : 0;
         if (data.markerVmg && data.markerVmg > 0) {
             routetime += data.routeRemain / data.markerVmg * 3600 * 1000; //time in ms
-            var routeDate = new Date(Math.round(routetime));
+            let routeDate = new Date(Math.round(routetime));
             data.routeEta = routeDate;
         }
         else {
@@ -187,7 +186,7 @@ NavData.prototype.computeValues=function() {
         data.routeNextCourse = undefined;
         if (gps.valid) {
             if (data.routeNextWp) {
-                var dst = NavCompute.computeDistance(gps, data.routeNextWp);
+                let dst = NavCompute.computeDistance(gps, data.routeNextWp);
                 data.routeNextCourse = dst.course;
             }
         }

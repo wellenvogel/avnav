@@ -12,7 +12,7 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Toast from '../util/overlay.js';
+import Toast from '../components/Toast.jsx';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Helper from '../util/helper.js';
@@ -130,7 +130,7 @@ const onHeadingClick=()=> {
             //check if a route with this name already exists
             RouteHandler.fetchRoute(name, false,
                 (data)=> {
-                    Toast.Toast("route with name " + name + " already exists");
+                    Toast("route with name " + name + " already exists");
                 },
                 (er)=> {
                     let newRoute = editor.getRoute().clone();
@@ -155,11 +155,11 @@ const startWaypointDialog=(item,index)=>{
     const wpChanged=(newWp,close)=>{
         if (! checkWritable()) return;
         let changedWp=WayPointDialog.updateWaypoint(item,newWp,function(err){
-            Toast.Toast(Helper.escapeHtml(err));
+            Toast(Helper.escapeHtml(err));
         });
         if (changedWp) {
             if (! editor.checkChangePossible(changedWp,index)){
-                Toast.Toast("unable to set waypoint, already exists");
+                Toast("unable to set waypoint, already exists");
                 return false;
             }
             editor.changeSelectedWaypoint(changedWp,index);
@@ -241,7 +241,7 @@ class RoutePage extends React.Component{
                                     history.pop();
                                 },
                                 function(err){
-                                    Toast.Toast("unable to load route");
+                                    Toast("unable to load route");
                                 }
                             );
                         }
@@ -279,7 +279,7 @@ class RoutePage extends React.Component{
             //check if a route with this name already exists
             RouteHandler.fetchRoute(currentName,!current.server,
                 function(data){
-                    Toast.Toast("route with name "+currentName+" already exists");
+                    Toast("route with name "+currentName+" already exists");
                 },
                 function(er){
                     if(storeRoute(current.clone(),startNav)) history.pop();

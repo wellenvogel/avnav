@@ -3,10 +3,11 @@
  * 
  */
 
-var React=require('react');
-var reactCreateClass=require('create-react-class');
-var PropTypes=require('prop-types');
-var navobjects=require('../nav/navobjects');
+import React from 'react';
+import reactCreateClass from 'create-react-class';
+import PropTypes from 'prop-types';
+import navobjects from '../nav/navobjects';
+import assign from 'object-assign';
 
 /**
  * a waypoint dialog
@@ -14,7 +15,7 @@ var navobjects=require('../nav/navobjects');
  *           okCallback: function to be called ok ok with the new waypoint as parameter, return true to close
  *           hideCallback: function to be called when the dialog is hidden (but not on unmount)
  */
-var WaypointDialog = reactCreateClass({
+let WaypointDialog = reactCreateClass({
     propTypes: {
         waypoint: PropTypes.instanceOf(navobjects.WayPoint).isRequired,
         okCallback: PropTypes.func.isRequired,
@@ -30,8 +31,8 @@ var WaypointDialog = reactCreateClass({
         };
     },
     valueChanged: function (event) {
-        var name = event.target.name;
-        var nState = {};
+        let name = event.target.name;
+        let nState = {};
         nState[name] = event.target.value;
         this.setState(nState);
     },
@@ -40,16 +41,16 @@ var WaypointDialog = reactCreateClass({
         if (this.props.closeCallback) this.props.closeCallback();
     },
     okFunction: function (event) {
-        var data = {
+        let data = {
             name: this.state.name,
             lat: Geo.parseDMS(this.state.lat),
             lon: Geo.parseDMS(this.state.lon.replace(/o/i, 'e'))
         };
         if (data.lat < -180 || data.lat > 180) delete data.lat;
         if (data.lon < -90 || data.lon > 90) delete data.lon;
-        var wp = this.props.waypoint.clone();
-        avnav.assign(wp,data);
-        var rt = this.props.okCallback(wp,this.closeFunction);
+        let wp = this.props.waypoint.clone();
+        assign(wp,data);
+        let rt = this.props.okCallback(wp,this.closeFunction);
         if (rt ) {
             this.closeFunction();
         }
@@ -59,7 +60,7 @@ var WaypointDialog = reactCreateClass({
     },
     render: function () {
         if (!this.state.show) return null;
-        var html = (
+        let html = (
             <div>
                 <h3>Edit Waypoint</h3>
                 <div>
@@ -82,11 +83,11 @@ var WaypointDialog = reactCreateClass({
     },
     statics: {
         updateWaypoint: function (oldWp, newWp,errorFunction) {
-            var wp = oldWp.clone();
-            var data = newWp;
+            let wp = oldWp.clone();
+            let data = newWp;
             if (!data) return;
             wp.name = data.name;
-            var doChange = true;
+            let doChange = true;
             try {
                 wp.lon = data.lon;
                 if (isNaN(wp.lon) || wp.lon === undefined) {
@@ -102,7 +103,7 @@ var WaypointDialog = reactCreateClass({
                 if (errorFunction)errorFunction("invalid coordinate, cannot convert");
                 doChange = false;
             }
-            var ok = false;
+            let ok = false;
             if (wp.routeName && wp.routeName != oldWp.routeName) {
                 if (errorFunction)errorFunction("internal error, route name changed");
                 doChange = false;

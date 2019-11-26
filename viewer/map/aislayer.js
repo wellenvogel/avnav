@@ -5,6 +5,7 @@
 import navobjects from '../nav/navobjects';
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
+import base from '../base.js';
 
 
 /**
@@ -116,7 +117,7 @@ AisLayer.prototype.createAllIcons=function(){
  * @param {ol.Coordinate} pixel the css pixel from the event
  */
 AisLayer.prototype.findTarget=function(pixel){
-    avnav.log("findAisTarget "+pixel[0]+","+pixel[1]);
+    base.log("findAisTarget "+pixel[0]+","+pixel[1]);
     let tolerance=globalStore.getData(keys.properties.aisClickTolerance)/2;
     let idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
     if (idx >=0) return this.pixel[idx].ais;
@@ -145,7 +146,7 @@ AisLayer.prototype.setStyles=function(){
 /**
  *
  * @param {ol.Coordinate} center
- * @param {avnav.map.Drawing} drawing
+ * @param {Drawing} drawing
  */
 AisLayer.prototype.onPostCompose=function(center,drawing){
     if (! this.visible) return;

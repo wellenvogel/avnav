@@ -12,7 +12,6 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Toast from '../util/overlay.js';
 import AisHandler from '../nav/aisdata.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import MapHolder from '../map/mapholder.js';

@@ -11,6 +11,7 @@ import React from 'react';
 import Promise from 'promise';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
+import base from '../base.js';
  //"active input" to prevent resizes
 class OverlayDialog extends React.Component {
     constructor(props) {
@@ -54,7 +55,7 @@ class OverlayDialog extends React.Component {
         if (props.parent) {
             try {
                 //expected to be a dom element
-                var containerRect = props.parent.getBoundingClientRect();
+                let containerRect = props.parent.getBoundingClientRect();
                 assign(this.refs.container.style, {
                     position: "fixed",
                     top: containerRect.top + "px",
@@ -64,7 +65,7 @@ class OverlayDialog extends React.Component {
                 });
                 assingToViewport = false;
             } catch (e) {
-                avnav.log("invalid parent for dialog: " + e);
+                base.log("invalid parent for dialog: " + e);
             }
         }
         if (assingToViewport) {

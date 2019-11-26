@@ -7,7 +7,8 @@ import NavCompute from './navcompute' ;
 import Formatter from '../util/formatter' ;
 import assign from 'object-assign' ;
 import helper from '../util/helper.js';
-var routeobjects={};
+import base from '../base.js';
+let routeobjects={};
 
 
 routeobjects.RoutingMode={
@@ -65,7 +66,7 @@ routeobjects.Leg=function(from, to, active){
 };
 
 routeobjects.Leg.prototype.clone=function(){
-    var rt=new routeobjects.Leg(this.from?this.from.clone():undefined,this.to?this.to.clone():undefined,this.active);
+    let rt=new routeobjects.Leg(this.from?this.from.clone():undefined,this.to?this.to.clone():undefined,this.active);
     rt.approach=false;
     rt.approachDistance=this.approachDistance;
     rt.currentRoute=this.currentRoute?this.currentRoute.clone():undefined;
@@ -81,7 +82,7 @@ routeobjects.Leg.prototype.toJsonString=function(){
 };
 
 routeobjects.Leg.prototype.toJson=function(){
-    var rt={
+    let rt={
         from: this.from,
         to: this.to,
         name: this.getRouteName(),
@@ -103,7 +104,7 @@ routeobjects.Leg.prototype.toJson=function(){
  * @returns {routeobjects.Leg}
  */
 routeobjects.Leg.prototype.fromJsonString=function(jsonString) {
-    var raw = JSON.parse(jsonString);
+    let raw = JSON.parse(jsonString);
     return this.fromJson(raw);
 };
 /**
@@ -124,21 +125,21 @@ routeobjects.Leg.prototype.fromJson=function(raw){
     if (this.currentRoute){
         this.to.routeName=this.currentRoute.name;
         if (raw.currentTarget !== undefined ){
-            var rp=this.currentRoute.getPointAtIndex(raw.currentTarget);
+            let rp=this.currentRoute.getPointAtIndex(raw.currentTarget);
             if (rp){
                 this.to=rp;
             }
             else{
                 //this is some error - set the to to be outside of the route...
-                avnav.log("invalid leg with currentTarget, to outside route, deleting route");
+                base.log("invalid leg with currentTarget, to outside route, deleting route");
                 this.currentRoute=undefined;
                 this.to.routeName=undefined;
             }
         }
         else{
-            var idx=this.currentRoute.getIndexFromPoint(this.to);
+            let idx=this.currentRoute.getIndexFromPoint(this.to);
             if (idx < 0){
-                avnav.log("invalid leg, to outside route, deleting route");
+                base.log("invalid leg, to outside route, deleting route");
                 this.currentRoute=undefined;
                 this.to.routeName=undefined;
             }
@@ -165,12 +166,12 @@ routeobjects.Leg.prototype.differsTo=function(leg2){
     if (leg2.anchorDistance && ! this.anchorDistance) return true;
     if (!leg2.anchorDistance && this.anchorDistance) return true;
     if (this.anchorDistance && leg2.anchorDistance && this.anchorDistance != leg2.anchorDistance) return true;
-    var leg1=this;
-    var changed = false;
-    var i;
-    var wps = ['from', 'to'];
+    let leg1=this;
+    let changed = false;
+    let i;
+    let wps = ['from', 'to'];
     for (i in wps) {
-        var wp=wps[i];
+        let wp=wps[i];
         if (leg1[wp]) {
             if (!leg2[wp]) changed = true;
             else {
@@ -286,7 +287,7 @@ routeobjects.Route=function(name, opt_points){
  * @returns {*}
  */
 routeobjects.Route.prototype.fromJsonString=function(jsonString) {
-    var parsed = JSON.parse(jsonString);
+    let parsed = JSON.parse(jsonString);
     return this.fromJson(parsed);
 };
 /**
@@ -298,8 +299,8 @@ routeobjects.Route.prototype.fromJson=function(parsed) {
     this.time=parsed.time||0;
     this.server=parsed.server||false;
     this.points=[];
-    var i;
-    var wp;
+    let i;
+    let wp;
     if (parsed.points){
         for (i=0;i<parsed.points.length;i++){
             wp=navobjects.WayPoint.fromPlain(parsed.points[i]);
@@ -538,7 +539,7 @@ routeobjects.Route.prototype.findFreeName=function(){
         if (! this.checkName(name)) return name;
         i++;
     }
-    avnav.log("no free name found for wp");
+    base.log("no free name found for wp");
     return "no free name found";
 };
 routeobjects.Route.prototype.addPoint=function(idx, point){
@@ -546,7 +547,7 @@ routeobjects.Route.prototype.addPoint=function(idx, point){
     let rp=point.clone();
     if (rp.name){
         if (this.checkName(rp.name)){
-            avnav.log("name "+rp.name+" already exists in route, create a new one");
+            base.log("name "+rp.name+" already exists in route, create a new one");
             rp.name=undefined;
         }
     }
@@ -656,7 +657,7 @@ routeobjects.RoutePoint=function(waypoint){
     this.distance=undefined;
     this.selected=false;
 };
-avnav.inherits(routeobjects.RoutePoint,navobjects.WayPoint);
+base.inherits(routeobjects.RoutePoint,navobjects.WayPoint);
 routeobjects.formatRoutePoint=function(routePoint){
     let rt=assign({},routePoint);
     rt.distance=Formatter.formatDistance(routePoint.distance).replace(/^/g,"");

@@ -12,7 +12,7 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Toast from '../util/overlay.js';
+import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
@@ -20,6 +20,7 @@ import routeobjects from '../nav/routeobjects.js';
 import Formatter from '../util/formatter.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
+import base from '../base.js';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -67,7 +68,7 @@ const fillDataServer=(type)=>{
         addItems(list,true);
     }).catch((error)=>{
         addItems([],true);
-        Toast.Toast("unable to load list of "+type+" from server: "+error);
+        Toast("unable to load list of "+type+" from server: "+error);
     });
 };
 
@@ -115,7 +116,7 @@ const fillDataRoutes = ()=> {
             addItems(routingInfos);
         },
         (err)=> {
-            Toast.Toast("unable to load routes from server: " + err);
+            Toast("unable to load routes from server: " + err);
         }
     );
 };
@@ -194,7 +195,7 @@ const sendDelete=(info)=>{
         }
         fillData();
     }).catch((error)=>{
-        Toast.Toast("unable to delete "+info.name+": "+error);
+        Toast("unable to delete "+info.name+": "+error);
         fillData();
     });
 };
@@ -207,13 +208,13 @@ const deleteItem=(info)=>{
         }
         else{
             if (RouteHandler.isActiveRoute(info.name)){
-                Toast.Toast("unable to delete active route");
+                Toast("unable to delete active route");
                 return false;
             }
             RouteHandler.deleteRoute(info.name,
                 (data)=>{fillData();},
                 (rinfo)=>{
-                    Toast.Toast("unable to delete route: "+rinfo);
+                    Toast("unable to delete route: "+rinfo);
                     fillData();
                 },
                 !info.server //if we think this is a local route - just delete it local only
@@ -221,7 +222,7 @@ const deleteItem=(info)=>{
         }
     });
     ok.catch(function(err){
-        avnav.log("delete canceled");
+        base.log("delete canceled");
     });
 };
 
@@ -254,7 +255,7 @@ const download=(info)=>{
                         avnav.android.downloadRoute(data.toJsonString());
                     },
                     (err)=> {
-                        Toast.Toast("unable to get route " + info.name);
+                        Toast("unable to get route " + info.name);
                     });
             }
             return;
@@ -269,7 +270,7 @@ const download=(info)=>{
                                 startServerDownload(info.type,info.name, undefined, data.toJsonString());
                             },
                             (err)=> {
-                                Toast.Toast("unable to get route " + info.name);
+                                Toast("unable to get route " + info.name);
                             });
                     }
                 }
@@ -303,7 +304,7 @@ const uploadChart=(fileObject)=>{
     if (fileObject.files && fileObject.files.length > 0) {
         let file = fileObject.files[0];
         if (! Helper.endsWith(file.name,".gemf")){
-            Toast.Toast("upload only for .gemf files");
+            Toast("upload only for .gemf files");
             resetUpload();
             return;
         }
@@ -311,7 +312,7 @@ const uploadChart=(fileObject)=>{
         for (let i=0;i<current.length;i++){
             let fname=current[i].name+".gemf";
             if (current[i].url && Helper.startsWith(current[i].url,"/gemf") && fname==file.name){
-                Toast.Toast("file "+file.name+" already exists");
+                Toast("file "+file.name+" already exists");
                 resetUpload();
                 return;
             }
@@ -325,7 +326,7 @@ const UploadIndicator = Dynamic((info)=> {
     let props=info.uploadInfo;
     if (! props || !props.xhdr) return null;
     let percentComplete = props.total ? 100 * props.loaded / props.total : 0;
-    var doneStyle = {
+    let doneStyle = {
         width: percentComplete + "%"
     };
     return (
@@ -357,7 +358,7 @@ const directUpload=(type,file)=>{
         },
         errorhandler: function (param, err) {
             globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
-            Toast.Toast("upload failed: " + err.statusText);
+            Toast("upload failed: " + err.statusText);
         },
         progresshandler: function (param, ev) {
             if (ev.lengthComputable) {
@@ -383,25 +384,25 @@ const uploadRoute=(fileObject)=> {
         let file = fileObject.files[0];
         resetUpload();
         if (!Helper.endsWith(file.name, ".gpx")) {
-            Toast.Toast("only .gpx routes");
+            Toast("only .gpx routes");
             return false;
         }
-        var rname = file.name.replace(".gpx", "");
+        let rname = file.name.replace(".gpx", "");
         if (file.size) {
             if (file.size > MAXUPLOADSIZE) {
-                Toast.Toast("file is to big, max allowed: " + MAXUPLOADSIZE);
+                Toast("file is to big, max allowed: " + MAXUPLOADSIZE);
                 return;
             }
         }
         if (!window.FileReader) {
-            Toast.Toast("your browser does not support FileReader, cannot upload");
+            Toast("your browser does not support FileReader, cannot upload");
             return;
         }
-        var reader = new FileReader();
+        let reader = new FileReader();
         reader.onloadend = ()=> {
-            var xml = reader.result;
+            let xml = reader.result;
             if (!xml) {
-                Toast.Toast("unable to load file " + file.name);
+                Toast("unable to load file " + file.name);
                 return;
             }
             let route = undefined;
@@ -409,15 +410,15 @@ const uploadRoute=(fileObject)=> {
                 route = new routeobjects.Route("");
                 route.fromXml(xml);
             } catch (e) {
-                Toast.Toast("unable to parse route from " + file.name + ", error: " + e);
+                Toast("unable to parse route from " + file.name + ", error: " + e);
                 return;
             }
             if (!route.name || route.name == "") {
-                Toast.Toast("route from " + file.name + " has no route name");
+                Toast("route from " + file.name + " has no route name");
                 return;
             }
             if (entryExists(route.name)) {
-                Toast.Toast("route with name " + route.name + " in file " + rname + " already exists");
+                Toast("route with name " + route.name + " in file " + rname + " already exists");
                 return false;
             }
             if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;

@@ -6,7 +6,6 @@ import routeobjects from './routeobjects';
 import navobjects from './navobjects';
 import Formatter from '../util/formatter';
 import NavCompute from './navcompute';
-import Overlay from '../util/overlay';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import assign from 'object-assign';

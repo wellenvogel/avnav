@@ -14,9 +14,9 @@ class CenterDisplayWidget extends React.Component{
         return Helper.compareProperties(this.props,nextProps,CenterDisplayWidget.storeKeys);
     }
     render(){
-        var classes="avn_widget avn_centerWidget "+this.props.classes||""+ " "+this.props.className||"";
-        var small = (this.props.mode == "small");
-        var tableClass="";
+        let classes="avn_widget avn_centerWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let small = (this.props.mode == "small");
+        let tableClass="";
         if (small) tableClass="avn_widgetDataFirst";
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>

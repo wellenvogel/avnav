@@ -14,10 +14,10 @@ class TimeStatusWidget extends React.Component{
         return Helper.compareProperties(this.props,nextProps,TimeStatusWidget.storeKeys);
     }
     render(){
-        var self=this;
-        var classes="avn_widget avn_timeStatusWidget avn_centeredWidget "+this.props.classes||""+ " "+this.props.className||"";
-        var imgSrc=this.props.gpsValid? PropertyHandler.getProperties().statusOkImage:PropertyHandler.getProperties().statusErrorImage;
-        var time="----";
+        let self=this;
+        let classes="avn_widget avn_timeStatusWidget avn_centeredWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let imgSrc=this.props.gpsValid? PropertyHandler.getProperties().statusOkImage:PropertyHandler.getProperties().statusErrorImage;
+        let time="----";
         if (this.props.time !== undefined){
             time=Formatter.formatTime(this.props.time);
         }

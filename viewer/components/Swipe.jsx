@@ -42,7 +42,7 @@ class ReactSwipe extends Component {
     _handleSwipeStart(e) {
         const { pageX, pageY } = e.touches[0];
         this.touchStart = { pageX, pageY };
-        var rectangle=e.target.getBoundingClientRect();
+        let rectangle=e.target.getBoundingClientRect();
         this.touchStartXY={x:pageX-rectangle.left,y:pageY-rectangle.top};
         this.touchPosition={deltaX:0,deltaY:0};
         this.props.onSwipeStart(this.touchStartXY);

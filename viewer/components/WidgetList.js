@@ -1,7 +1,6 @@
 /**
  * Created by andreas on 20.11.16.
  */
-let Widget=require('./Widget.jsx');
 let EtaWidget=require('./EtaWidget.jsx');
 let TimeStatusWidget=require('./TimeStatusWidget.jsx');
 let AisTargetWidget=require('./AisTargetWidget.jsx');

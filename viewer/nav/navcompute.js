@@ -1,8 +1,8 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-var navobjects=require('./navobjects');
-var NavCompute={
+import navobjects from './navobjects';
+let NavCompute={
 };
 
 
@@ -13,12 +13,12 @@ var NavCompute={
  * @returns {navobjects.Distance}
  */
 NavCompute.computeDistance=function(src,dst){
-    var srcll=src;
-    var dstll=dst;
-    var rt=new navobjects.Distance();
+    let srcll=src;
+    let dstll=dst;
+    let rt=new navobjects.Distance();
     //use the movable type stuff for computations
-    var llsrc=new LatLon(srcll.lat,srcll.lon);
-    var lldst=new LatLon(dstll.lat,dstll.lon);
+    let llsrc=new LatLon(srcll.lat,srcll.lon);
+    let lldst=new LatLon(dstll.lat,dstll.lon);
     rt.dts=llsrc.distanceTo(lldst,5)*1000;
     rt.dtsnm=rt.dts/1852; //NM
     rt.course=llsrc.bearingTo(lldst);
@@ -27,10 +27,10 @@ NavCompute.computeDistance=function(src,dst){
 
 NavCompute.computeXte=function(start,destination,current){
     //use the movable type stuff for computations
-    var llsrc=new LatLon(start.lat,start.lon);
-    var lldst=new LatLon(destination.lat,destination.lon);
-    var llcur=new LatLon(current.lat,current.lon);
-    var xte=llsrc.xte(lldst,llcur)*1000/1852;
+    let llsrc=new LatLon(start.lat,start.lon);
+    let lldst=new LatLon(destination.lat,destination.lon);
+    let llcur=new LatLon(current.lat,current.lon);
+    let xte=llsrc.xte(lldst,llcur)*1000/1852;
     return xte;
 };
 
@@ -41,7 +41,7 @@ NavCompute.computeXte=function(start,destination,current){
  * @param otherCourse
  */
 NavCompute.checkInverseCourse=function(myCourse,otherCourse){
-    var inversCourse=(myCourse+180) % 360;
+    let inversCourse=(myCourse+180) % 360;
     if (Math.abs(otherCourse-myCourse) < Math.abs(otherCourse-inversCourse)) return 1;
     return -1;
 };
@@ -62,25 +62,25 @@ NavCompute.checkInverseCourse=function(myCourse,otherCourse){
  * @returns {navobjects.Cpa}
  */
 NavCompute.computeCpa=function(src,dst,properties){
-    var NM=properties.NM;
-    var msFactor=NM/3600.0;
-    var rt = new navobjects.Cpa();
-    var llsrc = new LatLon(src.lat, src.lon);
-    var lldst = new LatLon(dst.lat, dst.lon);
-    var curdistance=llsrc.distanceTo(lldst,5)*1000; //m
+    let NM=properties.NM;
+    let msFactor=NM/3600.0;
+    let rt = new navobjects.Cpa();
+    let llsrc = new LatLon(src.lat, src.lon);
+    let lldst = new LatLon(dst.lat, dst.lon);
+    let curdistance=llsrc.distanceTo(lldst,5)*1000; //m
     if (curdistance < 0.1){
-        var x=curdistance;
+        let x=curdistance;
     }
     rt.curdistance=curdistance;
-    var courseToTarget=llsrc.bearingTo(lldst); //in deg
+    let courseToTarget=llsrc.bearingTo(lldst); //in deg
     //default to our current distance
     rt.tcpa=0;
     rt.cpa=curdistance;
     rt.cpanm=rt.cpa/NM;
-    var maxDistance=llsrc._radius*1000*Math.PI; //half earth
-    var appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed*msFactor,dst.course,dst.speed*msFactor,properties.minAISspeed*msFactor,maxDistance);
+    let maxDistance=llsrc._radius*1000*Math.PI; //half earth
+    let appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed*msFactor,dst.course,dst.speed*msFactor,properties.minAISspeed*msFactor,maxDistance);
     if (appr.dd !== undefined && appr.ds !== undefined) {
-        var xpoint = llsrc.destinationPoint(src.course, appr.dd / 1000);
+        let xpoint = llsrc.destinationPoint(src.course, appr.dd / 1000);
         rt.crosspoint = new navobjects.Point(xpoint._lon, xpoint._lat);
     }
     if (!appr.tm){
@@ -90,8 +90,8 @@ NavCompute.computeCpa=function(src,dst,properties){
         rt.front=undefined;
         return rt;
     }
-    var cpasrc = llsrc.destinationPoint(src.course, appr.dms/1000);
-    var cpadst = lldst.destinationPoint(dst.course, appr.dmd/1000);
+    let cpasrc = llsrc.destinationPoint(src.course, appr.dms/1000);
+    let cpadst = lldst.destinationPoint(dst.course, appr.dmd/1000);
     rt.src.lon=cpasrc._lon;
     rt.src.lat=cpasrc._lat;
     rt.dst.lon=cpadst._lon;
@@ -135,13 +135,13 @@ NavCompute.computeCpa=function(src,dst,properties){
  */
 NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpeed,dstCourse,dstSpeed,minAisSpeed,maxDistance){
     //courses
-    var rt={};
-    var ca=(courseToTarget-srcCourse)/180*Math.PI; //rad
-    var cb=(courseToTarget-dstCourse)/180*Math.PI;
-    var cosa=Math.cos(ca);
-    var sina=Math.sin(ca);
-    var cosb=Math.cos(cb);
-    var sinb=Math.sin(cb);
+    let rt={};
+    let ca=(courseToTarget-srcCourse)/180*Math.PI; //rad
+    let cb=(courseToTarget-dstCourse)/180*Math.PI;
+    let cosa=Math.cos(ca);
+    let sina=Math.sin(ca);
+    let cosb=Math.cos(cb);
+    let sinb=Math.sin(cb);
     if (dstSpeed > minAisSpeed && srcSpeed > minAisSpeed ){
         //compute crossing
         try {
@@ -163,7 +163,7 @@ NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpee
             }
         }
     }
-    var quot=(srcSpeed*srcSpeed+dstSpeed*dstSpeed-2*srcSpeed*dstSpeed*(cosa*cosb+sina*sinb));
+    let quot=(srcSpeed*srcSpeed+dstSpeed*dstSpeed-2*srcSpeed*dstSpeed*(cosa*cosb+sina*sinb));
     if (quot < 1e-6 && quot > -1e-6){
         rt.tm=undefined;
         return rt;
@@ -181,9 +181,9 @@ NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpee
  * @param {number} dist in m
 */
 NavCompute.computeTarget=function(src,brg,dist){
-    var llsrc = new LatLon(src.lat, src.lon);
-    var llrt=llsrc.destinationPoint(brg,dist/1000);
-    var rt=new navobjects.Point(llrt.lon(),llrt.lat());
+    let llsrc = new LatLon(src.lat, src.lon);
+    let llrt=llsrc.destinationPoint(brg,dist/1000);
+    let rt=new navobjects.Point(llrt.lon(),llrt.lat());
     return rt;
 };
 
@@ -197,7 +197,7 @@ NavCompute.computeTarget=function(src,brg,dist){
  * @returns {{markerCourse: Number, markerDistance: Number, markerVmg: Number, markerEta: Date, markerXte: Number}}
  */
 NavCompute.computeLegInfo=function(target,gps,opt_start){
-    var rt={
+    let rt={
         markerCourse:undefined,
         markerDistance: undefined,
         markerVmg: undefined,
@@ -206,20 +206,20 @@ NavCompute.computeLegInfo=function(target,gps,opt_start){
     };
     rt.markerWp=target;
     if (gps.valid) {
-        var markerdst = NavCompute.computeDistance(gps, target);
+        let markerdst = NavCompute.computeDistance(gps, target);
         rt.markerCourse = markerdst.course;
         rt.markerDistance = markerdst.dtsnm;
-        var coursediff = Math.min(Math.abs(markerdst.course - gps.course), Math.abs(markerdst.course + 360 - gps.course),
+        let coursediff = Math.min(Math.abs(markerdst.course - gps.course), Math.abs(markerdst.course + 360 - gps.course),
             Math.abs(markerdst.course - (gps.course + 360)));
         if (gps.rtime && coursediff <= 85) {
             //TODO: is this really correct for VMG?
-            var vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
+            let vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
             //vmgapp is in kn
-            var targettime = gps.rtime.getTime();
+            let targettime = gps.rtime.getTime();
             rt.markerVmg = vmgapp;
             if (vmgapp > 0) {
                 targettime += rt.markerDistance / vmgapp * 3600 * 1000; //time in ms
-                var targetDate = new Date(Math.round(targettime));
+                let targetDate = new Date(Math.round(targettime));
                 rt.markerEta = targetDate;
             }
             else {

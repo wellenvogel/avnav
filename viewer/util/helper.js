@@ -3,12 +3,12 @@
 
  */
 
-let compare=require('./shallowcompare');
+import compare from './shallowcompare';
 /**
  *
  * @constructor
  */
-var Helper=function(){};
+let Helper=function(){};
 
 
 

@@ -160,7 +160,7 @@ RouteLayer.prototype.showEditingRoute=function(on){
 /**
  *
  * @param {ol.Coordinate} center
- * @param {avnav.map.Drawing} drawing
+ * @param {Drawing} drawing
  */
 RouteLayer.prototype.onPostCompose=function(center,drawing) {
     this.routePixel = [];

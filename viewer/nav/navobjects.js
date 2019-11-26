@@ -1,7 +1,8 @@
 /**
  * Created by Andreas on 14.05.2014.
  */
-var navobjects={};
+import base from '../base.js';
+let navobjects={};
 
 
 
@@ -63,7 +64,7 @@ navobjects.Point.prototype.compare=function(point){
  * @returns {*[]}
  */
 navobjects.Point.prototype.toCoord=function(){
-    var rt=[this.lon,this.lat];
+    let rt=[this.lon,this.lat];
     return rt;
 };
 /**
@@ -89,11 +90,11 @@ navobjects.WayPoint=function(lon,lat,opt_name){
     this.routeName=undefined;
 };
 
-avnav.inherits(navobjects.WayPoint,navobjects.Point);
+base.inherits(navobjects.WayPoint,navobjects.Point);
 
 navobjects.WayPoint.prototype.compare=function(point){
     if (! point) return false;
-    var rt= navobjects.Point.prototype.compare.call(this,point);
+    let rt= navobjects.Point.prototype.compare.call(this,point);
     if (! rt) return rt;
     if (point instanceof navobjects.WayPoint ){
         return this.routeName == point.routeName;
@@ -110,7 +111,7 @@ navobjects.WayPoint.fromPlain=function(plain){
 };
 
 navobjects.WayPoint.prototype.clone=function(){
-    var rt=new navobjects.WayPoint(this.lon,this.lat,this.name?this.name.slice(0):null);
+    let rt=new navobjects.WayPoint(this.lon,this.lat,this.name?this.name.slice(0):null);
     rt.routeName=(this.routeName!==undefined)?this.routeName.slice(0):undefined;
     return rt;
 };
@@ -120,7 +121,7 @@ navobjects.WayPoint.prototype.clone=function(){
  * @returns {boolean}
  */
 navobjects.WayPoint.prototype.update=function(point){
-    var rt=false;
+    let rt=false;
     if (point.lon !== undefined){
         if (point.lon != this.lon) rt=true;
         this.lon=point.lon;
@@ -153,7 +154,7 @@ navobjects.TrackPoint=function(lon,lat,ts,opt_speed,opt_course){
     this.speed=opt_speed||0;
     this.opt_course=opt_course||0;
 };
-avnav.inherits(navobjects.TrackPoint,navobjects.Point);
+base.inherits(navobjects.TrackPoint,navobjects.Point);
 
 
 /**
@@ -212,7 +213,7 @@ navobjects.GpsInfo=function(){
      */
     this.raw=null;
 };
-avnav.inherits(navobjects.GpsInfo,navobjects.Point);
+base.inherits(navobjects.GpsInfo,navobjects.Point);
 
 /**
  * a CPA point for AIS data, contains the point + the time and the info whether we pass front or back

@@ -12,7 +12,7 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Toast from '../util/overlay.js';
+import Toast,{hideToast} from '../components/Toast.jsx';
 import assign from 'object-assign';
 import ColorPicker from '../components/ColorPicker.jsx';
 import CpCss from 'react-color-picker/index.css';
@@ -83,7 +83,7 @@ const rangeItemDialog=(item)=>{
             let button=ev.target.name;
             if (button == 'ok'){
                 if (this.state.value < item.values[0]|| this.state.value > item.values[1]){
-                    Toast.Toast("out of range");
+                    Toast("out of range");
                     return;
                 }
                 item.onClick(this.state.value);
@@ -94,7 +94,7 @@ const rangeItemDialog=(item)=>{
                 });
                 return;
             }
-            Toast.hideToast();
+            hideToast();
             this.props.closeCallback();
         }
         render() {
@@ -149,7 +149,7 @@ const colorItemDialog=(item)=>{
             this.setState({value: ev.target.value});
         }
         buttonClick(ev){
-            var button=ev.target.name;
+            let button=ev.target.name;
             if (button == 'ok'){
                 item.onClick(this.state.value);
             }

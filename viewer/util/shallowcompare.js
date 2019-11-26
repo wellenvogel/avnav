@@ -1,10 +1,10 @@
 /**
  * Created by andreas on 25.09.17.
  */
-var equalsObjects=require('shallow-equal/objects');
-var equalsArrays=require('shallow-equal/arrays');
+import equalsObjects from 'shallow-equal/objects';
+import equalsArrays from 'shallow-equal/arrays';
 
-var ShallowCompare=function(oldData,newData){
+let ShallowCompare=function(oldData,newData){
     if (oldData === undefined && newData === undefined) return true;
     if (oldData === undefined) return false;
     if (newData === undefined) return false;

@@ -101,7 +101,7 @@ const createValueDialog=function(title,value,okCallback,cancelCallback,opt_label
     return Dialog;
 };
 
-var createSelectDialog=function(title,list,okCallback,cancelCallback) {
+let createSelectDialog=function(title,list,okCallback,cancelCallback) {
     return (props)=> {
             return (
                 <div className="selectDialog">
@@ -198,7 +198,7 @@ const Dialogs = {
                 removeDialog(id,true);
                 reject();
             };
-            var html = function (props) {
+            let html = function (props) {
                 return (
                     <div>
                         <h3 className="dialogTitle">{opt_title || ''}</h3>
@@ -256,7 +256,7 @@ const Dialogs = {
     valueDialogPromise: function (title, value, opt_parent, opt_label) {
         let id = nextId();
         return new Promise(function (resolve, reject) {
-            var Dialog = createValueDialog(title, value, (value)=> {
+            let Dialog = createValueDialog(title, value, (value)=> {
                 removeDialog(id,true);
                 resolve(value);
                 return true;

@@ -74,12 +74,12 @@ const Drawing=function(converter,opt_ratio){
 Drawing.prototype.drawCircleToContext=function(center,other,opt_styles){
     if (! this.context) return;
     this.setLineStyles(opt_styles);
-    var rt=this.pointToCssPixel(center);
-    var cp=this.pixelToDevice(rt);
-    var op=this.pixelToDevice(this.pointToCssPixel(other));
-    var xd=op[0]-cp[0];
-    var yd=op[1]-cp[1];
-    var r=Math.sqrt(xd*xd+yd*yd);
+    let rt=this.pointToCssPixel(center);
+    let cp=this.pixelToDevice(rt);
+    let op=this.pixelToDevice(this.pointToCssPixel(other));
+    let xd=op[0]-cp[0];
+    let yd=op[1]-cp[1];
+    let r=Math.sqrt(xd*xd+yd*yd);
     this.context.beginPath();
     this.context.arc(cp[0],cp[1],r,0, 2 * Math.PI);
     this.context.stroke();
@@ -104,21 +104,21 @@ Drawing.prototype.drawCircleToContext=function(center,other,opt_styles){
 Drawing.prototype.drawImageToContext=function(point,image,opt_options){
     if (! this.context) return;
     if (image.naturalHeight == 0 || image.naturalWidth == 0) return; //silently ignore error
-    var rt=this.pointToCssPixel(point);
-    var xy=this.pixelToDevice(rt);
+    let rt=this.pointToCssPixel(point);
+    let xy=this.pixelToDevice(rt);
     if (opt_options && opt_options.fixX !== undefined) {
         xy[0]=opt_options.fixX*this.devPixelRatio;
     }
     if (opt_options &&  opt_options.fixY !== undefined) {
         xy[1]=opt_options.fixY*this.devPixelRatio;
     }
-    var devpixratio=this.devPixelRatio;
-    var anchor=[0,0];
+    let devpixratio=this.devPixelRatio;
+    let anchor=[0,0];
     if (opt_options && opt_options.anchor){
         anchor[0]+=opt_options.anchor[0]*devpixratio;
         anchor[1]+=opt_options.anchor[1]*devpixratio;
     }
-    var size;
+    let size;
     if (opt_options && opt_options.size) {
         size=opt_options.size;
     }
@@ -127,10 +127,10 @@ Drawing.prototype.drawImageToContext=function(point,image,opt_options){
     }
     if (size[0]<=0 || size[1] <= 0) return;
     /** @type {CanvasRenderingContext2D} */
-    var context=this.context;
+    let context=this.context;
     context.save();
     context.translate(xy[0],xy[1]);
-    var angle=0;
+    let angle=0;
     if (opt_options && opt_options.rotation) {
         angle = opt_options.rotation;
     }
@@ -146,7 +146,7 @@ Drawing.prototype.drawImageToContext=function(point,image,opt_options){
             context.fillStyle = opt_options.backgroundCircle;
             context.arc(0, 0,Math.max(size[0] * devpixratio, size[1] * devpixratio)/2,0,2*Math.PI);
         }
-        var alpha=context.globalAlpha;
+        let alpha=context.globalAlpha;
         if (opt_options.backgroundAlpha){
             context.globalAlpha=opt_options.backgroundAlpha;
         }
@@ -169,13 +169,13 @@ Drawing.prototype.drawImageToContext=function(point,image,opt_options){
  */
 Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
     this.context.moveTo(x1, y1);
-    var dX = x2 - x1;
-    var dY = y2 - y1;
-    var dashes = Math.floor(Math.sqrt(dX * dX + dY * dY) / dashLen);
-    var dashX = dX / dashes;
-    var dashY = dY / dashes;
+    let dX = x2 - x1;
+    let dY = y2 - y1;
+    let dashes = Math.floor(Math.sqrt(dX * dX + dY * dY) / dashLen);
+    let dashX = dX / dashes;
+    let dashY = dY / dashes;
 
-    var q = 0;
+    let q = 0;
     while (q++ < dashes) {
         x1 += dashX;
         y1 += dashY;
@@ -196,26 +196,26 @@ Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
  * @param open: if true - open arrow
  */
 Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe,open){
-    var dx=x2-x1;
-    var dy=y2-y1;
+    let dx=x2-x1;
+    let dy=y2-y1;
     if (Math.abs(dx)<0.0001) return;
-    var a=Math.atan(dy/dx);
-    var d=dx*dx+dy*dy;
+    let a=Math.atan(dy/dx);
+    let d=dx*dx+dy*dy;
     //compute part of line we must move
-    var f=Math.sqrt(l*l/d);
+    let f=Math.sqrt(l*l/d);
     if (f> 0.8) f=0.8;
-    var lf=Math.sqrt(pe*pe/d);
+    let lf=Math.sqrt(pe*pe/d);
     if (lf > 0.5) lf=0.5;
-    var x0=x1+lf*dx;
-    var y0=y1+lf*dy;
+    let x0=x1+lf*dx;
+    let y0=y1+lf*dy;
     this.context.moveTo(x0,y0);
     dx=dx*f;
     dy=dy*f;
     x2=x0+dx;
     y2=y0+dy;
     //x2,y2 is now the feet for the arrow
-    var ca=Math.cos(a);
-    var sa=Math.sin(a);
+    let ca=Math.cos(a);
+    let sa=Math.sin(a);
     this.context.lineTo(x2-sa*w,y2+ca*w);
     if (open) this.context.moveTo(x2+sa*w,y2-ca*w);
     else this.context.lineTo(x2+sa*w,y2-ca*w);
@@ -236,22 +236,22 @@ Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe,open){
 Drawing.prototype.drawLineToContext=function(points,opt_style){
     if (! points || points.length < 2) return;
     if (! this.context) return;
-    var rt=[];
+    let rt=[];
     this.setLineStyles(opt_style);
     this.context.beginPath();
-    var p=this.pointToCssPixel(points[0]);
+    let p=this.pointToCssPixel(points[0]);
     rt.push(p);
     p=this.pixelToDevice(p);
     this.context.moveTo(p[0],p[1]);
-    var i;
-    var dashlen=0;
+    let i;
+    let dashlen=0;
     if (opt_style && opt_style.dashed){
         dashlen=this.context.canvas.width/100;
         dashlen*=this.devPixelRatio;
     }
-    var last=p;
-    var nminus1=undefined;
-    var arrowStyle;
+    let last=p;
+    let nminus1=undefined;
+    let arrowStyle;
     if (opt_style && opt_style.arrow){
        if (typeof opt_style.arrow === "object"){
            try{
@@ -293,12 +293,12 @@ Drawing.prototype.drawLineToContext=function(points,opt_style){
  */
 Drawing.prototype.drawBubbleToContext=function(point,radius,opt_style){
     if (! this.context) return;
-    var rt=[];
+    let rt=[];
     this.setLineStyles(opt_style);
-    var cp=this.pointToCssPixel(point);
+    let cp=this.pointToCssPixel(point);
     rt=cp;
     cp=this.pixelToDevice(cp);
-    var r=radius*this.devPixelRatio;
+    let r=radius*this.devPixelRatio;
     this.context.beginPath();
     this.context.arc(cp[0],cp[1],r,0, 2 * Math.PI);
     this.context.stroke();
@@ -330,12 +330,12 @@ Drawing.prototype.drawBubbleToContext=function(point,radius,opt_style){
 Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
     if (!this.context) return;
     if (! point) return;
-    var doFill=true;
-    var doStroke=false;
-    var noRotate=true;
-    var rt=this.pointToCssPixel(point);
-    var dp=this.pixelToDevice(rt);
-    var offset=[0,0];
+    let doFill=true;
+    let doStroke=false;
+    let noRotate=true;
+    let rt=this.pointToCssPixel(point);
+    let dp=this.pixelToDevice(rt);
+    let offset=[0,0];
     if (opt_styles) {
         if (opt_styles.font) this.context.font = opt_styles.font;
         if (opt_styles.color) this.context.fillStyle = opt_styles.color;
@@ -402,7 +402,7 @@ Drawing.prototype.getRotation=function(){
  * @returns {ol.Coordinate}
  */
 Drawing.prototype.pointToCssPixel=function(coord) {
-    var rt = this.converter.coordToPixel(coord);
+    let rt = this.converter.coordToPixel(coord);
     return rt;
 };
 
@@ -412,7 +412,7 @@ Drawing.prototype.pointToCssPixel=function(coord) {
  * @returns {ol.Coordinate}
  */
 Drawing.prototype.pixelToDevice=function(pixel) {
-    var rt=[];
+    let rt=[];
     rt[0]=pixel[0]*this.devPixelRatio;
     rt[1]=pixel[1]*this.devPixelRatio;
     return rt;

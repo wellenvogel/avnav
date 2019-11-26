@@ -13,7 +13,7 @@ import PropTypes from 'prop-types';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Toast from '../util/overlay.js';
+import Toast from '../components/Toast.jsx';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
@@ -192,20 +192,20 @@ class WpaPage extends React.Component{
             self.numErrors++;
             if (self.numErrors > 3){
                 self.numErrors=0;
-                Toast.Toast("Status query error: "+Helper.escapeHtml(error));
+                Toast("Status query error: "+Helper.escapeHtml(error));
             }
             self.timer.startTimer(timerSequence);
         })
     }
     wpaRequest(request,message,param){
         let self=this;
-        Toast.Toast("sending "+message);
+        Toast("sending "+message);
         Requests.postJsonForm("?request=wpa&command="+request,
             param
         ).then((json)=>{
 
         }).catch((error)=>{
-            Toast.Toast(message+"...Error");
+            Toast(message+"...Error");
         })
     }
     itemClick(item,itemData){

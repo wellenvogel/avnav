@@ -12,7 +12,7 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Toast from '../util/overlay.js';
+import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
@@ -149,7 +149,7 @@ class StatusPage extends React.Component{
                         OverlayDialog.confirm("really shutdown the server?").then(function(){
                             Requests.getJson("?request=command&start=shutdown").then(
                                 (json)=>{
-                                    Toast.Toast("shutdown started");
+                                    Toast("shutdown started");
                                 },
                                 (error)=>{
                                     OverlayDialog.alert("unable to trigger shutdown: "+error);

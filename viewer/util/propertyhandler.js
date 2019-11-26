@@ -2,9 +2,10 @@
  * Created by andreas on 03.05.14.
  */
 
-import Toast from './overlay.js';
+import Toast from '../components/Toast.jsx';
 import globalStore from './globalstore.jsx';
 import keys,{KeyHelper} from './keys.jsx';
+import base from '../base.js';
 
 /**
  * filter out some tree ob objects
@@ -73,7 +74,7 @@ class PropertyHandler {
         //register at the store for updates of our synced data
         globalStore.register(this,keys.properties);
         if (!window.localStorage) {
-            Toast.Toast("local storage is not available, seems that your browser is not HTML5... - application will not work");
+            Toast("local storage is not available, seems that your browser is not HTML5... - application will not work");
             return;
         }
         try {
@@ -89,7 +90,7 @@ class PropertyHandler {
                 globalStore.storeMultiple(userData, keys.properties, true, true);
             }
         }catch (e){
-            avnav.log("Exception reading user data "+e);
+            base.log("Exception reading user data "+e);
         }
         this.incrementSequence();
     }

@@ -13,9 +13,10 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Toast from '../util/overlay.js';
+import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import MapHolder from '../map/mapholder.js';
+import base from '../base.js';
 
 const DynamicList = Dynamic(ItemList);
 
@@ -155,7 +156,7 @@ class MainPage extends React.Component {
                             </div>
                         </div>
                         <div className="link">
-                            <div > AVNav Version <span >{window.avnav_version}</span></div>
+                            <div > AVNav Version <span >{avnav.version}</span></div>
                             <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="avn_extlink">www.wellenvogel.de/software/avnav/index.php</a>
                             </div>
                         </div>
@@ -207,7 +208,7 @@ const fillList = function () {
             globalStore.storeData(keys.gui.mainpage.chartList, items);
         },
         (error)=>{
-            Toast.Toast("unable to read chart list: "+error);
+            Toast("unable to read chart list: "+error);
         });
 };
 const readAddOns = function () {
@@ -229,7 +230,7 @@ const readAddOns = function () {
             globalStore.storeData(keys.gui.mainpage.addOns, items);
         },
         (error)=>{
-            Toast.Toast("reading addons failed: " + error);
+            Toast("reading addons failed: " + error);
         });
 };
 
@@ -238,7 +239,7 @@ const readAddOns = function () {
  * @param entry - the chart entry
  */
 const showNavpage = function (entry) {
-    avnav.log("activating navpage with url " + entry.url);
+    base.log("activating navpage with url " + entry.url);
     MapHolder.setMapUrl(entry.url,entry.charturl);
     history.push('navpage');
 

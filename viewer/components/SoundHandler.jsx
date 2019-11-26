@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PropertyHandler from '../util/propertyhandler.js';
-import Toast from '../util/overlay.js';
+import Toast from '../components/Toast.jsx';
 import compare from '../util/shallowcompare.js';
 
 class SoundHandler extends React.Component{
@@ -36,7 +36,7 @@ class SoundHandler extends React.Component{
         let self=this;
         if (this.state.initialized) return;
         if (! this.refs.audio) return;
-        Toast.Toast("click to allow sounds",60000,()=>{
+        Toast("click to allow sounds",60000,()=>{
             self.setState({initialized:true});
             self.refs.audio.play();
         })

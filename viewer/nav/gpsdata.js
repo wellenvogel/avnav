@@ -9,6 +9,7 @@ import keys,{KeyHelper} from '../util/keys.jsx';
 import Formatter from '../util/formatter';
 import assign from 'object-assign';
 import Requests from '../util/requests.js';
+import base from '../base.js';
 
 
 /**
@@ -134,7 +135,7 @@ GpsData.prototype.startQuery=function(){
         }
     ).catch(
         (error)=>{
-            avnav.log("query position error");
+            base.log("query position error");
             self.handleGpsStatus(false);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
@@ -156,7 +157,7 @@ GpsData.prototype.stopAlarm=function(type){
         }
     ).catch(
         (error)=>{
-            avnav.log("unable to stop alarm "+type);
+            base.log("unable to stop alarm "+type);
         }
     );
 
@@ -170,7 +171,7 @@ GpsData.prototype.handleGpsStatus=function(success){
     if (! success){
         this.gpsErrors++;
         if (this.gpsErrors > globalStore.getData(keys.properties.maxGpsErrors)){
-            avnav.log("lost gps");
+            base.log("lost gps");
             this.gpsdata.valid=false;
             globalStore.storeData(keys.nav.gps.valid,false); //keep all the last values...
 

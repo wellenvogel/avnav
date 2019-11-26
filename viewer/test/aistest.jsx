@@ -142,7 +142,7 @@ var Main=reactCreateClass({
         this.changeShip({factor:v});
     },
     changeShip:function(val){
-        var nship=avnav.assign({},this.state.ship,val);
+        var nship=assign({},this.state.ship,val);
         saveShipPos(nship);
         store.storeData(keys.ship,nship);
     },
@@ -465,7 +465,7 @@ var SingleItem=reactCreateClass({
                         <span>,{formatter.formatDecimal(result.cpa.curdistance,4,2)} m</span>
                         <span>Cpa={formatter.formatDecimal(result.cpa.cpanm,4,3)} nm</span>
                         <span>Tcpa(h)={aisFormatter.tcpa.format(result.cpa)}</span>
-                        <span>Front={aisFormatter.passFront.format(avnav.assign({},result.cpa,{passFront:result.cpa.front}))}</span>
+                        <span>Front={aisFormatter.passFront.format(assign({},result.cpa,{passFront:result.cpa.front}))}</span>
                         <span>, {result.cpa.front}</span>
                     </div>
                     <MousePositionHandler index={this.props.id}/>
@@ -569,7 +569,7 @@ var SingleItem=reactCreateClass({
         var simulatedResult={};
         simulatedResult.ship=simulatedShip;
         var aisTarget=NavCompute.computeTarget(simulatedShip,courseTarget,factor*curdistance);
-        simulatedResult.target=avnav.assign({},aisTarget,{course:Y.course,speed:Y.speed/speedKnToMs,mmsi: this.props.id});
+        simulatedResult.target=assign({},aisTarget,{course:Y.course,speed:Y.speed/speedKnToMs,mmsi: this.props.id});
         simulatedResult.cpa=NavCompute.computeCpa(simulatedResult.ship,simulatedResult.target,{NM:NM,minAISspeed:0.2*speedKnToMs})
         console.log("xxx"+lat+","+lon+","+factor);
 

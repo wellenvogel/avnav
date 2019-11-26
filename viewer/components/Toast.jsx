@@ -13,7 +13,7 @@ export const ToastComponent=(props)=>{
         if (! props.html ){
             return null;
         }
-        var style=props.style||{};
+        let style=props.style||{};
         return (
         <div className={"toast "+props.className||""} onClick={()=>{
             if (props.onClick)props.onClick();
