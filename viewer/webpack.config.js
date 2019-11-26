@@ -59,8 +59,6 @@ var resolveAlias={
 };
 if (isProduction) {
     devtool="";
-    resolveAlias['react$']=__dirname+"/node_modules/react/dist/react.min.js";
-    resolveAlias['react-dom$']=__dirname+"/node_modules/react-dom/dist/react-dom.min.js";
 }
 if (! isProduction) {
     resolveAlias['openlayers$']=__dirname+"/node_modules/openlayers/dist/ol-debug.js";
@@ -150,6 +148,7 @@ module.exports = {
     },
     plugins:plugins,
     devtool:devtool,
+    mode: isProduction?'production':'development'
 };
 
 function getEntrySources(sources) {
