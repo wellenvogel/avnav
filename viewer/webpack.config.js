@@ -1,7 +1,7 @@
 var path = require('path');
 var webpack = require('webpack');
 var CopyWebpackPlugin= require('copy-webpack-plugin');
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var MiniCssExtractPlugin=require('mini-css-extract-plugin');
 var generateLicense=require('./collectLicense');
 var GenerateAssetsPlugin=require('generate-asset-webpack-plugin');
 
@@ -13,6 +13,17 @@ if (isProduction) {
     outDir="build/release";
 }
 
+var formatDate = function (date) {
+    var yyyy = date.getFullYear();
+    var mm = date.getMonth() < 9 ? "0" + (date.getMonth() + 1) : (date.getMonth() + 1); // getMonth() is zero-based
+    var dd = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+    var yyyymmdd= "".concat(yyyy).concat(mm).concat(dd);
+    var hh = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+    var min = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+    return "".concat(yyyymmdd).concat("-").concat(hh).concat(min);
+
+};
+
 var copyList=[
     {from: './avnav_viewer.html'},
     {from: './info.html'},
@@ -21,24 +32,12 @@ var copyList=[
     {from: './privacy-de.html'},
     {from: './webpack-loader.js',to:'loader.js'},
     {from: './util/polyfill.js',to:'polyfill.js'},
-    {from: './images/icons-new/*svg'},
-    {from: './images/icons-new/ic_*png'},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
     {from: '../libraries/movable-type/latlon.js',to: 'libraries'},
     {from: '../sounds/1-minute-of-silence.mp3',to: 'sounds'},
     {from: './layout',to:'layout'}
     ];
 var images=[
-    'Chart60.png',
-    'GreyBubble40.png',
-    'GreenBubble40.png',
-    'YellowBubble40.png',
-    'RedBubble40.png',
-    'Boat1.png',
-    'Marker2.png',
-    'MarkerOrange.png',
-    'Boat2.png',
-    'nadel_mit.png',
     'WebIcon-512.png'
 
 ];
@@ -66,7 +65,9 @@ if (! isProduction) {
 
 var plugins = [
     new CopyWebpackPlugin(copyList),
-    new ExtractTextPlugin("avnav_viewer.css", {allChunks: true}),
+    new MiniCssExtractPlugin({
+        filename: "avnav_viewer.css",
+        allChunks: true}),
     new GenerateAssetsPlugin({
         filename: 'license.html',
         fn: function (compilation, cb) {
@@ -89,18 +90,25 @@ module.exports = {
         './avnav_viewer_new.less'
     ]),
     //entry: './app/main.jsx',
-    publicPath: 'http://localhost:8081/viewer',
+    //publicPath: 'http://localhost:8081/viewer',
     output: { path: __dirname+"/"+outDir, filename: 'avnav_min.js' },
     resolve: {
-        extensions: ['', '.jsx', '.scss', '.js', '.json'],
+        extensions: ['.jsx', '.scss', '.js', '.json'],
         alias: resolveAlias
     },
     module: {
-        loaders: [
+        rules: [
+            {
+                test: process.env.AVNAV_VERSION_FILE?/NOTHING/:/version\.js$/,
+                loader: 'val-loader',
+                options:{
+                    version: (isProduction?"":"dev-")+(formatDate(new Date()))
+                }
+            },
 
             {
                 test: /.jsx$|.js$/,
-                exclude: /node_modules/,
+                exclude: /node_modules|version\.js$/,
                 loader: 'babel-loader',
                 query: {
                     presets: ['react', 'es2015','stage-0']
@@ -110,35 +118,37 @@ module.exports = {
 
             {
                 test: /\.css$/,
-                loader: ExtractTextPlugin.extract("style-loader","css-loader")
+                use:[
+                    {
+                        loader: MiniCssExtractPlugin.loader
+                    },
+                    'css-loader'
+                ]
             },
-            {
-                test: /\.less$/,
-                exclude: /avnav_viewer.*\.less/,
-                loader: ExtractTextPlugin.extract("style-loader","css-loader?-url&modules&"+cssLoaderQuery+"!less-loader")
 
-            },
-            {
-                test: /(\.scss)$/,
-                exclude: /commons\.scss$/,
-                loader: ExtractTextPlugin.extract('style-loader','css-loader?modules&'+cssLoaderQuery+'!sass')
-            },
-            {
-                test: /commons\.scss$/,
-                loader: ExtractTextPlugin.extract('style-loader','css-loader!sass-loader')
-            },
 
             {
                 test: /avnav_viewer.*\.less$/,
-                loader: ExtractTextPlugin.extract('style-loader','css-loader?-url!less-loader')
+                use:[
+                    {
+                        loader: MiniCssExtractPlugin.loader
+                    },
+                    {
+                        loader: 'css-loader',
+                        options:{
+                            url:true
+                        }
+                    },
+                    {
+                        loader: 'less-loader'
+                    }
+                    ]
             },
 
             {
                 test: /images[\\\/].*\.png$|images[\\\/].*\.svg$/,
                 loader: 'file-loader',
-                //we are not really able to tell the file loader to copy files correctly
-                //so we let it copy them and afterwards copy them again by the copy plugin
-                query:{
+                options:{
                     name: "images/[name].[ext]"
                 }
             }

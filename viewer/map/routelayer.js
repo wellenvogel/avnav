@@ -6,6 +6,7 @@ import navobjects from '../nav/navobjects';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
+import orangeMarker from '../images/MarkerOrange.png';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 const editingRoute=new RouteEdit(RouteEdit.MODES.EDIT);
@@ -129,7 +130,7 @@ RouteLayer.prototype.setStyle=function() {
     this.markerStyle={
         anchor: [20, 20],
         size: [40, 40],
-        src: 'images/MarkerOrange.png',
+        src: orangeMarker,
         image:  new Image()
     };
     this.markerStyle.image.src=this.markerStyle.src;

@@ -8,6 +8,8 @@ import anchor from '../images/icons-new/anchor.svg' ;
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
+import boatImage from '../images/Boat2.png';
+import markerImage from '../images/Marker2.png';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
@@ -35,7 +37,7 @@ const NavLayer=function(mapholder){
     this.boatStyle={
         anchor: [15, 72],
         size: [30,120],
-        src: 'images/Boat2.png',
+        src: boatImage,
         rotation: 20/180*Math.PI,
         rotateWithView: true,
         image: new Image()
@@ -59,7 +61,7 @@ const NavLayer=function(mapholder){
     this.centerStyle={
         anchor: [20, 20],
         size: [40, 40],
-        src: 'images/Marker2.png',
+        src: markerImage,
         image: new Image()
     };
     this.centerStyle.image.src=this.centerStyle.src;

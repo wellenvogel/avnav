@@ -17,6 +17,7 @@ import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import MapHolder from '../map/mapholder.js';
 import base from '../base.js';
+import chartImage from '../images/Chart60.png';
 
 const DynamicList = Dynamic(ItemList);
 
@@ -122,7 +123,7 @@ class MainPage extends React.Component {
         let ChartItem = function (props) {
             return (
                 <div className="chartItem" onClick={props.onClick}>
-                    <img src="images/Chart60.png"/>
+                    <img src={chartImage}/>
                     <span className="">{props.name}</span>
                     <span className="more"/>
                 </div>

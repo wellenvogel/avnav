@@ -3,6 +3,13 @@
  */
 
 import assign from 'object-assign';
+import greyBubble from '../images/GreyBubble40.png';
+import redBubble from '../images/RedBubble40.png';
+import greenBubble from '../images/GreenBubble40.png';
+import yellowBubble from '../images/YellowBubble40.png';
+import aisDefaultImage from '../images/ais-default.png';
+import aisNearestImage from '../images/ais-nearest.png';
+import aisWarningImage from '../images/ais-warning.png';
 
 const K=999; //the real value does not matter
 
@@ -265,9 +272,9 @@ let keys={
         aisWarningTpa: new Property(900, "AIS-Warning-TPA(s)", PropertyType.RANGE, [30, 3600, 10]), //in s - max time for tpa warning (15min)
         aisTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 24]), //in px
         //images are not used any more, just keeping for fallback
-        aisNormalImage: new Property('images/ais-default.png'),
-        aisNearestImage: new Property('images/ais-nearest.png'),
-        aisWarningImage: new Property('images/ais-warning.png'),
+        aisNormalImage: new Property(aisDefaultImage),
+        aisNearestImage: new Property(aisNearestImage),
+        aisWarningImage: new Property(aisWarningImage),
         aisBrowserWorkaround: new Property(600, "Browser AisPage Workaround(ms)", PropertyType.RANGE, [0, 6000, 10]),
         statusQueryTimeout: new Property(3000), //ms
         wpaQueryTimeout: new Property(4000), //ms
@@ -280,16 +287,16 @@ let keys={
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
         centerName: new Property("avnav.center"),
-        statusErrorImage: new Property("images/RedBubble40.png"),
-        statusOkImage: new Property("images/GreenBubble40.png"),
-        statusYellowImage: new Property("images/YellowBubble40.png"),
-        statusUnknownImage: new Property("images/GreyBubble40.png"),
+        statusErrorImage: new Property(redBubble),
+        statusOkImage: new Property(greenBubble),
+        statusYellowImage: new Property(yellowBubble),
+        statusUnknownImage: new Property(greyBubble),
         statusIcons: {
-            INACTIVE: new Property("images/GreyBubble40.png"),
-            STARTED: new Property("images/YellowBubble40.png"),
-            RUNNING: new Property("images/YellowBubble40.png"),
-            NMEA: new Property("images/GreenBubble40.png"),
-            ERROR: new Property("images/RedBubble40.png")
+            INACTIVE: new Property(greyBubble),
+            STARTED: new Property(yellowBubble),
+            RUNNING: new Property(yellowBubble),
+            NMEA: new Property(greenBubble),
+            ERROR: new Property(redBubble)
         },
         nightFade: new Property(50, "NightDim(%)", PropertyType.RANGE, [1, 99]), //in px
         nightChartFade: new Property(30, "NightChartDim(%)", PropertyType.RANGE, [1, 99]), //in %

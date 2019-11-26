@@ -18,6 +18,7 @@ import Requests from '../util/requests.js';
 import base from '../base.js';
 import PubSub from 'PubSub';
 import helper from '../util/helper.js';
+import northImage from '../images/nadel_mit.png';
 
 
 const PSTOPIC="mapevent";
@@ -121,7 +122,7 @@ const MapHolder=function(){
     this.drawing=new Drawing(this);
 
     this.northImage=new Image();
-    this.northImage.src='images/nadel_mit.png';
+    this.northImage.src=northImage;
     /**
      * is the routing display visible? (no AIS selection...)
      * @private
