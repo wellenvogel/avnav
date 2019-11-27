@@ -2,6 +2,7 @@
 //consequently using flexbos
 @import "flexbox.less";
 @import "defines.less";
+@import "widgets.less";
 
 *{
   .border-box();
@@ -1005,16 +1006,6 @@ span.valuePrefix{
 
 //-------------- pages with map and widgets ----------------------------
 .mapPage{
-  .widgetContainer{
-    .flex-display();
-    .avn_widget{
-      .flex-shrink(0);
-    }
-    overflow: hidden;
-    background-color: @colorMain;
-    .nightColors();
-    .flex-shrink(0);
-  }
   .leftSection{
     .flex-display();
     .flex(1);
@@ -1043,30 +1034,13 @@ span.valuePrefix{
       position: relative;
       .flex-direction(row);
     }
-    .widgetContainer{
-      .flex-wrap(wrap);
-      max-height: @verticalContainerHeight;
-      &.twoRows{
-        max-height: @verticalContainerDoubleHeight;
-      }
-    }
-    .avn_widget{
-      height: @verticalWidgetHeight;
-    }
   }
   .widgetContainer.left{
     position: absolute;
     bottom:0;
     left:0;
-    overflow: hidden;
     max-height: 100%;
-    .flex-direction(column);
     z-index: 3;
-    .avn_widget{
-      width: inherit;
-      flex-shrink: inherit;
-    }
-    max-width: 8.5em;
   }
   .overlayContainer{
     position: absolute;

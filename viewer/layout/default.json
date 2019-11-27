@@ -49,6 +49,7 @@
   },
   "navpage":{
     "left_not_small":[
+      {"name":"VMG"},
       {"name":"CenterDisplay"},
       {"name":"Zoom"},
       {"name":"WindDisplay"},

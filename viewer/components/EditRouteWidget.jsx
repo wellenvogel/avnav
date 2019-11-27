@@ -20,13 +20,13 @@ class EditRouteWidget extends React.Component{
     }
     render(){
         let [route,notUsed,isActive]=StateHelper.getRouteIndexFlag(this.props);
-        let classes="avn_widget avn_editingRouteWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let classes="widget avn_editingRouteWidget "+this.props.classes||""+ " "+this.props.className||"";
         if (isActive) classes +=" avn_activeRoute ";
         else classes+=" avn_otherRoute";
         if (!route){
             return (
                 <div className={classes} onClick={this.props.onClick}>
-                    <div className="avn_widgetInfoLeft">RTE</div>
+                    <div className="infoLeft">RTE</div>
                     <div className="avn_routeName">No Route</div>
                 </div>
             )
@@ -45,7 +45,7 @@ class EditRouteWidget extends React.Component{
         let eta=isActive?this.props.eta:undefined;
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style}>
-            <div className="avn_widgetInfoLeft">RTE</div>
+            <div className="infoLeft">RTE</div>
             <div className="avn_routeName">{rname}</div>
             <div className="avn_routeInfoLine">
                 <span className="avn_route_label">PTS:</span>
@@ -58,7 +58,7 @@ class EditRouteWidget extends React.Component{
             <div className="avn_routeInfoLine">
                 <span className="avn_route_label">RTG:</span>
                 <span className="avn_routeInfo">{Formatter.formatDecimal(remain,3,1)}</span>
-            </div>
+            </div>getRouteN
             <div className="avn_routeInfoLine">
                 <span className="avn_route_label">ETA:</span>
                 <span className="avn_routeInfo avd_edRouteEta">{Formatter.formatTime(eta)}</span>

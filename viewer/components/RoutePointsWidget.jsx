@@ -50,7 +50,7 @@ class RoutePointsWidget extends React.Component{
         let self=this;
         let [route,index,isActive]=StateHelper.getRouteIndexFlag(this.props);
         if (! route || !route.points || route.points.length < 1) return null;
-        let classes="avn_widget avn_routePointsWidget "+this.props.className||"";
+        let classes="widget avn_routePointsWidget "+this.props.className||"";
         if (isActive) classes +=" avn_activeRoute ";
 
         return (

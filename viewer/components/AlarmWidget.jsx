@@ -25,7 +25,7 @@ class  AlarmWidget extends React.Component{
         return false;
     }
     render(){
-        let classes="avn_widget avn_alarmWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let classes="widget avn_alarmWidget "+this.props.classes||""+ " "+this.props.className||"";
         let alarmText=undefined;
         if (this.props.alarmInfo){
             for (let k in this.props.alarmInfo){
@@ -40,7 +40,7 @@ class  AlarmWidget extends React.Component{
         if (! alarmText) return <div/>;
         return (
         <div className={classes} onClick={this.onClick} style={this.props.style}>
-            <div className="avn_widgetInfoLeft">Alarm</div>
+            <div className="infoLeft">Alarm</div>
             <div>
                 <span className="avn_alarmInfo">{alarmText}</span>
             </div>

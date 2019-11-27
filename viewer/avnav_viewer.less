@@ -343,38 +343,6 @@ html,body {
 
 
 
-.avn_widget{
-  position: relative;
-  z-index: 100;
-  padding: 0.3em;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
-  0 1px 5px 0 rgba(0, 0, 0, 0.12),
-  0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
-  .border-box();
-  overflow: hidden;
-  pointer-events: all;
-  background: white;
-  .nightColors();
-  .flex-shrink(0);
-  .flex-grow(1);
-  margin-bottom: 0.1em;
-  margin-top: 0.1em;
-  margin-left: 0.1em;
-  margin-right: 0.1em;
-}
-
-.avn_widgetContainer{
-  font-size: @widgetFontSize;
-  .flex-display();
-  .flex-wrap(wrap);
-}
-.avn_widgetContainer_vertical{
-  .avn_widgetContainer();
-  max-height: @verticalContainerHeight;
-  &.two_rows{
-    max-height: @verticalContainerDoubleHeight;
-  }
-}
 
 .avn_widgetInfo{
   font-size: @bottomBaseFont;
@@ -828,7 +796,6 @@ html,body {
 }
 
 .avn_nav_bottom .avn_widget{
-  height: @verticalWidgetHeight;
   margin-right: 0;
   margin-left: 0.2em;
 }

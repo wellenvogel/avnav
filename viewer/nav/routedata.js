@@ -418,6 +418,7 @@ RouteData.prototype.routeOff=function(){
         data.leg.name = undefined;
         data.leg.currentRoute = undefined;
         data.leg.to.routeName = undefined;
+        data.activeName=undefined;
         return true;
     });
 };
@@ -608,7 +609,7 @@ RouteData.prototype._checkNextWp=function(){
                     //seems to be the first time
                     this.lastDistanceToCurrent = dst.dts;
                     this.lastDistanceToNext = nextDst.dts;
-                    return;
+                    return true;
                 }
                 //check if the distance to own wp increases and to the nex decreases
                 let diffcurrent = dst.dts - this.lastDistanceToCurrent;
@@ -618,7 +619,7 @@ RouteData.prototype._checkNextWp=function(){
                         this.lastDistanceToCurrent = dst.dts;
                         this.lastDistanceToNext = nextDst.dts;
                     }
-                    return;
+                    return true;
                 }
                 let diffnext = nextDst.dts - this.lastDistanceToNext;
                 if (nextWp && (diffnext > -tolerance)) {
@@ -627,7 +628,7 @@ RouteData.prototype._checkNextWp=function(){
                         this.lastDistanceToCurrent = dst.dts;
                         this.lastDistanceToNext = nextDst.dts;
                     }
-                    return;
+                    return true;
                 }
                 //should we wait for some time???
                 if (nextWp) {

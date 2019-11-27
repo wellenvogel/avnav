@@ -14,7 +14,7 @@ class WindWidget extends React.Component{
         return Helper.compareProperties(this.props,nextProps,WindWidget.storeKeys);
     }
     render(){
-        let classes = "avn_widget avn_windWidget " + this.props.classes || ""+ " "+this.props.className||"";
+        let classes = "widget avn_windWidget " + this.props.classes || ""+ " "+this.props.className||"";
         let style = this.props.style || {};
         let windSpeed="";
         let showKnots=PropertyHandler.getProperties().windKnots;
@@ -31,13 +31,13 @@ class WindWidget extends React.Component{
             <div className={classes} onClick={this.props.onClick} style={style}>
                 <div className="avn_windInner">
                     <div className='avn_widgetData'>{Formatter.formatDecimal(this.props.windAngle,3,0)}</div>
-                    <div className='avn_widgetInfoLeft'>WD</div>
-                    <div className='avn_widgetInfoRight'>°</div>
+                    <div className='infoLeft'>WD</div>
+                    <div className='infoRight'>°</div>
                 </div>
                 <div className="avn_windInner">
                     <div className='avn_widgetData'>{windSpeed}</div>
-                    <div className='avn_widgetInfoLeft'>WS</div>
-                    <div className='avn_widgetInfoRight'>{showKnots?"kn":"m/s"}</div>
+                    <div className='infoLeft'>WS</div>
+                    <div className='infoRight'>{showKnots?"kn":"m/s"}</div>
                 </div>
             </div>
 

@@ -242,7 +242,7 @@ routeobjects.Leg.prototype.anchorWatch=function(){
     return this.anchorDistance;
 };
 
-routeobjects.Leg.isApproaching=function(){
+routeobjects.Leg.prototype.isApproaching=function(){
     return this.active && this.approach;
 };
 

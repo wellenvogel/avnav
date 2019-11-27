@@ -33,8 +33,8 @@ import navobjects from '../nav/navobjects.js';
 
 
 
-const widgetCreator=(widget,panel)=>{
-    let rt=WidgetFactory.createWidget(widget,{mode:panel,className:'',handleVisible:true});
+const widgetCreator=(widget,mode)=>{
+    let rt=WidgetFactory.createWidget(widget,{mode:mode,className:'',handleVisible:true});
     if (widget.name=='CenterDisplay'){
         rt=Dynamic(Visible(rt),{
             storeKeys:{locked:keys.map.lockPosition},
@@ -76,10 +76,10 @@ class MapPage extends React.Component{
         let isSmall=globalStore.getData(keys.gui.global.windowDimensions,{width:0}).width
             < globalStore.getData(keys.properties.smallBreak);
         const WidgetContainer=(props)=>{
-            let {panel,...other}=props;
+            let {panel,mode,...other}=props;
             return <ItemList  {...props}
-                className={"widgetContainer "+panel}
-                itemCreator={(widget)=>{return widgetCreator(widget,panel)}}
+                className={"widgetContainer "+mode+" "+panel}
+                itemCreator={(widget)=>{return widgetCreator(widget,mode)}}
                 itemList={self.props.panelCreator(panel,isSmall)}
                 onItemClick={(item,data)=>{self.props.onItemClick(item,data,panel)}}
                 />
@@ -95,10 +95,12 @@ class MapPage extends React.Component{
                                 <WidgetContainer
                                     fontSize={self.props.widgetFontSize+"px"}
                                     panel="left"
+                                    mode="vertical"
                                 />
                                  <WidgetContainer
                                     fontSize={self.props.widgetFontSize+"px"}
                                     panel="top"
+                                    mode="horizontal"
                                 />
 
                                 <div className="map" ref="map"/>
@@ -108,10 +110,12 @@ class MapPage extends React.Component{
                                 <WidgetContainer
                                     fontSize={self.props.widgetFontSize+"px"}
                                     panel='bottomLeft'
+                                    mode="horizontal"
                                     />
                                 <WidgetContainer
                                     fontSize={self.props.widgetFontSize+"px"}
                                     panel="bottomRight"
+                                    mode="horizontal"
                                     />
                              </div>
                             </React.Fragment>

@@ -16,12 +16,12 @@ class EtaWidget extends React.Component{
     }
     render(){
         let eta=this.props.eta?Formatter.formatTime(this.props.eta):'--:--:--';
-        let classes="avn_widget avn_etaWidget avn_centeredWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let classes="widget etaWidget "+this.props.className||"";
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
-            <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
-            <div className="avn_widgetData avn_markerEta">{eta}</div>
-            <div className="avn_widgetData avn_markerName" >{this.props.wpname}</div>
+            <div className='infoLeft'>{this.props.caption}</div>
+            <div className="widgetData markerEta">{eta}</div>
+            <div className="widgetData markerName" >{this.props.wpname}</div>
         </div>
         );
     }
@@ -29,9 +29,7 @@ class EtaWidget extends React.Component{
 };
 
 EtaWidget.propTypes={
-    //formatter: React.PropTypes.func,
     onClick: PropTypes.func,
-    classes: PropTypes.string,
     className: PropTypes.string,
     style: PropTypes.object,
     caption: PropTypes.string,

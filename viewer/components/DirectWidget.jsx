@@ -12,8 +12,8 @@ class DirectWidget extends React.Component{
         return Helper.compareProperties(this.props,nextProps,{value:1,isAverage:1});
     }
     render(){
-        let classes="avn_widget "+this.props.classes||"";
-        if (this.props.isAverage) classes+=" avn_average";
+        let classes="widget ";
+        if (this.props.isAverage) classes+=" average";
         if (this.props.className) classes+=" "+this.props.className;
         let val;
         if (this.props.value !== undefined) val=this.props.formatter(this.props.value);
@@ -23,14 +23,14 @@ class DirectWidget extends React.Component{
         return (
         <div className={classes} onClick={this.props.onClick} style={style}>
             <div className="resize">
-            <div className='avn_widgetData'>
+            <div className='widgetData'>
                 <Value value={val}/>
             </div>
             </div>
-            <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
+            <div className='infoLeft'>{this.props.caption}</div>
             {this.props.unit !== undefined?
-                <div className='avn_widgetInfoRight'>{this.props.unit}</div>
-                :<div className='avn_widgetInfoRight'></div>
+                <div className='infoRight'>{this.props.unit}</div>
+                :<div className='infoRight'></div>
             }
         </div>
         );
@@ -45,7 +45,7 @@ DirectWidget.propTypes={
     isAverage: PropTypes.bool,
     formatter: PropTypes.func.isRequired,
     onClick: PropTypes.func,
-    classes: PropTypes.string,
+    className: PropTypes.string,
     style: PropTypes.object,
     default: PropTypes.string
 };

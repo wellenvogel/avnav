@@ -23,7 +23,6 @@ let widgetList=[
         default: "0.0",
         unit: "kn",
         caption: 'SOG',
-        classes: 'avn_speedWidget',
         storeKeys: {
             value: keys.nav.gps.speed,
             isAverage: keys.nav.gps.speedAverageOn
@@ -35,7 +34,6 @@ let widgetList=[
         default: "---",
         unit: "\u00b0",
         caption: 'COG',
-        classes: 'avn_courseWidget',
         storeKeys:{
             value: keys.nav.gps.course,
             isAverage:keys.nav.gps.courseAverageOn
@@ -47,7 +45,6 @@ let widgetList=[
         name: 'Position',
         default: "-------------",
         caption: 'BOAT',
-        classes: 'avn_posWidget',
         storeKeys:{
             value: keys.nav.gps.position,
             isAverage: keys.nav.gps.positionAverageOn
@@ -72,7 +69,6 @@ let widgetList=[
         default: "----",
         unit: "nm",
         caption: 'DST',
-        classes: 'avn_distanceWidget',
         storeKeys:{
             value: keys.nav.wp.distance
         },
@@ -84,7 +80,6 @@ let widgetList=[
         default: "---",
         unit: "\u00b0",
         caption: 'BRG',
-        classes: 'avn_courseWidget',
         storeKeys:{
             value: keys.nav.wp.course
         },
@@ -95,7 +90,6 @@ let widgetList=[
         default: "0.0",
         unit: "kn",
         caption: 'VMG',
-        classes: 'avn_speedWidget',
         storeKeys: {
             value: keys.nav.wp.vmg
         },
@@ -107,7 +101,6 @@ let widgetList=[
         default: "---",
         unit: "\u00b0",
         caption: 'Wind Angle',
-        classes: 'avn_windAngleWidget',
         storeKeys:{
             value:keys.nav.gps.windAngle
         },
@@ -118,7 +111,6 @@ let widgetList=[
         default: "---",
         unit: "m/s",
         caption: 'Wind Speed',
-        classes: 'avn_windSpeedWidget',
         storeKeys:{
             value:keys.nav.gps.windSpeed
         },
@@ -134,7 +126,6 @@ let widgetList=[
             value:keys.nav.anchor.direction
         },
         formatter: 'formatDirection',
-        classes: 'avn_largeWidget'
     },
     {
         name: 'AnchorDistance',
@@ -145,7 +136,6 @@ let widgetList=[
             value:keys.nav.anchor.distance
         },
         formatter: 'formatDistance',
-        classes: 'avn_largeWidget'
     },
     {
         name: 'AnchorWatchDistance',
@@ -157,7 +147,6 @@ let widgetList=[
         },
         formatter: 'formatDecimal',
         formatterParameters: [3,1],
-        classes: 'avn_largeWidget'
     },
 
     {
@@ -165,7 +154,6 @@ let widgetList=[
         default: " ----- ",
         unit: "nm",
         caption: 'RTE-Dst',
-        classes: 'avn_rteWidget',
         storeKeys:{
             value:keys.nav.route.remain
         },
@@ -176,7 +164,6 @@ let widgetList=[
         default: " --:--:-- ",
         unit: "h",
         caption: 'RTE-ETA',
-        classes: 'avn_rteWidget',
         storeKeys:{
             value:keys.nav.route.eta
         },
@@ -186,7 +173,6 @@ let widgetList=[
         name: 'LargeTime',
         default: "--:--",
         caption: 'Time',
-        classes: 'avn_timeWidget',
         storeKeys:{
             value:keys.nav.gps.rtime,
             visible: keys.properties.showClock
@@ -197,7 +183,6 @@ let widgetList=[
         name: 'WpPosition',
         default: "-------------",
         caption: 'MRK',
-        classes: 'avn_posWidget',
         storeKeys:{
             value:keys.nav.wp.position
         },

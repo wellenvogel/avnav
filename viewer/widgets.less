@@ -1,0 +1,248 @@
+@import "flexbox.less";
+@import "defines.less";
+
+
+@horizontalContainerHeight: 4em;
+@horizontalContainerDoubleHeight: 7.9em;
+@horizontalWidgetHeight: 3.8em;
+@infoFontSize: 0.71em;
+
+
+.widget{
+  position: relative;
+  z-index: 100;
+  padding: 0.3em;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+  0 1px 5px 0 rgba(0, 0, 0, 0.12),
+  0 3px 1px -2px rgba(0, 0, 0, 0.2); /* z1 shadow */
+  .border-box();
+  overflow: hidden;
+  pointer-events: all;
+  background: white;
+  .nightColors();
+  .flex-shrink(0);
+  .flex-grow(1);
+  margin-bottom: 0.1em;
+  margin-top: 0.1em;
+  margin-left: 0.1em;
+  margin-right: 0.1em;
+  .widgetInfo(){
+    font-size: @infoFontSize;
+    position: absolute;
+    top: 0;
+    opacity: 0.7;
+  }
+  .infoRight{
+    .widgetInfo();
+    right: 0.2em;
+  }
+  .infoLeft{
+    .widgetInfo();
+    left: 0.2em;
+  }
+  .unit{
+    font-size: @infoFontSize;
+    opacity: 0.7;
+    margin-left: 0.2em;
+  }
+  .widgetData{
+    text-align: right;
+  }
+  &.average .infoLeft{
+    .nightForeColor(red);
+  }
+}
+
+.widgetContainer{
+  font-size: @widgetFontSize;
+  .flex-display();
+  .widget{
+    .flex-shrink(0);
+  }
+  overflow: hidden;
+  background-color: @colorMain;
+  .nightColors();
+  .flex-shrink(0);
+}
+.widgetContainer.horizontal{
+  .flex-wrap(wrap);
+  max-height: @horizontalContainerHeight;
+  &.two_rows{
+    max-height: @horizontalContainerDoubleHeight;
+  }
+  .widget{
+    height: @horizontalWidgetHeight;
+  }
+}
+
+.widgetContainer.vertical{
+  max-width: @navLeftWidgetWidth;
+  overflow: hidden;
+  .flex-direction(column);
+  .widget{
+    width: inherit;
+    flex-shrink: inherit;
+  }
+}
+
+//------------------ dedicated widgets -------------------------
+//widgets have their name from the widget list and maybe some additonial fixed name as classes
+@bigFont: 3em;
+@bigFontVertical: 2em;
+@smallFont: 1em;
+@timeFont: 1.5em;
+@clockFont: 2.5em;
+@size1: 7em;
+@size2: 11em;
+.widget{
+  .bigWidget(@size){
+    .widgetData{
+      font-size: @bigFont;
+    }
+    width: @size;
+    .vertical &{
+      width: inherit;
+      .widgetData{
+        font-size: @bigFontVertical;
+      }
+    }
+  }
+  .smallWidget(@size){
+    .widgetData{
+      font-size: @smallFont;
+      margin-top: 0.55em;
+      margin-right: 0.1em;
+    }
+    width: @size;
+    .vertical &{
+      width: inherit;
+      .widgetData{
+        font-size: @smallFont;
+      }
+    }
+  }
+  .timeWidget(@font){
+    .widgetData{
+      font-size: @font;
+    }
+    width: 7em;
+    .vertical &{
+      width: inherit;
+      .widgetData{
+        font-size: @font;
+      }
+    }
+  }
+  &.SOG{
+    .bigWidget(@size2);
+  }
+  &.VMG{
+    .bigWidget(@size2);
+  }
+  &.COG{
+    .bigWidget(@size1);
+  }
+  &.BRG{
+    .bigWidget(@size1);
+  }
+  &.DST{
+    .bigWidget(@size2);
+  }
+  &.WindAngle,&.WindSpeed{
+    .bigWidget(@size1);
+  }
+  &.AnchorBearing{
+    .bigWidget(@size1);
+  }
+  &.AnchorDistance{
+    .bigWidget(@size2);
+  }
+  &.AnchorWatchDistance{
+    .bigWidget(@size1);
+  }
+  &.RteDistance{
+    .bigWidget(@size2);
+  }
+  &.RteDistance{
+    .timeWidget(@timeFont);
+  }
+  &.LargeTime{
+    .timeWidget(@clockFont);
+  }
+  &.zoomWidget{
+    .smallWidget(@size1);
+    .widgetData{
+      text-align: center;
+      font-size: @timeFont;
+    }
+    .vertical &{
+      .widgetData{
+        font-size: @timeFont;
+      }
+    }
+    .rzoom{
+      display: inline-block;
+    }
+  }
+  &.Position,&.WpPosition{
+    .smallWidget(@size1);
+    .widgetData{
+      text-align: center;
+    }
+  }
+  &.timeStatusWidget{
+    .smallWidget(@size1);
+    .status{
+      width: 1.5em;
+      height: 1.5em;
+      text-align: center;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+    .widgetData{
+      text-align: center;
+    }
+  }
+  &.etaWidget{
+    .smallWidget(@size1);
+    .widgetData{
+      text-align: center;
+      &.markerName{
+        margin-top: 0;
+      }
+    }
+  }
+  &.aisTargetWidget{
+    .smallWidget(@size1);
+    .aisFront{
+      display: inline-block;
+      font-size: 1.5em;
+    }
+    .label{
+      .mdText2();
+      width: 2em;
+    }
+    .widgetData ~ .widgetData{
+      margin-top: 0;
+    }
+  }
+
+  &.activeRouteWidget{
+    .smallWidget(@size1);
+    .routeName{
+      margin-top: 0.8em;
+      margin-right: 0.2em;
+      .mdText2();
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .routeRemain{
+      font-size: 1.5em;
+    }
+    &.approach{
+      .nightBackFade(@routeApproachingColor);
+    }
+  }
+
+}

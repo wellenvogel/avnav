@@ -22,14 +22,14 @@ class XteWidget extends React.Component{
     }
     render(){
         let self = this;
-        let classes = "avn_widget avn_xteWidget " + this.props.classes || ""+ " "+this.props.className||"";
+        let classes = "widget avn_xteWidget " + this.props.classes || ""+ " "+this.props.className||"";
         let style = this.props.style || {};
         setTimeout(self.drawXte,0);
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
                 <canvas className='avn_widgetData' ref={self.canvasRef}></canvas>
-                <div className='avn_widgetInfoLeft'>XTE</div>
-                <div className='avn_widgetInfoRight'>nm</div>
+                <div className='infoLeft'>XTE</div>
+                <div className='infoRight'>nm</div>
             </div>
 
         );

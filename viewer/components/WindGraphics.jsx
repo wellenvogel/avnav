@@ -20,7 +20,7 @@ class WindGraphics extends React.Component{
     }
     render(){
         let self = this;
-        let classes = "avn_widget avn_WindGraphics " + this.props.classes || ""+ " "+this.props.className||"";
+        let classes = "widget avn_WindGraphics " + this.props.classes || ""+ " "+this.props.className||"";
         let style = this.props.style || {};
         setTimeout(self.drawWind,0);
         let windSpeed="";
@@ -37,8 +37,8 @@ class WindGraphics extends React.Component{
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
                 <canvas className='avn_widgetData' ref={self.canvasRef}></canvas>
-                <div className='avn_widgetInfoLeft'>Wind</div>
-                <div className='avn_widgetInfoRight'>{showKnots?"kn":"m/s"}</div>
+                <div className='infoLeft'>Wind</div>
+                <div className='infoRight'>{showKnots?"kn":"m/s"}</div>
                 <div className="avn_windSpeed">{windSpeed}</div>
             </div>
 

@@ -15,7 +15,7 @@ class TimeStatusWidget extends React.Component{
     }
     render(){
         let self=this;
-        let classes="avn_widget avn_timeStatusWidget avn_centeredWidget "+this.props.classes||""+ " "+this.props.className||"";
+        let classes="widget timeStatusWidget "+this.props.className||"";
         let imgSrc=this.props.gpsValid? PropertyHandler.getProperties().statusOkImage:PropertyHandler.getProperties().statusErrorImage;
         let time="----";
         if (this.props.time !== undefined){
@@ -23,9 +23,9 @@ class TimeStatusWidget extends React.Component{
         }
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
-            <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
-            <img className="avn_boatPositionStatus" src={imgSrc}/>
-            <div className="avn_widgetData avn_gpsTime">{time}</div>
+            <div className='infoLeft'>{this.props.caption}</div>
+            <img className="status" src={imgSrc}/>
+            <div className="widgetData">{time}</div>
         </div>
         );
     }
@@ -34,7 +34,7 @@ class TimeStatusWidget extends React.Component{
 
 TimeStatusWidget.propTypes={
     onClick: PropTypes.func,
-    classes: PropTypes.string,
+    className: PropTypes.string,
     time: PropTypes.objectOf(Date),
     gpsValid: PropTypes.bool
 };

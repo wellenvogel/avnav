@@ -13,7 +13,7 @@ class ZoomWidget extends React.Component{
         return false;
     }
     render(){
-        let classes="avn_widget avn_zoomWidget "+this.props.classes||"";
+        let classes="widget zoomWidget ";
         if (this.props.className) classes+=" "+this.props.className;
         let style=this.props.style||{};
         let val=this.props.default||'--';
@@ -26,13 +26,13 @@ class ZoomWidget extends React.Component{
         }
         return (
         <div className={classes} onClick={this.props.onClick} style={style}>
-            <div className='avn_widgetData'>{val}
+            <div className='widgetData'>{val}
                 {
-                    (rzoom !== undefined)?<div className="avn_rzoom">({rzoom})</div>:''
+                    (rzoom !== undefined)?<div className="rzoom">({rzoom})</div>:''
 
                 }
             </div>
-            <div className='avn_widgetInfoLeft'>{this.props.caption}</div>
+            <div className='infoLeft'>{this.props.caption}</div>
         </div>
         );
     }

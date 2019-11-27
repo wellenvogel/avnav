@@ -67,8 +67,8 @@ const write=(storeKeys,data,opt_omitCallbacks)=>{
             if (data.route && !hasChanged) hasChanged = data.route.differsTo(route);
         }
     }
-    if (storeKeys.activeName){
-        let newName=data.route?data.route.name:undefined;
+    if (storeKeys.activeName && data.leg){
+        let newName=data.leg.getRouteName();
         if (newName != data.activeName){
             data.activeName=newName;
         }
@@ -352,7 +352,8 @@ class RouteEdit{
     }
     getRouteName(){
         let data=load(this.storeKeys);
-        if (!data.route) return;
+        let [route]=StateHelper.getRouteIndexFlag(data);
+        if (!route) return;
         return data.route.name;
     }
     getIndexFromPoint(point,opt_bestMatching){
@@ -411,8 +412,8 @@ class RouteEdit{
     }
     isApproaching(){
         let data=load(this.storeKeys);
-        if (data.leg) return false;
-        return leg.isApproaching();
+        if (!data.leg) return false;
+        return data.leg.isApproaching();
     }
 }
 

@@ -72,7 +72,7 @@ class WidgetFactory{
             let wprops = assign({}, props, mergedProps);
             let {style,...childProperties}=opt_properties||{}; //filter out style for children
             if (mergedProps.children) {
-                return <div {...mergedProps} className="avn_widget avn_combinedWidget">
+                return <div {...mergedProps} className="widget combinedWidget">
                     {mergedProps.children.map((item)=> {
                         let Item = self.createWidget(item, childProperties);
                         return <Item />
@@ -82,6 +82,8 @@ class WidgetFactory{
             else {
                 let RenderWidget = mergedProps.wclass || DirectWidget;
                 let storeKeys = mergedProps.storeKeys;
+                if (wprops.className) wprops.className+=" "+wprops.name;
+                else wprops.className=wprops.name;
                 if (!storeKeys) {
                     storeKeys = RenderWidget.storeKeys;
                 }

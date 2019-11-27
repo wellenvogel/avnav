@@ -20,28 +20,32 @@ class ActiveRouteWidget extends React.Component{
     componentDidUpdate(){
 
     }
-    render(){
+
+    render() {
         if (!this.props.routeName) return null;
-        let self=this;
-        let classes="avn_widget avn_activeRouteWidget "+this.props.className||"";
-        if (this.props.isApproaching) classes +=" avn_route_display_approach ";
+        let self = this;
+        let classes = "widget activeRouteWidget " + this.props.className || "";
+        if (this.props.isApproaching) classes += " approach ";
         return (
-        <div className={classes} onClick={this.props.onClick} style={this.props.style}>
-            <div className="avn_widgetInfoLeft">RTE</div>
-            <div className="avn_routeName">{this.props.routeName}</div>
-            <div>
-                <span className="avn_routeRemain">{Formatter.formatDecimal(this.props.remain,3,1)}</span>
-                <span className='avn_unit'>nm</span>
-            </div>
-            <div className="avn_routeEta">{Formatter.formatTime(this.props.eta)}</div>
-            { this.props.isApproaching ?
-                <div className="avn_routeNext">
-                    <span className="avn_routeNextCourse">{Formatter.formatDecimal(this.props.nextCourse,3,0)}</span>
-                    <span className='avn_unit'>&#176;</span>
+            <div className={classes} onClick={this.props.onClick} style={this.props.style}>
+                <div className="infoLeft">RTE</div>
+                <div className="widgetData">
+                    <div className="routeName">{this.props.routeName}</div>
+                    <div>
+                        <span className="routeRemain">{Formatter.formatDecimal(this.props.remain, 3, 1)}</span>
+                        <span className='unit'>nm</span>
+                    </div>
+                    <div className="routeEta">{Formatter.formatTime(this.props.eta)}</div>
+                    { this.props.isApproaching ?
+                        <div className="routeNext">
+                            <span
+                                className="routeNextCourse">{Formatter.formatDecimal(this.props.nextCourse, 3, 0)}</span>
+                            <span className='unit'>&#176;</span>
+                        </div>
+                        : <div></div>
+                    }
                 </div>
-                : <div></div>
-            }
-        </div>
+            </div>
         );
     }
 

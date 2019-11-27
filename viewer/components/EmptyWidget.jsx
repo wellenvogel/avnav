@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 
 class EmptyWidget extends React.Component{
     render(){
-        let classes="avn_widget "+this.props.classes||"";
+        let classes="widget "+this.props.classes||"";
         if (this.props.className) classes+=" "+this.props.className;
         let style=this.props.style||{};
         return (

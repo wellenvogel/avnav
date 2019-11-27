@@ -28,8 +28,8 @@ class AisTargetWidget extends React.Component{
         }
         let current=this.props.current;
         let self=this;
-        let classes="avn_widget avn_aisTargetWidget avn_centeredWidget "+this.props.classes||""+ " "+this.props.className||"";
-        let small = (this.props.mode === "small" || this.props.mode === "gps");
+        let classes="widget aisTargetWidget "+this.props.className||"";
+        let small = (this.props.mode === "horizontal" || this.props.mode === "gps");
         let aisProperties={};
         if (current.mmsi && current.mmsi !== ""){
             aisProperties.warning=current.warning||false;
@@ -44,28 +44,28 @@ class AisTargetWidget extends React.Component{
                 <div className={classes}
                      style={style}
                      onClick={this.click}>
-                    <div className="avn_widgetInfoLeft">AIS</div>
+                    <div className="infoLeft">AIS</div>
 
-                    { ! small && <div className="avn_widgetData avn_widgetDataFirst">
-                        <span className='avn_label '>D</span>
-                        <span className="avn_ais_data">{AisFormatter.format('distance',current)}</span>
-                        <span className="avn_unit">nm</span>
+                    { ! small && <div className="widgetData">
+                        <span className='label '>D</span>
+                        <span className="aisData">{AisFormatter.format('distance',current)}</span>
+                        <span className="unit">nm</span>
                     </div> }
-                    { ! small && <div className="avn_widgetData">
-                        <span className='avn_label '>C</span>
-                        <span className="avn_ais_data">{AisFormatter.format('cpa',current)}</span>
-                        <span className="avn_unit">nm</span>
+                    { ! small && <div className="widgetData">
+                        <span className='label '>C</span>
+                        <span className="aisData">{AisFormatter.format('cpa',current)}</span>
+                        <span className="unit">nm</span>
                     </div> }
                     {current.mmsi !== undefined &&
-                    <div className="avn_widgetData">
-                        <span className='avn_label '>T</span>
-                        <span className="avn_ais_data">{AisFormatter.format('tcpa',current)}</span>
-                        <span className="avn_unit">h</span>
+                    <div className="widgetData">
+                        <span className='label '>T</span>
+                        <span className="aisData">{AisFormatter.format('tcpa',current)}</span>
+                        <span className="unit">h</span>
                     </div>
                     }
                     {current.mmsi !== undefined &&
-                    <div className="avn_widgetData">
-                        <span className='avn_ais_front avn_ais_data'>{front}</span>
+                    <div className="widgetData">
+                        <span className='aisFront aisData'>{front}</span>
                     </div>
                     }
                 </div>
@@ -90,7 +90,7 @@ AisTargetWidget.storeKeys={
 AisTargetWidget.propTypes={
     //formatter: React.PropTypes.func,
     onClick: PropTypes.func,
-    classes: PropTypes.string,
+    className: PropTypes.string,
     current: PropTypes.object,
     mode: PropTypes.string
 };
