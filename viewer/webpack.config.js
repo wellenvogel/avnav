@@ -5,11 +5,9 @@ var MiniCssExtractPlugin=require('mini-css-extract-plugin');
 var generateLicense=require('./collectLicense');
 var GenerateAssetsPlugin=require('generate-asset-webpack-plugin');
 
-var cssLoaderQuery="&localIdentName=[path][name]---[local]---[hash:base64:5]";
 var outDir="build/debug";
 var isProduction=(process.env.NODE_ENV === 'production') || (process.argv.indexOf('-p') !== -1);
 if (isProduction) {
-    cssLoaderQuery="";
     outDir="build/release";
 }
 

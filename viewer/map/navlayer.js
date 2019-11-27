@@ -4,7 +4,7 @@
 
 import NavCompute from '../nav/navcompute' ;
 import navobjects from '../nav/navobjects' ;
-import anchor from '../images/icons-new/anchor.svg' ;
+import anchor from '../images/icons-new/anchor.png' ;
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
