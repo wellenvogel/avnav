@@ -47,9 +47,15 @@
   }
   .widgetData{
     text-align: right;
+    max-width: 100%;
+    max-height: 100%;
   }
   &.average .infoLeft{
     .nightForeColor(red);
+  }
+
+  .label {
+    .mdText2();
   }
 }
 
@@ -110,8 +116,8 @@
   .smallWidget(@size){
     .widgetData{
       font-size: @smallFont;
-      margin-top: 0.55em;
-      margin-right: 0.1em;
+      padding-top: 0.55em;
+      padding-right: 0.1em;
     }
     width: @size;
     .vertical &{
@@ -220,7 +226,6 @@
       font-size: 1.5em;
     }
     .label{
-      .mdText2();
       width: 2em;
     }
     .widgetData ~ .widgetData{
@@ -244,5 +249,124 @@
       .nightBackFade(@routeApproachingColor);
     }
   }
+  &.editRouteWidget{
+    border: 3px solid;
+    .nightBorderFade(@colorGreen);
+    &.activeRoute{
+      .nightBorderFade(@colorRed);
+    }
+    .smallWidget(@size1);
+    .widgetData{
+      .routeInfo {
+        width: 4.5em;
+        display: inline-block;
+        .horizontal &{
+          width: auto;
+          margin-right: 0.3em;
+        }
+      }
+      &.routeName{
+        margin-top: 0.5em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        .horizontal &{
+          text-align: left;
+          display: block;
+          margin-top: 0.5em;
+        }
+      }
+      .horizontal &{
+        margin-top: 0;
+        display: inline-block;
+      }
+
+    }
+
+  }
+
+  &.centerDisplayWidget{
+    .smallWidget(@size1);
+    .widgetData ~ .widgetData{
+      margin-top: 0;
+    }
+    .value{
+      display: inline-block;
+    }
+    .label {
+      display: inline-block;
+      background-size: 1em 1em;
+      background-repeat: no-repeat;
+      width: 1em;
+      height: 1em;
+      float: left;
+      &.boat {
+        background-image: url(images/icons-new/boat.svg);
+      }
+      &.marker {
+        background-image: url(images/icons-new/waypoint.svg);
+      }
+    }
+    .horizontal &{
+      min-width: 10em;
+    }
+  }
+  &.windWidget{
+    .smallWidget(@size2);
+    .widgetData{
+      font-size: @timeFont;
+    }
+    .windInner {
+      position: relative;
+      padding-top: 0.7em;
+      .widgetData{
+        margin-top: 0;
+        font-size: @timeFont;
+      }
+    }
+  }
+  &.DepthDisplay{
+    .bigWidget(@size1);
+  }
+  &.xteDisplay{
+    .smallWidget(@size1)
+  }
+  &.windGraphics{
+    .smallWidget(@size2);
+    .windSpeed {
+      text-align: right;
+      font-size: @timeFont;
+    }
+    .horizontal &{
+      .widgetData,.windSpeed{
+        display: inline-block;
+      }
+    }
+  }
+  &.routePointsWidget {
+    .activeEntry .more {
+      display: inline-block;
+      position: absolute;
+      right: 0;
+      top: 20%;
+    }
+    overflow: hidden;
+    .flex-shrink(1) !important;
+  }
+  &.alarmWidget{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 3em;
+    font-size: @timeFont;
+    .nightBackFade(@colorRed);
+    padding: 1.5em;
+    padding-top: 1em;
+    margin: 0.5em;
+    border-radius: 4px;
+    .mdShadow2();
+  }
+
 
 }

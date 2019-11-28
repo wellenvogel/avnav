@@ -1,21 +1,21 @@
 /**
  * Created by andreas on 20.11.16.
  */
-let EtaWidget=require('./EtaWidget.jsx');
-let TimeStatusWidget=require('./TimeStatusWidget.jsx');
-let AisTargetWidget=require('./AisTargetWidget.jsx');
-let ActiveRouteWidget=require('./ActiveRouteWidget.jsx');
-let EditRouteWidget=require('./EditRouteWidget.jsx');
-let CenterDisplayWidget=require('./CenterDisplayWidget.jsx');
-let WindWidget=require('./WindWidget');
-let XteWidget=require('./XteWidget');
-let EmptyWidget=require('./EmptyWidget');
-let WindGraphics=require('./WindGraphics');
-let DirectWidget=require('./DirectWidget.jsx');
-let ZoomWidget=require('./ZoomWidget.jsx');
-let keys=require('../util/keys.jsx').default;
-let AlarmWidget=require('./AlarmWidget.jsx');
-let RoutePointsWidget=require('./RoutePointsWidget.jsx');
+import EtaWidget from './EtaWidget.jsx';
+import TimeStatusWidget from './TimeStatusWidget.jsx';
+import AisTargetWidget from './AisTargetWidget.jsx';
+import ActiveRouteWidget from './ActiveRouteWidget.jsx';
+import EditRouteWidget from './EditRouteWidget.jsx';
+import CenterDisplayWidget from './CenterDisplayWidget.jsx';
+import WindWidget from './WindWidget';
+import XteWidget from './XteWidget';
+import EmptyWidget from './EmptyWidget';
+import WindGraphics from './WindGraphics';
+import DirectWidget from './DirectWidget.jsx';
+import ZoomWidget from './ZoomWidget.jsx';
+import keys from '../util/keys.jsx';
+import AlarmWidget from './AlarmWidget.jsx';
+import RoutePointsWidget from './RoutePointsWidget.jsx';
 
 let widgetList=[
     {
@@ -224,8 +224,6 @@ let widgetList=[
     {
         name: 'DepthDisplay',
         caption: 'DPT',
-        dataKey: 'depthBelowTransducer',
-        classes: 'avn_depthWidget',
         unit: 'm',
         storeKeys:{
             value:keys.nav.gps.depthBelowTransducer,

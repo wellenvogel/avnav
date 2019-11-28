@@ -14,7 +14,7 @@ class WindWidget extends React.Component{
         return Helper.compareProperties(this.props,nextProps,WindWidget.storeKeys);
     }
     render(){
-        let classes = "widget avn_windWidget " + this.props.classes || ""+ " "+this.props.className||"";
+        let classes = "widget windWidget " +this.props.className||"";
         let style = this.props.style || {};
         let windSpeed="";
         let showKnots=PropertyHandler.getProperties().windKnots;
@@ -24,21 +24,35 @@ class WindWidget extends React.Component{
                 let nm=PropertyHandler.getProperties().NM;
                 windSpeed=windSpeed*3600/nm;
             }
-            if (windSpeed < 10) windSpeed=Formatter.formatDecimal(windSpeed,1,2);
+            if (windSpeed < 10) windSpeed=Formatter.formatDecimal(windSpeed,2,1);
             else windSpeed=Formatter.formatDecimal(windSpeed,3,0);
         }catch(e){}
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
-                <div className="avn_windInner">
-                    <div className='avn_widgetData'>{Formatter.formatDecimal(this.props.windAngle,3,0)}</div>
-                    <div className='infoLeft'>WD</div>
-                    <div className='infoRight'>°</div>
-                </div>
-                <div className="avn_windInner">
-                    <div className='avn_widgetData'>{windSpeed}</div>
-                    <div className='infoLeft'>WS</div>
-                    <div className='infoRight'>{showKnots?"kn":"m/s"}</div>
-                </div>
+                {(this.props.mode == 'horizontal') ?
+                    <React.Fragment>
+                        <div className='infoLeft'>W</div>
+                        <div className="widgetData">
+                            {Formatter.formatDirection(this.props.windAngle)}
+                            <span className="unit">°</span>
+                            /{windSpeed}
+                            <span className="unit">{showKnots ? "kn" : "m/s"}</span>
+                        </div>
+                    </React.Fragment>
+                    :
+                    <React.Fragment>
+                        <div className="windInner">
+                            <div className='widgetData'>{Formatter.formatDirection(this.props.windAngle)}</div>
+                            <div className='infoLeft'>WD</div>
+                            <div className='infoRight'>°</div>
+                        </div>
+                        <div className="windInner">
+                            <div className='widgetData'>{windSpeed}</div>
+                            <div className='infoLeft'>WS</div>
+                            <div className='infoRight'>{showKnots ? "kn" : "m/s"}</div>
+                        </div>
+                    </React.Fragment>
+                }
             </div>
 
         );
@@ -50,7 +64,7 @@ class WindWidget extends React.Component{
 
 WindWidget.propTypes={
     onClick: PropTypes.func,
-    classes:    PropTypes.string,
+    className:    PropTypes.string,
     windAngle:  PropTypes.number,
     windSpeed:  PropTypes.number,
     windReference: PropTypes.string
@@ -59,8 +73,7 @@ WindWidget.propTypes={
 WindWidget.storeKeys={
     windAngle: keys.nav.gps.windAngle,
     windSpeed: keys.nav.gps.windSpeed,
-    windReference: keys.nav.gps.windReference,
-    visible: keys.properties.showWind
+    windReference: keys.nav.gps.windReference
 };
 
 module.exports=WindWidget;

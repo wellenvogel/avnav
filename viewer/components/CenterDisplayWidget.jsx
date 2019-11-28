@@ -13,44 +13,42 @@ class CenterDisplayWidget extends React.Component{
     shouldComponentUpdate(nextProps,nextState) {
         return Helper.compareProperties(this.props,nextProps,CenterDisplayWidget.storeKeys);
     }
-    render(){
-        let classes="widget avn_centerWidget "+this.props.classes||""+ " "+this.props.className||"";
-        let small = (this.props.mode == "small");
-        let tableClass="";
-        if (small) tableClass="avn_widgetDataFirst";
-        return (
-        <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
-                <div className="infoLeft">Center</div>
-            { ! small && <div className="avn_centerPosition">{Formatter.formatLonLats(this.props.centerPosition)}</div>}
-                <div className={"avn_table "+tableClass}>
-                    <div className="avn_row">
-                        <div className="avn_label avn_marker"></div>
-                        <div className="avn_center_value">
-                            <span>{Formatter.formatDecimal(this.props.markerCourse,3,0)}</span>
-                            <span className="avn_unit">&#176;</span>
-                        </div>
-                        <div className="avn_center_value">
-                            /
-                        </div>
-                        <div className="avn_center_value">
-                            <span>{Formatter.formatDecimal(this.props.markerDistance,3,1)}</span>
-                            <span className="avn_unit">nm</span>
-                        </div>
-                    </div>
-                    <div className="avn_row">
-                        <div className="avn_label avn_boat"></div>
-                        <div className="avn_center_value">
-                            <span >{Formatter.formatDecimal(this.props.centerCourse,3,0)}</span>
-                            <span className="avn_unit">&#176;</span>
-                        </div>
-                        <div className="avn_center_value">
-                            /
-                        </div>
-                        <div className="avn_center_value">
-                            <span >{Formatter.formatDecimal(this.props.centerDistance,3,1)}</span>
-                            <span className="avn_unit">nm</span>
 
-                        </div>
+    render() {
+        let classes = "widget centerDisplayWidget " + this.props.className || "";
+        let small = (this.props.mode == "horizontal");
+        return (
+            <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
+                <div className="infoLeft">Center</div>
+                { !small && <div className="widgetData">{Formatter.formatLonLats(this.props.centerPosition)}</div>}
+
+                <div className="widgetData">
+                    <div className="label marker"></div>
+                    <div className="value">
+                        <span>{Formatter.formatDirection(this.props.markerCourse)}</span>
+                        <span className="unit">&#176;</span>
+                    </div>
+                    <div className="value">
+                        /
+                    </div>
+                    <div className="value">
+                        <span>{Formatter.formatDistance(this.props.markerDistance)}</span>
+                        <span className="unit">nm</span>
+                    </div>
+                </div>
+                <div className="widgetData">
+                    <div className="label boat"></div>
+                    <div className="value">
+                        <span >{Formatter.formatDirection(this.props.centerCourse)}</span>
+                        <span className="unit">&#176;</span>
+                    </div>
+                    <div className="value">
+                        /
+                    </div>
+                    <div className="value">
+                        <span >{Formatter.formatDistance(this.props.centerDistance)}</span>
+                        <span className="unit">nm</span>
+
                     </div>
                 </div>
             </div>
@@ -69,7 +67,7 @@ CenterDisplayWidget.storeKeys={
 
 CenterDisplayWidget.propTypes={
     onClick: PropTypes.func,
-    classes: PropTypes.string,
+    className: PropTypes.string,
     markerCourse:PropTypes.number,
     markerDistance:PropTypes.number,
     centerCourse:PropTypes.number,

@@ -22,12 +22,12 @@ class XteWidget extends React.Component{
     }
     render(){
         let self = this;
-        let classes = "widget avn_xteWidget " + this.props.classes || ""+ " "+this.props.className||"";
+        let classes = "widget xteWidget " +this.props.className||"";
         let style = this.props.style || {};
         setTimeout(self.drawXte,0);
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
-                <canvas className='avn_widgetData' ref={self.canvasRef}></canvas>
+                <canvas className='widgetData' ref={self.canvasRef}></canvas>
                 <div className='infoLeft'>XTE</div>
                 <div className='infoRight'>nm</div>
             </div>
@@ -43,7 +43,7 @@ class XteWidget extends React.Component{
         let canvas=this.canvas;
         if (! canvas) return;
         let context=canvas.getContext('2d');
-        let xteMax=PropertyHandler.getProperties().gpsXteMax;
+        let xteMax=this.props.xteMax;
         let xteText=Formatter.formatDecimal(xteMax,1,1);
         let color=canvas.style.color;
         context.fillStyle =color;
@@ -105,14 +105,16 @@ class XteWidget extends React.Component{
 }
 
 XteWidget.propTypes={
-    onClick: PropTypes.func,
-    classes: PropTypes.string,
-    markerXte: PropTypes.number
+    onClick:    PropTypes.func,
+    className:  PropTypes.string,
+    markerXte:  PropTypes.number,
+    xteMax:     PropTypes.number
 
 };
 
 XteWidget.storeKeys={
-    markerXte: keys.nav.wp.xte
+    markerXte:  keys.nav.wp.xte,
+    xteMax:     keys.properties.gpsXteMax
 };
 
 module.exports=XteWidget;

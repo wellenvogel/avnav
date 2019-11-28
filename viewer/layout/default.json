@@ -49,7 +49,6 @@
   },
   "navpage":{
     "left_not_small":[
-      {"name":"VMG"},
       {"name":"CenterDisplay"},
       {"name":"Zoom"},
       {"name":"WindDisplay"},
@@ -62,7 +61,7 @@
       {"name":"ActiveRoute"}
     ],
     "top_small":[
-      {"name":"CenterDisplay"},
+      {"name":"WindDisplay"},
       {"name":"DepthDisplay"},
       {"name":"AisTarget"},
       {"name":"LargeTime"},

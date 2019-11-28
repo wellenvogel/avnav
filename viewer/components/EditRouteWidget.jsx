@@ -20,25 +20,17 @@ class EditRouteWidget extends React.Component{
     }
     render(){
         let [route,notUsed,isActive]=StateHelper.getRouteIndexFlag(this.props);
-        let classes="widget avn_editingRouteWidget "+this.props.classes||""+ " "+this.props.className||"";
-        if (isActive) classes +=" avn_activeRoute ";
-        else classes+=" avn_otherRoute";
+        let classes="widget editRouteWidget "+this.props.className||"";
+        if (isActive) classes +=" activeRoute ";
         if (!route){
             return (
                 <div className={classes} onClick={this.props.onClick}>
                     <div className="infoLeft">RTE</div>
-                    <div className="avn_routeName">No Route</div>
+                    <div className="routeName">No Route</div>
                 </div>
             )
         }
-        let rname=undefined;
-        if (this.props.mode === "small"){
-            rname=route.name;
-        }
-        else {
-            rname = route.name.substr(0, 14);
-            if (route.name.length > 14) rname += "..";
-        }
+        let rname=route.name;
         let numPoints=route.points.length;
         let len=route.computeLength(0);
         let remain=isActive?this.props.remain:undefined;
@@ -46,23 +38,25 @@ class EditRouteWidget extends React.Component{
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style}>
             <div className="infoLeft">RTE</div>
-            <div className="avn_routeName">{rname}</div>
-            <div className="avn_routeInfoLine">
-                <span className="avn_route_label">PTS:</span>
-                <span className="avn_routeInfo">{Formatter.formatDecimal(numPoints,3)}</span>
+            <div className="routeName widgetData">{rname}</div>
+            <div className="widgetData">
+                <span className="label">PTS:</span>
+                <span className="routeInfo">{Formatter.formatDecimal(numPoints,3)}</span>
             </div>
-            <div className="avn_routeInfoLine">
-                <span className="avn_route_label">DST:</span>
-                <span className="avn_routeInfo">{Formatter.formatDecimal(len,3,1)}</span>
+            <div className="widgetData">
+                <span className="label">DST:</span>
+                <span className="routeInfo">{Formatter.formatDecimal(len,3,1)}</span>
             </div>
-            <div className="avn_routeInfoLine">
-                <span className="avn_route_label">RTG:</span>
-                <span className="avn_routeInfo">{Formatter.formatDecimal(remain,3,1)}</span>
-            </div>getRouteN
-            <div className="avn_routeInfoLine">
-                <span className="avn_route_label">ETA:</span>
-                <span className="avn_routeInfo avd_edRouteEta">{Formatter.formatTime(eta)}</span>
-            </div>
+            { this.props.mode !== "horizontal"?
+            <div className="widgetData">
+                <span className="label">RTG:</span>
+                <span className="routeInfo">{Formatter.formatDecimal(remain,3,1)}</span>
+            </div>:null}
+            { this.props.mode !== "horizontal"?
+            <div className="widgetData">
+                <span className="label">ETA:</span>
+                <span className="routeInfo">{Formatter.formatTime(eta)}</span>
+            </div>:null}
         </div>
         );
     }
@@ -71,7 +65,7 @@ class EditRouteWidget extends React.Component{
 
 EditRouteWidget.propTypes={
     onClick:PropTypes.func,
-    classes:PropTypes.string,
+    className:PropTypes.string,
     mode:   PropTypes.string, //display info side by side if small
     route:   PropTypes.objectOf(routeobjects.Route),
     remain: PropTypes.number,

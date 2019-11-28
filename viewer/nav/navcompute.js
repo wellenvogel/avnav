@@ -239,6 +239,7 @@ NavCompute.computeLegInfo=function(target,gps,opt_start){
     }
     return rt;
 };
+NavCompute.NM=1852; //m per NM
 
 module.exports=NavCompute;
 

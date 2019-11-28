@@ -6,7 +6,7 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
-import PropertyHandler from '../util/propertyhandler.js';
+import navcompute from '../nav/navcompute.js';
 import Helper from '../util/helper.js';
 
 class WindGraphics extends React.Component{
@@ -20,15 +20,15 @@ class WindGraphics extends React.Component{
     }
     render(){
         let self = this;
-        let classes = "widget avn_WindGraphics " + this.props.classes || ""+ " "+this.props.className||"";
+        let classes = "widget windGraphics " + this.props.classes || ""+ " "+this.props.className||"";
         let style = this.props.style || {};
         setTimeout(self.drawWind,0);
         let windSpeed="";
-        let showKnots=PropertyHandler.getProperties().windKnots;
+        let showKnots=this.props.showKnots;
         try{
             windSpeed=parseFloat(this.props.windSpeed);
             if (showKnots){
-                let nm=PropertyHandler.getProperties().NM;
+                let nm=navcompute.NM;
                 windSpeed=windSpeed*3600/nm;
             }
             if (windSpeed < 10) windSpeed=Formatter.formatDecimal(windSpeed,1,2);
@@ -36,10 +36,10 @@ class WindGraphics extends React.Component{
         }catch(e){}
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
-                <canvas className='avn_widgetData' ref={self.canvasRef}></canvas>
+                <canvas className='widgetData' ref={self.canvasRef}></canvas>
                 <div className='infoLeft'>Wind</div>
                 <div className='infoRight'>{showKnots?"kn":"m/s"}</div>
-                <div className="avn_windSpeed">{windSpeed}</div>
+                <div className="windSpeed">{windSpeed}</div>
             </div>
 
         );
@@ -152,11 +152,13 @@ WindGraphics.propTypes={
     onClick: PropTypes.func,
     classes: PropTypes.string,
     windSpeed: PropTypes.number,
-    windAngle: PropTypes.number
+    windAngle: PropTypes.number,
+    showKnots:  PropTypes.bool
 };
 WindGraphics.storeKeys={
-    windSpeed: keys.nav.gps.windSpeed,
-    windAngle: keys.nav.gps.windAngle,
-    visible: keys.properties.showWind
+    windSpeed:  keys.nav.gps.windSpeed,
+    windAngle:  keys.nav.gps.windAngle,
+    visible:    keys.properties.showWind,
+    showKnots:  keys.properties.windKnots
 };
 module.exports=WindGraphics;
