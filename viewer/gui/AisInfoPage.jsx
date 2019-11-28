@@ -29,7 +29,7 @@ const displayItems = [
     {name: 'course', label: 'COG'},
     {name: 'destination', label: 'Destination'},
     {name: 'shiptype', label: 'Type'},
-    {name: 'passFront', label: 'we pass', addClass: 'avn_ais_front'},
+    {name: 'passFront', label: 'we pass', addClass: 'aisFront'},
     {name: 'position', label: 'Position'}
 ];
 
@@ -47,7 +47,7 @@ const createItem=(config,mmsi)=>{
     if (config.addClass)cl+=" "+config.addClass;
     return Dynamic((props)=> {
         return (
-        <div className="row">
+        <div className="aisInfoRow">
             <div className='label '>{props.label}</div>
             <div className={cl}>{AisFormatter.format(props.name, props.current)}</div>
         </div>

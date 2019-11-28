@@ -114,7 +114,7 @@ class Dialog extends React.Component{
                         </label>
                         {this.props.showAccess?
                             <label onClick={this.accessChange}>External access
-                                <span className={'avnCheckbox'+(this.state.allowAccess?' checked':'')}/>
+                                <span className={'checkBox'+(this.state.allowAccess?' checked':'')}/>
                             </label>
                             :null
                         }

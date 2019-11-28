@@ -10,16 +10,16 @@ const WayPointItem =(props)=>{
         let info;
         let formatted=routeobjects.formatRoutePoint(props);
         if (props.showLatLon){
-            info=<div className="avn_route_point_ll">{formatted.latlon}</div>;
+            info=<div className="info">{formatted.latlon}</div>;
         }
         else{
-            info=<div className="avn_route_point_course">{formatted.course}&#176;/{formatted.distance}nm</div>;
+            info=<div className="info">{formatted.course}&#176;/{formatted.distance}nm</div>;
         }
-        let classNames="avn_route_info_point "+props.className||"";
+        let classNames="routeInfoPoint "+props.className||"";
         if (props.selected) classNames+=" activeEntry";
         return(
         <div className={classNames} onClick={()=>{if (props.onClick)props.onClick();}}>
-            <div className="avn_route_info_name">{props.name}</div>
+            <div className="info">{props.name}</div>
             <span className="more"></span>
             {info}
         </div>

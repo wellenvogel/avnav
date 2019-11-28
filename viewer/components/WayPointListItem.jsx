@@ -7,19 +7,18 @@ import PropTypes from 'prop-types';
 let WayPointListItem=(props)=>{
    {
         let self=this;
-        let classNames="avn_route_list_entry "+props.className||"";
+        let classNames="listEntry waypointListItem "+props.className||"";
         if (props.selected) classNames+=" activeEntry";
         return(
         <div className={classNames} onClick={props.onClick} >
-            <button className="avn_route_btnDelete avn_smallButton"
+            <button className="Delete smallButton"
                     onClick={function(ev){
                     ev.preventDefault();
                     ev.stopPropagation();
                     props.onClick('btnDelete');
                     }}/>
-            <div className="avn_route_listname">{props.name}</div>
-            <div className="avn_route_listinfo">{props.latlon},&nbsp;{props.course}&#176;/{props.distance}nm</div>
-            <div className="avn_route_targetImage"></div>
+            <div className="name">{props.name}</div>
+            <div className="info">{props.latlon},&nbsp;{props.course}&#176;/{props.distance}nm</div>
         </div>
         );
     }

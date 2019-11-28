@@ -47,6 +47,7 @@ const getCurrentEditor=()=>{
 
 const DynamicPage=Dynamic(MapPage);
 const startWaypointDialog=(item,index)=>{
+    if (! item) return;
     const wpChanged=(newWp,close)=>{
         let changedWp=WayPointDialog.updateWaypoint(item,newWp,(err)=>{
             Toast(Helper.escapeHtml(err));

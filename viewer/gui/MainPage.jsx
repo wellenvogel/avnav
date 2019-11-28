@@ -158,7 +158,7 @@ class MainPage extends React.Component {
                         </div>
                         <div className="link">
                             <div > AVNav Version <span >{avnav.version}</span></div>
-                            <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="avn_extlink">www.wellenvogel.de/software/avnav/index.php</a>
+                            <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="extLink">www.wellenvogel.de/software/avnav/index.php</a>
                             </div>
                         </div>
                     </div>

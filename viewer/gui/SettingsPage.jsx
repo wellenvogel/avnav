@@ -60,7 +60,7 @@ const CheckBoxSettingsItem=(props)=>{
     <div className={props.classsName+ " listEntry"}
                 onClick={()=>{props.onClick(!props.value);}}>
         <div className="label">{props.label}</div>
-        <span className={'avnCheckbox'+(props.value?' checked':'')}/>
+        <span className={'checkBox'+(props.value?' checked':'')}/>
     </div>
     );
 };

@@ -106,12 +106,12 @@ let RESULT = reactCreateClass({
         }
 
         return ( <div{...props}>
-            <Swipe className="avn_inner"
+            <Swipe className="inner"
                 onSwipeStart={this.onSatSwipeStart}
                 onSwipeMove={this.onSatSwipeMove}>
                 <SaturationSpectrum {...saturationConfig}/>
             </Swipe>
-            <Swipe className="avn_inner"
+            <Swipe className="inner"
                 onSwipeStart={this.onHueSwipeStart}
                 onSwipeMove={this.onHueSwipeMove}>
                 <HueSpectrum {...hueConfig} />

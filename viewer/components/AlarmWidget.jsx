@@ -42,7 +42,7 @@ class  AlarmWidget extends React.Component{
         <div className={classes} onClick={this.onClick} style={this.props.style}>
             <div className="infoLeft">Alarm</div>
             <div>
-                <span className="avn_alarmInfo">{alarmText}</span>
+                <span className="alarmInfo">{alarmText}</span>
             </div>
         </div>
         );

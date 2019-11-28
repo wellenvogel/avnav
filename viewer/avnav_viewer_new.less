@@ -13,9 +13,26 @@
   box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
+
 //----------------------------------------------------------------------------------------
 //general page set up
 //----------------------------------------------------------------------------------------
+
+input {
+  border: 2px inset;
+  .nightBackColor(inherit,#646463)
+}
+html,body {
+  .nightColors();
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Verdana,Arial,sans-serif;
+  font-size: 14px;
+  .border-box();
+}
+
 #new_pages, .app, .pageFrame{
   width: 100%;
   height: 100%;
@@ -90,18 +107,6 @@
   display: none;
 }
 
-//----------------------------------------------------------------------------------------
-//legacy support
-//----------------------------------------------------------------------------------------
-#old_pages{
-  .nightColors();
-  position: absolute;
-  top:0;
-  left: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-}
 
 //----------------------------------------------------------------------------------------
 //buttons
@@ -496,8 +501,56 @@ span.valuePrefix{
   z-index: 9999;
 }
 
+.inner{
+  display: inline-block;
+}
 
+.row{
+  display: table-row;
+}
 
+//-- WaypointItem
+
+.routeInfoPoint{
+  border-bottom: 1px solid;
+  .nightBorderColorGR();
+  padding-left: 0.1em;
+  padding-right: 0.3em;
+  padding-top: 0.1em;
+  margin-bottom: 5px;
+  padding-bottom: 0.1em;
+  position: relative;
+}
+
+//--WaypointListItem
+.waypointListItem{
+  .flex-display();
+  .flex-align-items(center);
+  .name{
+    width: 8em;
+    min-width: 8em;
+    margin-left: 1em;
+    white-space: nowrap;
+    margin-right: 1em;
+  }
+  .info{
+    .mdText2();
+  }
+}
+
+//--Checkbox
+
+.checkBox{
+  display: inline-block;
+  width:  1.8em;
+  height: 1.8em;
+  background-image: url('images/icons-new/checkbox-blank-outline.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  &.checked{
+    background-image: url('images/icons-new/checkbox-marked-outline.svg');
+  }
+}
 
 
 //----------------------------------------------------------------------------------------
@@ -540,6 +593,7 @@ span.valuePrefix{
     .inner{
       font-size: 0.8em;
       padding-top: 0.8em;
+      width: 100%;
       .status{
         padding-left: 1em;
         padding-right: 1em;
@@ -682,6 +736,14 @@ span.valuePrefix{
       }
       .infoLine{
         margin-bottom: 0.2em;
+      }
+      .label{
+        .mdText2();
+        width: 2em;
+      }
+      .info{
+        padding-left: 1em;
+        padding-right: 1em;
       }
     }
   }
@@ -837,7 +899,7 @@ span.valuePrefix{
     display: block;
     text-align: left;
   }
-  .avnCheckbox {
+  .checkBox {
     vertical-align: middle;
   }
 }
@@ -878,7 +940,7 @@ span.valuePrefix{
     display: inline-block;
     margin-left: 1em;
   }
-  .avnCheckbox{
+  .checkBox{
     vertical-align: middle;
   }
 }

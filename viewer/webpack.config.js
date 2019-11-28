@@ -84,7 +84,6 @@ module.exports = {
     entry: getEntrySources([
         '@babel/polyfill',
         './webpack-main.js',
-        './avnav_viewer.less',
         './avnav_viewer_new.less'
     ]),
     //entry: './app/main.jsx',

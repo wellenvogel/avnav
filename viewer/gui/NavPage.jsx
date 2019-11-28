@@ -79,6 +79,7 @@ const getPanelList=(panel,opt_isSmall)=>{
  * @param idx if undefined - just update the let "to" point
  */
 const startWaypointDialog=(item,idx)=>{
+    if (! item) return;
     const wpChanged=(newWp,close)=>{
         let changedWp=WayPointDialog.updateWaypoint(item,newWp,(err)=>{
             Toast(Helper.escapeHtml(err));

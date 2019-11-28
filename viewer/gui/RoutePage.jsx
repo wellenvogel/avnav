@@ -97,7 +97,7 @@ const createNewRouteDialog=(name,okCallback)=> {
                             <label>
                                 Copy Points
                             </label>
-                            <span className={'avnCheckbox' + (this.state.copyPoints ? ' checked' : '')}/>
+                            <span className={'checkBox' + (this.state.copyPoints ? ' checked' : '')}/>
                         </div>
                     </div>
                     <button name="ok" onClick={this.okFunction}>Ok</button>
@@ -152,6 +152,7 @@ const onHeadingClick=()=> {
 
 
 const startWaypointDialog=(item,index)=>{
+    if (! item) return;
     const wpChanged=(newWp,close)=>{
         if (! checkWritable()) return;
         let changedWp=WayPointDialog.updateWaypoint(item,newWp,function(err){

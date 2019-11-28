@@ -180,9 +180,9 @@ class AisPage extends React.Component{
                                     info1.map(function(info) {
                                         aisInfoKey++;
                                         return (
-                                            <span className="avn_aisInfoElement" key={aisInfoKey}>
-                                                <span className="avn_aisLabel">{info.label}: </span>
-                                                <span className="avn_aisData">{fmt.format(info.name,props)}{info.unit !== undefined && info.unit}</span>
+                                            <span className="aisInfoElement" key={aisInfoKey}>
+                                                <span className="label">{info.label}: </span>
+                                                <span className="info">{fmt.format(info.name,props)}{info.unit !== undefined && info.unit}</span>
                                             </span>
                                         );
                                     })
