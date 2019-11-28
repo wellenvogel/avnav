@@ -599,26 +599,30 @@ span.valuePrefix{
   .hfield{
     width: 50%;
     height: 100%;
+    border: 1px solid;
+    .nightBorderFade(grey);
     .widgetContainer{
       height: 100%;
       width: 100%;
       padding: 0;
       margin: 0;
-      .avn_widget:not(.avn_combinedWidget){
-        width: 100%;
-        .flex-display();
-        .flex-direction(column);
-        .flex(1);
-        .flex-justify-content(space-evenly);
-      }
+      .flex-direction(column);
     }
-    .avn_widget{
+    .widget:not(.combinedWidget){
+      width: 100%;
+      .flex-display();
+      .flex-direction(column);
+      .flex(none);
+      .flex-justify-content(space-evenly);
+      padding-top: 1.3em;
+    }
+    .widget{
       .flex-grow(0);
       .flex-shrink(0);
-      padding-top: 1.3em;
+      .flex(none);
       margin: 0;
     }
-    .avn_widgetInfoLeft {
+    .infoLeft {
       left: 0;
       padding-left: 8px;
       border-bottom: 1px solid;
@@ -627,21 +631,20 @@ span.valuePrefix{
       width: 100%;
       font-size: 0.7em;
     }
-    .avn_widgetData{
-      margin-top: 0;
+    .widgetData{
+      padding-top: 0;
       display: block;
       white-space: pre;
-      text-align: right;
     }
-    .avn_centeredWidget {
-      .avn_widgetData{
+    .centeredWidget {
+      .widgetData{
         text-align: center;
       }
     }
-    .avn_combinedWidget{
+    .combinedWidget{
       .flex-display();
       .flex-direction(row);
-      .avn_widget {
+      .widget {
         height: 100%;
         .flex-grow(1);
         .flex-shrink(1);

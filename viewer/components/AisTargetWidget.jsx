@@ -29,7 +29,7 @@ class AisTargetWidget extends React.Component{
         let current=this.props.current;
         let self=this;
         let classes="widget aisTargetWidget "+this.props.className||"";
-        let small = (this.props.mode === "horizontal" || this.props.mode === "gps");
+        let small = (this.props.mode === "horizontal" );
         let aisProperties={};
         if (current.mmsi && current.mmsi !== ""){
             aisProperties.warning=current.warning||false;
@@ -45,29 +45,32 @@ class AisTargetWidget extends React.Component{
                      style={style}
                      onClick={this.click}>
                     <div className="infoLeft">AIS</div>
-
-                    { ! small && <div className="widgetData">
-                        <span className='label '>D</span>
-                        <span className="aisData">{AisFormatter.format('distance',current)}</span>
-                        <span className="unit">nm</span>
-                    </div> }
-                    { ! small && <div className="widgetData">
-                        <span className='label '>C</span>
-                        <span className="aisData">{AisFormatter.format('cpa',current)}</span>
-                        <span className="unit">nm</span>
-                    </div> }
-                    {current.mmsi !== undefined &&
-                    <div className="widgetData">
-                        <span className='label '>T</span>
-                        <span className="aisData">{AisFormatter.format('tcpa',current)}</span>
-                        <span className="unit">h</span>
+                    <div className="aisPart">
+                        { !small && <div className="widgetData">
+                            <span className='label '>D</span>
+                            <span className="aisData">{AisFormatter.format('distance', current)}</span>
+                            <span className="unit">nm</span>
+                        </div> }
+                        { !small && <div className="widgetData">
+                            <span className='label '>C</span>
+                            <span className="aisData">{AisFormatter.format('cpa', current)}</span>
+                            <span className="unit">nm</span>
+                        </div> }
                     </div>
-                    }
-                    {current.mmsi !== undefined &&
-                    <div className="widgetData">
-                        <span className='aisFront aisData'>{front}</span>
+                    <div className="aisPart">
+                        {current.mmsi !== undefined &&
+                        <div className="widgetData">
+                            <span className='label '>T</span>
+                            <span className="aisData">{AisFormatter.format('tcpa', current)}</span>
+                            <span className="unit">h</span>
+                        </div>
+                        }
+                        {current.mmsi !== undefined &&
+                        <div className="widgetData">
+                            <span className='aisFront aisData'>{front}</span>
+                        </div>
+                        }
                     </div>
-                    }
                 </div>
             );
         }
