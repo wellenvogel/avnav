@@ -3,6 +3,7 @@
 @import "flexbox.less";
 @import "defines.less";
 @import "widgets.less";
+@import "buttons.less";
 
 *{
   .border-box();
@@ -99,7 +100,7 @@ html,body {
   float: right;
   width: 1em;
   height: 1em;
-  background-image: url('images/icons-new/ic_chevron_right.svg');
+  background-image: url('../images/icons-new/ic_chevron_right.svg');
   background-size: 100% 100%;
   opacity: 0.6;
 }
@@ -108,289 +109,6 @@ html,body {
 }
 
 
-//----------------------------------------------------------------------------------------
-//buttons
-//----------------------------------------------------------------------------------------
-.buttonBase(){
-  margin: 0.2em 0.2em 0.2em 0.2em;
-  border-top-right-radius: 0.3em;
-  border-top-left-radius: 0.3em;
-  border-bottom-right-radius: 0.3em;
-  border-bottom-left-radius: 0.3em;
-  border: 1px solid;
-  text-decoration: none;
-  .nightBorderFade(#D3D3D3);
-  .nightBackFade(#E6E6E6);
-  //position: relative;
-  cursor: pointer;
-  outline: none;
-  display: block;
-  position: relative;
-  &:after{
-    content: "";
-    background-position: center;
-    background-size: 80% 80%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-repeat: no-repeat;
-  }
-  &:disabled:after{
-    opacity: 0.5;
-  }
-}
-
-button.button{
-  .buttonBase();
-  width: 4em;
-  height: 4em;
-  font-size: @normalButtonFont;
-
-}
-button.smallButton{
-  .buttonBase();
-  width: 2em;
-  height: 2em;
-  font-size: 1rem;
-}
-button.active{
-  border: 0.3em solid ;
-  .nightBorderFade(@colorGreen);
-}
-
-.iconButton(@icon){
-  &:after {
-    background-image: url(@icon);
-  }
-}
-
-.textButton(@text){
-  &:after {
-    content: @text;
-    font-size: 2.3em;
-  }
-}
-
-button{
-  &.Cancel {
-    .iconButton('images/icons-new/ic_clear.svg');
-  }
-
-  &.Ok {
-    .iconButton('images/icons-new/ic_done.svg');
-
-  }
-  &.Forward {
-    .iconButton('images/icons-new/ic_arrow_forward.svg');
-  }
-  &.Back {
-    .iconButton('images/icons-new/ic_arrow_back.svg');
-  }
-  &.Edit {
-    .iconButton('images/icons-new/ic_edit.svg');
-  }
-
-  &.ZoomIn {
-    .iconButton('images/icons-new/ic_zoom_in.svg');
-  }
-  &.ZoomOut {
-    .iconButton('images/icons-new/ic_zoom_out.svg');
-  }
-  &.LockPos  {
-    .iconButton('images/icons-new/boat.svg');
-  }
-
-  &.LockMarker {
-    .iconButton('images/icons-new/waypoint.svg');
-  }
-
-  &.StopNav {
-    .iconButton('images/icons-new/stop-nav.svg');
-  }
-  &.CourseUp {
-    .iconButton('images/icons-new/compass.svg');
-  }
-  &.ShowRoutePanel {
-    .iconButton('images/icons-new/route.svg');
-  }
-  &.ShowGps {
-    .iconButton('images/icons-new/data.svg');
-
-  }
-  &.AnchorWatch {
-    .iconButton('images/icons-new/anchor.svg');
-
-  }
-
-  &.CancelNav {
-    .iconButton('images/icons-new/ic_clear.svg');
-
-  }
-
-  /*- nav page routing panel --*/
-  &.NavAdd {
-    .iconButton('images/icons-new/wpplus.svg');
-  }
-  &.NavDelete {
-    .iconButton('images/icons-new/wpminus.svg');
-  }
-  &.NavToCenter {
-    .iconButton('images/icons-new/wpcenter.svg');
-  }
-  &.NavGoto {
-    .iconButton('images/icons-new/wpgoto.svg');
-  }
-  &.NavInvert {
-    .iconButton('images/icons-new/invertroute.svg');
-  }
-  &.NavDeleteAll {
-    .iconButton('images/icons-new/ic_delete.svg');
-  }
-
-  &.NavNext {
-    .iconButton('images/icons-new/nextwp.svg');
-  }
-
-  &.WpLocate{
-    .iconButton('images/icons-new/center.svg');
-  }
-  &.WpPrevious{
-    .iconButton('images/icons-new/ic_arrow_back.svg');
-  }
-  &.WpNext{
-    .iconButton('images/icons-new/ic_arrow_forward.svg');
-  }
-
-  &.WpGoto {
-    .iconButton('images/icons-new/wpgoto.svg');
-  }
-  &.WpEdit {
-    .iconButton('images/icons-new/ic_edit.svg');
-  }
-
-  &.ShowStatus {
-    .iconButton('images/icons-new/status.svg');
-  }
-
-  &.ShowSettings {
-    .iconButton('images/icons-new/ic_settings.svg');
-  }
-
-  &.Connected {
-    .iconButton('images/icons-new/plug.svg');
-  }
-
-  &.Night {
-    .iconButton('images/icons-new/night.svg');
-  }
-
-  &.ShowDownload {
-    .iconButton('images/icons-new/ic_file_download.svg');
-  }
-
-  &.MainCancel {
-    .iconButton('images/icons-new/ic_clear.svg');
-  }
-
-  &.MainAndroid {
-    .iconButton('images/icons-new/ic_android.svg');
-  }
-  &.MainInfo{
-    .iconButton('images/icons-new/ic_info.svg');
-  }
-
-  &.MainAddOns{
-    .iconButton('images/icons-new/apps.svg');
-  }
-
-  &.GpsCenter{
-    .iconButton('images/icons-new/center.svg');
-  }
-
-  &.Gps1{
-    .textButton('1');
-  }
-  &.Gps2{
-    .textButton('2');
-  }
-  &.Gps3{
-    .textButton('3');
-  }
-  &.Gps4{
-    .textButton('4');
-  }
-  &.Gps5{
-    .textButton('5');
-  }
-
-  &.AisNearest {
-    .iconButton('images/icons-new/ais-nearest.svg');
-  }
-  &.AisSort {
-    .iconButton('images/icons-new/sort.svg');
-  }
-  &.AisInfoLocate {
-    .iconButton('images/icons-new/center.svg');
-  }
-  &.AisInfoList {
-    .iconButton('images/icons-new/ic_list.svg');
-  }
-  &.StatusWpa {
-    .iconButton('images/icons-new/ic_rss_feed.svg');
-  }
-  &.StatusAndroid{
-    .iconButton('images/icons-new/ic_android.svg');
-  }
-  &.StatusAddresses{
-    .iconButton('images/icons-new/qrcode.svg');
-  }
-  &.StatusShutdown{
-    .iconButton('images/icons-new/ic_power.svg');
-  }
-  &.RoutePageOk{
-    .iconButton('images/icons-new/ic_done.svg');
-  }
-  &.RoutePageDownload{
-    .iconButton('images/icons-new/ic_file_download.svg');
-  }
-
-  &.DownloadPageUpload{
-    .iconButton('images/icons-new/ic_file_upload.svg');
-  }
-
-  &.DownloadPageRoutes{
-    .iconButton('images/icons-new/route.svg');
-  }
-  &.DownloadPageCharts{
-    .iconButton('images/icons-new/map2.svg');
-  }
-  &.DownloadPageTracks{
-    .iconButton('images/icons-new/track.svg');
-  }
-  &.Delete{
-    .iconButton('images/icons-new/ic_delete.svg');
-  }
-  &.Download{
-    .iconButton('images/icons-new/ic_file_download.svg');
-  }
-
-  &.DownloadPageUploadCancel{
-    .iconButton('images/icons-new/ic_clear.svg');
-  }
-  &.SettingsOK {
-    .iconButton('images/icons-new/ic_done.svg');
-  }
-
-  &.SettingsDefaults {
-    .iconButton('images/icons-new/ic_delete.svg');
-  }
-
-  &.SettingsAndroid {
-    .iconButton('images/icons-new/ic_android.svg');
-  }
-}
 
 //----------------------------------------------------------------------------------------
 //dialogs
@@ -558,11 +276,11 @@ span.valuePrefix{
   display: inline-block;
   width:  1.8em;
   height: 1.8em;
-  background-image: url('images/icons-new/checkbox-blank-outline.svg');
+  background-image: url('../images/icons-new/checkbox-blank-outline.svg');
   background-repeat: no-repeat;
   background-size: cover;
   &.checked{
-    background-image: url('images/icons-new/checkbox-marked-outline.svg');
+    background-image: url('../images/icons-new/checkbox-marked-outline.svg');
   }
 }
 
@@ -589,7 +307,7 @@ span.valuePrefix{
       float: right;
       width: 1em;
       height: 1em;
-      background-image: url('images/icons-new/ic_chevron_right.svg');
+      background-image: url('../images/icons-new/ic_chevron_right.svg');
       background-size: 100% 100%;
       opacity: 0.6;
     }
@@ -982,7 +700,7 @@ span.valuePrefix{
     width:2em;
     height:2em;
     margin: 0.2em;
-    background-image: url(images/icons-new/plug.svg);
+    background-image: url(../images/icons-new/plug.svg);
     background-size: contain;
   }
   .downloadProgress{

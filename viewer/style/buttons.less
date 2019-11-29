@@ -1,0 +1,286 @@
+@import "defines.less";
+
+@iconBase: "../images/icons-new";
+//----------------------------------------------------------------------------------------
+//buttons
+//----------------------------------------------------------------------------------------
+.buttonBase(){
+  margin: 0.2em 0.2em 0.2em 0.2em;
+  border-top-right-radius: 0.3em;
+  border-top-left-radius: 0.3em;
+  border-bottom-right-radius: 0.3em;
+  border-bottom-left-radius: 0.3em;
+  border: 1px solid;
+  text-decoration: none;
+  .nightBorderFade(#D3D3D3);
+  .nightBackFade(#E6E6E6);
+  //position: relative;
+  cursor: pointer;
+  outline: none;
+  display: block;
+  position: relative;
+  &:after{
+    content: "";
+    background-position: center;
+    background-size: 80% 80%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-repeat: no-repeat;
+  }
+  &:disabled:after{
+    opacity: 0.5;
+  }
+}
+
+button.button{
+  .buttonBase();
+  width: 4em;
+  height: 4em;
+  font-size: @normalButtonFont;
+
+}
+button.smallButton{
+  .buttonBase();
+  width: 2em;
+  height: 2em;
+  font-size: 1rem;
+}
+button.active{
+  border: 0.3em solid ;
+  .nightBorderFade(@colorGreen);
+}
+
+.iconButton(@icon){
+  &:after {
+    background-image: url("@{iconBase}/@{icon}");
+  }
+}
+
+.textButton(@text){
+  &:after {
+    content: @text;
+    font-size: 2.3em;
+  }
+}
+
+button{
+  &.Cancel {
+    .iconButton('ic_clear.svg');
+  }
+
+  &.Ok {
+    .iconButton('ic_done.svg');
+
+  }
+  &.Forward {
+    .iconButton('ic_arrow_forward.svg');
+  }
+  &.Back {
+    .iconButton('ic_arrow_back.svg');
+  }
+  &.Edit {
+    .iconButton('ic_edit.svg');
+  }
+
+  &.ZoomIn {
+    .iconButton('ic_zoom_in.svg');
+  }
+  &.ZoomOut {
+    .iconButton('ic_zoom_out.svg');
+  }
+  &.LockPos  {
+    .iconButton('boat.svg');
+  }
+
+  &.LockMarker {
+    .iconButton('waypoint.svg');
+  }
+
+  &.StopNav {
+    .iconButton('stop-nav.svg');
+  }
+  &.CourseUp {
+    .iconButton('compass.svg');
+  }
+  &.ShowRoutePanel {
+    .iconButton('route.svg');
+  }
+  &.ShowGps {
+    .iconButton('data.svg');
+
+  }
+  &.AnchorWatch {
+    .iconButton('anchor.svg');
+
+  }
+
+  &.CancelNav {
+    .iconButton('ic_clear.svg');
+
+  }
+
+  /*- nav page routing panel --*/
+  &.NavAdd {
+    .iconButton('wpplus.svg');
+  }
+  &.NavDelete {
+    .iconButton('wpminus.svg');
+  }
+  &.NavToCenter {
+    .iconButton('wpcenter.svg');
+  }
+  &.NavGoto {
+    .iconButton('wpgoto.svg');
+  }
+  &.NavInvert {
+    .iconButton('invertroute.svg');
+  }
+  &.NavDeleteAll {
+    .iconButton('ic_delete.svg');
+  }
+
+  &.NavNext {
+    .iconButton('nextwp.svg');
+  }
+
+  &.WpLocate{
+    .iconButton('center.svg');
+  }
+  &.WpPrevious{
+    .iconButton('ic_arrow_back.svg');
+  }
+  &.WpNext{
+    .iconButton('ic_arrow_forward.svg');
+  }
+
+  &.WpGoto {
+    .iconButton('wpgoto.svg');
+  }
+  &.WpEdit {
+    .iconButton('ic_edit.svg');
+  }
+
+  &.ShowStatus {
+    .iconButton('status.svg');
+  }
+
+  &.ShowSettings {
+    .iconButton('ic_settings.svg');
+  }
+
+  &.Connected {
+    .iconButton('plug.svg');
+  }
+
+  &.Night {
+    .iconButton('night.svg');
+  }
+
+  &.ShowDownload {
+    .iconButton('ic_file_download.svg');
+  }
+
+  &.MainCancel {
+    .iconButton('ic_clear.svg');
+  }
+
+  &.MainAndroid {
+    .iconButton('ic_android.svg');
+  }
+  &.MainInfo{
+    .iconButton('ic_info.svg');
+  }
+
+  &.MainAddOns{
+    .iconButton('apps.svg');
+  }
+
+  &.GpsCenter{
+    .iconButton('center.svg');
+  }
+
+  &.Gps1{
+    .textButton('1');
+  }
+  &.Gps2{
+    .textButton('2');
+  }
+  &.Gps3{
+    .textButton('3');
+  }
+  &.Gps4{
+    .textButton('4');
+  }
+  &.Gps5{
+    .textButton('5');
+  }
+
+  &.AisNearest {
+    .iconButton('ais-nearest.svg');
+  }
+  &.AisSort {
+    .iconButton('sort.svg');
+  }
+  &.AisInfoLocate {
+    .iconButton('center.svg');
+  }
+  &.AisInfoList {
+    .iconButton('ic_list.svg');
+  }
+  &.StatusWpa {
+    .iconButton('ic_rss_feed.svg');
+  }
+  &.StatusAndroid{
+    .iconButton('ic_android.svg');
+  }
+  &.StatusAddresses{
+    .iconButton('qrcode.svg');
+  }
+  &.StatusShutdown{
+    .iconButton('ic_power.svg');
+  }
+  &.RoutePageOk{
+    .iconButton('ic_done.svg');
+  }
+  &.RoutePageDownload{
+    .iconButton('ic_file_download.svg');
+  }
+
+  &.DownloadPageUpload{
+    .iconButton('ic_file_upload.svg');
+  }
+
+  &.DownloadPageRoutes{
+    .iconButton('route.svg');
+  }
+  &.DownloadPageCharts{
+    .iconButton('map2.svg');
+  }
+  &.DownloadPageTracks{
+    .iconButton('track.svg');
+  }
+  &.Delete{
+    .iconButton('ic_delete.svg');
+  }
+  &.Download{
+    .iconButton('ic_file_download.svg');
+  }
+
+  &.DownloadPageUploadCancel{
+    .iconButton('ic_clear.svg');
+  }
+  &.SettingsOK {
+    .iconButton('ic_done.svg');
+  }
+
+  &.SettingsDefaults {
+    .iconButton('ic_delete.svg');
+  }
+
+  &.SettingsAndroid {
+    .iconButton('ic_android.svg');
+  }
+}
