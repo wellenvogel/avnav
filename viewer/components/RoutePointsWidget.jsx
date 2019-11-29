@@ -44,7 +44,7 @@ class RoutePointsWidget extends React.Component{
         this.scrollSelected();
     }
     componentDidUpdate(){
-        //this.scrollSelected();
+        this.scrollSelected();
     }
     render(){
         let self=this;

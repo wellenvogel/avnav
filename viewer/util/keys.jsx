@@ -203,6 +203,7 @@ let keys={
 
         },
         editroutepage:{
+            showWpButtons:K,
             selectedWp:K,
             lastCenteredWp:K
         }

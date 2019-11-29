@@ -94,7 +94,9 @@ const widgetClick=(item,data,panel)=>{
         MapHolder.setCenter(boatPos);
         return;
     }
-
+    if (item.name == 'BRG'||item.name == 'DST'|| item.name=='ETA'|| item.name=='WpPosition'){
+        globalStore.storeData(keys.gui.editroutepage.showWpButtons,true)
+    }
 
 };
 
@@ -114,53 +116,6 @@ const checkRouteWritable=function(){
     return false;
 };
 
-const getWaypointButtons=()=>{
-    let waypointButtons=[
-        {
-            name:'WpLocate',
-            onClick:()=>{
-                let currentEditor=getCurrentEditor();
-                MapHolder.setCenter(currentEditor.getPointAt());
-                globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
-            }
-        },
-        {
-            name:'WpEdit',
-            onClick:()=>{
-                let currentEditor=getCurrentEditor();
-                startWaypointDialog(currentEditor.getPointAt(),currentEditor.getIndex());
-            }
-        },
-        {
-            name:'WpNext',
-            storeKeys:getCurrentEditor().getStoreKeys(),
-            updateFunction: (state)=> {
-                return {disabled:! StateHelper.hasPointAtOffset(state,1)};
-            },
-            onClick:()=>{
-                let currentEditor=getCurrentEditor();
-                currentEditor.moveIndex(1);
-                MapHolder.setCenter(currentEditor.getPointAt());
-                globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
-
-            }
-        },
-        {
-            name:'WpPrevious',
-            storeKeys:getCurrentEditor().getStoreKeys(),
-            updateFunction: (state)=> {
-                return {disabled:!StateHelper.hasPointAtOffset(state,-1)}
-            },
-            onClick:()=>{
-                let currentEditor=getCurrentEditor();
-                currentEditor.moveIndex(-1);
-                MapHolder.setCenter(currentEditor.getPointAt());
-                globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
-            }
-        }
-    ];
-    return waypointButtons;
-};
 
 const DEFAULT_ROUTE="default";
 
@@ -181,8 +136,64 @@ class EditRoutePage extends React.Component{
                 });
 
         }
-
+        globalStore.storeData(keys.gui.editroutepage.showWpButtons,false);
+        this.wpTimer=GuiHelpers.lifecycleTimer(this,()=>{
+            globalStore.storeData(keys.gui.editroutepage.showWpButtons,false);
+        },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
     }
+    getWaypointButtons(){
+        let self=this;
+        let waypointButtons=[
+            {
+                name:'WpLocate',
+                onClick:()=>{
+                    self.wpTimer.startTimer();
+                    let currentEditor=getCurrentEditor();
+                    MapHolder.setCenter(currentEditor.getPointAt());
+                    globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
+                }
+            },
+            {
+                name:'WpEdit',
+                onClick:()=>{
+                    sel.wpTimer.startTimer();
+                    let currentEditor=getCurrentEditor();
+                    startWaypointDialog(currentEditor.getPointAt(),currentEditor.getIndex());
+                }
+            },
+            {
+                name:'WpNext',
+                storeKeys:getCurrentEditor().getStoreKeys(),
+                updateFunction: (state)=> {
+                    return {disabled:! StateHelper.hasPointAtOffset(state,1)};
+                },
+                onClick:()=>{
+                    self.wpTimer.startTimer();
+                    let currentEditor=getCurrentEditor();
+                    currentEditor.moveIndex(1);
+                    MapHolder.setCenter(currentEditor.getPointAt());
+                    globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
+
+                }
+            },
+            {
+                name:'WpPrevious',
+                storeKeys:getCurrentEditor().getStoreKeys(),
+                updateFunction: (state)=> {
+                    return {disabled:!StateHelper.hasPointAtOffset(state,-1)}
+                },
+                onClick:()=>{
+                    self.wpTimer.startTimer();
+                    let currentEditor=getCurrentEditor();
+                    currentEditor.moveIndex(-1);
+                    MapHolder.setCenter(currentEditor.getPointAt());
+                    globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
+                }
+            }
+        ];
+        return waypointButtons;
+    };
+
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);
         let currentEditor=getCurrentEditor();
@@ -282,7 +293,9 @@ class EditRoutePage extends React.Component{
                 chartBase={chartBase}
                 panelCreator={getPanelList}
                 storeKeys={
-                    [keys.nav.routeHandler.activeName,keys.gui.global.windowDimensions]
+                    [keys.nav.routeHandler.activeName,
+                    keys.gui.global.windowDimensions,
+                    keys.gui.editroutepage.showWpButtons]
                 }
                 updateFunction={(state)=>{
                     let rt={
@@ -290,11 +303,17 @@ class EditRoutePage extends React.Component{
                         overlayContent:undefined
                     };
                     rt.buttonList=self.getButtons();
-                    if (isSmall){
-                    rt.overlayContent=<ButtonList
-                            itemList={getWaypointButtons()}
+                    if (isSmall || state[keys.gui.editroutepage.showWpButtons]){
+                        rt.overlayContent=<ButtonList
+                            itemList={self.getWaypointButtons()}
                             className="overlayContainer"
-                        />;
+                            />;
+                        if (!isSmall){
+                            self.wpTimer.startTimer();
+                        }
+                    }
+                    else{
+                        self.wpTimer.stopTimer();
                     }
                     return rt;
                 }}
