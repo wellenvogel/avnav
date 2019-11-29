@@ -24,6 +24,8 @@ import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.jsx';
+import KeyHandler from './util/keyhandler.js';
+
 
 const DynamicSound=Dynamic(SoundHandler);
 
@@ -102,6 +104,7 @@ class App extends React.Component {
     constructor(props) {
         super(props);
         this.checkSizes=this.checkSizes.bind(this);
+        this.keyDown=this.keyDown.bind(this);
         this.state={};
     }
     checkSizes(){
@@ -115,6 +118,7 @@ class App extends React.Component {
         globalStore.storeData(keys.gui.global.buttonFontSize,PropertyHandler.getButtonFontSize())
     }
     componentDidMount(){
+        document.addEventListener("keydown",this.keyDown)
         let iv=window.setInterval(this.checkSizes,1000);
         this.checkSizes();
         this.setState({interval:iv});
@@ -129,17 +133,35 @@ class App extends React.Component {
                Toast("unable to load application layout: "+error);
             }
         );
+        Requests.getJson("layout/keys.json",{useNavUrl:false,checkOk:false}).then(
+            (json)=>{
+                KeyHandler.registerMappings(json);
+            },
+            (error)=>{
+                Toast("unable to load key mappings: "+error);
+            }
+        );
 
     }
     componentWillUnmount(){
+        document.removeEventListener("keydown",this.keyDown);
         window.removeEventListener('resize',this.checkSizes);
         if (this.state.interval){
             window.clearInterval(this.state.interval);
         }
     }
+    keyDown(evt){
+        if (globalStore.getData(keys.gui.global.hasActiveInputs,false)) return;
+        KeyHandler.handleKeyEvent(evt);
+    }
     render(){
         const Dialogs = OverlayDialog.getDialogContainer;
-        return <div className="app" ref="app" style={{fontSize: this.props.fontSize+"px"}}>
+        return <div
+            className="app"
+            ref="app"
+            style={{fontSize: this.props.fontSize+"px"}}
+            tabIndex="0"
+            >
             <DynamicRouter
                 storeKeys={{
                 location: keys.gui.global.pageName,

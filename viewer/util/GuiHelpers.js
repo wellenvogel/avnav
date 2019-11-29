@@ -5,6 +5,7 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import RouteEdit from '../nav/routeeditor.js';
+import KeyHandler from './keyhandler.js';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
@@ -180,6 +181,20 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
     };
 };
 
+const keyEventHandler=(thisref,callback,component,action)=>{
+    const handler=(cbComponent,cbAction)=>{
+        callback(cbComponent,cbAction);
+    };
+    lifecycleSupport(thisref,(isUmount)=>{
+        if (isUmount){
+            KeyHandler.deregisterHandler(handler);
+        }
+        else{
+            KeyHandler.registerHandler(handler,component,action);
+        }
+    });
+};
+
 //from https://stackoverflow.com/questions/487073/how-to-check-if-element-is-visible-after-scrolling
 //returns:
 //0 - no scroll
@@ -208,5 +223,6 @@ module.exports={
     getPanelFromLayout,
     lifecycleSupport,
     lifecycleTimer,
-    scrollInContainer
+    scrollInContainer,
+    keyEventHandler
 };

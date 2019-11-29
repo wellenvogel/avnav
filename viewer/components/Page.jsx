@@ -7,6 +7,7 @@ import WidgetFactory from './WidgetFactory.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import NavData from '../nav/navdata.js';
+import KeyHandler from '../util/keyhandler.js';
 
 const alarmClick =function(){
     let alarms=globalStore.getData(keys.nav.gps.alarms,"");
@@ -35,6 +36,9 @@ class Page extends React.Component {
             </div>
             <ButtonList itemList={props.buttonList}/>
         </div>
+    }
+    componentDidMount(){
+        KeyHandler.setPage(this.props.id);
     }
     componentWillUnmount(){
         hideToast();

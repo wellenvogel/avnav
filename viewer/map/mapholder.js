@@ -19,6 +19,7 @@ import base from '../base.js';
 import PubSub from 'PubSub';
 import helper from '../util/helper.js';
 import northImage from '../images/nadel_mit.png';
+import KeyHandler from '../util/keyhandler.js';
 
 
 const PSTOPIC="mapevent";
@@ -170,6 +171,16 @@ const MapHolder=function(){
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
     this.timer=undefined;
     this.pubSub=new PubSub();
+    KeyHandler.registerHandler(()=>{self.changeZoom(+1)},"map","zoomIn");
+    KeyHandler.registerHandler(()=>{self.changeZoom(-1)},"map","zoomOut");
+    KeyHandler.registerHandler(()=>{self.setGpsLock(true)},"map","lockGps");
+    KeyHandler.registerHandler(()=>{self.setGpsLock(false)},"map","unlockGps");
+    KeyHandler.registerHandler(()=>{self.setGpsLock(!self.getGpsLock())},"map","toggleGps");
+    KeyHandler.registerHandler(()=>{self.moveCenterPercent(-10,0)},"map","left");
+    KeyHandler.registerHandler(()=>{self.moveCenterPercent(10,0)},"map","right");
+    KeyHandler.registerHandler(()=>{self.moveCenterPercent(0,-10)},"map","up");
+    KeyHandler.registerHandler(()=>{self.moveCenterPercent(0,10)},"map","down");
+    KeyHandler.registerHandler(()=>{self.setCourseUp(!self.getCourseUp())},"map","toggleCourseUp");
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
@@ -962,6 +973,16 @@ MapHolder.prototype.pixelDistance=function(point1,point2){
  */
 MapHolder.prototype.setMapRotation=function(rotation){
     this.getView().setRotation(rotation==0?0:(360-rotation)*Math.PI/180);
+};
+
+MapHolder.prototype.moveCenterPercent=function(deltax,deltay){
+    if (! this.olmap) return;
+    let center= this.olmap.getView().getCenter();
+    let centerPix=this.coordToPixel(center); //[x,y]
+    let size=this.olmap.getSize(); //[width,height]
+    let deltaxPix=size[0]*deltax/100;
+    let deltayPix=size[1]*deltay/100;
+    this.olmap.getView().setCenter(this.pixelToCoord([centerPix[0]+deltaxPix,centerPix[1]+deltayPix]));
 };
 
 /**

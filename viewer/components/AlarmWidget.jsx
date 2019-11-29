@@ -6,12 +6,22 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import compare from '../util/shallowcompare.js';
+import GuiHelper from '../util/GuiHelpers.js';
 
 
 class  AlarmWidget extends React.Component{
     constructor(props){
         super(props);
         this.onClick=this.onClick.bind(this);
+        let self=this;
+        GuiHelper.keyEventHandler(this,(component,action)=>{
+            if (action == 'stop'){
+                if (self.props.onClick) self.props.onClick();
+            }
+        },"alarm",["stop"])
+    }
+    componentDidMount(){
+
     }
     shouldComponentUpdate(nextProps,nextState){
         if (nextProps.alarmInfo === this.props.alarmInfo ) return false;

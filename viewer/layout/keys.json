@@ -1,0 +1,22 @@
+{
+  "all": {
+    "map": {
+      "zoomIn":["+","PageUp"],
+      "zoomOut":["-","PageDown"],
+      "up":"ArrowUp",
+      "down":"ArrowDown",
+      "left":"ArrowLeft",
+      "right":"ArrowRight",
+      "lockGps":"l",
+      "unlockGps":"u",
+      "toggleGps":"t",
+      "toggleCourseUp":"b"
+    },
+    "alarm":{
+      "stop":"q"
+    },
+    "button":{
+      "Cancel":"Escape"
+    }
+  }
+}

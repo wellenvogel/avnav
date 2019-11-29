@@ -1,25 +1,35 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import GuiHelper from '../util/GuiHelpers.js';
 
-const Button=function(props){
-    let className=props.className||"";
-    className+=" button "+props.name;
-    if (props.toggle !== undefined){
-        className+=props.toggle?" active":" inactive";
+class Button extends React.Component {
+    constructor(props){
+        super(props);
+        let self=this;
+        GuiHelper.keyEventHandler(this,(component,action)=>{
+            if (self.props.onClick && ! self.props.disabled) self.props.onClick();
+        },"button",this.props.name);
     }
-    let {toggle,icon,style,disabled,...forward}=props;
-    if (! style) style={};
-    if (icon !== undefined) {
-        style.backgroundImage="url("+icon+")";
+    render() {
+        let className = this.props.className || "";
+        className += " button " + this.props.name;
+        if (this.props.toggle !== undefined) {
+            className += this.props.toggle ? " active" : " inactive";
+        }
+        let {toggle,icon,style,disabled,...forward}=this.props;
+        if (!style) style = {};
+        if (icon !== undefined) {
+            style.backgroundImage = "url(" + icon + ")";
+        }
+        let add = {};
+        if (disabled) {
+            add.disabled = "disabled";
+        }
+        return (
+            <button {...forward} {...add} className={className} style={style}/>
+        );
     }
-    let add={};
-    if (disabled){
-        add.disabled="disabled";
-    }
-    return(
-        <button {...forward} {...add} className={className} style={style}/>
-    );
-};
+}
 
 Button.propTypes={
     onClick: PropTypes.func,
