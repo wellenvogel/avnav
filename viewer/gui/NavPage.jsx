@@ -65,7 +65,7 @@ const widgetClick=(item,data,panel)=>{
     }
     if (item.name == 'BRG'||item.name == 'DST'|| item.name=='ETA'|| item.name=='WpPosition'){
         activeRoute.setIndexToTarget();
-        globalStore.storeData(keys.gui.navpage.selectedWp,true)
+        globalStore.storeData(keys.gui.navpage.showWpButtons,true)
     }
 
 };
@@ -103,78 +103,6 @@ const startWaypointDialog=(item,idx)=>{
     };
     OverlayDialog.dialog(RenderDialog);
 };
-const waypointButtons=[
-    {
-        name:'WpLocate',
-        onClick:()=>{
-            MapHolder.setCenter(activeRoute.hasRoute()?activeRoute.getPointAt():activeRoute.getCurrentTarget());
-            globalStore.storeData(keys.gui.navpage.selectedWp,false);
-        }
-    },
-    {
-        name:'WpEdit',
-        onClick:()=>{
-            if (activeRoute.hasRoute()){
-                startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex());
-            }
-            else {
-                startWaypointDialog(activeRoute.getCurrentTarget());
-            }
-            globalStore.storeData(keys.gui.navpage.selectedWp,false);
-        }
-    },
-    {
-        name:'WpGoto',
-        storeKeys:activeRoute.getStoreKeys(),
-        updateFunction: (state)=> {
-            return {visible: !StateHelper.selectedIsActiveTarget(state)}
-        },
-        onClick:()=>{
-            let selected=activeRoute.getPointAt();
-            globalStore.storeData(keys.gui.navpage.selectedWp,false);
-            if (selected) RouteHandler.wpOn(selected);
-        }
-
-    },
-    {
-        name:'NavNext',
-        storeKeys:activeRoute.getStoreKeys(),
-        updateFunction: (state)=> {
-            return {visible:  StateHelper.selectedIsActiveTarget(state) &&  StateHelper.hasPointAtOffset(state,1)};
-        },
-        onClick:()=>{
-            globalStore.storeData(keys.gui.navpage.selectedWp,false);
-            activeRoute.moveIndex(1);
-            RouteHandler.wpOn(activeRoute.getPointAt());
-
-        }
-    },
-    {
-        name:'WpNext',
-        storeKeys:activeRoute.getStoreKeys(),
-        updateFunction: (state)=> {
-            return {disabled:!StateHelper.hasPointAtOffset(state,1)};
-        },
-        onClick:()=>{
-            activeRoute.moveIndex(1);
-            let next=activeRoute.getPointAt();
-            MapHolder.setCenter(next);
-
-        }
-    },
-    {
-        name:'WpPrevious',
-        storeKeys:activeRoute.getStoreKeys(),
-        updateFunction: (state)=> {
-            return {disabled:!StateHelper.hasPointAtOffset(state,-1)}
-        },
-        onClick:()=>{
-            activeRoute.moveIndex(-1);
-            let next=activeRoute.getPointAt();
-            MapHolder.setCenter(next);
-        }
-    }
-];
 
 
 class NavPage extends React.Component{
@@ -183,7 +111,95 @@ class NavPage extends React.Component{
         let self=this;
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
+        this.waypointButtons=[
+            {
+                name:'WpLocate',
+                onClick:()=>{
+                    self.wpTimer.startTimer();
+                    MapHolder.setCenter(activeRoute.hasRoute()?activeRoute.getPointAt():activeRoute.getCurrentTarget());
+                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+                }
+            },
+            {
+                name:'WpEdit',
+                onClick:()=>{
+                    self.wpTimer.startTimer();
+                    if (activeRoute.hasRoute()){
+                        startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex());
+                    }
+                    else {
+                        startWaypointDialog(activeRoute.getCurrentTarget());
+                    }
+                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+                }
+            },
+            {
+                name:'WpGoto',
+                storeKeys:activeRoute.getStoreKeys(),
+                updateFunction: (state)=> {
+                    return {visible: !StateHelper.selectedIsActiveTarget(state)}
+                },
+                onClick:()=>{
+                    self.wpTimer.startTimer();
+                    let selected=activeRoute.getPointAt();
+                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+                    if (selected) RouteHandler.wpOn(selected);
+                }
+
+            },
+            {
+                name:'NavNext',
+                storeKeys:activeRoute.getStoreKeys(),
+                updateFunction: (state)=> {
+                    return {visible:  StateHelper.selectedIsActiveTarget(state) &&  StateHelper.hasPointAtOffset(state,1)};
+                },
+                onClick:()=>{
+                    self.wpTimer.startTimer();
+                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+                    activeRoute.moveIndex(1);
+                    RouteHandler.wpOn(activeRoute.getPointAt());
+
+                }
+            },
+            {
+                name:'WpNext',
+                storeKeys:activeRoute.getStoreKeys(),
+                updateFunction: (state)=> {
+                    return {
+                        disabled:!StateHelper.hasPointAtOffset(state,1),
+                        visible: StateHelper.hasRoute(state)
+                    };
+                },
+                onClick:()=>{
+                    self.wpTimer.startTimer();
+                    activeRoute.moveIndex(1);
+                    let next=activeRoute.getPointAt();
+                    MapHolder.setCenter(next);
+
+                }
+            },
+            {
+                name:'WpPrevious',
+                storeKeys:activeRoute.getStoreKeys(),
+                updateFunction: (state)=> {
+                    return {
+                        disabled:!StateHelper.hasPointAtOffset(state,-1),
+                        visible: StateHelper.hasRoute(state)
+                    }
+                },
+                onClick:()=>{
+                    self.wpTimer.startTimer();
+                    activeRoute.moveIndex(-1);
+                    let next=activeRoute.getPointAt();
+                    MapHolder.setCenter(next);
+                }
+            }
+        ];
         activeRoute.setIndexToTarget();
+        globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+        this.wpTimer=GuiHelpers.lifecycleTimer(this,()=>{
+            globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+        },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
     }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);
@@ -315,7 +331,7 @@ class NavPage extends React.Component{
                 chartBase={chartBase}
                 panelCreator={getPanelList}
                 storeKeys={{
-                    selectedWp:keys.gui.navpage.selectedWp
+                    showWpButtons:keys.gui.navpage.showWpButtons
                 }}
                 updateFunction={(state)=>{
                     let rt={
@@ -323,11 +339,15 @@ class NavPage extends React.Component{
                         overlayContent:undefined
                     };
                     rt.buttonList=self.getButtons();
-                    if (state.selectedWp){
+                    if (state.showWpButtons){
+                        self.wpTimer.startTimer();
                         rt.overlayContent=<ButtonList
-                            itemList={waypointButtons}
+                            itemList={self.waypointButtons}
                             className="overlayContainer"
                         />;
+                    }
+                    else{
+                        self.wpTimer.stopTimer();
                     }
                     return rt;
                 }}

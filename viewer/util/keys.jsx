@@ -199,7 +199,7 @@ let keys={
             leftPanelVisible: K
         },
         navpage:{
-            selectedWp:K,
+            showWpButtons:K,
 
         },
         editroutepage:{
@@ -233,8 +233,6 @@ let keys={
         maxZoom: new Property(21),  //only allow upscaling up to this zom level
         courseAverageFactor: new Property(0.5), //moving average for course up
         courseAverageTolerance: new Property(15, "Rotation Tolerance", PropertyType.RANGE, [1, 30]), //tolerance for slow rotation
-        minGridLedvel: new Property(10),
-        loggingEnabled: new Property(true),
         maxButtons: new Property(8),
         positionQueryTimeout: new Property(1000, "Position (ms)", PropertyType.RANGE, [500, 5000, 10]), //1000ms
         trackQueryTimeout: new Property(5000, "Track (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms
@@ -313,6 +311,7 @@ let keys={
         nightColorDim: new Property(60, "Night Dim for Colors", PropertyType.RANGE, [5, 100]), //should match @nightModeVale in less
         smallBreak: new Property(480, "portrait layout below (px)", PropertyType.RANGE, [200, 9999]),
         iosWorkaroundTime: new Property(300, "time to ignore events after page show", PropertyType.RANGE, [0, 1000]),
+        wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),

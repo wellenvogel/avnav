@@ -153,11 +153,20 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
             timerData.timer=undefined;
         }
     };
+    const stopTimer=(sequence)=>{
+        if (sequence !== undefined && sequence != timerData.sequence) {
+            return;
+        }
+        if (timerData.timer) {
+            timerData.sequence++;
+            window.clearTimeout(timerData.timer);
+            timerData.timer=undefined;
+        }
+    };
     lifecycleSupport(thisref,(unmount)=>{
         timerData.sequence++;
         if (unmount){
-            if (timerData.timer) window.clearTimeout(timerData.timer);
-            timerData.timer=undefined;
+            stopTimer();
         }
         else if(opt_autostart){
             timercallback.apply(thisref,[timerData.sequence]);
@@ -166,6 +175,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
     return {
         startTimer:startTimer,
         setTimeout:setTimeout,
+        stopTimer:stopTimer,
         currentSequence:()=>{return timerData.sequence}
     };
 };
