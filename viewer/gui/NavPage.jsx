@@ -39,7 +39,7 @@ const DynamicPage=Dynamic(MapPage);
 
 const widgetClick=(item,data,panel)=>{
     if (item.name == "AisTarget"){
-        let mmsi=(data && data.mmsi)?data.mmsi:widget.mmsi;
+        let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
         if (! mmsi) return;
         history.push("aisinfopage",{mmsi:mmsi});
         return;
@@ -104,6 +104,9 @@ const startWaypointDialog=(item,idx)=>{
     OverlayDialog.dialog(RenderDialog);
 };
 
+const setCenterToTarget=()=>{
+    MapHolder.setCenter(activeRoute.hasRoute()?activeRoute.getPointAt():activeRoute.getCurrentTarget());
+};
 
 class NavPage extends React.Component{
     constructor(props){
@@ -116,7 +119,7 @@ class NavPage extends React.Component{
                 name:'WpLocate',
                 onClick:()=>{
                     self.wpTimer.startTimer();
-                    MapHolder.setCenter(activeRoute.hasRoute()?activeRoute.getPointAt():activeRoute.getCurrentTarget());
+                    setCenterToTarget();
                     globalStore.storeData(keys.gui.navpage.showWpButtons,false);
                 }
             },
@@ -200,6 +203,7 @@ class NavPage extends React.Component{
         this.wpTimer=GuiHelpers.lifecycleTimer(this,()=>{
             globalStore.storeData(keys.gui.navpage.showWpButtons,false);
         },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
+        GuiHelpers.keyEventHandler(this,setCenterToTarget,"page","centerToTarget")
     }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);

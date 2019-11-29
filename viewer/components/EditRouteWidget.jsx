@@ -9,11 +9,16 @@ import Formatter from '../util/formatter.js'
 import Helper from '../util/helper.js';
 import routeobjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
+import GuiHelper from '../util/GuiHelpers.js';
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
 
 class EditRouteWidget extends React.Component{
+    constructor(props){
+        super(props);
+        GuiHelper.nameKeyEventHandler(this,"widget");
+    }
 
     shouldComponentUpdate(nextProps,nextState){
         return Helper.compareProperties(this.props,nextProps, EditRouteWidget.storeKeys);

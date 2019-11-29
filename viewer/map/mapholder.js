@@ -181,6 +181,7 @@ const MapHolder=function(){
     KeyHandler.registerHandler(()=>{self.moveCenterPercent(0,-10)},"map","up");
     KeyHandler.registerHandler(()=>{self.moveCenterPercent(0,10)},"map","down");
     KeyHandler.registerHandler(()=>{self.setCourseUp(!self.getCourseUp())},"map","toggleCourseUp");
+    KeyHandler.registerHandler(()=>{self.centerToGps()},"map","centerToGps");
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
@@ -934,7 +935,9 @@ MapHolder.prototype.pointFromMap=function(point){
 MapHolder.prototype.setCenter=function(point){
     if (! point) return;
     if (this.gpsLocked){
-        globalStore.storeData(keys.map.centerPosition,point);
+        let p=new navobjects.WayPoint();
+        p.assign(point);
+        globalStore.storeData(keys.map.centerPosition,p);
     }
     if (! this.getView()) return;
     this.getView().setCenter(this.pointToMap([point.lon,point.lat]))

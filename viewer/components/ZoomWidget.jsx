@@ -6,8 +6,13 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
+import GuiHelper from '../util/GuiHelpers.js';
 
 class ZoomWidget extends React.Component{
+    constructor(props){
+        super(props);
+        GuiHelper.nameKeyEventHandler(this,"widget");
+    }
     shouldComponentUpdate(nextProps,nextState) {
         if (this.props.zoom != nextProps.zoom || this.props.requiredZoom != nextProps.requiredZoom) return true;
         return false;

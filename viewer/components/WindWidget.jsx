@@ -8,8 +8,13 @@ import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
 import Helper from '../util/helper.js';
+import GuiHelper from '../util/GuiHelpers.js';
 
 class WindWidget extends React.Component{
+    constructor(props){
+        super(props);
+        GuiHelper.nameKeyEventHandler(this,"widget");
+    }
     shouldComponentUpdate(nextProps,nextState){
         return Helper.compareProperties(this.props,nextProps,WindWidget.storeKeys);
     }

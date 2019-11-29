@@ -20,6 +20,7 @@ class RoutePointsWidget extends React.Component{
     constructor(props){
         super(props);
         this.scrollSelected=this.scrollSelected.bind(this);
+        GuiHelper.nameKeyEventHandler(this,"widget");
     }
 
     shouldComponentUpdate(nextProps,nextState){

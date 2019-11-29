@@ -8,11 +8,13 @@ import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import Helper from '../util/helper.js';
+import GuiHelper from '../util/GuiHelpers.js';
 
 
 class ActiveRouteWidget extends React.Component{
     constructor(props){
         super(props);
+        GuiHelper.nameKeyEventHandler(this,"widget");
     }
     shouldComponentUpdate(nextProps,nextState){
         return Helper.compareProperties(this.props,nextProps,ActiveRouteWidget.storeKeys);

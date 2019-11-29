@@ -8,12 +8,14 @@ import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import navcompute from '../nav/navcompute.js';
 import Helper from '../util/helper.js';
+import GuiHelper from '../util/GuiHelpers.js';
 
 class WindGraphics extends React.Component{
     constructor(props){
         super(props);
         this.canvasRef=this.canvasRef.bind(this);
         this.drawWind=this.drawWind.bind(this);
+        GuiHelper.nameKeyEventHandler(this,"widget");
     }
     shouldComponentUpdate(nextProps,nextState){
         return Helper.compareProperties(this.props,nextProps,WindGraphics.storeKeys);

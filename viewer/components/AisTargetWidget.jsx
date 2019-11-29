@@ -10,12 +10,14 @@ import Formatter from '../util/formatter.js';
 import PropertyHandler from '../util/propertyhandler.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import assign from 'object-assign';
+import GuiHelper from '../util/GuiHelpers.js';
 
 
 class AisTargetWidget extends React.Component{
     constructor(props){
         super(props);
         this.click=this.click.bind(this);
+        GuiHelper.nameKeyEventHandler(this,"widget",this.click);
     }
     shouldComponentUpdate(nextProps,nextState){
         return ! compare(this.props.current,nextProps.current);
@@ -80,7 +82,7 @@ class AisTargetWidget extends React.Component{
 
     }
     click(ev){
-        ev.stopPropagation();
+        if (ev.stopPropagation) ev.stopPropagation();
         this.props.onClick(assign({},this.props,{mmsi:this.props.current?this.props.current.mmsi:undefined}));
     }
 

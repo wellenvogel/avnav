@@ -8,6 +8,7 @@ import PropertyHandler from '../util/propertyhandler.js';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import Helper from '../util/helper.js';
+import GuiHelper from '../util/GuiHelpers.js';
 
 
 class XteWidget extends React.Component{
@@ -16,6 +17,7 @@ class XteWidget extends React.Component{
         super(props);
         this.canvasRef=this.canvasRef.bind(this);
         this.drawXte=this.drawXte.bind(this);
+        GuiHelper.nameKeyEventHandler(this,"widget");
     }
     shouldComponentUpdate(nextProps,nextState){
         return Helper.compareProperties(this.props,nextProps, XteWidget.storeKeys);

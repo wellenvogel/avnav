@@ -18,5 +18,20 @@
     "button":{
       "Cancel":"Escape"
     }
+  },
+  "navpage":{
+    "widget":{
+      "AisTarget":"a"
+    },
+    "button":{
+      "LockMarker":"g",
+      "StopNav": "s"
+    },
+    "map":{
+      "centerToGps":"c"
+    },
+    "page":{
+      "centerToTarget":"w"
+    }
   }
 }

@@ -6,8 +6,13 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Helper from '../util/helper.js';
 import Value from './Value.jsx';
+import GuiHelper from '../util/GuiHelpers.js';
 
 class DirectWidget extends React.Component{
+    constructor(props){
+        super(props);
+        GuiHelper.nameKeyEventHandler(this,"widget")
+    }
     shouldComponentUpdate(nextProps,nextState) {
         return Helper.compareProperties(this.props,nextProps,{value:1,isAverage:1});
     }

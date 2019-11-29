@@ -3,7 +3,6 @@
      we do not have a gpsd and we can only directly use serial readers -->
 <AVNServer>
 <AVNConfig loglevel="DEBUG"
-	logfile="../data_linux/avnav.log" 
 	debugToLog="true"
     systimediff="5"
     settimecmd="beep"
@@ -81,6 +80,7 @@
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 	<UserTool url="http://www.wellenvogel.de" title="Homepage" icon="icons/wb_sunny.svg"></UserTool>
+	<UserTool url="http://www.wellenvogel.net" icon="icons/wb_sunny.svg"></UserTool>
 </AVNHttpServer>
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>

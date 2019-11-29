@@ -195,6 +195,21 @@ const keyEventHandler=(thisref,callback,component,action)=>{
     });
 };
 
+const nameKeyEventHandler=(thisref,component,opt_callback)=>{
+    if (! thisref.props || ! thisref.props.name || ! (thisref.props.onClick||opt_callback)) return;
+    if (! component) component="widget";
+    keyEventHandler(thisref,(cbComponent,cbAction)=>{
+        if (cbComponent == component && cbAction == thisref.props.name){
+            if (opt_callback){
+                opt_callback.apply(thisref,[cbComponent,cbAction])
+            }
+            else {
+                thisref.props.onClick();
+            }
+        }
+    },component,thisref.props.name);
+};
+
 //from https://stackoverflow.com/questions/487073/how-to-check-if-element-is-visible-after-scrolling
 //returns:
 //0 - no scroll
@@ -224,5 +239,6 @@ module.exports={
     lifecycleSupport,
     lifecycleTimer,
     scrollInContainer,
-    keyEventHandler
+    keyEventHandler,
+    nameKeyEventHandler
 };
