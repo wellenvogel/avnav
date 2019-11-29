@@ -131,6 +131,8 @@ class AVNRouter(AVNWorker):
   @classmethod
   def createInstance(cls, cfgparam):
     return AVNRouter(cfgparam)
+
+  ALARMS=Enum(['gps','waypoint','anchor'])
   
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
@@ -151,7 +153,9 @@ class AVNRouter(AVNWorker):
     self.routeListLock=threading.Lock()
     self.routeInfos={}
     self.getRequestParam=AVNUtil.getHttpRequestParam
-    self.activatedAlarms={} #ensure that we only re send alarms after they have been reset
+    self.activatedAlarms={} #we keep in mind if WE have already set (or reset) an alarm
+                            #independently of others already clearing the alarm
+                            #so we re-enable it only after we cleared once
     #build the backward conversion
     for k in self.fromGpx.keys():
       v=self.fromGpx[k]
@@ -454,8 +458,8 @@ class AVNRouter(AVNWorker):
         if self.currentLeg is not None and self.currentLeg.anchorDistance is not None:
           self.computeAnchor()
         else:
-          self.startStopAlarm(False,'anchor')
-          self.startStopAlarm(False, 'gps')
+          self.startStopAlarm(False,self.ALARMS.anchor)
+          self.startStopAlarm(False, self.ALARMS.gps)
           computeRMB=self.getBoolParam("computeRMB")
           computeAPB=self.getBoolParam("computeAPB")
           if computeRMB or computeAPB :
@@ -475,46 +479,50 @@ class AVNRouter(AVNWorker):
         lat = curTPV.data.get('lat')
         lon = curTPV.data.get('lon')
         if lat is not None and lon is not None:
-          self.startStopAlarm(False,'gps')
+          self.startStopAlarm(False,self.ALARMS.gps)
       except:
         pass
       AVNLog.debug("router main loop")
 
-  def startStopAlarm(self,start,name='waypoint'):
+  def startStopAlarm(self,start,name=ALARMS.waypoint):
     alert = self.findHandlerByName("AVNAlarmHandler")
     if alert is None:
       return
     if start:
+      self.activatedAlarms[name]=True
       alert.startAlarm(name)
     else:
+      if self.activatedAlarms.get(name) is not None:
+        del self.activatedAlarms[name]
       alert.stopAlarm(name)
   #compute whether we are approaching the waypoint
   def computeApproach(self):
     if self.currentLeg is None:
-      self.startStopAlarm(False)
+      self.startStopAlarm(False,self.ALARMS.waypoint)
       return
     if not self.currentLeg.active:
-      self.startStopAlarm(False)
+      self.startStopAlarm(False,self.ALARMS.waypoint)
       return
     curGps=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
     lat=curGps.get('lat')
     lon=curGps.get('lon')
     if lat is None or lon is None:
-      self.startStopAlarm(False)
+      self.startStopAlarm(False,self.ALARMS.waypoint)
       return
     dst = AVNUtil.distanceM(self.wpToLatLon(self.currentLeg.toWP),(lat,lon));
     AVNLog.debug("approach current distance=%f",float(dst))
     if (dst > self.currentLeg.approachDistance):
       self.currentLeg.approach=False
-      self.startStopAlarm(False)
+      self.startStopAlarm(False,self.ALARMS.waypoint)
       if (self.currentLeg.approach):
         #save leg
         self.setCurrentLeg(self.currentLeg)
       self.lastDistanceToCurrent=None
       self.lastDistanceToNext=None
       return
+    if self.activatedAlarms.get(self.ALARMS.waypoint) is None:
+      self.startStopAlarm(True, self.ALARMS.waypoint)
     if not self.currentLeg.approach:
-      self.startStopAlarm(True)
       self.currentLeg.approach=True
       #save the leg
       self.setCurrentLeg(self.currentLeg)
@@ -646,18 +654,15 @@ class AVNRouter(AVNWorker):
     lat = curGps.get('lat')
     lon = curGps.get('lon')
     if lat is None or lon is None:
-      self.startStopAlarm(False,'anchor')
-      if self.activatedAlarms.get('gps') is None:
-        self.startStopAlarm(True,'gps')
-        self.activatedAlarms['gps']=True
+      self.startStopAlarm(False,self.ALARMS.anchor)
+      if self.activatedAlarms.get(self.ALARMS.gps) is None:
+        self.startStopAlarm(True,self.ALARMS.gps)
       return
-    if self.activatedAlarms.get('gps'):
-      del self.activatedAlarms['gps']
-    self.startStopAlarm(False,'gps')
+    self.startStopAlarm(False,self.ALARMS.gps)
     anchorDistance = AVNUtil.distanceM((lat, lon), self.wpToLatLon(self.currentLeg.fromWP))
     AVNLog.debug("Anchor distance %d, allowed %d",anchorDistance,self.currentLeg.anchorDistance)
     if anchorDistance > self.currentLeg.anchorDistance:
-      self.startStopAlarm(True,'anchor')
+      self.startStopAlarm(True,self.ALARMS.anchor)
     return
   def deleteRouteFromList(self,name):
     self.routeListLock.acquire()
