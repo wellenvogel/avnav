@@ -153,7 +153,7 @@ const waypointButtons=[
         name:'WpNext',
         storeKeys:activeRoute.getStoreKeys(),
         updateFunction: (state)=> {
-            return {visible:StateHelper.hasPointAtOffset(state,1)};
+            return {disabled:!StateHelper.hasPointAtOffset(state,1)};
         },
         onClick:()=>{
             activeRoute.moveIndex(1);
@@ -166,7 +166,7 @@ const waypointButtons=[
         name:'WpPrevious',
         storeKeys:activeRoute.getStoreKeys(),
         updateFunction: (state)=> {
-            return {visible:StateHelper.hasPointAtOffset(state,-1)}
+            return {disabled:!StateHelper.hasPointAtOffset(state,-1)}
         },
         onClick:()=>{
             activeRoute.moveIndex(-1);

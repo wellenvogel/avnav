@@ -118,9 +118,6 @@ html,body {
   border-bottom-right-radius: 0.3em;
   border-bottom-left-radius: 0.3em;
   border: 1px solid;
-  background-position: center center;
-  background-size: 80% 80%;
-  background-repeat: no-repeat;
   text-decoration: none;
   .nightBorderFade(#D3D3D3);
   .nightBackFade(#E6E6E6);
@@ -128,6 +125,21 @@ html,body {
   cursor: pointer;
   outline: none;
   display: block;
+  position: relative;
+  &:after{
+    content: "";
+    background-position: center;
+    background-size: 80% 80%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-repeat: no-repeat;
+  }
+  &:disabled:after{
+    opacity: 0.5;
+  }
 }
 
 button.button{
@@ -149,7 +161,9 @@ button.active{
 }
 
 .iconButton(@icon){
-  background-image: url(@icon);
+  &:after {
+    background-image: url(@icon);
+  }
 }
 
 .textButton(@text){

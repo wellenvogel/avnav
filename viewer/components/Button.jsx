@@ -7,13 +7,17 @@ const Button=function(props){
     if (props.toggle !== undefined){
         className+=props.toggle?" active":" inactive";
     }
-    let {toggle,icon,style,...forward}=props;
+    let {toggle,icon,style,disabled,...forward}=props;
     if (! style) style={};
     if (icon !== undefined) {
         style.backgroundImage="url("+icon+")";
     }
+    let add={};
+    if (disabled){
+        add.disabled="disabled";
+    }
     return(
-        <button {...forward} className={className} style={style}/>
+        <button {...forward} {...add} className={className} style={style}/>
     );
 };
 
@@ -23,7 +27,8 @@ Button.propTypes={
     toggle: PropTypes.bool,
     name: PropTypes.string.isRequired,
     icon: PropTypes.string,
-    style: PropTypes.object
+    style: PropTypes.object,
+    disabled: PropTypes.bool
 };
 
 module.exports=Button;

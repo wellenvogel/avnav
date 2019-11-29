@@ -88,6 +88,12 @@ const widgetClick=(item,data,panel)=>{
             }
         }
     }
+    if (item.name =='COG' || item.name == 'SOG'|| item.name == 'TimeStatus'||item.name == 'Position'){
+        if (! globalStore.getData(keys.nav.gps.valid)) return;
+        let boatPos=globalStore.getData(keys.nav.gps.position);
+        MapHolder.setCenter(boatPos);
+        return;
+    }
 
 
 };
@@ -129,7 +135,7 @@ const getWaypointButtons=()=>{
             name:'WpNext',
             storeKeys:getCurrentEditor().getStoreKeys(),
             updateFunction: (state)=> {
-                return {visible:StateHelper.hasPointAtOffset(state,1)};
+                return {disabled:! StateHelper.hasPointAtOffset(state,1)};
             },
             onClick:()=>{
                 let currentEditor=getCurrentEditor();
@@ -143,9 +149,10 @@ const getWaypointButtons=()=>{
             name:'WpPrevious',
             storeKeys:getCurrentEditor().getStoreKeys(),
             updateFunction: (state)=> {
-                return {visible:StateHelper.hasPointAtOffset(-1)}
+                return {disabled:!StateHelper.hasPointAtOffset(state,-1)}
             },
             onClick:()=>{
+                let currentEditor=getCurrentEditor();
                 currentEditor.moveIndex(-1);
                 MapHolder.setCenter(currentEditor.getPointAt());
                 globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
@@ -275,7 +282,7 @@ class EditRoutePage extends React.Component{
                 chartBase={chartBase}
                 panelCreator={getPanelList}
                 storeKeys={
-                    [keys.nav.routeHandler.activeName]
+                    [keys.nav.routeHandler.activeName,keys.gui.global.windowDimensions]
                 }
                 updateFunction={(state)=>{
                     let rt={
