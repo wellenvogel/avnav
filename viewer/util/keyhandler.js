@@ -19,9 +19,15 @@ class KeyHandler{
             this.registrations[component]={};
         }
         let regComponent=this.registrations[component];
-        if (! regComponent[action]) regComponent[action]=[];
-        if (regComponent[action].indexOf(handlerFunction) >= 0) return false;
-        regComponent[action].push(handlerFunction);
+        if (! (action instanceof Array)){
+            action=[action]
+        }
+        for (let i =0 ; i< action.length;i++) {
+            if (!regComponent[action[i]]) regComponent[action[i]] = [];
+            if (regComponent[action[i]].indexOf(handlerFunction) <0) {
+                regComponent[action[i]].push(handlerFunction);
+            }
+        }
         return true;
     }
     deregisterHandler(handlerFunction){
@@ -84,8 +90,11 @@ class KeyHandler{
     handleKeyEvent(keyEvent){
         if (! keyEvent) return;
         let key=keyEvent.key;
-        base.log("handle key: "+key);
         if (! key) return;
+        if (keyEvent.ctrlKey){
+            key="Control-"+key;
+        }
+        base.log("handle key: "+key);
         if (! this.keymappings) return;
         let page=this.page;
         let mapping=this.findMappingForPage(key,page);
@@ -94,6 +103,8 @@ class KeyHandler{
             mapping=this.findMappingForPage(key,page);
         }
         if (! mapping) return;
+        keyEvent.preventDefault();
+        keyEvent.stopPropagation();
         base.log("found keymapping, page="+page+", component="+mapping.component+", action="+mapping.action);
         let regComponent=this.registrations[mapping.component];
         if (! regComponent) return;

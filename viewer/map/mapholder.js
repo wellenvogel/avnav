@@ -982,7 +982,9 @@ MapHolder.prototype.moveCenterPercent=function(deltax,deltay){
     if (! this.olmap) return;
     let center= this.olmap.getView().getCenter();
     let centerPix=this.coordToPixel(center); //[x,y]
+    if (!centerPix) return;
     let size=this.olmap.getSize(); //[width,height]
+    if (!size) return;
     let deltaxPix=size[0]*deltax/100;
     let deltayPix=size[1]*deltay/100;
     this.olmap.getView().setCenter(this.pixelToCoord([centerPix[0]+deltaxPix,centerPix[1]+deltayPix]));

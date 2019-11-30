@@ -156,6 +156,7 @@ let keys={
             chartList: K,
             status: K,
             addOns: K,
+            selectedChartIndex:K,
         },
         gpspage:{
             pageNumber:K,

@@ -37,29 +37,34 @@ class ItemList extends React.Component{
         if (this.props.fontSize){
             style.fontSize=this.props.fontSize;
         }
-        let Content=function(props) {
+        let Content = function (props) {
+            let idx = 0;
             return (
                 <div className={props.className} style={style} ref={(el)=>{if (props.listRef) props.listRef(el)}}>
                     {allitems.map(function (entry) {
-                    let itemProps = assign({}, entry);
-                    let key = getKey(entry);
-                    itemProps.key = key;
-                    if (!itemProps.onClick && self.props.onItemClick) {
-                        itemProps.onClick = function (data) {
-                            self.props.onItemClick(entry, data);
+                        let itemProps = assign({}, entry);
+                        let key = getKey(entry);
+                        itemProps.key = key;
+                        if (self.props.selectedIndex !== undefined && idx == self.props.selectedIndex) {
+                            itemProps.selected = true;
                         }
-                    }
-                    let ItemClass;
-                    if (self.props.itemCreator) {
-                        ItemClass = self.props.itemCreator(entry);
-                        if (!ItemClass) return null;
+                        if (!itemProps.onClick && self.props.onItemClick) {
+                            itemProps.onClick = function (data) {
+                                self.props.onItemClick(itemProps, data);
+                            }
+                        }
+                        idx++;
+                        let ItemClass;
+                        if (self.props.itemCreator) {
+                            ItemClass = self.props.itemCreator(entry);
+                            if (!ItemClass) return null;
+                            return <ItemClass {...itemProps}/>
+                        }
+                        else {
+                            ItemClass = self.props.itemClass;
+                        }
                         return <ItemClass {...itemProps}/>
-                    }
-                    else {
-                        ItemClass = self.props.itemClass;
-                    }
-                    return <ItemClass {...itemProps}/>
-                })}
+                    })}
                 </div>
             );
         };
@@ -90,7 +95,8 @@ ItemList.propTypes={
         scrollable:     PropTypes.bool,
         hideOnEmpty:    PropTypes.bool,
         fontSize:       PropTypes.any,
-        listRef:        PropTypes.func
+        listRef:        PropTypes.func,
+        selectedIndex:  PropTypes.number
 };
 
 module.exports=ItemList;

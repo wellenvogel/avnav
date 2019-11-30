@@ -18,6 +18,7 @@ import Requests from '../util/requests.js';
 import MapHolder from '../map/mapholder.js';
 import base from '../base.js';
 import chartImage from '../images/Chart60.png';
+import GuiHelper from '../util/GuiHelpers.js';
 
 const DynamicList = Dynamic(ItemList);
 
@@ -26,6 +27,20 @@ const getImgSrc=function(color){
     if (color == "red") return globalStore.getData(keys.properties.statusErrorImage);
     if (color == "green") return globalStore.getData(keys.properties.statusOkImage);
     if (color == "yellow")return globalStore.getData(keys.properties.statusYellowImage);
+};
+
+const selectChart=(offset)=>{
+    let chartList=globalStore.getData(keys.gui.mainpage.chartList);
+    let len=0;
+    if (chartList) len=chartList.length;
+    let currentIndex=globalStore.getData(keys.gui.mainpage.selectedChartIndex);
+    let newIndex=(currentIndex||0)+offset;
+    if (newIndex >= len){
+        newIndex=0;
+    }
+    if (newIndex != currentIndex){
+        globalStore.storeData(keys.gui.mainpage.selectedChartIndex,newIndex);
+    }
 };
 
 class MainPage extends React.Component {
@@ -109,7 +124,23 @@ class MainPage extends React.Component {
             }
         ];
         globalStore.storeData(keys.gui.mainpage.chartList, []);
-        globalStore.storeData(keys.gui.mainpage.addOns, [])
+        globalStore.storeData(keys.gui.mainpage.addOns, []);
+        selectChart(0);
+        GuiHelper.keyEventHandler(this,(component,action)=>{
+            if (action == "selectChart"){
+                let chartlist=globalStore.getData(keys.gui.mainpage.chartList);
+                let selected=globalStore.getData(keys.gui.mainpage.selectedChartIndex,0);
+                if (chartlist && chartlist[selected]){
+                    showNavpage(chartlist[selected]);
+                }
+            }
+            if (action == "nextChart"){
+                selectChart(1);
+            }
+            if (action == "previousChart"){
+                selectChart(-1);
+            }
+        },"page",["selectChart","nextChart","previousChart"])
     }
 
 
@@ -121,8 +152,10 @@ class MainPage extends React.Component {
     render() {
         let self = this;
         let ChartItem = function (props) {
+            let cls="chartItem";
+            if (props.selected) cls+=" activeEntry";
             return (
-                <div className="chartItem" onClick={props.onClick}>
+                <div className={cls} onClick={props.onClick}>
                     <img src={chartImage}/>
                     <span className="">{props.name}</span>
                     <span className="more"/>
@@ -176,8 +209,18 @@ class MainPage extends React.Component {
                                itemClass={ChartItem}
                                onItemClick={showNavpage}
                                itemList={[]}
-                               storeKeys={{itemList:keys.gui.mainpage.chartList}}
+                               storeKeys={{
+                                    itemList:keys.gui.mainpage.chartList,
+                                    selectedIndex: keys.gui.mainpage.selectedChartIndex
+                                    }}
                                scrollable={true}
+                               listRef={(list)=>{
+                                    if (!list) return;
+                                    let selected=list.querySelector('.activeEntry');
+                                    let mode=GuiHelper.scrollInContainer(list,selected);
+                                    if (mode < 1 || mode > 2) return;
+                                    selected.scrollIntoView(mode==1);
+                               }}
                         />
                         }
                   bottomContent={

@@ -9,7 +9,7 @@
       "right":"ArrowRight",
       "lockGps":"l",
       "unlockGps":"u",
-      "toggleGps":"t",
+      "toggleGps":["t","Control-a"],
       "toggleCourseUp":"b"
     },
     "alarm":{
@@ -25,13 +25,27 @@
     },
     "button":{
       "LockMarker":"g",
-      "StopNav": "s"
+      "StopNav": "s",
+      "ShowRoutePanel":["Control-r","r"]
     },
     "map":{
       "centerToGps":"c"
     },
     "page":{
-      "centerToTarget":"w"
+      "centerToTarget":"w",
+      "navNext": ["n","Control-n"]
+    }
+  },
+  "mainpage":{
+    "page":{
+      "selectChart":"Enter",
+      "nextChart":["Tab","ArrowDown"],
+      "previousChart":"ArrowUp"
+    },
+    "button":{
+      "ShowSettings":"Control-+",
+      "ShowStatus":"Control-s",
+      "Night":["c","Control-c","Control-g"]
     }
   }
 }

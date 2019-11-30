@@ -108,6 +108,11 @@ const setCenterToTarget=()=>{
     MapHolder.setCenter(activeRoute.hasRoute()?activeRoute.getPointAt():activeRoute.getCurrentTarget());
 };
 
+const navNext=()=>{
+    if (!activeRoute.hasRoute() ) return;
+    RouteHandler.wpOn(activeRoute.getNextWaypoint())
+};
+
 class NavPage extends React.Component{
     constructor(props){
         super(props);
@@ -203,7 +208,14 @@ class NavPage extends React.Component{
         this.wpTimer=GuiHelpers.lifecycleTimer(this,()=>{
             globalStore.storeData(keys.gui.navpage.showWpButtons,false);
         },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
-        GuiHelpers.keyEventHandler(this,setCenterToTarget,"page","centerToTarget")
+        GuiHelpers.keyEventHandler(this,(component,action)=>{
+            if (action == "centerToTarget"){
+                return setCenterToTarget();
+            }
+            if (action == "navNext"){
+                return navNext();
+            }
+        },"page",["centerToTarget","navNext"])
     }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);

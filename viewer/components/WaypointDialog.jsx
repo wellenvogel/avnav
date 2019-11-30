@@ -64,18 +64,18 @@ let WaypointDialog = reactCreateClass({
             <div>
                 <h3>Edit Waypoint</h3>
                 <div>
-                    <div className="row"><label>Name</label><input type="text" name="name"
+                    <div className="row"><label>Name</label><input type="text" name="name" tabIndex="0"
                                                                        onChange={this.valueChanged} value={this.state.name}/>
                     </div>
-                    <div className="row"><label>Lon</label><input type="text" name="lon"
+                    <div className="row"><label>Lon</label><input type="text" name="lon" tabIndex="1"
                                                                       onChange={this.valueChanged} value={this.state.lon}/>
                     </div>
-                    <div className="row"><label>Lat</label><input type="text" name="lat"
+                    <div className="row"><label>Lat</label><input type="text" name="lat" tabIndex="2"
                                                                       onChange={this.valueChanged} value={this.state.lat}/>
                     </div>
                 </div>
-                <button name="ok" onClick={this.okFunction}>Ok</button>
-                <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
+                <button name="ok" tabIndex="4" onClick={this.okFunction}>Ok</button>
+                <button name="cancel" tabIndex="3" onClick={this.cancelFunction}>Cancel</button>
                 <div className="clear"></div>
             </div>
         );
