@@ -141,7 +141,7 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
     @Override
     public void sendEventToJs(String key, int id) {
         AvnLog.i("js event key="+key+", id="+id);
-        webView.loadUrl("javascript:avnav.gui.sendAndroidEvent('" + key + "'," + id + ")");
+        webView.loadUrl("javascript:avnav.android.receiveEvent('" + key + "'," + id + ")");
     }
 
     @Override

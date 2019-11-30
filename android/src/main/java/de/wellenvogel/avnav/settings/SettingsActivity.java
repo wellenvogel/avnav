@@ -119,7 +119,7 @@ public class SettingsActivity extends PreferenceActivity {
         if (! workDir.isEmpty()){
             try {
                 String internal = activity.getFilesDir().getCanonicalPath();
-                String external = activity.getExternalFilesDir(null).getCanonicalPath();
+                String external = (activity.getExternalFilesDir(null)!=null)?activity.getExternalFilesDir(null).getCanonicalPath():null;
                 if (workDir.equals(internal)){
                     edit.putString(Constants.WORKDIR,Constants.INTERNAL_WORKDIR);
                     AvnLog.i("migrating workdir to internal");
@@ -127,6 +127,12 @@ public class SettingsActivity extends PreferenceActivity {
                 if (workDir.equals(external)){
                     edit.putString(Constants.WORKDIR,Constants.EXTERNAL_WORKDIR);
                     AvnLog.i("migrating workdir to external");
+                }
+                else{
+                    if (workDir.equals(Constants.EXTERNAL_WORKDIR) && external == null){
+                        AvnLog.i("external workdir not available, change to internal");
+                        edit.putString(Constants.WORKDIR,Constants.INTERNAL_WORKDIR);
+                    }
                 }
             }catch(IOException e){
                 AvnLog.e("Exception while migrating workdir",e);
@@ -252,7 +258,8 @@ public class SettingsActivity extends PreferenceActivity {
             //no permissions if below our app dirs
             boolean checkPermissions=true;
             if (chartDir.startsWith(AvnUtil.workdirStringToFile(Constants.INTERNAL_WORKDIR,activity).getAbsolutePath())) checkPermissions=false;
-            if (chartDir.startsWith(AvnUtil.workdirStringToFile(Constants.EXTERNAL_WORKDIR,activity).getAbsolutePath())) checkPermissions=false;
+            File externalDir=AvnUtil.workdirStringToFile(Constants.EXTERNAL_WORKDIR,activity);
+            if (externalDir != null && chartDir.startsWith(externalDir.getAbsolutePath())) checkPermissions=false;
             if (checkPermissions){
                 if (! checkStoragePermission(activity,startDialogs,showToasts)){
                     return false;

@@ -173,10 +173,11 @@ class App extends React.Component {
                 />
             <Dialogs
                 className={this.props.nightMode?"nightMode":""}/>
-            <DynamicSound
+            { ! avnav.android ?<DynamicSound
                 storeKeys={alarmStoreKeys}
                 updateFunction={computeAlarmSound}
-                />
+                />:
+                null}
             <ToastDisplay/>
         </div>
     };

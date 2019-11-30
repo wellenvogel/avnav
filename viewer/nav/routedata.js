@@ -85,7 +85,7 @@ let RouteData=function(){
                 new navobjects.WayPoint(0,0),
                 new navobjects.WayPoint(0,0),
                 false);
-            data.leg.approachDistance=globalStore.getData(keys.properties.routeApproach)+0;
+            data.leg.approachDistance=parseFloat(globalStore.getData(keys.properties.routeApproach,-1));
             changed=true;
         }
         try {
@@ -337,8 +337,8 @@ RouteData.prototype.anchorOff=function(){
  */
 RouteData.prototype._startRouting = function (mode, newWp, opt_keep_from) {
     activeRoute.modify((data)=> {
-        if (data.leg) data.leg = new routeobjects.Leg();
-        data.leg.approachDistance = globalStore.getData(keys.properties.routeApproach) + 0;
+        if (!data.leg) data.leg = new routeobjects.Leg();
+        data.leg.approachDistance = parseFloat(globalStore.getData(keys.properties.routeApproach,-1));
         let pfrom;
         let gps = globalStore.getData(keys.nav.gps.position);
         let center = globalStore.getData(keys.map.centerPosition);
@@ -665,13 +665,10 @@ RouteData.prototype._checkNextWp=function(){
  */
 RouteData.prototype._handleLegResponse = function (serverData) {
     if (!serverData) {
-        this.serverConnected = false;
         return false;
     }
     this.routeErrors = 0;
-    this.serverConnected = true;
     if (!this.connectMode) return false;
-    if (!serverData.from) return false;
     let nleg = new routeobjects.Leg();
     nleg.fromJson(serverData);
     if (nleg.currentRoute) nleg.currentRoute.server=true;
@@ -774,7 +771,7 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
 RouteData.prototype._startQuery=function() {
     this._checkNextWp();
     let url = "?request=routing&command=getleg";
-    let timeout =globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
+    let timeout = globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
     let self = this;
     if (! this.connectMode ){
         this.lastReceivedLeg=undefined;
@@ -934,7 +931,12 @@ RouteData.prototype._legChangedLocally=function(leg){
         this._saveRouteLocal(leg.currentRoute,true);
     }
     let self=this;
+    //do not allow to send until we received something
+    //this will sync us to the server when we connect (or connect again...)
+    if (! this.lastReceivedLeg) return;
+    if (! leg.differsTo(this.lastSentLeg)) return;
     if (avnav.android){
+        this.lastSentLeg=leg;
         let rt=avnav.android.setLeg(leg.toJsonString());
         if (rt){
             try{
@@ -945,10 +947,6 @@ RouteData.prototype._legChangedLocally=function(leg){
         Toast("unable to save leg: "+((rt && rt.status)?rt.status:""));
         return;
     }
-    //do not allow to send until we received something
-    //this will sync us to the server when we connect (or connect again...)
-    if (! this.lastReceivedLeg) return;
-    if (! leg.differsTo(this.lastSentLeg)) return;
     let legJson=leg.toJson();
     if (this.connectMode){
         this.lastSentLeg=leg;

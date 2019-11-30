@@ -97,6 +97,31 @@ avnav.main=function() {
         globalStore.storeData(keys.properties.connectedMode,true,true);
         avnav.version=avnav.android.getVersion();
         avnav.android.applicationStarted();
+        avnav.android.receiveEvent=(key,id)=>{
+            try {
+                //inform the android part that we noticed the event
+                avnav.android.acceptEvent(key, id);
+            } catch (e) {
+            }
+            if (key == 'backPressed'){
+                let currentPage=globalStore.getData(keys.gui.global.pageName);
+                if (currentPage == "mainpage"){
+                    avnav.android.goBack();
+                    return;
+                }
+                return history.pop();
+            }
+            if (key == 'propertyChange'){
+                globalStore.storeData(keys.gui.global.propertySequence,
+                    globalStore.getData(keys.gui.global.propertySequence,0)+1);
+                return;
+            }
+            if (key == "reloadData"){
+                globalStore.storeData(keys.gui.global.reloadSequence,
+                    globalStore.getData(keys.gui.global.reloadSequence,0)+1);
+                return;
+            }
+        }
     }
     history.push('mainpage');
     ReactDOM.render(<App/>,document.getElementById('new_pages'));

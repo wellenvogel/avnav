@@ -280,6 +280,7 @@ MapHolder.prototype.setMapUrl=function(url,chartBase){
 MapHolder.prototype.loadMap=function(div){
     let url=globalStore.getData(keys.map.url);
     let chartBase=globalStore.getData(keys.map.chartBase);
+    if (! chartBase) chartBase=url;
     let self=this;
     return new Promise((resolve,reject)=> {
         if (!url) {
@@ -301,7 +302,10 @@ MapHolder.prototype.loadMap=function(div){
             }
         }
         url = url + "/avnav.xml";
-        Requests.getHtmlOrText(url, {useNavUrl: false}).then((data)=> {
+        Requests.getHtmlOrText(url, {
+            useNavUrl: false,
+            timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout||10000))
+        }).then((data)=> {
             try {
                 self.initMap(div, data, chartBase);
                 self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
@@ -935,8 +939,7 @@ MapHolder.prototype.pointFromMap=function(point){
 MapHolder.prototype.setCenter=function(point){
     if (! point) return;
     if (this.gpsLocked){
-        let p=new navobjects.WayPoint();
-        p.assign(point);
+        let p=navobjects.WayPoint.fromPlain(point);
         globalStore.storeData(keys.map.centerPosition,p);
     }
     if (! this.getView()) return;

@@ -147,7 +147,7 @@ class RouteEdit{
         if (!data.route) return;
         let old=data.route.getPointAtIndex(data.index);
         data.route.swap();
-        if (old) data.index=route.getIndexFromPoint(old);
+        if (old) data.index=data.route.getIndexFromPoint(old);
         write(this.writeKeys,data);
     }
     setNewRoute(route,opt_index){
@@ -161,7 +161,7 @@ class RouteEdit{
             oldRouteName=data.route.name;
             oldTarget=data.leg.to;
             let oldIndex=data.route.getIndexFromPoint(oldTarget);
-            if (oldIndex >= 0)  oldNext=route.getPointAtIndex(oldIndex+1);
+            if (oldIndex >= 0)  oldNext=data.route.getPointAtIndex(oldIndex+1);
         }
         let oldPoint=data.route?data.route.getPointAtIndex(data.index):undefined;
         data.route=route.clone();

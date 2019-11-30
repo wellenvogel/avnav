@@ -310,6 +310,11 @@ public class RouteHandler {
         if (! stopParser) return;
         startSequence++;
         stopParser=false;
+        try {
+            getLeg(); //trigger creation if it does not exist
+        } catch (Exception e) {
+            AvnLog.e("Exception when initially creating currentLeg",e);
+        }
         Thread t=new Thread(new DirectoryReader(startSequence));
         t.start();
     }
@@ -587,29 +592,41 @@ public class RouteHandler {
         if (currentLeg != null) return currentLeg.getJsonData();
         JSONObject rt=new JSONObject();
         File legFile=new File(routedir,LEGFILE);
+        boolean hasError=false;
         if (! legFile.isFile()) {
             rt.put("status","legfile "+legFile.getAbsolutePath()+" not found");
-            return rt;
+            hasError=true;
         }
         int maxlegsize=MAXROUTESIZE+2000;
-        if (legFile.length() > maxlegsize){
+        if (! hasError && legFile.length() > maxlegsize){
             rt.put("status","legfile "+legFile.getAbsolutePath()+" too big, allowed "+maxlegsize);
-            return rt;
+            hasError=true;
         }
-        FileInputStream is=new FileInputStream(legFile);
-        byte buffer[]=new byte[(int)(legFile.length())];
-        int rd=is.read(buffer);
-        if (rd != legFile.length()){
-            rt.put("status","unable to read all bytes for "+legFile.getAbsolutePath());
-            return rt;
+        if (! hasError) {
+            FileInputStream is = new FileInputStream(legFile);
+            byte buffer[] = new byte[(int) (legFile.length())];
+            int rd = is.read(buffer);
+            if (rd != legFile.length()) {
+                rt.put("status", "unable to read all bytes for " + legFile.getAbsolutePath());
+                hasError=true;
+            }
+            if (! hasError) {
+                try {
+                    rt = new JSONObject(new String(buffer, "UTF-8"));
+                } catch (Exception e) {
+                    rt.put("status", "exception while parsing legfile " + legFile.getAbsolutePath() + ": " + e.getLocalizedMessage());
+                    hasError=true;
+                }
+            }
         }
-        try {
-            rt=new JSONObject(new String(buffer,"UTF-8"));
-        }catch (Exception e){
-            rt.put("status","exception while parsing legfile "+legFile.getAbsolutePath()+": "+e.getLocalizedMessage());
-            return rt;
+        if (hasError){
+            currentLeg=new RoutingLeg(new JSONObject());
+            rt=currentLeg.toJson();
+            saveCurrentLeg();
         }
-        currentLeg =new RoutingLeg(rt);
+        else {
+            currentLeg = new RoutingLeg(rt);
+        }
         return rt;
     }
 

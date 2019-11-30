@@ -22,14 +22,14 @@ routeobjects.Leg=function(from, to, active){
      * start of leg
      * @type {navobjects.WayPoint}
      */
-    this.from=from|| new navobjects.WayPoint();
+    this.from=from|| new navobjects.WayPoint(0,0);
     if (! (this.from instanceof navobjects.WayPoint))
         this.from=navobjects.WayPoint.fromPlain(this.from);
     /**
      * current target waypoint
      * @type {navobjects.WayPoint}
      */
-    this.to=to||new navobjects.WayPoint();
+    this.to=to||new navobjects.WayPoint(0,0);
     if (! (this.to instanceof navobjects.WayPoint))
         this.to=navobjects.WayPoint.fromPlain(this.to);
     /**
@@ -89,7 +89,7 @@ routeobjects.Leg.prototype.toJson=function(){
         active: this.active,
         currentTarget: this.getCurrentTargetIdx(),
         approach: this.approach,
-        approachDistance: this.approachDistance+0,
+        approachDistance: this.approachDistance,
         currentRoute: this.currentRoute?this.currentRoute.toJson():undefined
     };
     if (this.anchorDistance){
@@ -232,7 +232,6 @@ routeobjects.Leg.prototype.getRouteName=function(){
 routeobjects.Leg.prototype.setAnchorWatch=function(start,distance){
     this.from=start;
     this.to=undefined;
-    this.targetIndex=undefined;
     this.active=false;
     this.approach=false;
     this.currentRoute=undefined;

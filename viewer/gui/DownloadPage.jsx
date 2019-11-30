@@ -531,8 +531,12 @@ class DownloadPage extends React.Component{
             },
             {
                 name:'DownloadPageUpload',
-                visible: type == 'route' || type =='chart',
+                visible: type == 'route' || (type =='chart' && ! avnav.android) ,
                 onClick:()=>{
+                    if (type == 'route' && avnav.android){
+                        avnav.android.uploadRoute();
+                        return;
+                    }
                     globalStore.storeMultiple({key:(new Date()).getTime(),enable:true},{
                         key: keys.gui.downloadpage.fileInputKey,
                         enable: keys.gui.downloadpage.enableUpload

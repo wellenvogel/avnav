@@ -29,8 +29,8 @@ navobjects.AisCenterMode={
  * @constructor
  */
 navobjects.Point=function(lon,lat){
-    this.lon=lon;
-    this.lat=lat;
+    this.lon=lon||0;
+    this.lat=lat||0;
 };
 /**
  * convert ol3 coordinates to a point
@@ -107,6 +107,7 @@ navobjects.WayPoint.prototype.compare=function(point){
  * @returns {navobjects.WayPoint}
  */
 navobjects.WayPoint.fromPlain=function(plain){
+    if (! plain) return new navobjects.WayPoint();
     return new navobjects.WayPoint(plain.lon,plain.lat,plain.name);
 };
 
