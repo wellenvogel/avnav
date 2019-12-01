@@ -106,7 +106,7 @@ def instantiateHandlersFromModule(modulename,module,allData,logger):
 
 PREFIX="avnav_decoder_sys_"
 logger=ApiImpl()
-modules=loadModulesFromDir(os.path.join(os.path.dirname(__file__),'..','decoder'),logger,PREFIX)
+modules=loadModulesFromDir(os.path.join(os.path.dirname(__file__),'..','plugins'),logger,PREFIX)
 
 print modules
 

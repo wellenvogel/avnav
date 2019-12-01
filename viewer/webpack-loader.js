@@ -37,6 +37,7 @@
         'libraries/ol.js',
         'avnav_min.js',
         'avnav_viewer.css',
+        '/user/viewer/user.css',
         'polyfill.js'
     ];
     for (var i in scripts) {

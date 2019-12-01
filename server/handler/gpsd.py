@@ -340,7 +340,7 @@ class GpsdReader(threading.Thread):
 
 
 #a Worker for feeding data trough gpsd (or directly to the navdata)
-#it uses (if enabled) gpsd as a decoder by opening a local listener
+#it uses (if enabled) gpsd as a plugins by opening a local listener
 #and piping data trough gpsd
 #as an input there is the mehod addNMEALine that will add a line of NMEA data
 class AVNGpsdFeeder(AVNGpsd):

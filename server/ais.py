@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 #
-# A Python AIVDM/AIVDO decoder
+# A Python AIVDM/AIVDO plugins
 #
 # This file is Copyright (c) 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
-# This decoder works by defining a declarative pseudolanguage in which
+# This plugins works by defining a declarative pseudolanguage in which
 # to describe the process of extracting packed bitfields from an AIS
 # message, a set of tables which contain instructions in the pseudolanguage,
 # and a small amount of code for interpreting it.

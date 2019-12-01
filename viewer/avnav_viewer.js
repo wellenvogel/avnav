@@ -130,6 +130,19 @@ avnav.main=function() {
     setTimeout(function(){
         propertyHandler.incrementSequence();
     },1000);
+
+    //load the user and plugin stuff
+    let navUrl=globalStore.getData(keys.properties.navUrl);
+    let lateLoads=[navUrl+"?request=download&type=plugins&command=js",navUrl+"?request=download&type=plugins&command=css","/user/viewer/user.js"];
+    for (let i in  lateLoads) {
+        let scriptname=lateLoads[i];
+        if (scriptname.match(/css$/)) {
+            document.write('<link rel="stylesheet" type="text/css" href="' + scriptname + '"/>');
+        }
+        else {
+            document.write('<scr' + 'ipt type="text/javascript" src="' + scriptname + '"></scr' + 'ipt>');
+        }
+    }
     base.log("avnav loaded");
 };
 

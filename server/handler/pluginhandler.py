@@ -31,19 +31,22 @@ import inspect
 import time
 
 from avnav_api import AVNApi
-from avnav_store import AVNStore, AVNStore
-
-hasGpio=False
-try:
-  import RPi.GPIO as GPIO
-  hasGpio=True
-except:
-  pass
+from avnav_store import AVNStore
 
 from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
+import StringIO
+
+JSPREFIX="""
+    try{
+      (function() {"""
+JSSUFFIX="""
+  })();
+  }catch (e){
+    avnav.api.loaderror("Exception when loading %s: "+e);
+  }"""
 
 class ApiImpl(AVNApi):
   def __init__(self,parent,store,queue,prefix):
@@ -120,13 +123,14 @@ class AVNPluginHandler(AVNWorker):
     self.createdPlugins={}
     self.createdApis={}
     self.startedThreads={}
+    self.pluginDirs={} #key: moduleName, Value: dir
 
 
   @classmethod
   def getConfigParam(cls, child=None):
     if child is None:
       return {
-        'builtinDir':os.path.join(os.path.dirname(__file__),'..','decoder'),
+        'builtinDir':os.path.join(os.path.dirname(__file__),'..','plugins'),
         'systemDir':'',
         'userDir':'',
         'feederName':''
@@ -161,10 +165,10 @@ class AVNPluginHandler(AVNWorker):
     builtInDir=self.getStringParam('builtinDir')
     systemDir=self.getStringParam('systemDir')
     if systemDir is None or systemDir == '':
-      systemDir=os.path.join(self.getStringParam(AVNConfig.BASEPARAM.BASEDIR),'user')
+      systemDir=os.path.join(self.getStringParam(AVNConfig.BASEPARAM.BASEDIR),'..','plugins')
     userDir=self.getStringParam('userDir')
     if userDir is None or userDir == '':
-      userDir=self.getStringParam(AVNConfig.BASEPARAM.DATADIR,'plugins')
+      userDir=os.path.join(self.getStringParam(AVNConfig.BASEPARAM.DATADIR),'plugins')
 
     directories={
       'buildin':{
@@ -182,103 +186,113 @@ class AVNPluginHandler(AVNWorker):
     }
 
 
-    for dir in ['buildin','system','user']:
-      dircfg=directories[dir]
-      modules={}
-      try:
-        modules=self.loadPluginsFromDir(dircfg['dir'],dircfg['prefix'])
-        AVNLog.debug("loaded %d modules from %s"%(len(modules),dircfg['dir']))
-      except:
-        AVNLog.error("error loading plugins from %s:%s",dircfg['dir'],traceback.format_exc())
-      for modulname in modules.keys():
-        self.instantiateHandlersFromModule(modulname,modules[modulname])
-      for name in self.createdPlugins.keys():
-        plugin=self.createdPlugins[name]
-        AVNLog.info("starting plugin %s",name)
-        thread=threading.Thread(target=plugin.run)
-        thread.setDaemon(True)
-        thread.setName("Plugin: %s"%(name))
-        thread.start()
-        self.startedThreads[name]=thread
-
+    for basedir in ['buildin','system','user']:
+      dircfg=directories[basedir]
+      if not os.path.isdir(dircfg['dir']):
+        continue
+      for dirname in os.listdir(dircfg['dir']):
+        dir=os.path.join(dircfg['dir'],dirname)
+        if not os.path.isdir(dir):
+          continue
+        module=None
+        moduleName=dircfg['prefix'] + "-" + dirname
+        try:
+          module=self.loadPluginFromDir(dir, moduleName)
+        except:
+          AVNLog.error("error loading plugin from %s:%s",dir,traceback.format_exc())
+        if module is not None:
+          self.pluginDirs[moduleName]=dir
+          self.instantiateHandlersFromModule(moduleName,module)
+        for name in self.createdPlugins.keys():
+          plugin=self.createdPlugins[name]
+          AVNLog.info("starting plugin %s",name)
+          thread=threading.Thread(target=plugin.run)
+          thread.setDaemon(True)
+          thread.setName("Plugin: %s"%(name))
+          thread.start()
+          self.startedThreads[name]=thread
 
   def instantiateHandlersFromModule(self,modulename, module):
     MANDATORY_METHODS = ['run']
     MANDATORY_CLASSMETHODS=['pluginInfo']
-    for name in dir(module):
-      obj = getattr(module, name)
-      ic = inspect.isclass(obj)
-      if ic:
-        if obj.__module__ != (modulename):
-          continue
-        AVNLog.debug("checking module: %s <=> %s" % (obj.__module__, module))
-        hasMethods = True
-        for m in MANDATORY_METHODS:
-          if not hasattr(obj, m):
-            hasMethods=False
-            break
-          mObj = getattr(obj, m)
-          if not callable(mObj):
-            hasMethods = False
-            break
-        for clm in MANDATORY_CLASSMETHODS:
-          if not hasattr(obj, clm):
-            hasMethods=False
-            break
-          mObj = getattr(obj,clm)
-          if not isinstance(mObj,classmethod):
-            hasMethods=False
-            break
-        if hasMethods:
-          AVNLog.info("creating %s" % (name))
-          #TODO: handle multiple instances from config
-          api = ApiImpl(self,self.navdata,self.queue,name)
-          startPlugin = True
-          pluginInstance = None
-          try:
-            description=obj.pluginInfo()
-            if description is None or not isinstance(description,dict):
-              raise Exception("invalid return from pluginInfo")
-            mData = description.get('data')
-            if mData is None:
-              raise Exception("no 'data' field in pluginInfo result")
 
-            for entry in mData:
-              path = entry.get('path')
-              if path is None:
-                raise Exception("missing path in entry %s" % (entry))
-              else:
-                api.addKey(entry)
-            pluginInstance = obj(api)
-            AVNLog.info("created plugin %s",name)
-            self.createdPlugins[name]=pluginInstance
-            self.createdApis[name]=api
-          except:
-            AVNLog.error("cannot start %s:%s" % (name, traceback.format_exc()))
+    obj = getattr(module, "Plugin")
+    if obj is None:
+      return
+    ic = inspect.isclass(obj)
+    if ic:
+      if obj.__module__ != (modulename):
+        return
+      AVNLog.debug("checking module: %s <=> %s" % (obj.__module__, module))
+      hasMethods = True
+      for m in MANDATORY_METHODS:
+        if not hasattr(obj, m):
+          hasMethods=False
+          break
+        mObj = getattr(obj, m)
+        if not callable(mObj):
+          hasMethods = False
+          break
+      for clm in MANDATORY_CLASSMETHODS:
+        if not hasattr(obj, clm):
+          hasMethods=False
+          break
+        mObj = getattr(obj,clm)
+        #see https://stackoverflow.com/questions/19227724/check-if-a-function-uses-classmethod
+        if not ( inspect.ismethod(mObj) and mObj.__self__ is obj):
+          hasMethods=False
+          break
+      if hasMethods:
+        AVNLog.info("creating %s" % (modulename))
+        #TODO: handle multiple instances from config
+        api = ApiImpl(self,self.navdata,self.queue,modulename)
+        startPlugin = True
+        pluginInstance = None
+        try:
+          description=obj.pluginInfo()
+          if description is None or not isinstance(description,dict):
+            raise Exception("invalid return from pluginInfo")
+          mData = description.get('data')
+          if mData is None:
+            raise Exception("no 'data' field in pluginInfo result")
 
-  def loadPluginsFromDir(self,dir,prefix):
+          for entry in mData:
+            path = entry.get('path')
+            if path is None:
+              raise Exception("missing path in entry %s" % (entry))
+            else:
+              api.addKey(entry)
+          pluginInstance = obj(api)
+          AVNLog.info("created plugin %s",modulename)
+          self.createdPlugins[modulename]=pluginInstance
+          self.createdApis[modulename]=api
+        except:
+          AVNLog.error("cannot start %s:%s" % (modulename, traceback.format_exc()))
+
+  def loadPluginFromDir(self, dir, name):
     """
-    load plugin modules from a directory
+    load aplugin module from a directory
     @param dir: the dir to be loaded from
-    @param prefix: the prefix for the module name
-    @return: a dictionary of module_name->module
+    @param name: the module name
+    @return: the module (if nay)
     """
-    modules = {}
-    for path in glob.glob(os.path.join(dir, '[!_]*.py')):
-      name, ext = os.path.splitext(os.path.basename(path))
-      try:
-        modules[prefix + name] = imp.load_source(prefix + name, path)
-        AVNLog.info("loaded %s as %s", path, prefix + name)
-      except:
-        AVNLog.error("unable to load %s:%s", path, traceback.format_exc())
-    return modules
+    moduleFile=os.path.join(dir,"plugin.py");
+    if not os.path.exists(moduleFile):
+      return None
+    try:
+      rt = imp.load_source(name, moduleFile)
+      AVNLog.info("loaded %s as %s", moduleFile, name)
+      return rt
+    except:
+      AVNLog.error("unable to load %s:%s", moduleFile, traceback.format_exc())
+    return None
 
   def getStatusProperties(self):
     rt={}
     return rt
 
   def getHandledCommands(self):
-    return {}
+    return {"api":"plugins","download":"plugins"}
 
   def handleApiRequest(self,type,command,requestparam,**kwargs):
     '''
@@ -286,8 +300,46 @@ class AVNPluginHandler(AVNWorker):
     :param type: ???
     :return: the answer
     '''
-    rt={}
-    return rt
+    sub=AVNUtil.getHttpRequestParam(requestparam,'command')
+    if type == "api":
+      if sub=="list":
+        data=[]
+        for k in self.pluginDirs.keys():
+          dir=self.pluginDirs[k]
+          data.append({'name':k,'dir':dir})
+        rt={'status':'OK','data':data}
+        return rt
+      return {'status':'request not found %s'%sub}
+    if type=='download':
+      if sub=="js":
+        data=StringIO.StringIO()
+        for k in self.pluginDirs.keys():
+          dir=self.pluginDirs[k]
+          jsfile=os.path.join(dir,"plugin.js")
+          if os.path.exists(jsfile):
+            with open(jsfile) as f:
+              data.write(JSPREFIX)
+              data.write(f.read())
+              data.write(JSSUFFIX%(k))
+        data.seek(0)
+        rt = {'mimetype': 'text/javascript', 'size': data.len,'noattach':True,'stream':data}
+        return rt
+      if sub=="css":
+        data=StringIO.StringIO()
+        for k in self.pluginDirs.keys():
+          dir = self.pluginDirs[k]
+          jsfile = os.path.join(dir, "plugin.css")
+          if os.path.exists(jsfile):
+            with open(jsfile) as f:
+              data.write("/*---- start %s */\n"%(k))
+              data.write(f.read())
+              data.write("/*---- end %s*/\n" %(k))
+        data.seek(0)
+        rt = {'mimetype': 'text/css', 'size': data.len,'noattach':True,'stream':data}
+        return rt
+
+    raise Exception("unable to handle routing request of type %s:%s" % (type, command))
+
 
 
 avnav_handlerList.registerHandler(AVNPluginHandler)

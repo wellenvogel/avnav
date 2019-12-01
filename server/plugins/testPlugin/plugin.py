@@ -4,7 +4,7 @@ import time
 from avnav_api import AVNApi
 
 
-class TestDecoder:
+class Plugin:
   PATH="gps.test"
 
   @classmethod
@@ -22,7 +22,7 @@ class TestDecoder:
                  * maxvalue - a value being the max number /string to size GUI elements
     """
     return {
-      'description': 'a test decoder',
+      'description': 'a test plugins',
       'name': cls.__name__,
       'data': [
         {
@@ -36,7 +36,7 @@ class TestDecoder:
 
   def __init__(self,api):
     """
-        initialize a decoder
+        initialize a plugins
         do any checks here and throw an exception on error
         do not yet start any threads!
         @param api: the api to communicate with avnav

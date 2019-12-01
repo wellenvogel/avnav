@@ -42,6 +42,7 @@ import gemf_reader
 import cgi
 import shutil
 import avnav_handlerList
+import StringIO
 try:
   import create_overview
 except:
@@ -483,13 +484,22 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # transmitted *less* than the content-length!
         f = open(path, 'rb')
     except IOError:
+        if self.path[0:5]== "/user" and ( path.endswith(".css") or path.endswith(".js")):
+          #avoid any 404 error for loading non existing user.js and user.css
+          data=StringIO.StringIO("")
+          data.seek(0)
+          self.send_response(200)
+          self.send_header("Content-type", ctype)
+          self.send_header("cache-control", "private, max-age=0, no-cache")
+          self.end_headers()
+          return data
         self.send_error(404, "File not found")
         return None
     self.send_response(200)
     self.send_header("Content-type", ctype)
     fs = os.fstat(f.fileno())
     self.send_header("Content-Length", str(fs[6]))
-    if path.endswith(".js") or path.endswith(".less"):
+    if path.endswith(".js") or path.endswith(".css"):
       self.send_header("cache-control","private, max-age=0, no-cache")
     self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
     self.end_headers()
@@ -876,7 +886,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           raise Exception("missing stream")
         self.send_response(200)
         fname = self.getRequestParam(requestParam, "filename")
-        if fname is not None and fname != "":
+        if fname is not None and fname != "" and dl.get('noattach') is None:
           self.send_header("Content-Disposition", "attachment")
         self.send_header("Content-type", dl['mimetype'])
         self.send_header("Content-Length", dl['size'])
