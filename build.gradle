@@ -149,15 +149,15 @@ ospackage {
     os = LINUX // only applied to RPM
     packageGroup='misc'
     packageName='avnav'
-    requires 'gpsd'
-    requires 'python-gps'
-    requires 'bluetooth'
-    requires 'python-bluez'
-    requires 'python-pyudev'
-    requires 'python-serial'
-    requires 'python-gdal'
-    requires 'python-imaging'
-    requires 'python-netifaces'
+    requires('gpsd')
+    requires('python-gps')
+    requires('bluetooth')
+    requires('python-bluez')
+    requires('python-pyudev')
+    requires('python-serial')
+    requires('python-gdal')
+    requires('python-imaging').or('python-pil')
+    requires('python-netifaces')
     user='root'
     into ('/usr/lib/avnav') {
         from('viewer/build/release') {
@@ -240,7 +240,7 @@ task raspiDeb(type: GradleBuild){
 
 task releaseRpm(type: Rpm) {
     group taskgroup
-    arch = I386
+    arch = NOARCH
     dependsOn pkgVersion
 }
 
