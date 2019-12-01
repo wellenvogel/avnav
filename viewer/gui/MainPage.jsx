@@ -164,17 +164,19 @@ class MainPage extends React.Component {
         };
         let BottomLine = Dynamic(function (props) {
             //we have the raw nmea in "raw"
-            let nmeaColor="yellow";
-            let aisColor="yellow";
-            let nmeaText="";
+            let nmeaColor=props.valid?"yellow":"red";
+            let aisColor=props.valid?"yellow":"red";
+            let nmeaText=props.valid?"":"server connection lost";
             let aisText="";
-            if (props.raw && props.raw.status && props.raw.status.nmea){
-                nmeaColor=props.raw.status.nmea.status;
-                nmeaText=props.raw.status.nmea.source+":"+props.raw.status.nmea.info;
-            }
-            if (props.raw && props.raw.status && props.raw.status.ais){
-                aisColor = props.raw.status.ais.status;
-                aisText=props.raw.status.ais.source+":"+props.raw.status.ais.info;
+            if (props.valid) {
+                if (props.raw && props.raw.status && props.raw.status.nmea) {
+                    nmeaColor = props.raw.status.nmea.status;
+                    nmeaText = props.raw.status.nmea.source + ":" + props.raw.status.nmea.info;
+                }
+                if (props.raw && props.raw.status && props.raw.status.ais) {
+                    aisColor = props.raw.status.ais.status;
+                    aisText = props.raw.status.ais.source + ":" + props.raw.status.ais.info;
+                }
             }
             return (
                 <div className='footer'>
@@ -184,10 +186,11 @@ class MainPage extends React.Component {
                                 <img className='status_image' src={getImgSrc(nmeaColor)}/>
                                 NMEA&nbsp;{nmeaText}
                             </div>
-                            <div >
+                            {props.valid ? <div >
                                 <img className='status_image' src={getImgSrc(aisColor)}/>
                                 AIS&nbsp;{aisText}
-                            </div>
+                            </div> : null
+                            }
                         </div>
                         <div className="link">
                             <div > AVNav Version <span >{avnav.version}</span></div>
@@ -224,7 +227,10 @@ class MainPage extends React.Component {
                         />
                         }
                   bottomContent={
-                    <BottomLine storeKeys={{raw:keys.nav.gps.raw}} />
+                    <BottomLine storeKeys={{
+                        raw:keys.nav.gps.raw,
+                        valid: keys.nav.gps.valid
+                        }} />
                     }
                   buttonList={self.buttons}/>
         );

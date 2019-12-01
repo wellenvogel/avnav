@@ -48,6 +48,9 @@ const clearTimer=()=>{
 };
 const Toast=(html,time,opt_callback)=>{
     clearTimer();
+    if (! time){
+        time=parseInt(globalStore.getData(keys.properties.toastTimeout||15))*1000;
+    }
     globalStore.storeMultiple({
         html:html,
         time:time,

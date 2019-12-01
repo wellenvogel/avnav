@@ -315,6 +315,7 @@ let keys={
         smallBreak: new Property(480, "portrait layout below (px)", PropertyType.RANGE, [200, 9999]),
         iosWorkaroundTime: new Property(300, "time to ignore events after page show", PropertyType.RANGE, [0, 1000]),
         wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
+        toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),
