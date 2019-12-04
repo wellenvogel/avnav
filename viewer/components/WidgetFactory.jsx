@@ -122,8 +122,39 @@ class WidgetFactory{
         this.widgetDefinitions.push(definition);
     }
     registerExternalWidget(description){
+        let reservedParameters=['onClick','wclass'];
+        let forbiddenKeys=['name'].concat(reservedParameters);
         let internalDescription=assign({},description);
-        internalDescription.wclass=ExternalWidget;
+        if (internalDescription.renderHtml || internalDescription.renderCanvas){
+            //we should use our external widget
+            if (internalDescription.renderHtml && typeof(internalDescription.renderHtml) !== 'function'){
+                throw new Error("renderHtml must be a function");
+            }
+            if (internalDescription.renderCanvas && typeof(internalDescription.renderCanvas) !== 'function'){
+                throw new Error("renderCanvas must be a function");
+            }
+            internalDescription.wclass=ExternalWidget;
+        }
+        else{
+            if (! internalDescription.formatter){
+                throw new Error("formatter must be set for the default widget");
+            }
+            if (! internalDescription.storeKeys || ! internalDescription.storeKeys.value){
+                throw new Error("you must provide storeKeys with at least a \"value\" key for the default widget")
+            }
+        }
+        reservedParameters.forEach((p)=>{
+           if (description[p]){
+               throw new Error("you cannot set the reserved parameter "+p);
+           }
+        });
+        if (description.storeKeys){
+            forbiddenKeys.forEach((k)=>{
+                if (description.storeKeys[k]){
+                    throw new Error("you cannot set the reserved parameter "+k+" as a storeKey");
+                }
+            })
+        }
         this.addWidget(internalDescription);
     }
 }
