@@ -15,7 +15,8 @@ class ExternalWidget extends React.Component{
         super(props);
         this.canvasRef=this.canvasRef.bind(this);
         this.renderCanvas=this.renderCanvas.bind(this);
-        GuiHelper.nameKeyEventHandler(this,"widget")
+        GuiHelper.nameKeyEventHandler(this,"widget");
+        this.userData={};
     }
     render(){
         let classes="widget externalWidget";
@@ -24,10 +25,13 @@ class ExternalWidget extends React.Component{
         let innerHtml=null;
         if (this.props.renderHtml){
             try {
-                innerHtml = this.props.renderHtml(this.props);
+                innerHtml = this.props.renderHtml.apply(this.userData,[this.props]);
             }catch (e){
                 base.log("ExternalWidget: render error "+e);
                 innerHtml="<p>render error </p>";
+            }
+            if (innerHtml === null){
+                return null;
             }
         }
         return (
@@ -47,14 +51,13 @@ class ExternalWidget extends React.Component{
         this.renderCanvas();
     }
     canvasRef(item){
-        if (! item) return;
-        let self=this;
         this.canvas=item;
         setTimeout(this.renderCanvas,0);
     }
     renderCanvas(){
+        if (! this.canvas) return;
         try {
-            this.props.renderCanvas(this.canvas, this.props);
+            this.props.renderCanvas.apply(this.userData,[this.canvas, this.props]);
         }catch (e){
             base.log("ExternalWidget: canvas render error "+e);
         }
