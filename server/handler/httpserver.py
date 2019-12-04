@@ -966,7 +966,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       handler=self.server.getRequestHandler("upload",type)
       if handler is not None:
         AVNLog.debug("found handler for upload request %s:%s"%(type,handler.getConfigName()))
-        handler.handleApiRequest("upload",type,rfile=self.rfile,flen=rlen)
+        handler.handleApiRequest("upload",type,requestParam,rfile=self.rfile,flen=rlen)
         return json.dumps({'status': 'OK'})
       if type == "chart":
         filename=self.getRequestParam(requestParam,"filename")

@@ -21,6 +21,7 @@ import Formatter from '../util/formatter.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import base from '../base.js';
+import Promise from 'promise';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -28,7 +29,8 @@ const RouteHandler=NavHandler.getRoutingHandler();
 const headlines={
     track: "Tracks",
     chart: "Charts",
-    route: "Routes"
+    route: "Routes",
+    layout:"Layouts"
 };
 const DynamicPage=Dynamic(Page);
 const DynamicList=Dynamic(ItemList);
@@ -63,6 +65,7 @@ const fillDataServer=(type)=>{
             let fi=new FileInfo();
             assign(fi,json.items[i]);
             fi.type=type;
+            fi.server=true;
             list.push(fi);
         }
         addItems(list,true);
@@ -147,7 +150,7 @@ const DownloadItem=(props)=>{
         if (props.server) showRas=true;
     }
     let showDownload=false;
-    if (props.type === "track" || props.type === "route" || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
+    if (props.type === "track" || props.type === "route" || props.type == 'layout' || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
         showDownload=true;
     }
     let  cls="listEntry";
@@ -231,6 +234,7 @@ const startServerDownload=(type,name,opt_url,opt_json)=>{
     let filename=name;
     if (filename) {
         if (type == 'route') filename += ".gpx";
+        if (type == 'layout') filename=filename.replace(/^[^.]*/,'')+".json";
         action = globalStore.getData(keys.properties.navUrl) + "/" + filename;
     }
     globalStore.storeData(keys.gui.downloadpage.downloadParameters,{
@@ -261,7 +265,7 @@ const download=(info)=>{
             return;
         }
         else {
-            if (info.type == "track") startServerDownload(info.type,info.url ? info.url : info.name);
+            if (info.type == "track"|| info.type == 'layout') startServerDownload(info.type,info.url ? info.url : info.name);
             else {
                 if (info.type == "route") {
                     if (info.server) startServerDownload(info.type,info.name);
@@ -290,7 +294,47 @@ const runUpload=(ev)=>{
         return uploadChart(ev.target);
     }
     if (type == 'route'){
-        return uploadRoute(ev.target);
+        uploadFileReader(ev.target,".gpx").then((content)=>{
+                let route = undefined;
+                try {
+                    route = new routeobjects.Route("");
+                    route.fromXml(content.content);
+                } catch (e) {
+                    Toast("unable to parse route , error: " + e);
+                    return;
+                }
+                if (!route.name || route.name == "") {
+                    Toast("route has no route name");
+                    return;
+                }
+                if (entryExists(route.name)) {
+                    Toast("route with name " + route.name + " already exists");
+                    return false;
+                }
+                if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
+                RouteHandler.saveRoute(route, function () {
+                    fillData();
+                });
+            }
+        ).catch((error)=>{
+                Toast(error);
+            })
+    }
+    if (type == 'layout'){
+        uploadFileReader(ev.target,".json").then(
+            (content)=>{
+                Requests.postJson("?request=upload&type=layout&name="+encodeURIComponent(content.name),JSON.parse(content.content)).
+                    then(
+                    (result)=>{
+                        fillData();
+                    }
+                ).catch((error)=>{
+                        Toast("unable to upload layout: "+error);
+                    })
+            }
+        ).catch(
+            (error)=>{Toast(error)}
+        )
     }
     resetUpload();
 };
@@ -379,57 +423,46 @@ const directUpload=(type,file)=>{
     });
 };
 
-const uploadRoute=(fileObject)=> {
-    if (fileObject.files && fileObject.files.length > 0) {
-        let file = fileObject.files[0];
-        resetUpload();
-        if (!Helper.endsWith(file.name, ".gpx")) {
-            Toast("only .gpx routes");
-            return false;
-        }
-        let rname = file.name.replace(".gpx", "");
-        if (file.size) {
-            if (file.size > MAXUPLOADSIZE) {
-                Toast("file is to big, max allowed: " + MAXUPLOADSIZE);
-                return;
-            }
-        }
-        if (!window.FileReader) {
-            Toast("your browser does not support FileReader, cannot upload");
-            return;
-        }
-        let reader = new FileReader();
-        reader.onloadend = ()=> {
-            let xml = reader.result;
-            if (!xml) {
-                Toast("unable to load file " + file.name);
-                return;
-            }
-            let route = undefined;
-            try {
-                route = new routeobjects.Route("");
-                route.fromXml(xml);
-            } catch (e) {
-                Toast("unable to parse route from " + file.name + ", error: " + e);
-                return;
-            }
-            if (!route.name || route.name == "") {
-                Toast("route from " + file.name + " has no route name");
-                return;
-            }
-            if (entryExists(route.name)) {
-                Toast("route with name " + route.name + " in file " + rname + " already exists");
+const uploadFileReader=(fileObject,allowedExtension)=> {
+    return new Promise((resolve,reject)=> {
+        if (fileObject.files && fileObject.files.length > 0) {
+            let file = fileObject.files[0];
+            resetUpload();
+            if (!Helper.endsWith(file.name, allowedExtension)) {
+                reject("only "+allowedExtension+" files");
                 return false;
             }
-            if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
-            RouteHandler.saveRoute(route, function () {
-                fillData();
-            });
+            let rname = file.name.replace(allowedExtension, "");
+            if (file.size) {
+                if (file.size > MAXUPLOADSIZE) {
+                    reject("file is to big, max allowed: " + MAXUPLOADSIZE);
+                    return;
+                }
+            }
+            if (!window.FileReader) {
+                reject("your browser does not support FileReader, cannot upload");
+                return;
+            }
+            let reader = new FileReader();
+            reader.onloadend = ()=> {
+                let content = reader.result;
+                if (!content) {
+                    reject("unable to load file " + file.name);
+                    return;
+                }
+                resolve({content:content,name:rname});
 
-        };
-        reader.readAsText(file);
-    }
+
+            };
+            reader.readAsText(file);
+        }
+        else {
+            reject("no file selected");
+        }
+    });
 };
+
+
 
 class DownloadForm extends React.Component {
     constructor(props) {
@@ -530,11 +563,21 @@ class DownloadPage extends React.Component{
                 onClick:()=>{changeType('route')}
             },
             {
+                name:'DownloadPageLayouts',
+                toggle: type == 'layout',
+                visible: type == 'layout'|| allowTypeChange,
+                onClick:()=>{changeType('layout')}
+            },
+            {
                 name:'DownloadPageUpload',
-                visible: type == 'route' || (type =='chart' && ! avnav.android) ,
+                visible: type == 'route' || type == 'layout' || (type =='chart' && ! avnav.android) ,
                 onClick:()=>{
                     if (type == 'route' && avnav.android){
                         avnav.android.uploadRoute();
+                        return;
+                    }
+                    if (type == 'layout' && avnav.android){
+                        avnav.android.uploadLayout();
                         return;
                     }
                     globalStore.storeMultiple({key:(new Date()).getTime(),enable:true},{

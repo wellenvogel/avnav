@@ -6,8 +6,8 @@
     -  server: the server part
     -  chartconvert: the tools used for the importer to convert charts
     -  viewer: the java script part
+       - layout _(new)_: containing layouts and keyboard mappings
     -  sounds: sound files
-    -  layout _(new)_: containing layouts and keyboard mappings
     -  plugins _(new)_: base dir for external plugins
        for each plugin a unique name should be used.
         - somePlugin

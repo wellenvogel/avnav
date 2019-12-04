@@ -169,7 +169,7 @@ avnav.main=function() {
         }
     ).catch(
         (error)=>{
-            Toast.Toast("unable to load plogin data: "+error);
+            Toast("unable to load plugin data: "+error);
             loadScripts(lateLoads);
         }
     );
