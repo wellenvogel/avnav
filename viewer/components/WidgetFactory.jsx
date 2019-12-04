@@ -6,6 +6,7 @@ import DirectWidget from './DirectWidget.jsx';
 import globalStore from '../util/globalstore.jsx';
 import Formatter from '../util/formatter';
 import Visible from '../hoc/Visible.jsx';
+import ExternalWidget from './ExternalWidget.jsx';
 
 
 
@@ -119,6 +120,11 @@ class WidgetFactory{
         let existing=this.findWidgetIndex(definition);
         if (existing >= 0) throw new Error("widget "+definition.name+" already exists");
         this.widgetDefinitions.push(definition);
+    }
+    registerExternalWidget(description){
+        let internalDescription=assign({},description);
+        internalDescription.wclass=ExternalWidget;
+        this.addWidget(internalDescription);
     }
 }
 /**

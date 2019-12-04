@@ -203,6 +203,9 @@ class AVNPluginHandler(AVNWorker):
         if module is not None:
           self.pluginDirs[moduleName]=dir
           self.instantiateHandlersFromModule(moduleName,module)
+        else:
+          if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
+            self.pluginDirs[moduleName]=dir
         for name in self.createdPlugins.keys():
           plugin=self.createdPlugins[name]
           AVNLog.info("starting plugin %s",name)
@@ -291,10 +294,26 @@ class AVNPluginHandler(AVNWorker):
     rt={}
     return rt
 
+  PREFIX="/plugins"
   def getHandledCommands(self):
-    return {"api":"plugins","download":"plugins"}
+    return {"api":"plugins","path":self.PREFIX}
 
   def handleApiRequest(self,type,command,requestparam,**kwargs):
+    if type == 'path':
+      '''path mapping request, just return the module path
+         command is the original url
+         requestparam is the http handler 
+      '''
+      localPath=command[len(self.PREFIX)+1:len(command)].split("/",1)
+      if len(localPath) < 2:
+        kwargs.get('handler').send_error(404,"missing plugin path")
+        return None
+      dir=self.pluginDirs.get(localPath[0])
+      if dir is None:
+        kwargs.get('handler').send_error(404,"plugin %s not found"%localPath[0])
+        return None
+      return os.path.join(dir,localPath[1])
+
     '''
     handle the URL based requests
     :param type: ???
@@ -306,38 +325,15 @@ class AVNPluginHandler(AVNWorker):
         data=[]
         for k in self.pluginDirs.keys():
           dir=self.pluginDirs[k]
-          data.append({'name':k,'dir':dir})
+          element={'name':k,'dir':dir}
+          if os.path.exists(os.path.join(dir,"plugin.js")):
+            element['js']=self.PREFIX+"/"+k+"/plugin.js"
+          if os.path.exists(os.path.join(dir,"plugin.css")):
+            element['css']=self.PREFIX+"/"+k+"/plugin.css"
+          data.append(element)
         rt={'status':'OK','data':data}
         return rt
       return {'status':'request not found %s'%sub}
-    if type=='download':
-      if sub=="js":
-        data=StringIO.StringIO()
-        for k in self.pluginDirs.keys():
-          dir=self.pluginDirs[k]
-          jsfile=os.path.join(dir,"plugin.js")
-          if os.path.exists(jsfile):
-            with open(jsfile) as f:
-              data.write(JSPREFIX)
-              data.write(f.read())
-              data.write(JSSUFFIX%(k))
-        data.seek(0)
-        rt = {'mimetype': 'text/javascript', 'size': data.len,'noattach':True,'stream':data}
-        return rt
-      if sub=="css":
-        data=StringIO.StringIO()
-        for k in self.pluginDirs.keys():
-          dir = self.pluginDirs[k]
-          jsfile = os.path.join(dir, "plugin.css")
-          if os.path.exists(jsfile):
-            with open(jsfile) as f:
-              data.write("/*---- start %s */\n"%(k))
-              data.write(f.read())
-              data.write("/*---- end %s*/\n" %(k))
-        data.seek(0)
-        rt = {'mimetype': 'text/css', 'size': data.len,'noattach':True,'stream':data}
-        return rt
-
     raise Exception("unable to handle routing request of type %s:%s" % (type, command))
 
 

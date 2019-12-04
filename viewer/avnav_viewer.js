@@ -42,12 +42,17 @@ import MapHolder from './map/mapholder';
 import keys from './util/keys.jsx';
 import globalStore from './util/globalstore.jsx';
 import base from './base.js';
+import Requests from './util/requests.js';
+import Toast from './components/Toast.jsx';
+import Api from './util/api.js';
 
 
 
 if (! window.avnav){
     window.avnav={};
 }
+
+window.avnav.api=Api;
 
 
 function getParam(key)
@@ -131,18 +136,43 @@ avnav.main=function() {
         propertyHandler.incrementSequence();
     },1000);
 
+    const loadScripts=(loadList)=>{
+        let fileref=undefined;
+        for (let i in  loadList) {
+            let scriptname=loadList[i];
+            if (scriptname.match(/js$/)){ //if filename is a external JavaScript file
+                fileref=document.createElement('script');
+                fileref.setAttribute("type","text/javascript");
+                fileref.setAttribute("src", scriptname);
+            }
+            else { //if filename is an external CSS file
+                fileref=document.createElement("link");
+                fileref.setAttribute("rel", "stylesheet");
+                fileref.setAttribute("type", "text/css");
+                fileref.setAttribute("href", scriptname);
+            }
+            if (typeof fileref!="undefined")
+                document.getElementsByTagName("head")[0].appendChild(fileref)
+        }
+    };
     //load the user and plugin stuff
-    let navUrl=globalStore.getData(keys.properties.navUrl);
-    let lateLoads=[navUrl+"?request=download&type=plugins&command=js",navUrl+"?request=download&type=plugins&command=css","/user/viewer/user.js"];
-    for (let i in  lateLoads) {
-        let scriptname=lateLoads[i];
-        if (scriptname.match(/css$/)) {
-            document.write('<link rel="stylesheet" type="text/css" href="' + scriptname + '"/>');
+    let lateLoads=["/user/viewer/user.js"];
+    Requests.getJson("?request=plugins&command=list").then(
+        (json)=>{
+            if (json.data){
+               json.data.forEach((plugin)=>{
+                   if (plugin.js) lateLoads.push(plugin.js);
+                   if (plugin.css) lateLoads.push(plugin.css);
+               })
+            }
+            loadScripts(lateLoads);
         }
-        else {
-            document.write('<scr' + 'ipt type="text/javascript" src="' + scriptname + '"></scr' + 'ipt>');
+    ).catch(
+        (error)=>{
+            Toast.Toast("unable to load plogin data: "+error);
+            loadScripts(lateLoads);
         }
-    }
+    );
     base.log("avnav loaded");
 };
 

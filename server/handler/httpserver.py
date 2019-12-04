@@ -169,6 +169,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.gemfCondition=threading.Condition()
     self.addresslist=[]
     self.handlerMap={}
+    self.externalHandlers={} #prefixes that will be handled externally
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
   def getName(self):
     return "HTTPServer"
@@ -378,6 +379,9 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       return {}
 
   def registerRequestHandler(self,type,command,handler):
+    if type == 'path':
+      self.externalHandlers[command]=handler
+      return
     if self.handlerMap.get(type) is None:
       self.handlerMap[type]={}
     self.handlerMap[type][command]=handler
@@ -518,6 +522,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       (path,sep,query) = path.partition('?')
       path = path.split('#',1)[0]
       path = posixpath.normpath(urllib.unquote(path).decode('utf-8'))
+      for prefix in self.server.externalHandlers.keys():
+        if path.startswith(prefix):
+          #the external handler can either return a mapped path
+          #or just do the handling by its own and return None
+          return self.server.externalHandlers[prefix].handleApiRequest('path',path,query,handler=self)
       if path.startswith(self.server.navurl):
         requestParam=urlparse.parse_qs(query,True)
         self.handleNavRequest(path,requestParam)
