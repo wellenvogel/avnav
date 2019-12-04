@@ -22,8 +22,8 @@ var widget={
          */
         if (this.counter === undefined) this.counter=0;
         this.counter++;
-        var dv=avnav.api.formatter.formatDirection(props.myValue);
-        return "<div class=\"widgetData\">["+this.counter+"] "+dv+"</div>";
+        var dv=avnav.api.formatter.formatDirection(props.course);
+        return "<div class=\"widgetData\">["+props.myValue+"] "+dv+"</div>";
     },
     /**
      * optional render some graphics to a canvas object
@@ -49,7 +49,7 @@ var widget={
         ctx.scale(f,f);
         ctx.translate(100*f1/f,100*f2/f); //move the drawing to the middle
         // Rotate
-        ctx.rotate(props.myValue * Math.PI / 180);
+        ctx.rotate(props.course * Math.PI / 180);
         // Write pointer
         ctx.beginPath();
         ctx.lineWidth = 6;
@@ -72,7 +72,9 @@ var widget={
      * whenever one of the values in the store is changing, your render functions will be called
      */
     storeKeys:{
-      myValue: 'nav.gps.course'
+      course: 'nav.gps.course',
+      myValue: 'nav.gps.test' //stored at the server side with gps.test
+
     },
     caption: "Test",
     unit: "°"

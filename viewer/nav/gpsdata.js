@@ -12,14 +12,18 @@ import Requests from '../util/requests.js';
 import base from '../base.js';
 
 
+const ignoredKeys=[
+    'source',
+    'tag',
+    'mode'
+];
+
 /**
  * the handler for the gps data
  * query the server...
  * @constructor
  */
 const GpsData=function(){
-    /** @private */
-    this.gpsdata=new navobjects.GpsInfo();
 
    
     this.timer=null;
@@ -31,7 +35,7 @@ const GpsData=function(){
     this.latAverageData=[];
     this.lonAverageData=[];
     this.startQuery();
-    this.alarms=undefined;
+    this.additionalKeys={}; //collect additonal keys here to reset them if not received any more
 
 };
 
@@ -66,13 +70,13 @@ GpsData.prototype.average=function(gpsdata){
     return rt;
 };
 
-GpsData.prototype.writeToStore=function(){
-    let d=assign({},this.gpsdata,{
-        position:new navobjects.Point(this.gpsdata.lon,this.gpsdata.lat),
-        alarms:this.gpsdata.raw?this.gpsdata.raw.alarms:undefined,
+GpsData.prototype.writeToStore=function(gpsData,additionalKeys){
+    let d=assign({},gpsData,{
+        position:new navobjects.Point(gpsData.lon,gpsData.lat),
+        alarms:gpsData.raw?gpsData.raw.alarms:undefined,
         sequence:globalStore.getData(keys.nav.gps.sequence,0)+1
     });
-    globalStore.storeMultiple(d,this.getStoreKeys());
+    globalStore.storeMultiple(d,assign({},this.getStoreKeys(),additionalKeys));
 
 };
 /**
@@ -81,35 +85,77 @@ GpsData.prototype.writeToStore=function(){
  * @private
  */
 GpsData.prototype.handleGpsResponse=function(data, status){
-    let gpsdata=new navobjects.GpsInfo();
-    gpsdata.valid=false;
+    let gpsdata={
+        lat:0,
+        lon:0,
+        course:0,
+        speed:0
+    };
+    gpsdata.valid=this.handleGpsStatus(status);
     if (status) {
-        gpsdata.rtime = null;this.latAverageData=[];
-        if (data.time != null) gpsdata.rtime = new Date(data.time);
+        gpsdata.rtime = null;
+        if (data.time != null && data.time !== undefined) gpsdata.rtime = new Date(data.time);
+        delete data.time;
         gpsdata.lon = data.lon;
+        delete data.lon;
         gpsdata.lat = data.lat;
+        delete data.lat;
         gpsdata.course = data.course;
+        delete data.course;
         if (gpsdata.course === undefined) gpsdata.course = data.track;
+        delete data.track;
         gpsdata.speed = data.speed * 3600 / this.NM;
+        delete data.speed;
         gpsdata=this.average(gpsdata);
         gpsdata.windAngle = (data.windAngle !== undefined) ? data.windAngle : 0;
+        delete data.windAngle;
         gpsdata.windSpeed = (data.windSpeed !== undefined) ? data.windSpeed : 0;
+        delete data.windSpeed;
         gpsdata.windReference = data.windReference || 'R';
+        delete data.windReference;
         gpsdata.valid = true;
-        this.alarms=data.alarms;
     }
-    else{
-        gpsdata.valid=false;
+    if (!gpsdata.valid){
         //clean average data
         this.speedAverageData=[];
         this.courseAverageData=[];
         this.latAverageData=[];
         this.lonAverageData=[];
-        this.alarms=undefined;
     }
     gpsdata.raw=data?data.raw:{};
-    this.gpsdata=gpsdata;
-    this.writeToStore();
+    delete data.raw;
+    //we write to store if we received valid data
+    //or until we consider this as invalid
+    if (status || !gpsdata.valid) {
+        //store any additonal data we received
+        //we will unwind any objects to the leaves
+        //TODO: get the keys from the server
+        let additionalKeys={};
+        let predefined=this.getStoreKeys();
+        let base=KeyHelper.keyNodeToString(keys.nav.gps);
+        for (let k in data){
+            if (ignoredKeys.indexOf(k)>=0) continue;
+            if (predefined[k]) continue; //ignore any key we use internally
+            additionalKeys[k]=this.computeKeys(k,base);
+            gpsdata[k]=data[k];
+        }
+        assign(this.additionalKeys,additionalKeys);
+        this.writeToStore(gpsdata,this.additionalKeys);
+    }
+};
+
+GpsData.prototype.computeKeys=function(key,base){
+    let path=base+"."+key;
+    if (key instanceof Object){
+        let sub={};
+        for (let i in key){
+           sub[i]=this.computeKeys(key[i],path)
+        }
+        return sub;
+    }
+    else{
+        return path;
+    }
 };
 
 /**
@@ -123,11 +169,9 @@ GpsData.prototype.startQuery=function(){
             if ( data.lon != null && data.lat != null &&
                 data.mode != null && data.mode >=1){
                 self.handleGpsResponse(data,true);
-                self.handleGpsStatus(true);
             }
             else{
                 self.handleGpsResponse(data,false);
-                self.handleGpsStatus(false);
             }
             self.timer=window.setTimeout(function(){
                 self.startQuery();
@@ -172,28 +216,20 @@ GpsData.prototype.handleGpsStatus=function(success){
         this.gpsErrors++;
         if (this.gpsErrors > globalStore.getData(keys.properties.maxGpsErrors)){
             base.log("lost gps");
-            this.gpsdata.valid=false;
-            globalStore.storeData(keys.nav.gps.valid,false); //keep all the last values...
+            return false;
 
             //continue to count errrors...
         }
         else{
-            return;
+            return true;
         }
     }
     else {
         this.gpsErrors=0;
-        this.gpsdata.valid=true;
     }
+    return true;
 };
 
-/**
- * return the current gpsdata
- * @returns {navobjects.GpsInfo}
- */
-GpsData.prototype.getGpsData=function(){
-    return this.gpsdata;
-};
 
 GpsData.prototype.getStoreKeys=function(){
     let bk=keys.nav.gps;

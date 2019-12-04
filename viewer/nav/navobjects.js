@@ -181,40 +181,8 @@ navobjects.Distance=function(){
     this.course=0
 };
 
-/**
- *
- * @constructor
- * @extends {navobjects.Point}
- */
-navobjects.GpsInfo=function(){
-    navobjects.Point.call(this,0,0);
-    /**
-     * speed in NM/H (kn)
-     * @type {number}
-     */
-    this.speed=0;
-    /**
-     *
-     * @type {number}
-     */
-    this.course=0;
-    /**
-     * data is only valid if this is true
-     * @type {boolean}
-     */
-    this.valid=false;
-    /**
-     *
-     * @type {Date}
-     */
-    this.rtime=null;
-    /**
-     * the raw data (status and nmea objects)
-     * @type {Object}
-     */
-    this.raw=null;
-};
-base.inherits(navobjects.GpsInfo,navobjects.Point);
+
+
 
 /**
  * a CPA point for AIS data, contains the point + the time and the info whether we pass front or back
