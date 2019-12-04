@@ -1,7 +1,7 @@
 console.log("test plugin loaded");
 
 var widget={
-    name:"testPlugin.Widget",
+    name:"testPlugin_Widget",
     renderHtml:function(props){
         var dv=avnav.api.formatter.formatDirection(props.value);
         return "<div class=\"widgetData\">Course: "+dv+"</div>";
@@ -44,5 +44,16 @@ var widget={
     caption: "Test",
     unit: "°"
 };
+
+var simpleWidget={
+    name:"testPlugin_SimpleWidget",
+    storeKeys:{
+        value: 'nav.gps.course'
+    },
+    caption: "Test",
+    unit: "°",
+    formatter:avnav.api.formatter.formatDirection
+};
 avnav.api.registerWidget(widget);
-avnav.api.log("testPlugin.Widget registered");
+avnav.api.registerWidget(simpleWidget);
+avnav.api.log("testPlugin widgets registered");
