@@ -75,20 +75,32 @@ class LayoutHandler{
         //the provided name should always be without the user./system. prefix
         //whe we upload we always create a user. entry...
         name=name.replace(/^user\./,'').replace(/^system\./,'');
-        if (avnav.android){
-            return new Promise((resolve,reject)=>{
+        return new Promise((resolve, reject)=> {
+            try {
+                if (isString) {
+                    layout = JSON.parse(layout);
+                }
+                let error = this.checkLayout(layout);
+                if (error) {
+                    reject(error);
+                    return;
+                }
+            } catch (e) {
+                reject(e);
+                return;
+            }
+            if (avnav.android) {
                 try {
+                    //TODO: implement status return
                     avnav.android.storeLayout(name, layout);
-                    resolve({status:'OK'})
-                }catch(e){
+                    resolve({status: 'OK'})
+                } catch (e) {
                     reject(e)
                 }
-            });
-        }
-        if (isString){
-            layout=JSON.parse(layout);
-        }
-        return Requests.postJson("?request=upload&type=layout&name="+encodeURIComponent(name),layout)
+                return;
+            }
+            resolve(Requests.postJson("?request=upload&type=layout&name=" + encodeURIComponent(name), layout));
+        });
     }
 
     /**
