@@ -18,12 +18,13 @@ import ColorPicker from '../components/ColorPicker.jsx';
 import CpCss from 'react-color-picker/index.css';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Promise from 'promise';
+import LayoutHandler from '../util/layouthandler.js';
 
 const settingsSections={
     Layer:      [keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout ],
     Widgets:    [keys.properties.widgetFontSize,keys.properties.showClock,keys.properties.showZoom,keys.properties.showWind,keys.properties.showDepth],
-    Layout:     [keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.allowTwoWidgetRows,keys.properties.autoZoom,keys.properties.style.buttonSize,keys.properties.nightFade,keys.properties.nightChartFade,keys.properties.localAlarmSound,keys.properties.iosWorkaroundTime],
+    Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.allowTwoWidgetRows,keys.properties.autoZoom,keys.properties.style.buttonSize,keys.properties.nightFade,keys.properties.nightChartFade,keys.properties.localAlarmSound,keys.properties.iosWorkaroundTime],
     AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,keys.properties.aisTextSize,keys.properties.style.aisNormalColor,keys.properties.style.aisNearestColor,keys.properties.style.aisWarningColor],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
         keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,keys.properties.anchorCircleColor,keys.properties.windKnots],
@@ -225,7 +226,7 @@ const ColorSettingsItem=(properties)=>{
         backgroundColor: properties.value
     };
 
-    return <div className={properties.lassName+ " listEntry colorSelector"}
+    return <div className={properties.className+ " listEntry colorSelector"}
                 onClick={function(ev){
                             colorItemDialog(properties);
                         }}>
@@ -244,11 +245,66 @@ const createSettingsItem=(item)=>{
     if (item.type == PropertyType.COLOR){
         return ColorSettingsItem;
     }
+    if (item.type == PropertyType.LAYOUT){
+        return LayoutItem;
+    }
     return (props)=>{
         return (<div className="listEntry">
             <div className="label">{props.label}</div>
             <div className="value">{props.value}</div>
         </div>)
+    }
+};
+
+const LayoutItem=(props)=>
+{
+    return ValueSetting(props, (item)=> {
+        history.push("downloadpage", {
+                downloadtype: 'layout',
+                allowChange: false,
+                selectItemCallback: (item)=> {
+                    if (item.name == props.value) {
+                        history.pop();
+                        return;
+                    }
+                    //we selected a new layout
+                    LayoutHandler.loadLayout(item.name)
+                        .then((layout)=>{
+                            let layoutProps=LayoutHandler.getLayoutProperties();
+                            for (let k in layoutProps){
+                                changeItem({name:k},layoutProps[k])
+                            }
+                            changeItem(props,item.name);
+                            history.pop();
+                        })
+                        .catch((error)=>{
+                            Toast(error+"");
+                        })
+
+                }
+            }
+        );
+    });
+};
+
+const ValueSetting=(properties,clickHandler)=> {
+    return <div className={properties.className+ " listEntry"}
+                onClick={function(ev){
+                            clickHandler(properties);
+                        }}>
+        <div className="label">{properties.label}</div>
+        <div className="value">{properties.value}</div>
+    </div>;
+};
+
+const changeItem=(item,value)=>{
+    let old=globalStore.getData(keys.gui.settingspage.values,{});
+    let hasChanged=old[item.name]!== value;
+    if (hasChanged){
+        let changed={};
+        changed[item.name]=value;
+        globalStore.storeData(keys.gui.settingspage.values,assign({},old,changed));
+        globalStore.storeData(keys.gui.settingspage.hasChanges,true);
     }
 };
 const DynamicPage=Dynamic(Page);
@@ -269,6 +325,14 @@ class SettingsPage extends React.Component{
                         return;
                     }
                     let values=globalStore.getData(keys.gui.settingspage.values);
+                    //if the layout changed we need to set it
+                    if (values[keys.properties.layoutName] != globalStore.getData(keys.properties.layoutName)){
+                        if (! LayoutHandler.hasLoaded(values[keys.properties.layoutName])){
+                            Toast("layout not loaded, cannot activate it");
+                            return;
+                        }
+                        LayoutHandler.activateLayout();
+                    }
                     globalStore.storeMultiple(values);
                     history.pop();
                 }
@@ -305,19 +369,20 @@ class SettingsPage extends React.Component{
             }
         ];
         this.state={};
-        this.changeItem=this.changeItem.bind(this);
         this.resetData=this.resetData.bind(this);
         this.hasChanges=this.hasChanges.bind(this);
         this.leftPanelVisible=this.leftPanelVisible.bind(this);
         this.handlePanel=this.handlePanel.bind(this);
         this.sectionClick=this.sectionClick.bind(this);
         this.flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
-        globalStore.storeData(keys.gui.settingspage.leftPanelVisible,true);
-        this.leftVisible=true;
-        let values=globalStore.getMultiple(this.flattenedKeys);
-        globalStore.storeData(keys.gui.settingspage.values,values);
-        globalStore.storeData(keys.gui.settingspage.hasChanges,false);
-        globalStore.storeData(keys.gui.settingspage.section,'Layer');
+        if (! (this.props.options && this.props.options.returning)) {
+            globalStore.storeData(keys.gui.settingspage.leftPanelVisible, true);
+            this.leftVisible = true;
+            let values = globalStore.getMultiple(this.flattenedKeys);
+            globalStore.storeData(keys.gui.settingspage.values, values);
+            globalStore.storeData(keys.gui.settingspage.hasChanges, false);
+            globalStore.storeData(keys.gui.settingspage.section, 'Layer');
+        }
 
     }
     resetData(){
@@ -337,16 +402,6 @@ class SettingsPage extends React.Component{
     }
     hasChanges(){
         return globalStore.getData(keys.gui.settingspage.hasChanges);
-    }
-    changeItem(item,value){
-        let old=globalStore.getData(keys.gui.settingspage.values,{});
-        let hasChanged=old[item.name]!== value;
-        if (hasChanged){
-            let changed={};
-            changed[item.name]=value;
-            globalStore.storeData(keys.gui.settingspage.values,assign({},old,changed));
-            globalStore.storeData(keys.gui.settingspage.hasChanges,true);
-        }
     }
     leftPanelVisible(){
         return this.leftVisible;
@@ -409,7 +464,7 @@ class SettingsPage extends React.Component{
                         scrollable={true}
                         itemCreator={createSettingsItem}
                         itemList={settingsItems}
-                        onItemClick={self.changeItem}
+                        onItemClick={changeItem}
                         /> : null}
                 </div>);
         };

@@ -59,6 +59,13 @@ class KeyHandler{
         this.keymappings=mappings;
     }
 
+    mergeMappings(mappings){
+        //TODO
+    }
+    resetMerge(){
+        //TODO
+    }
+
     setPage(page){
         this.page=page;
     }

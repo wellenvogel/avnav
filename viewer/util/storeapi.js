@@ -142,7 +142,7 @@ StoreApi.prototype.callCallbacks=function(keys,opt_omitHandler){
             }
         }
         if (cbItem.isCallbackFor(keys)){
-           cbItem.callback.dataChanged(self,keys);
+           cbItem.callback.dataChanged(keys);
         }
     });
 };
@@ -198,15 +198,6 @@ StoreApi.prototype.getMultiple=function(keys){
 };
 
 
-/**
- * callback function for data provider
- * @param provider
- * @param keys
- * @private
- */
-StoreApi.prototype.dataChanged=function(provider,keys){
-    this.callCallbacks(keys);
-};
 
 
 

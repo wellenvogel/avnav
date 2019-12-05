@@ -3,7 +3,7 @@
 import React, { Component } from 'react';
 import history from './util/history.js';
 import Dynamic from './hoc/Dynamic.jsx';
-import keys from './util/keys.jsx';
+import keys,{KeyHelper} from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
 import InfoPage from './gui/InfoPage.jsx';
 import GpsPage from './gui/GpsPage.jsx';
@@ -25,6 +25,7 @@ import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.jsx';
 import KeyHandler from './util/keyhandler.js';
+import LayoutHandler from './util/layouthandler.js';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -106,6 +107,33 @@ class App extends React.Component {
         this.checkSizes=this.checkSizes.bind(this);
         this.keyDown=this.keyDown.bind(this);
         this.state={};
+        Requests.getJson("layout/keys.json",{useNavUrl:false,checkOk:false}).then(
+            (json)=>{
+                KeyHandler.registerMappings(json);
+            },
+            (error)=>{
+                Toast("unable to load key mappings: "+error);
+            }
+        );
+        let layoutName=globalStore.getData(keys.properties.layoutName);
+        LayoutHandler.loadLayout(layoutName)
+            .then((layout)=>{
+                LayoutHandler.activateLayout(true);
+            })
+            .catch((error)=>{
+                let description=KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
+                if (description && description.defaultv){
+                    if (layoutName != description.defaultv){
+                        globalStore.storeData(keys.properties.layoutName,description.defaultv);
+                        LayoutHandler.loadLayout(description.defaultv).then(()=>{
+                            LayoutHandler.activateLayout();
+                        }).catch((error)=>{
+                            Toast("unable to load default layout: "+error);
+                        })
+                    }
+                }
+                Toast("unable to load application layout "+layoutName+": "+error);
+            });
     }
     checkSizes(){
         if (globalStore.getData(keys.gui.global.hasActiveInputs,false)) return;
@@ -118,29 +146,12 @@ class App extends React.Component {
         globalStore.storeData(keys.gui.global.buttonFontSize,PropertyHandler.getButtonFontSize())
     }
     componentDidMount(){
-        document.addEventListener("keydown",this.keyDown)
+        document.addEventListener("keydown",this.keyDown);
         let iv=window.setInterval(this.checkSizes,1000);
         this.checkSizes();
         this.setState({interval:iv});
         window.addEventListener('resize',this.checkSizes);
-        Requests.getJson("layout/default.json",{useNavUrl:false,checkOk:false}).then(
-            (json)=>{
-                globalStore.storeData(keys.gui.global.layout,json);
-                let ls=globalStore.getData(keys.gui.global.layoutSequence,0);
-                globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
-            },
-            (error)=>{
-               Toast("unable to load application layout: "+error);
-            }
-        );
-        Requests.getJson("layout/keys.json",{useNavUrl:false,checkOk:false}).then(
-            (json)=>{
-                KeyHandler.registerMappings(json);
-            },
-            (error)=>{
-                Toast("unable to load key mappings: "+error);
-            }
-        );
+
 
     }
     componentWillUnmount(){

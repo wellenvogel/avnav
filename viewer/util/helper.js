@@ -74,6 +74,37 @@ Helper.parseXml=function(text){
     return xmlDoc;
 };
 
+/**
+ * filter out some tree of objects
+ * @param source
+ * @param filterFunction will be called with the current leaf from source and a
+ *        path being constructed of hierarchies concat by .
+ * @param opt_basepath to be prepended to the path
+ * @returns {undefined}
+ */
+Helper.filterObjectTree=function(source,filterFunction,opt_basepath){
+    let rt=undefined;
+    let path=opt_basepath;
+    for (let k in source) {
+        let currentPath=path!==undefined?path+"."+k:k;
+        if (typeof(source[k]) === 'object') {
+            let sub=Helper.filterObjectTree(source[k],filterFunction,currentPath);
+            if (sub !== undefined) {
+                if (rt === undefined) rt={};
+                rt[k]=sub;
+            }
+        }
+        else {
+            if (filterFunction(source[k], currentPath)) {
+                if (rt === undefined) rt = {};
+                rt[k] = source[k];
+            }
+        }
+    }
+    return rt;
+};
+
+
 
 
 module.exports=Helper;

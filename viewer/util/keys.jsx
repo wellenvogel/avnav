@@ -17,7 +17,8 @@ export const PropertyType={
     CHECKBOX:0,
     RANGE:1,
     LIST:2,
-    COLOR:3
+    COLOR:3,
+    LAYOUT:4
 };
 
 /**
@@ -33,6 +34,7 @@ export const Property=function(defaultv,opt_label,opt_type,opt_values){
     this.label=opt_label;
     this.type=(opt_type !== undefined)?opt_type:PropertyType.RANGE;
     this.values=(opt_values !== undefined)?opt_values:[0,1000]; //assume range 0...1000
+    this.canChange=opt_type !== undefined;
 };
 
 /**
@@ -316,6 +318,7 @@ let keys={
         iosWorkaroundTime: new Property(300, "time to ignore events after page show", PropertyType.RANGE, [0, 1000]),
         wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
+        layoutName: new Property("system.default","Layout name",PropertyType.LAYOUT),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),

@@ -6,37 +6,8 @@ import Toast from '../components/Toast.jsx';
 import globalStore from './globalstore.jsx';
 import keys,{KeyHelper} from './keys.jsx';
 import base from '../base.js';
-
-/**
- * filter out some tree ob objects
- * @param source
- * @param filterFunction will be called with the current leaf from source and a
- *        path being constructed of hierarchies concat by .
- * @param opt_basepath to be prepended to the path
- * @returns {undefined}
- */
-const filterObjectTree=(source,filterFunction,opt_basepath)=>{
-    let rt=undefined;
-    let path=opt_basepath;
-    for (let k in source) {
-        let currentPath=path!==undefined?path+"."+k:k;
-        if (typeof(source[k]) === 'object') {
-            let sub=filterObjectTree(source[k],filterFunction,currentPath);
-            if (sub !== undefined) {
-                if (rt === undefined) rt={};
-                rt[k]=sub;
-            }
-        }
-        else {
-            if (filterFunction(source[k], currentPath)) {
-                if (rt === undefined) rt = {};
-                rt[k] = source[k];
-            }
-        }
-    }
-    return rt;
-};
-
+import merge from 'lodash.merge';
+import Helper from './helper.js';
 
 
 const hex2rgba= (hex, opacity)=> {
@@ -69,30 +40,26 @@ class PropertyHandler {
         this.getAisColor=this.getAisColor.bind(this);
         this.incrementSequence=this.incrementSequence.bind(this);
         this.dataChanged=this.dataChanged.bind(this);
-        let defaults=KeyHelper.getDefaultKeyValues();
-        globalStore.storeMultiple(defaults);
+        this.resetToSaved=this.resetToSaved.bind(this);
+        this.resetToSaved();
         //register at the store for updates of our synced data
         globalStore.register(this,keys.properties);
         if (!window.localStorage) {
             Toast("local storage is not available, seems that your browser is not HTML5... - application will not work");
             return;
         }
-        try {
-            let rawdata = localStorage.getItem(globalStore.getData(keys.properties.settingsName));
-            if (!rawdata) return;
-            let ndata = JSON.parse(rawdata);
-            if (ndata) {
-                let userData = filterObjectTree(ndata, (item, path)=> {
-                    let description = self.propertyDescriptions[path];
-                    if (!description) return;
-                    return item != globalStore.getData(path);
-                }, KeyHelper.keyNodeToString(keys.properties));
-                globalStore.storeMultiple(userData, keys.properties, true, true);
-            }
-        }catch (e){
-            base.log("Exception reading user data "+e);
-        }
         this.incrementSequence();
+    }
+
+    loadUserData(){
+        try{
+           let rawdata = localStorage.getItem(globalStore.getData(keys.properties.settingsName));
+           if (!rawdata) return {};
+           return JSON.parse(rawdata);
+        }catch (e){
+           base.log("unable to load user data")
+        }
+        return {};
     }
 
     incrementSequence(){
@@ -118,11 +85,11 @@ class PropertyHandler {
     }
 
 
-    dataChanged(store,storeKeys){
+    dataChanged(storeKeys){
         let self=this;
         let values=globalStore.getMultiple(keys.properties);
         this.saveUserData(
-            filterObjectTree(values,(item,path)=>{
+            Helper.filterObjectTree(values,(item,path)=>{
                 let description=self.propertyDescriptions[path];
                 if (description === undefined) return false;
                 return item !== description.defaultv;
@@ -175,6 +142,26 @@ class PropertyHandler {
             }
         }
         return color;
+    }
+
+
+    resetToSaved(){
+        let self=this;
+        let defaults=KeyHelper.getDefaultKeyValues();
+        globalStore.storeMultiple(defaults,undefined,true);
+        try {
+            let ndata = this.loadUserData();
+            if (ndata) {
+                let userData = Helper.filterObjectTree(ndata, (item, path)=> {
+                    let description = self.propertyDescriptions[path];
+                    if (!description) return;
+                    return item != globalStore.getData(path);
+                }, KeyHelper.keyNodeToString(keys.properties));
+                globalStore.storeMultiple(userData, keys.properties, true, true);
+            }
+        }catch (e){
+            base.log("Exception reading user data "+e);
+        }
     }
 
 }

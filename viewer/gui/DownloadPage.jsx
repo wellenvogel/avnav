@@ -59,6 +59,10 @@ class FileInfo{
 };
 
 const fillDataServer=(type)=>{
+    let activeItemName=undefined;
+    if (type == 'layout'){
+        activeItemName=globalStore.getData(keys.properties.layoutName);
+    }
     Requests.getJson("?request=listdir&type="+type).then((json)=>{
         let list=[];
         for (let i=0;i<json.items.length;i++){
@@ -66,6 +70,7 @@ const fillDataServer=(type)=>{
             assign(fi,json.items[i]);
             fi.type=type;
             fi.server=true;
+            if (activeItemName == fi.name) fi.canDelete=false;
             list.push(fi);
         }
         addItems(list,true);
@@ -161,6 +166,8 @@ const DownloadItem=(props)=>{
     if (props.canDelete !== undefined){
         showDelete=props.canDelete && ! props.active;
     }
+    let dataClass="downloadItemData";
+    if (!(showDelete && ! props.active)) dataClass+=" noDelete";
     return(
         <div className={cls} onClick={function(ev){
             props.onClick('select')
@@ -170,7 +177,7 @@ const DownloadItem=(props)=>{
                 ev.stopPropagation();
                 props.onClick('delete');
             }}/>}
-            <div className="downloadItemData">
+            <div className={dataClass}>
                 <div className="date">{dp.timeText}</div>
                 <div className="info">{dp.infoText}</div>
             </div>
