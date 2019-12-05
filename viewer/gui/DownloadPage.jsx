@@ -22,6 +22,7 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import base from '../base.js';
 import Promise from 'promise';
+import LayoutHandler from '../util/layouthandler.js';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -330,14 +331,16 @@ const runUpload=(ev)=>{
     if (type == 'layout'){
         uploadFileReader(ev.target,".json").then(
             (content)=>{
-                Requests.postJson("?request=upload&type=layout&name="+encodeURIComponent(content.name),JSON.parse(content.content)).
-                    then(
-                    (result)=>{
-                        fillData();
-                    }
-                ).catch((error)=>{
-                        Toast("unable to upload layout: "+error);
-                    })
+                LayoutHandler.uploadLayout(content.name,content.content,true)
+                    .then(
+                        (result)=>{
+                            fillData();
+                        }
+                    ).catch(
+                        (error)=>{
+                            Toast("unable to upload layout: "+error);
+                        }
+                    )
             }
         ).catch(
             (error)=>{Toast(error)}

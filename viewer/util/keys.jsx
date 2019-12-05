@@ -229,11 +229,9 @@ let keys={
         readOnlyServer: new Property(false),
         NM: new Property(1852), //one mile
         silenceSound: new Property("sounds/1-minute-of-silence.mp3"),
-        buttonUpdateTime: new Property(500), //timer for button updates
         slideTime: new Property(300), //time in ms for upzoom
         slideLevels: new Property(3), //start with that many lower zoom levels
         maxUpscale: new Property(2), //2 levels upscale (otherwise we need too much mem)
-        hideLower: new Property(true), //if set, hide smaller zoom layers when completely covered
         maxZoom: new Property(21),  //only allow upscaling up to this zom level
         courseAverageFactor: new Property(0.5), //moving average for course up
         courseAverageTolerance: new Property(15, "Rotation Tolerance", PropertyType.RANGE, [1, 30]), //tolerance for slow rotation
@@ -287,6 +285,7 @@ let keys={
         settingsName: new Property("avnav.settings"), //storage name
         routingDataName: new Property("avnav.routing"),
         routeName: new Property("avnav.route"), //prefix for route names
+        layoutStoreName: new Property("avnav.layout"),
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
         centerName: new Property("avnav.center"),

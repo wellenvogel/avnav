@@ -5,6 +5,7 @@ import Helper from './helper.js';
 import globalStore from './globalstore.jsx';
 import keys,{KeyHelper} from './keys.jsx';
 import KeyHandler from './keyhandler.js';
+import base from '../base.js';
 
 class LayoutHandler{
     constructor(){
@@ -38,10 +39,56 @@ class LayoutHandler{
                     resolve(json);
                 },
                 (error)=> {
-                    reject("unable to load application layout: " + error);
+                    try {
+                        let raw = localStorage.getItem(
+                            globalStore.getData(keys.properties.layoutStoreName)
+                        );
+                        if (raw) {
+                            let layoutData=JSON.parse(raw);
+                            if (layoutData.name == name && layoutData.data){
+                                this.layout=layoutData.data;
+                                if (name.match(/^user\./)) {
+                                    self.uploadLayout(name.replace(/^user\./,''), this.layout)
+                                        .then(()=>{})
+                                        .catch(()=>{});
+                                }
+                                resolve(layoutData.data);
+                                return;
+                            }
+
+                        }
+                    }catch(e){
+                        base.log("error wen trying to read layout locally: "+e);
+                    }
+                    reject("" + error);
                 }
             );
         });
+    }
+
+    uploadLayout(name,layout,isString){
+        if (! name || ! layout){
+            return new Promise((resolve,reject)=>{
+               reject("missing parameter name or layout");
+            });
+        }
+        //the provided name should always be without the user./system. prefix
+        //whe we upload we always create a user. entry...
+        name=name.replace(/^user\./,'').replace(/^system\./,'');
+        if (avnav.android){
+            return new Promise((resolve,reject)=>{
+                try {
+                    avnav.android.storeLayout(name, layout);
+                    resolve({status:'OK'})
+                }catch(e){
+                    reject(e)
+                }
+            });
+        }
+        if (isString){
+            layout=JSON.parse(layout);
+        }
+        return Requests.postJson("?request=upload&type=layout&name="+encodeURIComponent(name),layout)
     }
 
     /**
@@ -72,6 +119,13 @@ class LayoutHandler{
     }
     activateLayout(){
         if (!this.layout) return false;
+        try {
+            localStorage.setItem(
+                globalStore.getData(keys.properties.layoutStoreName),
+                JSON.stringify({name: this.name, data: this.layout}));
+        }catch(e){
+            base.log("unable to store layout locally")
+        }
         KeyHandler.resetMerge();
         if (this.layout.keys){
            KeyHandler.mergeMappings(this.layout.keys);

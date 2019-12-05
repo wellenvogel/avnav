@@ -10,6 +10,7 @@ class Mapping{
 class KeyHandler{
     constructor(){
         this.keymappings={};
+        this.merges={};
         this.registrations={};
         this.page=undefined;
         this.ALLPAGES="all";
@@ -60,10 +61,10 @@ class KeyHandler{
     }
 
     mergeMappings(mappings){
-        //TODO
+        this.merges=mappings;
     }
     resetMerge(){
-        //TODO
+        this.merges={};
     }
 
     setPage(page){
@@ -71,11 +72,22 @@ class KeyHandler{
     }
 
     findMappingForPage(key,page){
+        let mapping=undefined;
+        try {
+            mapping = this.findMappingForType(this.merges, key, page);
+        }catch(e){
+            console.log("error when searching keymapping: "+e)
+        }
+        if (mapping) return mapping;
+        return this.findMappingForType(this.keymappings,key,page);
+    }
+    findMappingForType(mappings,key,page){
+        if (mappings === undefined) return;
         if (key === undefined) return;
         if (page === undefined) return;
-        if (! this.keymappings[page]) return;
-        for (let k in this.keymappings[page]){
-            let component=this.keymappings[page][k];
+        if (! mappings[page]) return;
+        for (let k in mappings[page]){
+            let component=mappings[page][k];
             for (let a in component){
                 let actionKey=component[a];
                 if (actionKey instanceof Array){
