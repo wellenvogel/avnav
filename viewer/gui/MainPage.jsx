@@ -38,6 +38,9 @@ const selectChart=(offset)=>{
     if (newIndex >= len){
         newIndex=0;
     }
+    if (newIndex < 0){
+        newIndex=0;
+    }
     if (newIndex != currentIndex){
         globalStore.storeData(keys.gui.mainpage.selectedChartIndex,newIndex);
     }

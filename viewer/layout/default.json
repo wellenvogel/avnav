@@ -1,4 +1,5 @@
 {
+  "description": "The system default layout. No keys and no properties.",
   "layoutVersion":1,
   "properties":{
     "layers":{
