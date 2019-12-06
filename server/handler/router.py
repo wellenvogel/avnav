@@ -354,23 +354,25 @@ class AVNRouter(AVNWorker):
 
   #fill all routeInfos
   def fillRouteInfos(self):
-    self.routeInfos={}
+    routeInfos={}
     try:
       for fn in os.listdir(self.routesdir):
         fullname=os.path.join(self.routesdir,fn)
         if not os.path.isfile(fullname):
           continue
-        if not fn.endswith(u'.gpx'):
+        if not fn.endswith('.gpx'):
           continue
         try:
           route=self.loadRouteFile(fullname)
           ri=AVNRouteInfo.fromRoute(route,os.path.getmtime(fullname))
-          self.routeInfos[ri.name]=ri
+          routeInfos[ri.name]=ri
           AVNLog.debug("add route info for %s",unicode(ri))
         except:
           AVNLog.debug("unable to read route from %s",fullname)
+      self.routeInfos=routeInfos
       AVNLog.info("read %d routes",len(self.routeInfos.items()))
-    except:
+    except Exception as e:
+      AVNLog.error("reading routes failed: %s"%e.message)
       pass
 
   def updateRouteInfo(self,route):
@@ -386,9 +388,7 @@ class AVNRouter(AVNWorker):
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
     interval=self.getIntParam('interval')
-    routesdir=AVNUtil.replaceParam(os.path.expanduser(self.getStringParam("routesdir")),AVNConfig.filterBaseParam(self.getParam()))
-    if routesdir == "":
-      routesdir=os.path.join(self.getStringParam(AVNConfig.BASEPARAM.DATADIR),u'routes')
+    routesdir=AVNConfig.getDirWithDefault(self.param,'routesdir','routes')
     self.routesdir=routesdir
     if not os.path.isdir(self.routesdir):
       AVNLog.info("creating routes directory %s"%(self.routesdir))
@@ -440,6 +440,7 @@ class AVNRouter(AVNWorker):
       hasLeg=False
       hasRMB=False
       time.sleep(interval)
+      self.fillRouteInfos();
       if self.currentLeg and self.currentLeg.active:
         hasLeg=True
         if self.currentLeg.anchorDistance is not None:
@@ -699,7 +700,7 @@ class AVNRouter(AVNWorker):
     self.routeListLock.release()
 
   def getHandledCommands(self):
-    return {"api":"routing","download":"route","upload":"route"}
+    return {"api":"routing","download":"route","upload":"route","delete":"route","list":"route"}
 
   #handle a routing request
   #this expects a command as parameter
@@ -708,9 +709,14 @@ class AVNRouter(AVNWorker):
     if type == 'api':
       return self.handleRoutingRequest(requestparam)
     elif type=="upload":
-      return self.handleRouteUploadRequest(requestparam,kwargs['rfile'],kwargs['flen'])
+      return self.handleRouteUploadRequest(requestparam)
     elif type=="download":
       return self.handleRouteDownloadRequest(requestparam)
+    elif type=="delete":
+      return self.handleRouteDeleteRequest(requestparam)
+    elif type == "list":
+      return self.handleRouteListRequest(requestparam)
+
     raise Exception("unable to handle routing request of type %s:%s"%(type,subtype))
   def handleRoutingRequest(self,requestparam):
     command=self.getRequestParam(requestparam, 'command')
@@ -733,62 +739,14 @@ class AVNRouter(AVNWorker):
         raise Exception("invalid leg data %s"%(data))
       self.setCurrentLeg(leg)
       return {'status':'OK'}
-    if (command == 'setroute'):
-      data=self.getRequestParam(requestparam,'_json')
-      if data is None:
-        raise Exception("missing route for setroute")
-      route=self.routeFromJsonString(data)
-      AVNLog.info("saving route %s with %d points"%(route.name,len(route.points)))
-      ignoreExisting=self.getRequestParam(requestparam,'ignoreExisting')
-      self.saveRoute(route,True if (ignoreExisting is not None and ignoreExisting == "true") else False)
-      return {'status':'OK'}
-    if (command == 'getroute'):
-      data=self.getRequestParam(requestparam, 'name')
-      if data is None:
-        return {'status':'no route name'}
-      AVNLog.debug("load route %s"%(data))
-      route=self.loadRoute(data)
-      if route is None:
-        return json.dumps({'status':'route'+data+' not found'})
-      AVNLog.debug("get route %s"%(route.name))
-      jroute=self.routeToJson(route)
-      rinfo=self.routeInfos.get(data)
-      if rinfo is not None:
-        jroute['time']=rinfo.time
-      return jroute
-    if (command == 'deleteroute'):
-      name=self.getRequestParam(requestparam, 'name')
-      if name is None:
-        return json.dumps({'status':'no route name'})
-      if self.currentLeg is not None and self.currentLeg.name is not None and self.currentLeg.active and self.currentLeg.name == name:
-        return {'status':'cannot delete active route'}
-      self.deleteRouteFromList(name)
-      self.deleteRouteInfo(name)
-      fname=self.getRouteFileName(name)
-      if os.path.exists(fname):
-        try:
-          os.unlink(fname)
-        except:
-          pass
-      return {'status':'OK'}
-
-    if (command == 'listroutes'):
-      rt={'status':'OK'}
-      infos=[]
-      for ri in self.routeInfos:
-        infos.append(self.routeInfos[ri].__dict__)
-      rt['items']=infos
-      return rt
-
     raise Exception("invalid command "+command)
-  #download a route in xml format
+  #download a route in xml or json format
   #this has 2 flavours:
   #either we have a name as parameter - in this case, download the route from us
   #otherwise we expected a JSON route as post param and send back this one
   #we need to ensure that we always return some data
   #otherwise we break the GUI
   def handleRouteDownloadRequest(self,requestparam):
-    mtype = "application/gpx+xml"
     route=None
     try:
       name=self.getRequestParam(requestparam,"name")
@@ -796,45 +754,70 @@ class AVNRouter(AVNWorker):
         AVNLog.debug("download route name=%s",name)
         route=self.loadRoute(name)
       else:
-        data=self.getRequestParam(requestparam,'_json');
+        data=self.getRequestParam(requestparam,'_json')
         if data is None:
           AVNLog.error("unable to find a route for download, returning an empty")
-          return ""
+          raise Exception("no data for the route was found")
         route=self.routeFromJsonString(data)
       if route is None:
-          return "error - route not found"
-      data=self.gpxFormat%(route.to_xml())
+          raise Exception("error - route not found")
+      if self.getRequestParam(requestparam,'format') != 'json':
+        mtype = "application/gpx+xml"
+        data=self.gpxFormat%(route.to_xml())
+      else:
+        mtype="application/json"
+        data=self.routeToJsonString(route)
       stream=StringIO.StringIO(data)
+      stream.seek(0)
       return {'size':len(data),'mimetype':mtype,'stream':stream}
     except:
       AVNLog.error("exception in route download %s",traceback.format_exc())
       return "error"
 
-  #we expect a filename parameter...
-  #TODO: should we check that the filename is the same like the route name?
-  def handleRouteUploadRequest(self,requestparam,rfile,flen):
-    fname=self.getRequestParam(requestparam,"filename")
-    AVNLog.debug("route upload request for %s",fname)
-    if flen > self.MAXROUTESIZE:
-      raise Exception("route is to big, max allowed filesize %d: "%self.MAXROUTESIZE)
+  #we only accept the route upload in json format - so being in a _json parameter
+  def handleRouteUploadRequest(self,requestparam):
+    data=self.getRequestParam(requestparam,'_json')
+    if data is None:
+      raise Exception("missing _json data")
+    AVNLog.debug("route upload request %s"%data)
     try:
-      data=rfile.read(flen)
-      parser = gpxparser.GPXParser(data)
-      gpx = parser.parse()
-      if gpx.routes is None or len(gpx.routes)  == 0:
-        raise "no routes in "+fname
-      route=gpx.routes[0]
+      route=self.routeFromJsonString(data)
       if route is None:
         raise Exception("no route found in file")
       rinfo=self.routeInfos.get(route.name)
-      if rinfo is not None:
+      ignoreExisting = self.getRequestParam(requestparam, 'ignoreExisting')
+      if rinfo is not None and ignoreExisting == 'true':
         raise Exception("route with name "+route.name+" already exists")
       rinfo=AVNRouteInfo.fromRoute(route,AVNUtil.utcnow())
       self.routeInfos[route.name]=rinfo
       self.saveRoute(route)
       return
     except Exception as e:
-      raise Exception("exception parsing "+fname+": "+e.message)
+      raise Exception("exception parsing route:%s"%(e.message))
+
+  def handleRouteDeleteRequest(self, requestparam):
+    name = self.getRequestParam(requestparam, 'name')
+    if name is None:
+      raise Exception("missing parameter name")
+    if self.currentLeg is not None and self.currentLeg.name is not None and self.currentLeg.active and self.currentLeg.name == name:
+      raise Exception('cannot delete active route')
+    self.deleteRouteFromList(name)
+    self.deleteRouteInfo(name)
+    fname = self.getRouteFileName(name)
+    if os.path.exists(fname):
+      try:
+        os.unlink(fname)
+      except:
+        pass
+
+  def handleRouteListRequest(self, requestparam):
+    rt = {'status': 'OK'}
+    infos = []
+    for ri in self.routeInfos:
+      infos.append(self.routeInfos[ri].__dict__)
+    rt['items'] = infos
+    return rt
+
 avnav_handlerList.registerHandler(AVNRouter)
 
 

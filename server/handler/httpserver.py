@@ -95,7 +95,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if not child is None:
       return None
     rt={
-                     "basedir":".",
+                     "basedir":"",
                      "navurl":"/viewer/avnav_navi.php", #those must be absolute with /
                      "index":"/viewer/avnav_viewer.html",
                      "chartbase": "maps", #this is the URL without leading /!
@@ -111,12 +111,10 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
   
   def __init__(self,cfgparam,RequestHandlerClass):
     replace=AVNConfig.filterBaseParam(cfgparam)
-    self.basedir=cfgparam['basedir']
-    if self.basedir==".":
-      self.basedir=cfgparam[AVNConfig.BASEPARAM.BASEDIR]
-    else:
-      self.basedir=AVNUtil.replaceParam(self.basedir,replace)
-    self.basedir=AVNUtil.prependBase(self.basedir,cfgparam[AVNConfig.BASEPARAM.BASEDIR])
+    if cfgparam.get('basedir')== '.':
+      #some migration of the older setting - we want to use our global dir function, so consider . to be empty
+      cfgparam['basedir']=''
+    self.basedir=AVNConfig.getDirWithDefault(cfgparam,'basedir',defaultSub='',belowData=False)
     datadir=cfgparam[AVNConfig.BASEPARAM.DATADIR]
     pathmappings=None
     #a list of gemf files (key is the url below charts)
@@ -648,7 +646,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleDebugLevelRequest(requestParam)
       elif requestType=='listCharts':
         rtj=self.handleListChartRequest(requestParam)
-      elif requestType=='listdir':
+      elif requestType=='listdir' or requestType == 'list':
         rtj=self.handleListDir(requestParam)
       elif requestType=='readAddons':
         rtj=self.handleAddonRequest(requestParam)
@@ -895,7 +893,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           raise Exception("missing stream")
         self.send_response(200)
         fname = self.getRequestParam(requestParam, "filename")
-        if fname is not None and fname != "" and dl.get('noattach') is None:
+        if fname is not None and fname != "" and self.getRequestParam(requestParam,'noattach') is None:
           self.send_header("Content-Disposition", "attachment")
         self.send_header("Content-type", dl['mimetype'])
         self.send_header("Content-Length", dl['size'])
@@ -910,8 +908,19 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             pass
         return
 
-    except:
-      self.send_error(404,traceback.format_exc(1))
+    except Exception as e:
+      if self.getRequestParam(requestParam,'noattach') is None:
+        #send some empty data
+        data = StringIO.StringIO("error: %s"%e.message)
+        data.seek(0)
+        self.send_response(200)
+        self.send_header("Content-type", "application/octet-stream")
+        try:
+          self.copyfile(data, self.wfile)
+        finally:
+          data.close()
+      else:
+        self.send_error(404,traceback.format_exc(1))
       return
     rtd=None
     mtype="application/octet-stream"

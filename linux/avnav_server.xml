@@ -73,10 +73,8 @@
 <!-- chartbaseurl="http://$host/Karten/anav"> -->
 	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
 	<Directory urlpath="viewer" path="../viewer"></Directory>
-	<Directory urlpath="build" path="../viewer/build"></Directory>
 	<Directory urlpath="libraries" path="../libraries"></Directory>
 	<Directory urlpath="sounds" path="../sounds"></Directory>
-	<Directory urlpath="test" path="../../leaflet-test"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
 	<UserTool url="http://www.wellenvogel.de" title="Homepage" icon="icons/wb_sunny.svg"></UserTool>
@@ -85,10 +83,10 @@
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
     <!--  routing handler -->
-<AVNRouter routesdir="../data_linux/routes" computeAPB="true"></AVNRouter>
+<AVNRouter computeAPB="true"></AVNRouter>
 <!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
 <AVNNmeaLogger></AVNNmeaLogger>
-<AVNImporter importDir="../data_linux/import"></AVNImporter>
+<AVNImporter ></AVNImporter>
 <AVNWpaHandler 
 wpaSocket="/var/run/wpa_supplicant/wlx0013eff503f2"
 allowDenyCommand="sudo $BASEDIR/../raspberry/iptables-ext.sh wlx0013eff503f2"

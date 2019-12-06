@@ -359,5 +359,15 @@ class AVNUtil():
     if os.path.isabs(path):
       return path
     if base is None:
-      return base
+      return path
+    if path.startswith(base):
+      return path
     return os.path.join(base,path)
+
+  @classmethod
+  def getDirWithDefault(cls,parameters,name,defaultSub,belowData=True):
+    value=parameters.get(name)
+    if value is not None:
+      if not isinstance(value,unicode):
+        value=unicode(value,errors='ignore')
+

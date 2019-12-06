@@ -42,6 +42,40 @@ class AVNConfig(sax.handler.ContentHandler):
     DATADIR='DATADIR' #the data directory if not provided on the commandline: either parent dir of chart dir or $HOME/avnav
 
   @classmethod
+  def getDirWithDefault(cls, parameters, name, defaultSub=None, belowData=True):
+    '''
+    return a directory performing some substitutions:
+      user replacement
+      prepending basedir if not abs
+    @param parameters:  the parameters from our worker
+    @param name:        the config name for the dir
+    @param defaultSub:  if set, return this as a default (otherwise return None if not set )
+    @param belowData:   if true: DATADIR as basedir, otherwise BASEDIR
+    @return:
+    '''
+    value = parameters.get(name)
+    defName = cls.BASEPARAM.BASEDIR if not belowData else cls.BASEPARAM.DATADIR
+    baseDir=parameters.get(defName)
+    if baseDir is None:
+      raise Exception("%s not found in parameters"%defName)
+    if value is not None and value:
+      if not isinstance(value, unicode):
+        value = unicode(value, errors='ignore')
+      value=os.path.expanduser(value)
+      value=AVNUtil.replaceParam(value,cls.filterBaseParam(parameters))
+      if not os.path.isabs(value):
+          if value.startswith(baseDir):
+            return value
+          return os.path.join(baseDir,value)
+      return value
+    if defaultSub is None :
+      return None
+    if not defaultSub:
+      #empty sub
+      return baseDir
+    return os.path.join(baseDir,defaultSub)
+
+  @classmethod
   def filterBaseParam(cls,dict):
     '''
     filter the base parameter out of the existing paramneters

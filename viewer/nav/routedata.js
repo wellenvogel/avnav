@@ -204,7 +204,7 @@ let RouteData=function(){
             if (! this.lastReceivedRoute || this.lastReceivedRoute.name != route.name){
                 ignoreExisting=true;
             }
-            this._sendRoute(route, undefined,ignoreExisting);
+            this._sendRoute(route, ()=>{return false},ignoreExisting); //ignore any errors
         }
     });
     globalStore.register(this.activeRouteChanged,activeRoute.getStoreKeys());
@@ -435,7 +435,7 @@ RouteData.prototype.routeOff=function(){
  */
 RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_callbackData){
     let self=this;
-    return this._remoteRouteOperation("listroutes",{
+    return this._remoteRouteOperation("list",{
         okcallback:function(data,param){
             if ((data.status && data.status!='OK') || (!data.items)) {
                 if (opt_failCallback) {
@@ -512,7 +512,7 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
         localStorage.removeItem(globalStore.getData(keys.properties.routeName)+"."+name);
     }catch(e){}
     if (this.connectMode && ! opt_localonly){
-        this._remoteRouteOperation("deleteroute",{
+        this._remoteRouteOperation("delete",{
             name:name,
             errorcallback:opt_errorcallback,
             okcallback:opt_okcallback
@@ -549,7 +549,8 @@ RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallb
         }
         return;
     }
-    this._remoteRouteOperation("getroute",{
+    this._remoteRouteOperation("download",{
+        format:'json',
         name:name,
         self:this,
         f_okcallback:okcallback,
@@ -714,12 +715,14 @@ RouteData.prototype._handleLegResponse = function (serverData) {
  *
  */
 RouteData.prototype._remoteRouteOperation=function(operation, param) {
-    let url = "?request=routing&command=" + operation;
+    let url = "?request="+operation+"&type=route";
     let data=undefined;
-    if (operation == "getroute" || operation=="deleteroute") {
-        url += "&name=" + encodeURIComponent(param.name);
-    }
-    if(operation=="setroute"){
+    let opt=['name','format','ignoreExisting'];
+    opt.forEach((rp)=>{
+    if (param[rp] !== undefined)
+        url += "&"+rp+"=" + encodeURIComponent(param[rp]);
+    });
+    if(operation=="upload"){
         if (avnav.android){
             base.log("android: setRoute");
             let status=avnav.android.storeRoute(param.route.toJsonString());
@@ -736,15 +739,11 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
             }
             return;
         }
-        if (param.ignoreExisting){
-            url+="&ignoreExisting=true"
-        }
         data=param.route.toJson();
     }
     base.log("remoteRouteOperation, operation="+operation);
-    param.operation=operation;
     let promise=undefined;
-    if (operation != "setroute"){
+    if (operation != "upload"){
         promise=Requests.getJson(url,{checkOk:false});
     }
     else{
@@ -753,7 +752,7 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
     promise.then(
         (data)=>{
             if (data.status !== undefined && data.status != 'OK'){
-                param.errorcallback("status: "+status,param);
+                param.errorcallback("status: "+data.status,param);
                 return;
             }
             param.okcallback(data,param);
@@ -810,7 +809,8 @@ RouteData.prototype._startQuery=function() {
     if (! this.isEditingActiveRoute()) {
         if (! editingRoute.hasRoute()) return;
         //we always query the server to let him overwrite what we have...
-        this._remoteRouteOperation("getroute",{
+        this._remoteRouteOperation("download",{
+            format:'json',
             name:editingRoute.getRouteName(),
             okcallback:function(data,param){
                 if (self.isEditingActiveRoute()) return;
@@ -900,7 +900,7 @@ RouteData.prototype._sendRoute=function(route, opt_callback,opt_ignoreExisting){
     let self=this;
     let sroute=route.clone();
     if (sroute.time) sroute.time=sroute.time/1000;
-    this._remoteRouteOperation("setroute",{
+    this._remoteRouteOperation("upload",{
         route:route,
         self:self,
         okcallback:function(data,param){
@@ -908,8 +908,9 @@ RouteData.prototype._sendRoute=function(route, opt_callback,opt_ignoreExisting){
             if (opt_callback)opt_callback(true);
         },
         errorcallback:function(status,param){
-            if (globalStore.getData(keys.properties.routingServerError)) Toast("unable to send route to server:" + errMsg);
-            if (opt_callback) opt_callback(false);
+            let showError=true;
+            if (opt_callback) showError=opt_callback(false);
+            if (showError && globalStore.getData(keys.properties.routingServerError)) Toast("unable to send route to server:" + status);
         },
         ignoreExisting:opt_ignoreExisting
     });

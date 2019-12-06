@@ -26,23 +26,15 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import time
-import subprocess
-import threading
-import os
-import datetime
-import glob
-import sys
-import traceback
 import json
-import datetime
-import threading
+import time
 
+import avnav_handlerList
 from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 from wpa_control import WpaControl
-import avnav_handlerList
+
 
 class FwInfo:
   def __init__(self,ssid,mode,status):

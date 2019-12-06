@@ -322,6 +322,7 @@ const runUpload=(ev)=>{
                 if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
                 RouteHandler.saveRoute(route, function () {
                     fillData();
+                    return true;
                 });
             }
         ).catch((error)=>{

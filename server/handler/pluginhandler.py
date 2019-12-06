@@ -163,13 +163,8 @@ class AVNPluginHandler(AVNWorker):
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
     builtInDir=self.getStringParam('builtinDir')
-    systemDir=self.getStringParam('systemDir')
-    if systemDir is None or systemDir == '':
-      systemDir=os.path.join(self.getStringParam(AVNConfig.BASEPARAM.BASEDIR),'..','plugins')
-    userDir=self.getStringParam('userDir')
-    if userDir is None or userDir == '':
-      userDir=os.path.join(self.getStringParam(AVNConfig.BASEPARAM.DATADIR),'plugins')
-
+    systemDir=AVNConfig.getDirWithDefault(self.param,'systemDir',defaultSub=os.path.join('..','plugins'),belowData=False)
+    userDir=AVNConfig.getDirWithDefault(self.param,'userDir','plugins')
     directories={
       'buildin':{
         'dir':builtInDir,

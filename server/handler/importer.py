@@ -76,8 +76,8 @@ class AVNImporter(AVNWorker):
     self.waittime=self.getIntParam('waittime',True)
     self.chartbase=None
     self.extensions=self.getStringParam('knownExtensions').split(',')
-    self.importDir=AVNUtil.prependBase(AVNUtil.replaceParam(self.getStringParam('importDir'),AVNConfig.filterBaseParam(self.getParam())),self.getStringParam(AVNConfig.BASEPARAM.DATADIR))
-    self.workDir=AVNUtil.prependBase(AVNUtil.replaceParam(self.getStringParam('workDir'),AVNConfig.filterBaseParam(self.getParam())),self.getStringParam(AVNConfig.BASEPARAM.DATADIR))
+    self.importDir=AVNConfig.getDirWithDefault(self.param,'importDir','import')
+    self.workDir=AVNConfig.getDirWithDefault(self.param,'workDir','work')
     self.converterDir=self.getStringParam('converterDir') # the location of the coneverter python
     if self.converterDir is None or self.converterDir=='':
       self.converterDir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"../..","chartconvert")

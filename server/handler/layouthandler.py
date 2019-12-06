@@ -96,10 +96,7 @@ class AVNLayoutHandler(AVNWorker):
       self.updateAllLayouts()
       time.sleep(self.getIntParam('period') or 10)
   def getUserDir(self):
-    userDir = self.getStringParam('userDir')
-    if userDir is None or userDir == "":
-      userDir = os.path.join(self.getStringParam(AVNConfig.BASEPARAM.DATADIR), 'layout')
-    return userDir
+    return AVNConfig.getDirWithDefault(self.param,'userDir','layout')
   def updateAllLayouts(self):
     dt = datetime.datetime.now()
     updateCount=dt.microsecond

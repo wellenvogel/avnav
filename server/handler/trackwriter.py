@@ -51,12 +51,7 @@ class AVNTrackWriter(AVNWorker):
     self.getFloatParam('mindistance', throw)
     self.getFloatParam('interval', throw)
     self.tracklock=threading.Lock()
-    trackdir=self.getStringParam("trackdir")
-    if trackdir == "":
-      trackdir=unicode(os.path.join(self.getStringParam(AVNConfig.BASEPARAM.DATADIR),'tracks'))
-    else:
-      trackdir=AVNUtil.replaceParam(os.path.expanduser(trackdir),AVNConfig.filterBaseParam(param))
-    self.trackdir=trackdir
+    self.trackdir=AVNConfig.getDirWithDefault(self.param,"trackdir",'tracks')
     self.fname=None
   @classmethod
   def getConfigName(cls):

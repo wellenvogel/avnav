@@ -39,7 +39,7 @@ The following commandline parameters for the avnav script control the directorie
 
 ## Internal parameters
 In the server code the following base parameters are used:
-  - *BASEDIR* : the installation dir
+  - *BASEDIR* : the server directory bewlow the installation dir
   - *DATADIR* : the data directory
 
 Those parameters are part of every config for a handler.

@@ -52,7 +52,7 @@ const Toast=(html,time,opt_callback)=>{
         time=parseInt(globalStore.getData(keys.properties.toastTimeout||15))*1000;
     }
     globalStore.storeMultiple({
-        html:html,
+        html:html+"",
         time:time,
         onClick:()=> {
             hideToast();

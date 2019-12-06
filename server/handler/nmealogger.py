@@ -76,7 +76,7 @@ class AVNNmeaLogger(AVNWorker):
     
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
-    trackdir=self.getStringParam("trackdir")
+    trackdir=AVNConfig.getDirWithDefault(self.param,"trackdir")
     filterstr=self.getStringParam("filter")
     if filterstr is None or filterstr == "":
       AVNLog.warn("no filter for NMEA logger, exiting logger")
@@ -86,14 +86,13 @@ class AVNNmeaLogger(AVNWorker):
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam("feederName") or "")
     self.feeder=feeder
     filter=filterstr.split(",")
-    if trackdir == "":
+    if trackdir is None:
       trackwriter=self.findHandlerByName(AVNTrackWriter.getConfigName())
       if trackwriter is not None:
         trackdir=trackwriter.getTrackDir()
-      if trackdir is None or trackdir == "":
-        trackdir=unicode(os.path.join(self.getStringParam(AVNConfig.BASEPARAM.DATADIR),'tracks'))
-    else:
-      trackdir=os.path.expanduser(trackdir)
+      if trackdir is None or not trackdir :
+        #2nd try with a default
+        trackdir = AVNConfig.getDirWithDefault(self.param, "trackdir","tracks")
     self.trackdir=trackdir
     interval=self.getIntParam('interval')
     maxfiles=100
