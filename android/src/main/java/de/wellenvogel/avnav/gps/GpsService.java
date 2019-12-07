@@ -46,12 +46,13 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service implements INmeaLogger, IRouteHandlerProvider, RouteHandler.UpdateReceiver {
+public class GpsService extends Service implements INmeaLogger, RouteHandler.UpdateReceiver {
 
 
     private static final String CHANNEL_ID = "main" ;
@@ -61,11 +62,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
 
 
     private Context ctx;
-    private long writerInterval=0;
-    private String outfile=null;
-    private ArrayList<Location> trackpoints=new ArrayList<Location>();
-    private long lastTrackWrite=0;
-    private long lastTrackCount;
+
     private final IBinder mBinder = new GpsServiceBinder();
     private GpsDataProvider internalProvider=null;
     private IpPositionHandler externalProvider=null;
@@ -77,11 +74,6 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
 
     //properties
     private File trackDir=null;
-    private long trackInterval; //interval for writing out the xml file
-    private long trackDistance; //min distance in m
-    private long trackMintime; //min interval between 2 points
-    private long trackTime;   //length of track
-
 
     private TrackWriter trackWriter;
     private RouteHandler routeHandler;
@@ -90,8 +82,6 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
     private long timerSequence=1;
     private Runnable runnable;
     private IMediaUpdater mediaUpdater;
-    private boolean trackLoading=true; //if set to true - do not write the track
-    private long loadSequence=1;
     private static final int NOTIFY_ID=Constants.LOCALNOTIFY;
     private Object loggerLock=new Object();
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
@@ -107,6 +97,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
     private PositionWriter positionWriter;
     private Thread positionWriterThread;
     private RouteHandler.RoutePoint lastAlarmWp=null;
+    long trackMintime;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -201,54 +192,6 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
         }
     }
 
-    /**
-     * a class for asynchronously loading the tracks
-     * this honors the load sequence to avoid overwriting data from
-     * a new load that has been started by a restarted service
-     */
-    private class LoadRunner implements Runnable{
-        private long myLoadSequence;
-
-        LoadRunner(long loadSequence){
-            myLoadSequence=loadSequence;
-        }
-
-        @Override
-        public void run() {
-            try {
-                ArrayList<Location> filetp = new ArrayList<Location>();
-                //read the track data from today and yesterday
-                //we rely on the cleanup to handle outdated entries
-                long mintime = System.currentTimeMillis() - trackTime;
-                Date dt = new Date();
-                ArrayList<Location> rt = trackWriter.parseTrackFile(new Date(dt.getTime() - 24 * 60 * 60 * 1000), mintime, trackDistance);
-                filetp.addAll(rt);
-                if (myLoadSequence != loadSequence){
-                    AvnLog.d(LOGPRFX, "load sequence has changed, stop loading");
-                }
-                rt = trackWriter.parseTrackFile(dt, mintime, trackDistance);
-                filetp.addAll(rt);
-                synchronized (GpsService.this) {
-                    if (myLoadSequence == loadSequence) {
-                        lastTrackWrite = dt.getTime();
-                        if (rt.size() == 0) {
-                            //empty track file - trigger write very soon
-                            lastTrackWrite = 0;
-                        }
-                        ArrayList<Location> newTp = trackpoints;
-                        trackpoints = filetp;
-                        trackpoints.addAll(newTp);
-                    }
-                    else{
-                        AvnLog.d(LOGPRFX,"unable to store loaded track as new load has already started");
-                    }
-                }
-            }catch (Exception e){}
-            AvnLog.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
-            if (myLoadSequence == loadSequence) trackLoading=false;
-
-        }
-    }
 
     private void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
@@ -352,10 +295,10 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
             AvnLog.d(LOGPRFX,"restart: do not load track data");
         }
 
-        trackInterval=1000* AvnUtil.getLongPref(prefs, Constants.TRACKINTERVAL, 300);
-        trackDistance=AvnUtil.getLongPref(prefs, Constants.TRACKDISTANCE, 25);
+        long trackInterval=1000* AvnUtil.getLongPref(prefs, Constants.TRACKINTERVAL, 300);
+        long trackDistance=AvnUtil.getLongPref(prefs, Constants.TRACKDISTANCE, 25);
         trackMintime=1000*AvnUtil.getLongPref(prefs, Constants.TRACKMINTIME, 10);
-        trackTime=1000*60*60*AvnUtil.getLongPref(prefs, Constants.TRACKTIME, 25); //25h - to ensure that we at least have the whole day...
+        long trackTime=1000*60*60*AvnUtil.getLongPref(prefs, Constants.TRACKTIME, 25); //25h - to ensure that we at least have the whole day...
         String aisMode= NmeaSettingsFragment.getAisMode(prefs);
         String nmeaMode=NmeaSettingsFragment.getNmeaMode(prefs);
         Properties loggerProperties=new Properties();
@@ -381,16 +324,8 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
             }
         }
         if (loadTrack) {
-            trackpoints.clear();
-            loadSequence++;
-            trackWriter = new TrackWriter(trackDir);
-            trackLoading=true;
-            Thread readThread=new Thread(new LoadRunner(loadSequence));
-            readThread.start();
+            trackWriter = new TrackWriter(trackDir,trackTime,trackDistance,trackMintime,trackInterval);
             timerSequence++;
-        }
-        else{
-            trackLoading=false;
         }
         File routeDir=new File(AvnUtil.getWorkDir(prefs,this),"routes");
         if (routeHandler == null || routeHandler.isStopped()) {
@@ -670,37 +605,29 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
     /**
      * will be called whe we intend to really stop
      */
-    private void handleStop(boolean emptyTrack){
-        for (GpsDataProvider provider: getAllProviders()) {
+    private void handleStop(boolean emptyTrack) {
+        for (GpsDataProvider provider : getAllProviders()) {
             if (provider != null) {
                 provider.stop();
             }
         }
         //this is not completely OK: we could fail to write our last track points
         //if we still load the track - but otherwise we could reeally empty the track
-        if (trackpoints.size() >0){
-            if (! trackLoading) {
-                try {
-                    //when we shut down completely we have to wait until the track is written
-                    //if we only restart, we write the track in background
-                    trackWriter.writeTrackFile(getTrackCopy(), new Date(), !emptyTrack, mediaUpdater);
-                } catch (FileNotFoundException e) {
-                    AvnLog.d(LOGPRFX, "Exception while finally writing trackfile: " + e.getLocalizedMessage());
-                }
-            }
-            else {
-                AvnLog.i(LOGPRFX,"unable to write trackfile as still loading");
-            }
+        try {
+            //when we shut down completely we have to wait until the track is written
+            //if we only restart, we write the track in background
+            trackWriter.writeSync(mediaUpdater);
+        } catch (FileNotFoundException e) {
+            AvnLog.d(LOGPRFX, "Exception while finally writing trackfile: " + e.getLocalizedMessage());
         }
         if (emptyTrack) {
-            trackpoints.clear();
+            trackWriter.clearTrack();
             trackDir = null;
         }
-        loadSequence++;
         if (routeHandler != null) routeHandler.stop();
         if (positionWriter != null) positionWriter.doStop();
-        isRunning=false;
-        handleNotification(false,false);
+        isRunning = false;
+        handleNotification(false, false);
         AvnLog.i(LOGPRFX, "service stopped");
     }
 
@@ -757,54 +684,9 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
      */
     private void checkTrackWriter(){
         if (! isRunning) return;
-        if (trackLoading) return;
-        boolean writeOut=false;
-        long current = System.currentTimeMillis();
         Location l=getLocation();
-        synchronized (this) {
-            if (l != null) {
-                boolean add = false;
-                //check if distance is reached
-                float distance = 0;
-                if (trackpoints.size() > 0) {
-                    Location last = trackpoints.get(trackpoints.size() - 1);
-                    distance = last.distanceTo(l);
-                    if (distance >= trackDistance) {
-                        add = true;
+        trackWriter.checkWrite(l,mediaUpdater);
 
-                    }
-                } else {
-                    add = true;
-                }
-                if (add) {
-                    AvnLog.d(LOGPRFX, "add location to track logNmea " + l.getLatitude() + "," + l.getLongitude() + ", distance=" + distance);
-                    Location nloc = new Location(l);
-                    nloc.setTime(current);
-                    trackpoints.add(nloc);
-                }
-            }
-            //now check if we should write out
-            if (current > (lastTrackWrite + trackInterval) && trackpoints.size() != lastTrackCount) {
-                AvnLog.d(LOGPRFX, "start writing track");
-                //cleanup
-                int deleted = 0;
-                long deleteTime = current - trackTime;
-                trackWriter.cleanup(trackpoints,deleteTime);
-                writeOut=true;
-            }
-        }
-        if (writeOut) {
-            ArrayList<Location> w=getTrackCopy();
-            lastTrackCount = w.size();
-            lastTrackWrite = current;
-            try {
-                //we have to be careful to get a copy when having a lock
-                trackWriter.writeTrackFile(w, new Date(current), true,mediaUpdater);
-            } catch (IOException io) {
-
-            }
-
-        }
     }
 
     /**
@@ -815,6 +697,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
      */
     public synchronized  ArrayList<Location> getTrack(int maxnum, long interval){
         ArrayList<Location> rt=new ArrayList<Location>();
+        List<Location> trackpoints=trackWriter.getTrackPoints(true);
         if (! isRunning) return rt;
         long currts=-1;
         long num=0;
@@ -840,11 +723,6 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
             //we are tolerant - if we hit cleanup an do not get the track once, this should be no issue
         }
         AvnLog.d(LOGPRFX,"getTrack returns "+num+" points");
-        return rt;
-    }
-
-    public synchronized ArrayList<Location> getTrackCopy(){
-        ArrayList<Location> rt=new ArrayList<Location>(trackpoints);
         return rt;
     }
 
@@ -999,28 +877,7 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
         if (trackWriter == null) return new ArrayList<TrackWriter.TrackInfo>();
         return trackWriter.listTracks();
     }
-    public File getTrackDir(){
-        return trackDir;
-    }
 
-    public void deleteTrackFile(String name) throws Exception{
-        File trackfile = new File(trackDir, name);
-        if (! trackfile.isFile()){
-            throw new Exception("track "+name+" not found");
-        }
-        else {
-            trackfile.delete();
-            if (mediaUpdater != null) mediaUpdater.triggerUpdateMtp(trackfile);
-            if (name.endsWith(".gpx")){
-                if (name.replace(".gpx","").equals(TrackWriter.getCurrentTrackname(new Date()))){
-                    AvnLog.i("deleting current trackfile");
-                    synchronized (this){
-                        trackpoints=new ArrayList<Location>();
-                    }
-                }
-            }
-        }
-    }
 
     /**
      * get the status for NMEA and AIS
@@ -1099,25 +956,12 @@ public class GpsService extends Service implements INmeaLogger, IRouteHandlerPro
     }
 
     public JSONObject getTrackStatus() throws JSONException {
-        JSONArray rt = new JSONArray();
-        JSONObject item=new JSONObject();
-        item.put("name","Writer");
-        if (trackWriter != null && lastTrackWrite != 0){
-            item.put("info",trackpoints.size()+" points, writing to "+trackWriter.getTrackFile(new Date(lastTrackWrite)).getAbsolutePath());
-            item.put("status",GpsDataProvider.STATUS_NMEA);
-        }
-        else {
-            item.put("info","waiting");
-            item.put("status",GpsDataProvider.STATUS_INACTIVE);
-        }
-        rt.put(item);
-        JSONObject out = new JSONObject();
-        out.put("name", "TrackWriter");
-        out.put("items", rt);
-        return out;
+        if (trackWriter == null) return new JSONObject();
+        return trackWriter.getTrackStatus();
     }
 
     public RouteHandler getRouteHandler(){
         return routeHandler;
     }
+    public TrackWriter getTrackWriter(){ return trackWriter;}
 }

@@ -234,7 +234,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             gpsService = binder.getService();
             if (gpsService !=null) {
                 gpsService.setMediaUpdater(MainActivity.this);
-                requestHandler.setRouteHandlerProvider(gpsService);
             }
             AvnLog.d(Constants.LOGPRFX, "gps service connected");
 

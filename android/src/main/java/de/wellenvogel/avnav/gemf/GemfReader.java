@@ -8,19 +8,20 @@ import android.os.Build;
 import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.INavRequestHandler;
+import de.wellenvogel.avnav.main.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
 
-public class GemfReader {
+public class GemfReader implements INavRequestHandler {
     private static final String GEMFEXTENSION =".gemf";
     private Activity activity;
     //mapping of url name to char descriptors
@@ -136,17 +137,44 @@ public class GemfReader {
         }
     }
 
-    public void readAllCharts(JSONArray arr) {
+
+    @Override
+    public RequestHandler.ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        throw new Exception("download chart not supported");
+    }
+
+    @Override
+    public boolean handleUpload(String postData, String name, boolean ignoreExisting) throws Exception {
+        throw new Exception("upload chart not supported");
+    }
+
+    @Override
+    public Collection<? extends IJsonObect> handleList() throws Exception {
         //here we will have more dirs in the future...
+        ArrayList<GemfChart> rt=new ArrayList<>();
         try {
             for (String url : gemfFiles.keySet()) {
                 GemfChart chart = gemfFiles.get(url);
-                arr.put(chart.toJson());
+                rt.add(chart);
             }
         } catch (Exception e) {
             Log.e(Constants.LOGPRFX, "exception readind chartlist:", e);
         }
-
+        return rt;
     }
 
+    @Override
+    public boolean handleDelete(String name, Uri uri) throws Exception {
+        String charturl=uri.getQueryParameter("url");
+        if (charturl == null) return false;
+        GemfChart chart= getChartDescription(charturl.substring(Constants.CHARTPREFIX.length()+2));
+        if (chart == null){
+            return false;
+        }
+        else {
+            File chartfile=chart.deleteFile();
+            updateChartList();
+            return chartfile != null;
+        }
+    }
 }

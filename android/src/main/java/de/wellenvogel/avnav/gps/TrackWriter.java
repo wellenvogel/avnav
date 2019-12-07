@@ -1,12 +1,18 @@
 package de.wellenvogel.avnav.gps;
 
 import android.location.Location;
+import android.net.Uri;
 import android.util.Log;
 
-import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.IMediaUpdater;
+import de.wellenvogel.avnav.main.INavRequestHandler;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
+import de.wellenvogel.avnav.main.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -15,14 +21,53 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
+
 /**
  * Created by andreas on 12.12.14.
  */
-public class TrackWriter {
+public class TrackWriter implements INavRequestHandler {
 
-    public static class TrackInfo{
+    @Override
+    public RequestHandler.ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        File trackfile = new File(trackdir, name);
+        if (!trackfile.isFile()) throw new IOException("trackfile "+name+" not found");
+        return new RequestHandler.ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
+    }
+
+    @Override
+    public boolean handleUpload(String postData, String name, boolean ignoreExisting) throws Exception {
+        throw new Exception("unable to upload tracks");
+    }
+
+    @Override
+    public Collection<? extends IJsonObect> handleList() throws Exception {
+        return listTracks();
+    }
+
+    @Override
+    public boolean handleDelete(String name, Uri uri) throws Exception {
+        File trackfile = new File(trackdir, name);
+        if (! trackfile.isFile()){
+            return false;
+        }
+        boolean rt=trackfile.delete();
+        if (name.replace(".gpx","").equals(getCurrentTrackname(new Date()))) {
+            AvnLog.i("deleting current trackfile");
+            trackpoints.clear();
+        }
+        return rt;
+    }
+
+    public static class TrackInfo implements INavRequestHandler.IJsonObect{
         public String name;
         public long mtime;
+        public JSONObject toJson() throws JSONException {
+            JSONObject o=new JSONObject();
+            o.put("name",name);
+            o.put("time",mtime/1000);
+            return o;
+        }
     }
 
     private static final String header="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"+
@@ -41,10 +86,155 @@ public class TrackWriter {
     private SimpleDateFormat cmpFormat=new SimpleDateFormat("yyyyMMdd"); //we only need to compare the day
 
     private boolean writerRunning=false;
+    private long trackTime=0; //length of track
+    private long trackDistance; //min distance in m
+    private long trackInterval; //interval for writing out the xml file
+    private long trackMintime; //min interval between 2 points
+    private long lastTrackWrite=0;
+    private boolean trackLoading=true;
+    private long lastTrackCount=0;
 
+    private ArrayList<Location> trackpoints=new ArrayList<Location>();
 
-    TrackWriter(File trackdir){
+    /**
+     * a class for asynchronously loading the tracks
+     * this honors the load sequence to avoid overwriting data from
+     * a new load that has been started by a restarted service
+     */
+    private class LoadRunner implements Runnable{
+
+        LoadRunner(){
+        }
+
+        @Override
+        public void run() {
+            try {
+                ArrayList<Location> filetp = new ArrayList<Location>();
+                //read the track data from today and yesterday
+                //we rely on the cleanup to handle outdated entries
+                long mintime = System.currentTimeMillis() - trackTime;
+                Date dt = new Date();
+                ArrayList<Location> rt = parseTrackFile(new Date(dt.getTime() - 24 * 60 * 60 * 1000), mintime, trackDistance);
+                filetp.addAll(rt);
+                rt = parseTrackFile(dt, mintime, trackDistance);
+                filetp.addAll(rt);
+                synchronized (TrackWriter.this) {
+                        lastTrackWrite = dt.getTime();
+                        if (rt.size() == 0) {
+                            //empty track file - trigger write very soon
+                            lastTrackWrite = 0;
+                        }
+                        ArrayList<Location> newTp = trackpoints;
+                        trackpoints = filetp;
+                        trackpoints.addAll(newTp);
+                    }
+
+            }catch (Exception e){
+                AvnLog.e("error loading tracks",e);
+            }
+            AvnLog.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
+            trackLoading=false;
+        }
+    }
+
+    TrackWriter(File trackdir,long trackTime,long trackDistance,long trackMintime,long trackInterval){
         this.trackdir=trackdir;
+        this.trackTime=trackTime;
+        this.trackDistance=trackDistance;
+        this.trackMintime=trackMintime;
+        this.trackInterval=trackInterval;
+        Thread loader=new Thread(new LoadRunner());
+        loader.start();
+
+    }
+
+    /**
+     * called by the gps service with a new location
+     * @param currentLocation
+     * @param mediaUpdater
+     */
+    public synchronized void checkWrite(Location currentLocation, IMediaUpdater mediaUpdater) {
+        if (trackLoading) return;
+        boolean writeOut = false;
+        long current = System.currentTimeMillis();
+        synchronized (this) {
+            if (currentLocation != null) {
+                boolean add = false;
+                //check if distance is reached
+                float distance = 0;
+                if (trackpoints.size() > 0) {
+                    Location last = trackpoints.get(trackpoints.size() - 1);
+                    distance = last.distanceTo(currentLocation);
+                    if (distance >= trackDistance) {
+                        add = true;
+
+                    }
+                } else {
+                    add = true;
+                }
+                if (add) {
+                    AvnLog.d(LOGPRFX, "add location to track logNmea " + currentLocation.getLatitude() + "," + currentLocation.getLongitude() + ", distance=" + distance);
+                    Location nloc = new Location(currentLocation);
+                    nloc.setTime(current);
+                    trackpoints.add(nloc);
+                }
+            }
+            //now check if we should write out
+            if (current > (lastTrackWrite + trackInterval) && trackpoints.size() != lastTrackCount) {
+                AvnLog.d(LOGPRFX, "start writing track");
+                //cleanup
+                int deleted = 0;
+                long deleteTime = current - trackTime;
+                cleanup(trackpoints, deleteTime);
+                writeOut = true;
+            }
+        }
+        if (writeOut) {
+            List<Location> w = getTrackPoints(true);
+            lastTrackCount = w.size();
+            lastTrackWrite = current;
+            try {
+                //we have to be careful to get a copy when having a lock
+                writeTrackFile(w, new Date(current), true, mediaUpdater);
+            } catch (IOException io) {
+
+            }
+
+        }
+    }
+
+    public void writeSync(IMediaUpdater mediaUpdater) throws FileNotFoundException{
+        if (trackpoints.size() < 1) return;
+        writeTrackFile(getTrackPoints(true),new Date(),false,mediaUpdater);
+    }
+
+    public JSONObject getTrackStatus() throws JSONException {
+        JSONArray rt = new JSONArray();
+        JSONObject item=new JSONObject();
+        item.put("name","Writer");
+        if (lastTrackWrite != 0){
+            item.put("info",trackpoints.size()+" points, writing to "+getTrackFile(new Date(lastTrackWrite)).getAbsolutePath());
+            item.put("status",GpsDataProvider.STATUS_NMEA);
+        }
+        else {
+            item.put("info","waiting");
+            item.put("status",GpsDataProvider.STATUS_INACTIVE);
+        }
+        rt.put(item);
+        JSONObject out = new JSONObject();
+        out.put("name", "TrackWriter");
+        out.put("items", rt);
+        return out;
+    }
+
+    public synchronized List<Location> getTrackPoints(boolean doCopy){
+        if (trackLoading) return new ArrayList<Location>();
+        if (! doCopy) return trackpoints;
+        else return new ArrayList<Location>(trackpoints);
+    }
+
+    public synchronized  void clearTrack(){
+        trackpoints.clear();
     }
     public static String getCurrentTrackname(Date dt){
         String rt= nameFormat.format(dt);
@@ -58,11 +248,11 @@ public class TrackWriter {
     }
 
     private class WriteRunner implements  Runnable{
-        private ArrayList<Location> track;
+        private List<Location> track;
         private Date dt;
         private TrackWriter writer;
         private IMediaUpdater updater;
-        WriteRunner(ArrayList<Location> track, Date dt, TrackWriter writer, IMediaUpdater updater){
+        WriteRunner(List<Location> track, Date dt, TrackWriter writer, IMediaUpdater updater){
             this.track=track;
             this.dt=dt;
             this.writer=writer;
@@ -74,7 +264,7 @@ public class TrackWriter {
             try {
                 String name = getCurrentTrackname(dt);
                 File ofile = getTrackFile(dt);
-                AvnLog.i(Constants.LOGPRFX, "writing trackfile " + ofile.getAbsolutePath());
+                AvnLog.i(LOGPRFX, "writing trackfile " + ofile.getAbsolutePath());
                 PrintStream out = new PrintStream(new FileOutputStream(ofile));
                 out.format(header, name);
                 int numpoints=0;
@@ -90,9 +280,9 @@ public class TrackWriter {
                 if (updater != null){
                     updater.triggerUpdateMtp(ofile);
                 }
-                AvnLog.i(Constants.LOGPRFX,"writing track finished with "+numpoints+" points");
+                AvnLog.i(LOGPRFX,"writing track finished with "+numpoints+" points");
             } catch (Exception io) {
-                Log.e(Constants.LOGPRFX, "error writing trackfile: " + io.getLocalizedMessage());
+                Log.e(LOGPRFX, "error writing trackfile: " + io.getLocalizedMessage());
             }
             writer.writerRunning=false;
         }
@@ -105,7 +295,7 @@ public class TrackWriter {
      * @param dt
      * @throws FileNotFoundException
      */
-    public void writeTrackFile(ArrayList<Location> track, Date dt,boolean background, IMediaUpdater updater) throws FileNotFoundException {
+    public void writeTrackFile(List<Location> track, Date dt,boolean background, IMediaUpdater updater) throws FileNotFoundException {
         if (background) {
             if (writerRunning) return; //we will come back anyway...
             writerRunning=true;
@@ -115,7 +305,7 @@ public class TrackWriter {
         }
         try {
             while (writerRunning) {
-                Log.w(Constants.LOGPRFX, "writer still running when trying sync write");
+                Log.w(LOGPRFX, "writer still running when trying sync write");
                 Thread.sleep(100);
             }
             writerRunning=true;
@@ -135,7 +325,7 @@ public class TrackWriter {
         ArrayList<Location> rt = new ArrayList<Location>();
         File infile = new File(trackdir, getCurrentTrackname(dt)+".gpx");
         if (!infile.isFile()) {
-            AvnLog.d(Constants.LOGPRFX, "unable to read trackfile " + infile.getName());
+            AvnLog.d(LOGPRFX, "unable to read trackfile " + infile.getName());
             return rt;
         }
         InputStream in_s = null;
@@ -145,10 +335,10 @@ public class TrackWriter {
             rt=new TrackParser().parseTrackFile(in_s,mintime, minDistance);
             in_s.close();
         } catch (Exception e) {
-            Log.e(Constants.LOGPRFX,"unexpected error while opening trackfile "+e);
+            Log.e(LOGPRFX,"unexpected error while opening trackfile "+e);
             return rt;
         }
-        AvnLog.d(Constants.LOGPRFX,"read trackfile "+infile+" with "+rt.size()+" trackpoints");
+        AvnLog.d(LOGPRFX,"read trackfile "+infile+" with "+rt.size()+" trackpoints");
         return rt;
     }
 
@@ -222,21 +412,21 @@ public class TrackWriter {
                                     v = parser.nextText();
                                     currentLocation.setTime(ISO8601DateParser.parse(v).getTime());
                                 }catch (Exception e){
-                                    AvnLog.d(Constants.LOGPRFX,"exception parsing track date "+v+": "+e.getLocalizedMessage());
+                                    AvnLog.d(LOGPRFX,"exception parsing track date "+v+": "+e.getLocalizedMessage());
                                 }
                             } else if (name.equalsIgnoreCase("course")) {
                                 try {
                                     v = parser.nextText();
                                     currentLocation.setBearing(Float.parseFloat(v));
                                 }catch (Exception e){
-                                    AvnLog.d(Constants.LOGPRFX,"exception parsing bearing "+v+": "+e.getLocalizedMessage());
+                                    AvnLog.d(LOGPRFX,"exception parsing bearing "+v+": "+e.getLocalizedMessage());
                                 }
                             } else if (name.equalsIgnoreCase("speed")) {
                                 try {
                                     v = parser.nextText();
                                     currentLocation.setSpeed(Float.parseFloat(v));
                                 }catch (Exception e){
-                                    AvnLog.d(Constants.LOGPRFX,"exception parsing speed "+v+": "+e.getLocalizedMessage());
+                                    AvnLog.d(LOGPRFX,"exception parsing speed "+v+": "+e.getLocalizedMessage());
                                 }
                             }
                         }
@@ -260,7 +450,7 @@ public class TrackWriter {
     }
     public int cleanup(ArrayList<Location> trackpoints,long deleteTime){
         int deleted=0;
-        AvnLog.d(Constants.LOGPRFX, "deleting trackpoints older " + new Date(deleteTime).toString());
+        AvnLog.d(LOGPRFX, "deleting trackpoints older " + new Date(deleteTime).toString());
         while (trackpoints.size() > 0) {
             Location first = trackpoints.get(0);
             if (first.getTime() < deleteTime) {
@@ -268,7 +458,7 @@ public class TrackWriter {
                 deleted++;
             } else break;
         }
-        AvnLog.d(Constants.LOGPRFX, "deleted " + deleted + " trackpoints");
+        AvnLog.d(LOGPRFX, "deleted " + deleted + " trackpoints");
         return deleted;
     }
 

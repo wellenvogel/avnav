@@ -55,6 +55,7 @@ android {
         manifestPlaceholders(['label':'avNav'])
         targetSdkVersion 29
         minSdkVersion 19
+        buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
     }
     lintOptions {
         abortOnError false

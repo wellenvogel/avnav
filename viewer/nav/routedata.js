@@ -244,7 +244,7 @@ RouteData.prototype.saveRoute=function(rte,opt_callback) {
     if (avnav.android){
         avnav.android.storeRoute(rte.toJsonString());
     }
-    if (this.connectMode) this._sendRoute(rte, opt_callback);
+    if (this.connectMode) this._sendRoute(rte, opt_callback,true);
     else {
         if (opt_callback) setTimeout(function () {
             opt_callback(true);

@@ -99,7 +99,7 @@ class LayoutHandler{
                 }
                 return;
             }
-            resolve(Requests.postJson("?request=upload&type=layout&name=" + encodeURIComponent(name), layout));
+            resolve(Requests.postJson("?request=upload&type=layout&ignoreExisting=true&name=" + encodeURIComponent(name), layout));
         });
     }
 

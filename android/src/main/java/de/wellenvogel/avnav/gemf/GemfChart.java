@@ -14,10 +14,11 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.INavRequestHandler;
 import de.wellenvogel.avnav.main.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 
-public class GemfChart {
+public class GemfChart implements INavRequestHandler.IJsonObect {
     private static final long INACTIVE_CLOSE=100000; //100s
     private Activity activity;
     private File realFile;

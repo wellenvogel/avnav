@@ -78,8 +78,13 @@ public class WebServer {
                 if (bread != contentLength) throw new IOException("not enough post data");
                 postData=new String(data);
             }
-
-            RequestHandler.ExtendedWebResourceResponse resp=activity.getRequestHandler().handleNavRequest(url, postData,getServerInfo());
+            RequestHandler.ExtendedWebResourceResponse resp=null;
+            try {
+                resp = activity.getRequestHandler().handleNavRequest(url, postData, getServerInfo());
+            }catch (Throwable t){
+                AvnLog.e("error handling request "+url,t);
+                throw new HttpException("error handling "+url,t);
+            }
             if (resp != null){
                 httpResponse.setHeader("content-type","application/json");
                 for (String k:resp.getHeaders().keySet()){

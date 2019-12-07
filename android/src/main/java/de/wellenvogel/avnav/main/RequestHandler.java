@@ -30,6 +30,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -41,12 +42,11 @@ import de.wellenvogel.avnav.gemf.GemfReader;
 import de.wellenvogel.avnav.gps.Alarm;
 import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
-import de.wellenvogel.avnav.gps.IRouteHandlerProvider;
 import de.wellenvogel.avnav.gps.RouteHandler;
-import de.wellenvogel.avnav.gps.TrackWriter;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.LayoutHandler;
 
 /**
  * Created by andreas on 22.11.15.
@@ -65,14 +65,13 @@ public class RequestHandler {
     private final Object handlerMonitor =new Object();
     private IMediaUpdater updater=null;
     private final static String FILE_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".provider";
-    //routes
-    private IRouteHandlerProvider routeHandler=null;
 
     private Thread chartHandler=null;
     private boolean chartHandlerRunning=false;
     private final Object chartHandlerMonitor=new Object();
 
     private GemfReader gemfReader;
+    private LayoutHandler layoutHandler;
 
     public static class ServerInfo{
         public InetSocketAddress address;
@@ -80,6 +79,11 @@ public class RequestHandler {
         String lastError=null;
     }
 
+    static interface LazyHandlerAccess{
+        INavRequestHandler getHandler();
+    }
+
+    private HashMap<String,LazyHandlerAccess> handlerMap=new HashMap<>();
 
     RequestHandler(MainActivity activity){
         this.activity=activity;
@@ -87,6 +91,45 @@ public class RequestHandler {
         this.gemfReader=new GemfReader(activity);
         ownMimeMap.put("js", "text/javascript");
         startHandler();
+        layoutHandler=new LayoutHandler(activity.getAssets(),"viewer/layout",
+                new File(getWorkDir(),"layout"));
+        handlerMap.put("layout", new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return layoutHandler;
+            }
+        });
+        handlerMap.put("route", new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return getRouteHandler();
+            }
+        });
+        handlerMap.put("track", new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return getTrackWriter();
+            }
+        });
+        handlerMap.put("chart", new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return gemfReader;
+            }
+        });
+    }
+
+    private INavRequestHandler getTrackWriter() {
+        GpsService gps=getGpsService();
+        if (gps == null) return null;
+        return gps.getTrackWriter();
+    }
+
+    private INavRequestHandler getHandler(String type){
+        if (type == null) return null;
+        LazyHandlerAccess access=handlerMap.get(type);
+        if (access == null) return null;
+        return access.getHandler();
     }
 
     void startHandler(){
@@ -117,15 +160,9 @@ public class RequestHandler {
 
     }
     private RouteHandler getRouteHandler(){
-        synchronized (handlerMonitor){
-            return routeHandler!=null?routeHandler.getRouteHandler():null;
-        }
+        return getGpsService().getRouteHandler();
     }
-    public void setRouteHandlerProvider(IRouteHandlerProvider h){
-        synchronized (handlerMonitor){
-            routeHandler=h;
-        }
-    }
+
     private File getWorkDir(){
         return AvnUtil.getWorkDir(getSharedPreferences(),activity);
     }
@@ -174,7 +211,7 @@ public class RequestHandler {
                 }
                 InputStream is=activity.assetManager.open(fname.replaceAll("\\?.*",""));
                 return new WebResourceResponse(mimeType(fname),"",is);
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
             }
             return null;
@@ -240,7 +277,9 @@ public class RequestHandler {
                 try {
                     out.put("status", "OK");
                     JSONArray arr = new JSONArray();
-                    gemfReader.readAllCharts(arr);
+                    for (INavRequestHandler.IJsonObect item:gemfReader.handleList()){
+                        arr.put(item.toJson());
+                    }
                     if (getSharedPreferences().getBoolean(Constants.SHOWDEMO,false)){
                         String demoCharts[]=activity.assetManager.list("charts");
                         for (String demo: demoCharts){
@@ -340,69 +379,18 @@ public class RequestHandler {
                         }
                         handled = true;
                     }
-                    if(command.equals("deleteroute")) {
-                        String name = uri.getQueryParameter("name");
-                        handled=true;
-                        if (name != null) {
-                            getRouteHandler().deleteRoute(name);
-                        } else {
-                            o.put("status", "missing parameter name");
-                        }
-                    }
-                    if (command.equals("getroute")) {
-                        //we directly handle this here...
-                        String name = uri.getQueryParameter("name");
-                        if (name != null) {
-                            try{
-                                o=getRouteHandler().loadRouteJson(name);
-                            }catch (Exception e){
-                                o.put("status",e.getLocalizedMessage());
-                            }
-                        }
-                        handled = true;
-                    }
-                    if (command.equals("listroutes")) {
-                        handled = true;
-                        JSONArray a = new JSONArray();
-                        Map<String,RouteHandler.RouteInfo> routeInfos=getRouteHandler().getRouteInfo();
-                        for (String k:routeInfos.keySet()){
-                            a.put(routeInfos.get(k).toJson());
-                        }
-                        o.put("items", a);
-                        fout = o;
-                    }
-                    if (command.equals("setroute")) {
-                        handled = true;
-                        if (postData == null) {
-                            o.put("status", "no data for setroute");
-                        } else {
-                            try{
-                                getRouteHandler().saveRoute(postData, true);
-                            }
-                            catch(Exception e){
-                                o.put("status",e.getLocalizedMessage());
-                            }
-                        }
-                    }
                     if (handled) fout = o;
                 }
             }
-            if (type.equals("listdir")){
+            if (type.equals("listdir") || type.equals("list")){
                 String dirtype=uri.getQueryParameter("type");
+                INavRequestHandler handler=getHandler(dirtype);
                 JSONArray items=new JSONArray();
-                if (dirtype.equals("track")){
-                    ArrayList<TrackWriter.TrackInfo> tracks=getGpsService().listTracks();
-                    for (TrackWriter.TrackInfo info:tracks){
-                        JSONObject e=new JSONObject();
-                        e.put("name",info.name);
-                        e.put("time",info.mtime/1000);
-                        items.put(e);
+                if (handler != null){
+                    for (INavRequestHandler.IJsonObect item:handler.handleList()){
+                        items.put(item.toJson());
                     }
                     handled=true;
-                }
-                if (dirtype.equals("chart")){
-                    handled=true;
-                    gemfReader.readAllCharts(items);
                 }
                 if (handled){
                     JSONObject o=new JSONObject();
@@ -413,25 +401,18 @@ public class RequestHandler {
 
             }
             if (type.equals("download")){
-                boolean setAttachment=false;
+                boolean setAttachment=true;
                 String dltype=uri.getQueryParameter("type");
                 String name=uri.getQueryParameter("name");
+                String noattach=uri.getQueryParameter("noattach");
+                if (noattach != null && noattach.equals("true")) setAttachment=false;
                 ExtendedWebResourceResponse resp=null;
-                if (dltype != null && dltype.equals("track") && name != null) {
-                    File trackfile = new File(getGpsService().getTrackDir(), name);
-                    if (trackfile.isFile()) {
-                        setAttachment=true;
-                        resp=new ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
-                    }
+                INavRequestHandler handler=getHandler(dltype);
+                if (handler != null){
+                    handled=true;
+                    resp=handler.handleDownload(name,uri);
                 }
-                if (dltype != null && dltype.equals("route") && name != null) {
-                    File routefile = new File(new File(getWorkDir(),"routes"), name+".gpx");
-                    if (routefile.isFile()) {
-                        setAttachment=true;
-                        resp=new ExtendedWebResourceResponse((int) routefile.length(), "application/gpx+xml", "", new FileInputStream(routefile));
-                    }
-                }
-                if (dltype != null && dltype.equals("alarm") && name != null) {
+                if (!handled && dltype != null && dltype.equals("alarm") && name != null) {
                     AudioEditTextPreference.AudioInfo info=AudioEditTextPreference.getAudioInfoForAlarmName(name,activity);
                     if (info != null){
                         AudioEditTextPreference.AudioStream stream=AudioEditTextPreference.getAlarmAudioStream(info,activity);
@@ -458,31 +439,17 @@ public class RequestHandler {
                 JSONObject o=new JSONObject();
                 String dtype = uri.getQueryParameter("type");
                 String name = uri.getQueryParameter("name");
-                if (dtype == null || (! dtype.equals("track") && ! dtype.equals("chart"))){
-                    o.put("status","invalid type");
-                }
-                if (dtype.equals("track")) {
-                    try {
-                        getGpsService().deleteTrackFile(name);
+                INavRequestHandler handler=getHandler(dtype);
+                if (handler != null){
+                    handled=true;
+                    boolean deleteOk=handler.handleDelete(name,uri );
+                    if (deleteOk){
                         o.put("status","OK");
-                    }catch (Exception e){
-                        o.put("status",e.getMessage());
+                    }
+                    else{
+                        o.put("status","unable to delete");
                     }
                 }
-                if (dtype.equals("chart")) {
-                    String charturl=uri.getQueryParameter("url");
-                    GemfChart chart= gemfReader.getChartDescription(charturl.substring(Constants.CHARTPREFIX.length()+2));
-                    if (chart == null){
-                        o.put("status","chart "+name+" not found");
-                    }
-                    else {
-                        File chartfile=chart.deleteFile();
-                        if (updater != null) updater.triggerUpdateMtp(chartfile);
-                        o.put("status","OK");
-                        gemfReader.updateChartList();
-                    }
-                }
-                handled=true;
                 fout=o;
             }
             if (type.equals("status")){
@@ -584,6 +551,35 @@ public class RequestHandler {
                 o.put("data",new JSONArray());
                 fout=o;
             }
+
+            if (type.equals("upload")){
+                String dtype = uri.getQueryParameter("type");
+                if (dtype == null ) throw new IOException("missing parameter type for upload");
+                String ignoreExisting=uri.getQueryParameter("ignoreExisting");
+                String name=uri.getQueryParameter("name");
+                INavRequestHandler handler=getHandler(dtype);
+                if (handler != null){
+                    handled=true;
+                    boolean success=handler.handleUpload(postData,name,ignoreExisting != null && ignoreExisting.equals("true"));
+                    fout=new JSONObject();
+                    if (success) {
+                        ((JSONObject) fout).put("status", "OK");
+                    }
+                    else{
+                        ((JSONObject) fout).put("status", "already exists");
+                    }
+                }
+            }
+            if (type.equals("plugins")){
+                String command=uri.getQueryParameter("command");
+                if (command != null && command.equals("list")){
+                    handled=true;
+                    JSONObject o=new JSONObject();
+                    o.put("status","OK");
+                    o.put("data",new JSONArray());
+                    fout=o;
+                }
+            }
             if (!handled){
                 AvnLog.d(Constants.LOGPRFX,"unhandled nav request "+type);
             }
@@ -595,6 +591,7 @@ public class RequestHandler {
         } catch (Exception e) {
             e.printStackTrace();
             is=new ByteArrayInputStream(new byte[]{});
+            len=0;
         }
         return new ExtendedWebResourceResponse(len,"application/json","UTF-8",is);
     }
@@ -749,7 +746,7 @@ public class RequestHandler {
             try {
                 activity.startActivityForResult(
                         Intent.createChooser(intent, res.getText(R.string.uploadRoute)),
-                        0);
+                        Constants.ROUTE_OPEN_REQUEST);
             } catch (android.content.ActivityNotFoundException ex) {
                 // Potentially direct the user to the Market with a Dialog
                 Toast.makeText(activity.getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();

@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.gps;
 
 import android.location.Location;
+import android.net.Uri;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -10,14 +11,14 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Formatter;
 import java.util.HashMap;
@@ -25,12 +26,54 @@ import java.util.Locale;
 import java.util.Map;
 
 import de.wellenvogel.avnav.main.IMediaUpdater;
+import de.wellenvogel.avnav.main.INavRequestHandler;
+import de.wellenvogel.avnav.main.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 12.12.14.
  */
-public class RouteHandler {
+public class RouteHandler implements INavRequestHandler {
+
+    @Override
+    public RequestHandler.ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        String format=uri.getQueryParameter("format");
+        String mimemtype="application/gpx+xml";
+        //TODO: handle special case when we have a route in the "json" parameter but no route here...
+        InputStream is;
+        int len=-1;
+        if (format != null && format.equals("json")){
+            mimemtype="application/json";
+            JSONObject jsonRoute=loadRouteJson(name);
+            byte routeBytes[]=jsonRoute.toString().getBytes("UTF-8");
+            len=routeBytes.length;
+            is=new ByteArrayInputStream(routeBytes);
+        }
+        else{
+            File routeFile=openRouteFile(name);
+            len=(int)routeFile.length();
+            is=new FileInputStream(routeFile);
+
+        }
+        return new RequestHandler.ExtendedWebResourceResponse(len,mimemtype,"",is);
+    }
+
+    @Override
+    public boolean handleUpload(String postData, String name, boolean ignoreExisting) throws Exception {
+        //TODO: better handling: false instead of exception if existing
+        saveRoute(postData,ignoreExisting);
+        return true;
+    }
+
+    @Override
+    public Collection<? extends IJsonObect> handleList() throws Exception {
+        return getRouteInfo().values();
+    }
+
+    @Override
+    public boolean handleDelete(String name, Uri uri) throws Exception {
+        return deleteRoute(name);
+    }
 
     public static interface UpdateReceiver{
         public void updated();
@@ -61,7 +104,7 @@ public class RouteHandler {
         return rt;
     }
 
-    public static class RouteInfo{
+    public static class RouteInfo implements INavRequestHandler.IJsonObect{
         public String name;
         long mtime;
         public int numpoints;
@@ -75,6 +118,7 @@ public class RouteHandler {
             sb.append(", mtime=").append(new Date(mtime).toLocaleString());
             return sb.toString();
         }
+        @Override
         public JSONObject toJson() throws JSONException{
             JSONObject e=new JSONObject();
             e.put("name",name);
@@ -381,13 +425,9 @@ public class RouteHandler {
         }
     }
 
-    public Route parseRouteFile(String routeName) {
+    public Route parseRouteFile(String routeName) throws Exception{
         Route rt=new Route();
-        File infile = new File(routedir,routeName+".gpx");
-        if (!infile.isFile()) {
-            AvnLog.d("unable to read routefile " + infile.getName());
-            return rt;
-        }
+        File infile = openRouteFile(routeName);
         InputStream in_s = null;
         try {
             in_s = new FileInputStream(infile);
@@ -555,23 +595,29 @@ public class RouteHandler {
         return rt;
     }
 
-    public JSONObject loadRouteJson(String name) throws Exception {
+    private File openRouteFile(String name) throws Exception{
         File routeFile=new File(routedir,name+".gpx");
         if (! routeFile.isFile()) throw new Exception("route "+name+" not found");
+        return routeFile;
+    }
+
+    public JSONObject loadRouteJson(String name) throws Exception {
+        File routeFile=openRouteFile(name);
         AvnLog.i("loading route "+name);
         Route rt=new RouteParser().parseRouteFile(new FileInputStream(routeFile));
         return rt.toJson();
     }
 
-    public void deleteRoute(String name){
+    public boolean deleteRoute(String name){
         File routeFile=new File(routedir,name+".gpx");
         if (! routeFile.isFile()) {
             deleteRouteInfo(name);
-            return;
+            return true;
         }
         AvnLog.i("delete route "+name);
-        routeFile.delete();
+        boolean rt=routeFile.delete();
         deleteRouteInfo(name);
+        return rt;
     }
 
     public void setLeg(String data) throws Exception{

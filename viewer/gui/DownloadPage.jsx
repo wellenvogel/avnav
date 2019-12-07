@@ -307,6 +307,7 @@ const runUpload=(ev)=>{
                 try {
                     route = new routeobjects.Route("");
                     route.fromXml(content.content);
+                    route.fromXml(content.content);
                 } catch (e) {
                     Toast("unable to parse route , error: " + e);
                     return;
