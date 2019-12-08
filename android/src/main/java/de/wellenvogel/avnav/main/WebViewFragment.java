@@ -50,6 +50,7 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
         webView = new WebView(inflater.getContext());
         webView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setAllowFileAccess(true);
         if (Build.VERSION.SDK_INT >= 16){
             try {
                 WebSettings settings = webView.getSettings();
@@ -112,6 +113,9 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
                     return false;
                 }
             }
+
+
+
         });
         webView.setWebChromeClient(new WebChromeClient() {
             public void onConsoleMessage(String message, int lineNumber, String sourceID) {
@@ -119,10 +123,10 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
                         + lineNumber + " of "
                         + sourceID);
             }
+
         });
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
-        webView.getSettings().setAllowFileAccess(true);
         String databasePath = webView.getContext().getDir("databases",
                 Context.MODE_PRIVATE).getPath();
         webView.getSettings().setDatabasePath(databasePath);
@@ -135,6 +139,7 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
         webView.loadDataWithBaseURL(start,htmlPage,"text/html","UTF-8",null);
         return webView;
     }
+
 
     @Override
     public void onAttach(Activity activity) {

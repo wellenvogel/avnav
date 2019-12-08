@@ -144,15 +144,18 @@ android {
 }
 
 File viewerDir = new File(project.rootDir, ".." + File.separator + "viewer"+File.separator+"build")
+
 task buildViewerRelease(type: org.gradle.api.tasks.GradleBuild) {
     group = taskgroup
     setDir "../viewer"
     setTasks(["release"])
+    startParameter.projectProperties.put("packageVersion",project.avnavVersion)
 }
 task buildViewerDebug(type: org.gradle.api.tasks.GradleBuild) {
     group = taskgroup
     setDir "../viewer"
     setTasks(["debug"])
+    startParameter.projectProperties.put("packageVersion",project.avnavVersion)
 }
 
 task cleanViewer(type: GradleBuild){

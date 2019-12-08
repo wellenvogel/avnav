@@ -27,6 +27,7 @@ import LayoutHandler from '../util/layouthandler.js';
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
 
+
 const headlines={
     track: "Tracks",
     chart: "Charts",
@@ -255,42 +256,27 @@ const startServerDownload=(type,name,opt_url,opt_json)=>{
     });
 };
 
-const download=(info)=>{
+const download = (info)=> {
     if (info) {
-        if (avnav.android) {
-            if (info.type == "track") {
-                avnav.android.downloadTrack(info.name);
-                return;
-            }
-            if (info.type == "route") {
-                RouteHandler.fetchRoute(info.name, !info.server, (data)=> {
-                        avnav.android.downloadRoute(data.toJsonString());
-                    },
-                    (err)=> {
-                        Toast("unable to get route " + info.name);
-                    });
-            }
-            return;
-        }
+        if (info.type == "track" || info.type == 'layout') startServerDownload(info.type, info.url ? info.url : info.name);
         else {
-            if (info.type == "track"|| info.type == 'layout') startServerDownload(info.type,info.url ? info.url : info.name);
-            else {
-                if (info.type == "route") {
-                    if (info.server) startServerDownload(info.type,info.name);
-                    else {
-                        RouteHandler.fetchRoute(info.name, true, (data)=> {
-                                startServerDownload(info.type,info.name, undefined, data.toJsonString());
-                            },
-                            (err)=> {
-                                Toast("unable to get route " + info.name);
-                            });
-                    }
+            if (info.type == "route") {
+                if (info.server) startServerDownload(info.type, info.name);
+                else {
+                    RouteHandler.fetchRoute(info.name, true, (data)=> {
+                            startServerDownload(info.type, info.name, undefined, data.toJsonString());
+                        },
+                        (err)=> {
+                            Toast("unable to get route " + info.name);
+                        });
                 }
-                else startServerDownload(info.type,info.name + ".gemf", info.url);
             }
+            else startServerDownload(info.type, info.name + ".gemf", info.url);
         }
+
     }
 };
+
 
 const resetUpload=()=>{
     globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
@@ -475,11 +461,11 @@ const uploadFileReader=(fileObject,allowedExtension)=> {
 };
 
 
-
 class DownloadForm extends React.Component {
     constructor(props) {
         super(props);
     }
+
     componentDidMount(){
         if (this.refs.form) this.refs.form.submit();
     }
@@ -516,16 +502,24 @@ class UploadForm extends React.Component{
     constructor(props){
         super(props);
     }
+    shouldComponentUpdate(nextProps,nextState){
+        //ensure that we only trigger again if at least the keys has changed
+        if (nextProps.fileInputKey != this.props.fileInputKey) return true;
+        if (nextProps.enableUpload != this.props.enableUpload) return true;
+        return false;
+    }
     componentDidMount(){
+        if (this.refs.form) this.refs.form.reset();
         if (this.refs.fileInput) this.refs.fileInput.click();
     }
     componentDidUpdate(){
+        if (this.refs.form) this.refs.form.reset();
         if (this.refs.fileInput) this.refs.fileInput.click();
     }
     render(){
         if (!this.props.enableUpload) return null;
         return(
-        <form className="hidden" method="post">
+        <form className="hidden" method="post" ref="form">
             <input type="file" ref="fileInput" name="file" key={this.props.fileInputKey} onChange={this.props.startUpload}/>
         </form>
         );
@@ -533,6 +527,42 @@ class UploadForm extends React.Component{
 }
 
 const DynamicUploadForm=Dynamic(UploadForm);
+
+class Callback{
+    constructor(callback){
+        this.callback=callback;
+    }
+    dataChanged(keys){
+        this.callback(keys);
+    }
+}
+const androidUploadHandler=new Callback(()=>{
+    if (!avnav.android) return;
+    let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
+    let current=globalStore.getData(keys.gui.downloadpage.androidUploadId);
+    if (current != requestedId) return;
+    let type=globalStore.getData(keys.gui.downloadpage.type);
+    if (type == 'route'){
+        let routeString=avnav.android.getFileData(current);
+        if (! routeString) return;
+        RouteHandler.saveRouteString(routeString,(error)=>{
+            if (error) Toast(error+"");
+            else fillData();
+        })
+    }
+    if (type == 'layout'){
+        let name=avnav.android.getFileName(current);
+        name=name.replace(/\.json$/,'');
+        let layoutString=avnav.android.getFileData(current);
+        LayoutHandler.uploadLayout(name,layoutString,true).then(()=>{
+            fillData();
+        })
+        .catch((error)=>{
+                Toast(error+"");
+            })
+    }
+});
+
 
 class DownloadPage extends React.Component{
     constructor(props){
@@ -548,8 +578,10 @@ class DownloadPage extends React.Component{
         globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
         globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
         fillData();
+        globalStore.register(androidUploadHandler,keys.gui.downloadpage.androidUploadId);
     }
     componentWillUnmount(){
+        globalStore.deregister(androidUploadHandler);
         let uploadInfo=globalStore.getData(keys.gui.downloadpage.uploadInfo,{});
         if (uploadInfo.xhdr) uploadInfo.xhdr.abort();
     }
@@ -589,7 +621,9 @@ class DownloadPage extends React.Component{
                         return;
                     }
                     if (type == 'layout' && avnav.android){
-                        avnav.android.uploadLayout();
+                        let nextId=globalStore.getData(keys.gui.downloadpage.requestedUploadId,0)+1;
+                        globalStore.storeData(keys.gui.downloadpage.requestedUploadId,nextId);
+                        avnav.android.requestFile(type,nextId);
                         return;
                     }
                     globalStore.storeMultiple({key:(new Date()).getTime(),enable:true},{

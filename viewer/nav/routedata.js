@@ -252,6 +252,19 @@ RouteData.prototype.saveRoute=function(rte,opt_callback) {
     }
 
 };
+RouteData.prototype.saveRouteString=function(routeString,opt_callback){
+    let error=undefined;
+    let route=new routeobjects.Route();
+    try {
+        route.fromJsonString(routeString);
+    }catch(e){
+        if (opt_callback)setTimeout(()=>{opt_callback(e+"")},0);
+        return e+"";
+    }
+    this.saveRoute(route,(success)=>{
+        if (opt_callback) opt_callback(success?undefined:"unable to save route")
+    });
+};
 
 /**
  * check if the current route is active

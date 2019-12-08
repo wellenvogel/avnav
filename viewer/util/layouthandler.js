@@ -92,8 +92,13 @@ class LayoutHandler{
             if (avnav.android) {
                 try {
                     //TODO: implement status return
-                    avnav.android.storeLayout(name, layout);
-                    resolve({status: 'OK'})
+                    let url=globalStore.getData(keys.properties.navUrl)+
+                            "?request=upload&type=layout&ignoreExisting=true&name="+encodeURIComponent(name);
+                    let status=avnav.android.handleUpload(url, JSON.stringify(layout));
+                    if (status == 'OK')
+                        resolve({status: status});
+                    else
+                        reject(status)
                 } catch (e) {
                     reject(e)
                 }

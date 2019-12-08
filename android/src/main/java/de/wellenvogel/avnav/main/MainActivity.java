@@ -105,6 +105,16 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
                     if (requestHandler != null) requestHandler.saveRoute(returnUri);
                 }
                 break;
+            case Constants.FILE_OPEN:
+                if (resultCode != RESULT_OK) {
+                    // Exit without doing anything else
+                    return;
+                } else {
+                    Uri returnUri = data.getData();
+                    if (requestHandler != null) requestHandler.saveFile(returnUri);
+                }
+                break;
+
             case Constants.SETTINGS_REQUEST:
                 if (resultCode != RESULT_OK){
                     endApp();

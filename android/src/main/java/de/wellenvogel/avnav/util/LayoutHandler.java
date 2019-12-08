@@ -59,7 +59,7 @@ public class LayoutHandler implements INavRequestHandler{
         String fileName = name + ".json";
         File of = new File(userDir, fileName);
         if (of.exists() && ignoreExisting) return false;
-        if (!of.canWrite()) throw new IOException("unable to write layout " + fileName);
+        if (!userDir.canWrite()) throw new IOException("unable to write layout " + fileName);
         FileOutputStream os = new FileOutputStream(of);
         os.write(postData.getBytes());
         os.close();

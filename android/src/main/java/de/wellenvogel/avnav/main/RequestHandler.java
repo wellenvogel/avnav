@@ -28,6 +28,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,6 +55,7 @@ import de.wellenvogel.avnav.util.LayoutHandler;
 public class RequestHandler {
     public static final String URLPREFIX="file://android_asset/";
     public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
+    public static final long FILE_MAX_SIZE=1000000; //for file uploads
     protected static final String NAVURL="viewer/avnav_navi.php";
     private static final String DEMOCHARTS="demo"; //urls will start with CHARTPREFIX/DEMOCHARTS
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
@@ -72,11 +74,26 @@ public class RequestHandler {
 
     private GemfReader gemfReader;
     private LayoutHandler layoutHandler;
+    private UploadData uploadData=null;
 
     public static class ServerInfo{
         public InetSocketAddress address;
         boolean listenAny=false;
         String lastError=null;
+    }
+
+    static class UploadData{
+        int id;
+        String name;
+        String fileData;
+        public UploadData(int id){
+            this.id=id;
+        }
+        boolean isReady(int id){
+            if (id != this.id) return false;
+            if (name == null || fileData == null) return false;
+            return true;
+        }
     }
 
     static interface LazyHandlerAccess{
@@ -239,6 +256,26 @@ public class RequestHandler {
             e.printStackTrace();
         }
         return htmlPage;
+    }
+
+    JSONObject handleUploadRequest(Uri uri,String postData) throws Exception{
+        String dtype = uri.getQueryParameter("type");
+        if (dtype == null ) throw new IOException("missing parameter type for upload");
+        String ignoreExisting=uri.getQueryParameter("ignoreExisting");
+        String name=uri.getQueryParameter("name");
+        INavRequestHandler handler=getHandler(dtype);
+        if (handler != null){
+            boolean success=handler.handleUpload(postData,name,ignoreExisting != null && ignoreExisting.equals("true"));
+            JSONObject rt=new JSONObject();
+            if (success) {
+                rt.put("status", "OK");
+            }
+            else{
+                rt.put("status", "already exists");
+            }
+            return rt;
+        }
+        return null;
     }
 
     ExtendedWebResourceResponse handleNavRequest(String url, String postData){
@@ -553,22 +590,8 @@ public class RequestHandler {
             }
 
             if (type.equals("upload")){
-                String dtype = uri.getQueryParameter("type");
-                if (dtype == null ) throw new IOException("missing parameter type for upload");
-                String ignoreExisting=uri.getQueryParameter("ignoreExisting");
-                String name=uri.getQueryParameter("name");
-                INavRequestHandler handler=getHandler(dtype);
-                if (handler != null){
-                    handled=true;
-                    boolean success=handler.handleUpload(postData,name,ignoreExisting != null && ignoreExisting.equals("true"));
-                    fout=new JSONObject();
-                    if (success) {
-                        ((JSONObject) fout).put("status", "OK");
-                    }
-                    else{
-                        ((JSONObject) fout).put("status", "already exists");
-                    }
-                }
+                fout=handleUploadRequest(uri,postData);
+                if (fout != null) handled=true;
             }
             if (type.equals("plugins")){
                 String command=uri.getQueryParameter("command");
@@ -757,6 +780,48 @@ public class RequestHandler {
         }
 
         @JavascriptInterface
+        public String handleUpload(String url,String postvars){
+            try {
+                JSONObject rt=handleUploadRequest(Uri.parse(url),postvars);
+                return rt.getString("status");
+            } catch (Exception e) {
+                AvnLog.e("error in upload request for "+url+":",e);
+                return e.getMessage();
+            }
+        }
+        @JavascriptInterface
+        public void requestFile(String type,int id){
+            RequestHandler.this.uploadData=new UploadData(id);
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            Resources res=getAppResources();
+            try {
+                activity.startActivityForResult(
+                        Intent.createChooser(intent,
+                                //TODO: be more flexible for types...
+                                res.getText(type.equals("route")?R.string.uploadRoute:R.string.uploadLayout)),
+                        Constants.FILE_OPEN);
+            } catch (android.content.ActivityNotFoundException ex) {
+                // Potentially direct the user to the Market with a Dialog
+                Toast.makeText(activity.getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @JavascriptInterface
+        public String getFileName(int id){
+            if (uploadData==null || ! uploadData.isReady(id)) return null;
+            return uploadData.name;
+        }
+
+        @JavascriptInterface
+        public String getFileData(int id){
+            if (uploadData==null || ! uploadData.isReady(id)) return null;
+            return uploadData.fileData;
+        }
+
+
+        @JavascriptInterface
         public void downloadTrack(String name){
             sendFile(name,"track",getAppResources());
         }
@@ -878,6 +943,33 @@ public class RequestHandler {
             Toast.makeText(activity.getApplicationContext(), "unable save route: "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             Log.e(Constants.LOGPRFX, "unable to save route: "+e.getLocalizedMessage());
+            return;
+        }
+    }
+
+    void saveFile(Uri returnUri) {
+        try {
+            if (uploadData == null) return;
+            AvnLog.i("importing route: "+returnUri);
+            ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(returnUri, "r");
+            long size=pfd.getStatSize();
+            if (size > RequestHandler.FILE_MAX_SIZE) throw new Exception("file to big, allowed "+ RequestHandler.FILE_MAX_SIZE);
+            AvnLog.i("saving file "+returnUri.getLastPathSegment());
+            byte buffer[]=new byte[(int)(FILE_MAX_SIZE/10)];
+            int rd=0;
+            StringBuilder data=new StringBuilder();
+            InputStream is=new FileInputStream(pfd.getFileDescriptor());
+            while ((rd=is.read(buffer)) > 0){
+                data.append(new String(buffer,0,rd, StandardCharsets.UTF_8));
+            }
+            is.close();
+            uploadData.name=returnUri.getLastPathSegment().replaceAll(".*/","");
+            uploadData.fileData=data.toString();
+            activity.sendEventToJs(Constants.JS_UPLOAD_AVAILABLE, uploadData.id);
+        } catch (Throwable e) {
+            Toast.makeText(activity.getApplicationContext(), "unable to read file: "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+            Log.e(Constants.LOGPRFX, "unable to read file: "+e.getLocalizedMessage());
             return;
         }
     }

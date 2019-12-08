@@ -45,6 +45,8 @@ import base from './base.js';
 import Requests from './util/requests.js';
 import Toast from './components/Toast.jsx';
 import Api from './util/api.js';
+import RouteHandler from './nav/routedata.js';
+import LayoutHandler from './util/layouthandler.js';
 
 
 
@@ -126,7 +128,10 @@ avnav.main=function() {
                     globalStore.getData(keys.gui.global.reloadSequence,0)+1);
                 return;
             }
-        }
+            if (key == "uploadAvailable"){
+                globalStore.storeData(keys.gui.downloadpage.androidUploadId,id);
+            }
+        };
     }
     history.push('mainpage');
     ReactDOM.render(<App/>,document.getElementById('new_pages'));

@@ -69,6 +69,7 @@ public class Constants {
     //request codes in main activity
     public static final int ROUTE_OPEN_REQUEST=0;
     public static final int SETTINGS_REQUEST=1;
+    public static final int FILE_OPEN=100;
 
     public static final String TRACKINTERVAL ="track.interval";
     public static final String TRACKDISTANCE ="track.distance";
@@ -102,4 +103,5 @@ public class Constants {
     public static final String JS_RELOAD="reloadData";
     public static final String JS_BACK="backPressed";
     public static final String JS_PROPERTY_CHANGE="propertyChange";
+    public static final String JS_UPLOAD_AVAILABLE="uploadAvailable";
 }

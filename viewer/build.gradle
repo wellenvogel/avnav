@@ -56,7 +56,7 @@ task pkgVersion {
         }
         if (!versionFile.getParentFile().isDirectory()) versionFile.getParentFile().mkdirs()
         versionFile.withWriter { wr ->
-            wr.println("window.avnav_version=\"$project.avnavVersion\";")
+            wr.println("module.exports=\"$project.avnavVersion\";")
         }
     }
 }
