@@ -96,15 +96,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-            case Constants.ROUTE_OPEN_REQUEST:
-                if (resultCode != RESULT_OK) {
-                    // Exit without doing anything else
-                    return;
-                } else {
-                    Uri returnUri = data.getData();
-                    if (requestHandler != null) requestHandler.saveRoute(returnUri);
-                }
-                break;
             case Constants.FILE_OPEN:
                 if (resultCode != RESULT_OK) {
                     // Exit without doing anything else

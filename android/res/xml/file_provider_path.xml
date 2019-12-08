@@ -2,6 +2,8 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <external-files-path name="eroutes" path="routes/"/>
     <external-files-path name="tracks" path="tracks/"/>
+    <external-files-path name="layouts" path="layout/"/>
     <files-path name="iroutes"  path="routes/"/>
     <files-path name="itracks"  path="tracks/"/>
+    <files-path name="ilayouts"  path="layout/"/>
 </paths>

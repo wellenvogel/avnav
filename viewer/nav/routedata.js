@@ -130,7 +130,7 @@ let RouteData=function(){
      * @private
      * @type {boolean}
      */
-    this.connectMode=globalStore.getData(keys.properties.connectedMode);
+    this.connectMode=globalStore.getData(keys.properties.connectedMode)||avnav.android !== undefined;
 
     /**
      * if set all routes are not from the server....
@@ -193,9 +193,6 @@ let RouteData=function(){
         let route=editingRoute.getRoute();
         if (! route) return;
         this._saveRouteLocal(route);
-        if (avnav.android){
-            avnav.android.storeRoute(route.toJsonString());
-        }
         if (this.connectMode && ! this.isEditingActiveRoute()) {
             if (route.differsTo(this.lastSentRoute)){
                 this.lastSentRoute=route.clone();
@@ -241,29 +238,38 @@ RouteData.prototype.isActiveRoute=function(name){
 RouteData.prototype.saveRoute=function(rte,opt_callback) {
     if (! rte) return;
     this._saveRouteLocal(rte);
-    if (avnav.android){
-        avnav.android.storeRoute(rte.toJsonString());
-    }
     if (this.connectMode) this._sendRoute(rte, opt_callback,true);
     else {
         if (opt_callback) setTimeout(function () {
-            opt_callback(true);
+            opt_callback();
         }, 0);
     }
 
 };
+/**
+ * save a route from an xml encoded string
+ * we only use this on android
+ * so we first try to upload and onyl store locally if we succeed
+ * @param routeString
+ * @param opt_callback
+ * @returns {string}
+ */
 RouteData.prototype.saveRouteString=function(routeString,opt_callback){
     let error=undefined;
+    if (!this.connectMode){
+        if (opt_callback) opt_callback("can only save in connected mode");
+        return;
+    }
     let route=new routeobjects.Route();
     try {
-        route.fromJsonString(routeString);
+        route.fromXml(routeString);
     }catch(e){
-        if (opt_callback)setTimeout(()=>{opt_callback(e+"")},0);
+        if (opt_callback)setTimeout(()=>{opt_callback("error parsing route: "+e)},0);
         return e+"";
     }
-    this.saveRoute(route,(success)=>{
-        if (opt_callback) opt_callback(success?undefined:"unable to save route")
-    });
+    this._sendRoute(route, (error)=>{
+        if (opt_callback) opt_callback(error)
+    },true);
 };
 
 /**
@@ -735,31 +741,13 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
     if (param[rp] !== undefined)
         url += "&"+rp+"=" + encodeURIComponent(param[rp]);
     });
-    if(operation=="upload"){
-        if (avnav.android){
-            base.log("android: setRoute");
-            let status=avnav.android.storeRoute(param.route.toJsonString());
-            let jstatus=JSON.parse(status);
-            if (jstatus.status == "OK" && param.okcallback){
-                setTimeout(function(){
-                   param.okcallback(jstatus,param);
-                },0);
-            }
-            if (param.errorcallback){
-                setTimeout(function(){
-                    param.errorcallback(jstatus.status,param);
-                },0);
-            }
-            return;
-        }
-        data=param.route.toJson();
-    }
     base.log("remoteRouteOperation, operation="+operation);
     let promise=undefined;
     if (operation != "upload"){
         promise=Requests.getJson(url,{checkOk:false});
     }
     else{
+        data=param.route;
         promise=Requests.postJson(url,data);
     }
     promise.then(
@@ -918,11 +906,11 @@ RouteData.prototype._sendRoute=function(route, opt_callback,opt_ignoreExisting){
         self:self,
         okcallback:function(data,param){
             base.log("route sent to server");
-            if (opt_callback)opt_callback(true);
+            if (opt_callback)opt_callback();
         },
         errorcallback:function(status,param){
             let showError=true;
-            if (opt_callback) showError=opt_callback(false);
+            if (opt_callback) showError=opt_callback(status);
             if (showError && globalStore.getData(keys.properties.routingServerError)) Toast("unable to send route to server:" + status);
         },
         ignoreExisting:opt_ignoreExisting

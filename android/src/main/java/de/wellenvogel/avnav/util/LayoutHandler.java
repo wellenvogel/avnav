@@ -1,7 +1,9 @@
 package de.wellenvogel.avnav.util;
 
+import android.app.Activity;
 import android.content.res.AssetManager;
 import android.net.Uri;
+import android.support.v4.content.FileProvider;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,13 +18,14 @@ import java.util.Collection;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.BuildConfig;
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.INavRequestHandler;
 import de.wellenvogel.avnav.main.RequestHandler;
 
 public class LayoutHandler implements INavRequestHandler{
     String systemDir=null; //base path at assets
     File userDir=null;
-    AssetManager manager=null;
+    Activity activity=null;
 
 
     static class LayoutInfo implements INavRequestHandler.IJsonObect {
@@ -89,7 +92,7 @@ public class LayoutHandler implements INavRequestHandler{
     private List<LayoutInfo> readAssetsDir() throws IOException {
         ArrayList<LayoutInfo> rt=new ArrayList<>();
         String [] list;
-        list=manager.list(systemDir);
+        list=activity.getAssets().list(systemDir);
         for (String name :list){
             if (!name.endsWith(".json")) continue;
             if (name.equals("keys.json")) continue;
@@ -111,10 +114,10 @@ public class LayoutHandler implements INavRequestHandler{
     }
 
 
-    public LayoutHandler(AssetManager manager,String systemDir, File userDir){
+    public LayoutHandler(Activity activity,String systemDir, File userDir){
         this.systemDir=systemDir;
         this.userDir=userDir;
-        this.manager=manager;
+        this.activity=activity;
         if (! userDir.isDirectory()){
             userDir.mkdirs();
         }
@@ -124,7 +127,7 @@ public class LayoutHandler implements INavRequestHandler{
         if (name.startsWith(LayoutInfo.SYSTEMPREFIX)){
             name=name.substring(LayoutInfo.SYSTEMPREFIX.length());
             String filename=name+".json";
-            return manager.open(systemDir+"/"+filename);
+            return activity.getAssets().open(systemDir+"/"+filename);
         }
         if (name.startsWith(LayoutInfo.USERPREFIX)){
             name=name.substring(LayoutInfo.USERPREFIX.length());
@@ -135,5 +138,22 @@ public class LayoutHandler implements INavRequestHandler{
         }
         throw new IOException("neither system nor user layout: "+name);
     }
+
+    public Uri getUriForLayout(String name){
+        if (name.startsWith("system.")){
+            return AssetsProvider.createContentUri("layout",name.replaceAll("^system\\.",""));
+        }
+        else{
+            try {
+                Uri rt = FileProvider.getUriForFile(activity, Constants.FILE_PROVIDER_AUTHORITY, new File(userDir, name.replaceAll("^user\\.", "")));
+                return rt;
+            }catch (Throwable t){
+                AvnLog.e("error creating uri for layout "+name,t);
+                return null;
+            }
+        }
+    }
+
+
 
 }

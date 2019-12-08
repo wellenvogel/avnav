@@ -94,6 +94,19 @@ let RequestHandler={
         if (!requestOptions.headers) requestOptions.headers={};
         requestOptions.headers['content-type']='application/json';
         let encodedBody=JSON.stringify(body);
+        if (avnav.android){
+            return new Promise((resolve,reject)=> {
+                let status=avnav.android.handleUpload(rurl, encodedBody);
+                if (status == 'OK'){
+                    resolve({status:status});
+                    return;
+                }
+                else{
+                    reject(status);
+                    return;
+                }
+            });
+        }
         requestOptions.body=encodedBody;
         return handleJson(rurl,requestOptions,options);
     },

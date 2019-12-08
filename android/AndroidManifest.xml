@@ -91,6 +91,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_path" />
         </provider>
+        <provider
+            android:name="de.wellenvogel.avnav.util.AssetsProvider"
+            android:authorities="${applicationId}.assetsprovider"
+            android:exported="false"
+            android:grantUriPermissions="true" >
+        </provider>
 
     </application>
 

@@ -60,8 +60,13 @@ public class RouteHandler implements INavRequestHandler {
 
     @Override
     public boolean handleUpload(String postData, String name, boolean ignoreExisting) throws Exception {
-        //TODO: better handling: false instead of exception if existing
-        saveRoute(postData,ignoreExisting);
+        Route rt = Route.fromJson(new JSONObject(postData));
+        try {
+            saveRoute(rt, !ignoreExisting);
+        }catch (Exception e){
+            AvnLog.e("Exception when storing route",e);
+            return false;
+        }
         return true;
     }
 
@@ -557,28 +562,8 @@ public class RouteHandler implements INavRequestHandler {
         }
     }
 
-    /**
-     * save a route
-     * @param routeJson - the json string of the route
-     * @throws Exception
-     */
-    public Route saveRoute(String routeJson, boolean overwrite) throws Exception {
-        Route rt = Route.fromJson(new JSONObject(routeJson));
-        return saveRoute(rt,overwrite);
-    }
 
-    /**
-     * save a route e.g. received from another app
-     * @param is
-     * @param overwrite
-     * @return
-     * @throws Exception
-     */
-    public Route saveRoute(InputStream is, boolean overwrite) throws Exception{
-        AvnLog.i("save route from stream");
-        Route rt=new RouteParser().parseRouteFile(is);
-        return saveRoute(rt,overwrite);
-    }
+
     private Route saveRoute(Route rt,boolean overwrite ) throws Exception{
         String name=rt.name;
         if (name == null){

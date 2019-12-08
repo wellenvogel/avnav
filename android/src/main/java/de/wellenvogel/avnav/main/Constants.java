@@ -47,6 +47,8 @@ public class Constants {
 
     public static final String REALCHARTS="charts";
     public static final String CHARTPREFIX="charts";
+    public final static String FILE_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".provider";
+    public final static String ASSETS_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".assetsprovider";
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{
@@ -67,7 +69,6 @@ public class Constants {
     public static final String LOGPRFX="avnav";
     public static final int    OSVERSION_XWALK=19;  //if below this version we should have xwalk
     //request codes in main activity
-    public static final int ROUTE_OPEN_REQUEST=0;
     public static final int SETTINGS_REQUEST=1;
     public static final int FILE_OPEN=100;
 

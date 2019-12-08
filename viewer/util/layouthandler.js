@@ -89,21 +89,6 @@ class LayoutHandler{
                 reject(e);
                 return;
             }
-            if (avnav.android) {
-                try {
-                    //TODO: implement status return
-                    let url=globalStore.getData(keys.properties.navUrl)+
-                            "?request=upload&type=layout&ignoreExisting=true&name="+encodeURIComponent(name);
-                    let status=avnav.android.handleUpload(url, JSON.stringify(layout));
-                    if (status == 'OK')
-                        resolve({status: status});
-                    else
-                        reject(status)
-                } catch (e) {
-                    reject(e)
-                }
-                return;
-            }
             resolve(Requests.postJson("?request=upload&type=layout&ignoreExisting=true&name=" + encodeURIComponent(name), layout));
         });
     }

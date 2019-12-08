@@ -60,6 +60,9 @@ android {
     lintOptions {
         abortOnError false
     }
+    aaptOptions{
+        noCompress '.json'
+    }
     //original:
     compileSdkVersion 29
 

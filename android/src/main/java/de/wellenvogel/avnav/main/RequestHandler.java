@@ -8,6 +8,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.support.v4.content.FileProvider;
+import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
@@ -31,7 +32,6 @@ import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -45,6 +45,7 @@ import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
+import de.wellenvogel.avnav.util.AssetsProvider;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.LayoutHandler;
@@ -66,7 +67,6 @@ public class RequestHandler {
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
     private IMediaUpdater updater=null;
-    private final static String FILE_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".provider";
 
     private Thread chartHandler=null;
     private boolean chartHandlerRunning=false;
@@ -108,7 +108,7 @@ public class RequestHandler {
         this.gemfReader=new GemfReader(activity);
         ownMimeMap.put("js", "text/javascript");
         startHandler();
-        layoutHandler=new LayoutHandler(activity.getAssets(),"viewer/layout",
+        layoutHandler=new LayoutHandler(activity,"viewer/layout",
                 new File(getWorkDir(),"layout"));
         handlerMap.put("layout", new LazyHandlerAccess() {
             @Override
@@ -696,27 +696,40 @@ public class RequestHandler {
 
 
 
-    private void sendFile(String name, String type,Resources res){
-        if (!type.equals("track") && ! type.equals("route")){
+    private boolean sendFile(String name, String type){
+        if (!type.equals("track") && ! type.equals("route") && ! type.equals("layout")){
             Log.e(Constants.LOGPRFX,"invalid type "+type+" for sendFile");
-            return;
+            return false;
         }
         String dirname="tracks";
         if (type.equals("route")) dirname="routes";
-        File dir=new File(getWorkDir(),dirname);
-        File file=new File(dir,name);
-        if (! file.isFile()){
-            Log.e(Constants.LOGPRFX,"file "+name+" not found");
-            return;
+        Uri data=null;
+        if (type.equals("layout")) {
+            data=layoutHandler.getUriForLayout(name);
         }
-        Uri data= FileProvider.getUriForFile(activity,FILE_PROVIDER_AUTHORITY,file);
+        else {
+            File dir = new File(getWorkDir(), dirname);
+            File file = new File(dir, name);
+            if (!file.isFile()) {
+                Log.e(Constants.LOGPRFX, "file " + name + " not found");
+                return false;
+            }
+            data = FileProvider.getUriForFile(activity, Constants.FILE_PROVIDER_AUTHORITY, file);
+        }
+        if (data == null) return false;
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_STREAM, data);
         shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        shareIntent.setType("application/gpx+xml");
-        String title=res.getText(R.string.selectApp)+" "+name;
+        if (type.equals("layout")) {
+            shareIntent.setType("application/json");
+        }
+        else{
+            shareIntent.setType("application/gpx+xml");
+        }
+        String title=activity.getText(R.string.selectApp)+" "+name;
         activity.startActivity(Intent.createChooser(shareIntent, title));
+        return true;
     }
 
     //potentially the Javascript interface code is called from the Xwalk app package
@@ -735,50 +748,21 @@ public class RequestHandler {
             rt = activity.getResources();
             return rt;
         }
-        @JavascriptInterface
-        public String storeRoute(String route){
-            AvnLog.i("store route");
-            if (getRouteHandler() == null) return returnStatus("no route handler");
-            try{
-                getRouteHandler().saveRoute(route, true);
-                return returnStatus("OK");
-            }catch (Exception e){
-                Log.e(AvnLog.LOGPREFIX,"error while storing route: "+e.getLocalizedMessage());
-                return returnStatus(e.getLocalizedMessage());
-            }
-        }
-        @JavascriptInterface
-        public void downloadRoute(String route){
-            if (getRouteHandler() == null){
-                Log.e(AvnLog.LOGPREFIX," no route handler for downloadRoute");
-            }
-            try {
-                RouteHandler.Route rt=getRouteHandler().saveRoute(route, true);
-                sendFile(rt.name + ".gpx", "route", getAppResources());
-            }catch(Exception e){
-                Toast.makeText(activity.getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-            }
-        }
+
 
         @JavascriptInterface
-        public String uploadRoute(){
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("*/*");
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            Resources res=getAppResources();
-            try {
-                activity.startActivityForResult(
-                        Intent.createChooser(intent, res.getText(R.string.uploadRoute)),
-                        Constants.ROUTE_OPEN_REQUEST);
-            } catch (android.content.ActivityNotFoundException ex) {
-                // Potentially direct the user to the Market with a Dialog
-                Toast.makeText(activity.getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
-            }
-
-            return "";
-
+        public boolean downloadFile(String name,String type){
+            return sendFile(name,type);
         }
 
+        /**
+         * replacement for the missing ability to intercept post requests
+         * will only work for small data provided here as a string
+         * basically it calls the request handler and returns the status as string
+         * @param url
+         * @param postvars
+         * @return status
+         */
         @JavascriptInterface
         public String handleUpload(String url,String postvars){
             try {
@@ -788,7 +772,23 @@ public class RequestHandler {
                 AvnLog.e("error in upload request for "+url+":",e);
                 return e.getMessage();
             }
+
         }
+
+        /**
+         * request a file from the system
+         * this is some sort of a workaround for the not really working onOpenFileChooser
+         * in the onActivityResult (MainActivity) we store the selected file and its name
+         * in the uploadData structure
+         * so we limit the size of the file to 1M - this should be ok for our routes, layouts and similar
+         * the id is some minimal security to ensure that somenone later on can only access the file
+         * when knowing this id
+         * the results will be retrieved via getFileName and getFileData
+         * a new call to this API will empty/overwrite any older data being retrieved
+         * when the file successfully has been fetched, we fire a uploadAvailable event to the JS with the id
+         * @param type one of the user data types (route|layout)
+         * @param id to identify the file
+         */
         @JavascriptInterface
         public void requestFile(String type,int id){
             RequestHandler.this.uploadData=new UploadData(id);
@@ -820,11 +820,6 @@ public class RequestHandler {
             return uploadData.fileData;
         }
 
-
-        @JavascriptInterface
-        public void downloadTrack(String name){
-            sendFile(name,"track",getAppResources());
-        }
 
         @JavascriptInterface
         public String setLeg(String legData){
@@ -924,33 +919,13 @@ public class RequestHandler {
         startHandler();
     }
 
-    void saveRoute(Uri returnUri) {
 
-
-        try {
-            AvnLog.i("importing route: "+returnUri);
-            ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(returnUri, "r");
-            long size=pfd.getStatSize();
-            if (size > RequestHandler.ROUTE_MAX_SIZE) throw new Exception("route to big, allowed "+ RequestHandler.ROUTE_MAX_SIZE);
-            if (getRouteHandler() == null){
-                Log.e(AvnLog.LOGPREFIX,"no route handler for saving route");
-                return;
-            }
-            AvnLog.i("saving route");
-            getRouteHandler().saveRoute(new FileInputStream(pfd.getFileDescriptor()), false);
-            activity.sendEventToJs(Constants.JS_RELOAD, 1);
-        } catch (Exception e) {
-            Toast.makeText(activity.getApplicationContext(), "unable save route: "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-            e.printStackTrace();
-            Log.e(Constants.LOGPRFX, "unable to save route: "+e.getLocalizedMessage());
-            return;
-        }
-    }
 
     void saveFile(Uri returnUri) {
         try {
             if (uploadData == null) return;
             AvnLog.i("importing route: "+returnUri);
+            DocumentFile df=DocumentFile.fromSingleUri(activity,returnUri);
             ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(returnUri, "r");
             long size=pfd.getStatSize();
             if (size > RequestHandler.FILE_MAX_SIZE) throw new Exception("file to big, allowed "+ RequestHandler.FILE_MAX_SIZE);
@@ -963,7 +938,7 @@ public class RequestHandler {
                 data.append(new String(buffer,0,rd, StandardCharsets.UTF_8));
             }
             is.close();
-            uploadData.name=returnUri.getLastPathSegment().replaceAll(".*/","");
+            uploadData.name=df.getName();
             uploadData.fileData=data.toString();
             activity.sendEventToJs(Constants.JS_UPLOAD_AVAILABLE, uploadData.id);
         } catch (Throwable e) {

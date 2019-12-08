@@ -246,6 +246,14 @@ const startServerDownload=(type,name,opt_url,opt_json)=>{
         if (type == 'layout') filename=filename.replace(/^[^.]*/,'')+".json";
         action = globalStore.getData(keys.properties.navUrl) + "/" + filename;
     }
+    if (avnav.android){
+        //we cannot handle the special case with local routes on android
+        //but this will not happen anyway...
+        if (type == 'route') name+=".gpx";
+        if (type == "layout") name+=".json";
+        return avnav.android.downloadFile(name,type);
+    }
+
     globalStore.storeData(keys.gui.downloadpage.downloadParameters,{
         name:name,
         url:opt_url,
@@ -541,26 +549,35 @@ const androidUploadHandler=new Callback(()=>{
     let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
     let current=globalStore.getData(keys.gui.downloadpage.androidUploadId);
     if (current != requestedId) return;
-    let type=globalStore.getData(keys.gui.downloadpage.type);
-    if (type == 'route'){
-        let routeString=avnav.android.getFileData(current);
-        if (! routeString) return;
-        RouteHandler.saveRouteString(routeString,(error)=>{
-            if (error) Toast(error+"");
-            else fillData();
-        })
-    }
-    if (type == 'layout'){
-        let name=avnav.android.getFileName(current);
-        name=name.replace(/\.json$/,'');
-        let layoutString=avnav.android.getFileData(current);
-        LayoutHandler.uploadLayout(name,layoutString,true).then(()=>{
-            fillData();
-        })
-        .catch((error)=>{
-                Toast(error+"");
+    //lets go back to the main thread as we had been called from android...
+    window.setTimeout(()=> {
+        let type = globalStore.getData(keys.gui.downloadpage.type);
+        if (type == 'route') {
+            let filename = avnav.android.getFileName(current);
+            if (!filename) return;
+            if (!filename.match(/\.gpx$/)) {
+                Toast("only gpx files for routes");
+                return;
+            }
+            let routeString = avnav.android.getFileData(current);
+            if (!routeString) return;
+            RouteHandler.saveRouteString(routeString, (error)=> {
+                if (error) Toast(error + "");
+                else fillData();
             })
-    }
+        }
+        if (type == 'layout') {
+            let name = avnav.android.getFileName(current);
+            name = name.replace(/\.json$/, '');
+            let layoutString = avnav.android.getFileData(current);
+            LayoutHandler.uploadLayout(name, layoutString, true).then(()=> {
+                fillData();
+            })
+                .catch((error)=> {
+                    Toast(error + "");
+                })
+        }
+    },0);
 });
 
 
@@ -616,11 +633,7 @@ class DownloadPage extends React.Component{
                 name:'DownloadPageUpload',
                 visible: type == 'route' || type == 'layout' || (type =='chart' && ! avnav.android) ,
                 onClick:()=>{
-                    if (type == 'route' && avnav.android){
-                        avnav.android.uploadRoute();
-                        return;
-                    }
-                    if (type == 'layout' && avnav.android){
+                    if ((type == 'layout' || type == 'route')  && avnav.android){
                         let nextId=globalStore.getData(keys.gui.downloadpage.requestedUploadId,0)+1;
                         globalStore.storeData(keys.gui.downloadpage.requestedUploadId,nextId);
                         avnav.android.requestFile(type,nextId);
