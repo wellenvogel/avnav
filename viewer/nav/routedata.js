@@ -453,6 +453,7 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
     if (! canUpload){
         //if we cannot upload there should not be any routes on the server
         okCallback([],opt_callbackData);
+        return;
     }
     return this._remoteRouteOperation("list",{
         okcallback:function(data,param){
