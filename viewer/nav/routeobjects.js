@@ -554,13 +554,15 @@ routeobjects.Route.prototype.addPoint=function(idx, point){
         rp.name=this.findFreeName();
     }
     rp.routeName=this.name.slice(0);
+    let rt=idx+1;
     if (idx < 0 || idx >= (this.points.length-1)) {
         this.points.push(rp);
+        rt=this.points.length-1;
     }
     else{
         this.points.splice(idx+1,0,rp);
     }
-    return rp;
+    return rt;
 };
 
 routeobjects.Route.prototype.setName=function(name){

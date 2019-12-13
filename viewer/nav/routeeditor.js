@@ -130,8 +130,7 @@ class RouteEdit{
         this.checkWritable();
         let data=load(this.storeKeys,true);
         if (!data.route) return;
-        data.route.addPoint(data.index,point);
-        data.index+=1;
+        data.index=data.route.addPoint(data.index,point);
         write(this.writeKeys,data);
     }
     emptyRoute(){
