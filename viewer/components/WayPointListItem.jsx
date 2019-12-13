@@ -3,6 +3,7 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
+import Button from './Button.jsx';
 
 let WayPointListItem=(props)=>{
    {
@@ -11,7 +12,7 @@ let WayPointListItem=(props)=>{
         if (props.selected) classNames+=" activeEntry";
         return(
         <div className={classNames} onClick={props.onClick} >
-            <button className="Delete smallButton"
+            <Button className="Delete smallButton"
                     onClick={function(ev){
                     ev.preventDefault();
                     ev.stopPropagation();

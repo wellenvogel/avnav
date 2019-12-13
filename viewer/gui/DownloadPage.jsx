@@ -174,7 +174,7 @@ const DownloadItem=(props)=>{
         <div className={cls} onClick={function(ev){
             props.onClick('select')
         }}>
-            {(showDelete && ! props.active) &&<button className="Delete smallButton" onClick={(ev)=>{
+            {(showDelete && ! props.active) &&<Button className="Delete smallButton" onClick={(ev)=>{
                 ev.preventDefault();
                 ev.stopPropagation();
                 props.onClick('delete');
@@ -184,7 +184,7 @@ const DownloadItem=(props)=>{
                 <div className="info">{dp.infoText}</div>
             </div>
             {showRas && <div className="listrasimage"></div>}
-            { showDownload && <button className="Download smallButton" onClick={
+            { showDownload && <Button className="Download smallButton" onClick={
                 (ev)=>{
                     ev.stopPropagation();
                     ev.preventDefault();
@@ -398,7 +398,7 @@ const UploadIndicator = Dynamic((info)=> {
                     <div className="progressDone" style={doneStyle}></div>
                 </div>
             </div>
-            <button className="DownloadPageUploadCancel button" onClick={()=>{
+            <Button className="DownloadPageUploadCancel button" onClick={()=>{
                 if (props.xhdr) props.xhdr.abort();
                 globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
                 }}
