@@ -66,6 +66,10 @@ class LayoutHandler{
         });
     }
 
+    nameToBaseName(name){
+        return name.replace(/^user\./,'').replace(/^system\./,'').replace(/\.json$/,'');
+    }
+
     uploadLayout(name,layout,isString){
         if (! name || ! layout){
             return new Promise((resolve,reject)=>{
@@ -73,8 +77,8 @@ class LayoutHandler{
             });
         }
         //the provided name should always be without the user./system. prefix
-        //whe we upload we always create a user. entry...
-        name=name.replace(/^user\./,'').replace(/^system\./,'');
+        //when we upload we always create a user. entry...
+        name=this.nameToBaseName(name);
         return new Promise((resolve, reject)=> {
             try {
                 if (isString) {
@@ -91,6 +95,16 @@ class LayoutHandler{
             }
             resolve(Requests.postJson("?request=upload&type=layout&ignoreExisting=true&name=" + encodeURIComponent(name), layout));
         });
+    }
+
+    /**
+     * get the name the server will create from our local file name when we upload a layout
+     * @param name
+     * @returns {string}
+     */
+    fileNameToServerName(name){
+        name=this.nameToBaseName(name);
+        return "user."+name;
     }
 
     /**

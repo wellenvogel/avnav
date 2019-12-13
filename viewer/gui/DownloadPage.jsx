@@ -289,6 +289,47 @@ const download = (info)=> {
 const resetUpload=()=>{
     globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
 };
+
+const uploadRouteData=(filename,data)=>{
+    let route = undefined;
+    try {
+        route = new routeobjects.Route("");
+        route.fromXml(data);
+    } catch (e) {
+        Toast("unable to parse route , error: " + e);
+        return;
+    }
+    if (!route.name || route.name == "") {
+        Toast("route has no route name");
+        return;
+    }
+    if (entryExists(route.name)) {
+        Toast("route with name " + route.name + " already exists");
+        return false;
+    }
+    if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
+    RouteHandler.saveRoute(route, function () {
+        fillData();
+        return true;
+    });
+};
+
+const uploadLayoutData=(fileName,data)=>{
+    let itemName=LayoutHandler.fileNameToServerName(fileName);
+    if (entryExists(itemName)){
+        Toast("Layout "+itemName+" already exists");
+    }
+    LayoutHandler.uploadLayout(fileName,data,true)
+        .then(
+        (result)=>{
+            fillData();
+        }
+    ).catch(
+        (error)=>{
+            Toast("unable to upload layout: "+error);
+        }
+    )
+};
 const runUpload=(ev)=>{
     let type=globalStore.getData(keys.gui.downloadpage.type);
     if (! type) return;
@@ -296,29 +337,8 @@ const runUpload=(ev)=>{
         return uploadChart(ev.target);
     }
     if (type == 'route'){
-        uploadFileReader(ev.target,".gpx").then((content)=>{
-                let route = undefined;
-                try {
-                    route = new routeobjects.Route("");
-                    route.fromXml(content.content);
-                    route.fromXml(content.content);
-                } catch (e) {
-                    Toast("unable to parse route , error: " + e);
-                    return;
-                }
-                if (!route.name || route.name == "") {
-                    Toast("route has no route name");
-                    return;
-                }
-                if (entryExists(route.name)) {
-                    Toast("route with name " + route.name + " already exists");
-                    return false;
-                }
-                if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
-                RouteHandler.saveRoute(route, function () {
-                    fillData();
-                    return true;
-                });
+        uploadFileReader(ev.target,".gpx").then((content)=> {
+                return uploadRouteData(content.name, content.content);
             }
         ).catch((error)=>{
                 Toast(error);
@@ -327,16 +347,7 @@ const runUpload=(ev)=>{
     if (type == 'layout'){
         uploadFileReader(ev.target,".json").then(
             (content)=>{
-                LayoutHandler.uploadLayout(content.name,content.content,true)
-                    .then(
-                        (result)=>{
-                            fillData();
-                        }
-                    ).catch(
-                        (error)=>{
-                            Toast("unable to upload layout: "+error);
-                        }
-                    )
+                return uploadLayoutData(content.name,content.content)
             }
         ).catch(
             (error)=>{Toast(error)}
@@ -438,7 +449,7 @@ const uploadFileReader=(fileObject,allowedExtension)=> {
                 reject("only "+allowedExtension+" files");
                 return false;
             }
-            let rname = file.name.replace(allowedExtension, "");
+            let rname = file.name;
             if (file.size) {
                 if (file.size > MAXUPLOADSIZE) {
                     reject("file is to big, max allowed: " + MAXUPLOADSIZE);
@@ -552,30 +563,18 @@ const androidUploadHandler=new Callback(()=>{
     //lets go back to the main thread as we had been called from android...
     window.setTimeout(()=> {
         let type = globalStore.getData(keys.gui.downloadpage.type);
+        let filename = avnav.android.getFileName(current);
+        if (!filename) return;
+        let data=avnav.android.getFileData(current);
         if (type == 'route') {
-            let filename = avnav.android.getFileName(current);
-            if (!filename) return;
             if (!filename.match(/\.gpx$/)) {
                 Toast("only gpx files for routes");
                 return;
             }
-            let routeString = avnav.android.getFileData(current);
-            if (!routeString) return;
-            RouteHandler.saveRouteString(routeString, (error)=> {
-                if (error) Toast(error + "");
-                else fillData();
-            })
+            uploadRouteData(filename,data);
         }
         if (type == 'layout') {
-            let name = avnav.android.getFileName(current);
-            name = name.replace(/\.json$/, '');
-            let layoutString = avnav.android.getFileData(current);
-            LayoutHandler.uploadLayout(name, layoutString, true).then(()=> {
-                fillData();
-            })
-                .catch((error)=> {
-                    Toast(error + "");
-                })
+            uploadLayoutData(filename,data);
         }
     },0);
 });
