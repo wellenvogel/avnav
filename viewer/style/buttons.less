@@ -19,7 +19,7 @@
   outline: none;
   display: block;
   position: relative;
-  &:after{
+  span{
     content: "";
     background-position: center;
     background-size: 80% 80%;
@@ -30,7 +30,7 @@
     bottom: 0;
     background-repeat: no-repeat;
   }
-  &:disabled:after{
+  &:disabled span{
     opacity: 0.5;
   }
 }
@@ -54,13 +54,13 @@ button.active{
 }
 
 .iconButton(@icon){
-  &:after {
+  span {
     background-image: url("@{iconBase}/@{icon}");
   }
 }
 
 .textButton(@text){
-  &:after {
+  span {
     content: @text;
     font-size: 2.3em;
     margin-top: 0.2em;

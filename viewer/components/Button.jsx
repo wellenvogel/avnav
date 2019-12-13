@@ -17,16 +17,18 @@ class Button extends React.Component {
             className += this.props.toggle ? " active" : " inactive";
         }
         let {toggle,icon,style,disabled,...forward}=this.props;
-        if (!style) style = {};
+        let spanStyle={};
         if (icon !== undefined) {
-            style.backgroundImage = "url(" + icon + ")";
+            spanStyle.backgroundImage = "url(" + icon + ")";
         }
         let add = {};
         if (disabled) {
             add.disabled = "disabled";
         }
         return (
-            <button {...forward} {...add} className={className} style={style}/>
+            <button {...forward} {...add} className={className}>
+            <span style={spanStyle}/>
+            </button>
         );
     }
 }
