@@ -166,12 +166,7 @@ let RouteData=function(){
      * @type {number}
      */
     this.lastDistanceToNext=-1;
-    /**
-     * approaching next wp in route
-     * @private
-     * @type {boolean}
-     */
-    this.isApproaching=false;
+
     /**
      * @private
      * @type {Formatter}
@@ -605,7 +600,6 @@ RouteData.prototype._checkNextWp=function(){
         if (!data.leg) return;
         if (!data.leg.hasRoute()) {
             data.leg.approach = false;
-            this.isApproaching = false;
             return true;
         }
         let boat = globalStore.getData(keys.nav.gps.position);
@@ -619,7 +613,6 @@ RouteData.prototype._checkNextWp=function(){
             let dst = NavCompute.computeDistance(boat, data.leg.to);
             //TODO: some handling for approach
             if (dst.dts <= approach) {
-                this.isApproaching = true;
                 data.leg.approach = true;
                 let nextDst = new navobjects.Distance();
                 if (nextWp) {
@@ -652,8 +645,12 @@ RouteData.prototype._checkNextWp=function(){
                 }
                 //should we wait for some time???
                 if (nextWp) {
+                    data.leg.from=data.leg.to;
                     data.leg.to = nextWp;
                     base.log("switching to next WP");
+                    this.lastDistanceToCurrent=-1;
+                    this.lastDistanceToNext=-1;
+                    data.leg.approach=false;
                 }
                 else {
                     window.setTimeout(()=> {
@@ -663,7 +660,6 @@ RouteData.prototype._checkNextWp=function(){
                 }
             }
             else {
-                this.isApproaching = false;
                 data.leg.approach = false;
             }
         } catch (ex) {
