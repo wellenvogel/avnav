@@ -23,11 +23,7 @@ var formatDate = function (date) {
 };
 
 var copyList=[
-    {from: './avnav_viewer.html'},
-    {from: './info.html'},
-    {from: './manifest.json'},
-    {from: './privacy-en.html'},
-    {from: './privacy-de.html'},
+    {from: './static/'},
     {from: './webpack-loader.js',to:'loader.js'},
     {from: './util/polyfill.js',to:'polyfill.js'},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},

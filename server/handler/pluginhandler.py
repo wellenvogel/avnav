@@ -196,7 +196,7 @@ class AVNPluginHandler(AVNWorker):
         except:
           AVNLog.error("error loading plugin from %s:%s",dir,traceback.format_exc())
         if module is not None:
-          self.pluginDirs[moduleName]=dir
+          self.pluginDirs[moduleName]=os.path.realpath(dir)
           self.instantiateHandlersFromModule(moduleName,module)
         else:
           if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
@@ -297,9 +297,8 @@ class AVNPluginHandler(AVNWorker):
     if type == 'path':
       '''path mapping request, just return the module path
          command is the original url
-         requestparam is the http handler 
       '''
-      localPath=command[len(self.PREFIX)+1:len(command)].split("/",1)
+      localPath=command[len(self.PREFIX)+1:].split("/",1)
       if len(localPath) < 2:
         kwargs.get('handler').send_error(404,"missing plugin path")
         return None
@@ -307,7 +306,7 @@ class AVNPluginHandler(AVNWorker):
       if dir is None:
         kwargs.get('handler').send_error(404,"plugin %s not found"%localPath[0])
         return None
-      return os.path.join(dir,localPath[1])
+      return os.path.join(dir,kwargs.get('handler').plainUrlToPath(localPath[1],False))
 
     '''
     handle the URL based requests
