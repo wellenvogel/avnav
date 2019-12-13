@@ -7,6 +7,7 @@ import keys,{KeyHelper} from './keys.jsx';
 import KeyHandler from './keyhandler.js';
 import base from '../base.js';
 import jsdownload from 'downloadjs';
+import assign from 'object-assign';
 
 import defaultLayout from '../layout/default.json';
 
@@ -18,6 +19,12 @@ class LayoutHandler{
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
         this.temporaryLayouts={};
         this.temporaryLayouts["system.default"]=defaultLayout;
+        this.dataChanged=this.dataChanged.bind(this);
+        globalStore.register(this,keys.gui.capabilities.uploadLayout);
+    }
+
+    dataChanged(skeys){
+        this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
     }
 
     hasLoaded(name){
@@ -218,6 +225,20 @@ class LayoutHandler{
             let layout=this.temporaryLayouts[name];
             if (! layout) return;
             jsdownload(JSON.stringify(layout,null,2),fileName,"application/json");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * delete an item if we handle this locally
+     * return true if handled
+     * @param name
+     * @returns {boolean}
+     */
+    deleteItem(name){
+        if (this.storeLocally){
+            delete this.temporaryLayouts[name];
             return true;
         }
         return false;

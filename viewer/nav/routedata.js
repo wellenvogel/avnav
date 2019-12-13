@@ -449,9 +449,13 @@ RouteData.prototype.routeOff=function(){
  */
 RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_callbackData){
     let self=this;
+    let canUpload=globalStore.getData(keys.gui.capabilities.uploadRoute,false);
+    if (! canUpload){
+        //if we cannot upload there should not be any routes on the server
+        okCallback([],opt_callbackData);
+    }
     return this._remoteRouteOperation("list",{
         okcallback:function(data,param){
-            let canUpload=globalStore.getData(keys.gui.capabilities.uploadRoute,false);
             if ((data.status && data.status!='OK') || (!data.items)) {
                 if (opt_failCallback) {
                     opt_failCallback(data.status || "no items", param.callbackdata)

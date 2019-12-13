@@ -222,6 +222,12 @@ const sendDelete=(info)=>{
 const deleteItem=(info)=>{
     let ok = OverlayDialog.confirm("delete " + info.type + " " + info.name + "?");
     ok.then(function() {
+        if (info.type == 'layout'){
+            if (LayoutHandler.deleteItem(info.name)) {
+                fillData();
+                return;
+            }
+        }
         if (info.type != "route") {
             sendDelete(info);
         }
