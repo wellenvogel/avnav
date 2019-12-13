@@ -432,7 +432,7 @@ task uploadRaspi(type: UploadTask){
     dependsOn raspiDeb
 }
 task uploadRpm(type: UploadTask){
-    inputFile=file("$buildDir/distributions/avnav-${project.avnavVersion}.i386.rpm")
+    inputFile=file("$buildDir/distributions/avnav-${project.avnavVersion}.noarch.rpm")
     dependsOn releaseRpm
 }
 task uploadWindows(type: UploadTask){
