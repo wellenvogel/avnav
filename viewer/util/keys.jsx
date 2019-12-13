@@ -137,6 +137,13 @@ let keys={
         chartBase: K,
         },
     gui:{
+        capabilities:{
+            addons:K,
+            uploadCharts:K,
+            plugins:K,
+            uploadRoute:K,
+            uploadLayout:K
+        },
         global:{
             smallDisplay: K,
             pageName: K,

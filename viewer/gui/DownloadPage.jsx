@@ -23,6 +23,7 @@ import Helper from '../util/helper.js';
 import base from '../base.js';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
+import jsdownload from 'downloadjs';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -61,10 +62,6 @@ class FileInfo{
 };
 
 const fillDataServer=(type)=>{
-    let activeItemName=undefined;
-    if (type == 'layout'){
-        activeItemName=globalStore.getData(keys.properties.layoutName);
-    }
     Requests.getJson("?request=listdir&type="+type).then((json)=>{
         let list=[];
         for (let i=0;i<json.items.length;i++){
@@ -72,7 +69,7 @@ const fillDataServer=(type)=>{
             assign(fi,json.items[i]);
             fi.type=type;
             fi.server=true;
-            if (activeItemName == fi.name) fi.canDelete=false;
+            if (fi.canDelete === undefined) fi.canDelete=false;
             list.push(fi);
         }
         addItems(list,true);
@@ -133,8 +130,18 @@ const fillDataRoutes = ()=> {
 
 const fillData=()=>{
     let type=globalStore.getData(keys.gui.downloadpage.type,'chart');
-    if (type != 'route') return fillDataServer(type);
-    fillDataRoutes();
+    if (type == 'route') return fillDataRoutes();
+    if (type == 'layout') {
+        LayoutHandler.listLayouts()
+            .then((list)=>{
+               addItems(list,true);
+            })
+            .catch((error)=>{
+            Toast("unable to load layouts "+error);
+            });
+        return;
+    }
+    return fillDataServer(type);
 };
 
 const changeType=(newType)=>{
@@ -243,7 +250,7 @@ const startServerDownload=(type,name,opt_url,opt_json)=>{
     let filename=name;
     if (filename) {
         if (type == 'route') filename += ".gpx";
-        if (type == 'layout') filename=filename.replace(/^[^.]*/,'')+".json";
+        if (type == 'layout') filename=filename.replace(/^[^.]*\./,'')+".json";
         action = globalStore.getData(keys.properties.navUrl) + "/" + filename;
     }
     if (avnav.android){
@@ -266,13 +273,16 @@ const startServerDownload=(type,name,opt_url,opt_json)=>{
 
 const download = (info)=> {
     if (info) {
+        if (info.type == 'layout'){
+            if (LayoutHandler.download(info.name)) return;
+        }
         if (info.type == "track" || info.type == 'layout') startServerDownload(info.type, info.url ? info.url : info.name);
         else {
             if (info.type == "route") {
                 if (info.server) startServerDownload(info.type, info.name);
                 else {
                     RouteHandler.fetchRoute(info.name, true, (data)=> {
-                            startServerDownload(info.type, info.name, undefined, data.toJsonString());
+                            jsdownload(data.toXml(),info.name+".gpx","application/gpx+xml");
                         },
                         (err)=> {
                             Toast("unable to get route " + info.name);
@@ -630,7 +640,7 @@ class DownloadPage extends React.Component{
             },
             {
                 name:'DownloadPageUpload',
-                visible: type == 'route' || type == 'layout' || (type =='chart' && ! avnav.android) ,
+                visible: type == 'route' || type == 'layout' || (type =='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false)) ,
                 onClick:()=>{
                     if ((type == 'layout' || type == 'route')  && avnav.android){
                         let nextId=globalStore.getData(keys.gui.downloadpage.requestedUploadId,0)+1;

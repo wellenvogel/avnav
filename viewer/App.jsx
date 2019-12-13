@@ -26,6 +26,7 @@ import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.jsx';
 import KeyHandler from './util/keyhandler.js';
 import LayoutHandler from './util/layouthandler.js';
+import assign from 'object-assign';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -174,12 +175,13 @@ class App extends React.Component {
             tabIndex="0"
             >
             <DynamicRouter
-                storeKeys={{
+                storeKeys={assign({
                 location: keys.gui.global.pageName,
                 options: keys.gui.global.pageOptions,
                 sequence: keys.gui.global.propertySequence,
                 dimensions: keys.gui.global.windowDimensions
-            }}
+                },keys.gui.capabilities)
+            }
                 nightMode={this.props.nightMode}
                 />
             <Dialogs

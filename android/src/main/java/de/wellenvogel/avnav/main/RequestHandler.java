@@ -581,27 +581,23 @@ public class RequestHandler {
                 }
                 fout=o;
             }
-            if (type.equals("readAddons")){
-                handled=true;
-                JSONObject o=new JSONObject();
-                o.put("status","OK");
-                o.put("data",new JSONArray());
-                fout=o;
-            }
-
             if (type.equals("upload")){
                 fout=handleUploadRequest(uri,postData);
                 if (fout != null) handled=true;
             }
-            if (type.equals("plugins")){
-                String command=uri.getQueryParameter("command");
-                if (command != null && command.equals("list")){
-                    handled=true;
-                    JSONObject o=new JSONObject();
-                    o.put("status","OK");
-                    o.put("data",new JSONArray());
-                    fout=o;
-                }
+            if (type.equals("capabilities")){
+                //see keys.jsx in viewer - gui.capabilities
+                handled=true;
+                JSONObject o=new JSONObject();
+                o.put("addons",false);
+                o.put("uploadCharts",false);
+                o.put("plugins",false);
+                o.put("uploadRoute",true);
+                o.put("uploadLayout",true);
+                JSONObject response=new JSONObject();
+                response.put("status","OK");
+                response.put("data",o);
+                fout=response;
             }
             if (!handled){
                 AvnLog.d(Constants.LOGPRFX,"unhandled nav request "+type);

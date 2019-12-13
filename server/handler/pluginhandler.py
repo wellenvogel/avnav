@@ -306,7 +306,7 @@ class AVNPluginHandler(AVNWorker):
       if dir is None:
         kwargs.get('handler').send_error(404,"plugin %s not found"%localPath[0])
         return None
-      return os.path.join(dir,kwargs.get('handler').plainUrlToPath(localPath[1],False))
+      return os.path.join(dir,kwargs.get('handler').server.plainUrlToPath(localPath[1],False))
 
     '''
     handle the URL based requests

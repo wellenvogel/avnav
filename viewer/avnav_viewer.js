@@ -84,13 +84,7 @@ avnav.main=function() {
     else {
         globalStore.storeData(keys.properties.routingServerError,true,true);
     }
-
-    if (getParam('onAndroid')){
-        globalStore.storeData(keys.gui.global.onAndroid,true,true);
-    }
-    else {
-        globalStore.storeData(keys.gui.global.onAndroid,false,true);
-    }
+    globalStore.storeData(keys.gui.global.onAndroid,false,true);
     let ro="readOnlyServer";
     if (getParam(ro) && getParam(ro) == "true"){
         globalStore.storeData(keys.properties.connectedMode,false,true);
@@ -160,24 +154,41 @@ avnav.main=function() {
                 document.getElementsByTagName("head")[0].appendChild(fileref)
         }
     };
-    //load the user and plugin stuff
-    let lateLoads=["/user/viewer/user.js"];
-    Requests.getJson("?request=plugins&command=list").then(
-        (json)=>{
-            if (json.data){
-               json.data.forEach((plugin)=>{
-                   if (plugin.js) lateLoads.push(plugin.js);
-                   if (plugin.css) lateLoads.push(plugin.css);
-               })
-            }
+
+    const doLateLoads=(loadPlugins)=>{
+        //load the user and plugin stuff
+        let lateLoads=["/user/viewer/user.js"];
+        if (loadPlugins) {
+            Requests.getJson("?request=plugins&command=list").then(
+                (json)=> {
+                    if (json.data) {
+                        json.data.forEach((plugin)=> {
+                            if (plugin.js) lateLoads.push(plugin.js);
+                            if (plugin.css) lateLoads.push(plugin.css);
+                        })
+                    }
+                    loadScripts(lateLoads);
+                }
+            ).catch(
+                (error)=> {
+                    Toast("unable to load plugin data: " + error);
+                    loadScripts(lateLoads);
+                }
+            );
+        }
+        else{
             loadScripts(lateLoads);
         }
-    ).catch(
-        (error)=>{
-            Toast("unable to load plugin data: "+error);
-            loadScripts(lateLoads);
-        }
-    );
+    };
+
+    //check capabilities
+    Requests.getJson("?request=capabilities").then((json)=>{
+        globalStore.storeMultiple(json.data,keys.gui.capabilities);
+        doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
+    }).catch((error)=>{
+        globalStore.storeMultiple({},keys.gui.capabilities);
+        doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
+    });
     base.log("avnav loaded");
 };
 

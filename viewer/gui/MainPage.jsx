@@ -151,6 +151,9 @@ class MainPage extends React.Component {
         readAddOns();
         fillList();
     }
+    componentDidUpdate(){
+        readAddOns();
+    }
 
     render() {
         let self = this;
@@ -266,6 +269,7 @@ const fillList = function () {
 };
 const readAddOns = function () {
     if (globalStore.getData(keys.gui.global.onAndroid, false)) return;
+    if (!globalStore.getData(keys.gui.capabilities.addons)) return;
     Requests.getJson("?request=readAddons").then((json)=>{
             let items = [];
             for (let e in json.data) {

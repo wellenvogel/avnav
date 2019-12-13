@@ -451,6 +451,7 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
     let self=this;
     return this._remoteRouteOperation("list",{
         okcallback:function(data,param){
+            let canUpload=globalStore.getData(keys.gui.capabilities.uploadRoute,false);
             if ((data.status && data.status!='OK') || (!data.items)) {
                 if (opt_failCallback) {
                     opt_failCallback(data.status || "no items", param.callbackdata)
@@ -464,6 +465,7 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
                 assign(ri, data.items[i]);
                 ri.server = true;
                 ri.time=ri.time*1e3; //we receive TS in s
+                ri.canDelete=canUpload;
                 if (self.isActiveRoute(ri.name)) ri.active=true;
                 items.push(ri);
             }
@@ -743,6 +745,10 @@ RouteData.prototype._remoteRouteOperation=function(operation, param) {
         promise=Requests.getJson(url,{checkOk:false});
     }
     else{
+        if (!globalStore.getData(keys.gui.capabilities.uploadRoute)){
+            base.log("route upload disabled by capabilities");
+            return;
+        }
         data=param.route;
         promise=Requests.postJson(url,data);
     }
@@ -948,6 +954,10 @@ RouteData.prototype._legChangedLocally=function(leg){
     let legJson=leg.toJson();
     if (this.connectMode){
         this.lastSentLeg=leg;
+        if (! globalStore.getData(keys.gui.capabilities.uploadRoute)){
+            base.log("upload leg disabled by capabilities");
+            return;
+        }
         Requests.postJson("?request=routing&command=setleg",legJson).then(
             (data)=>{
                 base.log("new leg sent to server");

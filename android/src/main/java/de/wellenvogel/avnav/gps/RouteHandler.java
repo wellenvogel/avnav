@@ -130,6 +130,7 @@ public class RouteHandler implements INavRequestHandler {
             e.put("time",mtime/1000);
             e.put("numpoints",numpoints);
             e.put("length",length);
+            e.put("canDelete",true);
             return e;
         }
 

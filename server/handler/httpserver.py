@@ -30,7 +30,7 @@ import SocketServer
 import BaseHTTPServer
 import gemf_reader
 
-from handler.httphandler import AVNHTTPHandler
+from httphandler import AVNHTTPHandler
 
 try:
   import create_overview
@@ -133,14 +133,15 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       addonkey=1
       for addon in addons:
         if addon.get('url') is not None and addon.get('icon') is not None:
-          iconpath=os.path.join(self.pathmappings['user'],addon['icon'])
+          iconUrl="/user/"+addon['icon']
+          iconpath=self.getUserPathFromUrl(iconUrl)
           if not os.path.exists(iconpath):
             AVNLog.error("icon path %s for %s not found, ignoring entry",iconpath,addon['url'])
             continue
           newAddon={
             'key':"addon%d"%addonkey,
             'url':addon['url'],
-            'icon':'/user/'+addon['icon'],
+            'icon':iconUrl,
             'title':addon.get('title')
           }
           self.addons.append(newAddon)
@@ -356,6 +357,51 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if typeMap is None:
       return None
     return typeMap.get(command)
+
+  def plainUrlToPath(self,path,usePathMapping=True):
+    '''
+
+    @param path: the URL as received
+    @param usePathMapping: if true use the mapping table
+    @return: an OS path
+    '''
+    words = path.split('/')
+    words = filter(None, words)
+    path = ""
+    for word in words:
+          drive, word = os.path.splitdrive(word)
+          head, word = os.path.split(word)
+          if word in (".",".."): continue
+          path = os.path.join(path, word)
+    AVNLog.ld("request path",path)
+    if not usePathMapping:
+      return path
+    #pathmappings expect to have absolute pathes!
+    return self.handlePathmapping(path)
+
+  def getUserPathFromUrl(self,path):
+    '''
+        special handling for user urls
+        try the user location and potentially use a fallback interal location
+        @param path:
+        @param query:
+        @return:
+        '''
+    osPath = self.plainUrlToPath(path, True)
+    if os.path.exists(osPath):
+      return osPath
+    path = path[len("/user/"):]
+    for p in ['user.css', 'user.js']:
+      p = "viewer/" + p
+      if path == p:
+        return self.plainUrlToPath("/" + p, True)
+    parts = path.split("/", 1)
+    if len(parts) < 2:  # not anything that we can do
+      return osPath
+    if parts[0] == 'icons' or parts[0] == 'images':
+      return self.plainUrlToPath("/viewer/images/" + parts[1], True)
+    return osPath
+
 
 avnav_handlerList.registerHandler(AVNHTTPServer)
 

@@ -66,6 +66,7 @@ public class TrackWriter implements INavRequestHandler {
             JSONObject o=new JSONObject();
             o.put("name",name);
             o.put("time",mtime/1000);
+            o.put("canDelete",true);
             return o;
         }
     }

@@ -158,53 +158,13 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.end_headers()
         return None
 
-      return self.plainUrlToPath(path)
+      return self.server.plainUrlToPath(path)
 
-  def plainUrlToPath(self,path,usePathMapping=True):
-    '''
 
-    @param path: the URL as received
-    @param usePathMapping: if true use the mapping table
-    @return: an OS path
-    '''
-    words = path.split('/')
-    words = filter(None, words)
-    path = ""
-    for word in words:
-          drive, word = os.path.splitdrive(word)
-          head, word = os.path.split(word)
-          if word in (".",".."): continue
-          path = os.path.join(path, word)
-    AVNLog.ld("request path",path)
-    if not usePathMapping:
-      return path
-    #pathmappings expect to have absolute pathes!
-    return self.handlePathmapping(path)
 
 
   def handleUserRequest(self,path,query):
-    '''
-    special handling for user urls
-    try the user location and potentially use a fallback interal location
-    @param path:
-    @param query:
-    @return:
-    '''
-    osPath=self.plainUrlToPath(path,True)
-    if os.path.exists(osPath):
-      return osPath
-    path=path[len("/user/"):]
-    for p in ['user.css','user.js']:
-      p="viewer/"+p
-      if path == p:
-        return self.plainUrlToPath("/"+p,True)
-    parts=path.split("/",1)
-    if len(parts) < 2: #not anything that we can do
-      return osPath
-    if parts[0] == 'icons' or parts[0] == 'images':
-      return self.plainUrlToPath("/viewer/images/"+parts[1],True)
-    return osPath
-
+    return self.server.getUserPathFromUrl(path)
 
 
   #handle the request to an gemf file
@@ -319,6 +279,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           rtj=json.dumps({'status':unicode(e)})
       elif requestType=='delete':
         rtj=self.handleDeleteRequest(requestParam)
+
+      elif requestType=='capabilities':
+        rtj=self.handleCapabilityRequest(requestParam)
       else:
         handler=self.server.getRequestHandler('api',requestType)
         if handler is None:
@@ -466,7 +429,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
              'name':gemfdata['name'],
              'url':"/gemf/"+gemfdata['name'],
              'charturl':"/gemf/"+gemfdata['name'],
-             'time': gemfdata['mtime']
+             'time': gemfdata['mtime'],
+             'canDelete': True
       }
       rt['data'].append(entry)
     try:
@@ -766,3 +730,14 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       'status':'OK',
       'data':outData
     })
+
+  def handleCapabilityRequest(self,param):
+    #see keys.jsx in the viewer at gui.capabilities
+    rt={
+      'addons':True,
+      'uploadCharts':True,
+      'plugins':True,
+      'uploadRoute': True,
+      'uploadLayout':True
+    }
+    return json.dumps({'status':'OK','data':rt})

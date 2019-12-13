@@ -157,7 +157,8 @@ class AVNTrackWriter(AVNWorker):
            continue
         item={
            'name': f,
-           'time': os.path.getmtime(fname)
+           'time': os.path.getmtime(fname),
+           'canDelete': True
         }
         rt['items'].append(item)
     return rt

@@ -6,12 +6,18 @@ import globalStore from './globalstore.jsx';
 import keys,{KeyHelper} from './keys.jsx';
 import KeyHandler from './keyhandler.js';
 import base from '../base.js';
+import jsdownload from 'downloadjs';
+
+import defaultLayout from '../layout/default.json';
 
 class LayoutHandler{
     constructor(){
         this.layout=undefined;
         this.name=undefined;
         this.propertyDescriptions=KeyHelper.getKeyDescriptions(true);
+        this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
+        this.temporaryLayouts={};
+        this.temporaryLayouts["system.default"]=defaultLayout;
     }
 
     hasLoaded(name){
@@ -27,6 +33,16 @@ class LayoutHandler{
         this.layout=undefined;
         this.name=name;
         return new Promise((resolve,reject)=> {
+            if (this.storeLocally){
+                if (!this.temporaryLayouts[name]) {
+                    reject("layout "+name+" not found");
+                }
+                else {
+                    this.layout=this.temporaryLayouts[name];
+                    resolve(this.temporaryLayouts[name]);
+                }
+                return;
+            }
             Requests.getJson("?request=download&type=layout&name=" +
                 encodeURIComponent(name), {checkOk: false}).then(
                 (json)=> {
@@ -58,7 +74,7 @@ class LayoutHandler{
 
                         }
                     }catch(e){
-                        base.log("error wen trying to read layout locally: "+e);
+                        base.log("error when trying to read layout locally: "+e);
                     }
                     reject("" + error);
                 }
@@ -91,6 +107,11 @@ class LayoutHandler{
                 }
             } catch (e) {
                 reject(e);
+                return;
+            }
+            if (this.storeLocally) {
+                this.temporaryLayouts[this.fileNameToServerName(name)] = layout;
+                resolve({status:'OK'});
                 return;
             }
             resolve(Requests.postJson("?request=upload&type=layout&ignoreExisting=true&name=" + encodeURIComponent(name), layout));
@@ -150,6 +171,56 @@ class LayoutHandler{
         globalStore.storeData(keys.gui.global.layout,this.layout.widgets);
         let ls=globalStore.getData(keys.gui.global.layoutSequence,0);
         globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
+    }
+
+    listLayouts(){
+        return new Promise((resolve,reject)=>{
+            let activeLayout=globalStore.getData(keys.properties.layoutName);
+            if (this.storeLocally){
+               let rt=[];
+               for (let k in this.temporaryLayouts){
+                   let item={
+                       name:k,
+                       type:'layout',
+                       server:false,
+                       canDelete:k != activeLayout,
+                       time: (new Date()).getTime()/1000
+                   };
+                   rt.push(item);
+               }
+               resolve(rt);
+               return;
+            }
+            Requests.getJson("?request=listdir&type=layout").then((json)=> {
+                let list = [];
+                for (let i = 0; i < json.items.length; i++) {
+                    let fi = {};
+                    assign(fi, json.items[i]);
+                    fi.type = 'layout';
+                    fi.server = true;
+                    if (activeLayout == fi.name) fi.canDelete = false;
+                    list.push(fi);
+                }
+                resolve(list);
+            }).catch((error)=>{reject(error)});
+
+        });
+    }
+
+    /**
+     * download if there is a special handling
+     * return true if we handled
+     * @param name
+     */
+    download(name){
+        let fileName=this.nameToBaseName(name)+".json";
+        if (this.storeLocally){
+            let layout=this.temporaryLayouts[name];
+            if (! layout) return;
+            jsdownload(JSON.stringify(layout,null,2),fileName,"application/json");
+            return true;
+        }
+        return false;
     }
 
 }
