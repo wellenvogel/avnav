@@ -59,7 +59,8 @@ class RoutePointsWidget extends React.Component{
                       itemList={route?route.getRoutePoints(index):[]}
                       itemClass={WaypointItem}
                       scrollable={true}
-                      onItemClick={(item,data)=>{if (self.props.onClick) self.props.onClick(item) }}
+                      onItemClick={(item,data)=>{if (self.props.onClick)
+                            self.props.onClick(new routeobjects.RoutePoint(item)) }}
                       listRef={(element)=>{self.listRef=element}}
                 />
         );

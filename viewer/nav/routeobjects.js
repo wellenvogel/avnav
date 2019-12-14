@@ -656,6 +656,11 @@ routeobjects.RoutePoint=function(waypoint){
     this.idx=0;
     this.course=undefined;
     this.distance=undefined;
+    if (waypoint){
+        this.idx=waypoint.idx||0;
+        this.course=waypoint.course;
+        this.distance=waypoint.distance;
+    }
     this.selected=false;
 };
 base.inherits(routeobjects.RoutePoint,navobjects.WayPoint);

@@ -156,7 +156,7 @@ class EditRoutePage extends React.Component{
             {
                 name:'WpEdit',
                 onClick:()=>{
-                    sel.wpTimer.startTimer();
+                    self.wpTimer.startTimer();
                     let currentEditor=getCurrentEditor();
                     startWaypointDialog(currentEditor.getPointAt(),currentEditor.getIndex());
                 }
