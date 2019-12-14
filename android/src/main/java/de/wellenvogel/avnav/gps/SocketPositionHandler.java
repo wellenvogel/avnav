@@ -560,19 +560,21 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
         GpsDataProvider.SatStatus st = handler.getSatStatus();
         Location loc = handler.getLocation();
         int numAis = handler.numAisData();
-        if (loc != null) {
+        if (loc != null && handler.handlesNmea()) {
             String info = "(" + addr + ") valid position, sats: " + st.numSat + " / " + st.numUsed;
             if (numAis > 0) info += ", valid AIS data, " + numAis + " targets";
             item.put("info", info);
             item.put("status", GpsDataProvider.STATUS_NMEA);
         } else {
-            if (!handler.handlesAis() && numAis > 0) {
+            if (handler.handlesAis() && numAis > 0) {
                 item.put("info", "(" + addr + ") valid AIS data, " + numAis + " targets");
                 item.put("status", GpsDataProvider.STATUS_NMEA);
 
             } else {
                 if (st.gpsEnabled) {
-                    item.put("info", "(" + addr + ") connected, sats: " + st.numSat + " available / " + st.numUsed + " used");
+                    String info="(" + addr + ") connected";
+                    if (handler.handlesNmea()) info+=", sats: " + st.numSat + " available / " + st.numUsed + " used";
+                    item.put("info", info);
                     item.put("status", GpsDataProvider.STATUS_STARTED);
                 } else {
                     item.put("info", "(" + addr + ") disconnected");
