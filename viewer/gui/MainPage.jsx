@@ -170,11 +170,11 @@ class MainPage extends React.Component {
         };
         let BottomLine = Dynamic(function (props) {
             //we have the raw nmea in "raw"
-            let nmeaColor=props.valid?"yellow":"red";
-            let aisColor=props.valid?"yellow":"red";
-            let nmeaText=props.valid?"":"server connection lost";
+            let nmeaColor=!props.connectionLost?"yellow":"red";
+            let aisColor=!props.connectionLost?"yellow":"red";
+            let nmeaText=!props.connectionLost?"":"server connection lost";
             let aisText="";
-            if (props.valid) {
+            if (!props.connectionLost) {
                 if (props.raw && props.raw.status && props.raw.status.nmea) {
                     nmeaColor = props.raw.status.nmea.status;
                     nmeaText = props.raw.status.nmea.source + ":" + props.raw.status.nmea.info;
@@ -192,7 +192,7 @@ class MainPage extends React.Component {
                                 <img className='status_image' src={getImgSrc(nmeaColor)}/>
                                 NMEA&nbsp;{nmeaText}
                             </div>
-                            {props.valid ? <div >
+                            {!props.connectionLost ? <div >
                                 <img className='status_image' src={getImgSrc(aisColor)}/>
                                 AIS&nbsp;{aisText}
                             </div> : null
@@ -235,7 +235,8 @@ class MainPage extends React.Component {
                   bottomContent={
                     <BottomLine storeKeys={{
                         raw:keys.nav.gps.raw,
-                        valid: keys.nav.gps.valid
+                        valid: keys.nav.gps.valid,
+                        connectionLost: keys.nav.gps.connectionLost
                         }} />
                     }
                   buttonList={self.buttons}/>

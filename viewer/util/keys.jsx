@@ -76,7 +76,8 @@ let keys={
             courseAverageOn: K,
             depthBelowTransducer: K,
             alarms: K,
-            sequence: K //will be incremented as last operation on each receive
+            sequence: K, //will be incremented as last operation on each receive
+            connectionLost: K
         },
         center:{
             course: K,

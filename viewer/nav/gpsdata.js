@@ -91,8 +91,9 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         course:0,
         speed:0
     };
-    gpsdata.valid=this.handleGpsStatus(status);
+    gpsdata.connectionLost=!this.handleGpsStatus(status);
     if (status) {
+        gpsdata.valid=(data.lat != null && data.lon != null && data.mode != null && data.mode >=1);
         gpsdata.rtime = null;
         if (data.time != null && data.time !== undefined) gpsdata.rtime = new Date(data.time);
         delete data.time;
@@ -113,7 +114,6 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         delete data.windSpeed;
         gpsdata.windReference = data.windReference || 'R';
         delete data.windReference;
-        gpsdata.valid = true;
     }
     if (!gpsdata.valid){
         //clean average data
@@ -126,7 +126,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
     delete data.raw;
     //we write to store if we received valid data
     //or until we consider this as invalid
-    if (status || !gpsdata.valid) {
+    if (status || gpsdata.connectionLost) {
         //store any additonal data we received
         //we will unwind any objects to the leaves
         //TODO: get the keys from the server
@@ -166,13 +166,7 @@ GpsData.prototype.startQuery=function(){
     let timeout=parseInt(globalStore.getData(keys.properties.positionQueryTimeout,1000));
     Requests.getJson("?request=gps",{checkOk:false}).then(
         (data)=>{
-            if ( data.lon != null && data.lat != null &&
-                data.mode != null && data.mode >=1){
-                self.handleGpsResponse(data,true);
-            }
-            else{
-                self.handleGpsResponse(data,false);
-            }
+            self.handleGpsResponse(data,true);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
             },timeout);
@@ -180,7 +174,7 @@ GpsData.prototype.startQuery=function(){
     ).catch(
         (error)=>{
             base.log("query position error");
-            self.handleGpsStatus(false);
+            self.handleGpsResponse({},false);
             self.timer=window.setTimeout(function(){
                 self.startQuery();
             },timeout);
@@ -250,7 +244,8 @@ GpsData.prototype.getStoreKeys=function(){
         depthBelowTransducer: bk.depthBelowTransducer,
         position:bk.position,
         alarms:bk.alarms,
-        sequence:bk.sequence
+        sequence:bk.sequence,
+        connectionLost: bk.connectionLost
     }
 };
 GpsData.getStoreKeys=GpsData.prototype.getStoreKeys;
