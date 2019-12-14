@@ -72,7 +72,13 @@ public class RouteHandler implements INavRequestHandler {
 
     @Override
     public Collection<? extends IJsonObect> handleList() throws Exception {
-        return getRouteInfo().values();
+        ArrayList<RouteInfo> rt=new ArrayList<>();
+        for (RouteInfo i:getRouteInfo().values()){
+            RouteInfo iv=i.clone();
+            if (isCurrentRoute(iv.name)) iv.canDelete=false;
+            rt.add(iv);
+        }
+        return rt;
     }
 
     @Override
@@ -114,6 +120,7 @@ public class RouteHandler implements INavRequestHandler {
         long mtime;
         public int numpoints;
         public double length; //in NM
+        public boolean canDelete=true;
 
         public String toString(){
             StringBuilder sb=new StringBuilder();
@@ -130,9 +137,20 @@ public class RouteHandler implements INavRequestHandler {
             e.put("time",mtime/1000);
             e.put("numpoints",numpoints);
             e.put("length",length);
-            e.put("canDelete",true);
+            e.put("canDelete",canDelete);
             return e;
         }
+
+        public RouteInfo clone()  {
+            RouteInfo rt=new RouteInfo();
+            rt.name=name;
+            rt.mtime=mtime;
+            rt.numpoints=numpoints;
+            rt.length=length;
+            rt.canDelete=canDelete;
+            return rt;
+        }
+
 
     }
 
@@ -595,6 +613,10 @@ public class RouteHandler implements INavRequestHandler {
     }
 
     public boolean deleteRoute(String name){
+        if (isCurrentRoute(name)){
+            AvnLog.e("unable to delete current route "+name);
+            return false;
+        }
         File routeFile=new File(routedir,name+".gpx");
         if (! routeFile.isFile()) {
             deleteRouteInfo(name);
@@ -604,6 +626,15 @@ public class RouteHandler implements INavRequestHandler {
         boolean rt=routeFile.delete();
         deleteRouteInfo(name);
         return rt;
+    }
+
+    boolean isCurrentRoute(String name){
+        if (currentLeg == null) return false;
+        if (!currentLeg.active) return false;
+        if (currentLeg.getRoute() == null) return false;
+        if (name == null) return false;
+        if (currentLeg.getRoute().name == null) return false;
+        return currentLeg.getRoute().name.equals(name);
     }
 
     public void setLeg(String data) throws Exception{

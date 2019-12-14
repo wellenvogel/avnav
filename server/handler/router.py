@@ -80,6 +80,7 @@ class AVNRouteInfo():
     self.length=0
     self.numpoints=0
     self.time=AVNUtil.utcnow();
+    self.canDelete=True
   @classmethod
   def fromRoute(cls,route,time):
     rt=AVNRouteInfo(route.name)
@@ -814,7 +815,10 @@ class AVNRouter(AVNWorker):
     rt = {'status': 'OK'}
     infos = []
     for ri in self.routeInfos:
-      infos.append(self.routeInfos[ri].__dict__)
+      plainInfo=self.routeInfos[ri].__dict__
+      if plainInfo.get('name') == self.activeRouteName:
+        plainInfo['canDelete']=False
+      infos.append(plainInfo)
     rt['items'] = infos
     return rt
 

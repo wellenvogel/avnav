@@ -455,6 +455,7 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
         okCallback([],opt_callbackData);
         return;
     }
+    let canDelete=globalStore.getData(keys.properties.connectedMode,false);
     return this._remoteRouteOperation("list",{
         okcallback:function(data,param){
             if ((data.status && data.status!='OK') || (!data.items)) {
@@ -470,7 +471,7 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
                 assign(ri, data.items[i]);
                 ri.server = true;
                 ri.time=ri.time*1e3; //we receive TS in s
-                ri.canDelete=canUpload;
+                if (ri.canDelete !== false) ri.canDelete=canDelete;
                 if (self.isActiveRoute(ri.name)) ri.active=true;
                 items.push(ri);
             }
