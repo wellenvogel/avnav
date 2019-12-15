@@ -85,52 +85,35 @@ class AVNSenseHatReader(AVNWorker):
   def getName(self):
     return self.param['name']
 
-  # make some checks when we have to start
-  # we cannot do this on init as we potentiall have to find the feeder...
-  def start(self):
-    feedername = self.getStringParam('feederName')
-    feeder = self.findFeeder(feedername)
-    if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)", self.getName(), feedername or "")
-    self.feederWrite = feeder.addNMEA
-    AVNWorker.start(self)
-
-  def writeData(self, data):
-    self.feederWrite(data,source=self.getName())
-
   # thread run method - just try forever
   def run(self):
     self.setName("[%s]%s" % (AVNLog.getThreadId(), self.getName()))
     self.setInfo('main', "reading sense", AVNWorker.Status.NMEA)
     sense = SenseHat()
+    source=self.getName()
     while True:
       try:
         if self.getBoolParam('writeMda'):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
           mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( sense.pressure / 1000.)
-          mda += "*" + NMEAParser.nmeaChecksum(mda) + "\r\n"
           AVNLog.debug("SenseHat:MDA %s", mda)
-          self.writeData(mda)
+          self.writeData(mda,source,addCheckSum=True)
           """$AVMTA,19.50,C*2B"""
           mta = 'AVMTA,%.2f,C' % (sense.temp)
-          mta += "*" + NMEAParser.nmeaChecksum(mta) + "\r\n"
           AVNLog.debug("SenseHat:MTA %s", mta)
-          self.writeData(mta)
+          self.writeData(mta,source,addCheckSum=True)
         if self.getBoolParam('writeXdr'):
           xdr = '$AVXDR,P,%.5f,B,Barometer' % (sense.pressure / 1000.)
-          xdr += "*" + NMEAParser.nmeaChecksum(xdr) + "\r\n"
           AVNLog.debug("SenseHat:XDR %s", xdr)
-          self.writeData(xdr)
+          self.writeData(xdr,source,addCheckSum=True)
 
           xdr = '$AVXDR,C,%.2f,C,TempAir' % (sense.temp)
-          xdr += "*" + NMEAParser.nmeaChecksum(xdr) + "\r\n"
           AVNLog.debug("SenseHat:XDR %s", xdr)
-          self.writeData(xdr)
+          self.writeData(xdr,source,addCheckSum=True)
 
           xdr = '$AVXDR,H,%.2f,P,Humidity' % (sense.humidity)
-          xdr += "*" + NMEAParser.nmeaChecksum(xdr) + "\r\n"
           AVNLog.debug("SenseHat:XDR %s", xdr)
-          self.writeData(xdr)
+          self.writeData(xdr,source,addCheckSum=True)
 
       except:
         AVNLog.info("exception while reading data from SenseHat %s", traceback.format_exc())

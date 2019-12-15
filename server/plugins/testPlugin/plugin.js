@@ -81,7 +81,8 @@ var widget={
 };
 
 /**
- * a widget, that simply allows for some own formatting of the displayed data
+ * a widget, that does not create any HTML by its own but  allows for some own formatting of the
+ * displayed data of the default widget
  * basically you can set the caption, the unit and the formatter for the data
  * additionally you can style your widget in css
  */

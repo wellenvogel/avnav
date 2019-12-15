@@ -77,18 +77,9 @@ class AVNSocketReader(AVNWorker,SocketReader):
   
   def getName(self):
     return self.param['name']
-  #make some checks when we have to start
-  #we cannot do this on init as we potentiall have tp find the feeder...
-  def start(self):
-    feedername=self.getStringParam('feederName')
-    feeder=self.findFeeder(feedername)
-    if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
-    self.feederWrite=feeder.addNMEA
-    AVNWorker.start(self)
-    
+
   def writeData(self,data,source):
-    self.feederWrite(data,source)
+    AVNWorker.writeData(self,data,source)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000) 
      

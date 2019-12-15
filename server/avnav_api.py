@@ -53,12 +53,12 @@ class AVNApi:
     """
     raise NotImplemented()
 
-  def fetchFromQueue(self, sequence, number=10):
+  def fetchFromQueue(self, sequence, number=10,includeSource=False,waitTime=0.5,filter=None):
     """
     fetch NMEA records from the queue
     initially you should start at sequence 0
     the function will return the last sequence
-    caution: if no data is available, the function will immediately return with no data
+    caution: if no data is available, the function will wait for waitTime seconds and return an empty list
     the normal flow is:
         seq=0
         while True:
@@ -66,32 +66,38 @@ class AVNApi:
           if len(data) > 0:
             for line in data:
               handle(line)
-          else:
-            time.sleep(0.1)
     @param sequence: the sequence from which you would like to read the data
     @param number: the max number of records you would like to get
+    @param includeSource: if set to True, the data in the return will be a list of objects each having a data field (the nmea) and a source field
+                          otherwise data in the return is a simple list of NMEA records
+                          if you are writing a decoder, you should set this to true and hand over the source to addData
+    @param filter: a filter string like used in avnav_server.xml - example: "$RMC","$","^!", can also be a list of such strings
+                   only NMEA sentences matching this filter will be returned
     @return: (sequence,data) - sequence being the last sequence you have, data being a list of nmea data
     """
     raise NotImplemented()
 
-  def addNMEA(self, nmea):
+  def addNMEA(self, nmea, addCheckSum=False):
     """
     add NMEA data to the queue
     caution: you should never add a new NMEA record for each record you received by fetchFromQueue
              as the would quickly fill up the queue
     @param nmea: the completely formatted NMEA record
     @type  nmea: str
+    @param addCheckSum: if true, add the checksum to the provided NMEA data
+    @type  addCheckSum: bool
     @return: None
     """
     raise NotImplemented()
 
-  def addData(self, key, value):
+  def addData(self, key, value, source=None):
     """
     add a data item (potentially from a decoded NMEA record) to the internal data store
     the data added here later on will be fetched from the GUI
-    @param key: the key, it must be one of the keys provided as return from initialize function - see example
+    @param key: the key, it must be one of the keys provided as return from the initialize function - see example
     @type  key: str
     @param value: the value to be stored
+    @param source: if set, use this as the source for the data value when displayed, otherwise the plugin name is used
     @return: True on success, will raise an Exception if the key is not allowed
     """
   def getDataByPrefix(self,prefix):

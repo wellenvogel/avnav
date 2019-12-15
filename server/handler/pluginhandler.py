@@ -64,11 +64,14 @@ class ApiImpl(AVNApi):
   def debug(self, str, *args):
     AVNLog.debug("(%s):%s" % (self.prefix,str % args))
 
-  def fetchFromQueue(self, sequence, number=10):
-    return self.queue.fetchFromHistory(sequence,number)
+  def fetchFromQueue(self, sequence, number=10,includeSource=False,waitTime=0.5,filter=None):
+    if filter is not None:
+      if not (isinstance(filter,list)):
+        filter=[filter]
+    return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,filter=filter)
 
-  def addNMEA(self, nmea):
-    return self.queue.addNMEA(self, nmea,source=self.prefix)
+  def addNMEA(self, nmea, addCheckSum=False):
+    return self.queue.addNMEA(self, nmea,source=self.prefix,addCheckSum=addCheckSum)
 
   def addKey(self,data):
     key=data.get('path')
@@ -77,7 +80,9 @@ class ApiImpl(AVNApi):
     AVNLog.info("%s: register key %s"%(self.prefix,key))
     self.store.registerKey(key,data,"Plugin: %s"%self.prefix)
     self.patterns.append(data)
-  def addData(self,path,value):
+  def addData(self,path,value,source=None):
+    if source is None:
+      source=self.prefix
     if self.patterns is not None:
       matches=False
       for p in self.patterns:
@@ -87,7 +92,8 @@ class ApiImpl(AVNApi):
       if not matches:
         AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
         return False
-    self.store.setValue(path,value,self.prefix)
+    self.store.setValue(path,value,source)
+    return True
   def getDataByPrefix(self, prefix):
     return self.store.getDataByPrefix(prefix)
 
@@ -246,15 +252,13 @@ class AVNPluginHandler(AVNWorker):
           if description is None or not isinstance(description,dict):
             raise Exception("invalid return from pluginInfo")
           mData = description.get('data')
-          if mData is None:
-            raise Exception("no 'data' field in pluginInfo result")
-
-          for entry in mData:
-            path = entry.get('path')
-            if path is None:
-              raise Exception("missing path in entry %s" % (entry))
-            else:
-              api.addKey(entry)
+          if mData is not None:
+            for entry in mData:
+              path = entry.get('path')
+              if path is None:
+                raise Exception("missing path in entry %s" % (entry))
+              else:
+                api.addKey(entry)
           pluginInstance = obj(api)
           AVNLog.info("created plugin %s",modulename)
           self.createdPlugins[modulename]=pluginInstance

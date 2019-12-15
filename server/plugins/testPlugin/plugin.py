@@ -12,24 +12,18 @@ class Plugin:
     """
     the description for the module
     @return: a dict with the content described below
-             mandatory parts:
-               * description
-               * name
-               * list of keys to be stored
-                 * path - the key - see AVNApi.addData
+            parts:
+               * description (mandatory)
+               * data: list of keys to be stored (optional)
+                 * path - the key - see AVNApi.addData, all pathes starting with "gps." will be sent to the GUI
                  * description
-                 * unit to be displayed
-                 * maxvalue - a value being the max number /string to size GUI elements
     """
     return {
       'description': 'a test plugins',
-      'name': cls.__name__,
       'data': [
         {
           'path': cls.PATH,
           'description': 'output of testdecoder',
-          'unit': '',
-          'maxvalue': '0000'
         }
       ]
     }
@@ -51,6 +45,8 @@ class Plugin:
     the run method
     this will be called after successfully instantiating an instance
     this method will be called in a separate Thread
+    The example simply counst the number of NMEA records that are flowing through avnav
+    and writes them to the store every 10 records
     @return:
     """
     seq=0
@@ -65,8 +61,5 @@ class Plugin:
           if count%10 == 0:
             self.api.log("store new value %d",count)
             self.api.addData(self.PATH,count)
-            self.api.addData("wrong.path",count)
-          pass
-      else:
-        time.sleep(0.1)
+            self.api.addData("wrong.path",count) #this will be ignored as we did not announce our path
 

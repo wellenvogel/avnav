@@ -273,7 +273,7 @@ class AVNStore():
   def getLastSource(self,key):
     rt=self.__list.get(key)
     if rt is None:
-      rt=""
+      return ""
     return rt.source
   def getLastAisSource(self):
     return self.__lastAisSource

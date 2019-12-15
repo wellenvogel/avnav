@@ -102,6 +102,7 @@ class AVNWorker(threading.Thread):
     self.info={'main':"started"}
     self.status={'main':self.Status.STARTED}
     self.type=self.Type.DEFAULT
+    self.feeder=None
   def getStatusProperties(self):
     return {}
   def getInfo(self):
@@ -242,7 +243,14 @@ class AVNWorker(threading.Thread):
   
   def startInstance(self,navdata):
     self.navdata=navdata
+    self.feeder = self.findFeeder(self.getStringParam('feederName'))
     self.start()
+
+  def writeData(self,data,source=None,addCheckSum=False):
+    if self.feeder is None:
+      raise Exception("no feeder in %s"%(self.getName()))
+    self.feeder.addNMEA(data,source,addCheckSum)
+
 
   def getHandledCommands(self):
     """get the API commands that will be handled by this instance

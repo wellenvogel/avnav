@@ -62,19 +62,10 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
     AVNWorker.__init__(self, cfgparam)
     self.maplock=threading.Lock()
     self.addrmap={}
-    self.writeData=None
     
   def getName(self):
     return "AVNBlueToothReader"
-  
-  #make some checks when we have to start
-  #we cannot do this on init as we potentiall have tp find the feeder...
-  def start(self):
-    feeder=self.findFeeder(self.getStringParam('feederName'))
-    if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam('feederName'))
-    self.writeData=feeder.addNMEA
-    AVNWorker.start(self) 
+
    
   #return True if added
   def checkAndAddAddr(self,addr):

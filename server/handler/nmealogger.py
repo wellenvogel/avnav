@@ -167,8 +167,6 @@ class AVNNmeaLogger(AVNWorker):
                   continue
               last[key]=now
               self.writeLine(f,line)
-        else:
-          time.sleep(0.1)
       except Exception as e:
         AVNLog.error("exception in nmea logger: %s",traceback.format_exc());
         time.sleep(1)

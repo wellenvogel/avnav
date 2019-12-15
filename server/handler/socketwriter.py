@@ -133,9 +133,6 @@ class AVNSocketWriter(AVNWorker,SocketReader):
             if NMEAParser.checkFilter(line, filter):
               socket.sendall(line)
               hasSend=True
-        else:
-          time.sleep(0.1)
-        pass
         if not hasSend:
           #just throw an exception if the reader potentially closed the socket
           socket.getpeername()

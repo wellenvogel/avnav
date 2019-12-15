@@ -190,8 +190,6 @@ class SerialWriter(SerialReader):
             for line in data:
               if NMEAParser.checkFilter(line, filter):
                 self.writeLine(self.device,line)
-          else:
-            time.sleep(0.1)
         except Exception as e:
           AVNLog.debug("Exception %s in serial write, close and reopen %s",traceback.format_exc(),portname)
           try:
@@ -217,6 +215,7 @@ class SerialWriter(SerialReader):
     if filterstr != "":
       filter=filterstr.split(',')
     hasNmea=False
+    source=self.getName()
     while True and not self.doStop:
       try:
         if self.device is not None:
@@ -240,7 +239,7 @@ class SerialWriter(SerialReader):
             if not hasNmea:
               self.setInfoWithKey("reader","receiving data",AVNWorker.Status.NMEA)
             if not self.writeData is None:
-              self.writeData(data)
+              self.writeData(data,source)
             else:
               AVNLog.debug("unable to write data")
         else:
@@ -265,13 +264,11 @@ class SerialWriter(SerialReader):
     if not self.infoHandler is None:
       self.infoHandler.deleteInfo(self.getName()+"-"+key)
 
-#a Worker to directly read from a serial line using pyserial
+#a Worker to directly write to a serial line using pyserial
 #on windows use an int for the port - e.g. use 4 for COM5
 #on linux use the device name for the port
 #if no data is received within timeout *10 the port is closed and reopened
 #this gives the chance to handle dynamically assigned ports with no issues
-#if useFeeder is set, pipe the received data through our feeder
-#this gives the chance to output them at NMEA output interfaces
 class AVNSerialWriter(AVNWorker):
   
   @classmethod
@@ -284,9 +281,6 @@ class AVNSerialWriter(AVNWorker):
       return None
     cfg=SerialWriter.getConfigParam()
     rt=cfg.copy()
-    rt.update({
-      'useFeeder':'true'
-    })
     return rt
   @classmethod
   def createInstance(cls, cfgparam):
@@ -300,22 +294,11 @@ class AVNSerialWriter(AVNWorker):
     for p in ('port','name','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial writer")
-    self.writeData=None
     AVNWorker.__init__(self, param)
     
   
   def getName(self):
     return "SerialWriter "+self.param['name']
-  #make some checks when we have to start
-  #we cannot do this on init as we potentiall have tp find the feeder...
-  def start(self):
-    if self.getBoolParam('useFeeder'):
-      feedername=self.getStringParam('feederName')
-      feeder=self.findFeeder(feedername)
-      if feeder is None:
-        raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
-      self.writeData=feeder.addNMEA
-    AVNWorker.start(self) 
      
   #thread run method - just try forever  
   def run(self):

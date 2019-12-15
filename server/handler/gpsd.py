@@ -356,8 +356,8 @@ class AVNGpsdFeeder(AVNGpsd):
     return {'listenerPort':None, #our port that GPSD connects to
             'port':None,         #the GPSD port
             'maxList': 300,      #len of the input list
-            'useGpsd': 'true',   #if set to false, we only have very limited support, listenerPort and port are ignored
-            'feederSleep': 0.1,  #time in s the feeder will sleep if there is no data
+            'useGpsd': 'false',   #if set to false, we use our internal decoders
+            'feederSleep': 0.5,  #time in s the feeder will sleep if there is no data
             'gpsdcommand':'/usr/sbin/gpsd -b -n -N',
             'timeout': 40,       #??? do we still need this?
             'name': ''           #if there should be more then one reader we must set the name
@@ -375,7 +375,7 @@ class AVNGpsdFeeder(AVNGpsd):
   def __init__(self,cfgparam):
     AVNGpsd.__init__(self, cfgparam)
     self.type=AVNWorker.Type.FEEDER
-    self.listlock=threading.Lock()
+    self.listlock=threading.Condition()
     self.list=[]
     self.history=[]
     self.sequence=0
@@ -393,13 +393,23 @@ class AVNGpsdFeeder(AVNGpsd):
   def getName(self):
     return self.name
   
-  def addNMEA(self, entry,source=None):
+  def addNMEA(self, entry,source=None,addCheckSum=False):
+    """
+    add an NMEA record to our internal queue
+    @param entry: the record
+    @param source: the source where the record comes from
+    @param addCheckSum: add the NMEA checksum
+    @return:
+    """
     rt=False
     ll=0
     hl=0
     if len(entry) < 5:
       AVNLog.debug("addNMEA: ignoring short data %s",entry)
       return False
+    if addCheckSum:
+      entry= entry.replace("\r","").replace("\n","")
+      entry+= "*" + NMEAParser.nmeaChecksum(entry) + "\r\n"
     self.listlock.acquire()
     self.sequence+=1
     if len(self.list) >=self.maxlist:
@@ -411,18 +421,29 @@ class AVNGpsdFeeder(AVNGpsd):
     self.history.append(NmeaEntry(entry,source))
     hl=len(self.history)
     rt=True
+    self.listlock.notify_all();
     self.listlock.release()
     AVNLog.debug("addNMEA listlen=%d history=%d data=%s",ll,hl,entry)
     return rt
   
   #fetch an entry from the feeder list
-  def popListEntry(self,includeSource=False):
+  def popListEntry(self,includeSource=False,waitTime=0.1):
     rt=None
+    stop=time.time()+waitTime
     self.listlock.acquire()
-    if len(self.list)>0:
-      rt=self.list.pop(0)
+    try:
+      while rt is None:
+        if len(self.list)>0:
+          rt=self.list.pop(0)
+        else:
+          wait=stop-time.time()
+          if wait <= 0:
+            break
+          self.listlock.wait(wait)
+    except:
+      pass
     self.listlock.release()
-    if includeSource:
+    if includeSource or rt is None:
       return rt
     else:
       return rt.data
@@ -430,31 +451,48 @@ class AVNGpsdFeeder(AVNGpsd):
   #only return entries with higher sequence
   #return a tuple (lastSequence,[listOfEntries])
   #when sequence == None or 0 - just fetch the topmost entries (maxEntries)
-  def fetchFromHistory(self,sequence,maxEntries=10,includeSource=False):
+  def fetchFromHistory(self,sequence,maxEntries=10,includeSource=False,waitTime=0.1,filter=None):
     seq=0
     list=[]
+    if waitTime <=0:
+      waitTime=0.1
     if maxEntries< 0:
       maxEntries=0
     if sequence is None:
       sequence=0
+    stop = time.time() + waitTime
     self.listlock.acquire()
-    seq=self.sequence
-    if sequence==0:
-      sequence=seq-maxEntries
-    if sequence < 0:
-      sequence=0
-    if seq > sequence:
-      if (seq-sequence) > maxEntries:
-        seq=sequence+maxEntries
-      start=seq-sequence
-      list=self.history[-start:]
+    try:
+      while len(list) < 1:
+        seq=self.sequence
+        if sequence==0:
+          sequence=seq-maxEntries
+        if sequence < 0:
+          sequence=0
+        if seq > sequence:
+          if (seq-sequence) > maxEntries:
+            seq=sequence+maxEntries
+          start=seq-sequence
+          list=self.history[-start:]
+        if len(list) < 1:
+          wait = stop - time.time()
+          if wait <= 0:
+            break
+          self.listlock.wait(wait)
+    except:
+      pass
     self.listlock.release()
-    if includeSource:
+    if len(list) < 1:
       return (seq,list)
+    if includeSource:
+      if filter is None:
+        return (seq,list)
+      return (seq,filter(lambda el: NMEAParser.checkFilter(el.data,filter),list))
     else:
       rt=[]
       for le in list:
-        rt.append(le.data)
+        if filter is None or NMEAParser.checkFilter(le.data,filter):
+          rt.append(le.data)
       return (seq,rt)
   
     
@@ -471,6 +509,7 @@ class AVNGpsdFeeder(AVNGpsd):
         self.setInfo(infoName, "listening at port %d"%(lport), AVNWorker.Status.STARTED)
         listener.listen(1)
         AVNLog.info("feeder listening at port address %s",unicode(listener.getsockname()))
+        waitTime=self.getFloatParam('feederSleep')
         while True:
           self.gpsdsocket=None
           self.gpsdsocket,addr=listener.accept()
@@ -478,11 +517,9 @@ class AVNGpsdFeeder(AVNGpsd):
           AVNLog.info("feeder - gpsd connected from %s",unicode(addr))
           try:
             while True:
-              data=self.popListEntry()
+              data=self.popListEntry(waitTime=waitTime)
               if not data is None:
                 self.gpsdsocket.sendall(data)
-              else:
-                time.sleep(self.getFloatParam('feederSleep'))
           except Exception as e:
             AVNLog.warn("feeder exception - retrying %s",traceback.format_exc())
       except Exception as e:
@@ -512,16 +549,15 @@ class AVNGpsdFeeder(AVNGpsd):
     nmeaParser=NMEAParser(self.navdata)
     self.setInfo(infoName, "running", AVNWorker.Status.RUNNING)
     hasNmea=False
+    waitTime=self.getFloatParam('feederSleep')
     while True:
       try:
         while True:
-          data=self.popListEntry(True)
+          data=self.popListEntry(True,waitTime=waitTime)
           if not data is None:
             if nmeaParser.parseData(data.data,source=data.source):
               if not hasNmea:
                 self.setInfo(infoName,"feeding NMEA",AVNWorker.Status.NMEA)
-          else:
-            time.sleep(self.getFloatParam('feederSleep'))
       except Exception as e:
         AVNLog.warn("feeder exception - retrying %s",traceback.format_exc())
     
