@@ -643,12 +643,12 @@ class AVNRouter(AVNWorker):
               XTE,LR,self.WpNr,self.WpNr+1,wplat[0],wplat[1],wplon[0],wplon[1],destDis,destBearing,kn,arrival)
             nmeaData = "$" + nmeaData + "*" + NMEAParser.nmeaChecksum(nmeaData) + "\r\n"
             AVNLog.debug("adding NMEA %s",nmeaData)
-            self.feeder.addNMEA(nmeaData)
+            self.feeder.addNMEA(nmeaData,source="router")
           if computeAPB:
             nmeaData = "GPAPB,A,A,%.2f,%s,N,%s,,%.1f,M,%s,%.1f,M,%.1f,M" % (XTE,LR,arrival,brg,self.WpNr + 1,destBearing,destBearing)
             nmeaData = "$" + nmeaData + "*" + NMEAParser.nmeaChecksum(nmeaData) + "\r\n"
             AVNLog.debug("adding NMEA %s", nmeaData, )
-            self.feeder.addNMEA(nmeaData)
+            self.feeder.addNMEA(nmeaData,source="router")
     return hasRMB
   ''' anchor watch
       will only be called if self.currentLeg.anchorDistance is not none

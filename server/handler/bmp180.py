@@ -193,7 +193,7 @@ class AVNBMP180Reader(AVNWorker):
     AVNWorker.start(self)
 
   def writeData(self, data):
-    self.feederWrite(data)
+    self.feederWrite(data,source=self.getName())
 
   # thread run method - just try forever
   def run(self):

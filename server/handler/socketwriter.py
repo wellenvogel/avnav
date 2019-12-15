@@ -159,14 +159,14 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     self.deleteInfo(infoName)
 
   #if we have writing enabled...
-  def writeData(self,data):
+  def writeData(self,data,source=None):
     doFeed=True
     if self.readFilter is not None:
       if not NMEAParser.checkFilter(data,self.readFilter):
         doFeed=False
         AVNLog.debug("ingoring line %s due to filter",data)
     if doFeed:
-      self.feederWrite(data)
+      self.feederWrite(data,source)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
         

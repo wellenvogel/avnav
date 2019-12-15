@@ -64,26 +64,23 @@ class SerialWriter(SerialReader):
   #param - the config dict
   #navdata - a nav data object (can be none if this reader does not directly write)
   #a write data method used to write a received line
-  def __init__(self,param,navdata,writeData,infoHandler):
+  def __init__(self,param,writeData,infoHandler):
     for p in ('port','name','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial writer")
     self.param=param
     self.infoHandler=infoHandler
     self.doStop=False
-    self.navdata=navdata
     self.writeData=writeData
-    if self.navdata is None and self.writeData is None:
-      raise Exception("either navdata or writeData has to be set")
+    if self.writeData is None:
+      raise Exception("writeData has to be set")
     feeder=AVNWorker.findFeeder(self.param.get('feederName'))
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.param.get('feederName') or "")
     self.feeder=feeder
-    self.maplock=threading.Lock()
     self.addrmap={}
     #the serial device
     self.device=None
-    self.nmeaParser=NMEAParser(navdata)
     self.buffer=None
 
   def getName(self):
@@ -245,7 +242,7 @@ class SerialWriter(SerialReader):
             if not self.writeData is None:
               self.writeData(data)
             else:
-              self.nmeaParser.parseData(data,source=self.getName())
+              AVNLog.debug("unable to write data")
         else:
           time.sleep(0.5)
       except:
@@ -323,7 +320,7 @@ class AVNSerialWriter(AVNWorker):
   #thread run method - just try forever  
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    writer=SerialWriter(self.param,self.navdata if self.writeData is None else None, self.writeData,self)
+    writer=SerialWriter(self.param,self.writeData,self)
     writer.run()
 avnav_handlerList.registerHandler(AVNSerialWriter)
 

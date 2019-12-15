@@ -68,7 +68,7 @@ class ApiImpl(AVNApi):
     return self.queue.fetchFromHistory(sequence,number)
 
   def addNMEA(self, nmea):
-    return self.queue.addNMEA(self, nmea)
+    return self.queue.addNMEA(self, nmea,source=self.prefix)
 
   def addKey(self,data):
     key=data.get('path')

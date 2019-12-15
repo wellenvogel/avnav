@@ -85,8 +85,8 @@ class AVNUdpReader(AVNWorker, SocketReader):
     self.feederWrite=feeder.addNMEA
     AVNWorker.start(self)
     
-  def writeData(self,data):
-    self.feederWrite(data)
+  def writeData(self,data,source=None):
+    self.feederWrite(data,source)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000) 
      

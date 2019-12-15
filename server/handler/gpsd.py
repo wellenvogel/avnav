@@ -336,7 +336,10 @@ class GpsdReader(threading.Thread):
 
         
     
-    
+class NmeaEntry:
+  def __init__(self,data,source=None):
+    self.data=data
+    self.source=source
 
 
 #a Worker for feeding data trough gpsd (or directly to the navdata)
@@ -390,7 +393,7 @@ class AVNGpsdFeeder(AVNGpsd):
   def getName(self):
     return self.name
   
-  def addNMEA(self, entry):
+  def addNMEA(self, entry,source=None):
     rt=False
     ll=0
     hl=0
@@ -403,9 +406,9 @@ class AVNGpsdFeeder(AVNGpsd):
       self.list.pop(0) #TODO: priorities?
     if len(self.history) >= self.maxlist:
       self.history.pop(0)
-    self.list.append(entry)
+    self.list.append(NmeaEntry(entry,source))
     ll=len(self.list)
-    self.history.append(entry)
+    self.history.append(NmeaEntry(entry,source))
     hl=len(self.history)
     rt=True
     self.listlock.release()
@@ -413,18 +416,21 @@ class AVNGpsdFeeder(AVNGpsd):
     return rt
   
   #fetch an entry from the feeder list
-  def popListEntry(self):
+  def popListEntry(self,includeSource=False):
     rt=None
     self.listlock.acquire()
     if len(self.list)>0:
       rt=self.list.pop(0)
     self.listlock.release()
-    return rt
+    if includeSource:
+      return rt
+    else:
+      return rt.data
   #fetch entries from the history
   #only return entries with higher sequence
   #return a tuple (lastSequence,[listOfEntries])
   #when sequence == None or 0 - just fetch the topmost entries (maxEntries)
-  def fetchFromHistory(self,sequence,maxEntries=10):
+  def fetchFromHistory(self,sequence,maxEntries=10,includeSource=False):
     seq=0
     list=[]
     if maxEntries< 0:
@@ -443,7 +449,13 @@ class AVNGpsdFeeder(AVNGpsd):
       start=seq-sequence
       list=self.history[-start:]
     self.listlock.release()
-    return (seq,list)
+    if includeSource:
+      return (seq,list)
+    else:
+      rt=[]
+      for le in list:
+        rt.append(le.data)
+      return (seq,rt)
   
     
   #a thread to feed the gpsd socket
@@ -503,9 +515,9 @@ class AVNGpsdFeeder(AVNGpsd):
     while True:
       try:
         while True:
-          data=self.popListEntry()
+          data=self.popListEntry(True)
           if not data is None:
-            if nmeaParser.parseData(data,source=infoName):
+            if nmeaParser.parseData(data.data,source=data.source):
               if not hasNmea:
                 self.setInfo(infoName,"feeding NMEA",AVNWorker.Status.NMEA)
           else:

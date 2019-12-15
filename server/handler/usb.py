@@ -211,12 +211,12 @@ class AVNUsbSerialReader(AVNWorker):
         if param.get('type') is not None:
           handlertype=param.get('type')
         if handlertype == 'writer' or handlertype == "combined":
-          handler=SerialWriter(param,None,self.writeData,self)
+          handler=SerialWriter(param,self.writeData,self)
           if handlertype == "combined":
             handler.param["combined"]=True
         else:
           if handlertype == 'reader':
-            handler=SerialReader(param, None, self.writeData, self)
+            handler=SerialReader(param, self.writeData, self)
           else:
             AVNLog.info("ignore device %s : type %s",usbid,handlertype)
             handler=DummyHandler()

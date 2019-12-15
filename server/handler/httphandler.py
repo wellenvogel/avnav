@@ -345,7 +345,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           status="green"
         else:
           status="yellow"
-    src=self.server.navdata.getLastSource(AVNStore.BASE_KEY_GPS+".lat") #we just want the last sourec of poistion
+    src=self.server.navdata.getLastSource(AVNStore.BASE_KEY_GPS+".lat") #we just want the last source of position
     #TODO: add info from sky
     sky=self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_SKY)
     visible=set()

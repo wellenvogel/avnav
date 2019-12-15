@@ -51,6 +51,7 @@ class SocketReader():
     self.setInfo(infoName, "receiving %s"%(info,), AVNWorker.Status.RUNNING)
     buffer=""
     hasNMEA=False
+    sourceName=self.getName()+"-"+info
     try:
       while True:
         data = sock.recv(1024)
@@ -63,7 +64,7 @@ class SocketReader():
           #last one ends with nl
           for l in lines:
             if pattern.match(l):
-              self.writeData(l)
+              self.writeData(l,source=sourceName)
               if not hasNMEA:
                 self.setInfo(infoName, "NMEA %s"%(info,), AVNWorker.Status.NMEA)
                 hasNMEA=True
@@ -73,7 +74,7 @@ class SocketReader():
         else:
           for i in range(len(lines)-1):
             if pattern.match(lines[i]):
-              self.writeData(lines[i])
+              self.writeData(lines[i],source=sourceName)
               if not hasNMEA:
                 self.setInfo(infoName, "receiving", AVNWorker.Status.NMEA)
                 hasNMEA=True

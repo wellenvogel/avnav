@@ -73,17 +73,15 @@ class SerialReader():
   #param - the config dict
   #navdata - a nav data object (can be none if this reader doesn not directly write)
   #a write data method used to write a received line
-  def __init__(self,param,navdata,writeData,infoHandler):
+  def __init__(self,param,writeData,infoHandler):
     for p in ('port','name','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial reader")
     self.param=param
-    self.navdata=navdata
-    self.nmeaParser=NMEAParser(navdata)
     self.writeData=writeData
     self.infoHandler=infoHandler
-    if self.navdata is None and self.writeData is None:
-      raise Exception("either navdata or writeData has to be set")
+    if self.writeData is None:
+      raise Exception("writeData has to be set")
     self.startpattern=AVNUtil.getNMEACheck()
     self.doStop=False 
     self.setInfo("created",AVNWorker.Status.INACTIVE) 
@@ -314,9 +312,9 @@ class SerialReader():
             self.setInfo("receiving",AVNWorker.Status.NMEA)
             hasNMEA=True
             if not self.writeData is None:
-              self.writeData(data)
+              self.writeData(data,source=self.getName())
             else:
-              self.nmeaParser.parseData(data,source=self.getName())
+              AVNLog.debug("unable to write data")
 
         if (time.time() - lastTime) > porttimeout:
           self.setInfo("timeout",AVNWorker.Status.ERROR)
@@ -396,7 +394,7 @@ class AVNSerialReader(AVNWorker):
   #thread run method - just try forever  
   def run(self):
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    reader=SerialReader(self.param, self.navdata if self.writeData is None else None, self.writeData,self) 
+    reader=SerialReader(self.param, self.writeData,self)
     reader.run()
 avnav_handlerList.registerHandler(AVNSerialReader)
 
