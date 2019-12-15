@@ -37,16 +37,8 @@ from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
-import StringIO
 
-JSPREFIX="""
-    try{
-      (function() {"""
-JSSUFFIX="""
-  })();
-  }catch (e){
-    avnav.api.loaderror("Exception when loading %s: "+e);
-  }"""
+
 
 class ApiImpl(AVNApi):
   def __init__(self,parent,store,queue,prefix):
@@ -111,6 +103,11 @@ class ApiImpl(AVNApi):
     if rt is None:
       return default
     return rt
+
+  def setStatus(self,value,info):
+    if not value in AVNWorker.Status:
+      value=AVNWorker.Status.ERROR
+    self.phandler.setInfo(self.prefix,info,value)
 
 
 
@@ -244,8 +241,6 @@ class AVNPluginHandler(AVNWorker):
         AVNLog.info("creating %s" % (modulename))
         #TODO: handle multiple instances from config
         api = ApiImpl(self,self.navdata,self.queue,modulename)
-        startPlugin = True
-        pluginInstance = None
         try:
           description=obj.pluginInfo()
           if description is None or not isinstance(description,dict):
@@ -264,6 +259,7 @@ class AVNPluginHandler(AVNWorker):
           AVNLog.info("created plugin %s",modulename)
           self.createdPlugins[modulename]=pluginInstance
           self.createdApis[modulename]=api
+          self.setInfo(modulename,"started",AVNWorker.Status.STARTED)
         except:
           AVNLog.error("cannot start %s:%s" % (modulename, traceback.format_exc()))
 

@@ -122,7 +122,7 @@ class AVNStore():
           if not self.__isExpired(existing) and existing.priority > priority:
             doUpdate=False
         if doUpdate:
-          self.__list[listKey]=AVNStore.DataEntry(dataValue, priority=priority)
+          self.__list[listKey]=AVNStore.DataEntry(dataValue, priority=priority,source=source)
         else:
           AVNLog.debug("AVNavData: keeping existing entry for %s",listKey)
     except :

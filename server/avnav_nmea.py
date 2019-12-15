@@ -102,8 +102,8 @@ class NMEAParser():
   #add a valid dataset to nav data
   #timedate is a datetime object as returned by gpsTimeToTime
   #fill this additionally into the time part of data
-  def addToNavData(self,data,priority=0):
-    self.navdata.setValue(AVNStore.BASE_KEY_GPS,data,source='internal',priority=priority)
+  def addToNavData(self,data,source='internal',priority=0):
+    self.navdata.setValue(AVNStore.BASE_KEY_GPS,data,source=source,priority=priority)
     
   #returns an datetime object containing the current gps time
   @classmethod
@@ -228,7 +228,7 @@ class NMEAParser():
     return ("%02X"%chksum)
 
   #parse a line of NMEA data and store it in the navdata array      
-  def parseData(self,data):
+  def parseData(self,data,source='internal'):
     darray=data.split("*")[0].split(",")
     if len(darray) < 1 or (darray[0][0:1] != "$" and darray[0][0:1] != '!') :
       AVNLog.debug("invalid nmea data (len<1) "+data+" - ignore")
@@ -238,7 +238,7 @@ class NMEAParser():
         AVNLog.debug("cannot parse AIS data (no ais.py found)  %s",data)
         return False
       AVNLog.debug("parse AIS data %s",data)
-      return self.ais_packet_scanner(data)
+      return self.ais_packet_scanner(data,source=source)
       
     tag=darray[0][3:]
     rt={'tag':tag}
@@ -250,7 +250,7 @@ class NMEAParser():
         rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
         rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
         rt['mode']=int(darray[6] or '0')
-        self.addToNavData(rt)
+        self.addToNavData(rt,source=source)
         return True
       if tag=='GLL':
         rt['mode']=1
@@ -258,7 +258,7 @@ class NMEAParser():
           rt['mode']= (0 if (darray[6] != 'A') else 2)
         rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
         rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
-        self.addToNavData(rt)
+        self.addToNavData(rt,source=source)
         return True
       if tag=='VTG':
         mode=darray[2]
@@ -268,7 +268,7 @@ class NMEAParser():
           rt['speed']=float(darray[5] or '0')*self.NM/3600
         else:
           rt['speed']=float(darray[3]or '0')*self.NM/3600
-        self.addToNavData(rt)
+        self.addToNavData(rt,source=source)
         return True
       if tag=='RMC':
         #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
@@ -281,7 +281,7 @@ class NMEAParser():
         rt['track']=float(darray[8] or '0')
         gpsdate = darray[9]
         rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
-        self.addToNavData(rt,priority=1)
+        self.addToNavData(rt,source=source,priority=1)
         return True
       if tag == 'MWV':
         '''
@@ -303,7 +303,7 @@ class NMEAParser():
         if (darray[4] == 'N'):
           windspeed=windspeed*self.NM/3600
         rt['windSpeed']=windspeed
-        self.addToNavData(rt)
+        self.addToNavData(rt,source=source)
         return True
       if tag == 'DPT':
         '''
@@ -323,7 +323,7 @@ class NMEAParser():
           rt['depthBelowWaterline'] = float(darray[1]) + float(darray[2])
         else:
           rt['depthBelowKeel'] = float(darray[1]) + float(darray[2])
-        self.addToNavData(rt)
+        self.addToNavData(rt,source=source)
         return True
       if tag == 'DBT':
         '''
@@ -341,14 +341,14 @@ class NMEAParser():
          7) Checksum
         '''
         rt['depthBelowTransducer'] = float(darray[3])
-        self.addToNavData(rt)
+        self.addToNavData(rt,source=source)
         return True
     except Exception:
       AVNLog.info(" error parsing nmea data " + unicode(data) + "\n" + traceback.format_exc())
   
   #parse one line of AIS data 
   #taken from ais.py and adapted to our input handling     
-  def ais_packet_scanner(self,line):
+  def ais_packet_scanner(self,line,source='internal'):
     "Get a span of AIVDM packets with contiguous fragment numbers."
     if not line.startswith("!"):
       AVNLog.debug("ignore unknown AIS data %s",line)
@@ -391,11 +391,11 @@ class NMEAParser():
     # Render assembled payload to packed bytes
     bits = ais.BitVector()
     bits.from_sixbit(self.payloads[channel], pad)
-    return self.parse_ais_messages(self.payloads[channel], bits)
+    return self.parse_ais_messages(self.payloads[channel], bits,source=source)
 
 
   #basically taken from ais.py but changed to decode one message at a time
-  def parse_ais_messages(self,raw,bits):
+  def parse_ais_messages(self,raw,bits,source='internal'):
       "Generator code - read forever from source stream, parsing AIS messages."
       values = {}
       values['length'] = bits.bitlen
@@ -433,14 +433,14 @@ class NMEAParser():
                   raise AISUnpackingException(0, "length", actual)
           # We're done, hand back a decoding
           #AVNLog.ld('decoded AIS data',cooked)
-          self.storeAISdata(cooked)
+          self.storeAISdata(cooked,source=source)
           return True
       except:
           (exc_type, exc_value, exc_traceback) = sys.exc_info()
           AVNLog.debug("exception %s while decoding AIS data %s",exc_value,raw.strip())
           return False
   
-  def storeAISdata(self,bitfield):
+  def storeAISdata(self,bitfield,source='internal'):
     rt={'class':'AIS'}
     storeData=False
     for bfe in bitfield:
@@ -457,5 +457,5 @@ class NMEAParser():
     if mmsi is None:
       AVNLog.debug("ignoring AIS data without mmsi, %s"%rt)
       return
-    self.navdata.setAisValue(mmsi,rt,'server')
+    self.navdata.setAisValue(mmsi,rt,source=source)
     

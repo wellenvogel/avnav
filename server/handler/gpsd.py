@@ -233,6 +233,7 @@ class GpsdReader(threading.Thread):
     self.errorHandler=errorHandler
     self.stop=False
     self.session=None
+    self.infoName=self.name
   def doStop(self):
     self.stop=True
     try:
@@ -241,11 +242,10 @@ class GpsdReader(threading.Thread):
     except:
       pass
   def run(self):
-    infoName=self.name
     self.setName("[%s]%s"%(AVNLog.getThreadId(),self.name))
     self.lasttime=time.time()
     AVNLog.debug("gpsd reader thread started at port %d",self.port)
-    self.infoHandler.setInfo(infoName,"started at port %d"%(self.port),AVNWorker.Status.STARTED)
+    self.infoHandler.setInfo(self.infoName,"started at port %d"%(self.port),AVNWorker.Status.STARTED)
     try:
       #try for 10s to open the gpsd port
       timeout=10
@@ -260,18 +260,18 @@ class GpsdReader(threading.Thread):
           AVNLog.debug("gpsd reader open comm exception %s %s",traceback.format_exc(),("retrying" if timeout > 1 else ""))
           time.sleep(1)
       if self.stop:
-        self.infoHandler.deleteInfo(infoName)
+        self.infoHandler.deleteInfo(self.infoName)
         AVNLog.info("stopping gpsd reader")
         return
       if not connected:
         raise Exception("unable to connect to gpsd within 10s")    
       self.session.stream(gps.WATCH_ENABLE)
       hasNMEA=False
-      self.infoHandler.setInfo(infoName,"start receiving",AVNWorker.Status.STARTED)
+      self.infoHandler.setInfo(self.infoName,"start receiving",AVNWorker.Status.STARTED)
       for report in self.session:
         if (self.stop):
           AVNLog.info("stopping gpsd reader")
-          self.infoHandler.deleteInfo(infoName)
+          self.infoHandler.deleteInfo(self.infoName)
           self.session.close()
           return
         AVNLog.debug("received gps data : %s",pprint.pformat(report))
@@ -287,9 +287,9 @@ class GpsdReader(threading.Thread):
           if ddata.get('tag') is None:
             ddata['tag']='gpsd'
           try:
-            self.navdata.setValue(AVNStore.BASE_KEY_GPS,ddata,ddata['source'])
+            self.navdata.setValue(AVNStore.BASE_KEY_GPS,ddata,self.infoName)
             if not hasNMEA:
-              self.infoHandler.setInfo(infoName,"receiving NMEA",AVNWorker.Status.NMEA)
+              self.infoHandler.setInfo(self.infoName,"receiving NMEA",AVNWorker.Status.NMEA)
               hasNMEA=True
           except:
             AVNLog.debug("exception storing gpsd data %s",traceback.format_exc())
@@ -300,13 +300,13 @@ class GpsdReader(threading.Thread):
           mmsi=aisdata.get('mmsi')
           if mmsi is not None:
             try:
-              self.navdata.setAisValue(str(mmsi), aisdata, 'gpsd')
+              self.navdata.setAisValue(str(mmsi), aisdata, self.infoName)
             except:
               AVNLog.debug("exception storing ais data %s", traceback.format_exc())
         if cl == 'SKY':
           try:
             base=self.filterToDict(report,NMEAParser.SKY_BASE_KEYS)
-            self.navdata.setValue(AVNStore.BASE_KEY_SKY,base,source='gpsd')
+            self.navdata.setValue(AVNStore.BASE_KEY_SKY,base,source=self.infoName)
             sats=report.get('satellites')
             #we rely on the store to remove outdated sats...
             if sats is not None:
@@ -314,13 +314,13 @@ class GpsdReader(threading.Thread):
                 entry=self.filterToDict(sat,NMEAParser.SKY_SATELLITE_KEYS)
                 PRN=entry.get('PRN')
                 if PRN is not None:
-                  self.navdata.setValue(AVNStore.BASE_KEY_SKY+".satellites."+str(PRN),entry,source='gpsd')
+                  self.navdata.setValue(AVNStore.BASE_KEY_SKY+".satellites."+str(PRN),entry,source=self.infoName)
           except:
             AVNLog.debug("exception storing sky data %s", traceback.format_exc())
       if self.stop:
         try:
           AVNLog.info("stopping gpsd reader")
-          self.infoHandler.deleteInfo(infoName)
+          self.infoHandler.deleteInfo(self.infoName)
           self.session.close()
         except:
           pass
@@ -329,7 +329,7 @@ class GpsdReader(threading.Thread):
       pass
     AVNLog.debug("gpsd reader exited")
     self.status=False
-    self.infoHandler.setInfo(infoName,"exited",AVNWorker.Status.INACTIVE)
+    self.infoHandler.setInfo(self.infoName,"exited",AVNWorker.Status.INACTIVE)
     if self.errorHandler is not None:
       self.errorHandler()
 
@@ -505,7 +505,7 @@ class AVNGpsdFeeder(AVNGpsd):
         while True:
           data=self.popListEntry()
           if not data is None:
-            if nmeaParser.parseData(data):
+            if nmeaParser.parseData(data,source=infoName):
               if not hasNmea:
                 self.setInfo(infoName,"feeding NMEA",AVNWorker.Status.NMEA)
           else:

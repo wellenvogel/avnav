@@ -245,7 +245,7 @@ class SerialWriter(SerialReader):
             if not self.writeData is None:
               self.writeData(data)
             else:
-              self.nmeaParser.parseData(data)
+              self.nmeaParser.parseData(data,source=self.getName())
         else:
           time.sleep(0.5)
       except:

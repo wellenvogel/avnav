@@ -25,6 +25,7 @@
 ###############################################################################
 
 class AVNApi:
+
   """
   the API for handlers/decoders that will input data, decode NMEA or output data
   """
@@ -109,5 +110,16 @@ class AVNApi:
     @param key: the key
     @type  key: str
     @return: the value
+    """
+    raise NotImplemented()
+
+  def setStatus(self,value,info):
+    """
+    set the status for the plugin
+    this will be displayed on the status page
+    @param value: String, one of 'INACTIVE','STARTED','RUNNING','NMEA','ERROR'
+                  any other value will be mapped to ERROR
+    @param info: an info text
+    @return:
     """
     raise NotImplemented()
