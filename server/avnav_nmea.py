@@ -245,7 +245,7 @@ class NMEAParser():
     #currently we only take the time from RMC
     #as only with this one we have really a valid complete timestamp
     try:
-      rt['source']=darray[0][1:2]
+      rt['source']=darray[0][1:3]
       if tag=='GGA':
         rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
         rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])

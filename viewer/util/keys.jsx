@@ -66,7 +66,6 @@ let keys={
             course: K,
             speed: K,
             rtime: K,
-            raw: K,
             valid: K,
             windAngle: K,
             windSpeed: K,

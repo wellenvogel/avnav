@@ -252,8 +252,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     AVNLog.ld('navrequest',requestParam)
     try:
       rtj=None
-      if requestType=='gps':
+      if requestType=='gps' or requestType=='self':
         rtj=self.handleGpsRequest(requestParam)
+      elif requestType=='nmeaStatus':
+        rtj=self.handleNmeaStatus(requestParam)
       elif requestType=='ais':
         rtj=self.handleAISRequest(requestParam)
       elif requestType=='status':
@@ -334,40 +336,44 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
   def handleGpsRequest(self,requestParam):
     rtv=self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
-    #we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
-    status="red"
-    mode=rtv.get('mode')
+    return json.dumps(rtv)
+
+  def handleNmeaStatus(self, requestParam):
+    rtv = self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
+    # we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
+    status = "red"
+    mode = rtv.get('mode')
     if mode is not None:
       if int(mode) == 1:
-        status="yellow"
+        status = "yellow"
       if int(mode) == 2 or int(mode) == 3:
         if rtv.get("lat") is not None and rtv.get('lon') is not None:
-          status="green"
+          status = "green"
         else:
-          status="yellow"
-    src=self.server.navdata.getLastSource(AVNStore.BASE_KEY_GPS+".lat") #we just want the last source of position
-    #TODO: add info from sky
-    sky=self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_SKY)
-    visible=set()
-    used=set()
+          status = "yellow"
+    src = self.server.navdata.getLastSource(AVNStore.BASE_KEY_GPS + ".lat")  # we just want the last source of position
+    # TODO: add info from sky
+    sky = self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_SKY)
+    visible = set()
+    used = set()
     try:
-      satellites=sky.get('satellites')
+      satellites = sky.get('satellites')
       if satellites is not None:
         for sat in satellites.keys():
           visible.add(sat)
           if satellites[sat].get('used'):
             used.add(sat)
     except:
-      AVNLog.info("unable to get sat count: %s",traceback.format_exc())
-    statusNmea={"status":status,"source":src,"info":"Sat %d visible/%d used"%(len(visible),len(used))}
-    status="red"
-    numAis=self.server.navdata.getAisCounter()
+      AVNLog.info("unable to get sat count: %s", traceback.format_exc())
+    statusNmea = {"status": status, "source": src, "info": "Sat %d visible/%d used" % (len(visible), len(used))}
+    status = "red"
+    numAis = self.server.navdata.getAisCounter()
     if numAis > 0:
-      status="green"
-    src=self.server.navdata.getLastAisSource()
-    statusAis={"status":status,"source":src,"info":"%d targets"%(numAis)}
-    rtv["raw"]={"status":{"nmea":statusNmea,"ais":statusAis}}
-    return json.dumps(rtv)
+      status = "green"
+    src = self.server.navdata.getLastAisSource()
+    statusAis = {"status": status, "source": self.server.navdata.getLastAisSource(), "info": "%d targets" % (numAis)}
+    rt = {"status": "OK","data":{"nmea": statusNmea, "ais": statusAis}}
+    return json.dumps(rt)
 
 
   def handleStatusRequest(self,requestParam):

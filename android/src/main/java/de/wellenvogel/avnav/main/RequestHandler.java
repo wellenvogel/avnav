@@ -298,13 +298,21 @@ public class RequestHandler {
                     if (navLocation == null) {
                         navLocation = new JSONObject();
                     }
-                    JSONObject nmea = new JSONObject();
-                    JSONObject status = getGpsService().getNmeaStatus();
-                    nmea.put("status", status);
-                    navLocation.put("raw", nmea);
-
                 }
                 fout=navLocation;
+            }
+            if (type.equals("nmeaStatus")){
+                handled=true;
+                JSONObject o=new JSONObject();
+                if (getGpsService() != null) {
+                    JSONObject status = getGpsService().getNmeaStatus();
+                    o.put("data", status);
+                    o.put("status", "OK");
+                }
+                else{
+                    o.put("status","no gps service");
+                }
+                fout=o;
             }
             if (type.equals("listCharts")){
                 handled=true;

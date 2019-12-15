@@ -121,8 +121,6 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         this.latAverageData=[];
         this.lonAverageData=[];
     }
-    gpsdata.raw=data?data.raw:{};
-    delete data.raw;
     //we write to store if we received valid data
     //or until we consider this as invalid
     if (status || gpsdata.connectionLost) {
@@ -216,7 +214,6 @@ GpsData.prototype.getStoreKeys=function(){
         lon:bk.lon,
         course:bk.course,
         rtime:bk.rtime,
-        raw: bk.raw,
         valid:bk.valid,
         speed:bk.speed,
         windAngle:bk.windAngle,

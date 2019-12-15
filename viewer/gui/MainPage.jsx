@@ -49,6 +49,7 @@ const selectChart=(offset)=>{
 class MainPage extends React.Component {
     constructor(props) {
         super(props);
+        this.timerCall=this.timerCall.bind(this);
         let self=this;
         this.buttons = [
             {
@@ -143,7 +144,8 @@ class MainPage extends React.Component {
             if (action == "previousChart"){
                 selectChart(-1);
             }
-        },"page",["selectChart","nextChart","previousChart"])
+        },"page",["selectChart","nextChart","previousChart"]);
+        this.timer=GuiHelper.lifecycleTimer(this,this.timerCall,globalStore.getData(keys.properties.positionQueryTimeout),true);
     }
 
 
@@ -153,6 +155,19 @@ class MainPage extends React.Component {
     }
     componentDidUpdate(){
         readAddOns();
+    }
+
+    timerCall(sequence){
+        if (sequence != this.timer.currentSequence()) return;
+        Requests.getJson("?request=nmeaStatus")
+            .then((json)=>{
+                globalStore.storeData(keys.gui.mainpage.status,json.data);
+                this.timer.startTimer(sequence);
+            })
+            .catch((error)=>{
+                globalStore.storeData(keys.gui.mainpage.status,{});
+                this.timer.startTimer(sequence);
+            })
     }
 
     render() {
@@ -175,13 +190,13 @@ class MainPage extends React.Component {
             let nmeaText=!props.connectionLost?"":"server connection lost";
             let aisText="";
             if (!props.connectionLost) {
-                if (props.raw && props.raw.status && props.raw.status.nmea) {
-                    nmeaColor = props.raw.status.nmea.status;
-                    nmeaText = props.raw.status.nmea.source + ":" + props.raw.status.nmea.info;
+                if (props.status && props.status.nmea) {
+                    nmeaColor = props.status.nmea.status;
+                    nmeaText = props.status.nmea.source + ":" + props.status.nmea.info;
                 }
-                if (props.raw && props.raw.status && props.raw.status.ais) {
-                    aisColor = props.raw.status.ais.status;
-                    aisText = props.raw.status.ais.source + ":" + props.raw.status.ais.info;
+                if (props.status && props.status.ais) {
+                    aisColor = props.status.ais.status;
+                    aisText = props.status.ais.source + ":" + props.status.ais.info;
                 }
             }
             return (
@@ -234,7 +249,7 @@ class MainPage extends React.Component {
                         }
                   bottomContent={
                     <BottomLine storeKeys={{
-                        raw:keys.nav.gps.raw,
+                        status:keys.gui.mainpage.status,
                         valid: keys.nav.gps.valid,
                         connectionLost: keys.nav.gps.connectionLost
                         }} />
