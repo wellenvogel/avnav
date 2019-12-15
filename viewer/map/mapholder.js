@@ -401,6 +401,8 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     this.renderTo(div);
     let recenter=true;
     let view;
+    if (this.requiredZoom < 0) this.requiredZoom=this.minzoom;
+    if (this.zoom < 0) this.zoom=this.minzoom;
     if (this.requiredZoom) this.zoom=this.requiredZoom;
     if (this.center && this.zoom >0){
         //if we load a new map - try to restore old center and zoom
