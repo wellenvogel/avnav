@@ -324,6 +324,83 @@ MapHolder.prototype.loadMap=function(div){
     });
 
 };
+
+MapHolder.prototype.getBaseLayer=function(){
+    var styles = {
+        'MultiPolygon': new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'blue',
+                width: 1
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(0, 0, 255, 0.1)'
+            })
+        }),
+        'Polygon': new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'blue',
+                width: 1
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(0, 0, 255, 0.1)'
+            })
+        })
+    };
+
+    var styleFunction = function(feature) {
+        return styles[feature.getGeometry().getType()];
+    };
+    var vectorSource = new ol.source.Vector({
+        format: new ol.format.GeoJSON(),
+        url: 'countries-110m.json',
+        wrapX: false
+    });
+
+    var vectorLayer = new ol.layer.Vector({
+        source: vectorSource,
+        style: styleFunction
+    });
+    return vectorLayer;
+
+};
+
+MapHolder.prototype.getMapOutlineLayer = function (layers) {
+    let style = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'red',
+            width: 2
+        })
+    });
+
+    let source = new ol.source.Vector({
+        wrapX: false
+    });
+    if (layers && layers.length > 0) {
+        let extent = ol.extent.createEmpty();
+        layers.forEach((layer)=> {
+            if (layer.avnavOptions && layer.avnavOptions.extent) {
+                let e = layer.avnavOptions.extent;
+                extent = ol.extent.extend(extent, e);
+            }
+        });
+        let feature = new ol.Feature(new ol.geom.Polygon([
+            [
+                ol.extent.getBottomLeft(extent),
+                ol.extent.getBottomRight(extent),
+                ol.extent.getTopRight(extent),
+                ol.extent.getTopLeft(extent)
+
+            ]
+        ]));
+        feature.setStyle(style);
+        source.addFeature(feature);
+    }
+    ;
+    return new ol.layer.Vector({
+        source: source
+    });
+};
+
 /**
  * init the map (deinit an old one...)
  * @param {String} div
@@ -346,6 +423,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             this.maxzoom=layers[i].avnavOptions.maxZoom;
         }
     }
+    this.minzoom=2;
     if (this.olmap){
         let oldlayers=this.olmap.getLayers();
         if (oldlayers && oldlayers.getArray().length){
@@ -358,15 +436,23 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
                 this.olmap.removeLayer(olarray[i]);
             }
         }
+        this.olmap.addLayer(this.getBaseLayer());
+        if (layers.length > 0) {
+            this.olmap.addLayer(this.getMapOutlineLayer(layers))
+        }
         for (let i=0;i< layersreverse.length;i++){
             this.olmap.addLayer(layersreverse[i]);
         }
         this.renderTo(div);
     }
     else {
+        let base=[this.getBaseLayer()];
+        if (layers.length > 0) {
+            base.push(this.getMapOutlineLayer(layers))
+        }
         this.olmap = new ol.Map({
             target: div?div:self.defaultDiv,
-            layers: layersreverse,
+            layers: base.concat(layersreverse),
             interactions: ol.interaction.defaults({
                 altShiftDragRotate:false,
                 pinchRotate: false
@@ -374,7 +460,8 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             controls: [],
             view: new ol.View({
                 center: ol.proj.transform([ 13.8, 54.1], 'EPSG:4326', 'EPSG:3857'),
-                zoom: 9
+                zoom: 9,
+                extent: this.transformToMap([-200,-89,200,89])
             })
 
         });
@@ -641,7 +728,8 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
     let centerCoord=this.olmap.getView().getCenter();
     let hasZoomInfo=false;
     let zoomOk=false;
-    for (let tzoom=Math.floor(this.requiredZoom);tzoom >= this.minzoom;tzoom--){
+    let tzoom=2;
+    for (tzoom=Math.floor(this.requiredZoom);tzoom >= this.minzoom;tzoom--){
         zoomOk=false;
         let layers=this.olmap.getLayers().getArray();
         for (let i=0;i<layers.length && ! zoomOk;i++){
@@ -733,8 +821,8 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
         //we store the layer region in EPSG:4326
         Array.from(tm.childNodes).forEach(function(bb){
             if (bb.tagName != 'BoundingBox') return;
-            rt.layerExtent = [self.e2f(bb,'minlon'),self.e2f(bb,'maxlat'),
-                self.e2f(bb,'maxlon'),self.e2f(bb,'minlat')];
+            rt.layerExtent = [self.e2f(bb,'minlon'),self.e2f(bb,'minlat'),
+                self.e2f(bb,'maxlon'),self.e2f(bb,'maxlat')];
         });
         //TODO: do wen need the origin stuff?
         /*
