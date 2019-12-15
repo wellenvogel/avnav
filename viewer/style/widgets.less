@@ -82,12 +82,11 @@
 }
 
 .widgetContainer.vertical{
-  max-width: @navLeftWidgetWidth;
-  width: @navLeftWidgetWidth;
   overflow: hidden;
   .flex-direction(column);
   .widget{
-    width: inherit;
+    max-width: @navLeftWidgetWidth;
+    width: @navLeftWidgetWidth;
     flex-shrink: inherit;
   }
 }
@@ -230,7 +229,7 @@
       width: 2em;
     }
     .widgetData ~ .widgetData{
-      margin-top: 0;
+      padding-top: 0;
     }
     .hfield &{
       .flex-direction(row)!important;

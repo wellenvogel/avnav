@@ -216,9 +216,6 @@
       "top_small": [
         {
           "name": "EditRoute"
-        },
-        {
-          "name": "Zoom"
         }
       ],
       "bottomLeft": [
