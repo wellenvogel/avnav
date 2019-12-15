@@ -33,11 +33,12 @@ class AisTargetWidget extends React.Component{
         let classes="widget aisTargetWidget "+this.props.className||"";
         let small = (this.props.mode === "horizontal" );
         let aisProperties={};
-        if (current.mmsi && current.mmsi !== ""){
-            aisProperties.warning=current.warning||false;
-            aisProperties.nearest=current.nearest||false;
+        let color=undefined;
+        if (current.mmsi && current.mmsi !== "") {
+            aisProperties.warning = current.warning || false;
+            aisProperties.nearest = current.nearest || false;
+            color=PropertyHandler.getAisColor(aisProperties);
         }
-        let color=PropertyHandler.getAisColor(aisProperties);
         let front=AisFormatter.format('passFront',current);
         if (current.mmsi !== undefined || this.props.mode === "gps") {
             let style=assign({},this.props.style,{backgroundColor:color});
