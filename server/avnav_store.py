@@ -37,9 +37,6 @@ from avnav_util import *
 
 #the main List of navigational items received
 class AVNStore():
-  SOURCE_KEY_AIS = 'AIS'
-  SOURCE_KEY_GPS = 'GPS'
-  SOURCE_KEY_OTHER = 'OTHER'
   BASE_KEY_GPS = 'gps'
   BASE_KEY_AIS = 'ais'
   BASE_KEY_SKY = 'sky'
@@ -56,7 +53,6 @@ class AVNStore():
     def __init__(self,data):
       self.value=data
       self.timestamp = AVNUtil.utcnow()
-      self.source=AVNStore.SOURCE_KEY_AIS
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
@@ -68,7 +64,6 @@ class AVNStore():
     self.__aisExpiryTime=aisExpiryTime
     self.__ownMMSI=ownMMSI
     self.__prefixCounter={} #contains the number of entries for TPV, AIS,...
-    self.__lastSources={} #contains the last source for each class
     # a description of the already registered keys
     self.__registeredKeys={} # type: dict
     # for wildcard keys we speed up by storing keys we already found
@@ -77,6 +72,7 @@ class AVNStore():
     self.__wildcardKeys={}
     # all the key sources
     self.__keySources={}
+    self.__lastAisSource=None
 
   def __registerInternalKeys(self):
     self.registerKey(self.BASE_KEY_AIS+".count","AIS count",self.__class__.__name__)
@@ -127,10 +123,6 @@ class AVNStore():
             doUpdate=False
         if doUpdate:
           self.__list[listKey]=AVNStore.DataEntry(dataValue, priority=priority)
-          sourceKey=AVNStore.SOURCE_KEY_OTHER
-          if key.startswith(AVNStore.BASE_KEY_GPS):
-            sourceKey=AVNStore.SOURCE_KEY_GPS
-          self.__lastSources[sourceKey]=source
         else:
           AVNLog.debug("AVNavData: keeping existing entry for %s",listKey)
     except :
@@ -174,7 +166,7 @@ class AVNStore():
           newData[k] = v
       existing.value=newData
       existing.timestamp=now
-    self.__lastSources[AVNStore.SOURCE_KEY_AIS]=source
+    self.__lastAisSource=source
     self.__aisLock.release()
 
 
@@ -278,11 +270,13 @@ class AVNStore():
     return len(self.__aisList)
 
 
-  def getLastSource(self,cls):
-    rt=self.__lastSources.get(cls)
+  def getLastSource(self,key):
+    rt=self.__list.get(key)
     if rt is None:
       rt=""
-    return rt
+    return rt.source
+  def getLastAisSource(self):
+    return self.__lastAisSource
   KEY_PATTERN='^[a-zA-Z0-9_.*]*$'
   def __checkKey(self, key):
     if re.match(self.KEY_PATTERN,key) is None:

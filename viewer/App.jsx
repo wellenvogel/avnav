@@ -27,17 +27,19 @@ import Toast,{ToastDisplay} from './components/Toast.jsx';
 import KeyHandler from './util/keyhandler.js';
 import LayoutHandler from './util/layouthandler.js';
 import assign from 'object-assign';
+import AlarmHandler from './nav/alarmhandler.js';
 
 
 const DynamicSound=Dynamic(SoundHandler);
 
 //to feed the sound with the alarm sound we have
-const alarmStoreKeys={alarms:keys.nav.gps.alarms,enabled:keys.properties.localAlarmSound};
+const alarmStoreKeys={alarms:keys.nav.alarms.all,enabled:keys.properties.localAlarmSound};
 const computeAlarmSound=(state)=>{
     let off={src:undefined,repeat:undefined};
     if (! state.enabled) return {enabled:false,...off};
     if (!state.alarms) return {enabled:true,...off};
     for (let k in state.alarms){
+        if (!state.alarms[k].running) continue;
         //only use the first alarm
         return {
             src: globalStore.getData(keys.properties.navUrl)+"?request=download&type=alarm&name="+encodeURIComponent(k),
@@ -152,6 +154,7 @@ class App extends React.Component {
         this.checkSizes();
         this.setState({interval:iv});
         window.addEventListener('resize',this.checkSizes);
+        AlarmHandler.start();
 
 
     }

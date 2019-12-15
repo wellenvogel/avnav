@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import compare from '../util/shallowcompare.js';
 import GuiHelper from '../util/GuiHelpers.js';
+import AlarmHandler from '../nav/alarmhandler.js';
 
 
 class  AlarmWidget extends React.Component{
@@ -24,21 +25,14 @@ class  AlarmWidget extends React.Component{
 
     }
     shouldComponentUpdate(nextProps,nextState){
-        if (nextProps.alarmInfo === this.props.alarmInfo ) return false;
-        if (! nextProps.alarmInfo !== ! this.props.alarmInfo) return true;
-        for (let k in this.props.alarmInfo){
-            if (! compare(this.props.alarmInfo[k],nextProps.alarmInfo[k])) return true;
-        }
-        for (let k in nextProps.alarmInfo){
-            if (! compare(this.props.alarmInfo[k],nextProps.alarmInfo[k])) return true;
-        }
-        return false;
+        return ! AlarmHandler.compareAlarms(nextProps.alarmInfo,this.props.alarmInfo);
     }
     render(){
         let classes="widget alarmWidget "+this.props.className||"";
         let alarmText=undefined;
         if (this.props.alarmInfo){
             for (let k in this.props.alarmInfo){
+                if (!this.props.alarmInfo[k].running) continue;
                 if (alarmText){
                     alarmText+=","+k;
                 }
@@ -73,7 +67,7 @@ AlarmWidget.propTypes={
 };
 
 AlarmWidget.storeKeys={
-    alarmInfo: keys.nav.gps.alarms
+    alarmInfo: keys.nav.alarms.all
 };
 
 module.exports=AlarmWidget;

@@ -67,7 +67,7 @@ routeobjects.Leg=function(from, to, active){
 
 routeobjects.Leg.prototype.clone=function(){
     let rt=new routeobjects.Leg(this.from?this.from.clone():undefined,this.to?this.to.clone():undefined,this.active);
-    rt.approach=false;
+    rt.approach=this.approach;
     rt.approachDistance=this.approachDistance;
     rt.currentRoute=this.currentRoute?this.currentRoute.clone():undefined;
     rt.anchorDistance=this.anchorDistance;

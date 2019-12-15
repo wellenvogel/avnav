@@ -277,6 +277,8 @@ class AVNRouter(AVNWorker):
       self.activeRouteName=leg.name
     if leg.currentRoute is not None:
       self.saveRoute(leg.currentRoute)
+    if not leg.active:
+      self.computeApproach() #ensure that we immediately switch off alarms
 
   def routeFromJsonString(self,routeJson):
     try:

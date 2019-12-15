@@ -196,6 +196,8 @@ class AVNAlarmHandler(AVNWorker):
       self.setInfo(name, "activated %s" % info, self.Status.NMEA)
     else:
       self.setInfo(name, "unable to start alarm command \"%s\":\"%s\" " % (name,cmd['command']), self.Status.INACTIVE)
+    if alarmid is None:
+      alarmid=-1
     self.runningAlarms[name] = alarmid
     return True
 
@@ -218,7 +220,7 @@ class AVNAlarmHandler(AVNWorker):
       del self.runningAlarms[name]
     except:
       pass
-    if alarmid is not None:
+    if alarmid is not None and alarmid >=0:
       self.commandHandler.stopCommand(alarmid)
     self.setInfo(name, "stopped", self.Status.INACTIVE)
     return True
@@ -301,7 +303,7 @@ class AVNAlarmHandler(AVNWorker):
                   'running':True if running is not None else False,
                   'repeat': config.get('repeat')
                   }
-      return rt
+      return {"status":"OK","data":rt}
     rt={'status':'ok'}
     mode="start"
     command=AVNUtil.getHttpRequestParam(requestparam,"start")

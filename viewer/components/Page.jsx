@@ -8,12 +8,14 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import NavData from '../nav/navdata.js';
 import KeyHandler from '../util/keyhandler.js';
+import AlarmHandler from '../nav/alarmhandler.js';
 
 const alarmClick =function(){
-    let alarms=globalStore.getData(keys.nav.gps.alarms,"");
+    let alarms=globalStore.getData(keys.nav.alarms.all,"");
     if (! alarms) return;
     for (let k in alarms){
-        NavData.getGpsHandler().stopAlarm(k);
+        if (!alarms[k].running)continue;
+        AlarmHandler.stopAlarm(k);
     }
 };
 class Page extends React.Component {

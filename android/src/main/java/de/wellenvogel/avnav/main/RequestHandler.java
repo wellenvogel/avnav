@@ -301,8 +301,6 @@ public class RequestHandler {
                     JSONObject nmea = new JSONObject();
                     JSONObject status = getGpsService().getNmeaStatus();
                     nmea.put("status", status);
-                    JSONObject alarms=getGpsService().getAlarStatusJson();
-                    nmea.put("alarms",alarms);
                     navLocation.put("raw", nmea);
 
                 }
@@ -553,26 +551,29 @@ public class RequestHandler {
                 JSONObject o=null;
                 String status=uri.getQueryParameter("status");
                 if (status != null && ! status.isEmpty()){
+                    JSONObject rt=new JSONObject();
                     if (status.matches(".*all.*")){
-                        o=getGpsService().getAlarStatusJson();
+                        rt=getGpsService().getAlarStatusJson();
                     }
                     else {
                         Map <String,Alarm> alarmStatus=getGpsService().getAlarmStatus();
-                        o=new JSONObject();
                         String[] queryAlarms = status.split(",");
                         for (String alarm:queryAlarms){
                             Alarm ao=alarmStatus.get(alarm);
                             if (ao != null){
-                                o.put(alarm,ao.toJson());
+                                rt.put(alarm,ao.toJson());
                             }
                         }
                     }
+                    o=new JSONObject();
+                    o.put("status","OK");
+                    o.put("data",rt);
                 }
                 String stop=uri.getQueryParameter("stop");
                 if (stop != null && ! stop.isEmpty()){
                     getGpsService().resetAlarm(stop);
                     o=new JSONObject();
-                    o.put("status","ok");
+                    o.put("status","OK");
                 }
                 if (o == null){
                     o=new JSONObject();

@@ -345,7 +345,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           status="green"
         else:
           status="yellow"
-    src=self.server.navdata.getLastSource(AVNStore.SOURCE_KEY_GPS)
+    src=self.server.navdata.getLastSource(AVNStore.BASE_KEY_GPS+".lat") #we just want the last sourec of poistion
     #TODO: add info from sky
     sky=self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_SKY)
     visible=set()
@@ -364,19 +364,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     numAis=self.server.navdata.getAisCounter()
     if numAis > 0:
       status="green"
-    src=self.server.navdata.getLastSource(AVNStore.SOURCE_KEY_AIS)
+    src=self.server.navdata.getLastAisSource()
     statusAis={"status":status,"source":src,"info":"%d targets"%(numAis)}
     rtv["raw"]={"status":{"nmea":statusNmea,"ais":statusAis}}
-    alarmHandler = self.server.findHandlerByName("AVNAlarmHandler")
-    if alarmHandler is not None:
-      alarmInfo={}
-      alarms=alarmHandler.getRunningAlarms()
-      for k in alarms.keys():
-        info=alarmHandler.findAlarm(k,True)
-        alarmInfo[k]={'running':True,'alarm':k}
-        if info:
-          alarmInfo[k]['repeat']=info.get('repeat')
-      rtv['raw']['alarms']=alarmInfo
     return json.dumps(rtv)
 
 

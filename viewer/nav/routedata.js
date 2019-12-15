@@ -606,15 +606,13 @@ RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallb
 RouteData.prototype._checkNextWp=function(){
     activeRoute.modify((data)=> {
         if (!data.leg) return;
-        if (!data.leg.hasRoute()) {
-            data.leg.approach = false;
-            return true;
-        }
+        if (!data.leg.isRouting()) return;
+        let lastApproach=data.leg.approach;
         let boat = globalStore.getData(keys.nav.gps.position);
         //TODO: switch of routing?!
         if (!globalStore.getData(keys.nav.gps.valid)) return;
         let nextWpNum = data.leg.getCurrentTargetIdx() + 1;
-        let nextWp = data.route.getPointAtIndex(nextWpNum);
+        let nextWp = data.route?data.route.getPointAtIndex(nextWpNum):undefined;
         let approach = globalStore.getData(keys.properties.routeApproach) + 0;
         let tolerance = approach / 10; //we allow some position error...
         try {
@@ -622,6 +620,9 @@ RouteData.prototype._checkNextWp=function(){
             //TODO: some handling for approach
             if (dst.dts <= approach) {
                 data.leg.approach = true;
+                if (!data.leg.hasRoute()){
+                    return data.leg.approach != lastApproach;
+                }
                 let nextDst = new navobjects.Distance();
                 if (nextWp) {
                     nextDst = NavCompute.computeDistance(boat, nextWp);
@@ -669,6 +670,7 @@ RouteData.prototype._checkNextWp=function(){
             }
             else {
                 data.leg.approach = false;
+                return data.leg.approach != lastApproach;
             }
         } catch (ex) {
         } //ignore errors

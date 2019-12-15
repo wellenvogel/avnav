@@ -73,7 +73,6 @@ GpsData.prototype.average=function(gpsdata){
 GpsData.prototype.writeToStore=function(gpsData,additionalKeys){
     let d=assign({},gpsData,{
         position:new navobjects.Point(gpsData.lon,gpsData.lat),
-        alarms:gpsData.raw?gpsData.raw.alarms:undefined,
         sequence:globalStore.getData(keys.nav.gps.sequence,0)+1
     });
     globalStore.storeMultiple(d,assign({},this.getStoreKeys(),additionalKeys));
@@ -184,22 +183,7 @@ GpsData.prototype.startQuery=function(){
 
 };
 
-GpsData.prototype.stopAlarm=function(type){
-    //we also remove the alarm from the store to ensure that all widgets get updated
-    let alarms=assign({},globalStore.getData(keys.nav.gps.alarms));
-    delete alarms[type];
-    globalStore.storeData(keys.nav.gps.alarms,alarms);
-    Requests.getJson("?request=alarm&stop="+type).then(
-        (json)=>{
 
-        }
-    ).catch(
-        (error)=>{
-            base.log("unable to stop alarm "+type);
-        }
-    );
-
-};
 
 /**
  * handle the status and trigger the FPS event
@@ -243,7 +227,6 @@ GpsData.prototype.getStoreKeys=function(){
         courseAverage: bk.courseAverageOn,
         depthBelowTransducer: bk.depthBelowTransducer,
         position:bk.position,
-        alarms:bk.alarms,
         sequence:bk.sequence,
         connectionLost: bk.connectionLost
     }
