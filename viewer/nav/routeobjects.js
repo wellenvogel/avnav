@@ -688,7 +688,7 @@ routeobjects.Route.prototype.getRoutePoints=function(opt_selectedIdx){
         if (i>0) {
             let dst=NavCompute.computeDistance(this.points[i-1],this.points[i]);
             formatted.course=dst.course;
-            formatted.distance=dst.dtsnm;
+            formatted.distance=dst.dts;
         }
         if (i == opt_selectedIdx){
             formatted.selected=true;
@@ -711,7 +711,7 @@ routeobjects.Route.prototype.computeLength=function(startIdx){
     for (;startIdx<this.points.length;startIdx++){
         let next=this.points[startIdx];
         let dst=NavCompute.computeDistance(last,next);
-        rt+=dst.dtsnm;
+        rt+=dst.dts;
         last=next;
     }
     return rt;

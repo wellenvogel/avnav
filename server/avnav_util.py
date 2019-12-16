@@ -271,7 +271,7 @@ class AVNUtil():
     rt=aisdata.copy()
     rt['lat']=float(aisdata.get('lat') or 0)/600000
     rt['lon']=float(aisdata.get('lon') or 0)/600000
-    rt['speed']=float(aisdata.get('speed') or 0)/10
+    rt['speed']=(float(aisdata.get('speed') or 0)/10) * cls.NM/3600;
     rt['course']=float(aisdata.get('course') or 0)/10
     rt['mmsi']=unicode(aisdata['mmsi'])
     return rt

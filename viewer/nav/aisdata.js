@@ -46,12 +46,6 @@ let AisData=function( opt_noQuery){
      */
     this.trackedAIStarget=null;
 
-    /**
-     * @private
-     * @type {properties.NM}
-     */
-    this.NM=globalStore.getData(keys.properties.NM);
-
 
     /**
      * the nearest target - being returned when values are queried
@@ -80,7 +74,6 @@ AisData.prototype._computeAisTarget=function(boatPos,ais){
     ais.tracking=false;
     ais.nearest=false;
     let computeProperties=globalStore.getMultiple({
-        NM:keys.properties.NM,
         minAISspeed: keys.properties.minAISspeed
     });
     let dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
@@ -98,10 +91,10 @@ AisData.prototype._computeAisTarget=function(boatPos,ais){
         },
         computeProperties
     );
-    ais.distance = dst.dtsnm;
+    ais.distance = dst.dts;
     ais.headingTo = dst.course;
-    if (cpadata.tcpa !== undefined && cpadata.cpanm !== undefined) {
-        ais.cpa = cpadata.cpanm;
+    if (cpadata.tcpa !== undefined && cpadata.cpa !== undefined) {
+        ais.cpa = cpadata.cpa;
         ais.tcpa = cpadata.tcpa;
     }
     else {
@@ -125,7 +118,7 @@ AisData.prototype.handleAisData=function() {
         for (let aisidx in this.currentAis) {
             let ais = this.currentAis[aisidx];
             this._computeAisTarget(boatPos,ais);
-            let warningCpa=globalStore.getData(keys.properties.aisWarningCpa/this.NM);
+            let warningCpa=globalStore.getData(keys.properties.aisWarningCpa);
             if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && Math.abs(ais.tcpa) < globalStore.getData(keys.properties.aisWarningTpa)) {
                 if (aisWarningAis) {
                     if (ais.tcpa >=0) {

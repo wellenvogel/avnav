@@ -53,11 +53,6 @@ const NavData=function(){
 
     this.aisMode=navobjects.AisCenterMode.GPS;
 
-    /**
-     * @private
-     * @type {properties.NM}
-     */
-    this.NM=globalStore.getData(keys.properties.NM);
 
     let self=this;
     this.changeCallback=new Callback((keys)=>{self.computeValues();});
@@ -108,7 +103,7 @@ NavData.prototype.computeValues=function() {
     //copy the marker to data to make it available extern
     data.markerWp = activeRoute.getCurrentTarget();
     data.routeNextWp = activeRoute.getNextWaypoint();
-    let maplatlon=globalStore.getData(keys.map.centerPosition,new navobjects.Point(0,0))
+    let maplatlon=globalStore.getData(keys.map.centerPosition,new navobjects.Point(0,0));
     let rstart = activeRoute.getCurrentFrom();
     if (gps.valid) {
         if (activeRoute.hasActiveTarget()) {
@@ -123,13 +118,13 @@ NavData.prototype.computeValues=function() {
         }
         let centerdst = NavCompute.computeDistance(gps, maplatlon);
         data.centerCourse = centerdst.course;
-        data.centerDistance = centerdst.dtsnm;
+        data.centerDistance = centerdst.dts;
         if (activeRoute.anchorWatch() !== undefined) {
             let anchor = activeRoute.getCurrentFrom();
             data.anchorWatchDistance = activeRoute.anchorWatch();
             if (anchor) {
                 let aleginfo = NavCompute.computeLegInfo(anchor, gps);
-                data.anchorDistance = aleginfo.markerDistance * this.NM;
+                data.anchorDistance = aleginfo.markerDistance;
                 data.anchorDirection = aleginfo.markerCourse;
             }
             else {
@@ -158,7 +153,7 @@ NavData.prototype.computeValues=function() {
     if (data.markerWp) {
         let mcdst = NavCompute.computeDistance(data.markerWp, maplatlon);
         data.centerMarkerCourse = mcdst.course;
-        data.centerMarkerDistance = mcdst.dtsnm;
+        data.centerMarkerDistance = mcdst.dts;
     }
     else {
         data.centerMarkerCourse = undefined;

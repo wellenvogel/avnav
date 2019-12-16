@@ -20,7 +20,6 @@ NavCompute.computeDistance=function(src,dst){
     let llsrc=new LatLon(srcll.lat,srcll.lon);
     let lldst=new LatLon(dstll.lat,dstll.lon);
     rt.dts=llsrc.distanceTo(lldst,5)*1000;
-    rt.dtsnm=rt.dts/1852; //NM
     rt.course=llsrc.bearingTo(lldst);
     return rt;
 };
@@ -62,8 +61,6 @@ NavCompute.checkInverseCourse=function(myCourse,otherCourse){
  * @returns {navobjects.Cpa}
  */
 NavCompute.computeCpa=function(src,dst,properties){
-    let NM=properties.NM;
-    let msFactor=NM/3600.0;
     let rt = new navobjects.Cpa();
     let llsrc = new LatLon(src.lat, src.lon);
     let lldst = new LatLon(dst.lat, dst.lon);
@@ -76,9 +73,8 @@ NavCompute.computeCpa=function(src,dst,properties){
     //default to our current distance
     rt.tcpa=0;
     rt.cpa=curdistance;
-    rt.cpanm=rt.cpa/NM;
     let maxDistance=llsrc._radius*1000*Math.PI; //half earth
-    let appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed*msFactor,dst.course,dst.speed*msFactor,properties.minAISspeed*msFactor,maxDistance);
+    let appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed,dst.course,dst.speed,properties.minAISspeed,maxDistance);
     if (appr.dd !== undefined && appr.ds !== undefined) {
         let xpoint = llsrc.destinationPoint(src.course, appr.dd / 1000);
         rt.crosspoint = new navobjects.Point(xpoint._lon, xpoint._lat);
@@ -86,7 +82,6 @@ NavCompute.computeCpa=function(src,dst,properties){
     if (!appr.tm){
         rt.tcpa=0; //better undefined
         rt.cpa=curdistance;
-        rt.cpanm = rt.cpa / NM;
         rt.front=undefined;
         return rt;
     }
@@ -102,7 +97,6 @@ NavCompute.computeCpa=function(src,dst,properties){
         rt.cpa=curdistance;
         //rt.tcpa=0;
     }
-    rt.cpanm = rt.cpa / NM;
     if (appr.td !==undefined && appr.ts!==undefined){
         rt.front=(appr.ts<appr.td)?1:0;
     }
@@ -208,17 +202,17 @@ NavCompute.computeLegInfo=function(target,gps,opt_start){
     if (gps.valid) {
         let markerdst = NavCompute.computeDistance(gps, target);
         rt.markerCourse = markerdst.course;
-        rt.markerDistance = markerdst.dtsnm;
+        rt.markerDistance = markerdst.dts;
         let coursediff = Math.min(Math.abs(markerdst.course - gps.course), Math.abs(markerdst.course + 360 - gps.course),
             Math.abs(markerdst.course - (gps.course + 360)));
         if (gps.rtime && coursediff <= 85) {
             //TODO: is this really correct for VMG?
             let vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
-            //vmgapp is in kn
+            //vmgapp is in m/s
             let targettime = gps.rtime.getTime();
             rt.markerVmg = vmgapp;
             if (vmgapp > 0) {
-                targettime += rt.markerDistance / vmgapp * 3600 * 1000; //time in ms
+                targettime += rt.markerDistance / vmgapp  * 1000; //time in ms
                 let targetDate = new Date(Math.round(targettime));
                 rt.markerEta = targetDate;
             }

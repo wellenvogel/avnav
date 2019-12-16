@@ -29,7 +29,6 @@ const GpsData=function(){
     this.timer=null;
 
     this.gpsErrors=0;
-    this.NM=globalStore.getData(keys.properties.NM);
     this.courseAverageData=[];
     this.speedAverageData=[];
     this.latAverageData=[];
@@ -104,7 +103,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         delete data.course;
         if (gpsdata.course === undefined) gpsdata.course = data.track;
         delete data.track;
-        gpsdata.speed = data.speed * 3600 / this.NM;
+        gpsdata.speed = data.speed;
         delete data.speed;
         gpsdata=this.average(gpsdata);
         gpsdata.windAngle = (data.windAngle !== undefined) ? data.windAngle : 0;

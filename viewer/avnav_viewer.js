@@ -128,13 +128,6 @@ avnav.main=function() {
         };
     }
     history.push('mainpage');
-    ReactDOM.render(<App/>,document.getElementById('new_pages'));
-
-    //ios browser sometimes has issues with less...
-    setTimeout(function(){
-        propertyHandler.incrementSequence();
-    },1000);
-
     const loadScripts=(loadList)=>{
         let fileref=undefined;
         for (let i in  loadList) {
@@ -156,6 +149,12 @@ avnav.main=function() {
     };
 
     const doLateLoads=(loadPlugins)=>{
+        ReactDOM.render(<App/>,document.getElementById('new_pages'));
+        //ios browser sometimes has issues with less...
+        setTimeout(function(){
+            propertyHandler.incrementSequence();
+        },1000);
+
         //load the user and plugin stuff
         let lateLoads=["/user/viewer/user.js"];
         if (loadPlugins) {

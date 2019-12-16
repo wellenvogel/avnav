@@ -30,8 +30,7 @@ class WindGraphics extends React.Component{
         try{
             windSpeed=parseFloat(this.props.windSpeed);
             if (showKnots){
-                let nm=navcompute.NM;
-                windSpeed=windSpeed*3600/nm;
+                windSpeed=windSpeed*3600/navcompute.NM;
             }
             if (windSpeed < 10) windSpeed=Formatter.formatDecimal(windSpeed,1,2);
             else windSpeed=Formatter.formatDecimal(windSpeed,3,0);

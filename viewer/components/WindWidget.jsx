@@ -6,9 +6,9 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
-import PropertyHandler from '../util/propertyhandler.js';
 import Helper from '../util/helper.js';
 import GuiHelper from '../util/GuiHelpers.js';
+import navcompute from '../nav/navcompute.js';
 
 class WindWidget extends React.Component{
     constructor(props){
@@ -22,11 +22,10 @@ class WindWidget extends React.Component{
         let classes = "widget windWidget " +this.props.className||"";
         let style = this.props.style || {};
         let windSpeed="";
-        let showKnots=PropertyHandler.getProperties().windKnots;
         try{
             windSpeed=parseFloat(this.props.windSpeed);
-            if (showKnots){
-                let nm=PropertyHandler.getProperties().NM;
+            if (this.props.showKnots){
+                let nm=navcompute.NM;
                 windSpeed=windSpeed*3600/nm;
             }
             if (windSpeed < 10) windSpeed=Formatter.formatDecimal(windSpeed,2,1);
@@ -54,7 +53,7 @@ class WindWidget extends React.Component{
                         <div className="windInner">
                             <div className='widgetData'>{windSpeed}</div>
                             <div className='infoLeft'>WS</div>
-                            <div className='infoRight'>{showKnots ? "kn" : "m/s"}</div>
+                            <div className='infoRight'>{this.props.showKnots ? "kn" : "m/s"}</div>
                         </div>
                     </React.Fragment>
                 }
@@ -80,7 +79,8 @@ WindWidget.storeKeys={
     windAngle: keys.nav.gps.windAngle,
     windSpeed: keys.nav.gps.windSpeed,
     windReference: keys.nav.gps.windReference,
-    visible: keys.properties.showWind
+    visible: keys.properties.showWind,
+    showKnots: keys.properties.windKnots
 };
 
 module.exports=WindWidget;

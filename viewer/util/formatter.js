@@ -2,7 +2,7 @@
  * Created by andreas on 04.05.14.
  */
 
-
+import navcompute from '../nav/navcompute.js';
 
 /**
  *
@@ -106,20 +106,39 @@ const formatDecimalOpt=function(number,fix,fract,addSpace){
 /**
  * format a distance
  * show 99.9 for values < 100, show 999 for values >= 100, max 5
- * @param distance
+ * @param distance in m
+ * @param unit: one of nm,m,km
  */
-const formatDistance=function(distance){
+const formatDistance=function(distance,opt_unit){
     let number=parseFloat(distance);
     if (isNaN(number)) return "    -"; //4 spaces
+    let factor=navcompute.NM;
+    if (opt_unit == 'm') factor=1;
+    if (opt_unit == 'km') factor=1000;
+    number=number/factor;
+    if (number < 1){
+        return formatDecimal(number,3,2);
+    }
     if (number < 100){
         return formatDecimal(number,4,1);
     }
     return formatDecimal(number,5,0);
 };
 
-const formatSpeed=function(speed){
+/**
+ *
+ * @param speed in m/s
+ * @param opt_unit one of kn,ms,kmh
+ * @returns {*}
+ */
+
+const formatSpeed=function(speed,opt_unit){
     let number=parseFloat(speed);
     if (isNaN(number)) return "  -"; //2 spaces
+    let factor=3600/navcompute.NM;
+    if (opt_unit == 'ms') factor=1;
+    if (opt_unit == 'kmh') factor=3.6;
+    number=number*factor;
     if (number < 100){
         return formatDecimal(number,2,1);
     }

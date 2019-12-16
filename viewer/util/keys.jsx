@@ -239,7 +239,6 @@ let keys={
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),
         readOnlyServer: new Property(false),
-        NM: new Property(1852), //one mile
         silenceSound: new Property("sounds/1-minute-of-silence.mp3"),
         slideTime: new Property(300), //time in ms for upzoom
         slideLevels: new Property(3), //start with that many lower zoom levels
@@ -279,7 +278,7 @@ let keys={
         aisDistance: new Property(20, "AIS-Range(nm)", PropertyType.RANGE, [1, 100]), //distance for AIS query in nm
         aisClickTolerance: new Property(80, "Click Tolerance", PropertyType.RANGE, [10, 100]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
-        minAISspeed: new Property(0.2), //minimal speed in kn that we consider when computing cpa/tcpa
+        minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa
         maxAisTPA: new Property(3),    //max. computed AIS TPA time in h (otherwise we do not consider this)
         aisWarningCpa: new Property(500, "AIS Warning-CPA(m)", PropertyType.RANGE, [100, 5000, 10]), //m for AIS warning (500m)
         aisWarningTpa: new Property(900, "AIS-Warning-TPA(s)", PropertyType.RANGE, [30, 3600, 10]), //in s - max time for tpa warning (15min)

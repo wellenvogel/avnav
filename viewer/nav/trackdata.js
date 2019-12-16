@@ -46,7 +46,6 @@ const TrackData=function(){
      * @type {number}
      */
     this.trackRequestSequence=0;
-    this.NM=globalStore.getData(keys.properties.NM);
     this.startQuery();
     globalStore.register(this,keys.gui.global.propertySequence);
 

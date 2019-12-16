@@ -170,11 +170,6 @@ navobjects.Distance=function(){
      */
     this.dts=0;
     /**
-     * the distance in nm
-     * @type {number}
-     */
-    this.dtsnm=0;
-    /**
      * the course
      * @type {number}
      */
@@ -211,11 +206,7 @@ navobjects.Cpa=function(){
      * @type {number}
      */
     this.cpa=0;
-    /**
-     * cpa in NM
-     * @type {number}
-     */
-    this.cpanm=0;
+
     /**
      * time till cpa in s
      * @type {number}

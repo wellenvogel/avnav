@@ -8,34 +8,31 @@ const aisparam={
     distance: {
         headline: 'dist(nm)',
             format: function (v) {
-            return Formatter.formatDecimal(parseFloat(v.distance || 0), 3, 2);
+            return Formatter.formatDistance(v.distance || 0);
         }
     },
     heading: {
         headline: 'hdg',
             format: function (v) {
-            return Formatter.formatDecimal(parseFloat(v.headingTo || 0), 3, 0);
+            return Formatter.formatDirection(v.headingTo || 0);
         }
     },
     speed: {
         headline: 'speed(kn)',
             format: function (v) {
-            return Formatter.formatDecimal(parseFloat(v.speed || 0), 3, 1);
+            return Formatter.formatSpeed(v.speed || 0);
         }
     },
     course: {
         headline: 'course',
             format: function (v) {
-            return Formatter.formatDecimal(parseFloat(v.course || 0), 3, 0);
+            return Formatter.formatDirection(v.course || 0);
         }
     },
     cpa: {
         headline: 'cpa',
             format: function (v) {
-            let tval = parseFloat(v.tcpa || 0);
-            //no cpa if tcpa < 0
-            //if (tval < 0) return "-----";
-            return Formatter.formatDecimal(parseFloat(v.cpa || 0), 3, 2);
+            return Formatter.formatDistance(v.cpa || 0);
         }
     },
     tcpa: {
