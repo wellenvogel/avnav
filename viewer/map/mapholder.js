@@ -151,7 +151,12 @@ const MapHolder=function(){
     this.navChanged=new Callback(()=>{
         self.navEvent();
     });
+    this.propertyChange=new Callback(()=>{
+        self._chartbase=undefined;
+        self._url=undefined;
+    });
     globalStore.register(this.navChanged,storeKeys);
+    globalStore.register(this.propertyChange,keys.gui.global.propertySequence);
 
 
     /**
@@ -423,7 +428,10 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             this.maxzoom=layers[i].avnavOptions.maxZoom;
         }
     }
-    this.minzoom=2;
+    let hasBaseLayers=globalStore.getData(keys.properties.layers.base,true);
+    if (hasBaseLayers) {
+        this.minzoom = 2;
+    }
     if (this.olmap){
         let oldlayers=this.olmap.getLayers();
         if (oldlayers && oldlayers.getArray().length){
@@ -436,9 +444,11 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
                 this.olmap.removeLayer(olarray[i]);
             }
         }
-        this.olmap.addLayer(this.getBaseLayer());
-        if (layers.length > 0) {
-            this.olmap.addLayer(this.getMapOutlineLayer(layers))
+        if (hasBaseLayers) {
+            this.olmap.addLayer(this.getBaseLayer());
+            if (layers.length > 0) {
+                this.olmap.addLayer(this.getMapOutlineLayer(layers))
+            }
         }
         for (let i=0;i< layersreverse.length;i++){
             this.olmap.addLayer(layersreverse[i]);
@@ -446,9 +456,12 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         this.renderTo(div);
     }
     else {
-        let base=[this.getBaseLayer()];
-        if (layers.length > 0) {
-            base.push(this.getMapOutlineLayer(layers))
+        let base=[];
+        if (hasBaseLayers) {
+            base.push(this.getBaseLayer());
+            if (layers.length > 0) {
+                base.push(this.getMapOutlineLayer(layers))
+            }
         }
         this.olmap = new ol.Map({
             target: div?div:self.defaultDiv,

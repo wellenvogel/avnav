@@ -233,7 +233,8 @@ let keys={
             nav: new Property(true, "Navigation", PropertyType.CHECKBOX),
             boat: new Property(true, "Boat", PropertyType.CHECKBOX),
             grid: new Property(true, "Grid", PropertyType.CHECKBOX),
-            compass: new Property(true, "Compass", PropertyType.CHECKBOX)
+            compass: new Property(true, "Compass", PropertyType.CHECKBOX),
+            base: new Property(true, "Base", PropertyType.CHECKBOX)
         },
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),
