@@ -178,6 +178,10 @@ ospackage {
             into "server/handler"
             fileMode 0755
         }
+        from('server/plugins'){
+            into 'server/plugins'
+            fileMode 0644
+        }
         from('chartconvert') {
             include "*.py"
             into 'chartconvert'
