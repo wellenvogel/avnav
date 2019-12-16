@@ -127,6 +127,7 @@ public class WebViewFragment extends Fragment implements IJsEventHandler {
         });
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
+        webView.getSettings().setTextZoom(100);
         String databasePath = webView.getContext().getDir("databases",
                 Context.MODE_PRIVATE).getPath();
         webView.getSettings().setDatabasePath(databasePath);
