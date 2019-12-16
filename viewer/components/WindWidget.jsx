@@ -40,7 +40,7 @@ class WindWidget extends React.Component{
                             {Formatter.formatDirection(this.props.windAngle)}
                             <span className="unit">°</span>
                             /{windSpeed}
-                            <span className="unit">{showKnots ? "kn" : "m/s"}</span>
+                            <span className="unit">{this.props.showKnots ? "kn" : "m/s"}</span>
                         </div>
                     </React.Fragment>
                     :
