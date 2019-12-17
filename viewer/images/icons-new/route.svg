@@ -14,7 +14,7 @@
    viewBox="0 0 256 256"
    id="svg20959"
    version="1.1"
-   inkscape:version="0.91 r13725"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="route.svg">
   <title
      id="title29792">routeIcon</title>
@@ -40,7 +40,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.979899"
-     inkscape:cx="28.23821"
+     inkscape:cx="-61.665366"
      inkscape:cy="139.03123"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -52,22 +52,24 @@
      inkscape:snap-bbox="true"
      inkscape:snap-grids="false"
      inkscape:window-width="1920"
-     inkscape:window-height="1001"
-     inkscape:window-x="-9"
-     inkscape:window-y="-9"
+     inkscape:window-height="994"
+     inkscape:window-x="1680"
+     inkscape:window-y="31"
      inkscape:window-maximized="1">
     <sodipodi:guide
        position="128,315.67267"
        orientation="1,0"
        id="guide24971"
        inkscape:label=""
-       inkscape:color="rgb(0,0,255)" />
+       inkscape:color="rgb(0,0,255)"
+       inkscape:locked="false" />
     <sodipodi:guide
        position="-92.934034,128"
        orientation="0,1"
        id="guide24973"
        inkscape:label=""
-       inkscape:color="rgb(0,0,255)" />
+       inkscape:color="rgb(0,0,255)"
+       inkscape:locked="false" />
     <inkscape:grid
        type="xygrid"
        id="grid25543" />
@@ -118,7 +120,7 @@
     <g
        id="use29879"
        style="fill:#ff2a2a"
-       transform="translate(78.071118,728.89764)">
+       transform="translate(68.979745,729.90779)">
       <circle
          r="42.553192"
          id="circle11703"
