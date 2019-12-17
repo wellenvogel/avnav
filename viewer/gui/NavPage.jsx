@@ -55,18 +55,12 @@ const widgetClick=(item,data,panel)=>{
         MapHolder.checkAutoZoom(true);
         return;
     }
-    if (item.name == 'WindDisplay' || item.name == 'DepthDisplay'){
-        history.push("gpspage",{secondPage:true});
-        return;
-    }
-    if (item.name =='COG' || item.name == 'SOG'|| item.name == 'TimeStatus'||item.name == 'Position'){
-        history.push('gpspage');
-        return;
-    }
-    if (item.name == 'BRG'||item.name == 'DST'|| item.name=='ETA'|| item.name=='WpPosition'){
+    if (panel == 'bottomLeft'){
         activeRoute.setIndexToTarget();
-        globalStore.storeData(keys.gui.navpage.showWpButtons,true)
+        globalStore.storeData(keys.gui.navpage.showWpButtons,true);
+        return;
     }
+    history.push("gpspage",{widget:item.name});
 
 };
 

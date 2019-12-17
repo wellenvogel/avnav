@@ -54,12 +54,31 @@ const getWeightSum=(list)=>{
     return sum;
 };
 
+const layoutBase="gpspage";
+const findPageWithWidget=(name,anchor)=>{
+    let pnums=[1,2,3,4,5];
+    let panels=['left','right'];
+    if (! name) return ;
+    for (let pidx in pnums){
+        for (let idx in panels){
+            let list=getPanelList(panels[idx],anchor,pnums[pidx]);
+            if (! list) continue;
+            for (let li in list){
+                if (! list[li]) continue;
+                if (list[li].name == name){
+                    return pnums[pidx];
+                }
+            }
+        }
+    }
+};
+
+
 const layoutBaseParam={
     layoutWidth: 600, //the widgets are prepared for this width, others will scale the font
     layoutHeight: 600,
     baseWidgetFontSize: 21, //font size for 600x600
 };
-const layoutBase="gpspage";
 
 class GpsPage extends React.Component{
     constructor(props){
@@ -161,6 +180,12 @@ class GpsPage extends React.Component{
             }
         ];
         this.onItemClick=this.onItemClick.bind(this);
+        if (props.options && props.options.widget && ! props.options.returning) {
+            let pagenNum = findPageWithWidget(props.options.widget, props.anchor);
+            if (pagenNum !== undefined){
+                globalStore.storeData(keys.gui.gpspage.pageNumber,pagenNum);
+            }
+        }
     }
     onItemClick(item,data){
         if (item && item.name=== "AisTarget"){

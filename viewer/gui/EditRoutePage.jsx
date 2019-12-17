@@ -87,14 +87,15 @@ const widgetClick=(item,data,panel)=>{
                 startWaypointDialog(data,data.idx);
             }
         }
+        return;
     }
-    if (item.name =='COG' || item.name == 'SOG'|| item.name == 'TimeStatus'||item.name == 'Position'){
+    if (panel == 'bottomRight'){
         if (! globalStore.getData(keys.nav.gps.valid)) return;
         let boatPos=globalStore.getData(keys.nav.gps.position);
         MapHolder.setCenter(boatPos);
         return;
     }
-    if (item.name == 'BRG'||item.name == 'DST'|| item.name=='ETA'|| item.name=='WpPosition'){
+    if (panel == 'bottomLeft'){
         globalStore.storeData(keys.gui.editroutepage.showWpButtons,true)
     }
 
