@@ -34,14 +34,14 @@ class ActiveRouteWidget extends React.Component{
                 <div className="widgetData">
                     <div className="routeName">{this.props.routeName}</div>
                     <div>
-                        <span className="routeRemain">{Formatter.formatDecimal(this.props.remain, 3, 1)}</span>
+                        <span className="routeRemain">{Formatter.formatDistance(this.props.remain)}</span>
                         <span className='unit'>nm</span>
                     </div>
                     <div className="routeEta">{Formatter.formatTime(this.props.eta)}</div>
                     { this.props.isApproaching ?
                         <div className="routeNext">
                             <span
-                                className="routeNextCourse">{Formatter.formatDecimal(this.props.nextCourse, 3, 0)}</span>
+                                className="routeNextCourse">{Formatter.formatDirection(this.props.nextCourse)}</span>
                             <span className='unit'>&#176;</span>
                         </div>
                         : <div></div>

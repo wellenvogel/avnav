@@ -664,13 +664,6 @@ routeobjects.RoutePoint=function(waypoint){
     this.selected=false;
 };
 base.inherits(routeobjects.RoutePoint,navobjects.WayPoint);
-routeobjects.formatRoutePoint=function(routePoint){
-    let rt=assign({},routePoint);
-    rt.distance=Formatter.formatDistance(routePoint.distance).replace(/^/g,"");
-    rt.course=Formatter.formatDirection(routePoint.course).replace(/^ /g,"");
-    rt.latlon=Formatter.formatLonLats(routePoint);
-    return rt;
-};
 
 /**
  * get a list of waypoint info

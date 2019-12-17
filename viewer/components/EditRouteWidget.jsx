@@ -50,12 +50,12 @@ class EditRouteWidget extends React.Component{
             </div>
             <div className="widgetData">
                 <span className="label">DST:</span>
-                <span className="routeInfo">{Formatter.formatDecimal(len,3,1)}</span>
+                <span className="routeInfo">{Formatter.formatDistance(len)}</span>
             </div>
             { this.props.mode !== "horizontal"?
             <div className="widgetData">
                 <span className="label">RTG:</span>
-                <span className="routeInfo">{Formatter.formatDecimal(remain,3,1)}</span>
+                <span className="routeInfo">{Formatter.formatDistance(remain)}</span>
             </div>:null}
             { this.props.mode !== "horizontal"?
             <div className="widgetData">
@@ -76,8 +76,7 @@ EditRouteWidget.propTypes={
     remain: PropTypes.number,
     eta:    PropTypes.objectOf(Date),
     isApproaching: PropTypes.bool,
-    isActive: PropTypes.bool,
-    name: PropTypes.string
+    isActive: PropTypes.bool
 };
 
 EditRouteWidget.storeKeys=editor.getStoreKeys({

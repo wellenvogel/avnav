@@ -4,16 +4,14 @@
 import React from 'react';
 import reactCreateClass from 'create-react-class';
 import PropTypes from 'prop-types';
-import routeobjects from '../nav/routeobjects.js';
-
+import Formatter from '../util/formatter.js';
 const WayPointItem =(props)=>{
         let info;
-        let formatted=routeobjects.formatRoutePoint(props);
         if (props.showLatLon){
-            info=<div className="info">{formatted.latlon}</div>;
+            info=<div className="info">{Formatter.formatLonLats(props)}</div>;
         }
         else{
-            info=<div className="info">{formatted.course}&#176;/{formatted.distance}nm</div>;
+            info=<div className="info">{Formatter.formatDirection(props.course)}&#176;/{Formatter.formatDistance(props.distance)}nm</div>;
         }
         let classNames="routeInfoPoint "+props.className||"";
         if (props.selected) classNames+=" activeEntry";

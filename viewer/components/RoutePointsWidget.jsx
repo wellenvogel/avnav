@@ -16,6 +16,12 @@ import GuiHelper from '../util/GuiHelpers.js';
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
+const RoutePoint=(showLL)=>{
+    return function(props){
+        return <WaypointItem {...props} showLatLon={showLL}/>
+    }
+};
+
 class RoutePointsWidget extends React.Component{
     constructor(props){
         super(props);
@@ -57,7 +63,7 @@ class RoutePointsWidget extends React.Component{
         return (
             <ItemList className={classes}
                       itemList={route?route.getRoutePoints(index):[]}
-                      itemClass={WaypointItem}
+                      itemCreator={(item)=>{return RoutePoint(this.props.showLatLon)}}
                       scrollable={true}
                       onItemClick={(item,data)=>{if (self.props.onClick)
                             self.props.onClick(new routeobjects.RoutePoint(item)) }}
@@ -74,11 +80,12 @@ RoutePointsWidget.propTypes={
     mode:           PropTypes.string, //display info side by side if small
     route:          PropTypes.objectOf(routeobjects.Route),
     isActive:       PropTypes.bool,
-    index:          PropTypes.number
+    index:          PropTypes.number,
+    showLatLon:     PropTypes.bool
 };
 
 RoutePointsWidget.storeKeys=editor.getStoreKeys({
-
+    showLatLon: keys.properties.routeShowLL
 });
 
 module.exports=RoutePointsWidget;

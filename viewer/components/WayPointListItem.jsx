@@ -4,6 +4,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Button from './Button.jsx';
+import Formatter from '../util/formatter.js';
 
 let WayPointListItem=(props)=>{
    {
@@ -19,21 +20,22 @@ let WayPointListItem=(props)=>{
                     props.onClick('btnDelete');
                     }}/>
             <div className="name">{props.name}</div>
-            <div className="info">{props.latlon},&nbsp;{props.course}&#176;/{props.distance}nm</div>
+            <div className="info">{Formatter.formatLonLats(props)},&nbsp;{Formatter.formatDirection(props.course)}&#176;/{Formatter.formatDistance(props.distance)}nm</div>
         </div>
         );
     }
 };
 
 WayPointListItem.propTypes={
-        idx: PropTypes.number,
-        name: PropTypes.string,
-        latlon: PropTypes.string,
-        course: PropTypes.string,
-        distance: PropTypes.string,
-        className: PropTypes.string,
-        onClick:  PropTypes.func.isRequired,
-        selected: PropTypes.bool
+        idx:        PropTypes.number,
+        name:       PropTypes.string,
+        course:     PropTypes.number,
+        distance:   PropTypes.number,
+        lat:        PropTypes.number,
+        lon:        PropTypes.number,
+        className:  PropTypes.string,
+        onClick:    PropTypes.func.isRequired,
+        selected:   PropTypes.bool
 };
 
 module.exports=WayPointListItem;

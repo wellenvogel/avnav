@@ -49,10 +49,6 @@ const Heading = (props)=>{
     );
 };
 
-const WaypointForList=(props)=>{
-    let formattedProps=RouteObjects.formatRoutePoint(props);
-    return <WaypointListItem {...formattedProps}/>
-};
 
 const createNewRouteDialog=(name,okCallback)=> {
     class Dialog extends React.Component{
@@ -305,7 +301,7 @@ class RoutePage extends React.Component{
                     />
                 <ItemList
                     itemList={route.getRoutePoints(index)}
-                    itemClass={WaypointForList}
+                    itemClass={WaypointListItem}
                     scrollable={true}
                     onItemClick={(item,data)=>{
                         if (data=='btnDelete'){
