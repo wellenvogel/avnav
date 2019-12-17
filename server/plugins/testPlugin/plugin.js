@@ -34,18 +34,19 @@ var widget={
      *                defined with the storeKeys
      */
     renderCanvas:function(canvas,props){
-        let ctx=canvas.getContext('2d');
+        var ctx=canvas.getContext('2d');
         // Set scale factor for all values
-        let crect=canvas.getBoundingClientRect();
-        let w=crect.width;
-        let h=crect.height;
+        var crect=canvas.getBoundingClientRect();
+        var w=crect.width;
+        var h=crect.height;
         canvas.width=w;
         canvas.height=h;
-        let width = 200;			// Control width
-        let height = 200;			// Control height
-        let f1=w/width;
-        let f2=h/height;
-        let f=Math.min(f1,f2);
+        ctx.save();
+        var width = 200;			// Control width
+        var height = 200;			// Control height
+        var f1=w/width;
+        var f2=h/height;
+        var f=Math.min(f1,f2);
         ctx.scale(f,f);
         ctx.translate(100*f1/f,100*f2/f); //move the drawing to the middle
         // Rotate
@@ -55,7 +56,7 @@ var widget={
         ctx.lineWidth = 6;
         ctx.lineCap = 'round';
         ctx.strokeStyle = '#000000';
-        let pointer_length=80;
+        var pointer_length=80;
         ctx.moveTo(0,0);
         ctx.lineTo(0,-pointer_length);
         ctx.stroke();
@@ -64,6 +65,7 @@ var widget={
         ctx.lineTo(0,-pointer_length);
         ctx.fill();
         ctx.stroke();
+        ctx.restore();
     },
     /**
      * the access to the internal store
