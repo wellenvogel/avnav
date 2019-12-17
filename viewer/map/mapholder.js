@@ -100,6 +100,7 @@ const MapHolder=function(){
     this.tracklayer=new TrackLayer(this);
     this.routinglayer=new RouteLayer(this);
     this.minzoom=32;
+    this.mapMinZoom=32; //for checking in autozoom - differs from minzoom if the baselayer is active
     this.maxzoom=0;
     this.center=[0,0];
     this.zoom=-1;
@@ -418,6 +419,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
     let layers=this.parseLayerlist(layerdata,baseurl);
     let layersreverse=[];
     this.minzoom=32;
+    this.mapMinZoom=this.minzoom;
     this.maxzoom=0;
     for (let i=layers.length- 1;i>=0;i--){
         layersreverse.push(layers[i]);
@@ -428,6 +430,7 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
             this.maxzoom=layers[i].avnavOptions.maxZoom;
         }
     }
+    this.mapMinZoom=this.minzoom;
     let hasBaseLayers=globalStore.getData(keys.properties.layers.base,true);
     if (hasBaseLayers) {
         this.minzoom = 2;
@@ -737,12 +740,11 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
     }
     //check if we have tiles available for this zoom
     //otherwise change zoom but leave required as it is
-    let currentZoom=this.olmap.getView().getZoom();
     let centerCoord=this.olmap.getView().getCenter();
     let hasZoomInfo=false;
     let zoomOk=false;
     let tzoom=2;
-    for (tzoom=Math.floor(this.requiredZoom);tzoom >= this.minzoom;tzoom--){
+    for (tzoom=Math.floor(this.requiredZoom);tzoom >= this.mapMinZoom;tzoom--){
         zoomOk=false;
         let layers=this.olmap.getLayers().getArray();
         for (let i=0;i<layers.length && ! zoomOk;i++){
@@ -781,7 +783,9 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
             break;
         }
     }
-    if (! zoomOk && hasZoomInfo){
+    if (! zoomOk && hasZoomInfo && (this.minzoom == this.mapMinZoom)){
+        //if we land here, we are down to the min zoom of the map
+        //we only set this, if we do not have a base layer
         let nzoom=tzoom+1;
         if (nzoom > this.requiredZoom) nzoom=this.requiredZoom;
         if (nzoom != this.olmap.getView().getZoom) {
