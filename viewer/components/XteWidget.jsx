@@ -9,6 +9,7 @@ import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import Helper from '../util/helper.js';
 import GuiHelper from '../util/GuiHelpers.js';
+import navcompute from '../nav/navcompute.js';
 
 
 class XteWidget extends React.Component{
@@ -89,7 +90,7 @@ class XteWidget extends React.Component{
         context.lineTo(0.5*w,linebase+0.5*middleHeight);
         context.stroke();
         context.closePath();
-        let curXte=this.props.markerXte;
+        let curXte=this.props.markerXte/navcompute.NM;
         if (curXte === undefined) return;
         let xtepos=parseFloat(curXte)/xteMax;
         if (xtepos < -1.1) xtepos=-1.1;

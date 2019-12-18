@@ -29,7 +29,7 @@ NavCompute.computeXte=function(start,destination,current){
     let llsrc=new LatLon(start.lat,start.lon);
     let lldst=new LatLon(destination.lat,destination.lon);
     let llcur=new LatLon(current.lat,current.lon);
-    let xte=llsrc.xte(lldst,llcur)*1000/1852;
+    let xte=llsrc.xte(lldst,llcur)*1000;
     return xte;
 };
 
