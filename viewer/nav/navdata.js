@@ -88,13 +88,6 @@ NavData.prototype.computeValues=function() {
         routeEta: null,
         routeNextCourse: 0,
         routeNextWp: undefined,
-        /* data for the route we are editing */
-        edRouteName: undefined,
-        edRouteNumPoints: 0,
-        edRouteLen: 0,
-        /* the next 2 will only be filled when the editing route is the current */
-        edRouteRemain: 0,
-        edRouteEta:0,
         anchorWatchDistance: undefined,
         anchorDistance: 0,
         anchorDirection: 0
@@ -165,13 +158,13 @@ NavData.prototype.computeValues=function() {
     if (curRoute) {
         data.routeName = curRoute.name;
         data.routeNumPoints = curRoute.points.length;
-        data.routeLen = curRoute.computeLength(0, curRoute);
+        data.routeLen = curRoute.computeLength(0);
         let currentIndex = curRoute.getIndexFromPoint(data.markerWp);
         if (currentIndex < 0) currentIndex = 0;
         data.routeRemain = curRoute.computeLength(currentIndex) + data.markerDistance;
         let routetime = gps.rtime ? gps.rtime.getTime() : 0;
         if (data.markerVmg && data.markerVmg > 0) {
-            routetime += data.routeRemain / data.markerVmg * 3600 * 1000; //time in ms
+            routetime += data.routeRemain / data.markerVmg  * 1000; //time in ms
             let routeDate = new Date(Math.round(routetime));
             data.routeEta = routeDate;
         }
