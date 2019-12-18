@@ -139,6 +139,7 @@ class AisInfoPage extends React.Component{
                     itemList={displayItems}
                     scrollable={true}
                     className="infoList"
+                    onClick={()=>{history.pop()}}
                     />
 
             </React.Fragment>

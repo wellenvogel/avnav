@@ -40,7 +40,11 @@ class ItemList extends React.Component{
         let Content = function (props) {
             let idx = 0;
             return (
-                <div className={props.className} style={style} ref={(el)=>{if (props.listRef) props.listRef(el)}}>
+                <div className={props.className}
+                     style={style}
+                     ref={(el)=>{if (props.listRef) props.listRef(el)}}
+                     onClick={(ev)=>{if (self.props.onClick)self.props.onClick(ev);}}
+                    >
                     {allitems.map(function (entry) {
                         let itemProps = assign({}, entry);
                         let key = getKey(entry);
@@ -96,7 +100,8 @@ ItemList.propTypes={
         hideOnEmpty:    PropTypes.bool,
         fontSize:       PropTypes.any,
         listRef:        PropTypes.func,
-        selectedIndex:  PropTypes.number
+        selectedIndex:  PropTypes.number,
+        onClick:        PropTypes.func
 };
 
 module.exports=ItemList;
