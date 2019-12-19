@@ -2,7 +2,8 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "AvNav"
-#define MyAppVersion GetFileVersion("..\\AvChartConvert.exe")
+#define ExeSource "..\\AvChartConvert\\AvChartConvert\\bin\\x86\\Release\\AvChartConvert.exe"
+#define MyAppVersion GetFileVersion(ExeSource)
 #define MyAppVersionMinus StringChange(MyAppVersion,".","-")
 ;#define MyAppVersion "2015-10-16"
 #define MyAppPublisher "Andreas Vogel"
@@ -52,7 +53,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\AvChartConvert.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: {#ExeSource}; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: "..\avnav_server_home.xml"; DestDir: "{app}\windows"; DestName: "avnav_server.xml"
 Source: "..\downloadAndInstall.ps1"; DestDir: "{app}\windows"; DestName: "downloadAndInstall.ps1"

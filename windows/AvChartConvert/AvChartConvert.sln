@@ -10,6 +10,7 @@ Global
 		Debug|x86 = Debug|x86
 		DebugNet|x86 = DebugNet|x86
 		Release|x86 = Release|x86
+		ReleaseNet|x86 = ReleaseNet|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{4E733350-0FDE-40C7-9EB7-CCF50A4A18C1}.Debug|x86.ActiveCfg = Debug|x86
@@ -18,6 +19,8 @@ Global
 		{4E733350-0FDE-40C7-9EB7-CCF50A4A18C1}.DebugNet|x86.Build.0 = DebugNet|x86
 		{4E733350-0FDE-40C7-9EB7-CCF50A4A18C1}.Release|x86.ActiveCfg = Release|x86
 		{4E733350-0FDE-40C7-9EB7-CCF50A4A18C1}.Release|x86.Build.0 = Release|x86
+		{4E733350-0FDE-40C7-9EB7-CCF50A4A18C1}.ReleaseNet|x86.ActiveCfg = ReleaseNet|x86
+		{4E733350-0FDE-40C7-9EB7-CCF50A4A18C1}.ReleaseNet|x86.Build.0 = ReleaseNet|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

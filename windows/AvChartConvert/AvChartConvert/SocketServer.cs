@@ -25,13 +25,13 @@ namespace AvChartConvert
         public void start()
         {
             listener = new Thread(listen);
+            listenerSocket = new TcpListener(port);
+            listenerSocket.Start();
             listener.Start();
         }
 
         private void listen()
         {
-            listenerSocket = new TcpListener(port);
-            listenerSocket.Start();
             while (!doStop)
             {
                 try {
@@ -74,7 +74,12 @@ namespace AvChartConvert
         public void stop()
         {
             doStop = true;
-            listenerSocket.Stop();
+            try
+            {
+                listenerSocket.Stop();
+                listener.Interrupt();
+            }
+            catch (Exception e) { }
         }
     }
     

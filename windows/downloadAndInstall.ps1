@@ -108,5 +108,7 @@ if ($avnavUrl){
 catch {
     Write-Host "Downlod failed:"+$_.Exception.Message
 }
-$dummy=Read-Host -Prompt "ENTER to close"
+Write-Host "Close window to continue"
+Start-Sleep -Seconds 3600
+
 

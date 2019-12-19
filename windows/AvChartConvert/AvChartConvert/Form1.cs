@@ -507,6 +507,10 @@ namespace AvChartConvert
                 if (serverProcess.HasExited)
                 {
                     serverProcess = null;
+                    if (server != null)
+                    {
+                        server.stop();
+                    }
                     return false;
                 }
                 return true;
@@ -557,8 +561,28 @@ namespace AvChartConvert
                 {
                     MessageBox.Show("invalid delay time " + txTestDelay.Text + ", using 0.3s");
                 }
-                this.server = new SocketServer(this.txTestData.Text, Convert.ToInt32(txTestPort.Text), Convert.ToInt32(delayS * 1000));
-                this.server.start();
+                if (!File.Exists(this.txTestData.Text))
+                {
+                    MessageBox.Show("No file " + this.txTestData.Text + " found, unable to run simulation");
+
+                }
+                else
+                {
+                    if (this.server != null)
+                    {
+                        this.server.stop();
+                    }
+
+                    this.server = new SocketServer(this.txTestData.Text, Convert.ToInt32(txTestPort.Text), Convert.ToInt32(delayS * 1000));
+                    try
+                    {
+                        this.server.start();
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show("Unable to start Emulation Data Server: " + e.Message);
+                    }
+                }
             }
             serverProcess.Start();
             this.lbServerRunning.Text = "Server pid " + serverProcess.Id;
@@ -863,10 +887,11 @@ namespace AvChartConvert
                     currentDlPath = location2;
                 }
                 ProcessStartInfo info = new ProcessStartInfo(@"powershell.exe");
-                info.Arguments = "\"" + currentDlPath + "\" \"" + updateDialog.getUpdateUrl() + "\"";
+                info.Arguments = " -executionpolicy unrestricted -file \"" + currentDlPath + "\" \"" + updateDialog.getUpdateUrl() + "\"";
                 info.RedirectStandardInput = false;
                 info.RedirectStandardOutput = false;
-                info.UseShellExecute = true;
+                info.RedirectStandardError = false;
+                info.UseShellExecute = false;
                 Process updater = new Process();
                 updater.StartInfo = info;
                 updater.EnableRaisingEvents = true;
