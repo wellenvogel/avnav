@@ -1,4 +1,8 @@
-﻿$targetBase=$env:USERPROFILE + "\avnav"
+﻿Param(
+    [string]$avnavUrl
+)
+
+$targetBase=$env:LOCALAPPDATA + "\avnav"
 $downloadDir=$targetBase+"\download"
 
 
@@ -13,6 +17,7 @@ $actions=@(
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12
 
+Write-Host "Installing into $targetBase"
 foreach ($program in $actions){
     $exe=""
     if ($program.target){
@@ -25,16 +30,16 @@ foreach ($program in $actions){
     $name=$program.name
     $target=$program.target
     echo "checking $name"
-    if (Test-Path $exe -PathType Leaf ){
+    if ($null=Test-Path $exe -PathType Leaf ){
         Write-Host "$name : $exe found"
     }
     else {
         Write-Host "download $name from $url"
         $Client = New-Object System.Net.WebClient
         if ($target){
-            md -Force $target
+            $null=md -Force $target
         }
-        md -Force $downloadDir
+        $null=md -Force $downloadDir
         $Client.DownloadFile($url,$downloadDir+"\"+$name)
         $res=$null
         if ($target){
@@ -59,4 +64,42 @@ foreach ($program in $actions){
         Write-Host "installing $name finished"
 
     }
+    
+}
+
+if ($avnavUrl){
+    Write-Host "Downloading avnav from $avnavUrl"
+    $Client = New-Object System.Net.WebClient
+    $downloadName=$downloadDir+"\avnav-current.zip"
+    if ($null=Test-Path $downloadName -PathType Leaf){
+        $null=Remove-Item -Path $downloadName -Force
+    }
+    $null=md -Force $downloadDir
+    $Client.DownloadFile($avnavUrl,$downloadName)
+    if ( $null=Test-Path $downloadName -PathType Leaf){
+        #check if the archive contains at least avnav_server.py
+        $checkFiles=@("server/avnav_server.py")
+        $checkResults=@{}
+        $null=[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
+        $zip=[IO.Compression.ZipFile]::OpenRead($downloadName)
+        foreach ($entry in $zip.Entries){
+            foreach ($k in $checkFiles){
+                if ($k -eq $entry.FullName){
+                    $checkResults[$k]=1
+                }
+            }    
+        }
+        $zip.Dispose()
+        foreach ($k in $checkFiles){
+            if ($checkResults[$k] -ne 1){
+                throw "required file $k not found in $avnavUrl, unable to extract"
+            }
+        }
+        Write-Host "Installing avnav"
+        Expand-Archive -Force -LiteralPath $downloadName -DestinationPath $targetBase
+    }
+    else{
+        Write-Host "Unable to download avnav from $avnavUrl"
+    }
+
 }
