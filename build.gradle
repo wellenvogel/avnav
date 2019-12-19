@@ -234,6 +234,22 @@ ospackage {
 }
 
 
+task buildZip(type: Zip){
+    //archiveName="avnav.zip"
+    archiveVersion=project.avnavVersion
+    dependsOn 'releaseViewer',pkgVersion
+    group taskgroup
+    includeEmptyDirs=false
+    with ospackage.delegateCopySpec
+    eachFile{ d->
+        if (!d.getPath().matches("^usr/lib/avnav.*")) {
+            d.exclude()
+            return
+        }
+        d.setPath(d.getPath().replaceAll("^usr/lib/avnav/",""))
+    }
+}
+
 task raspiDeb(type: GradleBuild){
     group taskgroup
     buildFile="raspi.gradle"
@@ -434,6 +450,10 @@ task uploadDeb(type: UploadTask){
 task uploadRaspi(type: UploadTask){
     inputFile=file("$buildDir/distributions/avnav-raspi_${project.avnavVersion}_all.deb")
     dependsOn raspiDeb
+}
+task uploadZip(type: UploadTask){
+    inputFile=file("$buildDir/distributions/avnav-${project.avnavVersion}.zip")
+    dependsOn buildZip
 }
 task uploadRpm(type: UploadTask){
     inputFile=file("$buildDir/distributions/avnav-${project.avnavVersion}.noarch.rpm")
