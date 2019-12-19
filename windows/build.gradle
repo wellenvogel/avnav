@@ -26,13 +26,15 @@ task buildViewer(type: org.gradle.api.tasks.GradleBuild){
 }
 
 project.ext.avnavVersion=null
-task pkgVersion<< {
-    if (!project.hasProperty('packageVersion')) {
-        SimpleDateFormat f = new SimpleDateFormat('YYYYMMdd')
-        project.avnavVersion=f.format(new Date())
-    } else {
-        project.avnavVersion = packageVersion
-    }
+task pkgVersion {
+    doFirst{	
+	    if (!project.hasProperty('packageVersion')) {
+		SimpleDateFormat f = new SimpleDateFormat('YYYYMMdd')
+		project.avnavVersion=f.format(new Date())
+	    } else {
+		project.avnavVersion = packageVersion
+	    }
+	}
 }
 
 def versionFile=file("$projectDir/AvChartConvert/AvChartConvert/Properties/AssemblyInfo.cs")

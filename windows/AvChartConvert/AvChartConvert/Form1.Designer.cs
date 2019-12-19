@@ -49,8 +49,6 @@
             this.btnStartServer = new System.Windows.Forms.Button();
             this.lbServerRunning = new System.Windows.Forms.Label();
             this.timer2 = new System.Windows.Forms.Timer(this.components);
-            this.checkUseCmd = new System.Windows.Forms.CheckBox();
-            this.lbCmd = new System.Windows.Forms.Label();
             this.btTestData = new System.Windows.Forms.Button();
             this.txTestData = new System.Windows.Forms.TextBox();
             this.tbUrl = new System.Windows.Forms.TextBox();
@@ -100,6 +98,7 @@
             this.lnkHome = new System.Windows.Forms.LinkLabel();
             this.label13 = new System.Windows.Forms.Label();
             this.lbVersion = new System.Windows.Forms.Label();
+            this.updateButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -283,28 +282,6 @@
             this.timer2.Interval = 500;
             this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
             // 
-            // checkUseCmd
-            // 
-            this.checkUseCmd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.checkUseCmd.AutoSize = true;
-            this.checkUseCmd.Location = new System.Drawing.Point(7, 242);
-            this.checkUseCmd.Name = "checkUseCmd";
-            this.checkUseCmd.Size = new System.Drawing.Size(80, 17);
-            this.checkUseCmd.TabIndex = 22;
-            this.checkUseCmd.Text = "useCmdFile";
-            this.checkUseCmd.UseVisualStyleBackColor = true;
-            // 
-            // lbCmd
-            // 
-            this.lbCmd.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbCmd.AutoSize = true;
-            this.lbCmd.Location = new System.Drawing.Point(81, 242);
-            this.lbCmd.Name = "lbCmd";
-            this.lbCmd.Size = new System.Drawing.Size(252, 13);
-            this.lbCmd.TabIndex = 23;
-            this.lbCmd.Text = "check this if python is not found and adapt cmd files";
-            // 
             // btTestData
             // 
             this.btTestData.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -354,7 +331,7 @@
             // splitContainer1
             // 
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.splitContainer1.Margin = new System.Windows.Forms.Padding(2);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -377,10 +354,8 @@
             this.panel1.Controls.Add(this.btLogFile);
             this.panel1.Controls.Add(this.btViewLog);
             this.panel1.Controls.Add(this.cbNewGemf);
-            this.panel1.Controls.Add(this.lbCmd);
             this.panel1.Controls.Add(this.tbLogFile);
             this.panel1.Controls.Add(this.cbLogFile);
-            this.panel1.Controls.Add(this.checkUseCmd);
             this.panel1.Controls.Add(this.buttonStop);
             this.panel1.Controls.Add(this.buttonOK);
             this.panel1.Controls.Add(this.buttonFocus);
@@ -396,7 +371,7 @@
             this.panel1.Controls.Add(this.buttonOutDir);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
-            this.panel1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel1.Margin = new System.Windows.Forms.Padding(2);
             this.panel1.Name = "panel1";
             this.panel1.Padding = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.panel1.Size = new System.Drawing.Size(375, 391);
@@ -557,7 +532,7 @@
             this.panel2.Controls.Add(this.btnStartServer);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
-            this.panel2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel2.Margin = new System.Windows.Forms.Padding(2);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(372, 391);
             this.panel2.TabIndex = 27;
@@ -569,7 +544,7 @@
             this.pUserConfig.Controls.Add(this.btChangeUserConfig);
             this.pUserConfig.Controls.Add(this.txUserConfig);
             this.pUserConfig.Location = new System.Drawing.Point(4, 171);
-            this.pUserConfig.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.pUserConfig.Margin = new System.Windows.Forms.Padding(2);
             this.pUserConfig.Name = "pUserConfig";
             this.pUserConfig.Size = new System.Drawing.Size(364, 72);
             this.pUserConfig.TabIndex = 46;
@@ -624,7 +599,7 @@
             this.pServerMode.Controls.Add(this.rbModeIP);
             this.pServerMode.Controls.Add(this.rbModeCom);
             this.pServerMode.Location = new System.Drawing.Point(106, 119);
-            this.pServerMode.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.pServerMode.Margin = new System.Windows.Forms.Padding(2);
             this.pServerMode.Name = "pServerMode";
             this.pServerMode.Size = new System.Drawing.Size(270, 38);
             this.pServerMode.TabIndex = 42;
@@ -633,7 +608,7 @@
             // 
             this.rbModeCustom.AutoSize = true;
             this.rbModeCustom.Location = new System.Drawing.Point(199, 7);
-            this.rbModeCustom.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbModeCustom.Margin = new System.Windows.Forms.Padding(2);
             this.rbModeCustom.Name = "rbModeCustom";
             this.rbModeCustom.Size = new System.Drawing.Size(60, 17);
             this.rbModeCustom.TabIndex = 31;
@@ -646,7 +621,7 @@
             // 
             this.rbModeTest.AutoSize = true;
             this.rbModeTest.Location = new System.Drawing.Point(8, 7);
-            this.rbModeTest.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbModeTest.Margin = new System.Windows.Forms.Padding(2);
             this.rbModeTest.Name = "rbModeTest";
             this.rbModeTest.Size = new System.Drawing.Size(46, 17);
             this.rbModeTest.TabIndex = 30;
@@ -659,7 +634,7 @@
             // 
             this.rbModeIP.AutoSize = true;
             this.rbModeIP.Location = new System.Drawing.Point(134, 7);
-            this.rbModeIP.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbModeIP.Margin = new System.Windows.Forms.Padding(2);
             this.rbModeIP.Name = "rbModeIP";
             this.rbModeIP.Size = new System.Drawing.Size(35, 17);
             this.rbModeIP.TabIndex = 29;
@@ -672,7 +647,7 @@
             // 
             this.rbModeCom.AutoSize = true;
             this.rbModeCom.Location = new System.Drawing.Point(62, 7);
-            this.rbModeCom.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbModeCom.Margin = new System.Windows.Forms.Padding(2);
             this.rbModeCom.Name = "rbModeCom";
             this.rbModeCom.Size = new System.Drawing.Size(70, 17);
             this.rbModeCom.TabIndex = 28;
@@ -690,7 +665,7 @@
             this.pIp.Controls.Add(this.label7);
             this.pIp.Controls.Add(this.txIpAddress);
             this.pIp.Location = new System.Drawing.Point(4, 171);
-            this.pIp.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.pIp.Margin = new System.Windows.Forms.Padding(2);
             this.pIp.Name = "pIp";
             this.pIp.Size = new System.Drawing.Size(367, 28);
             this.pIp.TabIndex = 40;
@@ -744,7 +719,7 @@
             this.pCom.Controls.Add(this.label6);
             this.pCom.Controls.Add(this.lbComPort);
             this.pCom.Location = new System.Drawing.Point(4, 171);
-            this.pCom.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.pCom.Margin = new System.Windows.Forms.Padding(2);
             this.pCom.Name = "pCom";
             this.pCom.Size = new System.Drawing.Size(367, 30);
             this.pCom.TabIndex = 35;
@@ -775,7 +750,7 @@
             // 
             this.lbComPort.FormattingEnabled = true;
             this.lbComPort.Location = new System.Drawing.Point(95, 6);
-            this.lbComPort.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.lbComPort.Margin = new System.Windows.Forms.Padding(2);
             this.lbComPort.Name = "lbComPort";
             this.lbComPort.Size = new System.Drawing.Size(99, 17);
             this.lbComPort.TabIndex = 33;
@@ -791,7 +766,7 @@
             this.pTestData.Controls.Add(this.btTestData);
             this.pTestData.Controls.Add(this.txTestData);
             this.pTestData.Location = new System.Drawing.Point(4, 171);
-            this.pTestData.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.pTestData.Margin = new System.Windows.Forms.Padding(2);
             this.pTestData.Name = "pTestData";
             this.pTestData.Size = new System.Drawing.Size(367, 72);
             this.pTestData.TabIndex = 41;
@@ -899,11 +874,24 @@
             this.lbVersion.Size = new System.Drawing.Size(0, 13);
             this.lbVersion.TabIndex = 30;
             // 
+            // updateButton
+            // 
+            this.updateButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.updateButton.Location = new System.Drawing.Point(541, 405);
+            this.updateButton.Name = "updateButton";
+            this.updateButton.Size = new System.Drawing.Size(82, 23);
+            this.updateButton.TabIndex = 31;
+            this.updateButton.Text = "Update";
+            this.updateButton.UseVisualStyleBackColor = true;
+            this.updateButton.Click += new System.EventHandler(this.button1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(752, 456);
+            this.Controls.Add(this.updateButton);
             this.Controls.Add(this.lbVersion);
             this.Controls.Add(this.label13);
             this.Controls.Add(this.lnkHome);
@@ -959,8 +947,6 @@
         private System.Windows.Forms.Button btnStartServer;
         private System.Windows.Forms.Label lbServerRunning;
         private System.Windows.Forms.Timer timer2;
-        private System.Windows.Forms.CheckBox checkUseCmd;
-        private System.Windows.Forms.Label lbCmd;
         private System.Windows.Forms.SaveFileDialog openOutputDialog;
         private System.Windows.Forms.CheckBox cbBrowser;
         private System.Windows.Forms.TextBox tbUrl;
@@ -1010,6 +996,7 @@
         private System.Windows.Forms.LinkLabel lnkHome;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label lbVersion;
+        private System.Windows.Forms.Button updateButton;
     }
 }
 
