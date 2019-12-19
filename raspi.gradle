@@ -38,6 +38,7 @@ ospackage {
         configurationFile("/etc/hostapd/hostapd.conf.$ext")
     }
     configurationFile("/etc/udev/rules.d/010-avnav-net.rules")
+    configurationFile("/etc/wpa_supplicant/wpa_supplicant.conf")
     user='root'
     into ('/usr/lib/avnav/raspberry') {
         from('raspberry'){
