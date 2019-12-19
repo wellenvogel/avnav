@@ -2,6 +2,7 @@
     [string]$avnavUrl
 )
 
+try{
 $targetBase=$env:LOCALAPPDATA + "\avnav"
 $downloadDir=$targetBase+"\download"
 
@@ -103,3 +104,9 @@ if ($avnavUrl){
     }
 
 }
+}
+catch {
+    Write-Host "Downlod failed:"+$_.Exception.Message
+}
+$dummy=Read-Host -Prompt "ENTER to close"
+

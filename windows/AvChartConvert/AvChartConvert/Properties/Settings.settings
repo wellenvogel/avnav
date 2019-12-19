@@ -41,5 +41,8 @@
     <Setting Name="TestDelay" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="UpdateUrl" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://wellenvogel.de/software/avnav/downloads/release/latest/avnav-latest.zip</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

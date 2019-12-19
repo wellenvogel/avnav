@@ -54,7 +54,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "..\AvChartConvert.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: "..\avnav_server_home.xml"; DestDir: "{app}"; DestName: "avnav_server.xml"
+Source: "..\avnav_server_home.xml"; DestDir: "{app}\windows"; DestName: "avnav_server.xml"
+Source: "..\downloadAndInstall.ps1"; DestDir: "{app}\windows"; DestName: "downloadAndInstall.ps1"
 Source: "..\..\server\*.py"; DestDir: "{app}\scripts"
 Source: "..\..\server\handler\*.py"; DestDir: "{app}\scripts\handler"
 Source: "..\..\chartconvert\*.py"; DestDir: "{app}\scripts"
