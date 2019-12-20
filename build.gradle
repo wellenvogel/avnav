@@ -131,6 +131,44 @@ task pkgVersion{
     }
 }
 
+def markerFile=new File(project.buildDir,"__avnav_software_archive__")
+task zipMarker{
+    doLast{
+        if (!markerFile.getParentFile().isDirectory()) markerFile.getParentFile().mkdirs();
+        markerFile.withWriter{ wr->
+            wr.println(project.avnavVersion)
+        }
+    }
+}
+
+def releaseHtAccess=new File(project.buildDir,"release.htaccess")
+def dailyHtAccess=new File(project.buildDir,"daily.htaccess")
+
+def createHtAccess(dest,version){
+    File src=new File(project.projectDir,dest.getName())
+    if (! src.exists()) throw new Exception("$src not found")
+    src.withReader{ rd->
+        dest.withWriter{ wr->
+            rd.readLines().each { String line ->
+                line=line.replace("VERSION",version)
+                wr.println(line)
+            }    
+        }
+    }
+}
+
+task releaseAccessFile{
+    doLast{
+        createHtAccess(releaseHtAccess,project.avnavVersion)
+    }
+}
+
+task dailyAccessFile{
+    doLast{
+        createHtAccess(dailyHtAccess,project.avnavVersion)
+    }
+}
+
 task windowsBuild(type: org.gradle.api.tasks.GradleBuild){
     dir="windows"
     tasks=["release"]
@@ -237,7 +275,7 @@ ospackage {
 task buildZip(type: Zip){
     //archiveName="avnav.zip"
     archiveVersion=project.avnavVersion
-    dependsOn 'releaseViewer',pkgVersion
+    dependsOn 'releaseViewer',pkgVersion, zipMarker
     group taskgroup
     includeEmptyDirs=false
     with ospackage.delegateCopySpec
@@ -247,6 +285,23 @@ task buildZip(type: Zip){
             return
         }
         d.setPath(d.getPath().replaceAll("^usr/lib/avnav/",""))
+    }
+    into('usr/lib/avnav/windows') {
+        from('windows'){
+            include("avnav_server_home.xml")
+            rename "avnav_server_home.xml","avnav_server.xml"
+            include("downloadAndInstall.ps1")
+        }
+    }
+    into('usr/lib/avnav/test'){
+        from('test'){
+            include("nmea-20130630-3.log")
+        }
+    }
+    into('usr/lib/avnav'){
+        from(markerFile.getParentFile()){
+            include markerFile.getName()
+        }
     }
 }
 
@@ -385,8 +440,12 @@ class UploadTask extends DefaultTask{
         ftp.setFileType(FTP.BINARY_FILE_TYPE)
         FileInputStream is=new FileInputStream(ifile)
         logger.lifecycle("uploading $ifile to $dir")
+        def targetName=ifile.getName()
+        if (getTargetName != null){
+            targetName=getTargetName(ifile)
+        }
         try {
-            ftp.storeFile(ifile.getName(), is)
+            ftp.storeFile(targetName, is)
         }catch (Exception e){
             logger.error("Exception while uploading: ",e)
             e.printStackTrace()
@@ -399,7 +458,7 @@ class UploadTask extends DefaultTask{
     def subDir=project.avnavVersion
 
     File inputFile
-
+    def getTargetName=null
     FileTree inputFiles
     boolean deleteTargetDir=false
     @TaskAction
@@ -424,10 +483,11 @@ class UploadTask extends DefaultTask{
         ftp.enterLocalPassiveMode()
         ftp.setBufferSize(1024*1024)
         def dir=baseDir
+        def remoteDir=(subDir!=null)?baseDir+"/"+subDir:baseDir
         if (inputFile != null){
             assert inputFile.exists(),"input file $inputFile does not exist"
-            if (deleteTargetDir) removeRemoteDir(ftp,dir+"/"+subDir)
-            uploadFile(ftp,dir+"/"+subDir,inputFile)
+            if (deleteTargetDir) removeRemoteDir(ftp,remoteDir)
+            uploadFile(ftp,remoteDir,inputFile)
         }
         else{
             if (deleteTargetDir) removeRemoteDir(ftp,dir)
@@ -464,6 +524,20 @@ task uploadWindows(type: UploadTask){
     inputFile=file("windows/build/AvNavSetup-${windowsVersion}-0.exe")
     dependsOn windowsBuild
 }
+task uploadWindowsNet(type: UploadTask){
+    def windowsVersion=project.avnavVersion.replaceAll(/(....)(..)(..)/,'$1-$2-$3').replaceAll(/-0([^-])/,'-$1')
+    inputFile=file("windows/build/AvNavNetSetup-${windowsVersion}-0.exe")
+    dependsOn windowsBuild
+}
+
+
+task uploadAccess(type: UploadTask){
+    dependsOn project.avnavRelease?releaseAccessFile:dailyAccessFile
+    inputFile=project.avnavRelease?releaseHtAccess:dailyHtAccess
+    subDir=null
+    getTargetName={ return ".htaccess"}
+}
+
 def ks=System.getenv("ANDROID_KEYSTORE")
 def sign="-unsigned"
 if (ks) sign=""
@@ -512,9 +586,9 @@ task upload{
     doLast {
         println "###uploaded artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadViewer
+    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadViewer, uploadAccess
     if (onWindows){
-        dependsOn uploadWindows
+        dependsOn uploadWindows,uploadWindowsNet
     }
     if (buildAndroid){
         dependsOn uploadAndroidBeta
@@ -525,9 +599,9 @@ task uploadRelease{
     doLast {
         println "###upload release artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease
+    dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease,uploadAccess
     if (onWindows){
-        dependsOn uploadWindows
+        dependsOn uploadWindows,uploadWindowsNet
     }
     if (buildAndroid){
         dependsOn uploadAndroidRelease
