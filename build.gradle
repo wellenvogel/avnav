@@ -586,7 +586,7 @@ task upload{
     doLast {
         println "###uploaded artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadViewer, uploadAccess
+    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadViewer, uploadAccess,uploadZip
     if (onWindows){
         dependsOn uploadWindows,uploadWindowsNet
     }
@@ -599,7 +599,7 @@ task uploadRelease{
     doLast {
         println "###upload release artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease,uploadAccess
+    dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease,uploadAccess,uploadZip
     if (onWindows){
         dependsOn uploadWindows,uploadWindowsNet
     }
