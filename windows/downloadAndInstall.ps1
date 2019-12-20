@@ -79,7 +79,7 @@ if ($avnavUrl){
     $Client.DownloadFile($avnavUrl,$downloadName)
     if ( $null=Test-Path $downloadName -PathType Leaf){
         #check if the archive contains at least avnav_server.py
-        $checkFiles=@("server/avnav_server.py")
+        $checkFiles=@("__avnav_software_archive__")
         $checkResults=@{}
         $null=[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
         $zip=[IO.Compression.ZipFile]::OpenRead($downloadName)
