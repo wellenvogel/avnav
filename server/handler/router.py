@@ -373,7 +373,7 @@ class AVNRouter(AVNWorker):
         except:
           AVNLog.debug("unable to read route from %s",fullname)
       self.routeInfos=routeInfos
-      AVNLog.info("read %d routes",len(self.routeInfos.items()))
+      AVNLog.debug("read %d routes",len(self.routeInfos.items()))
     except Exception as e:
       AVNLog.error("reading routes failed: %s"%e.message)
       pass
