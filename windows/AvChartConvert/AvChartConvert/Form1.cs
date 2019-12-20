@@ -922,6 +922,7 @@ namespace AvChartConvert
                 try
                 {
                     Directory.Delete(myPath, true);
+                    lbVersion.Text = getVersion();
                 }
                 catch (Exception ex)
                 {
