@@ -21,7 +21,8 @@
   },
   "navpage":{
     "widget":{
-      "AisTarget":"a"
+      "AisTarget":"a",
+      "COG":"d"
     },
     "button":{
       "LockMarker":"g",
@@ -45,6 +46,7 @@
     "button":{
       "ShowSettings":"Control-+",
       "ShowStatus":"Control-s",
+      "ShowGps": "d",
       "Night":["c","Control-c","Control-g"]
     }
   }
