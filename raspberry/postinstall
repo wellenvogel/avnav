@@ -53,10 +53,13 @@ systemctl disable dhcpd || echo "dhcpd not running, dont need to disable"
 systemctl stop dhcpd || echo "dhcpd not running, dont need to disable"
 systemctl disable dhcpcd || echo "dhcpcd not running, dont need to disable"
 systemctl stop dhcpcd || echo "dhcpcd not running, dont need to disable"
+systemctl disable ntp || echo "ntp not running, dont need to disable"
+systemctl mask ntp || echo "ntp not running, dont need to mask"
+systemctl stop ntp.service || echo "ntp not running, dont need to disable"
+
 
 systemctl daemon-reload
 systemctl restart dnsmasq
-systemctl restart ntp
 #systemctl start avnav-check-parts
 systemctl restart avnav
 systemctl enable avnav-iptables
