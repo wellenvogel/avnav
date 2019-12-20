@@ -97,7 +97,15 @@ if ($avnavUrl){
             }
         }
         Write-Host "Installing avnav"
-        Expand-Archive -Force -LiteralPath $downloadName -DestinationPath $targetBase
+
+        if ($null = Test-Path $targetBase){
+            $subs=Get-ChildItem $targetBase | Where { $_ -notmatch "^python"} | Where { $_ -notmatch "^gdal"} | Where { $_ -notmatch "^download"}
+            foreach ($sub in $subs){
+                Remove-Item -Path "$targetBase\$sub" -Recurse -Force
+            }
+        }
+        [IO.Compression.ZipFile]::ExtractToDirectory($downloadName,$targetBase)
+        Write-Host "Installation finished"
     }
     else{
         Write-Host "Unable to download avnav from $avnavUrl"
