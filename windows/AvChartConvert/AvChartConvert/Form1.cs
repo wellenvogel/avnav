@@ -97,7 +97,11 @@ namespace AvChartConvert
         {
             if (myPath == null) myPath = assemblyPath;
             InitializeComponent();
-            if (!canUpdate) updateButton.Visible = false;
+            if (!canUpdate)
+            {
+                updateButton.Visible = false;
+                buttonRemove.Visible = false;
+            }
             defaultOut = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\" + BASE;
             scriptpath = Path.Combine(myPath, "chartconvert");
             serverpath = Path.Combine(myPath, "server");
@@ -908,6 +912,22 @@ namespace AvChartConvert
                 return;
             }
             lbVersion.Text = getVersion();
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            var confirm = MessageBox.Show("Delete downloaded software at " + myPath + "?","Confirm deletion", MessageBoxButtons.YesNo);
+            if (confirm == DialogResult.Yes)
+            {
+                try
+                {
+                    Directory.Delete(myPath, true);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("deletion failed: " + ex.Message);
+                }
+            }
         }
     }
 }

@@ -99,6 +99,7 @@
             this.label13 = new System.Windows.Forms.Label();
             this.lbVersion = new System.Windows.Forms.Label();
             this.updateButton = new System.Windows.Forms.Button();
+            this.buttonRemove = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -152,7 +153,7 @@
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCancel.Location = new System.Drawing.Point(634, 405);
+            this.buttonCancel.Location = new System.Drawing.Point(662, 405);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(82, 23);
             this.buttonCancel.TabIndex = 4;
@@ -846,7 +847,7 @@
             // lnkHome
             // 
             this.lnkHome.AutoSize = true;
-            this.lnkHome.Location = new System.Drawing.Point(244, 410);
+            this.lnkHome.Location = new System.Drawing.Point(175, 410);
             this.lnkHome.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lnkHome.Name = "lnkHome";
             this.lnkHome.Size = new System.Drawing.Size(270, 13);
@@ -878,7 +879,7 @@
             // 
             this.updateButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.updateButton.Location = new System.Drawing.Point(541, 405);
+            this.updateButton.Location = new System.Drawing.Point(567, 405);
             this.updateButton.Name = "updateButton";
             this.updateButton.Size = new System.Drawing.Size(82, 23);
             this.updateButton.TabIndex = 31;
@@ -886,11 +887,24 @@
             this.updateButton.UseVisualStyleBackColor = true;
             this.updateButton.Click += new System.EventHandler(this.button1_Click);
             // 
+            // buttonRemove
+            // 
+            this.buttonRemove.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRemove.Location = new System.Drawing.Point(478, 405);
+            this.buttonRemove.Name = "buttonRemove";
+            this.buttonRemove.Size = new System.Drawing.Size(82, 23);
+            this.buttonRemove.TabIndex = 32;
+            this.buttonRemove.Text = "Remove";
+            this.buttonRemove.UseVisualStyleBackColor = true;
+            this.buttonRemove.Click += new System.EventHandler(this.button1_Click_1);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(752, 456);
+            this.Controls.Add(this.buttonRemove);
             this.Controls.Add(this.updateButton);
             this.Controls.Add(this.lbVersion);
             this.Controls.Add(this.label13);
@@ -997,6 +1011,7 @@
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label lbVersion;
         private System.Windows.Forms.Button updateButton;
+        private System.Windows.Forms.Button buttonRemove;
     }
 }
 
