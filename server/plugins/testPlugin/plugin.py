@@ -45,7 +45,7 @@ class Plugin:
     the run method
     this will be called after successfully instantiating an instance
     this method will be called in a separate Thread
-    The example simply counst the number of NMEA records that are flowing through avnav
+    The example simply counts the number of NMEA records that are flowing through avnav
     and writes them to the store every 10 records
     @return:
     """
@@ -59,7 +59,6 @@ class Plugin:
           #do something
           count+=1
           if count%10 == 0:
-            self.api.log("store new value %d",count)
             self.api.addData(self.PATH,count)
-            self.api.addData("wrong.path",count) #this will be ignored as we did not announce our path
+            #self.api.addData("wrong.path",count) #this would be ignored as we did not announce our path - and will write to the log
 
