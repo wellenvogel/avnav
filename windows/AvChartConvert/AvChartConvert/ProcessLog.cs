@@ -44,6 +44,12 @@ namespace AvChartConvert
             logText.ScrollToCaret();  
         }
 
+        private void buttonClose_Click(object sender, EventArgs e)
+        {
+            callback.stopConverter();
+            Dispose();
+        }
+
       
 
         
