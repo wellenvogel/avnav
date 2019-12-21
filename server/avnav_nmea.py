@@ -229,7 +229,13 @@ class NMEAParser():
 
   #parse a line of NMEA data and store it in the navdata array      
   def parseData(self,data,source='internal'):
-    darray=data.split("*")[0].split(",")
+    valAndSum=data.rstrip().split("*")
+    if len(valAndSum) > 1:
+      sum=self.nmeaChecksum(valAndSum[0])
+      if sum != valAndSum[1]:
+        AVNLog.error("invalid checksum in %s, expected %s"%(data,sum))
+        return
+    darray=valAndSum[0].split(",")
     if len(darray) < 1 or (darray[0][0:1] != "$" and darray[0][0:1] != '!') :
       AVNLog.debug("invalid nmea data (len<1) "+data+" - ignore")
       return False
