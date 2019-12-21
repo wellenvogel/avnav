@@ -38,7 +38,6 @@ ospackage {
         configurationFile("/etc/hostapd/hostapd.conf.$ext")
     }
     configurationFile("/etc/udev/rules.d/010-avnav-net.rules")
-    configurationFile("/etc/wpa_supplicant/wpa_supplicant.conf")
     user='root'
     into ('/usr/lib/avnav/raspberry') {
         from('raspberry'){
@@ -51,6 +50,7 @@ ospackage {
             include 'sound.sh'
             include 'check-wlan-av1.pl'
             include 'iptables-ext.sh'
+            include 'wpa_supplicant.conf'
         }
         from('raspberry') {
             include 'avnav_server.xml'
@@ -104,11 +104,6 @@ ospackage {
     into('/etc/udev/rules.d'){
         from('raspberry'){
             include('010-avnav-net.rules')
-        }
-    }
-    into('/etc/wpa_supplicant'){
-        from('raspberry'){
-            include('wpa_supplicant.conf')
         }
     }
     into('/etc/dnsmasq.d'){
