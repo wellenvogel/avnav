@@ -83,12 +83,21 @@ if ($avnavUrl){
         $checkResults=@{}
         $null=[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
         $zip=[IO.Compression.ZipFile]::OpenRead($downloadName)
+        $subs=Get-ChildItem $targetBase
         foreach ($entry in $zip.Entries){
             foreach ($k in $checkFiles){
                 if ($k -eq $entry.FullName){
                     $checkResults[$k]=1
                 }
-            }    
+            } 
+            foreach ($s in $subs){
+                if ($entry.FullName -match "^$s[/\\]"){
+                    $subsToDel[$s]=1
+                }
+                if ($entry.FullName -match "^$s$"){
+                    $subsToDel[$s]=1
+                }
+            }       
         }
         $zip.Dispose()
         foreach ($k in $checkFiles){
@@ -99,8 +108,8 @@ if ($avnavUrl){
         Write-Host "Installing avnav"
 
         if ($null = Test-Path $targetBase){
-            $subs=Get-ChildItem $targetBase | Where { $_ -notmatch "^python"} | Where { $_ -notmatch "^gdal"} | Where { $_ -notmatch "^download"}
-            foreach ($sub in $subs){
+            foreach ($sub in $subsToDel.Keys){
+		Write-Host "removing existing $sub"
                 Remove-Item -Path "$targetBase\$sub" -Recurse -Force
             }
         }
