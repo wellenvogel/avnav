@@ -84,6 +84,7 @@ if ($avnavUrl){
         $null=[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
         $zip=[IO.Compression.ZipFile]::OpenRead($downloadName)
         $subs=Get-ChildItem $targetBase
+        $subsToDel=@{}
         foreach ($entry in $zip.Entries){
             foreach ($k in $checkFiles){
                 if ($k -eq $entry.FullName){
