@@ -166,6 +166,7 @@ class AVNWpaHandler(AVNWorker):
               self.setInfo(statusName,"unable to run firewall command on %s for %s, return %d"%(ssid,mode,lastResult),AVNWorker.Status.ERROR)
             else:
               self.setInfo(statusName, "firewall command on %s for %s ok" % (ssid,mode), AVNWorker.Status.NMEA)
+              lastSuccess=AVNUtil.utcnow()
             self.lastFwInfo=FwInfo(ssid,mode,lastResult)
       except:
         AVNLog.error("%s: exception %s"%(statusName,traceback.format_exc()))
