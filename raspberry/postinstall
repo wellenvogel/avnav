@@ -1,4 +1,5 @@
 #! /bin/sh
+BASE=/usr/lib/avnav/raspberry
 systemctl stop avnav || echo "avnav not running"
 systemctl stop check_parts || echo "check_parts not running"
 systemctl stop check_wlan || echo "check_wlan not running"
@@ -31,6 +32,32 @@ else
 fi
 grep "^ *FSCKFIX *= *yes" /etc/default/rcS > /dev/null || ( echo "configure FSCKFIX=yes"; echo 'FSCKFIX=yes' >> /etc/default/rcS)
 
+#wlan config for wlan-av1
+
+WLAN_CONFIG=/etc/wpa_supplicant/wpa_supplicant.conf
+if [ ! -f "$WLAN_CONFIG" ] ; then
+    echo "creating $WLAN_CONFIG"
+    cp $BASE/wpa_supplicant.conf $WLAN_CONFIG
+else
+    echo "checking existing $WLAN_CONFIG"
+    if grep "^ *country *=" "$WLAN_CONFIG" > /dev/null ; then
+        echo "country already set"
+    else
+        echo "setting country"
+        echo "country=DE" >> "$WLAN_CONFIG"
+    fi
+    if grep "^ *ctrl_interface *= *DIR=/var/run/wpa_supplicant *GROUP *= *netdev" "$WLAN_CONFIG" > /dev/null ; then
+        echo "socket setting ok"
+    else
+
+        if grep "^ *ctrl_interface" "$WLAN_CONFIG" > /dev/null ; then
+            sed -i -e 's?^ *ctrl_interface.*?ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev?' "$WLAN_CONFIG"
+        else
+            echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev" >> "$WLAN_CONFIG"
+        fi
+    fi
+fi
+
 #remove dhcp server ntp conf
 DHCONF=/var/lib/ntp/ntp.conf.dhcp
 if [ -f $DHCONF ] ; then
@@ -39,7 +66,7 @@ if [ -f $DHCONF ] ; then
 fi
 [ ! -d var/lib/ntp/ ] && mkdir -p var/lib/ntp/
 #a bit dirty trick to force ntpd to use our config file
-cp /usr/lib/avnav/raspberry/ntp.conf $DHCONF
+cp $BASE/ntp.conf $DHCONF
 HOOK=/etc/dhcp/dhclient-exit-hooks.d/ntp
 if [ -f $HOOK ] ; then
     echo "moving $HOOK into /etc/dhcp/save"
