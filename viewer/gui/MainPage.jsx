@@ -94,7 +94,7 @@ class MainPage extends React.Component {
             {
                 name: 'Night',
                 storeKeys: {toggle: keys.properties.nightMode},
-                onClick: ()=> {
+                onClick: ()=> {chartList
                     let mode = globalStore.getData(keys.properties.nightMode, false);
                     mode = !mode;
                     globalStore.storeData(keys.properties.nightMode, mode);
@@ -155,6 +155,7 @@ class MainPage extends React.Component {
     }
     componentDidUpdate(){
         readAddOns();
+        fillList();
     }
 
     timerCall(sequence){
@@ -320,4 +321,4 @@ const showNavpage = function (entry) {
 
 
 
-module.exports = MainPage;
+module.exports = Dynamic(MainPage,{storeKeys:keys.gui.global.reloadSequence});
