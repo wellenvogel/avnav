@@ -1,0 +1,161 @@
+@import url("classic.css");
+
+@image_width: 600px;
+
+/* colors */
+
+@new_colors:false;
+
+.color-primary() when (@new_colors = true){
+    background-color: #0C4249C2;;
+    color: white; 
+}
+
+.color-primary-fg() when (@new_colors = true){
+    color: white; 
+}
+
+.color-primary() when (@new_colors = false){
+    background-color: #ffcc33;;
+    color: black; 
+}
+.color-primary-fg() when (@new_colors = false){
+    color: black; 
+}
+
+.color-secondary() when(@new_colors = true){
+    background-color: #548B93A3;
+    color: black;
+}
+
+.color-secondary() when(@new_colors = false){
+    background-color: #F5D777;
+    color: black;
+}
+
+.color-third()when(@new_colors = true){
+    background-color: #98BFC4;
+    color: black;
+}
+.color-third()when(@new_colors = false){
+    background-color: #FF9;
+    color: black;
+}
+
+
+
+div.sphinxsidebar a{
+    display: block;
+    padding-top: 0.3em;
+    padding-bottom: 0.3em;
+    margin-bottom: 0.2em;
+    margin-top: 0.2em;
+    margin-right: 1em;
+    padding-left: 0.3em;
+    .color-secondary();
+}
+
+div.sphinxsidebar a.current{
+    .color-primary();
+}
+div.related{
+    .color-primary();
+}
+div.related a{
+    .color-primary-fg()
+}
+
+div.sphinxsidebar{
+    float: inherit;
+    width: 12em;
+    margin-left: 0;
+    .color-third();
+}
+div.footer{
+    .color-primary();
+}
+
+i.sideBarButton{
+    width: 2em;
+    float: left;
+    line-height: 30px !important;
+    margin-left: 1em;
+    display:none;
+}
+
+@media only screen and (max-width: 768px){
+    div.sphinxsidebar{
+        display: none;
+    }
+    .showBar div.sphinxsidebar{
+        display: block;
+        z-index: 100;
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        box-shadow: 0 10px 10px rgba(0,0,0,0.12), 0 10px 5px rgba(0,0,0,0.24);
+        padding-right: 3em;
+        overflow-y: auto;
+    }
+    .showBar div.documentwrapper{
+        opacity: 0.5
+    }
+    .footer{
+        display: none;
+    }
+    i.sideBarButton{
+        display:block;
+    }
+}
+
+
+html,body{
+    width: 100%;
+    height: 100%;
+}
+body{
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: inherit;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+div.contentWrapper{
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+div.content{
+    flex:1;
+    overflow: auto;
+}
+
+div.document{
+    flex:1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row-reverse;
+    background-color: inherit;
+    min-height: 100%;
+}
+
+
+div.documentwrapper {
+    float: inherit;
+    flex: 1;
+}
+div.bodywrapper {
+    margin: 0 0 0 0;
+}
+div.body{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.img-default{
+    width: @image_width;
+}
+
+
