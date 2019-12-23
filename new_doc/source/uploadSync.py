@@ -159,7 +159,8 @@ def find_uploads(localDir,remote,excludes=None):
       to_upload[k]=True
   for k in remote_hash.keys():
     if remote_hash[k] != local_hash.get(k):
-      to_upload[k]=True
+      if local_hash.get(k) is not None:
+        to_upload[k]=True
   return to_upload.keys()
 
 
