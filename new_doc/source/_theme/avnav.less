@@ -70,6 +70,7 @@ div.sphinxsidebar{
     width: 12em;
     margin-left: 0;
     .color-third();
+    overflow-y: auto;
 }
 div.footer{
     .color-primary();
@@ -129,8 +130,9 @@ div.contentWrapper{
 }
 div.content{
     flex:1;
-    overflow: auto;
+    overflow: hidden;
 }
+
 
 div.document{
     flex:1;
@@ -139,12 +141,14 @@ div.document{
     flex-direction: row-reverse;
     background-color: inherit;
     min-height: 100%;
+    height: 100%;
 }
 
 
 div.documentwrapper {
     float: inherit;
     flex: 1;
+    overflow: auto;
 }
 div.bodywrapper {
     margin: 0 0 0 0;
