@@ -43,7 +43,7 @@ const Heading = (props)=>{
     return (
         <div className="routeCurrent" onClick={props.onClick}>
             <div className="routeName">{props.currentRoute.name||''}</div>
-            <div className="routeInfo">{props.currentRoute.points.length||0}Points,{Formatter.formatDecimal(len,6,2)}nm</div>
+            <div className="routeInfo">{props.currentRoute.points.length||0}Points,{Formatter.formatDistance(len)}nm</div>
             <span className="more"> </span>
         </div>
     );
