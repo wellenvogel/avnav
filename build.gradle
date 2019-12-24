@@ -145,6 +145,8 @@ def releaseHtAccess=new File(project.buildDir,"release.htaccess")
 def dailyHtAccess=new File(project.buildDir,"daily.htaccess")
 
 def createHtAccess(dest,version){
+    File ddir=dest.getParentFile()
+    if (! ddir.exists()) ddir.mkdirs()
     File src=new File(project.projectDir,dest.getName())
     if (! src.exists()) throw new Exception("$src not found")
     src.withReader{ rd->
