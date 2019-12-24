@@ -94,7 +94,7 @@ class MainPage extends React.Component {
             {
                 name: 'Night',
                 storeKeys: {toggle: keys.properties.nightMode},
-                onClick: ()=> {chartList
+                onClick: ()=> {
                     let mode = globalStore.getData(keys.properties.nightMode, false);
                     mode = !mode;
                     globalStore.storeData(keys.properties.nightMode, mode);
