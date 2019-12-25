@@ -6,7 +6,6 @@
    :glob:
    :hidden:
    
-   *
    overview/intro
    usageOverview
    raspberry/raspberry
