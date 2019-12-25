@@ -50,9 +50,13 @@ div.sphinxsidebar a{
     padding-bottom: 0.3em;
     margin-bottom: 0.2em;
     margin-top: 0.2em;
-    margin-right: 1em;
-    padding-left: 0.3em;
+    padding-left: 0.1em;
+    padding-right: 0.1em;
     .color-secondary();
+}
+
+div.sphinxsidebar ul{
+    margin-right: 0;
 }
 
 div.sphinxsidebar a.current{
@@ -69,6 +73,7 @@ div.sphinxsidebar{
     float: inherit;
     width: 12em;
     margin-left: 0;
+    padding-right: 0.2em;
     .color-third();
     overflow-y: auto;
 }
@@ -122,6 +127,14 @@ body{
     background-color: inherit;
     font-family: Verdana, Arial, Helvetica, sans-serif;
 }
+
+div.body p, div.body dd, div.body li, div.body blockquote {
+    -moz-hyphens: initial;
+    -ms-hyphens: initial;
+    -webkit-hyphens: initial;
+    hyphens: initial;
+}
+
 div.contentWrapper{
     display: flex;
     flex: 1;
@@ -162,4 +175,10 @@ div.body{
     width: @image_width;
 }
 
+.img-inline {
+
+    vertical-align: middle;
+    height: 1.5em;
+
+}
 

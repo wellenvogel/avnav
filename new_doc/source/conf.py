@@ -93,7 +93,7 @@ html_short_title="AvNav Dokumentation"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static','_theme']
+html_static_path = ['_static','_theme','_temp']
 
 html_js_files= ['avnav.js']
 
@@ -188,11 +188,52 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
+external_base="../../viewer/images"
+
+
+import os
 import subprocess
+import shutil
+
 def call_less(app):
     rt=subprocess.call(['lessc','_theme/avnav.less','_theme/avnav.css'])
     if rt != 0:
-        raise Exception("less call failed")
+        raise Exception("less call failed") 
+
+
+#small plugin to use external files from the viewer directory
+#adds externalimage and expects a path below viewer/images
+from docutils import nodes
+from docutils.parsers.rst import Directive
+from docutils.parsers.rst import directives
+from sphinx.util.docutils import SphinxDirective
+class ExternalImage(SphinxDirective):
+    required_arguments = 1
+    final_argument_whitespace = True
+    option_spec = {'alt': directives.unchanged,
+                   'height': directives.nonnegative_int,
+                   'width': directives.nonnegative_int,
+                   'scale': directives.nonnegative_int,
+                   'class': directives.unchanged
+                   }
+    has_content = False
+
+    def run(self):
+        reference = directives.uri(self.arguments[0])
+        #copy the image to the _temp dir - will fail on errors
+        src_name=os.path.join(external_base,reference)
+        dst_name=os.path.join('_temp',os.path.basename(reference))
+        shutil.copyfile(os.path.join(self.env.app.srcdir,src_name),os.path.join(self.env.app.srcdir,dst_name))
+        self.options['uri'] = "/"+dst_name
+        classes=[]
+        if self.options.get('class') is not None:
+            classes=[self.options.get('class')]
+        image_node = nodes.image(rawsource=self.block_text,classes=classes,
+                                 **self.options)
+        return [image_node]
+
+
 
 def setup(app):
     app.connect('builder-inited',call_less)
+    app.add_directive("externalimage",ExternalImage)

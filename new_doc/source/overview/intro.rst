@@ -1,18 +1,25 @@
 Einführung
 ==========
 
+
 .. toctree::
    :hidden:
+   
 
+   setups
 
 Motivation
 ----------
 
-Nachdem ich schon eine ganze Weile mit Rasterkarten unterwegs navigiere (erst unter Windows mit Seaclear, dann unter Windows, WindowsCE und OSX mit OpenCPN und OziExplorer) hatte ich schon eine ganze Weile nach Möglichkeiten gesucht, das zu erweitern und noch besser tauglich für unterwegs zu machen.
+Nachdem ich schon eine ganze Weile mit Rasterkarten unterwegs navigiere 
+(erst unter Windows mit Seaclear, dann unter Windows, WindowsCE und 
+OSX mit OpenCPN und OziExplorer) hatte ich schon länger nach Möglichkeiten 
+gesucht, das zu erweitern und noch besser tauglich für unterwegs zu machen.
 
 Meine Wunschliste dabei war:
 
-*  Navigation auf kleinen Geräten (Laptop ist immer ein wenig unhandlich) – 7 oder 10 Zoll Tablet wäre Ideal
+*  Navigation auf kleinen Geräten (Laptop ist immer ein wenig unhandlich)
+   – 7 oder 10 Zoll Tablet wäre Ideal
 *  Navigation auch im Cockpit
 *  Trackaufzeichnung
 *  Verknüpfung mit der „on board“ Navigation 
