@@ -189,6 +189,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                         if (line.startsWith("$") && properties.readNmea) {
                             if (!AvnUtil.matchesNmeaFilter(line,nmeaFilter)){
                                 AvnLog.d("ignore "+line+" due to filter");
+                                continue;
                             }
                             if (nmeaLogger != null) nmeaLogger.logNmea(line);
                             //NMEA
@@ -524,6 +525,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
     @Override
     JSONObject getGpsData(Location curLoc) throws JSONException {
         JSONObject rt= super.getGpsData(curLoc);
+        if (rt == null) rt=new JSONObject();
         mergeAuxiliaryData(rt);
         return rt;
     }
