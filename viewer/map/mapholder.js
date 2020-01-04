@@ -1106,7 +1106,6 @@ MapHolder.prototype.moveCenterPercent=function(deltax,deltay){
  * @returns {boolean} the newl set value
  */
 MapHolder.prototype.setCourseUp=function(on){
-    globalStore.storeData(keys.map.courseUp,on);
     let old=this.courseUp;
     if (old == on) return on;
     if (on){
@@ -1115,10 +1114,12 @@ MapHolder.prototype.setCourseUp=function(on){
         this.averageCourse=gps.course;
         this.setMapRotation(this.averageCourse);
         this.courseUp=on;
+        globalStore.storeData(keys.map.courseUp,on);
         return on;
     }
     else{
         this.courseUp=on;
+        globalStore.storeData(keys.map.courseUp,on);
         this.setMapRotation(0);
 
     }
