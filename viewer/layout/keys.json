@@ -19,6 +19,11 @@
       "Cancel":"Escape"
     }
   },
+  "gpspage":{
+    "button":{
+      "Cancel":["d","Escape"]
+    }
+  },
   "navpage":{
     "widget":{
       "AisTarget":"a",
