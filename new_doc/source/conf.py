@@ -39,6 +39,7 @@ release = u''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinxcontrib.images'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -187,6 +188,10 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+images_config={
+    "override_image_directive": True
+}
 
 external_base="../../viewer/images"
 

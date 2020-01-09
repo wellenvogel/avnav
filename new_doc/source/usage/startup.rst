@@ -23,7 +23,7 @@ Hier kann die Karte ausgewählt werden, die zur Navigation genutzt werden soll.
 Wenn keine Karten vorhanden sind, wird u.U. eine Fehlermeldung ausgegeben.
 Karten können dann über die Download-Seite (Button |btdl|) hochgeladen werden.
 
-Durch Auswahl einer Karte gelang man auf die Navigationsseite.
+Durch Auswahl einer Karte gelang man auf die :ref:`Navigationsseite <page-navpage>`.
 
 Die weiteren Funktionen
 
@@ -36,7 +36,9 @@ Die weiteren Funktionen
 .. |btnight| externalimage:: icons-new/night.svg
                      :class: img-inline
 .. |btinfo| externalimage:: icons-new/ic_info.svg
-            :class: img-inline                              
+            :class: img-inline
+.. |btconnect| externalimage:: icons-new/plug.svg
+               :class: img-inline                                          
 
 ============  ============================================================
 Button        Funktion
@@ -47,6 +49,8 @@ Button        Funktion
 |btdash|      "Dashboard" - Anzeige von wichtigen Werten (auch ohne Karte)
 |btnight|     Nachtmodus
 |btinfo|      Aufruf der Lizenz- und Datenschutzseite
+|btconnect|   Connected Mode: WP und Routen auf dem Server aktivieren
 ============  ============================================================
+
 
 

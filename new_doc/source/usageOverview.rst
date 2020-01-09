@@ -17,7 +17,8 @@ Für Details zur Android App siehe TODO.
 .. toctree::
    :glob:
 
-   usage/*
+   usage/startup
+   usage/navigation
 
 
 
