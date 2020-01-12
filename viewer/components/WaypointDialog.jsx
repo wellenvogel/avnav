@@ -108,6 +108,10 @@ let WaypointDialog = reactCreateClass({
                 if (errorFunction)errorFunction("internal error, route name changed");
                 doChange = false;
             }
+            if (wp.name == navobjects.WayPoint.MOB){
+                doChange=false;
+                if (errorFunction) errorFunction("you cannot use this name");
+            }
             if (!doChange) return;
             return wp;
         }
