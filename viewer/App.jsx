@@ -146,7 +146,16 @@ class App extends React.Component {
         },'global','moboff');
         GuiHelpers.keyEventHandler(this,()=>{
             GuiHelpers.toggleMob();
-        },'global','mobtoggle')
+        },'global','mobtoggle');
+        GuiHelpers.keyEventHandler(this,(component,action)=>{
+            let addon=parseInt(action);
+            if (history.currentLocation() === "addonpage"){
+                history.replace("addonpage",{activeAddOn:addon});
+            }
+            else {
+                history.push("addonpage", {activeAddOn: addon});
+            }
+        },'addon',['0','1','2','3','4','5','6','7']);
 
     }
     checkSizes(){

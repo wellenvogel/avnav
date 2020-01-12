@@ -118,7 +118,7 @@ class MainPage extends React.Component {
                     };
                 },
                 onClick: ()=> {
-                    history.push('addonpage',{addOns:globalStore.getData(keys.gui.mainpage.addOns,[])})
+                    history.push('addonpage')
                 }
             }
         ];

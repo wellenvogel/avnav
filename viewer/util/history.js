@@ -30,6 +30,11 @@ class History{
         this.updateStore(true);
     }
 
+    currentLocation(){
+        if (this.history.length < 1) return;
+        return this.history[this.history.length-1].location;
+    }
+
     /**
      * remove all except the first entries
      */

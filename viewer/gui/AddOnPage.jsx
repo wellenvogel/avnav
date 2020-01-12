@@ -15,6 +15,29 @@ import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 
+const readAddOns = function () {
+    if (globalStore.getData(keys.gui.global.onAndroid, false)) return;
+    if (!globalStore.getData(keys.gui.capabilities.addons)) return;
+    Requests.getJson("?request=readAddons").then((json)=>{
+            let items = [];
+            for (let e in json.data) {
+                let button = json.data[e];
+                let entry = {
+                    key: button.key,
+                    url: button.url,
+                    icon: button.icon,
+                    title: button.title
+                };
+                if (entry.key) {
+                    items.push(entry);
+                }
+            }
+            globalStore.storeData(keys.gui.addonpage.addOns, items);
+        },
+        (error)=>{
+            Toast("reading addons failed: " + error);
+        });
+};
 
 class AddOnPage extends React.Component{
     constructor(props){
@@ -28,32 +51,26 @@ class AddOnPage extends React.Component{
             }
         ];
         this.state={};
-        this.checkOptions=this.checkOptions.bind(this);
         this.buildButtonList=this.buildButtonList.bind(this);
-    }
-    checkOptions(){
-        if (! (this.props.options && this.props.options.addOns)){
-            history.pop();
+        if (this.props.options && this.props.options.activeAddOn !== undefined){
+            globalStore.storeData(keys.gui.addonpage.activeAddOn,this.props.options.activeAddOn);
         }
     }
     componentDidMount(){
-        this.checkOptions();
+        readAddOns();
     }
-    componentDidUpdate(){
-        this.checkOptions();
-    }
-    buildButtonList(activeIndex){
-        let rt=[];
-        if (this.props.options && this.props.options.addOns){
-            for (let i=0;i< this.props.options.addOns.length;i++ ){
-                let addOn=this.props.options.addOns[i];
-                let button={
-                    name:addOn.key,
+    buildButtonList(addOns,activeIndex){
+        let rt = [];
+        if (addOns) {
+            for (let i = 0; i < addOns.length; i++) {
+                let addOn = addOns[i];
+                let button = {
+                    name: addOn.key,
                     icon: addOn.icon,
-                    onClick:()=>{
-                        globalStore.storeData(keys.gui.addonpage.activeAddOn,i);
+                    onClick: ()=> {
+                        globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
                     },
-                    toggle:activeIndex==i
+                    toggle: activeIndex == i
                 };
                 rt.push(button);
             }
@@ -64,8 +81,8 @@ class AddOnPage extends React.Component{
         let self=this;
         let Rt=Dynamic((props)=> {
                 let currentAddOn={};
-                if (self.props.options && self.props.options.addOns){
-                    currentAddOn=self.props.options.addOns[props.activeAddOn||0]||{};
+                if (props.addOns) {
+                    currentAddOn = props.addOns[props.activeAddOn || 0] || {};
                 }
                 return (
                     <Page
@@ -78,11 +95,12 @@ class AddOnPage extends React.Component{
                                 <iframe src={currentAddOn.url} className="addOn"/>
                             </div>
                         }
-                        buttonList={self.buildButtonList(props.activeAddOn||0)}/>
+                        buttonList={self.buildButtonList(props.addOns,props.activeAddOn||0)}/>
                 );
             },{
             storeKeys:{
-                activeAddOn:keys.gui.addonpage.activeAddOn
+                activeAddOn:keys.gui.addonpage.activeAddOn,
+                addOns: keys.gui.addonpage.addOns
                 }
             }
         );
