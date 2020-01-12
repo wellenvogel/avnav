@@ -24,6 +24,7 @@ import NavHandler from '../nav/navdata.js';
 import assign from 'object-assign';
 import RouteObjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
+import navobjects from '../nav/navobjects.js';
 
 const editor=new RouteEdit(RouteEdit.MODES.PAGE);
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
@@ -147,8 +148,10 @@ const onHeadingClick=()=> {
 };
 
 
-const startWaypointDialog=(item,index)=>{
-    if (! item) return;
+const startWaypointDialog=(rawitem,index)=>{
+    if (! rawitem) return;
+    let item=new navobjects.WayPoint();
+    assign(item,rawitem);
     const wpChanged=(newWp,close)=>{
         if (! checkWritable()) return;
         let changedWp=WayPointDialog.updateWaypoint(item,newWp,function(err){
