@@ -306,6 +306,9 @@ routeobjects.Route.prototype.fromJson=function(parsed) {
             if (! wp.name){
                 wp.name=this.findFreeName();
             }
+            if (wp.name == navobjects.WayPoint.MOB){
+                wp.name=this.findFreeName();
+            }
             wp.routeName=this.name.slice(0);
             this.points.push(wp);
         }
