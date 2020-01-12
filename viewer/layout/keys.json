@@ -16,7 +16,7 @@
       "stop":"q"
     },
     "global":{
-      "mobon": ["Control-l"," "]
+      "mobon": ["Control- "]
     },
     "button":{
       "Cancel":"Escape"
@@ -42,7 +42,8 @@
     },
     "page":{
       "centerToTarget":"w",
-      "navNext": ["n","Control-n"]
+      "navNext": ["n","Control-n"],
+      "toggleNav": ["Control-g"]
     }
   },
   "mainpage":{

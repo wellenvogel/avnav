@@ -107,6 +107,28 @@ const navNext=()=>{
     RouteHandler.wpOn(activeRoute.getNextWaypoint())
 };
 
+const navToWp=(on)=>{
+    if(on){
+        let center = globalStore.getData(keys.map.centerPosition);
+        let current=activeRoute.getCurrentTarget();
+        let wp=new navobjects.WayPoint();
+        //take over the wp name if this was a normal wp with a name
+        //but do not take over if this was part of a route
+        if (current && current.name && current.name !== navobjects.WayPoint.MOB ){
+            wp.name=current.name;
+        }
+        else{
+            wp.name = 'Marker';
+        }
+        wp.routeName=undefined;
+        center.assign(wp);
+        RouteHandler.wpOn(wp);
+        return;
+    }
+    RouteHandler.routeOff();
+    MapHolder.triggerRender();
+};
+
 class NavPage extends React.Component{
     constructor(props){
         super(props);
@@ -224,7 +246,10 @@ class NavPage extends React.Component{
             if (action == "navNext"){
                 return navNext();
             }
-        },"page",["centerToTarget","navNext"])
+            if (action == "toggleNav"){
+                navToWp(!activeRoute.hasActiveTarget())
+            }
+        },"page",["centerToTarget","navNext","toggleNav"])
     }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);
@@ -274,20 +299,7 @@ class NavPage extends React.Component{
                     return {visible:!StateHelper.hasActiveTarget(state)}
                 },
                 onClick:()=>{
-                    let center = globalStore.getData(keys.map.centerPosition);
-                    let current=activeRoute.getCurrentTarget();
-                    let wp=new navobjects.WayPoint();
-                    //take over the wp name if this was a normal wp with a name
-                    //but do not take over if this was part of a route
-                    if (current && current.name ){
-                        wp.name=current.name;
-                    }
-                    else{
-                        wp.name = 'Marker';
-                    }
-                    wp.routeName=undefined;
-                    center.assign(wp);
-                    RouteHandler.wpOn(wp);
+                    navToWp(true);
                 }
             },
             {
@@ -298,8 +310,7 @@ class NavPage extends React.Component{
                 },
                 toggle:true,
                 onClick:()=>{
-                    RouteHandler.routeOff();
-                    MapHolder.triggerRender();
+                    navToWp(false);
                 }
             },
             {
