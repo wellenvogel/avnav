@@ -174,6 +174,7 @@ class GpsPage extends React.Component{
                     GuiHelpers.anchorWatchDialog(undefined);
                 }
             },
+            GuiHelpers.mobDefinition,
             {
                 name:'Cancel',
                 onClick:()=>{history.pop();}

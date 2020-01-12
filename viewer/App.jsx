@@ -28,6 +28,7 @@ import KeyHandler from './util/keyhandler.js';
 import LayoutHandler from './util/layouthandler.js';
 import assign from 'object-assign';
 import AlarmHandler from './nav/alarmhandler.js';
+import GuiHelpers from './util/GuiHelpers.js';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -137,6 +138,16 @@ class App extends React.Component {
                 }
                 Toast("unable to load application layout "+layoutName+": "+error);
             });
+        GuiHelpers.keyEventHandler(this,()=>{
+            GuiHelpers.controlMob(true);
+        },'global','mobon');
+        GuiHelpers.keyEventHandler(this,()=>{
+            GuiHelpers.controlMob(false);
+        },'global','moboff');
+        GuiHelpers.keyEventHandler(this,()=>{
+            GuiHelpers.toggleMob();
+        },'global','mobtoggle')
+
     }
     checkSizes(){
         if (globalStore.getData(keys.gui.global.hasActiveInputs,false)) return;

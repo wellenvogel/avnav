@@ -4,8 +4,11 @@ import PropertyHandler from '../util/propertyhandler.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import RouteEdit from '../nav/routeeditor.js';
+import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import KeyHandler from './keyhandler.js';
+import navobjects from '../nav/navobjects.js';
+import history from '../util/history.js';
+import MapHolder from '../map/mapholder.js';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
@@ -229,6 +232,54 @@ const scrollInContainer=(parent, element)=> {
     return 0;
 };
 
+const controlMob=(start)=>{
+    let Router=NavData.getRoutingHandler();
+    let isActive=StateHelper.targetName(activeRoute.getRawData()) === navobjects.WayPoint.MOB;
+    if (start){
+        if (isActive) return;
+        if (! globalStore.getData(keys.nav.gps.valid)) return;
+        let target=navobjects.WayPoint.fromPlain(globalStore.getData(keys.nav.gps.position));
+        target.name=navobjects.WayPoint.MOB;
+        Router.wpOn(target,false);
+        MapHolder.setGpsLock(true);
+        if (globalStore.getData(keys.gui.global.hasSelectedChart)){
+            let currentZoom=MapHolder.getZoom();
+            let mzoom=globalStore.getData(keys.properties.mobMinZoom);
+            if (currentZoom.current < mzoom){
+                MapHolder.changeZoom(mzoom-currentZoom.current);
+            }
+            history.reset();
+            history.push("navpage")
+        }
+        else{
+            history.reset();
+            history.push("gpspage")
+        }
+    }
+    else{
+        if (! isActive) return;
+        Router.routeOff();
+    }
+};
+
+const toggleMob=()=>{
+    let isActive=StateHelper.targetName(activeRoute.getRawData()) === navobjects.WayPoint.MOB;
+    controlMob(!isActive);
+};
+
+const mobDefinition={
+    name: "MOB",
+    storeKeys: activeRoute.getStoreKeys(),
+    updateFunction:(state)=>{
+        return {
+            toggle: StateHelper.targetName(state) === navobjects.WayPoint.MOB
+        }
+    },
+    onClick:()=>{
+        toggleMob();
+    }
+};
+
 
 module.exports={
     anchorWatchDialog,
@@ -240,5 +291,8 @@ module.exports={
     lifecycleTimer,
     scrollInContainer,
     keyEventHandler,
-    nameKeyEventHandler
+    nameKeyEventHandler,
+    mobDefinition,
+    controlMob,
+    toggleMob
 };

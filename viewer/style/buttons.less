@@ -50,7 +50,12 @@ button.smallButton{
 button.active{
   border: 0.3em solid ;
   .nightBorderFade(@colorGreen);
+  &.MOB{
+    .nightBorderFade(@colorRed);
+  }
 }
+
+
 
 .iconButton(@icon){
   span {
@@ -117,6 +122,10 @@ button{
   &.AnchorWatch {
     .iconButton('anchor.svg');
 
+  }
+
+  &.MOB{
+    .iconButton('drowning.svg');
   }
 
   &.CancelNav {

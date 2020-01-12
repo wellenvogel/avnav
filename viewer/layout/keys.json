@@ -15,6 +15,9 @@
     "alarm":{
       "stop":"q"
     },
+    "global":{
+      "mobon": ["Control-l"," "]
+    },
     "button":{
       "Cancel":"Escape"
     }

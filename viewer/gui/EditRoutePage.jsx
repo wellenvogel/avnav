@@ -263,13 +263,7 @@ class EditRoutePage extends React.Component{
                     history.pop();
                 }
             },
-            {
-                name:"NavInvert",
-                onClick:()=>{
-                    if (!checkRouteWritable()) return;
-                    getCurrentEditor().invertRoute();
-                }
-            },
+            GuiHelpers.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

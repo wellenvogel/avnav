@@ -24,6 +24,7 @@ import base from '../base.js';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import jsdownload from 'downloadjs';
+import GuiHelpers from '../util/GuiHelpers.js';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -660,6 +661,7 @@ class DownloadPage extends React.Component{
                     });
                 }
             },
+            GuiHelpers.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

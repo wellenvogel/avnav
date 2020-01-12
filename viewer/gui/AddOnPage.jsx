@@ -13,6 +13,7 @@ import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 
 
 class AddOnPage extends React.Component{
@@ -20,6 +21,7 @@ class AddOnPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
+            GuiHelpers.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

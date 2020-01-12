@@ -492,6 +492,12 @@ export class StateHelper{
         return state.leg.isRouting();
     }
 
+    static targetName(state){
+        if (! StateHelper.hasActiveTarget(state)) return;
+        if (! state.leg.to) return;
+        return state.leg.to.name;
+    }
+
     static selectedIsActiveTarget(state){
         if (! StateHelper.hasActiveTarget(state)) return false;
         return state.leg.getCurrentTargetIdx() == state.index;

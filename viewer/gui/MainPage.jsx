@@ -100,12 +100,7 @@ class MainPage extends React.Component {
                     globalStore.storeData(keys.properties.nightMode, mode);
                 }
             },
-            {
-                name: 'MainInfo',
-                onClick: ()=> {
-                    history.push('infopage')
-                }
-            },
+            GuiHelper.mobDefinition,
             {
                 name: 'MainCancel',
                 storeKeys: {visible: keys.gui.global.onAndroid},

@@ -159,6 +159,13 @@ class StatusPage extends React.Component{
                     }
                 },
                 {
+                    name: 'MainInfo',
+                    onClick: ()=> {
+                        history.push('infopage')
+                    }
+                },
+                GuiHelpers.mobDefinition,
+                {
                     name: 'Cancel',
                     onClick: ()=>{history.pop()}
                 }

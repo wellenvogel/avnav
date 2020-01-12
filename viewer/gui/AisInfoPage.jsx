@@ -90,6 +90,7 @@ class AisInfoPage extends React.Component{
                     history.replace('aispage');
                 }
             },
+            GuiHelpers.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

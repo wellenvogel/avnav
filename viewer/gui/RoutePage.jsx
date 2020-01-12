@@ -245,6 +245,7 @@ class RoutePage extends React.Component{
                     });
                 }
             },
+            GuiHelpers.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

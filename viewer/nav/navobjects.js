@@ -140,6 +140,8 @@ navobjects.WayPoint.prototype.update=function(point){
     return rt;
 };
 
+navobjects.WayPoint.MOB="MOB";
+
 /**
  * a track point
  * @param {number} lon

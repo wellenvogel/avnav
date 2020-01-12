@@ -115,6 +115,21 @@ class NavPage extends React.Component{
         this.mapEvent=this.mapEvent.bind(this);
         this.waypointButtons=[
             {
+                name: "AnchorWatch",
+                storeKeys: {
+                    watchDistance: keys.nav.anchor.watchDistance
+                },
+                updateFunction:(state)=>{
+                    return {
+                        toggle: state.watchDistance !== undefined
+                    }
+                },
+                onClick:()=>{
+                    GuiHelpers.anchorWatchDialog(undefined);
+                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+                }
+            },
+            {
                 name:'WpLocate',
                 onClick:()=>{
                     self.wpTimer.startTimer();
@@ -305,20 +320,7 @@ class NavPage extends React.Component{
                 }
 
             },
-            {
-                name: "AnchorWatch",
-                storeKeys: {
-                    watchDistance: keys.nav.anchor.watchDistance
-                },
-                updateFunction:(state)=>{
-                    return {
-                        toggle: state.watchDistance !== undefined
-                    }
-                },
-                onClick:()=>{
-                    GuiHelpers.anchorWatchDialog(undefined);
-                }
-            },
+            GuiHelpers.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

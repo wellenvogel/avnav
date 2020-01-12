@@ -14,6 +14,7 @@ import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import QRCode from 'qrcode.react';
+import GuiHelpers from '../util/GuiHelpers.js';
 
 const AddressItem=(props)=>{
     let url="http://"+props.value;
@@ -33,6 +34,7 @@ class AddressPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
+            GuiHelpers.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

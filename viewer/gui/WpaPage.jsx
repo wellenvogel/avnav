@@ -143,6 +143,7 @@ class WpaPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
+            GuiHelpers.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

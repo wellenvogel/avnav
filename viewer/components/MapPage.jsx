@@ -68,7 +68,9 @@ class MapPage extends React.Component{
         NavHandler.setAisCenterMode(navobjects.AisCenterMode.MAP);
         this.subscribeToken=MapHolder.subscribe(this.mapEvent);
         MapHolder.loadMap(this.refs.map).
-            then((result)=>{}).
+            then((result)=>{
+                globalStore.storeData(keys.gui.global.hasSelectedChart,true);
+            }).
             catch((error)=>{Toast(error)});
     }
     render(){
