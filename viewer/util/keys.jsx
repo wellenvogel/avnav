@@ -331,7 +331,7 @@ let keys={
         wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
         layoutName: new Property("system.default","Layout name",PropertyType.LAYOUT),
-        mobMinZoom: new Property(15,"minzoom for MOB",PropertyType.RANGE,[8,20]),
+        mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20]),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),

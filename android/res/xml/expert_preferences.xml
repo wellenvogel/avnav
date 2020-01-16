@@ -67,6 +67,11 @@
         android:inputType="text"
         android:title="@string/labelSettingsGpsAlarm"/>
     <de.wellenvogel.avnav.settings.AudioEditTextPreference
+        android:key="alarm.mob"
+        android:defaultValue="anchorAlarm.mp3"
+        android:inputType="text"
+        android:title="@string/labelSettingsMobAlarm"/>
+    <de.wellenvogel.avnav.settings.AudioEditTextPreference
         android:key="alarm.waypoint"
         android:defaultValue="waypointAlarm.mp3"
         android:inputType="text"

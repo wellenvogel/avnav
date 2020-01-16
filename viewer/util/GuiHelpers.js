@@ -245,9 +245,9 @@ const controlMob=(start)=>{
         if (globalStore.getData(keys.gui.global.hasSelectedChart)){
             let currentZoom=MapHolder.getZoom();
             let mzoom=globalStore.getData(keys.properties.mobMinZoom);
-            if (currentZoom.current < mzoom){
-                MapHolder.changeZoom(mzoom-currentZoom.current);
-            }
+            let diff=mzoom-currentZoom.required;
+            if (diff < 0) diff=0;
+            MapHolder.changeZoom(diff,true); //force to set required zoom
             history.reset();
             history.push("navpage")
         }

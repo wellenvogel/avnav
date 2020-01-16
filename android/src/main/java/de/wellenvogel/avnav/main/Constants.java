@@ -42,6 +42,7 @@ public class Constants {
     public static final String ANCHORALARM="alarm.anchor";
     public static final String GPSALARM="alarm.gps";
     public static final String WAYPOINTALARM="alarm.waypoint";
+    public static final String MOBALARM="alarm.mob";
     public static final String GPS_PERMISSION_REQUESTED="permissions.gps";
     public static final String STORAGE_PERMISSION_REQUESTED="permissions.storage";
 
@@ -54,7 +55,8 @@ public class Constants {
     public static String[] audioPreferenceCodes=new String[]{
             ANCHORALARM,
             GPSALARM,
-            WAYPOINTALARM
+            WAYPOINTALARM,
+            MOBALARM
     };
     public static final String PREFNAME="AvNav";
     //dummy file to make the media scanner see or directories...

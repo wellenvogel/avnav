@@ -105,6 +105,7 @@ const MapHolder=function(){
     this.center=[0,0];
     this.zoom=-1;
     this.requiredZoom=-1;
+    this.forceZoom=false; //temporarily overwrite autozoom
     this.mapZoom=-1; //the last zoom we required from the map
     try {
         let currentView = localStorage.getItem(globalStore.getData(keys.properties.centerName));
@@ -574,7 +575,7 @@ MapHolder.prototype.timerFunction=function(){
  * increase/decrease the map zoom
  * @param number
  */
-MapHolder.prototype.changeZoom=function(number){
+MapHolder.prototype.changeZoom=function(number,opt_force){
     let curzoom=this.requiredZoom; //this.getView().getZoom();
     curzoom+=number;
     if (curzoom < this.minzoom ) curzoom=this.minzoom;
@@ -582,6 +583,7 @@ MapHolder.prototype.changeZoom=function(number){
         curzoom=this.maxzoom+globalStore.getData(keys.properties.maxUpscale);
     }
     this.requiredZoom=curzoom;
+    this.forceZoom=opt_force||false;
     this.setZoom(curzoom);
     this.checkAutoZoom();
     this.timerFunction();
@@ -728,6 +730,7 @@ MapHolder.prototype.centerToGps=function(){
 
 MapHolder.prototype.checkAutoZoom=function(opt_force){
     let enabled= globalStore.getData(keys.properties.autoZoom)||opt_force;
+    if (this.forceZoom) enabled=false;
     if (! this.olmap) return;
     if (! enabled ||  !(this.gpsLocked||opt_force)) {
         if (this.olmap.getView().getZoom() != this.requiredZoom){

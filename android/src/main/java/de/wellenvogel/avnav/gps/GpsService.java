@@ -88,6 +88,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private MediaPlayer mediaPlayer=null;
     private int mediaRepeatCount=0;
     private boolean gpsLostAlarmed=false;
+    private boolean mobAlarm=false;
     private BroadcastReceiver broadCastReceiver;
     private BroadcastReceiver triggerReceiver; //trigger rescans...
     private boolean shouldStop=false;
@@ -542,6 +543,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     public void timerAction(){
         checkAnchor();
         checkApproach();
+        checkMob();
         handleNotification(true,false);
         checkTrackWriter();
         for (GpsDataProvider provider: getAllProviders()) {
@@ -600,6 +602,18 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         lastAlarmWp=routeHandler.getCurrentTarget();
         setAlarm(Alarm.WAYPOINT.name);
+    }
+
+    private void checkMob(){
+        if (routeHandler == null) return;
+        if (! routeHandler.mobActive()){
+            mobAlarm=false;
+            resetAlarm(Alarm.MOB.name);
+            return;
+        }
+        if (mobAlarm) return;
+        setAlarm(Alarm.MOB.name);
+        mobAlarm=true;
     }
 
     /**

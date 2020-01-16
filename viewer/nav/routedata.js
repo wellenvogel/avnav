@@ -608,6 +608,9 @@ RouteData.prototype._checkNextWp=function(){
         if (!data.leg) return;
         if (!data.leg.isRouting()) return;
         let lastApproach=data.leg.approach;
+        if (data.leg.to && data.leg.to.name == navobjects.WayPoint.MOB){
+            return;
+        }
         let boat = globalStore.getData(keys.nav.gps.position);
         //TODO: switch of routing?!
         if (!globalStore.getData(keys.nav.gps.valid)) return;

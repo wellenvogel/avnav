@@ -256,6 +256,7 @@ public class RouteHandler implements INavRequestHandler {
     };
 
     public static class RoutingLeg{
+        public static String MOBNAME="MOB";
         private RoutePoint from;
         private RoutePoint to;
         private Route route;
@@ -341,6 +342,14 @@ public class RouteHandler implements INavRequestHandler {
         }
         JSONObject toJson() throws JSONException {
             return getJsonData();
+        }
+
+        public boolean isMob(){
+            if (to == null) return false;
+            if ( ! active) return false;
+            if (hasAnchorWatch()) return false;
+            if (MOBNAME.equals(to.name)) return true;
+            return false;
         }
     }
 
@@ -710,6 +719,10 @@ public class RouteHandler implements INavRequestHandler {
             resetLast();
             return false;
         }
+        if (leg.isMob()){
+            resetLast();
+            return false;
+        }
         float currentDistance=leg.to.distanceTo(currentPosition);
         if (currentDistance > leg.approachDistance){
             resetLast();
@@ -794,6 +807,11 @@ public class RouteHandler implements INavRequestHandler {
             if (leg == null) return false;
         }
         return leg.hasAnchorWatch();
+    }
+
+    public boolean mobActive(){
+        if (currentLeg == null) return false;
+        return currentLeg.isMob();
     }
 
     public void setMediaUpdater(IMediaUpdater u){

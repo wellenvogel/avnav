@@ -54,6 +54,7 @@ from avnav_nmea import *
 import avnav_handlerList
 
 class AVNRoutingLeg():
+  MOBNAME="MOB" #the waypoint name fro MOB
   def __init__(self,name,fromWP,toWP,active,currentTarget,approachDistance,approach):
     self.name=name
     self.fromWP=fromWP
@@ -65,7 +66,13 @@ class AVNRoutingLeg():
     self.currentRoute=None
     self.anchorDistance=None #if set - we are in anchor watch mode, ignore any toWp and any route
 
-  
+  def isMob(self):
+    if self.toWP is None:
+      return False
+    if self.toWP.name == self.MOBNAME:
+      return True
+    return False
+
   def __unicode__(self):
     if self.anchorDistance is not None:
       return "AVNRoutingLeg route=%s,from=%s,anchorDistanc=%s" \
@@ -133,7 +140,7 @@ class AVNRouter(AVNWorker):
   def createInstance(cls, cfgparam):
     return AVNRouter(cfgparam)
 
-  ALARMS=Enum(['gps','waypoint','anchor'])
+  ALARMS=Enum(['gps','waypoint','anchor','mob'])
   
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
@@ -503,10 +510,18 @@ class AVNRouter(AVNWorker):
   def computeApproach(self):
     if self.currentLeg is None:
       self.startStopAlarm(False,self.ALARMS.waypoint)
+      self.startStopAlarm(False, self.ALARMS.mob)
       return
     if not self.currentLeg.active:
       self.startStopAlarm(False,self.ALARMS.waypoint)
+      self.startStopAlarm(False, self.ALARMS.mob)
       return
+    if self.currentLeg.isMob():
+      self.startStopAlarm(False, self.ALARMS.waypoint)
+      if self.activatedAlarms.get(self.ALARMS.mob) is None:
+        self.startStopAlarm(True, self.ALARMS.mob)
+      return
+    self.startStopAlarm(False,self.ALARMS.mob)
     curGps=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
     lat=curGps.get('lat')
     lon=curGps.get('lon')

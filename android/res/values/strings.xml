@@ -134,5 +134,6 @@
     <string name="receiveUnableToImport">unable to import</string>
     <string name="importFailed">import failed</string>
     <string name="receiveAlreadyExists">Route already exists</string>
+    <string name="labelSettingsMobAlarm">Sound for MOB alarm</string>
 
 </resources>
