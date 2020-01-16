@@ -127,7 +127,13 @@ avnav.main=function() {
             }
         };
     }
-    history.push('mainpage');
+    let startpage="warningpage";
+    if (typeof window.localStorage === 'object'){
+        if (localStorage.getItem(globalStore.getData(keys.properties.licenseAcceptedName)) === 'true'){
+            startpage="mainpage";
+        }
+    }
+    history.push(startpage);
     const loadScripts=(loadList)=>{
         let fileref=undefined;
         for (let i in  loadList) {

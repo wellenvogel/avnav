@@ -63,9 +63,9 @@ button.active{
   }
 }
 
-.textButton(@text){
+.textButton(@text,@fontSize:2.3em){
   span {
-    font-size: 2.3em;
+    font-size: @fontSize;
     position: relative;
   }
   span:after{
@@ -296,5 +296,12 @@ button{
 
   &.SettingsAndroid {
     .iconButton('ic_android.svg');
+  }
+
+  &.WarningOK{
+    .textButton('Akzeptieren/Accept',1.5em);
+    margin-left: auto;
+    margin-right: auto;
+    width: auto;
   }
 }

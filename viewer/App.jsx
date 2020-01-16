@@ -18,6 +18,7 @@ import DownloadPage from './gui/DownloadPage.jsx';
 import SettingsPage from './gui/SettingsPage.jsx';
 import NavPage from './gui/NavPage.jsx';
 import EditRoutePage from './gui/EditRoutePage.jsx';
+import WarningPage from './gui/WarningPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -34,10 +35,12 @@ import GuiHelpers from './util/GuiHelpers.js';
 const DynamicSound=Dynamic(SoundHandler);
 
 //to feed the sound with the alarm sound we have
-const alarmStoreKeys={alarms:keys.nav.alarms.all,enabled:keys.properties.localAlarmSound};
+const alarmStoreKeys={alarms:keys.nav.alarms.all,
+    enabled:keys.properties.localAlarmSound,
+    gui: keys.gui.global.soundEnabled};
 const computeAlarmSound=(state)=>{
     let off={src:undefined,repeat:undefined};
-    if (! state.enabled) return {enabled:false,...off};
+    if (! state.enabled || ! state.gui) return {enabled:false,...off};
     if (!state.alarms) return {enabled:true,...off};
     for (let k in state.alarms){
         if (!state.alarms[k].running) continue;
@@ -86,7 +89,8 @@ const pages={
     downloadpage:DownloadPage,
     settingspage:SettingsPage,
     navpage: NavPage,
-    editroutepage:EditRoutePage
+    editroutepage:EditRoutePage,
+    warningpage:WarningPage
 };
 class Router extends Component {
     render() {

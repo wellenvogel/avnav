@@ -162,7 +162,8 @@ let keys={
             toastText:K,
             toastTimeout:K,
             toastCallback:K,
-            hasSelectedChart: K
+            hasSelectedChart: K,
+            soundEnabled: new D("only enable sound once we reach the mainpage")
         },
         mainpage:{
             chartList: K,
@@ -302,6 +303,7 @@ let keys={
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
         centerName: new Property("avnav.center"),
+        licenseAcceptedName: new Property("avnav.licenseAccepted"),
         statusErrorImage: new Property(redBubble),
         statusOkImage: new Property(greenBubble),
         statusYellowImage: new Property(yellowBubble),

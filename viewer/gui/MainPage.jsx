@@ -145,6 +145,7 @@ class MainPage extends React.Component {
 
 
     componentDidMount() {
+        globalStore.storeData(keys.gui.global.soundEnabled,true);
         readAddOns();
         fillList();
     }
