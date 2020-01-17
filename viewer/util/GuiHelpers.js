@@ -238,6 +238,7 @@ const controlMob=(start)=>{
     if (start){
         if (isActive) return;
         if (! globalStore.getData(keys.nav.gps.valid)) return;
+        if (! globalStore.getData(keys.properties.connectedMode)) return;
         let target=navobjects.WayPoint.fromPlain(globalStore.getData(keys.nav.gps.position));
         target.name=navobjects.WayPoint.MOB;
         Router.wpOn(target,false);
@@ -269,10 +270,11 @@ const toggleMob=()=>{
 
 const mobDefinition={
     name: "MOB",
-    storeKeys: activeRoute.getStoreKeys(),
+    storeKeys: activeRoute.getStoreKeys({visible:keys.properties.connectedMode}),
     updateFunction:(state)=>{
         return {
-            toggle: StateHelper.targetName(state) === navobjects.WayPoint.MOB
+            toggle: StateHelper.targetName(state) === navobjects.WayPoint.MOB,
+            visible: state.visible
         }
     },
     onClick:()=>{
