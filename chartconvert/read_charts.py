@@ -1698,6 +1698,25 @@ def main(argv):
   if (len(args) < 1):
     print usage
     sys.exit(1)
+  TilerTools=findTilerTools(options.ttdir)
+  mercator=Mercator()
+  mode="all"
+  if options.mode is not None:
+    mode=options.mode
+    allowedModes=["chartlist","generate","all","merge","overview", "base","gemf"]
+    if not mode in allowedModes:
+      assert False, "invalid mode "+mode+", allowed: "+",".join(allowedModes)
+  log("running in mode "+mode)
+  if mode == "chartlist" or mode == "all":
+    log("layers:"+str(layer_zoom_levels))
+  gemfdir = os.path.join(basedir, OUT)
+  if mode == "all":
+    '''in all mode we also handle conversions of navpack and mbtiles files
+      this allows a seemless run of such conversions from GUIs'''
+    args=convertAux(args,gemfdir)
+    if len(args) < 1:
+      log("no further charts to convert")
+      return
   if options.outname is not None:
     outname=options.outname
   else:
@@ -1714,24 +1733,8 @@ def main(argv):
     sys.exit(1)
   ld("outname",outname)
   log("using outname %s" %(outname))
-  TilerTools=findTilerTools(options.ttdir)
-  mercator=Mercator()
-  mode="all"
-  if options.mode is not None:
-    mode=options.mode
-    allowedModes=["chartlist","generate","all","merge","overview", "base","gemf"]
-    if not mode in allowedModes:
-      assert False, "invalid mode "+mode+", allowed: "+",".join(allowedModes)
-  log("running in mode "+mode)
-  if mode == "chartlist" or mode == "all":
-    log("layers:"+str(layer_zoom_levels))
-  basetiles=os.path.join(basedir,WORKDIR,outname,BASETILES)
-  outdir=os.path.join(basedir,WORKDIR,outname)
-  gemfdir = os.path.join(basedir, OUT)
-  if mode == "all":
-    '''in all mode we also handle conversions of navpack and mbtiles files
-      this allows a seemless run of such conversions from GUIs'''
-    args=convertAux(args,gemfdir)
+  basetiles = os.path.join(basedir, WORKDIR, outname, BASETILES)
+  outdir = os.path.join(basedir, WORKDIR, outname)
   if mode == "chartlist"  or mode == "all":
     if len(args) < 1 :
       log("no charts to convert")
