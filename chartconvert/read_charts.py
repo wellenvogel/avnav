@@ -325,6 +325,10 @@ class ChartList():
   def __init__(self,mercator):
     self.tlist=[]
     self.mercator=mercator
+
+  def isEmpty(self):
+    return len(self.tlist) < 1
+
   def add(self,entry,noSort=False):
     idx=0
     found=False
@@ -1177,6 +1181,7 @@ def readChartList(outdir,mercator):
   fname=LISTFILE
   if outdir is not None:
     fname=os.path.join(outdir,LISTFILE)
+  log("reading chartlist %s"%fname)
   chartlist=ChartList.createFromXml(fname,mercator)
   assert chartlist is not None,"unable to read chartlist from "+fname
   return chartlist
@@ -1517,6 +1522,9 @@ def mergeLayerTiles(chartlist,outdir,layerindex,tilespyramid,gemf,onlyOverview=F
 #-------------------------------------
 def mergeAllTiles(outdir,mercator,gemf=None,onlyOverview=False):
   chartlist=readChartList(outdir,mercator)
+  if chartlist.isEmpty():
+    log("no charts in chartlist")
+    return
   ld("chartlist read:",str(chartlist))
   log("mergeAllTiles: layers: %s, start collecting created basetiles"%(str(layer_zoom_levels)))
   chartlist.readBaseTiles(outdir)
@@ -1571,11 +1579,53 @@ def mergeAllTiles(outdir,mercator,gemf=None,onlyOverview=False):
   with open(overviewfname,"w") as f:
     f.write(overviewstr)
   log(overviewfname+" written, successfully finished")
-  
-        
+
+def runAuxConvert(infile,outdir):
+  converter=None
+  if infile.endswith("mbtiles"):
+    converter="convert_mbtiles.py"
+  if infile.endswith("navipack"):
+    converter="convert_navipack.py"
+  if converter is None:
+    warn("unable to find a converter for %s"%infile)
+    return -1
+  outfilebase=os.path.join(outdir,os.path.splitext(os.path.basename(infile))[0])
+  tmpname=outfilebase+".tmp"
+  args=[sys.executable,
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),converter),
+        tmpname,
+        infile
+        ]
+  auxproc = subprocess.Popen(args,stdout=subprocess.PIPE,universal_newlines=True,stderr=subprocess.STDOUT)
+  log("converting %s with %s"%(infile," ".join(args)))
+  for line in auxproc.stdout:
+    log("convert %s:%s"%(infile,line))
+  rt=auxproc.wait()
+  if rt == 0:
+    finalName=outfilebase+".gemf"
+    if os.path.exists(finalName):
+      os.unlink(finalName)
+    os.rename(tmpname,finalName)
+  else:
+    if os.path.exists(tmpname):
+      os.unlink(tmpname)
+  return rt
+
+
+def convertAux(args,outdir):
+  rt=[]
+  for name in args:
+    if name.endswith("mbtiles") or name.endswith("navipack"):
+      pr=runAuxConvert(name,outdir)
+      if pr != 0:
+        warn("converting %s failed"%name)
+    else:
+      rt.append(name)
+  return rt
+
  
 def main(argv):
-  
+
   global LISTFILE,layer_zoom_levels,options,MAXUPSCALE,TilerTools,MAXOVERLAP
   usage = "%prog [options] [chartdir or file...]"
   parser = OptionParser(
@@ -1677,17 +1727,24 @@ def main(argv):
     log("layers:"+str(layer_zoom_levels))
   basetiles=os.path.join(basedir,WORKDIR,outname,BASETILES)
   outdir=os.path.join(basedir,WORKDIR,outname)
+  gemfdir = os.path.join(basedir, OUT)
+  if mode == "all":
+    '''in all mode we also handle conversions of navpack and mbtiles files
+      this allows a seemless run of such conversions from GUIs'''
+    args=convertAux(args,gemfdir)
   if mode == "chartlist"  or mode == "all":
-    if not os.path.isdir(basetiles):
-      os.makedirs(basetiles, 0777)
-    createChartList(args,outdir,mercator)
+    if len(args) < 1 :
+      log("no charts to convert")
+    else:
+      if not os.path.isdir(basetiles):
+        os.makedirs(basetiles, 0777)
+      createChartList(args,outdir,mercator)
   if mode == "generate" or mode == "all" or mode == "base":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
     generateAllBaseTiles(outdir,mercator)
   if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview" or mode == "gemf":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
     mapdir=os.path.join(outdir,OUTTILES)
-    gemfdir=os.path.join(basedir,OUT)
     if not os.path.isdir(gemfdir):
       os.makedirs(gemfdir,0777)
     gemfname=os.path.join(basedir,OUT,outname+".gemf")
@@ -1700,20 +1757,22 @@ def main(argv):
     mergeAllTiles(outdir,mercator,gemfwriter,(mode == "overview"))
   if ( mode == "gemf" or mode == "all" ) and not options.newgemf:
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
-    gemfoptions={}
-    marker=os.path.join(mapdir,"avnav.xml")
-    doGenerateGemf=True
-    if options.update == 1:
-      if os.path.exists(marker) and os.path.exists(gemfname):
-        ostat=os.stat(gemfname)
-        cstat=os.stat(marker)
-        if (cstat.st_mtime <= ostat.st_mtime):
-          log("file %s is newer then %s, no need to generate" %(gemfname,marker))
-          doGenerateGemf=False
-    if doGenerateGemf:
-      log("starting creation of GEMF file %s"%(gemfname))
-      generate_efficient_map_file.MakeGEMFFile(mapdir,gemfname,gemfoptions)
-    log("gemf file %s successfully created" % (gemfname))
+    chartlist = readChartList(outdir, mercator)
+    if not chartlist.isEmpty():
+      gemfoptions={}
+      marker=os.path.join(mapdir,"avnav.xml")
+      doGenerateGemf=True
+      if options.update == 1:
+        if os.path.exists(marker) and os.path.exists(gemfname):
+          ostat=os.stat(gemfname)
+          cstat=os.stat(marker)
+          if (cstat.st_mtime <= ostat.st_mtime):
+            log("file %s is newer then %s, no need to generate" %(gemfname,marker))
+            doGenerateGemf=False
+      if doGenerateGemf:
+        log("starting creation of GEMF file %s"%(gemfname))
+        generate_efficient_map_file.MakeGEMFFile(mapdir,gemfname,gemfoptions)
+      log("gemf file %s successfully created" % (gemfname))
   log("***chart generation finished***")
 
 
