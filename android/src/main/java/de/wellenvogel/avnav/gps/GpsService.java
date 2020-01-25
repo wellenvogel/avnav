@@ -56,6 +56,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
 
     private static final String CHANNEL_ID = "main" ;
+    private static final String CHANNEL_ID_NEW = "main_new" ;
     public static String PROP_TRACKDIR="track.dir";
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
@@ -99,6 +100,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private Thread positionWriterThread;
     private RouteHandler.RoutePoint lastAlarmWp=null;
     long trackMintime;
+    Alarm lastNotifiedAlarm=null;
+    boolean notificationSend=false;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -201,74 +204,83 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             CharSequence name = getString(R.string.channel_name);
             String description = getString(R.string.channel_description);
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID_NEW, name, importance);
             channel.setDescription(description);
+            channel.setSound(null,null);
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
+            try{
+                //we need a new channel as we did not disable the sound initially - but we cannot change an existing one
+                notificationManager.deleteNotificationChannel(CHANNEL_ID);
+            }catch (Throwable t){}
         }
     }
 
     private void handleNotification(boolean start, boolean startForeground){
         if (start) {
-            createNotificationChannel();
-            Intent notificationIntent = new Intent(this, Dummy.class);
-            PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                    notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            Intent broadcastIntent=new Intent();
-            broadcastIntent.setAction(Constants.BC_STOPALARM);
-            PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx,1,broadcastIntent,PendingIntent.FLAG_CANCEL_CURRENT);
-            Intent broadcastIntentStop=new Intent();
-            broadcastIntentStop.setAction(Constants.BC_STOPAPPL);
-            PendingIntent stopAppl = PendingIntent.getBroadcast(ctx,1,broadcastIntentStop,PendingIntent.FLAG_CANCEL_CURRENT);
-            RemoteViews nv=new RemoteViews(getPackageName(),R.layout.notification);
-            nv.setOnClickPendingIntent(R.id.button2,stopAlarmPi);
-            nv.setOnClickPendingIntent(R.id.button3,stopAppl);
-            nv.setOnClickPendingIntent(R.id.notification,contentIntent);
-            //TODO: show/hide alarm button
             Alarm currentAlarm=getCurrentAlarm();
-            if (currentAlarm != null){
-                nv.setViewVisibility(R.id.button2,View.VISIBLE);
-                nv.setViewVisibility(R.id.button3,View.GONE);
-            }
-            else{
-                nv.setViewVisibility(R.id.button2,View.GONE);
-                nv.setViewVisibility(R.id.button3,View.VISIBLE);
-            }
-            NotificationCompat.Builder notificationBuilder =
-                    new NotificationCompat.Builder(this,CHANNEL_ID);
-            notificationBuilder.setSmallIcon(R.drawable.sailboat);
-            notificationBuilder.setContentTitle(getString(R.string.notifyTitle));
-            if (currentAlarm == null) {
-                notificationBuilder.setContentText(getString(R.string.notifyText));
-                nv.setTextViewText(R.id.notificationText,getString(R.string.notifyText));
-            }
-            else{
-                notificationBuilder.setContentText(currentAlarm.name+ " Alarm");
-                nv.setTextViewText(R.id.notificationText,currentAlarm.name+ " Alarm");
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                notificationBuilder.setContent(nv);
-            }
-            //notificationBuilder.addAction(R.drawable.alarm256red,"alarm",stopAlarmPi);
-            notificationBuilder.setContentIntent(contentIntent);
-            notificationBuilder.setOngoing(true);
-            notificationBuilder.setAutoCancel(false);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-                notificationBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
-            }
-            NotificationManager mNotificationManager =
-                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (startForeground){
-                startForeground(NOTIFY_ID,notificationBuilder.build());
-            }
-            else{
-                mNotificationManager.notify(NOTIFY_ID,notificationBuilder.build());
+            if (! notificationSend || (currentAlarm != null && ! currentAlarm.equals(lastNotifiedAlarm))|| (currentAlarm == null && lastNotifiedAlarm != null))
+            {
+                createNotificationChannel();
+                Intent notificationIntent = new Intent(this, Dummy.class);
+                PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                        notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                Intent broadcastIntent = new Intent();
+                broadcastIntent.setAction(Constants.BC_STOPALARM);
+                PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx, 1, broadcastIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                Intent broadcastIntentStop = new Intent();
+                broadcastIntentStop.setAction(Constants.BC_STOPAPPL);
+                PendingIntent stopAppl = PendingIntent.getBroadcast(ctx, 1, broadcastIntentStop, PendingIntent.FLAG_CANCEL_CURRENT);
+                RemoteViews nv = new RemoteViews(getPackageName(), R.layout.notification);
+                nv.setOnClickPendingIntent(R.id.button2, stopAlarmPi);
+                nv.setOnClickPendingIntent(R.id.button3, stopAppl);
+                nv.setOnClickPendingIntent(R.id.notification, contentIntent);
+                //TODO: show/hide alarm button
+                if (currentAlarm != null) {
+                    nv.setViewVisibility(R.id.button2, View.VISIBLE);
+                    nv.setViewVisibility(R.id.button3, View.GONE);
+                } else {
+                    nv.setViewVisibility(R.id.button2, View.GONE);
+                    nv.setViewVisibility(R.id.button3, View.VISIBLE);
+                }
+                NotificationCompat.Builder notificationBuilder =
+                        new NotificationCompat.Builder(this, CHANNEL_ID_NEW);
+                notificationBuilder.setSmallIcon(R.drawable.sailboat);
+                notificationBuilder.setContentTitle(getString(R.string.notifyTitle));
+                if (currentAlarm == null) {
+                    notificationBuilder.setContentText(getString(R.string.notifyText));
+                    nv.setTextViewText(R.id.notificationText, getString(R.string.notifyText));
+                } else {
+                    notificationBuilder.setContentText(currentAlarm.name + " Alarm");
+                    nv.setTextViewText(R.id.notificationText, currentAlarm.name + " Alarm");
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    notificationBuilder.setContent(nv);
+                }
+                //notificationBuilder.addAction(R.drawable.alarm256red,"alarm",stopAlarmPi);
+                notificationBuilder.setContentIntent(contentIntent);
+                notificationBuilder.setOngoing(true);
+                notificationBuilder.setAutoCancel(false);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    notificationBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
+                }
+                NotificationManager mNotificationManager =
+                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (startForeground) {
+                    startForeground(NOTIFY_ID, notificationBuilder.build());
+                } else {
+                    mNotificationManager.notify(NOTIFY_ID, notificationBuilder.build());
+                }
+                lastNotifiedAlarm=currentAlarm;
+                notificationSend=true;
             }
 
         }
         else{
+            notificationSend=false;
+            lastNotifiedAlarm=null;
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.cancel(NOTIFY_ID);
@@ -469,6 +481,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     public void onCreate()
     {
         super.onCreate();
+        notificationSend=false;
+        lastNotifiedAlarm=null;
         ctx = this;
         mediaPlayer=new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -688,6 +702,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
                     cancel(watchdogIntent);
         }
+        lastNotifiedAlarm=null;
+        notificationSend=false;
     }
 
 

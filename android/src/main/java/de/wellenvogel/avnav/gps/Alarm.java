@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.gps;
 
+import android.support.annotation.Nullable;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,6 +35,14 @@ public class Alarm {
         rt.put("running",running);
         return rt;
     }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (! (obj instanceof Alarm)) return false;
+        if (! name.equals(((Alarm)obj).name)) return false;
+        return running == ((Alarm)obj).running;
+    }
+
     public String toString(){
         StringBuilder rt=new StringBuilder();
         rt.append("Alarm: name=").append(name);
