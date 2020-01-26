@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <title>mapsources</title>
+  </head>
+  <body>
+    <h2><a name="Mobac"></a>Mobile Atlas Creator Mapsources</h2>
+    2020/01/26<br>
+    <p>Wieder mal ein paar kleine Modifikationen an den mapsources, damit der
+      Zugriff auf die BSH Server wieder funktioniert.</p>
+    <h2>Sourcen</h2>
+    <p>Für den Mobile Atlas Creator habe ich einige Map-Sources erzeugt, die es
+      erlauben, etwas flexibler per xml den Zugriff auf Kartendienste zu
+      definieren. Dazu die Datei <a href="../downloads/avnav-mapsources.zip">avnav-mapsources.zip</a>
+      im Verzeichnis "mapsources" des Mobile Atlas Creator entpacken.<br>
+      Dann erhält man u.a. ein "mashUp" aus den BSH-Kartendiensten (siehe auch <a
+        href="../../../../segeln/Technik/BshViewer/index.php">bsh-viewer</a>)
+      und OpenSeaMap ("BSH OpenSeaMap 2014 Extended"). Außerdem noch BSH alleine
+      ("BSH 2014 Extended") oder OpenSeaMap + OpenStreetMap ("OWS OpenSeaMap
+      2014"). Wenn jemand "spielen" möchte, kann man die .exml entsprechend
+      anpassen. Spannend sind insbesondere die Layer für die BSH-Abfrage. Die
+      kann man mit meinem<a href="../../../../segeln/Technik/BshViewer/index.php">
+        bsh-viewer</a> ausprobieren (jeweils rechts in der Quelle editieren).
+      Außerdem kann man bei Bedarf die Farben noch etwas anpassen - ich habe
+      mich bemüht, etwas mehr Kontrast zu erzeugen. Wenn man etwas ändern will -
+      eine der Karten z.B. mit pain.net öffnen und dann die Hex-Werte für die
+      Farben aussuchen und in der .exml Datei eintragen.</p>
+    <p>Der Download dauert meist ziemlich lange - oft ist der BSH-Server sehr
+      langsam oder stürzt auch gerne mal ab. Dann einfach wieder neu versuchen
+      (dazu im Mobac die cache Einstellungen so setzen, dass er die Karten z.B.
+      1 Monat im Cache lässt) - irgendwann sind sie alle heruntergeladen. Als
+      Format jetzt immer "OsmdroidGEMF" wählen (das kann man übrigens auch in
+      anderen Programmen nutzen...).</p>
+    <p>Wenn man in den exml Dateien ändert (insbesondere bei den layern) muss
+      man allerdings unter tilestore den enstprechenden caches löschen - sonst
+      werden die Ãnderungen nicht wirksam.</p>
+    <p>Die chartsources sind mit Java 7 übersetzt (werden also mit Java6 nicht
+      laufen). Source files auf <a href="https://github.com/wellenvogel/avnav/tree/master/mobac/testsrc">github</a>.</p>
+    <p>Das Ergebnis sieht z.B. so aus (das ist die Einfahrt nach Greifswald):</p>
+    <p><img src="MobacExampleBsh.PNG" height="405" width="600"></p>
+    <p>Hier nochmal die Dateien:</p>
+    <ul>
+      <li><a href="avnav-mapsources.zip">avnav-mapsources.zip</a> (die
+        Mapsources BSH, BSH+OpenSeaMap)</li>
+    </ul>
+    <br>
+  </body>
+</html>

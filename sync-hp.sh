@@ -9,6 +9,7 @@ set -x
 rsync -rav --exclude="*bak" --exclude="*odg" --exclude="*php" --delete $BASE/docs/ $TARGET/docs
 rsync -rav --include="*php" --exclude="*" $BASE/docs/ $TARGET
 rsync -rav --delete $BASE/viewer/build/$SUB/ $TARGET/viewern
+rsync -rav --delete $BASE/mobac/testsrc/build/libs/avnav-mapsources.zip $TARGET/downloads
 
 for lib in movable-type ol3201
 do
