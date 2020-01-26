@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<customMultiLayerMapSource>
+<name>Inland ENC Deutschland 2020</name>
+<tileType>png</tileType>
+<backgroundColor>#000000</backgroundColor>
+<layers>
+
+<customMapSource>
+<name>Geofabrik</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<url>https://b.tile.geofabrik.de/23228979966ae9040ceb0597251e12a2/{$z}/{$x}/{$y}.png</url>
+</customMapSource>
+
+<customWmsMapSource>
+<name>Inland ENC</name>
+<minZoom>7</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<layers>Blattschnitte%2CIENC</layers>
+<url>https://atlas.wsv.bund.de/ienc/wms?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&TRANSPARENT=TRUE&VERSION=1.1.1&SERVICE=WMS&STYLES=&QUERY_LAYERS=IENC]]></aditionalparameters>
+</customWmsMapSource>
+
+</layers>
+</customMultiLayerMapSource>

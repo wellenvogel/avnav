@@ -1,7 +1,7 @@
 group 'de.wellenvogel.avnav'
 apply plugin: 'java'
 
-def revision="2"
+def revision="3"
 def mobacJar="Mobile_Atlas_Creator.jar"
 
 dependencies{
@@ -21,12 +21,14 @@ task copyDefs(type: org.gradle.api.tasks.Copy) {
     outputs.upToDateWhen {false}
 }
 
-task writeVersion<<{
+task writeVersion{
+    doLast{
     def outfile=new File(project.buildDir,"classes"+File.separator+"main"+File.separator+srcsub+
         File.separator+"mappack.properties")
     outfile.withWriter {
         out->
             out.println("mappack.revision="+revision)
+    }
     }
 }
 writeVersion.dependsOn classes
