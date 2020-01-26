@@ -6,12 +6,8 @@
   </head>
   <body>
     <h2 class="western">AvNav - Navigation per WebApp</h2>
-    <p>Stand 2017/02/28</p>
-    <p>Ein Hinweis vorweg:</p>
-    <p>I<i><b>ch kann keine Garantie für die Funktion der App übernehmen,
-          insbesondere die Nutzung zu Navigationszwecken geschieht auf eigenes
-          Risiko. In jedem Falle empfehle ich einen intensiven Test der
-          Genauigkeit der Darstellung und des verwendeten Kartenmaterials.</b></i></p>
+    <p>2020/01/26: Die Beschreibung wird momentan überarbeitet. In weiten Teilen
+      entspricht sie dem aktuellen Stand, es fehlen jedoch einige Funktionen.</p>
     <p>Die wesentlichen Fähigkeiten:</p>
     <ul>
       <li> Darstellung der Kartendaten (blattschnittfrei je Satz), mit den
@@ -36,7 +32,7 @@
       danach einige technische Details.</p>
     <h3 class="western">Die Bedienung</h3>
     <p>Nach dem Aufruf der Start-Url landet man auf der Einstigesseite.</p>
-    <p><img src="navi-start.png" name="Grafik3" width="600" border="0"> </p>
+    <p><img src="navi-start.png" name="Grafik3" border="0" width="600"> </p>
     <p>Im Hauptbereich der Seite befindet sich die Liste der vom Server
       gefundenen Kartensätze (beim Raspi-Server gemf files unter
       /data/avnav/charts, in der Android App unter charts im gewählten
@@ -50,7 +46,7 @@
     <p><br clear="RIGHT">
       Dieses Bild zeigt einen gesetzten Marker (locked) – das Boot ist auf Kurs.</p>
     <div><img src="navi-routing-wp-ais.png" name="Grafik4" style="display:inline-block;"
-        height="400" border="0">
+        border="0" height="400">
       <div style="display: inline-block;margin-left: 2em;"> <span style="font-weight: bold;">Buttons</span><br>
         <ul>
           <li>Zoom In</li>
@@ -291,7 +287,7 @@
     <h3>Die AIS Übersicht</h3>
     <p>Mit einem Klick auf die AIS Info (oder auf ein AIS Target in der Karte)
       gelangt man zur AIS Übersicht:</p>
-    <p><img src="navi-ais.png" name="Grafik10" width="600" border="0"><br clear="RIGHT">
+    <p><img src="navi-ais.png" name="Grafik10" border="0" width="600"><br clear="RIGHT">
       Auf dieser Seite sieht man alle empfangenen AIS Ziele im Umkreis von ca.
       10nm zur Bootsposition (sortiert nach CPA). Mit Klick auf eine Zeile
       springt man zurück zur Karten-Anzeige mit dem gewählten AIS Ziel im
@@ -299,10 +295,12 @@
       färbt sich gelb). Ein Klick auf den grünen Pfeil schaltet wieder in den
       „Normalmodus“ - d.h. Anzeige des nächsten AIS Zieles.</p>
     <p>Mit dem zurück Button geht es unverändert zur Karten-Anzeige zurück.</p>
-    <h3>Die GPS Seite</h3>
+    <h3>Die Dashboard Seite</h3>
     <p>Über den Button (000) auf der Start-Seite oder einen Klick auf die
       Position (rechts unten) auf der Navi-Seite gelangt man zu einer Anzeige
       der GPS-Daten ohne Karte.</p>
+    <p>Im Layout können bis zu 5 solcher Seiten mit verschiedenen Anzeigen konfiguriert
+      werden.</p>
     <img alt="" src="gps-display.png" height="400"><br>
     <br>
     Ein Klick auf die Anzeige des nächsten AIS-Zieles (rechts unten) führt zur
@@ -323,8 +321,8 @@
     <h3>Die Status Seite</h3>
     Von der Startseite kann man noch eine Status-Seite erreichen – hier werden
     interne Status-Infos des Servers angezeigt.
-    <div><img style="width: 690px;" src="navi-status.png" name="Grafik11" width="600"
-        border="0">
+    <div><img style="width: 690px;" src="navi-status.png" name="Grafik11" border="0"
+        width="600">
       <div style="display: inline-block;margin-left: 2em;"> <span style="font-weight: bold;">Buttons</span><br>
         <ul>
           <li>Zurück</li>
@@ -427,9 +425,8 @@
     <p>Die WebApp besteht aus einem HTML Gerüst (avnav_viewer.html) sowie den
       eingebundenen JavaScript Bibliotheken und einem JavaScript Anteil
       (avnav_min.js). Die Darstellung ist weitgehend von der eigentlichen
-      Funktion entkoppelt und wird per css (unter Nutzung von less) gesteuert.
-      Man kann die Darstellung in der HTMl Datei und in avnav_viewer.less
-      weitgehend anpassen.</p>
+      Funktion entkoppelt und wird per css (unter Nutzung von less) gesteuert. Als
+      Framework wird <a href="https://reactjs.org/">ReactJs</a> verwendet.</p>
     <p>Die Kommunikation erfolgt durch einfache GET/POST requests zur url <a href="http://avnav/viewer/avnav_navi.php">http://avnav/viewer/avnav_navi.php</a>,
       dann folgen Parameter, die den request beschreiben. Die Antworten vom
       server sind json kodiert.</p>

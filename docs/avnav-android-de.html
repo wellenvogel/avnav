@@ -6,21 +6,24 @@
   </head>
   <body>
     <h1>AvNav Android</h1>
-    <p>Version 2017xxxx.</p>
+    <p>2020/01/26: Die Beschreibung spiegelt noch nicht überall aktuellen Stand
+      wieder und wird überarbeitet. Weite Teile sind jedoch unverändert.</p>
     <p>Nachdem die Navigations-App für die <a href="beschreibung.html">Nutzung
         mit dem Raspberry Pi</a>&nbsp; bereits einige Jahre erfolgreich im
       Einsatz ist, gibt es jetzt auch eine Version, die direkt (ohne einen
-      Raspberry) auf Android läuft.</p>
-    <p>Zum <a href="../downloads">Download</a>. Oder im <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">AppStore</a>.</p>
+      Raspberry) auf Android läuft. Sie erfordert Android ab 4.4 (KitKat).</p>
+    <p>Die aktuellste Version kann man unter <a href="../downloads/release/latest/">Downloads</a>
+      herunterladen. Oder im <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">AppStore</a>.<br>
+      Ältere Versionen oder daily builds findet man über die <a href="install.html">Installationsbeschreibung</a>.</p>
     <p>Sie verpackt im Wesentlichen die Web-App (siehe <a href="avnav-de.html">Beschreibung</a>)
-      in eine Android Applikation - siehe dort auch zum <a href="beschreibung.html">Erzeugen/Konvertieren</a>
+      in eine Android Applikation - siehe dort auch zum <a href="avnav-chart-convert-de.html">Erzeugen/Konvertieren</a>
       der Karten.</p>
     <p>Es kann das interne GPS des Gerätes genutzt werden. Alternativ können
-      NMEA Daten über TCP/IP oder bluetooth empfangen werden (RMC für die
-      Positionsdaten und AIS Daten). Die Quelle dafür kann z.B. ein Raspberry
-      mit meiner Software sein - aber auch ein beliebiger anderer Sender, der
-      die NMEA Daten per WLAN bereitstellt. Auch eine einfache GPS bluetooth
-      "Maus" ist geeignet.</p>
+      NMEA Daten über TCP/IP, bluetooth oder einen USB-Seriell-Adapter
+      (erfordert USB-OTG) empfangen werden. Die Quelle dafür kann z.B. ein
+      Raspberry mit meiner Software sein - aber auch ein beliebiger anderer
+      Sender, der die NMEA Daten per WLAN bereitstellt. Auch eine einfache GPS
+      bluetooth "Maus" ist geeignet.</p>
     <p>Damit kann die Software auch auf Tablets ohne eingebautes GPS laufen.</p>
     <p>Die Karten werden im gleichen gemf Format erwartet. Sie können in 2
       Verzeichnissen liegen:</p>
@@ -43,9 +46,8 @@
       Routen und Tracks können aus der App über die Download Funktion an andere
       Apps weitergegeben werden (siehe Beschreibung der App). Um sie in andere
       Verzeichnisse zu speichern oder Routen aus anderen Verzeichnissen zu laden
-      (upload Funktion) sollte sinnvollerweise ein Dateimanager installiert sein
-      - z.B. <a href="https://play.google.com/store/apps/details?id=com.estrongs.android.pop&amp;hl=de">ES
-        Datei Manager.</a></p>
+      (upload Funktion) sollte sinnvollerweise ein Dateimanager installiert
+      sein.</p>
     <p>Nach dem erstmaligen Start der App befindet man sich auf einer
       Einführungsseite:</p>
     <img alt="" src="android-start-first.png" height="400"><br>
@@ -68,7 +70,7 @@
     und gültige AIS Daten (unterer grüner Punkt) empfangen.<br>
     Um zu den Android Einstellungen zu gelangen, zunächst die Einstellungsseite
     in der App aufrufen, dort dann auf den Android Button klicken.<br>
-    Bei weitteren Starts erreicht man sofort die Hauptseite der App.<br>
+    Bei weiteren Starts erreicht man sofort die Hauptseite der App.<br>
     <br>
     <h2>Bluetooth</h2>
     <br>
@@ -88,50 +90,16 @@
     die App läuft ist auch die Track-Aufzeichnung aktiv (auch wenn sie nicht
     sichtbar ist).<br>
     <h2> Modus</h2>
-    Ab Android 4.4 (Kitkat) läuft die App problemlos ohne weitere
-    Installationen. In Versionen ab 4.0 (in älteren läuft sie nicht) ist sie im
-    Normalmodus meist kaum bedienbar. Das liegt an dem recht fehlerhaften
-    Browser unter Android.<br>
-    Dafür gibt es zwei Lösungsmöglichkeiten:<br>
-    <ol>
-    </ol>
-    <h4>Die "Crosswalk" runtime installieren.</h4>
-    Das ist eine embedded Chrome runtime (d.h. ein Stückchen Chrome läuft in der
-    App) - damit wird der Stand für den embedded Browser auf Android 4.4
-    angehoben. Die runtime muss allerdings in der Version genau passen (die
-    AvNavApp prüft das und zeigt das auf der Info-Seite (i) an). <br>
-    Über die Info Seite ((i) unter Einstellungen) kann die Runtime installiert
-    werden.<br>
-    Diese kann man entweder von der <a href="../downloads">Download-Seite</a>
-    oder aus dem AppStore herunterladen. In jedem Falle auf die Versionsnummer
-    und die Architektur achten (dürfte meist ARM sein).<br>
-    Wenn die App das erste mal gestartet wird, prüft sie, ob eine solche runtime
-    installiert ist und bietet sonst an, das zu tun.<br>
-    <br>
-    <img style="width: 640px; height: 400px;" alt="" src="android-crosswalk-1.png"><br>
-    Hier gibt es 2 Möglichkeiten:<br>
-    <img style="width: 639px; height: 399px;" alt="" src="android-crosswalk2.png"><br>
-    GooglePlay - das installiert die neueste Version der runtime. Wenn man die
-    App auch auf der neuesten Version hat, sollte das funktionieren.<br>
-    Sonst die Möglichkeit ApkDownload auswählen (das geht zur passenden Version
-    auf der <a href="../downloads">download Seite</a>) . Dann sollte im
-    Normalfall ein Browser zum Download gestartet werden. Zum Installieren muss
-    dann allerdings unter Sicherheit die "Installation aus unbekannten Quellen"
-    erlaubt werden.<br>
-    <br>
-    Wenn die Runtime erfolgreich installiert wurde, unter "ApplicationMode" den
-    Mode "Crosswalk" auswählen. Das ist auf jeden Fall von der Performance die
-    beste Variante. Wenn die Runtime App nicht installiert ist, ist der Button
-    nicht zu sehen.<br>
-    <br>
-    <h4>Chrome Browser installieren</h4>
-    &nbsp;<a href="https://play.google.com/store/apps/details?id=com.android.chrome">https://play.google.com/store/apps/details?id=com.android.chrome<br>
-    </a>Dann in den Einstellungen den Mode "External Browser" auswählen (siehe)
-    unten - ist von der Bedienung beim Start etwas umständlicher.<br>
-    <br>
-    Im Browser Mode startet die App einen kleinen Webserver (also spielt so ein
-    wenig Raspberry...) auf einem einstellbaren Port (34567) und zeigt die
-    folgende Seite an:<br>
+    Die App kann in 2 Modi arbeiten:<br>
+    <ul>
+      <li>Normal</li>
+      <li>External Browser</li>
+    </ul>
+    Im Normal-Modus ist der Browser in der App integriert und sie wird wie eine
+    normale Android App genutzt.<br>
+    Im Externl-Browser Mode startet die App einen kleinen Webserver (also spielt
+    so ein wenig Raspberry...) auf einem einstellbaren Port (34567) und zeigt
+    die folgende Seite an:<br>
     <img style="width: 641px; height: 400px;" alt="" src="android-browser.png"><br>
     <br>
     Durch einen Klick auf Start Browser wird eine Auswahl der installierten
@@ -155,7 +123,13 @@
     Beim nächsten Start nur die App im Browser Mode starten, dann direkt über
     den Home Button zum Startbildschirm und den Browser über das abgelegte Icon
     dort starten.<br>
-    <br>
+    Wenn in den Einstellungen-&gt;Android-&gt;MainSettings "WebServer external
+    access" eingeschaltet wird, können andere Geräte im Netz auf die App
+    zugreifen.<br>
+    <span style="color:red">Achtung: Das sollte nur in vertrauenswürdigen Netzen
+      geschehen, das es hier keinen weiteren Schutz gibt!.</span><br>
+    Die App announciert ihren service per Bonjour, so das sie leicht von anderen
+    gefunden werden kann. <br>
     <br>
     Wenn die App läuft werden die Track-Daten alle 5 Minuten in eine Datei
     geschrieben.<br>
@@ -206,11 +180,19 @@
             man mit dem 2. Gerät ebenfalls zugreifen.</td>
           <td>aus</td>
         </tr>
+        <tr>
+          <td>Alarm sounds</td>
+          <td>Hier können die durch den Server erzeugetn Alarm-Sounds
+            abgeschaltet werden. Im external Browser mode müssen diese im
+            Browser ggf. zusätzlich abgeschaltet werden.</td>
+          <td><br>
+          </td>
+        </tr>
       </tbody>
     </table>
     <br>
     <h3> NMEA</h3>
-    <table style="width: 100%" border="1">
+    <table style="width: 100%;" border="1">
       <tbody>
         <tr>
           <td>Name</td>
@@ -229,6 +211,13 @@
           <td>Off</td>
         </tr>
         <tr>
+          <td>send own position on AIS device</td>
+          <td>Wenn AIS und NMEA unterschiedliche Quellen haben, wird auf dem AIS
+            channel die eigene Position (RMC) gesendet</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
           <td>IP Address</td>
           <td>IP Adresse von der NMEA/AIS Daten empfangen werden sollen</td>
           <td>192.168.10.20</td>
@@ -237,6 +226,24 @@
           <td>IP Port</td>
           <td>Port für den IP Empfang</td>
           <td>34567</td>
+        </tr>
+        <tr>
+          <td>Bluetooth Device</td>
+          <td>Auswahl des Bluetooth Gerätes</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>USB Device</td>
+          <td>Auswahl eines angeschlossenen USB devices</td>
+          <td style="height: 19px;"><br>
+          </td>
+        </tr>
+        <tr>
+          <td>USB Baudrate</td>
+          <td>Baudrate USB</td>
+          <td><br>
+          </td>
         </tr>
         <tr>
           <td>filter own MMSI</td>
@@ -328,6 +335,12 @@
           <td>port for external browser mode</td>
           <td>Hier kann der durch den Webserver genuzte Port geändert werden.</td>
           <td>34567</td>
+        </tr>
+        <tr>
+          <td>Sound for XXX alarm</td>
+          <td>Hier kann der Ton für die verschiedenen Alarme gewählt werden</td>
+          <td><br>
+          </td>
         </tr>
       </tbody>
     </table>

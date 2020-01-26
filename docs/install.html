@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <title>Avnav Installation</title>
+  </head>
+  <body>
+    <h3 class="western">AvNav Installation</h3>
+    <ul class="mainlist">
+      <li><a href="install.html#Headless">Image ohne Bildschirm (Headless)</a></li>
+      <li><a href="install.html#Touch">Image mit Bildschirm (avnav-touch)</a></li>
+      <li><a href="install.html#Packages">Paket-Installation</a></li>
+      <li><a href="install.html#Windows">Windows</a></li>
+      <li><a href="release.html">Releases</a></li>
+    </ul>
+    <h3 class="western"><a name="Headless"></a>Image ohne Bildschirm (Headless)</h3>
+    <p>Diese Images werden von <a href="https://www.segeln-forum.de/user/27970-blacksea/">BlackSea</a>
+      gepflegt (vielen Dank...).</p>
+    <p>Für diese Variante einfach unter Windows/Linux/OSx das image von <span style="color: #0000ee;"><span
+          style="text-decoration: underline;">free-x</span></span> herunterladen
+      und wie unter <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
+      (raw images) beschrieben auf eine SD Karte spielen. Danach muss man sich
+      einmal auf dem pi einloggen und ggf. ein paar Anpassungen vornehmen. Am
+      einfachsten geht das, wenn man den pi im LAN anschließt und einen
+      router/dhcp-server (z.B. Fritz Box) aktiv hat. Dann holt er sich per DHCP
+      eine IP Adresse. Diese kann man auf dem Router sehen bzw. unter Linux z.B.
+      per ping -b &lt;brodcast-address&gt; herausfinden. Alternativ kann man
+      auch Tastatur + Bildschirm an den Pi direkt anschliessen.</p>
+    <p>Die Paßworte sind auf Standardwerte gesetzt – also login pi, Paßwort
+      raspberry. Per sudo -i wechselt man in eine root shell. Man sollte&nbsp;
+      das Paßwort für den user pi ändern (passwd).&nbsp;</p>
+    Das Image setzt einen WLAN-accesspoint mit dem internen WLAN des raspberry
+    auf (SSID: avnav).<br>
+    <br>
+    Das WLAN hat den Adressbereich 192.168.20.0/24. Der pi selbst ist auf
+    192.168.20.10 erreichbar (ggf. als url im Browser benutzen, wenn die
+    Namensauflösung nicht funktioniert). Auf dem pi läuft ein DHCP server und
+    ein DNS server (dnsmasqd). Die Konfiguration kann angepasst werden in
+    /etc/dnsmasqd.conf. Wenn der pi im LAN angeschlossen ist, versucht er per
+    DHCP eine Adresse zu bekommen, das WLAN wird per NAT an das LAN interface
+    weitergereicht (damit kann man den pi ins Internet bringen - z.B. zum
+    Installieren von Software- und auch per Wlan verbundene Geräte haben dann
+    Internet-Zugriff).<br>
+    Wenn weitere WLAN sticks gesteckt werden, werden weitere access Points
+    aufgemacht.<br>
+    Ausnahme: WLAN-Stick wie im Bild - dieser wird zur Verbindung mit einem
+    externen WLAN genutzt. Beim Raspberry 4 ist es der blaue Anschluss auf der
+    Platinen-Seite. Intern heißt das interface dann wlan-av1.<img style="width: 468px;"
+      src="raspi3-wlan.jpg"><br>
+    <br>
+    <p>Port 80 ist direkt zum Web server von avnav weitergeleitet (dieser
+      lauscht auf port 8080).<br>
+      Wenn alles richtig aufgesetzt ist, sollte sich unter der url <a href="http://avnav/">http://avnav.avnav.de</a>
+      die Einstiegsseite der WebApp öffnen. <br>
+      Avnav meldet sich per Bonjour - mit einer entsprechenden App (<a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">Android</a>,
+      <a href="https://apps.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829">IOS</a>)
+      kann man sehr einfach den Server erreichen, ohne eine Adresse eintippen zu
+      müssen. </p>
+    <br>
+    In der App gibt es eine Seite, um sich mit einem WLAN zu verbinden
+    (Status-Seite-&gt;WLAN) - siehe <a href="avnav-de.html">Beschreibung der
+      App</a>.<br>
+    Die Verbindung zu einem externen WLAN wird an die angeschlossenen Geräte
+    "durchgereicht".<br>
+    Mit <em>sudo service avnav status</em> kann man den Status des servers
+    prüfen, mit <em>sudo service avnav start</em> bzw. <em>sudo service avnav
+      stop</em> kann man ihn starten und stoppen.
+    <h3 class="western"><a name="Touch"></a>Image mit Bildschirm</h3>
+    <span>Falls man direkt einen Bildschirm an den Pi anschliessen möchte, ist
+      dieses Image das Richtige.<br>
+      Für&nbsp;</span> diese Variante hat Holger (<a href="https://www.segeln-forum.de/user/13545-pandel/">pandel</a>)
+    dankenswerterweise eine eigene Image Linie aufgesetzt. Die tollen
+    Beschreibungen dazu findet man auf seiner <a href="https://open-mind.space/">AvNav-Touch
+      Seite</a>. Herunterladen kann man die Images von der <a href="https://open-mind.space/download/">download
+      Seite</a>.<br>
+    Natürlich kann man auch hier weitere externe (Display-)Geräte nutzen.<br>
+    <h3 class="western"><a name="Packages"></a>Paket Installation</h3>
+    Dank Holger gibt es jetzt fertige Paket-Repositories, die man in sein debian
+    einbinden kann. Das geht auf dem raspberry pi - aber auch auf jeder anderen
+    Debian Variante (z.B. Ubuntu). <br>
+    Informationen dazu findet man wieder in seiner <a href="https://open-mind.space/rasbian-buster-lite-zu-avnavtouch-in-5-schritten/">Beschreibung</a>.<br>
+    Für die Installation auf einem anderen raspberry System (nicht avnav-touch)
+    ändert man Schritt 5 der Beschreibung ab zu:<br>
+    <pre>sudo apt-get install avnav avnav-raspi</pre>
+    Der raspberry startet danach avnav automatisch mit dem Nutzer pi.<br>
+    <br>
+    Für ein anderes debian ändert man Schritt 5 zu:<br>
+    <pre>sudo apt-get install avnav</pre>
+    Danach kann man als jeder Nutzer mit dem Kommando<br>
+    <pre>avnav</pre>
+    den Server starten.<br>
+    Mit <br>
+    <pre>sudo systemctl enable avnav</pre>
+    <pre>sudo systemctl start avnav</pre>
+    kann man avnav mit dem Benutzer avnav automatisch beim Systemstart
+    aktivieren.<br>
+    Alternativ kann man auch die debian Pakete direkt von der download Seite
+    herunterladen:<br>
+    <ul>
+      <li><a title="downloads/releases" href="../downloads/release">Releases</a></li>
+      <li><a href="../downloads/daily">Tägliche Builds</a></li>
+    </ul>
+    Nach dem Herunterladen kann man die Pakete mit<br>
+    <pre>sudo dpkg -i avnav_xxxxxxxx_all,deb</pre>
+    <pre>sudo dpkg -i avnav-raspi_xxxxxxxx_all.deb</pre>
+    <pre>sudo apt-get -f</pre>
+    installieren (dabei das -raspi... Paket nur auf einem raspberry). Die ersten
+    Kommandos werden typischerweise Fehler erzeugen, das letzte lädt dann die
+    fehlenden Abhängigkeiten.<br>
+    Wenn man auch die Karten-Konvertierung auf dem Linux Rechner mit einer
+    kleinen GUI machen möchte, muss man zusätz das Paket python-wxgtk3.0
+    installiert werden. Dann muss man avnav mit<br>
+    <pre>avnav -g</pre>
+    starten.<br>
+    <br>
+    <h3><a name="Windows"></a>Windows</h3>
+    Für Windows gibt es einen Installer. Dieser wird nicht bei jeder Release neu
+    ausgeliefert. Die aktuelle Version findet man <a href="../downloads/latestwindows/">hier</a>.<br>
+    Es empfiehlt sicht, den AvNavNetSetup-jjjj-mm-dd-0.exe installer zu
+    verwenden, da dieser die eigentliche Software nachlädt und somit eine
+    Möglichkeit bietet, jeweils die neueste AvNav Version zu installieren (ohne
+    den Installer selbst neu herunterladen zu müssen).<br>
+    Die Windows Version ist primär auf die Karten-Konvertierung ausgelegt,
+    bietet aber die volle Funktionalität und kann somit auch zur Navigation
+    unter Windows verwendet werden. Wie immer lassen sich weitere Geräte
+    ankoppeln.<br>
+    <br>
+    <br>
+  </body>
+</html>

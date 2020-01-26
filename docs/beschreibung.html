@@ -12,19 +12,33 @@
 		H3.ctl { font-family: "Arial Unicode MS" }
 		H4.ctl { font-family: "Arial Unicode MS" }
 	-->
+      
 	</style>
   </head>
-  <body dir="LTR" style="    max-width: 650px" lang="de-DE">
+  <body dir="LTR" style="          max-width: 650px" lang="de-DE">
     <h1>Raspberry Pi als Bordcomputer / Navigation im Browser </h1>
-    <p>18.03.2016</p>
-    <p><a href="https://www.segeln-forum.de/board1-rund-ums-segeln/board35-bootstechnik-und-elektronik/43757-raspberry-pi-als-bordcomputer-spielzeug-f%C3%BCr-den-winter/">Thread
-        im Segeln Forum</a></p>
-    <p><a href="https://github.com/wellenvogel/avnav">Source Code auf GitHub</a></p>
-    <p>Direkt zur Beschreibung der WebApp <a href="avnav-de.html">hier</a>. </p>
-    <p>NEU! - <a href="avnav-android-de.html">Android App</a></p>
-    <p>Konvertieren der Karten <a href="avnav-chart-convert-de.html">hier</a>.<br>
-      (Neu Oktober 2015 - Windows Desktop App/Installer)</p>
-    <br>
+    <p>26.01.2020</p>
+    <ul class="mainlist">
+      <li><a title="open-boat-projects" href="https://open-boat-projects.org/">AvNav
+          auf der Boot 2020 in Düsseldorf bei open-boat-projects</a></li>
+      <li>Datenschutz: <a href="../viewern/privacy-en.html">english</a>,<a href="../viewern/privacy-de.html">deutsch</a></li>
+      <li><a href="https://www.segeln-forum.de/board1-rund-ums-segeln/board35-bootstechnik-und-elektronik/43757-raspberry-pi-als-bordcomputer-spielzeug-f%C3%BCr-den-winter/">Thread
+          im Segeln Forum</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav">Source Code auf GitHub</a></li>
+      <li><a href="avnav-de.html">Nutzer-Beschreibung</a> </li>
+      <li><a href="avnav-android-de.html">Android App</a></li>
+      <li> <a href="avnav-chart-convert-de.html">Karten herunterladen und
+          umwandeln</a></li>
+      <li><a href="install.html">Installation</a></li>
+      <li><a href="release.html">Release-Notes</a></li>
+      <li><a href="demo.html">Demo</a></li>
+      <li><a href="./AvNavPraesi.pdf">Foliensatz(PDF)</a></li>
+    </ul>
+    <p>Ein Hinweis vorweg:</p>
+    <p><i><b>Ich kann keine Garantie für die Funktion der App übernehmen,
+          insbesondere die Nutzung zu Navigationszwecken geschieht auf eigenes
+          Risiko. In jedem Falle empfehle ich einen intensiven Test der
+          Genauigkeit der Darstellung und des verwendeten Kartenmaterials.</b></i></p>
     <h2 class="western">Motivation</h2>
     <p>Nachdem ich schon eine ganze Weile mit Rasterkarten unterwegs navigiere
       (erst unter Windows mit Seaclear, dann unter Windows, WindowsCE und OSX
@@ -78,7 +92,7 @@
       <br>
     </p>
     <h2 class="western">Überblick </h2>
-    <p><img src="overview.png" name="Grafik1" align="LEFT" border="0" width="600">avnav-raspi-2016-03<br
+    <p><img src="overview.png" name="Grafik1" border="0" width="600" align="LEFT">avnav-raspi-2020<br
         clear="LEFT">
       Wie im Bild zu sehen, besteht die gesamte Lösung aus mehreren Teilen:</p>
     <ul>
@@ -122,10 +136,9 @@
       inklusive AIS Darstellung, Wegepunkt Navigation und Routing. Falls die
       Web-Applikation verwendet werden soll, müssen die Karten dafür auch auf
       dem raspberry installiert werden. Diese müssen dazu vorher auf dem PC
-      (Windows, Osx, Linux) in das <a href="http://www.cgtk.co.uk/gemf">gemf</a>
-      Format konvertiert werden (ab 2015-10-19 kann das auch direkt auf dem
-      Raspberry erfolgen) . Im Wesentlichen können die folgenden Kartenquellen
-      verarbeitet werden:</p>
+      (Windows, Osx, Linux) oder direkt auf dem raspberry in das <a href="http://www.cgtk.co.uk/gemf">gemf</a>
+      Format <a href="avnav-chart-convert-de.html">konvertiert</a> werden. Im
+      Wesentlichen können die folgenden Kartenquellen verarbeitet werden:</p>
     <ul>
       <li>
         <p>Alle Kartentypen, die die GDAL software lesen kann (also insbesondere
@@ -134,16 +147,13 @@
       <li>
         <p>Mit Mobile Atlas Creator heruntergeladene Karten</p>
       </li>
-      <li>
-        <p>Zur Nutzung von NV digital Karten bitte ich um Kontaktaufnahme, hier
-          ist die Einhaltung der Lizenzbedingungen ein Thema.</p>
-      </li>
     </ul>
+    <p>Daneben gibt es noch eine <a href="avnav-android-de.html">Android-App</a>,
+      die eine weitgehend identische Funktionalität bereitstellt. Der
+      Server-Anteil ist hier nativ in Java geschrieben, die Anzeige-Funktionen
+      sind identisch zur raspberry Variante.</p>
     <p>In den folgenden Abschnitten gehe ich auf die Funktion der einzelnen
       Teile ein wenig genauer ein.</p>
-    <p><br>
-      <br>
-    </p>
     <h2 class="western">Die Server Software (avnav_server.py)</h2>
     <p>Auf dem raspberry pi ist zunächst ein<a href="http://www.raspberrypi.org/downloads">
         ganz normales Debian image</a> installiert (ca. 2GB). Dazu kommen einige
@@ -151,12 +161,10 @@
     <p>Der Hauptbestandteil der Sofware auf dem raspberry pi ist ein in python
       geschriebener Server. Im Folgenden beschreibe ich in groben Zügen, was
       dieser Server intern tut.</p>
-    <p><img src="software.png" name="Grafik2" align="LEFT" border="0" width="600"><br
+    <p><img src="software.png" name="Grafik2" border="0" width="600" align="LEFT"><br
         clear="LEFT">
       <br>
-      <br>
-    </p>
-    <p>Dieser Server versucht alle am raspberry angeschlossenen seriellen Geräte
+      Dieser Server versucht alle am raspberry angeschlossenen seriellen Geräte
       zu erkennen und deren NMEA Daten zu lesen. Typisch werden die Geräte über
       seriell-usb Wandler angeschlossen (bei mir z.B. PL2303). Man muss ein
       wenig aufpassen, dass man einen Wandler hat, der vom Raspberry auch sauber
@@ -178,40 +186,27 @@
       bereitgestellt. Verbundene TCP Empfänger (z.B. OpenCPN) bekommen so jeden
       empfangenen Datensatz weitergereicht. Per Default "lauscht" der server
       (intern:SocketWriter) auf Port 34567.</p>
-    <p>Anschliessend werden die NMEA Daten an den Decoder weitergereicht. Auf
-      dem raspberry benutze ich dazu <a href="http://catb.org/gpsd/">gpsd</a>.
-      Leider liess der sich nicht verwenden, um direkt die seriellen
-      Schnittstellen zu lesen, daher macht der avnnav_server einen Socket auf,
-      an den sich der gpsd connected und von dem er die Daten liest. Das Starten
-      des gpsd übernimmt ebenfalls der anav server. Am „anderen Ende“ werden
-      über die gpsd python Schnittstelle die dekodierten Daten ausgelesen (gps
-      Daten und AIS Daten) und im Server abgelegt ("NMEA decoded data") für den
-      Zugriff per HTTP aus der WebApp. Der gpsd wird überwacht und bei Fehlern
-      neu gestartet. Zusätzlich werden die dekodierten Daten auch benutzt um
-      Track Dateien zu schreiben.</p>
+    <p>Daneben lassen sich Daten auch per TCP, UDP oder direkt über die
+      seriellen Schnittstellen des Raspberry lesen und schreiben.</p>
+    <p>Anschliessend werden die NMEA Daten an den Decoder weitergereicht. Die
+      dekodierten gps und AIS Daten werden im Server abgelegt ("NMEA decoded
+      data") für den Zugriff per HTTP aus der WebApp.Zusätzlich werden die
+      dekodierten Daten auch benutzt um Track Dateien zu schreiben.</p>
     <p>Über den integrierten WebServer kann der Zugriff auf diese dekodierten
       Daten erfolgen (per HTTP GET, Antwort als json).</p>
-    <p><span style="font-style: italic;">Neu ab Versionen 2015-01-23:</span></p>
-    <p><span style="font-style: italic;">Der Route-Handler wertet eingestellte
-        Routen (bzw. Wegepunkte) aus und berechnet daraus die Daten für eine
-        Autopilot-Steuerung. Diese werden als RMB NMEA Datensätze wieder in die
-        NMEA Daten eingespeist und stehen so an allen Schnittstellen zur
-        Verfügung.</span></p>
-    <p><span style="font-style: italic;">Es gibt dazu einen Seriell Writer, der
-        die Daten über USB-Seriell Wandler ausgeben kann.</span></p>
-    <p>Falls gültige GPS Zeitinformationen empfangen werden, wird die Systemzeit
-      des raspberry entsprechend eingestellt.</p>
+    <p>Der Route-Handler wertet eingestellte Routen (bzw. Wegepunkte) aus und
+      berechnet daraus die Daten für eine Autopilot-Steuerung. Diese werden als
+      RMB NMEA Datensätze wieder in die NMEA Daten eingespeist und stehen so an
+      allen Schnittstellen zur Verfügung.</p>
+    Falls gültige GPS Zeitinformationen empfangen werden, wird die Systemzeit
+    des raspberry entsprechend eingestellt.
     <p>Auf dem raspberry gibt es noch einen service, der den avnav_server beim
       Systemstart automatisch startet und es auch ermöglicht, ihn geordnet zu
       beenden.</p>
     <p>Da der gesamte server in python geschrieben ist, kann er auch (vor allem
       zu Testzwecken) unter Windows oder Osx (Mac), Linux laufen. Dazu muss
-      python ab 2.6 installiert sein, falls reale serielle Daten gelesen werden
-      sollen noch <a href="http://pyserial.sourceforge.net/">pyserial</a>. In
-      diesem Falle steht gpsd als Dekoder ja nicht zur Verfügung, es wird dann
-      ein interner Dekoder genutzt, der die wichtigsten NMEA Sequenzen dekodiert
-      und ein AIS Dekoder in python, der ebenfalls durch das gpsd Projekt
-      bereitgestellt wird.</p>
+      python ab 2.7 installiert sein, falls reale serielle Daten gelesen werden
+      sollen noch <a href="http://pyserial.sourceforge.net/">pyserial</a>. </p>
     <p>Der Server kann in weiten Grenzen durch ein xml File konfiguriert werden,
       für die verschiedenen Nutzungsfälle liefere ich dokumentierte Beispiele
       mit.</p>
@@ -227,8 +222,8 @@
     <p>Die ausgelieferte avnav_server.xml Datei enthält Kommentare, so das
       Anpassungen an die eigenen Bedürfnisse einfach möglich sein sollten.</p>
     <p>Die Software ist auf <a href="https://github.com/wellenvogel/avnav">github</a>
-      verfügbar - downloads auf <a href="http://www.wellenvogel.net/software/avnav/downloads/index.php">wellenvogel.de</a>.</p>
-    <h2 class="western">Software auf dem raspberry</h2>
+      verfügbar - für die Installation siehe die separate <a href="install.html">Beschreibung</a>.</p>
+    <h3 class="western">Software auf dem raspberry</h3>
     <p>Auf dem raspberry ist die Software in der folgenden Verzeichnisstruktur
       installiert:</p>
     <table border="1" cellpadding="4" cellspacing="4" width="100%">
@@ -242,32 +237,30 @@
             <p>Inhalt</p>
           </th>
         </tr>
+        <tr>
+          <td>/usr/lib/avnav</td>
+          <td>die Software nach der Installation</td>
+        </tr>
         <tr valign="TOP">
           <td width="28%">
-            <p>/data/</p>
+            <p>/home/pi/avnav/data/</p>
           </td>
           <td width="72%">
-            <p>Eine separate data partition. Diese wird automatisch beim ersten
-              Hochfahren angelegt und umfasst die gesamte Speicherkarte (- ca.
-              2GB für die boot partition und die root partition). Das Filesystem
-              ist so angelegt, dass es gut mit sehr vielen kleinen Dateien
-              umgehen kann (für die Karten).</p>
+            <p>Basis für die Nutzer-Daten</p>
           </td>
         </tr>
         <tr valign="TOP">
           <td width="28%">
-            <p>/data/avnav/charts</p>
+            <p>.../data/charts</p>
           </td>
           <td width="72%">
-            <p>Verzeichnis für die Kartendateien. Jeder verwendete Kartensatz
-              muss in einem separaten Unterverzeichnis liegen. Dort hinein
-              müssen jeweils die avnav.xml und die erzeugten Kartenverzeichnisse
-              kopiert werden (siehe<a href="#Chartconvert"> Karten konvertieren</a>).</p>
+            <p>Verzeichnis für die Kartendateien -siehe<a href="#Chartconvert">
+                Karten konvertieren</a>.</p>
           </td>
         </tr>
         <tr valign="TOP">
           <td width="28%">
-            <p>/dava/avnav/log</p>
+            <p>.../dava/log</p>
           </td>
           <td width="72%">
             <p>logfiles</p>
@@ -275,361 +268,32 @@
         </tr>
         <tr valign="TOP">
           <td width="28%">
-            <p>/data/avnav/tracks</p>
+            <p>.../data/tracks</p>
           </td>
           <td width="72%">
-            <p>Die trackfiles. Sie werden in einem File pro Tag gespeichert.
-              Momentan ist das ein simples csv Format, eine Konvertierung nach
-              gpx steht schon auf der todo Liste.</p>
+            <p>Die trackfiles (gpx). Sie werden in einem File pro Tag
+              gespeichert. Ausserdem nmea logs.</p>
           </td>
         </tr>
         <tr>
-          <td>/data/avnav/routes</td>
-          <td>die aktuelle route default.gpx und das aktuelle Segment
-            currentLeg.json</td>
+          <td>.../data/routes</td>
+          <td>Routen - xxx.gpx und das aktuelle Segment (Leg) currentLeg.json</td>
         </tr>
         <tr>
-          <td>/data/avnav/import</td>
-          <td>ab 2015-10-19: Hier abgelegte Karten werden konvertiert in das
-            gemf Format, so das die WebApp sie verarbeiten kann</td>
-        </tr>
-        <tr valign="TOP">
-          <td width="28%">
-            <p>/home/pi/avnav/data</p>
-          </td>
-          <td width="72%">
-            <p>Links zu /data/avnav/charts, /data/avnav/tracks, /data/avnav/log.
-              Ausserdem die config Datei avnav_server.xml. Beim ersten Start
-              wird sie dorthin kopiert, danach aber nicht wieder überschrieben.
-              Etwaige Anpassungen also hier.</p>
-          </td>
-        </tr>
-        <tr valign="TOP">
-          <td width="28%">
-            <p>/home/pi/avnav/setup.sh</p>
-          </td>
-          <td width="72%">
-            <p>Kann als root aufgerufen werden, um ein update der Software zu
-              machen (bei Internet-Verbindung):<br>
-              setup.sh update &lt;url&gt;</p>
-          </td>
-        </tr>
-        <tr valign="TOP">
-          <td width="28%">
-            <p>/home/pi/avnav/program</p>
-          </td>
-          <td width="72%">
-            <p>Das Program-Verzeichnis.</p>
-          </td>
-        </tr>
-        <tr valign="TOP">
-          <td width="28%">
-            <p>/home/pi/avnav/program/server</p>
-          </td>
-          <td width="72%">
-            <p>Der eigentliche server: avnav_server.py, <br>
-              Der ais Dekoder (aus dem gpsd Projekt): ais.py, <br>
-              Konvertierung von MOBAC atlas files zu avnav.xml:
-              create_overview.py</p>
-          </td>
-        </tr>
-        <tr valign="TOP">
-          <td width="28%">
-            <p>/home/pi/avnav/program/raspberry</p>
-          </td>
-          <td width="72%">
-            <p>Raspberry spezifische software Anteile (u.a. der service zum
-              Starten von avnav_server)</p>
-          </td>
-        </tr>
-        <tr valign="TOP">
-          <td width="28%">
-            <p>/home/pi/avnav/program/libraries</p>
-          </td>
-          <td width="72%">
-            <p>Die verwendeten JS libraries für die WebApp.<br>
-              Das sind u.a.:<br>
-              * <a href="http://www.openlayers.org/">OpenLayers</a><br>
-              * <a href="http://jquery.com/">jQuery</a><br>
-              * <a href="http://lesscss.org/">less</a><br>
-              * <a href="http://www.movable-type.co.uk/scripts/latlong.html">movable-type</a>
-              (java script functions von movable type)</p>
-          </td>
-        </tr>
-        <tr valign="TOP">
-          <td width="28%">
-            <p>/home/pi/avnav/program/viewer</p>
-          </td>
-          <td width="72%">
-            <p>Die WebApp.</p>
-          </td>
-        </tr>
-        <tr valign="TOP">
-          <td width="28%">
-            <p>/etc/init.d/</p>
-          </td>
-          <td width="72%">
-            <p>Die services, die zum Starten benutzt werden (links zu
-              /home/pi/avnav/program/raspberry):<br>
-              * avnav – der server<br>
-              * check_parts – service, der prüft, ob die data partition schon da
-              ist und sie im Zweifel anlegt<br>
-              * check_wlan – prüft, ob das interface wlan0 eine IP adresse hat
-              und macht im Zweifel ein ifdown/ifup – damit funktioniert das Wlan
-              deutlich stabiler</p>
-          </td>
+          <td>.../data/import</td>
+          <td>Hier abgelegte Karten werden konvertiert in das gemf Format, so
+            das die WebApp sie verarbeiten kann</td>
         </tr>
       </tbody>
     </table>
     <p>&nbsp;</p>
-    <p>Bis auf die init scripte läuft die gesamte Software unter dem Nutzer pi.
-      Die Installation muss allerdings als root erfolgen.</p>
-    <p>Standardmässig wird die SD Karte für den pi mit 2 Partitionen versehen:</p>
-    <ul>
-      <li>
-        <p>eine FAT32 formatierte boot Partition (ca. 60MB), gemounted nach
-          /boot</p>
-      </li>
-      <li>
-        <p>eine root partition, ca. 2GB</p>
-      </li>
-    </ul>
-    <p>Bei meinem Image kommt dazu noch eine separate /data partition mit dem
-      Rest der SD-Karte (wird beim ersten Start automatisch erzeugt). </p>
-    <p>Die Installation der Software hängt stark davon ab, ob mein Image
-      verwendet wird, oder ob von einem „stock“ Image ausgegangen wird. Beide
-      Varianten beschreibe ich kurz.</p>
-    <h3 class="western">Installation mit avnav image</h3>
-    <p>Für diese Variante einfach unter Windows/Linux/OSx das image von <a href="http://www.wellenvogel.de/software/avnav/download">wellenvogel.de</a>
-      herunterladen und wie unter <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
-      (raw images) beschrieben auf eine SD Karte spielen. Danach muss man sich
-      einmal auf dem pi einloggen und ggf. ein paar Anpassungen vornehmen. Am
-      einfachsten geht das, wenn man den pi im LAN anschließt und einen
-      router/dhcp-server (z.B. Fritz Box) aktiv hat. Dann holt er sich per DHCP
-      eine IP Adresse. Diese kann man auf dem Router sehen bzw. unter Linux z.B.
-      per ping -b &lt;brodcast-address&gt; herausfinden. Alternativ kann man
-      auch Tastatur + Bildschirm an den Pi direkt anschliessen.</p>
-    <p>Die Paßworte sind auf Standardwerte gesetzt – also login pi, Paßwort
-      raspberry. Per sudo -i wechselt man in eine root shell. Man sollte
-      kontrollieren, ob die /data partition existiert und gemounted ist (df -h,
-      mount). Anschliessend sollte man noch das Paßwort für den user pi ändern
-      (passwd). Per sudo raspi-config (siehe u.a. <a href="http://www.raspberrypi.org/phpBB3/viewtopic.php?f=91&amp;t=4751">hier</a>)
-      sollte ein Übertakten auf 1GHz eingestellt werden.</p>
-    <p>Am schwierigsten kann sich das Aufsetzen des WLAN gestalten. Das hängt
-      vom verwendeten Adapter ab. Ich habe einen rtl8192cu verwendet (TP-Link
-      TL-WN725N). Dazu musste ich den hostapd (/usr/sbin/hostapd) austauschen
-      gegen den von <a href="http://itwelt.org/downloads/hostapd">http://itwelt.org/downloads/hostapd</a>.
-      Der originale ist noch als hostapd.ori vorhanden – also ggf. wieder
-      umbennen. Anpassungen zur Konfiguration muss man in
-      /etc/hostapd/hostapd.conf vornehmen. In jedem Falle sollte hier der
-      WPA-Key getauscht werden (standard: SSID avnav, pw: avnav-secret). Ggf.
-      muss man den driver ändern. Danach service hostapd restart und die
-      WLAN-Verbindung testen. Eine gute Anleitung findet sich unter <a href="http://elinux.org/RPI-Wireless-Hotspot">http://elinux.org/RPI-Wireless-Hotspot</a>.
-      Als WLAN für den access point wird das erste gefundene WLAN (wlan0)
-      verwendet (siehe auch Installationshinweise unten).</p>
-    <p>Mit dem image ab 2015-01-28 sollte eine Erkennung der rtl18x WLAN Adapter
-      erfolgen. Dazu liegen unter /usr/sbin 2 hostapd (.ori/.edimax). Die werden
-      durch ein script (/etc/init.d/check_wlan) enstprechend auf den hostapd
-      gelinkt. Gleichzeitig wird die Datei /etc/hostapd/hostapd.conf angepaßt -
-      daher bitte die beiden driver Zeilen so lassen wie sie im image sind. Wenn
-      die automatische Umstellung nicht gewollt ist, in /etc/default/check_wlan
-      (Datei ggf. anlegen) NO_HOSTAPD_SWITCH=1<br>
-      setzen.</p>
-    <p>Das WLAN hat den Adressbereich 192.168.20.0/24. Der pi selbst ist auf
-      192.168.20.10 erreichbar (ggf. als url im Browser benutzen, wenn die
-      Namensauflösung nicht funktioniert). Auf dem pi läuft ein DHCP server und
-      ein DNS server (dnsmasqd). Die Konfiguration kann angepasst werden in
-      /etc/dnsmasqd.conf. Wenn der pi im LAN angeschlossen ist, versucht er per
-      DHCP eine Adresse zu bekommen, das WLAN wird per NAT an das LAN interface
-      weitergereicht (damit kann man den pi ins Internet bringen - z.B. zum
-      Installieren von Software- und auch per Wlan verbundene Geräte haben dann
-      Internet-Zugriff). </p>
-    <p>Für die Auslieferung einiger Karten ist der lighthttpd installiert.
-      Dieser kann gff. Auch für weitere Funktionen genutzt werden. Er ist jedoch
-      per default auf port 81 aufgesetzt. Port 80 ist direkt zum Web server von
-      avnav weitergeleitet (dieser lauscht auf port 8080).</p>
-    <p>Wenn alles richtig aufgesetzt ist, sollte sich unter der url <a href="http://avnav/">http://avnav.avnav.de</a>
-      die Einstiegsseite der WebApp öffnen.</p>
-    <p>Ab dem Image 2016-03-18 ist der Anschluß eines 2. WLAN Adapters
-      vorbereitet, über den dann eine Verbindung zu einem WLAN (z.B. im Hafen)
-      hergestellt werden kann. Da es potentiell nicht so einfach ist,
-      festzulegen welches WLAN den hotspot bereitstellt und welches für eine
-      Verbindung "nach draußen" genutzt wird, habe ich einfach einen festen USB
-      Steckplatz vorgesehen.</p>
-    <p>Ein Wlan Adapter der in die obere linke USB Buchse gesteckt wird (siehe
-      Bild) wird die Verbindung "nach draußen" machen, der erste andere (enteder
-      der interne oder ein in eine andere USB Buchse gesteckte) den hotspot.
-      Intern heißt das interface dann wlan-av1. Für Details siehe unten.</p>
-    <img style="width: 468px;" src="raspi3-wlan.jpg"><br>
-    <br>
-    In der App gibt es eine Seite, um sich mit einem WLAN zu verbinden
-    (Status-Seite-&gt;WLAN) - siehe <a href="avnav-de.html">Beschreibung der
-      App</a>.<br>
-    <br>
-    Die Verbindung zu einem externen WLAN wird an die angeschlossenen Geräte
-    "durchgereicht".<br>
-    <br>
-    <p>Mit <em>sudo service avnav status</em> kann man den Status des servers
-      prüfen, mit <em>sudo service avnav start</em> bzw. <em>sudo service
-        avnav stop</em> kann man ihn starten und stoppen.</p>
-    <h3 class="western">Installation mit „stock image“</h3>
-    <p>(Danke an Christian für ein paar Hilfestellungen) Hierbei zunächst das
-      debian wheezy image von <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
-      installieren (Anleitung siehe dort). Danach muss man eine Reihe weiterer
-      Pakete installieren, die Konfigurationen vornehmen und zum Schluss die
-      avnav software installieren. Nach dem ersten reboot Übertakten auf 1GHz
-      einstellen.<br>
-      Hier eine kurze Dokumentation der Schritte (ohne ganz detaillierte
-      Beschreibung):</p>
-    <pre><br>1.basic raspberry installation:
-http://www.raspberrypi.org/downloads
-win32 discimager http://sourceforge.net/projects/win32diskimager/
-
-2. download raspbian jessie lite https://downloads.raspberrypi.org/raspbian_lite_latest
- login as root, raspi-config - extend root fs
- parted /dev/mmcblk0
- resizepart 2 2GB
- quit
- 
-3. reboot
- apt-get install gpsd gpsd-clients python-gps bluetooth python-bluez python-pyudev hostapd dnsmasq python-serial lighttpd
- apt-get install python-gdal python-imaging
- apt-get install bc
- 
- copy tar from download page to /home/pi
- unpack as pi
- run as root avnav/setup.sh
- 
- edit /etc/default/gpsd, START_DAEMON="false",
- systemctl disable gpsd
- <br>4. set up ntp sync
- see http://catb.org/gpsd/gpsd.html
- -- does not work out of the box
-    as gpsd is running non root, we have to enable other SHM segments!
- * /etc/ntp.conf:
- server 127.127.28.0
-fudge 127.127.28.0 time1 0.420 refid GPS
-server 127.127.28.1 prefer
-fudge 127.127.28.1 refid GPS1
-server 127.127.28.2
-fudge 127.127.28.2 time1 0.420 refid GPS2
-server 127.127.28.3 prefer
-fudge 127.127.28.3 refid GPS3
-
-ntpq -p gives:
-     remote           refid      st t when poll reach   delay   offset  jitter
-==============================================================================
- SHM(0)          .GPS.            0 l    -   64    0    0.000    0.000   0.000
- SHM(1)          .GPS1.           0 l    -   64    0    0.000    0.000   0.000
--SHM(2)          .GPS2.           0 l   29   64    3    0.000    1.740  20.409
- SHM(3)          .GPS3.           0 l    -   64    0    0.000    0.000   0.000
-+batman.till-wie 129.69.1.153     2 u   22   64    3  321.884  142.512  36.881
-+mail.ziegenberg 131.188.3.220    2 u   24   64    3  338.131  147.767  39.671
-*mail.buh.bz     160.45.10.8      2 u   21   64    3  324.912  141.625  49.656
-+TAMARA.HZ.DE.AR 143.93.117.16    2 u   21   64    3  338.490  148.679  54.099<br><br>&nbsp;edit /etc/ntp.conf, remove all servers, insert settings from above, remove dhcp stuff
- edit /etc/dhcpcd.conf , disable ntp ??
-
- 
-5. #set up /etc/network/interfaces
- auto lo
-
-iface lo inet loopback
-iface eth0 inet dhcp
-
-allow-hotplug wlan0
-
-iface wlan0 inet static
-  address 192.168.20.10
-  netmask 255.255.255.0
-  up iptables-restore &lt; /etc/iptables.ipv4.nat
-
-iface eth0:1 inet static
-  address 192.168.20.11
-  netmask 255.255.255.0
-
-
-#####
-edit /etc/hosts:
-192.168.20.10 avnav
-192.168.20.10 avnav.avnav
-192.168.20.10 avnav.avnav.de
-
- 
-6. apt-get install avahi-autoipd - should fall back to link local address
-
-7. #set up /etc/hostapd/hostapd.conf
-<br>interface=wlan0<br>#use this driver for 8192/8188
-#needs hostapd.edimax - rename this to hostapd (sbin)
-#driver=rtl871xdrv
-#setting for normal hostapd driver=nl80211
-ssid=avnav
-hw_mode=g
-channel=6
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=avnav-secret
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-
-8.#set the config for the daemon in /etc/default/hostapd
-
-9. systemctl enable check_parts
-
-10. #when creating the image, remove /etc/default/check_parts
-
-11. #--------- re-enable check-wlan ------------------
-cd /usr/sbin
-mv hostapd hostapd.ori
-ln -s hostapd.ori hostapd
-wget -O hostapd.edimax http://itwelt.org/downloads/hostapd
-chown root:root hostapd.edimax
-chmod 755 hostapd.edimax
-
-
-12. #disable wlan power mgtmt for 8192cu
-#see https://www.datenreise.de/raspberry-pi-wlan-einrichten-edimax/
-#/etc/modprobe.d/8192cu.conf
-options 8192cu rtw_power_mgnt=0 rtw_enusbss=0
-<br>13. prevent pi from interacting on boot due to corrupted FS
-see http://www.raspberrypi.org/phpBB3/viewtopic.php?f=28&amp;t=15870
-sudo vi /etc/default/rcS
-change #FSCKFIX=no
-to FSCKFIX=yes
-  
-14. copy demo charts from .../homepage/software/avnav/viewer to .../home/pi/avnav/data/charts<br><br>15. update firmware<br>#rapsi 3 still has a lot of issues with the build in WLAN adapter
-#an update to the newest firmware slightly improves this
-apt-get update
-apt-get upgrade
-apt-get install rpi-update
-BRANCH=next rpi-update
-reboot<br>&nbsp;</pre>
-    <h3>2. WLAN Adapter</h3>
-    <p>Um einen 2. WLAN adapter zur Verbindung mit z.B. einem hotspot
-      einzurichten, müssen 3 Dinge getan werden:</p>
-    <ol>
-      <li>Festelegen welcher WLAN Adapater was machen soll</li>
-      <li>Konfigurieren der Weiterleitung von access point in das WLAN nach
-        draußen</li>
-      <li>Konfigurieren des Zugangs</li>
-    </ol>
-    Zu 1. hatte ich oben bereits beschrieben, das der Adapter auf einem festen
-    Port dazu genutzt wird (oben links) - wlan-av1.<br>
-    2. Erfolgt durch iptables (NAT)<br>
-    3. es wird vorkonfiguriert, das wpa_supplicant für wlan-av1 gestartet wird.
-    Die eigentliche Konfiguration erfolgt über die App.<br>
-    <br>
-    <pre>#prepare for a second WLAN adapter - upper left socket (as wlan-av1) when looking at the sockets<br>#it is important to identify the WLAN adapter that should be used as client (i.e. to connect to an access point)<br>#as the linux has some own ideas how to assign names, we use a fixed relation between the USB socket to use and the wlan name<br>#with providing an udev rule file, we force a WLAN adapter that is put into the upper left socket to be named as wlan-av1<br>#this wlan will be set up to connect to an access point<br>#all other wlans (either connected to other USB ports) or the build in from the raspi 3 will be named by the system<br>#the first one will be wlan0 - this is configured for the access point<br><br>#the udev rules file (works for raspi 2 and raspi 3)<br>/etc/udev/rules.d/010-avnav-net.rules:<br>KERNELS=="1-1.2:1.0",SUBSYSTEM=="net",NAME="wlan-av1"</pre>
-    <pre><br>#wpa configuration<br>/etc/wpa_supplicant/wpa_supplicant.conf:<br>ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev<br>update_config=1</pre>
-    <pre><br>#add wlan-av1 <br>/etc/network/interfaces :<br>allow-hotplug wlan-av1<br>iface wlan-av1 inet dhcp<br>wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf</pre>
-    <pre><br>#iptables - set up NAT for data that flows from wlan0 to wlan-av1<br>#the routing will be automatically handled by the DHCP client<br>iptables -t nat -A POSTROUTING -o wlan-av1 -j MASQUERADE<br>iptables -A FORWARD -i wlan-av1 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT<br>iptables -A FORWARD -i wlan0 -o wlan-av1 -j ACCEPT<br>iptables-save &gt; /etc/iptables.ipv4.nat</pre>
-    <br>
-    <h3> </h3>
+    <p>Bis auf die systemd scripte läuft die gesamte Software unter dem Nutzer
+      pi (auf dem raspberry) oder als beliebiger anderer Nutzer (avnav als
+      default). Die Installation muss allerdings als root erfolgen.</p>
     <h2>Die Web App</h2>
     Zur Navigation mit den auf dem Raspberry Pi vorhandenen Karten gibt es eine
-    Web App.<br>
+    Web App. Diese ist mit <a href="https://reactjs.org/">ReactJs</a>
+    realisiert.<br>
     Die App kommuniziert mit dem webserver des avnav_server.py auf dem pi. Die
     Einstiegsseite ist unter der url <a href="http://avnav/viewer/avnav_viewer.html">http://avnav/viewer/avnav_viewer.html</a>
     erreichbar. Es is eine sogenannte „single page app“, d.h. Die weitere
@@ -641,5 +305,6 @@ reboot<br>&nbsp;</pre>
     etwa 900x540 Pixel möglich.<br>
     <br>
     Zur Beschreibung der WebApp <a href="avnav-de.html">hier</a>.<br>
+    <br>
   </body>
 </html>

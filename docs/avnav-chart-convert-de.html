@@ -17,7 +17,18 @@
     </script>
   </head>
   <body>
-    <h2 class="western"><a name="Chartconvert">Konvertieren der Karten</a></h2>
+    <h2 class="western"><a name="Chartconvert">Avnav Karten</a></h2>
+    <ul class="mainlist">
+      <li><a href="avnav-chart-convert-de.html#Intro">Einführung</a><br>
+      </li>
+      <li><a href="avnav-chart-convert-de.html#Convert">Konvertieren von
+          vorhandenen Rasterkarten (z.B. BSB) oder mbtiles<br>
+        </a></li>
+      <li><a href="avnav-chart-convert-de.html#Download">Herunterladen von
+          Kachel-Karten</a></li>
+    </ul>
+    <h3><a id="Intro" name="Intro"></a>Einführung</h3>
+    <img title="Karten" alt="Karten" src="Karten.png" width="600">
     <p>Damit Karten in der WebApp verwendet werden können, müssen sie in einem
       „Kachelformat“ vorliegen. Das ist das Format, das durch Dienste wie
       OpenStreetMaps oder GoogleMaps benutzt wird. Eine Kartenkachel ist 256x256
@@ -64,6 +75,8 @@
       zu schwach). Das ist aber nicht schlimm – man muss das ja nur einmal
       machen. Belohnt wird man dafür mit einer sogenannten „blattschnittfreien“
       Darstellung.</p>
+    <p>Für den Download gilt Vergleichbares - hier muss man geeignet die
+      zoomlevel und Bereiche auswählen.</p>
     <p>Das Verfahren dazu hängt von der Quelle ab. Im Moment habe ich support
       für 2 „Wege“ der Kartenerstellung eingebaut:</p>
     <ul>
@@ -74,137 +87,45 @@
       <li> Nutzung von downloads mit dem <a href="http://mobac.sourceforge.net/">Mobile
           Atlas Creator</a>. </li>
     </ul>
-    <p>Ab der Version 2014-03-21 können die Karten in das <a href="http://www.cgtk.co.uk/gemf">GEMF</a>
-      Format konvertiert werden - das ist ein kompaktes Format - anstelle von
-      sehr vielen einzelnen Files sind diese in einem großen File
-      zusammengefaßt. </p>
-    <p>Achtung: die folgende Beschreibung bezieht sich auf diese Version -
-      ältere Server-Versionen können mit der GEMF Datei nichts anfangen.</p>
-    <h3 class="western">Konvertierung von Karten mit GDAL</h3>
-    <p>Ab Version 2015-10-19 kann die Konvertierung direkt auf dem Raspi
-      erfolgen. Da hier die Resourcen jedoch ziemlich begrenzt sind, muß mit
-      längeren Laufzeiten gerechnet werden (Beispiel: Auf einem Raspi 2 dauerte
-      das Konvertieren eines älteren NV Satzes (Ostsee 4) ca. 1 Stunde).</p>
-    <p>Dazu müssen die Karten in das /data/avnav/import Verzeichnis kopiert
-      werden (ganze Sätze bitte in ein Unterverzeichnis). Der Server beobachtet
-      dieses Verzeichnis und wird die Konvertierung starten, sobald er neue
-      Dateien dort entdeckt. Neben den Dateien, die GDAL lesen kann, können auch
-      Dateien vom Typ .mbtiles konvertiert werden. Der Zustand des "Importers"
-      kann auf der Status Seite geprüft werden. Logfiles liegen dann unter
-      /data/avnav/log. Ein Upload über die App wird sicher in einer späteren
-      Version folgen.</p>
+    <p>Die Karten werden in das <a href="http://www.cgtk.co.uk/gemf">GEMF</a>
+      Format konvertiert - das ist ein kompaktes Format - anstelle von sehr
+      vielen einzelnen Files sind diese in einem großen File zusammengefaßt.</p>
+    <h3 class="western"><a id="Convert" name="Convert"></a>Konvertierung von
+      Karten</h3>
+    <p>Die Konvertierung kann direkt auf dem Raspi erfolgen. Da hier die
+      Resourcen jedoch ziemlich begrenzt sind, muß mit längeren Laufzeiten
+      gerechnet werden (Beispiel: Auf einem Raspi 2 dauerte das Konvertieren
+      eines älteren NV Satzes (Ostsee 4) ca. 1 Stunde).</p>
+    <p>Dazu müssen die Karten in das /home/pi/avnav/data/import Verzeichnis
+      kopiert werden (ganze Sätze bitte in ein Unterverzeichnis). Der Server
+      beobachtet dieses Verzeichnis und wird die Konvertierung starten, sobald
+      er neue Dateien dort entdeckt. Neben den Dateien, die GDAL lesen kann,
+      können auch Dateien vom Typ .mbtiles konvertiert werden. Der Zustand des
+      "Importers" kann auf der Status Seite geprüft werden. Logfiles liegen dann
+      unter /data/avnav/log. Ein Upload über die App wird sicher in einer
+      späteren Version folgen.</p>
     <p>Da beim Konvertieren temporär recht viele Dateien entstehen, sollte das
       Filesystem auf der SD Karte darauf vorbereitet sein (ist bei meinen Images
       so gegeben). Es sollte auch ausreichen Platz vorhanden sein (eine 8GB
       Karte ist aber gut ausreichend).</p>
     <p>Einfacher geht die Konvertierung auf einem Windows (oder Linux/Mac)
-      Rechner.</p>
-    <p>Für diese Konvertierung müssen einige Tools installiert werden. </p>
-    <p><span style="font-weight: bold;">Ab 2015-10-05 gibt es für Windows einen
-        Installer, der alle benötigten Pakete enthält. Damit ist die
-        Installation mit wenigen Klicks erledigt</span>. Zum Download <a href="../downloads">hier</a>.</p>
-    <p><a href="" onclick="return showOld();">[Hier</a> ist die&nbsp;
-      Beschreibung für den alten Stand ohne Installer.]</p>
-    <div id="oldInstall" style="display:none; background-color: #ECECEC;">
-      <p><span><sub><span style="font-style: italic;">Zunächst wird python (ab
-              2.6) benötigt. Für Windows (64 Bit) z.B. von <a href="http://www.python.org/ftp/python/2.7.3/python-2.7.3.amd64.msi">http://www.python.org/ftp/python/2.7.3/python-2.7.3.amd64.msi</a>
-              . </span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;">Bei der Installation das
-              Verzeichnis merken (Standard: c:\Python27). Danach einmal die
-              Python GUI starten (Python IDLE).<br>
-              Die Ausschrift beim Start sollte so etwas zeigen:</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <pre><span><sub><span style="font-style: italic;">Python 2.7.3 (default, Apr 10 2012, 23:24:47) [MSC v.1500 64 bit (AMD64)] on win32
-Type "copyright", "credits" or "license()" for more information.
-&gt;&gt;&gt; </span></sub></span></pre>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;">Wichtig sind hierbei die
-              Versionsnummer und die Architektur - die folgenden Downloads
-              müssen dazu passen. In diesem Falle Version 1500 und AMD64.</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;">Danach GDAL und GDAL
-              python bindings (<a href="http://www.gisinternals.com/sdk">http://www.gisinternals.com/sdk</a>).</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;">Für die o.g. Python
-              Version unter "Archive Versions" schauen.</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;"> Neue Links (2015/03/20):</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <ul>
-        <li><span><sub><span style="font-style: italic;">GDAL Core:<a href="http://download.gisinternals.com/sdk/downloads/release-1500-x64-gdal-1-11-0-mapserver-6-4-1/gdal-111-1500-x64-core.msi">http://download.gisinternals.com/sdk/downloads/release-1500-x64-gdal-1-11-0-mapserver-6-4-1/gdal-111-1500-x64-core.msi</a><a
-                  href="http://download.gisinternals.com/sdk/downloads/release-1600-x64-gdal-1-11-1-mapserver-6-4-1/gdal-111-1600-x64-core.msi"><br>
-                </a>Das Installationsverzeichnis merken - Standard.
-                C:\Programme\GDAL.</span></sub></span></li>
-        <li><span><sub><span style="font-style: italic;">Python bindings:<a href="http://download.gisinternals.com/sdk/downloads/release-1500-x64-gdal-1-11-0-mapserver-6-4-1/GDAL-1.11.0.win-amd64-py2.7.msi">http://download.gisinternals.com/sdk/downloads/release-1500-x64-gdal-1-11-0-mapserver-6-4-1/GDAL-1.11.0.win-amd64-py2.7.msi</a><br>
-                Bei der Installation wird nach dem Python-Verzeichnis gefragt.
-                Wenn es angeboten wird: "Python from registry", sonst: other
-                Python location - hier das Verzeichnis von oben eintragen - also
-                z.B. c:\Python27.<br>
-              </span></sub></span> </li>
-      </ul>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;">-&nbsp; Anschliessend
-              GDAL_DATA im environment setzen und GDAL in den Pfad
-              aufnehmen.Dazu Systemsteuerung-&gt;Systemumgebungsvariablen
-              bearbeiten-&gt;Umgebungsvariablen-&gt;Systemvariablen. Dort dann
-              bei Path ergänzen: <br>
-            </span></sub></span> <span><sub><span style="font-style: italic;">;c:\Programme\GDAL<br>
-              Ggf. kann man auch das Python Verzeichnis in den Pfad aufnehmen -
-              dann muß man weiter unten nicht immer den kompletten Pfad
-              eintippen.<br>
-              Dazu noch eine neue Variable anlegen:<br>
-            </span></sub></span> <span><sub><span style="font-style: italic;">GDAL_DATA=c:\Programme\GDAL\gdal_data</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;">Danach noch einmal python
-              IDLE starten und eingeben:</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;">import gdal</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;">Das sollte ohne Fehler
-              akzeptiert werden.</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <p><span><sub><span style="font-style: italic;">Dazu noch PIL für python (
-              <a href="http://www.lfd.uci.edu/%7Egohlke/pythonlibs/">http://www.lfd.uci.edu/~gohlke/pythonlibs/</a>).Leider
-              ist das etwas "fummelig" - man muß mehrere Schritte machen.</span></sub></span></p>
-      <span><sub><span style="font-style: italic;"> </span></sub></span>
-      <ol>
-        <li><span><sub><span style="font-style: italic;">PIP installieren<br>
-                Dazu von der Seite erst mal pip herunterladen: <a href="http://www.lfd.uci.edu/%7Egohlke/pythonlibs/#pip">http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip</a>.
-                Danach eine Kommandozeile im Download-Verzeichnis öffnen (cmd,
-                ggf. cd c:\Users\xxx\Downloads).<br>
-                Danach pip installieren mit dem Kommando:<br>
-              </span></sub></span> <span><sub><span style="font-style: italic;">c:\Python27\python.exe
-                pip-6.0.8-py2.py3-none-any.whl/pip install
-                pip-6.0.8-py2.py3-none-any.whl<br>
-                Den Pfad zu python ggf. anpassen - oder auch die pip Version.</span></sub></span></li>
-        <li><span><sub><span style="font-style: italic;">Pillow (Ersatz für PIL)
-                herunterladen:<br>
-                Pillow‑2.7.0‑cp27‑none‑win_amd64.whl<br>
-                Danach wieder in der Kommandozeile im Download Verzeichnis:<br>
-                c:\Python27\Scripts\pip.exe install
-                Pillow-2.7.0-cp27-none-win_amd64.whl</span></sub></span></li>
-      </ol>
-      <span><sub><span style="font-style: italic;"> Zum Testen nun wieder die
-            Python GUI (IDLE) aufrufen und eingeben:<br>
-            from PIL import Image<br>
-            x=Image.new("RGB",(256,256),"red")<br>
-            x.show()<br>
-            Wenn alles funktioniert sollte jetzt im Default-Bildbetrachter ein
-            rotes Quadrat mit 256x256 Pixeln gezeigt werden.<br>
-            <br>
-            Uff!<br>
-          </span></sub></span><br>
-    </div>
-    <p>Der Hauptteil der Konvertierung wird durch tiler_tools durchgeführt (<a href="https://code.google.com/p/tilers-tools/">https://code.google.com/p/tilers-tools/</a>)
-      diese sind Bestandteil der Software und müssen nicht extra heruntergeladen
-      werden.. </p>
+      Rechner. Für die nötigen Installationen siehe:</p>
+    <ul>
+      <li><a href="install.html#Packages">Linux</a></li>
+      <li><a href="install.html#Windows">Windows</a></li>
+    </ul>
+    Der Hauptteil der Konvertierung wird durch tiler_tools durchgeführt (<a href="https://code.google.com/p/tilers-tools/">https://code.google.com/p/tilers-tools/</a>)
+    diese sind Bestandteil der Software und müssen nicht extra heruntergeladen
+    werden..
     <p>Die Karten werden per default im Verzeichnis
       &lt;UserHome&gt;/AvNavCharts/out erzeugt (also z.B.
       c:\Users\Andreas\AvNavCharts\out). Zumindest in der Windows GUI kann das
       Verzeichnis gewählt werden. Standarmäßig ensteht für jeden Konverter-Lauf
       eine xxx.gemf Datei, xxx ist dabei der Dateiname der ersten Datei oder der
       Name des ersten gewählten Verzeichnisses.</p>
+    <p>Wenn zusätzlich auch mbtiles Dateien gewählt werden (ab 20200126), dann
+      werden diese separat behandelt, da sie sich direkt in die gemf Dateien
+      umwandeln lassen.</p>
     <p>Im AvNavCharts Verzeichnis gibt es auch noch ein work-Verzeichnis, dieses
       sollte nicht gelöscht werden, da dann bei einem Update (z.B.
       Berichtigungen eingepflegt) nur die geänderten Karten neu erzeugt werden
@@ -225,27 +146,24 @@ Type "copyright", "credits" or "license()" for more information.
     <p>Der upload kann auch über die App erfolgen (dazu z.B. mit dem Laptop im
       Raspi WLAN anmelden und die Startseite aufrufen, dann Upload/Download).</p>
     <h4>Windows</h4>
-    <p>Der Installer für windows installiert (wenn es angewählt wird) neben der
-      eigentlichen Konverter-Software auch die nötigen Programme:</p>
+    <p>Der <a href="install.html#Windows">Net-Installer</a> (AvNavNet...) für
+      windows installiert neben der eigentlichen Konverter-Software auch die
+      nötigen Programme:</p>
     <ul>
       <li>python 2.7.10 (32 Bit)</li>
       <li>GDAL 1.11 für python 2.7 (32 Bit)</li>
       <li>Pillow 2.7.0</li>
       <li>pyserial 2.7</li>
     </ul>
-    Alle Dateien werden unter ProgramFiles\AvNav installiert. Wenn AvNav
-    deinstalliert wird, werden auch diese Anteile mit entfernt. Python und GDAL
-    sollten nur dann mit installiert werden, wenn sie auf dem Rechner noch nicht
-    vorhanden sind.<br>
-    Nach der Installation kann man mit AvChartConvert die Applikation starten.
-    Unter einigen Windows Versionen scheint der Start aus dem Installer heraus
-    nicht sehr gut zu funktionieren (beim Start des Konverters blinkt kurz ein
-    Fenster auf, aber es gibt noch nicht einmal ein logfile)- bitte einfach
-    nochmal beenden und über das Startmenü/Desktop starten.<br>
+    Der installer werden unter ProgramFiles\AvNav installiert. Wenn AvNav
+    deinstalliert wird, werden nur diese Anteile mit entfernt. <br>
+    Die nachgeladenen Teile werden im Home-Verzichnis des Nutzers installiert
+    und müssen aus der UI deinstalliert werden.<br>
+    Nach der Installation kann man mit AvChartConvert die Applikation starten. <br>
     <br>
     Die Applikation hat nur einen Bildschirm:<br>
     <br>
-    <img alt="windows gui" src="gui-windows-n1-show.png" width="800px"><br>
+    <img alt="windows gui" src="avnav-windows-new.png" width="800px"><br>
     <p>Bei (1) können die zu konvertierenden Karten gewählt werden, bei (2)
       startet die Konvertierung. Es wird ein logfile geschrieben, das man mit
       "view" anschauen kann (das hätte ich auch gerne, wenn etwas nicht
@@ -253,6 +171,11 @@ Type "copyright", "credits" or "license()" for more information.
     <p>Mit den default-Einstellungen startet danach sofort der AvNav Server
       (also die Software, die sonst auf dem Raspberry läuft) und ein Browser
       wird geöffnet, der die App anzeigt.</p>
+    <p>Wenn die nötige Software noch nicht installiert wurde, öffnet sich ein
+      Dialog, der die Installation anbietet und die nötigen Teile aus dem Netz
+      nachlädt. Mit (5) kann das für ein update wiederholt werden (die aktuell
+      vorhandene Version wird angezeigt). Mit (4) kann die nachinstallierte
+      Software entfernt werden.</p>
     <p>Wie im Bild zu sehen liefere ich eine Datei mit NMEA Daten mit (vom
       Greifswalder Bodden). Es kann natürlich zum Test auch jede andere eigene
       NMEA-log Datei gewählt werden.</p>
@@ -264,23 +187,12 @@ Type "copyright", "credits" or "license()" for more information.
     <p>Mit diesem Setup kann die Software damit also auch komplett z.B. and Bord
       auf einem Windows-Laptop benutzt werden. Die Funktionen sind die gleichen
       wie mit dem Raspberry.</p>
-    <p>Wenn man nur den Server starten möchte - rechts "startServer". Das muß
-      man auch nach jeder Änderung tun.<br>
+    <p>Wenn man nur den Server starten möchte - (3) "startServer". Das muß man
+      auch nach jeder Änderung tun.<br>
     </p>
-    <h4>OSX/Linux</h4>
-    <p>Von der <a href="../downloads">download Seite</a> sollte die
-      xxx-host.zip Datei heruntergeladen und in einem beliebigen Verzeichnis
-      entpackt werden.</p>
-    <p>Für OSX und&nbsp; Linux sind jeweils minimale GUIs vorhanden, die es
-      erlauben die Konvertierung zu starten sowie zum Test der erzeugten Karten
-      die Server-Software.</p>
-    Unter OSX lann der Konverter durch Klick auf AvChartConvert im osx
-    Verzeichnis gestartet werden (ggf. ins Dock legen für drag &amp; drop), der
-    Server durch Klick auf avnav.command.
-    <p>Unter Linux gibt es ebenfalls eine minimale grafische Oberfläche - sie
-      erfordert wxPython (python-wxgtk2.8). Zum Starten im linux Verzeichnis
-      avnav_gui.py aufrufen (python-gdal muss installiert sein). Linux getestet
-      unter Ubuntu 14.04.</p>
+    <h4>Linux</h4>
+    Wie unter <a href="install.html#Packages">Installation</a> beschrieben,
+    startet man avnav -g und wählt auch hier die zu konvertierenden Karten.<br>
     <h4>Details</h4>
     Im Folgenden werden die Konvertierungsschritte beschrieben - normalerweise
     muss man sich darum nicht kümmern - nur wenn die default-Einstellungen der
@@ -313,9 +225,11 @@ Type "copyright", "credits" or "license()" for more information.
 </pre> </blockquote>
       </div>
     </blockquote>
-    <h3 class="western">Nutzung von Karten mit dem Mobile Atlas Creator</h3>
-    <p>Für die Nutzung des Mobile Atlas Creators ist keine weitere Software auf
-      dem PC/Laptop nötig. Man muss beim Download der Karten allerdings ein
+    <h3 class="western"><a id="Download" name="Download"></a>Download von Karten
+      mit dem Mobile Atlas Creator</h3>
+    <p>Für die Nutzung des <a href="https://mobac.sourceforge.io/">Mobile Atlas
+        Creators</a> ist ausser Java und dem MOBAC selbst keine weitere Software
+      auf dem PC/Laptop nötig. Man muss beim Download der Karten allerdings ein
       gewisses Schema einhalten, damit die Karten in das oben beschriebene
       Layer-Konzept passen und die Datenmengen überschaubar bleiben. </p>
     <p>Dazu sollte man (je nach Kartenquelle) z.B. 3 Layer vorsehen: Übersicht(
@@ -329,12 +243,8 @@ Type "copyright", "credits" or "license()" for more information.
       ggf. nochg für weitere Versuche brauchen. Als output Format OsmDroid GEMF
       (File-&gt;convertAtlasFormat) wählen und die Atlas-Erzeugung starten. Im
       output Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den raspberry
-      unter /data/avnav/charts kopieren. Ab der Version avnav-2014-04-08 ist das
-      ausreichend, bei älteren Versionen muss man noch Folgendes tun:<br>
-      <span style="font-size: small;">Den Atlas speichern (Profil speichern).
-        Diese Datei (liegt im Programmverzeichnis von MOBAC) in das gleiche
-        Verzeichnis kopieren und zu xxx.xml umbenennen (wichtig!).</span></p>
-    <p>Auf der <a href="../downloads">download Seite</a> sammle ich chart
+      unter /data/avnav/charts kopieren oder mit der App hochladen.<br>
+      Auf der <a href="../downloads">download Seite</a> sammle ich chart
       sources für den mobac, die für uns nützlich sein lönnten. </p>
     <p><br>
     </p>

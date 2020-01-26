@@ -1,12 +1,16 @@
 #! /bin/sh
 BASE=`dirname $0`
 TARGET=/diskstation/web/homepage/software/avnav
+SUB=release
+if [ "$1" != "" ] ; then
+ SUB=$1
+fi
 set -x
-rsync -rav --exclude="*bak" --exclude="*odg" --delete $BASE/docs/ $TARGET/docs
-rsync -rav --include="*png" --include="*PNG" --exclude="*" --delete $BASE/viewer/images/ $TARGET/viewer/images/
-rsync -rav --include="avnav_min.js" --include="loader.js" --include="avnav_viewer.html" --include="avnav_viewer.less" --exclude="*" --delete $BASE/viewer/ $TARGET/viewer
+rsync -rav --exclude="*bak" --exclude="*odg" --exclude="*php" --delete $BASE/docs/ $TARGET/docs
+rsync -rav --include="*php" --exclude="*" $BASE/docs/ $TARGET
+rsync -rav --delete $BASE/viewer/build/$SUB/ $TARGET/viewern
 
-for lib in jquery movable-type ol3201
+for lib in movable-type ol3201
 do
 	rsync -rav --delete $BASE/libraries/$lib/* $TARGET/libraries/$lib/
 done
