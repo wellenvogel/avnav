@@ -143,6 +143,7 @@ task zipMarker{
 
 def releaseHtAccess=new File(project.buildDir,"release.htaccess")
 def dailyHtAccess=new File(project.buildDir,"daily.htaccess")
+def windowsHtAccess=new File(project.buildDir,"windows.htaccess")
 
 def createHtAccess(dest,version){
     File ddir=dest.getParentFile()
@@ -168,6 +169,11 @@ task releaseAccessFile{
 task dailyAccessFile{
     doLast{
         createHtAccess(dailyHtAccess,project.avnavVersion)
+    }
+}
+task windowsAccessFile{
+    doLast{
+        createHtAccess(windowsHtAccess,project.avnavVersion)
     }
 }
 
@@ -539,6 +545,13 @@ task uploadAccess(type: UploadTask){
     subDir=null
     getTargetName={ return ".htaccess"}
 }
+task uploadAccessWindows(type: UploadTask){
+    dependsOn windowsAccessFile
+    inputFile=windowsHtAccess
+    subDir=null
+    getTargetName={ return ".htaccess"}
+    baseDir="/www/software/avnav/downloads"	
+}
 
 def ks=System.getenv("ANDROID_KEYSTORE")
 def sign="-unsigned"
@@ -603,7 +616,7 @@ task uploadRelease{
     }
     dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease,uploadAccess,uploadZip
     if (onWindows){
-        dependsOn uploadWindows,uploadWindowsNet
+        dependsOn uploadWindows,uploadWindowsNet,uploadAccessWindows
     }
     if (buildAndroid){
         dependsOn uploadAndroidRelease
@@ -620,7 +633,7 @@ afterEvaluate{
     }
     if (project.avnavRelease) {
         tasks.withType(UploadTask.class) { UploadTask task ->
-            if (! task.name.equals("uploadViewerRelease")) task.baseDir = "/www/software/avnav/downloads/release"
+            if (! task.name.equals("uploadViewerRelease") && ! task.name.equals("uploadAccessWindows")) task.baseDir = "/www/software/avnav/downloads/release"
 
         }
     }
