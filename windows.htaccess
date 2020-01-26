@@ -1,3 +1,4 @@
 AddType application/octet-stream .img
+Options -Indexes
 RewriteEngine on
 RewriteRule "latestwindows" "release/VERSION/" [PT]
