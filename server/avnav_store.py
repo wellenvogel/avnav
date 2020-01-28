@@ -283,8 +283,8 @@ class AVNStore():
       raise Exception("key %s does not match pattern %s"%(key,self.KEY_PATTERN))
   def __isWildCard(self, key):
     return key.find('*') >= 0
-
-  def __wildCardMatch(self,key,wildcardKey):
+  @classmethod
+  def wildCardMatch(cls,key, wildcardKey):
     keyParts=key.split('.')
     wildCardParts=wildcardKey.split('.')
     if len(keyParts) < len(wildCardParts):
@@ -310,7 +310,7 @@ class AVNStore():
     if key in self.__approvedKeys:
       return True
     for wildcard in self.__wildcardKeys.keys():
-      if self.__wildCardMatch(key,wildcard):
+      if self.wildCardMatch(key, wildcard):
         self.__approvedKeys.add(key)
         return True
     return False
@@ -330,11 +330,11 @@ class AVNStore():
       if existing == key or key.startswith(existing):
         raise Exception("key %s already registered from %s:%s" % (key,existing,self.__registeredKeys[existing]))
     for existing in self.__wildcardKeys.keys():
-      if self.__wildCardMatch(key,existing):
+      if self.wildCardMatch(key, existing):
         raise Exception("key %s matches wildcard from %s:%s" % (key, existing, self.__wildcardKeys[existing]))
     if self.__isWildCard(key):
       for existing in self.__registeredKeys.keys():
-        if self.__wildCardMatch(existing,key):
+        if self.wildCardMatch(existing, key):
           raise Exception("wildcard key %s matches existing from %s:%s" % (key, existing, self.__registeredKeys[existing]))
     self.__keySources[key]=source
     if self.__isWildCard(key):

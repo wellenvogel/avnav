@@ -25,10 +25,9 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-import glob
+
 import imp
 import inspect
-import time
 
 from avnav_api import AVNApi
 from avnav_store import AVNStore
@@ -54,15 +53,16 @@ class ApiImpl(AVNApi):
     self.queue=queue
     self.prefix=prefix
     self.patterns=[]
+    self.wildcardPatterns=[]
 
   def log(self, str, *args):
-    AVNLog.info("(%s):%s",self.prefix,str % args)
+    AVNLog.info("%s",str % args)
 
   def error(self, str, *args):
-    AVNLog.error("(%s):%s" % (self.prefix,str % args))
+    AVNLog.error("%s" % (str % args))
 
   def debug(self, str, *args):
-    AVNLog.debug("(%s):%s" % (self.prefix,str % args))
+    AVNLog.debug("%s" % (str % args))
 
   def fetchFromQueue(self, sequence, number=10,includeSource=False,waitTime=0.5,filter=None):
     if filter is not None:
@@ -79,19 +79,26 @@ class ApiImpl(AVNApi):
       raise Exception("%s: missing path in data entry: %s"%(self.prefix,data))
     AVNLog.info("%s: register key %s"%(self.prefix,key))
     self.store.registerKey(key,data,"Plugin: %s"%self.prefix)
-    self.patterns.append(data)
+    if key.find('*') >= 0:
+      self.wildcardPatterns.append(data)
+    else:
+      self.patterns.append(data)
   def addData(self,path,value,source=None):
     if source is None:
-      source=self.prefix
-    if self.patterns is not None:
-      matches=False
-      for p in self.patterns:
-        if p.get('path') == path:
+      source="plugin-"+self.prefix
+    matches=False
+    for p in self.patterns:
+      if p.get('path') == path:
+        matches=True
+        break
+    if not matches:
+      for p in self.wildcardPatterns:
+        if AVNStore.wildCardMatch(path,p.get('path')):
           matches=True
           break
-      if not matches:
-        AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
-        return False
+    if not matches:
+      AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
+      return False
     self.store.setValue(path,value,source)
     return True
   def getDataByPrefix(self, prefix):
@@ -105,7 +112,9 @@ class ApiImpl(AVNApi):
     childcfg=self.phandler.getParamValue(self.prefix) #for now we use the prefix as cfg name
     if childcfg is None:
       return default
-    rt=childcfg.get(key)
+    if len(childcfg) < 1:
+      return default
+    rt=childcfg[0].get(key)
     if rt is None:
       return default
     return rt
@@ -169,22 +178,22 @@ class AVNPluginHandler(AVNWorker):
     systemDir=AVNConfig.getDirWithDefault(self.param,'systemDir',defaultSub=os.path.join('..','plugins'),belowData=False)
     userDir=AVNConfig.getDirWithDefault(self.param,'userDir','plugins')
     directories={
-      'buildin':{
+      'builtin':{
         'dir':builtInDir,
-        'prefix':'buildin-plugins'
+        'prefix':'builtin'
       },
       'system':{
         'dir':systemDir,
-        'prefix':'system-plugins'
+        'prefix':'system'
       },
       'user':{
         'dir':userDir,
-        'prefix':'user-plugins'
+        'prefix':'user'
       }
     }
 
 
-    for basedir in ['buildin','system','user']:
+    for basedir in ['builtin','system','user']:
       dircfg=directories[basedir]
       if not os.path.isdir(dircfg['dir']):
         continue
@@ -204,14 +213,14 @@ class AVNPluginHandler(AVNWorker):
         else:
           if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
             self.pluginDirs[moduleName]=dir
-        for name in self.createdPlugins.keys():
-          plugin=self.createdPlugins[name]
-          AVNLog.info("starting plugin %s",name)
-          thread=threading.Thread(target=plugin.run)
-          thread.setDaemon(True)
-          thread.setName("Plugin: %s"%(name))
-          thread.start()
-          self.startedThreads[name]=thread
+      for name in self.createdPlugins.keys():
+        plugin=self.createdPlugins[name]
+        AVNLog.info("starting plugin %s",name)
+        thread=threading.Thread(target=plugin.run)
+        thread.setDaemon(True)
+        #thread.setName("Plugin: %s"%(name))
+        thread.start()
+        self.startedThreads[name]=thread
 
   def instantiateHandlersFromModule(self,modulename, module):
     MANDATORY_METHODS = ['run']

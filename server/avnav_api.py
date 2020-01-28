@@ -39,10 +39,30 @@ class AVNApi:
     """
     raise NotImplemented()
 
+  def debug(self, format, *param):
+    """
+    debug infos
+    @param format: the format string
+    @type format: str
+    @param param: the list of parameters
+    @return:
+    """
+    raise NotImplemented()
+
+  def error(self, format, *param):
+    """
+    log errors
+    @param format: the format string
+    @type format: str
+    @param param: the list of parameters
+    @return:
+    """
+    raise NotImplemented()
+
   def getConfigValue(self, key, default=None):
     """
     get a config item from the avnav_server.xml
-    it will be a sub element at AVNLoader with the name of the file and a prefix (buildin,sys,user):
+    it will be a sub element at AVNLoader with the name of the plugin dir and a prefix (builtin,system,user):
     <AVNLoader>
       <user-test count=5 max=10/>
     <AVNLoader
