@@ -103,4 +103,7 @@ allowDenyCommand="sudo $BASEDIR/../raspberry/iptables-ext.sh wlx0013eff503f2"
 		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
 	</AVNAlarmHandler>
 -->
+<AVNPluginHandler>
+	<builtin-signalk enabled="true"/>
+</AVNPluginHandler>
 </AVNServer>

@@ -188,6 +188,10 @@ const formatDateTime=function(curDate){
     return datestr;
 };
 
+const formatString=function(data){
+    return data;
+};
+
 module.exports={
     formatDateTime,
     formatClock,
@@ -198,5 +202,6 @@ module.exports={
     formatLonLatsDecimal,
     formatDistance,
     formatDirection,
-    formatSpeed
+    formatSpeed,
+    formatString
 };

@@ -55,7 +55,11 @@ class WidgetFactory{
         let self = this;
         if (!props.name) return;
         let e = this.findWidget(props.name);
-        if (!e) return;
+        if (!e ) {
+            e= {
+                wClass:DirectWidget
+            };
+        }
         let mergedProps = assign({}, e, props, opt_properties);
         if (mergedProps.key === undefined) mergedProps.key = props.name;
         if (mergedProps.formatter) {

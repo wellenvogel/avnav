@@ -132,7 +132,7 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         for (let k in data){
             if (ignoredKeys.indexOf(k)>=0) continue;
             if (predefined[k]) continue; //ignore any key we use internally
-            additionalKeys[k]=this.computeKeys(k,base);
+            additionalKeys[k]=this.computeKeys(k,data[k],base);
             gpsdata[k]=data[k];
         }
         assign(this.additionalKeys,additionalKeys);
@@ -140,12 +140,12 @@ GpsData.prototype.handleGpsResponse=function(data, status){
     }
 };
 
-GpsData.prototype.computeKeys=function(key,base){
+GpsData.prototype.computeKeys=function(key,data,base){
     let path=base+"."+key;
-    if (key instanceof Object){
+    if (data instanceof Object){
         let sub={};
-        for (let i in key){
-           sub[i]=this.computeKeys(key[i],path)
+        for (let i in data){
+           sub[i]=this.computeKeys(i,data[i],path)
         }
         return sub;
     }
