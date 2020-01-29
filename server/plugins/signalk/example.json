@@ -1,0 +1,335 @@
+{
+  "description": "The system default layout. No keys and no properties.",
+  "layoutVersion":1,
+  "properties":{
+    "layers":{
+      "ais": true
+    }
+  },
+  "widgets": {
+    "gpspage1": {
+      "left": [
+        {
+          "name": "BRG",
+          "weight": 1.5
+        },
+        {
+          "name": "DST",
+          "weight": 1.5
+        },
+        {
+          "name": "XteDisplay",
+          "compareState": true,
+          "weight": 1
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "name": "SOG",
+          "weight": 1.5
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        },
+        {
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage2": {
+      "left": [
+        {
+          "name": "BRG",
+          "weight": 1.5
+        },
+        {
+          "name": "XteDisplay",
+          "compareState": true,
+          "weight": 1.5
+        },
+        {
+          "name": "DST"
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "RteCombine"
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "name": "WindGraphics",
+          "weight": 1.5
+        },
+        {
+          "name": "SOG",
+          "weight": 1
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "AisTarget"
+        }
+      ]
+    },
+    "gpspage3": {
+      "left": [
+        {
+          "name": "SOG",
+          "weight": 1.5
+        },
+        {
+          "name": "COG",
+          "weight": 1.5
+        },
+        {
+          "name": "BRG",
+          "weight": 1.5
+        },
+        {
+          "name": "DST",
+          "weight": 1.5
+        }
+      ],
+      "left_anchor": [
+        {
+          "name": "AnchorBearing",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorDistance",
+          "weight": 1.5
+        },
+        {
+          "name": "AnchorWatchDistance"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "Empty"
+        }
+      ],
+      "right": [
+        {
+          "name": "Default",
+          "caption": "OwnName",
+          "unit": "",
+          "formatter": "formatString",
+          "default": "???",
+          "storeKeys": {
+            "value": "nav.gps.signalk.name"
+          }
+        },
+        {
+          "name": "Default",
+          "caption": "OwnType",
+          "unit": "",
+          "formatter": "formatString",
+          "default": "???",
+          "storeKeys": {
+            "value": "nav.gps.signalk.design.aisShipType.name"
+          }
+        },
+        {
+          "name": "signalKCelsius",
+          "className": "skOutTemp",
+          "caption": "TempOut",
+          "storeKeys": {
+            "value": "nav.gps.signalk.environment.outside.temperature"
+          }
+        },
+        {
+          "name": "Default",
+          "caption": "Pressure",
+          "unit": "Pa",
+          "formatter": "formatDecimal",
+          "formatterParameters": [3,0],
+          "default": "???",
+          "storeKeys": {
+            "value": "nav.gps.signalk.environment.outside.pressure"
+          }
+        },
+        {
+          "name": "Empty",
+          "weight": 3
+        }
+      ]
+    },
+    "navpage": {
+      "left_not_small": [
+        {
+          "name": "CenterDisplay"
+        },
+        {
+          "name": "Zoom"
+        },
+        {
+          "name": "WindDisplay"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "ActiveRoute"
+        },
+        {
+          "name": "LargeTime"
+        }
+      ],
+      "left_small": [
+        {
+          "name": "ActiveRoute"
+        }
+      ],
+      "top_small": [
+        {
+          "name": "WindDisplay"
+        },
+        {
+          "name": "DepthDisplay"
+        },
+        {
+          "name": "AisTarget"
+        },
+        {
+          "name": "LargeTime"
+        },
+        {
+          "name": "Zoom"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "name": "BRG"
+        },
+        {
+          "name": "DST"
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
+        }
+      ],
+      "bottomRight": [
+        {
+          "name": "COG"
+        },
+        {
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        }
+      ]
+    },
+    "editroutepage": {
+      "left_not_small": [
+        {
+          "name": "EditRoute"
+        },
+        {
+          "name": "RoutePoints"
+        }
+      ],
+      "top_small": [
+        {
+          "name": "EditRoute"
+        }
+      ],
+      "bottomLeft": [
+        {
+          "name": "BRG"
+        },
+        {
+          "name": "DST"
+        },
+        {
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
+        }
+      ],
+      "bottomRight": [
+        {
+          "name": "COG"
+        },
+        {
+          "name": "SOG"
+        },
+        {
+          "name": "TimeStatus"
+        },
+        {
+          "name": "Position"
+        }
+      ]
+    }
+  }
+}

@@ -36,11 +36,12 @@ from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
-
+from httpserver import AVNHTTPServer
+from layouthandler import AVNLayoutHandler
 
 
 class ApiImpl(AVNApi):
-  def __init__(self,parent,store,queue,prefix):
+  def __init__(self,parent,store,queue,prefix,moduleFile):
     """
 
     @param parent: the pluginhandler instance to access cfg data
@@ -54,6 +55,8 @@ class ApiImpl(AVNApi):
     self.prefix=prefix
     self.patterns=[]
     self.wildcardPatterns=[]
+    self.addonIndex=1
+    self.fileName=moduleFile
 
   def log(self, str, *args):
     AVNLog.info("%s",str % args)
@@ -124,7 +127,27 @@ class ApiImpl(AVNApi):
       value=AVNWorker.Status.ERROR
     self.phandler.setInfo(self.prefix,info,value)
 
+  def registerUserApp(self, url, iconFile, title=None):
+    httpserver=AVNWorker.findHandlerByName(AVNHTTPServer.getConfigName())
+    if httpserver is None:
+      raise Exception("no http server")
+    if os.path.isabs(iconFile):
+      raise Exception("only relative pathes for icon files")
+    iconFilePath=os.path.join(os.path.dirname(self.fileName),iconFile)
+    if not os.path.exists(iconFilePath):
+      raise Exception("icon file %s not found"%iconFilePath)
+    httpserver.registerAddOn("%s%i"%(self.prefix,self.addonIndex),url,"%s/%s/%s"%(AVNPluginHandler.PREFIX,self.prefix,iconFile),title)
+    self.addonIndex+=1
 
+  def registerLayout(self, name, layoutFile):
+    if not os.path.isabs(layoutFile):
+      layoutFile=os.path.join(os.path.dirname(self.fileName),layoutFile)
+    if not os.path.exists(layoutFile):
+      raise Exception("layout file %s not found",layoutFile)
+    layoutHandler=AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName()) #type: AVNLayoutHandler
+    if layoutHandler is None:
+      raise Exception("no layout handler")
+    layoutHandler.registerPluginLayout(re.sub(".*\.","",self.prefix),name,layoutFile)
 
 
 class AVNPluginHandler(AVNWorker):
@@ -255,7 +278,7 @@ class AVNPluginHandler(AVNWorker):
       if hasMethods:
         AVNLog.info("creating %s" % (modulename))
         #TODO: handle multiple instances from config
-        api = ApiImpl(self,self.navdata,self.queue,modulename)
+        api = ApiImpl(self,self.navdata,self.queue,modulename,inspect.getfile(obj))
         try:
           description=obj.pluginInfo()
           if description is None or not isinstance(description,dict):

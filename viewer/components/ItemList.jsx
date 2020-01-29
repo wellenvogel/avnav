@@ -39,6 +39,7 @@ class ItemList extends React.Component{
         }
         let Content = function (props) {
             let idx = 0;
+            let existingKeys={};
             return (
                 <div className={props.className}
                      style={style}
@@ -48,7 +49,15 @@ class ItemList extends React.Component{
                     {allitems.map(function (entry) {
                         let itemProps = assign({}, entry);
                         let key = getKey(entry);
+                        //we allow for multiple items with the same name
+                        //we try at most 20 times to get a unique key by appending _idx
+                        let tries=20;
+                        while (tries > 0 && existingKeys[key]){
+                            key+="_"+idx;
+                            tries--;
+                        }
                         itemProps.key = key;
+                        existingKeys[key]=true;
                         if (self.props.selectedIndex !== undefined && idx == self.props.selectedIndex) {
                             itemProps.selected = true;
                         }

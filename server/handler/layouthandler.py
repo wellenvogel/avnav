@@ -34,7 +34,6 @@ import avnav_handlerList
 from avnav_worker import AVNWorker
 from avnav_config import AVNConfig
 from avnav_util import *
-import create_overview
 
 class LayoutInfo:
   def __init__(self,name,filename,time,isSystem=False):
@@ -115,7 +114,11 @@ class AVNLayoutHandler(AVNWorker):
       deleteKeys = []
       for key in self.layouts:
         if self.layouts[key].updateCount != updateCount:
-          deleteKeys.append(key)
+          #if we did not re-read the layout (e.g. plugin) but it is still there - we keep it
+          if not os.path.exists(self.layouts[key].fileName):
+            deleteKeys.append(key)
+          else:
+            self.layouts[key].mtime=os.path.getmtime(self.layouts[key].fileName)
       for key in deleteKeys:
         del self.layouts[key]
     except:
@@ -141,6 +144,16 @@ class AVNLayoutHandler(AVNWorker):
           info=LayoutInfo(name,file,mtime,isSystem)
           info.updateCount=updateCount
           self.layouts[key]=info
+
+  def registerPluginLayout(self,pluginName,name,fileName):
+    if not os.path.exists(fileName):
+      return False
+    name="plugin.%s.%s"%(pluginName,name)
+    key=LayoutInfo.getKey(name,True)
+    if self.layouts.get(key) is not None:
+      AVNLog.error("trying to register an already existing plugin layout %s",name)
+      return False
+    self.layouts[key]=LayoutInfo(name,fileName,os.path.getmtime(fileName),True)
 
   def getHandledCommands(self):
     return {"api": "layout",'list':'layout','upload':'layout','download':'layout','delete':'layout' }

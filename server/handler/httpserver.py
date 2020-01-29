@@ -180,7 +180,16 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       self.interfaceReader.daemon=True
       self.interfaceReader.start()
     self.serve_forever()
-    
+
+  def registerAddOn(self,key,url,iconPath,title=None):
+    newAddon = {
+      'key': key,
+      'url': url,
+      'icon': iconPath,
+      'title': title
+    }
+    #TODO: check existing key
+    self.addons.append(newAddon)
   def handlePathmapping(self,path):
     if not self.pathmappings is None:
       for mk in self.pathmappings.keys():

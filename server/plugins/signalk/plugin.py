@@ -89,9 +89,10 @@ class Plugin:
     except:
       self.api.log("exception while reading config values %s",traceback.format_exc())
       raise
-
     self.api.log("started with port %d, period %d"%(port,period))
     baseUrl="http://localhost:%d/signalk"%port
+    self.api.registerUserApp("http://$HOST:%s"%port,"signalk.svg")
+    self.api.registerLayout("example","example.json")
     while True:
       apiUrl=None
       while apiUrl is None:
@@ -129,6 +130,9 @@ class Plugin:
           data=json.loads(response.read())
           self.api.debug("read: %s",json.dumps(data))
           self.storeData(data,self.PATH)
+          name=data.get('name')
+          if name is not None:
+            self.api.addData(self.PATH+".name",name)
           time.sleep(float(period)/1000.0)
       except:
         self.api.log("error when fetching from signalk %s: %s",apiUrl,traceback.format_exc())

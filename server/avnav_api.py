@@ -149,3 +149,23 @@ class AVNApi:
     @return:
     """
     raise NotImplemented()
+
+  def registerUserApp(self,url,iconFile,title=None):
+    """
+    register a user app to be displayed
+    this should be called only early - i.e. at the beginning of the run method
+    @param url: the url to be used to connect, $HOST will be replaced by the current host
+    @param iconFile: a file name for the icon file, relative pathes to this plugin dir
+    @param title: if set - show a title bar with this title
+    @return:
+    """
+    raise NotImplemented()
+
+  def registerLayout(self,name,layoutFile):
+    """
+    register a system layout
+    @param name: a name for the layout
+    @param layoutFile: a file (relative to the plugin dir)
+    @return:
+    """
+    raise NotImplemented()

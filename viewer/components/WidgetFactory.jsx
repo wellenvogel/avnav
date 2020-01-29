@@ -56,9 +56,7 @@ class WidgetFactory{
         if (!props.name) return;
         let e = this.findWidget(props.name);
         if (!e ) {
-            e= {
-                wClass:DirectWidget
-            };
+            return;
         }
         let mergedProps = assign({}, e, props, opt_properties);
         if (mergedProps.key === undefined) mergedProps.key = props.name;
@@ -142,9 +140,6 @@ class WidgetFactory{
         else{
             if (! internalDescription.formatter){
                 throw new Error("formatter must be set for the default widget");
-            }
-            if (! internalDescription.storeKeys || ! internalDescription.storeKeys.value){
-                throw new Error("you must provide storeKeys with at least a \"value\" key for the default widget")
             }
         }
         reservedParameters.forEach((p)=>{

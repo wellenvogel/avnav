@@ -260,6 +260,9 @@ let widgetList=[
         name: 'RoutePoints',
         wclass: RoutePointsWidget,
         storeKeys: RoutePointsWidget.storeKeys
+    },
+    {
+        name: 'Default' //a way to access the default widget providing all parameters in the layout
     }
 
 
