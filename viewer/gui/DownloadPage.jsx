@@ -331,19 +331,88 @@ const uploadRouteData=(filename,data)=>{
     });
 };
 
-const uploadLayoutData=(fileName,data)=>{
-    let itemName=LayoutHandler.fileNameToServerName(fileName);
-    if (entryExists(itemName)){
-        Toast("Layout "+itemName+" already exists");
+class LayoutNameDialog extends React.Component{
+    constructor(props){
+        super(props);
+        this.state={
+            value:props.value,
+            exists:props.checkName?props.checkName(props.value):false,
+            active:props.checkActive?props.checkActive(props.value):false};
+        this.valueChanged=this.valueChanged.bind(this);
     }
-    LayoutHandler.uploadLayout(fileName,data,true)
+    valueChanged(event) {
+        let value=event.target.value;
+        let nstate={value:value};
+        if (this.props.checkName){
+            nstate.exists=this.props.checkName(value);
+        }
+        if (this.props.checkActive){
+            nstate.active=this.props.checkActive(value)
+        }
+        this.setState(nstate);
+    }
+    render () {
+        let info="New Layout";
+        if (this.state.active){
+            info="Active Layout";
+        }
+        else{
+            if (this.state.exists){
+                info="Existing Layout";
+            }
+        }
+        return (
+            <div>
+                <h3 className="dialogTitle">{'Select Layout Name'}</h3>
+                <div>
+                    <div className="row"><label>{info}</label></div>
+                    <div className="row"><label>{'user.'}</label>
+                        <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
+                    </div>
+                </div>
+                <button name="ok" onClick={()=>{
+                    this.props.closeCallback();
+                    this.props.okCallback(this.state.value);
+                    }}>{this.state.exists?"Overwrite":"Ok"}</button>
+                <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
+                <div className="clear"></div>
+            </div>
+        );
+    }
+};
+
+const userlayoutExists=(name)=>{
+    let itemName=LayoutHandler.fileNameToServerName(name);
+    return entryExists(itemName);
+};
+
+const uploadLayoutData = (fileName, data)=> {
+    if (userlayoutExists(fileName)) {
+        let baseName=LayoutHandler.nameToBaseName(fileName);
+        OverlayDialog.dialog((props)=> {
+            return <LayoutNameDialog
+                {...props}
+                exists={true}
+                value={baseName}
+                okCallback={(newName)=>{
+                        LayoutHandler.uploadLayout(newName,data,true)
+                            .then((result)=>{fillData();})
+                            .catch((error)=>{Toast("unable to upload layout: "+error);})
+                   }}
+                checkName={userlayoutExists}
+                checkActive={(name)=>{return LayoutHandler.isActiveLayout(LayoutHandler.fileNameToServerName(name))}}
+                />
+        });
+        return;
+    }
+    LayoutHandler.uploadLayout(fileName, data, true)
         .then(
-        (result)=>{
+        (result)=> {
             fillData();
         }
     ).catch(
-        (error)=>{
-            Toast("unable to upload layout: "+error);
+        (error)=> {
+            Toast("unable to upload layout: " + error);
         }
     )
 };

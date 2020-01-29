@@ -156,6 +156,7 @@ let keys={
             currentDialog: K, //holds the data for the currently visible dialog - if any
             windowDimensions: K,
             layout: K, //the loaded layout object
+            layoutName: K,
             layoutSequence: K, //updated on layout load
             reloadSequence: K, //will be changed if new data from server
             buttonFontSize: K,

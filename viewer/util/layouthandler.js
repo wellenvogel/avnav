@@ -30,6 +30,9 @@ class LayoutHandler{
     hasLoaded(name){
         return (name == this.name && this.layout);
     }
+    isActiveLayout(name){
+        return name == globalStore.getData(keys.gui.global.layoutName);
+    }
 
     /**
      * loads a layout but still does not activate it
@@ -116,12 +119,30 @@ class LayoutHandler{
                 reject(e);
                 return;
             }
+            let layoutName=this.fileNameToServerName(name);
+            let isActive=this.isActiveLayout(layoutName);
             if (this.storeLocally) {
-                this.temporaryLayouts[this.fileNameToServerName(name)] = layout;
+                this.temporaryLayouts[layoutName] = layout;
+                if (isActive){
+                    this.name=layoutName;
+                    this.layout=layout;
+                    this.activateLayout();
+                }
                 resolve({status:'OK'});
                 return;
             }
-            resolve(Requests.postJson("?request=upload&type=layout&ignoreExisting=true&name=" + encodeURIComponent(name), layout));
+            Requests.postJson("?request=upload&type=layout&name=" + encodeURIComponent(name), layout).
+                then((result)=>{
+                    if (isActive){
+                        this.name=layoutName;
+                        this.layout=layout;
+                        this.activateLayout();
+                    }
+                    resolve(result);
+                }).
+                catch((error)=>{
+                    reject(error);
+                })
         });
     }
 
@@ -174,6 +195,7 @@ class LayoutHandler{
         if (this.layout.keys){
            KeyHandler.mergeMappings(this.layout.keys);
         }
+        globalStore.storeData(keys.gui.global.layoutName,this.name);
         if (! this.layout.widgets) return false;
         globalStore.storeData(keys.gui.global.layout,this.layout.widgets);
         let ls=globalStore.getData(keys.gui.global.layoutSequence,0);
