@@ -72,7 +72,7 @@ class SerialReader():
   #navdata - a nav data object (can be none if this reader doesn not directly write)
   #a write data method used to write a received line
   def __init__(self,param,writeData,infoHandler,sourceName):
-    for p in ('port','name','timeout'):
+    for p in ('port','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial reader")
     self.param=param
@@ -331,10 +331,10 @@ class SerialReader():
         
   def setInfo(self,txt,status):
     if not self.infoHandler is None:
-      self.infoHandler.setInfo(self.getName(),txt,status)
+      self.infoHandler.setInfo('main',"%s:%s"%(self.param['port'],txt),status)
   def deleteInfo(self):
     if not self.infoHandler is None:
-      self.infoHandler.deleteInfo(self.getName())
+      self.infoHandler.deleteInfo('main')
  
 
 #a Worker to directly read from a serial line using pyserial

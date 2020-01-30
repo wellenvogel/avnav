@@ -381,7 +381,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     for handler in AVNWorker.getAllHandlers(True):
       entry={'configname':handler.getConfigName(),
              'config': handler.getParam(),
-             'name':handler.getName(),
+             'name':handler.getStatusName(),
              'info':handler.getInfo(),
              'disabled': handler.isDisabled(),
              'properties':handler.getStatusProperties() if not handler.isDisabled() else {}}

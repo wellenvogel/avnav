@@ -43,7 +43,8 @@ class SocketReader():
     pattern=AVNUtil.getNMEACheck()
     peer = "unknown connection"
     try:
-      peer="%s:%d"%sock.getpeername()
+      peer="%s:%d"%sock.getsockname()
+      peer+="-%s:%d"%sock.getpeername()
     except:
       pass
     AVNLog.info("%s established, start reading",peer)

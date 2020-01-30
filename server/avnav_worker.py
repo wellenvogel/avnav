@@ -106,7 +106,7 @@ class AVNWorker(threading.Thread):
     return {}
   def getInfo(self):
     try:
-      rt=self.info.copy();
+      rt=self.info.copy()
       st=self.status.copy()
       rta=[]
       for k in rt.keys():
@@ -118,9 +118,9 @@ class AVNWorker(threading.Thread):
           rta.append(elem)
         except:
           pass
-      return {'name':self.getName(),'items':rta}
+      return {'name':self.getStatusName(),'items':rta}
     except:
-      return {'name':self.getName(),'items':[],'error':"no info available"}
+      return {'name':self.getStatusName(),'items':[],'error':"no info available"}
   def setInfo(self,name,info,status):
     self.info[name]=info
     self.status[name]=status
@@ -195,6 +195,13 @@ class AVNWorker(threading.Thread):
     if n is not None and n != '':
       return n
     return re.sub("^AVN", "", self.getConfigName())
+
+  def getStatusName(self):
+    rt=re.sub("^AVN", "", self.getConfigName())
+    n = self.getParamValue('name')
+    if n is not None and n != '':
+      return "%s(%s)"%(rt,n)
+    return rt
 
   def getThreadPrefix(self):
     '''
