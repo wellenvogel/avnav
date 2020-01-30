@@ -243,11 +243,6 @@ class AVNWorker(threading.Thread):
   DEFAULT_CONFIG_PARAM={
     'name':''
   }
-  @classmethod
-  def getAllConfigParam(cls,child=None):
-    rt=cls.DEFAULT_CONFIG_PARAM.copy()
-    rt.update(cls.getConfigParam(child))
-    return rt
 
   @classmethod
   def preventMultiInstance(cls):
@@ -270,6 +265,7 @@ class AVNWorker(threading.Thread):
       for k in attrs.keys():
         sparam[k]=attrs[k]
       return sparam
+    sparam.update(cls.DEFAULT_CONFIG_PARAM)
     for k in sparam.keys():
       dv=sparam[k]
       if (isinstance(dv,str)):
