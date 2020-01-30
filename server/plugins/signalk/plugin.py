@@ -95,6 +95,7 @@ class Plugin:
     self.api.registerLayout("example","example.json")
     while True:
       apiUrl=None
+      self.api.setStatus("STARTED", "connecting at %s"%baseUrl)
       while apiUrl is None:
         responseData=None
         try:
@@ -114,7 +115,7 @@ class Plugin:
             if apiUrl is not None:
               break
         except:
-          self.api.log("unable to connect to signalk at url %s: %s" % (baseUrl, sys.exc_info()[0]))
+          self.api.log("unable to connect at url %s: %s" % (baseUrl, sys.exc_info()[0]))
           time.sleep(1)
           continue
         if apiUrl is None:
@@ -122,6 +123,7 @@ class Plugin:
         else:
           self.api.log("found api url %s",apiUrl)
       apiUrl=apiUrl+"vessels/self"
+      self.api.setStatus("NMEA", "connected at %s" % apiUrl)
       try:
         while True:
           response=urllib.urlopen(apiUrl)
