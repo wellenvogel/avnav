@@ -190,6 +190,14 @@
         },
         {
           "name": "signalKCelsius",
+          "className": "skWaterTemp",
+          "caption": "TempWater",
+          "storeKeys": {
+            "value": "nav.gps.signalk.environment.water.temperature"
+          }
+        },
+        {
+          "name": "signalKCelsius",
           "className": "skOutTemp",
           "caption": "TempOut",
           "storeKeys": {
@@ -197,19 +205,28 @@
           }
         },
         {
-          "name": "Default",
+          "name": "signalKCelsius",
+          "className": "skInTemp",
+          "caption": "TempIn",
+          "storeKeys": {
+            "value": "nav.gps.signalk.environment.inside.temperature"
+          }
+        },
+        {
+          "name": "signalKCelsius",
+          "className": "skCoolTemp",
+          "caption": "TempCool",
+          "storeKeys": {
+            "value": "nav.gps.signalk.environment.inside.refrigerator.temperature"
+          }
+        },
+        {
+          "name": "signalKPressureHpa",
           "caption": "Pressure",
-          "unit": "Pa",
-          "formatter": "formatDecimal",
-          "formatterParameters": [3,0],
           "default": "???",
           "storeKeys": {
             "value": "nav.gps.signalk.environment.outside.pressure"
           }
-        },
-        {
-          "name": "Empty",
-          "weight": 3
         }
       ]
     },
