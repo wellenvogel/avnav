@@ -25,7 +25,6 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
 import time
 from avnav_util import *
 from avnav_nmea import *
@@ -54,7 +53,6 @@ class SerialReader():
   def getConfigParam(cls):
     cfg={
                'port':None,
-               'name':None,
                'timeout': 1,
                'baud': 4800,
                'minbaud':0, #if this is set to anything else, try autobauding between baud and minbaud
@@ -73,13 +71,14 @@ class SerialReader():
   #param - the config dict
   #navdata - a nav data object (can be none if this reader doesn not directly write)
   #a write data method used to write a received line
-  def __init__(self,param,writeData,infoHandler):
+  def __init__(self,param,writeData,infoHandler,sourceName):
     for p in ('port','name','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial reader")
     self.param=param
     self.writeData=writeData
     self.infoHandler=infoHandler
+    self.sourceName=sourceName
     if self.writeData is None:
       raise Exception("writeData has to be set")
     self.startpattern=AVNUtil.getNMEACheck()
@@ -122,7 +121,7 @@ class SerialReader():
     lastTime=time.time()
     try:
       self.setInfo("opening %s at %d baud"%(portname,baud),AVNWorker.Status.STARTED)
-      f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
+      f=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
       self.setInfo("port open",AVNWorker.Status.STARTED)
       if autobaud:
         starttime=time.time()
@@ -312,7 +311,7 @@ class SerialReader():
             self.setInfo("receiving",AVNWorker.Status.NMEA)
             hasNMEA=True
             if not self.writeData is None:
-              self.writeData(data,source=self.getName())
+              self.writeData(data,source=self.sourceName)
             else:
               AVNLog.debug("unable to write data")
 
@@ -371,15 +370,13 @@ class AVNSerialReader(AVNWorker):
     return rt
     
   def __init__(self,param):
-    for p in ('port','name','timeout'):
+    for p in ('port','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial reader")
     self.writeData=None
     AVNWorker.__init__(self, param)
     
-  
-  def getName(self):
-    return "SerialReader "+self.param['name']
+
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have tp find the feeder...
   def start(self):
@@ -393,8 +390,8 @@ class AVNSerialReader(AVNWorker):
      
   #thread run method - just try forever  
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    reader=SerialReader(self.param, self.writeData,self)
+    self.setName("%s-%s"%(self.getThreadPrefix(),self.getParamValue('port')))
+    reader=SerialReader(self.param, self.writeData,self,self.getSourceName(self.getParamValue('port')))
     reader.run()
 avnav_handlerList.registerHandler(AVNSerialReader)
 

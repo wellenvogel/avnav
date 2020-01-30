@@ -26,12 +26,10 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import time
-from avnav_util import *
-from avnav_nmea import *
-from avnav_worker import *
-from avnav_serial import *
+from avnserial import *
 import avnav_handlerList
+from avnav_worker import AVNWorker
+
 hasSerial=False
 
 try:
@@ -64,7 +62,7 @@ class SerialWriter(SerialReader):
   #param - the config dict
   #navdata - a nav data object (can be none if this reader does not directly write)
   #a write data method used to write a received line
-  def __init__(self,param,writeData,infoHandler):
+  def __init__(self,param,writeData,infoHandler,sourceName):
     for p in ('port','name','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial writer")
@@ -82,11 +80,8 @@ class SerialWriter(SerialReader):
     #the serial device
     self.device=None
     self.buffer=None
+    self.sourceName=sourceName
 
-  def getName(self):
-    if self.param.get('combined') is not None and unicode(self.param.get('combined')).upper()=="TRUE":
-      return "SerialReaderWriter-"+self.param['name']
-    return "SerialWriter-"+self.param['name']
    
   def stopHandler(self):
     self.doStop=True
@@ -116,7 +111,7 @@ class SerialWriter(SerialReader):
     lastTime=time.time()
     try:
       self.setInfoWithKey("writer","opening %s at %d baud"%(portname,baud),AVNWorker.Status.STARTED)
-      f=serial.Serial(pnum,timeout=timeout,baudrate=baud,bytesize=bytesize,parity=parity,stopbits=stopbits,xonxoff=xonxoff,rtscts=rtscts)
+      f=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
       self.setInfoWithKey("writer","port open",AVNWorker.Status.STARTED)
       return f
     except Exception:
@@ -141,7 +136,7 @@ class SerialWriter(SerialReader):
    
   #the run method - just try forever  
   def run(self):
-    threading.current_thread().setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    threading.current_thread().setName("[%s]%s - %s"%(AVNLog.getThreadId(),self.getName(),self.param['port']))
     self.device=None
     init=True
     isOpen=False
@@ -215,7 +210,7 @@ class SerialWriter(SerialReader):
     if filterstr != "":
       filter=filterstr.split(',')
     hasNmea=False
-    source=self.getName()
+    source=self.sourceName
     while True and not self.doStop:
       try:
         if self.device is not None:
@@ -291,19 +286,16 @@ class AVNSerialWriter(AVNWorker):
     return rt
     
   def __init__(self,param):
-    for p in ('port','name','timeout'):
+    for p in ('port','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial writer")
     AVNWorker.__init__(self, param)
-    
-  
-  def getName(self):
-    return "SerialWriter "+self.param['name']
+
      
   #thread run method - just try forever  
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    writer=SerialWriter(self.param,self.writeData,self)
+    self.setName(self.getThreadPrefix())
+    writer=SerialWriter(self.param,self.writeData,self,self.getSourceName(self.getParamValue('port')))
     writer.run()
 avnav_handlerList.registerHandler(AVNSerialWriter)
 

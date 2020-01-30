@@ -161,26 +161,11 @@ class AVNBMP180Reader(AVNWorker):
     }
     return rt
 
-  @classmethod
-  def createInstance(cls, cfgparam):
-    if cfgparam.get('name') is None:
-      cfgparam['name'] = "BMP180Reader"
-    rt = AVNBMP180Reader(cfgparam)
-    return rt
-
-  def __init__(self, param):
-    self.feederWrite = None
-    AVNWorker.__init__(self, param)
-    if param.get('name') is None:
-      self.param['name'] = "BMP180Reader"
 
   def isDisabled(self):
     if not hasBMP180:
       return True
     return super(AVNBMP180Reader, self).isDisabled()
-
-  def getName(self):
-    return self.param['name']
 
 
   # thread run method - just try forever
@@ -188,13 +173,13 @@ class AVNBMP180Reader(AVNWorker):
     global bus
     if hasBMP180:
       bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-    self.setName("[%s]%s" % (AVNLog.getThreadId(), self.getName()))
+    self.setName(self.getThreadPrefix())
     self.setInfo('main', "reading BMP180", AVNWorker.Status.NMEA)
     addr = int(self.getStringParam('addr'),16)
     (chip_id,chip_version) = readBmp180Id(addr)
     info = "Using BMP180 Chip: %d Version: %d " % (chip_id,chip_version)
     AVNLog.info(info)
-    source=self.getName()
+    source=self.getSourceName(addr)
     while True:
       try:
         temperature,pressure = readBmp180(addr)

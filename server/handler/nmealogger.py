@@ -63,8 +63,6 @@ class AVNNmeaLogger(AVNWorker):
             'interval':'5' #interval in seconds
 
     }
-  def getName(self):
-    return "NmeaLogger"
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,data):
@@ -75,7 +73,7 @@ class AVNNmeaLogger(AVNWorker):
     return str
     
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
+    self.setName(self.getThreadPrefix())
     trackdir=AVNConfig.getDirWithDefault(self.param,"trackdir")
     filterstr=self.getStringParam("filter")
     if filterstr is None or filterstr == "":

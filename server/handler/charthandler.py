@@ -54,10 +54,8 @@ class AVNChartHandler(AVNWorker):
   @classmethod
   def preventMultiInstance(cls):
     return True
-  def getName(self):
-    return "AVNChartHandler"
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName(self.getThreadPrefix())
     server=self.findHandlerByName("AVNHttpServer")
     if server is None:
       AVNLog.error("unable to find AVNHttpServer")

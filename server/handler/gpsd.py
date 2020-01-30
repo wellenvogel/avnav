@@ -26,20 +26,14 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import time
-import subprocess
-import threading
-import os
 import socket
 
-from avnav_util import *
-from avnav_nmea import *
+from avnserial import *
 from avnav_worker import *
-from avnav_serial import *
 hasSerial=False
 
 try:
-  import serial
+  import avnserial
   hasSerial=True
 except:
   pass
@@ -64,10 +58,7 @@ import avnav_handlerList
 class AVNGpsd(AVNWorker):
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
-  #should be overridden
-  def getName(self):
-    return "GPSDReader"
-  
+
   #get the XML tag in the config file that describes this worker
   @classmethod
   def getConfigName(cls):
@@ -114,7 +105,7 @@ class AVNGpsd(AVNWorker):
       gpsdcommandli=gpsdcommand.split()
       timeout=self.getFloatParam('timeout')
       noCheck=self.getBoolParam('nocheck')
-      self.setName("[%s]%s-dev:%s-port:%d"%(AVNLog.getThreadId(),self.getName(),device,port))
+      self.setName("%s-dev:%s-port:%d"%(self.getThreadPrefix(),device,port))
       if init:
         AVNLog.info("started for %s with command %s, timeout %f",device,gpsdcommand,timeout)
         self.setInfo('main', "waiting for device %s"%(unicode(device)), AVNWorker.Status.STARTED)
@@ -131,7 +122,7 @@ class AVNGpsd(AVNWorker):
           #so we would avoid starting gpsd...
           try:
             AVNLog.debug("try to open device %s",device)
-            ts=serial.Serial(device,timeout=timeout,baudrate=baud)
+            ts=serial.Serial(device, timeout=timeout, baudrate=baud)
             AVNLog.debug("device %s opened, try to read 1 byte",device)
             bytes=ts.read(1)
             ts.close()
@@ -367,10 +358,6 @@ class AVNGpsdFeeder(AVNGpsd):
   def getStartupGroup(cls):
     return 1
 
-  @classmethod
-  def createInstance(cls, cfgparam):
-    return cls(cfgparam)
-
 
   def __init__(self,cfgparam):
     AVNGpsd.__init__(self, cfgparam)
@@ -382,16 +369,9 @@ class AVNGpsdFeeder(AVNGpsd):
     self.maxlist=self.getIntParam('maxList', True)
     self.gpsdproc=None
     self.gpsdsocket=None
-    name=self.getStringParam('name')
-    if not name is None and not name == "":
-      self.setName(name)
-    else:
-      self.setName(self.getConfigName())
     if not hasGpsd and self.getBoolParam('useGpsd'):
       raise Exception("no gpsd installed, cannot run %s"%(self.getConfigName()))
-    
-  def getName(self):
-    return self.name
+
   
   def addNMEA(self, entry,source=None,addCheckSum=False):
     """
@@ -498,7 +478,7 @@ class AVNGpsdFeeder(AVNGpsd):
     
   #a thread to feed the gpsd socket
   def feed(self):
-    threading.current_thread().setName("[%s]%s[gpsd feeder]"%(AVNLog.getThreadId(),self.getName()))
+    threading.current_thread().setName("%s[gpsd feeder]"%(self.getThreadPrefix()))
     infoName="gpsdFeeder"
     while True:
       try:
@@ -544,7 +524,7 @@ class AVNGpsdFeeder(AVNGpsd):
   
   def standaloneFeed(self):
     infoName="standaloneFeeder"
-    threading.current_thread().setName("[%s]%s[standalone feed]"%(AVNLog.getThreadId(),self.getName()))
+    threading.current_thread().setName("%s[standalone feed]"%(self.getThreadPrefix()))
     AVNLog.info("standalone feeder started")
     nmeaParser=NMEAParser(self.navdata)
     self.setInfo(infoName, "running", AVNWorker.Status.RUNNING)

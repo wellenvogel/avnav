@@ -199,26 +199,11 @@ class AVNBME280Reader(AVNWorker):
     }
     return rt
 
-  @classmethod
-  def createInstance(cls, cfgparam):
-    if cfgparam.get('name') is None:
-      cfgparam['name'] = "BME280Reader"
-    rt = AVNBME280Reader(cfgparam)
-    return rt
-
-  def __init__(self, param):
-    self.feederWrite = None
-    AVNWorker.__init__(self, param)
-    if param.get('name') is None:
-      self.param['name'] = "BME280Reader"
 
   def isDisabled(self):
     if not hasBME280:
       return True
     return super(AVNBME280Reader, self).isDisabled()
-
-  def getName(self):
-    return self.param['name']
 
 
 
@@ -228,13 +213,13 @@ class AVNBME280Reader(AVNWorker):
     if hasBME280:
       # BME280DEVICE = 0x77 # Default device I2C Address
       bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-    self.setName("[%s]%s" % (AVNLog.getThreadId(), self.getName()))
+    self.setName(self.getThreadPrefix())
     self.setInfo('main', "reading BME280", AVNWorker.Status.NMEA)
     addr = int(self.getStringParam('addr'),16)
     (chip_id, chip_version) = readBME280ID(addr)
     info = "Using BME280 Chip: %d Version: %d" % (chip_id, chip_version)
     AVNLog.info(info)
-    source=self.getName()
+    source=self.getSourceName(addr)
     while True:
       try:
         temperature,pressure,humidity = readBME280All(addr)

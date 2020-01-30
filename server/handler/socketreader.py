@@ -58,25 +58,14 @@ class AVNSocketReader(AVNWorker,SocketReader):
                'minTime':0,        #if tthis is set, wait this time before reading new data (ms)
     }
     return rt
-  @classmethod
-  def createInstance(cls, cfgparam):
-    if cfgparam.get('name') is None:
-      cfgparam['name']="SocketReader"
-    rt=AVNSocketReader(cfgparam)
-    return rt
-    
+
   def __init__(self,param):
     for p in ('port','host'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for socket reader")
     self.feederWrite=None
     AVNWorker.__init__(self, param)
-    if param.get('name') is None:
-      self.param['name']="SocketReader-%s-%d"%(self.param['host'],int(self.param['port']))
-    
-  
-  def getName(self):
-    return self.param['name']
+
 
   def writeData(self,data,source):
     AVNWorker.writeData(self,data,source)
@@ -85,7 +74,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
      
   #thread run method - just try forever  
   def run(self):
-    self.setName("[%s]%s-%s:%d"%(AVNLog.getThreadId(),self.getName(),self.getStringParam('host'),self.getIntParam('port')))
+    self.setName("%s-%s:%d"%(self.getThreadPrefix(),self.getStringParam('host'),self.getIntParam('port')))
     info="%s:%d"%(self.getStringParam('host'),self.getIntParam('port'))
     while True:
       try:
@@ -93,16 +82,16 @@ class AVNSocketReader(AVNWorker,SocketReader):
         sock=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getIntParam('timeout'))
         self.setInfo('main',"connected to %s"%(info,),AVNWorker.Status.RUNNING)
       except:
-        AVNLog.info("exception while trying to connect to %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
+        AVNLog.info("exception while trying to connect to %s %s",info,traceback.format_exc())
         self.setInfo('main',"unable to connect to %s"%(info,),AVNWorker.Status.ERROR)
         time.sleep(2)
         continue
-      AVNLog.info("successfully connected to %s:%d",self.getStringParam('host'),self.getIntParam('port'))
+      AVNLog.info("successfully connected to %s",info)
       try:
-        self.readSocket(sock,'main')
+        self.readSocket(sock,'main',self.getSourceName(info))
         time.sleep(2)
       except:
-        AVNLog.info("exception while reading from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
+        AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())
 avnav_handlerList.registerHandler(AVNSocketReader)
         
         

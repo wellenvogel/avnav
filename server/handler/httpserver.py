@@ -156,11 +156,9 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.handlerMap={}
     self.externalHandlers={} #prefixes that will be handled externally
     BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
-  def getName(self):
-    return "HTTPServer"
   
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),"HTTPServer"))
+    self.setName(self.getThreadPrefix())
     AVNLog.info("HTTP server "+self.server_name+", "+unicode(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(unicode(self.server_port)),AVNWorker.Status.RUNNING)
     self.gemfhandler=threading.Thread(target=self.handleGemfFiles)

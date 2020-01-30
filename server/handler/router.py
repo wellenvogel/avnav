@@ -136,15 +136,11 @@ class AVNRouter(AVNWorker):
       return rt
     return None
   
-  @classmethod
-  def createInstance(cls, cfgparam):
-    return AVNRouter(cfgparam)
 
   ALARMS=Enum(['gps','waypoint','anchor','mob'])
   
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
-    self.setName(self.getName())
     self.routesdir=None
     self.currentLeg=None
     self.activeRoute=None
@@ -169,9 +165,7 @@ class AVNRouter(AVNWorker):
       v=self.fromGpx[k]
       self.toGpx[v]=k
     
-  def getName(self):
-    return "AVNRouter"
-  
+
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have to find the feeder...
   def start(self):
@@ -396,7 +390,7 @@ class AVNRouter(AVNWorker):
         
   #this is the main thread - listener
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName(self.getThreadPrefix())
     interval=self.getIntParam('interval')
     routesdir=AVNConfig.getDirWithDefault(self.param,'routesdir','routes')
     self.routesdir=routesdir

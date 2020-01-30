@@ -54,7 +54,6 @@ class AVNUdpWriter(AVNWorker):
       rt={
           'host'      : 'localhost',                 
           'port'      : 2000,       #port
-          'name'      : '',
           'feederName': '',         #if set, use this feeder
           'broadcast' : 'true',
           'filter'    : ''          #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
@@ -68,11 +67,7 @@ class AVNUdpWriter(AVNWorker):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for udp writer")
     AVNWorker.__init__(self, param)
-    if param.get('name') is None:
-      self.param['name']="UdpWriter-%s-%d"%(self.getStringParam('host'),int(self.getIntParam('port'))) 
-    
-  def getName(self):
-    return self.getStringParam('name')
+
 
   # make some checks when we have to start
   # we cannot do this on init as we potentiall have to find the feeder...
@@ -86,7 +81,7 @@ class AVNUdpWriter(AVNWorker):
   
 
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName("%s-host:%s-port%s"%(self.getThreadPrefix(),self.param['host'],self.param['port']))
     while True:
        cs = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
        cs.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

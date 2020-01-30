@@ -69,8 +69,6 @@ class AVNTrackWriter(AVNWorker):
 
   def getTrackDir(self):
     return self.trackdir
-  def getName(self):
-    return "TrackWriter"
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,timestamp,data):
@@ -291,7 +289,7 @@ class AVNTrackWriter(AVNWorker):
       time.sleep(60)
     
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
+    self.setName(self.getThreadPrefix())
     f=None
     self.fname=None
     initial=True

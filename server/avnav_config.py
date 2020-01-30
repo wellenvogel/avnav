@@ -132,7 +132,7 @@ class AVNConfig(sax.handler.ContentHandler):
               AVNLog.error("error parsing default config %s for %s:%s",ai,handler.getConfigName(),sys.exc_info()[1])
               return False
           else:
-            cfg=handler.parseConfig({}, handler.getConfigParam(None))
+            cfg=handler.parseConfig({}, handler.getAllConfigParam(None))
             cfg.update(self.baseParam)
             handler.createInstance(cfg)
     return len(AVNWorker.getAllHandlers()) > 0
@@ -141,7 +141,7 @@ class AVNConfig(sax.handler.ContentHandler):
     if not self.currentHandlerClass is None:
       #we are at a child element
       #currently we ignore any deeper nesting
-      childParamDefaults=self.currentHandlerClass.getConfigParam(name)
+      childParamDefaults=self.currentHandlerClass.getAllConfigParam(name)
       if childParamDefaults is None:
         return
       childParam=AVNWorker.parseConfig(attrs,childParamDefaults)
@@ -156,7 +156,7 @@ class AVNConfig(sax.handler.ContentHandler):
         raise Exception("invalid xml for default config, expected %s, got %s"%(self.restrictedHandler.getConfigName(),name))
     if handler is not None:
       self.currentHandlerClass=handler
-      self.currentHandlerData=handler.parseConfig(attrs, handler.getConfigParam(None))
+      self.currentHandlerData=handler.parseConfig(attrs, handler.getAllConfigParam(None))
       AVNLog.ld("handler config started for ",name,self.currentHandlerData)
       return
     AVNLog.warn("unknown XML element %s - ignoring",name)

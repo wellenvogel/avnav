@@ -28,8 +28,7 @@
 import re
 import threading
 import copy
-from avnav_util import Enum
-
+from avnav_util import Enum, AVNLog
 
 __author__="Andreas"
 __date__ ="$29.06.2014 21:09:10$"
@@ -192,8 +191,36 @@ class AVNWorker(threading.Thread):
     pass
   #should be overridden
   def getName(self):
+    n=self.getParamValue('name')
+    if n is not None and n != '':
+      return n
     return re.sub("^AVN", "", self.getConfigName())
-  
+
+  def getThreadPrefix(self):
+    '''
+    nicely compute the name prefix for a thread
+    if we have the default name (just from the config name) - avoid to have this twice
+    @return:
+    '''
+    n=self.getName()
+    if "AVN%s"%n == self.getConfigName():
+      return "[ %s]-%s"%(AVNLog.getThreadId(),n)
+    else:
+      return "[ %s]-%s-%s" % (AVNLog.getThreadId(), self.getConfigName(),n)
+
+  def getSourceName(self,defaultSuffix=None):
+    '''
+    get the name for the data source
+    @param defaultSuffix:
+    @return: returns either the explicitely set name or the default name appended by the suffix
+    '''
+    rt=self.getParamValue('name')
+    if rt is not None and rt != "":
+      return rt
+    if defaultSuffix is None:
+      defaultSuffix="?"
+    return "%s-%s"%(self.getName(),defaultSuffix)
+
   #get the XML tag in the config file that describes this worker
   @classmethod
   def getConfigName(cls):
@@ -205,6 +232,16 @@ class AVNWorker(threading.Thread):
   @classmethod
   def getConfigParam(cls,child=None):
     raise Exception("getConfigParam must be overwritten")
+
+  DEFAULT_CONFIG_PARAM={
+    'name':''
+  }
+  @classmethod
+  def getAllConfigParam(cls,child=None):
+    rt=cls.DEFAULT_CONFIG_PARAM.copy()
+    rt.update(cls.getConfigParam(child))
+    return rt
+
   @classmethod
   def preventMultiInstance(cls):
     """overwrite this to return true if you only allow one instance

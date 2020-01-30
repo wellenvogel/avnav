@@ -62,9 +62,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
     AVNWorker.__init__(self, cfgparam)
     self.maplock=threading.Lock()
     self.addrmap={}
-    
-  def getName(self):
-    return "AVNBlueToothReader"
+
 
    
   #return True if added
@@ -91,17 +89,17 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
   #disconnected
   def readBT(self,host,port):
     infoName="BTReader-%s"%(host)
-    threading.current_thread().setName("[%s]%s[Reader %s]"%(AVNLog.getThreadId(),self.getName(),host))
+    threading.current_thread().setName("%s[Reader %s]"%(self.getThreadPrefix(),host))
     AVNLog.debug("started bluetooth reader thread for %s:%s",unicode(host),unicode(port))
     self.setInfo(infoName, "connecting", AVNWorker.Status.STARTED)
     try:
       sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
       sock.connect((host, port))
       AVNLog.info("bluetooth connection to %s established",host)
-      self.readSocket(sock,infoName)
+      self.readSocket(sock,infoName,self.getSourceName(host))
       sock.close()
     except Exception as e:
-      AVNLog.debug("exception fro bluetooth device: %s",traceback.format_exc())
+      AVNLog.debug("exception from bluetooth device: %s",traceback.format_exc())
       try:
         sock.close()
       except:
@@ -114,7 +112,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
   
   #this is the main thread - this executes the bluetooth polling
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName("%s-main"%(self.getThreadPrefix()))
     time.sleep(2) # give a chance to have the socket open...   
     #now start an endless loop with BT discovery...
     self.setInfo('main', "discovering", AVNWorker.Status.RUNNING)

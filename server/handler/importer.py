@@ -85,8 +85,7 @@ class AVNImporter(AVNWorker):
 
     
   
-  def getName(self):
-    return "Importer "
+
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have to find the feeder...
   def start(self):
@@ -118,7 +117,7 @@ class AVNImporter(AVNWorker):
      
   #thread run method - just try forever  
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName(self.getThreadPrefix())
     self.setInfo("main","monitoring started for %s"%(self.importDir),AVNWorker.Status.NMEA)
     self.setInfo("converter","free",AVNWorker.Status.INACTIVE)
     while True:

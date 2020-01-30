@@ -64,33 +64,18 @@ class AVNSenseHatReader(AVNWorker):
     }
     return rt
 
-  @classmethod
-  def createInstance(cls, cfgparam):
-    if cfgparam.get('name') is None:
-      cfgparam['name'] = "SenseHatReader"
-    rt = AVNSenseHatReader(cfgparam)
-    return rt
-
-  def __init__(self, param):
-    self.feederWrite = None
-    AVNWorker.__init__(self, param)
-    if param.get('name') is None:
-      self.param['name'] = "SenseHatReader"
-
   def isDisabled(self):
     if not hasSenseHat:
       return True
     return super(AVNSenseHatReader, self).isDisabled()
 
-  def getName(self):
-    return self.param['name']
 
   # thread run method - just try forever
   def run(self):
-    self.setName("[%s]%s" % (AVNLog.getThreadId(), self.getName()))
+    self.setName(self.getThreadPrefix())
     self.setInfo('main', "reading sense", AVNWorker.Status.NMEA)
     sense = SenseHat()
-    source=self.getName()
+    source=self.getSourceName()
     while True:
       try:
         if self.getBoolParam('writeMda'):

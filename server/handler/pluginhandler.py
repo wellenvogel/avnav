@@ -196,7 +196,7 @@ class AVNPluginHandler(AVNWorker):
     AVNWorker.start(self)
 
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
+    self.setName(self.getThreadPrefix())
     builtInDir=self.getStringParam('builtinDir')
     systemDir=AVNConfig.getDirWithDefault(self.param,'systemDir',defaultSub=os.path.join('..','plugins'),belowData=False)
     userDir=AVNConfig.getDirWithDefault(self.param,'userDir','plugins')
@@ -241,7 +241,7 @@ class AVNPluginHandler(AVNWorker):
         AVNLog.info("starting plugin %s",name)
         thread=threading.Thread(target=plugin.run)
         thread.setDaemon(True)
-        #thread.setName("Plugin: %s"%(name))
+        thread.setName("Plugin: %s"%(name))
         thread.start()
         self.startedThreads[name]=thread
 

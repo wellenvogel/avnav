@@ -56,25 +56,13 @@ class AVNUdpReader(AVNWorker, SocketReader):
                'minTime':0,        #if tthis is set, wait this time before reading new data (ms)
     }
     return rt
-  @classmethod
-  def createInstance(cls, cfgparam):
-    if cfgparam.get('name') is None:
-      cfgparam['name']="UdpReader"
-    rt=AVNUdpReader(cfgparam)
-    return rt
-    
+
   def __init__(self,param):
     for p in ('port','host'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for udp reader")
     self.feederWrite=None
     AVNWorker.__init__(self, param)
-    if param.get('name') is None:
-      self.param['name']="UdpReader-%s-%d"%(self.param['host'],int(self.param['port']))
-    
-  
-  def getName(self):
-    return self.param['name']
 
     
   def writeData(self,data,source=None):
@@ -84,7 +72,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
      
   #thread run method - just try forever  
   def run(self):
-    self.setName("[%s]%s-%s:%d"%(AVNLog.getThreadId(),self.getName(),self.getStringParam('host'),self.getIntParam('port')))
+    self.setName("%s-%s:%d"%(self.getThreadPrefix(),self.getStringParam('host'),self.getIntParam('port')))
     info="%s:%d"%(self.getStringParam('host'),self.getIntParam('port'))
     while True:
       try:
@@ -97,9 +85,9 @@ class AVNUdpReader(AVNWorker, SocketReader):
         self.setInfo('main',"unable to listen at %s"%(info,),AVNWorker.Status.ERROR)
         time.sleep(2)
         continue
-      AVNLog.info("successfully listening at %s:%d",self.getStringParam('host'),self.getIntParam('port'))
+      AVNLog.info("successfully listening at %s",info)
       try:
-        self.readSocket(sock,'main',info="UDP: "+info)
+        self.readSocket(sock,'main',self.getSourceName(info))
       except:
         AVNLog.info("exception while reading data from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
 avnav_handlerList.registerHandler(AVNUdpReader)

@@ -169,8 +169,7 @@ class AVNCommandHandler(AVNWorker):
     </AVNCommandHandler>
     '''
 
-  def getName(self):
-    return "CommandHandler"
+
   def getNextId(self):
     self.cntLock.acquire()
     self.idCounter+=1
@@ -178,7 +177,7 @@ class AVNCommandHandler(AVNWorker):
     self.cntLock.release()
     return rt
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getConfigName()))
+    self.setName(self.getThreadPrefix())
     for cmd in self.getConfiguredCommands():
       self.updateCommandStatus(cmd)
     while True:

@@ -26,16 +26,8 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import time
-import socket
-import threading
-import re
-
-from avnav_util import *
-from avnav_nmea import *
-from avnav_worker import *
-from avnav_serial import *
 from serialwriter import *
+from avnserial import *
 import avnav_handlerList
 hasUdev=False
 try:
@@ -69,7 +61,6 @@ class AVNUsbSerialReader(AVNWorker):
       rt=SerialReader.getConfigParam().copy()
       rt.update({
           'port': 0,        #we do not use this
-          'name':'',
           'maxDevices':5,   #this includes preconfigured devices!
           'feederName':'',  #if set, use this feeder
           'allowUnknown':'true' #allow devices that are not configured
@@ -84,7 +75,6 @@ class AVNUsbSerialReader(AVNWorker):
     rt=SerialWriter.getConfigParam().copy()
     rt.update({
         'port': 0,
-        'name':'',    #will be set automatically
         'usbid':None, #an identifier of the USB device 
                       #.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1
         'type': 'reader',
@@ -102,10 +92,6 @@ class AVNUsbSerialReader(AVNWorker):
     AVNWorker.__init__(self, cfgparam)
     self.maplock=threading.Lock()
     self.addrmap={}
-    self.setName(self.getName())
-    
-  def getName(self):
-    return "AVNUsbSerialReader"
 
    
   #return True if added
@@ -188,6 +174,7 @@ class AVNUsbSerialReader(AVNWorker):
     for usbid in startStop:
       if startStop[usbid]=='start':
         AVNLog.debug("must start handler for %s at %s",usbid,devicelist[usbid])
+        sourceName="%s-%s"%(self.getName(),usbid)
         param=self.getParamByUsbId(usbid)
         type="anonymous"
         if param is None:
@@ -197,17 +184,20 @@ class AVNUsbSerialReader(AVNWorker):
           param=self.setParameterForSerial(self.getParam(),usbid,devicelist[usbid])
         else:
           type="known"
+          pn=param.get('name')
+          if pn is not None and pn != '':
+            sourceName=pn
           param=self.setParameterForSerial(param, usbid, devicelist[usbid])
         handlertype="reader"
         if param.get('type') is not None:
           handlertype=param.get('type')
         if handlertype == 'writer' or handlertype == "combined":
-          handler=SerialWriter(param,self.writeData,self)
+          handler=SerialWriter(param,self.writeData,self,sourceName)
           if handlertype == "combined":
             handler.param["combined"]=True
         else:
           if handlertype == 'reader':
-            handler=SerialReader(param, self.writeData, self)
+            handler=SerialReader(param, self.writeData, self,sourceName)
           else:
             AVNLog.info("ignore device %s : type %s",usbid,handlertype)
             handler=DummyHandler()
@@ -240,7 +230,7 @@ class AVNUsbSerialReader(AVNWorker):
   #method will never return...
   def monitorDevices(self,context):
     self.setInfo('monitor', "running", AVNWorker.Status.RUNNING)
-    threading.current_thread().setName("[%s]%s[monitor]"%(AVNLog.getThreadId(),self.getName()))
+    threading.current_thread().setName("%s[monitor]"%(self.getThreadPrefix()))
     AVNLog.info("start device monitoring")
     while True:
       try:
@@ -258,10 +248,10 @@ class AVNUsbSerialReader(AVNWorker):
         time.sleep(2)
           #any start handling we leave to the audit...
         
-  #this is the main thread - this executes the bluetooth polling
+  #this is the main thread - this executes the polling
   def run(self):
     self.setInfo('main', "discovering", AVNWorker.Status.RUNNING)
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName("%s-polling"%(self.getThreadPrefix()))
     time.sleep(2) # give a chance to have the feeder socket open...   
     #now start an endless loop with udev discovery...
     #any removal will be detected by the monitor (to be fast)

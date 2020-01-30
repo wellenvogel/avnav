@@ -51,7 +51,6 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       
       rt={
           'port': None,       #local listener port
-          'name':'',
           'maxDevices':5,     #max external connections
           'feederName':'',    #if set, use this feeder
           'filter': '',       #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
@@ -66,11 +65,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
-    self.setName(self.getName())
     self.readFilter=None
-    
-  def getName(self):
-    return "AVNSocketWriter-%d"%(self.getIntParam('port'))
+
   
   #make some checks when we have to start
   #we cannot do this on init as we potentially have to find the feeder...
@@ -112,7 +108,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   #the writer for a connected client
   def client(self,socket,addr):
     infoName="SocketWriter-%s"%(unicode(addr),)
-    self.setName("[%s]%s-Writer %s"%(AVNLog.getThreadId(),self.getName(),unicode(addr)))
+    self.setName("%s-Writer %s"%(self.getThreadPrefix(),unicode(addr)))
     self.setInfo(infoName,"sending data",AVNWorker.Status.RUNNING)
     if self.getBoolParam('read',False):
       clientHandler=threading.Thread(target=self.clientRead,args=(socket, addr))
@@ -145,14 +141,14 @@ class AVNSocketWriter(AVNWorker,SocketReader):
 
   def clientRead(self,socket,addr):
     infoName="SocketReader-%s"%(unicode(addr),)
-    threading.currentThread().setName("SocketWriter-Reader-%s"%unicode(addr))
+    threading.currentThread().setName("%s-Reader-%s"%(self.getThreadPrefix(),unicode(addr)))
     #on each newly connected socket we recompute the filter
     filterstr=self.getStringParam('readerFilter')
     filter=None
     if filterstr != "":
       filter=filterstr.split(',')
     self.readFilter=filter
-    self.readSocket(socket,infoName)
+    self.readSocket(socket,infoName,self.getSourceName(unicode(addr)))
     self.deleteInfo(infoName)
 
   #if we have writing enabled...
@@ -169,7 +165,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
         
   #this is the main thread - listener
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName("%s-listen"%(self.getThreadPrefix()))
     time.sleep(2) # give a chance to have the feeder socket open...   
     #now start an endless loop with udev discovery...
     #any removal will be detected by the monitor (to be fast)

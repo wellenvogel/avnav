@@ -83,10 +83,9 @@ class AVNLayoutHandler(AVNWorker):
       <%s>
   	  </%s>
       """ % (cls.getConfigName(), cls.getConfigName())
-  def getName(self):
-    return self.getConfigName()
+
   def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    self.setName(self.getThreadPrefix())
     AVNLog.info("started")
     userDir=self.getUserDir()
     if not os.path.isdir(userDir):
@@ -115,10 +114,10 @@ class AVNLayoutHandler(AVNWorker):
       for key in self.layouts:
         if self.layouts[key].updateCount != updateCount:
           #if we did not re-read the layout (e.g. plugin) but it is still there - we keep it
-          if not os.path.exists(self.layouts[key].fileName):
+          if not os.path.exists(self.layouts[key].filename):
             deleteKeys.append(key)
           else:
-            self.layouts[key].mtime=os.path.getmtime(self.layouts[key].fileName)
+            self.layouts[key].mtime=os.path.getmtime(self.layouts[key].filename)
       for key in deleteKeys:
         del self.layouts[key]
     except:
