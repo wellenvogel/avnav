@@ -54,7 +54,8 @@ class SerialWriter(SerialReader):
       rt.update({
           'feederName':'',  #if set, use this feeder (if combined use it both for reader and writer)
           'combined' : False, #if true, also start a reader
-          'readFilter':''   #filterstring for reading
+          'readFilter':'',   #filterstring for reading
+          'blackList':''     #, separated list of sources that we will not send out
           })
       return rt
     
@@ -81,6 +82,8 @@ class SerialWriter(SerialReader):
     self.device=None
     self.buffer=None
     self.sourceName=sourceName
+    self.blackList=param.get('blacklist').split(',')
+    self.blackList.append(sourceName)
 
    
   def stopHandler(self):
@@ -180,11 +183,13 @@ class SerialWriter(SerialReader):
       while True and not self.doStop:
         bytes=0
         try:
-          seq,data=self.feeder.fetchFromHistory(seq,10)
+          seq,data=self.feeder.fetchFromHistory(seq,10,includeSource=True,filter=filter)
           if len(data)>0:
             for line in data:
-              if NMEAParser.checkFilter(line, filter):
-                self.writeLine(self.device,line)
+              if line.source in self.blackList:
+                AVNLog.debug("ignore %s:%s due to blacklist",line.source,line.data)
+              else:
+                self.writeLine(self.device,line.data)
         except Exception as e:
           AVNLog.debug("Exception %s in serial write, close and reopen %s",traceback.format_exc(),portname)
           try:

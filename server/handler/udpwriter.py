@@ -56,7 +56,8 @@ class AVNUdpWriter(AVNWorker):
           'port'      : 2000,       #port
           'feederName': '',         #if set, use this feeder
           'broadcast' : 'true',
-          'filter'    : ''          #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
+          'filter'    : '',          #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
+          'blackList' : ''          # , separated list of sources we do not send out
          }
       return rt
     return None
@@ -67,6 +68,7 @@ class AVNUdpWriter(AVNWorker):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for udp writer")
     AVNWorker.__init__(self, param)
+    self.blackList=self.getStringParam('blackList').split(',')
 
 
   # make some checks when we have to start
@@ -96,11 +98,13 @@ class AVNUdpWriter(AVNWorker):
        if filterstr != "":
          filter=filterstr.split(",")
        while True:
-          seq,data=self.feeder.fetchFromHistory(seq,10)
+          seq,data=self.feeder.fetchFromHistory(seq,10,filter=filter,includeSource=True)
           if len(data) > 0:
             for line in data:
-               if NMEAParser.checkFilter(line, filter):
-                 cs.sendto(line,(addr,port)) 
+               if line.source in self.blackList:
+                 AVNLog.debug("ignore line %s:%s due to blacklist",line.source,line.data)
+               else:
+                 cs.sendto(line.data,(addr,port))
        cs.close()
 
 avnav_handlerList.registerHandler(AVNUdpWriter)

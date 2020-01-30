@@ -57,7 +57,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           'address':'',       #the local bind address
           'read': True,       #allow for reading data
           'readerFilter':'',
-          'minTime':50         #if this is set, wait this time before reading new data (ms)
+          'minTime':50,         #if this is set, wait this time before reading new data (ms)
+          'blackList':''      #, separated list of sources we do not send out
           }
       return rt
     return None
@@ -66,6 +67,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
     self.readFilter=None
+    self.blackList=self.getStringParam('blackList').split(',')
+    self.blackList.append(self.getSourceName())
 
   
   #make some checks when we have to start
@@ -123,11 +126,13 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       socket.sendall("avnav_server %s\r\n"%(VERSION))
       while True:
         hasSend=False
-        seq,data=self.feeder.fetchFromHistory(seq,10)
+        seq,data=self.feeder.fetchFromHistory(seq,10,filter=filter,includeSource=True)
         if len(data)>0:
           for line in data:
-            if NMEAParser.checkFilter(line, filter):
-              socket.sendall(line)
+            if line.source in self.blackList:
+              AVNLog.debug("ignore %s:%s due to blacklist",line.source,line.data)
+            else:
+              socket.sendall(line.data)
               hasSend=True
         if not hasSend:
           #just throw an exception if the reader potentially closed the socket
@@ -148,7 +153,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     if filterstr != "":
       filter=filterstr.split(',')
     self.readFilter=filter
-    self.readSocket(socket,infoName,self.getSourceName(unicode(addr)))
+    self.readSocket(socket,infoName,self.getSourceName())
     self.deleteInfo(infoName)
 
   #if we have writing enabled...
