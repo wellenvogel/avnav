@@ -6,7 +6,6 @@ import time
 #it only allows "intelligent" IDEs (like PyCharm) to support you in using it
 import traceback
 import urllib
-import urllib3
 
 from avnav_api import AVNApi
 
