@@ -86,7 +86,7 @@ class SocketReader():
           break
       sock.close()
     except Exception as e:
-      AVNLog.debug("exception while reading from socket: %s",traceback.format_exc())
+      AVNLog.error("exception while reading from socket: %s",traceback.format_exc())
       pass
     try:
       sock.close()
