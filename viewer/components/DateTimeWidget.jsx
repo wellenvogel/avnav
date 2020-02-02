@@ -21,11 +21,11 @@ class DateTimeWidget extends React.Component{
         let self=this;
         let classes="widget dateTimeWidget "+this.props.className||"";
         let time="----";
-        if (this.props.time !== undefined){
+        if (this.props.time){
             time=Formatter.formatTime(this.props.time);
         }
         let date="----";
-        if (this.props.time !== undefined){
+        if (this.props.time){
             date=Formatter.formatDate(this.props.time);
         }
         return (
