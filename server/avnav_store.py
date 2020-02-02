@@ -315,7 +315,8 @@ class AVNStore():
         return True
     return False
 
-
+  def isKeyRegistered(self,key):
+    return self.__allowedKey(key)
 
   def registerKey(self,key,keyDescription,source=None):
     """

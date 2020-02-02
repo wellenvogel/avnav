@@ -81,7 +81,12 @@ class ApiImpl(AVNApi):
     if key is None:
       raise Exception("%s: missing path in data entry: %s"%(self.prefix,data))
     AVNLog.info("%s: register key %s"%(self.prefix,key))
-    self.store.registerKey(key,data,"Plugin: %s"%self.prefix)
+    if self.store.isKeyRegistered(key):
+      allowOverwrite=self.getConfigValue("allowKeyOverwrite","false")
+      if allowOverwrite.lower() != "true":
+        raise Exception("keys %s already registered"%key)
+    else:
+      self.store.registerKey(key,data,"Plugin: %s"%self.prefix)
     if key.find('*') >= 0:
       self.wildcardPatterns.append(data)
     else:
