@@ -75,12 +75,15 @@
           "weight": 1.5
         },
         {
-          "name": "XteDisplay",
-          "compareState": true,
-          "weight": 1.5
+          "name": "DST",
+          "weight": 0.75
         },
         {
-          "name": "DST"
+          "name": "SOG",
+          "weight": 0.75
+        },
+        {
+          "name": "DepthDisplay"
         },
         {
           "name": "ETA"
@@ -115,14 +118,10 @@
         },
         {
           "name": "WindGraphics",
-          "weight": 1.5
+          "weight": 2.5
         },
         {
-          "name": "SOG",
-          "weight": 1
-        },
-        {
-          "name": "DepthDisplay"
+          "name": "DateTime"
         },
         {
           "name": "AisTarget"
