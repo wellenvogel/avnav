@@ -18,16 +18,11 @@
     settimeperiod="3600"/>
 <!-- the workers section -->
 <Workers>
-<!-- the universal feeder with gpsd
-	 there is a couple of readers that are able to feed its data into this
-	 feeder. As it has an input history there also could be NMEA output workers attached
-	 gpsd will connect to our listener port and get all data from there, will decode the data
-	 and give it back to us via its python API 
-	 By setting port to the default gpsd port (2947) there is also a chance for other devices to connect 
-	 to gpsd
-	 The gpsd -G parameter set gpsd to bind to any - so also external connections are allowed
-	 If you set useGpsd to false, you can use this feeder on system where you don't have gpsd
-	 like on Windows. In this case the decoding is limited to the internal decoder.
+<!-- the universal feeder 
+     the gpsd is only here for compatibility with old set ups
+     if you still enable it here, a couple of features will not work
+     as dpsd lacks some decoders we need
+     so leave this entry untouched
 	 -->
 <AVNGpsdFeeder useGpsd="false" listenerPort="4020" port="2948" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
 
@@ -106,36 +101,6 @@
 	 They could become necessary if you have a device that must directly interface with gpsd.
 	 (AVNGpsd)
 	  -->
-<!-- gpsd readers (legacy - or for very special devices)
-     4 readers for usb-serial converters, 4 for bluetooth
-     by default they will check if the device is there and will start gpsd 
-     once they have been able to at least receive one byte
-     gpsd seems to have difficulties with autobaud - so you can set the baud here to the correct rate
-     to assist...
-     The timeout is a compromise - just give gpsd enough time to sync
-     but kill it and release the device to allow for USB reconnects
-     
-     For bluetooth device we now prefer the autodiscovery daemon AVNBlueToothReader
-     It will be default try to connect to any serial bluetooth device and pip its data 
-     through gpsd
-     If this does not work, remove the AVNBlueToothReader and add some lines here
-     They currently do not autoconnect...
-     
-     The last one is even more special - for such device we leave everythingt to gpsd (nocheck=true)
-      
-<AVNGpsd device="/dev/rfcomm0" port="4001"/>
-<AVNGpsd device="/dev/rfcomm1" port="4002"/>
-<AVNGpsd device="/dev/rfcomm2" port="4003"/>
-<AVNGpsd device="/dev/rfcomm3" port="4004"/>
-<AVNGpsd device="/dev/ttyUSB0" port="4010" timeout="40" baud="38400"/>
-<AVNGpsd device="/dev/ttyUSB1" port="4011" timeout="40" baud="38400"/>
-<AVNGpsd device="/dev/ttyUSB2" port="4012" timeout="40" baud="38400"/>
-<AVNGpsd device="/dev/ttyUSB3" port="4013" timeout="40" baud="38400"/>
- 
-<AVNGpsd device="tcp://76.103.90.196:9009" port="4012" timeout="40" nocheck="true"/>
-
--->
-
 <!-- a reader that opens an UDP socket and listens for incoming data 
      by default it will receive data only at localhost (127.0.0.1), you can change this by settintg the host parameter e.g. to 0.0.0.0
      to listen on all interfaces
@@ -146,7 +111,6 @@
 <AVNUdpWriter host="192.168.30.255" port="2000" filter=""/>
 -->
 
-</Workers>
 
 <!-- the Web server
      the port defaults to 8080, the host to "any"
@@ -180,7 +144,28 @@
          minTime - when reading data wait that many milliseconds between records to avoid overloading
          readFilter - if set, only read filtered data
  -->
-<AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="50"/>
+<!-- a tcp socket that will output all NMEA data that AvNav has received
+     you can customize it using the filter -->
+<AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="50" name="allnmea0183"/>
+<!-- the following entries provide the integration with signalk and canboat
+     we provide a connector to canboat (n2kd) to receive all data that has been translated from nmea2000 to nmea0183
+     we provide an additional socket that will provide only the nmea data that has not been received from canboat
+       this will be used for signalk to get all of our nmea0183. signalk will itself connect to canboat to get the nmea2000
+       directly, inside signalk just configure a connector to this port and the canboat nmea200 connector
+     we additional have 2 plugins:
+       * signalk: will receive all data at vessels/self from signalk and store it at gps.signalk in our store
+       * canboat: will receive pgns that are not translated to NMEA0183 - currently only 126992 to get the time
+     for canboat to work you potentially need to modify /etc/default/n2kd and /boot/config.txt
+-->
+<!-- ##START SIGNALK
+<AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183"/>
+<AVNSocketReader port="2599" filter="" name="canboatnmea0183"/>
+<AvnPluginHandler>
+        <builtin-signalk enabled="true"/>
+	<builtin-canboat enabled="true" allowKeyOverwrite="true"/>
+</AVNPluginHandler>
+ ##END SIGNALK -->
+
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
 <!--  routing handler 
@@ -216,4 +201,5 @@
 		<Alarm name="gps" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
 </AVNAlarmHandler>
 
+</Workers>
 </AVNServer>
