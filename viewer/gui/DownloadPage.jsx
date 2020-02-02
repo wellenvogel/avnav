@@ -25,6 +25,7 @@ import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import jsdownload from 'downloadjs';
 import GuiHelpers from '../util/GuiHelpers.js';
+import LeaveHandler from '../util/leavehandler.js';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -572,10 +573,18 @@ class DownloadForm extends React.Component {
     }
 
     componentDidMount(){
-        if (this.refs.form) this.refs.form.submit();
+        if (this.refs.form) {
+            LeaveHandler.stop();
+            this.refs.form.submit();
+            LeaveHandler.activate();
+        }
     }
     componentDidUpdate(){
-        if (this.refs.form) this.refs.form.submit();
+        if (this.refs.form) {
+            LeaveHandler.stop();
+            this.refs.form.submit();
+            LeaveHandler.activate();
+        }
     }
 
     render() {

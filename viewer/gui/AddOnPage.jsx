@@ -46,6 +46,10 @@ class AddOnPage extends React.Component{
         this.buttons=[
             GuiHelpers.mobDefinition,
             {
+                name: 'Back',
+                onClick: ()=>{window.history.back();}
+            },
+            {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}
             }
@@ -54,6 +58,9 @@ class AddOnPage extends React.Component{
         this.buildButtonList=this.buildButtonList.bind(this);
         if (this.props.options && this.props.options.activeAddOn !== undefined){
             globalStore.storeData(keys.gui.addonpage.activeAddOn,this.props.options.activeAddOn);
+        }
+        if (globalStore.getData(keys.gui.addonpage.activeAddOn) === undefined){
+            globalStore.storeData(keys.gui.addonpage.activeAddOn,0);
         }
     }
     componentDidMount(){
@@ -68,7 +75,11 @@ class AddOnPage extends React.Component{
                     name: addOn.key,
                     icon: addOn.icon,
                     onClick: ()=> {
-                        globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
+                        //first unload the iframe completely to avoid pushing to the history
+                        globalStore.storeData(keys.gui.addonpage.activeAddOn, -1);
+                        window.setTimeout(()=> {
+                            globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
+                        },100);
                     },
                     toggle: activeIndex == i
                 };
@@ -92,7 +103,7 @@ class AddOnPage extends React.Component{
                         title={currentAddOn.title}
                         mainContent={
                             <div className="addOnFrame">
-                                <iframe src={currentAddOn.url} className="addOn"/>
+                                {currentAddOn.url?<iframe src={currentAddOn.url} className="addOn"/>:null}
                             </div>
                         }
                         buttonList={self.buildButtonList(props.addOns,props.activeAddOn||0)}/>
