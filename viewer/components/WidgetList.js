@@ -16,6 +16,7 @@ import ZoomWidget from './ZoomWidget.jsx';
 import keys from '../util/keys.jsx';
 import AlarmWidget from './AlarmWidget.jsx';
 import RoutePointsWidget from './RoutePointsWidget.jsx';
+import DateTimeWidget from './DateTimeWidget.jsx';
 
 let widgetList=[
     {
@@ -241,6 +242,10 @@ let widgetList=[
         name: 'WindGraphics',
         wclass: WindGraphics,
         storeKeys: WindGraphics.storeKeys
+    },
+    {
+        name: "DateTime",
+        wclass: DateTimeWidget
     },
     {
         name: 'Empty',

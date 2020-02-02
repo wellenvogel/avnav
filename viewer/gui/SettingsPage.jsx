@@ -28,7 +28,8 @@ const settingsSections={
     Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.allowTwoWidgetRows,keys.properties.autoZoom,keys.properties.style.buttonSize,keys.properties.nightFade,keys.properties.nightChartFade,keys.properties.localAlarmSound,keys.properties.mobMinZoom],
     AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,keys.properties.aisTextSize,keys.properties.style.aisNormalColor,keys.properties.style.aisNearestColor,keys.properties.style.aisWarningColor],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
-        keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,keys.properties.anchorCircleColor,keys.properties.windKnots],
+        keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
+        keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle],
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
     Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL]
 };

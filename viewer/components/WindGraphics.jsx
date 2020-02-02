@@ -72,11 +72,13 @@ class WindGraphics extends React.Component{
         let mvy=(h-height*f)/2;
         ctx.translate(mvx>0?0.9*mvx:0,mvy>0?mvy:0); //move the drawing to the middle
         ctx.scale(f,f);
+        let scaleAngle=this.props.scaleAngle||50;
+        scaleAngle=parseFloat(scaleAngle);
 
 
         // Settings
         let radius = 100;			// Radius of control
-        let pointer_lenght = 80;	// Pointer lenght
+        let pointer_lenght = 50;	// Pointer lenght
         let pointer_linewidth = 6;	// Pointer lenght
         let circle_linewidth = 1;	// Pointer lenght
         let value_min = 0;			// Minimum of value
@@ -86,7 +88,6 @@ class WindGraphics extends React.Component{
 
         // Create random value for wind direction and wind speed
         let winddirection = parseFloat(this.props.windAngle);
-        let windspeed = parseFloat(this.props.windSpeed);
 
         // Calculation of pointer rotation
         let angle = ((angle_scala) / (value_max - value_min) * winddirection) + angle_offset;
@@ -98,18 +99,18 @@ class WindGraphics extends React.Component{
         ctx.stroke();
         // Write left partial circle
         ctx.beginPath();
-        ctx.strokeStyle = '#888888'; // gray
+        ctx.strokeStyle = 'rgba(255, 20, 7, 0.54)'; // red
         ctx.lineWidth = 10;
-        let start = 210;
+        let start = 270-scaleAngle;
         let end = 250;
         ctx.arc(width / 2 ,height / 2,radius*0.9,2*Math.PI/360*start,2*Math.PI/360*end);
         ctx.stroke();
         // Write right partial circle
         ctx.beginPath();
-        ctx.strokeStyle = '#888888'; // gray
+        ctx.strokeStyle = 'rgba(5, 128, 30, 0.57)'; // green
         ctx.lineWidth = 10;
         start = 290;
-        end = 330;
+        end = 270+scaleAngle;
         ctx.arc(width / 2 ,height / 2,radius*0.9,2*Math.PI/360*start,2*Math.PI/360*end);
         ctx.stroke();
         // Write partial circle
@@ -125,16 +126,17 @@ class WindGraphics extends React.Component{
             ctx.beginPath();
             ctx.strokeStyle = '#666666'; // dark gray
             ctx.lineWidth = 10;
-            start = i*30;
-            end = i*30+2;
+            start = i*30-1;
+            end = i*30+1;
             ctx.arc(width / 2 ,height / 2,radius*0.9,2*Math.PI/360*start,2*Math.PI/360*end);
             ctx.stroke();
         }
         // Create text
-        ctx.font = fontSize+"px Arial";
-        ctx.fillText(Formatter.formatDecimal(winddirection,3,0) + "°",width/2*0.7,height/2*1.15);
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2 ,height / 2);
+        ctx.font = fontSize+"px Arial";
+        let txt=Formatter.formatDirection(winddirection).replace(/ /g,"0");
+        ctx.fillText(txt,-0.8*fontSize,0.4*fontSize);
         // Rotate
         ctx.rotate(angle * Math.PI / 180);
         // Write pointer
@@ -142,8 +144,8 @@ class WindGraphics extends React.Component{
         ctx.lineWidth = pointer_linewidth;
         ctx.lineCap = 'round';
         ctx.strokeStyle = '#000000';
-        ctx.moveTo(0,(-pointer_lenght - (-pointer_lenght / 3)));
-        ctx.lineTo(0,-pointer_lenght);
+        ctx.moveTo(0,-40);
+        ctx.lineTo(0,-40-pointer_lenght);
         ctx.stroke();
     }
 
@@ -154,12 +156,14 @@ WindGraphics.propTypes={
     classes: PropTypes.string,
     windSpeed: PropTypes.number,
     windAngle: PropTypes.number,
-    showKnots:  PropTypes.bool
+    showKnots:  PropTypes.bool,
+    scaleAngle: PropTypes.number
 };
 WindGraphics.storeKeys={
     windSpeed:  keys.nav.gps.windSpeed,
     windAngle:  keys.nav.gps.windAngle,
     visible:    keys.properties.showWind,
-    showKnots:  keys.properties.windKnots
+    showKnots:  keys.properties.windKnots,
+    scaleAngle: keys.properties.windScaleAngle
 };
 module.exports=WindGraphics;

@@ -6,48 +6,48 @@ import React from "react";
 import PropTypes from "prop-types";
 import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
-import globalStore from '../util/globalstore.jsx';
 import Helper from '../util/helper.js';
 import GuiHelper from '../util/GuiHelpers.js';
 
-class TimeStatusWidget extends React.Component{
+class DateTimeWidget extends React.Component{
     constructor(props){
         super(props);
         GuiHelper.nameKeyEventHandler(this,"widget");
     }
     shouldComponentUpdate(nextProps,nextState) {
-        return Helper.compareProperties(this.props,nextProps,TimeStatusWidget.storeKeys);
+        return Helper.compareProperties(this.props,nextProps,DateTimeWidget.storeKeys);
     }
     render(){
         let self=this;
-        let classes="widget timeStatusWidget "+this.props.className||"";
-        let imgSrc=globalStore.getData(this.props.gpsValid?
-            keys.properties.statusOkImage:
-            keys.properties.statusErrorImage);
+        let classes="widget dateTimeWidget "+this.props.className||"";
         let time="----";
         if (this.props.time !== undefined){
             time=Formatter.formatTime(this.props.time);
         }
+        let date="----";
+        if (this.props.time !== undefined){
+            date=Formatter.formatDate(this.props.time);
+        }
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
-            <div className='infoLeft'>{this.props.caption}</div>
-            <img className="status" src={imgSrc}/>
-            <div className="widgetData">{time}</div>
+            <div className='infoLeft'>Date</div>
+            <div className="widgetData date">{date}</div>
+            <div className="widgetData time">{time}</div>
         </div>
         );
     }
 
 };
 
-TimeStatusWidget.propTypes={
+DateTimeWidget.propTypes={
     onClick: PropTypes.func,
     className: PropTypes.string,
     time: PropTypes.objectOf(Date),
     gpsValid: PropTypes.bool
 };
-TimeStatusWidget.storeKeys={
+DateTimeWidget.storeKeys={
     time: keys.nav.gps.rtime,
     gpsValid: keys.nav.gps.valid
 };
 
-module.exports=TimeStatusWidget;
+module.exports=DateTimeWidget;

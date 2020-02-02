@@ -188,6 +188,13 @@ const formatDateTime=function(curDate){
     return datestr;
 };
 
+const formatDate=function(curDate){
+    let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
+        this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
+        this.formatDecimal(curDate.getDate(),2,0);
+    return datestr;
+};
+
 const formatString=function(data){
     return data;
 };
@@ -203,5 +210,6 @@ module.exports={
     formatDistance,
     formatDirection,
     formatSpeed,
-    formatString
+    formatString,
+    formatDate
 };
