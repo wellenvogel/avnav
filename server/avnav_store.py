@@ -40,6 +40,7 @@ class AVNStore():
   BASE_KEY_GPS = 'gps'
   BASE_KEY_AIS = 'ais'
   BASE_KEY_SKY = 'sky'
+  KEY_LAST_RECORD = 'internal.last' #we remember when we received the last kind of NMEA record
   # AIS messages we store
   knownAISTypes = (1, 2, 3, 5, 18, 19, 24)
   class DataEntry:
@@ -73,10 +74,12 @@ class AVNStore():
     # all the key sources
     self.__keySources={}
     self.__lastAisSource=None
+    self.__registerInternalKeys()
 
   def __registerInternalKeys(self):
     self.registerKey(self.BASE_KEY_AIS+".count","AIS count",self.__class__.__name__)
     self.registerKey(self.BASE_KEY_AIS+".entities.*","AIS entities",self.__class__.__name__)
+    self.registerKey(self.KEY_LAST_RECORD+".*","timestamp of last received record",self.__class__.__name__)
 
   def __isExpired(self, entry, now=None):
     if now is None:
@@ -130,6 +133,12 @@ class AVNStore():
       AVNLog.error("exception in writing data: %",traceback.format_exc())
       raise
     self.__listLock.release()
+
+  def setReceivedRecord(self,record,source=None):
+    if len(record) > 3:
+      record=record[-3:]
+    now=AVNUtil.utcnow()
+    self.setValue(self.KEY_LAST_RECORD+"."+record,now,source)
 
   def setAisValue(self,mmsi,data,source=None):
     """
@@ -194,7 +203,7 @@ class AVNStore():
     self.__aisLock.release()
     return rt
 
-  def getSingleValue(self,key):
+  def getSingleValue(self,key,includeInfo=False):
     self.__listLock.acquire()
     rt=self.__list.get(key)
     self.__listLock.release()
@@ -204,6 +213,8 @@ class AVNStore():
       return None
     if type(rt.value) == dict:
       return None
+    if includeInfo:
+      return rt
     return rt.value
 
   def getDataByPrefix(self,prefix,levels=None):
@@ -290,6 +301,9 @@ class AVNStore():
     if len(keyParts) < len(wildCardParts):
       return False
     if len(wildCardParts) < len(keyParts):
+      for x in range(0, len(wildCardParts)):
+        if keyParts[x] != wildCardParts[x] and wildCardParts[x] != '*':
+          return False
       if wildCardParts[-1] == '*':
         return True
       return False

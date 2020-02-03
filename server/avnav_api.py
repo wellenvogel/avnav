@@ -97,7 +97,7 @@ class AVNApi:
     """
     raise NotImplemented()
 
-  def addNMEA(self, nmea, addCheckSum=False):
+  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True):
     """
     add NMEA data to the queue
     caution: you should never add a new NMEA record for each record you received by fetchFromQueue
@@ -105,12 +105,14 @@ class AVNApi:
     @param nmea: the completely formatted NMEA record
     @type  nmea: str
     @param addCheckSum: if true, add the checksum to the provided NMEA data
+    @param: omitDecode: if true, do not decode the data (only send it out to listeners)
+                        this also prevents setting the receive timestamp for such records
     @type  addCheckSum: bool
     @return: None
     """
     raise NotImplemented()
 
-  def addData(self, key, value, source=None):
+  def addData(self, key, value, source=None,record=None):
     """
     add a data item (potentially from a decoded NMEA record) to the internal data store
     the data added here later on will be fetched from the GUI
@@ -118,6 +120,7 @@ class AVNApi:
     @type  key: str
     @param value: the value to be stored
     @param source: if set, use this as the source for the data value when displayed, otherwise the plugin name is used
+    @param record: if set, remember when this record was received
     @return: True on success, will raise an Exception if the key is not allowed
     """
   def getDataByPrefix(self,prefix):
@@ -130,12 +133,13 @@ class AVNApi:
     """
     raise NotImplemented()
 
-  def getSingleValue(self,key):
+  def getSingleValue(self,key,includeInfo=False):
     """
     get a single value from the store
     @param key: the key
+    @param includeInfo: if set return an object with: value,source,timestamp,priority
     @type  key: str
-    @return: the value
+    @return: the value or the object
     """
     raise NotImplemented()
 
@@ -168,4 +172,12 @@ class AVNApi:
     @param layoutFile: a file (relative to the plugin dir)
     @return:
     """
+    raise NotImplemented()
+
+  def timestampFromDateTime(self,dt=None):
+    '''
+    convert a datetime object into a timestamp (seconds since epoch)
+    @param dt: the datetime, if None use datetime.datetime.utcnow
+    @return: timestamp in seconds
+    '''
     raise NotImplemented()

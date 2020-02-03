@@ -328,9 +328,10 @@ class GpsdReader(threading.Thread):
         
     
 class NmeaEntry:
-  def __init__(self,data,source=None):
+  def __init__(self,data,source=None,omitDecode=False):
     self.data=data
     self.source=source
+    self.omitDecode=omitDecode
 
 
 #a Worker for feeding data trough gpsd (or directly to the navdata)
@@ -373,7 +374,7 @@ class AVNGpsdFeeder(AVNGpsd):
       raise Exception("no gpsd installed, cannot run %s"%(self.getConfigName()))
 
   
-  def addNMEA(self, entry,source=None,addCheckSum=False):
+  def addNMEA(self, entry,source=None,addCheckSum=False,omitDecode=False):
     """
     add an NMEA record to our internal queue
     @param entry: the record
@@ -396,12 +397,12 @@ class AVNGpsdFeeder(AVNGpsd):
       self.list.pop(0) #TODO: priorities?
     if len(self.history) >= self.maxlist:
       self.history.pop(0)
-    self.list.append(NmeaEntry(entry,source))
+    self.list.append(NmeaEntry(entry,source,omitDecode))
     ll=len(self.list)
-    self.history.append(NmeaEntry(entry,source))
+    self.history.append(NmeaEntry(entry,source,omitDecode))
     hl=len(self.history)
     rt=True
-    self.listlock.notify_all();
+    self.listlock.notify_all()
     self.listlock.release()
     AVNLog.debug("addNMEA listlen=%d history=%d data=%s",ll,hl,entry)
     return rt
@@ -497,9 +498,10 @@ class AVNGpsdFeeder(AVNGpsd):
           AVNLog.info("feeder - gpsd connected from %s",unicode(addr))
           try:
             while True:
-              data=self.popListEntry(waitTime=waitTime)
+              data=self.popListEntry(waitTime=waitTime,includeSource=True)
               if not data is None:
-                self.gpsdsocket.sendall(data)
+                if not data.omitDecode:
+                  self.gpsdsocket.sendall(data.data)
           except Exception as e:
             AVNLog.warn("feeder exception - retrying %s",traceback.format_exc())
       except Exception as e:
@@ -534,7 +536,7 @@ class AVNGpsdFeeder(AVNGpsd):
       try:
         while True:
           data=self.popListEntry(True,waitTime=waitTime)
-          if not data is None:
+          if not data is None and not data.omitDecode:
             if nmeaParser.parseData(data.data,source=data.source):
               if not hasNmea:
                 self.setInfo(infoName,"feeding NMEA",AVNWorker.Status.NMEA)

@@ -12,6 +12,7 @@ from avnav_api import AVNApi
 
 class Plugin:
   PATH="gps.time"
+  NM = 1852.0
 
   @classmethod
   def pluginInfo(cls):
@@ -82,7 +83,9 @@ class Plugin:
     except:
       self.api.log("exception while reading config values %s",traceback.format_exc())
       raise
-    self.api.log("started with host=%s,port %d"%(host,port))
+    autoSendRMC=int(self.api.getConfigValue('autoSendRMC',"0"))
+    self.api.log("started with host=%s,port %d, autoSendRMC=%d"%(host,port,autoSendRMC))
+    source="plugin-builtin-signalk"
     while True:
       self.api.setStatus("STARTED", "connecting to n2kd at %s:%d"%(host,port))
       try:
@@ -122,9 +125,30 @@ class Plugin:
                       self.api.setStatus("NMEA", "valid time")
                       hasNmea=True
                     self.api.addData(self.PATH,self.formatTime(dt))
+                    if autoSendRMC > 0:
+                      lastRmc=self.api.getSingleValue("internal.last.RMC",includeInfo=True)
+                      now=self.api.timestampFromDateTime()
+                      if lastRmc is None or lastRmc.timestamp < (now - autoSendRMC):
+                        lat=self.api.getSingleValue("gps.lat")
+                        lon=self.api.getSingleValue("gps.lon")
+                        if lat is not None and lon is not None:
+                          speed=self.api.getSingleValue("gps.speed")
+                          cog=self.api.getSingleValue("gps.track")
+                          self.api.debug("generating RMC lat=%f,lon=%f,ts=%s",lat,lon,dt.isoformat())
+                          # $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
+                          fixutc="%02d%02d%02d.%02d"%(dt.hour,dt.minute,dt.second,dt.microsecond/1000)
+                          (latstr,NS)=self.nmeaFloatToPos(lat,True)
+                          (lonstr,EW)=self.nmeaFloatToPos(lon,False)
+                          speedstr="" if speed is None else "%.2f"%(speed*3600/self.NM)
+                          year="%04d"%dt.year
+                          datestr="%02d%02d%s"%(dt.day,dt.month,year[-2:])
+                          cogstr="" if cog is None else "%.2f"%cog
+                          record="$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A"%(fixutc,latstr,NS,lonstr,EW,speedstr,cogstr,datestr)
+                          self.api.addNMEA(record,addCheckSum=True)
+
               #add other decoders here
             except:
-              self.api.log("unable to decode json %s"%l)
+              self.api.log("unable to decode json %s:%s"%(l,traceback.format_exc()))
             pass
           if len(buffer) > 4096:
             raise Exception("no line feed in long data, stopping")
@@ -147,6 +171,22 @@ class Plugin:
     if not t[-1:] == "Z":
       t += "Z"
     return t
+
+  def nmeaFloatToPos(self,pos,isLat):
+    '''return a tuple (string,direction) from a position'''
+    if pos is None:
+      return ("","")
+    dir='N' if isLat else 'E'
+    if pos < 0:
+      dir = 'S' if isLat else 'W'
+      pos=-pos
+    deg = int(pos)
+    min = 60*pos - 60 * deg
+    if isLat:
+      rt="%02d%05.2f"%(deg,min)
+    else:
+      rt = "%03d%05.2f" % (deg, min)
+    return(rt,dir)
 
 
 

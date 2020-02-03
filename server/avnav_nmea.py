@@ -102,7 +102,9 @@ class NMEAParser():
   #add a valid dataset to nav data
   #timedate is a datetime object as returned by gpsTimeToTime
   #fill this additionally into the time part of data
-  def addToNavData(self,data,source='internal',priority=0):
+  def addToNavData(self,data,record=None,source='internal',priority=0):
+    if record is not None:
+      self.navdata.setReceivedRecord(record,source)
     self.navdata.setValue(AVNStore.BASE_KEY_GPS,data,source=source,priority=priority)
     
   #returns an datetime object containing the current gps time
@@ -169,7 +171,10 @@ class NMEAParser():
       pos=-pos
     deg = int(pos)
     min = 60*pos - 60 * deg
-    rt="%d%05.2f"%(deg,min)
+    if isLat:
+      rt="%02d%05.2f"%(deg,min)
+    else:
+      rt = "%03d%05.2f" % (deg, min)
     AVNLog.debug("nmeaFloatToPos for %f (isLat=%s) returns %s,%s",pos,isLat,rt,dir)
     return(rt,dir)
   @classmethod
@@ -256,7 +261,7 @@ class NMEAParser():
         rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
         rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
         rt['mode']=int(darray[6] or '0')
-        self.addToNavData(rt,source=source)
+        self.addToNavData(rt,source=source,record=tag)
         return True
       if tag=='GLL':
         rt['mode']=1
@@ -264,7 +269,7 @@ class NMEAParser():
           rt['mode']= (0 if (darray[6] != 'A') else 2)
         rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
         rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
-        self.addToNavData(rt,source=source)
+        self.addToNavData(rt,source=source,record=tag)
         return True
       if tag=='VTG':
         mode=darray[2]
@@ -274,7 +279,7 @@ class NMEAParser():
           rt['speed']=float(darray[5] or '0')*self.NM/3600
         else:
           rt['speed']=float(darray[3]or '0')*self.NM/3600
-        self.addToNavData(rt,source=source)
+        self.addToNavData(rt,source=source,record=tag)
         return True
       if tag=='RMC':
         #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
@@ -287,7 +292,7 @@ class NMEAParser():
         rt['track']=float(darray[8] or '0')
         gpsdate = darray[9]
         rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
-        self.addToNavData(rt,source=source,priority=1)
+        self.addToNavData(rt,source=source,priority=1,record=tag)
         return True
       if tag == 'MWV':
         '''
@@ -309,7 +314,7 @@ class NMEAParser():
         if (darray[4] == 'N'):
           windspeed=windspeed*self.NM/3600
         rt['windSpeed']=windspeed
-        self.addToNavData(rt,source=source)
+        self.addToNavData(rt,source=source,record=tag)
         return True
       if tag == 'DPT':
         '''
@@ -329,7 +334,7 @@ class NMEAParser():
           rt['depthBelowWaterline'] = float(darray[1]) + float(darray[2])
         else:
           rt['depthBelowKeel'] = float(darray[1]) + float(darray[2])
-        self.addToNavData(rt,source=source)
+        self.addToNavData(rt,source=source,record=tag)
         return True
       if tag == 'DBT':
         '''
@@ -347,7 +352,7 @@ class NMEAParser():
          7) Checksum
         '''
         rt['depthBelowTransducer'] = float(darray[3])
-        self.addToNavData(rt,source=source)
+        self.addToNavData(rt,source=source,record=tag)
         return True
     except Exception:
       AVNLog.info(" error parsing nmea data " + unicode(data) + "\n" + traceback.format_exc())

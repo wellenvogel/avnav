@@ -73,8 +73,8 @@ class ApiImpl(AVNApi):
         filter=[filter]
     return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,filter=filter)
 
-  def addNMEA(self, nmea, addCheckSum=False):
-    return self.queue.addNMEA(self, nmea,source=self.prefix,addCheckSum=addCheckSum)
+  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True):
+    return self.queue.addNMEA(nmea,source=self.prefix,addCheckSum=addCheckSum,omitDecode=omitDecode)
 
   def addKey(self,data):
     key=data.get('path')
@@ -91,7 +91,7 @@ class ApiImpl(AVNApi):
       self.wildcardPatterns.append(data)
     else:
       self.patterns.append(data)
-  def addData(self,path,value,source=None):
+  def addData(self,path,value,source=None,record=None):
     if source is None:
       source="plugin-"+self.prefix
     matches=False
@@ -107,13 +107,15 @@ class ApiImpl(AVNApi):
     if not matches:
       AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
       return False
+    if record is not None:
+      self.store.setReceivedRecord(record,source)
     self.store.setValue(path,value,source)
     return True
   def getDataByPrefix(self, prefix):
     return self.store.getDataByPrefix(prefix)
 
-  def getSingleValue(self, key):
-    return self.store.getSingleValue(key)
+  def getSingleValue(self, key,includeInfo=False):
+    return self.store.getSingleValue(key,includeInfo=includeInfo)
 
 
   def getConfigValue(self, key, default=None):
@@ -154,6 +156,10 @@ class ApiImpl(AVNApi):
       raise Exception("no layout handler")
     layoutHandler.registerPluginLayout(re.sub(".*\.","",self.prefix),name,layoutFile)
 
+  def timestampFromDateTime(self, dt=None):
+    if dt is None:
+      dt=datetime.datetime.utcnow()
+    return AVNUtil.datetimeToTsUTC(dt)
 
 class AVNPluginHandler(AVNWorker):
   """a handler for plugins"""
