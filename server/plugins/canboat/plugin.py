@@ -14,7 +14,7 @@ class Plugin:
   PATH="gps.time"
   NM = 1852.0
   #PGNS used to set the time
-  DEFAULT_PGNS='129027,129029,129025,126992,129033'
+  DEFAULT_PGNS='126992,129029'
 
   @classmethod
   def pluginInfo(cls):
@@ -153,39 +153,45 @@ class Plugin:
               msg=json.loads(l)
               #{"timestamp":"2016-02-28-20:32:48.226","prio":3,"src":27,"dst":255,"pgn":126992,"description":"System Time","fields":{"SID":117,"Source":"GPS","Date":"2016.02.28", "Time": "19:57:46.05000"}}
               if msg.get('pgn') in handledPGNs:
-                ctime=msg.get('timestamp')
+                #currently we can decode messages that have a Date and Time field set
                 now = self.api.timestampFromDateTime()
-                if ctime is not None and ( now < lastTimeSet or now > (lastTimeSet+timeInterval)):
-                    tsplit=ctime.split(".")
-                    dt=datetime.datetime.strptime(tsplit[0],"%Y-%m-%d-%H:%M:%S")
-                    if len(tsplit) > 1:
-                      dt+=datetime.timedelta(seconds=float("0."+tsplit[1]))
-                    if not hasNmea:
-                      self.api.log("received time %s"%dt.isoformat())
-                      self.api.setStatus("NMEA", "valid time")
-                      hasNmea=True
-                    self.api.addData(self.PATH,self.formatTime(dt))
-                    lastTimeSet=now
-                    if autoSendRMC > 0:
-                      lastRmc=self.api.getSingleValue("internal.last.RMC",includeInfo=True)
-                      if lastRmc is None or lastRmc.timestamp < (now - autoSendRMC) or (lastRmc.timestamp > now) :
-                        lat=self.api.getSingleValue("gps.lat")
-                        lon=self.api.getSingleValue("gps.lon")
-                        if lat is not None and lon is not None:
-                          speed=self.api.getSingleValue("gps.speed")
-                          cog=self.api.getSingleValue("gps.track")
-                          self.api.debug("generating RMC lat=%f,lon=%f,ts=%s",lat,lon,dt.isoformat())
-                          # $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
-                          fixutc="%02d%02d%02d.%02d"%(dt.hour,dt.minute,dt.second,dt.microsecond/1000)
-                          (latstr,NS)=self.nmeaFloatToPos(lat,True)
-                          (lonstr,EW)=self.nmeaFloatToPos(lon,False)
-                          speedstr="" if speed is None else "%.2f"%(speed*3600/self.NM)
-                          year="%04d"%dt.year
-                          datestr="%02d%02d%s"%(dt.day,dt.month,year[-2:])
-                          cogstr="" if cog is None else "%.2f"%cog
-                          record="$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A"%(fixutc,latstr,NS,lonstr,EW,speedstr,cogstr,datestr)
-                          self.api.addNMEA(record,addCheckSum=True,source=source)
-
+                if now < lastTimeSet or now > (lastTimeSet+timeInterval):
+                  fields = msg.get('fields')
+                  if fields is not None:
+                    cdate = fields.get('Date')
+                    ctime = fields.get('Time')
+                    dt=None
+                    if cdate is not None and ctime is not None:
+                      tsplit = ctime.split(".")
+                      dt = datetime.datetime.strptime(cdate + " " + tsplit[0], "%Y.%m.%d %H:%M:%S")
+                      if len(tsplit) > 1:
+                        dt += datetime.timedelta(seconds=float("0." + tsplit[1]))
+                    if dt is not None:
+                      if not hasNmea:
+                        self.api.log("received time %s"%dt.isoformat())
+                        self.api.setStatus("NMEA", "valid time")
+                        hasNmea=True
+                      self.api.addData(self.PATH,self.formatTime(dt))
+                      lastTimeSet=now
+                      if autoSendRMC > 0:
+                        lastRmc=self.api.getSingleValue("internal.last.RMC",includeInfo=True)
+                        if lastRmc is None or lastRmc.timestamp < (now - autoSendRMC) or (lastRmc.timestamp > now) :
+                          lat=self.api.getSingleValue("gps.lat")
+                          lon=self.api.getSingleValue("gps.lon")
+                          if lat is not None and lon is not None:
+                            speed=self.api.getSingleValue("gps.speed")
+                            cog=self.api.getSingleValue("gps.track")
+                            self.api.debug("generating RMC lat=%f,lon=%f,ts=%s",lat,lon,dt.isoformat())
+                            # $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
+                            fixutc="%02d%02d%02d.%02d"%(dt.hour,dt.minute,dt.second,dt.microsecond/1000)
+                            (latstr,NS)=self.nmeaFloatToPos(lat,True)
+                            (lonstr,EW)=self.nmeaFloatToPos(lon,False)
+                            speedstr="" if speed is None else "%.2f"%(speed*3600/self.NM)
+                            year="%04d"%dt.year
+                            datestr="%02d%02d%s"%(dt.day,dt.month,year[-2:])
+                            cogstr="" if cog is None else "%.2f"%cog
+                            record="$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A"%(fixutc,latstr,NS,lonstr,EW,speedstr,cogstr,datestr)
+                            self.api.addNMEA(record,addCheckSum=True,source=source)
 
               #add other decoders here
             except:
