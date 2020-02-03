@@ -157,18 +157,18 @@
        * canboat: will receive pgns that are not translated to NMEA0183 - currently only 126992 to get the time
      for canboat to work you potentially need to modify /etc/default/n2kd and /boot/config.txt
 -->
-<!-- ##START SIGNALK CANBOAT
+<!-- ##SIGNALK CANBOAT
 <AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/>
-<AVNSocketReader port="2599" filter="" name="canboatnmea0183"/>
-<AvnPluginHandler>
-<!-- ##START SIGNALK 
+<AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183"/>
+<AVNPluginHandler>
+<!-- ##SIGNALK 
         <builtin-signalk enabled="true"/>
- ##END SIGNALK -->
-<!-- ##START CANBOAT 
+ ##SIGNALK -->
+<!-- ##CANBOAT 
 	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
- ##END CANBOAT -->
+ ##CANBOAT -->
 </AVNPluginHandler>
- ##END SIGNALK CANBOAT-->
+ ##SIGNALK CANBOAT-->
 
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
@@ -198,12 +198,6 @@
 	<Command name="shutdown" command="sudo shutdown -P"/>
 	<Command name="sound" command="/bin/sh $BASEDIR/../raspberry/sound.sh 90%" repeat="1"/>
 </AVNCommandHandler>
-<AVNAlarmHandler>
-		<Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/>
-		<Alarm name="ais" command="sound" parameter="$BASEDIR/../sounds/aisAlarm.mp3" repeat="1"/>
-		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
-		<Alarm name="gps" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
-</AVNAlarmHandler>
 
 </Workers>
 </AVNServer>
