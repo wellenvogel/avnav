@@ -157,14 +157,18 @@
        * canboat: will receive pgns that are not translated to NMEA0183 - currently only 126992 to get the time
      for canboat to work you potentially need to modify /etc/default/n2kd and /boot/config.txt
 -->
-<!-- ##START SIGNALK
-<AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183"/>
+<!-- ##START SIGNALK CANBOAT
+<AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/>
 <AVNSocketReader port="2599" filter="" name="canboatnmea0183"/>
 <AvnPluginHandler>
+<!-- ##START SIGNALK 
         <builtin-signalk enabled="true"/>
-	<builtin-canboat enabled="true" allowKeyOverwrite="true"/>
-</AVNPluginHandler>
  ##END SIGNALK -->
+<!-- ##START CANBOAT 
+	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
+ ##END CANBOAT -->
+</AVNPluginHandler>
+ ##END SIGNALK CANBOAT-->
 
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>

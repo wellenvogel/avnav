@@ -73,8 +73,10 @@ class ApiImpl(AVNApi):
         filter=[filter]
     return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,filter=filter)
 
-  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True):
-    return self.queue.addNMEA(nmea,source=self.prefix,addCheckSum=addCheckSum,omitDecode=omitDecode)
+  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None):
+    if source is None:
+      source=self.prefix
+    return self.queue.addNMEA(nmea,source=source,addCheckSum=addCheckSum,omitDecode=omitDecode)
 
   def addKey(self,data):
     key=data.get('path')

@@ -97,7 +97,7 @@ class AVNApi:
     """
     raise NotImplemented()
 
-  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True):
+  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None):
     """
     add NMEA data to the queue
     caution: you should never add a new NMEA record for each record you received by fetchFromQueue
@@ -108,6 +108,7 @@ class AVNApi:
     @param: omitDecode: if true, do not decode the data (only send it out to listeners)
                         this also prevents setting the receive timestamp for such records
     @type  addCheckSum: bool
+    @param source: the name of the source to be set, defaults to the plugin name
     @return: None
     """
     raise NotImplemented()

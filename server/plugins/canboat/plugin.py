@@ -13,6 +13,8 @@ from avnav_api import AVNApi
 class Plugin:
   PATH="gps.time"
   NM = 1852.0
+  #PGNS used to set the time
+  DEFAULT_PGNS='129027,129029,129025,126992,129033'
 
   @classmethod
   def pluginInfo(cls):
@@ -38,7 +40,38 @@ class Plugin:
           'name':'port',
           'description':'set to canbus json port',
           'default':'2598'
+        },
+        {
+          'name': 'host',
+          'description': 'set to canbus json host',
+          'default': 'localhost'
+        },
+        {
+          'name': 'allowKeyOverride',
+          'description': 'necessary to be able to write time',
+          'default': 'false'
+        },
+        {
+          'name': 'autoSendRMC',
+          'description': 'time in seconds with no RMC to start sending it,0: off',
+          'default': '0'
+        },
+        {
+          'name': 'sourceName',
+          'description': 'source name to be set for the generated records',
+          'default': '<plugin-name>'
+        },
+        {
+          'name': 'timeInterval',
+          'description': 'time in seconds to store time received via n2k',
+          'default': '0.5'
+        },
+        {
+          'name': 'timePGNs',
+          'description':'PGNs used to set time',
+          'default': cls.DEFAULT_PGNS
         }
+
       ],
       'data': [
         {
@@ -77,15 +110,23 @@ class Plugin:
     port=2598
     sock=None
     host=self.api.getConfigValue('host','localhost')
+    timeInterval=0.5
     try:
       port=self.api.getConfigValue('port','2598')
       port=int(port)
+      timeInterval=float(self.api.getConfigValue('timeInterval','0.5'))
     except:
       self.api.log("exception while reading config values %s",traceback.format_exc())
       raise
     autoSendRMC=int(self.api.getConfigValue('autoSendRMC',"0"))
+    handledPGNs=self.api.getConfigValue('timePGNs',self.DEFAULT_PGNS).split(',')
+    if len(handledPGNs) < 1:
+      self.api.log("no pgns to be handled, stopping plugin")
+      self.api.setStatus("INACTIVE", "no pgns to be handled")
+      return
+    handledPGNs=map(lambda p: int(p),handledPGNs)
     self.api.log("started with host=%s,port %d, autoSendRMC=%d"%(host,port,autoSendRMC))
-    source="plugin-builtin-signalk"
+    source=self.api.getConfigValue("sourceName",None)
     while True:
       self.api.setStatus("STARTED", "connecting to n2kd at %s:%d"%(host,port))
       try:
@@ -93,10 +134,11 @@ class Plugin:
         self.api.setStatus("RUNNING", "connected to n2kd at %s:%d" %(host,port))
         hasNmea=False
         buffer=""
+        lastTimeSet=self.api.timestampFromDateTime()
         while True:
           data = sock.recv(1024)
           if len(data) == 0:
-            raise Exception("conenction to n2kd lost")
+            raise Exception("connection to n2kd lost")
           buffer = buffer + data.decode('ascii', 'ignore')
           lines = buffer.splitlines(True)
           if lines[-1][-1] == '\n':
@@ -110,14 +152,12 @@ class Plugin:
             try:
               msg=json.loads(l)
               #{"timestamp":"2016-02-28-20:32:48.226","prio":3,"src":27,"dst":255,"pgn":126992,"description":"System Time","fields":{"SID":117,"Source":"GPS","Date":"2016.02.28", "Time": "19:57:46.05000"}}
-              if msg.get('pgn') == 126992:
-                fields=msg.get('fields')
-                if fields is not None:
-                  cdate=fields.get('Date')
-                  ctime=fields.get('Time')
-                  if cdate is not None and ctime is not None:
+              if msg.get('pgn') in handledPGNs:
+                ctime=msg.get('timestamp')
+                now = self.api.timestampFromDateTime()
+                if ctime is not None and ( now < lastTimeSet or now > (lastTimeSet+timeInterval)):
                     tsplit=ctime.split(".")
-                    dt=datetime.datetime.strptime(cdate+" "+tsplit[0],"%Y.%m.%d %H:%M:%S")
+                    dt=datetime.datetime.strptime(tsplit[0],"%Y-%m-%d-%H:%M:%S")
                     if len(tsplit) > 1:
                       dt+=datetime.timedelta(seconds=float("0."+tsplit[1]))
                     if not hasNmea:
@@ -125,10 +165,10 @@ class Plugin:
                       self.api.setStatus("NMEA", "valid time")
                       hasNmea=True
                     self.api.addData(self.PATH,self.formatTime(dt))
+                    lastTimeSet=now
                     if autoSendRMC > 0:
                       lastRmc=self.api.getSingleValue("internal.last.RMC",includeInfo=True)
-                      now=self.api.timestampFromDateTime()
-                      if lastRmc is None or lastRmc.timestamp < (now - autoSendRMC):
+                      if lastRmc is None or lastRmc.timestamp < (now - autoSendRMC) or (lastRmc.timestamp > now) :
                         lat=self.api.getSingleValue("gps.lat")
                         lon=self.api.getSingleValue("gps.lon")
                         if lat is not None and lon is not None:
@@ -144,7 +184,8 @@ class Plugin:
                           datestr="%02d%02d%s"%(dt.day,dt.month,year[-2:])
                           cogstr="" if cog is None else "%.2f"%cog
                           record="$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,%s,,,A"%(fixutc,latstr,NS,lonstr,EW,speedstr,cogstr,datestr)
-                          self.api.addNMEA(record,addCheckSum=True)
+                          self.api.addNMEA(record,addCheckSum=True,source=source)
+
 
               #add other decoders here
             except:
