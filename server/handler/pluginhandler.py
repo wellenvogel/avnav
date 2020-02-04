@@ -86,7 +86,8 @@ class ApiImpl(AVNApi):
     if self.store.isKeyRegistered(key):
       allowOverwrite=self.getConfigValue("allowKeyOverwrite","false")
       if allowOverwrite.lower() != "true":
-        raise Exception("keys %s already registered"%key)
+        self.error("key %s already registered, skipping it"%key)
+        return
     else:
       self.store.registerKey(key,data,"Plugin: %s"%self.prefix)
     if key.find('*') >= 0:
@@ -289,9 +290,9 @@ class AVNPluginHandler(AVNWorker):
           hasMethods=False
           break
       if hasMethods:
-        AVNLog.info("creating %s" % (modulename))
         #TODO: handle multiple instances from config
         api = ApiImpl(self,self.navdata,self.queue,modulename,inspect.getfile(obj))
+        AVNLog.info("creating %s" % (modulename))
         try:
           description=obj.pluginInfo()
           if description is None or not isinstance(description,dict):
