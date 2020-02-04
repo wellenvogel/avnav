@@ -160,6 +160,7 @@
 <!-- ##SIGNALK CANBOAT
 <AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/>
 <AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183"/>
+ ##SIGNALK CANBOAT-->
 <AVNPluginHandler>
 <!-- ##SIGNALK 
         <builtin-signalk enabled="true"/>
@@ -168,7 +169,6 @@
 	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
  ##CANBOAT -->
 </AVNPluginHandler>
- ##SIGNALK CANBOAT-->
 
 <!-- create chart overview files -->
 <AVNChartHandler></AVNChartHandler>
