@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>Canboat and SignalK</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
   <body>
     <h1>Zusammenwirken mit Canboat und SignalK</h1>
@@ -12,12 +13,10 @@
     <p>Mit <a href="https://github.com/canboat/canboat">canboat</a> können an
       den Raspberry angeschlossene CAN Adapter (z.B. mit <a href="https://www.reichelt.de/entwicklerboards-can-modul-mcp2515-mcp2562-debo-can-modul-p239277.html">MCP2515</a>
       oder ein <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">Waveshare
-        RS485 CAN-HAT</a>
-      <meta http-equiv="content-type" content="text/html; charset=utf-8">
-      ) oder per USB angeschlossene Adapter (z.B. Actisene NGT-1) genutzt
-      werden. Für die einfachen CAN-Adapter muss darauf geachtet werden, das sie
-      2 Spannungsversorgungen haben (3,3V und 5V) - viele ganz einfache haben
-      das nicht!</p>
+        RS485 CAN-HAT</a> ) oder per USB angeschlossene Adapter (z.B. Actisene
+      NGT-1) genutzt werden. Für die einfachen CAN-Adapter muss darauf geachtet
+      werden, das sie 2 Spannungsversorgungen haben (3,3V und 5V) - viele ganz
+      einfache haben das nicht!</p>
     <img title="Canboat" alt="" src="Canboat.png" width="800">
     <p>Im Bild ist das prinzipielle set up zu sehen, so wie es von den headless
       Images bereitgestellt wird. </p>
@@ -31,27 +30,27 @@
       noch entsprechend konfiguriert werden - in den images ist das bereits
       vorbereitet).</p>
     <p>Das interface sollte mit</p>
-    <pre>ifconfig can0</pre>
+    <div class="code">ifconfig can0</div>
     <p>sichtbar sein.</p>
     <p>Für einen per USB angeschlossenen Actisense NGT-1 siehe die <a href="https://github.com/canboat/canboat/wiki/actisense-serial">Beschreibung
         bei canboat</a>.</p>
     <p>Avnav kommuniziert mit dem <a href="https://github.com/canboat/canboat/wiki/n2kd">n2kd</a>.
       Dieser konvertiert empfangene NMEA2000 Daten in NMEA0183 (nicht ganz
       vollständig). Die Konfiguration für canboat erfolgt über die Datei</p>
-    <pre>/etc/default/n2kd</pre>
+    <div class="code">/etc/default/n2kd</div>
     <p>In den Images ist hier eine Verbindung zu can0 vorbereitet, für einen per
       USB angeschlossenen Adapter muss hier ggf. geändert werden. Falls ein
       Adapter per USB angeschlossen wird, sollte er einen Eintrag in der
       avnav_server.xml bekommen, damit er dort nicht genutzt wird (bei
       Einstecken die Status-Seite beobachten und die USB-Id von dort kopieren),
       dann entsprechend eintragen:</p>
-    <pre>&lt;AVNUsbSerialReader .....&gt;<br>&lt;UsbDevice usbid="x:y.z" type="ignore"/&gt; <br>....</pre>
+    <div class="code">&lt;AVNUsbSerialReader .....&gt;<br>&lt;UsbDevice usbid="x:y.z" type="ignore"/&gt; <br>....</div>
     <p>Wenn alles korrekt konfiguriert ist, sollten auf den ports 2599 und 2598
       NMEA-Daten bzw. json Daten zu sehen sein, wenn auf dem Bus NMEA2000
       traffic vorhanden ist. Kontrolle z.B.</p>
-    <pre>nc localhost 2599</pre>
+    <div class="code">nc localhost 2599</div>
     <p>Sonst den Zustand von canboat mit</p>
-    <pre>sudo systemctl status canboat</pre>
+    <div class="code">sudo systemctl status canboat</div>
     <p>prüfen.</p>
     <p>Für AvNav sollten 2 Verbindungen zum n2kd konfiguriert werden. Über eine
       Verbindung empfängt er die NMEA0183 Daten und über die andere Verbindung
@@ -64,11 +63,9 @@
       we3rden bei einer Image Installation automatisch aufgesetzt, sonst sind
       sie im Template unter /usr/lib/avnav/raspberry/avnav_server.xml zu finden
       und können von dort kopiert werden.</p>
-    <pre>&lt;AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/&gt;</pre>
-    <pre>&lt;AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183"/&gt;</pre>
-    <pre>&lt;AVNPluginHandler&gt;</pre>
-    <pre>&nbsp;&nbsp;&nbsp; &lt;builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/&gt;</pre>
-    <pre>&lt;/AVNPluginHandler&gt;</pre>
+    <div class="code">&lt;AVNSocketWriter port="34568" maxDevices="5" filter=""read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/&gt;
+&lt;AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183"/&gt;
+&lt;AVNPluginHandler&gt;<br>  &lt;builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
     <p>Mit dem ersten Eintrag wird ein zusätzlicher Port erzeugt, auf dem AvNav
       seine NMEA-Daten ausgibt - aber ohne die per canboat empfangenen Daten.
       Das wird für die Integration mit SignalK genutzt, wenn SignalK die
@@ -97,21 +94,22 @@
       bei AvNav der Port 34568 genutzt (siehe oben). Bei SignalK wird ein
       enstprechender Kanal konfiguriert.</p>
     <p>AvNav pollt 1x pro Sekunde die URL</p>
-    <pre>http://localhost:3000/signalk/v1/api/vessels/self</pre>
+    <div class="code">http://localhost:3000/signalk/v1/api/vessels/self</div>
     <p>und trägt die empfangenen Daten intern unter</p>
-    <pre>gps.signalk....</pre>
+    <div class="code">gps.signalk....</div>
     <p>ein (nur die values der Werte).</p>
     <p>Damit sind diese Daten in der App anzeigbar. Ein <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/example.json">entsprechendes
         Layout</a> wird mitgeliefert und kann angepasst werden. Dieses Layout
-      kann über die Settings Seite gewählt werden (system.plugin.builtin-signalk.example)
-      - es sist aber nur sichtbar, wenn das Plugin aktiv ist.</p>
+      kann über die Settings Seite gewählt werden
+      (system.plugin.builtin-signalk.example) - es sist aber nur sichtbar, wenn
+      das Plugin aktiv ist.</p>
     <p>Die Kommunikation mit SignalK erfolgt über ein plugin, das entsprechend
       konfiguriert werden muss (in den Images entsprechend vorbereitet, Beispiel
       sonst wieder unter /usr/lib/avnav/raspberry/avnav_server.xml):</p>
-    <pre>&lt;AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/&gt;</pre>
-    <pre>&lt;AVNPluginHandler&gt;</pre>
-    <pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;builtin-signalk enabled="true"/&gt;</pre>
-    <pre>&lt;/AVNPluginHandler&gt;</pre>
+    <div class="code">&lt;AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/&gt;
+&lt;AVNPluginHandler&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;builtin-signalk enabled="true"/&gt;
+&lt;/AVNPluginHandler&gt;</div>
     <p>Wenn die canboat Integration ebenfalls genutzt wird, dann bitte beide
       plugins gemeinsam unter einem AVNPluginHandler Eintrag konfigurieren.</p>
     <p>Da SignalK alle NMEA Daten von AvNav empfängt, ist beispielsweise auch

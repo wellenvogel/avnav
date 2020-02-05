@@ -1,0 +1,11 @@
+.code {
+    background-color: #e9eae978;
+    padding: 1em;
+    white-space: pre;
+    border-radius: 0.3em;
+    font-family: monospace;
+}
+
+.red{
+   color: red;
+}
