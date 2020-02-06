@@ -10,6 +10,7 @@ $navlist=array(
 	array('url'=>"$pdir/docs/release.html",'title'=>'Releases'),
 	array('url'=>"$pdir/docs/avnav-chart-convert-de.html",'title'=>'Karten'),
 	array('url'=>"$pdir/docs/avnav-de.html",'title'=>'Beschreibung'),
+	array('url'=>"$pdir/docs/hints/index.html",'title'=>'Spezielle Themen'),
 	array('url'=>"$pdir/docs/avnav-android-de.html",'title'=>'Android'),
 	array('url'=>"$pdir/../../segeln/index.php",'title'=>'Segeln'),
 );

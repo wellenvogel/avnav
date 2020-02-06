@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>AvNav Beschreibung</title>
+    <link href="styles.css" rel="stylesheet" type="text/css">
   </head>
   <body>
     <h2 class="western">AvNav - Navigation per WebApp</h2>
@@ -31,23 +32,99 @@
     <p>Im Folgenden beschreibe ich kurz die Bedienung der aktuellen Version,
       danach einige technische Details.</p>
     <h3 class="western">Die Bedienung</h3>
-    <p>Nach dem Aufruf der Start-Url landet man auf der Einstigesseite.</p>
-    <p><img src="navi-start.png" name="Grafik3" border="0" width="600"> </p>
+    <div>Nach dem Aufruf der Start-Url landet man auf der </div>
+    <div>
+      <h4><a name="mainpage" id="mainpage"></a>Einstiegsseite.</h4>
+    </div>
+    <div><br>
+    </div>
+    <div> <img src="navi-start.png" name="Grafik3" class="image">
+      <div class="inline"> <b>Buttons</b>
+        <table border="1">
+          <tbody>
+            <tr>
+              <td>Icon</td>
+              <td>Name</td>
+              <td>Beschreibung</td>
+            </tr>
+            <tr>
+              <td><img class="inlineimage" src="viewerimages/icons-new/status.svg"
+                  alt=""><br>
+              </td>
+              <td>ShowStatus<br>
+              </td>
+              <td style="height: 36px;">Anzeige der Status-Seite für den Server<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img class="inlineimage" src="viewerimages/icons-new/ic_settings.svg"
+                  alt=""><br>
+              </td>
+              <td>ShowSettings<br>
+              </td>
+              <td>Anzeige der Seite mit den Einstellungen<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/ic_file_download.svg" alt=""
+                  class="inlineimage"><br>
+              </td>
+              <td>ShowDownload<br>
+              </td>
+              <td>Anzeige der Seite zum Herunterladen und Hochladen von Tracks,
+                Routen, Karten und Layouts<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/plug.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>Connected</td>
+              <td>Wenn aktiv wird die Navigation (Wegepunkte, Routen) auch auf
+                dem Server aktiviert, sonst nur lokal</td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/data.svg" class="inlineimage"><br>
+              </td>
+              <td>ShowGps<br>
+              </td>
+              <td>Anzeige des Dashboards<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>Night<br>
+              </td>
+              <td>Nachtmodus aktivieren<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>MOB</td>
+              <td>Mann über Bord (nur sichtbar wenn connected)</td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>MainAddOns</td>
+              <td>Anzeige von konfigurierten user apps (z.B. signalK)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
     <p>Im Hauptbereich der Seite befindet sich die Liste der vom Server
       gefundenen Kartensätze (beim Raspi-Server gemf files unter
       /data/avnav/charts, in der Android App unter charts im gewählten
-      Verzeichnis). Durch Anklicken gelang man zur Navigationsseite mit dem
-      enstprechenden Kartensatz.</p>
-    <p>Wie auf allen Seiten befindet sich am rechten Rand eine Button-Leiste.
-      Von hier aus erreich man eine Status-Seite des Servers, Einstellungen,
-      Downloads, das GPS Display und eine Info Seite. Ausserdem kann hier der
-      Nachtmodus aktiviert werden.</p>
-    <h4 class="western">Die Navigationsseite</h4>
+      Verzeichnis). Durch Anklicken gelang man zur <a href="#navpage">Navigationsseite</a>
+      mit dem enstprechenden Kartensatz.</p>
+    <p>Wie auf allen Seiten befindet sich am rechten Rand eine Button-Leiste. </p>
+    <h4 class="western"><a name="navpage" id="navpage"></a>Die Navigationsseite</h4>
     <p><br clear="RIGHT">
       Dieses Bild zeigt einen gesetzten Marker (locked) – das Boot ist auf Kurs.</p>
-    <div><img src="navi-routing-wp-ais.png" name="Grafik4" style="display:inline-block;"
-        border="0" height="400">
-      <div style="display: inline-block;margin-left: 2em;"> <span style="font-weight: bold;">Buttons</span><br>
+    <div><img src="navi-routing-wp-ais.png" name="Grafik4" class="image">
+      <div class="inline"> <span style="font-weight: bold;">Buttons</span><br>
         <ul>
           <li>Zoom In</li>
           <li>Zoom Out</li>
@@ -299,8 +376,8 @@
     <p>Über den Button (000) auf der Start-Seite oder einen Klick auf die
       Position (rechts unten) auf der Navi-Seite gelangt man zu einer Anzeige
       der GPS-Daten ohne Karte.</p>
-    <p>Im Layout können bis zu 5 solcher Seiten mit verschiedenen Anzeigen konfiguriert
-      werden.</p>
+    <p>Im Layout können bis zu 5 solcher Seiten mit verschiedenen Anzeigen
+      konfiguriert werden.</p>
     <img alt="" src="gps-display.png" height="400"><br>
     <br>
     Ein Klick auf die Anzeige des nächsten AIS-Zieles (rechts unten) führt zur
@@ -425,8 +502,8 @@
     <p>Die WebApp besteht aus einem HTML Gerüst (avnav_viewer.html) sowie den
       eingebundenen JavaScript Bibliotheken und einem JavaScript Anteil
       (avnav_min.js). Die Darstellung ist weitgehend von der eigentlichen
-      Funktion entkoppelt und wird per css (unter Nutzung von less) gesteuert. Als
-      Framework wird <a href="https://reactjs.org/">ReactJs</a> verwendet.</p>
+      Funktion entkoppelt und wird per css (unter Nutzung von less) gesteuert.
+      Als Framework wird <a href="https://reactjs.org/">ReactJs</a> verwendet.</p>
     <p>Die Kommunikation erfolgt durch einfache GET/POST requests zur url <a href="http://avnav/viewer/avnav_navi.php">http://avnav/viewer/avnav_navi.php</a>,
       dann folgen Parameter, die den request beschreiben. Die Antworten vom
       server sind json kodiert.</p>

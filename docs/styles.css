@@ -17,3 +17,31 @@
 	display: inline-block;
 }
 
+.image{
+	width: 600px;
+}
+
+.inline{
+	display: inline-block;
+	margin-left: 2em;
+	vertical-align: top;
+	max-width: 35em;
+}
+
+.mainlist{
+    font-size: 1.2em;
+    list-style: none;
+    line-height: 1.8em;
+    background-color: #e9eae978;
+    border-radius: 0.5em;
+    padding: 1em;
+      }
+ 
+table{
+    border-spacing: 0;
+    border-width: 1px;
+    border-color: #80808061;
+}
+td{
+    padding: 5px;
+}     
