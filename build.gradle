@@ -5,19 +5,20 @@ import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.lib.ObjectId
 import org.gradle.api.*
 buildscript{
-	repositories{
-		mavenCentral()
-	}
+    repositories{
+        mavenCentral()
+    }
     dependencies{
         classpath localGroovy()
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:7.5.0'
         classpath 'commons-net:commons-net:3.3'
         classpath 'org.eclipse.jgit:org.eclipse.jgit:4.6.0.201612231935-r'
+        classpath group: 'org.ccil.cowan.tagsoup', name: 'tagsoup', version: '1.2.1'
     }
 }
 
 repositories{
-	mavenCentral()
+    mavenCentral()
 }
 
 
@@ -550,7 +551,7 @@ task uploadAccessWindows(type: UploadTask){
     inputFile=windowsHtAccess
     subDir=null
     getTargetName={ return ".htaccess"}
-    baseDir="/www/software/avnav/downloads"	
+    baseDir="/www/software/avnav/downloads" 
 }
 
 def ks=System.getenv("ANDROID_KEYSTORE")
@@ -592,9 +593,73 @@ task uploadViewerRelease(type: UploadTask){
     inputFiles+=fileTree("viewer/demo",{
         include "demo-bsh/**"
     })
-    baseDir="/www/software/avnav/viewerr"
+    baseDir="/www/software/avnav/viewern"
     //deleteTargetDir=true
     dependsOn releaseViewer
+}
+
+task uploadDoc(type: UploadTask){
+    inputFiles=fileTree("docs",{
+        exclude "viewerimages"
+        include "**/*html"
+        include "**/*css"
+        include "**/*pdf"
+        include "**/*PDF"
+    })
+    deleteTargetDir=true
+    baseDir="/www/software/avnav/docs"
+    doFirst(){
+        def imageFiles=findImages(inputFiles)
+        imageFiles.each { img->
+            logger.info("add image file $img")
+            inputFiles.include(img)
+        }
+    }
+}
+import groovy.util.XmlSlurper
+def findImages(fileTree){
+    def result=[]
+    fileTree.visit{ FileVisitDetails element ->
+          if (! element.getFile().isFile()) return;
+          if (! element.getName().matches('.*html$')) return;  
+          def tagsoupParser = new org.ccil.cowan.tagsoup.Parser()
+          def page = new XmlSlurper(tagsoupParser).parse(element.getFile())
+          page.'**'.findAll().each{ node->
+            if (node.name() == "img" ){
+                def imgFile=RelativePath.parse(true,node.@src.toString())
+                def completePath=element.getRelativePath().getParent().append(imgFile)
+                def segments=new ArrayList()
+                for (String s : completePath.getSegments()){
+                    if (s == ".."){
+                        if (segments.size() > 0 && segments[segments.size()-1] != ".." ){
+                            segments.remove(segments.size()-1)
+                        }
+                        else{
+                            segments.add(s)
+                        }
+                    }
+                    else{
+                        segments.add(s)
+                    }
+                }
+                def completeName=new RelativePath(true,segments.toArray(new String[segments.size()])).getPathString();
+                if (completeName.matches(".*viewerimages/.*")) return
+                result.add(completeName)
+            }
+          }  
+    }
+    return result
+}
+task findImages(type: DefaultTask){
+    doFirst(){
+            def list=fileTree("docs",{
+                    include "**/*html"
+            })
+        def rt=findImages(list)
+        rt.each { img ->
+            println "image: ${img}"
+        }
+    }
 }
 
 task upload{
