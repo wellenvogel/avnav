@@ -4,8 +4,16 @@
     white-space: pre;
     border-radius: 0.3em;
     font-family: monospace;
+    line-height: 1.6em;
 }
 
 .red{
    color: red;
 }
+
+.inlineimage{
+	width: 2em;
+	height: 2em;
+	display: inline-block;
+}
+

@@ -6,7 +6,7 @@ if [ "$1" != "" ] ; then
  SUB=$1
 fi
 set -x
-rsync -rav --exclude="*bak" --exclude="*odg" --exclude="*php" --delete $BASE/docs/ $TARGET/docs
+rsync -rav --no-links --exclude="*bak" --exclude="*odg" --exclude="*php" --delete $BASE/docs/ $TARGET/docs
 rsync -rav --include="*php" --exclude="*" $BASE/docs/ $TARGET
 rsync -rav --delete $BASE/viewer/build/$SUB/ $TARGET/viewern
 rsync -rav --delete $BASE/mobac/testsrc/build/libs/avnav-mapsources.zip $TARGET/downloads
