@@ -575,6 +575,7 @@ class UploadTask extends DefaultTask{
                 Hashes=project.computeHashes(inputFiles)
                 def remoteHashes=readRemoteHashes(ftp,dir)
                 if (remoteHashes == null){
+                    hasChanges=true
                     logger.lifecycle("no remote hashes file found, deleting remote dir")
                     removeRemoteDir(ftp,dir)
                 }
@@ -736,7 +737,7 @@ task addImagesToDoc(type: DefaultTask){
 task uploadDoc(type: UploadTask){
     inputFiles=docTree
     deleteTargetDir=false
-    baseDir="/www/software/avnav/doctest"
+    baseDir="/www/software/avnav/docs"
     useHashes=true
     dependsOn addImagesToDoc
 }
