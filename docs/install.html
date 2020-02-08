@@ -1,7 +1,8 @@
 <html>
   <head>
-    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>Avnav Installation</title>
+    <link href="styles.css" rel="stylesheet" type="text/css">
   </head>
   <body>
     <h3 class="western">AvNav Installation</h3>
@@ -42,11 +43,10 @@
     Internet-Zugriff).<br>
     Wenn weitere WLAN sticks gesteckt werden, werden weitere access Points
     aufgemacht.<br>
-    Ausnahme: WLAN-Stick wie im Bild - dieser wird zur Verbindung mit einem
-    externen WLAN genutzt. Beim Raspberry 4 ist es der blaue Anschluss auf der
-    Platinen-Seite. Intern heißt das interface dann wlan-av1.<img style="width: 468px;"
-      src="raspi3-wlan.jpg"><br>
-    <br>
+    <p> Ausnahme: WLAN-Stick wie im Bild - dieser wird zur Verbindung mit einem
+      externen WLAN genutzt. Beim Raspberry 4 ist es der blaue Anschluss auf der
+      Platinen-Seite. Intern heißt das interface dann wlan-av1. </p>
+    <img class="image" src="raspi3-wlan.jpg">
     <p>Port 80 ist direkt zum Web server von avnav weitergeleitet (dieser
       lauscht auf port 8080).<br>
       Wenn alles richtig aufgesetzt ist, sollte sich unter der url <a href="http://avnav/">http://avnav.avnav.de</a>
@@ -80,36 +80,36 @@
     Informationen dazu findet man wieder in seiner <a href="https://open-mind.space/rasbian-buster-lite-zu-avnavtouch-in-5-schritten/">Beschreibung</a>.<br>
     Für die Installation auf einem anderen raspberry System (nicht avnav-touch)
     ändert man Schritt 5 der Beschreibung ab zu:<br>
-    <pre>sudo apt-get install avnav avnav-raspi</pre>
+    <div class="code">sudo apt-get install avnav avnav-raspi</div>
     Der raspberry startet danach avnav automatisch mit dem Nutzer pi.<br>
     <br>
     Für ein anderes debian ändert man Schritt 5 zu:<br>
-    <pre>sudo apt-get install avnav</pre>
+    <div class="code">sudo apt-get install avnav</div>
     Danach kann man als jeder Nutzer mit dem Kommando<br>
-    <pre>avnav</pre>
+    <div class="code">avnav</div>
     den Server starten.<br>
     Mit <br>
-    <pre>sudo systemctl enable avnav</pre>
-    <pre>sudo systemctl start avnav</pre>
+    <div class="code">sudo systemctl enable avnav
+sudo systemctl start avnav</div>
     kann man avnav mit dem Benutzer avnav automatisch beim Systemstart
     aktivieren.<br>
     Alternativ kann man auch die debian Pakete direkt von der download Seite
     herunterladen:<br>
     <ul>
-      <li><a title="downloads/releases" href="../downloads/release">Releases</a></li>
-      <li><a href="../downloads/daily">Tägliche Builds</a></li>
+      <li><a title="downloads/releases" href="../index.php?dir=downloads/release">Releases</a></li>
+      <li><a href="../index.php?dir=downloads/daily">Tägliche Builds</a></li>
     </ul>
     Nach dem Herunterladen kann man die Pakete mit<br>
-    <pre>sudo dpkg -i avnav_xxxxxxxx_all,deb</pre>
-    <pre>sudo dpkg -i avnav-raspi_xxxxxxxx_all.deb</pre>
-    <pre>sudo apt-get -f</pre>
+    <div class="code">sudo dpkg -i avnav_xxxxxxxx_all,deb
+sudo dpkg -i avnav-raspi_xxxxxxxx_all.deb
+sudo apt-get -f</div>
     installieren (dabei das -raspi... Paket nur auf einem raspberry). Die ersten
     Kommandos werden typischerweise Fehler erzeugen, das letzte lädt dann die
     fehlenden Abhängigkeiten.<br>
     Wenn man auch die Karten-Konvertierung auf dem Linux Rechner mit einer
     kleinen GUI machen möchte, muss man zusätz das Paket python-wxgtk3.0
     installiert werden. Dann muss man avnav mit<br>
-    <pre>avnav -g</pre>
+    <div class="code">avnav -g</div>
     starten.<br>
     <br>
     <h3><a name="Windows"></a>Windows</h3>
