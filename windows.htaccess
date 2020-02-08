@@ -2,3 +2,12 @@ AddType application/octet-stream .img
 Options -Indexes
 RewriteEngine on
 RewriteRule "latestwindows" "release/VERSION/" [PT]
+RewriteCond %{REQUEST_URI}::$1 ^(.*/)(.*)::\2$
+RewriteRule ^(.*)$ - [E=BASE:%1]
+
+RewriteCond %{REQUEST_URI} "downloads/$"
+RewriteRule .* %{ENV:BASE}../docs/install.html [R,L]
+
+RewriteCond %{REQUEST_URI} "downloads/index.php$"
+RewriteRule .* %{ENV:BASE}../docs/install.html [R,L]
+

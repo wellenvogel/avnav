@@ -16,12 +16,35 @@ $navlist=array(
 );
 include "../../Templates/top.php";
 
-if (isset($_REQUEST['ifc'])){
-    $ifc=$_REQUEST['ifc'];
+function getScriptRoot(){
+  $root=realpath(dirname(__FILE__));
+  $doc=realpath($_SERVER['DOCUMENT_ROOT']);
+  return substr($root,strlen($doc))."/";
+}
+
+function sanitize($ifc,$base){
     $ifc=preg_replace("&[^0-9a-zA-Z./_-]*&","",$ifc);
     $ifc=preg_replace("/\.\./","",$ifc);
     $ifcpath=preg_replace("?[^/]*$?","",$ifc);
-    $ifc=dirname($script)."/".$ifc;
+    $ifc=$base."/".$ifc;
+    return $ifc;
+}
+
+if (isset($_REQUEST['dir'])){
+    $dir=sanitize($_REQUEST['dir'],"");
+    if (is_dir(dirname(__FILE__).$dir)){
+        print "<iframe class=\"full\" src=\"".getScriptRoot().$dir."\"/>";
+    }
+}
+else{
+
+    if (isset($_REQUEST['ifc'])){
+        $ifc=$_REQUEST['ifc'];
+    }
+    else{
+        $ifc="docs/beschreibung.html";
+    }
+    $ifc=sanitize($ifc,dirname($script));
 
     $f=fopen($ifc,"r");
     while ($line=fgets($f)){
