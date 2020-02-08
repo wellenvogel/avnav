@@ -1,3 +1,4 @@
+import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import org.apache.commons.net.ftp.*
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
@@ -368,6 +369,26 @@ task beta{
     }
 }
 
+def md5( obj ) {
+    def hash = MessageDigest.getInstance( 'MD5' ).with {
+        obj.eachByte( 8192 ) { bfr, num ->
+            update bfr, 0, num
+        }
+        it.digest()
+    }
+    return new BigInteger( 1, hash ).toString( 16 ).padLeft( 32, '0' )
+
+}
+def computeHashes(fileTree){
+    def rt=[:]
+    fileTree.visit { FileVisitDetails element ->
+        if (element.isDirectory()) return
+        def name=element.getPath()
+        def hash=md5(element.open())
+        rt.put(name,hash)
+    }
+    return rt
+}
 
 class UploadTask extends DefaultTask{
 
@@ -377,6 +398,8 @@ class UploadTask extends DefaultTask{
             throw new Exception("negative ftp reply: "+ftp.getReplyString())
         }
     }
+
+    protected Hashes=[:]
 
     private void removeRemoteDir(FTPClient ftpClient, String dirToList) {
         logger.info("delete remote dir $dirToList")
@@ -462,9 +485,53 @@ class UploadTask extends DefaultTask{
         }
         logger.lifecycle("upload of $ifile complete")
     }
+
+    protected void writeRemoteHashes(FTPClient ftp,String baseDir,HashMap hashes){
+        createRemoteDir(ftp,baseDir)
+        ftp.setFileType(FTP.BINARY_FILE_TYPE)
+        def os=ftp.storeFileStream(hashFileName)
+        os.withPrintWriter { wr ->
+            hashes.each { name, md5 ->
+                logger.debug("writing remote hash entry name=${name}, hash=${md5}")
+                wr.println("${md5} ${name}")
+            }
+        }
+        ftp.completePendingCommand()
+    }
+
+    protected Map readRemoteHashes(FTPClient ftp, String baseDir){
+        def rt=[:]
+        ftp.setFileType(FTP.BINARY_FILE_TYPE)
+        def cs=ftp.changeWorkingDirectory(baseDir)
+        if ( !cs){
+            logger.info("base dir ${baseDir} not found in remote, unable to read hashes")
+            return null
+        }
+        logger.info("trying to read remote hash file ${baseDir}/${hashFileName}")
+        def is=ftp.retrieveFileStream(hashFileName)
+        if (is == null) {
+            logger.info("ftp reply code was ${ftp.getReplyCode()}")
+            return null
+        }
+        is.withReader{ rd->
+            rd.readLines().each{ line->
+                def nv=line.split(" ",2)
+                if (nv.size() < 2){
+                    logger.info("invalid line in remote hash: ${line}, ignoring")
+                    return
+                }
+                logger.debug("reading remotze hash, name=${nv[1]}, md5=${nv[0]}")
+                rt.put(nv[1],nv[0])
+            }
+        }
+        ftp.completePendingCommand();
+        return rt
+    }
     def server="www.wellenvogel.net"
     def baseDir="/www/software/avnav/downloads/daily"
     def subDir=project.avnavVersion
+    def useHashes=false
+    def hashFileName="_hashes"
 
     File inputFile
     def getTargetName=null
@@ -499,15 +566,67 @@ class UploadTask extends DefaultTask{
             uploadFile(ftp,remoteDir,inputFile)
         }
         else{
+            def skipList=[:]
+            def removeList=[:]
+            def hasChanges=false
             if (deleteTargetDir) removeRemoteDir(ftp,dir)
+            if (useHashes && ! deleteTargetDir){
+                logger.info("computing local hashes")
+                Hashes=project.computeHashes(inputFiles)
+                def remoteHashes=readRemoteHashes(ftp,dir)
+                if (remoteHashes == null){
+                    logger.lifecycle("no remote hashes file found, deleting remote dir")
+                    removeRemoteDir(ftp,dir)
+                }
+                else{
+                   Hashes.each{ name,md5 ->
+                       def remote=remoteHashes.get(name)
+                       if (remote != null){
+                           if (remote == md5){
+                               logger.info("skipping file ${name} due to equal hash")
+                               skipList.put(name,true)
+                           }
+                           else{
+                               logger.info("changed hash for ${name}")
+                               hasChanges=true
+                           }
+                       }
+                       else{
+                           hasChanges=true
+                       }
+                   }
+                   remoteHashes.each { name,md5 ->
+                       if (Hashes.get(name) != null) return;
+                       logger.info("marking remote file ${name} for deletion")
+                       removeList.put(name,true)
+                       hasChanges=true
+                   }
+                   if (hasChanges) ftp.deleteFile(dir+"/"+hashFileName)
+                }
+            }
             inputFiles.visit {FileVisitDetails element->
                 if (!element.isDirectory()) {
+                    if (skipList.get(element.getPath())){
+                        logger.debug("skipping upload for ${element.getPath()}")
+                        return
+                    }
                     String dirname = (dir + "/" + element.relativePath.getPathString()).replaceAll('/[^/]*$', '')
                     uploadFile(ftp, dirname, element.getFile())
                 }
             }
+            removeList.each{ name,flag ->
+                String fileName=dir+"/"+name
+                logger.info("removing remote file ${fileName}")
+                ftp.deleteFile(fileName)
+            }
+            if (useHashes && hasChanges){
+                logger.info("writing remote hashes")
+                writeRemoteHashes(ftp,dir,Hashes)
+            }
+
+
         }
-        checkReply(ftp)
+        //checkReply(ftp)
         ftp.disconnect()
     }
 }
@@ -598,24 +717,41 @@ task uploadViewerRelease(type: UploadTask){
     dependsOn releaseViewer
 }
 
-task uploadDoc(type: UploadTask){
-    inputFiles=fileTree("docs",{
-        exclude "viewerimages"
-        include "**/*html"
-        include "**/*css"
-        include "**/*pdf"
-        include "**/*PDF"
-    })
-    deleteTargetDir=true
-    baseDir="/www/software/avnav/docs"
+def docTree=fileTree("docs",{
+    exclude "viewerimages"
+    include "**/*html"
+    include "**/*css"
+    include "**/*pdf"
+    include "**/*PDF"
+})
+task addImagesToDoc(type: DefaultTask){
     doFirst(){
-        def imageFiles=findImages(inputFiles)
+        def imageFiles=findImages(docTree)
         imageFiles.each { img->
             logger.info("add image file $img")
-            inputFiles.include(img)
+            docTree.include(img)
         }
     }
 }
+task uploadDoc(type: UploadTask){
+    inputFiles=docTree
+    deleteTargetDir=false
+    baseDir="/www/software/avnav/doctest"
+    useHashes=true
+    dependsOn addImagesToDoc
+}
+
+task computeDocHashes(type:DefaultTask){
+    dependsOn addImagesToDoc
+    doFirst(){
+        def hashes=computeHashes(docTree)
+        hashes.each{ n,v->
+            println "${n}=${v}"
+        }
+    }
+}
+
+
 import groovy.util.XmlSlurper
 def findImages(fileTree){
     def result=[]
