@@ -1,0 +1,15 @@
+- programmiert von Wellenvogel (Segel-Forum)
+- Features:
+	Navigation auf kleinen Geräten (Laptop ist immer ein wenig unhandlich) – 7 oder 10 Zoll Tablet wäre Ideal
+	Navigation auch im Cockpit
+	Trackaufzeichnung
+	Verknüpfung mit der „on board“ Navigation (seit einiger Zeit habe ich ein RO4800 als Funke, das auch einen AIS Decoder hat – und ja auch schon GPS Daten bekommt)
+	Nutzung der Rasterkarten (BSB, NV, alles was sich per Download über mobile atlas creator bekommen lässt...)
+	Minimaler Installationsaufwand
+	Klein, wenig Stromverbrauch (sollte möglichst immer laufen können)
+	
+NMEA 0183 on-board
+NMEA 2000 über Konverter
+NMEA Multiplexer 
+NMEA Daten ins WLAN 
+App für Handy/Tablet
