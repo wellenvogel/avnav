@@ -18,8 +18,8 @@
       werden, das sie 2 Spannungsversorgungen haben (3,3V und 5V) - viele ganz
       einfache haben das nicht!</p>
     <img title="Canboat" alt="" src="Canboat.png" width="800">
-    <p>Im Bild ist das prinzipielle set up zu sehen, so wie es von den headless
-      Images bereitgestellt wird. </p>
+    <p>Im Bild ist das prinzipielle set up zu sehen, so wie es von den <a href="../install.html#Headless">headless
+        Images</a> bereitgestellt wird. </p>
     <p>Für einen per <a href="https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md">SPI</a>
       angeschlossenen <a href="https://www.raspberrypi.org/forums/viewtopic.php?t=141052">CAN-Adapter</a>
       muss meist noch ein overlay in /boot/config.txt eingeschaltet werden. Für
@@ -36,14 +36,14 @@
         bei canboat</a>.</p>
     <p>Avnav kommuniziert mit dem <a href="https://github.com/canboat/canboat/wiki/n2kd">n2kd</a>.
       Dieser konvertiert empfangene NMEA2000 Daten in NMEA0183 (nicht ganz
-      vollständig). Die Konfiguration für canboat erfolgt über die Datei</p>
+      vollständig). Die Konfiguration für n2kd erfolgt über die Datei</p>
     <div class="code">/etc/default/n2kd</div>
     <p>In den Images ist hier eine Verbindung zu can0 vorbereitet, für einen per
-      USB angeschlossenen Adapter muss hier ggf. geändert werden. Falls ein
-      Adapter per USB angeschlossen wird, sollte er einen Eintrag in der
-      avnav_server.xml bekommen, damit er dort nicht genutzt wird (bei
-      Einstecken die Status-Seite beobachten und die USB-Id von dort kopieren),
-      dann entsprechend eintragen:</p>
+      USB angeschlossenen Adapter muss diese Datei geändert werden. Falls ein
+      solcher USB-Adapter für NMEA2000 angeschlossen wird, sollte er einen
+      Eintrag in der avnav_server.xml bekommen, damit er dort nicht genutzt wird
+      (bei Einstecken die Status-Seite beobachten und die USB-Id von dort
+      kopieren), dann entsprechend eintragen:</p>
     <div class="code">&lt;AVNUsbSerialReader .....&gt;<br>&lt;UsbDevice usbid="x:y.z" type="ignore"/&gt; <br>....</div>
     <p>Wenn alles korrekt konfiguriert ist, sollten auf den ports 2599 und 2598
       NMEA-Daten bzw. json Daten zu sehen sein, wenn auf dem Bus NMEA2000
@@ -53,16 +53,17 @@
     <div class="code">sudo systemctl status canboat</div>
     <p>prüfen.</p>
     <p>Für AvNav sollten 2 Verbindungen zum n2kd konfiguriert werden. Über eine
-      Verbindung empfängt er die NMEA0183 Daten und über die andere Verbindung
-      direkt einige JSON Daten. Das ist notwendig, da n2kd keinen NMEA-Datensatz
-      mit Datum ausgibt (z.B. RMC). Daher kann avnav direkt die pgns
-      126992,129029 aus um intern Datum und Zeit zu setzen und kann daraus auch
-      einen RMC Datensatz generieren (wenn über NMEA gültige Positionsdaten
-      empfangen werden).</p>
+      Verbindung (Port 2599) empfängt er die NMEA0183 Daten und über die andere
+      Verbindung
+      (Port 2598)&nbsp; direkt einige JSON Daten. Das ist notwendig, da n2kd
+      keinen NMEA-Datensatz mit Datum ausgibt (z.B. RMC). Um das Datum zu
+      erhalten, kann avnav direkt die pgns 126992,129029 lesen um intern Datum
+      und Zeit zu setzen und kann daraus auch einen RMC Datensatz generieren
+      (wenn über NMEA gültige Positionsdaten empfangen werden).</p>
     <p>Dazu sind in der avnav_server.xml einige Konfigurationen nötig. Diese
-      we3rden bei einer Image Installation automatisch aufgesetzt, sonst sind
-      sie im Template unter /usr/lib/avnav/raspberry/avnav_server.xml zu finden
-      und können von dort kopiert werden.</p>
+      werden bei einer Image Installation automatisch aufgesetzt, sonst sind sie
+      im Template unter /usr/lib/avnav/raspberry/avnav_server.xml zu finden und
+      können von dort kopiert werden.</p>
     <div class="code">&lt;AVNSocketWriter port="34568" maxDevices="5" filter=""read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/&gt;
 &lt;AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183"/&gt;
 &lt;AVNPluginHandler&gt;<br>  &lt;builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
@@ -76,8 +77,8 @@
       muss ein Eintrag unter AVNPluginHandler gemacht werden. Mit den Settings
       im Beispiel wird das plugin aktiviert, allowKeyOverwrite erlaubt das
       Überschreiben der internen Zeit durch das plugin und autoSendRMC=30 sorgt
-      dafür, das wenn 30s kein RMC im NMEA Datenstrom aufgetaucht ist, dann wird
-      im Intervall 1s ein RMC geschrieben. Für die Parameter des plugins siehe
+      dafür, das (wenn 30s kein RMC im NMEA Datenstrom aufgetaucht ist) im
+      Intervall 1s ein RMC geschrieben wird. Für die Parameter des plugins siehe
       den <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/canboat/plugin.py">source
         code</a>.&nbsp;</p>
     <p>Ein Senden von Daten über NMEA2000 ist bisher nicht vorgesehen, dass kann
@@ -88,7 +89,7 @@
     <p>Mit dem Stand 20200204 ist ein erster Schritt der <a href="http://signalk.org/">SignalK</a>
       Integration möglich.</p>
     <img alt="SignalK" src="SignalK.png" width="800">
-    <p>Im defaukt set up schickt AvNav alle seine Daten an SignalK weiter (per
+    <p>Im default set up schickt AvNav alle seine Daten an SignalK weiter (per
       NMEA0183), nicht jedoch die per canboat empfangenen Daten. Dafür sollte
       SignalK direkt konfiguriert werden (im Image bereits vorhanden). Dazu wird
       bei AvNav der Port 34568 genutzt (siehe oben). Bei SignalK wird ein
@@ -123,6 +124,5 @@
       filter- und name-Optionen und an den Writern die filter-,readFilter- und
       blackList- Optionen zur Verfügung. Auch die canboat Integration kann dann
       u.U. komplett über signalK abgewickelt werden.</p>
-    <img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage">
   </body>
 </html>
