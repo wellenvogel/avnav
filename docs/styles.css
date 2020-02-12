@@ -4,7 +4,6 @@
     white-space: pre;
     border-radius: 0.3em;
     font-family: monospace;
-    font-size: 1.2em;
     line-height: 1.6em;
 }
 
@@ -30,12 +29,7 @@
 }
 
 .mainlist{
-    font-size: 1.2em;
-    list-style: none;
-    line-height: 1.8em;
-    background-color: #e9eae978;
-    border-radius: 0.5em;
-    padding: 1em;
+    
       }
  
 table{
