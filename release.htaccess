@@ -1,5 +1,6 @@
 Options +Indexes
 RewriteEngine on
+RewriteOptions Inherit
 indexignore ..
 RewriteRule "latest/$" "VERSION/" [PT]
 RewriteRule "latest/(avnav.*)-latest\.(.*)" "VERSION/$1-VERSION.$2" [PT]
