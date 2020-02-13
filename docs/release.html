@@ -6,14 +6,14 @@
   </head>
   <body>
     <h1>Avnav Releases</h1>
-    Das Verzeichnis mit allen Releases findet man <a href="../downloads/release">hier</a>.<br>
+    Das Verzeichnis mit allen Releases findet man <a href="../downloads/release/fr">hier</a>.<br>
     <h2>Hinweise</h2>
     <a href="install.html">Die Installationsanleitung<span style="color: black;"></span></a>
     enthält eine detaillierte Beschreibung der Installationsoptionen. Auf dieser
     Seite finden sich Informationen zu den einzelnen Release-Versionen.<br>
     Nicht mit jedem update werden neue Images bereitgestellt. Zwischen-Updates
-    sind entweder <a href="../downloads/daily">Entwickler-Versionen</a> oder <a
-      href="../downloads/release">Releases</a>.<br>
+    sind entweder <a href="../downloads/daily/fr">Entwickler-Versionen</a> oder
+    <a href="../downloads/release/fr">Releases</a>.<br>
     Um ein solches Update zu installieren, benötigt man eine Kommandozeile auf
     dem pi. Von Windows aus geht das z.B. mit <a href="https://www.putty.org/">putty
       </a>. Dazu die IP Adresse vom pi ermitteln und dann mit putty dorthin
@@ -31,20 +31,21 @@ sudo systemctl start avnav</div>
     <br>
     <dfehler kann="" man="" z.b.="" im="" log="" unter="" home="" pi="" avnav=""
       data="" avnav.log="" sehen.<br=""> Auf dieser Seite sind nur Hinweise zu
-      den <a href="../downloads/release">release-Versionen</a> enthalten, für <a
-        href="../downloads/daily">tägliche Builds</a> kann man die <a href="https://github.com/wellenvogel/avnav/commits/master">commits
-        auf GitHub</a> prüfen.<br>
+      den <a href="../downloads/release/fr">release-Versionen</a> enthalten,
+      für <a href="../downloads/daily/fr">tägliche Builds</a> kann man die <a
+        href="https://github.com/wellenvogel/avnav/commits/master">commits auf
+        GitHub</a> prüfen.<br>
       <br>
       <div> </div>
       <h2>Versionen</h2>
       <p><span style="font-weight: bold;">20200204</span> <a title="release/20200204"
-          href="../downloads/release/20200204">link</a></p>
+          href="../downloads/release/20200204/fr">link</a></p>
       <ul>
         <li>Support für NME2000 (via canboat) und SignalK - siehe <a href="hints/CanboatAndSignalk.html">Beschreibung</a></li>
         <li>Anpassungen am Layout</li>
       </ul>
       <p><span style="font-weight: bold;"><a name="20200126"></a>20200126</span>
-        <a title="release/20200126" href="../downloads/release/20200126">link</a></p>
+        <a title="release/20200126" href="../downloads/release/20200126/fr">link</a></p>
       <ul>
         <li>Fehlerkorrektur Android ständiger Notification-Ton</li>
         <li>Fehlerkorrektur Routen-Länge auf der Detail-Seite.</li>
@@ -52,10 +53,22 @@ sudo systemctl start avnav</div>
           abgebrochen, die aktuelle Position wird als Wegepunkt "MOB" gesetzt
           und es wird ein Alarm ausgelöst. Die MOB Taste bekommt einen roten
           Rand. Beendet wird das MOB über die MOB Taste oder über das Stoppen
-          der Navigation.</li>
+          der Navigation.<br>
+          Wenn in avnav_config.xml ein AlarmHandler konfiguriert wurde, benötigt
+          diese Funktion einen neuen Eintrag dort. <br>
+          Wenn nur die Standard-Sounds für die Alarme verwendet werden sollen,
+          kann der gesamte AVNAlarmHandler Eintrag entfernt werden.<br>
+          <div class="code">&lt;AVNAlarmHandler&gt;
+       &lt;Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/&gt;
+       &lt;Alarm name="ais" command="sound" parameter="$BASEDIR/../sounds/aisAlarm.mp3" repeat="1"/&gt;
+       &lt;Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;
+       &lt;Alarm name="gps" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;
+       <span style="color: #ff6666;">&lt;Alarm name="mob" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="2"/&gt;</span>
+&lt;/AVNAlarmHandler&gt;
+</div></li>
       </ul>
       <p><span style="font-weight: bold;"><a name="20191224"></a>20191224</span>
-        <a title="release/20191224" href="../downloads/release/20191224">link</a></p>
+        <a title="release/20191224" href="../downloads/release/20191224/fr">link</a></p>
       <ul>
         <li>Größerer interner Umbau</li>
         <li>Keyboard Support. Die aktuellen Bindings findet man auf <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/layout/keys.json">GitHub</a>.
@@ -86,7 +99,7 @@ sudo systemctl start avnav</div>
           Beschreibung folgt. Nicht unter Android.</li>
       </ul>
       <p><span style="font-weight: bold;"><a name="20190429"></a>20190429</span>
-        <a title="release/20190429" href="../downloads/release/20190429">link</a></p>
+        <a title="release/20190429" href="../downloads/release/20190429/fr">link</a></p>
       <ul>
         <li>Im neuesten Raspbian gibt es Fehler, die verhindern das bei
           bestimmten REALTEK basierten WLAN-Adaptern ein Neu-Verbinden mit einem
@@ -153,12 +166,11 @@ sudo systemctl start avnav-check-wlan</div>
           neuere finden sich wie unter <a href="install.html">Installation</a>
           beschrieben.</li>
       </ul>
-      <p><span style="font-weight: bold;">20180313</span> <a href="../downloads/release/20180313">link</a></p>
+      <p><span style="font-weight: bold;">20180313</span> <a href="../downloads/release/20180313/fr">link</a></p>
       <ul>
         <li>Ausschalten aller Alarme mittels Taster an GPIO Pin. Dazu muss in
           der avnav_server.xml für den AlarmHandler ein Attribut stopAlarmPin
           angegeben werden. Beispiel:<br>
-          <p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><!--StartFragment--></p>
           <div class="code">&lt;AVNAlarmHandler stopAlarmPin="7"&gt;</div>
           <p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Die
             Pin Nummer ist dabei die Nummer am Pi connector - siehe <a href="http://raspberrypiguide.de/howtos/raspberry-pi-gpio-how-to/">howto
@@ -172,33 +184,32 @@ sudo systemctl start avnav-check-wlan</div>
         <li>Konverter für die Karten auf dem Pi funktioniert wieder mit dem
           neuesten Image (neue gdal Version)</li>
       </ul>
-      <p><span style="font-weight: bold;">20180306</span> <a href="../downloads/release/20180306">link</a></p>
+      <p><span style="font-weight: bold;">20180306</span> <a href="../downloads/release/20180306/fr">link</a></p>
       Korrekturen:<br>
       <ul>
         <li>gps Alarm aktiv</li>
         <li>korrektes Icon für Android "add to homescreen"</li>
       </ul>
-      <p><span style="font-weight: bold;">20180218</span> <a href="../downloads/release/20180218">link</a></p>
+      <p><span style="font-weight: bold;">20180218</span> <a href="../downloads/release/20180218/fr">link</a></p>
       <p>kleinere Fehlerkorrekturen zu 20180215</p>
       <ul>
         <li>Status auf Hauptseite vertauscht für NMEA/AIS</li>
         <li>Versions-Info auf Hauptseite falsch</li>
         <li>kleinere Android Korrekturen</li>
       </ul>
-      <span style="font-weight: bold;">20180215</span> <a href="../downloads/release/20180215">link</a><br>
+      <span style="font-weight: bold;">20180215</span> <a href="../downloads/release/20180215/fr">link</a><br>
       <br>
       Anker Alarm<br>
       Achtung: Dazu muss die avnav_server.xml erweitert werden. (Wenn man neu
       aufsetzt, wird das automatisch erzeugt, dann muss man nichts tun).<br>
       Am Ende bitte einfügen:<br>
       <br>
-      <pre>&lt;AVNCommandHandler &gt;</pre>
-      <pre>&nbsp;&nbsp;&nbsp; &lt;Command name="shutdown" command="sudo shutdown -P"/&gt;</pre>
-      <pre>&nbsp;&nbsp;&nbsp; &lt;Command name="sound" command="/bin/sh $BASEDIR/../raspberry/sound.sh 90%" repeat="1"/&gt;</pre>
-      <pre>&lt;/AVNCommandHandler&gt;</pre>
-      <pre>&lt;AVNAlarmHandler&gt;</pre>
-      <pre>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/&gt;<br>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;<br>	&lt;Alarm name="gps" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;
-&lt;/AVNAlarmHandler&gt;</pre>
+      <div class="code">&lt;AVNCommandHandler &gt;
+&nbsp;&nbsp;&nbsp; &lt;Command name="shutdown" command="sudo shutdown -P"/&gt;
+&nbsp;&nbsp;&nbsp; &lt;Command name="sound" command="/bin/sh $BASEDIR/../raspberry/sound.sh 90%" repeat="1"/&gt;<br>&lt;/AVNCommandHandler&gt;
+&lt;AVNAlarmHandler&gt;
+ &nbsp;&nbsp;&nbsp; &lt;Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/&gt;<br> &nbsp;&nbsp;&nbsp; &lt;Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;<br>     &lt;Alarm name="gps" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;
+&lt;/AVNAlarmHandler&gt;</div>
       Das Kommando, das den Alarm-Sound ausgibt, kann frei angepasst werden
       ("sound" command oder ein anderes) - man kann auch z.B. ein gpio Pin
       schalten. <br>
@@ -234,7 +245,7 @@ sudo systemctl start avnav-check-wlan</div>
       </ul>
       <br>
       <br>
-      <span style="font-weight: bold;">20170410</span> <a href="../downloads/release/20170410">link</a><br>
+      <span style="font-weight: bold;">20170410</span> <a href="../downloads/release/20170410/fr">link</a><br>
       Fehlerkorrekturen:<br>
       <ul>
         <li>track display</li>

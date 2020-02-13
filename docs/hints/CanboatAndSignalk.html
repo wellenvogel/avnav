@@ -54,17 +54,16 @@
     <p>prüfen.</p>
     <p>Für AvNav sollten 2 Verbindungen zum n2kd konfiguriert werden. Über eine
       Verbindung (Port 2599) empfängt er die NMEA0183 Daten und über die andere
-      Verbindung
-      (Port 2598)&nbsp; direkt einige JSON Daten. Das ist notwendig, da n2kd
-      keinen NMEA-Datensatz mit Datum ausgibt (z.B. RMC). Um das Datum zu
-      erhalten, kann avnav direkt die pgns 126992,129029 lesen um intern Datum
-      und Zeit zu setzen und kann daraus auch einen RMC Datensatz generieren
-      (wenn über NMEA gültige Positionsdaten empfangen werden).</p>
+      Verbindung (Port 2598)&nbsp; direkt einige JSON Daten. Das ist notwendig,
+      da n2kd keinen NMEA-Datensatz mit Datum ausgibt (z.B. RMC). Um das Datum
+      zu erhalten, kann avnav direkt die pgns 126992,129029 lesen um intern
+      Datum und Zeit zu setzen und kann daraus auch einen RMC Datensatz
+      generieren (wenn über NMEA gültige Positionsdaten empfangen werden).</p>
     <p>Dazu sind in der avnav_server.xml einige Konfigurationen nötig. Diese
       werden bei einer Image Installation automatisch aufgesetzt, sonst sind sie
       im Template unter /usr/lib/avnav/raspberry/avnav_server.xml zu finden und
       können von dort kopiert werden.</p>
-    <div class="code">&lt;AVNSocketWriter port="34568" maxDevices="5" filter=""read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/&gt;
+    <div class="code">&lt;AVNSocketWriter port="34568" maxDevices="5" <br>   filter=""read="true" minTime="50" <br>   name="nmea0183tosignalk" <br>   blackList="canboatnmea0183,canboatgen"/&gt;
 &lt;AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183"/&gt;
 &lt;AVNPluginHandler&gt;<br>  &lt;builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
     <p>Mit dem ersten Eintrag wird ein zusätzlicher Port erzeugt, auf dem AvNav

@@ -3,12 +3,6 @@ Options -Indexes
 RewriteEngine on
 RewriteOptions Inherit
 RewriteRule "latestwindows/$" "release/VERSION/" [PT]
-RewriteCond %{REQUEST_URI}::$1 ^(.*/)(.*)::\2$
-RewriteRule ^(.*)$ - [E=AVBASE:%1]
-
-RewriteCond %{REQUEST_URI} "downloads/$"
-RewriteRule .* %{ENV:AVBASE}../docs/install.html [R,L]
-
-RewriteCond %{REQUEST_URI} "downloads/index.php$"
-RewriteRule .* %{ENV:AVBASE}../docs/install.html [R,L]
+RewriteRule "latestwindows/fr$" "release/VERSION/fr" [PT]
+RewriteRule "latestwindows/fr/$" "release/VERSION/fr/" [PT]
 
