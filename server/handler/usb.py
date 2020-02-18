@@ -37,6 +37,15 @@ except:
   pass
 
 
+class InfoHandler():
+  def __init__(self,name,parent):
+    self.name=name
+    self.parent=parent
+  def setInfo(self,item,text,status):
+    self.parent.setInfo(self.name,text,status)
+  def deleteInfo(self,item):
+    self.parent.deleteInfo(self.name)
+
 class DummyHandler():
   def __init__(self):
     self.stop=False
@@ -192,12 +201,12 @@ class AVNUsbSerialReader(AVNWorker):
         if param.get('type') is not None:
           handlertype=param.get('type')
         if handlertype == 'writer' or handlertype == "combined":
-          handler=SerialWriter(param,self.writeData,self,sourceName)
+          handler=SerialWriter(param,self.writeData,InfoHandler(usbid,self),sourceName)
           if handlertype == "combined":
             handler.param["combined"]=True
         else:
           if handlertype == 'reader':
-            handler=SerialReader(param, self.writeData, self,sourceName)
+            handler=SerialReader(param, self.writeData, InfoHandler(usbid,self),sourceName)
           else:
             AVNLog.info("ignore device %s : type %s",usbid,handlertype)
             handler=DummyHandler()
