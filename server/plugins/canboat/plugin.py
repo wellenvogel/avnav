@@ -127,6 +127,7 @@ class Plugin:
     handledPGNs=map(lambda p: int(p),handledPGNs)
     self.api.log("started with host=%s,port %d, autoSendRMC=%d"%(host,port,autoSendRMC))
     source=self.api.getConfigValue("sourceName",None)
+    errorReported=False
     while True:
       self.api.setStatus("STARTED", "connecting to n2kd at %s:%d"%(host,port))
       try:
@@ -151,6 +152,7 @@ class Plugin:
           for l in lines:
             try:
               msg=json.loads(l)
+              errorReported=False
               #{"timestamp":"2016-02-28-20:32:48.226","prio":3,"src":27,"dst":255,"pgn":126992,"description":"System Time","fields":{"SID":117,"Source":"GPS","Date":"2016.02.28", "Time": "19:57:46.05000"}}
               if msg.get('pgn') in handledPGNs:
                 #currently we can decode messages that have a Date and Time field set
@@ -200,7 +202,9 @@ class Plugin:
           if len(buffer) > 4096:
             raise Exception("no line feed in long data, stopping")
       except:
-        self.api.log("error connecting to n2kd %s:%d: %s",host,port,traceback.format_exc())
+        if not errorReported:
+          self.api.log("error connecting to n2kd %s:%d: %s",host,port,traceback.format_exc())
+          errorReported=True
         if sock is not None:
           try:
             sock.close()

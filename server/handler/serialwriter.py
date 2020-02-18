@@ -82,7 +82,9 @@ class SerialWriter(SerialReader):
     self.device=None
     self.buffer=None
     self.sourceName=sourceName
-    self.blackList=param.get('blacklist').split(',')
+    self.blackList=[]
+    if param.get('blacklist') is not None:
+      self.blackList =param.get('blacklist').split(',')
     self.blackList.append(sourceName)
 
    

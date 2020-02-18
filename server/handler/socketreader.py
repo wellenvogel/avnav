@@ -76,18 +76,22 @@ class AVNSocketReader(AVNWorker,SocketReader):
   def run(self):
     self.setName("%s-%s:%d"%(self.getThreadPrefix(),self.getStringParam('host'),self.getIntParam('port')))
     info="%s:%d"%(self.getStringParam('host'),self.getIntParam('port'))
+    errorReported=False
     while True:
       try:
         self.setInfo('main',"trying to connect to %s"%(info,),AVNWorker.Status.INACTIVE)
         sock=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getIntParam('timeout'))
         self.setInfo('main',"connected to %s"%(info,),AVNWorker.Status.RUNNING)
       except:
-        AVNLog.info("exception while trying to connect to %s %s",info,traceback.format_exc())
+        if not errorReported:
+          AVNLog.info("exception while trying to connect to %s %s",info,traceback.format_exc())
+          errorReported=True
         self.setInfo('main',"unable to connect to %s"%(info,),AVNWorker.Status.ERROR)
         time.sleep(2)
         continue
       AVNLog.info("successfully connected to %s",info)
       try:
+        errorReported=False
         self.readSocket(sock,'main',self.getSourceName(info))
         time.sleep(2)
       except:

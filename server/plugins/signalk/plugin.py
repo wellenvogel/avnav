@@ -92,6 +92,7 @@ class Plugin:
     baseUrl="http://localhost:%d/signalk"%port
     self.api.registerUserApp("http://$HOST:%s"%port,"signalk.svg")
     self.api.registerLayout("example","example.json")
+    errorReported=False
     while True:
       apiUrl=None
       self.api.setStatus("STARTED", "connecting at %s"%baseUrl)
@@ -112,9 +113,12 @@ class Plugin:
             ep=endpoints[k]
             apiUrl=ep.get('signalk-http')
             if apiUrl is not None:
+              errorReported=False
               break
         except:
-          self.api.log("unable to connect at url %s: %s" % (baseUrl, sys.exc_info()[0]))
+          if not errorReported:
+            self.api.log("unable to connect at url %s: %s" % (baseUrl, sys.exc_info()[0]))
+            errorReported=True
           time.sleep(1)
           continue
         if apiUrl is None:
