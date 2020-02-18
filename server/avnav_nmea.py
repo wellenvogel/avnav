@@ -53,6 +53,8 @@ class NMEAParser():
   SKY_BASE_KEYS = ['gdop', 'tdop', 'vdop', 'hdop', 'pdop']
   SKY_SATELLITE_KEYS = ['ss', 'el', 'PRN', 'az', 'used']
   NM=AVNUtil.NM
+  #a translation table to strip unwanted chars from NMEA0183 input
+  STRIPCHARS={i:None for i in range(0,32)}
   #AIS field translations
   aisFieldTranslations={'msgtype':'type'}
 

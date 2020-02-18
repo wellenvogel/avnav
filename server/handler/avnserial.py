@@ -285,7 +285,7 @@ class SerialReader():
             AVNLog.info("successfully opened %s",f.name)
             isOpen=True
           self.status=True
-          data=bytes.decode('ascii','ignore')
+          data=bytes.decode('ascii','ignore').translate(NMEAParser.STRIPCHARS)
           if maxerrors > 0 or not hasNMEA:
             if not self.startpattern.match(data):
               if maxerrors>0:

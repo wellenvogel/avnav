@@ -62,6 +62,7 @@ class SocketReader():
         if lines[-1][-1]=='\n':
           #last one ends with nl
           for l in lines:
+            l=l.translate(NMEAParser.STRIPCHARS)
             if pattern.match(l):
               self.writeData(l,source=sourceName)
               if not hasNMEA:
@@ -72,8 +73,9 @@ class SocketReader():
           buffer=''
         else:
           for i in range(len(lines)-1):
-            if pattern.match(lines[i]):
-              self.writeData(lines[i],source=sourceName)
+            line=lines[i].translate(NMEAParser.STRIPCHARS)
+            if pattern.match(line):
+              self.writeData(line,source=sourceName)
               if not hasNMEA:
                 self.setInfo(infoName, "receiving", AVNWorker.Status.NMEA)
                 hasNMEA=True
