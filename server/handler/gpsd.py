@@ -391,6 +391,9 @@ class AVNGpsdFeeder(AVNGpsd):
     if addCheckSum:
       entry= entry.replace("\r","").replace("\n","")
       entry+= "*" + NMEAParser.nmeaChecksum(entry) + "\r\n"
+    else:
+      if not entry[-2:]=="\r\n":
+        entry=entry+"\r\n"
     self.listlock.acquire()
     self.sequence+=1
     if len(self.list) >=self.maxlist:
