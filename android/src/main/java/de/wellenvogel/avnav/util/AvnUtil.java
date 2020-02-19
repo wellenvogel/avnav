@@ -56,6 +56,11 @@ public class AvnUtil {
         return null;
     }
 
+    public static String removeNonNmeaChars(String input){
+        if (input == null) return input;
+        return input.replaceAll("[^\\x20-\\x7F]", "");
+    }
+
     public static File workdirStringToFile(String wd, Context context){
         if (wd.equals(Constants.INTERNAL_WORKDIR)){
             return context.getFilesDir();

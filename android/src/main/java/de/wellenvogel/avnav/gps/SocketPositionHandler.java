@@ -186,6 +186,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                             stat.gpsEnabled=false;
                             break;
                         }
+                        line=AvnUtil.removeNonNmeaChars(line);
                         if (line.startsWith("$") && properties.readNmea) {
                             if (!AvnUtil.matchesNmeaFilter(line,nmeaFilter)){
                                 AvnLog.d("ignore "+line+" due to filter");
