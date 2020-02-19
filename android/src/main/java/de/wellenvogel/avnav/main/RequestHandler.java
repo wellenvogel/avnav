@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -55,6 +56,7 @@ import de.wellenvogel.avnav.util.LayoutHandler;
  */
 public class RequestHandler {
     public static final String URLPREFIX="file://android_asset/";
+    public static final String USERPREFIX="user/";
     public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
     public static final long FILE_MAX_SIZE=1000000; //for file uploads
     protected static final String NAVURL="viewer/avnav_navi.php";
@@ -216,6 +218,45 @@ public class RequestHandler {
         }
         return mimeType;
     }
+
+    WebResourceResponse handleUserRequest(String url){
+        if (! url.startsWith(USERPREFIX)) return null;
+        url=url.substring((USERPREFIX.length())).replaceAll("\\?.*","");
+        String[] parts=url.split("/");
+        if (parts.length < 1) return null;
+        File path=new File(getWorkDir(),"user");
+        boolean dirOk=path.isDirectory();
+        for (int i=0;(i<parts.length-1) && dirOk;i++){
+            path=new File(path,parts[i]);
+            if (! path.isDirectory() || (parts[i].equals(".."))) {
+                dirOk=false;
+                break;
+            }
+        }
+        if (dirOk) {
+            path = new File(path, parts[parts.length - 1]);
+            if (!path.isFile() || !path.canRead()) dirOk=false;
+        }
+        try {
+            if (! dirOk){
+                //fallbacks
+                String fallback=null;
+                if (url.equals("viewer/keys.json")) {
+                    fallback = "viewer/layout/keys.json";
+                }
+                if (fallback != null){
+                    InputStream is=activity.assetManager.open(fallback);
+                    return new WebResourceResponse(mimeType(fallback),"",is);
+                }
+                return null;
+            }
+            return new WebResourceResponse(mimeType(path.getName()),"",new FileInputStream(path));
+        } catch (Exception e) {
+            AvnLog.e("unable to open file "+url);
+        }
+        return null;
+    }
+
     WebResourceResponse handleRequest(View view,String url){
         if (url.startsWith(URLPREFIX)){
             try {
@@ -225,6 +266,9 @@ public class RequestHandler {
                 }
                 if (fname.startsWith(Constants.CHARTPREFIX)){
                     return handleChartRequest(fname);
+                }
+                if (fname.startsWith(USERPREFIX)){
+                    return handleUserRequest(fname);
                 }
                 InputStream is=activity.assetManager.open(fname.replaceAll("\\?.*",""));
                 return new WebResourceResponse(mimeType(fname),"",is);

@@ -371,7 +371,7 @@ public class SettingsActivity extends PreferenceActivity {
             workdir.mkdirs();
         }
         if (! workdir.isDirectory()) throw new Exception("unable to create "+workdir.getAbsolutePath());
-        final String subdirs[]=new String[]{"charts","tracks","routes"};
+        final String subdirs[]=new String[]{"charts","tracks","routes","user"};
         for (String s: subdirs){
             File sub=new File(workdir,s);
             if (! sub.isDirectory()){

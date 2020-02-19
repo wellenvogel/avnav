@@ -8,6 +8,8 @@ package de.wellenvogel.avnav.main;
 
 import android.app.NotificationManager;
 import android.util.Log;
+import android.webkit.WebResourceResponse;
+
 import de.wellenvogel.avnav.util.AvnLog;
 import org.apache.http.*;
 import org.apache.http.entity.InputStreamEntity;
@@ -154,6 +156,15 @@ public class WebServer {
             }
             url=url.replaceAll("^/*","");
             url=url.replaceAll("\\?.*","");
+            if (url.startsWith(RequestHandler.USERPREFIX)){
+                WebResourceResponse r=activity.getRequestHandler().handleUserRequest(url);
+                if ( r != null){
+                    httpResponse.setStatusCode(HttpStatus.SC_OK);
+                    httpResponse.setEntity(streamToEntity(r.getData()));
+                    httpResponse.addHeader("content-type", r.getMimeType());
+                    return;
+                }
+            }
             //TODO: restrict access
             try {
                 InputStream is = activity.assetManager.open(url);
