@@ -47,11 +47,15 @@ class InfoHandler():
     self.parent.deleteInfo(self.name)
 
 class DummyHandler():
-  def __init__(self):
+  def __init__(self,infoHandler,device):
     self.stop=False
+    self.infoHandler=infoHandler
+    self.device=device
   def run(self):
+    self.infoHandler.setInfo('main','%s: ignored'%self.device,AVNWorker.Status.INACTIVE)
     while( not self.stop):
       time.sleep(0.2)
+    self.infoHandler.deleteInfo('main')
   def stopHandler(self):
     self.stop=True
 
@@ -209,7 +213,7 @@ class AVNUsbSerialReader(AVNWorker):
             handler=SerialReader(param, self.writeData, InfoHandler(usbid,self),sourceName)
           else:
             AVNLog.info("ignore device %s : type %s",usbid,handlertype)
-            handler=DummyHandler()
+            handler=DummyHandler(InfoHandler(usbid,self),devicelist[usbid])
         res=self.checkAndAddHandler(usbid, handler,devicelist[usbid])
         if not res:
             AVNLog.debug("max number of readers already reached, skip start of %s at %s",usbid,devicelist[usbid])

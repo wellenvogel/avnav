@@ -120,9 +120,9 @@ class SerialReader():
                    "true" if autobaud else "false")
     lastTime=time.time()
     try:
-      self.setInfo("opening %s at %d baud"%(portname,baud),AVNWorker.Status.STARTED)
+      self.setInfo("opening at %d baud"%(baud),AVNWorker.Status.STARTED)
       f=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
-      self.setInfo("port open",AVNWorker.Status.STARTED)
+      self.setInfo("port open at %d baud"%baud,AVNWorker.Status.STARTED)
       if autobaud:
         starttime=time.time()
         while time.time() <= (starttime + autobaudtime):
@@ -220,110 +220,115 @@ class SerialReader():
     filter=None
     if filterstr != "":
       filter=filterstr.split(',')
-    while True and not self.doStop:
-      name=self.getName()
-      timeout=float(self.param['timeout'])
-      portname=self.param['port']
-      porttimeout=timeout*10
-      baud=int(self.param['baud'])
-      maxerrors=int(self.param['numerrors'])
-      minbaud=int(self.param.get('minbaud') or baud)
-      rates=(115200,57600,38400,19200,9600,4800)
-      autobaud=False
-      if minbaud != baud and minbaud != 0:
-        autobaud=True
-        if not baud in rates or not minbaud in rates:
-          AVNLog.debug("minbaud/baud not in allowed rates %s","".join(unicode(f) for f in rates))
-          autobaud=False
-        if minbaud >= baud:
-          AVNLog.debug("minbaud >= baud")
-          autobaud=False
-      if autobaud:
-        baudidx=0
-        while rates[baudidx] > baud:
-          baudidx+=1
-        while baudidx < len(rates) and rates[baudidx] >= minbaud and not self.doStop:
-          f=self.openDevice(rates[baudidx],True,init)
-          init=False
-          baudidx+=1
-          if not f is None:
-            break
-      else:
-        f=self.openDevice(baud,False,init)
-        init=False
-      if self.doStop:
-        AVNLog.info("handler stopped, leaving")
-        self.setInfo("stopped",AVNWorker.Status.INACTIVE)
-        try:
-          f.close()
-        except:
-          pass
-        return
-      if f is None:  
-        time.sleep(porttimeout/2)
-        continue
-      AVNLog.debug("%s opened, start receiving data",f.name)
-      lastTime=time.time()
-      numerrors=0
-      hasNMEA=False
+    try:
       while True and not self.doStop:
-        bytes=0
-        try:
-          bytes=self.readLine(f,timeout)
-        except Exception as e:
-          AVNLog.debug("Exception %s in serial read, close and reopen %s",traceback.format_exc(),portname)
-          try:
-            f.close()
-            isOpen=False
-          except:
-            pass
-          break
-        if not bytes is None and len(bytes)> 0:
-          if not hasNMEA:
-            self.setInfo("receiving",AVNWorker.Status.STARTED)
-          if not isOpen:
-            AVNLog.info("successfully opened %s",f.name)
-            isOpen=True
-          self.status=True
-          data=bytes.decode('ascii','ignore').translate(NMEAParser.STRIPCHARS)
-          if maxerrors > 0 or not hasNMEA:
-            if not self.startpattern.match(data):
-              if maxerrors>0:
-                numerrors+=1
-                if numerrors > maxerrors:
-                  #hmm - seems that we do not see any NMEA data
-                  AVNLog.debug("did not see any NMEA data for %d lines - close and reopen",maxerrors)
-                  try:
-                    f.close()
-                  except:
-                    pass
-                  break;
-                continue
-            else:
-              pass
-          if len(data) < 5:
-            AVNLog.debug("ignore short data %s",data)
-          else:
-            numerrors=0
-            lastTime=time.time()
-            if not NMEAParser.checkFilter(data,filter):
-              continue
-            self.setInfo("receiving",AVNWorker.Status.NMEA)
-            hasNMEA=True
-            if not self.writeData is None:
-              self.writeData(data,source=self.sourceName)
-            else:
-              AVNLog.debug("unable to write data")
+       name=self.getName()
+       timeout=float(self.param['timeout'])
+       portname=self.param['port']
+       porttimeout=timeout*10
+       baud=int(self.param['baud'])
+       maxerrors=int(self.param['numerrors'])
+       minbaud=int(self.param.get('minbaud') or baud)
+       rates=(115200,57600,38400,19200,9600,4800)
+       autobaud=False
+       if minbaud != baud and minbaud != 0:
+         autobaud=True
+         if not baud in rates or not minbaud in rates:
+           AVNLog.debug("minbaud/baud not in allowed rates %s","".join(unicode(f) for f in rates))
+           autobaud=False
+         if minbaud >= baud:
+           AVNLog.debug("minbaud >= baud")
+           autobaud=False
+       if autobaud:
+         baudidx=0
+         while rates[baudidx] > baud:
+           baudidx+=1
+         while baudidx < len(rates) and rates[baudidx] >= minbaud and not self.doStop:
+           f=self.openDevice(rates[baudidx],True,init)
+           init=False
+           baudidx+=1
+           if not f is None:
+             break
+       else:
+         f=self.openDevice(baud,False,init)
+         init=False
+       if self.doStop:
+         AVNLog.info("handler stopped, leaving")
+         self.setInfo("stopped",AVNWorker.Status.INACTIVE)
+         try:
+           f.close()
+         except:
+           pass
+         break
+       if f is None:
+         time.sleep(porttimeout/2)
+         continue
+       AVNLog.debug("%s opened, start receiving data",f.name)
+       lastTime=time.time()
+       numerrors=0
+       hasNMEA=False
+       while True and not self.doStop:
+         bytes=0
+         try:
+           bytes=self.readLine(f,timeout)
+         except Exception as e:
+           AVNLog.debug("Exception %s in serial read, close and reopen %s",traceback.format_exc(),portname)
+           try:
+             f.close()
+             isOpen=False
+           except:
+             pass
+           break
+         if not bytes is None and len(bytes)> 0:
+           if not hasNMEA:
+             self.setInfo("receiving at %d baud"%f.baudrate,AVNWorker.Status.STARTED)
+           if not isOpen:
+             AVNLog.info("successfully opened %s",f.name)
+             isOpen=True
+           self.status=True
+           data=bytes.decode('ascii','ignore').translate(NMEAParser.STRIPCHARS)
+           if maxerrors > 0 or not hasNMEA:
+             if not self.startpattern.match(data):
+               if maxerrors>0:
+                 numerrors+=1
+                 if numerrors > maxerrors:
+                   #hmm - seems that we do not see any NMEA data
+                   AVNLog.debug("did not see any NMEA data for %d lines - close and reopen",maxerrors)
+                   try:
+                     f.close()
+                   except:
+                     pass
+                   break;
+                 continue
+             else:
+               pass
+           if len(data) < 5:
+             AVNLog.debug("ignore short data %s",data)
+           else:
+             numerrors=0
+             lastTime=time.time()
+             if not NMEAParser.checkFilter(data,filter):
+               continue
+             if not hasNMEA:
+               self.setInfo("receiving at %d baud"%f.baudrate,AVNWorker.Status.NMEA)
+             hasNMEA=True
+             if not self.writeData is None:
+               self.writeData(data,source=self.sourceName)
+             else:
+               AVNLog.debug("unable to write data")
 
-        if (time.time() - lastTime) > porttimeout:
-          self.setInfo("timeout",AVNWorker.Status.ERROR)
-          f.close()
-          if isOpen:
-            AVNLog.info("reopen port %s - timeout elapsed",portname)
-            isOpen=False
-          else:
-            AVNLog.debug("reopen port %s - timeout elapsed",portname)
-          break
+         if (time.time() - lastTime) > porttimeout:
+           self.setInfo("timeout",AVNWorker.Status.ERROR)
+           f.close()
+           if isOpen:
+             AVNLog.info("reopen port %s - timeout elapsed",portname)
+             isOpen=False
+           else:
+             AVNLog.debug("reopen port %s - timeout elapsed",portname)
+           break
+
+    except:
+      AVNLog.info("exception in receiver %s"%traceback.format_exc())
     AVNLog.info("stopping handler")
     self.setInfo("stopped",AVNWorker.Status.INACTIVE)
     self.deleteInfo()
