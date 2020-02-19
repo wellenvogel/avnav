@@ -398,6 +398,8 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if os.path.exists(osPath):
       return osPath
     path = path[len("/user/"):]
+    if path.startswith("viewer/keys.json"):
+      return self.plainUrlToPath("/viewer/layout/keys.json",True)
     for p in ['user.css', 'user.js']:
       p = "viewer/" + p
       if path == p:

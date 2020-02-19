@@ -115,7 +115,7 @@ class App extends React.Component {
         this.checkSizes=this.checkSizes.bind(this);
         this.keyDown=this.keyDown.bind(this);
         this.state={};
-        Requests.getJson("layout/keys.json",{useNavUrl:false,checkOk:false}).then(
+        Requests.getJson("/user/viewer/keys.json",{useNavUrl:false,checkOk:false}).then(
             (json)=>{
                 KeyHandler.registerMappings(json);
             },
