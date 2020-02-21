@@ -293,6 +293,22 @@ class LayoutHandler{
         globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
     }
 
+    getItem(page,panel,index){
+        if (! this.isEditing()) return ;
+        let widgets=this.getLayoutWidgets();
+        if (!widgets) return ;
+        let pageData=widgets[page];
+        if (! pageData) {
+            return;
+        }
+        if (typeof(pageData) !== 'object') return;
+        let panelData=pageData[panel];
+        if (! panelData) {
+            return;
+        }
+        if (index < 0 || index >= panelData.length) return;
+        return panelData[index];
+    }
     /**
      * replace/add/remove a widget
      * @param page the page
@@ -307,10 +323,18 @@ class LayoutHandler{
         let widgets=this.getLayoutWidgets();
         if (!widgets) return false;
         let pageData=widgets[page];
-        if (! pageData) return false;
+        if (! pageData) {
+            if (! opt_add) return false;
+            pageData={};
+            widgets[page]=pageData;
+        }
         if (typeof(pageData) !== 'object') return false;
         let panelData=pageData[panel];
-        if (! panelData) return false;
+        if (! panelData) {
+            if (! opt_add) return false;
+            panelData=[];
+            pageData[panel]=panelData;
+        }
         if (opt_add) {
             if (index < 0) {
                 //insert at the beginning

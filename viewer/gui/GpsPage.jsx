@@ -17,6 +17,7 @@ import Requests from '../util/requests.js';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
+import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
 function resizeFont() {
@@ -32,16 +33,32 @@ const widgetCreator=(widget,weightSum)=>{
 const getPanelList=(panelType,anchor,pageNum)=>{
     let basename="gpspage"+pageNum;
     let page=GuiHelpers.getPageFromLayout(basename);
-    if (! page){
+    if (! page && ! globalStore.getData(keys.gui.global.layoutEditing)){
         //fallback to page 1
-        page=GuiHelpers.getPageFromLayout("gpspage1");
+        basename="gpspage1";
+        page=GuiHelpers.getPageFromLayout(basename);
     }
-    if (! page) return;
+    if (! page) return {name:panelType,page:basename,list:[]};
     let name=panelType;
     name+=anchor!==undefined?"_anchor":"_not_anchor";
-    if (page[name]) return page[name];
+    if (page[name]) return {name:name,page:basename,list:page[name]};
     //fallback to panel without suffix
-    if (page[panelType]) return page[panelType];
+    return {name:panelType,page:basename,list:page[panelType]||[]};
+
+};
+
+const hasPageEntries=(pageNum,anchor)=>{
+    let basename="gpspage"+pageNum;
+    let page=GuiHelpers.getPageFromLayout(basename);
+    if (! page) return false;
+    let panels=['left','right'];
+    for (let p in panels){
+        let panel=panels[p];
+        if (page[panel] && page[panel].length > 0) return true;
+        panel+=anchor?"_anchor":"_not_anchor";
+        if (page[panel] && page[panel].length > 0) return true;
+    }
+    return false;
 };
 
 const getWeightSum=(list)=>{
@@ -63,7 +80,7 @@ const findPageWithWidget=(name,anchor)=>{
         for (let idx in panels){
             let list=getPanelList(panels[idx],anchor,pnums[pidx]);
             if (! list) continue;
-            for (let li in list){
+            for (let li in list.list){
                 if (! list[li]) continue;
                 if (list[li].name == name){
                     return pnums[pidx];
@@ -103,10 +120,11 @@ class GpsPage extends React.Component{
                 name: "Gps1",
                 storeKeys:{
                     pageNumber:keys.gui.gpspage.pageNumber,
-                    layoutSequence:keys.gui.global.layoutSequence},
+                    layoutSequence:keys.gui.global.layoutSequence,
+                    isEditing: keys.gui.global.layoutEditing},
                 updateFunction:(state)=>{return {
                     toggle:state.pageNumber == 1 || state.pageNumber === undefined,
-                    visible: GuiHelpers.getPageFromLayout(layoutBase+"1")!==undefined
+                    visible: hasPageEntries(1,self.props.anchor) || state.isEditing
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,1);
@@ -116,10 +134,11 @@ class GpsPage extends React.Component{
                 name: "Gps2",
                 storeKeys:{
                     pageNumber:keys.gui.gpspage.pageNumber,
-                    layoutSequence:keys.gui.global.layoutSequence},
+                    layoutSequence:keys.gui.global.layoutSequence,
+                    isEditing: keys.gui.global.layoutEditing},
                 updateFunction:(state)=>{return {
                     toggle:state.pageNumber == 2,
-                    visible: GuiHelpers.getPageFromLayout(layoutBase+"2")!==undefined
+                    visible: hasPageEntries(2,self.props.anchor) || state.isEditing
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,2);
@@ -129,10 +148,11 @@ class GpsPage extends React.Component{
                 name: "Gps3",
                 storeKeys:{
                     pageNumber:keys.gui.gpspage.pageNumber,
-                    layoutSequence:keys.gui.global.layoutSequence},
+                    layoutSequence:keys.gui.global.layoutSequence,
+                    isEditing: keys.gui.global.layoutEditing},
                 updateFunction:(state)=>{return {
                     toggle:state.pageNumber == 3,
-                    visible: GuiHelpers.getPageFromLayout(layoutBase+"3")!==undefined
+                    visible: hasPageEntries(3,self.props.anchor) || state.isEditing
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,3);
@@ -142,10 +162,11 @@ class GpsPage extends React.Component{
                 name: "Gps4",
                 storeKeys:{
                     pageNumber:keys.gui.gpspage.pageNumber,
-                    layoutSequence:keys.gui.global.layoutSequence},
+                    layoutSequence:keys.gui.global.layoutSequence,
+                    isEditing: keys.gui.global.layoutEditing},
                 updateFunction:(state)=>{return {
                     toggle:state.pageNumber == 4,
-                    visible: GuiHelpers.getPageFromLayout(layoutBase+"4")!==undefined
+                    visible: hasPageEntries(4,self.props.anchor) || state.isEditing
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,4);
@@ -155,10 +176,11 @@ class GpsPage extends React.Component{
                 name: "Gps5",
                 storeKeys:{
                     pageNumber:keys.gui.gpspage.pageNumber,
-                    layoutSequence:keys.gui.global.layoutSequence},
+                    layoutSequence:keys.gui.global.layoutSequence,
+                    isEditing: keys.gui.global.layoutEditing},
                 updateFunction:(state)=>{return {
                     toggle:state.pageNumber == 5,
-                    visible: GuiHelpers.getPageFromLayout(layoutBase+"5")!==undefined
+                    visible: hasPageEntries(5,self.props.anchor) || state.isEditing
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,5);
@@ -187,8 +209,13 @@ class GpsPage extends React.Component{
                 globalStore.storeData(keys.gui.gpspage.pageNumber,pagenNum);
             }
         }
+        let oldNum=globalStore.getData(keys.gui.gpspage.pageNumber);
+        if (oldNum === undefined || ! hasPageEntries(oldNum,props.anchor)){
+            globalStore.storeData(keys.gui.gpspage.pageNumber,1);
+        }
     }
-    onItemClick(item,data){
+    onItemClick(item,data,panelInfo){
+        if (EditWidgetDialog.createDialog(item,panelInfo.page,panelInfo.name,false,true)) return;
         if (item && item.name=== "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
             history.push("aisinfopage",{mmsi:mmsi});
@@ -210,8 +237,8 @@ class GpsPage extends React.Component{
         let MainContent=(props)=> {
             let leftPanel=getPanelList('left',self.props.anchor,self.props.pageNum||1);
             let rightPanel=getPanelList('right',self.props.anchor,self.props.pageNum||1);
-            let leftSum=getWeightSum(leftPanel);
-            let rightSum=getWeightSum(rightPanel);
+            let leftSum=getWeightSum(leftPanel.list);
+            let rightSum=getWeightSum(rightPanel.list);
             let dimensions=globalStore.getData(keys.gui.global.windowDimensions);
             let fontSize=layoutBaseParam.baseWidgetFontSize;
             if (dimensions){
@@ -227,16 +254,18 @@ class GpsPage extends React.Component{
             let p1leftProp={
                 className: 'widgetContainer',
                 itemCreator: (widget)=>{ return widgetCreator(widget,leftSum);},
-                itemList: leftPanel,
+                itemList: leftPanel.list,
                 fontSize: fontSize,
-                onItemClick: (item,data) => {self.onItemClick(item,data);}
+                onItemClick: (item,data) => {self.onItemClick(item,data,leftPanel);},
+                onClick: ()=>{EditWidgetDialog.createDialog(undefined,leftPanel.page,leftPanel.name,false,true);}
             };
             let p1RightProp={
                 className: 'widgetContainer',
                 itemCreator: (widget)=>{ return widgetCreator(widget,rightSum);},
-                itemList: rightPanel,
+                itemList: rightPanel.list,
                 fontSize: fontSize,
-                onItemClick: (item,data) => {self.onItemClick(item,data);}
+                onItemClick: (item,data) => {self.onItemClick(item,data,rightPanel);},
+                onClick: ()=>{EditWidgetDialog.createDialog(undefined,rightPanel.page,rightPanel.name,false,true);}
             };
             return(
             <React.Fragment>
@@ -267,5 +296,10 @@ GpsPage.propTypes={
     pageNum: PropTypes.number
 };
 
-module.exports=Dynamic(GpsPage,{storeKeys:{pageNum:keys.gui.gpspage.pageNumber,
-    anchor: keys.nav.anchor.watchDistance}});
+module.exports=Dynamic(GpsPage,{
+    storeKeys:{
+        pageNum:keys.gui.gpspage.pageNumber,
+        anchor: keys.nav.anchor.watchDistance,
+        layoutSequence: keys.gui.global.layoutSequence
+    }
+});

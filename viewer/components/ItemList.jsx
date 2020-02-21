@@ -52,7 +52,7 @@ class ItemList extends React.Component{
                         //we allow for multiple items with the same name
                         //we try at most 20 times to get a unique key by appending _idx
                         let tries=20;
-                        while (tries > 0 && existingKeys[key]){
+                        while (tries > 0 && (! key || existingKeys[key])){
                             key+="_"+idx;
                             tries--;
                         }

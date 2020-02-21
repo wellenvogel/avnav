@@ -75,10 +75,12 @@ class WidgetFactory{
             let wprops = assign({}, props, mergedProps);
             let {style,...childProperties}=opt_properties||{}; //filter out style for children
             if (mergedProps.children) {
+                let cidx=0;
                 return <div {...mergedProps} className="widget combinedWidget">
                     {mergedProps.children.map((item)=> {
                         let Item = self.createWidget(item, childProperties);
-                        return <Item />
+                        cidx++;
+                        return <Item key={cidx}/>
                     })}
                 </div>
             }

@@ -49,7 +49,6 @@ class WindGraphics extends React.Component{
     canvasRef(item){
         let self=this;
         this.canvas=item;
-        console.log("canvas ref");
         setTimeout(self.drawWind,0);
     }
     drawWind(){
