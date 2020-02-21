@@ -35,11 +35,14 @@ import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 
 
 const widgetCreator=(widget,mode)=>{
-    let rt=WidgetFactory.createWidget(widget,{mode:mode,className:'',handleVisible:true});
+    let rt=WidgetFactory.createWidget(widget,{mode:mode,className:'',handleVisible:!globalStore.getData(keys.gui.global.layoutEditing)});
     if (widget.name=='CenterDisplay'){
         rt=Dynamic(Visible(rt),{
-            storeKeys:{locked:keys.map.lockPosition},
-            updateFunction:(state)=>{return {visible:!state.locked}}
+            storeKeys:{
+                locked:keys.map.lockPosition,
+                editing: keys.gui.global.layoutEditing
+            },
+            updateFunction:(state)=>{return {visible:!state.locked || state.editing}}
         })
     }
     return rt;

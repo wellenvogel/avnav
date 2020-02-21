@@ -16,7 +16,7 @@ const WayPointItem =(props)=>{
         let classNames="routeInfoPoint "+props.className||"";
         if (props.selected) classNames+=" activeEntry";
         return(
-        <div className={classNames} onClick={()=>{if (props.onClick)props.onClick();}}>
+        <div className={classNames} onClick={(ev)=>{if (props.onClick)props.onClick(ev);}}>
             <div className="info">{props.name}</div>
             <span className="more"></span>
             {info}

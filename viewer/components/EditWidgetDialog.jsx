@@ -59,9 +59,21 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning)=>{
     let widgetList=WidgetFactory.getAvailableWidgets();
     let displayList=[];
     //copy the list as we maybe add more properties...
+    let idx=0;
     widgetList.forEach((el)=>{
         let item=assign({},el);
+        item.key=idx;
+        idx++;
         displayList.push(item);
+    });
+    displayList.sort((a,b)=>{
+        if ( ! a || ! a.name) return -1;
+        if (! b || ! b.name) return 1;
+        let na=a.name.toUpperCase();
+        let nb=b.name.toUpperCase();
+        if (na<nb) return -1;
+        if (na > nb) return 1;
+        return 0;
     });
     let add=true;
     let index=opt_beginning?-1:1;

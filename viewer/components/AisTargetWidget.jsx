@@ -25,10 +25,7 @@ class AisTargetWidget extends React.Component{
     componentDidUpdate(){
     }
     render(){
-        if (! this.props.current){
-            return null;
-        }
-        let current=this.props.current;
+        let current=this.props.current||{};
         let self=this;
         let classes="widget aisTargetWidget "+this.props.className||"";
         let small = (this.props.mode === "horizontal" );
@@ -40,7 +37,7 @@ class AisTargetWidget extends React.Component{
             color=PropertyHandler.getAisColor(aisProperties);
         }
         let front=AisFormatter.format('passFront',current);
-        if (current.mmsi !== undefined || this.props.mode === "gps") {
+        if (current.mmsi !== undefined || this.props.mode === "gps" || this.props.isEditing) {
             let style=assign({},this.props.style,{backgroundColor:color});
             return (
 
@@ -90,7 +87,8 @@ class AisTargetWidget extends React.Component{
 }
 
 AisTargetWidget.storeKeys={
-    current: keys.nav.ais.nearest
+    current: keys.nav.ais.nearest,
+    isEditing: keys.gui.global.layoutEditing
 };
 
 AisTargetWidget.propTypes={

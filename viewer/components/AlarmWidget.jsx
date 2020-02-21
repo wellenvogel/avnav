@@ -53,7 +53,7 @@ class  AlarmWidget extends React.Component{
     }
     onClick(ev){
         if (this.props.onClick){
-            this.props.onClick();
+            this.props.onClick(ev);
         }
         ev.stopPropagation();
     }

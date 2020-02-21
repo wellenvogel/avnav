@@ -64,8 +64,8 @@ class ItemList extends React.Component{
                         }
                         if (!itemProps.onClick && self.props.onItemClick) {
                             itemProps.onClick = function (data) {
-                                if (data.stopPropagation) data.stopPropagation();
-                                if (data.preventDefault) data.preventDefault();
+                                if (data && data.stopPropagation) data.stopPropagation();
+                                if (data && data.preventDefault) data.preventDefault();
                                 self.props.onItemClick(itemProps, data);
                             }
                         }
