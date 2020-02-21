@@ -29,15 +29,21 @@ import AisData from '../nav/aisdata.js';
 import ButtonList from '../components/ButtonList.jsx';
 import WayPointDialog from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
+import LayoutHandler from '../util/layouthandler.js';
+import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 
 const DynamicPage=Dynamic(MapPage);
-
+const PAGENAME='navpage';
 
 const widgetClick=(item,data,panel)=>{
+    if (LayoutHandler.isEditing()){
+        EditWidgetDialog.createDialog(item,PAGENAME,panel);
+        return;
+    }
     if (item.name == "AisTarget"){
         let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
         if (! mmsi) return;
@@ -65,7 +71,7 @@ const widgetClick=(item,data,panel)=>{
 };
 
 const getPanelList=(panel,opt_isSmall)=>{
-    return GuiHelpers.getPanelFromLayout('navpage',panel,'small',opt_isSmall);
+    return GuiHelpers.getPanelFromLayout(PAGENAME,panel,'small',opt_isSmall);
 };
 /**
  *
@@ -348,7 +354,7 @@ class NavPage extends React.Component{
             <DynamicPage
                 className={self.props.className}
                 style={self.props.style}
-                id="navpage"
+                id={PAGENAME}
                 mapEventCallback={self.mapEvent}
                 onItemClick={widgetClick}
                 mapUrl={url}

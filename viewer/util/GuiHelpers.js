@@ -86,10 +86,12 @@ const getPanelFromLayout=(pagename,panel,opt_filtername,opt_filtervalue)=>{
         panelname += opt_filtervalue ? "_"+opt_filtername : "_not_"+opt_filtername;
     }
     let rt=page[panelname];
-    if (rt) return rt;
+    if (rt) {
+        return {name:panelname,list:rt};
+    }
     rt=page[panel];
-    if (rt) return rt;
-    return [];
+    if (rt) return {name:panel,list:rt};
+    return {name:panel,list:[]};
 };
 /**
  * will call the provided callback on mount (param: false),umount(param: true), update(optional, param false)

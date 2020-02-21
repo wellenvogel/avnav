@@ -56,6 +56,7 @@ class ItemList extends React.Component{
                             key+="_"+idx;
                             tries--;
                         }
+                        itemProps.index=idx;
                         itemProps.key = key;
                         existingKeys[key]=true;
                         if (self.props.selectedIndex !== undefined && idx == self.props.selectedIndex) {

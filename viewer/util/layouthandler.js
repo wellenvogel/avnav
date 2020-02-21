@@ -280,8 +280,7 @@ class LayoutHandler{
            KeyHandler.mergeMappings(this.layout.keys);
         }
         globalStore.storeData(keys.properties.layoutName,this.name);
-        let ls=globalStore.getData(keys.gui.global.layoutSequence,0);
-        globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
+        this.incrementSequence();
         if (upload){
             this.uploadLayout(this.name,this.layout).then(()=>{}).catch((error)=>{
                base.log("unable to upload layout "+error);
@@ -289,7 +288,35 @@ class LayoutHandler{
         }
         return true;
     }
-
+    incrementSequence(){
+        let ls=globalStore.getData(keys.gui.global.layoutSequence,0);
+        globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
+    }
+    replaceItem(page,panel,index,item){
+        if (! this.isEditing()) return false;
+        let widgets=this.getLayoutWidgets();
+        if (!widgets) return false;
+        let pageData=widgets[page];
+        if (! pageData) return false;
+        if (typeof(pageData) !== 'object') return false;
+        let panelData=pageData[panel];
+        if (! panelData) return false;
+        if (index < 0){
+            //insert at the beginning
+            panelData.splice(0,0,item);
+            this.incrementSequence();
+            return true;
+        }
+        if (index >= panelData.length){
+            //append
+            panelData.push(item);
+            this.incrementSequence();
+            return true;
+        }
+        panelData.splice(index,1,item);
+        this.incrementSequence();
+        return true;
+    }
     listLayouts(){
         return new Promise((resolve,reject)=>{
             let activeLayout=globalStore.getData(keys.properties.layoutName);

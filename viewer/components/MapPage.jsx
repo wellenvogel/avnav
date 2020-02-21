@@ -79,11 +79,12 @@ class MapPage extends React.Component{
             < globalStore.getData(keys.properties.smallBreak);
         const WidgetContainer=(props)=>{
             let {panel,mode,...other}=props;
+            let panelItems=self.props.panelCreator(panel,isSmall);
             return <ItemList  {...props}
                 className={"widgetContainer "+mode+" "+panel}
                 itemCreator={(widget)=>{return widgetCreator(widget,mode)}}
-                itemList={self.props.panelCreator(panel,isSmall)}
-                onItemClick={(item,data)=>{self.props.onItemClick(item,data,panel)}}
+                itemList={panelItems.list}
+                onItemClick={(item,data)=>{self.props.onItemClick(item,data,panelItems.name)}}
                 />
         };
         return (
@@ -134,7 +135,7 @@ MapPage.propertyTypes={
     buttonList:         PropTypes.array,
     className:          PropTypes.string,
     panelCreator:       PropTypes.func.isRequired,  //will be called with the panel name + isSmall
-                                                    //and must return the widget list
+                                                    //and must return {name: panelName, list:widget list}
     onItemClick:        PropTypes.func.isRequired,  //like ItemList
     mapEventCallback:   PropTypes.func,
     id:                 PropTypes.string,
@@ -143,6 +144,7 @@ MapPage.propertyTypes={
 
 module.exports=Dynamic(MapPage,{
     storeKeys:{
-        widgetFontSize:keys.properties.widgetFontSize
+        widgetFontSize:keys.properties.widgetFontSize,
+        layoutSequence: keys.gui.global.layoutSequence
     }
 });
