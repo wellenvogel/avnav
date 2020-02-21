@@ -235,14 +235,16 @@ class EditRoutePage extends React.Component{
                     }
                     currentEditor.addWaypoint(center);
                     globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,currentEditor.getIndex());
-                }
+                },
+                editDisable: true
             },
             {
                 name:"NavDelete",
                 onClick:()=>{
                     if (!checkRouteWritable()) return;
                     getCurrentEditor().deleteWaypoint();
-                }
+                },
+                editDisable: true
             },
             {
                 name:"NavToCenter",
@@ -253,7 +255,8 @@ class EditRoutePage extends React.Component{
                     let currentEditor=getCurrentEditor();
                     currentEditor.changeSelectedWaypoint(center);
                     globalStore.storeData(keys.gui.editroutepage.lastCenteredWp,editor.getIndex());
-                }
+                },
+                editDisable: true
             },
             {
                 name:"NavGoto",
@@ -261,7 +264,8 @@ class EditRoutePage extends React.Component{
                     if (!checkRouteWritable()) return;
                     RouteHandler.wpOn(getCurrentEditor().getPointAt());
                     history.pop();
-                }
+                },
+                editDisable: true
             },
             GuiHelpers.mobDefinition,
             {

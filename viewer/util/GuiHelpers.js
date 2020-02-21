@@ -10,6 +10,7 @@ import navobjects from '../nav/navobjects.js';
 import history from '../util/history.js';
 import MapHolder from '../map/mapholder.js';
 import LayoutHandler from './layouthandler.js';
+import AlarmHandler from '../nav/alarmhandler.js';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
@@ -19,8 +20,8 @@ const anchorWatchDialog = (overlayContainer)=> {
         router.anchorOff();
         //alarms will be stopped anyway by the server
         //but this takes some seconds...
-        NavData.getGpsHandler().stopAlarm('anchor');
-        NavData.getGpsHandler().stopAlarm('gps');
+        AlarmHandler.stopAlarm('anchor');
+        AlarmHandler.stopAlarm('gps');
         return;
     }
     let pos = NavData.getCurrentPosition();
@@ -240,6 +241,7 @@ const controlMob=(start)=>{
         if (isActive) return;
         if (! globalStore.getData(keys.nav.gps.valid)) return;
         if (! globalStore.getData(keys.properties.connectedMode)) return;
+        if (LayoutHandler.isEditing()) LayoutHandler.loadStoredLayout();
         let target=navobjects.WayPoint.fromPlain(globalStore.getData(keys.nav.gps.position));
         target.name=navobjects.WayPoint.MOB;
         Router.wpOn(target,false);

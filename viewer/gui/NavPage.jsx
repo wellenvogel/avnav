@@ -300,7 +300,8 @@ class NavPage extends React.Component{
                 },
                 onClick:()=>{
                     navToWp(true);
-                }
+                },
+                editDisable: true
             },
             {
                 name: "StopNav",

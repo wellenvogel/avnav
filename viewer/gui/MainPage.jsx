@@ -56,7 +56,8 @@ class MainPage extends React.Component {
                 name: 'ShowStatus',
                 onClick: ()=> {
                     history.push('statuspage')
-                }
+                },
+                editDisable: true
             },
             {
                 name: 'ShowSettings',
@@ -68,7 +69,8 @@ class MainPage extends React.Component {
                 name: 'ShowDownload',
                 onClick: ()=> {
                     history.push('downloadpage')
-                }
+                },
+                editDisable: true
             },
             {
                 name: 'Connected',
@@ -83,7 +85,8 @@ class MainPage extends React.Component {
                     let con = globalStore.getData(keys.properties.connectedMode, false);
                     con = !con;
                     globalStore.storeData(keys.properties.connectedMode, con);
-                }
+                },
+                editDisable: true
             },
             {
                 name: 'ShowGps',
@@ -98,7 +101,8 @@ class MainPage extends React.Component {
                     let mode = globalStore.getData(keys.properties.nightMode, false);
                     mode = !mode;
                     globalStore.storeData(keys.properties.nightMode, mode);
-                }
+                },
+                editDisable: true
             },
             GuiHelper.mobDefinition,
             {
@@ -119,7 +123,8 @@ class MainPage extends React.Component {
                 },
                 onClick: ()=> {
                     history.push('addonpage')
-                }
+                },
+                editDisable: true
             }
         ];
         globalStore.storeData(keys.gui.mainpage.chartList, []);
