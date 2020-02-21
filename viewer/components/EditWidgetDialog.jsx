@@ -18,19 +18,29 @@ class EditWidgetDialog extends React.Component{
         this.setState(nstate);
     }
     render () {
+        let self=this;
         return (
-            <div>
+            <div className="selectDialog editWidgetDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Widget'}</h3>
-                {this.props.subTitle?<p>{this.props.subTitle}</p>:null}
-                <div>
-
+                <div className="info"><span className="label">Panel:</span>{this.props.panel}</div>
+                <div className="info"><span className="label">Current:</span>{this.props.current}</div>
+                <div className="selectList">
+                    {this.props.list.map(function(elem){
+                        return(
+                            <div className={"listEntry "+(elem.selected && 'selectedItem')} onClick={function(){
+                              self.props.okCallback(elem);
+                              self.props.closeCallback();
+                            }}>{elem.name}</div>);
+                    })}
                 </div>
-                <button name="ok" onClick={()=>{
-                    this.props.okCallback(this.state.value);
-                    this.props.closeCallback();
-                    }}>{this.state.exists?"Overwrite":"Ok"}</button>
-                <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
+                <div className="dialogButtons">
+                    <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
+                    <button name="remove" onClick={()=>{
+                        this.props.closeCallback();
+                        this.props.okCallback();
+                    }}>Remove</button>
                 <div className="clear"></div>
+                </div>
             </div>
         );
     }
@@ -38,27 +48,40 @@ class EditWidgetDialog extends React.Component{
 
 EditWidgetDialog.propTypes={
     title: PropTypes.string,
-    subTitle: PropTypes.string,
+    panel: PropTypes.string,
+    current:PropTypes.string,
     okCallback: PropTypes.func.isRequired,
     closeCallback: PropTypes.func.isRequired
 };
 
-EditWidgetDialog.createDialog=(widgetItem,pagename,panelname)=>{
+EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning)=>{
     if (! LayoutHandler.isEditing()) return false;
     let widgetList=WidgetFactory.getAvailableWidgets();
     let displayList=[];
     //copy the list as we maybe add more properties...
     widgetList.forEach((el)=>{
         let item=assign({},el);
-        item.label=el.name;
         displayList.push(item);
     });
-
-    let title=("Widget for panel "+panelname+", current="+widgetItem.name);
-    OverlayDialog.selectDialogPromise(title,displayList).then((selected)=>{
-        let newItem={name:selected.name};
-        LayoutHandler.replaceItem(pagename,panelname,widgetItem.index,newItem);
-    }).catch(()=>{});
+    let add=true;
+    let index=opt_beginning?-1:1;
+    if (widgetItem){
+        index=widgetItem.index;
+        add=false;
+    }
+    OverlayDialog.dialog((props)=> {
+        return <EditWidgetDialog
+            {...props}
+            title="Select Widget"
+            panel={panelname}
+            current={widgetItem?widgetItem.name:""}
+            list={displayList}
+            okCallback={(selected)=>{
+                let newItem=selected?{name:selected.name}:undefined;
+                LayoutHandler.replaceItem(pagename,panelname,index,newItem,add);
+            }}
+            />
+    });
     return true;
 };
 

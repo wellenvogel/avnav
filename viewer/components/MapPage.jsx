@@ -27,6 +27,7 @@ import WidgetFactory from '../components/WidgetFactory.jsx';
 import MapHolder from '../map/mapholder.js';
 import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
+import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 
 
 
@@ -84,7 +85,13 @@ class MapPage extends React.Component{
                 className={"widgetContainer "+mode+" "+panel}
                 itemCreator={(widget)=>{return widgetCreator(widget,mode)}}
                 itemList={panelItems.list}
-                onItemClick={(item,data)=>{self.props.onItemClick(item,data,panelItems.name)}}
+                onItemClick={(item,data)=>{
+                    if (EditWidgetDialog.createDialog(item,self.props.id,panelItems.name)) return;
+                    self.props.onItemClick(item,data,panelItems.name)
+                    }}
+                onClick={()=>{
+                    EditWidgetDialog.createDialog(undefined,self.props.id,panelItems.name,mode==='vertical');
+                }}
                 />
         };
         return (

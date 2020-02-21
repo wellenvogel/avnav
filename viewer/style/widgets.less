@@ -58,6 +58,9 @@
   .label {
     .mdText2();
   }
+  .editing &{
+    .flex-grow(0);
+  }
 }
 
 .widgetContainer{
@@ -80,15 +83,22 @@
   .widget{
     height: @horizontalWidgetHeight;
   }
+  .editing &{
+    .flex-wrap(nowrap);
+  }
 }
 
 .widgetContainer.vertical{
   overflow: hidden;
   .flex-direction(column);
+  .flex-justify-content(flex-end);
   .widget{
     max-width: @navLeftWidgetWidth;
     width: @navLeftWidgetWidth;
     flex-shrink: inherit;
+  }
+  .editing &{
+    top: 0;
   }
 }
 

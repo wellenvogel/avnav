@@ -30,7 +30,6 @@ import ButtonList from '../components/ButtonList.jsx';
 import WayPointDialog from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler from '../util/layouthandler.js';
-import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -40,10 +39,6 @@ const DynamicPage=Dynamic(MapPage);
 const PAGENAME='navpage';
 
 const widgetClick=(item,data,panel)=>{
-    if (LayoutHandler.isEditing()){
-        EditWidgetDialog.createDialog(item,PAGENAME,panel);
-        return;
-    }
     if (item.name == "AisTarget"){
         let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
         if (! mmsi) return;

@@ -29,7 +29,6 @@ import AisData from '../nav/aisdata.js';
 import WayPointDialog from '../components/WaypointDialog.jsx';
 import ButtonList from '../components/ButtonList.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
-import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -71,7 +70,6 @@ const startWaypointDialog=(item,index)=>{
 
 
 const widgetClick=(item,data,panel)=>{
-    if (EditWidgetDialog.createDialog(item,'editroutepage',panel)) return;
     let currentEditor=getCurrentEditor();
     if (item.name == "EditRoute"){
         currentEditor.syncTo(RouteEdit.MODES.PAGE);
@@ -105,7 +103,7 @@ const widgetClick=(item,data,panel)=>{
 
 
 const getPanelList=(panel,opt_isSmall)=>{
-    return GuiHelpers.getPanelFromLayout('editroutepage',panel,'small',opt_isSmall).slice(0);
+    return GuiHelpers.getPanelFromLayout('editroutepage',panel,'small',opt_isSmall);
 };
 
 const checkRouteWritable=function(){

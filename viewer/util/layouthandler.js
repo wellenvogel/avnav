@@ -292,7 +292,17 @@ class LayoutHandler{
         let ls=globalStore.getData(keys.gui.global.layoutSequence,0);
         globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
     }
-    replaceItem(page,panel,index,item){
+
+    /**
+     * replace/add/remove a widget
+     * @param page the page
+     * @param panel the panel
+     * @param index the item index, if opt_add is set: <0 insert at start, >= 0 append
+     * @param item the item to be inserted, if undefined: remove
+     * @param opt_add if set: add the item instead of replace/remove
+     * @return {boolean} true if success
+     */
+    replaceItem(page,panel,index,item,opt_add){
         if (! this.isEditing()) return false;
         let widgets=this.getLayoutWidgets();
         if (!widgets) return false;
@@ -301,19 +311,30 @@ class LayoutHandler{
         if (typeof(pageData) !== 'object') return false;
         let panelData=pageData[panel];
         if (! panelData) return false;
-        if (index < 0){
-            //insert at the beginning
-            panelData.splice(0,0,item);
-            this.incrementSequence();
-            return true;
+        if (opt_add) {
+            if (index < 0) {
+                //insert at the beginning
+                panelData.splice(0, 0, item);
+                this.incrementSequence();
+                return true;
+            }
+            if (index >=0 ) {
+                //append
+                panelData.push(item);
+                this.incrementSequence();
+                return true;
+            }
+            return false;
         }
-        if (index >= panelData.length){
-            //append
-            panelData.push(item);
-            this.incrementSequence();
-            return true;
+        if (index < 0 || index >= panelData.length){
+            return false;
         }
-        panelData.splice(index,1,item);
+        if (item) {
+            panelData.splice(index, 1, item);
+        }
+        else{
+            panelData.splice(index, 1);
+        }
         this.incrementSequence();
         return true;
     }
