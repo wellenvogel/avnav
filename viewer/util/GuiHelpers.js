@@ -9,6 +9,7 @@ import KeyHandler from './keyhandler.js';
 import navobjects from '../nav/navobjects.js';
 import history from '../util/history.js';
 import MapHolder from '../map/mapholder.js';
+import LayoutHandler from './layouthandler.js';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
@@ -68,7 +69,7 @@ const resizeByQuerySelector=(querySelector)=>{
 };
 
 const getPageFromLayout=(pagename)=>{
-    let layout=globalStore.getData(keys.gui.global.layout);
+    let layout=LayoutHandler.getLayoutWidgets();
     if (! layout) return;
     if (typeof(layout) !== 'object') return;
     let page=layout[pagename];

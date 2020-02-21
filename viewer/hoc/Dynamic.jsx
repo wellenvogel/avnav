@@ -27,8 +27,8 @@ module.exports= function(Component,opt_options){
         }
         getStoreKeys(){
             let storeKeys=this.props.storeKeys;
-            if (! storeKeys){
-                if (opt_options && opt_options.storeKeys) storeKeys=opt_options.storeKeys;
+            if (opt_options && opt_options.storeKeys) {
+                storeKeys=assign({},opt_options.storeKeys,storeKeys);
             }
             if (!storeKeys) return ;
             if (storeKeys instanceof Array) return storeKeys;

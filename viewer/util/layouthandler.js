@@ -20,6 +20,7 @@ class LayoutHandler{
         this.temporaryLayouts={};
         this.temporaryLayouts["system.default"]=defaultLayout;
         this.dataChanged=this.dataChanged.bind(this);
+        this._setEditing(false);
         globalStore.register(this,keys.gui.capabilities.uploadLayout);
     }
 
@@ -31,7 +32,83 @@ class LayoutHandler{
         return (name == this.name && this.layout);
     }
     isActiveLayout(name){
-        return name == globalStore.getData(keys.gui.global.layoutName);
+        if (name === undefined) name=this.name;
+        return name == globalStore.getData(keys.properties.layoutName);
+    }
+
+    canEdit(name){
+        if (name === undefined) name=this.name;
+        if (! name) return false;
+        return name.match(/^user\./)?true:false;
+    }
+    startEditing(name){
+        if (! this.canEdit(name)) return false;
+        this.name=name;
+        this._setEditing(true);
+    }
+    isEditing(){
+        return this.editing;
+    }
+
+    loadStoredLayout(){
+        let self=this;
+        return new Promise((resolve,reject)=> {
+            let layoutName=globalStore.getData(keys.properties.layoutName);
+            let storedLayout=this._loadFromStorage();
+            if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data){
+                this.name=storedLayout.name;
+                this.layout=storedLayout.data;
+                this.temporaryLayouts[this.name]=this.layout;
+                self.activateLayout();
+                resolve(this.layout);
+                return;
+            }
+            this.loadLayout(layoutName)
+                .then((layout)=>{
+                    this.activateLayout();
+                    resolve(this.layout);
+                })
+                .catch((error)=>{
+                    let description=KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
+                    if (description && description.defaultv){
+                        if (layoutName != description.defaultv){
+                            globalStore.storeData(keys.properties.layoutName,description.defaultv);
+                            self.loadLayout(description.defaultv).then(()=>{
+                                self.activateLayout();
+                                resolve(self.layout);
+                            }).catch((error)=>{
+                                reject("unable to load default layout: "+error);
+                            })
+                        }
+                    }
+                    else{
+                        reject("unable to load application layout "+layoutName+": "+error);
+                    }
+                });
+        });
+    }
+
+    /**
+     * load a layout from local storage
+     * @private
+     * @returns a object with name,data
+     */
+    _loadFromStorage(){
+        try {
+            let raw = localStorage.getItem(
+                globalStore.getData(keys.properties.layoutStoreName)
+            );
+            if (raw) {
+                return JSON.parse(raw);
+            }
+        }catch(e){
+            base.log("error when trying to read layout locally: "+e);
+        }
+
+    }
+    _setEditing(on){
+        this.editing=on;
+        globalStore.storeData(keys.gui.global.layoutEditing,on);
     }
 
     /**
@@ -42,6 +119,7 @@ class LayoutHandler{
         let self=this;
         this.layout=undefined;
         this.name=name;
+        this._setEditing(false);
         return new Promise((resolve,reject)=> {
             if (this.storeLocally){
                 if (!this.temporaryLayouts[name]) {
@@ -182,7 +260,13 @@ class LayoutHandler{
         },KeyHelper.keyNodeToString(keys.properties));
         return rt;
     }
-    activateLayout(){
+
+    getLayoutWidgets(){
+        if (! this.layout || ! this.layout.widgets) return {};
+        return this.layout.widgets;
+    }
+    activateLayout(upload){
+        this._setEditing(false);
         if (!this.layout) return false;
         try {
             localStorage.setItem(
@@ -195,11 +279,15 @@ class LayoutHandler{
         if (this.layout.keys){
            KeyHandler.mergeMappings(this.layout.keys);
         }
-        globalStore.storeData(keys.gui.global.layoutName,this.name);
-        if (! this.layout.widgets) return false;
-        globalStore.storeData(keys.gui.global.layout,this.layout.widgets);
+        globalStore.storeData(keys.properties.layoutName,this.name);
         let ls=globalStore.getData(keys.gui.global.layoutSequence,0);
         globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
+        if (upload){
+            this.uploadLayout(this.name,this.layout).then(()=>{}).catch((error)=>{
+               base.log("unable to upload layout "+error);
+            });
+        }
+        return true;
     }
 
     listLayouts(){

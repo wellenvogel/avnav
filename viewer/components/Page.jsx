@@ -9,6 +9,7 @@ import keys from '../util/keys.jsx';
 import NavData from '../nav/navdata.js';
 import KeyHandler from '../util/keyhandler.js';
 import AlarmHandler from '../nav/alarmhandler.js';
+import Dynamic from '../hoc/Dynamic.jsx';
 
 const alarmClick =function(){
     let alarms=globalStore.getData(keys.nav.alarms.all,"");
@@ -27,6 +28,7 @@ class Page extends React.Component {
     render() {
         let props=this.props;
         let className = "page";
+        if (props.isEditing) className+=" editing";
         if (props.className) className += " " + props.className;
         let Alarm=this.alarmWidget;
         return <div className={className} id={props.id} style={props.style}>
@@ -55,7 +57,8 @@ Page.propTypes={
     mainContent: PropTypes.any,
     bottomContent: PropTypes.any,
     buttonList: PropTypes.any,
-    style: PropTypes.object
+    style: PropTypes.object,
+    isEditing: PropTypes.bool
 };
 
-module.exports=Page;
+module.exports=Dynamic(Page,{storeKeys:{isEditing:keys.gui.global.layoutEditing}});

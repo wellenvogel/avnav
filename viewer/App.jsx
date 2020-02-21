@@ -123,25 +123,9 @@ class App extends React.Component {
                 Toast("unable to load key mappings: "+error);
             }
         );
-        let layoutName=globalStore.getData(keys.properties.layoutName);
-        LayoutHandler.loadLayout(layoutName)
-            .then((layout)=>{
-                LayoutHandler.activateLayout(true);
-            })
-            .catch((error)=>{
-                let description=KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
-                if (description && description.defaultv){
-                    if (layoutName != description.defaultv){
-                        globalStore.storeData(keys.properties.layoutName,description.defaultv);
-                        LayoutHandler.loadLayout(description.defaultv).then(()=>{
-                            LayoutHandler.activateLayout();
-                        }).catch((error)=>{
-                            Toast("unable to load default layout: "+error);
-                        })
-                    }
-                }
-                Toast("unable to load application layout "+layoutName+": "+error);
-            });
+        LayoutHandler.loadStoredLayout()
+            .then((layout)=>{})
+            .catch((error)=>{Toast(error)});
         GuiHelpers.keyEventHandler(this,()=>{
             GuiHelpers.controlMob(true);
         },'global','mobon');

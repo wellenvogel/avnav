@@ -26,6 +26,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import jsdownload from 'downloadjs';
 import GuiHelpers from '../util/GuiHelpers.js';
 import LeaveHandler from '../util/leavehandler.js';
+import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -332,55 +333,6 @@ const uploadRouteData=(filename,data)=>{
     });
 };
 
-class LayoutNameDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state={
-            value:props.value,
-            exists:props.checkName?props.checkName(props.value):false,
-            active:props.checkActive?props.checkActive(props.value):false};
-        this.valueChanged=this.valueChanged.bind(this);
-    }
-    valueChanged(event) {
-        let value=event.target.value;
-        let nstate={value:value};
-        if (this.props.checkName){
-            nstate.exists=this.props.checkName(value);
-        }
-        if (this.props.checkActive){
-            nstate.active=this.props.checkActive(value)
-        }
-        this.setState(nstate);
-    }
-    render () {
-        let info="New Layout";
-        if (this.state.active){
-            info="Active Layout";
-        }
-        else{
-            if (this.state.exists){
-                info="Existing Layout";
-            }
-        }
-        return (
-            <div>
-                <h3 className="dialogTitle">{'Select Layout Name'}</h3>
-                <div>
-                    <div className="row"><label>{info}</label></div>
-                    <div className="row"><label>{'user.'}</label>
-                        <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
-                    </div>
-                </div>
-                <button name="ok" onClick={()=>{
-                    this.props.closeCallback();
-                    this.props.okCallback(this.state.value);
-                    }}>{this.state.exists?"Overwrite":"Ok"}</button>
-                <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
-                <div className="clear"></div>
-            </div>
-        );
-    }
-};
 
 const userlayoutExists=(name)=>{
     let itemName=LayoutHandler.fileNameToServerName(name);
@@ -390,20 +342,13 @@ const userlayoutExists=(name)=>{
 const uploadLayoutData = (fileName, data)=> {
     if (userlayoutExists(fileName)) {
         let baseName=LayoutHandler.nameToBaseName(fileName);
-        OverlayDialog.dialog((props)=> {
-            return <LayoutNameDialog
-                {...props}
-                exists={true}
-                value={baseName}
-                okCallback={(newName)=>{
-                        LayoutHandler.uploadLayout(newName,data,true)
-                            .then((result)=>{fillData();})
-                            .catch((error)=>{Toast("unable to upload layout: "+error);})
-                   }}
-                checkName={userlayoutExists}
-                checkActive={(name)=>{return LayoutHandler.isActiveLayout(LayoutHandler.fileNameToServerName(name))}}
-                />
-        });
+        LayoutNameDialog.createDialog(baseName,userlayoutExists)
+            .then((newName)=>{
+                LayoutHandler.uploadLayout(newName,data,true)
+                    .then((result)=>{fillData();})
+                    .catch((error)=>{Toast("unable to upload layout: "+error);})
+                })
+            .catch((error)=>{});
         return;
     }
     LayoutHandler.uploadLayout(fileName, data, true)
