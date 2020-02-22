@@ -24,7 +24,7 @@ class ActiveRouteWidget extends React.Component{
     }
 
     render() {
-        if (!this.props.routeName) return null;
+        if (!this.props.routeName && ! this.props.isEditing) return null;
         let self = this;
         let classes = "widget activeRouteWidget " + this.props.className || "";
         if (this.props.isApproaching) classes += " approach ";
@@ -71,6 +71,7 @@ ActiveRouteWidget.storeKeys={
     eta: keys.nav.route.eta,
     remain: keys.nav.route.remain,
     nextCourse: keys.nav.route.nextCourse,
+    isEditing: keys.gui.global.layoutEditing
 };
 
 module.exports=ActiveRouteWidget;
