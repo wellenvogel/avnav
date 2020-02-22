@@ -309,6 +309,8 @@ class LayoutHandler{
         if (index < 0 || index >= panelData.length) return;
         return panelData[index];
     }
+
+
     /**
      * replace/add/remove a widget
      * @param page the page
@@ -316,42 +318,62 @@ class LayoutHandler{
      * @param index the item index, if opt_add is set: <0 insert at start, >= 0 append
      * @param item the item to be inserted, if undefined: remove
      * @param opt_add if set: add the item instead of replace/remove
+     * @type ADD_MODES
      * @return {boolean} true if success
      */
     replaceItem(page,panel,index,item,opt_add){
         if (! this.isEditing()) return false;
         let widgets=this.getLayoutWidgets();
         if (!widgets) return false;
+        let allowAdd=opt_add !== undefined && opt_add !== this.ADD_MODES.noAdd;
+        if (allowAdd && ! item) return false;
         let pageData=widgets[page];
         if (! pageData) {
-            if (! opt_add) return false;
+            if (! allowAdd) return false;
             pageData={};
             widgets[page]=pageData;
         }
         if (typeof(pageData) !== 'object') return false;
         let panelData=pageData[panel];
         if (! panelData) {
-            if (! opt_add) return false;
+            if (! allowAdd) return false;
             panelData=[];
             pageData[panel]=panelData;
         }
-        if (opt_add) {
-            if (index < 0) {
+        if (allowAdd) {
+            if (opt_add == this.ADD_MODES.beginning) {
                 //insert at the beginning
                 panelData.splice(0, 0, item);
                 this.incrementSequence();
                 return true;
             }
-            if (index >=0 ) {
+            if (opt_add == this.ADD_MODES.end) {
                 //append
                 panelData.push(item);
                 this.incrementSequence();
                 return true;
             }
-            return false;
         }
         if (index < 0 || index >= panelData.length){
             return false;
+        }
+        if (allowAdd){
+            if (opt_add == this.ADD_MODES.afterIndex){
+                if (index == (panelData.length-1)){
+                    panelData.push(item);
+                }
+                else {
+                    panelData.splice(index + 1, 0, item)
+                }
+                this.incrementSequence();
+                return true;
+            }
+            if (opt_add == this.ADD_MODES.beforeIndex){
+                panelData.splice(index,0,item);
+                this.incrementSequence();
+                return true;
+            }
+            return false; //invalid add mode
         }
         if (item) {
             panelData.splice(index, 1, item);
@@ -428,4 +450,11 @@ class LayoutHandler{
 
 }
 
+LayoutHandler.prototype.ADD_MODES={
+    noAdd:0,
+    beginning: 1,
+    end: 2,
+    beforeIndex: 3,
+    afterIndex: 4
+};
 export default new LayoutHandler();

@@ -14,12 +14,21 @@ class EditWidgetDialog extends React.Component{
         this.state= {weight:props.weight,selectedWidget:props.current};
         this.valueChanged=this.valueChanged.bind(this);
         this.selectWidget=this.selectWidget.bind(this);
+        this.insert=this.insert.bind(this);
     }
     valueChanged(event,name) {
         let value=event.target.value;
         let nstate={};
         nstate[name]=value;
         this.setState(nstate);
+    }
+    insert(before){
+        if (! this.props.insertCallback) return;
+        this.props.closeCallback();
+        this.props.insertCallback({
+            name:this.state.selectedWidget,
+            weight:this.state.weight
+        },before);
     }
     selectWidget(){
         let self=this;
@@ -61,7 +70,10 @@ class EditWidgetDialog extends React.Component{
             <div className="selectDialog editWidgetDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Widget'}</h3>
                 <div className="info"><span className="label">Panel:</span>{this.props.panel}</div>
-                <div className="info"><span className="label">Current:</span>{this.props.current}</div>
+                {(this.props.current !== undefined)?
+                    <div className="info"><span className="label">Current:</span>{this.props.current}</div>
+                    :
+                    null}
                 {(this.state.weight !== undefined)?
                     <div className="input">
                         <span className="label">Weight:</span>
@@ -69,9 +81,16 @@ class EditWidgetDialog extends React.Component{
                     </div>
                     :null}
                 <div className="selectElement info" onClick={this.selectWidget}>
-                    <span class="label">New Widget:</span>
-                    <span class="newWidget">{this.state.selectedWidget}</span>
+                    <span className="label">New Widget:</span>
+                    <span className="newWidget">{this.state.selectedWidget}</span>
                 </div>
+                {(this.state.selectedWidget !== undefined)?
+                    <div className="insertButtons">
+                        {(this.props.current !== undefined)?<button name="before" onClick={()=>this.insert(true)}>Before</button>:null}
+                        {(this.props.current !== undefined)?<button name="after" onClick={()=>this.insert(false)}>After</button>:null}
+                        {(this.props.current === undefined)?<button name="after" onClick={()=>this.insert(false)}>Insert</button>:null}
+                    </div>
+                    :null}
                 <div className="dialogButtons">
                     <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
                     {this.props.updateCallback?
@@ -109,7 +128,7 @@ EditWidgetDialog.propTypes={
     panel: PropTypes.string,
     current:PropTypes.string,
     weight: PropTypes.number,
-    okCallback: PropTypes.func.isRequired,
+    insertCallback: PropTypes.func,
     updateCallback: PropTypes.func,
     removeCallback: PropTypes.func,
     closeCallback: PropTypes.func.isRequired
@@ -141,15 +160,22 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
             {...props}
             title="Select Widget"
             panel={panelname}
-            current={widgetItem?widgetItem.name:""}
+            current={widgetItem?widgetItem.name:undefined}
             weight={weight}
-            okCallback={(selected)=>{
-                if (! selected) return;
+            insertCallback={(selected,before)=>{
+                if (! selected || ! selected.name) return;
                 let newItem={name:selected.name};
                 if (opt_weight && newItem){
                     newItem.weight=selected.weight;
                 }
-                LayoutHandler.replaceItem(pagename,panelname,index,newItem,add);
+                let addMode=LayoutHandler.ADD_MODES.noAdd;
+                if (widgetItem){
+                    addMode=before?LayoutHandler.ADD_MODES.beforeIndex:LayoutHandler.ADD_MODES.afterIndex;
+                }
+                else{
+                    addMode=opt_beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
+                }
+                LayoutHandler.replaceItem(pagename,panelname,index,newItem,addMode);
             }}
             removeCallback={widgetItem?()=>{
                 LayoutHandler.replaceItem(pagename,panelname,index);
