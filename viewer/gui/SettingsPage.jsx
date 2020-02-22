@@ -21,6 +21,7 @@ import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
+import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
@@ -323,66 +324,46 @@ const changeItem=(item,value,opt_omitFlag)=>{
 const handleLayoutClick=()=>{
     let isEditing=LayoutHandler.isEditing();
     if (! isEditing){
-        let currentLayouts=[];
-        let checkName=(name)=>{
-            name=LayoutHandler.fileNameToServerName(name);
-            for (let i=0;i<currentLayouts.length;i++){
-                if (currentLayouts[i].name === name) return true;
-            }
-            return false;
+        let startDialog=()=> {
+            let currentLayouts = [];
+            let checkName = (name)=> {
+                name = LayoutHandler.fileNameToServerName(name);
+                for (let i = 0; i < currentLayouts.length; i++) {
+                    if (currentLayouts[i].name === name) return true;
+                }
+                return false;
+            };
+            LayoutHandler.listLayouts()
+                .then((list)=> {
+                    currentLayouts = list;
+                    let name = LayoutHandler.nameToBaseName(LayoutHandler.name);
+                    LayoutNameDialog.createDialog(name, checkName, "Start Layout Editor", "save changes to")
+                        .then((newName)=> {
+                            let layoutName = LayoutHandler.fileNameToServerName(newName);
+                            LayoutHandler.startEditing(layoutName);
+                        })
+                        .catch(()=> {
+                        })
+                })
+                .catch((error)=> {
+                    Toast("cannot start layout editing: " + error)
+                });
         };
-        LayoutHandler.listLayouts()
-            .then((list)=>{
-                currentLayouts=list;
-                let name=LayoutHandler.nameToBaseName(LayoutHandler.name);
-                LayoutNameDialog.createDialog(name,checkName,"Start Layout Editor","save changes to")
-                    .then((newName)=>{
-                        let layoutName=LayoutHandler.fileNameToServerName(newName);
-                        LayoutHandler.startEditing(layoutName);
-                    })
-                    .catch(()=>{})
-            })
-            .catch((error)=>{Toast("cannot start layout editing: "+error)});
+        if (! hasChanges()){
+            startDialog();
+            return;
+        }
+        confirmAbortOrDo().then(()=>{
+            startDialog();
+        }).catch(()=>{});
     }
     else{
-
-        let FinishDialog=function (props) {
-            let buttonFunction=(mode)=>{
-                if (props.buttonClick) props.buttonClick(mode);
-                if (props.closeCallback) props.closeCallback();
-            };
-            return (
-                <div>
-                    <h3 className="dialogTitle">Save Layout Changes?</h3>
-                    <button name="ok" onClick={()=>buttonFunction(1)}>Ok</button>
-                    <button name="cancel" onClick={()=>buttonFunction(3)}>Cancel</button>
-                    <button name="discard" onClick={()=>buttonFunction(2)}>Discard Changes</button>
-                    <div className="clear"></div>
-                </div>
-            );
-        };
-        let buttonClick=(mode)=>{
-            switch (mode) {
-                case 1:
-                    LayoutHandler.activateLayout(true);
-                    //we need to write the changed value also in our display values
-                    changeItem({name:keys.properties.layoutName},LayoutHandler.name,true);
-                    break;
-                case 2:
-                    LayoutHandler.loadStoredLayout();
-                    //we need to write the changed value also in our display values
-                    changeItem({name:keys.properties.layoutName},LayoutHandler.name,true);
-                    break;
-                case 3:
-                    break;
-            }
-        };
-        OverlayDialog.dialog((props)=>{
-            return <FinishDialog
-                {...props}
-                buttonClick={buttonClick}
-            />
-        });
+        LayoutFinishedDialog.createDialog()
+            .then((result)=>{
+                //we need to write the changed value also in our display values
+                changeItem({name:keys.properties.layoutName},LayoutHandler.name,true);
+            })
+            .catch((error)=>{});
     }
 };
 
@@ -439,7 +420,7 @@ class SettingsPage extends React.Component{
             {
                 name: 'SettingsLayout',
                 onClick:()=>{
-                    handleLayoutClick();
+                    this.handleLayoutClick();
                 },
                 storeKeys:{
                     toggle: keys.gui.global.layoutEditing
@@ -465,6 +446,7 @@ class SettingsPage extends React.Component{
         this.leftPanelVisible=this.leftPanelVisible.bind(this);
         this.handlePanel=this.handlePanel.bind(this);
         this.sectionClick=this.sectionClick.bind(this);
+        this.handleLayoutClick=this.handleLayoutClick.bind(this);
         this.flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
         if (! (this.props.options && this.props.options.returning)) {
             globalStore.storeData(keys.gui.settingspage.leftPanelVisible, true);
@@ -476,6 +458,54 @@ class SettingsPage extends React.Component{
         }
 
     }
+
+    handleLayoutClick(){
+        let isEditing=LayoutHandler.isEditing();
+        if (! isEditing){
+            let startDialog=()=> {
+                let currentLayouts = [];
+                let checkName = (name)=> {
+                    name = LayoutHandler.fileNameToServerName(name);
+                    for (let i = 0; i < currentLayouts.length; i++) {
+                        if (currentLayouts[i].name === name) return true;
+                    }
+                    return false;
+                };
+                LayoutHandler.listLayouts()
+                    .then((list)=> {
+                        currentLayouts = list;
+                        let name = LayoutHandler.nameToBaseName(LayoutHandler.name);
+                        LayoutNameDialog.createDialog(name, checkName, "Start Layout Editor", "save changes to")
+                            .then((newName)=> {
+                                let layoutName = LayoutHandler.fileNameToServerName(newName);
+                                LayoutHandler.startEditing(layoutName);
+                                history.pop();
+                            })
+                            .catch(()=> {
+                            })
+                    })
+                    .catch((error)=> {
+                        Toast("cannot start layout editing: " + error)
+                    });
+            };
+            if (! this.hasChanges()){
+                startDialog();
+                return;
+            }
+            confirmAbortOrDo().then(()=>{
+                this.resetData();
+                startDialog();
+            }).catch(()=>{});
+        }
+        else{
+            LayoutFinishedDialog.createDialog()
+                .then((result)=>{
+                    //we need to write the changed value also in our display values
+                    changeItem({name:keys.properties.layoutName},LayoutHandler.name,true);
+                })
+                .catch((error)=>{});
+        }
+    };
 
     resetData(){
         let values=assign({},globalStore.getData(keys.gui.settingspage.values));

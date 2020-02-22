@@ -157,8 +157,16 @@ const MapHolder=function(){
         self._chartbase=undefined;
         self._url=undefined;
     });
+    this.editMode=new Callback(()=>{
+        let isEditing=globalStore.getData(keys.gui.global.layoutEditing)
+        if (isEditing){
+            self.setCourseUp(false);
+            self.setGpsLock(false);
+        }
+    });
     globalStore.register(this.navChanged,storeKeys);
     globalStore.register(this.propertyChange,keys.gui.global.propertySequence);
+    globalStore.register(this.editMode,keys.gui.global.layoutEditing);
 
 
     /**

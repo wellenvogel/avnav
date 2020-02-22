@@ -29,6 +29,7 @@ import AisData from '../nav/aisdata.js';
 import WayPointDialog from '../components/WaypointDialog.jsx';
 import ButtonList from '../components/ButtonList.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
+import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -268,6 +269,7 @@ class EditRoutePage extends React.Component{
                 editDisable: true
             },
             GuiHelpers.mobDefinition,
+            LayoutFinishedDialog.getButtonDef(),
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

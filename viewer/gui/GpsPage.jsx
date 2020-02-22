@@ -18,6 +18,7 @@ import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
+import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
 function resizeFont() {
@@ -81,8 +82,8 @@ const findPageWithWidget=(name,anchor)=>{
             let list=getPanelList(panels[idx],anchor,pnums[pidx]);
             if (! list) continue;
             for (let li in list.list){
-                if (! list[li]) continue;
-                if (list[li].name == name){
+                if (! list.list[li]) continue;
+                if (list.list[li].name == name){
                     return pnums[pidx];
                 }
             }
@@ -114,7 +115,8 @@ class GpsPage extends React.Component{
                 onClick:()=>{
                     MapHolder.centerToGps();
                     history.pop();
-                }
+                },
+                editDisable: true
             },
             {
                 name: "Gps1",
@@ -194,9 +196,11 @@ class GpsPage extends React.Component{
                 },
                 onClick: ()=>{
                     GuiHelpers.anchorWatchDialog(undefined);
-                }
+                },
+                editDisable:true
             },
             GuiHelpers.mobDefinition,
+            LayoutFinishedDialog.getButtonDef(),
             {
                 name:'Cancel',
                 onClick:()=>{history.pop();}

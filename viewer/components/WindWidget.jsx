@@ -45,15 +45,17 @@ class WindWidget extends React.Component{
                     </React.Fragment>
                     :
                     <React.Fragment>
-                        <div className="windInner">
-                            <div className='widgetData'>{Formatter.formatDirection(this.props.windAngle)}</div>
-                            <div className='infoLeft'>WD</div>
-                            <div className='infoRight'>°</div>
-                        </div>
-                        <div className="windInner">
-                            <div className='widgetData'>{windSpeed}</div>
-                            <div className='infoLeft'>WS</div>
-                            <div className='infoRight'>{this.props.showKnots ? "kn" : "m/s"}</div>
+                        <div className="resize">
+                            <div className="windInner">
+                                <div className='widgetData'>{Formatter.formatDirection(this.props.windAngle)}</div>
+                                <div className='infoLeft'>WD</div>
+                                <div className='infoRight'>°</div>
+                            </div>
+                            <div className="windInner">
+                                <div className='widgetData'>{windSpeed}</div>
+                                <div className='infoLeft'>WS</div>
+                                <div className='infoRight'>{this.props.showKnots ? "kn" : "m/s"}</div>
+                            </div>
                         </div>
                     </React.Fragment>
                 }

@@ -284,7 +284,8 @@ const mobDefinition={
     },
     onClick:()=>{
         toggleMob();
-    }
+    },
+    editDisable:true
 };
 
 

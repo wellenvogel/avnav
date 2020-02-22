@@ -12,7 +12,7 @@
 <AVNGpsdFeeder useGpsd="false" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
 <!-- <AVNSerialReader name="com4reader" port="3" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
-<AVNSerialReader useFeeder="true" name="usb1reader" port="/dev/ttyUSB1" baud="38400" minbaud="4800"/>
+<!--<AVNSerialReader useFeeder="true" name="usb1reader" port="/dev/ttyUSB2" baud="38400" minbaud="4800"/>-->
 <!-- bluetooth support
 	 we have a scanner that is looking for bluetooth devices
 	 if one is found, it will try to connect and feed the data through the gpsd feeder
@@ -47,9 +47,9 @@
 	<!-- <UsbDevice usbid="3-4.3.1:1.0" baud="38400" type="writer" xonxoff="1" timeout="10" filter="$RMC" combined="True" /> -->
 	<!-- more readable form ...-->
 	<UsbDevice usbid="3-4.3.1:1.0" baud="38400" type="combined" xonxoff="1" timeout="10" filter="$RMC" />
-	<UsbDevice usbid="3-2.2:1.0" baud="38400" type="combined" timeout="10" filter="" xonxoff="1" readFilter="!AIV"/>
 	<!-- a device to be ignored - e.g. for testing -->
 	<UsbDevice usbid="3-10.1:1.0" baud="38400" type="ignore" />
+	<UsbDevice usbid="3-2.1:1.0" baud="38400" type="ignore" />
 	<UsbDevice usbid="3-2.3.1:1.0" baud="38400" type="ignore" />
 	<!-- a reader with autobaud and filter - it will filter out any RMC records and all AIS stuff-->
 	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="reader" filter="^$RMC,^!"/>-->
@@ -103,7 +103,11 @@ allowDenyCommand="sudo $BASEDIR/../raspberry/iptables-ext.sh wlx0013eff503f2"
 		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
 	</AVNAlarmHandler>
 -->
+<AVNSocketReader host="10.222.10.122" port="2599" name="canboatnmea0183" />
+
+<AVNSocketWriter port="34569" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboat"/>
 <AVNPluginHandler>
 	<builtin-signalk enabled="true"/>
+	<builtin-canboat enabled="true" host="10.222.10.122" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboat"/>
 </AVNPluginHandler>
 </AVNServer>

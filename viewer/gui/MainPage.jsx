@@ -19,6 +19,7 @@ import MapHolder from '../map/mapholder.js';
 import base from '../base.js';
 import chartImage from '../images/Chart60.png';
 import GuiHelper from '../util/GuiHelpers.js';
+import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 
 const DynamicList = Dynamic(ItemList);
 
@@ -105,6 +106,8 @@ class MainPage extends React.Component {
                 editDisable: true
             },
             GuiHelper.mobDefinition,
+            LayoutFinishedDialog.getButtonDef(),
+
             {
                 name: 'MainCancel',
                 storeKeys: {visible: keys.gui.global.onAndroid},

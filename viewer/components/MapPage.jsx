@@ -57,6 +57,7 @@ class MapPage extends React.Component{
 
     }
     mapEvent(evdata,token){
+        if (globalStore.getData(keys.gui.global.layoutEditing)) return;
         this.props.mapEventCallback(evdata,token);
     }
     componentWillUnmount(){

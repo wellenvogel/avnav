@@ -10,7 +10,7 @@ import keys from '../util/keys.jsx';
 const LayoutEditMode=function(Component){
     let HComponent=function(props){
         let {editDisable,isEditing,editOnly,...compProps}=props;
-        if (props.editDisable && props.isEditing) compProps.disabled=true;
+        if (props.editDisable && props.isEditing) return null;
         if (props.editOnly && ! props.isEditing) return null;
         return <Component {...compProps}/>;
     };

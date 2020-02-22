@@ -30,6 +30,7 @@ import ButtonList from '../components/ButtonList.jsx';
 import WayPointDialog from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler from '../util/layouthandler.js';
+import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -291,7 +292,8 @@ class NavPage extends React.Component{
                 onClick:()=>{
                     let old=globalStore.getData(keys.map.lockPosition);
                     MapHolder.setGpsLock(!old);
-                }
+                },
+                editDisable:true
             },
             {
                 name: "LockMarker",
@@ -313,7 +315,8 @@ class NavPage extends React.Component{
                 toggle:true,
                 onClick:()=>{
                     navToWp(false);
-                }
+                },
+                editDisable:true
             },
             {
                 name: "CourseUp",
@@ -322,7 +325,8 @@ class NavPage extends React.Component{
                 },
                 onClick:()=>{
                     MapHolder.setCourseUp(!globalStore.getData(keys.map.courseUp,false))
-                }
+                },
+                editDisable:true
             },
             {
                 name: "ShowRoutePanel",
@@ -334,6 +338,7 @@ class NavPage extends React.Component{
 
             },
             GuiHelpers.mobDefinition,
+            LayoutFinishedDialog.getButtonDef(),
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

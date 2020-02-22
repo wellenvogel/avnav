@@ -296,10 +296,20 @@ button{
 
   &.SettingsLayout{
     .iconButton('ballot.svg');
+    &.button.active{
+      border-color: @editingColor;
+    }
   }
 
   &.SettingsAndroid {
     .iconButton('ic_android.svg');
+  }
+
+  &.LayoutFinished{
+    .iconButton('ballot.svg');
+    &.button.active{
+      border-color: @editingColor;
+    }
   }
 
   &.WarningOK{
