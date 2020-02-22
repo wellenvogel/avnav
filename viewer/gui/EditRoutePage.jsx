@@ -30,6 +30,7 @@ import WayPointDialog from '../components/WaypointDialog.jsx';
 import ButtonList from '../components/ButtonList.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
+import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -73,11 +74,13 @@ const startWaypointDialog=(item,index)=>{
 const widgetClick=(item,data,panel)=>{
     let currentEditor=getCurrentEditor();
     if (item.name == "EditRoute"){
+        if (globalStore.getData(keys.gui.global.layoutEditing)) return;
         currentEditor.syncTo(RouteEdit.MODES.PAGE);
         history.push("routepage");
         return;
     }
     if (item.name == 'RoutePoints'){
+        if (globalStore.getData(keys.gui.global.layoutEditing)) return;
         if (data && data.idx !== undefined){
             let lastSelected=currentEditor.getIndex();
             currentEditor.setNewIndex(data.idx);
@@ -90,6 +93,7 @@ const widgetClick=(item,data,panel)=>{
         }
         return;
     }
+    if (EditWidgetDialog.createDialog(item,'editroutepage',panel)) return;
     if (panel == 'bottomRight'){
         if (! globalStore.getData(keys.nav.gps.valid)) return;
         let boatPos=globalStore.getData(keys.nav.gps.position);

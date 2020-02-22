@@ -90,7 +90,6 @@ class MapPage extends React.Component{
                 itemCreator={(widget)=>{return widgetCreator(widget,mode)}}
                 itemList={panelItems.list}
                 onItemClick={(item,data)=>{
-                    if (EditWidgetDialog.createDialog(item,self.props.id,panelItems.name)) return;
                     self.props.onItemClick(item,data,panelItems.name)
                     }}
                 onClick={()=>{
