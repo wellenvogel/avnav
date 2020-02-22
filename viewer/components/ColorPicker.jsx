@@ -12,7 +12,7 @@ import colorUtils  from '../node_modules/react-color-picker/lib/utils/color';
 import defaultColor  from '../node_modules/react-color-picker/lib/defaultColor';
 import toStringValue from '../node_modules/react-color-picker/lib/utils/toStringValue';
 
-import {SaturationSpectru,HueSpectrum} from 'react-color-picker';
+import {SaturationSpectrum,HueSpectrum} from 'react-color-picker';
 import Swipe from '../components/Swipe.jsx';
 import base from '../base.js';
 
