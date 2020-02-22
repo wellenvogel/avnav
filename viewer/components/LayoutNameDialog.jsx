@@ -35,7 +35,7 @@ class LayoutNameDialog extends React.Component{
             }
         }
         return (
-            <div>
+            <div className="inner">
                 <h3 className="dialogTitle">{this.props.title||'Select Layout Name'}</h3>
                 {this.props.subTitle?<p>{this.props.subTitle}</p>:null}
                 <div>

@@ -21,9 +21,11 @@ class OverlayDialog extends React.Component {
 
     render() {
         let Content=this.props.content;
+        let className="dialog";
+        if (this.props.className) className+=" "+this.props.className;
         return (
             <div ref="container" className="overlay_cover_active" onClick={this.props.onClick}>
-                <div ref="box" className="dialog" onClick={
+                <div ref="box" className={className} onClick={
                     (ev)=>{
                     ev.preventDefault();
                     ev.stopPropagation();
@@ -81,7 +83,6 @@ class OverlayDialog extends React.Component {
         assign(this.refs.box.style, {
             maxWidth: rect.width + "px",
             maxHeight: rect.height + "px",
-            display: 'block',
             position: 'fixed',
             opacity: 0
         });
@@ -102,7 +103,8 @@ class OverlayDialog extends React.Component {
 OverlayDialog.propTypes={
     parent: PropTypes.element,
     onClick: PropTypes.func, //click on container
-    closeCallback: PropTypes.func //handed over to the child to close the dialog
+    closeCallback: PropTypes.func, //handed over to the child to close the dialog
+    className: PropTypes.string
 };
 
 

@@ -72,39 +72,25 @@ const removeAll=()=>{
 };
 
 
-const createValueDialog=function(title,value,okCallback,cancelCallback,opt_label) {
-    class Dialog extends React.Component{
-        constructor(props){
-            super(props);
-            this.state={value:value};
-            this.valueChanged=this.valueChanged.bind(this);
-        }
-        valueChanged(event) {
-            this.setState({value: event.target.value});
-        }
-        render () {
-            return (
-                <div>
-                    <h3 className="dialogTitle">{title || 'Input'}</h3>
-                    <div>
-                        <div className="row"><label>{opt_label || ''}</label>
-                            <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
-                        </div>
-                    </div>
-                    <button name="ok" onClick={()=>okCallback(this.state.value)}>Ok</button>
-                    <button name="cancel" onClick={cancelCallback}>Cancel</button>
-                    <div className="clear"></div>
-                </div>
-            );
-        }
-    };
-    return Dialog;
-};
 
-let createSelectDialog=function(title,list,okCallback,cancelCallback) {
-    return (props)=> {
+
+
+
+                                            //"active input" to prevent resizes
+const Dialogs = {
+    /**
+     * create a select dialog component
+     * this method will not directly show the dialog
+     * @param title
+     * @param list
+     * @param okCallback
+     * @param cancelCallback
+     * @return {Function}
+     */
+    createSelectDialog: (title,list,okCallback,cancelCallback)=> {
+        return (props)=> {
             return (
-                <div className="selectDialog">
+                <div className="selectDialog inner">
                     <h3 className="dialogTitle">{title || ''}</h3>
                     <div className="selectList">
                         {list.map(function(elem){
@@ -121,12 +107,48 @@ let createSelectDialog=function(title,list,okCallback,cancelCallback) {
                 </div>
             );
 
-    };
-};
-
-                                            //"active input" to prevent resizes
-const Dialogs = {
+        };
+    },
     /**
+     * create a value dialog component
+     * this method will not show the dialog directly
+     * @param title
+     * @param value
+     * @param okCallback
+     * @param cancelCallback
+     * @param opt_label
+     * @return {Dialog}
+     */
+    createValueDialog:(title,value,okCallback,cancelCallback,opt_label) =>{
+        class Dialog extends React.Component{
+            constructor(props){
+                super(props);
+                this.state={value:value};
+                this.valueChanged=this.valueChanged.bind(this);
+            }
+            valueChanged(event) {
+                this.setState({value: event.target.value});
+            }
+            render () {
+                return (
+                    <div className="inner">
+                        <h3 className="dialogTitle">{title || 'Input'}</h3>
+                        <div>
+                            <div className="row"><label>{opt_label || ''}</label>
+                                <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
+                            </div>
+                        </div>
+                        <button name="ok" onClick={()=>okCallback(this.state.value)}>Ok</button>
+                        <button name="cancel" onClick={cancelCallback}>Cancel</button>
+                        <div className="clear"></div>
+                    </div>
+                );
+            }
+        };
+        return Dialog;
+    },
+
+/**
      * get the react elemnt that will handle all the dialogs
      */
     getDialogContainer: (props) => {
@@ -166,7 +188,7 @@ const Dialogs = {
             };
             const html = function () {
                 return (
-                    <div>
+                    <div className="inner">
                         <h3 className="dialogTitle">Alert</h3>
 
                         <div className="dialogText">{text}</div>
@@ -200,7 +222,7 @@ const Dialogs = {
             };
             let html = function (props) {
                 return (
-                    <div>
+                    <div className="inner">
                         <h3 className="dialogTitle">{opt_title || ''}</h3>
 
                         <div className="dialogText">{text}</div>
@@ -238,7 +260,7 @@ const Dialogs = {
         const cancel = ()=> {
             if (removeDialog(id,true) && opt_cancelCallback) opt_cancelCallback();
         };
-        let html= createValueDialog(title, value, ok, cancel, opt_label);
+        let html= Dialogs.createValueDialog(title, value, ok, cancel, opt_label);
         addDialog(id,html,opt_parent,()=> {
                 if (opt_cancelCallback) opt_cancelCallback();
             });
@@ -256,7 +278,7 @@ const Dialogs = {
     valueDialogPromise: function (title, value, opt_parent, opt_label) {
         let id = nextId();
         return new Promise(function (resolve, reject) {
-            let Dialog = createValueDialog(title, value, (value)=> {
+            let Dialog = Dialogs.createValueDialog(title, value, (value)=> {
                 removeDialog(id,true);
                 resolve(value);
                 return true;
@@ -281,7 +303,7 @@ const Dialogs = {
     selectDialogPromise: function (title, list, opt_parent) {
         return new Promise(function (resolve, reject) {
             let id = nextId();
-            let Dialog = createSelectDialog(title, list, (value)=> {
+            let Dialog = Dialogs.createSelectDialog(title, list, (value)=> {
                 removeDialog(id,true);
                 resolve(value);
             }, ()=> {

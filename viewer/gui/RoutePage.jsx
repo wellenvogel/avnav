@@ -82,7 +82,7 @@ const createNewRouteDialog=(name,okCallback)=> {
         render () {
             let self=this;
             let html = (
-                <div className="editRouteName">
+                <div className="editRouteName inner">
                     <h3 className="dialogTitle">Save as New</h3>
                     <div>
                         <div className="row">

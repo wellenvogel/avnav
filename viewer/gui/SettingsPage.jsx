@@ -104,7 +104,7 @@ const rangeItemDialog=(item)=>{
         render() {
             let range=item.values[0]+"..."+item.values[1];
             return(
-                <div className="settingsDialog">
+                <div className="settingsDialog inner">
                     <h3><span >{item.label}</span></h3>
                     <div className="settingsRange">Range: {range}</div>
                     <div>
@@ -201,7 +201,7 @@ const colorItemDialog=(item)=>{
             }
             if (pickerProperties.saturationWidth < 50 ) pickerProperties.saturationWidth=50;
             return (
-                <div className="settingsDialog colorDialog">
+                <div className="settingsDialog colorDialog inner">
                     <h3><span >{item.label}</span></h3>
                     <ColorPicker value={this.state.value} onDrag={this.onDrag} {...pickerProperties}/>
                     <div className="colorFrame">

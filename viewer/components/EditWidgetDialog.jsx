@@ -3,14 +3,17 @@ import PropTypes from 'prop-types';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog from './OverlayDialog.jsx';
+import DialogContainer from './OverlayDialogDisplay.jsx';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import assign from 'object-assign';
+
 
 class EditWidgetDialog extends React.Component{
     constructor(props){
         super(props);
-        this.state= {weight:props.weight};
+        this.state= {weight:props.weight,selectedWidget:props.current};
         this.valueChanged=this.valueChanged.bind(this);
+        this.selectWidget=this.selectWidget.bind(this);
     }
     valueChanged(event,name) {
         let value=event.target.value;
@@ -18,7 +21,7 @@ class EditWidgetDialog extends React.Component{
         nstate[name]=value;
         this.setState(nstate);
     }
-    render () {
+    selectWidget(){
         let self=this;
         let widgetList=WidgetFactory.getAvailableWidgets();
         let displayList=[];
@@ -27,6 +30,7 @@ class EditWidgetDialog extends React.Component{
         widgetList.forEach((el)=>{
             let item=assign({},el);
             item.key=idx;
+            item.label=el.name;
             idx++;
             displayList.push(item);
         });
@@ -39,7 +43,21 @@ class EditWidgetDialog extends React.Component{
             if (na > nb) return 1;
             return 0;
         });
+        this.setState({
+            dialog: OverlayDialog.createSelectDialog("Select Widget", displayList,
+                (selected)=> {
+                    self.setState({selectedWidget: selected.name, dialog: undefined});
+                },
+                ()=> {
+                    self.setState({dialog: undefined})
+                })
+        });
+    }
+    render () {
+        let self=this;
+        let Dialog=this.state.dialog;
         return (
+            <React.Fragment>
             <div className="selectDialog editWidgetDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Widget'}</h3>
                 <div className="info"><span className="label">Panel:</span>{this.props.panel}</div>
@@ -50,23 +68,21 @@ class EditWidgetDialog extends React.Component{
                         <input type="number" name="weight" onChange={(ev)=>this.valueChanged(ev,"weight")} value={this.state.weight}/>
                     </div>
                     :null}
-                <div className="selectList">
-                    {displayList.map(function(elem){
-                        return(
-                            <div key={elem.key} className={"listEntry "+(elem.selected && 'selectedItem')} onClick={function(){
-                              if (self.state.weight !== undefined) elem.weight=parseFloat(self.state.weight);
-                              self.props.okCallback(elem);
-                              self.props.closeCallback();
-                            }}>{elem.name}</div>);
-                    })}
+                <div className="selectElement info" onClick={this.selectWidget}>
+                    <span class="label">New Widget:</span>
+                    <span class="newWidget">{this.state.selectedWidget}</span>
                 </div>
                 <div className="dialogButtons">
                     <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
-                    {((this.state.weight !== undefined) && this.props.updateCallback)?
+                    {this.props.updateCallback?
                         <button name="ok" onClick={()=>{
                         this.props.closeCallback();
-                        this.props.updateCallback({weight:parseFloat(this.state.weight)});
-                    }}>Ok</button>
+                        let changes={name: this.state.selectedWidget};
+                        if (this.state.weight !== undefined){
+                            changes.weight=parseFloat(this.state.weight)
+                        }
+                        this.props.updateCallback(changes);
+                    }}>Update</button>
                     :null}
                     {this.props.removeCallback?
                     <button name="remove" onClick={()=>{
@@ -76,6 +92,14 @@ class EditWidgetDialog extends React.Component{
                 <div className="clear"></div>
                 </div>
             </div>
+            {Dialog?
+                <DialogContainer
+                    className="nested"
+                    content={Dialog}
+                    onClick={()=>{this.setState({dialog:undefined})}}
+                />:
+                null}
+            </React.Fragment>
         );
     }
 }

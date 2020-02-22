@@ -105,7 +105,7 @@ class Dialog extends React.Component{
     render(){
         let id=this.props.id;
         return (
-            <div className="wpaDialog">
+            <div className="wpaDialog inner">
                 <div>
                     <h3><span >{this.props.ssid}</span></h3>
                     <div>

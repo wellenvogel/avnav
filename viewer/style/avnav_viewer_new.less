@@ -133,13 +133,20 @@ html,body {
 
 .dialog {
   z-index: 121;
-  overflow: auto;
   padding: 1em;
   background-color: white;
   border-radius: 3px;
+  .flex-display();
   .nightColors();
   font-size: 1.3em;
   .mdShadow2();
+  &.nested{
+    font-size: 1em;
+  }
+
+  .inner{
+    overflow: auto;
+  }
 
 
   input {
@@ -177,13 +184,12 @@ html,body {
   .selectDialog {
     .flex-display();
     .flex-direction(column);
-    overflow: hidden;
-    max-height: inherit;
+    overflow: auto;
     padding-bottom: 1em;
     .selectList {
       .flex(1);
+      .flex-shrink(0);
       .flex-basis(auto);
-      overflow: auto;
     }
 
     .selectedItem {
@@ -194,30 +200,28 @@ html,body {
 }
 
 .editWidgetDialog{
+  .label {
+    .mdText2();
+    width: 7em;
+    display: inline-block;
+    text-align: end;
+    margin-right: 0.5em;
+    font-size: 0.8em;
+  }
   .info{
     font-size: 0.8em;
-    .label {
-      .mdText2();
-      width: 4.5em;
-      display: inline-block;
-      text-align: end;
-      margin-right: 0.5em;
+    .label{
+      font-size: 1em;
     }
-  }
-  .selectList{
-    max-height: 50vh;
   }
   .input{
     input{
       width: 4em;
+      margin-left: 0;
     }
-    .label{
-      font-size: 0.8em;
-      .mdText2();
-      width: 4.5em;
-      display: inline-block;
-      text-align: end;
-    }
+  }
+  .selectElement{
+    min-height: 2em;
   }
 
 }

@@ -61,7 +61,7 @@ let WaypointDialog = reactCreateClass({
     render: function () {
         if (!this.state.show) return null;
         let html = (
-            <div>
+            <div className="inner">
                 <h3>Edit Waypoint</h3>
                 <div>
                     <div className="row"><label>Name</label><input type="text" name="name" tabIndex="0"
