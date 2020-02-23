@@ -321,52 +321,6 @@ const changeItem=(item,value,opt_omitFlag)=>{
 };
 
 
-const handleLayoutClick=()=>{
-    let isEditing=LayoutHandler.isEditing();
-    if (! isEditing){
-        let startDialog=()=> {
-            let currentLayouts = [];
-            let checkName = (name)=> {
-                name = LayoutHandler.fileNameToServerName(name);
-                for (let i = 0; i < currentLayouts.length; i++) {
-                    if (currentLayouts[i].name === name) return true;
-                }
-                return false;
-            };
-            LayoutHandler.listLayouts()
-                .then((list)=> {
-                    currentLayouts = list;
-                    let name = LayoutHandler.nameToBaseName(LayoutHandler.name);
-                    LayoutNameDialog.createDialog(name, checkName, "Start Layout Editor", "save changes to")
-                        .then((newName)=> {
-                            let layoutName = LayoutHandler.fileNameToServerName(newName);
-                            LayoutHandler.startEditing(layoutName);
-                        })
-                        .catch(()=> {
-                        })
-                })
-                .catch((error)=> {
-                    Toast("cannot start layout editing: " + error)
-                });
-        };
-        if (! hasChanges()){
-            startDialog();
-            return;
-        }
-        confirmAbortOrDo().then(()=>{
-            startDialog();
-        }).catch(()=>{});
-    }
-    else{
-        LayoutFinishedDialog.createDialog()
-            .then((result)=>{
-                //we need to write the changed value also in our display values
-                changeItem({name:keys.properties.layoutName},LayoutHandler.name,true);
-            })
-            .catch((error)=>{});
-    }
-};
-
 
 
 const DynamicPage=Dynamic(Page);

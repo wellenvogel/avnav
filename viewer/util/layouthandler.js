@@ -171,7 +171,7 @@ class LayoutHandler{
     }
 
     nameToBaseName(name){
-        return name.replace(/^user\./,'').replace(/^system\./,'').replace(/\.json$/,'');
+        return name.replace(/^user\./,'').replace(/^system\./,'').replace(/\.json$/,'').replace(/.*\./,'');
     }
 
     uploadLayout(name,layout,isString){

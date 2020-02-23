@@ -112,7 +112,7 @@ class WidgetFactory{
     }
     getAvailableWidgets(){
         let rt=[];
-        for (let i=0;i< widgetList.length;i++){
+        for (let i=0;i< this.widgetDefinitions.length;i++){
             let el=this.getWidget(i);
             rt.push(el);
         }
