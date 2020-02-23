@@ -22,6 +22,7 @@ export class WidgetParameter{
     }
     setValue(widget,value){
         if (! widget) widget={};
+        if (this.type == WidgetParameter.TYPE.DISPLAY) return widget;
         if (this.type !== WidgetParameter.TYPE.NUMBER || value === undefined) {
             widget[this.name] = value;
         }
@@ -50,7 +51,8 @@ WidgetParameter.TYPE={
     STRING:1,
     NUMBER:2,
     KEY:3,
-    SELECT:4
+    SELECT:4,
+    DISPLAY: 5
 };
 
 
@@ -89,16 +91,28 @@ class WidgetFactory{
         if (! widgetData.wclass || widgetData.wclass === DirectWidget || widgetData.wclass === ExternalWidget){
             rt.push(new WidgetParameter('caption',WidgetParameter.TYPE.STRING,widget.caption||widgetData.caption));
             rt.push(new WidgetParameter('unit',WidgetParameter.TYPE.STRING,widget.unit||widgetData.unit));
-            if (! widgetData.formatter) {
-                rt.push(new WidgetParameter('formatter', WidgetParameter.TYPE.SELECT,widget.formatter,()=>{
+            let fmpar=new WidgetParameter('formatter', WidgetParameter.TYPE.SELECT,widget.formatter||widgetData.formatter);
+            if (widgetData.formatter){
+                let fname=widgetData.formatter;
+                if (typeof(fname) === 'function') fname=fname.name;
+                fmpar.default=fname;
+                fmpar.type=WidgetParameter.TYPE.DISPLAY;
+            }
+            else{
+                fmpar.list=()=>{
                     let fl=[];
                     for (let k in Formatter){
                         if (typeof(Formatter[k]) === 'function') fl.push(k);
                     }
                     return fl;
-                }))
+                }
             }
-            let fpar=new WidgetParameter('fmt parameter',WidgetParameter.TYPE.STRING,widget.formatterParameters||widgetData.formatterParameters,'formatterParameters');
+            rt.push(fmpar);
+            let currentParameters=widget.formatterParameters||widgetData.formatterParameters;
+            if (currentParameters instanceof Array){
+                currentParameters=currentParameters.join(",");
+            }
+            let fpar=new WidgetParameter('formatter parameter',WidgetParameter.TYPE.STRING,currentParameters);
             fpar.setValue=(widget,value)=>{
                 if (! widget) widget={};
                 widget.formatterParameters=value;
@@ -168,7 +182,11 @@ class WidgetFactory{
                     throw new Error("invalid formatter " + mergedProps.formatter)
                 }
                 mergedProps.formatter = function (v) {
-                    return ff.apply(self.formatter, [v].concat(mergedProps.formatterParameters || []));
+                    let param=mergedProps.formatterParameters;
+                    if (typeof(param) === 'string'){
+                        param=param.split(",");
+                    }
+                    return ff.apply(self.formatter, [v].concat(param || []));
                 }
             }
         }

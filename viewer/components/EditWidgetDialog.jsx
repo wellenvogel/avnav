@@ -103,14 +103,18 @@ class EditWidgetDialog extends React.Component{
                         <input type="number" name="weight" onChange={(ev)=>this.updateWidgetState({weight:ev.target.value})} value={this.state.widget.weight||1}/>
                     </div>
                     :null}
-                <div className="selectElement info" onClick={this.selectWidget}>
+                <div className="selectElement info" >
                     <span className="label">New Widget:</span>
-                    <span className="newWidget">{this.state.widget.name||'-Select Widget-'}</span>
+                    <input className="newWidget" value={this.state.widget.name||'-Select Widget-'} onClick={this.selectWidget}/>
                 </div>
                 {parameters.map((param)=>{
                     let selectFunction=undefined;
                     let inputFunction=undefined;
+                    let inputDisabled=false;
                     let type="text";
+                    if (param.type == WidgetParameter.TYPE.DISPLAY){
+                        inputDisabled=true;
+                    }
                     if (param.type == WidgetParameter.TYPE.STRING || param.type == WidgetParameter.TYPE.NUMBER){
                         inputFunction=(ev)=>{
                             self.updateWidgetState(param.setValue({},ev.target.value))
@@ -126,8 +130,11 @@ class EditWidgetDialog extends React.Component{
                     }
                     return <div className={"editWidgetParam "+param.name} key={param.name.replace(/  */,'')}>
                         <span className="label">{param.name}</span>
-                        {inputFunction?
-                            <input type={type} value={param.getValueForDisplay(this.state.widget)} onChange={inputFunction}/>
+                        {(inputFunction || inputDisabled)?
+                            inputDisabled?
+                                <input type={type} disabled="disabled" value={param.getValueForDisplay(this.state.widget)}/>
+                                :
+                                <input type={type} value={param.getValueForDisplay(this.state.widget)} onChange={inputFunction}/>
                             :
                             <input type="text" className="currentValue" onClick={selectFunction} value={param.getValueForDisplay(this.state.widget)}/>
                         }

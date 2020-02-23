@@ -21,7 +21,9 @@ class DirectWidget extends React.Component{
         if (this.props.isAverage) classes+=" average";
         if (this.props.className) classes+=" "+this.props.className;
         let val;
-        if (this.props.value !== undefined) val=this.props.formatter(this.props.value);
+        if (this.props.value !== undefined) {
+            val=this.props.formatter?this.props.formatter(this.props.value):this.props.default||'0';
+        }
         else val=this.props.default||'0';
         let style=this.props.style||{};
 
