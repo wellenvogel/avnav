@@ -19,6 +19,7 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
+import LayoutHandler from '../util/layouthandler.js';
 
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
 function resizeFont() {
@@ -261,7 +262,9 @@ class GpsPage extends React.Component{
                 itemList: leftPanel.list,
                 fontSize: fontSize,
                 onItemClick: (item,data) => {self.onItemClick(item,data,leftPanel);},
-                onClick: ()=>{EditWidgetDialog.createDialog(undefined,leftPanel.page,leftPanel.name,false,true);}
+                onClick: ()=>{EditWidgetDialog.createDialog(undefined,leftPanel.page,leftPanel.name,false,true);},
+                dragdrop: LayoutHandler.isEditing(),
+                onSortEnd: (oldIndex,newIndex)=>LayoutHandler.moveItem(leftPanel.page,leftPanel.name,oldIndex,newIndex)
             };
             let p1RightProp={
                 className: 'widgetContainer',
@@ -269,7 +272,9 @@ class GpsPage extends React.Component{
                 itemList: rightPanel.list,
                 fontSize: fontSize,
                 onItemClick: (item,data) => {self.onItemClick(item,data,rightPanel);},
-                onClick: ()=>{EditWidgetDialog.createDialog(undefined,rightPanel.page,rightPanel.name,false,true);}
+                onClick: ()=>{EditWidgetDialog.createDialog(undefined,rightPanel.page,rightPanel.name,false,true);},
+                dragdrop: LayoutHandler.isEditing(),
+                onSortEnd: (oldIndex,newIndex)=>LayoutHandler.moveItem(rightPanel.page,rightPanel.name,oldIndex,newIndex)
             };
             return(
             <React.Fragment>
