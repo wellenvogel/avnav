@@ -12,6 +12,10 @@ import aisNearestImage from '../images/ais-nearest.png';
 import aisWarningImage from '../images/ais-warning.png';
 
 const K=999; //the real value does not matter
+const V=888; //keys that can be used as value display
+
+let valueKeys=[]; // a list of keys that can be used to display values in widgets
+
 
 export const PropertyType={
     CHECKBOX:0,
@@ -46,6 +50,15 @@ const D=function(description){
     this.description=description;
 };
 
+/**
+ * key with description for values that can be used in widgets
+ * @param description
+ * @constructor
+ */
+const VD=function(description){
+    this.description=description;
+};
+
 let keyDescriptions={}; //will be filled on first module loading
 
 export class KeyNode{
@@ -60,20 +73,20 @@ export class KeyNode{
 let keys={
     nav:{
         gps:{
-            lat:K,
-            lon:K,
+            lat:V,
+            lon:V,
             position: new D("an instance of navobjects.Point"),
-            course: K,
-            speed: K,
-            rtime: K,
+            course: V,
+            speed: V,
+            rtime: V,
             valid: K,
-            windAngle: K,
-            windSpeed: K,
-            windReference: K,
+            windAngle: V,
+            windSpeed: V,
+            windReference: V,
             positionAverageOn:K,
             speedAverageOn: K,
             courseAverageOn: K,
-            depthBelowTransducer: K,
+            depthBelowTransducer: V,
             sequence: K, //will be incremented as last operation on each receive
             connectionLost: K
         },
@@ -81,33 +94,33 @@ let keys={
             all:K,
         },
         center:{
-            course: K,
-            distance: K,
-            markerCourse: K,
-            markerDistance: K
+            course: V,
+            distance: V,
+            markerCourse: V,
+            markerDistance: V
         },
         wp:{
-            course: K,
-            distance: K,
-            eta: K,
-            xte: K,
-            vmg: K,
-            position: K,
-            name: K
+            course: V,
+            distance: V,
+            eta: V,
+            xte: V,
+            vmg: V,
+            position: V,
+            name: V
         },
         anchor:{
-            distance: K,
-            direction:K,
-            watchDistance: K
+            distance: V,
+            direction:V,
+            watchDistance: V
         },
         route:{
-            name: K,
-            numPoints: K,
-            len:K,
-            remain: K,
-            eta: K,
-            nextCourse: K,
-            isApproaching: K
+            name: V,
+            numPoints: V,
+            len:V,
+            remain: V,
+            eta: V,
+            nextCourse: V,
+            isApproaching: V
         },
 
         ais:{
@@ -357,10 +370,18 @@ function update_keys(base,name){
             base[k]=cname;
             continue;
         }
+        if (base[k] === V){
+            valueKeys.push(cname);
+            base[k]=cname;
+            continue;
+        }
         let current=base[k];
         if (typeof (current) === 'object'){
-            if (current instanceof D || current instanceof Property){
+            if (current instanceof D || current instanceof Property || current instanceof VD){
                 keyDescriptions[cname]=current;
+                if (current instanceof VD){
+                    valueKeys.push(cname);
+                }
                 base[k]=cname;
                 continue;
             }
@@ -425,6 +446,14 @@ export const KeyHelper = {
         }
         return [keyObject]
 
+    },
+
+    /**
+     * get a list of keys that can be used for the display in si9mple widgets
+     * @return {Array}
+     */
+    getValueKeys:()=>{
+        return valueKeys;
     }
 };
 

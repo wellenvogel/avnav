@@ -7,7 +7,7 @@ import globalStore from '../util/globalstore.jsx';
 import Formatter from '../util/formatter';
 import Visible from '../hoc/Visible.jsx';
 import ExternalWidget from './ExternalWidget.jsx';
-import keys from '../util/keys.jsx';
+import keys,{KeyHelper} from '../util/keys.jsx';
 
 export class WidgetParameter{
     constructor(name,type,defaultv,list){
@@ -124,10 +124,7 @@ class WidgetFactory{
             if (! storeKeys){
                 let spar=new WidgetParameter('value',WidgetParameter.TYPE.KEY,widget.storeKeys?widget.storeKeys.value:undefined);
                 spar.list=()=>{
-                    let kl=[];
-                    for( let k in keys.nav.gps){
-                        kl.push(keys.nav.gps[k]);
-                    }
+                    let kl=KeyHelper.getValueKeys().slice(0);
                     //TODO: add currently available signalk keys
                     return kl;
                 };
