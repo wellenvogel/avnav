@@ -11,7 +11,10 @@ import assign from 'object-assign';
 class EditWidgetDialog extends React.Component{
     constructor(props){
         super(props);
-        this.state= {widget:props.current,sizeCount:0};
+        this.state= {
+            widget:props.current,
+            sizeCount:0,
+            parameters:WidgetFactory.getEditableWidgetParameters(props.current)};
         this.selectWidget=this.selectWidget.bind(this);
         this.insert=this.insert.bind(this);
         this.sizeCount=0;
@@ -59,31 +62,34 @@ class EditWidgetDialog extends React.Component{
                 })
         });
     }
-    updateWidgetState(values){
+    updateWidgetState(values,opt_new){
         let nvalues=undefined;
-        if (values.name && values.name !== this.state.widget.name){
+        if (opt_new){
             nvalues=values;
+            this.setState({
+                widget: nvalues,
+                sizeCount: this.sizeCount + 1,
+                parameters:WidgetFactory.getEditableWidgetParameters(nvalues)});
         }
         else {
             nvalues = assign({}, this.state.widget, values);
+            this.setState({widget: nvalues, sizeCount: this.sizeCount + 1})
         }
-        this.setState({widget:nvalues,sizeCount: this.sizeCount+1})
     }
 
 
     selectWidget(){
         let self=this;
         let widgetList=WidgetFactory.getAvailableWidgets();
-        this.showSelection("Select Widget",widgetList,(selected)=>{this.updateWidgetState({name:selected})});
+        this.showSelection("Select Widget",widgetList,(selected)=>{
+            this.updateWidgetState({name:selected},true);}
+        );
     }
     render () {
         let self=this;
         let Dialog=this.state.dialog;
         let hasCurrent=this.props.current.name !== undefined;
-        let parameters=[];
-        if (this.state.widget){
-            parameters=WidgetFactory.getEditableWidgetParameters(this.state.widget);
-        }
+        let parameters=this.state.parameters;
         if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
             this.sizeCount=this.state.sizeCount;
             window.setTimeout(self.props.updateDimensions,100);
@@ -98,14 +104,16 @@ class EditWidgetDialog extends React.Component{
                     :
                     null}
                 {(this.props.weight !== undefined)?
-                    <div className="input">
+                    <div className="weight">
                         <span className="label">Weight:</span>
-                        <input type="number" name="weight" onChange={(ev)=>this.updateWidgetState({weight:ev.target.value})} value={this.state.widget.weight||1}/>
+                        <input type="number" name="weight"
+                               onChange={(ev)=>this.updateWidgetState({weight:ev.target.value})}
+                               value={this.state.widget.weight!==undefined?this.state.widget.weight:1}/>
                     </div>
                     :null}
                 <div className="selectElement info" >
                     <span className="label">New Widget:</span>
-                    <input className="newWidget" value={this.state.widget.name||'-Select Widget-'} onClick={this.selectWidget}/>
+                    <div className="newWidget input" onClick={this.selectWidget}>{this.state.widget.name||'-Select Widget-'} </div>
                 </div>
                 {parameters.map((param)=>{
                     let selectFunction=undefined;
@@ -129,14 +137,14 @@ class EditWidgetDialog extends React.Component{
                         }
                     }
                     return <div className={"editWidgetParam "+param.name} key={param.name.replace(/  */,'')}>
-                        <span className="label">{param.name}</span>
+                        <span className="label">{param.displayName}</span>
                         {(inputFunction || inputDisabled)?
                             inputDisabled?
-                                <input type={type} disabled="disabled" value={param.getValueForDisplay(this.state.widget)}/>
+                                <div className="input disabled">{param.getValueForDisplay(this.state.widget)}</div>
                                 :
                                 <input type={type} value={param.getValueForDisplay(this.state.widget)} onChange={inputFunction}/>
                             :
-                            <input type="text" className="currentValue" onClick={selectFunction} value={param.getValueForDisplay(this.state.widget)}/>
+                            <div className="currentValue input" onClick={selectFunction}>{param.getValueForDisplay(this.state.widget,'-Select-')}</div>
                         }
                         </div>
                 })}
@@ -231,9 +239,7 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
                 LayoutHandler.replaceItem(pagename,panelname,index);
             }:undefined}
             updateCallback={widgetItem?(changes)=>{
-                //TODO: filter allowed properties
-                let changedItem=assign({},LayoutHandler.getItem(pagename,panelname,index),changes);
-                LayoutHandler.replaceItem(pagename,panelname,index,changedItem);
+                LayoutHandler.replaceItem(pagename,panelname,index,changes);
             }:undefined}
             />
     });

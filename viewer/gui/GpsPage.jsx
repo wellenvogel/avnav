@@ -29,7 +29,7 @@ const widgetCreator=(widget,weightSum)=>{
     let {weight,...widgetProps}=widget;
     if (weight === undefined) weight=1;
     let height=weight/weightSum*100;
-    return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps',className:''});
+    return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps'});
 };
 
 const getPanelList=(panelType,anchor,pageNum)=>{

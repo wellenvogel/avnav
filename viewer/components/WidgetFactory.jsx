@@ -15,6 +15,7 @@ export class WidgetParameter{
         this.type=type;
         this.default=defaultv;
         this.list=list;
+        this.displayName=name;
     }
     getList(){
         if (typeof (this.list) === 'function') return this.list();
@@ -34,10 +35,12 @@ export class WidgetParameter{
     getValue(widget){
         return widget[this.name];
     }
-    getValueForDisplay(widget){
+    getValueForDisplay(widget,opt_placeHolder){
         let rt=this.getValue(widget);
         if (rt !== undefined) return rt;
-        return this.default;
+        rt=this.default;
+        if (rt !== undefined) return rt;
+        return opt_placeHolder;
     }
     isValid(value){
         return true;
@@ -87,8 +90,9 @@ class WidgetFactory{
         let widgetData=this.findWidget(widget);
         if (! widgetData) return[];
         let rt=[];
+        let wClass=undefined;
         //simple approach: only DirectWidget...
-        if (! widgetData.wclass || widgetData.wclass === DirectWidget || widgetData.wclass === ExternalWidget){
+        if ((! widgetData.wclass  && ! widgetData.children) || widgetData.wclass === DirectWidget || widgetData.wclass === ExternalWidget){
             rt.push(new WidgetParameter('caption',WidgetParameter.TYPE.STRING,widget.caption||widgetData.caption));
             rt.push(new WidgetParameter('unit',WidgetParameter.TYPE.STRING,widget.unit||widgetData.unit));
             let fmpar=new WidgetParameter('formatter', WidgetParameter.TYPE.SELECT,widget.formatter||widgetData.formatter);
@@ -112,14 +116,12 @@ class WidgetFactory{
             if (currentParameters instanceof Array){
                 currentParameters=currentParameters.join(",");
             }
-            let fpar=new WidgetParameter('formatter parameter',WidgetParameter.TYPE.STRING,currentParameters);
-            fpar.setValue=(widget,value)=>{
-                if (! widget) widget={};
-                widget.formatterParameters=value;
-                return widget;
-            };
+            let fpar=new WidgetParameter('formatterParameters',WidgetParameter.TYPE.STRING,currentParameters);
+            fpar.displayName="formatter parameters";
             rt.push(fpar);
-            if (! widgetData.storeKeys){
+            wClass=widgetData.wclass||DirectWidget;
+            let storeKeys=widgetData.storeKeys||wClass.storeKeys;
+            if (! storeKeys){
                 let spar=new WidgetParameter('value',WidgetParameter.TYPE.KEY,widget.storeKeys?widget.storeKeys.value:undefined);
                 spar.list=()=>{
                     let kl=[];
@@ -143,8 +145,20 @@ class WidgetFactory{
                 rt.push(spar)
             }
         }
-        return rt;
+        let cpar=new WidgetParameter("className",WidgetParameter.TYPE.STRING,widget.className||widgetData.className);
+        cpar.displayName="css class";
+        rt.push(cpar);
+        let editableParameters=widgetData.editableParameters||(wClass?wClass.editableParameters:undefined);
+        if (!editableParameters) return rt;
+        let filtered=[];
+        rt.forEach((p)=>{
+            if (p.name==='className' || editableParameters[p.name]){
+                filtered.push(p);
+            }
+        });
+        return filtered;
     }
+
 
     /**
      * find the index for a widget
@@ -199,7 +213,7 @@ class WidgetFactory{
                     {mergedProps.children.map((item)=> {
                         let Item = self.createWidget(item, childProperties);
                         cidx++;
-                        return <Item key={cidx}/>
+                        return <Item key={cidx} onClick={wprops.onClick}/>
                     })}
                 </div>
             }
