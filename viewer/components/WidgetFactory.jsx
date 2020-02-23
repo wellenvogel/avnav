@@ -125,7 +125,8 @@ class WidgetFactory{
                 let spar=new WidgetParameter('value',WidgetParameter.TYPE.KEY,widget.storeKeys?widget.storeKeys.value:undefined);
                 spar.list=()=>{
                     let kl=KeyHelper.getValueKeys().slice(0);
-                    //TODO: add currently available signalk keys
+                    //TODO: better + generic
+                    kl=kl.concat(globalStore.getKeysByPrefix('nav.gps.signalk'));
                     return kl;
                 };
                 spar.setValue=(widget,value)=>{
