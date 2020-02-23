@@ -335,18 +335,28 @@ class LayoutHandler{
         if (! this.isEditing()) return false;
         let allowAdd=opt_add !== undefined && opt_add !== this.ADD_MODES.noAdd;
         if (allowAdd && ! item) return false;
+        let layoutItem={};
+        if (item){
+            for (let k in item){
+                if (k === 'key') continue;
+                if (k === 'index') continue;
+                if (k === 'wclass') continue;
+                if (typeof(item[k]) === 'function')continue;
+                layoutItem[k]=item[k];
+            }
+        }
         let panelData=this._getPanelData(page,panel,allowAdd);
         if (!panelData) return false;
         if (allowAdd) {
             if (opt_add == this.ADD_MODES.beginning) {
                 //insert at the beginning
-                panelData.splice(0, 0, item);
+                panelData.splice(0, 0, layoutItem);
                 this.incrementSequence();
                 return true;
             }
             if (opt_add == this.ADD_MODES.end) {
                 //append
-                panelData.push(item);
+                panelData.push(layoutItem);
                 this.incrementSequence();
                 return true;
             }
@@ -357,23 +367,23 @@ class LayoutHandler{
         if (allowAdd){
             if (opt_add == this.ADD_MODES.afterIndex){
                 if (index == (panelData.length-1)){
-                    panelData.push(item);
+                    panelData.push(layoutItem);
                 }
                 else {
-                    panelData.splice(index + 1, 0, item)
+                    panelData.splice(index + 1, 0, layoutItem)
                 }
                 this.incrementSequence();
                 return true;
             }
             if (opt_add == this.ADD_MODES.beforeIndex){
-                panelData.splice(index,0,item);
+                panelData.splice(index,0,layoutItem);
                 this.incrementSequence();
                 return true;
             }
             return false; //invalid add mode
         }
         if (item) {
-            panelData.splice(index, 1, item);
+            panelData.splice(index, 1, layoutItem);
         }
         else{
             panelData.splice(index, 1);

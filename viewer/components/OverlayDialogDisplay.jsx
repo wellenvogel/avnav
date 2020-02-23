@@ -31,7 +31,7 @@ class OverlayDialog extends React.Component {
                     ev.stopPropagation();
                     }
                 }>
-                    <Content closeCallback={this.props.closeCallback}/></div>
+                    <Content closeCallback={this.props.closeCallback} updateDimensions={this.updateDimensions}/></div>
             </div>
         );
     }

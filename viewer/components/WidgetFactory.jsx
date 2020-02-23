@@ -7,6 +7,51 @@ import globalStore from '../util/globalstore.jsx';
 import Formatter from '../util/formatter';
 import Visible from '../hoc/Visible.jsx';
 import ExternalWidget from './ExternalWidget.jsx';
+import keys from '../util/keys.jsx';
+
+export class WidgetParameter{
+    constructor(name,type,defaultv,list){
+        this.name=name;
+        this.type=type;
+        this.default=defaultv;
+        this.list=list;
+    }
+    getList(){
+        if (typeof (this.list) === 'function') return this.list();
+        return this.list||[];
+    }
+    setValue(widget,value){
+        if (! widget) widget={};
+        if (this.type !== WidgetParameter.TYPE.NUMBER || value === undefined) {
+            widget[this.name] = value;
+        }
+        else{
+            widget[this.name] = parseFloat(value);
+        }
+        return widget;
+    }
+    getValue(widget){
+        return widget[this.name];
+    }
+    getValueForDisplay(widget){
+        let rt=this.getValue(widget);
+        if (rt !== undefined) return rt;
+        return this.default;
+    }
+    isValid(value){
+        return true;
+    }
+    isChanged(value){
+        return value !== this.default;
+    }
+}
+
+WidgetParameter.TYPE={
+    STRING:1,
+    NUMBER:2,
+    KEY:3,
+    SELECT:4
+};
 
 
 
@@ -32,7 +77,63 @@ class WidgetFactory{
     }
 
     /**
-     * find teh index for a widget
+     *
+     * @param widget
+     * @return {WidgetParameter[]|undefined}
+     */
+    getEditableWidgetParameters(widget){
+        let widgetData=this.findWidget(widget);
+        if (! widgetData) return[];
+        let rt=[];
+        //simple approach: only DirectWidget...
+        if (! widgetData.wclass || widgetData.wclass === DirectWidget || widgetData.wclass === ExternalWidget){
+            rt.push(new WidgetParameter('caption',WidgetParameter.TYPE.STRING,widget.caption||widgetData.caption));
+            rt.push(new WidgetParameter('unit',WidgetParameter.TYPE.STRING,widget.unit||widgetData.unit));
+            if (! widgetData.formatter) {
+                rt.push(new WidgetParameter('formatter', WidgetParameter.TYPE.SELECT,widget.formatter,()=>{
+                    let fl=[];
+                    for (let k in Formatter){
+                        if (typeof(Formatter[k]) === 'function') fl.push(k);
+                    }
+                    return fl;
+                }))
+            }
+            let fpar=new WidgetParameter('fmt parameter',WidgetParameter.TYPE.STRING,widget.formatterParameters||widgetData.formatterParameters,'formatterParameters');
+            fpar.setValue=(widget,value)=>{
+                if (! widget) widget={};
+                widget.formatterParameters=value;
+                return widget;
+            };
+            rt.push(fpar);
+            if (! widgetData.storeKeys){
+                let spar=new WidgetParameter('value',WidgetParameter.TYPE.KEY,widget.storeKeys?widget.storeKeys.value:undefined);
+                spar.list=()=>{
+                    let kl=[];
+                    for( let k in keys.nav.gps){
+                        kl.push(keys.nav.gps[k]);
+                    }
+                    //TODO: add currently available signalk keys
+                    return kl;
+                };
+                spar.setValue=(widget,value)=>{
+                    if (! widget) widget={};
+                    if (!widget.storeKeys) widget.storeKeys={};
+                    widget.storeKeys.value=value;
+                    return widget;
+                };
+                spar.getValue=(widget)=>{
+                    if (!widget) return;
+                    if (!widget.storeKeys) return;
+                    return widget.storeKeys.value;
+                };
+                rt.push(spar)
+            }
+        }
+        return rt;
+    }
+
+    /**
+     * find the index for a widget
      * @param widget - either a name or a widget description with a name field
      * @returns {number} - -1 omn error
      */
@@ -177,4 +278,4 @@ WidgetFactory.prototype.filterListByName=function(list,filterObject){
     return rt;
 };
 
-module.exports=new WidgetFactory();
+export default new WidgetFactory();

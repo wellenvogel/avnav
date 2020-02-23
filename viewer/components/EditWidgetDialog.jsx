@@ -4,42 +4,38 @@ import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog from './OverlayDialog.jsx';
 import DialogContainer from './OverlayDialogDisplay.jsx';
-import WidgetFactory from '../components/WidgetFactory.jsx';
+import WidgetFactory,{WidgetParameter} from '../components/WidgetFactory.jsx';
 import assign from 'object-assign';
 
 
 class EditWidgetDialog extends React.Component{
     constructor(props){
         super(props);
-        this.state= {weight:props.weight,selectedWidget:props.current};
-        this.valueChanged=this.valueChanged.bind(this);
+        this.state= {widget:props.current,sizeCount:0};
         this.selectWidget=this.selectWidget.bind(this);
         this.insert=this.insert.bind(this);
-    }
-    valueChanged(event,name) {
-        let value=event.target.value;
-        let nstate={};
-        nstate[name]=value;
-        this.setState(nstate);
+        this.sizeCount=0;
     }
     insert(before){
         if (! this.props.insertCallback) return;
         this.props.closeCallback();
-        this.props.insertCallback({
-            name:this.state.selectedWidget,
-            weight:this.state.weight
-        },before);
+        this.props.insertCallback(this.state.widget,before);
     }
-    selectWidget(){
+
+    showSelection(title,list,callback){
         let self=this;
-        let widgetList=WidgetFactory.getAvailableWidgets();
-        let displayList=[];
-        //copy the list as we maybe add more properties...
         let idx=0;
-        widgetList.forEach((el)=>{
-            let item=assign({},el);
+        let displayList=[];
+        list.forEach((el)=>{
+            let item=undefined;
+            if (typeof(el) === 'object') {
+                item=assign({},el);
+            }
+            else{
+                item={name:el}
+            }
             item.key=idx;
-            item.label=el.name;
+            if (! item.label) item.label=item.name;
             idx++;
             displayList.push(item);
         });
@@ -53,42 +49,95 @@ class EditWidgetDialog extends React.Component{
             return 0;
         });
         this.setState({
-            dialog: OverlayDialog.createSelectDialog("Select Widget", displayList,
+            dialog: OverlayDialog.createSelectDialog(title, displayList,
                 (selected)=> {
-                    self.setState({selectedWidget: selected.name, dialog: undefined});
+                    callback(selected.name);
+                    self.setState({dialog:undefined});
                 },
                 ()=> {
                     self.setState({dialog: undefined})
                 })
         });
     }
+    updateWidgetState(values){
+        let nvalues=undefined;
+        if (values.name && values.name !== this.state.widget.name){
+            nvalues=values;
+        }
+        else {
+            nvalues = assign({}, this.state.widget, values);
+        }
+        this.setState({widget:nvalues,sizeCount: this.sizeCount+1})
+    }
+
+
+    selectWidget(){
+        let self=this;
+        let widgetList=WidgetFactory.getAvailableWidgets();
+        this.showSelection("Select Widget",widgetList,(selected)=>{this.updateWidgetState({name:selected})});
+    }
     render () {
         let self=this;
         let Dialog=this.state.dialog;
+        let hasCurrent=this.props.current.name !== undefined;
+        let parameters=[];
+        if (this.state.widget){
+            parameters=WidgetFactory.getEditableWidgetParameters(this.state.widget);
+        }
+        if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
+            this.sizeCount=this.state.sizeCount;
+            window.setTimeout(self.props.updateDimensions,100);
+        }
         return (
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Widget'}</h3>
                 <div className="info"><span className="label">Panel:</span>{this.props.panel}</div>
-                {(this.props.current !== undefined)?
-                    <div className="info"><span className="label">Current:</span>{this.props.current}</div>
+                {hasCurrent?
+                    <div className="info"><span className="label">Current:</span>{this.props.current.name}</div>
                     :
                     null}
-                {(this.state.weight !== undefined)?
+                {(this.props.weight !== undefined)?
                     <div className="input">
                         <span className="label">Weight:</span>
-                        <input type="number" name="weight" onChange={(ev)=>this.valueChanged(ev,"weight")} value={this.state.weight}/>
+                        <input type="number" name="weight" onChange={(ev)=>this.updateWidgetState({weight:ev.target.value})} value={this.state.widget.weight||1}/>
                     </div>
                     :null}
                 <div className="selectElement info" onClick={this.selectWidget}>
                     <span className="label">New Widget:</span>
-                    <span className="newWidget">{this.state.selectedWidget}</span>
+                    <span className="newWidget">{this.state.widget.name||'-Select Widget-'}</span>
                 </div>
-                {(this.state.selectedWidget !== undefined)?
+                {parameters.map((param)=>{
+                    let selectFunction=undefined;
+                    let inputFunction=undefined;
+                    let type="text";
+                    if (param.type == WidgetParameter.TYPE.STRING || param.type == WidgetParameter.TYPE.NUMBER){
+                        inputFunction=(ev)=>{
+                            self.updateWidgetState(param.setValue({},ev.target.value))
+                        }
+                    }
+                    if (param.type == WidgetParameter.TYPE.SELECT || param.type == WidgetParameter.TYPE.KEY){
+                        let title="Select "+param.name;
+                        selectFunction=()=>{
+                            self.showSelection(title,param.getList(),(selected)=>{
+                                self.updateWidgetState(param.setValue({},selected));
+                            })
+                        }
+                    }
+                    return <div className={"editWidgetParam "+param.name} key={param.name.replace(/  */,'')}>
+                        <span className="label">{param.name}</span>
+                        {inputFunction?
+                            <input type={type} value={param.getValueForDisplay(this.state.widget)} onChange={inputFunction}/>
+                            :
+                            <input type="text" className="currentValue" onClick={selectFunction} value={param.getValueForDisplay(this.state.widget)}/>
+                        }
+                        </div>
+                })}
+                {(this.state.widget.name !== undefined)?
                     <div className="insertButtons">
-                        {(this.props.current !== undefined)?<button name="before" onClick={()=>this.insert(true)}>Before</button>:null}
-                        {(this.props.current !== undefined)?<button name="after" onClick={()=>this.insert(false)}>After</button>:null}
-                        {(this.props.current === undefined)?<button name="after" onClick={()=>this.insert(false)}>Insert</button>:null}
+                        {hasCurrent?<button name="before" onClick={()=>this.insert(true)}>Before</button>:null}
+                        {hasCurrent?<button name="after" onClick={()=>this.insert(false)}>After</button>:null}
+                        {(!hasCurrent)?<button name="after" onClick={()=>this.insert(false)}>Insert</button>:null}
                     </div>
                     :null}
                 <div className="dialogButtons">
@@ -96,9 +145,12 @@ class EditWidgetDialog extends React.Component{
                     {this.props.updateCallback?
                         <button name="ok" onClick={()=>{
                         this.props.closeCallback();
-                        let changes={name: this.state.selectedWidget};
-                        if (this.state.weight !== undefined){
-                            changes.weight=parseFloat(this.state.weight)
+                        let changes=this.state.widget;
+                        if (this.props.weight){
+                            if (changes.weight !== undefined) changes.weight=parseFloat(changes.weight)
+                        }
+                        else{
+                            changes.weight=undefined;
                         }
                         this.props.updateCallback(changes);
                     }}>Update</button>
@@ -126,8 +178,8 @@ class EditWidgetDialog extends React.Component{
 EditWidgetDialog.propTypes={
     title: PropTypes.string,
     panel: PropTypes.string,
-    current:PropTypes.string,
-    weight: PropTypes.number,
+    current:PropTypes.any,
+    weight: PropTypes.bool,
     insertCallback: PropTypes.func,
     updateCallback: PropTypes.func,
     removeCallback: PropTypes.func,
@@ -145,29 +197,20 @@ EditWidgetDialog.propTypes={
  */
 EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_weight)=>{
     if (! LayoutHandler.isEditing()) return false;
-    let add=true;
     let index=opt_beginning?-1:1;
     if (widgetItem){
         index=widgetItem.index;
-        add=false;
-    }
-    let weight=undefined;
-    if (opt_weight){
-        weight=widgetItem?widgetItem.weight||1:1;
     }
     OverlayDialog.dialog((props)=> {
         return <EditWidgetDialog
             {...props}
+            weight={opt_weight||false}
             title="Select Widget"
             panel={panelname}
-            current={widgetItem?widgetItem.name:undefined}
-            weight={weight}
+            current={widgetItem?widgetItem:{}}
+            weight={opt_weight}
             insertCallback={(selected,before)=>{
                 if (! selected || ! selected.name) return;
-                let newItem={name:selected.name};
-                if (opt_weight && newItem){
-                    newItem.weight=selected.weight;
-                }
                 let addMode=LayoutHandler.ADD_MODES.noAdd;
                 if (widgetItem){
                     addMode=before?LayoutHandler.ADD_MODES.beforeIndex:LayoutHandler.ADD_MODES.afterIndex;
@@ -175,7 +218,7 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
                 else{
                     addMode=opt_beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
                 }
-                LayoutHandler.replaceItem(pagename,panelname,index,newItem,addMode);
+                LayoutHandler.replaceItem(pagename,panelname,index,selected,addMode);
             }}
             removeCallback={widgetItem?()=>{
                 LayoutHandler.replaceItem(pagename,panelname,index);
