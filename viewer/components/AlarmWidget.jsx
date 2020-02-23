@@ -41,7 +41,12 @@ class  AlarmWidget extends React.Component{
                 }
             }
         }
-        if (! alarmText) return null;
+        if (! alarmText) {
+            if (! this.props.isEditing || ! this.props.mode) return null;
+            return <div className={classes} onClick={this.props.onClick} style={this.props.style}>
+                <div className="infoLeft">Alarm</div>
+                </div>;
+        }
         return (
         <div className={classes} onClick={this.onClick} style={this.props.style}>
             <div className="infoLeft">Alarm</div>
@@ -63,11 +68,14 @@ class  AlarmWidget extends React.Component{
 AlarmWidget.propTypes={
     className: PropTypes.string,
     onClick: PropTypes.func,
-    alarmInfo: PropTypes.object
+    alarmInfo: PropTypes.object,
+    isEditing: PropTypes.bool,
+    style: PropTypes.object
 };
 
 AlarmWidget.storeKeys={
-    alarmInfo: keys.nav.alarms.all
+    alarmInfo: keys.nav.alarms.all,
+    isEditing: keys.gui.global.layoutEditing
 };
 
 module.exports=AlarmWidget;

@@ -61,12 +61,16 @@ class RoutePointsWidget extends React.Component{
         if (isActive) classes +=" activeRoute ";
         if (this.props.mode == 'horizontal' && ! this.props.isEditing) return null; //we do not display...
         return (
-            <ItemList className={classes}
+            <ItemList style={this.props.style}
+                      className={classes}
                       itemList={route?route.getRoutePoints(index):[]}
                       itemCreator={(item)=>{return RoutePoint(this.props.showLatLon)}}
                       scrollable={true}
                       onItemClick={(item,data)=>{if (self.props.onClick)
                             self.props.onClick(new routeobjects.RoutePoint(item)) }}
+                      onClick={(ev)=>{if (self.props.isEditing && self.props.onClick){
+                        self.props.onClick(ev);
+                      }}}
                       listRef={(element)=>{self.listRef=element}}
                 />
         );

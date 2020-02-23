@@ -31,8 +31,10 @@ class DateTimeWidget extends React.Component{
         return (
         <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
             <div className='infoLeft'>Date</div>
-            <div className="widgetData date">{date}</div>
-            <div className="widgetData time">{time}</div>
+            <div className="resize">
+                <div className="widgetData date">{date}</div>
+                <div className="widgetData time">{time}</div>
+            </div>
         </div>
         );
     }

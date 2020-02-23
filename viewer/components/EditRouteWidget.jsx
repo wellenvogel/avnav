@@ -29,7 +29,7 @@ class EditRouteWidget extends React.Component{
         if (isActive) classes +=" activeRoute ";
         if (!route){
             return (
-                <div className={classes} onClick={this.props.onClick}>
+                <div className={classes} onClick={this.props.onClick} style={this.props.style}>
                     <div className="infoLeft">RTE</div>
                     <div className="routeName">No Route</div>
                 </div>

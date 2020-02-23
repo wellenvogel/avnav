@@ -40,7 +40,7 @@ class ItemList extends React.Component{
         if (this.props.scrollable) className+=" scrollable";
         if (this.props.className) className += " " + this.props.className;
         if (this.props.horizontal) className += " horizontal";
-        let style={};
+        let style=this.props.style||{};
         if (this.props.fontSize){
             style.fontSize=this.props.fontSize;
         }
@@ -49,7 +49,7 @@ class ItemList extends React.Component{
             let existingKeys={};
             return (
                 <div className={props.className}
-                     style={style}
+                     style={props.style}
                      ref={(el)=>{if (props.listRef) props.listRef(el)}}
                      onClick={(ev)=>{if (self.props.onClick)self.props.onClick(ev);}}
                     >
@@ -103,14 +103,14 @@ class ItemList extends React.Component{
         }
         if (this.props.scrollable) {
             return (
-                <div className={className} ref={(el)=>{if (self.props.listRef) self.props.listRef(el)}}>
+                <div onClick={self.props.onClick} className={className} style={style} ref={(el)=>{if (self.props.listRef) self.props.listRef(el)}}>
                     <Content className="listScroll" {...dragProps}/>
                 </div>
             );
         }
         else {
             return(
-                <Content className={className} listRef={self.props.listRef} {...dragProps}/>
+                <Content className={className} style={style} listRef={self.props.listRef} {...dragProps}/>
             );
         }
     }
