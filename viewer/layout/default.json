@@ -129,7 +129,7 @@
       ]
     },
     "navpage": {
-      "left_not_small": [
+      "left": [
         {
           "name": "CenterDisplay"
         },
@@ -176,17 +176,18 @@
       ],
       "bottomLeft": [
         {
-          "name": "BRG"
-        },
-        {
-          "name": "DST"
+          "name": "WpPosition"
         },
         {
           "name": "ETA"
         },
         {
-          "name": "WpPosition"
+          "name": "DST"
+        },
+        {
+          "name": "BRG"
         }
+
       ],
       "bottomRight": [
         {
@@ -204,7 +205,7 @@
       ]
     },
     "editroutepage": {
-      "left_not_small": [
+      "left": [
         {
           "name": "EditRoute"
         },
@@ -212,6 +213,7 @@
           "name": "RoutePoints"
         }
       ],
+      "left_small":[],
       "top_small": [
         {
           "name": "EditRoute"
@@ -219,16 +221,16 @@
       ],
       "bottomLeft": [
         {
-          "name": "BRG"
-        },
-        {
-          "name": "DST"
+          "name": "WpPosition"
         },
         {
           "name": "ETA"
         },
         {
-          "name": "WpPosition"
+          "name": "DST"
+        },
+        {
+          "name": "BRG"
         }
       ],
       "bottomRight": [

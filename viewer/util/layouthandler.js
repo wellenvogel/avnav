@@ -293,19 +293,29 @@ class LayoutHandler{
         globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
     }
 
-    getItem(page,panel,index){
-        if (! this.isEditing()) return ;
+    _getPanelData(page,panel,opt_add){
         let widgets=this.getLayoutWidgets();
-        if (!widgets) return ;
+        if (!widgets) return;
         let pageData=widgets[page];
         if (! pageData) {
-            return;
+            if (! opt_add) return;
+            pageData={};
+            widgets[page]=pageData;
         }
         if (typeof(pageData) !== 'object') return;
         let panelData=pageData[panel];
         if (! panelData) {
-            return;
+            if (! opt_add) return ;
+            panelData=[];
+            pageData[panel]=panelData;
         }
+        return panelData;
+    }
+
+    getItem(page,panel,index){
+        if (! this.isEditing()) return ;
+        let panelData=this._getPanelData(page,panel);
+        if (!panelData) return;
         if (index < 0 || index >= panelData.length) return;
         return panelData[index];
     }
@@ -323,23 +333,10 @@ class LayoutHandler{
      */
     replaceItem(page,panel,index,item,opt_add){
         if (! this.isEditing()) return false;
-        let widgets=this.getLayoutWidgets();
-        if (!widgets) return false;
         let allowAdd=opt_add !== undefined && opt_add !== this.ADD_MODES.noAdd;
         if (allowAdd && ! item) return false;
-        let pageData=widgets[page];
-        if (! pageData) {
-            if (! allowAdd) return false;
-            pageData={};
-            widgets[page]=pageData;
-        }
-        if (typeof(pageData) !== 'object') return false;
-        let panelData=pageData[panel];
-        if (! panelData) {
-            if (! allowAdd) return false;
-            panelData=[];
-            pageData[panel]=panelData;
-        }
+        let panelData=this._getPanelData(page,panel,allowAdd);
+        if (!panelData) return false;
         if (allowAdd) {
             if (opt_add == this.ADD_MODES.beginning) {
                 //insert at the beginning
@@ -381,6 +378,20 @@ class LayoutHandler{
         else{
             panelData.splice(index, 1);
         }
+        this.incrementSequence();
+        return true;
+    }
+
+    moveItem(page,panel,oldIndex,newIndex){
+        if (oldIndex == newIndex) return true;
+        if (! this.isEditing()) return false;
+        let panelData=this._getPanelData(page,panel);
+        if (!panelData) return false;
+        if (oldIndex < 0 || oldIndex >= panelData.length) return false;
+        if (newIndex < 0 || newIndex >= panelData.length) return false;
+        let item=panelData[oldIndex];
+        panelData.splice(oldIndex,1);
+        panelData.splice(newIndex,0,item);
         this.incrementSequence();
         return true;
     }

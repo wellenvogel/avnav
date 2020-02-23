@@ -28,6 +28,7 @@ import MapHolder from '../map/mapholder.js';
 import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
+import LayoutHandler from '../util/layouthandler.js';
 
 
 
@@ -85,16 +86,20 @@ class MapPage extends React.Component{
         const WidgetContainer=(props)=>{
             let {panel,mode,...other}=props;
             let panelItems=self.props.panelCreator(panel,isSmall);
+            let invertEditDirection=mode==='vertical'||panel === 'bottomLeft';
             return <ItemList  {...props}
                 className={"widgetContainer "+mode+" "+panel}
                 itemCreator={(widget)=>{return widgetCreator(widget,mode)}}
                 itemList={panelItems.list}
                 onItemClick={(item,data)=>{
-                    self.props.onItemClick(item,data,panelItems.name)
+                    self.props.onItemClick(item,data,panelItems.name,invertEditDirection)
                     }}
                 onClick={()=>{
-                    EditWidgetDialog.createDialog(undefined,self.props.id,panelItems.name,mode==='vertical');
+                    EditWidgetDialog.createDialog(undefined,self.props.id,panelItems.name,invertEditDirection);
                 }}
+                dragdrop={globalStore.getData(keys.gui.global.layoutEditing)}
+                horizontal={mode === 'horizontal'}
+                onSortEnd={(oldIndex,newIndex)=>LayoutHandler.moveItem(self.props.id,panelItems.name,oldIndex,newIndex)}
                 />
         };
         return (

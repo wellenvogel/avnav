@@ -13,6 +13,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
+import {SortableContainer, SortableElement} from 'react-sortable-hoc';
 
 
 const getKey=function(obj){
@@ -25,6 +26,11 @@ const getKey=function(obj){
 class ItemList extends React.Component{
     constructor(props){
         super(props);
+        this.onSortEnd=this.onSortEnd.bind(this);
+    }
+    onSortEnd(data){
+        if (this.props.onSortEnd) this.props.onSortEnd(data.oldIndex,data.newIndex);
+
     }
     render() {
         let allitems = this.props.itemList || [];
@@ -33,6 +39,7 @@ class ItemList extends React.Component{
         let className = "listContainer";
         if (this.props.scrollable) className+=" scrollable";
         if (this.props.className) className += " " + this.props.className;
+        if (this.props.horizontal) className += " horizontal";
         let style={};
         if (this.props.fontSize){
             style.fontSize=this.props.fontSize;
@@ -74,26 +81,36 @@ class ItemList extends React.Component{
                         if (self.props.itemCreator) {
                             ItemClass = self.props.itemCreator(entry);
                             if (!ItemClass) return null;
+                            if (self.props.dragdrop) ItemClass=SortableElement(ItemClass);
                             return <ItemClass {...itemProps}/>
                         }
                         else {
                             ItemClass = self.props.itemClass;
                         }
+                        if (self.props.dragdrop) ItemClass=SortableElement(ItemClass);
                         return <ItemClass {...itemProps}/>
                     })}
                 </div>
             );
         };
+        let dragProps={};
+        if (this.props.dragdrop){
+            Content= SortableContainer(Content);
+            dragProps.axis=self.props.horizontal?"x":"y";
+            dragProps.distance=20;
+            dragProps.onSortEnd=self.onSortEnd;
+
+        }
         if (this.props.scrollable) {
             return (
                 <div className={className} ref={(el)=>{if (self.props.listRef) self.props.listRef(el)}}>
-                    <Content className="listScroll"/>
+                    <Content className="listScroll" {...dragProps}/>
                 </div>
             );
         }
         else {
-            return (
-                <Content className={className} listRef={self.props.listRef}/>
+            return(
+                <Content className={className} listRef={self.props.listRef} {...dragProps}/>
             );
         }
     }
@@ -113,7 +130,10 @@ ItemList.propTypes={
         fontSize:       PropTypes.any,
         listRef:        PropTypes.func,
         selectedIndex:  PropTypes.number,
-        onClick:        PropTypes.func
+        onClick:        PropTypes.func,
+        dragdrop:       PropTypes.bool,
+        horizontal:     PropTypes.bool,
+        onSortEnd:      PropTypes.func
 };
 
 module.exports=ItemList;

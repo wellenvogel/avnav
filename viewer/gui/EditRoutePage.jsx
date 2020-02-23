@@ -71,7 +71,7 @@ const startWaypointDialog=(item,index)=>{
 
 
 
-const widgetClick=(item,data,panel)=>{
+const widgetClick=(item,data,panel,invertEditDirection)=>{
     let currentEditor=getCurrentEditor();
     if (item.name == "EditRoute"){
         if (globalStore.getData(keys.gui.global.layoutEditing)) return;
@@ -93,7 +93,7 @@ const widgetClick=(item,data,panel)=>{
         }
         return;
     }
-    if (EditWidgetDialog.createDialog(item,'editroutepage',panel)) return;
+    if (EditWidgetDialog.createDialog(item,'editroutepage',panel,invertEditDirection)) return;
     if (panel == 'bottomRight'){
         if (! globalStore.getData(keys.nav.gps.valid)) return;
         let boatPos=globalStore.getData(keys.nav.gps.position);

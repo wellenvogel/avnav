@@ -40,8 +40,8 @@ const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 const DynamicPage=Dynamic(MapPage);
 const PAGENAME='navpage';
 
-const widgetClick=(item,data,panel)=>{
-    if (EditWidgetDialog.createDialog(item,PAGENAME,panel)) return;
+const widgetClick=(item,data,panel,invertEditDirection)=>{
+    if (EditWidgetDialog.createDialog(item,PAGENAME,panel,invertEditDirection)) return;
     if (item.name == "AisTarget"){
         let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
         if (! mmsi) return;

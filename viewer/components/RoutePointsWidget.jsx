@@ -56,10 +56,10 @@ class RoutePointsWidget extends React.Component{
     render(){
         let self=this;
         let [route,index,isActive]=StateHelper.getRouteIndexFlag(this.props);
-        if (! route || !route.points || route.points.length < 1) return null;
+        if ((! route || !route.points || route.points.length < 1) && ! this.props.isEditing) return null;
         let classes="widget routePointsWidget "+this.props.className||"";
         if (isActive) classes +=" activeRoute ";
-        if (this.props.mode == 'horizontal') return null; //we do not display...
+        if (this.props.mode == 'horizontal' && ! this.props.isEditing) return null; //we do not display...
         return (
             <ItemList className={classes}
                       itemList={route?route.getRoutePoints(index):[]}
@@ -81,11 +81,13 @@ RoutePointsWidget.propTypes={
     route:          PropTypes.objectOf(routeobjects.Route),
     isActive:       PropTypes.bool,
     index:          PropTypes.number,
-    showLatLon:     PropTypes.bool
+    showLatLon:     PropTypes.bool,
+    isEditing:      PropTypes.bool
 };
 
 RoutePointsWidget.storeKeys=editor.getStoreKeys({
-    showLatLon: keys.properties.routeShowLL
+    showLatLon: keys.properties.routeShowLL,
+    isEditing: keys.gui.global.layoutEditing
 });
 
 module.exports=RoutePointsWidget;
