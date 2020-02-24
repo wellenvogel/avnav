@@ -240,7 +240,7 @@ html,body {
 .editPageDialog{
   .panelList{
     border-top: 1px solid;
-    .nightBorderColorGR(30);
+    .nightBorderColorGR(40);
     margin-top: 0.3em;
     padding-top: 0.3em;
   }
@@ -251,6 +251,31 @@ html,body {
 
   .checkBox{
     vertical-align: middle;
+  }
+  .editPanel {
+    margin-top: 0.3em;
+    border-bottom: 1px solid;
+    .nightBorderColorGR(20);
+    & >div{
+      display: inline-block;
+    }
+    & >.label {
+      text-align: left;
+    }
+  }
+  .combinationSelect,.modeSelect{
+      .label {
+        width: 4em;
+      }
+  }
+  .currentHeadline {
+    margin-bottom: 0.3em;
+  }
+  .selectCurrent{
+    border-top: 1px solid;
+    .nightBorderColorGR(40);
+    margin-top: 0.5em;
+    padding-top: 0.5em;
   }
 }
 //----------------------------------------------------------------------------------------

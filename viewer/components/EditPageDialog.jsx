@@ -8,6 +8,10 @@ import assign from 'object-assign';
 
 const OPTION_COMBINATIONS=[
     {
+        display: 'default',
+        options: []
+    },
+    {
         display: 'small',
         options: [LayoutHandler.OPTIONS.SMALL]
     },
@@ -50,7 +54,6 @@ class PanelListEntry{
         this.basename=basename;
         //array of the same length like OPTION_COMBINATIONS
         this.foundCombinations=[];
-        this.removed=false;
     }
     hasOptionCombination(index){
         if (index < 0 || index >= this.foundCombinations.length) return false;
@@ -63,7 +66,7 @@ class PanelListEntry{
             let tryList=LayoutHandler.getPanelTryList(this.basename,optionListToObject(definition.options));
             //first element has the panel we check for
             let panelData=LayoutHandler.getDirectPanelData(this.pagename,tryList[0]);
-            if (panelData && panelData.length > 0){
+            if (panelData){
                 this.foundCombinations.push(true);
             }
             else{
@@ -71,14 +74,14 @@ class PanelListEntry{
             }
         }
     }
-    writePanelsToLayout(opt_removeAll){
-        opt_removeAll|=this.removed;
+
+    writePanelsToLayout(){
         let combinations=getFilteredOptions(this.handledOptions);
         for (let i=0;i<this.foundCombinations.length;i++){
             let definition=combinations[i];
             let shouldExist=this.foundCombinations[i];
             let tryList=LayoutHandler.getPanelTryList(this.basename,optionListToObject(definition.options));
-            if (! shouldExist || opt_removeAll){
+            if (! shouldExist){
                 LayoutHandler.removePanel(this.pagename,tryList[0]);
             }
             else
@@ -86,14 +89,6 @@ class PanelListEntry{
                 LayoutHandler.getDirectPanelData(this.pagename,tryList[0],true);
             }
         }
-    }
-    removePanels(){
-        this.writePanelsToLayout(true);
-    }
-    clone(){
-        let rt=new PanelListEntry(this.pagename,this.basename,this.handledOptions);
-        rt.foundCombinations=this.foundCombinations.slice(0);
-        rt.removed=this.removed;
     }
 }
 const getPanelList=(page,panelNames,handledOptions)=>{
@@ -111,7 +106,7 @@ class EditPageDialog extends React.Component{
         super(props);
         this.state= {
             page:props.page,
-            currentOptions: optionListToObject(props.handledOptions,true),
+            currentOptions: LayoutHandler.getOptionValues(props.handledOptions),
             panelList:getPanelList(props.page,props.panelNames,props.handledOptions),
             sizeCount: 0
         };
@@ -158,10 +153,11 @@ class EditPageDialog extends React.Component{
                     )}
                 </div>
                 <div className="panelList">
-                    <div className="panelHeadlin">Panels</div>
+                    <div className="panelHeadline">Panel Configurations</div>
                 {this.getPanelsAsArray().map((panel)=>{
                     return <div className={"editPanel "+panel.basename} key={panel.basename.replace(/  */,'')}>
                         <span className="label">{panel.basename}</span>
+                        <div className="combinationFrame">
                         { getFilteredOptions(this.props.handledOptions).map((combination,index)=>{
                             let current=panel.foundCombinations[index];
                             let className="select checkBox ";
@@ -174,13 +170,18 @@ class EditPageDialog extends React.Component{
                             )
                         })}
                         </div>
+                        </div>
                 })}
                 </div>
                 <div className="dialogButtons">
                     <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
                     <button name="ok" onClick={()=>{
                         this.props.closeCallback();
-                        this.props.okCallback(this.state);
+                        for (let pn in this.state.panelList){
+                            let panel=this.state.panelList[pn];
+                            panel.writePanelsToLayout();
+                        }
+                        LayoutHandler.setTemporaryOptionValues(this.state.currentOptions);
                     }}>Ok</button>
                 <div className="clear"></div>
                 </div>
@@ -195,7 +196,6 @@ EditPageDialog.propTypes={
     page: PropTypes.string,
     panelNames: PropTypes.array,
     supportedOptions: PropTypes.array,
-    okCallback: PropTypes.func,
     closeCallback: PropTypes.func.isRequired
 };
 
@@ -205,7 +205,7 @@ EditPageDialog.propTypes={
  * @param panelnames
  * @return {boolean}
  */
-EditPageDialog.createDialog=(pagename,panelnames,handledOptions,callback)=>{
+EditPageDialog.createDialog=(pagename,panelnames,handledOptions)=>{
     if (! LayoutHandler.isEditing()) return false;
     OverlayDialog.dialog((props)=> {
         return <EditPageDialog
@@ -214,20 +214,17 @@ EditPageDialog.createDialog=(pagename,panelnames,handledOptions,callback)=>{
             page={pagename}
             panelNames={panelnames}
             handledOptions={handledOptions}
-            okCallback={(changes)=>{
-                console.log(changes)
-            }}
             />
     });
     return true;
 };
 
-EditPageDialog.getButtonDef=(pagename,panelNames,handledOptions,callback)=>{
+EditPageDialog.getButtonDef=(pagename,panelNames,handledOptions)=>{
     return{
         name: 'EditPage',
         editOnly: true,
         onClick:()=>{
-            EditPageDialog.createDialog(pagename,panelNames,handledOptions,callback);
+            EditPageDialog.createDialog(pagename,panelNames,handledOptions);
         },
         toggle: true
     }

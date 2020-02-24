@@ -81,11 +81,9 @@ class MapPage extends React.Component{
     }
     render(){
         let self=this;
-        let isSmall=globalStore.getData(keys.gui.global.windowDimensions,{width:0}).width
-            < globalStore.getData(keys.properties.smallBreak);
         const WidgetContainer=(props)=>{
             let {panel,mode,...other}=props;
-            let panelItems=self.props.panelCreator(panel,isSmall);
+            let panelItems=self.props.panelCreator(panel);
             let invertEditDirection=mode==='vertical'||panel === 'bottomLeft';
             return <ItemList  {...props}
                 className={"widgetContainer "+mode+" "+panel}
@@ -149,7 +147,7 @@ class MapPage extends React.Component{
 MapPage.propertyTypes={
     buttonList:         PropTypes.array,
     className:          PropTypes.string,
-    panelCreator:       PropTypes.func.isRequired,  //will be called with the panel name + isSmall
+    panelCreator:       PropTypes.func.isRequired,  //will be called with the panel name
                                                     //and must return {name: panelName, list:widget list}
     onItemClick:        PropTypes.func.isRequired,  //like ItemList
     mapEventCallback:   PropTypes.func,
@@ -158,8 +156,7 @@ MapPage.propertyTypes={
 };
 
 module.exports=Dynamic(MapPage,{
-    storeKeys:{
-        widgetFontSize:keys.properties.widgetFontSize,
-        layoutSequence: keys.gui.global.layoutSequence
-    }
+    storeKeys:LayoutHandler.getStoreKeys({
+        widgetFontSize:keys.properties.widgetFontSize
+    })
 });

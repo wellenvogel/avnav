@@ -108,10 +108,8 @@ const widgetClick=(item,data,panel,invertEditDirection)=>{
 };
 
 
-const getPanelList=(panel,opt_isSmall)=>{
-    let options={};
-    options[LayoutHandler.OPTIONS.SMALL]=opt_isSmall;
-    return LayoutHandler.getPanelData('editroutepage',panel,options);
+const getPanelList=(panel)=>{
+    return LayoutHandler.getPanelData('editroutepage',panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL]));
 };
 
 const checkRouteWritable=function(){

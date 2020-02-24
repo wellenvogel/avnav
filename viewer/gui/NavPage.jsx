@@ -69,10 +69,8 @@ const widgetClick=(item,data,panel,invertEditDirection)=>{
 
 };
 
-const getPanelList=(panel,opt_isSmall)=>{
-    let options={};
-    options[LayoutHandler.OPTIONS.SMALL]=opt_isSmall;
-    return LayoutHandler.getPanelData(PAGENAME,panel,options);
+const getPanelList=(panel)=>{
+    return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL]));
 };
 /**
  *

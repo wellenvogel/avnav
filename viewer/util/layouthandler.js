@@ -21,6 +21,8 @@ class LayoutHandler{
         this.temporaryLayouts[DEFAULT_NAME]=defaultLayout;
         this.dataChanged=this.dataChanged.bind(this);
         this._setEditing(false);
+        this.hiddenPanels={}; //panels we removed during editing
+        this.temporaryOptions={}; //options being set during edit
         globalStore.register(this,keys.gui.capabilities.uploadLayout);
     }
 
@@ -45,6 +47,7 @@ class LayoutHandler{
         if (! this.canEdit(name)) return false;
         this.name=name;
         this._setEditing(true);
+        this.setTemporaryOptionValues();
     }
     isEditing(){
         return this.editing;
@@ -270,6 +273,7 @@ class LayoutHandler{
         return this.layout.widgets;
     }
     activateLayout(upload){
+        this._removeHiddenPanels();
         this._setEditing(false);
         if (!this.layout) return false;
         try {
@@ -297,6 +301,35 @@ class LayoutHandler{
         globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
     }
 
+    _isHiddenPanel(page,panelname){
+        if (! this.isEditing()) return false;
+        let pd=this.hiddenPanels[page];
+        if (!pd) return;
+        return pd[panelname]?true:false;
+    }
+    _setHiddenPanel(page,panelname,hidden){
+        let pd=this.hiddenPanels[page];
+        if (!pd){
+            pd={};
+            this.hiddenPanels[page]=pd;
+        }
+        pd[panelname]=hidden;
+    }
+
+    _removeHiddenPanels(){
+        if (! this.isEditing()) return;
+        for (let pg in this.hiddenPanels){
+            let pageData=this.getPageData(pg);
+            if (!pageData) continue;
+            let page=this.hiddenPanels[pg];
+            for (let pn in page){
+                if (! page[pn]) continue;
+                delete pageData[pn];
+            }
+        }
+        this.hiddenPanels={};
+    }
+
     getPageData(page,opt_add){
         let widgets=this.getLayoutWidgets();
         if (!widgets) return;
@@ -314,6 +347,13 @@ class LayoutHandler{
         let rt={};
         for (let k in this.OPTIONS){
             rt[this.OPTIONS[k]]=true;
+        }
+        return rt;
+    }
+    getOptionsAsArray(){
+        let rt=[];
+        for (let k in this.OPTIONS){
+            rt.push(this.OPTIONS[k]);
         }
         return rt;
     }
@@ -353,7 +393,8 @@ class LayoutHandler{
         if (!pageData) return {name:basename,list:[]};
         let tryList=this.getPanelTryList(basename,options);
         for (let i=0;i<tryList.length;i++){
-            if (pageData[tryList[i]]) return {name:tryList[i],list:pageData[tryList[i]]};
+            let list=this.getDirectPanelData(page,tryList[i]);
+            if (list) return {name:tryList[i],list:list};
         }
         return {name:basename,list:[]};
     }
@@ -364,7 +405,7 @@ class LayoutHandler{
      * if opt_add is true and we are editing - just add the structure if it is not there
      * @param page
      * @param panel
-     * @param opt_add
+     * @param opt_add if set to true: create the panel (only possible if we are editing)
      * @return {*}
      */
     getDirectPanelData(page,panel,opt_add){
@@ -376,18 +417,17 @@ class LayoutHandler{
             panelData=[];
             pageData[panel]=panelData;
         }
+        if (this._isHiddenPanel(page,panel)){
+            if (!opt_add) return;
+            this._setHiddenPanel(page,panel,false);
+        }
         return panelData;
     }
 
     removePanel(pagename,panel){
         if (!this.isEditing()) return false;
-        let pageData=this.getPageData(pagename);
-        if (! pageData) return false;
-        if (pageData[panel]) {
-            delete pageData[panel];
-            return true;
-        }
-        return false;
+        this._setHiddenPanel(pagename,panel,true);
+        return true;
     }
 
     getItem(page,panel,index){
@@ -545,6 +585,45 @@ class LayoutHandler{
             return true;
         }
         return false;
+    }
+
+    getStoreKeys(others){
+        let rt={
+            layoutSequence:keys.gui.global.layoutSequence,
+            isEditing: keys.gui.global.layoutEditing
+        };
+        rt["layout"+this.OPTIONS.ANCHOR]=keys.nav.anchor.watchDistance;
+        rt["layout"+this.OPTIONS.SMALL]=keys.gui.global.smallDisplay;
+        return assign(rt,others);
+    }
+    setTemporaryOptionValues(options){
+        if (! this.isEditing()) return;
+        if (!options){
+            this.temporaryOptions=this.getOptionValues(this.getOptionsAsArray(),true);
+        }
+        this.temporaryOptions=assign({},this.temporaryOptions,options);
+        this.incrementSequence();
+    }
+
+    /**
+     * get the values for layout options
+     * @param handledOptions - array of handled options
+     * @param opt_ignoreTemporary
+     * @returns {{}}
+     */
+    getOptionValues(handledOptions,opt_ignoreTemporary){
+        if (this.isEditing() && ! opt_ignoreTemporary){
+            return this.temporaryOptions;
+        }
+        let rt={};
+        let keys=this.getStoreKeys();
+        handledOptions.forEach((option)=>{
+            let storeKey=keys['layout'+option];
+            if (storeKey){
+                rt[option]=globalStore.getData(storeKey,false);
+            }
+        });
+        return rt;
     }
 
 }
