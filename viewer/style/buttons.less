@@ -311,6 +311,12 @@ button{
       border-color: @editingColor;
     }
   }
+  &.EditPage{
+    .iconButton('ic_edit.svg');
+    &.button.active{
+      border-color: @editingColor;
+    }
+  }
 
   &.WarningOK{
     .textButton('Akzeptieren/Accept',1.5em);
