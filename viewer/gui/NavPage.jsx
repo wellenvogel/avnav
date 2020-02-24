@@ -32,6 +32,7 @@ import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutHandler from '../util/layouthandler.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
+import EditPageDialog from '../components/EditPageDialog.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -69,7 +70,9 @@ const widgetClick=(item,data,panel,invertEditDirection)=>{
 };
 
 const getPanelList=(panel,opt_isSmall)=>{
-    return GuiHelpers.getPanelFromLayout(PAGENAME,panel,'small',opt_isSmall);
+    let options={};
+    options[LayoutHandler.OPTIONS.SMALL]=opt_isSmall;
+    return LayoutHandler.getPanelData(PAGENAME,panel,options);
 };
 /**
  *
@@ -341,6 +344,9 @@ class NavPage extends React.Component{
             },
             GuiHelpers.mobDefinition,
             LayoutFinishedDialog.getButtonDef(),
+            EditPageDialog.getButtonDef(PAGENAME,
+                ['left','top','bottomLeft','bottomRight'],
+                [LayoutHandler.OPTIONS.SMALL]),
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

@@ -69,30 +69,7 @@ const resizeByQuerySelector=(querySelector)=>{
     } 
 };
 
-const getPageFromLayout=(pagename)=>{
-    let layout=LayoutHandler.getLayoutWidgets();
-    if (! layout) return;
-    if (typeof(layout) !== 'object') return;
-    let page=layout[pagename];
-    if (typeof(page) !== 'object') return;
-    return page;
-};
 
-const getPanelFromLayout=(pagename,panel,opt_filtername,opt_filtervalue)=>{
-    let page=getPageFromLayout(pagename);
-    if (! page) return;
-    let panelname=panel;
-    if (opt_filtername) {
-        panelname += opt_filtervalue ? "_"+opt_filtername : "_not_"+opt_filtername;
-    }
-    let rt=page[panelname];
-    if (rt) {
-        return {name:panelname,list:rt};
-    }
-    rt=page[panel];
-    if (rt) return {name:panel,list:rt};
-    return {name:panel,list:[]};
-};
 /**
  * will call the provided callback on mount (param: false),umount(param: true), update(optional, param false)
  * will be injected after the existing lifecycle methods
@@ -293,8 +270,6 @@ module.exports={
     anchorWatchDialog,
     resizeElementFont,
     resizeByQuerySelector,
-    getPageFromLayout,
-    getPanelFromLayout,
     lifecycleSupport,
     lifecycleTimer,
     scrollInContainer,

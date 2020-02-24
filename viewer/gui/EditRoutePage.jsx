@@ -31,6 +31,7 @@ import ButtonList from '../components/ButtonList.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
+import LayoutHandler from '../util/layouthandler.js';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -108,7 +109,9 @@ const widgetClick=(item,data,panel,invertEditDirection)=>{
 
 
 const getPanelList=(panel,opt_isSmall)=>{
-    return GuiHelpers.getPanelFromLayout('editroutepage',panel,'small',opt_isSmall);
+    let options={};
+    options[LayoutHandler.OPTIONS.SMALL]=opt_isSmall;
+    return LayoutHandler.getPanelData('editroutepage',panel,options);
 };
 
 const checkRouteWritable=function(){

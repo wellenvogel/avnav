@@ -21,6 +21,7 @@ import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 
+const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
 function resizeFont() {
     GuiHelpers.resizeByQuerySelector('#gpspage .resize');
@@ -34,31 +35,23 @@ const widgetCreator=(widget,weightSum)=>{
 
 const getPanelList=(panelType,anchor,pageNum)=>{
     let basename="gpspage"+pageNum;
-    let page=GuiHelpers.getPageFromLayout(basename);
-    if (! page && ! globalStore.getData(keys.gui.global.layoutEditing)){
-        //fallback to page 1
-        basename="gpspage1";
-        page=GuiHelpers.getPageFromLayout(basename);
-    }
-    if (! page) return {name:panelType,page:basename,list:[]};
-    let name=panelType;
-    name+=anchor!==undefined?"_anchor":"_not_anchor";
-    if (page[name]) return {name:name,page:basename,list:page[name]};
-    //fallback to panel without suffix
-    return {name:panelType,page:basename,list:page[panelType]||[]};
+    let options={};
+    options[LayoutHandler.OPTIONS.ANCHOR]=anchor;
+    let rt=LayoutHandler.getPanelData(basename,panel,options);
+    rt.page=basename;
+    return rt;
 
 };
 
 const hasPageEntries=(pageNum,anchor)=>{
     let basename="gpspage"+pageNum;
-    let page=GuiHelpers.getPageFromLayout(basename);
+    let page=LayoutHandler.getPageData(basename);
     if (! page) return false;
-    let panels=['left','right'];
+    let panels=PANEL_LIST;
     for (let p in panels){
         let panel=panels[p];
-        if (page[panel] && page[panel].length > 0) return true;
-        panel+=anchor?"_anchor":"_not_anchor";
-        if (page[panel] && page[panel].length > 0) return true;
+        let panelData=LayoutHandler.getPanelData(basename,panel,LayoutHandler.getAllOptions())
+        if (panelData.length > 0) return true;
     }
     return false;
 };
@@ -76,7 +69,7 @@ const getWeightSum=(list)=>{
 const layoutBase="gpspage";
 const findPageWithWidget=(name,anchor)=>{
     let pnums=[1,2,3,4,5];
-    let panels=['left','right'];
+    let panels=PANEL_LIST;
     if (! name) return ;
     for (let pidx in pnums){
         for (let idx in panels){

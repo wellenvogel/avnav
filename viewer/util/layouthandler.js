@@ -10,7 +10,7 @@ import jsdownload from 'downloadjs';
 import assign from 'object-assign';
 
 import defaultLayout from '../layout/default.json';
-
+const DEFAULT_NAME="system.default";
 class LayoutHandler{
     constructor(){
         this.layout=undefined;
@@ -18,7 +18,7 @@ class LayoutHandler{
         this.propertyDescriptions=KeyHelper.getKeyDescriptions(true);
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
         this.temporaryLayouts={};
-        this.temporaryLayouts["system.default"]=defaultLayout;
+        this.temporaryLayouts[DEFAULT_NAME]=defaultLayout;
         this.dataChanged=this.dataChanged.bind(this);
         this._setEditing(false);
         globalStore.register(this,keys.gui.capabilities.uploadLayout);
@@ -54,14 +54,18 @@ class LayoutHandler{
         let self=this;
         return new Promise((resolve,reject)=> {
             let layoutName=globalStore.getData(keys.properties.layoutName);
-            let storedLayout=this._loadFromStorage();
-            if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data){
-                this.name=storedLayout.name;
-                this.layout=storedLayout.data;
-                this.temporaryLayouts[this.name]=this.layout;
-                self.activateLayout();
-                resolve(this.layout);
-                return;
+            //if we selected the default layout we will always use our buildin (if store locally)
+            //or load from the server
+            if (layoutName !== DEFAULT_NAME) {
+                let storedLayout = this._loadFromStorage();
+                if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
+                    this.name = storedLayout.name;
+                    this.layout = storedLayout.data;
+                    this.temporaryLayouts[this.name] = this.layout;
+                    self.activateLayout();
+                    resolve(this.layout);
+                    return;
+                }
             }
             this.loadLayout(layoutName)
                 .then((layout)=>{
@@ -293,28 +297,102 @@ class LayoutHandler{
         globalStore.storeData(keys.gui.global.layoutSequence,ls+1);
     }
 
-    _getPanelData(page,panel,opt_add){
+    getPageData(page,opt_add){
         let widgets=this.getLayoutWidgets();
         if (!widgets) return;
         let pageData=widgets[page];
-        if (! pageData) {
-            if (! opt_add) return;
+        if (! pageData){
+            if (! this.isEditing() || ! opt_add)return;
             pageData={};
             widgets[page]=pageData;
         }
         if (typeof(pageData) !== 'object') return;
+        return pageData;
+    }
+
+    getAllOptions(){
+        let rt={};
+        for (let k in this.OPTIONS){
+            rt[this.OPTIONS[k]]=true;
+        }
+        return rt;
+    }
+
+    /**
+     * get an array of panel names to try for the options being set
+     * the last element is the basename and the first element is the name with the max amount of options
+     * @param basename
+     * @param options object with the keys being LayoutHandler.prototype.OPTIONS
+     * @return {*[]}
+     */
+    getPanelTryList(basename,options){
+        if (! options) options=[];
+        let panelName=basename;
+        let tryList=[panelName];
+        for (let o in this.OPTIONS){
+            if (options[this.OPTIONS[o]]){
+                panelName+="_"+this.OPTIONS[o];
+                tryList.push(panelName);
+            }
+        }
+        let rt=[];
+        for (let k=tryList.length-1;k>=0;k--){
+            rt.push(tryList[k]);
+        }
+        return rt;
+    }
+    /**
+     *
+     * @param page
+     * @param basename
+     * @param options object with the keys being LayoutHandler.prototype.OPTIONS
+     * @returns an object with {name:panelName, list: the data}
+     */
+    getPanelData(page,basename,options){
+        let pageData=this.getPageData(page);
+        if (!pageData) return {name:basename,list:[]};
+        let tryList=this.getPanelTryList(basename,options);
+        for (let i=0;i<tryList.length;i++){
+            if (pageData[tryList[i]]) return {name:tryList[i],list:pageData[tryList[i]]};
+        }
+        return {name:basename,list:[]};
+    }
+
+
+    /**
+     * get the data for a panel (name already includes options)
+     * if opt_add is true and we are editing - just add the structure if it is not there
+     * @param page
+     * @param panel
+     * @param opt_add
+     * @return {*}
+     */
+    getDirectPanelData(page,panel,opt_add){
+        let pageData=this.getPageData(page,opt_add);
+        if (! pageData) return;
         let panelData=pageData[panel];
         if (! panelData) {
-            if (! opt_add) return ;
+            if ((! opt_add) || (! this.isEditing())) return ;
             panelData=[];
             pageData[panel]=panelData;
         }
         return panelData;
     }
 
+    removePanel(pagename,panel){
+        if (!this.isEditing()) return false;
+        let pageData=this.getPageData(pagename);
+        if (! pageData) return false;
+        if (pageData[panel]) {
+            delete pageData[panel];
+            return true;
+        }
+        return false;
+    }
+
     getItem(page,panel,index){
         if (! this.isEditing()) return ;
-        let panelData=this._getPanelData(page,panel);
+        let panelData=this.getDirectPanelData(page,panel);
         if (!panelData) return;
         if (index < 0 || index >= panelData.length) return;
         return panelData[index];
@@ -345,7 +423,7 @@ class LayoutHandler{
                 layoutItem[k]=item[k];
             }
         }
-        let panelData=this._getPanelData(page,panel,allowAdd);
+        let panelData=this.getDirectPanelData(page,panel,allowAdd);
         if (!panelData) return false;
         if (allowAdd) {
             if (opt_add == this.ADD_MODES.beginning) {
@@ -395,7 +473,7 @@ class LayoutHandler{
     moveItem(page,panel,oldIndex,newIndex){
         if (oldIndex == newIndex) return true;
         if (! this.isEditing()) return false;
-        let panelData=this._getPanelData(page,panel);
+        let panelData=this.getDirectPanelData(page,panel);
         if (!panelData) return false;
         if (oldIndex < 0 || oldIndex >= panelData.length) return false;
         if (newIndex < 0 || newIndex >= panelData.length) return false;
@@ -470,6 +548,11 @@ class LayoutHandler{
     }
 
 }
+
+LayoutHandler.prototype.OPTIONS={
+    SMALL:'small',
+    ANCHOR:'anchor'
+};
 
 LayoutHandler.prototype.ADD_MODES={
     noAdd:0,
