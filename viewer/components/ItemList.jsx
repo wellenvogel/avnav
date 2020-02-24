@@ -29,7 +29,13 @@ class ItemList extends React.Component{
         this.onSortEnd=this.onSortEnd.bind(this);
     }
     onSortEnd(data){
-        if (this.props.onSortEnd) this.props.onSortEnd(data.oldIndex,data.newIndex);
+        let len=this.props.itemList?this.props.itemList.length:0;
+        if (this.props.reverse) {
+            if (this.props.onSortEnd) this.props.onSortEnd(len-data.oldIndex,len- data.newIndex);
+        }
+        else{
+            if (this.props.onSortEnd) this.props.onSortEnd(data.oldIndex, data.newIndex);
+        }
 
     }
     render() {
@@ -63,7 +69,7 @@ class ItemList extends React.Component{
                             key+="_"+idx;
                             tries--;
                         }
-                        itemProps.index=idx;
+                        itemProps.index=self.props.reverse?allitems.length-idx:idx;
                         itemProps.key = key;
                         existingKeys[key]=true;
                         if (self.props.selectedIndex !== undefined && idx == self.props.selectedIndex) {
@@ -73,7 +79,13 @@ class ItemList extends React.Component{
                             itemProps.onClick = function (data) {
                                 if (data && data.stopPropagation) data.stopPropagation();
                                 if (data && data.preventDefault) data.preventDefault();
-                                self.props.onItemClick(itemProps, data);
+                                if (self.props.reverse){
+                                    let len=self.props.itemList?self.props.itemList.length:0;
+                                    self.props.onItemClick(assign({},itemProps,{index:len-itemProps.index}),data);
+                                }
+                                else {
+                                    self.props.onItemClick(itemProps, data);
+                                }
                             }
                         }
                         idx++;
@@ -133,6 +145,7 @@ ItemList.propTypes={
         onClick:        PropTypes.func,
         dragdrop:       PropTypes.bool,
         horizontal:     PropTypes.bool,
+        reverse:        PropTypes.bool, //let the index count backwards
         onSortEnd:      PropTypes.func
 };
 

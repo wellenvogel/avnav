@@ -124,6 +124,7 @@ class MapPage extends React.Component{
                             </div>
                             <div className={"bottomSection" + (globalStore.getData(keys.properties.allowTwoWidgetRows)?" twoRows":"")}>
                                 <WidgetContainer
+                                    reverse={true}
                                     fontSize={self.props.widgetFontSize+"px"}
                                     panel='bottomLeft'
                                     mode="horizontal"
