@@ -342,7 +342,7 @@ class NavPage extends React.Component{
             },
             GuiHelpers.mobDefinition,
             EditPageDialog.getButtonDef(PAGENAME,
-                ['left','top','bottomLeft','bottomRight'],
+                MapPage.PANELS,
                 [LayoutHandler.OPTIONS.SMALL]),
             LayoutFinishedDialog.getButtonDef(),
             {

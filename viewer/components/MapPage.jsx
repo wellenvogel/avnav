@@ -157,8 +157,10 @@ MapPage.propertyTypes={
     overlayContent:     PropTypes.any               //overlay in the map container
 };
 
-module.exports=Dynamic(MapPage,{
+let DynamicPage=Dynamic(MapPage,{
     storeKeys:LayoutHandler.getStoreKeys({
         widgetFontSize:keys.properties.widgetFontSize
     })
 });
+DynamicPage.PANELS=['left','top','bottomLeft','bottomRight'];
+module.exports=DynamicPage;

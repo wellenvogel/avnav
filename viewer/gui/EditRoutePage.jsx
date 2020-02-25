@@ -31,6 +31,7 @@ import ButtonList from '../components/ButtonList.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
+import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -274,6 +275,8 @@ class EditRoutePage extends React.Component{
                 editDisable: true
             },
             GuiHelpers.mobDefinition,
+            EditPageDialog.getButtonDef('editroutepage',
+                MapPage.PANELS,[LayoutHandler.OPTIONS.SMALL]),
             LayoutFinishedDialog.getButtonDef(),
             {
                 name: 'Cancel',
