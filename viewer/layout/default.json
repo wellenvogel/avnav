@@ -176,18 +176,17 @@
       ],
       "bottomLeft": [
         {
-          "name": "WpPosition"
-        },
-        {
-          "name": "ETA"
+          "name": "BRG"
         },
         {
           "name": "DST"
         },
         {
-          "name": "BRG"
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
         }
-
       ],
       "bottomRight": [
         {
@@ -221,16 +220,16 @@
       ],
       "bottomLeft": [
         {
-          "name": "WpPosition"
-        },
-        {
-          "name": "ETA"
+          "name": "BRG"
         },
         {
           "name": "DST"
         },
         {
-          "name": "BRG"
+          "name": "ETA"
+        },
+        {
+          "name": "WpPosition"
         }
       ],
       "bottomRight": [
