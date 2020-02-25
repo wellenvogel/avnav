@@ -57,4 +57,12 @@ DirectWidget.propTypes={
     default: PropTypes.string
 };
 
+DirectWidget.editableParameters={
+    caption:true,
+    unit:true,
+    formatter:true,
+    formatterParameters: true,
+    value: true
+};
+
 module.exports=DirectWidget;

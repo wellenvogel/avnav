@@ -13,12 +13,17 @@ import base from '../base.js';
 import GaugeRadial from './GaugeRadial.jsx';
 
 export class WidgetParameter{
-    constructor(name,type,defaultv,list){
+    constructor(name,type,list,displayName){
         this.name=name;
         this.type=type;
-        this.default=defaultv;
+        this.default=undefined;
         this.list=list;
-        this.displayName=name;
+        this.displayName=displayName||name;
+    }
+    clone(){
+        let rt=new WidgetParameter(this.name,this.type,this.list,this.displayName);
+        rt.default=this.default;
+        return rt;
     }
     getList(){
         if (typeof (this.list) === 'function') return this.list();
@@ -53,6 +58,60 @@ export class WidgetParameter{
     }
 }
 
+class KeyWidgetParameter extends WidgetParameter {
+    constructor(name, type, list, displayName) {
+        super(name, type, list, displayName);
+        this.list = ()=> {
+            let kl = KeyHelper.getValueKeys().slice(0);
+            //TODO: better + generic
+            kl = kl.concat(globalStore.getKeysByPrefix('nav.gps.signalk'));
+            return kl;
+        };
+    }
+    clone(){
+        let rt=new KeyWidgetParameter(this.name,this.type,this.list,this.displayName);
+        rt.default=this.default;
+        return rt;
+    }
+    setValue(widget, value) {
+        if (!widget) widget = {};
+        if (!widget.storeKeys) widget.storeKeys = {};
+        widget.storeKeys.value = value;
+        return widget;
+    }
+
+    getValue(widget) {
+        if (!widget) return;
+        if (!widget.storeKeys) return;
+        return widget.storeKeys.value;
+    }
+
+}
+
+class ArrayWidgetParameter extends WidgetParameter {
+    constructor(name, type, list, displayName) {
+        super(name, type, list, displayName);
+    }
+    clone(){
+        let rt=new ArrayWidgetParameter(this.name,this.type,this.list,this.displayName);
+        rt.default=this.default;
+        return rt;
+    }
+
+    setValue(widget, value) {
+        if (!widget) widget = {};
+        if (typeof(value) === 'string') value=value.split(",")
+        widget[this.name]=value;
+        return widget;
+    }
+    getValue(widget){
+        let rt=widget[this.name];
+        if (! rt) return;
+        if (rt instanceof Array) return rt.join(",");
+        return rt;
+    }
+}
+
 WidgetParameter.TYPE={
     STRING:1,
     NUMBER:2,
@@ -60,6 +119,30 @@ WidgetParameter.TYPE={
     SELECT:4,
     DISPLAY: 5
 };
+
+const PREDEFINED_PARAMETERS=[
+    new WidgetParameter('caption',WidgetParameter.TYPE.STRING),
+    new WidgetParameter('unit',WidgetParameter.TYPE.STRING),
+    new WidgetParameter('formatter', WidgetParameter.TYPE.SELECT,()=>{
+        let fl=[];
+        for (let k in Formatter){
+            if (typeof(Formatter[k]) === 'function') fl.push(k);
+        }
+        return fl;
+    }),
+    new ArrayWidgetParameter('formatterParameters',WidgetParameter.TYPE.STRING,undefined,"formatter parameters"),
+    new KeyWidgetParameter('value',WidgetParameter.TYPE.KEY),
+    new WidgetParameter("className",WidgetParameter.TYPE.STRING,undefined,"css class")
+];
+
+const getDefaultParameter=(name)=>{
+    for (let k in PREDEFINED_PARAMETERS){
+        if (PREDEFINED_PARAMETERS[k].name === name) return PREDEFINED_PARAMETERS[k].clone();
+    }
+};
+
+
+
 
 
 
@@ -93,71 +176,49 @@ class WidgetFactory{
         let widgetData=this.findWidget(widget);
         if (! widgetData) return[];
         let rt=[];
-        let wClass=undefined;
-        //simple approach: only DirectWidget...
-        if ((! widgetData.wclass  && ! widgetData.children) || widgetData.wclass === DirectWidget || widgetData.wclass === ExternalWidget || widgetData.wclass.useDefaultOptions){
-            rt.push(new WidgetParameter('caption',WidgetParameter.TYPE.STRING,widget.caption||widgetData.caption));
-            rt.push(new WidgetParameter('unit',WidgetParameter.TYPE.STRING,widget.unit||widgetData.unit));
-            let fmpar=new WidgetParameter('formatter', WidgetParameter.TYPE.SELECT,widget.formatter||widgetData.formatter);
-            if (widgetData.formatter){
-                let fname=widgetData.formatter;
-                if (typeof(fname) === 'function') fname=fname.name;
-                fmpar.default=fname;
-                fmpar.type=WidgetParameter.TYPE.DISPLAY;
+        let mergedData=assign({},widgetData,widget);
+        let wClass=widgetData.wclass || DirectWidget;
+        let editableParameters=assign({className:true},wClass.editableParameters,widgetData.editableParameters);
+        let storeKeys=assign({},wClass.storeKeys,widgetData.storeKeys);
+        for (let pname in editableParameters){
+            let pdefinition=editableParameters[pname];
+            if (! pdefinition) continue;
+            let predefined=getDefaultParameter(pname);
+            if (! predefined && (typeof(pdefinition) !== 'object')){
+                base.log("invalid parameter definition in widget "+widgetData.name+": "+pname);
+                continue;
+            }
+            if (predefined){
+                pdefinition=predefined;
+                if (pdefinition.name === 'formatter'){
+                    if (widgetData.formatter){
+                        pdefinition.type=WidgetParameter.TYPE.DISPLAY; //read only
+                        if (typeof(widgetData.formatter) === 'function'){
+                            pdefinition.default=widgetData.formatter.name;
+                        }
+                        else{
+                            pdefinition.default=widgetData.formatter;
+                        }
+                    }
+                }
+                if (pdefinition.name === 'value' && storeKeys.value){
+                    continue;
+                }
+                //special handling...
             }
             else{
-                fmpar.list=()=>{
-                    let fl=[];
-                    for (let k in Formatter){
-                        if (typeof(Formatter[k]) === 'function') fl.push(k);
-                    }
-                    return fl;
+                if (!WidgetParameter.TYPE[pdefinition.type]){
+                    base.log("ignore unknown parameter type "+pdefinition.type);
+                    continue;
                 }
+                let npdefinition=new WidgetParameter(pdefinition.name,pdefinition.type,pdefinition.list,pdefinition.displayName)
+                npdefinition.default=pdefinition.default;
+                pdefinition=npdefinition;
             }
-            rt.push(fmpar);
-            let currentParameters=widget.formatterParameters||widgetData.formatterParameters;
-            if (currentParameters instanceof Array){
-                currentParameters=currentParameters.join(",");
-            }
-            let fpar=new WidgetParameter('formatterParameters',WidgetParameter.TYPE.STRING,currentParameters);
-            fpar.displayName="formatter parameters";
-            rt.push(fpar);
-            wClass=widgetData.wclass||DirectWidget;
-            let storeKeys=widgetData.storeKeys||wClass.storeKeys;
-            if (! storeKeys){
-                let spar=new WidgetParameter('value',WidgetParameter.TYPE.KEY,widget.storeKeys?widget.storeKeys.value:undefined);
-                spar.list=()=>{
-                    let kl=KeyHelper.getValueKeys().slice(0);
-                    //TODO: better + generic
-                    kl=kl.concat(globalStore.getKeysByPrefix('nav.gps.signalk'));
-                    return kl;
-                };
-                spar.setValue=(widget,value)=>{
-                    if (! widget) widget={};
-                    if (!widget.storeKeys) widget.storeKeys={};
-                    widget.storeKeys.value=value;
-                    return widget;
-                };
-                spar.getValue=(widget)=>{
-                    if (!widget) return;
-                    if (!widget.storeKeys) return;
-                    return widget.storeKeys.value;
-                };
-                rt.push(spar)
-            }
+            if (pdefinition.default === undefined) pdefinition.default=pdefinition.getValue(mergedData);
+            rt.push(pdefinition);
         }
-        let cpar=new WidgetParameter("className",WidgetParameter.TYPE.STRING,widget.className||widgetData.className);
-        cpar.displayName="css class";
-        rt.push(cpar);
-        let editableParameters=widgetData.editableParameters||(wClass?wClass.editableParameters:undefined);
-        if (!editableParameters) return rt;
-        let filtered=[];
-        rt.forEach((p)=>{
-            if (p.name==='className' || editableParameters[p.name]){
-                filtered.push(p);
-            }
-        });
-        return filtered;
+        return rt;
     }
 
 
@@ -331,7 +392,7 @@ WidgetFactory.prototype.loadGaugeDefinitions=function(name,prefix,wclass){
                             return;
                         }
                     }
-                    self.addWidget(description);
+                    self.addWidget(description,true);
                 }
             })
             .catch((error)=>{
