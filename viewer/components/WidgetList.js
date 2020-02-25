@@ -17,6 +17,7 @@ import keys from '../util/keys.jsx';
 import AlarmWidget from './AlarmWidget.jsx';
 import RoutePointsWidget from './RoutePointsWidget.jsx';
 import DateTimeWidget from './DateTimeWidget.jsx';
+import GaugeRadial from './GaugeRadial.jsx';
 
 let widgetList=[
     {
@@ -268,6 +269,10 @@ let widgetList=[
     },
     {
         name: 'Default' //a way to access the default widget providing all parameters in the layout
+    },
+    {
+        name: 'RadialGauge',
+        wclass: GaugeRadial
     }
 
 

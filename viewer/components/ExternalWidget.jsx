@@ -27,7 +27,7 @@ class ExternalWidget extends React.Component{
             try {
                 innerHtml = this.props.renderHtml.apply(this.userData,[this.props]);
             }catch (e){
-                base.log("ExternalWidget: render error "+e);
+                base.log("GaugeRadial: render error "+e);
                 innerHtml="<p>render error </p>";
             }
             if (innerHtml === null){
@@ -59,7 +59,7 @@ class ExternalWidget extends React.Component{
         try {
             this.props.renderCanvas.apply(this.userData,[this.canvas, this.props]);
         }catch (e){
-            base.log("ExternalWidget: canvas render error "+e);
+            base.log("GaugeRadial: canvas render error "+e);
         }
     }
 };

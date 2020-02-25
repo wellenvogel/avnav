@@ -8,6 +8,9 @@ import Formatter from '../util/formatter';
 import Visible from '../hoc/Visible.jsx';
 import ExternalWidget from './ExternalWidget.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
+import Requests from '../util/requests.js';
+import base from '../base.js';
+import GaugeRadial from './GaugeRadial.jsx';
 
 export class WidgetParameter{
     constructor(name,type,defaultv,list){
@@ -92,7 +95,7 @@ class WidgetFactory{
         let rt=[];
         let wClass=undefined;
         //simple approach: only DirectWidget...
-        if ((! widgetData.wclass  && ! widgetData.children) || widgetData.wclass === DirectWidget || widgetData.wclass === ExternalWidget){
+        if ((! widgetData.wclass  && ! widgetData.children) || widgetData.wclass === DirectWidget || widgetData.wclass === ExternalWidget || widgetData.wclass.useDefaultOptions){
             rt.push(new WidgetParameter('caption',WidgetParameter.TYPE.STRING,widget.caption||widgetData.caption));
             rt.push(new WidgetParameter('unit',WidgetParameter.TYPE.STRING,widget.unit||widgetData.unit));
             let fmpar=new WidgetParameter('formatter', WidgetParameter.TYPE.SELECT,widget.formatter||widgetData.formatter);
@@ -249,11 +252,14 @@ class WidgetFactory{
         }
         return rt;
     }
-    addWidget(definition){
+    addWidget(definition,ignoreExisting){
         if (! definition) throw new Error("missing parameter definition");
         if (! definition.name) throw new Error("missing parameter name");
         let existing=this.findWidgetIndex(definition);
-        if (existing >= 0) throw new Error("widget "+definition.name+" already exists");
+        if (existing >= 0 ) {
+            if (! ignoreExisting) throw new Error("widget " + definition.name + " already exists");
+            this.widgetDefinitions[existing]=definition;
+        }
         this.widgetDefinitions.push(definition);
     }
     registerExternalWidget(description){
@@ -307,5 +313,42 @@ WidgetFactory.prototype.filterListByName=function(list,filterObject){
     });
     return rt;
 };
+
+WidgetFactory.prototype.loadGaugeDefinitions=function(name,prefix,wclass){
+    let self=this;
+    let urls=[name+".json","/user/viewer/"+name+".json"];
+    urls.forEach((url)=>{
+        Requests.getJson(url,{useNavUrl:false,checkOk:false})
+            .then((data)=>{
+                for (let gName in data){
+                    let description=data[gName];
+                    description.name=prefix+"."+gName;
+                    description.wclass=wclass;
+                    let existing=self.findWidget(description);
+                    if (existing){
+                        if (existing.wclass !== description.wclass){
+                            base.log("ignoring widget "+description.name+": already exists with different class");
+                            return;
+                        }
+                    }
+                    self.addWidget(description);
+                }
+            })
+            .catch((error)=>{
+                base.log("unable to read widget list "+url+": "+error);
+            })
+    })
+};
+
+WidgetFactory.prototype.loadAllGaugeDefinitions=function(){
+    let self=this;
+    let list=[
+        {name:'radialGauges',prefix:'radGauge',wclass:GaugeRadial}
+    ];
+    list.forEach((le)=>{
+        self.loadGaugeDefinitions(le.name,le.prefix,le.wclass);
+    })
+};
+
 
 export default new WidgetFactory();

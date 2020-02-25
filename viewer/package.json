@@ -60,6 +60,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.7.0",
     "PubSub": "^3.6.0",
+    "canvas-gauges": "^2.1.5",
     "create-react-class": "^15.6.3",
     "downloadjs": "^1.4.7",
     "lodash.merge": "^4.6.2",

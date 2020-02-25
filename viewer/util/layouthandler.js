@@ -53,13 +53,13 @@ class LayoutHandler{
         return this.editing;
     }
 
-    loadStoredLayout(){
+    loadStoredLayout(opt_remoteFirst){
         let self=this;
         return new Promise((resolve,reject)=> {
             let layoutName=globalStore.getData(keys.properties.layoutName);
             //if we selected the default layout we will always use our buildin (if store locally)
             //or load from the server
-            if (layoutName !== DEFAULT_NAME) {
+            if (layoutName !== DEFAULT_NAME && ! opt_remoteFirst) {
                 let storedLayout = this._loadFromStorage();
                 if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
                     this.name = storedLayout.name;
@@ -76,6 +76,17 @@ class LayoutHandler{
                     resolve(this.layout);
                 })
                 .catch((error)=>{
+                    if (opt_remoteFirst) {
+                        let storedLayout = this._loadFromStorage();
+                        if (storedLayout && (storedLayout.name == layoutName) && storedLayout.data) {
+                            this.name = storedLayout.name;
+                            this.layout = storedLayout.data;
+                            this.temporaryLayouts[this.name] = this.layout;
+                            self.activateLayout();
+                            resolve(this.layout);
+                            return;
+                        }
+                    }
                     let description=KeyHelper.getKeyDescriptions()[keys.properties.layoutName];
                     if (description && description.defaultv){
                         if (layoutName != description.defaultv){

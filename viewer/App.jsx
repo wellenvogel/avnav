@@ -123,7 +123,7 @@ class App extends React.Component {
                 Toast("unable to load key mappings: "+error);
             }
         );
-        LayoutHandler.loadStoredLayout()
+        LayoutHandler.loadStoredLayout(true)
             .then((layout)=>{})
             .catch((error)=>{Toast(error)});
         GuiHelpers.keyEventHandler(this,()=>{

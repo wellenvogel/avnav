@@ -410,5 +410,27 @@
     margin: 0;
   }
 
+  &.canvasGauge.radial {
+    canvas {
+      margin: auto;
+      position: relative;
+    }
+    .canvasFrame {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      .flex-display();
+      .flex-align-items(center);
+      .flex-justify-content(center);
+
+    }
+    .gaugeValue {
+      position: absolute;
+      top: ~"calc(50% + 1em)";
+      left: ~"calc(50% - 1em)";
+      z-index: 20;
+      white-space: pre;
+    }
+  }
 
 }

@@ -48,6 +48,7 @@ import Api from './util/api.js';
 import RouteHandler from './nav/routedata.js';
 import LayoutHandler from './util/layouthandler.js';
 import LeaveHandler from './util/leavehandler.js';
+import WidgetFactory from './components/WidgetFactory.jsx';
 
 
 
@@ -162,6 +163,7 @@ avnav.main=function() {
             propertyHandler.incrementSequence();
         },1000);
 
+        let scriptsLoaded=false;
         //load the user and plugin stuff
         let lateLoads=["/user/viewer/user.js"];
         if (loadPlugins) {
@@ -173,17 +175,21 @@ avnav.main=function() {
                             if (plugin.css) lateLoads.push(plugin.css);
                         })
                     }
-                    loadScripts(lateLoads);
+                    if (! scriptsLoaded)loadScripts(lateLoads);
+                    scriptsLoaded=true;
+                    WidgetFactory.loadAllGaugeDefinitions();
                 }
             ).catch(
                 (error)=> {
                     Toast("unable to load plugin data: " + error);
-                    loadScripts(lateLoads);
+                    if (! scriptsLoaded) loadScripts(lateLoads);
+                    WidgetFactory.loadAllGaugeDefinitions();
                 }
             );
         }
         else{
             loadScripts(lateLoads);
+            WidgetFactory.loadAllGaugeDefinitions();
         }
     };
 
