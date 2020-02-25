@@ -225,8 +225,7 @@ EditPageDialog.getButtonDef=(pagename,panelNames,handledOptions)=>{
         editOnly: true,
         onClick:()=>{
             EditPageDialog.createDialog(pagename,panelNames,handledOptions);
-        },
-        toggle: true
+        }
     }
 
 };
