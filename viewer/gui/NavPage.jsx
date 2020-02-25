@@ -341,10 +341,10 @@ class NavPage extends React.Component{
 
             },
             GuiHelpers.mobDefinition,
-            LayoutFinishedDialog.getButtonDef(),
             EditPageDialog.getButtonDef(PAGENAME,
                 ['left','top','bottomLeft','bottomRight'],
                 [LayoutHandler.OPTIONS.SMALL]),
+            LayoutFinishedDialog.getButtonDef(),
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

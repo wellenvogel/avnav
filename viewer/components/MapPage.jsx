@@ -84,6 +84,7 @@ class MapPage extends React.Component{
         const WidgetContainer=(props)=>{
             let {panel,mode,...other}=props;
             let panelItems=self.props.panelCreator(panel);
+            if (! panelItems.list) return null;
             let invertEditDirection=mode==='vertical'||panel === 'bottomLeft';
             return <ItemList  {...props}
                 className={"widgetContainer "+mode+" "+panel}

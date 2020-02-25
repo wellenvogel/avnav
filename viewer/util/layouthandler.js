@@ -390,13 +390,13 @@ class LayoutHandler{
      */
     getPanelData(page,basename,options){
         let pageData=this.getPageData(page);
-        if (!pageData) return {name:basename,list:[]};
+        if (!pageData) return {name:basename};
         let tryList=this.getPanelTryList(basename,options);
         for (let i=0;i<tryList.length;i++){
             let list=this.getDirectPanelData(page,tryList[i]);
             if (list) return {name:tryList[i],list:list};
         }
-        return {name:basename,list:[]};
+        return {name:basename};
     }
 
 

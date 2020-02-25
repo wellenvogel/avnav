@@ -18,6 +18,7 @@ import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
+import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 
@@ -33,7 +34,7 @@ const widgetCreator=(widget,weightSum)=>{
     return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps'});
 };
 
-const getPanelList=(panelType,pageNum)=>{
+const getPanelList=(panel,pageNum)=>{
     let basename="gpspage"+pageNum;
     let rt=LayoutHandler.getPanelData(basename,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.ANCHOR]));
     rt.page=basename;
@@ -49,7 +50,7 @@ const hasPageEntries=(pageNum)=>{
     for (let p in panels){
         let panel=panels[p];
         let panelData=LayoutHandler.getPanelData(basename,panel,LayoutHandler.getAllOptions());
-        if (panelData.length > 0) return true;
+        if (panelData.list && panelData.list.length > 0) return true;
     }
     return false;
 };
@@ -72,7 +73,7 @@ const findPageWithWidget=(name)=>{
     for (let pidx in pnums){
         for (let idx in panels){
             let list=getPanelList(panels[idx],pnums[pidx]);
-            if (! list) continue;
+            if (! list || ! list.list) continue;
             for (let li in list.list){
                 if (! list.list[li]) continue;
                 if (list.list[li].name == name){
@@ -101,7 +102,22 @@ class GpsPage extends React.Component{
             }
         ];
         this.state={};
-        this.buttons=[
+
+        this.onItemClick=this.onItemClick.bind(this);
+        if (props.options && props.options.widget && ! props.options.returning) {
+            let pagenNum = findPageWithWidget(props.options.widget);
+            if (pagenNum !== undefined){
+                globalStore.storeData(keys.gui.gpspage.pageNumber,pagenNum);
+            }
+        }
+        let oldNum=globalStore.getData(keys.gui.gpspage.pageNumber);
+        if (oldNum === undefined || ! hasPageEntries(oldNum)){
+            globalStore.storeData(keys.gui.gpspage.pageNumber,1);
+        }
+    }
+    getButtons(){
+        let self=this;
+        return[
             {
                 name:'GpsCenter',
                 onClick:()=>{
@@ -192,23 +208,15 @@ class GpsPage extends React.Component{
                 editDisable:true
             },
             GuiHelpers.mobDefinition,
+            EditPageDialog.getButtonDef('gpspage'+globalStore.getData(keys.gui.gpspage.pageNumber,0),
+                PANEL_LIST,
+                [LayoutHandler.OPTIONS.ANCHOR]),
             LayoutFinishedDialog.getButtonDef(),
             {
                 name:'Cancel',
                 onClick:()=>{history.pop();}
             }
         ];
-        this.onItemClick=this.onItemClick.bind(this);
-        if (props.options && props.options.widget && ! props.options.returning) {
-            let pagenNum = findPageWithWidget(props.options.widget);
-            if (pagenNum !== undefined){
-                globalStore.storeData(keys.gui.gpspage.pageNumber,pagenNum);
-            }
-        }
-        let oldNum=globalStore.getData(keys.gui.gpspage.pageNumber);
-        if (oldNum === undefined || ! hasPageEntries(oldNum)){
-            globalStore.storeData(keys.gui.gpspage.pageNumber,1);
-        }
     }
     onItemClick(item,data,panelInfo){
         if (EditWidgetDialog.createDialog(item,panelInfo.page,panelInfo.name,false,true)) return;
@@ -231,50 +239,48 @@ class GpsPage extends React.Component{
     render(){
         let self=this;
         let MainContent=(props)=> {
-            let leftPanel=getPanelList('left',self.props.pageNum||1);
-            let rightPanel=getPanelList('right',self.props.pageNum||1);
-            let leftSum=getWeightSum(leftPanel.list);
-            let rightSum=getWeightSum(rightPanel.list);
-            let dimensions=globalStore.getData(keys.gui.global.windowDimensions);
-            let fontSize=layoutBaseParam.baseWidgetFontSize;
-            if (dimensions){
-                let width=dimensions.width-60; //TODO: correct button dimensions...
-                if (width > 0 && dimensions.height > 0){
-                    let fw=width/layoutBaseParam.layoutWidth||0;
-                    let fh=dimensions.height/layoutBaseParam.layoutHeight||0;
-                    if (fw > 0 && fh > 0){
-                        fontSize=fontSize*Math.min(fh,fw);
+            let fontSize = layoutBaseParam.baseWidgetFontSize;
+            let dimensions = globalStore.getData(keys.gui.global.windowDimensions);
+            if (dimensions) {
+                let width = dimensions.width - 60; //TODO: correct button dimensions...
+                if (width > 0 && dimensions.height > 0) {
+                    let fw = width / layoutBaseParam.layoutWidth || 0;
+                    let fh = dimensions.height / layoutBaseParam.layoutHeight || 0;
+                    if (fw > 0 && fh > 0) {
+                        fontSize = fontSize * Math.min(fh, fw);
                     }
                 }
             }
-            let p1leftProp={
-                className: 'widgetContainer',
-                itemCreator: (widget)=>{ return widgetCreator(widget,leftSum);},
-                itemList: leftPanel.list,
-                fontSize: fontSize,
-                onItemClick: (item,data) => {self.onItemClick(item,data,leftPanel);},
-                onClick: ()=>{EditWidgetDialog.createDialog(undefined,leftPanel.page,leftPanel.name,false,true);},
-                dragdrop: LayoutHandler.isEditing(),
-                onSortEnd: (oldIndex,newIndex)=>LayoutHandler.moveItem(leftPanel.page,leftPanel.name,oldIndex,newIndex)
-            };
-            let p1RightProp={
-                className: 'widgetContainer',
-                itemCreator: (widget)=>{ return widgetCreator(widget,rightSum);},
-                itemList: rightPanel.list,
-                fontSize: fontSize,
-                onItemClick: (item,data) => {self.onItemClick(item,data,rightPanel);},
-                onClick: ()=>{EditWidgetDialog.createDialog(undefined,rightPanel.page,rightPanel.name,false,true);},
-                dragdrop: LayoutHandler.isEditing(),
-                onSortEnd: (oldIndex,newIndex)=>LayoutHandler.moveItem(rightPanel.page,rightPanel.name,oldIndex,newIndex)
-            };
+            let panelList=[];
+            PANEL_LIST.forEach((panelName)=> {
+                let panelData = getPanelList(panelName, self.props.pageNum || 1);
+                if (! panelData.list) return;
+                let sum = getWeightSum(panelData.list);
+                let prop={
+                    className: 'widgetContainer',
+                    itemCreator: (widget)=>{ return widgetCreator(widget,sum);},
+                    itemList: panelData.list,
+                    fontSize: fontSize,
+                    onItemClick: (item,data) => {self.onItemClick(item,data,panelData);},
+                    onClick: ()=>{EditWidgetDialog.createDialog(undefined,panelData.page,panelData.name,false,true);},
+                    dragdrop: LayoutHandler.isEditing(),
+                    onSortEnd: (oldIndex,newIndex)=>LayoutHandler.moveItem(panelData.page,panelData.name,oldIndex,newIndex)
+                };
+                panelList.push(prop);
+            });
+            let panelWidth=100;
+            if (panelList.length){
+                panelWidth=panelWidth/panelList.length;
+            }
             return(
             <React.Fragment>
-                <div className="hfield">
-                    <ItemList {...p1leftProp}/>
-                </div>
-                <div className="hfield">
-                    <ItemList {...p1RightProp}/>
-                </div>
+                {panelList.map((panelProps)=>{
+                    return(
+                        <div className="hfield" style={{width:panelWidth+"%"}}>
+                            <ItemList {...panelProps}/>
+                        </div>
+                    )
+                })}
             </React.Fragment>);
         };
 
@@ -285,7 +291,7 @@ class GpsPage extends React.Component{
                 mainContent={
                             <MainContent/>
                         }
-                buttonList={self.buttons}
+                buttonList={self.getButtons()}
                 />;
 
     }
