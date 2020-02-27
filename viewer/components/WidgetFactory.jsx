@@ -21,7 +21,7 @@ export class WidgetParameter{
         this.displayName=displayName||name;
     }
     clone(){
-        let rt=new WidgetParameter(this.name,this.type,this.list,this.displayName);
+        let rt=createWidgetParameter(this.name,this.type,this.list,this.displayName);
         rt.default=this.default;
         return rt;
     }
@@ -39,6 +39,12 @@ export class WidgetParameter{
             widget[this.name] = parseFloat(value);
         }
         return widget;
+    }
+    setDefault(widget){
+        let current=this.getValue(widget);
+        if ((current === undefined) && (this.default !== undefined)){
+            this.setValue(widget,this.default);
+        }
     }
     getValue(widget){
         return widget[this.name];
@@ -68,11 +74,6 @@ class KeyWidgetParameter extends WidgetParameter {
             return kl;
         };
     }
-    clone(){
-        let rt=new KeyWidgetParameter(this.name,this.type,this.list,this.displayName);
-        rt.default=this.default;
-        return rt;
-    }
     setValue(widget, value) {
         if (!widget) widget = {};
         if (!widget.storeKeys) widget.storeKeys = {};
@@ -92,11 +93,6 @@ class ArrayWidgetParameter extends WidgetParameter {
     constructor(name, type, list, displayName) {
         super(name, type, list, displayName);
     }
-    clone(){
-        let rt=new ArrayWidgetParameter(this.name,this.type,this.list,this.displayName);
-        rt.default=this.default;
-        return rt;
-    }
 
     setValue(widget, value) {
         if (!widget) widget = {};
@@ -112,27 +108,67 @@ class ArrayWidgetParameter extends WidgetParameter {
     }
 }
 
+class ReadOnlyWidgetParameter extends WidgetParameter {
+    constructor(name, type, list, displayName) {
+        super(name, type, list, displayName);
+    }
+
+    setValue(widget, value) {
+        if (!widget) widget = {};
+        return widget;
+    }
+    getValue(widget){
+        return this.default;;
+    }
+}
+
 WidgetParameter.TYPE={
     STRING:1,
     NUMBER:2,
     KEY:3,
     SELECT:4,
-    DISPLAY: 5
+    DISPLAY: 5,
+    ARRAY: 6,
+    BOOLEAN:7,
+    COLOR:8
+};
+
+
+const createWidgetParameter=(name,type,list,displayName)=>{
+    if (typeof(type) === 'string'){
+        type=WidgetParameter.TYPE[type];
+        if (type === undefined) return;
+    }
+    switch(type) {
+        case WidgetParameter.TYPE.DISPLAY:
+            return new ReadOnlyWidgetParameter(name,type,list,displayName);
+        case WidgetParameter.TYPE.STRING:
+        case WidgetParameter.TYPE.NUMBER:
+        case WidgetParameter.TYPE.SELECT:
+        case WidgetParameter.TYPE.BOOLEAN:
+        case WidgetParameter.TYPE.COLOR:
+            return new WidgetParameter(name, type, list, displayName);
+        case WidgetParameter.TYPE.KEY:
+            return new KeyWidgetParameter(name, type, list, displayName);
+        case WidgetParameter.TYPE.ARRAY:
+            return new ArrayWidgetParameter(name, type, list, displayName);
+
+    }
 };
 
 const PREDEFINED_PARAMETERS=[
-    new WidgetParameter('caption',WidgetParameter.TYPE.STRING),
-    new WidgetParameter('unit',WidgetParameter.TYPE.STRING),
-    new WidgetParameter('formatter', WidgetParameter.TYPE.SELECT,()=>{
+    createWidgetParameter('caption',WidgetParameter.TYPE.STRING),
+    createWidgetParameter('unit',WidgetParameter.TYPE.STRING),
+    createWidgetParameter('formatter', WidgetParameter.TYPE.SELECT,()=>{
         let fl=[];
         for (let k in Formatter){
             if (typeof(Formatter[k]) === 'function') fl.push(k);
         }
         return fl;
     }),
-    new ArrayWidgetParameter('formatterParameters',WidgetParameter.TYPE.STRING,undefined,"formatter parameters"),
-    new KeyWidgetParameter('value',WidgetParameter.TYPE.KEY),
-    new WidgetParameter("className",WidgetParameter.TYPE.STRING,undefined,"css class")
+    createWidgetParameter('formatterParameters',WidgetParameter.TYPE.ARRAY,undefined,"formatter parameters"),
+    createWidgetParameter('value',WidgetParameter.TYPE.KEY),
+    createWidgetParameter("className",WidgetParameter.TYPE.STRING,undefined,"css class")
 ];
 
 const getDefaultParameter=(name)=>{
@@ -204,18 +240,17 @@ class WidgetFactory{
                 if (pdefinition.name === 'value' && storeKeys.value){
                     continue;
                 }
-                //special handling...
             }
             else{
-                if (!WidgetParameter.TYPE[pdefinition.type]){
-                    base.log("ignore unknown parameter type "+pdefinition.type);
+                let npdefinition=createWidgetParameter(pname,pdefinition.type,pdefinition.list,pdefinition.displayName)
+                if (! npdefinition){
+                    base.log("unknown widget parameter type: "+pdefinition.type);
                     continue;
                 }
-                let npdefinition=new WidgetParameter(pdefinition.name,pdefinition.type,pdefinition.list,pdefinition.displayName)
                 npdefinition.default=pdefinition.default;
                 pdefinition=npdefinition;
             }
-            if (pdefinition.default === undefined) pdefinition.default=pdefinition.getValue(mergedData);
+            if (pdefinition.default === undefined) pdefinition.default=pdefinition.getValue(widgetData);
             rt.push(pdefinition);
         }
         return rt;
@@ -323,29 +358,19 @@ class WidgetFactory{
         }
         this.widgetDefinitions.push(definition);
     }
-    registerExternalWidget(description){
-        let reservedParameters=['onClick','wclass'];
+    getWidgetFromTypeName(typeName){
+        switch(typeName){
+            case 'radialGauge':
+                return GaugeRadial;
+        }
+    }
+    registerWidget(description,opt_editableParameters){
+        let reservedParameters=['onClick','wclass','editableParameters'];
         let forbiddenKeys=['name'].concat(reservedParameters);
-        let internalDescription=assign({},description);
-        if (internalDescription.renderHtml || internalDescription.renderCanvas){
-            //we should use our external widget
-            if (internalDescription.renderHtml && typeof(internalDescription.renderHtml) !== 'function'){
-                throw new Error("renderHtml must be a function");
-            }
-            if (internalDescription.renderCanvas && typeof(internalDescription.renderCanvas) !== 'function'){
-                throw new Error("renderCanvas must be a function");
-            }
-            internalDescription.wclass=ExternalWidget;
-        }
-        else{
-            if (! internalDescription.formatter){
-                throw new Error("formatter must be set for the default widget");
-            }
-        }
         reservedParameters.forEach((p)=>{
-           if (description[p]){
-               throw new Error("you cannot set the reserved parameter "+p);
-           }
+            if (description[p]){
+                throw new Error("you cannot set the reserved parameter "+p);
+            }
         });
         if (description.storeKeys){
             forbiddenKeys.forEach((k)=>{
@@ -354,6 +379,38 @@ class WidgetFactory{
                 }
             })
         }
+        let internalDescription=assign({},description);
+        if (internalDescription.type){
+            internalDescription.wclass=this.getWidgetFromTypeName(internalDescription.type);
+            if (! internalDescription.wclass){
+                throw new Error("invalid widget type: "+internalDescription.type);
+            }
+            if (internalDescription.renderHtml && typeof(internalDescription.renderHtml) !== 'function') {
+                throw new Error("renderHtml must be a function");
+            }
+        }
+        if (! internalDescription.wclass) {
+            if (internalDescription.renderHtml || internalDescription.renderCanvas) {
+                //we should use our external widget
+                if (internalDescription.renderHtml && typeof(internalDescription.renderHtml) !== 'function') {
+                    throw new Error("renderHtml must be a function");
+                }
+                if (internalDescription.renderCanvas && typeof(internalDescription.renderCanvas) !== 'function') {
+                    throw new Error("renderCanvas must be a function");
+                }
+                internalDescription.wclass = ExternalWidget;
+            }
+            else {
+                if (!internalDescription.formatter) {
+                    throw new Error("formatter must be set for the default widget");
+                }
+            }
+        }
+        if (opt_editableParameters){
+            //TODO: add some checks?
+            internalDescription.editableParameters=opt_editableParameters;
+        }
+
         this.addWidget(internalDescription);
     }
 }

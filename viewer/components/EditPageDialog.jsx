@@ -5,6 +5,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog from './OverlayDialog.jsx';
 import DialogContainer from './OverlayDialogDisplay.jsx';
 import assign from 'object-assign';
+import {Checkbox} from './Inputs.jsx';
 
 const OPTION_COMBINATIONS=[
     {
@@ -141,13 +142,13 @@ class EditPageDialog extends React.Component{
                 <div className="selectCurrent" >
                     <div className="currentHeadline">Current Conditions</div>
                     {this.props.handledOptions.map((option)=>{
-                            let className="select checkBox ";
-                            if (this.state.currentOptions[option]) className+="checked";
                             return(
-                                <div className="modeSelect" onClick={()=>{this.setMode(option)}} key={option}>
-                                    <span className="label">{option}</span>
-                                    <span className= {className} ></span>
-                                </div>
+                                <Checkbox className="modeSelect"
+                                          onClick={()=>{this.setMode(option)}}
+                                          key={option}
+                                          label={option}
+                                          value={this.state.currentOptions[option]}  />
+
                                 )
                             }
                     )}
@@ -159,14 +160,13 @@ class EditPageDialog extends React.Component{
                         <span className="label">{panel.basename}</span>
                         <div className="combinationFrame">
                         { getFilteredOptions(this.props.handledOptions).map((combination,index)=>{
-                            let current=panel.foundCombinations[index];
-                            let className="select checkBox ";
-                            if (current) className+="checked";
                             return(
-                                <div className="combinationSelect" onClick={()=>{this.setCombination(panel,index)}} key={combination.display}>
-                                    <span className="label">{combination.display}</span>
-                                    <span className={className} ></span>
-                                </div>
+                                <Checkbox className="combinationSelect"
+                                          onClick={()=>{this.setCombination(panel,index)}}
+                                          key={combination.display}
+                                          label={combination.display}
+                                          value={panel.foundCombinations[index]}
+                                />
                             )
                         })}
                         </div>

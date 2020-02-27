@@ -14,7 +14,6 @@ import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast,{hideToast} from '../components/Toast.jsx';
 import assign from 'object-assign';
-import ColorPicker from '../components/ColorPicker.jsx';
 import CpCss from 'react-color-picker/index.css';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Promise from 'promise';
@@ -22,6 +21,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
+import ColorDialog from '../components/ColorDialog.jsx';
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
@@ -138,89 +138,14 @@ const RangeSettingsItem=(properties)=> {
 };
 
 const colorItemDialog=(item)=>{
-    let colorDialogInstance;
-    class Dialog extends React.Component{
-        constructor(props){
-            super(props);
-            this.state={
-                value: item.value
-            };
-            this.valueChange=this.valueChange.bind(this);
-            this.buttonClick=this.buttonClick.bind(this);
-            this.onDrag=this.onDrag.bind(this);
-            this.colorInput=this.colorInput.bind(this);
-        }
-        valueChange(ev){
-            this.setState({value: ev.target.value});
-        }
-        buttonClick(ev){
-            let button=ev.target.name;
-            if (button == 'ok'){
-                item.onClick(this.state.value);
-            }
-            if (button == 'reset'){
-                this.setState({
-                    value: item.defaultv
-                });
-                return;
-            }
-            this.props.closeCallback();
-        }
-        onDrag(color,c){
-            this.setState({
-                value: color
-            })
-        }
-        colorInput(ev){
-            this.setState({
-                value:ev.target.value
-            })
-        }
-        render() {
-            let style={
-                backgroundColor:this.state.value,
-                width: 30,
-                height: 30
-            };
-            let pickerProperties={
-                saturationWidth: 250,
-                saturationHeight: 250,
-                hueWidth: 30,
-                className: "colorPicker"
-            };
-            let dimensions=globalStore.getData(keys.gui.global.windowDimensions,{});
-            let v = dimensions.height;
-            let margin=250;
-            if (v) {
-                pickerProperties.saturationHeight = v < pickerProperties.saturationHeight + margin ? v - margin : pickerProperties.saturationHeight;
-            }
-            if (pickerProperties.saturationHeight < 50) pickerProperties.saturationHeight=50;
-            v = dimensions.width;
-            margin=70;
-            if (v) {
-                pickerProperties.saturationWidth = v < pickerProperties.saturationWidth + margin ? v - margin : pickerProperties.saturationWidth;
-            }
-            if (pickerProperties.saturationWidth < 50 ) pickerProperties.saturationWidth=50;
-            return (
-                <div className="settingsDialog colorDialog inner">
-                    <h3><span >{item.label}</span></h3>
-                    <ColorPicker value={this.state.value} onDrag={this.onDrag} {...pickerProperties}/>
-                    <div className="colorFrame">
-                        <div style={style} className="colorValue"></div>
-                        <input className="colorName"
-                               onChange={this.colorInput}
-                               value={this.state.value}/>
-                    </div>
-                    <button name="ok" onClick={this.buttonClick}>OK</button>
-                    <button name="cancel" onClick={this.buttonClick}>Cancel</button>
-                    <button name="reset" onClick={this.buttonClick}>Reset</button>
-                    <div className="clear"></div>
-                </div>
-            );
-        }
-
-    };
-    OverlayDialog.dialog(Dialog);
+    OverlayDialog.dialog((props)=>{
+        return <ColorDialog
+            {...props}
+            value={item.value}
+            default={item.defaultv}
+            okCallback={(val)=>item.onClick(val)}
+            />
+    });
 };
 
 

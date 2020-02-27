@@ -161,10 +161,24 @@ html,body {
     .nightBorderColorGR();
   }
 
-  label {
+  label, {
     display: table-cell;
     text-align: right;
     .mdText2();
+  }
+
+  .inputLabel{
+    .mdText2();
+    width: 7em;
+    display: inline-block;
+    text-align: end;
+    margin-right: 0.5em;
+    font-size: 0.8em;
+  }
+  .input{
+    display: inline-block;
+    vertical-align: middle;
+    min-height: 1em;
   }
 
   button{
@@ -218,10 +232,9 @@ html,body {
     &.disabled{
       .mdText2();
     }
-  }
-  .input{
-    display: inline-block;
-    vertical-align: middle;
+    .disabled .input{
+      .mdText2();
+    }
   }
 
   .selectElement{
@@ -249,9 +262,7 @@ html,body {
     vertical-align: middle;
   }
 
-  .checkBox{
-    vertical-align: middle;
-  }
+
   .editPanel {
     margin-top: 0.3em;
     border-bottom: 1px solid;
@@ -264,7 +275,7 @@ html,body {
     }
   }
   .combinationSelect,.modeSelect{
-      .label {
+      .label, .inputLabel {
         width: 4em;
       }
   }
@@ -372,6 +383,16 @@ span.valuePrefix{
   &.checked{
     background-image: url('../images/icons-new/checkbox-marked-outline.svg');
   }
+  vertical-align: middle;
+}
+
+//--ColorSelector
+.colorValue {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+  margin-right: 0.3em;
 }
 
 
@@ -726,9 +747,7 @@ span.valuePrefix{
     display: block;
     text-align: left;
   }
-  .checkBox {
-    vertical-align: middle;
-  }
+
 }
 
 #routepage{
@@ -767,9 +786,7 @@ span.valuePrefix{
     display: inline-block;
     margin-left: 1em;
   }
-  .checkBox{
-    vertical-align: middle;
-  }
+
 }
 
 #downloadpage{

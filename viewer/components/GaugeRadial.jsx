@@ -10,6 +10,20 @@ import GuiHelper from '../util/GuiHelpers.js';
 import {RadialGauge} from 'canvas-gauges';
 import base from '../base.js';
 import assign from 'object-assign';
+//refer to https://canvas-gauges.com/documentation/user-guide/configuration
+const defaultTranslateFunction=(props)=>{
+    let rt=assign({},props);
+    let textColorNames=['colorTitle','colorUnits','colorNumbers','colorStrokeTicks','colorMajorTicks','colorMinorTicks','colorValueText'];
+    if (props.colorText !== undefined){
+        textColorNames.forEach((cn)=>{
+            if (rt[cn] === undefined) rt[cn]=props.colorText;
+        })
+    }
+    if (props.colorNeedle !== undefined){
+        if (rt.colorNeedleEnd === undefined) rt.colorNeedleEnd=props.colorNeedle;
+    }
+    return rt;
+};
 
 class GaugeRadial extends React.Component{
     constructor(props){
@@ -19,24 +33,33 @@ class GaugeRadial extends React.Component{
         GuiHelper.nameKeyEventHandler(this,"widget");
         this.gauge=undefined;
     }
+    getProps(){
+        let rt=this.props.translateFunction?this.props.translateFunction(this.props):defaultTranslateFunction(this.props);
+        for (let k in rt){
+            if (rt[k] === undefined) delete rt[k];
+        }
+        return rt;
+    }
     render(){
+        let props=this.getProps();
         let classes="widget canvasGauge radial";
-        if (this.props.className) classes+=" "+this.props.className;
-        let style=this.props.style||{};
-        let value=this.props.value;
+        if (props.className) classes+=" "+props.className;
+        let style=props.style||{};
+        let value=props.value;
         if (typeof (this.props.formatter) === 'function'){
             value=this.props.formatter(value);
         }
+        let textStyle={color:props.colorText};
         return (
-        <div className={classes} onClick={this.props.onClick} style={style}>
+        <div className={classes} onClick={props.onClick} style={style}>
             <div className="canvasFrame" ref="frame">
-                {this.props.drawValue?
-                <div className="gaugeValue" ref="value">{value}</div>:null}
+                {props.drawValue?
+                <div className="gaugeValue" ref="value" style={textStyle}>{value}</div>:null}
                 <canvas className='widgetData' ref={this.canvasRef}></canvas>
             </div>
-            {(this.props.caption !== undefined )?<div className='infoLeft'>{this.props.caption}</div>:null}
-            {(this.props.unit !== undefined)?
-                <div className='infoRight'>{this.props.unit}</div>
+            {(props.caption !== undefined )?<div className='infoLeft'>{props.caption}</div>:null}
+            {(props.unit !== undefined)?
+                <div className='infoRight'>{props.unit}</div>
                 :null}
         </div>
         );
@@ -71,17 +94,19 @@ class GaugeRadial extends React.Component{
             }catch(e){}
 
         }
+        let props=this.getProps();
         if (! this.gauge){
             try {
-                let options = assign({}, this.props, {renderTo: this.canvas,width:wh,height:wh});
+                let options = assign({}, props, {renderTo: this.canvas,width:wh,height:wh});
                 this.gauge = new RadialGauge(options).draw();
                 return;
             }catch(e){
                 base.log("gauge error:"+e);
             }
         }
-        this.gauge.value=this.props.value;
-        this.gauge.update(assign({},this.props,{width:wh,height:wh}));
+        if (! this.gauge) return;
+        this.gauge.value=props.value;
+        this.gauge.update(assign({},props,{width:wh,height:wh}));
     }
 };
 
@@ -94,10 +119,22 @@ GaugeRadial.propTypes={
     style: PropTypes.object,
     default: PropTypes.string,
     value: PropTypes.number,
-    drawValue: PropTypes.bool
+    drawValue: PropTypes.bool,
+    colorText: PropTypes.string,
+    translateFunction: PropTypes.func //if set: a function to translate options
     //all the options from canvas-gauges, see
     //https://canvas-gauges.com/documentation/user-guide/configuration
 };
-GaugeRadial.useDefaultOptions=true;
+GaugeRadial.editableParameters=
+{
+    "caption":true,
+    "unit":true,
+    "value":true,
+    drawValue:{type:"BOOLEAN",default:true,description:"Show Value"},
+    colorPlate:{type:'COLOR'},
+    colorText:{type: 'COLOR'},
+    colorNeedle:{type:'COLOR'}
+};
+
 
 module.exports=GaugeRadial;

@@ -6,6 +6,8 @@ import OverlayDialog from './OverlayDialog.jsx';
 import DialogContainer from './OverlayDialogDisplay.jsx';
 import WidgetFactory,{WidgetParameter} from '../components/WidgetFactory.jsx';
 import assign from 'object-assign';
+import {Input,Checkbox,InputReadOnly,ColorSelector} from './Inputs.jsx';
+import ColorDialog from './ColorDialog.jsx';
 
 
 class EditWidgetDialog extends React.Component{
@@ -62,14 +64,32 @@ class EditWidgetDialog extends React.Component{
                 })
         });
     }
+    showColorDialog(current,okFunction){
+        let self=this;
+        this.setState({
+            dialog: (props)=>{
+                return <ColorDialog
+                    {...props}
+                    value={current}
+                    closeCallback={()=>self.setState({dialog:undefined})}
+                    okCallback={(selected)=>okFunction(selected)}
+                    showUnset={true}
+                    />
+            }
+        });
+    }
     updateWidgetState(values,opt_new){
         let nvalues=undefined;
         if (opt_new){
             nvalues=values;
-            this.setState({
+            let newState={
                 widget: nvalues,
                 sizeCount: this.sizeCount + 1,
-                parameters:WidgetFactory.getEditableWidgetParameters(nvalues)});
+                parameters:WidgetFactory.getEditableWidgetParameters(nvalues)};
+            newState.parameters.forEach((p)=>{
+                p.setDefault(newState.widget);
+            });
+            this.setState(newState);
         }
         else {
             nvalues = assign({}, this.state.widget, values);
@@ -104,29 +124,34 @@ class EditWidgetDialog extends React.Component{
                     :
                     null}
                 {(this.props.weight !== undefined)?
-                    <div className="weight">
-                        <span className="label">Weight:</span>
-                        <input type="number" name="weight"
-                               onChange={(ev)=>this.updateWidgetState({weight:ev.target.value})}
+                        <Input className="weigth"
+                               type="number"
+                               label="Weight:"
+                               onChange={(ev)=>this.updateWidgetState({weight:ev})}
                                value={this.state.widget.weight!==undefined?this.state.widget.weight:1}/>
-                    </div>
                     :null}
-                <div className="selectElement info" >
-                    <span className="label">New Widget:</span>
-                    <div className="newWidget input" onClick={this.selectWidget}>{this.state.widget.name||'-Select Widget-'} </div>
-                </div>
+                <InputReadOnly className="selectElement info"
+                    label="New Widget:"
+                    onClick={this.selectWidget}
+                    value={this.state.widget.name||'-Select Widget-'}/>
                 {parameters.map((param)=>{
                     let selectFunction=undefined;
                     let inputFunction=undefined;
-                    let inputDisabled=false;
-                    let type="text";
+                    let ValueInput=undefined;
+                    let current=param.getValue(this.state.widget);
+                    let addClass="";
                     if (param.type == WidgetParameter.TYPE.DISPLAY){
-                        inputDisabled=true;
+                        selectFunction=()=>{};
+                        ValueInput=InputReadOnly;
+                        addClass=" disabled";
                     }
-                    if (param.type == WidgetParameter.TYPE.STRING || param.type == WidgetParameter.TYPE.NUMBER){
+                    if (param.type == WidgetParameter.TYPE.STRING ||
+                        param.type == WidgetParameter.TYPE.NUMBER||
+                        param.type == WidgetParameter.TYPE.ARRAY){
                         inputFunction=(ev)=>{
-                            self.updateWidgetState(param.setValue({},ev.target.value))
-                        }
+                            self.updateWidgetState(param.setValue({},ev))
+                        };
+                        ValueInput=Input;
                     }
                     if (param.type == WidgetParameter.TYPE.SELECT || param.type == WidgetParameter.TYPE.KEY){
                         let title="Select "+param.name;
@@ -134,19 +159,32 @@ class EditWidgetDialog extends React.Component{
                             self.showSelection(title,param.getList(),(selected)=>{
                                 self.updateWidgetState(param.setValue({},selected));
                             })
-                        }
+                        };
+                        ValueInput=InputReadOnly;
                     }
-                    return <div className={"editWidgetParam "+param.name} key={param.name.replace(/  */,'')}>
-                        <span className="label">{param.displayName}</span>
-                        {(inputFunction || inputDisabled)?
-                            inputDisabled?
-                                <div className="input disabled">{param.getValueForDisplay(this.state.widget)}</div>
-                                :
-                                <input type={type} value={param.getValueForDisplay(this.state.widget)} onChange={inputFunction}/>
-                            :
-                            <div className="currentValue input" onClick={selectFunction}>{param.getValueForDisplay(this.state.widget,'-Select-')}</div>
-                        }
-                        </div>
+                    if (param.type == WidgetParameter.TYPE.BOOLEAN){
+                        inputFunction=(val)=>{
+                            self.updateWidgetState(param.setValue({},val));
+                        };
+                        ValueInput=Checkbox;
+                    }
+                    if (param.type == WidgetParameter.TYPE.COLOR){
+                        selectFunction=()=>{
+                            self.showColorDialog(param.getValue(self.state.widget),
+                                (selected)=>{self.updateWidgetState(param.setValue({},selected))}
+                            )
+                        };
+                        ValueInput=ColorSelector;
+                    }
+                    if (!ValueInput) return;
+                    return <ValueInput
+                            className={"editWidgetParam "+param.name+addClass}
+                            key={param.name.replace(/  */,'')}
+                            label={param.displayName}
+                            onClick={selectFunction}
+                            onChange={inputFunction}
+                            value={current}
+                        />
                 })}
                 {(this.state.widget.name !== undefined)?
                     <div className="insertButtons">
@@ -201,6 +239,13 @@ EditWidgetDialog.propTypes={
     closeCallback: PropTypes.func.isRequired
 };
 
+const filterObject=(data)=>{
+    for (let k in data){
+        if (data[k] === undefined) delete data[k];
+    }
+    return data;
+};
+
 /**
  *
  * @param widgetItem
@@ -239,7 +284,7 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
                 LayoutHandler.replaceItem(pagename,panelname,index);
             }:undefined}
             updateCallback={widgetItem?(changes)=>{
-                LayoutHandler.replaceItem(pagename,panelname,index,changes);
+                LayoutHandler.replaceItem(pagename,panelname,index,filterObject(changes));
             }:undefined}
             />
     });

@@ -48,7 +48,7 @@ import Api from './util/api.js';
 import RouteHandler from './nav/routedata.js';
 import LayoutHandler from './util/layouthandler.js';
 import LeaveHandler from './util/leavehandler.js';
-import WidgetFactory from './components/WidgetFactory.jsx';
+import registerRadial from './components/RadialGauges.js';
 
 
 
@@ -177,22 +177,20 @@ avnav.main=function() {
                     }
                     if (! scriptsLoaded)loadScripts(lateLoads);
                     scriptsLoaded=true;
-                    WidgetFactory.loadAllGaugeDefinitions();
                 }
             ).catch(
                 (error)=> {
                     Toast("unable to load plugin data: " + error);
                     if (! scriptsLoaded) loadScripts(lateLoads);
-                    WidgetFactory.loadAllGaugeDefinitions();
                 }
             );
         }
         else{
             loadScripts(lateLoads);
-            WidgetFactory.loadAllGaugeDefinitions();
         }
     };
-
+    //register some widget definitions
+    registerRadial();
     //check capabilities
     Requests.getJson("?request=capabilities").then((json)=>{
         globalStore.storeMultiple(json.data,keys.gui.capabilities);

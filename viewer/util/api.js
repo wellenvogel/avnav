@@ -15,8 +15,8 @@ class Api{
     log(text){
         base.log("API: "+text);
     }
-    registerWidget(description){
-        WidgetFactory.registerExternalWidget(description);
+    registerWidget(description,opt_editableParameters){
+        WidgetFactory.registerWidget(description,opt_editableParameters);
     }
     formatter(){
         return Formatter;
