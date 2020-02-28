@@ -1,36 +1,31 @@
 /**
  * Created by andreas on 03.12.16.
  * modified from https://github.com/leandrowd/react-easy-swipe/blob/master/src/react-swipe.js
+ * add some drag/drop support basing on https://github.com/clauderic/react-sortable-hoc/blob/master/src/utils.js
  */
 
 import React, { Component} from 'react';
 import PropTypes from 'prop-types';
 
+function getPosition(event) {
+    if (event.touches && event.touches.length) {
+        return {
+            x: event.touches[0].pageX,
+            y: event.touches[0].pageY,
+        };
+    } else if (event.changedTouches && event.changedTouches.length) {
+        return {
+            x: event.changedTouches[0].pageX,
+            y: event.changedTouches[0].pageY,
+        };
+    } else {
+        return {
+            x: event.pageX,
+            y: event.pageY,
+        };
+    }
+}
 class ReactSwipe extends Component {
-    static propTypes = {
-        tagName: PropTypes.string,
-        className: PropTypes.string,
-        style: PropTypes.object,
-        children: PropTypes.node,
-        onSwipeUp: PropTypes.func,
-        onSwipeDown: PropTypes.func,
-        onSwipeLeft: PropTypes.func,
-        onSwipeRight: PropTypes.func,
-        onSwipeStart: PropTypes.func,
-        onSwipeMove: PropTypes.func,
-        onSwipeEnd: PropTypes.func
-    };
-
-    static defaultProps = {
-        tagName: 'div',
-        onSwipeUp() {},
-        onSwipeDown() {},
-        onSwipeLeft() {},
-        onSwipeRight() {},
-        onSwipeStart() {},
-        onSwipeMove() {},
-        onSwipeEnd() {}
-    };
 
     constructor() {
         super();
@@ -40,29 +35,29 @@ class ReactSwipe extends Component {
     }
 
     _handleSwipeStart(e) {
-        const { pageX, pageY } = e.touches[0];
-        this.touchStart = { pageX, pageY };
+        const { x, y } = getPosition(e);
+        this.touchStart = { x, y };
         let rectangle=e.target.getBoundingClientRect();
-        this.touchStartXY={x:pageX-rectangle.left,y:pageY-rectangle.top};
+        //console.log(e.target);
+        //console.log("swipe start x="+x+", y="+y+",target="+e.target+",top="+rectangle.top);
+        this.touchStartXY={x:x-rectangle.left,y:y-rectangle.top};
         this.touchPosition={deltaX:0,deltaY:0};
-        this.props.onSwipeStart(this.touchStartXY);
+        if (this.props.onSwipeStart)this.props.onSwipeStart(this.touchStartXY);
     }
 
     _handleSwipeMove(e) {
-        const deltaX = e.touches[0].pageX - this.touchStart.pageX;
-        const deltaY = e.touches[0].pageY - this.touchStart.pageY;
+        if (! this.touchStart) return;
+        let {x,y}=getPosition(e);
+        const deltaX = x - this.touchStart.x;
+        const deltaY = y - this.touchStart.y;
         this.swiping = true;
         this.touchPosition = { deltaX, deltaY };
         // handling the responsability of cancelling the scroll to
         // the component handling the event
-        const shouldPreventDefault = this.props.onSwipeMove({
+        if(this.props.onSwipeMove)this.props.onSwipeMove({
             x: deltaX,
             y: deltaY
         },this._getAbsolutePosition());
-
-        if (shouldPreventDefault) {
-            e.preventDefault();
-        }
 
     }
 
@@ -72,41 +67,67 @@ class ReactSwipe extends Component {
     }
 
     _handleSwipeEnd() {
+        if (!this.touchStart || ! this.touchPosition) return;
+        //console.log("swipe end tsx="+this.touchStart.x+",tsy="+this.touchStart.y);
         if (this.swiping) {
             if (this.touchPosition.deltaX < 0) {
-                this.props.onSwipeLeft(1);
+                if(this.props.onSwipeLeft)this.props.onSwipeLeft(1);
             } else if (this.touchPosition.deltaX > 0) {
-                this.props.onSwipeRight(1);
+                if (this.props.onSwipeRight)this.props.onSwipeRight(1);
             }
             if (this.touchPosition.deltaY < 0) {
-                this.props.onSwipeUp(1);
+                if (this.props.onSwipeUp) this.props.onSwipeUp(1);
             } else if (this.touchPosition.deltaY > 0) {
-                this.props.onSwipeDown(1);
+                if (this.props.onSwipeDown)this.props.onSwipeDown(1);
             }
         }
-        this.props.onSwipeEnd(this._getAbsolutePosition());
+        if (this.props.onSwipeEnd)this.props.onSwipeEnd(this._getAbsolutePosition());
         this.touchStart = null;
         this.swiping = false;
         this.touchPosition = null;
     }
 
     render() {
+        let props={
+            onTouchMove:this._handleSwipeMove,
+            onTouchStart:this._handleSwipeStart,
+            onTouchEnd :this._handleSwipeEnd ,
+            onTouchCancel: this._handleSwipeEnd,
+            className:this.props.className,
+            style:this.props.style
+        };
+        if (this.props.includeMouse){
+            props.onMouseDown=this._handleSwipeStart;
+            props.onMouseMove=this._handleSwipeMove;
+            props.onMouseUp=this._handleSwipeEnd;
+        }
         return (
-            <this.props.tagName
-                onTouchMove = { this._handleSwipeMove }
-                onTouchStart = { this._handleSwipeStart }
-                onTouchEnd = { this._handleSwipeEnd }
-                className = { this.props.className }
-                style = { this.props.style }
+            <div
+                {...props}
             >
 
                 { this.props.children }
 
-            </this.props.tagName>
+            </div>
         );
     }
 }
 
 ReactSwipe.displayName = 'ReactSwipe';
+
+ReactSwipe.propTypes = {
+    className: PropTypes.string,
+    style: PropTypes.object,
+    children: PropTypes.node,
+    onSwipeUp: PropTypes.func,
+    onSwipeDown: PropTypes.func,
+    onSwipeLeft: PropTypes.func,
+    onSwipeRight: PropTypes.func,
+    onSwipeStart: PropTypes.func,
+    onSwipeMove: PropTypes.func,
+    onSwipeEnd: PropTypes.func,
+    includeMouse: PropTypes.bool
+};
+
 
 export default ReactSwipe;

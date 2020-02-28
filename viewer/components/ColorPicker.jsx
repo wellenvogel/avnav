@@ -8,57 +8,110 @@
 import React from 'react';
 import reactCreateClass from 'create-react-class';
 import assign from 'object-assign';
-import colorUtils  from '../node_modules/react-color-picker/lib/utils/color';
-import defaultColor  from '../node_modules/react-color-picker/lib/defaultColor';
-import toStringValue from '../node_modules/react-color-picker/lib/utils/toStringValue';
+import tinycolor from 'tinycolor2';
 
 import {SaturationSpectrum,HueSpectrum} from 'react-color-picker';
 import Swipe from '../components/Swipe.jsx';
 import base from '../base.js';
 
-let toHsv = colorUtils.toHsv;
+const toHsv = (color)=>{ return tinycolor(color).toHsv()};
+const toColorString=(color)=>{
+    let cv=tinycolor(color);
+    return (cv.getAlpha() == 1)?cv.toHexString():cv.toRgbString();
+};
+
 
 function emptyFn(){}
 
-let RESULT = reactCreateClass({
+class HueSpectrumL extends React.Component{
+    constructor(props){
+        super(props);
+    }
+    render(){
+        let hsv = toHsv(this.props.value);
 
-    displayName: 'ColorPicker',
+        var style = assign({}, this.props.style);
 
-    getDefaultProps: function(){
-        return {
-            defaultColor    : defaultColor,
-            saturationWidth : 300,
-            saturationHeight: 300,
-            hueHeight       : null,
-            hueWidth        : 50,
-            hueMargin       : 10
+        if (this.props.height) {
+            style.height = this.props.height;
         }
-    },
-
-    getInitialState: function(){
-        return {
-            value: this.props.defaultValue
+        if (this.props.width) {
+            style.width = this.props.width;
         }
-    },
 
-    prepareClasses: function(classes){
-        classes.push('cp')
-    },
-    componentWillReceiveProps:function(nextProps){
+        var dragStyle = {
+            height: this.props.pointerSize||3
+        };
+
+        var dragPos = this.getDragPosition(hsv);
+
+        if (dragPos != null) {
+            dragStyle.top = dragPos;
+            dragStyle.display = 'block';
+        }
+        return <div className='hue-spectrum'
+                    style={style}
+                    ref="main">
+                    <div
+                        className='hue-drag'
+                        style={dragStyle }>
+                        <div className='hue-inner'/>
+                    </div>
+                </div>
+
+
+    }
+    getDragPosition(hsv) {
+
+    if (!this.props.height && !this.refs.main) {
+        return null;
+    }
+
+    var height = this.props.height||this.refs.main.getBoundingClientRect().height;
+    var size = this.props.pointerSize||3;
+
+    var pos = Math.round(hsv.h * height / 360);
+    var diff = Math.round(size / 2);
+
+    return pos - diff;
+    }
+}
+
+class ColorPicker extends React.Component{
+
+    constructor(props){
+        super(props);
+        this.onHueSwipeStart=this.onHueSwipeStart.bind(this);
+        this.onSatSwipeStart=this.onSatSwipeStart.bind(this);
+        this.onSwipeH=this.onSwipeH.bind(this);
+        this.onSwipeSV=this.onSwipeSV.bind(this);
+        this.onHueSwipeMove=this.onHueSwipeMove.bind(this);
+        this.onSatSwipeMove=this.onSatSwipeMove.bind(this);
+        this.onHueSwipeEnd=this.onHueSwipeEnd.bind(this);
+        this.handleChange=this.handleChange.bind(this);
+        this.handleDrag=this.handleDrag.bind(this);
+        this.state={};
+    }
+
+    prepareClasses(classes){
+        classes.push('colorPicker');
+        classes.push('cp');
+    }
+    componentWillReceiveProps(nextProps){
         this.setState({
             dragHue: null
         });
-    },
-    prepareProps: function(props){
+    }
+    prepareProps(props){
 
         let classes = [props.className || ''];
         this.prepareClasses(classes);
         props.className = classes.join(' ');
 
         return props
-    },
+    }
 
-    render: function(){
+    render(){
 
         let props = this.prepareProps(assign({}, this.props));
 
@@ -76,8 +129,8 @@ let RESULT = reactCreateClass({
             null;
 
         let saturationConfig = {
-            onDrag     : this.handleSaturationDrag,
-            onChange   : this.handleSaturationChange,
+            onDrag     : this.handleDrag,
+            onChange   : this.handleChange,
             onMouseDown: this.handleSaturationMouseDown,
             height     : props.saturationHeight,
             width     : props.saturationWidth,
@@ -85,11 +138,8 @@ let RESULT = reactCreateClass({
         };
 
         let hueConfig = {
-            onDrag     : this.handleHueDrag,
-            onChange   : this.handleHueChange,
             height     : props.hueHeight || props.saturationHeight,
             width      : props.hueWidth,
-            inPicker   : true,
             style      : hueStyle
         };
 
@@ -113,26 +163,29 @@ let RESULT = reactCreateClass({
             </Swipe>
             <Swipe className="inner"
                 onSwipeStart={this.onHueSwipeStart}
-                onSwipeMove={this.onHueSwipeMove}>
-                <HueSpectrum {...hueConfig} />
+                onSwipeMove={this.onHueSwipeMove}
+                onSwipeEnd={this.onHueSwipeEnd}
+                includeMouse={true}
+                >
+                <HueSpectrumL {...hueConfig} />
             </Swipe>
         </div>);
-    },
+    }
     /*
         normally all the swipe handling should go directly into the sub comps
         but to avoid copying them all, we leave them here.
      */
-    onHueSwipeStart: function(abs){
+    onHueSwipeStart(abs){
         this.swipe=this.toColorValue(this.props.value);
         base.log("swipe start");
         return this.onSwipeH(abs.y);
-    },
-    onSatSwipeStart: function(abs){
+    }
+    onSatSwipeStart(abs){
         this.swipe=this.toColorValue(this.props.value);
         base.log("swipe start");
         return this.onSwipeSV(abs.x,abs.y);
-    },
-    onSwipeH:function(newY){
+    }
+    onSwipeH(newY){
         if (! this.swipe) return;
         base.log("swipeH y="+newY+", oldh="+this.swipe.h);
         let h=newY*360/(this.props.hueHeight||this.props.saturationHeight);
@@ -143,8 +196,8 @@ let RESULT = reactCreateClass({
         base.log("new h="+hsv.h);
         this.handleDrag(hsv);
         return true;
-    },
-    onSwipeSV:function(newX,newY){
+    }
+    onSwipeSV(newX,newY){
         if (! this.swipe) return;
         base.log("Satswipe "+newX+","+newY+", olds="+this.swipe.s+",oldv="+this.swipe.v);
         let s=newX/this.props.saturationWidth;
@@ -159,66 +212,45 @@ let RESULT = reactCreateClass({
         base.log("new s="+hsv.s+", newv="+hsv.v);
         this.handleDrag(hsv);
         return true;
-    },
-    onHueSwipeMove: function(o,abs){
+    }
+    onHueSwipeEnd(abs){
         return this.onSwipeH(abs.y);
-    },
-    onSatSwipeMove: function(o,abs){
+    }
+    onHueSwipeMove(o,abs){
+        return this.onSwipeH(abs.y);
+    }
+    onSatSwipeMove(o,abs){
         return this.onSwipeSV(abs.x,abs.y);
-    },
+    }
 
-    toColorValue: function(value){
+    toColorValue(value){
         return typeof value == 'string'?
             toHsv(value):
             value
-    },
+    }
 
-    toStringValue: toStringValue,
 
-    handleChange: function(color){
+    handleChange(color){
 
         this.state.dragHue = null;
 
         color = assign({}, color);
 
-        let value = this.toStringValue(color)
+        let value = toColorString(color)
 
             ;(this.props.onChange || emptyFn)(value, color)
-    },
+    }
 
-    handleSaturationChange: function(color){
-        this.handleChange(color)
-    },
+    handleDrag(color){
+        (this.props.onDrag || emptyFn)(toColorString(color), color);
+    }
 
-    handleHueChange: function(color){
-        this.handleChange(color)
-    },
-
-    handleHueDrag: function(hsv){
-        this.handleDrag(hsv)
-    },
-
-    handleSaturationDrag: function(hsv){
-        this.handleDrag(hsv)
-    },
-
-    handleDrag: function(color){
-
-        if (!this.props.value){
-            this.setState({
-                value: color
-            })
-        }
-
-        (this.props.onDrag || emptyFn)(this.toStringValue(color), color);
-    },
-
-    handleSaturationMouseDown: function(hsv){
+    handleSaturationMouseDown(hsv){
         this.setState({
             dragHue: hsv.h
         })
     }
-});
+};
 
-
-module.exports = RESULT;
+ColorPicker.displayName='ColorPicker';
+export default ColorPicker;
