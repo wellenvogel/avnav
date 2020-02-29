@@ -26,54 +26,60 @@ function emptyFn(){}
 class HueSpectrumL extends React.Component{
     constructor(props){
         super(props);
+        this.mainRef=this.mainRef.bind(this);
+        this.state={redraw:0};
+        this.main=undefined;
+    }
+    mainRef(item){
+        if (this.main !== item){
+            this.main=item;
+            if (item) this.setState({redraw:this.state.redraw+1})
+        }
+    }
+    getPointerSize(){
+        return this.props.pointerSize||3;
     }
     render(){
         let hsv = toHsv(this.props.value);
-
         var style = assign({}, this.props.style);
-
         if (this.props.height) {
             style.height = this.props.height;
         }
         if (this.props.width) {
             style.width = this.props.width;
         }
-
         var dragStyle = {
-            height: this.props.pointerSize||3
+            height: this.getPointerSize()
         };
-
         var dragPos = this.getDragPosition(hsv);
-
         if (dragPos != null) {
             dragStyle.top = dragPos;
             dragStyle.display = 'block';
+            dragStyle.position='absolute';
         }
         return <div className='hue-spectrum'
                     style={style}
-                    ref="main">
+                    ref={this.mainRef}>
                     <div
                         className='hue-drag'
-                        style={dragStyle }>
+                        style={dragStyle }
+                        >
                         <div className='hue-inner'/>
                     </div>
                 </div>
 
 
     }
+
     getDragPosition(hsv) {
-
-    if (!this.props.height && !this.refs.main) {
-        return null;
-    }
-
-    var height = this.props.height||this.refs.main.getBoundingClientRect().height;
-    var size = this.props.pointerSize||3;
-
-    var pos = Math.round(hsv.h * height / 360);
-    var diff = Math.round(size / 2);
-
-    return pos - diff;
+        if (!this.props.height && !this.main) {
+            return null;
+        }
+        var height = this.props.height || this.main.getBoundingClientRect().height;
+        var size = this.getPointerSize();
+        var pos = Math.round(hsv.h * height / 360);
+        var diff = Math.round(size / 2);
+        return pos - diff;
     }
 }
 
@@ -93,33 +99,24 @@ class ColorPicker extends React.Component{
         this.state={};
     }
 
-    prepareClasses(classes){
-        classes.push('colorPicker');
-        classes.push('cp');
-    }
+
     componentWillReceiveProps(nextProps){
         this.setState({
             dragHue: null
         });
     }
-    prepareProps(props){
-
-        let classes = [props.className || ''];
-        this.prepareClasses(classes);
-        props.className = classes.join(' ');
-
-        return props
-    }
 
     render(){
 
-        let props = this.prepareProps(assign({}, this.props));
-
+        let props = assign({}, this.props);
+        if (props.className){
+            props.className+=" colorPicker";
+        }
+        else{
+            props.className="colorPicker";
+        }
         let hueStyle = this.props.hueStyle || {};
-
         hueStyle.marginLeft = this.props.hueMargin;
-
-
         let value = props.value?
             this.toColorValue(this.props.value):
             null;
