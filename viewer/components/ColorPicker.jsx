@@ -320,12 +320,12 @@ class ColorPicker extends React.Component{
      */
     onHueSwipeStart(abs){
         this.swipe=this.toColorValue(this.props.value);
-        base.log("swipe start");
+        base.log("hue swipe start");
         return this.onSwipeH(abs.y);
     }
     onSatSwipeStart(abs){
         this.swipe=this.toColorValue(this.props.value);
-        base.log("swipe start");
+        base.log("sat swipe start");
         return this.onSwipeSV(abs.x,abs.y);
     }
     onAlphaSwipeStart(abs){
@@ -374,9 +374,11 @@ class ColorPicker extends React.Component{
         return true;
     }
     onHueSwipeEnd(abs){
+        base.log("hue swipe end y="+abs.y);
         return this.onSwipeH(abs.y);
     }
     onHueSwipeMove(o,abs){
+        base.log("hue swipe move y="+abs.y);
         return this.onSwipeH(abs.y);
     }
     onSatSwipeMove(o,abs){

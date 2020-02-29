@@ -32,8 +32,19 @@ class ReactSwipe extends Component {
         this._handleSwipeStart = this._handleSwipeStart.bind(this);
         this._handleSwipeMove = this._handleSwipeMove.bind(this);
         this._handleSwipeEnd = this._handleSwipeEnd.bind(this);
+        this._cancelSwipe=this._cancelSwipe.bind(this);
     }
-
+    componentDidMount(){
+        if (this.props.includeMouse) {
+            document.addEventListener('mouseup', this._handleSwipeEnd);
+        }
+    }
+    componentWillUnmount(){
+        if (this.props.includeMouse) {
+            document.removeEventListener('mouseup', this._handleSwipeEnd);
+        }
+        this._handleSwipeEnd();
+    }
     _handleSwipeStart(e) {
         const { x, y } = getPosition(e);
         this.touchStart = { x, y };
@@ -43,6 +54,7 @@ class ReactSwipe extends Component {
         this.touchStartXY={x:x-rectangle.left,y:y-rectangle.top};
         this.touchPosition={deltaX:0,deltaY:0};
         if (this.props.onSwipeStart)this.props.onSwipeStart(this.touchStartXY);
+        e.preventDefault();
     }
 
     _handleSwipeMove(e) {
@@ -58,6 +70,7 @@ class ReactSwipe extends Component {
             x: deltaX,
             y: deltaY
         },this._getAbsolutePosition());
+        e.preventDefault();
 
     }
 
@@ -66,7 +79,8 @@ class ReactSwipe extends Component {
             y:this.touchStartXY.y+this.touchPosition.deltaY};
     }
 
-    _handleSwipeEnd() {
+    _handleSwipeEnd(e) {
+        if (e && e.preventDefault) e.preventDefault();
         if (!this.touchStart || ! this.touchPosition) return;
         //console.log("swipe end tsx="+this.touchStart.x+",tsy="+this.touchStart.y);
         if (this.swiping) {
@@ -85,6 +99,8 @@ class ReactSwipe extends Component {
         this.touchStart = null;
         this.swiping = false;
         this.touchPosition = null;
+    }
+    _cancelSwipe(){
     }
 
     render() {
