@@ -14,6 +14,7 @@ import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import GuiHelpers from '../util/GuiHelpers.js';
+import InputMonitor from '../hoc/InputMonitor.jsx';
 
 const readAddOns = function () {
     if (globalStore.getData(keys.gui.global.onAndroid, false)) return;
@@ -95,6 +96,10 @@ class AddOnPage extends React.Component{
                 if (props.addOns) {
                     currentAddOn = props.addOns[props.activeAddOn || 0] || {};
                 }
+                let MainContent= InputMonitor((props)=>
+                    <div className="addOnFrame">
+                        {currentAddOn.url?<iframe src={currentAddOn.url} className="addOn"/>:null}
+                    </div>);
                 return (
                     <Page
                         className={self.props.className}
@@ -102,9 +107,7 @@ class AddOnPage extends React.Component{
                         id="addonpage"
                         title={currentAddOn.title}
                         mainContent={
-                            <div className="addOnFrame">
-                                {currentAddOn.url?<iframe src={currentAddOn.url} className="addOn"/>:null}
-                            </div>
+                            <MainContent/>
                         }
                         buttonList={self.buildButtonList(props.addOns,props.activeAddOn||0)}/>
                 );
