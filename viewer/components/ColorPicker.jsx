@@ -19,8 +19,66 @@ const toColorString=(color)=>{
     return (cv.getAlpha() == 1)?cv.toHexString():cv.toRgbString();
 };
 
+class AlphaSpectrumL extends React.Component{
+    constructor(props){
+        super(props);
+        this.mainRef=this.mainRef.bind(this);
+        this.state={redraw:0};
+        this.main=undefined;
+    }
+    mainRef(item){
+        if (this.main !== item){
+            this.main=item;
+            if (item) this.setState({redraw:this.state.redraw+1})
+        }
+    }
+    getPointerSize(){
+        return this.props.pointerSize||3;
+    }
+    render(){
+        let hsv = toHsv(this.props.value);
+        var style = assign({}, this.props.style);
+        if (this.props.height) {
+            style.height = this.props.height;
+        }
+        if (this.props.width) {
+            style.width = this.props.width;
+        }
+        var dragStyle = {
+            height: this.getPointerSize()
+        };
+        var dragPos = this.getDragPosition(hsv);
+        if (dragPos != null) {
+            dragStyle.top = dragPos;
+            dragStyle.display = 'block';
+            dragStyle.position='absolute';
+        }
+        return <div className='alpha-spectrum'
+                    style={style}
+                    ref={this.mainRef}>
+                <div className="alpha-gradient"/>
+            <div
+                className='alpha-drag'
+                style={dragStyle }
+                >
+                <div className='hue-inner'/>
+            </div>
+        </div>
 
-function emptyFn(){}
+
+    }
+
+    getDragPosition(hsv) {
+        if (!this.props.height && !this.main) {
+            return null;
+        }
+        var height = this.props.height || this.main.getBoundingClientRect().height;
+        var size = this.getPointerSize();
+        var pos = Math.round(hsv.a * height );
+        var diff = Math.round(size / 2);
+        return pos - diff;
+    }
+}
 
 class HueSpectrumL extends React.Component{
     constructor(props){
@@ -173,21 +231,16 @@ class ColorPicker extends React.Component{
         this.onSatSwipeStart=this.onSatSwipeStart.bind(this);
         this.onSwipeH=this.onSwipeH.bind(this);
         this.onSwipeSV=this.onSwipeSV.bind(this);
+        this.onSwipeAlpha=this.onSwipeAlpha.bind(this);
         this.onHueSwipeMove=this.onHueSwipeMove.bind(this);
         this.onSatSwipeMove=this.onSatSwipeMove.bind(this);
         this.onHueSwipeEnd=this.onHueSwipeEnd.bind(this);
-        this.handleChange=this.handleChange.bind(this);
+        this.onAlphaSwipeStart=this.onAlphaSwipeStart.bind(this);
+        this.onAlphaSwipeMove=this.onAlphaSwipeMove.bind(this);
+        this.onAlphaSwipeEnd=this.onAlphaSwipeEnd.bind(this);
         this.handleChange=this.handleChange.bind(this);
         this.state={};
     }
-
-
-    componentWillReceiveProps(nextProps){
-        this.setState({
-            dragHue: null
-        });
-    }
-
     render(){
 
         let props = assign({}, this.props);
@@ -199,6 +252,8 @@ class ColorPicker extends React.Component{
         }
         let hueStyle = this.props.hueStyle || {};
         hueStyle.marginLeft = this.props.hueMargin;
+        let alphaStyle = this.props.alphaStyle || {};
+        alphaStyle.marginLeft = this.props.alphaMargin;
         let value = props.value?
             this.toColorValue(this.props.value):
             null;
@@ -218,13 +273,22 @@ class ColorPicker extends React.Component{
             style      : hueStyle
         };
 
+        let alphaConfig = {
+            height     : props.alphaHeight || props.saturationHeight,
+            width      : props.alphaWidth||props.hueWidth,
+            style      : alphaStyle
+        };
+
         saturationConfig.value=value;
         hueConfig.value=value;
+        alphaConfig.value=value;
 
         return ( <div{...props}>
             <Swipe className="inner"
                 onSwipeStart={this.onSatSwipeStart}
-                onSwipeMove={this.onSatSwipeMove}>
+                onSwipeMove={this.onSatSwipeMove}
+                onSwipeEnd={this.onSatSwipeEnd}
+                includeMouse={true}>
                 <SaturationSpectrumL {...saturationConfig}/>
             </Swipe>
             <Swipe className="inner"
@@ -235,6 +299,18 @@ class ColorPicker extends React.Component{
                 >
                 <HueSpectrumL {...hueConfig} />
             </Swipe>
+            {this.props.showAlpha?
+                <Swipe className="inner"
+                       onSwipeStart={this.onAlphaSwipeStart}
+                       onSwipeMove={this.onAlphaSwipeMove}
+                       onSwipeEnd={this.onAlphaSwipeEnd}
+                       includeMouse={true}
+                    >
+                    <AlphaSpectrumL {...alphaConfig} />
+                </Swipe>
+                :
+                null
+            }
         </div>);
     }
     /*
@@ -250,6 +326,11 @@ class ColorPicker extends React.Component{
         this.swipe=this.toColorValue(this.props.value);
         base.log("swipe start");
         return this.onSwipeSV(abs.x,abs.y);
+    }
+    onAlphaSwipeStart(abs){
+        this.swipe=this.toColorValue(this.props.value);
+        base.log("swipe start");
+        return this.onSwipeAlpha(abs.y);
     }
     onSwipeH(newY){
         if (! this.swipe) return;
@@ -279,6 +360,18 @@ class ColorPicker extends React.Component{
         this.handleChange(hsv);
         return true;
     }
+    onSwipeAlpha(newY){
+        if (! this.swipe) return;
+        base.log("swipeAlpha y="+newY+", olda="+this.swipe.a);
+        let a=newY/(this.props.alphaHeight||this.props.saturationHeight);
+        let hsv=assign({},this.swipe);
+        hsv.a=a;
+        if (hsv.a >1) hsv.a=1;
+        if (hsv.a < 0) hsv.a=0;
+        base.log("new a="+hsv.a);
+        this.handleChange(hsv);
+        return true;
+    }
     onHueSwipeEnd(abs){
         return this.onSwipeH(abs.y);
     }
@@ -290,6 +383,12 @@ class ColorPicker extends React.Component{
     }
     onSatSwipeEnd(abs){
         return this.onSwipeSV(abs.x,abs.y);
+    }
+    onAlphaSwipeMove(o,abs){
+        return this.onSwipeAlpha(abs.y);
+    }
+    onAlphaSwipeEnd(abs){
+        return this.onSwipeAlpha(abs.y);
     }
 
     toColorValue(value){

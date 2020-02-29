@@ -54,7 +54,8 @@ class ColorDialog extends React.Component{
         let pickerProperties={
             saturationWidth: 250,
             saturationHeight: 250,
-            hueWidth: 30
+            hueWidth: 30,
+            showAlpha: true
         };
         let dimensions=globalStore.getData(keys.gui.global.windowDimensions,{});
         let v = dimensions.height;

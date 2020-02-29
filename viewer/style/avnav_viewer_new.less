@@ -343,6 +343,25 @@ html,body {
     border-radius: 10px;
   }
 
+  .alpha-spectrum{
+    margin-left: 1em;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==);
+    overflow: hidden;
+  }
+  .alpha-gradient {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgb(0, 0, 0) 100%);
+    width: 100%;
+    height: 100%;
+  }
+  .alpha-drag{
+    pointer-events: none;
+    width: 100%;
+    border: 1px solid #000;
+  }
+
 }
 //----------------------------------------------------------------------------------------
 //lists
@@ -967,6 +986,9 @@ span.valuePrefix{
     .colorPicker {
       .flex-display();
       .flex-direction(row);
+    }
+    .colorName{
+      width:11em;
     }
   }
 
