@@ -48,7 +48,7 @@ import Api from './util/api.js';
 import RouteHandler from './nav/routedata.js';
 import LayoutHandler from './util/layouthandler.js';
 import LeaveHandler from './util/leavehandler.js';
-import registerRadial from './components/RadialGauges.js';
+import registerRadial from './components/CanvasGaugeDefinitions.js';
 
 
 

@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 import Helper from '../util/helper.js';
 import Value from './Value.jsx';
 import GuiHelper from '../util/GuiHelpers.js';
-import {RadialGauge} from 'canvas-gauges';
+import {RadialGauge,LinearGauge} from 'canvas-gauges';
 import base from '../base.js';
 import assign from 'object-assign';
 //refer to https://canvas-gauges.com/documentation/user-guide/configuration
@@ -25,7 +25,7 @@ const defaultTranslateFunction=(props)=>{
     return rt;
 };
 
-class GaugeRadial extends React.Component{
+class Gauge extends React.Component{
     constructor(props){
         super(props);
         this.canvasRef=this.canvasRef.bind(this);
@@ -34,7 +34,7 @@ class GaugeRadial extends React.Component{
         this.gauge=undefined;
     }
     getProps(){
-        let rt=this.props.translateFunction?this.props.translateFunction(this.props):defaultTranslateFunction(this.props);
+        let rt=this.props.translateFunction?defaultTranslateFunction(this.props.translateFunction(this.props)):defaultTranslateFunction(this.props);
         for (let k in rt){
             if (rt[k] === undefined) delete rt[k];
         }
@@ -80,8 +80,15 @@ class GaugeRadial extends React.Component{
         else {
             rect = this.canvas.getBoundingClientRect();
         }
-        let wh=Math.min(rect.width,rect.height);
         let props=this.getProps();
+        let makeSquare=(props.makeSquare === undefined) || props.makeSquare;
+        let width=rect.width;
+        let height=rect.height;
+        let wh = Math.min(rect.width, rect.height);
+        if (makeSquare) {
+            width=wh;
+            height=wh;
+        }
         if (this.refs.value){
             try {
                 let factor=parseFloat(props.valueFontFactor||12);
@@ -104,8 +111,8 @@ class GaugeRadial extends React.Component{
         if (value > 360) value=360;
         if (! this.gauge){
             try {
-                let options = assign({}, props, {renderTo: this.canvas,width:wh,height:wh,value:value});
-                this.gauge = new RadialGauge(options).draw();
+                let options = assign({}, props, {renderTo: this.canvas,width:width,height:height,value:value});
+                this.gauge = new this.props.gauge(options).draw();
                 return;
             }catch(e){
                 base.log("gauge error:"+e);
@@ -113,11 +120,12 @@ class GaugeRadial extends React.Component{
         }
         if (! this.gauge) return;
         this.gauge.value=value;
-        this.gauge.update(assign({},props,{width:wh,height:wh,value:value}));
+        this.gauge.update(assign({},props,{width:width,height:height,value:value}));
     }
 };
 
-GaugeRadial.propTypes={
+Gauge.propTypes={
+    gauge: PropTypes.object.isRequired,
     name: PropTypes.string,
     unit: PropTypes.string,
     caption: PropTypes.string,
@@ -135,7 +143,7 @@ GaugeRadial.propTypes={
     //all the options from canvas-gauges, see
     //https://canvas-gauges.com/documentation/user-guide/configuration
 };
-GaugeRadial.editableParameters=
+Gauge.editableParameters=
 {
     "caption":true,
     "unit":true,
@@ -149,5 +157,21 @@ GaugeRadial.editableParameters=
     colorNeedle:{type:'COLOR'}
 };
 
+export const GaugeRadial=(props)=>{
+    return <Gauge
+        {...props}
+        gauge={RadialGauge}
+        />
+};
+GaugeRadial.propTypes=Gauge.propTypes;
+GaugeRadial.editableParameters=Gauge.editableParameters;
+export const GaugeHorizontal=(props)=>{
+    return <Gauge
+        {...props}
+        gauge={LinearGauge}
+        makeSquare={false}
+        />
+};
 
-module.exports=GaugeRadial;
+GaugeHorizontal.propTypes=Gauge.propTypes;
+GaugeHorizontal.editableParameters=assign({},Gauge.editableParameters,{drawValue:false,valueFontFactor:false});

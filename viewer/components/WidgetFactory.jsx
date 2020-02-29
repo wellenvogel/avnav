@@ -10,7 +10,7 @@ import ExternalWidget from './ExternalWidget.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import Requests from '../util/requests.js';
 import base from '../base.js';
-import GaugeRadial from './GaugeRadial.jsx';
+import {GaugeRadial,GaugeHorizontal} from './CanvasGauges.jsx';
 
 export class WidgetParameter{
     constructor(name,type,list,displayName){
@@ -359,6 +359,8 @@ class WidgetFactory{
         switch(typeName){
             case 'radialGauge':
                 return GaugeRadial;
+            case 'horizontalGauge':
+                return GaugeHorizontal
         }
     }
     registerWidget(description,opt_editableParameters){

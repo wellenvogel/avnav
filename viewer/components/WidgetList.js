@@ -17,7 +17,7 @@ import keys from '../util/keys.jsx';
 import AlarmWidget from './AlarmWidget.jsx';
 import RoutePointsWidget from './RoutePointsWidget.jsx';
 import DateTimeWidget from './DateTimeWidget.jsx';
-import GaugeRadial from './GaugeRadial.jsx';
+import GaugeRadial from './CanvasGauges.jsx';
 
 let widgetList=[
     {
