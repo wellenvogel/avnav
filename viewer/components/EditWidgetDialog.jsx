@@ -93,7 +93,7 @@ class EditWidgetDialog extends React.Component{
         }
         else {
             nvalues = assign({}, this.state.widget, values);
-            this.setState({widget: nvalues, sizeCount: this.sizeCount + 1})
+            this.setState({widget: nvalues})
         }
     }
 
