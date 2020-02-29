@@ -13,7 +13,7 @@ class ColorDialog extends React.Component{
         if (this.state.value === undefined) this.state.value="#ffffff";
         this.valueChange=this.valueChange.bind(this);
         this.buttonClick=this.buttonClick.bind(this);
-        this.onDrag=this.onDrag.bind(this);
+        this.onColorChange=this.onColorChange.bind(this);
         this.colorInput=this.colorInput.bind(this);
     }
     valueChange(ev){
@@ -35,7 +35,7 @@ class ColorDialog extends React.Component{
         }
         this.props.closeCallback();
     }
-    onDrag(color,c){
+    onColorChange(color,c){
         this.setState({
             value: color
         })
@@ -72,7 +72,7 @@ class ColorDialog extends React.Component{
         return (
             <div className="settingsDialog colorDialog inner">
                 {this.props.title?<h3>{this.props.title}</h3>:null}
-                <ColorPicker value={this.state.value} onDrag={this.onDrag} {...pickerProperties}/>
+                <ColorPicker value={this.state.value} onChange={this.onColorChange} {...pickerProperties}/>
                 <div className="colorFrame">
                     <div style={style} className="colorValue"></div>
                     <input className="colorName"

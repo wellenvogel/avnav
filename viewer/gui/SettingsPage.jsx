@@ -14,7 +14,6 @@ import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast,{hideToast} from '../components/Toast.jsx';
 import assign from 'object-assign';
-import CpCss from 'react-color-picker/index.css';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
