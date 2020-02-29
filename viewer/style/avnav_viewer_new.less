@@ -655,14 +655,19 @@ span.valuePrefix{
       }
       .infoLine{
         margin-bottom: 0.2em;
+        .flex-display();
+        .flex-direction(row);
+        .flex-wrap(wrap);
       }
       .label{
         .mdText2();
         width: 2em;
+        display: inline-block;
       }
       .info{
         padding-left: 1em;
-        padding-right: 1em;
+        min-width: 6.5em;
+        display: inline-block;
       }
     }
   }
@@ -672,7 +677,7 @@ span.valuePrefix{
     padding-top: 0.5em;
     padding-left: 1em;
     padding-bottom: 0.5em;
-    height: 3em;
+    min-height: 3em;
     .flex-shrink(0);
     span{
       display: inline-block;
@@ -873,6 +878,7 @@ span.valuePrefix{
     .flex-align-items(center);
     @media(max-width: 35em){
       .flex-direction(column);
+      .flex-align-items(flex-start);
     }
     .date{
       .mdText2();

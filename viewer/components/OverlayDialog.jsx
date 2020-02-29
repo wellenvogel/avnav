@@ -97,8 +97,8 @@ const Dialogs = {
                             return(
                                 <div className={"listEntry "+(elem.selected && 'selectedItem')}
                                      onClick={function(){
-                                        if (props.closeCallback) props.closeCallback()
                                         if (okCallback) okCallback(elem);
+                                        if (props.closeCallback) props.closeCallback();
                                     }}
                                     >{elem.label}</div>);
                         })}
