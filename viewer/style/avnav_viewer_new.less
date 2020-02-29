@@ -214,13 +214,8 @@ html,body {
 }
 
 .editWidgetDialog, .editPageDialog{
-  .label {
-    .mdText2();
-    width: 7em;
-    display: inline-block;
-    text-align: end;
-    margin-right: 0.5em;
-    font-size: 0.8em;
+  .inputLabel {
+    width: 8em;
   }
   input, .input{
     min-width: 9em;
@@ -232,9 +227,9 @@ html,body {
     &.disabled{
       .mdText2();
     }
-    .disabled .input{
-      .mdText2();
-    }
+  }
+  .disabled .input{
+    .mdText2();
   }
 
   .selectElement{

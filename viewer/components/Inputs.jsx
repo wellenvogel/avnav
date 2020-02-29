@@ -113,7 +113,7 @@ export const ColorSelector=(props)=>{
     let style=props.style||{backgroundColor:props.value};
     return <div className={props.className+ " colorSelector"}
               onClick={onClick}>
-            <span className="label">{props.label}</span>
+            <span className="inputLabel">{props.label}</span>
             <div className="colorValue" style={style}></div>
             <div className="input">{props.value}</div>
   </div>;

@@ -81,11 +81,12 @@ class GaugeRadial extends React.Component{
             rect = this.canvas.getBoundingClientRect();
         }
         let wh=Math.min(rect.width,rect.height);
+        let props=this.getProps();
         if (this.refs.value){
             try {
-                let factor=12;
+                let factor=parseFloat(props.valueFontFactor||12);
                 let fs = parseFloat(window.getComputedStyle(this.refs.value).fontSize);
-                if (fs > wh/factor) {
+                if (fs != wh/factor) {
                     this.refs.value.style.fontSize=(wh/factor)+"px";
                 }
                 else{
@@ -94,10 +95,16 @@ class GaugeRadial extends React.Component{
             }catch(e){}
 
         }
-        let props=this.getProps();
+        let value=props.value;
+        if (typeof (props.formatter) === 'function'){
+            value=props.formatter(value);
+        }
+        value=parseFloat(value);
+        if (value < 0) value=0;
+        if (value > 360) value=360;
         if (! this.gauge){
             try {
-                let options = assign({}, props, {renderTo: this.canvas,width:wh,height:wh});
+                let options = assign({}, props, {renderTo: this.canvas,width:wh,height:wh,value:value});
                 this.gauge = new RadialGauge(options).draw();
                 return;
             }catch(e){
@@ -105,8 +112,8 @@ class GaugeRadial extends React.Component{
             }
         }
         if (! this.gauge) return;
-        this.gauge.value=props.value;
-        this.gauge.update(assign({},props,{width:wh,height:wh}));
+        this.gauge.value=value;
+        this.gauge.update(assign({},props,{width:wh,height:wh,value:value}));
     }
 };
 
@@ -121,7 +128,10 @@ GaugeRadial.propTypes={
     value: PropTypes.number,
     drawValue: PropTypes.bool,
     colorText: PropTypes.string,
-    translateFunction: PropTypes.func //if set: a function to translate options
+    formatter: PropTypes.string,
+    formatterParameters: PropTypes.string,
+    translateFunction: PropTypes.func, //if set: a function to translate options
+    valueFontFactor: PropTypes.number
     //all the options from canvas-gauges, see
     //https://canvas-gauges.com/documentation/user-guide/configuration
 };
@@ -130,7 +140,10 @@ GaugeRadial.editableParameters=
     "caption":true,
     "unit":true,
     "value":true,
+    formatter: true,
+    formatterParameters:true,
     drawValue:{type:"BOOLEAN",default:true,description:"Show Value"},
+    valueFontFactor:{type:'NUMBER',default:12},
     colorPlate:{type:'COLOR'},
     colorText:{type: 'COLOR'},
     colorNeedle:{type:'COLOR'}

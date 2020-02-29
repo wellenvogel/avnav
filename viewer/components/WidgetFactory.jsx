@@ -32,12 +32,7 @@ export class WidgetParameter{
     setValue(widget,value){
         if (! widget) widget={};
         if (this.type == WidgetParameter.TYPE.DISPLAY) return widget;
-        if (this.type !== WidgetParameter.TYPE.NUMBER || value === undefined) {
-            widget[this.name] = value;
-        }
-        else{
-            widget[this.name] = parseFloat(value);
-        }
+        widget[this.name] = value;
         return widget;
     }
     setDefault(widget){
@@ -230,6 +225,7 @@ class WidgetFactory{
                 if (pdefinition.name === 'formatter'){
                     if (widgetData.formatter){
                         pdefinition.type=WidgetParameter.TYPE.DISPLAY; //read only
+                        pdefinition=pdefinition.clone(); //ensure correct class
                         if (typeof(widgetData.formatter) === 'function'){
                             pdefinition.default=widgetData.formatter.name;
                         }
@@ -243,7 +239,7 @@ class WidgetFactory{
                 }
             }
             else{
-                let npdefinition=createWidgetParameter(pname,pdefinition.type,pdefinition.list,pdefinition.displayName)
+                let npdefinition=createWidgetParameter(pname,pdefinition.type,pdefinition.list,pdefinition.displayName);
                 if (! npdefinition){
                     base.log("unknown widget parameter type: "+pdefinition.type);
                     continue;

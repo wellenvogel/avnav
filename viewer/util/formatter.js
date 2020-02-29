@@ -145,7 +145,10 @@ const formatSpeed=function(speed,opt_unit){
     return formatDecimal(number,3,0);
 };
 
-const formatDirection=function(dir){
+const formatDirection=function(dir,opt_rad){
+    if (opt_rad){
+        dir=180*dir/Math.PI;
+    }
     return formatDecimal(dir,3,0);
 };
 
