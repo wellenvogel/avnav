@@ -945,15 +945,21 @@ span.valuePrefix{
     .settingsList{
       .flex-grow(1);
       overflow-x: hidden;
-      .label{
+      .label, .inputLabel{
         width: 10em;
       }
-      .value {
+      .value, .checkBox {
+        .mdText2();
+      }
+      .colorSelector .input{
         .mdText2();
       }
       .colorValue{
         width: 1.5em;
         height: 1.5em;
+      }
+      .listEntry{
+        .flex-align-items(center)
       }
     }
 }

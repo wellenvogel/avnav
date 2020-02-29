@@ -20,6 +20,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
+import {Input,ColorSelector,Checkbox} from '../components/Inputs.jsx';
 import ColorDialog from '../components/ColorDialog.jsx';
 
 const settingsSections={
@@ -61,11 +62,11 @@ const SectionItem=(props)=>{
 
 const CheckBoxSettingsItem=(props)=>{
     return (
-    <div className={props.classsName+ " listEntry"}
-                onClick={()=>{props.onClick(!props.value);}}>
-        <div className="label">{props.label}</div>
-        <span className={'checkBox'+(props.value?' checked':'')}/>
-    </div>
+        <Checkbox
+            className={props.classsName+ " listEntry"}
+            onChange={props.onClick}
+            label={props.label}
+            value={props.value}/>
     );
 };
 
@@ -136,31 +137,19 @@ const RangeSettingsItem=(properties)=> {
     </div>;
 };
 
-const colorItemDialog=(item)=>{
-    OverlayDialog.dialog((props)=>{
-        return <ColorDialog
-            {...props}
-            value={item.value}
-            default={item.defaultv}
-            okCallback={(val)=>item.onClick(val)}
-            />
-    });
-};
-
-
-
 const ColorSettingsItem=(properties)=>{
     let style={
         backgroundColor: properties.value
     };
 
-    return <div className={properties.className+ " listEntry colorSelector"}
-                onClick={function(ev){
-                            colorItemDialog(properties);
-                        }}>
-        <div className="label">{properties.label}</div>
-        <div className="colorValue" style={style}></div><div className="value">{properties.value}</div>
-    </div>;
+    return <ColorSelector
+               className={properties.className+ " listEntry"}
+               onChange={properties.onClick}
+               label={properties.label}
+               default={properties.defaultv}
+               value={properties.value}
+        />
+        ;
 };
 
 const createSettingsItem=(item)=>{

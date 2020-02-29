@@ -102,20 +102,20 @@ class EditWidgetDialog extends React.Component{
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Widget'}</h3>
-                <div className="info"><span className="label">Panel:</span>{this.props.panel}</div>
+                <div className="info"><span className="label">Panel</span>{this.props.panel}</div>
                 {hasCurrent?
-                    <div className="info"><span className="label">Current:</span>{this.props.current.name}</div>
+                    <div className="info"><span className="label">Current</span>{this.props.current.name}</div>
                     :
                     null}
                 {(this.props.weight !== undefined)?
                         <Input className="weigth"
                                type="number"
-                               label="Weight:"
+                               label="Weight"
                                onChange={(ev)=>this.updateWidgetState({weight:ev})}
                                value={this.state.widget.weight!==undefined?this.state.widget.weight:1}/>
                     :null}
                 <InputSelect className="selectElement info"
-                    label="New Widget:"
+                    label="New Widget"
                     onChange={(selected)=>{this.updateWidgetState({name:selected.name},true);}}
                     list={()=>this.getList(WidgetFactory.getAvailableWidgets())}
                     value={this.state.widget.name||'-Select Widget-'}
