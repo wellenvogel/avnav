@@ -95,13 +95,21 @@ const Dialogs = {
                     <div className="selectList">
                         {list.map(function(elem){
                             return(
-                                <div className={"listEntry "+(elem.selected && 'selectedItem')} onClick={function(){
-                                okCallback(elem);
-                            }}>{elem.label}</div>);
+                                <div className={"listEntry "+(elem.selected && 'selectedItem')}
+                                     onClick={function(){
+                                        if (props.closeCallback) props.closeCallback()
+                                        if (okCallback) okCallback(elem);
+                                    }}
+                                    >{elem.label}</div>);
                         })}
                     </div>
                     <div className="dialogButtons">
-                        <button name="cancel" onClick={cancelCallback}>Cancel</button>
+                        <button name="cancel"
+                                onClick={(ev)=>{
+                                    if (props.closeCallback) props.closeCallback();
+                                    if (cancelCallback) cancelCallback(ev);
+                                }}
+                            >Cancel</button>
                         <div className="clear"></div>
                     </div>
                 </div>
@@ -304,10 +312,8 @@ const Dialogs = {
         return new Promise(function (resolve, reject) {
             let id = nextId();
             let Dialog = Dialogs.createSelectDialog(title, list, (value)=> {
-                removeDialog(id,true);
                 resolve(value);
             }, ()=> {
-                removeDialog(id,true);
                 reject();
             });
             addDialog(id,Dialog, opt_parent,()=> {

@@ -1,6 +1,6 @@
 /**
  * Created by andreas on 03.12.16.
- * copied from https://github.com/Lazyshot/react-color-picker/blob/master/lib/index.js
+ * copied/modified  from https://github.com/Lazyshot/react-color-picker/blob/master/lib/index.js
  * to correctly handle willReceiveProperties
  */
 'use strict';
@@ -234,6 +234,7 @@ class ColorPicker extends React.Component{
         this.onSwipeAlpha=this.onSwipeAlpha.bind(this);
         this.onHueSwipeMove=this.onHueSwipeMove.bind(this);
         this.onSatSwipeMove=this.onSatSwipeMove.bind(this);
+        this.onSatSwipeEnd=this.onSatSwipeEnd.bind(this);
         this.onHueSwipeEnd=this.onHueSwipeEnd.bind(this);
         this.onAlphaSwipeStart=this.onAlphaSwipeStart.bind(this);
         this.onAlphaSwipeMove=this.onAlphaSwipeMove.bind(this);

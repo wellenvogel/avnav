@@ -191,6 +191,7 @@ class WidgetFactory{
         for (let k=0;k<widgetList.length;k++){
             this.widgetDefinitions.push(widgetList[k]);
         }
+        this.getAvailableWidgets=this.getAvailableWidgets.bind(this);
     }
     /**
      * find a complete widget description
