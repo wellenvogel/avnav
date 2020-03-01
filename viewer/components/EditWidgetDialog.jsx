@@ -14,6 +14,7 @@ class EditWidgetDialog extends React.Component{
     constructor(props){
         super(props);
         this.state= {
+            panel: props.panel,
             widget:props.current,
             sizeCount:0,
             parameters:WidgetFactory.getEditableWidgetParameters(props.current)};
@@ -25,7 +26,7 @@ class EditWidgetDialog extends React.Component{
     insert(before){
         if (! this.props.insertCallback) return;
         this.props.closeCallback();
-        this.props.insertCallback(this.state.widget,before);
+        this.props.insertCallback(this.state.widget,before,this.state.panel);
     }
     getList(list,current){
         let self=this;
@@ -106,11 +107,22 @@ class EditWidgetDialog extends React.Component{
             this.sizeCount=this.state.sizeCount;
             window.setTimeout(self.props.updateDimensions,100);
         }
+        let panelClass="dialogLine panel";
+        if (this.props.panel !== this.state.panel){
+            panelClass+=" changed";
+        }
         return (
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Widget'}</h3>
-                <div className="dialogLine info"><span className="inputLabel">Panel</span>{this.props.panel}</div>
+                <InputSelect className={panelClass}
+                             label="Panel"
+                             value={this.state.panel}
+                             list={(current)=>this.getList(this.props.panelList,current)}
+                             onChange={(selected)=>{
+                                this.setState({panel:selected.name})
+                                }}
+                             showDialogFunction={this.showDialog}/>
                 {hasCurrent?
                     <div className="dialogLine info"><span className="inputLabel">Current</span>{this.props.current.name}</div>
                     :
@@ -186,10 +198,10 @@ class EditWidgetDialog extends React.Component{
                         else{
                             changes.weight=undefined;
                         }
-                        this.props.updateCallback(changes);
+                        this.props.updateCallback(changes,this.state.panel);
                     }}>Update</button>
                     :null}
-                    {this.props.removeCallback?
+                    {(this.props.removeCallback && (this.state.panel === this.props.panel)) ?
                     <button name="remove" onClick={()=>{
                         this.props.closeCallback();
                         this.props.removeCallback();
@@ -212,6 +224,7 @@ class EditWidgetDialog extends React.Component{
 EditWidgetDialog.propTypes={
     title: PropTypes.string,
     panel: PropTypes.string,
+    panelList: PropTypes.array,
     current:PropTypes.any,
     weight: PropTypes.bool,
     insertCallback: PropTypes.func,
@@ -248,9 +261,10 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
             weight={opt_weight||false}
             title="Select Widget"
             panel={panelname}
+            panelList={LayoutHandler.getPagePanels(pagename)}
             current={widgetItem?widgetItem:{}}
             weight={opt_weight}
-            insertCallback={(selected,before)=>{
+            insertCallback={(selected,before,newPanel)=>{
                 if (! selected || ! selected.name) return;
                 let addMode=LayoutHandler.ADD_MODES.noAdd;
                 if (widgetItem){
@@ -259,13 +273,19 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
                 else{
                     addMode=opt_beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
                 }
-                LayoutHandler.replaceItem(pagename,panelname,index,filterObject(selected),addMode);
+                LayoutHandler.replaceItem(pagename,newPanel,index,filterObject(selected),addMode);
             }}
             removeCallback={widgetItem?()=>{
                 LayoutHandler.replaceItem(pagename,panelname,index);
             }:undefined}
-            updateCallback={widgetItem?(changes)=>{
-                LayoutHandler.replaceItem(pagename,panelname,index,filterObject(changes));
+            updateCallback={widgetItem?(changes,newPanel)=>{
+                if (newPanel !== panelname){
+                    LayoutHandler.replaceItem(pagename,panelname,index);
+                    LayoutHandler.replaceItem(pagename,newPanel,1,filterObject(changes),LayoutHandler.ADD_MODES.end);
+                }
+                else{
+                    LayoutHandler.replaceItem(pagename,panelname,index,filterObject(changes));
+                }
             }:undefined}
             />
     });

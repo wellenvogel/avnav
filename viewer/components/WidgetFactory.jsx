@@ -241,11 +241,11 @@ class WidgetFactory{
                         pdefinition.type=WidgetParameter.TYPE.DISPLAY; //read only
                         pdefinition=pdefinition.clone(); //ensure correct class
                         pdefinition.getValue=(widget)=> {
-                            if (typeof(widget.formatter) === 'function') {
-                                return widget.formatter.name;
+                            if (typeof(widgetData.formatter) === 'function') {
+                                return widgetData.formatter.name;
                             }
                             else {
-                                return widget.formatter;
+                                return widgetData.formatter;
                             }
                         }
                     }

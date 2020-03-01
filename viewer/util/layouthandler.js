@@ -449,6 +449,18 @@ class LayoutHandler{
         return panelData[index];
     }
 
+    getPagePanels(pagename){
+        let rt=[];
+        let pageData=this.getPageData(pagename);
+        if (! pageData) return rt;
+        for (let panelName in pageData){
+            if (this._isHiddenPanel(pagename,panelName)) continue;
+            //TODO: we should filter the allowed panels
+            rt.push(panelName);
+        }
+        return rt;
+    }
+
 
     /**
      * replace/add/remove a widget
