@@ -87,6 +87,14 @@ class EditWidgetDialog extends React.Component{
         }
     }
 
+    getWidgetFromState(){
+        let rt=assign({},this.state.widget);
+        if (this.state.parameters){
+            this.state.parameters.forEach((p)=>{
+                p.ensureValue(rt);
+            })
+        }
+    }
 
 
     render () {
@@ -251,7 +259,7 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
                 else{
                     addMode=opt_beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
                 }
-                LayoutHandler.replaceItem(pagename,panelname,index,selected,addMode);
+                LayoutHandler.replaceItem(pagename,panelname,index,filterObject(selected),addMode);
             }}
             removeCallback={widgetItem?()=>{
                 LayoutHandler.replaceItem(pagename,panelname,index);

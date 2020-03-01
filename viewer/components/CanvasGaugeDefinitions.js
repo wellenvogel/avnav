@@ -1,6 +1,35 @@
 import WidgetFactory from './WidgetFactory.jsx';
 import assign from 'object-assign';
 
+
+const temperatureTranslateFunction=(props)=>{
+    let rt=assign({},props);
+    if (props.minValue !== undefined && props.maxValue !== undefined){
+        let inc=Math.floor((props.maxValue - props.minValue)/10);
+        if (inc < 1) inc=1;
+        let majorTicks=[];
+        for (let i=Math.round(props.minValue);i<=props.maxValue;i+=inc){
+            majorTicks.push(i);
+        }
+        rt.majorTicks=majorTicks;
+    }
+    if (props.startHighlight){
+        rt.highlights=[
+            {from:props.startHighlight,to:props.maxValue||200,color:props.colorHighlight}
+        ];
+    }
+    else{
+        rt.highlights=[];
+    }
+    if (props.inputIsKelvin){
+        if (props.value !== undefined){
+            rt.value=props.value-273.15;
+        }
+    }
+    return rt;
+};
+
+
 export default ()=>{
     let prefix="radGauge_";
     WidgetFactory.registerWidget(
@@ -48,7 +77,7 @@ export default ()=>{
         translateFunction: (props)=>{
             let rt=assign({},props);
             if (props.minValue !== undefined && props.maxValue !== undefined){
-                let inc=Math.floor((parseFloat(props.maxValue)-parseFloat(props.minValue))/10);
+                let inc=Math.floor((props.maxValue-props.minValue)/10);
                 let majorTicks=[];
                 for (let i=Math.round(props.minValue);i<=props.maxValue;i+=inc){
                     majorTicks.push(i);
@@ -57,7 +86,7 @@ export default ()=>{
             }
             if (props.startHighlight){
                 rt.highlights=[
-                    {from:parseFloat(props.startHighlight),to:parseFloat(props.maxValue||200),color:props.colorHighlight}
+                    {from:props.startHighlight,to:props.maxValue||200,color:props.colorHighlight}
                 ];
             }
             else{
@@ -93,12 +122,49 @@ export default ()=>{
         colorHighlight:{type:'COLOR',default:"rgba(200, 50, 50, .75)"},
         startHighlight:{type:'NUMBER'}
     });
-    prefix="horGauge_";
+
+    WidgetFactory.registerWidget({
+        name:prefix+"Temperature",
+        type: 'radialGauge',
+        translateFunction: temperatureTranslateFunction,
+        formatter: 'formatDecimal',
+        formatterParameters: '3,0',
+        unit: '°C',
+        minValue:-20,
+        startAngle:90,
+        ticksAngle:180,
+        valueBox:false,
+        maxValue:50,
+        majorTicks:[],
+        minorTicks:10,
+        strokeTicks:true,
+        highlights:[
+        ],
+        colorPlate:"#fff",
+        borderShadowWidth:"0",
+        borders:false,
+        needleType:"arrow",
+        needleWidth:2,
+        needleCircleSize:7,
+        needleCircleOuter:true,
+        needleCircleInner:false,
+        animationDuration:1000,
+        animationRule:"linear"
+    },{
+        formatter: false,
+        formatterParameters: false,
+        minValue:{type:'NUMBER'},
+        maxValue:{type:'NUMBER'},
+        inputIsKelvin:{type:'BOOLEAN',default:false},
+        colorHighlight:{type:'COLOR',default:"rgba(200, 50, 50, .75)"},
+        startHighlight:{type:'NUMBER',default: 30}
+    });
+    prefix="linGauge_";
     WidgetFactory.registerWidget(
         //Compass
         {
             name: prefix+"Compass",
-            type: 'horizontalGauge',
+            type: 'linearGauge',
             "unit":"°",
             "formatter":"formatDirection",
             "drawValue":false,
@@ -135,5 +201,44 @@ export default ()=>{
             "ticksAngle": 360,
             "startAngle": 180,
             "animationTarget": "plate"
+        });
+
+    WidgetFactory.registerWidget(
+        {
+            name: prefix+"Temperature",
+            type: 'linearGauge',
+            "unit":"°C",
+            "formatter":"formatDecimal",
+            formatterParameters: "3,0",
+            translateFunction: temperatureTranslateFunction,
+            drawValue:false,
+            tickSide: "right",
+            numberSide: "right",
+            borders:false,
+            barBeginCircle:0,
+            barProgress:true,
+            "animationDuration": 1000,
+            "animationRule":"linear",
+            "minValue": -20,
+            "maxValue": 50,
+            "majorTicks": [
+            ],
+            "minorTicks": 9,
+            "highlights": [
+            ],
+            "needleType":"line",
+            "needleWidth":5,
+            "borderShadowWidth":0,
+            "valueBox": false
+        },{
+            formatter: false,
+            formatterParameters: false,
+            minValue:{type:'NUMBER'},
+            maxValue:{type:'NUMBER'},
+            inputIsKelvin:{type:'BOOLEAN',default:false},
+            colorBar:{type:'COLOR',default: '#ccc'},
+            colorBarProgress:{type:'COLOR',default:'#888'},
+            colorHighlight:{type:'COLOR',default:"rgba(200, 50, 50, .75)"},
+            startHighlight:{type:'NUMBER',default:30}
         });
 };

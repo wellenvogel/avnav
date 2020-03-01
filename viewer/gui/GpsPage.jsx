@@ -59,7 +59,7 @@ const getWeightSum=(list)=>{
     let sum=0;
     if (! list ) return sum;
     list.forEach((el)=>{
-        if (el.weight !== undefined) sum+=el.weight;
+        if (el.weight !== undefined) sum+=parseFloat(el.weight||0);
         else sum+=1;
     });
     return sum;

@@ -42,8 +42,9 @@ class Gauge extends React.Component{
     }
     render(){
         let props=this.getProps();
-        let classes="widget canvasGauge radial";
+        let classes="widget canvasGauge";
         if (props.className) classes+=" "+props.className;
+        if (props.typeClass) classes+=" "+props.typeClass;
         let style=props.style||{};
         let value=props.value;
         if (typeof (this.props.formatter) === 'function'){
@@ -131,6 +132,7 @@ Gauge.propTypes={
     caption: PropTypes.string,
     onClick: PropTypes.func,
     className: PropTypes.string,
+    typeClass: PropTypes.string,
     style: PropTypes.object,
     default: PropTypes.string,
     value: PropTypes.number,
@@ -161,17 +163,19 @@ export const GaugeRadial=(props)=>{
     return <Gauge
         {...props}
         gauge={RadialGauge}
+        typeClass="radial"
         />
 };
 GaugeRadial.propTypes=Gauge.propTypes;
 GaugeRadial.editableParameters=Gauge.editableParameters;
-export const GaugeHorizontal=(props)=>{
+export const GaugeLinear=(props)=>{
     return <Gauge
         {...props}
         gauge={LinearGauge}
         makeSquare={false}
+        typeClass="linear"
         />
 };
 
-GaugeHorizontal.propTypes=Gauge.propTypes;
-GaugeHorizontal.editableParameters=assign({},Gauge.editableParameters,{drawValue:false,valueFontFactor:false});
+GaugeLinear.propTypes=Gauge.propTypes;
+GaugeLinear.editableParameters=assign({},Gauge.editableParameters,{drawValue:false,valueFontFactor:false});

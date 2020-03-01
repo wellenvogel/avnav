@@ -410,7 +410,7 @@
     margin: 0;
   }
 
-  &.canvasGauge.radial {
+  &.canvasGauge {
     canvas {
       margin: auto;
       position: relative;
@@ -434,6 +434,17 @@
     &.radGauge_Speed{
       .gaugeValue{
         top: 70%;
+      }
+    }
+    &.radGauge_Temperature{
+      .gaugeValue{
+        top: 70%;
+      }
+    }
+    &.linear{
+      padding: 0;
+      .canvasFrame{
+        padding: 0;
       }
     }
   }

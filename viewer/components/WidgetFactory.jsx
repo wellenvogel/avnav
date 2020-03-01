@@ -10,7 +10,7 @@ import ExternalWidget from './ExternalWidget.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import Requests from '../util/requests.js';
 import base from '../base.js';
-import {GaugeRadial,GaugeHorizontal} from './CanvasGauges.jsx';
+import {GaugeRadial,GaugeLinear} from './CanvasGauges.jsx';
 
 export class WidgetParameter{
     constructor(name,type,list,displayName){
@@ -36,9 +36,14 @@ export class WidgetParameter{
         widget[this.name] = value;
         return widget;
     }
+
+    /**
+     * unconditionally set the default value
+     * @param widget
+     */
     setDefault(widget){
         let current=this.getValue(widget);
-        if ((current === undefined) && (this.default !== undefined)){
+        if (this.default !== undefined){
             this.setValue(widget,this.default);
         }
     }
@@ -59,6 +64,14 @@ export class WidgetParameter{
     }
     isChanged(value){
         return value !== this.default;
+    }
+    ensureValue(widget){
+        if (this.type === WidgetParameter.TYPE.NUMBER){
+            if (widget[this.name] !== undefined ) widget[this.name]=parseFloat(widget[this.name]);
+        }
+        if (this.type === WidgetParameter.TYPE.BOOLEAN){
+            if (widget[this.name] !== undefined ) widget[this.name]=widget[this.name]?true:false;
+        }
     }
 }
 
@@ -362,8 +375,8 @@ class WidgetFactory{
         switch(typeName){
             case 'radialGauge':
                 return GaugeRadial;
-            case 'horizontalGauge':
-                return GaugeHorizontal
+            case 'linearGauge':
+                return GaugeLinear
         }
     }
     registerWidget(description,opt_editableParameters){
