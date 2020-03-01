@@ -29,6 +29,40 @@ const temperatureTranslateFunction=(props)=>{
     return rt;
 };
 
+const voltageTranslateFunction=(props)=>{
+    let rt=assign({},props);
+    if (props.minValue !== undefined && props.maxValue !== undefined){
+        let inc=Math.floor((props.maxValue - props.minValue)/10);
+        if (inc < 1) inc=1;
+        let majorTicks=[];
+        for (let i=Math.round(props.minValue);i<=props.maxValue;i+=inc){
+            majorTicks.push(i);
+        }
+        rt.majorTicks=majorTicks;
+    }
+    rt.highlights=[];
+    let warningStart=props.minValue||0;
+    let okStart=props.minValue||0;
+    if (props.startDanger){
+        rt.highlights.push(
+            {from:props.minValue,to:props.startDanger,color:props.colorDanger});
+        warningStart=props.startDanger;
+        okStart=props.startDanger;
+    }
+    if (props.startWarning){
+        rt.highlights.push(
+            {from:warningStart,to:props.startWarning,color:props.colorWarning}
+        );
+        okStart=props.startWarning;
+    }
+    if (props.colorOk !== undefined) {
+        rt.highlights.push(
+            {from: okStart, to: props.maxValue || 200, color: props.colorOk}
+        );
+    }
+    return rt;
+};
+
 
 export default ()=>{
     let prefix="radGauge_";
@@ -159,6 +193,45 @@ export default ()=>{
         colorHighlight:{type:'COLOR',default:"rgba(200, 50, 50, .75)"},
         startHighlight:{type:'NUMBER',default: 30}
     });
+
+    WidgetFactory.registerWidget({
+        name:prefix+"Voltage",
+        type: 'radialGauge',
+        translateFunction: voltageTranslateFunction,
+        formatter: 'formatDecimal',
+        formatterParameters: '2,2',
+        unit: 'V',
+        minValue:0,
+        startAngle:90,
+        ticksAngle:180,
+        valueBox:false,
+        maxValue:18,
+        majorTicks:[],
+        minorTicks:10,
+        strokeTicks:true,
+        highlights:[
+        ],
+        colorPlate:"#fff",
+        borderShadowWidth:"0",
+        borders:false,
+        needleType:"arrow",
+        needleWidth:2,
+        needleCircleSize:7,
+        needleCircleOuter:true,
+        needleCircleInner:false,
+        animationDuration:1000,
+        animationRule:"linear"
+    },{
+        formatter: false,
+        formatterParameters: false,
+        minValue:{type:'NUMBER',default:9},
+        maxValue:{type:'NUMBER',default:16},
+        startWarning:{type:'NUMBER',default: 12.2},
+        colorWarning:{type:'COLOR',default:"#e7ed0c"},
+        startDanger:{type:'NUMBER',default: 11.5},
+        colorDanger:{type:'COLOR',default:"#ed1414"},
+        colorOk:{type:'COLOR'}
+    });
     prefix="linGauge_";
     WidgetFactory.registerWidget(
         //Compass
@@ -193,9 +266,9 @@ export default ()=>{
             "highlights": [
             ],
             "needleType":"line",
-            "needleStart":65,
-            "needleEnd":99,
             "needleWidth":5,
+            needleStart:0,
+            needleEnd:100,
             "borderShadowWidth":0,
             "valueBox": false,
             "ticksAngle": 360,
@@ -223,11 +296,13 @@ export default ()=>{
             "maxValue": 50,
             "majorTicks": [
             ],
-            "minorTicks": 9,
+            "minorTicks": 10,
             "highlights": [
             ],
             "needleType":"line",
-            "needleWidth":5,
+            needleWidth:5,
+            needleStart:0,
+            needleEnd:100,
             "borderShadowWidth":0,
             "valueBox": false
         },{
@@ -241,4 +316,46 @@ export default ()=>{
             colorHighlight:{type:'COLOR',default:"rgba(200, 50, 50, .75)"},
             startHighlight:{type:'NUMBER',default:30}
         });
+
+    WidgetFactory.registerWidget({
+        name:prefix+"Voltage",
+        type: 'linearGauge',
+        translateFunction: voltageTranslateFunction,
+        formatter: 'formatDecimal',
+        formatterParameters: '2,2',
+        unit: 'V',
+        minValue:0,
+        valueBox:false,
+        maxValue:18,
+        majorTicks:[],
+        minorTicks:10,
+        strokeTicks:true,
+        highlights:[
+        ],
+        tickSide: "right",
+        numberSide: "right",
+        borders:false,
+        barBeginCircle:0,
+        barProgress:false,
+        barWidth:0,
+        barStrokeWidth:0,
+        colorPlate:"#fff",
+        borderShadowWidth:0,
+        needleType:"line",
+        needleWidth:4,
+        needleStart:0,
+        needleEnd:100,
+        animationDuration:1000,
+        animationRule:"linear"
+    },{
+        formatter: false,
+        formatterParameters: false,
+        minValue:{type:'NUMBER',default:9},
+        maxValue:{type:'NUMBER',default:16},
+        startWarning:{type:'NUMBER',default: 12.2},
+        colorWarning:{type:'COLOR',default:"#e7ed0c"},
+        startDanger:{type:'NUMBER',default: 11.5},
+        colorDanger:{type:'COLOR',default:"#ed1414"},
+        colorOk:{type:'COLOR'}
+    });
 };
