@@ -137,7 +137,7 @@ Gauge.propTypes={
     drawValue: PropTypes.bool,
     colorText: PropTypes.string,
     formatter: PropTypes.string,
-    formatterParameters: PropTypes.string,
+    formatterParameters: PropTypes.array,
     translateFunction: PropTypes.func, //if set: a function to translate options
     valueFontFactor: PropTypes.number
     //all the options from canvas-gauges, see

@@ -123,7 +123,6 @@ class EditWidgetDialog extends React.Component{
                 {parameters.map((param)=>{
                     let ValueInput=undefined;
                     let current=param.getValue(this.state.widget);
-                    if (current === undefined) current=param.default;
                     let addClass="";
                     let inputFunction=(val)=>{
                         self.updateWidgetState(param.setValue({},val));

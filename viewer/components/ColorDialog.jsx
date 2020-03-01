@@ -10,7 +10,7 @@ class ColorDialog extends React.Component{
         this.state={
             value: props.value
         };
-        if (this.state.value === undefined) this.state.value="#ffffff";
+        if (!this.state.value) this.state.value="#ffffff";
         this.valueChange=this.valueChange.bind(this);
         this.buttonClick=this.buttonClick.bind(this);
         this.onColorChange=this.onColorChange.bind(this);

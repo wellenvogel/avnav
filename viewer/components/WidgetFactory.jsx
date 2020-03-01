@@ -32,6 +32,7 @@ export class WidgetParameter{
     setValue(widget,value){
         if (! widget) widget={};
         if (this.type == WidgetParameter.TYPE.DISPLAY) return widget;
+        if (value === '') value=undefined;
         widget[this.name] = value;
         return widget;
     }
@@ -42,7 +43,9 @@ export class WidgetParameter{
         }
     }
     getValue(widget){
-        return widget[this.name];
+        let rt=widget[this.name];
+        if (rt === undefined) rt='';
+        return rt;
     }
     getValueForDisplay(widget,opt_placeHolder){
         let rt=this.getValue(widget);
@@ -72,14 +75,15 @@ class KeyWidgetParameter extends WidgetParameter {
     setValue(widget, value) {
         if (!widget) widget = {};
         if (!widget.storeKeys) widget.storeKeys = {};
+        if (value === '') value=undefined;
         widget.storeKeys.value = value;
         return widget;
     }
 
     getValue(widget) {
-        if (!widget) return;
-        if (!widget.storeKeys) return;
-        return widget.storeKeys.value;
+        if (!widget) return '';
+        if (!widget.storeKeys) return '';
+        return widget.storeKeys.value||'';
     }
 
 }
@@ -91,13 +95,13 @@ class ArrayWidgetParameter extends WidgetParameter {
 
     setValue(widget, value) {
         if (!widget) widget = {};
-        if (typeof(value) === 'string') value=value.split(",")
+        if (typeof(value) === 'string') value=value.split(",");
         widget[this.name]=value;
         return widget;
     }
     getValue(widget){
         let rt=widget[this.name];
-        if (! rt) return;
+        if (! rt) return '';
         if (rt instanceof Array) return rt.join(",");
         return rt;
     }
@@ -111,9 +115,6 @@ class ReadOnlyWidgetParameter extends WidgetParameter {
     setValue(widget, value) {
         if (!widget) widget = {};
         return widget;
-    }
-    getValue(widget){
-        return this.default;;
     }
 }
 
@@ -226,11 +227,13 @@ class WidgetFactory{
                     if (widgetData.formatter){
                         pdefinition.type=WidgetParameter.TYPE.DISPLAY; //read only
                         pdefinition=pdefinition.clone(); //ensure correct class
-                        if (typeof(widgetData.formatter) === 'function'){
-                            pdefinition.default=widgetData.formatter.name;
-                        }
-                        else{
-                            pdefinition.default=widgetData.formatter;
+                        pdefinition.getValue=(widget)=> {
+                            if (typeof(widget.formatter) === 'function') {
+                                return widget.formatter.name;
+                            }
+                            else {
+                                return widget.formatter;
+                            }
                         }
                     }
                 }
