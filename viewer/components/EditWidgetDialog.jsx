@@ -102,19 +102,19 @@ class EditWidgetDialog extends React.Component{
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Widget'}</h3>
-                <div className="info"><span className="label">Panel</span>{this.props.panel}</div>
+                <div className="dialogLine info"><span className="inputLabel">Panel</span>{this.props.panel}</div>
                 {hasCurrent?
-                    <div className="info"><span className="label">Current</span>{this.props.current.name}</div>
+                    <div className="dialogLine info"><span className="inputLabel">Current</span>{this.props.current.name}</div>
                     :
                     null}
                 {(this.props.weight !== undefined)?
-                        <Input className="weigth"
+                        <Input className="dialogLine weigth"
                                type="number"
                                label="Weight"
                                onChange={(ev)=>this.updateWidgetState({weight:ev})}
                                value={this.state.widget.weight!==undefined?this.state.widget.weight:1}/>
                     :null}
-                <InputSelect className="selectElement info"
+                <InputSelect className="dialogLine selectElement info"
                     label="New Widget"
                     onChange={(selected)=>{this.updateWidgetState({name:selected.name},true);}}
                     list={()=>this.getList(WidgetFactory.getAvailableWidgets())}
@@ -151,7 +151,7 @@ class EditWidgetDialog extends React.Component{
                     }
                     if (!ValueInput) return;
                     return <ValueInput
-                            className={"editWidgetParam "+param.name+addClass}
+                            className={"editWidgetParam dialogLine "+param.name+addClass}
                             key={param.name.replace(/  */,'')}
                             label={param.displayName}
                             onChange={inputFunction}
@@ -161,13 +161,13 @@ class EditWidgetDialog extends React.Component{
                         />
                 })}
                 {(this.state.widget.name !== undefined)?
-                    <div className="insertButtons">
+                    <div className="insertButtons dialogLine">
                         {hasCurrent?<button name="before" onClick={()=>this.insert(true)}>Before</button>:null}
                         {hasCurrent?<button name="after" onClick={()=>this.insert(false)}>After</button>:null}
                         {(!hasCurrent)?<button name="after" onClick={()=>this.insert(false)}>Insert</button>:null}
                     </div>
                     :null}
-                <div className="dialogButtons">
+                <div className="dialogButtons dialogLine">
                     <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
                     {this.props.updateCallback?
                         <button name="ok" onClick={()=>{

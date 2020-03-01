@@ -25,8 +25,8 @@ if (!('requestAnimationFrame' in this)) {
 
 // requestAnimationFrame
 (function (global) {
-	let rafPrefix;
-	let emulatePerformanceNow;
+	var rafPrefix;
+	var emulatePerformanceNow;
 	if (!('performance' in this && 'now' in this.performance)) {
 		emulatePerformanceNow=Date.now();
 	}
@@ -48,14 +48,14 @@ if (!('requestAnimationFrame' in this)) {
 		global.cancelAnimationFrame = global[rafPrefix + 'CancelAnimationFrame'];
 	} else {
 
-		let lastTime = Date.now();
+		var lastTime = Date.now();
 
 		global.requestAnimationFrame = function (callback) {
 			if (typeof callback !== 'function') {
 				throw new TypeError(callback + ' is not a function');
 			}
 
-			let
+			var
 			currentTime = Date.now(),
 			delay = 16 + lastTime - currentTime;
 

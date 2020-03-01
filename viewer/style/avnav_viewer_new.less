@@ -214,8 +214,12 @@ html,body {
 }
 
 .editWidgetDialog, .editPageDialog{
+  .dialogLine{
+    .flex-shrink(0);
+  }
   .inputLabel {
     width: 8em;
+    text-align: start;
   }
   input, .input{
     min-width: 9em;
@@ -238,7 +242,6 @@ html,body {
   .insertButtons{
     border-bottom: 1px solid;
     .nightBorderColorGR(30);
-    padding-bottom: 0.3em;
   }
   button{
     width: 4.5em;
