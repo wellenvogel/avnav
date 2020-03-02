@@ -129,9 +129,8 @@ let RequestHandler={
      * do a json get request
      * @param url
      * @param options:
-     *        useNavUrl - (default: true) - prepend the navUrl to the provided url
-     *        checkOk   - (default: true) - check if the response has a status field and this is set to "OK"
-     *        noCache   - (default: true) - prevent caching
+     *        useNavUrl - (default: false) - prepend the navUrl to the provided url
+     *        noCache   - (default: false) - prevent caching
      */
     getHtmlOrText:(url,options)=>{
         let [rurl,requestOptions]=prepare(url,options,{useNavUrl:false,noCache:false});

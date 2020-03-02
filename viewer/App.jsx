@@ -19,6 +19,7 @@ import SettingsPage from './gui/SettingsPage.jsx';
 import NavPage from './gui/NavPage.jsx';
 import EditRoutePage from './gui/EditRoutePage.jsx';
 import WarningPage from './gui/WarningPage.jsx';
+import ViewPage from './gui/ViewPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -90,7 +91,8 @@ const pages={
     settingspage:SettingsPage,
     navpage: NavPage,
     editroutepage:EditRoutePage,
-    warningpage:WarningPage
+    warningpage:WarningPage,
+    viewpage:ViewPage
 };
 class Router extends Component {
     render() {

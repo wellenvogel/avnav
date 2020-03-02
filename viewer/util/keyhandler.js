@@ -14,6 +14,13 @@ class KeyHandler{
         this.registrations={};
         this.page=undefined;
         this.ALLPAGES="all";
+        this.enabled=true;
+    }
+    disable(){
+        this.enabled=false;
+    }
+    enable(){
+        this.enabled=true;
     }
     registerHandler(handlerFunction,component,action){
         if (! this.registrations[component]){
@@ -107,6 +114,7 @@ class KeyHandler{
     }
 
     handleKeyEvent(keyEvent){
+        if (! this.enabled) return;
         if (! keyEvent) return;
         let key=keyEvent.key;
         if (! key) return;

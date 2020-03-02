@@ -109,7 +109,12 @@ class AVNUserHandlerBase(AVNWorker):
         fullname=os.path.join(self.baseDir,f)
         if not os.path.isfile(fullname):
           continue
-        element = {'name': f, 'type': 'user','time':os.path.getmtime(fullname),'canDelete':True}
+        element = {'name': f,
+                   'type': 'user',
+                   'time':os.path.getmtime(fullname),
+                   'size':os.path.getsize(fullname),
+                   'canDelete':True
+                   }
         data.append(element)
       rt = {'status': 'OK', 'items': data}
       return rt

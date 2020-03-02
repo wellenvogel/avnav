@@ -29,6 +29,7 @@ import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 
 const MAXUPLOADSIZE=100000;
+const MAXEDITSIZE=MAXUPLOADSIZE;
 const RouteHandler=NavHandler.getRoutingHandler();
 
 
@@ -187,6 +188,7 @@ const DownloadItem=(props)=>{
     }
     let dataClass="downloadItemData";
     if (!(showDelete && ! props.active)) dataClass+=" noDelete";
+    let showView=(props.type == 'user' && props.size !== undefined && props.size < MAXEDITSIZE);
     return(
         <div className={cls} onClick={function(ev){
             props.onClick('select')
@@ -200,6 +202,13 @@ const DownloadItem=(props)=>{
                 <div className="date">{dp.timeText}</div>
                 <div className="info">{dp.infoText}</div>
             </div>
+            { showView && <Button className="View smallButton" onClick={
+                (ev)=>{
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    props.onClick('view');
+                }
+            }/>}
             {showRas && <div className="listrasimage"></div>}
             { showDownload && <Button className="Download smallButton" onClick={
                 (ev)=>{
@@ -662,7 +671,9 @@ class DownloadPage extends React.Component{
         if (props.options && props.options.downloadtype){
             type=props.options.downloadtype;
         }
-        globalStore.storeData(keys.gui.downloadpage.type,type);
+        if (globalStore.getData(keys.gui.downloadpage.type) === undefined || ! (props.options && props.options.returning)) {
+            globalStore.storeData(keys.gui.downloadpage.type, type);
+        }
         globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
         globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
         globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
@@ -763,6 +774,9 @@ class DownloadPage extends React.Component{
                                     }
                                     if (data == 'download'){
                                         return download(item);
+                                    }
+                                    if (data == 'view'){
+                                        history.push('viewpage',{type:item.type,name:item.name});
                                     }
                                     if (self.props.options && self.props.options.selectItemCallback){
                                         return self.props.options.selectItemCallback(item);
