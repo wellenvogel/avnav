@@ -59,7 +59,9 @@
   "dependencies": {
     "@babel/polyfill": "^7.7.0",
     "PubSub": "^3.6.0",
+    "babel-plugin-prismjs": "^2.0.1",
     "canvas-gauges": "^2.1.5",
+    "codeflask": "git+https://github.com/wellenvogel/CodeFlask.git#20200302",
     "create-react-class": "^15.6.3",
     "downloadjs": "^1.4.7",
     "lodash.merge": "^4.6.2",

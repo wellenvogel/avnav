@@ -16,17 +16,20 @@ import Requests from '../util/requests.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Toast from '../components/Toast.jsx';
 import keyhandler from '../util/keyhandler.js';
+import Prism from 'prismjs';
+import CodeFlask from 'codeflask';
+
+const languageMap={
+    js:'js',
+    json:'json',
+    html:'html',
+    css:'css'
+};
 
 class ViewPage extends React.Component{
     constructor(props){
         super(props);
-        this.buttons=[
-            GuiHelpers.mobDefinition,
-            {
-                name: 'Cancel',
-                onClick: ()=>{history.pop()}
-            }
-        ];
+        let self=this;
         let state={
             data:'',
             changed:false
@@ -37,13 +40,51 @@ class ViewPage extends React.Component{
         this.type=this.props.options.type;
         this.name=this.props.options.name;
         this.state=state;
+        this.changed=this.changed.bind(this);
+        this.flask=undefined;
         keyhandler.disable();
     }
 
+    buttons() {
+        let self=this;
+        return [
+            GuiHelpers.mobDefinition,
+            {
+                name: 'ViewPageSave',
+                disabled: !this.state.changed,
+                onClick: ()=> {
+                    let data = this.flask.getCode();
+                    Requests.postJson("?request=upload&type=" + self.type + "&overwrite=true&filename=" + encodeURIComponent(self.name), data)
+                        .then((result)=> {
+                            this.setState({changed: false});
+                        })
+                        .catch((error)=> {
+                            Toast("unable to save: " + error)
+                        });
+
+                }
+
+            },
+            {
+                name: 'Cancel',
+                onClick: ()=> {
+                    history.pop()
+                }
+            }
+        ];
+    }
+    changed(data){
+        if (this.state.changed) return;
+        this.setState({changed:true});
+    }
     componentDidMount(){
         let self=this;
         Requests.getHtmlOrText("?request=download&type="+this.type+"&name="+encodeURIComponent(this.name),{useNavUrl:true,noCache:true}).then((text)=>{
-            self.setState({data:text});
+            let ext=this.name.replace(/.*\./,'');
+            let language=languageMap[ext];
+            this.flask=new CodeFlask(self.refs.editor,{language:language,lineNumbers:true,noInitialCallback:true});
+            this.flask.updateCode(text,true);
+            this.flask.onUpdate(this.changed);
         },(error)=>{Toast("unable to load "+this.name+": "+error)});
 
     }
@@ -53,10 +94,8 @@ class ViewPage extends React.Component{
     render(){
         let self=this;
         let MainContent=<React.Fragment>
-            <div className="mainContainer listContainer scrollable" >
-            <textarea className="infoFrame"
-                defaultValue={this.state.data}/>
-            </div>
+            <div className="mainContainer" ref="editor">
+                        </div>
             </React.Fragment>;
 
         return (
@@ -68,7 +107,7 @@ class ViewPage extends React.Component{
                 mainContent={
                             MainContent
                         }
-                buttonList={self.buttons}/>
+                buttonList={self.buttons()}/>
         );
     }
 }

@@ -102,9 +102,20 @@ module.exports = {
             {
                 test: /.jsx$|.js$/,
                 exclude: /node_modules|version\.js$/,
-                loader: 'babel-loader',
-                query: {
-                    presets: ['react', 'es2015','stage-0']
+                use: {
+                    loader: 'babel-loader',
+                    options:
+                    {
+                        presets: ['react', 'es2015', 'stage-0'],
+                        plugins: [
+                            ["prismjs", {
+                                "languages": ["javascript", "css", "html","json"],
+                                "plugins": ["line-numbers"],
+                                "theme": "default",
+                                "css": false
+                            }]
+                        ]
+                    }
                 }
 
             },
