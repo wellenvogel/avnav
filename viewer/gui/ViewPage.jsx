@@ -20,15 +20,8 @@ import keyhandler from '../util/keyhandler.js';
 class ViewPage extends React.Component{
     constructor(props){
         super(props);
-        this.buttons=[
-            GuiHelpers.mobDefinition,
-            {
-                name: 'Cancel',
-                onClick: ()=>{history.pop()}
-            }
-        ];
         let state={
-            data:'',
+            data:undefined,
             changed:false
         };
         if (! this.props.options ) {
@@ -37,9 +30,49 @@ class ViewPage extends React.Component{
         this.type=this.props.options.type;
         this.name=this.props.options.name;
         this.state=state;
+        this.changed=this.changed.bind(this);
         keyhandler.disable();
+        let self=this;
+        this.timer=GuiHelpers.lifecycleTimer(this,(seq)=>{
+            if (self.refs.editor && self.state.data !== undefined){
+                if (self.refs.editor.value != this.state.data) self.changed();
+            }
+            self.timer.startTimer(seq);
+        },1000,true)
     }
 
+    buttons() {
+        let self=this;
+        return [
+            GuiHelpers.mobDefinition,
+            {
+                name: 'ViewPageSave',
+                disabled: !this.state.changed,
+                onClick: ()=> {
+                    let data = this.refs.editor.value;
+                    Requests.postJson("?request=upload&type=" + self.type + "&overwrite=true&filename=" + encodeURIComponent(self.name), data)
+                        .then((result)=> {
+                            this.setState({changed: false,data:data});
+                        })
+                        .catch((error)=> {
+                            Toast("unable to save: " + error)
+                        });
+
+                }
+
+            },
+            {
+                name: 'Cancel',
+                onClick: ()=> {
+                    history.pop()
+                }
+            }
+        ];
+    }
+    changed(data){
+        if (this.state.changed) return;
+        this.setState({changed:true});
+    }
     componentDidMount(){
         let self=this;
         Requests.getHtmlOrText("?request=download&type="+this.type+"&name="+encodeURIComponent(this.name),{useNavUrl:true,noCache:true}).then((text)=>{
@@ -54,8 +87,10 @@ class ViewPage extends React.Component{
         let self=this;
         let MainContent=<React.Fragment>
             <div className="mainContainer listContainer scrollable" >
-            <textarea className="infoFrame"
-                defaultValue={this.state.data}/>
+            <textarea className="infoFrame" ref="editor"
+                defaultValue={this.state.data}
+                onChange={this.onChange}
+                />
             </div>
             </React.Fragment>;
 
@@ -68,7 +103,7 @@ class ViewPage extends React.Component{
                 mainContent={
                             MainContent
                         }
-                buttonList={self.buttons}/>
+                buttonList={self.buttons()}/>
         );
     }
 }

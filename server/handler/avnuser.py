@@ -125,19 +125,22 @@ class AVNUserHandlerBase(AVNWorker):
       filename = AVNUtil.getHttpRequestParam(requestparam, "filename")
       if filename is None:
         raise Exception("missing filename in upload request")
-      len=kwargs.get('flen')
+      rlen=kwargs.get('flen')
       handler=kwargs.get('handler')
       filename = AVNUtil.clean_filename(filename)
       outname=os.path.join(self.baseDir,filename)
-      data=requestparam.get('_data')
+      data=AVNUtil.getHttpRequestParam(requestparam,'_json')
       if data is not None:
-        if isinstance(data,list):
-          data=data[0]
-        stream = StringIO.StringIO(data)
-        stream.seek(0)
-        handler.writeFileFromInput(outname,len,overwrite,stream)
+        decoded=json.loads(data)
+        if not overwrite and os.path.exists(outname):
+          raise Exception("file %s already exists"%outname)
+        fh=open(outname,"wb")
+        if fh is None:
+          raise Exception("unable to write to %s"%outname)
+        fh.write(decoded.encode('utf-8'))
+        fh.close()
       else:
-        handler.writeFileFromInput(outname,len,overwrite)
+        handler.writeFileFromInput(outname,rlen,overwrite)
       return {'status':'OK'}
 
     if type == 'download':
