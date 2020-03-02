@@ -16,7 +16,16 @@ import Requests from '../util/requests.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Toast from '../components/Toast.jsx';
 import keyhandler from '../util/keyhandler.js';
+import ace from 'brace';
+import 'brace/mode/javascript';
+import 'brace/mode/css';
+import 'brace/mode/html';
+import 'brace/mode/json';
+import 'brace/theme/chrome';
 
+const languageMap={
+    js:'javascript'
+};
 class ViewPage extends React.Component{
     constructor(props){
         super(props);
@@ -34,8 +43,8 @@ class ViewPage extends React.Component{
         keyhandler.disable();
         let self=this;
         this.timer=GuiHelpers.lifecycleTimer(this,(seq)=>{
-            if (self.refs.editor && self.state.data !== undefined){
-                if (self.refs.editor.value != this.state.data) self.changed();
+            if (self.editor && self.state.data !== undefined){
+                if (self.editor.session.getDocument().getValue() != this.state.data) self.changed();
             }
             self.timer.startTimer(seq);
         },1000,true)
@@ -49,7 +58,7 @@ class ViewPage extends React.Component{
                 name: 'ViewPageSave',
                 disabled: !this.state.changed,
                 onClick: ()=> {
-                    let data = this.refs.editor.value;
+                    let data = self.editor.session.getDocument().getValue();
                     Requests.postJson("?request=upload&type=" + self.type + "&overwrite=true&filename=" + encodeURIComponent(self.name), data)
                         .then((result)=> {
                             this.setState({changed: false,data:data});
@@ -77,6 +86,13 @@ class ViewPage extends React.Component{
         let self=this;
         Requests.getHtmlOrText("?request=download&type="+this.type+"&name="+encodeURIComponent(this.name),{useNavUrl:true,noCache:true}).then((text)=>{
             self.setState({data:text});
+            let ext=this.name.replace(/.*\./,'');
+            let language="ace/mode/"+(languageMap[ext]||ext);
+            self.editor=ace.edit(self.refs.editor);
+            self.editor.getSession().setMode(language);
+            self.editor.setTheme('ace/theme/chrome');
+            //TODO: better font size from surrounding element
+            self.editor.setOption('fontSize',globalStore.getData(keys.properties.baseFontSize));
         },(error)=>{Toast("unable to load "+this.name+": "+error)});
 
     }
@@ -86,8 +102,8 @@ class ViewPage extends React.Component{
     render(){
         let self=this;
         let MainContent=<React.Fragment>
-            <div className="mainContainer listContainer scrollable" >
-            <textarea className="infoFrame" ref="editor"
+            <div className="mainContainer listContainer scrollable" ref="editor">
+            <textarea className="infoFrame"
                 defaultValue={this.state.data}
                 onChange={this.onChange}
                 />
