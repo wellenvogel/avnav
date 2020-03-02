@@ -30,6 +30,7 @@ import logging.handlers
 import datetime
 import itertools
 import os
+import string
 import threading
 import subprocess
 import math
@@ -37,6 +38,7 @@ import re
 import sys
 import ctypes
 import traceback
+import unicodedata
 
 VERSION="0.9.1"
 
@@ -370,4 +372,22 @@ class AVNUtil():
     if value is not None:
       if not isinstance(value,unicode):
         value=unicode(value,errors='ignore')
+
+
+  @classmethod
+  def clean_filename(cls,filename, whitelist=None, replace=' '):
+    valid_filename_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+    char_limit = 255
+    if whitelist is None:
+      whitelist=valid_filename_chars
+    # replace spaces
+    for r in replace:
+      filename = filename.replace(r, '_')
+
+    # keep only valid ascii chars
+    cleaned_filename = unicodedata.normalize('NFKD', filename).encode('ASCII', 'ignore').decode()
+
+    # keep only whitelisted chars
+    cleaned_filename = ''.join(c for c in cleaned_filename if c in whitelist)
+    return cleaned_filename[:char_limit]
 

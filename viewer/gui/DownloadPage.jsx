@@ -36,7 +36,9 @@ const headlines={
     track: "Tracks",
     chart: "Charts",
     route: "Routes",
-    layout:"Layouts"
+    layout:"Layouts",
+    user: "User",
+    images: "Images"
 };
 const DynamicPage=Dynamic(Page);
 const DynamicList=Dynamic(ItemList);
@@ -167,7 +169,12 @@ const DownloadItem=(props)=>{
         if (props.server) showRas=true;
     }
     let showDownload=false;
-    if (props.type === "track" || props.type === "route" || props.type == 'layout' || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
+    if (props.type === "track"
+        || props.type === "route"
+        || props.type == 'layout'
+        || props.type == 'user'
+        || props.type == 'images'
+        || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
         showDownload=true;
     }
     let  cls="listEntry";
@@ -285,7 +292,12 @@ const download = (info)=> {
         if (info.type == 'layout'){
             if (LayoutHandler.download(info.name)) return;
         }
-        if (info.type == "track" || info.type == 'layout') startServerDownload(info.type, info.url ? info.url : info.name);
+        if (info.type == "track"
+            || info.type == 'layout'
+            || info.type == 'user'
+            || info.type == 'images'
+        )
+            startServerDownload(info.type, info.url ? info.url : info.name);
         else {
             if (info.type == "route") {
                 if (info.server) startServerDownload(info.type, info.name);
@@ -385,6 +397,9 @@ const runUpload=(ev)=>{
             (error)=>{Toast(error)}
         )
     }
+    if (type == 'user' || type == 'images'){
+        return uploadGeneric(type,ev.target);
+    }
     resetUpload();
 };
 
@@ -412,6 +427,22 @@ const uploadChart=(fileObject)=>{
         }
         resetUpload();
         directUpload('chart',file);
+    }
+};
+
+const uploadGeneric=(type,fileObject)=>{
+    if (fileObject.files && fileObject.files.length > 0) {
+        let file = fileObject.files[0];
+        let current=globalStore.getData(keys.gui.downloadpage.currentItems,[]);
+        for (let i=0;i<current.length;i++){
+            if (current[i].name ==file.name){
+                Toast("file "+file.name+" already exists");
+                resetUpload();
+                return;
+            }
+        }
+        resetUpload();
+        directUpload(type,file);
     }
 };
 
@@ -522,6 +553,7 @@ class DownloadForm extends React.Component {
             LeaveHandler.stop();
             this.refs.form.submit();
             LeaveHandler.activate();
+            globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
         }
     }
     componentDidUpdate(){
@@ -529,6 +561,7 @@ class DownloadForm extends React.Component {
             LeaveHandler.stop();
             this.refs.form.submit();
             LeaveHandler.activate();
+            globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
         }
     }
 
@@ -669,8 +702,23 @@ class DownloadPage extends React.Component{
                 onClick:()=>{changeType('layout')}
             },
             {
+                name:'DownloadPageUser',
+                toggle: type == 'user',
+                visible: type == 'user'|| allowTypeChange,
+                onClick:()=>{changeType('user')}
+            },
+            {
+                name:'DownloadPageImages',
+                toggle: type == 'images',
+                visible: type == 'images'|| allowTypeChange,
+                onClick:()=>{changeType('images')}
+            },
+            {
                 name:'DownloadPageUpload',
-                visible: type == 'route' || type == 'layout' || (type =='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false)) ,
+                visible: type == 'route' || type == 'layout'
+                    || (type =='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false))
+                    || (type == 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
+                    || (type == 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false)),
                 onClick:()=>{
                     if ((type == 'layout' || type == 'route')  && avnav.android){
                         let nextId=globalStore.getData(keys.gui.downloadpage.requestedUploadId,0)+1;

@@ -346,13 +346,11 @@ class AVNPluginHandler(AVNWorker):
       '''
       localPath=command[len(self.PREFIX)+1:].split("/",1)
       if len(localPath) < 2:
-        kwargs.get('handler').send_error(404,"missing plugin path")
-        return None
+        raise Exception(404,"missing plugin path")
       dir=self.pluginDirs.get(localPath[0])
       if dir is None:
-        kwargs.get('handler').send_error(404,"plugin %s not found"%localPath[0])
-        return None
-      return os.path.join(dir,kwargs.get('handler').server.plainUrlToPath(localPath[1],False))
+        raise Exception("plugin %s not found"%localPath[0])
+      return os.path.join(dir,kwargs.get('server').plainUrlToPath(localPath[1],False))
 
     '''
     handle the URL based requests

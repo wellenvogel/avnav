@@ -127,25 +127,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if mtypes is not None:
       for mtype in mtypes:
         self.overwrite_map[mtype['extension']]=mtype['type']
-    addons=cfgparam.get('UserTool')
     self.addons=[]
-    if addons is not None:
-      addonkey=1
-      for addon in addons:
-        if addon.get('url') is not None and addon.get('icon') is not None:
-          iconUrl="/user/"+addon['icon']
-          iconpath=self.getUserPathFromUrl(iconUrl)
-          if not os.path.exists(iconpath):
-            AVNLog.error("icon path %s for %s not found, ignoring entry",iconpath,addon['url'])
-            continue
-          newAddon={
-            'key':"addon%d"%addonkey,
-            'url':addon['url'],
-            'icon':iconUrl,
-            'title':addon.get('title')
-          }
-          self.addons.append(newAddon)
-          addonkey+=1
     server_address=(cfgparam['httpHost'],int(cfgparam['httpPort']))
     AVNWorker.__init__(self, cfgparam)
     self.type=AVNWorker.Type.HTTPSERVER
@@ -161,6 +143,24 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.setName(self.getThreadPrefix())
     AVNLog.info("HTTP server "+self.server_name+", "+unicode(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(unicode(self.server_port)),AVNWorker.Status.RUNNING)
+    addons = self.getParamValue('UserTool')
+    if addons is not None:
+      addonkey=1
+      for addon in addons:
+        if addon.get('url') is not None and addon.get('icon') is not None:
+          iconUrl="/user/"+addon['icon']
+          iconpath=self.tryExternalMappings(iconUrl,None)
+          if not os.path.exists(iconpath):
+            AVNLog.error("icon path %s for %s not found, ignoring entry",iconpath,addon['url'])
+            continue
+          newAddon={
+            'key':"addon%d"%addonkey,
+            'url':addon['url'],
+            'icon':iconUrl,
+            'title':addon.get('title')
+          }
+          self.addons.append(newAddon)
+          addonkey+=1
     self.gemfhandler=threading.Thread(target=self.handleGemfFiles)
     self.gemfhandler.daemon=True
     emptyname=self.getParamValue("empty", False)
@@ -386,30 +386,25 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     #pathmappings expect to have absolute pathes!
     return self.handlePathmapping(path)
 
-  def getUserPathFromUrl(self,path):
-    '''
-        special handling for user urls
-        try the user location and potentially use a fallback interal location
-        @param path:
-        @param query:
-        @return:
-        '''
-    osPath = self.plainUrlToPath(path, True)
-    if os.path.exists(osPath):
-      return osPath
-    path = path[len("/user/"):]
-    if path.startswith("viewer/keys.json"):
-      return self.plainUrlToPath("/viewer/layout/keys.json",True)
-    for p in ['user.css', 'user.js']:
-      p = "viewer/" + p
-      if path == p:
-        return self.plainUrlToPath("/" + p, True)
-    parts = path.split("/", 1)
-    if len(parts) < 2:  # not anything that we can do
-      return osPath
-    if parts[0] == 'icons' or parts[0] == 'images':
-      return self.plainUrlToPath("/viewer/images/" + parts[1], True)
-    return osPath
+  def tryExternalMappings(self,path,query):
+    for prefix in self.externalHandlers.keys():
+      if path.startswith(prefix):
+        # the external handler can either return a mapped path (already
+        # converted in an OS path - e.g. using plainUrlToPath)
+        # or just do the handling by its own and return None
+        return self.externalHandlers[prefix].handleApiRequest('path', path, query, server=self)
+    #legacy fallback:
+    #if we have images at /user/images or /user/icons we can fallback to viewer
+    #new pathes should be /user/viewer/images
+    for prefix in ['icons','images']:
+      cp="/user/"+prefix
+      if path.startswith(cp):
+        osPath = self.plainUrlToPath(path, True)
+        if os.path.exists(osPath):
+          return osPath
+        return self.plainUrlToPath("/viewer/images/"+path[len(cp)+1:],True)
+
+
 
 
 avnav_handlerList.registerHandler(AVNHTTPServer)

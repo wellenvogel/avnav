@@ -157,7 +157,9 @@ let keys={
             uploadCharts:K,
             plugins:K,
             uploadRoute:K,
-            uploadLayout:K
+            uploadLayout:K,
+            uploadUser:K,
+            uploadImages:K
         },
         global:{
             smallDisplay: K,

@@ -136,14 +136,13 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       (path,sep,query) = path.partition('?')
       path = path.split('#',1)[0]
       path = posixpath.normpath(urllib.unquote(path).decode('utf-8'))
-      for prefix in self.server.externalHandlers.keys():
-        if path.startswith(prefix):
-          #the external handler can either return a mapped path (already
-          # converted in an OS path - e.g. using plainUrlToPath)
-          #or just do the handling by its own and return None
-          return self.server.externalHandlers[prefix].handleApiRequest('path',path,query,handler=self)
-      if path.startswith("/user"):
-        return self.handleUserRequest(path,query)
+      try:
+        extPath=self.server.tryExternalMappings(path,query)
+      except Exception as e:
+        self.send_error(404,e.message)
+        return None
+      if extPath is not None:
+        return extPath
       if path.startswith(self.server.navurl):
         requestParam=urlparse.parse_qs(query,True)
         self.handleNavRequest(path,requestParam)
@@ -159,12 +158,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return None
 
       return self.server.plainUrlToPath(path)
-
-
-
-
-  def handleUserRequest(self,path,query):
-    return self.server.getUserPathFromUrl(path)
 
 
   #handle the request to an gemf file
@@ -498,7 +491,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       handler=self.server.getRequestHandler('download',type)
       if handler is not None:
         AVNLog.debug("found handler %s to handle download %s"%(handler.getConfigName(), type))
-        dl=handler.handleApiRequest('download',type,requestParam)
+        dl=handler.handleApiRequest('download',type,requestParam,handler=self)
         if dl is None:
           raise Exception("unable to download %s",type)
         if dl.get('mimetype') is None:
@@ -591,46 +584,18 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       handler=self.server.getRequestHandler("upload",type)
       if handler is not None:
         AVNLog.debug("found handler for upload request %s:%s"%(type,handler.getConfigName()))
-        handler.handleApiRequest("upload",type,requestParam,rfile=self.rfile,flen=rlen)
+        handler.handleApiRequest("upload",type,requestParam,rfile=self.rfile,flen=rlen,handler=self)
         return json.dumps({'status': 'OK'})
       if type == "chart":
         filename=self.getRequestParam(requestParam,"filename")
         if filename is None:
           raise Exception("missing filename in upload request")
-        filename=filename.replace("/","")
+        filename=AVNUtil.clean_filename(filename)
         if not filename.endswith(".gemf"):
           raise Exception("invalid filename %s, must be .gemf"%filename)
         outname=os.path.join(self.getChartDir(),filename)
-        if os.path.exists(outname):
-          raise Exception("chart file %s already exists"%filename)
-        writename=outname+".tmp"
-        AVNLog.info("start upload of chart file %s",outname)
-        fh=open(writename,"wb")
-        if fh is None:
-          raise Exception("unable to write to %s"%filename)
-        bToRead=int(rlen)
-        bufSize=1000000
-        try:
-          while bToRead > 0:
-            buf=self.rfile.read(bufSize if bToRead >= bufSize else bToRead)
-            if len(buf) == 0 or buf is None:
-              raise Exception("no more data received")
-            bToRead-=len(buf)
-            fh.write(buf)
-          fh.close()
-          os.rename(writename,outname)
-          AVNLog.info("created chart file %s",filename)
-        except Exception as e:
-          try:
-            fh.close()
-          except:
-            pass
-          try:
-            os.unlink(writename)
-          except:
-            pass
-          AVNLog.error("upload of chart file %s failed: %s",filename,unicode(e))
-          raise Exception("exception during writing %s: %s"%(writename,unicode(e)))
+        self.writeFileFromInput(outname,rlen,False)
+        AVNLog.info("created chart file %s",filename)
         self.server.notifyGemf()
         return json.dumps({'status':'OK'})
       else:
@@ -638,7 +603,35 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     except Exception as e:
       return json.dumps({'status':unicode(e)})
 
-
+  def writeFileFromInput(self,outname,rlen,overwrite=False,stream=None):
+    if os.path.exists(outname) and not overwrite:
+      raise Exception("file %s already exists" % outname)
+    writename = outname + ".tmp"
+    AVNLog.info("start upload of file %s", outname)
+    fh = open(writename, "wb")
+    if fh is None:
+      raise Exception("unable to write to %s" % outname)
+    if stream is None:
+      stream=self.rfile
+    bToRead = int(rlen)
+    bufSize = 1000000
+    try:
+      while bToRead > 0:
+        buf = stream.read(bufSize if bToRead >= bufSize else bToRead)
+        if len(buf) == 0 or buf is None:
+          raise Exception("no more data received")
+        bToRead -= len(buf)
+        fh.write(buf)
+      fh.close()
+      if os.path.exists(outname):
+        os.unlink(outname)
+      os.rename(writename, outname)
+    except:
+      try:
+        os.unlink(writename)
+      except:
+        pass
+      raise
 
   def handleListDir(self,requestParam):
     type=self.getRequestParam(requestParam,"type")
@@ -734,6 +727,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       'uploadCharts':True,
       'plugins':True,
       'uploadRoute': True,
-      'uploadLayout':True
+      'uploadLayout':True,
+      'uploadUser':True,
+      'uploadImages':True
     }
     return json.dumps({'status':'OK','data':rt})
