@@ -188,7 +188,8 @@ const DownloadItem=(props)=>{
     }
     let dataClass="downloadItemData";
     if (!(showDelete && ! props.active)) dataClass+=" noDelete";
-    let showView=(props.type == 'user' && props.size !== undefined && props.size < MAXEDITSIZE);
+    let showView=(props.type == 'user' || props.type=='images');
+    let showEdit=(props.type == 'user' && props.size !== undefined && props.size < MAXEDITSIZE);
     return(
         <div className={cls} onClick={function(ev){
             props.onClick('select')
@@ -207,6 +208,13 @@ const DownloadItem=(props)=>{
                     ev.stopPropagation();
                     ev.preventDefault();
                     props.onClick('view');
+                }
+            }/>}
+            { showEdit && <Button className="DownloadEdit smallButton" onClick={
+                (ev)=>{
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    props.onClick('edit');
                 }
             }/>}
             {showRas && <div className="listrasimage"></div>}
@@ -709,19 +717,19 @@ class DownloadPage extends React.Component{
             {
                 name:'DownloadPageLayouts',
                 toggle: type == 'layout',
-                visible: type == 'layout'|| allowTypeChange,
+                visible: type == 'layout'|| allowTypeChange ,
                 onClick:()=>{changeType('layout')}
             },
             {
                 name:'DownloadPageUser',
                 toggle: type == 'user',
-                visible: type == 'user'|| allowTypeChange,
+                visible: (type == 'user'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadUser,false),
                 onClick:()=>{changeType('user')}
             },
             {
                 name:'DownloadPageImages',
                 toggle: type == 'images',
-                visible: type == 'images'|| allowTypeChange,
+                visible: type == ('images'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadImages,false),
                 onClick:()=>{changeType('images')}
             },
             {
@@ -776,6 +784,9 @@ class DownloadPage extends React.Component{
                                         return download(item);
                                     }
                                     if (data == 'view'){
+                                        history.push('viewpage',{type:item.type,name:item.name,readOnly:true});
+                                    }
+                                    if (data == 'edit'){
                                         history.push('viewpage',{type:item.type,name:item.name});
                                     }
                                     if (self.props.options && self.props.options.selectItemCallback){

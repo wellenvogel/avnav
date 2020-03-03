@@ -23,8 +23,11 @@ const languageMap={
     js:'js',
     json:'json',
     html:'html',
-    css:'css'
+    css:'css',
+    txt: 'text'
 };
+
+const IMAGES=['png','jpg','svg','bmp','tiff','gif'];
 
 class ViewPage extends React.Component{
     constructor(props){
@@ -32,13 +35,17 @@ class ViewPage extends React.Component{
         let self=this;
         let state={
             data:'',
-            changed:false
+            changed:false,
+            readOnly:false
         };
         if (! this.props.options ) {
             history.pop();
         }
         this.type=this.props.options.type;
         this.name=this.props.options.name;
+        if (this.props.options.readOnly || this.isImage()){
+            state.readOnly=true;
+        }
         this.state=state;
         this.changed=this.changed.bind(this);
         this.flask=undefined;
@@ -52,6 +59,7 @@ class ViewPage extends React.Component{
             {
                 name: 'ViewPageSave',
                 disabled: !this.state.changed,
+                visible: !this.state.readOnly,
                 onClick: ()=> {
                     hideToast();
                     let data = this.flask.getCode();
@@ -103,25 +111,42 @@ class ViewPage extends React.Component{
         if (this.state.changed) return;
         this.setState({changed:true});
     }
+    getExt(){
+        return this.name.replace(/.*\./,'');
+    }
+    isImage(){
+        let ext=this.getExt().toLowerCase();
+        return (IMAGES.indexOf(ext) >= 0);
+    }
     getLanguage(){
-        let ext=this.name.replace(/.*\./,'');
+        let ext=this.getExt();
         let language=languageMap[ext];
         if (! language) language="text";
         return language;
     }
+    getUrl(includeNavUrl){
+        return (includeNavUrl?globalStore.getData(keys.properties.navUrl):"")+"?request=download&type="+this.type+"&name="+encodeURIComponent(this.name);
+    }
     componentDidMount(){
         let self=this;
-        Requests.getHtmlOrText("?request=download&type="+this.type+"&name="+encodeURIComponent(this.name),{useNavUrl:true,noCache:true}).then((text)=>{
-            let language=self.getLanguage();
-            this.flask=new CodeFlask(self.refs.editor,{
-                language:language,
-                lineNumbers:true,
-                noInitialCallback:true,
-                highLighter: Prism.highlightElement
-            });
-            //this.flask.addLanguage(language,Prism.languages[language]);
-            this.flask.updateCode(text,true);
-            this.flask.onUpdate(this.changed);
+        if (this.isImage()) return;
+        Requests.getHtmlOrText(this.getUrl(),{useNavUrl:true,noCache:true}).then((text)=>{
+            if (! this.state.readOnly) {
+                let language = self.getLanguage();
+                this.flask = new CodeFlask(self.refs.editor, {
+                    language: language,
+                    lineNumbers: true,
+                    defaultTheme: false,
+                    noInitialCallback: true,
+                    highLighter: Prism.highlightElement
+                });
+                //this.flask.addLanguage(language,Prism.languages[language]);
+                this.flask.updateCode(text, true);
+                this.flask.onUpdate(this.changed);
+            }
+            else{
+                this.setState({data:text})
+            }
         },(error)=>{Toast("unable to load "+this.name+": "+error)});
 
     }
@@ -130,9 +155,20 @@ class ViewPage extends React.Component{
     }
     render(){
         let self=this;
+        let isImage=this.isImage();
         let MainContent=<React.Fragment>
-            <div className="mainContainer" ref="editor">
-                        </div>
+            {this.state.readOnly ?
+                <div className="mainContainer" ref="editor">
+                    {isImage?
+                        <img className="readOnlyImage" src={this.getUrl(true)}/>
+                     :
+                        <textarea className="readOnlyText" defaultValue={this.state.data} readOnly={true}/>
+                    }
+                </div>
+                :
+                <div className="mainContainer" ref="editor">
+                </div>
+            }
             </React.Fragment>;
 
         return (
@@ -140,7 +176,7 @@ class ViewPage extends React.Component{
                 className={this.props.className}
                 style={this.props.style}
                 id="viewpage"
-                title={this.name}
+                title={(this.state.readOnly?"Showing":"Edit")+":"+this.name}
                 mainContent={
                             MainContent
                         }
