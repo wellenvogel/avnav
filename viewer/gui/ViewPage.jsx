@@ -9,15 +9,15 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import Toast from '../components/Toast.jsx';
+import Toast,{hideToast} from '../components/Toast.jsx';
+import OverlayDialog from '../components/OverlayDialog.jsx';
 import keyhandler from '../util/keyhandler.js';
-import Prism from 'prismjs';
 import CodeFlask from 'codeflask';
+import Prism from 'prismjs';
 
 const languageMap={
     js:'js',
@@ -53,7 +53,27 @@ class ViewPage extends React.Component{
                 name: 'ViewPageSave',
                 disabled: !this.state.changed,
                 onClick: ()=> {
+                    hideToast();
                     let data = this.flask.getCode();
+                    if (self.getLanguage() == 'json'){
+                        try{
+                            JSON.parse(data);
+                        }
+                        catch (ex){
+                            let txt=ex.message;
+                            if (txt.match(/osition [0-9]/)){
+                                try {
+                                    let num = txt.replace(/.*osition */, '');
+                                    num=parseInt(num);
+                                    let lines=data.substr(0,num).replace(/[^\n]*/g,'').length+1;
+                                    txt+=" (around line "+lines+")";
+                                }catch(e){}
+
+                            }
+                            Toast("invalid json: "+txt);
+                            return;
+                        }
+                    }
                     Requests.postJson("?request=upload&type=" + self.type + "&overwrite=true&filename=" + encodeURIComponent(self.name), data)
                         .then((result)=> {
                             this.setState({changed: false});
@@ -68,6 +88,12 @@ class ViewPage extends React.Component{
             {
                 name: 'Cancel',
                 onClick: ()=> {
+                    if (this.state.changed){
+                        OverlayDialog.confirm("Discard Changes?")
+                            .then((data)=>{history.pop();})
+                            .catch((e)=>{});
+                        return;
+                    }
                     history.pop()
                 }
             }
@@ -77,12 +103,23 @@ class ViewPage extends React.Component{
         if (this.state.changed) return;
         this.setState({changed:true});
     }
+    getLanguage(){
+        let ext=this.name.replace(/.*\./,'');
+        let language=languageMap[ext];
+        if (! language) language="text";
+        return language;
+    }
     componentDidMount(){
         let self=this;
         Requests.getHtmlOrText("?request=download&type="+this.type+"&name="+encodeURIComponent(this.name),{useNavUrl:true,noCache:true}).then((text)=>{
-            let ext=this.name.replace(/.*\./,'');
-            let language=languageMap[ext];
-            this.flask=new CodeFlask(self.refs.editor,{language:language,lineNumbers:true,noInitialCallback:true});
+            let language=self.getLanguage();
+            this.flask=new CodeFlask(self.refs.editor,{
+                language:language,
+                lineNumbers:true,
+                noInitialCallback:true,
+                highLighter: Prism.highlightElement
+            });
+            //this.flask.addLanguage(language,Prism.languages[language]);
             this.flask.updateCode(text,true);
             this.flask.onUpdate(this.changed);
         },(error)=>{Toast("unable to load "+this.name+": "+error)});
