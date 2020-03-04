@@ -182,12 +182,11 @@ let RequestHandler={
      *        see https://mobiarch.wordpress.com/2012/08/21/html5-file-upload-with-progress-bar-using-jquery/
      */
     uploadFile: (url, file, param)=> {
-        let type = file.type;
-        if (!type || type == "") type = "application/octet-stream";
+        let type = "application/octet-stream";
         try {
             let xhr=new XMLHttpRequest();
             xhr.open('POST',url,true);
-            xhr.setRequestHeader('Content-Type', file.type);
+            xhr.setRequestHeader('Content-Type', type);
             xhr.addEventListener('load',(event)=>{
                 if (xhr.status != 200){
                     if (param.errorhandler) param.errorhandler(param,xhr.statusText);

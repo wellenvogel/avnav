@@ -184,12 +184,13 @@ class AVNUserHandlerBase(AVNWorker):
       outname=os.path.join(self.baseDir,filename)
       data=AVNUtil.getHttpRequestParam(requestparam,'_json')
       if data is not None:
+        decoded=json.loads(data)
         if not overwrite and os.path.exists(outname):
           raise Exception("file %s already exists"%outname)
         fh=open(outname,"wb")
         if fh is None:
           raise Exception("unable to write to %s"%outname)
-        fh.write(data.encode('utf-8'))
+        fh.write(decoded.encode('utf-8'))
         fh.close()
       else:
         handler.writeFileFromInput(outname,rlen,overwrite)
