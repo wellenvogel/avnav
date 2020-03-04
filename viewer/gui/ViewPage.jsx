@@ -172,15 +172,13 @@ class ViewPage extends React.Component{
     }
     render(){
         let self=this;
-        let isImage=this.isImage();
+        let mode=this.isImage()?0:(this.getExt() == 'html')?1:2;
         let MainContent=<React.Fragment>
             {this.state.readOnly ?
                 <div className="mainContainer" ref="editor">
-                    {isImage?
-                        <img className="readOnlyImage" src={this.getUrl(true)}/>
-                     :
-                        <textarea className="readOnlyText" defaultValue={this.state.data} readOnly={true}/>
-                    }
+                    {(mode == 1)&&  <div dangerouslySetInnerHTML={{__html: this.state.data}}/>}
+                    {(mode == 0) && <img className="readOnlyImage" src={this.getUrl(true)}/>}
+                    {(mode == 2) && <textarea className="readOnlyText" defaultValue={this.state.data} readOnly={true}/>}
                 </div>
                 :
                 <div className="mainContainer" ref="editor">
