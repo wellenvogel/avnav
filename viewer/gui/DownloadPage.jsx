@@ -155,11 +155,31 @@ const changeType=(newType)=>{
     globalStore.storeData(keys.gui.downloadpage.type, newType);
 };
 
-const canEditView=(props)=>{
+const allowedItemActions=(props)=>{
     let ext=props.name.replace(/.*\./,'').toLocaleLowerCase();
-    let showView=(props.type == 'user' || props.type=='images') && ViewPage.VIEWABLES.indexOf(ext)>=0;
+    let showView=(props.type == 'user' || props.type=='images' || props.type == 'route' || props.type == 'track') && ViewPage.VIEWABLES.indexOf(ext)>=0;
     let showEdit=(props.type == 'user' && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE && ViewPage.EDITABLES.indexOf(ext) >=0);
-    return {showEdit:showEdit,showView:showView};
+    let showDownload=false;
+    if (props.type === "track"
+        || props.type === "route"
+        || props.type == 'layout'
+        || props.type == 'user'
+        || props.type == 'images'
+        || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
+        showDownload=true;
+    }
+    let showDelete=!props.active;
+    if (props.canDelete !== undefined){
+        showDelete=props.canDelete && ! props.active;
+    }
+    let showRename=(props.type == 'user' || props.type == 'images');
+    return {
+        showEdit:showEdit,
+        showView:showView,
+        showDownload:showDownload,
+        showDelete:showDelete,
+        showRename:showRename
+    };
 };
 
 const DownloadItem=(props)=>{
@@ -177,27 +197,13 @@ const DownloadItem=(props)=>{
             " nm, "+props.numpoints+" points";
         if (props.server) showRas=true;
     }
-    let showDownload=false;
-    if (props.type === "track"
-        || props.type === "route"
-        || props.type == 'layout'
-        || props.type == 'user'
-        || props.type == 'images'
-        || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
-        showDownload=true;
-    }
+    let {showView,showEdit,showDownload,showDelete}=allowedItemActions(props);
     let  cls="listEntry";
     if (props.active){
         cls+=" activeEntry";
     }
-    let showDelete=!props.active;
-    if (props.canDelete !== undefined){
-        showDelete=props.canDelete && ! props.active;
-    }
     let dataClass="downloadItemData";
     if (!(showDelete && ! props.active)) dataClass+=" noDelete";
-    let ext=props.name.replace(/.*\./,'').toLocaleLowerCase();
-    let {showView,showEdit}=canEditView(props);
     return(
         <div className={cls} onClick={function(ev){
             props.onClick('select')
@@ -255,7 +261,7 @@ const sendDelete=(info)=>{
 };
 
 const deleteItem=(info)=>{
-    let ok = OverlayDialog.confirm("delete " + info.type + " " + info.name + "?");
+    let ok = OverlayDialog.confirm("delete " + info.name + "?");
     ok.then(function() {
         if (info.type == 'layout'){
             if (LayoutHandler.deleteItem(info.name)) {
@@ -507,7 +513,10 @@ const directUpload=(type,file)=>{
         },
         errorhandler: function (param, err) {
             globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
-            Toast("upload failed: " + err.statusText);
+            Toast("upload failed: " + err);
+            setTimeout(function(){
+                fillData();
+            },1500);
         },
         progresshandler: function (param, ev) {
             if (ev.lengthComputable) {
@@ -683,13 +692,14 @@ class FileDialog extends React.Component{
         this.state={
             changed:false,
             existingName:false,
-            name:props.name
+            name:props.current.name,
+            allowed:allowedItemActions(props.current)
         };
         this.onChange=this.onChange.bind(this);
     }
     onChange(newName){
         if (newName == this.state.name) return;
-        if (newName == this.props.name){
+        if (newName == this.props.current.name){
             this.setState({
                 changed:false,
                 existingName:false,
@@ -709,49 +719,86 @@ class FileDialog extends React.Component{
         let rename=this.state.changed && ! this.state.existingName;
         return(
             <div className="fileDialog flexInner">
-                <h3 className="dialogTitle">{this.props.name}</h3>
-                <div className="dialogLine">
-                    <Input
-                        label="new name"
-                        className={cn}
-                        value={this.state.name}
-                        onChange={this.onChange}
-                        />
+                <h3 className="dialogTitle">{this.props.current.name}</h3>
+                {this.state.allowed.showRename ?
+                    <div className="dialogLine">
+                        <Input
+                            label={this.state.existingName?"existing":"new name"}
+                            className={cn}
+                            value={this.state.name}
+                            onChange={this.onChange}
+                            />
+                    </div>
+                    : null
+                }
+                <div className="dialogButtons dialogLine">
+                    {this.state.allowed.showRename ?
+                        <button name="rename"
+                                onClick={()=>{
+                                    self.props.closeCallback();
+                                    self.props.okFunction('rename',this.props.current.name,this.state.name);
+                                }}
+                                disabled={!rename}
+                            >
+                            Rename
+                        </button>
+                        :
+                        null
+                    }
+                    {this.state.allowed.showDelete?
+                        <button name="delete"
+                                onClick={()=>{
+                                    self.props.closeCallback();
+                                    self.props.okFunction('delete',this.props.current.name);
+                                }}
+                                disabled={this.state.changed}
+                            >
+                            Delete
+                        </button>
+                        :
+                        null
+                    }
                 </div>
                 <div className="dialogButtons dialogLine">
-                    <button name="rename"
-                            onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('rename',this.props.name,this.state.name);
-                                }}
-                            disabled={!rename}
-                        >
-                        Rename
-                    </button>
                     <button name="cancel"
                             onClick={self.props.closeCallback}
                         >
                         Cancel
                     </button>
-                    {(this.props.canView && ! this.state.changed)?
+                    {(this.state.allowed.showView )?
                         <button name="view"
                                 onClick={()=>{
                                     self.props.closeCallback();
-                                    self.props.okFunction('view',this.props.name);
+                                    self.props.okFunction('view',this.props.current.name);
                                 }}
+                                disabled={this.state.changed}
                             >
                             View
                         </button>
                         :
                         null}
-                    {(this.props.canEdit && ! this.state.changed)?
+                    {(this.state.allowed.showEdit)?
                         <button name="edit"
                                 onClick={()=>{
                                     self.props.closeCallback();
-                                    self.props.okFunction('edit',this.props.name);
+                                    self.props.okFunction('edit',this.props.current.name);
                                 }}
+                                disabled={this.state.changed}
                             >
                             Edit
+                        </button>
+                        :
+                        null
+                    }
+                    {(this.state.allowed.showDownload) ?
+                        <button name="download"
+                                onClick={()=>{
+                                    self.props.closeCallback();
+                                    self.props.okFunction('download',this.props.current.name);
+                                }}
+                                disabled={this.state.changed}
+                            >
+                            Download
                         </button>
                         :
                         null
@@ -763,7 +810,6 @@ class FileDialog extends React.Component{
 }
 
 const showFileDialog=(item)=>{
-    if (item.type != 'user' && item.type != 'images') return;
     let rename=(oldName,newName)=>{
         Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
             "&command=rename&name="+encodeURIComponent(oldName)+
@@ -791,17 +837,21 @@ const showFileDialog=(item)=>{
             history.push('viewpage',{type:item.type,name:name});
             return;
         }
+        if (action == 'download'){
+            return download(item);
+        }
+        if (action == 'delete'){
+            return deleteItem(item);
+        }
     };
-    let {showView,showEdit}=canEditView(item);
+    let {showView,showEdit}=allowedItemActions(item);
     OverlayDialog.dialog((props)=>{
        return(
            <FileDialog
                {...props}
                okFunction={actionFunction}
-               name={item.name}
+               current={item}
                checkName={entryExists}
-               canEdit={showEdit}
-               canView={showView}
                />
        );
     });
@@ -920,13 +970,6 @@ class DownloadPage extends React.Component{
                                     if (data == 'download'){
                                         return download(item);
                                     }
-                                    /*
-                                    if (data == 'view'){
-                                        history.push('viewpage',{type:item.type,name:item.name,readOnly:true});
-                                    }
-                                    if (data == 'edit'){
-                                        history.push('viewpage',{type:item.type,name:item.name});
-                                    }*/
                                     if (self.props.options && self.props.options.selectItemCallback){
                                         return self.props.options.selectItemCallback(item);
                                     }
