@@ -28,6 +28,7 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import ViewPage from './ViewPage.jsx';
+import {Input} from '../components/Inputs.jsx';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -154,6 +155,13 @@ const changeType=(newType)=>{
     globalStore.storeData(keys.gui.downloadpage.type, newType);
 };
 
+const canEditView=(props)=>{
+    let ext=props.name.replace(/.*\./,'').toLocaleLowerCase();
+    let showView=(props.type == 'user' || props.type=='images') && ViewPage.VIEWABLES.indexOf(ext)>=0;
+    let showEdit=(props.type == 'user' && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE && ViewPage.EDITABLES.indexOf(ext) >=0);
+    return {showEdit:showEdit,showView:showView};
+};
+
 const DownloadItem=(props)=>{
     let dp={};
     if (props.type == "route"){
@@ -189,8 +197,7 @@ const DownloadItem=(props)=>{
     let dataClass="downloadItemData";
     if (!(showDelete && ! props.active)) dataClass+=" noDelete";
     let ext=props.name.replace(/.*\./,'').toLocaleLowerCase();
-    let showView=(props.type == 'user' || props.type=='images') && ViewPage.VIEWABLES.indexOf(ext)>=0;
-    let showEdit=(props.type == 'user' && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE && ViewPage.EDITABLES.indexOf(ext) >=0);
+    let {showView,showEdit}=canEditView(props);
     return(
         <div className={cls} onClick={function(ev){
             props.onClick('select')
@@ -670,6 +677,135 @@ const androidUploadHandler=new Callback(()=>{
     },0);
 });
 
+class FileDialog extends React.Component{
+    constructor(props){
+        super(props);
+        this.state={
+            changed:false,
+            existingName:false,
+            name:props.name
+        };
+        this.onChange=this.onChange.bind(this);
+    }
+    onChange(newName){
+        if (newName == this.state.name) return;
+        if (newName == this.props.name){
+            this.setState({
+                changed:false,
+                existingName:false,
+                name:newName
+            });
+            return;
+        }
+        let newState={name:newName,changed:true};
+        if (this.props.checkName){
+            newState.existingName=this.props.checkName(newName);
+        }
+        this.setState(newState)
+    }
+    render(){
+        let self=this;
+        let cn=this.state.existingName?"existing":"";
+        let rename=this.state.changed && ! this.state.existingName;
+        return(
+            <div className="fileDialog flexInner">
+                <h3 className="dialogTitle">{this.props.name}</h3>
+                <div className="dialogLine">
+                    <Input
+                        label="new name"
+                        className={cn}
+                        value={this.state.name}
+                        onChange={this.onChange}
+                        />
+                </div>
+                <div className="dialogButtons dialogLine">
+                    <button name="rename"
+                            onClick={()=>{
+                                    self.props.closeCallback();
+                                    self.props.okFunction('rename',this.props.name,this.state.name);
+                                }}
+                            disabled={!rename}
+                        >
+                        Rename
+                    </button>
+                    <button name="cancel"
+                            onClick={self.props.closeCallback}
+                        >
+                        Cancel
+                    </button>
+                    {(this.props.canView && ! this.state.changed)?
+                        <button name="view"
+                                onClick={()=>{
+                                    self.props.closeCallback();
+                                    self.props.okFunction('view',this.props.name);
+                                }}
+                            >
+                            View
+                        </button>
+                        :
+                        null}
+                    {(this.props.canEdit && ! this.state.changed)?
+                        <button name="edit"
+                                onClick={()=>{
+                                    self.props.closeCallback();
+                                    self.props.okFunction('edit',this.props.name);
+                                }}
+                            >
+                            Edit
+                        </button>
+                        :
+                        null
+                    }
+                </div>
+            </div>
+        );
+    }
+}
+
+const showFileDialog=(item)=>{
+    if (item.type != 'user' && item.type != 'images') return;
+    let rename=(oldName,newName)=>{
+        Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
+            "&command=rename&name="+encodeURIComponent(oldName)+
+            "&newName="+encodeURIComponent(newName))
+            .then(()=>{})
+            .catch((error)=>{Toast("rename failed: "+error)});
+    };
+    let actionFunction=(action,name,opt_new)=>{
+        if (action == 'rename'){
+            Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
+                "&command=rename&name="+encodeURIComponent(name)+
+                "&newName="+encodeURIComponent(opt_new))
+                .then(()=>{ fillData();})
+                .catch((error)=>{
+                    Toast("rename failed: "+error);
+                    fillData();
+                });
+            return;
+        }
+        if (action == 'view'){
+            history.push('viewpage',{type:item.type,name:name,readOnly:true});
+            return;
+        }
+        if (action == 'edit'){
+            history.push('viewpage',{type:item.type,name:name});
+            return;
+        }
+    };
+    let {showView,showEdit}=canEditView(item);
+    OverlayDialog.dialog((props)=>{
+       return(
+           <FileDialog
+               {...props}
+               okFunction={actionFunction}
+               name={item.name}
+               checkName={entryExists}
+               canEdit={showEdit}
+               canView={showView}
+               />
+       );
+    });
+};
 
 class DownloadPage extends React.Component{
     constructor(props){
@@ -784,15 +920,17 @@ class DownloadPage extends React.Component{
                                     if (data == 'download'){
                                         return download(item);
                                     }
+                                    /*
                                     if (data == 'view'){
                                         history.push('viewpage',{type:item.type,name:item.name,readOnly:true});
                                     }
                                     if (data == 'edit'){
                                         history.push('viewpage',{type:item.type,name:item.name});
-                                    }
+                                    }*/
                                     if (self.props.options && self.props.options.selectItemCallback){
                                         return self.props.options.selectItemCallback(item);
                                     }
+                                    showFileDialog(item);
                                 }}
                             />
                             <DynamicForm/>

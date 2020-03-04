@@ -133,6 +133,9 @@ html,body {
 
 
 .dialog {
+  & > div{
+    min-width: 0;
+  }
   z-index: 121;
   padding: 1em;
   background-color: white;
@@ -148,6 +151,11 @@ html,body {
   .inner{
     overflow: auto;
   }
+  .flexInner{
+    overflow: auto;
+    .flex-display();
+    .flex-direction(column);
+  }
 
 
   input, .input {
@@ -155,8 +163,9 @@ html,body {
     font-size: inherit;
     margin-top: 0.5em;
     margin-bottom: 0.5em;
-    margin-left: 1em;
+    max-width: 100%;
     width: 20em;
+    min-width: 5em;
     border: none;
     border-bottom: 1px solid;
     .nightBorderColorGR();
@@ -172,7 +181,6 @@ html,body {
     .mdText2();
     width: 7em;
     display: inline-block;
-    text-align: end;
     margin-right: 0.5em;
     font-size: 0.8em;
   }
@@ -194,6 +202,9 @@ html,body {
     .nightBackColor(@colorSelection);
     border: none;
     .nightForeColor(@colorMain,@nightColor);
+  }
+  button[disabled] {
+    opacity: 0.6;
   }
 
   .selectDialog {
@@ -271,6 +282,8 @@ html,body {
     }
     & >.label {
       text-align: left;
+      width: 4em;
+      display: inline-block;
     }
   }
   .combinationSelect,.modeSelect{
