@@ -8,6 +8,7 @@ import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
+import helper from '../util/helper.js';
 import React from 'react';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
@@ -85,6 +86,17 @@ class ViewPage extends React.Component{
                             }
                             Toast("invalid json: "+txt);
                             return;
+                        }
+                    }
+                    else if(self.getExt() == 'xml'){
+                        try{
+                            let doc=helper.parseXml(data);
+                            let errors=doc.getElementsByTagName('parsererror');
+                            if (errors.length > 0){
+                                Toast("invalid xml: "+errors[0].textContent.replace(/ *[bB]elow is a .*/,''));
+                                return;
+                            }
+                        }catch(e){
                         }
                     }
                     Requests.postJson("?request=upload&type=" + self.type + "&overwrite=true&filename=" + encodeURIComponent(self.name), data)
