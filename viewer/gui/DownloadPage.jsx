@@ -27,9 +27,9 @@ import jsdownload from 'downloadjs';
 import GuiHelpers from '../util/GuiHelpers.js';
 import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
+import ViewPage from './ViewPage.jsx';
 
 const MAXUPLOADSIZE=100000;
-const MAXEDITSIZE=MAXUPLOADSIZE;
 const RouteHandler=NavHandler.getRoutingHandler();
 
 
@@ -188,8 +188,9 @@ const DownloadItem=(props)=>{
     }
     let dataClass="downloadItemData";
     if (!(showDelete && ! props.active)) dataClass+=" noDelete";
-    let showView=(props.type == 'user' || props.type=='images');
-    let showEdit=(props.type == 'user' && props.size !== undefined && props.size < MAXEDITSIZE);
+    let ext=props.name.replace(/.*\./,'').toLocaleLowerCase();
+    let showView=(props.type == 'user' || props.type=='images') && ViewPage.VIEWABLES.indexOf(ext)>=0;
+    let showEdit=(props.type == 'user' && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE && ViewPage.EDITABLES.indexOf(ext) >=0);
     return(
         <div className={cls} onClick={function(ev){
             props.onClick('select')

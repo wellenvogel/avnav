@@ -19,13 +19,18 @@ import keyhandler from '../util/keyhandler.js';
 import CodeFlask from 'codeflask';
 import Prism from 'prismjs';
 
+//add all extensions here that we can edit
+//if set to undefined we will edit them but without highlighting
 const languageMap={
     js:'js',
     json:'json',
-    html:'html',
+    html:'markup',
     css:'css',
-    txt: 'text'
+    xml: 'markup',
+    gpx: 'markup',
+    txt: undefined
 };
+const MAXEDITSIZE=50000;
 
 const IMAGES=['png','jpg','svg','bmp','tiff','gif'];
 
@@ -184,5 +189,9 @@ class ViewPage extends React.Component{
         );
     }
 }
+
+ViewPage.VIEWABLES=Object.keys(languageMap).concat(IMAGES);
+ViewPage.EDITABLES=Object.keys(languageMap);
+ViewPage.MAXEDITSIZE=MAXEDITSIZE;
 
 module.exports=ViewPage;
