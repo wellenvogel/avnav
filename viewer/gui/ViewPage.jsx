@@ -9,45 +9,47 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import Toast from '../components/Toast.jsx';
+import Toast,{hideToast} from '../components/Toast.jsx';
+import OverlayDialog from '../components/OverlayDialog.jsx';
 import keyhandler from '../util/keyhandler.js';
-import ace from 'brace';
-import 'brace/mode/javascript';
-import 'brace/mode/css';
-import 'brace/mode/html';
-import 'brace/mode/json';
-import 'brace/theme/chrome';
+import CodeFlask from 'codeflask';
+import Prism from 'prismjs';
 
 const languageMap={
-    js:'javascript'
+    js:'js',
+    json:'json',
+    html:'html',
+    css:'css',
+    txt: 'text'
 };
+
+const IMAGES=['png','jpg','svg','bmp','tiff','gif'];
+
 class ViewPage extends React.Component{
     constructor(props){
         super(props);
+        let self=this;
         let state={
-            data:undefined,
-            changed:false
+            data:'',
+            changed:false,
+            readOnly:false
         };
         if (! this.props.options ) {
             history.pop();
         }
         this.type=this.props.options.type;
         this.name=this.props.options.name;
+        if (this.props.options.readOnly || this.isImage()){
+            state.readOnly=true;
+        }
         this.state=state;
         this.changed=this.changed.bind(this);
+        this.flask=undefined;
         keyhandler.disable();
-        let self=this;
-        this.timer=GuiHelpers.lifecycleTimer(this,(seq)=>{
-            if (self.editor && self.state.data !== undefined){
-                if (self.editor.session.getDocument().getValue() != this.state.data) self.changed();
-            }
-            self.timer.startTimer(seq);
-        },1000,true)
     }
 
     buttons() {
@@ -57,11 +59,32 @@ class ViewPage extends React.Component{
             {
                 name: 'ViewPageSave',
                 disabled: !this.state.changed,
+                visible: !this.state.readOnly,
                 onClick: ()=> {
-                    let data = self.editor.session.getDocument().getValue();
+                    hideToast();
+                    let data = this.flask.getCode();
+                    if (self.getLanguage() == 'json'){
+                        try{
+                            JSON.parse(data);
+                        }
+                        catch (ex){
+                            let txt=ex.message;
+                            if (txt.match(/osition [0-9]/)){
+                                try {
+                                    let num = txt.replace(/.*osition */, '');
+                                    num=parseInt(num);
+                                    let lines=data.substr(0,num).replace(/[^\n]*/g,'').length+1;
+                                    txt+=" (around line "+lines+")";
+                                }catch(e){}
+
+                            }
+                            Toast("invalid json: "+txt);
+                            return;
+                        }
+                    }
                     Requests.postJson("?request=upload&type=" + self.type + "&overwrite=true&filename=" + encodeURIComponent(self.name), data)
                         .then((result)=> {
-                            this.setState({changed: false,data:data});
+                            this.setState({changed: false});
                         })
                         .catch((error)=> {
                             Toast("unable to save: " + error)
@@ -73,6 +96,12 @@ class ViewPage extends React.Component{
             {
                 name: 'Cancel',
                 onClick: ()=> {
+                    if (this.state.changed){
+                        OverlayDialog.confirm("Discard Changes?")
+                            .then((data)=>{history.pop();})
+                            .catch((e)=>{});
+                        return;
+                    }
                     history.pop()
                 }
             }
@@ -82,17 +111,26 @@ class ViewPage extends React.Component{
         if (this.state.changed) return;
         this.setState({changed:true});
     }
+    getExt(){
+        return this.name.replace(/.*\./,'');
+    }
+    isImage(){
+        let ext=this.getExt().toLowerCase();
+        return (IMAGES.indexOf(ext) >= 0);
+    }
+    getLanguage(){
+        let ext=this.getExt();
+        let language=languageMap[ext];
+        if (! language) language="text";
+        return language;
+    }
+    getUrl(includeNavUrl){
+        return (includeNavUrl?globalStore.getData(keys.properties.navUrl):"")+"?request=download&type="+this.type+"&name="+encodeURIComponent(this.name);
+    }
     componentDidMount(){
         let self=this;
         Requests.getHtmlOrText("?request=download&type="+this.type+"&name="+encodeURIComponent(this.name),{useNavUrl:true,noCache:true}).then((text)=>{
             self.setState({data:text});
-            let ext=this.name.replace(/.*\./,'');
-            let language="ace/mode/"+(languageMap[ext]||ext);
-            self.editor=ace.edit(self.refs.editor);
-            self.editor.getSession().setMode(language);
-            self.editor.setTheme('ace/theme/chrome');
-            //TODO: better font size from surrounding element
-            self.editor.setOption('fontSize',globalStore.getData(keys.properties.baseFontSize));
         },(error)=>{Toast("unable to load "+this.name+": "+error)});
 
     }
@@ -101,12 +139,11 @@ class ViewPage extends React.Component{
     }
     render(){
         let self=this;
+        let isImage=this.isImage();
         let MainContent=<React.Fragment>
-            <div className="mainContainer listContainer scrollable" ref="editor">
+            <div className="mainContainer listContainer scrollable" >
             <textarea className="infoFrame"
-                defaultValue={this.state.data}
-                onChange={this.onChange}
-                />
+                defaultValue={this.state.data}/>
             </div>
             </React.Fragment>;
 
@@ -115,11 +152,11 @@ class ViewPage extends React.Component{
                 className={this.props.className}
                 style={this.props.style}
                 id="viewpage"
-                title={this.name}
+                title={(this.state.readOnly?"Showing":"Edit")+":"+this.name}
                 mainContent={
                             MainContent
                         }
-                buttonList={self.buttons()}/>
+                buttonList={self.buttons}/>
         );
     }
 }
