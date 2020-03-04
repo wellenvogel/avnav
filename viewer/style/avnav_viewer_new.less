@@ -1021,6 +1021,9 @@ span.valuePrefix{
     .flex(1);
     position: relative;
     overflow: hidden;
+    .flex-display();
+    .flex-align-items(center);
+    .flex-justify-content(center);
   }
   .readOnlyText{
     width: 100%;
@@ -1032,6 +1035,20 @@ span.valuePrefix{
     max-height: 100%;
     margin: auto;
     display: block;
+    object-fit: contain;
+  }
+  //some corrections for codeflask
+  pre.codeflask__pre.codeflask__flatten {
+    width: unset;
+  }
+  .codeflask__lines{
+    z-index: 4 !important;
+    background-color:  #eee;
+  }
+  .codeflask__lines__line{
+    background-color:  #eee;
+    padding-right: 5px;
+    padding-left: 0;
   }
 }
 

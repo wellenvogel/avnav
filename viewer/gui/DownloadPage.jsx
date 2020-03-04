@@ -729,7 +729,7 @@ class DownloadPage extends React.Component{
             {
                 name:'DownloadPageImages',
                 toggle: type == 'images',
-                visible: type == ('images'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadImages,false),
+                visible: (type == 'images'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadImages,false),
                 onClick:()=>{changeType('images')}
             },
             {

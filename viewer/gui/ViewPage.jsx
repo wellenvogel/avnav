@@ -129,8 +129,24 @@ class ViewPage extends React.Component{
     }
     componentDidMount(){
         let self=this;
-        Requests.getHtmlOrText("?request=download&type="+this.type+"&name="+encodeURIComponent(this.name),{useNavUrl:true,noCache:true}).then((text)=>{
-            self.setState({data:text});
+        if (this.isImage()) return;
+        Requests.getHtmlOrText(this.getUrl(),{useNavUrl:true,noCache:true}).then((text)=>{
+            if (! this.state.readOnly) {
+                let language = self.getLanguage();
+                this.flask = new CodeFlask(self.refs.editor, {
+                    language: language,
+                    lineNumbers: true,
+                    defaultTheme: false,
+                    noInitialCallback: true,
+                    highLighter: Prism.highlightElement
+                });
+                //this.flask.addLanguage(language,Prism.languages[language]);
+                this.flask.updateCode(text, true);
+                this.flask.onUpdate(this.changed);
+            }
+            else{
+                this.setState({data:text})
+            }
         },(error)=>{Toast("unable to load "+this.name+": "+error)});
 
     }
@@ -141,10 +157,18 @@ class ViewPage extends React.Component{
         let self=this;
         let isImage=this.isImage();
         let MainContent=<React.Fragment>
-            <div className="mainContainer listContainer scrollable" >
-            <textarea className="infoFrame"
-                defaultValue={this.state.data}/>
-            </div>
+            {this.state.readOnly ?
+                <div className="mainContainer" ref="editor">
+                    {isImage?
+                        <img className="readOnlyImage" src={this.getUrl(true)}/>
+                     :
+                        <textarea className="readOnlyText" defaultValue={this.state.data} readOnly={true}/>
+                    }
+                </div>
+                :
+                <div className="mainContainer" ref="editor">
+                </div>
+            }
             </React.Fragment>;
 
         return (
@@ -156,7 +180,7 @@ class ViewPage extends React.Component{
                 mainContent={
                             MainContent
                         }
-                buttonList={self.buttons}/>
+                buttonList={self.buttons()}/>
         );
     }
 }
