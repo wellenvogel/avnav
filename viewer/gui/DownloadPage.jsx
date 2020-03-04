@@ -849,6 +849,24 @@ const showFileDialog=(item)=>{
     });
 };
 
+const createItem=(type)=>{
+    OverlayDialog.valueDialogPromise('enter filename','')
+        .then((name)=>{
+            if (entryExists(name)) {
+                Toast("already exists");
+                return;
+            }
+            let data="";
+            Requests.postJson("?request=upload&type=" + type + "&filename=" + encodeURIComponent(name), data)
+                .then((res)=>{fillData();})
+                .catch((error)=>{
+                    Toast("creation failed: "+error);
+                    fillData();
+                });
+        })
+        .catch(()=>{})
+};
+
 class DownloadPage extends React.Component{
     constructor(props){
         super(props);
@@ -945,40 +963,6 @@ class DownloadPage extends React.Component{
                 className={self.props.className}
                 style={self.props.style}
                 id="downloadpage"
-                mainContent={
-                            <React.Fragment>
-                            <DynamicList
-                                itemClass={DownloadItem}
-                                scrollable={true}
-                                storeKeys={{
-                                    itemList:keys.gui.downloadpage.currentItems,
-                                    type:keys.gui.downloadpage.type
-                                    }}
-                                onItemClick={(item,data)=>{
-                                    console.log("click on "+item.name+" type="+data);
-                                    if (data == 'delete'){
-                                        return deleteItem(item);
-                                    }
-                                    if (data == 'download'){
-                                        return download(item);
-                                    }
-                                    if (self.props.options && self.props.options.selectItemCallback){
-                                        return self.props.options.selectItemCallback(item);
-                                    }
-                                    showFileDialog(item);
-                                }}
-                            />
-                            <DynamicForm/>
-                            <DynamicUploadForm
-                                storeKeys={{
-                                    fileInputKey: keys.gui.downloadpage.fileInputKey,
-                                    enableUpload: keys.gui.downloadpage.enableUpload
-                                }}
-                                startUpload={runUpload}
-                            />
-                            <UploadIndicator/>
-                            </React.Fragment>
-                        }
                 storeKeys={{
                     type:keys.gui.downloadpage.type,
                     reloadSequence:keys.gui.global.reloadSequence
@@ -988,6 +972,50 @@ class DownloadPage extends React.Component{
                     rt.title=headlines[state.type];
                     rt.buttonList=self.getButtons(state.type);
                     rt.type=state.type;
+                    rt.mainContent=(
+                        <React.Fragment>
+                            <DynamicList
+                                itemClass={DownloadItem}
+                                scrollable={true}
+                                storeKeys={{
+                                            itemList:keys.gui.downloadpage.currentItems,
+                                            type:keys.gui.downloadpage.type
+                                            }}
+                                onItemClick={(item,data)=>{
+                                            console.log("click on "+item.name+" type="+data);
+                                            if (data == 'delete'){
+                                                return deleteItem(item);
+                                            }
+                                            if (data == 'download'){
+                                                return download(item);
+                                            }
+                                            if (self.props.options && self.props.options.selectItemCallback){
+                                                return self.props.options.selectItemCallback(item);
+                                            }
+                                            showFileDialog(item);
+                                        }}
+                                />
+                            <DynamicForm/>
+                            <DynamicUploadForm
+                                storeKeys={{
+                                            fileInputKey: keys.gui.downloadpage.fileInputKey,
+                                            enableUpload: keys.gui.downloadpage.enableUpload
+                                        }}
+                                startUpload={runUpload}
+                                />
+                            <UploadIndicator/>
+                            {(rt.type == "user")?
+                                <Button
+                                    className="fab"
+                                    name="DownloadPageCreate"
+                                    onClick={()=>{
+                                                createItem(rt.type);
+                                            }}
+                                    />
+                                :
+                                null}
+                        </React.Fragment>);
+
                     //as we will only be called if the type really changes - we can fill the display...
                     addItems([],true);
                     fillData();

@@ -41,6 +41,14 @@ button.button{
   font-size: @normalButtonFont;
 
 }
+button.fab.button {
+  position: absolute;
+  bottom: 0.5em;
+  right: 0.5em;
+  border-radius: 50%;
+  .nightBackFade(@colorMain);
+  .nightForeColor(white,@nightColor);
+}
 button.smallButton{
   .buttonBase();
   width: 2em;
@@ -291,6 +299,10 @@ button{
 
   &.DownloadPageUploadCancel{
     .iconButton('ic_clear.svg');
+  }
+
+  &.DownloadPageCreate{
+    .textButton('+');
   }
   &.SettingsOK {
     .iconButton('ic_done.svg');
