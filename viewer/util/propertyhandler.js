@@ -105,7 +105,7 @@ class PropertyHandler {
         let scale=1;
         let height = window.innerHeight;
         if (height !== undefined) {
-            let buttonHeight = height / numButtons - 8; //TODO: should we get this from CSS?
+            let buttonHeight = height / numButtons - 4; //TODO: should we get this from CSS?
             scale = buttonHeight / currentButtonHeight;
         }
         if (scale > 1) scale = 1;
