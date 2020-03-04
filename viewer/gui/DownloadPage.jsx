@@ -213,25 +213,17 @@ const DownloadItem=(props)=>{
                 ev.stopPropagation();
                 props.onClick('delete');
             }}/>}
-            <div className={dataClass}>
-                <div className="date">{dp.timeText}</div>
-                <div className="info">{dp.infoText}</div>
+            <div className="itemMain">
+                <div className={dataClass}>
+                    <div className="date">{dp.timeText}</div>
+                    <div className="info">{dp.infoText}</div>
+                </div>
+                <div className="infoImages">
+                    { showView && <div className="viewimage"></div>}
+                    { showEdit && <div className="editimage"></div>}
+                    {showRas && <div className="listrasimage"></div>}
+                </div>
             </div>
-            { showView && <Button className="View smallButton" onClick={
-                (ev)=>{
-                    ev.stopPropagation();
-                    ev.preventDefault();
-                    props.onClick('view');
-                }
-            }/>}
-            { showEdit && <Button className="DownloadEdit smallButton" onClick={
-                (ev)=>{
-                    ev.stopPropagation();
-                    ev.preventDefault();
-                    props.onClick('edit');
-                }
-            }/>}
-            {showRas && <div className="listrasimage"></div>}
             { showDownload && <Button className="Download smallButton" onClick={
                 (ev)=>{
                     ev.stopPropagation();

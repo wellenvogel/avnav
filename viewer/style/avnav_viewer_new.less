@@ -481,6 +481,17 @@ span.valuePrefix{
   margin-right: 0.3em;
 }
 
+//--iconimage
+
+.iconImage(@url){
+  width:1.5em;
+  height:1.5em;
+  margin: 0.2em;
+  background-image: url("../images/icons-new/@{url}");
+  background-size: contain;
+  display: inline-block;
+}
+
 
 //----------------------------------------------------------------------------------------
 //pages
@@ -884,6 +895,13 @@ span.valuePrefix{
 }
 
 #downloadpage{
+  .itemMain {
+    .flex-display();
+    .flex-direction(row);
+    .flex(1);
+    .flex-wrap(wrap);
+    .flex-align-items(start);
+  }
   .downloadItemData{
     .flex(1);
     padding-left: 0.8em;
@@ -906,12 +924,17 @@ span.valuePrefix{
       margin-left: 2.4em;
     }
   }
+  .infoImages{
+    padding-left: 0.8em;
+  }
   .listrasimage{
-    width:2em;
-    height:2em;
-    margin: 0.2em;
-    background-image: url(../images/icons-new/plug.svg);
-    background-size: contain;
+   .iconImage('plug.svg');
+  }
+  .editimage{
+    .iconImage('ic_edit.svg');
+  }
+  .viewimage{
+    .iconImage('visibility.svg');
   }
   .downloadProgress{
     position: absolute;
