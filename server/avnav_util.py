@@ -345,6 +345,17 @@ class AVNUtil():
     return rt
 
   @classmethod
+  def getReturnData(cls,error=None,**kwargs):
+    if error is not None:
+      rt= {'status':error}
+    else:
+      rt={'status':'OK'}
+    for k in kwargs.keys():
+      if kwargs[k] is not None:
+        rt[k]=kwargs[k]
+    return rt
+
+  @classmethod
   def replaceParam(cls,instr,param):
     if instr is None:
       return instr

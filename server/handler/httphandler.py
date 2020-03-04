@@ -277,20 +277,37 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
       elif requestType=='capabilities':
         rtj=self.handleCapabilityRequest(requestParam)
+      elif requestType=='api':
+        #new handling for dedicated requests for some handler
+        type=self.getRequestParam(requestParam,'type')
+        rtj=self.handleSpecificRequest(requestParam,type)
       else:
-        handler=self.server.getRequestHandler('api',requestType)
-        if handler is None:
-          raise Exception("no handler found for request %s",requestType)
-        rtj=handler.handleApiRequest('api',requestType,requestParam)
-        if isinstance(rtj,dict) or isinstance(rtj,list):
-          rtj=json.dumps(rtj)
+        #legacy: have the api type as requestType
+        rtj=self.handleSpecificRequest(requestParam,requestType)
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
-          text=e.message+"\n"+traceback.format_exc()
-          AVNLog.error("unable to process request for navrequest %s"%text)
-          self.send_response(500,text)
-          self.end_headers()
+          text=e.message
+          rtj=json.dumps(AVNUtil.getReturnData(error=text,stack=traceback.format_exc()))
+          self.sendNavResponse(rtj,requestParam)
           return
+
+  def handleSpecificRequest(self,requestParam,rtype):
+    """
+    a request that is specific to a particular handler
+    @param requestParam:
+    @param rtype: the request type
+    @return: json
+    """
+    if type is None:
+      raise Exception("missing parameter type for api request")
+    handler = self.server.getRequestHandler('api', rtype)
+    if handler is None:
+      raise Exception("no handler found for request %s", rtype)
+    rtj = handler.handleApiRequest('api', rtype, requestParam,handler=self)
+    if isinstance(rtj, dict) or isinstance(rtj, list):
+      rtj = json.dumps(rtj)
+    return rtj
+
   #return AIS targets
   #parameter: lat,lon,distance (in NM) - limit to this distance
   def handleAISRequest(self,requestParam):
@@ -640,7 +657,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     handler=self.server.getRequestHandler('list',type)
     if handler is not None:
       AVNLog.debug("found handler for list request %s:%s" % (type, handler.getConfigName()))
-      rt=handler.handleApiRequest('list',type,requestParam)
+      rt=handler.handleApiRequest('list',type,requestParam,handler=self)
       if rt is None:
         raise Exception("invalid list response")
       return json.dumps(rt)
@@ -656,12 +673,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     type=self.getRequestParam(requestParam,"type")
     if type is None:
       raise Exception("no type for delete")
-    type = self.getRequestParam(requestParam, "type")
     handler = self.server.getRequestHandler('delete', type)
     rt = {'status': 'OK'}
     if handler is not None:
       AVNLog.debug("found handler for delete request %s:%s" % (type, handler.getConfigName()))
-      handler.handleApiRequest('delete', type, requestParam)
+      handler.handleApiRequest('delete', type, requestParam,handler=self)
       return json.dumps(rt)
     if type != "chart" :
       raise Exception("invalid type %s, allowed is chart"%type)

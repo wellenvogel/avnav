@@ -42,7 +42,7 @@ class AVNUserHandlerBase(AVNWorker):
   '''
   @classmethod
   def getPrefix(cls):
-    raise NotImplemented()
+    return None
   @classmethod
   def getConfigParam(cls, child=None):
     if not child is None:
@@ -62,9 +62,10 @@ class AVNUserHandlerBase(AVNWorker):
   	  </%s>
       """ % (cls.getConfigName(), cls.getConfigName())
 
-  def __init__(self,param):
+  def __init__(self,param,type):
     AVNWorker.__init__(self,param)
     self.baseDir=None
+    self.type=type
 
   def copyTemplates(self):
     pass
@@ -88,7 +89,74 @@ class AVNUserHandlerBase(AVNWorker):
   def handlePathRequest(self,path,server):
     return None
 
+  def handleDelete(self,name):
+    if name is None:
+      raise Exception("missing name")
+    name = AVNUtil.clean_filename(name)
+    filename = os.path.join(self.baseDir, name)
+    if not os.path.exists(filename):
+      raise Exception("file %s not found" % filename)
+    os.unlink(filename)
+
+  def handleList(self):
+    data = []
+    if not os.path.exists(self.baseDir):
+      return AVNUtil.getReturnData("directory %s does not exist" % self.baseDir)
+    for f in os.listdir(self.baseDir):
+      fullname = os.path.join(self.baseDir, f)
+      if not os.path.isfile(fullname):
+        continue
+      element = {'name': f,
+                 'type': 'user',
+                 'time': os.path.getmtime(fullname),
+                 'size': os.path.getsize(fullname),
+                 'canDelete': True
+                 }
+      data.append(element)
+    rt = AVNUtil.getReturnData(items=data)
+    return rt
+
+  def getHandledCommands(self):
+    rt={"api": self.type, "upload": self.type, "list": self.type, "download": self.type, "delete": self.type}
+    prefix=self.getPrefix()
+    if prefix is not None:
+      rt["path"]=prefix
+    return rt
+
+  def checkName(self,name,doRaise=True):
+    cleanName=AVNUtil.clean_filename(name)
+    if name != cleanName:
+      if doRaise:
+        raise Exception("name %s is invalid"%name)
+      return False
+    return True
+
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
+    if type == 'api':
+      command=AVNUtil.getHttpRequestParam(requestparam,'command')
+      name=AVNUtil.getHttpRequestParam(requestparam,'name')
+      if command=='rename':
+        if name is None:
+          raise Exception("parameter name missing for rename")
+        self.checkName(name)
+        newName=AVNUtil.getHttpRequestParam(requestparam,'newName')
+        if newName is None:
+          raise Exception("parameter newName is missing for rename")
+        self.checkName(newName)
+        src=os.path.join(self.baseDir,name)
+        if not os.path.exists(src):
+          raise Exception("file %s not found"%name)
+        dst=os.path.join(self.baseDir,newName)
+        if os.path.exists(dst):
+          raise Exception("%s already exists"%newName)
+        os.rename(src,dst)
+        return AVNUtil.getReturnData()
+      elif command == 'delete':
+        self.handleDelete(name)
+        return AVNUtil.getReturnData()
+      elif command == 'list':
+        return self.handleList()
+      raise Exception("unknown command for %s api request: %s"%(self.type,command))
     if type == 'path':
       server=kwargs.get('server')
       originalPath=server.plainUrlToPath(subtype,True)
@@ -102,22 +170,7 @@ class AVNUserHandlerBase(AVNWorker):
       return originalPath
 
     if type == "list":
-      data = []
-      if not os.path.exists(self.baseDir):
-        return {'status':'ERROR','info':"directory %s does not exist"%self.baseDir}
-      for f in os.listdir(self.baseDir):
-        fullname=os.path.join(self.baseDir,f)
-        if not os.path.isfile(fullname):
-          continue
-        element = {'name': f,
-                   'type': 'user',
-                   'time':os.path.getmtime(fullname),
-                   'size':os.path.getsize(fullname),
-                   'canDelete':True
-                   }
-        data.append(element)
-      rt = {'status': 'OK', 'items': data}
-      return rt
+      return self.handleList()
 
     if type == 'upload':
       overwrite=AVNUtil.getHttpRequestParam(requestparam,'overwrite')
@@ -141,7 +194,7 @@ class AVNUserHandlerBase(AVNWorker):
         fh.close()
       else:
         handler.writeFileFromInput(outname,rlen,overwrite)
-      return {'status':'OK'}
+      return AVNUtil.getReturnData()
 
     if type == 'download':
       name = AVNUtil.getHttpRequestParam(requestparam, "name")
@@ -159,14 +212,8 @@ class AVNUserHandlerBase(AVNWorker):
 
     if type == 'delete':
       name = AVNUtil.getHttpRequestParam(requestparam, "name")
-      if name is None:
-        raise Exception("missing name")
-      name=AVNUtil.clean_filename(name)
-      filename=os.path.join(self.baseDir,name)
-      if not os.path.exists(filename):
-        raise Exception("file %s not found"%filename)
-      os.unlink(filename)
-      return {'status': 'OK'}
+      self.handleDelete(name)
+      return AVNUtil.getReturnData()
 
     raise Exception("unable to handle user request %s"%(type))
 
@@ -178,7 +225,7 @@ class AVNUserHandler(AVNUserHandlerBase):
   def getPrefix(cls):
     return cls.PREFIX
   def __init__(self,param):
-    AVNUserHandlerBase.__init__(self,param)
+    AVNUserHandlerBase.__init__(self,param,"user")
 
   def copyTemplates(self):
     httpserver=self.findHandlerByName("AVNHttpServer")
@@ -200,8 +247,6 @@ class AVNUserHandler(AVNUserHandlerBase):
     self.baseDir=AVNConfig.getDirWithDefault(self.param,'userDir',os.path.join('user','viewer'))
     AVNWorker.start(self)
 
-  def getHandledCommands(self):
-    return {"upload":"user","list":"user","download":"user","delete":"user","path":self.getPrefix()}
   def handlePathRequest(self,path,server):
     if path == 'keys.json':
       return server.plainUrlToPath('/viewer/layout/keys.json')
@@ -217,14 +262,11 @@ class AVNImagesHandler(AVNUserHandlerBase):
   def getPrefix(cls):
     return cls.PREFIX
   def __init__(self,param):
-    AVNUserHandlerBase.__init__(self,param)
+    AVNUserHandlerBase.__init__(self,param,"images")
   def start(self):
     self.baseDir=AVNConfig.getDirWithDefault(self.param,'userDir',os.path.join('user','images'))
     AVNWorker.start(self)
 
-
-  def getHandledCommands(self):
-    return {"upload":"images","list":"images","download":"images","delete":"images","path":self.getPrefix()}
 
   def handlePathRequest(self,path,server):
       return server.plainUrlToPath("/viewer/images/" + path[len("images/"):])
