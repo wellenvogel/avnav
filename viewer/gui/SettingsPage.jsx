@@ -22,6 +22,7 @@ import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {Input,ColorSelector,Checkbox} from '../components/Inputs.jsx';
 import ColorDialog from '../components/ColorDialog.jsx';
+import DB from '../components/DialogButton.jsx';
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
@@ -108,18 +109,17 @@ const rangeItemDialog=(item)=>{
                 <div className="settingsDialog inner">
                     <h3><span >{item.label}</span></h3>
                     <div className="settingsRange">Range: {range}</div>
-                    <div>
-                        <label >Value
+                    <div className="dialogRow">
+                        <span className="inputLabel">Value</span>
                             <input type="number"
                                    min={item.values[0]}
                                    max={item.values[1]}
                                    step={item.values[2]||1}
                                    name="value" onChange={this.valueChange} value={this.state.value}/>
-                        </label>
                     </div>
-                    <button name="ok" onClick={this.buttonClick}>OK</button>
-                    <button name="cancel" onClick={this.buttonClick}>Cancel</button>
-                    <button name="reset" onClick={this.buttonClick}>Reset</button>
+                    <DB name="ok" onClick={this.buttonClick}>OK</DB>
+                    <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
+                    <DB name="reset" onClick={this.buttonClick}>Reset</DB>
                     <div className="clear"></div>
                 </div>
             );

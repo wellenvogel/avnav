@@ -81,6 +81,41 @@ button.active{
   }
 }
 
+.dialogButton{
+    float: right;
+    .buttonBase();
+    margin-top: 0.5em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    font-size: @normalButtonFont;
+    padding: 0.5em;
+    width: inherit;
+    .nightBackColor(@colorSelection);
+    border: none;
+    position: relative;
+    .nightForeColor(@colorMain,@nightColor);
+    &[disabled] {
+      opacity: 0.6;
+      }
+    > span{
+      position: absolute;
+      left: 0.1em;
+      width:1em;
+    }
+    &.icon{
+      padding-left: 1.3em;
+      font-size: 0.9em;
+    }
+}
+
+.dialogIconButton(@icon){
+  > span{
+    background-image: url("@{iconBase}/@{icon}");
+  }
+  padding-left:1.3em;
+  font-size: 0.9em;
+}
+
 button{
   &.Cancel {
     .iconButton('ic_clear.svg');
@@ -348,4 +383,53 @@ button{
   &.ViewPageSave{
     .iconButton('save.svg');
   }
+}
+
+.dialogButton{
+  &.cancel{
+    .dialogIconButton('ic_clear.svg');
+  }
+  &.ok{
+    .dialogIconButton('ic_done.svg');
+  }
+  &.delete{
+    .dialogIconButton('ic_delete.svg');
+  }
+  &.reset{
+    .dialogIconButton('ic_delete.svg');
+  }
+  &.edit{
+    .dialogIconButton('ic_edit.svg');
+  }
+  &.download{
+    .dialogIconButton('ic_file_download.svg');
+  }
+  .fileDialog &.view{
+    .dialogIconButton('visibility.svg');
+  }
+  .fileDialog &.rename{
+    .dialogIconButton('swap_horiz.svg');
+  }
+  .editWidgetDialog &.before{
+    .dialogIconButton('navigate_before.svg');
+  }
+  .editWidgetDialog &.after{
+    .dialogIconButton('navigate_next.svg');
+  }
+  .colorDialog &.unset{
+    .dialogIconButton('format_color_reset.svg');
+  }
+  .wpaDialog &.disable{
+    .dialogIconButton('wifi_off.svg');
+  }
+  .wpaDialog &.remove{
+    .dialogIconButton('ic_delete.svg');
+  }
+  .wpaDialog &.connect{
+    .dialogIconButton('play_arrow.svg');
+  }
+  .wpaDialog &.enable{
+    .dialogIconButton('wifi.svg');
+  }
+
 }

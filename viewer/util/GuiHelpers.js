@@ -1,7 +1,6 @@
 import NavData from '../nav/navdata.js';
 import Toast from '../components/Toast.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
@@ -10,31 +9,9 @@ import navobjects from '../nav/navobjects.js';
 import history from '../util/history.js';
 import MapHolder from '../map/mapholder.js';
 import LayoutHandler from './layouthandler.js';
-import AlarmHandler from '../nav/alarmhandler.js';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
-const anchorWatchDialog = (overlayContainer)=> {
-    let router = NavData.getRoutingHandler();
-    if (activeRoute.anchorWatch() !== undefined) {
-        router.anchorOff();
-        //alarms will be stopped anyway by the server
-        //but this takes some seconds...
-        AlarmHandler.stopAlarm('anchor');
-        AlarmHandler.stopAlarm('gps');
-        return;
-    }
-    let pos = NavData.getCurrentPosition();
-    if (!pos) {
-        Toast("no gps position");
-        return;
-    }
-    let def = globalStore.getData(keys.properties.anchorWatchDefault);
-    OverlayDialog.valueDialogPromise("Set Anchor Watch", def, overlayContainer, "Radius(m)")
-        .then(function (value) {
-            router.anchorOn(pos, value);
-        })
-};
 
 const resizeElementFont=(el)=>{
     if (!el) return;
@@ -267,7 +244,6 @@ const mobDefinition={
 
 
 module.exports={
-    anchorWatchDialog,
     resizeElementFont,
     resizeByQuerySelector,
     lifecycleSupport,

@@ -29,6 +29,7 @@ import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import ViewPage from './ViewPage.jsx';
 import {Input} from '../components/Inputs.jsx';
+import DB from '../components/DialogButton.jsx';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -725,7 +726,7 @@ class FileDialog extends React.Component{
                 }
                 <div className="dialogButtons dialogLine">
                     {this.state.allowed.showRename ?
-                        <button name="rename"
+                        <DB name="rename"
                                 onClick={()=>{
                                     self.props.closeCallback();
                                     self.props.okFunction('rename',this.props.current.name,this.state.name);
@@ -733,12 +734,12 @@ class FileDialog extends React.Component{
                                 disabled={!rename}
                             >
                             Rename
-                        </button>
+                        </DB>
                         :
                         null
                     }
                     {this.state.allowed.showDelete?
-                        <button name="delete"
+                        <DB name="delete"
                                 onClick={()=>{
                                     self.props.closeCallback();
                                     self.props.okFunction('delete',this.props.current.name);
@@ -746,19 +747,19 @@ class FileDialog extends React.Component{
                                 disabled={this.state.changed}
                             >
                             Delete
-                        </button>
+                        </DB>
                         :
                         null
                     }
                 </div>
                 <div className="dialogButtons dialogLine">
-                    <button name="cancel"
+                    <DB name="cancel"
                             onClick={self.props.closeCallback}
                         >
                         Cancel
-                    </button>
+                    </DB>
                     {(this.state.allowed.showView )?
-                        <button name="view"
+                        <DB name="view"
                                 onClick={()=>{
                                     self.props.closeCallback();
                                     self.props.okFunction('view',this.props.current.name);
@@ -766,11 +767,11 @@ class FileDialog extends React.Component{
                                 disabled={this.state.changed}
                             >
                             View
-                        </button>
+                        </DB>
                         :
                         null}
                     {(this.state.allowed.showEdit)?
-                        <button name="edit"
+                        <DB name="edit"
                                 onClick={()=>{
                                     self.props.closeCallback();
                                     self.props.okFunction('edit',this.props.current.name);
@@ -778,12 +779,12 @@ class FileDialog extends React.Component{
                                 disabled={this.state.changed}
                             >
                             Edit
-                        </button>
+                        </DB>
                         :
                         null
                     }
                     {(this.state.allowed.showDownload) ?
-                        <button name="download"
+                        <DB name="download"
                                 onClick={()=>{
                                     self.props.closeCallback();
                                     self.props.okFunction('download',this.props.current.name);
@@ -791,7 +792,7 @@ class FileDialog extends React.Component{
                                 disabled={this.state.changed}
                             >
                             Download
-                        </button>
+                        </DB>
                         :
                         null
                     }

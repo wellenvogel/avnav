@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog from './OverlayDialog.jsx';
+import {Input} from './Inputs.jsx';
+import DB from './DialogButton.jsx';
 
 class LayoutNameDialog extends React.Component{
     constructor(props){
@@ -13,8 +15,7 @@ class LayoutNameDialog extends React.Component{
             active:props.checkActive?props.checkActive(props.value):false};
         this.valueChanged=this.valueChanged.bind(this);
     }
-    valueChanged(event) {
-        let value=event.target.value;
+    valueChanged(value) {
         let nstate={value:value};
         if (this.props.checkName){
             nstate.exists=this.props.checkName(value);
@@ -35,20 +36,23 @@ class LayoutNameDialog extends React.Component{
             }
         }
         return (
-            <div className="inner">
+            <div className="inner layoutNameDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Layout Name'}</h3>
                 {this.props.subTitle?<p>{this.props.subTitle}</p>:null}
                 <div>
-                    <div className="row"><label>{info}</label></div>
-                    <div className="row"><label>{'user.'}</label>
-                        <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
+                    <div className="dialogRow"><span className="inputLabel">{info}</span></div>
+                    <div className="dialogRow">
+                        <Input
+                            className="layoutName"
+                            label={'user.'}
+                            value={this.state.value} onChange={this.valueChanged}/>
                     </div>
                 </div>
-                <button name="ok" onClick={()=>{
+                <DB name="ok" onClick={()=>{
                     this.props.okCallback(this.state.value);
                     this.props.closeCallback();
-                    }}>{this.state.exists?"Overwrite":"Ok"}</button>
-                <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
+                    }}>{this.state.exists?"Overwrite":"Ok"}</DB>
+                <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                 <div className="clear"></div>
             </div>
         );

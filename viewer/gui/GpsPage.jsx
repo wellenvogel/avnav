@@ -21,6 +21,7 @@ import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
+import anchorWatch from '../components/AnchorWatchDialog.jsx';
 
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -196,17 +197,7 @@ class GpsPage extends React.Component{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,5);
                 }
             },
-            {
-                name: "AnchorWatch",
-                storeKeys: {watchDistance:keys.nav.anchor.watchDistance},
-                updateFunction:(state)=>{
-                    return {toggle:state.watchDistance !== undefined}
-                },
-                onClick: ()=>{
-                    GuiHelpers.anchorWatchDialog(undefined);
-                },
-                editDisable:true
-            },
+            anchorWatch(),
             GuiHelpers.mobDefinition,
             EditPageDialog.getButtonDef('gpspage'+globalStore.getData(keys.gui.gpspage.pageNumber,0),
                 PANEL_LIST,

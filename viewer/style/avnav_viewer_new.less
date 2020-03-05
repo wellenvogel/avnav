@@ -190,21 +190,8 @@ html,body {
     min-height: 1em;
   }
 
-  button{
-    float: right;
-    .buttonBase();
-    margin-top: 0.5em;
-    margin-left: 0.5em;
-    margin-right: 0.5em;
-    font-size: @normalButtonFont;
-    padding: 0.5em;
-    width: inherit;
-    .nightBackColor(@colorSelection);
-    border: none;
-    .nightForeColor(@colorMain,@nightColor);
-  }
-  button[disabled] {
-    opacity: 0.6;
+  button:not(.dialogButton){
+    .dialogButton();
   }
 
   .selectDialog {
@@ -256,7 +243,7 @@ html,body {
     .nightBorderColorGR(30);
   }
   button{
-    width: 4.5em;
+    width: 4.8em;
   }
 
 }
@@ -270,6 +257,7 @@ html,body {
   .combinationSelect {
     display: inline-block;
     vertical-align: middle;
+    margin-left: 1em;
   }
 
 
@@ -374,6 +362,14 @@ html,body {
     border: 1px solid #000;
   }
 
+}
+
+.layoutNameDialog{
+  .layoutName{
+    .inputLabel{
+      text-align: end;
+    }
+  }
 }
 //----------------------------------------------------------------------------------------
 //lists
@@ -814,6 +810,7 @@ span.valuePrefix{
     font-size: 1.2em;
     margin-top: 0.5em;
     margin-bottom: 0.5em;
+    padding-left: 0.5em;
     .detail {
       .mdText2();
       margin-top: 0.3em;

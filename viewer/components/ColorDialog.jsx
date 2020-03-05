@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import ColorPicker from '../components/ColorPicker.jsx';
+import DB from './DialogButton.jsx';
 
 class ColorDialog extends React.Component{
     constructor(props){
@@ -80,14 +81,14 @@ class ColorDialog extends React.Component{
                            onChange={this.colorInput}
                            value={this.state.value}/>
                 </div>
-                <button name="ok" onClick={this.buttonClick}>OK</button>
-                <button name="cancel" onClick={this.buttonClick}>Cancel</button>
+                <DB name="ok" onClick={this.buttonClick}>OK</DB>
+                <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
                 {(this.props.default !== undefined)?
-                    <button name="reset" onClick={this.buttonClick}>Reset</button>
+                    <DB name="reset" onClick={this.buttonClick}>Reset</DB>
                         :
                     null}
                 {(this.props.showUnset !== undefined)?
-                    <button name="unset" onClick={this.buttonClick}>Unset</button>
+                    <DB name="unset" onClick={this.buttonClick}>Unset</DB>
                     :
                     null}
                 <div className="clear"></div>

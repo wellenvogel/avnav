@@ -8,6 +8,7 @@ import WidgetFactory,{WidgetParameter} from '../components/WidgetFactory.jsx';
 import assign from 'object-assign';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector} from './Inputs.jsx';
 import ColorDialog from './ColorDialog.jsx';
+import DB from './DialogButton.jsx';
 
 
 class EditWidgetDialog extends React.Component{
@@ -175,21 +176,21 @@ class EditWidgetDialog extends React.Component{
                             label={param.displayName}
                             onChange={inputFunction}
                             showDialogFunction={self.showDialog}
+                            showUnset={true}
                             list={(current)=>this.getList(param.getList(),current)}
                             value={current}
                         />
                 })}
                 {(this.state.widget.name !== undefined)?
                     <div className="insertButtons dialogLine">
-                        {hasCurrent?<button name="before" onClick={()=>this.insert(true)}>Before</button>:null}
-                        {hasCurrent?<button name="after" onClick={()=>this.insert(false)}>After</button>:null}
-                        {(!hasCurrent)?<button name="after" onClick={()=>this.insert(false)}>Insert</button>:null}
+                        {hasCurrent?<DB name="before" onClick={()=>this.insert(true)}>Before</DB>:null}
+                        {hasCurrent?<DB name="after" onClick={()=>this.insert(false)}>After</DB>:null}
+                        {(!hasCurrent)?<DB name="after" onClick={()=>this.insert(false)}>Insert</DB>:null}
                     </div>
                     :null}
                 <div className="dialogButtons dialogLine">
-                    <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
                     {this.props.updateCallback?
-                        <button name="ok" onClick={()=>{
+                        <DB name="ok" onClick={()=>{
                         this.props.closeCallback();
                         let changes=this.state.widget;
                         if (this.props.weight){
@@ -199,13 +200,14 @@ class EditWidgetDialog extends React.Component{
                             changes.weight=undefined;
                         }
                         this.props.updateCallback(changes,this.state.panel);
-                    }}>Update</button>
+                    }}>Update</DB>
                     :null}
+                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                     {(this.props.removeCallback && (this.state.panel === this.props.panel)) ?
-                    <button name="remove" onClick={()=>{
+                    <DB name="delete" onClick={()=>{
                         this.props.closeCallback();
                         this.props.removeCallback();
-                    }}>Remove</button>:null}
+                    }}>Delete</DB>:null}
                 <div className="clear"></div>
                 </div>
             </div>

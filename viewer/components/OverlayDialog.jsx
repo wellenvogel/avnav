@@ -17,6 +17,7 @@ import InputMonitor from '../hoc/InputMonitor.jsx';
 import globalStore from '../util/globalstore.jsx';
 import ItemList from '../components/ItemList.jsx';
 import keys from '../util/keys.jsx';
+import DB from './DialogButton.jsx';
 
 let id=1;
 
@@ -104,12 +105,12 @@ const Dialogs = {
                         })}
                     </div>
                     <div className="dialogButtons">
-                        <button name="cancel"
+                        <DB name="cancel"
                                 onClick={(ev)=>{
                                     if (props.closeCallback) props.closeCallback();
                                     if (cancelCallback) cancelCallback(ev);
                                 }}
-                            >Cancel</button>
+                            >Cancel</DB>
                         <div className="clear"></div>
                     </div>
                 </div>
@@ -142,12 +143,13 @@ const Dialogs = {
                     <div className="inner">
                         <h3 className="dialogTitle">{title || 'Input'}</h3>
                         <div>
-                            <div className="row"><label>{opt_label || ''}</label>
+                            <div className="dialogRow">
+                                <span className="inputLabel">{opt_label}</span>
                                 <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
                             </div>
                         </div>
-                        <button name="ok" onClick={()=>okCallback(this.state.value)}>Ok</button>
-                        <button name="cancel" onClick={cancelCallback}>Cancel</button>
+                        <DB name="ok" onClick={()=>okCallback(this.state.value)}>Ok</DB>
+                        <DB name="cancel" onClick={cancelCallback}>Cancel</DB>
                         <div className="clear"></div>
                     </div>
                 );
@@ -200,7 +202,7 @@ const Dialogs = {
                         <h3 className="dialogTitle">Alert</h3>
 
                         <div className="dialogText">{text}</div>
-                        <button name="ok" onClick={okFunction}>Ok</button>
+                        <DB name="ok" onClick={okFunction}>Ok</DB>
                         <div className="clear"></div>
                     </div>
                 );
@@ -234,8 +236,8 @@ const Dialogs = {
                         <h3 className="dialogTitle">{opt_title || ''}</h3>
 
                         <div className="dialogText">{text}</div>
-                        <button name="ok" onClick={okFunction}>Ok</button>
-                        <button name="cancel" onClick={cancelFunction}>Cancel</button>
+                        <DB name="ok" onClick={okFunction}>Ok</DB>
+                        <DB name="cancel" onClick={cancelFunction}>Cancel</DB>
                         <div className="clear"></div>
                     </div>
                 );

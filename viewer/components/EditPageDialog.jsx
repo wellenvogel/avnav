@@ -6,6 +6,7 @@ import OverlayDialog from './OverlayDialog.jsx';
 import DialogContainer from './OverlayDialogDisplay.jsx';
 import assign from 'object-assign';
 import {Checkbox} from './Inputs.jsx';
+import DB from './DialogButton.jsx';
 
 const OPTION_COMBINATIONS=[
     {
@@ -174,15 +175,15 @@ class EditPageDialog extends React.Component{
                 })}
                 </div>
                 <div className="dialogButtons">
-                    <button name="cancel" onClick={this.props.closeCallback}>Cancel</button>
-                    <button name="ok" onClick={()=>{
+                    <DB name="ok" onClick={()=>{
                         this.props.closeCallback();
                         for (let pn in this.state.panelList){
                             let panel=this.state.panelList[pn];
                             panel.writePanelsToLayout();
                         }
                         LayoutHandler.setTemporaryOptionValues(this.state.currentOptions);
-                    }}>Ok</button>
+                    }}>Ok</DB>
+                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                 <div className="clear"></div>
                 </div>
             </div>

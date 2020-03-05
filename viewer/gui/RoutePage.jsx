@@ -25,6 +25,8 @@ import assign from 'object-assign';
 import RouteObjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import navobjects from '../nav/navobjects.js';
+import DB from '../components/DialogButton.jsx';
+import {Input,Checkbox} from '../components/Inputs.jsx';
 
 const editor=new RouteEdit(RouteEdit.MODES.PAGE);
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
@@ -60,17 +62,11 @@ const createNewRouteDialog=(name,okCallback)=> {
                 copyPoints: true
             };
             this.nameChanged=this.nameChanged.bind(this);
-            this.changeValue=this.changeValue.bind(this);
             this.okFunction=this.okFunction.bind(this);
             this.cancelFunction=this.cancelFunction.bind(this);
         }
-        nameChanged(event) {
-            this.setState({name: event.target.value});
-        }
-        changeValue(name,newValue) {
-            let ns={};
-            ns[name]=newValue;
-            this.setState(ns);
+        nameChanged(value) {
+            this.setState({name: value});
         }
         okFunction(event) {
             let rt = okCallback(this.state,this.props.closeCallback);
@@ -85,20 +81,23 @@ const createNewRouteDialog=(name,okCallback)=> {
                 <div className="editRouteName inner">
                     <h3 className="dialogTitle">Save as New</h3>
                     <div>
-                        <div className="row">
-                            <input type="text" name="value" value={this.state.name} onChange={this.nameChanged}/>
+                        <div className="dialogRow">
+                            <Input
+                                label="Name"
+                                value={this.state.name}
+                                onChange={this.nameChanged}/>
                         </div>
-                        <div className="row" onClick={function () {
-                                self.changeValue('copyPoints', !self.state.copyPoints);
-                            }} >
-                            <label>
-                                Copy Points
-                            </label>
-                            <span className={'checkBox' + (this.state.copyPoints ? ' checked' : '')}/>
+                        <div className="dialogRow">
+                            <Checkbox
+                                onChange={function (newVal) {
+                                    self.setState({copyPoints:newVal});
+                                }}
+                                label="Copy Points"
+                                value={self.state.copyPoints}/>
                         </div>
                     </div>
-                    <button name="ok" onClick={this.okFunction}>Ok</button>
-                    <button name="cancel" onClick={this.cancelFunction}>Cancel</button>
+                    <DB name="ok" onClick={this.okFunction}>Ok</DB>
+                    <DB name="cancel" onClick={this.cancelFunction}>Cancel</DB>
                     <div className="clear"></div>
                 </div>
             );

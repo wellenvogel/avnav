@@ -8,6 +8,8 @@ import reactCreateClass from 'create-react-class';
 import PropTypes from 'prop-types';
 import navobjects from '../nav/navobjects';
 import assign from 'object-assign';
+import DB from './DialogButton.jsx';
+import {Input} from './Inputs.jsx';
 
 /**
  * a waypoint dialog
@@ -30,8 +32,7 @@ let WaypointDialog = reactCreateClass({
             show: true
         };
     },
-    valueChanged: function (event) {
-        let name = event.target.name;
+    valueChanged: function (name,value) {
         let nState = {};
         nState[name] = event.target.value;
         this.setState(nState);
@@ -64,18 +65,27 @@ let WaypointDialog = reactCreateClass({
             <div className="inner">
                 <h3>Edit Waypoint</h3>
                 <div>
-                    <div className="row"><label>Name</label><input type="text" name="name" tabIndex="0"
-                                                                       onChange={this.valueChanged} value={this.state.name}/>
+                    <div className="dialogRow">
+                        <Input
+                            label="Name"
+                            value={this.state.name}
+                            onChange={(value)=>this.valueChanged('name',value)}/>
                     </div>
-                    <div className="row"><label>Lon</label><input type="text" name="lon" tabIndex="1"
-                                                                      onChange={this.valueChanged} value={this.state.lon}/>
+                    <div className="dialogRow">
+                        <Input
+                            label="Lon"
+                            onChange={(value)=>this.valueChanged('lon',value)}
+                            value={this.state.lon}/>
                     </div>
-                    <div className="row"><label>Lat</label><input type="text" name="lat" tabIndex="2"
-                                                                      onChange={this.valueChanged} value={this.state.lat}/>
+                    <div className="dialogRow">
+                        <Input
+                         label="Lat"
+                         onChange={(value)=>this.valueChanged('lat',value)}
+                         value={this.state.lat}/>
                     </div>
                 </div>
-                <button name="ok" tabIndex="4" onClick={this.okFunction}>Ok</button>
-                <button name="cancel" tabIndex="3" onClick={this.cancelFunction}>Cancel</button>
+                <DB name="ok" tabIndex="4" onClick={this.okFunction}>Ok</DB>
+                <DB name="cancel" tabIndex="3" onClick={this.cancelFunction}>Cancel</DB>
                 <div className="clear"></div>
             </div>
         );

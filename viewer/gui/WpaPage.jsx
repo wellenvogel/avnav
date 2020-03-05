@@ -19,6 +19,8 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
 import Helper from '../util/helper.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
+import {Input,Checkbox} from '../components/Inputs.jsx';
+import DB from '../components/DialogButton.jsx';
 
 const ListEntry=(props)=>{
     let level=props.level;
@@ -82,20 +84,7 @@ class Dialog extends React.Component{
             psk: '',
             allowAccess: props.allowAccess||false
         };
-        this.valueChange=this.valueChange.bind(this);
-        this.accessChange=this.accessChange.bind(this);
         this.buttonClick=this.buttonClick.bind(this);
-    }
-    valueChange(event){
-        this.setState({
-            psk: event.target.value
-        }) ;
-    }
-    accessChange(event){
-        let newAccess=! this.state.allowAccess;
-        this.setState({
-            allowAccess: newAccess
-        }) ;
     }
     buttonClick(event){
         let button=event.target.name;
@@ -104,26 +93,33 @@ class Dialog extends React.Component{
     }
     render(){
         let id=this.props.id;
+        let self=this;
         return (
             <div className="wpaDialog inner">
                 <div>
                     <h3><span >{this.props.ssid}</span></h3>
-                    <div>
-                        <label >Password
-                            <input type="password" name="psk" onChange={this.valueChange} value={this.state.psk}/>
-                        </label>
+                    <div className="dialogRow">
+                        <Input
+                            label="Password"
+                            type="password"
+                            name="psk"
+                            onChange={(value)=>self.setState({psk:value})}
+                            value={this.state.psk}/>
                         {this.props.showAccess?
-                            <label onClick={this.accessChange}>External access
-                                <span className={'checkBox'+(this.state.allowAccess?' checked':'')}/>
-                            </label>
+                            <div className="dialogRow">
+                            <Checkbox
+                                onChange={(newVal)=>self.setState({allowAccess:newVal})}
+                                label="External access"
+                                value={this.state.allowAccess}/>
+                            </div>
                             :null
                         }
                     </div>
-                    {id >=0 && <button name="remove" onClick={this.buttonClick}>Remove</button>}
-                    <button name="cancel" onClick={this.buttonClick}>Cancel</button>
-                    <button name="connect" onClick={this.buttonClick}>Connect</button>
-                    {id >= 0 && <button name="enable" onClick={this.buttonClick}>Enable</button>}
-                    {id >= 0 && <button name="disable" onClick={this.buttonClick}>Disable</button>}
+                    {id >=0 && <DB name="remove" onClick={this.buttonClick}>Remove</DB>}
+                    <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
+                    <DB name="connect" onClick={this.buttonClick}>Connect</DB>
+                    {id >= 0 && <DB name="enable" onClick={this.buttonClick}>Enable</DB>}
+                    {id >= 0 && <DB name="disable" onClick={this.buttonClick}>Disable</DB>}
                     <div className="clear"></div>
                 </div>
             </div>

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog from './OverlayDialog.jsx';
+import DB from './DialogButton.jsx';
 
 class LayoutFinishedDialog extends React.Component{
     constructor(props){
@@ -28,9 +29,9 @@ class LayoutFinishedDialog extends React.Component{
         return (
             <div>
                 <h3 className="dialogTitle">Save Layout Changes?</h3>
-                <button name="ok" onClick={()=>this.buttonFunction(1)}>Ok</button>
-                <button name="cancel" onClick={()=>this.buttonFunction(3)}>Cancel</button>
-                <button name="discard" onClick={()=>this.buttonFunction(2)}>Discard Changes</button>
+                <DB name="ok" onClick={()=>this.buttonFunction(1)}>Ok</DB>
+                <DB name="cancel" onClick={()=>this.buttonFunction(3)}>Cancel</DB>
+                <DB name="delete" onClick={()=>this.buttonFunction(2)}>Discard Changes</DB>
                 <div className="clear"></div>
             </div>
         );

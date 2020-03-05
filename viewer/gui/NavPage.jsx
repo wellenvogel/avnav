@@ -33,6 +33,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
+import anchorWatch from '../components/AnchorWatchDialog.jsx';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -141,21 +142,7 @@ class NavPage extends React.Component{
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
         this.waypointButtons=[
-            {
-                name: "AnchorWatch",
-                storeKeys: {
-                    watchDistance: keys.nav.anchor.watchDistance
-                },
-                updateFunction:(state)=>{
-                    return {
-                        toggle: state.watchDistance !== undefined
-                    }
-                },
-                onClick:()=>{
-                    GuiHelpers.anchorWatchDialog(undefined);
-                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
-                }
-            },
+            anchorWatch(),
             {
                 name:'WpLocate',
                 onClick:()=>{
