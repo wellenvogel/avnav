@@ -77,6 +77,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
         'url':None, #we replace $HOST...
         'title':'',
         'icon':None, #an icon below $datadir/user
+        'keepUrl':'' #auto detect
       }
     if not child is None:
       return None
@@ -147,17 +148,30 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if addons is not None:
       addonkey=1
       for addon in addons:
-        if addon.get('url') is not None and addon.get('icon') is not None:
-          iconUrl="/user/"+addon['icon']
+        icon=addon.get('icon')
+        url=addon.get('url')
+        if url is not None and icon is not None:
+          if not icon.startswith("/user"):
+            iconUrl="/user/"+addon['icon']
+          else:
+            iconUrl=icon
           iconpath=self.tryExternalMappings(iconUrl,None)
-          if not os.path.exists(iconpath):
+          if iconpath is None or not os.path.exists(iconpath):
             AVNLog.error("icon path %s for %s not found, ignoring entry",iconpath,addon['url'])
             continue
+          keepUrl=False
+          if addon.get('keepUrl') is None or addon.get('keepUrl') == '':
+            if url.startswith("http"):
+              keepUrl=True
+          else:
+            if str(addon.get('keepUrl')).lower() == "true":
+              keepUrl=True
           newAddon={
             'key':"addon%d"%addonkey,
-            'url':addon['url'],
+            'url':url,
             'icon':iconUrl,
-            'title':addon.get('title')
+            'title':addon.get('title'),
+            'keepUrl':keepUrl
           }
           self.addons.append(newAddon)
           addonkey+=1

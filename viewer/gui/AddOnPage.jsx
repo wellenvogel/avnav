@@ -96,9 +96,15 @@ class AddOnPage extends React.Component{
                 if (props.addOns) {
                     currentAddOn = props.addOns[props.activeAddOn || 0] || {};
                 }
+                let url=currentAddOn.url;
+                if (url && ! currentAddOn.keepUrl){
+                    let urladd="_="+(new Date()).getTime();
+                    if (url.match(/\?/)) url+="&"+urladd;
+                    else url+="?"+urladd;
+                }
                 let MainContent= InputMonitor((props)=>
                     <div className="addOnFrame">
-                        {currentAddOn.url?<iframe src={currentAddOn.url} className="addOn"/>:null}
+                        {currentAddOn.url?<iframe src={url} className="addOn"/>:null}
                     </div>);
                 return (
                     <Page

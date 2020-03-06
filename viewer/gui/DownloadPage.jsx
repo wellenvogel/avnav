@@ -174,12 +174,14 @@ const allowedItemActions=(props)=>{
         showDelete=props.canDelete && ! props.active;
     }
     let showRename=(props.type == 'user' || props.type == 'images');
+    let showApp=(props.type == 'user' && ext == 'html');
     return {
         showEdit:showEdit,
         showView:showView,
         showDownload:showDownload,
         showDelete:showDelete,
-        showRename:showRename
+        showRename:showRename,
+        showApp:showApp
     };
 };
 
@@ -198,7 +200,7 @@ const DownloadItem=(props)=>{
             " nm, "+props.numpoints+" points";
         if (props.server) showRas=true;
     }
-    let {showView,showEdit,showDownload,showDelete}=allowedItemActions(props);
+    let {showView,showEdit,showDownload,showDelete,showApp}=allowedItemActions(props);
     let  cls="listEntry";
     if (props.active){
         cls+=" activeEntry";
@@ -223,6 +225,7 @@ const DownloadItem=(props)=>{
                     { showView && <div className="viewimage"></div>}
                     { showEdit && <div className="editimage"></div>}
                     {showRas && <div className="listrasimage"></div>}
+                    {showApp && <div className="appimage"></div>}
                 </div>
             </div>
             { showDownload && <Button className="Download smallButton" onClick={
