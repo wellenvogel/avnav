@@ -1065,9 +1065,14 @@ span.valuePrefix{
     .flex(1);
     position: relative;
     overflow: hidden;
-    .flex-display();
-    .flex-align-items(center);
-    .flex-justify-content(center);
+    &.image {
+      .flex-display();
+      .flex-align-items(center);
+      .flex-justify-content(center);
+    }
+    .hidden{
+      display: none !important;
+    }
   }
   .readOnlyText{
     width: 100%;

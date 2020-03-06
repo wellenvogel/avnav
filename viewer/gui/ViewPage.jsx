@@ -63,9 +63,25 @@ class ViewPage extends React.Component{
         return [
             GuiHelpers.mobDefinition,
             {
+                name: 'ViewPageView',
+                visible: this.canChangeMode(),
+                toggle: this.state.readOnly,
+                onClick: ()=>{
+                    this.setState({readOnly: true})
+                }
+            },
+            {
+                name: 'ViewPageEdit',
+                visible: this.canChangeMode(),
+                toggle: !this.state.readOnly,
+                onClick: ()=>{
+                    this.setState({readOnly: false})
+                }
+            },
+            {
                 name: 'ViewPageSave',
                 disabled: !this.state.changed,
-                visible: !this.state.readOnly,
+                visible: !this.state.readOnly || this.canChangeMode(),
                 onClick: ()=> {
                     hideToast();
                     let data = this.flask.getCode();
@@ -135,6 +151,9 @@ class ViewPage extends React.Component{
         let ext=this.getExt().toLowerCase();
         return (IMAGES.indexOf(ext) >= 0);
     }
+    canChangeMode(){
+        return this.getExt() == 'html';
+    }
     getLanguage(){
         let ext=this.getExt();
         let language=languageMap[ext];
@@ -148,7 +167,7 @@ class ViewPage extends React.Component{
         let self=this;
         if (this.isImage()) return;
         Requests.getHtmlOrText(this.getUrl(),{useNavUrl:true,noCache:true}).then((text)=>{
-            if (! this.state.readOnly) {
+            if (! this.state.readOnly || this.canChangeMode()) {
                 let language = self.getLanguage();
                 this.flask = new CodeFlask(self.refs.editor, {
                     language: language,
@@ -161,9 +180,7 @@ class ViewPage extends React.Component{
                 this.flask.updateCode(text, true);
                 this.flask.onUpdate(this.changed);
             }
-            else{
-                this.setState({data:text})
-            }
+            this.setState({data:text})
         },(error)=>{Toast("unable to load "+this.name+": "+error)});
 
     }
@@ -173,15 +190,23 @@ class ViewPage extends React.Component{
     render(){
         let self=this;
         let mode=this.isImage()?0:(this.getExt() == 'html')?1:2;
+        let showView=this.state.readOnly || this.canChangeMode();
+        let showEdit=!this.state.readOnly || this.canChangeMode();
+        let viewData=this.state.changed?this.flask.getCode():this.state.data;
+        let viewClass="mainContainer view";
+        if (!this.state.readOnly) viewClass+=" hidden";
+        if (mode == 0) viewClass+=" image";
+        let editClass="mainContainer edit";
+        if (this.state.readOnly) editClass+=" hidden";
         let MainContent=<React.Fragment>
-            {this.state.readOnly ?
-                <div className="mainContainer" ref="editor">
-                    {(mode == 1)&&  <div dangerouslySetInnerHTML={{__html: this.state.data}}/>}
+            {showView &&
+                <div className={viewClass}>
+                    {(mode == 1)&&  <div dangerouslySetInnerHTML={{__html: viewData}}/>}
                     {(mode == 0) && <img className="readOnlyImage" src={this.getUrl(true)}/>}
-                    {(mode == 2) && <textarea className="readOnlyText" defaultValue={this.state.data} readOnly={true}/>}
-                </div>
-                :
-                <div className="mainContainer" ref="editor">
+                    {(mode == 2) && <textarea className="readOnlyText" defaultValue={viewData} readOnly={true}/>}
+                </div>}
+            {showEdit &&
+                <div className={editClass} ref="editor">
                 </div>
             }
             </React.Fragment>;
@@ -191,7 +216,7 @@ class ViewPage extends React.Component{
                 className={this.props.className}
                 style={this.props.style}
                 id="viewpage"
-                title={(this.state.readOnly?"Showing":"Edit")+":"+this.name}
+                title={(this.state.readOnly?"Showing":"Editing")+": "+this.name}
                 mainContent={
                             MainContent
                         }
