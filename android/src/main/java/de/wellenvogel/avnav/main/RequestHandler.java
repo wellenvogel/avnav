@@ -647,6 +647,7 @@ public class RequestHandler {
                 o.put("plugins",false);
                 o.put("uploadRoute",true);
                 o.put("uploadLayout",true);
+                o.put("canConnect",true);
                 JSONObject response=new JSONObject();
                 response.put("status","OK");
                 response.put("data",o);
