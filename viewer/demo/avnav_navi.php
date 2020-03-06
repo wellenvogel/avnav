@@ -38,10 +38,10 @@ $tstdata=array(
 function readFileEntry($rqtype){
 	global $tstdata;
 	$fdata=$tstdata[$rqtype];
-	if (! isset($fdata)) return "{'status':'no fdata'}";
+	if (! isset($fdata)) return '{"status":"no fdata"}';
 	$fname=$fdata['name'];
 	if (! file_exists($fname)){
-		return "{'status':'file $fname does not exist'}";
+		return "{\"status\":\"file $fname does not exist\"}";
 	}
 	$h=fopen($fname,"rb");
 	if (! $h) return "";
