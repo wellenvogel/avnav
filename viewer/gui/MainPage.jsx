@@ -75,10 +75,10 @@ class MainPage extends React.Component {
             },
             {
                 name: 'Connected',
-                storeKeys: [keys.gui.global.onAndroid, keys.properties.connectedMode],
+                storeKeys: [keys.gui.global.onAndroid, keys.properties.connectedMode,keys.gui.capabilities.canConnect],
                 updateFunction: (state, skeys) => {
                     return {
-                        visible: !state[keys.gui.global.onAndroid],
+                        visible: !state[keys.gui.global.onAndroid] && state[keys.gui.capabilities.canConnect] == true,
                         toggle: state[keys.properties.connectedMode]
                     }
                 },

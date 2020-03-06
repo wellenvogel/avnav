@@ -159,7 +159,8 @@ let keys={
             uploadRoute:K,
             uploadLayout:K,
             uploadUser:K,
-            uploadImages:K
+            uploadImages:K,
+            canConnect: K,
         },
         global:{
             smallDisplay: K,

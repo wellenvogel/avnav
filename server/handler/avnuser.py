@@ -242,14 +242,16 @@ class AVNUserHandler(AVNUserHandlerBase):
       if not os.path.exists(dest) and os.path.exists(src):
         AVNLog.info("copying template from %s to %s"%(src,dest))
         shutil.copyfile(src,dest)
+    dest=os.path.join(self.baseDir,"keys.json")
+    if not os.path.exists(dest):
+      with open(dest,"w") as fh:
+        fh.write("{\n}\n")
 
   def start(self):
     self.baseDir=AVNConfig.getDirWithDefault(self.param,'userDir',os.path.join('user','viewer'))
     AVNWorker.start(self)
 
   def handlePathRequest(self,path,server):
-    if path == 'keys.json':
-      return server.plainUrlToPath('/viewer/layout/keys.json')
     for p in self.FLIST:
       if path == p:
         return server.plainUrlToPath("/viewer/" + p, True)

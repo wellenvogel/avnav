@@ -294,9 +294,9 @@ class LayoutHandler{
         }catch(e){
             base.log("unable to store layout locally")
         }
-        KeyHandler.resetMerge();
+        KeyHandler.resetMerge(1);
         if (this.layout.keys){
-           KeyHandler.mergeMappings(this.layout.keys);
+           KeyHandler.mergeMappings(1,this.layout.keys);
         }
         globalStore.storeData(keys.properties.layoutName,this.name);
         this.incrementSequence();

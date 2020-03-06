@@ -11,6 +11,7 @@ class KeyHandler{
     constructor(){
         this.keymappings={};
         this.merges={};
+        this.mergeLevels=[];
         this.registrations={};
         this.page=undefined;
         this.ALLPAGES="all";
@@ -67,11 +68,19 @@ class KeyHandler{
         this.keymappings=mappings;
     }
 
-    mergeMappings(mappings){
-        this.merges=mappings;
+    mergeMappings(level,mappings){
+        this.merges[level]=mappings;
+        if (this.mergeLevels.indexOf(level) < 0){
+            this.mergeLevels.push(level);
+            this.mergeLevels.sort();
+        }
     }
-    resetMerge(){
-        this.merges={};
+    resetMerge(level){
+        delete this.merges[level];
+        let idx=this.mergeLevels.indexOf(level);
+        if (idx < 0) return;
+        this.mergeLevels.splice(idx,1);
+        this.mergeLevels.sort();
     }
 
     setPage(page){
@@ -80,13 +89,21 @@ class KeyHandler{
 
     findMappingForPage(key,page){
         let mapping=undefined;
-        try {
-            mapping = this.findMappingForType(this.merges, key, page);
-        }catch(e){
-            console.log("error when searching keymapping: "+e)
+        for (let lidx=this.mergeLevels.length-1;lidx>=0;lidx--) {
+            let mergeIndex=this.mergeLevels[lidx];
+            try {
+                mapping = this.findMappingForType(this.merges[mergeIndex], key, page);
+                if (mapping) return mapping;
+                mapping = this.findMappingForType(this.merges[mergeIndex], key,this.ALLPAGES );
+            } catch (e) {
+                console.log("error when searching keymapping: " + e)
+            }
+            if (mapping) return mapping;
         }
+        mapping=this.findMappingForType(this.keymappings,key,page);
         if (mapping) return mapping;
-        return this.findMappingForType(this.keymappings,key,page);
+        return this.findMappingForType(this.keymappings,key,this.ALLPAGES);
+
     }
     findMappingForType(mappings,key,page){
         if (mappings === undefined) return;
@@ -125,10 +142,6 @@ class KeyHandler{
         if (! this.keymappings) return;
         let page=this.page;
         let mapping=this.findMappingForPage(key,page);
-        if (! mapping){
-            page=this.ALLPAGES;
-            mapping=this.findMappingForPage(key,page);
-        }
         if (! mapping) return;
         keyEvent.preventDefault();
         keyEvent.stopPropagation();

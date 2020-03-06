@@ -117,12 +117,19 @@ class App extends React.Component {
         this.checkSizes=this.checkSizes.bind(this);
         this.keyDown=this.keyDown.bind(this);
         this.state={};
-        Requests.getJson("/user/viewer/keys.json",{useNavUrl:false,checkOk:false}).then(
+        Requests.getJson("keys.json",{useNavUrl:false,checkOk:false}).then(
             (json)=>{
                 KeyHandler.registerMappings(json);
             },
             (error)=>{
                 Toast("unable to load key mappings: "+error);
+            }
+        );
+        Requests.getJson("/user/viewer/keys.json",{useNavUrl:false,checkOk:false}).then(
+            (json)=>{
+                KeyHandler.mergeMappings(2,json);
+            },
+            (error)=>{
             }
         );
         LayoutHandler.loadStoredLayout(true)

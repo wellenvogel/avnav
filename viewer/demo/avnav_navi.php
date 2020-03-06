@@ -81,9 +81,12 @@ if (isset($_REQUEST['request'])){
 $isEncoded=1;
 if ($rq == 'listCharts'){
 		$rt['status']='OK';
-		$de=array('name'=>'eniro','url'=>'demo-eniro','charturl'=>'demo-eniro');
-		$de2=array('name'=>'bsh','url'=>'demo-bsh','charturl'=>'demo-bsh');
-		$de3=array('name'=>'osm','url'=>'demo-osm','charturl'=>'demo-osm');
+		$base=$_SERVER['REQUEST_URI'];
+		$base=preg_replace("/\?.*/","",$base);
+		$base=preg_replace("?/[^/]*$?","",$base);
+		$de=array('name'=>'eniro','url'=>$base.'/demo-eniro','charturl'=>$base.'/demo-eniro');
+		$de2=array('name'=>'bsh','url'=>$base.'/demo-bsh','charturl'=>$base.'/demo-bsh');
+		$de3=array('name'=>'osm','url'=>$base.'/demo-osm','charturl'=>$base.'/demo-osm');
 		$rt['data']=array($de,$de2,$de3);
 		$isEncoded=0;
 }
@@ -92,6 +95,9 @@ else if ($rq == 'listdir' || $rq == 'routing'){
     $rt['data']=array();
     $rt['items']=array();
     $isEncoded=0;
+}
+else if ($rq == 'nmeaStatus'){
+	$rt='{"status": "OK", "data": {"nmea": {"status": "green", "source": "testreader", "info": "Sat 0 visible/0 used"}, "ais": {"status": "green", "source": "testreader", "info": "70 targets"}}}';
 }
 else {
 	$rt=readFileEntry($rq);
