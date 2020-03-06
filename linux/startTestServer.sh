@@ -10,5 +10,5 @@ vdir="release"
 if [ "$1" = "-d" ] ; then
   vdir="debug"
 fi
-$PROG -w $RUNDIR -c $HOME/AvNavCharts/out -u viewer=$pdir/../viewer/build/$vdir $RUNDIR/avnav_server.xml
+$PROG -e -w $RUNDIR -c $HOME/AvNavCharts/out -u viewer=$pdir/../viewer/build/$vdir $RUNDIR/avnav_server.xml
 

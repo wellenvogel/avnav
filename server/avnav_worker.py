@@ -59,7 +59,9 @@ class AVNWorker(threading.Thread):
           rt = handler
           break
     return rt
-
+  @classmethod
+  def resetHandlerList(cls):
+    cls.allHandlers=[]
   @classmethod
   def findFeeder(cls,feedername):
     """find a feeder by its name (not configName)"""
@@ -102,11 +104,9 @@ class AVNWorker(threading.Thread):
     self.status={'main':self.Status.STARTED}
     self.type=self.Type.DEFAULT
     self.feeder=None
-    self.domNode=None #node in the dom for writing back
-    self.childNodes={} #a hash having an array of entries for each child name
-  def setDomNode(self,node,childNodes):
-    self.domNode=node
-    self.childNodes=childNodes
+    self.configChanger=None #reference for writing back to the DOM
+  def setConfigChanger(self, changer):
+    self.configChanger=changer
   def getStatusProperties(self):
     return {}
   def getInfo(self):
@@ -232,6 +232,40 @@ class AVNWorker(threading.Thread):
     if defaultSuffix is None:
       defaultSuffix="?"
     return "%s-%s"%(self.getName(),defaultSuffix)
+
+  def changeConfig(self,name,value):
+    if self.param is None:
+      raise Exception("unable to set param")
+    if self.configChanger is None:
+      raise Exception("unable to store changed config")
+    old=self.getParamValue(name)
+    if old != value:
+      self.configChanger.changeAttribute(name,value)
+      self.param[name] = value
+
+  def changeChildConfig(self,childName,childIndex,name,value):
+    if self.param is None:
+      raise Exception("unable to set param")
+    if self.configChanger is None:
+      raise Exception("unable to store changed config")
+    childList=self.param.get(childName)
+    if childList is None:
+      childList=[]
+      self.param[childName]=childList
+    if not isinstance(childList,list):
+      raise Exception("param %s is no childlist"%childName)
+    if childIndex >= 0 and childIndex >= len(childList):
+      raise Exception("trying to change a non existing child %s:%d"%(childName,childIndex))
+    current=None
+    if childIndex < 0:
+      current={}
+      childList.append(current)
+    else:
+      current=childList[childIndex]
+    old=current.get(name)
+    if old != value:
+      self.configChanger.changeChildAttribute(childName,childIndex,name,value)
+      current[name] = value
 
   #get the XML tag in the config file that describes this worker
   @classmethod

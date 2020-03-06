@@ -116,6 +116,8 @@ def main(argv):
         const=100, default=logging.INFO, dest="verbose")
   parser.add_option("-d", "--debug", action="store_const", 
         const=logging.DEBUG, dest="verbose")
+  parser.add_option("-e", "--error", action="store_const",
+                    const=True, dest="failOnError")
   parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
   parser.add_option("-c", "--chartbase", dest="chartbase", help="if set, overwrite the chart base dir from the HTTPServer")
   parser.add_option("-w", "--datadir", dest="datadir",
@@ -142,9 +144,20 @@ def main(argv):
   cfg.setBaseParam(cfg.BASEPARAM.BASEDIR,basedir)
   cfg.setBaseParam(cfg.BASEPARAM.DATADIR,datadir)
   rt=cfg.readConfigAndCreateHandlers(cfgname)
+  fallbackName = AVNConfig.getFallbackName(cfgname)
   if rt is False:
-    AVNLog.error("unable to parse config file %s",cfgname)
-    sys.exit(1)
+    if os.path.exists(fallbackName) and not options.failOnError:
+      AVNLog.error("error when parsing %s, trying fallback %s",cfgname,fallbackName)
+      rt=cfg.readConfigAndCreateHandlers(fallbackName)
+      if not rt:
+        AVNLog.error("unable to parse config file %s", fallbackName)
+        sys.exit(1)
+      cfg.cfgfileName=cfgname #we just did read the fallback - but if we write...
+    else:
+      AVNLog.error("unable to parse config file %s",cfgname)
+      sys.exit(1)
+  else:
+    cfg.copyFileWithCheck(cfgname,fallbackName,False) #write a "last known good"
   baseConfig=AVNWorker.findHandlerByName("AVNConfig")
   httpServer=AVNWorker.findHandlerByName("AVNHttpServer")
   if baseConfig is None:

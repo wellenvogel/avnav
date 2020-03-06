@@ -25,14 +25,70 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import shutil
 
 from avnav_util import *
 from avnav_worker import *
 import xml.dom as dom
 import xml.dom.minidom as parser
 import avnav_handlerList
-  
-  
+
+
+class ConfigChanger:
+  def __init__(self,changeHandler,domBase,isAttached,elementDom,childMap):
+    self.isAttached=isAttached
+    self.domBase=domBase
+    self.elementDom=elementDom
+    self.childMap=childMap
+    self.dirty=False
+    self.changeHandler=changeHandler
+
+  def _setDirty(self):
+    self.dirty=True
+
+  def _handleChange(self):
+    if not self.dirty:
+      return
+    if not self.changeHandler:
+      return
+    self.changeHandler.dataChanged()
+
+  def _addToDom(self):
+    if self.isAttached:
+      return
+    self.domBase.documentElement.appendChild(self.elementDom)
+    self._setDirty()
+
+  def changeAttribute(self,name,value):
+    self._addToDom()
+    self.elementDom.setAttribute(name,unicode(value))
+    self._setDirty()
+    self._handleChange()
+
+  def changeChildAttribute(self,childName,childIndex,name,value):
+    if self.childMap is None:
+      raise Exception("no dom, cannot change")
+    self._addToDom()
+    childList=self.childMap.get(childName)
+    if childList is None:
+      childList=[]
+      self.childMap[childName]=childList
+    if childIndex >= 0:
+      if childIndex >= len(childList):
+        raise Exception("traing to update an non existing child index %s:%d"%(childName,childIndex))
+      childList[childIndex].setAttribute(name,unicode(value))
+      self._setDirty()
+      self._handleChange()
+      return
+    #we must insert
+    newEl=self.domBase.createElement(childName)
+    newEl.setAttribute(name,unicode(value))
+    self.elementDom.appendChild(newEl)
+    childList.append(newEl)
+    self._setDirty()
+    self._handleChange()
+    return len(childList)-1
+
 # a class for parsing the config file
 class AVNConfig():
   class BASEPARAM(Enum):
@@ -87,6 +143,18 @@ class AVNConfig():
       if dict.get(k) is not None:
         rt[k]=dict[k]
     return rt
+
+  @classmethod
+  def getFallbackName(cls,cfgname,initial=False):
+    if initial:
+      return cfgname+".initial"
+    else:
+      return cfgname+".ok"
+  @classmethod
+  def getInvalidName(cls,fileName):
+    now = datetime.datetime.utcnow()
+    return fileName + ".invalid-" + now.strftime("%Y%m%d%H%M%S")
+
   def __init__(self):
     #global parameters
     self.parameters={
@@ -95,6 +163,8 @@ class AVNConfig():
                      }
     self.baseParam={} #parameters to be added to all handlers
     self.domObject=None
+    self.cfgfileName=None
+    self.currentCfgFileName=None #potentially this is the fallback file
     pass
   def setBaseParam(self,name,value):
     if not hasattr(self.BASEPARAM,name):
@@ -102,9 +172,12 @@ class AVNConfig():
     self.baseParam[name]=value
   def readConfigAndCreateHandlers(self,filename):
     AVNLog.info("reading config %s",filename)
+    AVNWorker.resetHandlerList()
     if not os.path.exists(filename):
       AVNLog.error("unable to read config file %s",filename)
       return False
+    self.cfgfileName=filename
+    self.currentCfgFileName=filename
     try:
       self.parseDomAndCreateHandlers(filename)
     except:
@@ -121,7 +194,7 @@ class AVNConfig():
             try:
               node=parser.parseString(ai)
               if node.documentElement.nodeType != dom.Node.ELEMENT_NODE or node.documentElement.tagName != name:
-                raise Exception("invalid xml for autoInstantiate: %s",ai)
+                raise Exception("invalid main node or main node name for autoInstantiate")
               self.parseHandler(node.documentElement,handler)
             except Exception:
               AVNLog.error("error parsing default config %s for %s:%s",ai,name,sys.exc_info()[1])
@@ -156,7 +229,7 @@ class AVNConfig():
         self.parseDomNode(nextElement)
         nextElement=nextElement.nextSibling
 
-  def parseHandler(self,element,handlerClass):
+  def parseHandler(self,element,handlerClass,noDom=False):
     cfg=handlerClass.parseConfig(element.attributes,handlerClass.getConfigParam(None))
     childPointer={}
     child=element.firstChild
@@ -178,5 +251,93 @@ class AVNConfig():
     if instance is None:
       AVNLog.error("unable to instantiate handler %s",element.tagName)
     else:
-      instance.setDomNode(element,childPointer)
+      instance.setConfigChanger(ConfigChanger(self,self.domObject,not noDom,element, childPointer))
+
+  def dataChanged(self):
+    #TODO: do some checks?
+    self.writeChanges()
+
+  def houseKeepingCfgFiles(self):
+    dir = os.path.dirname(self.cfgfileName)
+    if not os.path.isdir(dir):
+      return
+    base=os.path.basename(self.cfgfileName)
+    CFGMAX = 20
+    for pattern in ["-",".invalid-"]:
+      allBackups=[]
+      for f in os.listdir(dir):
+        if not f.startswith(base+pattern):
+          continue
+        if f == base or f == self.getFallbackName(base):
+          continue
+        full=os.path.join(dir,f)
+        if not os.path.isfile(full):
+          continue
+        allBackups.append(f)
+      allBackups.sort()
+      #just keep the last 20 backups - maybe configure this...
+      for f in allBackups[0:-CFGMAX]:
+        full=os.path.join(base,f)
+        AVNLog.debug("removing old backup %s",full)
+        os.unlink(full)
+
+  def getBackupName(self,fileName):
+    now=datetime.datetime.utcnow()
+    return fileName+"-"+now.strftime("%Y%m%d%H%M%S")
+
+
+
+  def copyFileWithCheck(self,src,dest,skipExisting=True):
+    if skipExisting and os.path.exists(dest):
+      return
+    dir = os.path.dirname(dest)
+    if not os.path.isdir(dir):
+      raise Exception("directory for %s does not exist" % dest)
+    if not os.access(dir, os.W_OK):
+      raise Exception("cannot write into directory for %s" % dest)
+    if os.path.exists(dest):
+      os.unlink(dest)
+    shutil.copyfile(src,dest)
+    osize = os.path.getsize(src)
+    fsize = os.path.getsize(dest)
+    if osize != fsize:
+      raise Exception("unable to create fallback file %s, sizes different after copy" % dest)
+    try:
+      parser.parse(dest)
+    except Exception as e:
+      raise Exception("unable to create fallback file %s, no valid xml: %s"%(dest,e.message))
+
+  def writeChanges(self):
+    if self.cfgfileName is None:
+      raise Exception("no cfg file set")
+    if self.domObject is None:
+      raise Exception("no dom available")
+    dir=os.path.dirname(self.cfgfileName)
+    fallback=self.getFallbackName(self.cfgfileName)
+    backupFile=self.getBackupName(self.cfgfileName)
+    copyFile=backupFile
+    if not os.path.isfile(fallback):
+      copyFile=fallback
+    AVNLog.info("creating fallback config file %s",copyFile)
+    self.copyFileWithCheck(self.currentCfgFileName,copyFile)
+    self.houseKeepingCfgFiles()
+    tmpName=self.cfgfileName+".tmp"
+    if os.path.exists(tmpName):
+      os.unlink(tmpName)
+    fh=open(tmpName,"w")
+    if fh is None:
+      raise Exception("unable to open file %s"%tmpName)
+    self.domObject.writexml(fh)
+    fh.close()
+    try:
+      parser.parse(tmpName)
+    except Exception as e:
+      raise Exception("unable to read config after writing it, xml error: %s"%e.message)
+    os.unlink(self.cfgfileName)
+    try:
+      os.rename(tmpName,self.cfgfileName)
+    except Exception as e:
+      AVNLog.error("exception when finally renaming %s to %s: %s",tmpName,self.cfgfileName,e.message)
+      raise
+
 

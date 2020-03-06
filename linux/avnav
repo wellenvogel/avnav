@@ -12,7 +12,7 @@ gui=0
 template="$avnavdir/avnav_template.xml"
 
 usage(){
-  echo "usage: $0 [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-t template] [-g]"
+  echo "usage: $0 [-e] [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-t template] [-g]"
 }
 
 err(){
@@ -21,10 +21,13 @@ err(){
 }
 
 
-while getopts dc:b:x:qgt: opt; do
+while getopts dec:b:x:qgt: opt; do
 case $opt in
   d)
     dopt="-d"
+    ;;
+  e)
+    eopt="-e"
     ;;
   c)
     chartdir=$OPTARG
@@ -109,9 +112,9 @@ if [ "$gui" != 0 ] ; then
 else
   echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
   if [ "$silent" = 0 ] ; then
-    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt "$xmlfile"
+    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"
   else
-    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt "$xmlfile"  > /dev/null 2>&1
+    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"  > /dev/null 2>&1
   fi
 fi
 
