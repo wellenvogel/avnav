@@ -9,6 +9,7 @@ set -x
 rsync -rav --no-links --include=.htaccess --exclude="*bak" --exclude="*odg" --exclude="*php" --delete $BASE/docs/ $TARGET/docs
 rsync -rav --include="*php" --exclude="*" $BASE/docs/ $TARGET
 rsync -rav --delete $BASE/viewer/build/$SUB/ $TARGET/viewern
+rsync -rav --delete $BASE/viewer/demo/ $TARGET/viewer
 rsync -rav --delete $BASE/mobac/testsrc/build/libs/avnav-mapsources.zip $TARGET/downloads
 cp -p $BASE/docs/indexav.json $TARGET/index.json
 
