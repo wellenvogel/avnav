@@ -26,17 +26,15 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import os
-import pprint
-import xml.sax as sax
-import traceback
 from avnav_util import *
 from avnav_worker import *
+import xml.dom as dom
+import xml.dom.minidom as parser
 import avnav_handlerList
   
   
 # a class for parsing the config file
-class AVNConfig(sax.handler.ContentHandler):
+class AVNConfig():
   class BASEPARAM(Enum):
     BASEDIR='BASEDIR' #the base directory for the server - location of the main python file
     DATADIR='DATADIR' #the data directory if not provided on the commandline: either parent dir of chart dir or $HOME/avnav
@@ -96,10 +94,7 @@ class AVNConfig(sax.handler.ContentHandler):
                      "expiryTime":20, #time after which an entry is considered to be expired
                      }
     self.baseParam={} #parameters to be added to all handlers
-    self.currentHandlerClass=None
-    self.currentHandlerData=None
-    self.restrictedHandler=None
-    sax.handler.ContentHandler.__init__(self)
+    self.domObject=None
     pass
   def setBaseParam(self,name,value):
     if not hasattr(self.BASEPARAM,name):
@@ -111,68 +106,77 @@ class AVNConfig(sax.handler.ContentHandler):
       AVNLog.error("unable to read config file %s",filename)
       return False
     try:
-      self.currentHandlerData=None
-      self.currentHandlerClass=None
-      parser=sax.parse(filename,self)
+      self.parseDomAndCreateHandlers(filename)
     except:
       AVNLog.error("error parsing cfg file %s : %s",filename,traceback.format_exc())
       return False
     for handler in avnav_handlerList.getAllHandlerClasses():
+      name=handler.getConfigName()
       ai=handler.autoInstantiate()
       if ai:
-        existing=AVNWorker.findHandlerByName(handler.getConfigName(), True)
+        existing=AVNWorker.findHandlerByName(name, True)
         if existing is None:
-          AVNLog.info("auto instantiate for %s", handler.getConfigName())
+          AVNLog.info("auto instantiate for %s", name)
           if isinstance(ai,str):
             try:
-              self.restrictedHandler=handler
-              parser=sax.parseString(ai,self)
-              self.restrictedHandler=None
+              node=parser.parseString(ai)
+              if node.documentElement.nodeType != dom.Node.ELEMENT_NODE or node.documentElement.tagName != name:
+                raise Exception("invalid xml for autoInstantiate: %s",ai)
+              self.parseHandler(node.documentElement,handler)
             except Exception:
-              AVNLog.error("error parsing default config %s for %s:%s",ai,handler.getConfigName(),sys.exc_info()[1])
+              AVNLog.error("error parsing default config %s for %s:%s",ai,name,sys.exc_info()[1])
               return False
           else:
             cfg=handler.parseConfig({}, handler.getConfigParam(None))
             cfg.update(self.baseParam)
             handler.createInstance(cfg)
     return len(AVNWorker.getAllHandlers()) > 0
-    
-  def startElement(self, name, attrs):
-    if not self.currentHandlerClass is None:
-      #we are at a child element
-      #currently we ignore any deeper nesting
-      childParamDefaults=self.currentHandlerClass.getConfigParam(name)
-      if childParamDefaults is None:
-        return
-      childParam=AVNWorker.parseConfig(attrs,childParamDefaults)
-      if self.currentHandlerData.get(name) is None:
-        self.currentHandlerData[name]=[]
-      self.currentHandlerData[name].append(childParam)
-      AVNLog.ld("added sub to handlerdata",name,childParam)
+
+
+  def parseDomAndCreateHandlers(self,filename):
+    self.domObject=parser.parse(filename)
+    self.parseDomNode(self.domObject.documentElement)
+
+  def parseDomNode(self,node):
+    """
+    parse a node from the dom tree
+    @param
+    @return:
+    """
+    if node.nodeType != dom.Node.ELEMENT_NODE and node.nodeType != dom.Node.DOCUMENT_NODE:
       return
+    name=node.tagName
     handler=avnav_handlerList.findHandlerByConfigName(name)
-    if self.restrictedHandler is not None:
-      if self.restrictedHandler.getConfigName() != name:
-        raise Exception("invalid xml for default config, expected %s, got %s"%(self.restrictedHandler.getConfigName(),name))
     if handler is not None:
-      self.currentHandlerClass=handler
-      self.currentHandlerData=handler.parseConfig(attrs, handler.getConfigParam(None))
-      AVNLog.ld("handler config started for ",name,self.currentHandlerData)
-      return
-    AVNLog.warn("unknown XML element %s - ignoring",name)
-    pass
-  def endElement(self, name):
-    if self.currentHandlerClass is None:
-      return
-    if not self.currentHandlerClass.getConfigName() == name:
-      return #only create the handler when we are back at the handler level
-    AVNLog.info("creating instance for %s with param %s",name,pprint.pformat(self.currentHandlerData))
-    self.currentHandlerData.update(self.baseParam)
-    nextInstance=self.currentHandlerClass.createInstance(self.currentHandlerData)
-    if nextInstance is None:
-      AVNLog.warn("unable to create instance for handler %s",name)
-    self.currentHandlerClass=None
-    self.currentHandlerData=None   
-    pass
-  def characters(self, content): 
-    pass
+      AVNLog.info("parsing entry for handler %s",name)
+      self.parseHandler(node,handler)
+    else:
+      nextElement=node.firstChild
+      while nextElement is not None:
+        self.parseDomNode(nextElement)
+        nextElement=nextElement.nextSibling
+
+  def parseHandler(self,element,handlerClass):
+    cfg=handlerClass.parseConfig(element.attributes,handlerClass.getConfigParam(None))
+    childPointer={}
+    child=element.firstChild
+    while child is not None:
+      if child.nodeType == dom.Node.ELEMENT_NODE:
+        childName=child.tagName
+        cfgDefaults=handlerClass.getConfigParam(childName)
+        if cfgDefaults is not None:
+          if childPointer.get(childName) is None:
+            childPointer[childName]=[]
+          if cfg.get(childName) is None:
+            cfg[childName]=[]
+          AVNLog.debug("adding child %s to %s",childName,element.tagName)
+          childPointer[childName].append(child)
+          cfg[childName].append(handlerClass.parseConfig(child.attributes,cfgDefaults))
+      child=child.nextSibling
+    cfg.update(self.baseParam)
+    instance=handlerClass.createInstance(cfg)
+    if instance is None:
+      AVNLog.error("unable to instantiate handler %s",element.tagName)
+    else:
+      instance.setDomNode(element,childPointer)
+

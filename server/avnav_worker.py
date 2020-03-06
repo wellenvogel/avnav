@@ -102,6 +102,11 @@ class AVNWorker(threading.Thread):
     self.status={'main':self.Status.STARTED}
     self.type=self.Type.DEFAULT
     self.feeder=None
+    self.domNode=None #node in the dom for writing back
+    self.childNodes={} #a hash having an array of entries for each child name
+  def setDomNode(self,node,childNodes):
+    self.domNode=node
+    self.childNodes=childNodes
   def getStatusProperties(self):
     return {}
   def getInfo(self):
@@ -263,7 +268,11 @@ class AVNWorker(threading.Thread):
     if len(sparam.keys()) == 0:
       #special case: accept all attributes
       for k in attrs.keys():
-        sparam[k]=attrs[k]
+        v=attrs[k]
+        if v is None or isinstance(v,str) or isinstance(v,unicode):
+          sparam[k]=v
+        else:
+          sparam[k] = v.value
       return sparam
     sparam.update(cls.DEFAULT_CONFIG_PARAM)
     for k in sparam.keys():
@@ -278,7 +287,10 @@ class AVNWorker(threading.Thread):
       if v is None:
         sparam[k]=dv
       else:
-        sparam[k]=v
+        if isinstance(v,str) or isinstance(v,unicode):
+          sparam[k]=v
+        else:
+          sparam[k] = v.value
     return sparam
   
   def startInstance(self,navdata):
