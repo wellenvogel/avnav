@@ -192,7 +192,7 @@ class ViewPage extends React.Component{
         let mode=this.isImage()?0:(this.getExt() == 'html')?1:2;
         let showView=this.state.readOnly || this.canChangeMode();
         let showEdit=!this.state.readOnly || this.canChangeMode();
-        let viewData=this.state.changed?this.flask.getCode():this.state.data;
+        let viewData=(showEdit && this.flask)?this.flask.getCode():this.state.data;
         let viewClass="mainContainer view";
         if (!this.state.readOnly) viewClass+=" hidden";
         if (mode == 0) viewClass+=" image";

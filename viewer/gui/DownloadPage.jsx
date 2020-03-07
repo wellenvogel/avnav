@@ -213,13 +213,7 @@ const readAddOns = function () {
     Requests.getJson("?request=list&type=addon").then((json)=>{
             let items = [];
             for (let e in json.items) {
-                let button = json.items[e];
-                let entry = {
-                    key: button.key,
-                    url: button.url,
-                    icon: button.icon,
-                    title: button.title
-                };
+                let entry = json.items[e];
                 if (entry.key) {
                     items.push(entry);
                 }
@@ -968,7 +962,7 @@ class FileDialog extends React.Component{
                     {(this.state.allowed.showView )?
                         <DB name="view"
                                 onClick={()=>{
-                                    self.props.closeCallback();app
+                                    self.props.closeCallback();
                                     self.props.okFunction('view',this.props.current.name);
                                 }}
                                 disabled={this.state.changed}
