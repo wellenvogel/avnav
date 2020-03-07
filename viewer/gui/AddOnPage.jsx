@@ -19,10 +19,10 @@ import InputMonitor from '../hoc/InputMonitor.jsx';
 const readAddOns = function () {
     if (globalStore.getData(keys.gui.global.onAndroid, false)) return;
     if (!globalStore.getData(keys.gui.capabilities.addons)) return;
-    Requests.getJson("?request=readAddons").then((json)=>{
+    Requests.getJson("?request=list&type=addon").then((json)=>{
             let items = [];
-            for (let e in json.data) {
-                let button = json.data[e];
+            for (let e in json.items) {
+                let button = json.items[e];
                 let entry = {
                     key: button.key,
                     url: button.url,

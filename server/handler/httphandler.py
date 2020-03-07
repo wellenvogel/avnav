@@ -259,8 +259,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleListChartRequest(requestParam)
       elif requestType=='listdir' or requestType == 'list':
         rtj=self.handleListDir(requestParam)
-      elif requestType=='readAddons':
-        rtj=self.handleAddonRequest(requestParam)
       elif requestType=='download':
         #download requests are special
         # the dow not return json...
@@ -720,21 +718,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         #TODO: how to avoid timeout here?
         shutil.rmtree(dirname)
         return json.dumps(rt)
-
-  def handleAddonRequest(self,param):
-    host=self.headers.get('host')
-    hostparts=host.split(':')
-    outData=[]
-    for addon in self.server.addons:
-      newAddon=addon.copy()
-      newAddon['url']=addon['url'].replace('$HOST',hostparts[0])
-      if newAddon.get('title') == '':
-        del newAddon['title']
-      outData.append(newAddon)
-    return json.dumps({
-      'status':'OK',
-      'data':outData
-    })
 
   def handleCapabilityRequest(self,param):
     #see keys.jsx in the viewer at gui.capabilities

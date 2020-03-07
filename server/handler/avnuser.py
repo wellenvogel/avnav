@@ -71,6 +71,14 @@ class AVNUserHandlerBase(AVNWorker):
     AVNWorker.__init__(self,param)
     self.baseDir=None
     self.type=type
+    self.httpServer=None
+
+  def start(self):
+    self.httpServer=self.findHandlerByName('AVNHttpServer')
+    if self.httpServer is None:
+      raise Exception("unable to find AVNHttpServer")
+    AVNWorker.start(self)
+
 
   def copyTemplates(self):
     pass
@@ -91,7 +99,7 @@ class AVNUserHandlerBase(AVNWorker):
     while True:
       time.sleep(sleepTime)
 
-  def handlePathRequest(self,path,server):
+  def handlePathRequest(self,path):
     return None
 
   def handleDelete(self,name):
@@ -136,11 +144,30 @@ class AVNUserHandlerBase(AVNWorker):
       return False
     return True
 
-  def checkExists(self,name):
-    if not self.checkName(name):
+  def checkExists(self,name,doRaise=True):
+    if not self.checkName(name,doRaise):
       return False
     src = os.path.join(self.baseDir, name)
     return os.path.exists(src)
+
+  def getPathFromUrl(self,url,restrictName=False):
+    if not url.startswith(self.getPrefix()):
+      return None
+    path = url[len(self.getPrefix()) + 1:]
+    if restrictName:
+      if not self.checkExists(path,False):
+        return None #name is no simple name
+      return path
+    originalPath = self.httpServer.plainUrlToPath(url, True)
+    if os.path.exists(originalPath):
+      return originalPath
+    path = url[len(self.getPrefix()) + 1:]
+    rt = self.handlePathRequest(path)
+    if rt is not None:
+      return rt
+    # nothing we can really do...
+    return originalPath
+
 
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
     if type == 'api':
@@ -169,16 +196,7 @@ class AVNUserHandlerBase(AVNWorker):
         return self.handleList()
       raise Exception("unknown command for %s api request: %s"%(self.type,command))
     if type == 'path':
-      server=kwargs.get('server')
-      originalPath=server.plainUrlToPath(subtype,True)
-      if os.path.exists(originalPath):
-        return originalPath
-      path = subtype[len(self.getPrefix()) + 1:]
-      rt=self.handlePathRequest(path,server)
-      if rt is not None:
-        return rt
-      #nothing we can really do...
-      return originalPath
+      return self.getPathFromUrl(subtype)
 
     if type == "list":
       return self.handleList()
@@ -237,6 +255,7 @@ class AVNUserHandler(AVNUserHandlerBase):
     return cls.PREFIX
   def __init__(self,param):
     AVNUserHandlerBase.__init__(self,param,"user")
+    self.baseDir = AVNConfig.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'viewer'))
 
   def copyTemplates(self):
     httpserver=self.findHandlerByName("AVNHttpServer")
@@ -258,16 +277,14 @@ class AVNUserHandler(AVNUserHandlerBase):
       with open(dest,"w") as fh:
         fh.write("{\n}\n")
 
-  def start(self):
-    self.baseDir=AVNConfig.getDirWithDefault(self.param,'userDir',os.path.join('user','viewer'))
-    AVNWorker.start(self)
 
-  def handlePathRequest(self,path,server):
+
+  def handlePathRequest(self,path):
     for p in self.FLIST:
       if path == p:
-        return server.plainUrlToPath("/viewer/" + p, True)
+        return self.httpServer.plainUrlToPath("/viewer/" + p, True)
     if path.startswith("images/"):
-      return server.plainUrlToPath("/viewer/images/" + path[len("images/"):])
+      return self.httpServer.plainUrlToPath("/viewer/images/" + path[len("images/"):])
 
 class AVNImagesHandler(AVNUserHandlerBase):
   PREFIX = "/user/images"
@@ -276,13 +293,10 @@ class AVNImagesHandler(AVNUserHandlerBase):
     return cls.PREFIX
   def __init__(self,param):
     AVNUserHandlerBase.__init__(self,param,"images")
-  def start(self):
-    self.baseDir=AVNConfig.getDirWithDefault(self.param,'userDir',os.path.join('user','images'))
-    AVNWorker.start(self)
+    self.baseDir = AVNConfig.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'images'))
 
-
-  def handlePathRequest(self,path,server):
-      return server.plainUrlToPath("/viewer/images/" + path[len("images/"):])
+  def handlePathRequest(self,path):
+      return self.httpServer.plainUrlToPath("/viewer/images/" + path[len("images/"):])
 
 
 avnav_handlerList.registerHandler(AVNUserHandler)

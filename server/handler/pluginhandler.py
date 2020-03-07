@@ -36,7 +36,7 @@ from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
-from httpserver import AVNHTTPServer
+from avnaddon import AVNAddonHandler
 from layouthandler import AVNLayoutHandler
 
 
@@ -138,15 +138,15 @@ class ApiImpl(AVNApi):
     self.phandler.setInfo(self.prefix,info,value)
 
   def registerUserApp(self, url, iconFile, title=None):
-    httpserver=AVNWorker.findHandlerByName(AVNHTTPServer.getConfigName())
-    if httpserver is None:
+    addonhandler=AVNWorker.findHandlerByName(AVNAddonHandler.getConfigName())
+    if addonhandler is None:
       raise Exception("no http server")
     if os.path.isabs(iconFile):
       raise Exception("only relative pathes for icon files")
     iconFilePath=os.path.join(os.path.dirname(self.fileName),iconFile)
     if not os.path.exists(iconFilePath):
       raise Exception("icon file %s not found"%iconFilePath)
-    httpserver.registerAddOn("%s%i"%(self.prefix,self.addonIndex),url,"%s/%s/%s"%(AVNPluginHandler.PREFIX,self.prefix,iconFile),title)
+    addonhandler.registerAddOn("%s%i"%(self.prefix,self.addonIndex),url,"%s/%s/%s"%(AVNPluginHandler.PREFIX,self.prefix,iconFile),title)
     self.addonIndex+=1
 
   def registerLayout(self, name, layoutFile):

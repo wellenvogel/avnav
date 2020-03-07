@@ -128,7 +128,6 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     if mtypes is not None:
       for mtype in mtypes:
         self.overwrite_map[mtype['extension']]=mtype['type']
-    self.addons=[]
     server_address=(cfgparam['httpHost'],int(cfgparam['httpPort']))
     AVNWorker.__init__(self, cfgparam)
     self.type=AVNWorker.Type.HTTPSERVER
@@ -144,37 +143,6 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.setName(self.getThreadPrefix())
     AVNLog.info("HTTP server "+self.server_name+", "+unicode(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(unicode(self.server_port)),AVNWorker.Status.RUNNING)
-    addons = self.getParamValue('UserTool')
-    if addons is not None:
-      addonkey=1
-      for addon in addons:
-        icon=addon.get('icon')
-        url=addon.get('url')
-        if url is not None and icon is not None:
-          if not icon.startswith("/user"):
-            iconUrl="/user/"+addon['icon']
-          else:
-            iconUrl=icon
-          iconpath=self.tryExternalMappings(iconUrl,None)
-          if iconpath is None or not os.path.exists(iconpath):
-            AVNLog.error("icon path %s for %s not found, ignoring entry",iconpath,addon['url'])
-            continue
-          keepUrl=False
-          if addon.get('keepUrl') is None or addon.get('keepUrl') == '':
-            if url.startswith("http"):
-              keepUrl=True
-          else:
-            if str(addon.get('keepUrl')).lower() == "true":
-              keepUrl=True
-          newAddon={
-            'key':"addon%d"%addonkey,
-            'url':url,
-            'icon':iconUrl,
-            'title':addon.get('title'),
-            'keepUrl':keepUrl
-          }
-          self.addons.append(newAddon)
-          addonkey+=1
     self.gemfhandler=threading.Thread(target=self.handleGemfFiles)
     self.gemfhandler.daemon=True
     emptyname=self.getParamValue("empty", False)
@@ -193,15 +161,6 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       self.interfaceReader.start()
     self.serve_forever()
 
-  def registerAddOn(self,key,url,iconPath,title=None):
-    newAddon = {
-      'key': key,
-      'url': url,
-      'icon': iconPath,
-      'title': title
-    }
-    #TODO: check existing key
-    self.addons.append(newAddon)
   def handlePathmapping(self,path):
     if not self.pathmappings is None:
       for mk in self.pathmappings.keys():
@@ -406,7 +365,11 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
         # the external handler can either return a mapped path (already
         # converted in an OS path - e.g. using plainUrlToPath)
         # or just do the handling by its own and return None
-        return self.externalHandlers[prefix].handleApiRequest('path', path, query, server=self)
+        try:
+          return self.externalHandlers[prefix].handleApiRequest('path', path, query, server=self)
+        except:
+          AVNLog.error("external mapping failed: %s",traceback.format_exc())
+        return None
     #legacy fallback:
     #if we have images at /user/images or /user/icons we can fallback to viewer
     #new pathes should be /user/viewer/images
