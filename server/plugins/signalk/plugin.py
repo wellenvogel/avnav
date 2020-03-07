@@ -144,13 +144,13 @@ class Plugin:
         time.sleep(5)
 
   def storeData(self,node,prefix):
+    if 'value' in node:
+      self.api.addData(prefix, node.get('value'), 'signalk')
+      return
     for key, item in node.items():
       if isinstance(item,dict):
         self.storeData(item,prefix+"."+key)
-      if isinstance(item,list):
-        continue #currently not handled
-      if key == 'value':
-        self.api.addData(prefix,item,'signalk')
+
 
 
 

@@ -242,14 +242,21 @@ def main(argv):
         navData.reset()
         hasFix=False
       lastutc=curutc
-      curGpsData=navData.getDataByPrefix(AVNStore.BASE_KEY_GPS)
-      if ( not curGpsData.get('lat') is None) and (not curGpsData.get('lon') is None):
+      lat=None
+      lon=None
+      curGpsTime=None
+      try:
+        lat=navData.getSingleValue(AVNStore.BASE_KEY_GPS+".lat")
+        lon = navData.getSingleValue(AVNStore.BASE_KEY_GPS + ".lon")
+        curGpsTime=navData.getSingleValue(AVNStore.BASE_KEY_GPS + ".time")
+      except Exception as e:
+        AVNLog.error("Exception when getting curGpsData: %s",traceback.format_exc())
+      if ( lat is not None) and (lon is not None):
         #we have some position
         if not hasFix:
-          AVNLog.info("new GPS fix lat=%f lon=%f, time=%s, currentTime=%s",curGpsData.get('lat'),curGpsData.get('lon'),curGpsData.get('time'),curutc.isoformat())
+          AVNLog.info("new GPS fix lat=%f lon=%f, time=%s, currentTime=%s",lat,lon,curGpsTime,curutc.isoformat())
           hasFix=True
         #settime handling
-        curGpsTime=curGpsData.get('time')
         if not curGpsTime is None:
           try:
             AVNLog.debug("checking time diffs - new gpsts=%s",curGpsTime)

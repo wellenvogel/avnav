@@ -257,8 +257,10 @@ class AVNStore():
                 current[keyparts[i]]={}
               current=current[keyparts[i]]
               if not type(current) == dict:
-                raise Exception("inconsistent data , found normal value and dict with key %s"%(".".join(keyparts[0:i])))
-            current[keyparts[-1]]=entry.value
+                AVNLog.error("inconsistent data , found normal value and dict with key %s"%(".".join(keyparts[0:i])))
+                break
+            if type(current) == dict:
+              current[keyparts[-1]]=entry.value
           else:
             rt[nkey]=entry.value
       for rkey in keysToRemove:
