@@ -336,9 +336,11 @@ class AVNUtil():
         raise
 
   @classmethod
-  def getHttpRequestParam(cls,requestparam,name):
+  def getHttpRequestParam(cls,requestparam,name,mantadory=False):
     rt = requestparam.get(name)
     if rt is None:
+      if mantadory:
+        raise Exception("missing parameter %s",name)
       return None
     if isinstance(rt, list):
       return rt[0].decode('utf-8', errors='ignore')

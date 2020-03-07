@@ -46,10 +46,12 @@ class ConfigChanger:
   def _setDirty(self):
     self.dirty=True
 
-  def _handleChange(self):
+  def handleChange(self, skip=False):
     if not self.dirty:
       return
     if not self.changeHandler:
+      return
+    if skip:
       return
     self.changeHandler.dataChanged()
 
@@ -63,9 +65,9 @@ class ConfigChanger:
     self._addToDom()
     self.elementDom.setAttribute(name,unicode(value))
     self._setDirty()
-    self._handleChange()
+    self.handleChange()
 
-  def changeChildAttribute(self,childName,childIndex,name,value):
+  def changeChildAttribute(self,childName,childIndex,name,value,delayUpdate=False):
     if self.childMap is None:
       raise Exception("no dom, cannot change")
     self._addToDom()
@@ -78,7 +80,7 @@ class ConfigChanger:
         raise Exception("traing to update an non existing child index %s:%d"%(childName,childIndex))
       childList[childIndex].setAttribute(name,unicode(value))
       self._setDirty()
-      self._handleChange()
+      self.handleChange(delayUpdate)
       return
     #we must insert
     newEl=self.domBase.createElement(childName)
@@ -86,8 +88,23 @@ class ConfigChanger:
     self.elementDom.appendChild(newEl)
     childList.append(newEl)
     self._setDirty()
-    self._handleChange()
+    self.handleChange(delayUpdate)
     return len(childList)-1
+
+  def removeChild(self,childName,childIndex):
+    if self.childMap is None:
+      raise Exception("no dom, cannot change")
+    childList=self.childMap.get(childName)
+    if childList is None:
+      return
+    if childIndex < 0 or childIndex >= len(childList):
+      raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
+    self._addToDom()
+    self.elementDom.removeChild(childList[childIndex])
+    childList[childList].unlink()
+    self._setDirty()
+    self.handleChange()
+    return
 
 # a class for parsing the config file
 class AVNConfig():

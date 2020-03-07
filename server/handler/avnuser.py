@@ -30,6 +30,7 @@
 ###############################################################################
 import StringIO
 import shutil
+import urllib
 
 from avnav_config import *
 from avnav_nmea import *
@@ -51,6 +52,10 @@ class AVNUserHandlerBase(AVNWorker):
       'interval': '5',
     }
     return rt
+
+  @classmethod
+  def nameToUrl(cls,name):
+    return cls.getPrefix()+"/"+urllib.quote(name)
 
   @classmethod
   def preventMultiInstance(cls):
@@ -130,6 +135,12 @@ class AVNUserHandlerBase(AVNWorker):
         raise Exception("name %s is invalid"%name)
       return False
     return True
+
+  def checkExists(self,name):
+    if not self.checkName(name):
+      return False
+    src = os.path.join(self.baseDir, name)
+    return os.path.exists(src)
 
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
     if type == 'api':
