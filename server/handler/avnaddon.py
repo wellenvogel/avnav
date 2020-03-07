@@ -174,7 +174,7 @@ class AVNAddonHandler(AVNWorker):
           AVNLog.error("icon path %s for %s not found, ignoring entry", icon, addon['url'])
           continue
         addon['iconType'] = iconType
-        addon['iconName'] = iconFile
+        addon['iconFile'] = iconFile
       outdata.append(addon)
     self.addonList=outdata
     return
@@ -274,10 +274,10 @@ class AVNAddonHandler(AVNWorker):
       elif command == 'update':
         userFile=AVNUtil.getHttpRequestParam(requestparam,'userFile',True)
         iconType=AVNUtil.getHttpRequestParam(requestparam,'iconType',True) #images,user
-        iconName=AVNUtil.getHttpRequestParam(requestparam,'iconName',True)
+        iconFile=AVNUtil.getHttpRequestParam(requestparam,'iconFile',True)
         title=AVNUtil.getHttpRequestParam(requestparam,'title')
         param={'key':name}
-        if not self.userHandler.checkExistance(userFile):
+        if not self.userHandler.checkExists(userFile):
           raise Exception("user file %s not found"%userFile)
         param['url']=self.userHandler.nameToUrl(userFile)
         iconHandler=None
@@ -287,16 +287,17 @@ class AVNAddonHandler(AVNWorker):
           iconHandler=self.imagesHandler
         if iconHandler is None:
           raise Exception("unknown icon type %s"%iconType)
-        if not iconHandler.checkExistance(iconName):
-          raise Exception("icon %s not found "%iconName)
-        param['icon']=iconHandler.nameToUrl(iconName)
+        if not iconHandler.checkExists(iconFile):
+          raise Exception("icon %s not found "%iconFile)
+        param['icon']=iconHandler.nameToUrl(iconFile)
         param['title']=title
         param['keepUrl']=False
         idx=self.findChild(name)
         for k in param.keys():
-          self.changeChildConfig(self.CHILDNAME,idx,k,param[k],True)
+          idx=self.changeChildConfig(self.CHILDNAME,idx,k,param[k],True)
         self.writeConfigChanges()
         self.fillList()
+        return AVNUtil.getReturnData()
       raise Exception("unknown command for %s api request: %s"%(self.type,command))
 
     if type == "list":

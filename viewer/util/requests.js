@@ -71,6 +71,19 @@ const handleJson=(rurl,requestOptions,options)=>{
             });
     });
 };
+
+const addParameters=(url,parameters)=>{
+    if (!parameters) return url;
+    for (let k in parameters){
+        let v=parameters[k];
+        if (v === undefined) continue;
+        if (typeof(v) == 'function' || typeof(k) == 'object') continue;
+        if (url.match(/\?/)) url+="&";
+        else url+="?";
+        url+=encodeURIComponent(k)+"="+encodeURIComponent(v);
+    }
+    return url;
+};
 let RequestHandler={
     /**
      * do a json get request
@@ -82,10 +95,11 @@ let RequestHandler={
      *        timeout   - (default: statusQueryTimeout) - timeout
      *        sequenceFunction - if set: a function to return a sequence - if the one returned from start
      *                           does not match the on at the result we reject
+     *        opt_parameter - object with request parameters
      */
-    getJson:(url,options)=>{
+    getJson:(url,options,opt_parameter)=>{
         let [rurl,requestOptions]=prepare(url,options);
-        return handleJson(rurl,requestOptions,options);
+        return handleJson(addParameters(rurl,opt_parameter),requestOptions,options);
     },
 
     postJson:(url,body,options)=>{
@@ -132,7 +146,7 @@ let RequestHandler={
      *        useNavUrl - (default: false) - prepend the navUrl to the provided url
      *        noCache   - (default: false) - prevent caching
      */
-    getHtmlOrText:(url,options)=>{
+    getHtmlOrText:(url,options,opt_parameter)=>{
         let [rurl,requestOptions]=prepare(url,options,{useNavUrl:false,noCache:false});
         return new Promise((resolve,reject)=>{
           if (!rurl) {
@@ -141,7 +155,7 @@ let RequestHandler={
           }
           let sequence=undefined;
           if (options && options.sequenceFunction) sequence=options.sequenceFunction();
-          fetch(rurl,requestOptions).then(
+          fetch(addParameters(rurl,opt_parameter),requestOptions).then(
               (response)=>{
                   if (response.status < 200 || response.status >= 300){
                       reject(response.statusText);

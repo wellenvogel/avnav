@@ -59,6 +59,8 @@ class ConfigChanger:
     if self.isAttached:
       return
     self.domBase.documentElement.appendChild(self.elementDom)
+    newline=self.domBase.createTextNode("\n")
+    self.domBase.documentElement.appendChild(newline)
     self._setDirty()
 
   def changeAttribute(self,name,value):
@@ -77,7 +79,7 @@ class ConfigChanger:
       self.childMap[childName]=childList
     if childIndex >= 0:
       if childIndex >= len(childList):
-        raise Exception("traing to update an non existing child index %s:%d"%(childName,childIndex))
+        raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
       childList[childIndex].setAttribute(name,unicode(value))
       self._setDirty()
       self.handleChange(delayUpdate)
@@ -86,6 +88,8 @@ class ConfigChanger:
     newEl=self.domBase.createElement(childName)
     newEl.setAttribute(name,unicode(value))
     self.elementDom.appendChild(newEl)
+    newline = self.domBase.createTextNode("\n")
+    self.elementDom.appendChild(newline)
     childList.append(newEl)
     self._setDirty()
     self.handleChange(delayUpdate)
@@ -100,8 +104,15 @@ class ConfigChanger:
     if childIndex < 0 or childIndex >= len(childList):
       raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
     self._addToDom()
-    self.elementDom.removeChild(childList[childIndex])
-    childList[childList].unlink()
+    childNode=childList[childIndex]
+    sibling=childNode.nextSibling
+    if sibling is not None:
+      if sibling.nodeType == dom.Node.TEXT_NODE and sibling.nodeValue == "\n":
+        #our inserted newline
+        self.elementDom.removeChild(sibling)
+    self.elementDom.removeChild(childNode)
+    childList[childIndex].unlink()
+    childList.pop(childIndex)
     self._setDirty()
     self.handleChange()
     return
@@ -212,7 +223,7 @@ class AVNConfig():
               node=parser.parseString(ai)
               if node.documentElement.nodeType != dom.Node.ELEMENT_NODE or node.documentElement.tagName != name:
                 raise Exception("invalid main node or main node name for autoInstantiate")
-              self.parseHandler(node.documentElement,handler)
+              self.parseHandler(node.documentElement,handler,noDom=True)
             except Exception:
               AVNLog.error("error parsing default config %s for %s:%s",ai,name,sys.exc_info()[1])
               return False
@@ -294,9 +305,12 @@ class AVNConfig():
       allBackups.sort()
       #just keep the last 20 backups - maybe configure this...
       for f in allBackups[0:-CFGMAX]:
-        full=os.path.join(base,f)
+        full=os.path.join(dir,f)
         AVNLog.debug("removing old backup %s",full)
-        os.unlink(full)
+        try:
+          os.unlink(full)
+        except:
+          AVNLog.error("unable to remove old cfg file %s:%s",full,traceback.format_exc())
 
   def getBackupName(self,fileName):
     now=datetime.datetime.utcnow()

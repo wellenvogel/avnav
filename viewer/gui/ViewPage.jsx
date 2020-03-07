@@ -227,6 +227,7 @@ class ViewPage extends React.Component{
 
 ViewPage.VIEWABLES=Object.keys(languageMap).concat(IMAGES);
 ViewPage.EDITABLES=Object.keys(languageMap);
+ViewPage.IMAGES=IMAGES;
 ViewPage.MAXEDITSIZE=MAXEDITSIZE;
 
 module.exports=ViewPage;

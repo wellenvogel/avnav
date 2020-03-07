@@ -120,10 +120,11 @@ class AVNUserHandlerBase(AVNWorker):
       if not os.path.isfile(fullname):
         continue
       element = {'name': f,
-                 'type': 'user',
+                 'type': self.type,
                  'time': os.path.getmtime(fullname),
                  'size': os.path.getsize(fullname),
-                 'canDelete': True
+                 'canDelete': True,
+                 'url': self.nameToUrl(f)
                  }
       data.append(element)
     rt = AVNUtil.getReturnData(items=data)

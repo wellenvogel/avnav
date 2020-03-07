@@ -1,15 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!-- configuration for avnav_server on windows
-     we do not have a gpsd and we can only directly use serial readers -->
-<AVNServer>
-<AVNConfig loglevel="DEBUG"
-	debugToLog="true"
-    systimediff="5"
-    settimecmd="beep"
-    settimeperiod="3600"/>
+<?xml version="1.0" ?><!-- configuration for avnav_server on windows
+     we do not have a gpsd and we can only directly use serial readers --><AVNServer>
+<AVNConfig debugToLog="true" loglevel="DEBUG" settimecmd="beep" settimeperiod="3600" systimediff="5"/>
 <Readers>
 <!--<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />-->
-<AVNGpsdFeeder useGpsd="false" listenerPort="4020" port="2947" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
+<AVNGpsdFeeder gpsdcommand="/usr/sbin/gpsd -b -n -N -G" listenerPort="4020" port="2947" useGpsd="false"/>
 <!-- <AVNSerialReader name="com4reader" port="3" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
 <!--<AVNSerialReader useFeeder="true" name="usb1reader" port="/dev/ttyUSB2" baud="38400" minbaud="4800"/>-->
@@ -37,8 +31,8 @@
 	 We use autobaud between 4800 and 38400 here
 	 The data is feed through the gpsd feeder
 	 -->
-<AVNUsbSerialReader maxDevices="5" allowUnknown="true" baud="38400" minbaud="4800">
-	<UsbDevice usbid="1-1.2.1:1.0" baud="38400" minbaud="4800"/>
+<AVNUsbSerialReader allowUnknown="true" baud="38400" maxDevices="5" minbaud="4800">
+	<UsbDevice baud="38400" minbaud="4800" usbid="1-1.2.1:1.0"/>
 	<!-- a serial output device at one particular USB port
              with this filter it will output all NMEA data but no AIS data
              you can further restrict this by using e.g. $RMC for NMEA RMC sentences 
@@ -46,15 +40,15 @@
 	     use a readerFilter to also apply a filter at the reader-->
 	<!-- <UsbDevice usbid="3-4.3.1:1.0" baud="38400" type="writer" xonxoff="1" timeout="10" filter="$RMC" combined="True" /> -->
 	<!-- more readable form ...-->
-	<UsbDevice usbid="3-4.3.1:1.0" baud="38400" type="combined" xonxoff="1" timeout="10" filter="$RMC" />
+	<UsbDevice baud="38400" filter="$RMC" timeout="10" type="combined" usbid="3-4.3.1:1.0" xonxoff="1"/>
 	<!-- a device to be ignored - e.g. for testing -->
-	<UsbDevice usbid="3-10.1:1.0" baud="38400" type="ignore" />
-	<UsbDevice usbid="3-2.1:1.0" baud="38400" type="ignore" />
-	<UsbDevice usbid="3-2.3.1:1.0" baud="38400" type="ignore" />
+	<UsbDevice baud="38400" type="ignore" usbid="3-10.1:1.0"/>
+	<UsbDevice baud="38400" type="ignore" usbid="3-2.1:1.0"/>
+	<UsbDevice baud="38400" type="ignore" usbid="3-2.3.1:1.0"/>
 	<!-- a reader with autobaud and filter - it will filter out any RMC records and all AIS stuff-->
 	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="reader" filter="^$RMC,^!"/>-->
 	<!-- a pure writer that outputs RMB -->
-	<UsbDevice usbid="3-10.3.1:1.0" baud="4800" minbaud="4800" type="writer" filter="$RMB"/>
+	<UsbDevice baud="4800" filter="$RMB" minbaud="4800" type="writer" usbid="3-10.3.1:1.0"/>
 	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="ignore" filter=""/>-->
 </AVNUsbSerialReader>
 
@@ -62,38 +56,33 @@
 
 <!-- for testing purposes: connect to a socket for reading NMEA data -->
 <!--<AVNSocketReader host="10.222.10.79" port="34567"/> -->
-<AVNSocketReader host="localhost" port="34568" name="testreader" />
-	<AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
+<AVNSocketReader host="localhost" name="testreader" port="34568"/>
+	<AVNUdpReader minTime="100" port="34667"/>
 </Readers>
 <!-- provide your data at this port for e.g. OpenCPN -->
-<AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="100"/>
-<AVNTrackWriter interval="10" distance="100" trackdir="../data_linux/tracks"/>
-<AVNHttpServer navurl="/viewer/avnav_navi.php" httpPort="8081" upzoom="0"
-               chartbase="maps" empty="nonexistent">
+<AVNSocketWriter filter="" maxDevices="5" minTime="100" port="34567" read="true"/>
+<AVNTrackWriter distance="100" interval="10" trackdir="../data_linux/tracks"/>
+<AVNHttpServer chartbase="maps" empty="nonexistent" httpPort="8081" navurl="/viewer/avnav_navi.php" upzoom="0">
 <!-- chartbaseurl="http://$host/Karten/anav"> -->
-	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
-	<Directory urlpath="viewer" path="../viewer"></Directory>
-	<Directory urlpath="libraries" path="../libraries"></Directory>
-	<Directory urlpath="sounds" path="../sounds"></Directory>
-	<MimeType extension=".avt" type="text/plain"></MimeType>
-	<MimeType extension=".log" type="text/plain"></MimeType>
-	<UserTool url="http://www.wellenvogel.de" title="Homepage" icon="icons/wb_sunny.svg"></UserTool>
-	<UserTool url="http://www.wellenvogel.net" icon="icons/wb_sunny.svg"></UserTool>
+	<Directory path="~/AvNavCharts/out" urlpath="maps"/>
+	<Directory path="../viewer" urlpath="viewer"/>
+	<Directory path="../libraries" urlpath="libraries"/>
+	<Directory path="../sounds" urlpath="sounds"/>
+	<MimeType extension=".avt" type="text/plain"/>
+	<MimeType extension=".log" type="text/plain"/>
+	<UserTool icon="icons/wb_sunny.svg" url="http://www.wellenvogel.net"/>
 </AVNHttpServer>
 <!-- create chart overview files -->
-<AVNChartHandler></AVNChartHandler>
+<AVNChartHandler/>
     <!--  routing handler -->
-<AVNRouter computeAPB="true"></AVNRouter>
+<AVNRouter computeAPB="true"/>
 <!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
-<AVNNmeaLogger></AVNNmeaLogger>
-<AVNImporter ></AVNImporter>
-<AVNWpaHandler 
-wpaSocket="/var/run/wpa_supplicant/wlx0013eff503f2"
-allowDenyCommand="sudo $BASEDIR/../raspberry/iptables-ext.sh wlx0013eff503f2"
-></AVNWpaHandler>
+<AVNNmeaLogger/>
+<AVNImporter/>
+<AVNWpaHandler allowDenyCommand="sudo $BASEDIR/../raspberry/iptables-ext.sh wlx0013eff503f2" wpaSocket="/var/run/wpa_supplicant/wlx0013eff503f2"/>
 <AVNCommandHandler>
-	<Command name="test" command="sleep 4"/>
-	<Command name="shutdown" command="echo shutdown triggered"/>
+	<Command command="sleep 4" name="test"/>
+	<Command command="echo shutdown triggered" name="shutdown"/>
 	<!--<Command name="sound" command="mpg123 -q" repeat="1"/>-->
 </AVNCommandHandler>
 <!--
@@ -103,11 +92,18 @@ allowDenyCommand="sudo $BASEDIR/../raspberry/iptables-ext.sh wlx0013eff503f2"
 		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
 	</AVNAlarmHandler>
 -->
-<AVNSocketReader host="10.222.10.122" port="2599" name="canboatnmea0183" />
+<AVNSocketReader host="10.222.10.122" name="canboatnmea0183" port="2599"/>
 
-<AVNSocketWriter port="34569" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboat"/>
+<AVNSocketWriter blackList="canboatnmea0183,canboat" filter="" maxDevices="5" minTime="50" name="nmea0183tosignalk" port="34569" read="true"/>
 <AVNPluginHandler>
 	<builtin-signalk enabled="true"/>
-	<builtin-canboat enabled="true" host="10.222.10.122" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboat"/>
+	<builtin-canboat allowKeyOverwrite="true" autoSendRMC="30" enabled="true" host="10.222.10.122" sourceName="canboat"/>
 </AVNPluginHandler>
+
+
+
+
+<AVNAddonHandler>
+<UserTool icon="/user/images/boat.svg" keepUrl="False" key="kaese.html" title="kxxx" url="/user/viewer/kaese.html"/>
+</AVNAddonHandler>
 </AVNServer>

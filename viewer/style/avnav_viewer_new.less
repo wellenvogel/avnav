@@ -210,6 +210,12 @@ html,body {
     }
   }
 
+  .dialogRow{
+    .flex-display();
+    .flex-direction(row);
+    .flex-align-items(center);
+  }
+
 }
 
 .editWidgetDialog, .editPageDialog{
@@ -974,6 +980,14 @@ span.valuePrefix{
   .existing input{
     border-bottom: 1px solid;
     .nightBorderFade(@colorRed)
+  }
+}
+.userAppDialog{
+  .appIcon{
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-block;
+    margin-left: 0.5em;
   }
 }
 

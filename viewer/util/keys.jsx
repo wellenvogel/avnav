@@ -224,6 +224,7 @@ let keys={
             uploadInfo:K,
             androidUploadId: new D("this will be set from the android uploadAvailable event"),
             requestedUploadId: new D("the last requested upload for android"),
+            addOns:K,
         },
         settingspage:{
             hasChanges:K,

@@ -28,8 +28,9 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import ViewPage from './ViewPage.jsx';
-import {Input} from '../components/Inputs.jsx';
+import {Input,InputSelect,InputReadOnly} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
+import DialogContainer from '../components/OverlayDialogDisplay.jsx';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -69,6 +70,18 @@ class FileInfo{
     }
 };
 
+const findAddon=(item)=>{
+    if (item.type !== 'user') return;
+    let addons=globalStore.getData(keys.gui.downloadpage.addOns);
+    if (! addons || !(addons instanceof Array)) return;
+    for (let i in addons){
+        let addon=addons[i];
+        if (addon.key == item.name){
+            return addon;
+        }
+    }
+};
+
 const fillDataServer=(type)=>{
     Requests.getJson("?request=listdir&type="+type).then((json)=>{
         let list=[];
@@ -78,6 +91,10 @@ const fillDataServer=(type)=>{
             fi.type=type;
             fi.server=true;
             if (fi.canDelete === undefined) fi.canDelete=false;
+            let addon=findAddon(fi);
+            if (addon){
+                fi.isAddon=true;
+            }
             list.push(fi);
         }
         addItems(list,true);
@@ -156,8 +173,11 @@ const changeType=(newType)=>{
     globalStore.storeData(keys.gui.downloadpage.type, newType);
 };
 
+const getExt=(name)=>{
+    return name.replace(/.*\./,'').toLocaleLowerCase();
+};
 const allowedItemActions=(props)=>{
-    let ext=props.name.replace(/.*\./,'').toLocaleLowerCase();
+    let ext=getExt(props.name);
     let showView=(props.type == 'user' || props.type=='images' || props.type == 'route' || props.type == 'track') && ViewPage.VIEWABLES.indexOf(ext)>=0;
     let showEdit=(props.type == 'user' && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE && ViewPage.EDITABLES.indexOf(ext) >=0);
     let showDownload=false;
@@ -175,14 +195,41 @@ const allowedItemActions=(props)=>{
     }
     let showRename=(props.type == 'user' || props.type == 'images');
     let showApp=(props.type == 'user' && ext == 'html');
+    let isApp=(props.type == 'user' && ext == 'html' && props.isAddon);
     return {
         showEdit:showEdit,
         showView:showView,
         showDownload:showDownload,
         showDelete:showDelete,
         showRename:showRename,
-        showApp:showApp
+        showApp:showApp,
+        isApp:isApp
     };
+};
+
+const readAddOns = function () {
+    if (globalStore.getData(keys.gui.global.onAndroid, false)) return;
+    if (!globalStore.getData(keys.gui.capabilities.addons)) return;
+    Requests.getJson("?request=list&type=addon").then((json)=>{
+            let items = [];
+            for (let e in json.items) {
+                let button = json.items[e];
+                let entry = {
+                    key: button.key,
+                    url: button.url,
+                    icon: button.icon,
+                    title: button.title
+                };
+                if (entry.key) {
+                    items.push(entry);
+                }
+            }
+            globalStore.storeData(keys.gui.downloadpage.addOns, items);
+            fillData();
+        },
+        (error)=>{
+            Toast("reading addons failed: " + error);
+        });
 };
 
 const DownloadItem=(props)=>{
@@ -200,7 +247,7 @@ const DownloadItem=(props)=>{
             " nm, "+props.numpoints+" points";
         if (props.server) showRas=true;
     }
-    let {showView,showEdit,showDownload,showDelete,showApp}=allowedItemActions(props);
+    let {showView,showEdit,showDownload,showDelete,showApp,isApp}=allowedItemActions(props);
     let  cls="listEntry";
     if (props.active){
         cls+=" activeEntry";
@@ -225,7 +272,7 @@ const DownloadItem=(props)=>{
                     { showView && <div className="viewimage"></div>}
                     { showEdit && <div className="editimage"></div>}
                     {showRas && <div className="listrasimage"></div>}
-                    {showApp && <div className="appimage"></div>}
+                    {isApp && <div className="appimage"></div>}
                 </div>
             </div>
             { showDownload && <Button className="Download smallButton" onClick={
@@ -682,6 +729,161 @@ const androidUploadHandler=new Callback(()=>{
     },0);
 });
 
+class UserAppDialog extends React.Component{
+    constructor(props){
+        super(props);
+        this.state=props.addon||{};
+        this.state.userFile=props.current.name;
+        if (! this.state.name) this.state.name=props.current.name;
+        this.state.dialog=undefined;
+        this.state.iconList=[];
+        this.showDialog=this.showDialog.bind(this);
+        this.fillIconList();
+
+    }
+    fillIconList(){
+        let self=this;
+        Requests.getJson("?request=list&type=user")
+            .then((data)=>{
+                let itemList=[];
+                if (data.items){
+                    data.items.forEach((el)=>{
+                        if (ViewPage.IMAGES.indexOf(getExt(el.name)) >= 1){
+                            el.label=el.name;
+                            itemList.push(el);
+                        }
+                    });
+                    self.setState({iconList:self.state.iconList.concat(itemList)});
+                }
+            }).catch((error)=>{});
+        Requests.getJson("?request=list&type=images")
+            .then((data)=>{
+                let itemList=[];
+                if (data.items) {
+                    data.items.forEach((el)=> {
+                        if (ViewPage.IMAGES.indexOf(getExt(el.name)) >= 1) {
+                            el.label=el.name;
+                            itemList.push(el);
+                        }
+                    });
+                    self.setState({iconList: self.state.iconList.concat(itemList)});
+                }
+            })
+            .catch((error)=>{})
+    }
+    showDialog(Dialog){
+        let self=this;
+        this.setState({
+            dialog: (props)=>{
+                return(
+                    <Dialog
+                        {...props}
+                        closeCallback={()=>self.setState({dialog:undefined})}
+                        />
+                )
+            }
+        });
+    }
+
+    render(){
+        let self=this;
+        let Dialog=this.state.dialog;
+        return(
+        <React.Fragment>
+        <div className="userAppDialog">
+            <h3 className="dialogTitle">{this.props.current.isAddon?'Modify User App':'Create User App'}</h3>
+            <div className="dialogRow">
+                <InputReadOnly
+                    label="fileName"
+                    value={this.props.current.name}/>
+            </div>
+            <div className="dialogRow">
+                <Input
+                    label="title"
+                    value={this.state.title}
+                    onChange={(value)=>{self.setState({title:value})}}
+                    />
+            </div>
+            <div className="dialogRow">
+                <InputSelect
+                    label="icon"
+                    value={this.state.iconFile}
+                    list={this.state.iconList}
+                    showDialogFunction={this.showDialog}
+                    onChange={(selected)=>{this.setState({
+                        iconFile:selected.name,
+                        iconType:selected.type,
+                        icon:selected.url
+                    })}}
+                    />
+                {this.state.icon && <img className="appIcon" src={this.state.icon}/>}
+            </div>
+            <div className="dialogButtons dialogLine">
+                <DB name="ok" onClick={()=>{
+                    this.props.closeCallback();
+                    this.props.okFunction(this.state)
+                    }}
+                    disabled={!this.state.icon}
+                >Ok</DB>
+                <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
+                {this.props.current.isAddon && <DB name="delete" onClick={()=>{
+                        this.props.closeCallback();
+                        this.props.removeFunction(this.state);
+                    }}>Delete</DB>}
+            </div>
+        </div>
+            {Dialog?
+                <DialogContainer
+                    className="nested"
+                    content={Dialog}
+                    onClick={()=>{this.setState({dialog:undefined})}}
+                    />:
+                null}
+        </React.Fragment>
+        );
+    }
+}
+
+const showUserAppDialog=(item)=>{
+    OverlayDialog.dialog((props)=>{
+        return(
+            <UserAppDialog
+                {...props}
+                okFunction={(addon)=>{
+                   Requests.getJson("?request=api&type=addon&command=update",{},{
+                      userFile:addon.userFile,
+                      iconType:addon.iconType,
+                      title: addon.title,
+                      iconFile:addon.iconFile,
+                      name:addon.name
+                   })
+                   .then((data)=>{
+                        readAddOns();
+                   })
+                   .catch((error)=>{
+                    Toast("unable to create app entry: "+error);
+                    readAddOns();
+                    })
+                }}
+                removeFunction={(addon)=>{
+                    Requests.getJson("?request=api&type=addon&command=delete",{},{
+                      name:addon.name
+                   })
+                   .then((data)=>{
+                        readAddOns();
+                   })
+                   .catch((error)=>{
+                   Toast("unable to delete app entry: "+error);
+                   readAddOns();
+                   })
+                }}
+                addon={findAddon(item)}
+                current={item}
+                />
+        )
+    })
+};
+
 class FileDialog extends React.Component{
     constructor(props){
         super(props);
@@ -713,7 +915,9 @@ class FileDialog extends React.Component{
         let self=this;
         let cn=this.state.existingName?"existing":"";
         let rename=this.state.changed && ! this.state.existingName;
+        let Dialog=this.state.dialog;
         return(
+            <React.Fragment>
             <div className="fileDialog flexInner">
                 <h3 className="dialogTitle">{this.props.current.name}</h3>
                 {this.state.allowed.showRename ?
@@ -757,14 +961,14 @@ class FileDialog extends React.Component{
                 </div>
                 <div className="dialogButtons dialogLine">
                     <DB name="cancel"
-                            onClick={self.props.closeCallback}
+                            onClick={self.props.closeCallback}FileDia
                         >
                         Cancel
                     </DB>
                     {(this.state.allowed.showView )?
                         <DB name="view"
                                 onClick={()=>{
-                                    self.props.closeCallback();
+                                    self.props.closeCallback();app
                                     self.props.okFunction('view',this.props.current.name);
                                 }}
                                 disabled={this.state.changed}
@@ -799,8 +1003,28 @@ class FileDialog extends React.Component{
                         :
                         null
                     }
+                    {(this.state.allowed.showApp) &&
+                    <DB name="userApp"
+                        onClick={()=>{
+                                    this.props.closeCallback();
+                                    showUserAppDialog(this.props.current);
+                                }}
+                        disabled={this.state.changed}
+                        >
+                        App
+                    </DB>
+
+                    }
                 </div>
             </div>
+                {Dialog?
+                    <DialogContainer
+                        className="nested"
+                        content={Dialog}
+                        onClick={()=>{this.setState({dialog:undefined})}}
+                        />:
+                    null}
+            </React.Fragment>
         );
     }
 }
@@ -886,6 +1110,7 @@ class DownloadPage extends React.Component{
         globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
         globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
         globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
+        readAddOns();
         fillData();
         globalStore.register(androidUploadHandler,keys.gui.downloadpage.androidUploadId);
     }

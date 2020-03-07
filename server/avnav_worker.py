@@ -248,6 +248,7 @@ class AVNWorker(threading.Thread):
       raise Exception("unable to set param")
     if self.configChanger is None:
       raise Exception("unable to store changed config")
+    rt=childIndex
     childList=self.param.get(childName)
     if childList is None:
       childList=[]
@@ -260,12 +261,14 @@ class AVNWorker(threading.Thread):
     if childIndex < 0:
       current={}
       childList.append(current)
+      rt=len(childList)-1
     else:
       current=childList[childIndex]
     old=current.get(name)
     if old != value:
       self.configChanger.changeChildAttribute(childName,childIndex,name,value,delayWriteOut)
       current[name] = value
+    return rt
 
   def writeConfigChanges(self):
     if self.configChanger is None:
@@ -285,7 +288,7 @@ class AVNWorker(threading.Thread):
       raise Exception("param %s is no childlist"%childName)
     if childIndex < 0 or childIndex >= len(childList):
       raise Exception("trying to delete a non existing child %s:%d"%(childName,childIndex))
-    self.configChanger.changeChildAttribute(childName,childIndex,name,value)
+    self.configChanger.removeChild(childName,childIndex)
     childList.pop(childIndex)
 
   #get the XML tag in the config file that describes this worker
