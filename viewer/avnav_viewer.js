@@ -49,6 +49,7 @@ import RouteHandler from './nav/routedata.js';
 import LayoutHandler from './util/layouthandler.js';
 import LeaveHandler from './util/leavehandler.js';
 import registerRadial from './components/CanvasGaugeDefinitions.js';
+import AndroidEventHandler from './util/androidEventHandler.js';
 
 
 
@@ -112,21 +113,17 @@ avnav.main=function() {
                     avnav.android.goBack();
                     return;
                 }
-                return history.pop();
+                history.pop();
             }
             if (key == 'propertyChange'){
                 globalStore.storeData(keys.gui.global.propertySequence,
                     globalStore.getData(keys.gui.global.propertySequence,0)+1);
-                return;
             }
             if (key == "reloadData"){
                 globalStore.storeData(keys.gui.global.reloadSequence,
                     globalStore.getData(keys.gui.global.reloadSequence,0)+1);
-                return;
             }
-            if (key == "uploadAvailable"){
-                globalStore.storeData(keys.gui.downloadpage.androidUploadId,id);
-            }
+            AndroidEventHandler.handleEvent(key,id);
         };
     }
     let startpage="warningpage";

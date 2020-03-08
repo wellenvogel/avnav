@@ -462,7 +462,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
      * @param key
      * @param id
      */
-    void sendEventToJs(String key, int id){
+    public void sendEventToJs(String key, int id){
         if (jsEventHandler != null) jsEventHandler.sendEventToJs(key,id);
     }
 

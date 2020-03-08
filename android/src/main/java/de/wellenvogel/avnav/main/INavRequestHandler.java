@@ -39,4 +39,7 @@ public interface INavRequestHandler {
      */
     boolean handleDelete(String name, Uri uri) throws Exception;
 
+    JSONObject handleApiRequest(Uri uri) throws Exception;
+
+
 }

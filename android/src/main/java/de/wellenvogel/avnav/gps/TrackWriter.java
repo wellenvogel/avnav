@@ -59,6 +59,11 @@ public class TrackWriter implements INavRequestHandler {
         return rt;
     }
 
+    @Override
+    public JSONObject handleApiRequest(Uri uri) throws Exception {
+        return null;
+    }
+
     public static class TrackInfo implements INavRequestHandler.IJsonObect{
         public String name;
         public long mtime;

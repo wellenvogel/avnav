@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 
 import java.io.File;
 
@@ -80,5 +81,11 @@ public class AvnUtil {
 
     public static SharedPreferences getSharedPreferences(Context ctx){
         return ctx.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+    }
+
+    public static String getMandatoryParameter(Uri uri, String name)throws Exception{
+        String rt=uri.getQueryParameter(name);
+        if (rt == null) throw new Exception("missing mandatory parameter "+name);
+        return rt;
     }
 }

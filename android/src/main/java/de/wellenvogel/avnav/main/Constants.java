@@ -107,4 +107,7 @@ public class Constants {
     public static final String JS_BACK="backPressed";
     public static final String JS_PROPERTY_CHANGE="propertyChange";
     public static final String JS_UPLOAD_AVAILABLE="uploadAvailable";
+    public static final String JS_FILE_COPY_READY="fileCopyReady";
+    public static final String JS_FILE_COPY_PERCENT="fileCopyPercent"; //id will be percent
+    public static final String JS_FILE_COPY_DONE="fileCopyDone"; //id will be: 0 for success, 1 for error
 }

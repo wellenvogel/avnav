@@ -31,6 +31,7 @@ import ViewPage from './ViewPage.jsx';
 import {Input,InputSelect,InputReadOnly} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DialogContainer from '../components/OverlayDialogDisplay.jsx';
+import AndroidEventHandler from '../util/androidEventHandler.js';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -498,9 +499,17 @@ const uploadChart=(fileObject)=>{
     }
 };
 
-const uploadGeneric=(type,fileObject)=>{
+const uploadGeneric=(type,fileObject,opt_restrictedExtensions)=>{
     if (fileObject.files && fileObject.files.length > 0) {
         let file = fileObject.files[0];
+        if (opt_restrictedExtensions){
+            let ext=getExt(file.name);
+            if (opt_restrictedExtensions.indexOf(ext) < 0){
+                Toast("only files of types: "+opt_restrictedExtensions.join(","));
+                resetUpload();
+                return;
+            }
+        }
         let current=globalStore.getData(keys.gui.downloadpage.currentItems,[]);
         for (let i=0;i<current.length;i++){
             if (current[i].name ==file.name){
@@ -518,6 +527,7 @@ const UploadIndicator = Dynamic((info)=> {
     let props=info.uploadInfo;
     if (! props || !props.xhdr) return null;
     let percentComplete = props.total ? 100 * props.loaded / props.total : 0;
+    if (props.loadedPercent) percentComplete=props.loaded||0;
     let doneStyle = {
         width: percentComplete + "%"
     };
@@ -699,29 +709,6 @@ class Callback{
         this.callback(keys);
     }
 }
-const androidUploadHandler=new Callback(()=>{
-    if (!avnav.android) return;
-    let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
-    let current=globalStore.getData(keys.gui.downloadpage.androidUploadId);
-    if (current != requestedId) return;
-    //lets go back to the main thread as we had been called from android...
-    window.setTimeout(()=> {
-        let type = globalStore.getData(keys.gui.downloadpage.type);
-        let filename = avnav.android.getFileName(current);
-        if (!filename) return;
-        let data=avnav.android.getFileData(current);
-        if (type == 'route') {
-            if (!filename.match(/\.gpx$/)) {
-                Toast("only gpx files for routes");
-                return;
-            }
-            uploadRouteData(filename,data);
-        }
-        if (type == 'layout') {
-            uploadLayoutData(filename,data);
-        }
-    },0);
-});
 
 class UserAppDialog extends React.Component{
     constructor(props){
@@ -1106,10 +1093,86 @@ class DownloadPage extends React.Component{
         globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
         readAddOns();
         fillData();
-        globalStore.register(androidUploadHandler,keys.gui.downloadpage.androidUploadId);
+        this.androidSubscriptions=[];
+        this.androidUploadHandler=this.androidUploadHandler.bind(this);
+        this.androidCopyHandler=this.androidCopyHandler.bind(this);
+        this.androidProgressHandler=this.androidProgressHandler.bind(this);
+        this.androidSubscriptions.push(AndroidEventHandler.subscribe("uploadAvailable",this.androidUploadHandler));
+        this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyReady",this.androidCopyHandler));
+        this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyPercent",this.androidProgressHandler));
+        this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyDone",this.androidProgressHandler));
     }
+    androidUploadHandler(event,id){
+        if (!avnav.android) return;
+        let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
+        if (id != requestedId) return;
+        //lets go back to the main thread as we had been called from android...
+        window.setTimeout(()=> {
+            let type = globalStore.getData(keys.gui.downloadpage.type);
+            let filename = avnav.android.getFileName(id);
+            if (!filename) return;
+            let data=avnav.android.getFileData(id);
+            if (type == 'route') {
+                if (!filename.match(/\.gpx$/)) {
+                    Toast("only gpx files for routes");
+                    return;
+                }
+                uploadRouteData(filename,data);
+            }
+            if (type == 'layout') {
+                uploadLayoutData(filename,data);
+            }
+        },0);
+    }
+
+    /**
+     * called from android when the file selection is ready
+     * we now have to start the copy - showing the upload progressif (!avnav.android) return;
+        let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
+        if (id != requestedId) return;
+     * @param event
+     * @param id
+     */
+    androidCopyHandler(event,id){
+        if (!avnav.android) return;
+        let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
+        if (id != requestedId) return;
+        let copyInfo={
+            xhr:{
+                abort:()=>{avnav.android.interruptCopy();}
+            },
+            total:100,
+            loadedPercent:true
+        };
+        globalStore.storeData(keys.gui.downloadpage.uploadInfo,copyInfo);
+        avnav.android.copyFile(id);
+        globalStore.storeData(keys.gui.downloadpage.uploadInfo,assign({},copyInfo,{total:avnav.android.getFileSize(id)}));
+
+    }
+    androidProgressHandler(event,value){
+        if (event == "fileCopyProgress"){
+            let old=globalStore.getData(keys.gui.downloadpage.uploadInfo);
+            if (!old.total) return; //no upload...
+            globalStore.storeData(keys.gui.downloadpage.uploadInfo,
+                assign({},old,{
+                    loaded: value
+                }));
+        }
+        else{
+            //done, error already reported from java side
+            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
+            setTimeout(function(){
+                fillData();
+            },1500);
+        }
+    }
+
+
+
     componentWillUnmount(){
-        globalStore.deregister(androidUploadHandler);
+        this.androidSubscriptions.forEach((token)=> {
+            AndroidEventHandler.unsubscribe(token);
+        });
         let uploadInfo=globalStore.getData(keys.gui.downloadpage.uploadInfo,{});
         if (uploadInfo.xhdr) uploadInfo.xhdr.abort();
     }
@@ -1159,10 +1222,10 @@ class DownloadPage extends React.Component{
                     || (type == 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
                     || (type == 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false)),
                 onClick:()=>{
-                    if ((type == 'layout' || type == 'route')  && avnav.android){
+                    if (avnav.android){
                         let nextId=globalStore.getData(keys.gui.downloadpage.requestedUploadId,0)+1;
                         globalStore.storeData(keys.gui.downloadpage.requestedUploadId,nextId);
-                        avnav.android.requestFile(type,nextId);
+                        avnav.android.requestFile(type,nextId,(type == 'layout' || type == 'route'));
                         return;
                     }
                     globalStore.storeMultiple({key:(new Date()).getTime(),enable:true},{

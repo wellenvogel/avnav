@@ -57,6 +57,9 @@
     <string name="btShowPrivacy">PrivacyInfo</string>
     <string name="selectApp">Select Application to handle</string>
     <string name="uploadRoute">Select a route to upload</string>
+    <string name="uploadChart">Select a chart to upload</string>
+    <string name="uploadImage">Select an image to upload</string>
+    <string name="uploadUser">Select a file to upload</string>
     <string name="uploadLayout">Select a layout to upload</string>
     <string name="installFileManager">Please install a file manager</string>
     <string name="bluetoothLabel">Bluetooth</string>

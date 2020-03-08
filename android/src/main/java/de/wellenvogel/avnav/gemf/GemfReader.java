@@ -8,6 +8,8 @@ import android.os.Build;
 import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -176,5 +178,10 @@ public class GemfReader implements INavRequestHandler {
             updateChartList();
             return chartfile != null;
         }
+    }
+
+    @Override
+    public JSONObject handleApiRequest(Uri uri) throws Exception {
+        return null;
     }
 }

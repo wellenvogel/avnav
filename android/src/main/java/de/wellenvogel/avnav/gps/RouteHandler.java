@@ -86,6 +86,11 @@ public class RouteHandler implements INavRequestHandler {
         return deleteRoute(name);
     }
 
+    @Override
+    public JSONObject handleApiRequest(Uri uri) throws Exception {
+        return null;
+    }
+
     public static interface UpdateReceiver{
         public void updated();
     }

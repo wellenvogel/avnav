@@ -156,8 +156,9 @@ public class WebServer {
             }
             url=url.replaceAll("^/*","");
             url=url.replaceAll("\\?.*","");
-            if (url.startsWith(RequestHandler.USERPREFIX)){
-                WebResourceResponse r=activity.getRequestHandler().handleUserRequest(url);
+            DirectoryRequestHandler handler=activity.getRequestHandler().getPrefixHandler(url);
+            if (handler != null ){
+                WebResourceResponse r=handler.handleDirectRequest(url);
                 if ( r != null){
                     httpResponse.setStatusCode(HttpStatus.SC_OK);
                     httpResponse.setEntity(streamToEntity(r.getData()));

@@ -88,6 +88,11 @@ public class LayoutHandler implements INavRequestHandler{
 
     }
 
+    @Override
+    public JSONObject handleApiRequest(Uri uri) throws Exception {
+        return null;
+    }
+
     private List<LayoutInfo> readAssetsDir() throws IOException {
         ArrayList<LayoutInfo> rt=new ArrayList<>();
         String [] list;

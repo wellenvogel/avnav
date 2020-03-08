@@ -23,7 +23,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -46,10 +46,10 @@ import de.wellenvogel.avnav.gps.GpsDataProvider;
 import de.wellenvogel.avnav.gps.GpsService;
 import de.wellenvogel.avnav.gps.RouteHandler;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
-import de.wellenvogel.avnav.util.AssetsProvider;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.LayoutHandler;
+import de.wellenvogel.avnav.util.UploadData;
 
 /**
  * Created by andreas on 22.11.15.
@@ -58,7 +58,6 @@ public class RequestHandler {
     public static final String URLPREFIX="file://android_asset/";
     public static final String USERPREFIX="user/";
     public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
-    public static final long FILE_MAX_SIZE=1000000; //for file uploads
     protected static final String NAVURL="viewer/avnav_navi.php";
     private static final String DEMOCHARTS="demo"; //urls will start with CHARTPREFIX/DEMOCHARTS
     private static final String OVERVIEW="avnav.xml"; //request for chart overview
@@ -68,7 +67,6 @@ public class RequestHandler {
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
-    private IMediaUpdater updater=null;
 
     private Thread chartHandler=null;
     private boolean chartHandlerRunning=false;
@@ -78,25 +76,56 @@ public class RequestHandler {
     private LayoutHandler layoutHandler;
     private UploadData uploadData=null;
 
+    //file types from the js side
+    public static String TYPE_ROUTE="route";
+    public static String TYPE_LAYOUT="layout";
+    public static String TYPE_CHART="chart";
+    public static String TYPE_TRACK="track";
+    public static String TYPE_USER="user";
+    public static String TYPE_IMAGE="images";
+
+    public static class KeyValue<VT>{
+        String key;
+        public VT value;
+        public KeyValue(String key, VT v){
+            this.key=key;
+            this.value=v;
+        }
+    }
+
+
+    public static class TypeItemMap<VT> extends HashMap<String, KeyValue<VT>>{
+        public TypeItemMap(KeyValue<VT>...list){
+            for (KeyValue<VT> i : list){
+                put(i.key,i);
+            }
+        }
+    }
+
+    public static TypeItemMap<Integer> typeHeadings=new TypeItemMap<Integer>(
+            new KeyValue<Integer>(TYPE_ROUTE,R.string.uploadRoute),
+            new KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
+            new KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
+            new KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
+            new KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout)
+    );
+
+    //directories below workdir
+    public static TypeItemMap<File> typeDirs=new TypeItemMap<File>(
+            new KeyValue<File>(TYPE_ROUTE,new File("routes")),
+            new KeyValue<File>(TYPE_CHART,new File("charts")),
+            new KeyValue<File>(TYPE_LAYOUT,new File("layout")),
+            new KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
+            new KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images"))
+
+    );
+
     public static class ServerInfo{
         public InetSocketAddress address;
         boolean listenAny=false;
         String lastError=null;
     }
 
-    static class UploadData{
-        int id;
-        String name;
-        String fileData;
-        public UploadData(int id){
-            this.id=id;
-        }
-        boolean isReady(int id){
-            if (id != this.id) return false;
-            if (name == null || fileData == null) return false;
-            return true;
-        }
-    }
 
     static interface LazyHandlerAccess{
         INavRequestHandler getHandler();
@@ -104,38 +133,80 @@ public class RequestHandler {
 
     private HashMap<String,LazyHandlerAccess> handlerMap=new HashMap<>();
 
-    RequestHandler(MainActivity activity){
+    public static JSONObject getReturn() throws JSONException {
+        return getReturn(null);
+    }
+    public static JSONObject getReturn(KeyValue ...data) throws JSONException {
+        JSONObject rt=new JSONObject();
+        Object error=null;
+        for (KeyValue kv : data){
+            if ("error".equals(kv.key)) error=kv.value;
+            else rt.put(kv.key,kv.value);
+        }
+        rt.put("status",error == null?"OK":error);
+        return rt;
+    }
+    public static JSONObject getErrorReturn(String error,KeyValue ...data) throws JSONException {
+        JSONObject rt=new JSONObject();
+        rt.put("status",error == null?"OK":error);
+        for (KeyValue kv : data){
+            if (!"error".equals(kv.key)) rt.put(kv.key,kv.value);
+        }
+        return rt;
+    }
+
+    HashMap<String,DirectoryRequestHandler> prefixHandlers=
+            new HashMap<>();
+
+
+    RequestHandler(MainActivity activity) throws IOException {
         this.activity=activity;
-        this.updater=activity;
         this.gemfReader=new GemfReader(activity);
         ownMimeMap.put("js", "text/javascript");
         startHandler();
         layoutHandler=new LayoutHandler(activity,"viewer/layout",
-                new File(getWorkDir(),"layout"));
-        handlerMap.put("layout", new LazyHandlerAccess() {
+                new File(getWorkDir(),typeDirs.get(TYPE_LAYOUT).value.getPath()));
+        handlerMap.put(TYPE_LAYOUT, new LazyHandlerAccess() {
             @Override
             public INavRequestHandler getHandler() {
                 return layoutHandler;
             }
         });
-        handlerMap.put("route", new LazyHandlerAccess() {
+        handlerMap.put(TYPE_ROUTE, new LazyHandlerAccess() {
             @Override
             public INavRequestHandler getHandler() {
                 return getRouteHandler();
             }
         });
-        handlerMap.put("track", new LazyHandlerAccess() {
+        handlerMap.put(TYPE_TRACK, new LazyHandlerAccess() {
             @Override
             public INavRequestHandler getHandler() {
                 return getTrackWriter();
             }
         });
-        handlerMap.put("chart", new LazyHandlerAccess() {
+        handlerMap.put(TYPE_CHART, new LazyHandlerAccess() {
             @Override
             public INavRequestHandler getHandler() {
                 return gemfReader;
             }
         });
+        prefixHandlers.put(TYPE_USER,new DirectoryRequestHandler(activity,TYPE_USER,
+                typeDirs.get(TYPE_USER).value,"user/viewer"));
+        handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return prefixHandlers.get(TYPE_USER);
+            }
+        });
+        prefixHandlers.put(TYPE_IMAGE,new DirectoryRequestHandler(activity,TYPE_IMAGE,
+                typeDirs.get(TYPE_IMAGE).value,"user/images"));
+        handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return prefixHandlers.get(TYPE_IMAGE);
+            }
+        });
+
     }
 
     private INavRequestHandler getTrackWriter() {
@@ -193,13 +264,13 @@ public class RequestHandler {
     }
 
     public static class ExtendedWebResourceResponse extends WebResourceResponse {
-        int length;
+        long length;
         private HashMap<String,String> headers=new HashMap<String, String>();
-        public ExtendedWebResourceResponse(int length,String mime,String encoding,InputStream is){
+        public ExtendedWebResourceResponse(long length,String mime,String encoding,InputStream is){
             super(mime,encoding,is);
             this.length=length;
         }
-        public int getLength(){
+        public long getLength(){
             return length;
         }
         public void setHeader(String name,String value){
@@ -219,43 +290,6 @@ public class RequestHandler {
         return mimeType;
     }
 
-    WebResourceResponse handleUserRequest(String url){
-        if (! url.startsWith(USERPREFIX)) return null;
-        url=url.substring((USERPREFIX.length())).replaceAll("\\?.*","");
-        String[] parts=url.split("/");
-        if (parts.length < 1) return null;
-        File path=new File(getWorkDir(),"user");
-        boolean dirOk=path.isDirectory();
-        for (int i=0;(i<parts.length-1) && dirOk;i++){
-            path=new File(path,parts[i]);
-            if (! path.isDirectory() || (parts[i].equals(".."))) {
-                dirOk=false;
-                break;
-            }
-        }
-        if (dirOk) {
-            path = new File(path, parts[parts.length - 1]);
-            if (!path.isFile() || !path.canRead()) dirOk=false;
-        }
-        try {
-            if (! dirOk){
-                //fallbacks
-                String fallback=null;
-                if (url.equals("viewer/keys.json")) {
-                    fallback = "viewer/layout/keys.json";
-                }
-                if (fallback != null){
-                    InputStream is=activity.assetManager.open(fallback);
-                    return new WebResourceResponse(mimeType(fallback),"",is);
-                }
-                return null;
-            }
-            return new WebResourceResponse(mimeType(path.getName()),"",new FileInputStream(path));
-        } catch (Exception e) {
-            AvnLog.e("unable to open file "+url);
-        }
-        return null;
-    }
 
     WebResourceResponse handleRequest(View view,String url){
         if (url.startsWith(URLPREFIX)){
@@ -267,8 +301,9 @@ public class RequestHandler {
                 if (fname.startsWith(Constants.CHARTPREFIX)){
                     return handleChartRequest(fname);
                 }
-                if (fname.startsWith(USERPREFIX)){
-                    return handleUserRequest(fname);
+                DirectoryRequestHandler handler=getPrefixHandler(fname);
+                if (handler != null){
+                    return handler.handleDirectRequest(fname);
                 }
                 InputStream is=activity.assetManager.open(fname.replaceAll("\\?.*",""));
                 return new WebResourceResponse(mimeType(fname),"",is);
@@ -312,6 +347,7 @@ public class RequestHandler {
             boolean success=handler.handleUpload(postData,name,ignoreExisting != null && ignoreExisting.equals("true"));
             JSONObject rt=new JSONObject();
             if (success) {
+
                 rt.put("status", "OK");
             }
             else{
@@ -648,10 +684,26 @@ public class RequestHandler {
                 o.put("uploadRoute",true);
                 o.put("uploadLayout",true);
                 o.put("canConnect",true);
-                JSONObject response=new JSONObject();
-                response.put("status","OK");
-                response.put("data",o);
-                fout=response;
+                o.put("uploadUser",true);
+                o.put("uploadImages",true);
+                fout=getReturn(new KeyValue<JSONObject>("data",o));
+            }
+            if (type.equals("api")){
+                try {
+                    String apiType = AvnUtil.getMandatoryParameter(uri, "type");
+                    RequestHandler.LazyHandlerAccess handler = handlerMap.get(apiType);
+                    if (handler == null || handler.getHandler() == null ) throw new Exception("no handler for api request "+apiType);
+                    JSONObject resp=handler.getHandler().handleApiRequest(uri);
+                    if (resp == null){
+                        fout=getErrorReturn("api request returned null");
+                    }
+                    else{
+                        fout=resp;
+                    }
+                }catch (Throwable t){
+                    fout=getErrorReturn("exception: "+t.getLocalizedMessage());
+                }
+
             }
             if (!handled){
                 AvnLog.d(Constants.LOGPRFX,"unhandled nav request "+type);
@@ -782,10 +834,18 @@ public class RequestHandler {
         return true;
     }
 
+    public DirectoryRequestHandler getPrefixHandler(String url){
+        if (url == null) return null;
+        for (DirectoryRequestHandler handler : prefixHandlers.values()){
+            if (url.startsWith(handler.getUrlPrefix())) return handler;
+        }
+        return null;
+    }
+
     //potentially the Javascript interface code is called from the Xwalk app package
     //so we have to be careful to always access the correct resource manager when accessing resources!
     //to make this visible we pass a resource manager to functions called from here that open dialogs
-    protected class JavaScriptApi{
+    protected class JavaScriptApi  {
         private String returnStatus(String status){
             JSONObject o=new JSONObject();
             try {
@@ -838,10 +898,17 @@ public class RequestHandler {
          * when the file successfully has been fetched, we fire a uploadAvailable event to the JS with the id
          * @param type one of the user data types (route|layout)
          * @param id to identify the file
+         * @param readFile if true: read the file (used for small files), otherwise jsut keep the file url for later copy
          */
         @JavascriptInterface
-        public void requestFile(String type,int id){
-            RequestHandler.this.uploadData=new UploadData(id);
+        public void requestFile(String type,int id,boolean readFile){
+            KeyValue<Integer> title=typeHeadings.get(type);
+            if (title == null){
+                AvnLog.e("unknown type for request file "+type);
+                return;
+            }
+            if (uploadData != null) uploadData.interruptCopy(true);
+            RequestHandler.this.uploadData=new UploadData(activity,prefixHandlers.get(type),id,readFile);
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -850,7 +917,7 @@ public class RequestHandler {
                 activity.startActivityForResult(
                         Intent.createChooser(intent,
                                 //TODO: be more flexible for types...
-                                res.getText(type.equals("route")?R.string.uploadRoute:R.string.uploadLayout)),
+                                res.getText(title.value)),
                         Constants.FILE_OPEN);
             } catch (android.content.ActivityNotFoundException ex) {
                 // Potentially direct the user to the Market with a Dialog
@@ -861,13 +928,30 @@ public class RequestHandler {
         @JavascriptInterface
         public String getFileName(int id){
             if (uploadData==null || ! uploadData.isReady(id)) return null;
-            return uploadData.name;
+            return uploadData.getName();
         }
 
         @JavascriptInterface
         public String getFileData(int id){
             if (uploadData==null || ! uploadData.isReady(id)) return null;
-            return uploadData.fileData;
+            return uploadData.getFileData();
+        }
+
+        @JavascriptInterface
+        public boolean copyFile(int id){
+            if (uploadData==null || ! uploadData.isReady(id)) return false;
+            return uploadData.copyFile();
+        }
+        @JavascriptInterface
+        public long getFileSize(int id){
+            if (uploadData==null || ! uploadData.isReady(id)) return -1;
+            return uploadData.getSize();
+        }
+
+        @JavascriptInterface
+        public boolean interruptCopy(int id){
+            if (uploadData==null || ! uploadData.isReady(id)) return false;
+            return uploadData.interruptCopy(false);
         }
 
 
@@ -970,32 +1054,9 @@ public class RequestHandler {
     }
 
 
-
     void saveFile(Uri returnUri) {
-        try {
-            if (uploadData == null) return;
-            AvnLog.i("importing route: "+returnUri);
-            DocumentFile df=DocumentFile.fromSingleUri(activity,returnUri);
-            ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(returnUri, "r");
-            long size=pfd.getStatSize();
-            if (size > RequestHandler.FILE_MAX_SIZE) throw new Exception("file to big, allowed "+ RequestHandler.FILE_MAX_SIZE);
-            AvnLog.i("saving file "+returnUri.getLastPathSegment());
-            byte buffer[]=new byte[(int)(FILE_MAX_SIZE/10)];
-            int rd=0;
-            StringBuilder data=new StringBuilder();
-            InputStream is=new FileInputStream(pfd.getFileDescriptor());
-            while ((rd=is.read(buffer)) > 0){
-                data.append(new String(buffer,0,rd, StandardCharsets.UTF_8));
-            }
-            is.close();
-            uploadData.name=df.getName();
-            uploadData.fileData=data.toString();
-            activity.sendEventToJs(Constants.JS_UPLOAD_AVAILABLE, uploadData.id);
-        } catch (Throwable e) {
-            Toast.makeText(activity.getApplicationContext(), "unable to read file: "+e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-            e.printStackTrace();
-            Log.e(Constants.LOGPRFX, "unable to read file: "+e.getLocalizedMessage());
-            return;
-        }
+        if (uploadData == null) return;
+        uploadData.saveFile(returnUri);
+
     }
 }
