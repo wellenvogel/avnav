@@ -1,7 +1,6 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.location.Location;
-import android.util.Log;
 
 import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
@@ -21,7 +20,6 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Map;
 import java.util.TimeZone;
 
 /**

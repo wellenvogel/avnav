@@ -24,7 +24,6 @@ import de.wellenvogel.avnav.util.ActionBarHandler;
  * Created by andreas on 30.12.14.
  */
 public class Info extends Activity {
-    private XwalkDownloadHandler downloadHandler=new XwalkDownloadHandler(this);
     private void scrollView(View parent, int target){
         if (parent == null) return;
         View v=parent.findViewById(target);

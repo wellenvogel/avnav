@@ -1,10 +1,8 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.appapi;
 
 import android.net.Uri;
-import android.webkit.WebResourceResponse;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -12,37 +10,22 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
-import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
-public class DirectoryRequestHandler implements INavRequestHandler {
-    class JsonWrapper implements IJsonObect{
-        JSONObject o;
-        JsonWrapper(JSONObject o){
-            this.o=o;
-        }
-        @Override
-        public JSONObject toJson() throws JSONException {
-            return o;
-        }
-    }
-    File subDir;
-    MainActivity activity;
-    File workDir;
-    String urlPrefix;
-    String type;
-    public DirectoryRequestHandler(MainActivity activity, String type,File subDir,String urlPrefrix) throws IOException {
-        this.activity=activity;
+public class DirectoryRequestHandler implements INavRequestHandler, IDirectoryHandler {
+    private File subDir;
+    private RequestHandler handler;
+    private File workDir;
+    private String urlPrefix;
+    private String type;
+    public DirectoryRequestHandler(RequestHandler handler, String type,File subDir,String urlPrefrix) throws IOException {
+        this.handler=handler;
         this.type=type;
         this.subDir=subDir;
         this.urlPrefix=urlPrefrix;
-        this.workDir=new File(AvnUtil.getWorkDir(null,activity),subDir.getPath());
+        this.workDir=new File(handler.getWorkDir(),subDir.getPath());
         if (! workDir.exists()){
             workDir.mkdirs();
         }
@@ -51,31 +34,31 @@ public class DirectoryRequestHandler implements INavRequestHandler {
         }
     }
     @Override
-    public RequestHandler.ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
         File found=findLocalFile(name);
         if (found == null) return null;
-        return new RequestHandler.ExtendedWebResourceResponse(
+        return new ExtendedWebResourceResponse(
             found.length(),
-            activity.getRequestHandler().mimeType(found.getName()),
+            handler.mimeType(found.getName()),
             "",
             new FileInputStream(found)
         );
     }
 
     @Override
-    public boolean handleUpload(String postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
         String safeName=safeName(name,true);
         File out=new File(workDir,safeName);
         if (out.exists() && ! ignoreExisting) return false;
         FileOutputStream os=new FileOutputStream(out);
-        os.write(postData.getBytes());
+        postData.writeTo(os);
         os.close();
         return true;
     }
 
     @Override
-    public Collection<? extends IJsonObect> handleList() throws Exception {
-        ArrayList<JsonWrapper> rt=new ArrayList<JsonWrapper>();
+    public JSONArray handleList() throws Exception {
+        JSONArray rt=new JSONArray();
         for (File localFile: workDir.listFiles()) {
             if (localFile.isFile()){
                 JSONObject el=new JSONObject();
@@ -86,7 +69,7 @@ public class DirectoryRequestHandler implements INavRequestHandler {
                         URLEncoder.encode(localFile.getName(),"utf-8"));
                 el.put("type",type);
                 el.put("canDelete",true);
-                rt.add(new JsonWrapper(el));
+                rt.put(el);
             }
         }
         return rt;
@@ -100,15 +83,10 @@ public class DirectoryRequestHandler implements INavRequestHandler {
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri) throws Exception {
+    public JSONObject handleApiRequest(Uri uri,PostVars postData) throws Exception {
         String command=AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            Collection<? extends IJsonObect> files=handleList();
-            JSONArray data=new JSONArray();
-            for (IJsonObect el:files){
-                data.put(el.toJson());
-            }
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",data));
+            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList()));
         }
         if (command.equals("delete")){
             String name=AvnUtil.getMandatoryParameter(uri,"name");
@@ -147,37 +125,46 @@ public class DirectoryRequestHandler implements INavRequestHandler {
         }
         return null;
     }
-
-    public WebResourceResponse handleDirectRequest(String url) throws FileNotFoundException {
+    @Override
+    public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException {
         if (!url.startsWith(urlPrefix)) return null;
         url = url.substring((urlPrefix.length())).replaceAll("\\?.*", "");
         String[] parts = url.split("/");
         if (parts.length < 1) return null;
         File foundFile = findLocalFile(parts[parts.length - 1]);
         if (foundFile != null) {
-            return new WebResourceResponse(
-                    activity.getRequestHandler().mimeType(foundFile.getName()),
+            return new ExtendedWebResourceResponse(
+                    foundFile.length(),
+                    handler.mimeType(foundFile.getName()),
                     "", new FileInputStream(foundFile));
 
         }
         return null;
     }
+    @Override
     public String getUrlPrefix(){
         return urlPrefix;
     }
-    private String safeName(String name,boolean throwError) throws Exception {
+    public static String safeName(String name,boolean throwError) throws Exception {
         if (name == null) throw new Exception("name is null");
         String safeName=name.replaceAll("[^\\w.-]","");
         if (!name.equals(safeName) && throwError) throw new Exception("illegal filename "+name);
         return safeName;
     }
-    public FileOutputStream openForWrite(String name,boolean noOverwrite) throws Exception {
+    @Override
+    public FileOutputStream openForWrite(String name, boolean noOverwrite) throws Exception {
         String safeName=safeName(name,true);
         File outFile=new File(workDir,safeName);
         if (outFile.exists() && noOverwrite) throw new Exception("file "+name+" already exists");
         return new FileOutputStream(outFile);
     }
+    @Override
     public String getDirName(){
         return workDir.getAbsolutePath();
+    }
+
+    @Override
+    public void deleteFile(String name) throws Exception {
+        handleDelete(name,null);
     }
 }

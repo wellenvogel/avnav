@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -41,10 +41,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,7 +141,9 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
     @Override
     public void updated() {
+        timerAction();
         sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
+
     }
 
     public class GpsServiceBinder extends Binder{
@@ -901,11 +901,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
     public IMediaUpdater getMediaUpdater(){
         return mediaUpdater;
-    }
-
-    public ArrayList<TrackWriter.TrackInfo> listTracks(){
-        if (trackWriter == null) return new ArrayList<TrackWriter.TrackInfo>();
-        return trackWriter.listTracks();
     }
 
 

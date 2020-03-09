@@ -1,15 +1,17 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
 
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.main.IMediaUpdater;
-import de.wellenvogel.avnav.main.INavRequestHandler;
+import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
-import de.wellenvogel.avnav.main.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 
+import org.apache.http.HttpEntity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,20 +31,31 @@ import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 public class TrackWriter implements INavRequestHandler {
 
     @Override
-    public RequestHandler.ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
         File trackfile = new File(trackdir, name);
         if (!trackfile.isFile()) throw new IOException("trackfile "+name+" not found");
-        return new RequestHandler.ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
+        return new ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
     }
 
     @Override
-    public boolean handleUpload(String postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
         throw new Exception("unable to upload tracks");
     }
 
     @Override
-    public Collection<? extends IJsonObect> handleList() throws Exception {
-        return listTracks();
+    public JSONArray handleList() throws Exception {
+
+        JSONArray rt = new JSONArray();
+        for (File f : trackdir.listFiles()) {
+            if (!f.isFile()) continue;
+            if (!f.getName().endsWith(".gpx") && !f.getName().endsWith(".nmea")) continue;
+            TrackInfo e = new TrackInfo();
+            e.name = f.getName();
+            e.mtime = f.lastModified();
+            rt.put(e.toJson());
+        }
+        return rt;
+
     }
 
     @Override
@@ -60,7 +73,7 @@ public class TrackWriter implements INavRequestHandler {
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri) throws Exception {
+    public JSONObject handleApiRequest(Uri uri,PostVars postData) throws Exception {
         return null;
     }
 
@@ -468,18 +481,6 @@ public class TrackWriter implements INavRequestHandler {
         return deleted;
     }
 
-    public ArrayList<TrackInfo> listTracks(){
-        ArrayList<TrackInfo> rt=new ArrayList<TrackInfo>();
-        for (File f: trackdir.listFiles()){
-            if (! f.isFile()) continue;
-            if(! f.getName().endsWith(".gpx") && ! f.getName().endsWith(".nmea")) continue;
-            TrackInfo e=new TrackInfo();
-            e.name=f.getName();
-            e.mtime=f.lastModified();
-            rt.add(e);
-        }
-        return rt;
-    }
 
 
 }

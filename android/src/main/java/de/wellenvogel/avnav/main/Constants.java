@@ -48,6 +48,8 @@ public class Constants {
 
     public static final String REALCHARTS="charts";
     public static final String CHARTPREFIX="charts";
+    public static final String DEMOCHARTS="demo";
+    public static final String CHARTOVERVIEW="avnav.xml";
     public final static String FILE_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".provider";
     public final static String ASSETS_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".assetsprovider";
     //list of audio settings
@@ -101,6 +103,9 @@ public class Constants {
     //workdir settings
     public static final String INTERNAL_WORKDIR="workdir_internal";
     public static final String EXTERNAL_WORKDIR="workdir_external";
+
+    //max size for files being transferred as string between js and android
+    public static final long MAXFILESIZE=500000;
 
     //js events
     public static final String JS_RELOAD="reloadData";

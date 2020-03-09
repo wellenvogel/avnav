@@ -1,69 +1,62 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.appapi;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.location.Location;
 import android.net.Uri;
-import android.os.ParcelFileDescriptor;
 import android.support.v4.content.FileProvider;
-import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.view.View;
-import android.webkit.JavascriptInterface;
 import android.webkit.MimeTypeMap;
 import android.webkit.WebResourceResponse;
 import android.widget.Toast;
 
+import org.apache.http.HttpEntity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.wellenvogel.avnav.gemf.GemfChart;
 import de.wellenvogel.avnav.gemf.GemfHandler;
-import de.wellenvogel.avnav.gemf.GemfReader;
-import de.wellenvogel.avnav.gps.Alarm;
-import de.wellenvogel.avnav.gps.GpsDataProvider;
-import de.wellenvogel.avnav.gps.GpsService;
-import de.wellenvogel.avnav.gps.RouteHandler;
+import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.MainActivity;
+import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
-import de.wellenvogel.avnav.util.LayoutHandler;
 import de.wellenvogel.avnav.util.UploadData;
+import de.wellenvogel.avnav.worker.Alarm;
+import de.wellenvogel.avnav.worker.GpsDataProvider;
+import de.wellenvogel.avnav.worker.GpsService;
+import de.wellenvogel.avnav.worker.RouteHandler;
 
 /**
  * Created by andreas on 22.11.15.
  */
 public class RequestHandler {
     public static final String URLPREFIX="file://android_asset/";
-    public static final String USERPREFIX="user/";
     public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
     protected static final String NAVURL="viewer/avnav_navi.php";
-    private static final String DEMOCHARTS="demo"; //urls will start with CHARTPREFIX/DEMOCHARTS
-    private static final String OVERVIEW="avnav.xml"; //request for chart overview
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-    private MainActivity activity;
-    protected JavaScriptApi mJavaScriptApi=new JavaScriptApi();
+    MainActivity activity;
+    private SharedPreferences preferences;
+    protected JavaScriptApi mJavaScriptApi=new JavaScriptApi(this);
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
@@ -72,9 +65,9 @@ public class RequestHandler {
     private boolean chartHandlerRunning=false;
     private final Object chartHandlerMonitor=new Object();
 
-    private GemfReader gemfReader;
+    private GemfHandler gemfHandler;
     private LayoutHandler layoutHandler;
-    private UploadData uploadData=null;
+    UploadData uploadData=null;
 
     //file types from the js side
     public static String TYPE_ROUTE="route";
@@ -103,7 +96,7 @@ public class RequestHandler {
     }
 
     public static TypeItemMap<Integer> typeHeadings=new TypeItemMap<Integer>(
-            new KeyValue<Integer>(TYPE_ROUTE,R.string.uploadRoute),
+            new KeyValue<Integer>(TYPE_ROUTE, R.string.uploadRoute),
             new KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
             new KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
             new KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
@@ -122,8 +115,8 @@ public class RequestHandler {
 
     public static class ServerInfo{
         public InetSocketAddress address;
-        boolean listenAny=false;
-        String lastError=null;
+        public boolean listenAny=false;
+        public String lastError=null;
     }
 
 
@@ -132,10 +125,8 @@ public class RequestHandler {
     }
 
     private HashMap<String,LazyHandlerAccess> handlerMap=new HashMap<>();
+    private HashMap<String, IDirectoryHandler> prefixHandlers= new HashMap<>();
 
-    public static JSONObject getReturn() throws JSONException {
-        return getReturn(null);
-    }
     public static JSONObject getReturn(KeyValue ...data) throws JSONException {
         JSONObject rt=new JSONObject();
         Object error=null;
@@ -155,13 +146,11 @@ public class RequestHandler {
         return rt;
     }
 
-    HashMap<String,DirectoryRequestHandler> prefixHandlers=
-            new HashMap<>();
 
 
-    RequestHandler(MainActivity activity){
+    public RequestHandler(MainActivity activity){
         this.activity=activity;
-        this.gemfReader=new GemfReader(activity);
+        this.gemfHandler =new GemfHandler(activity,this);
         ownMimeMap.put("js", "text/javascript");
         startHandler();
         layoutHandler=new LayoutHandler(activity,"viewer/layout",
@@ -187,11 +176,12 @@ public class RequestHandler {
         handlerMap.put(TYPE_CHART, new LazyHandlerAccess() {
             @Override
             public INavRequestHandler getHandler() {
-                return gemfReader;
+                return gemfHandler;
             }
         });
+        prefixHandlers.put(TYPE_CHART,gemfHandler);
         try{
-            final DirectoryRequestHandler userHandler=new DirectoryRequestHandler(activity,TYPE_USER,
+            final DirectoryRequestHandler userHandler=new DirectoryRequestHandler(this,TYPE_USER,
                     typeDirs.get(TYPE_USER).value,"user/viewer");
             prefixHandlers.put(TYPE_USER,userHandler);
             handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
@@ -204,7 +194,7 @@ public class RequestHandler {
             AvnLog.e("unable to create user handler",e);
         }
         try {
-            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(activity, TYPE_IMAGE,
+            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(this, TYPE_IMAGE,
                     typeDirs.get(TYPE_IMAGE).value, "user/images");
             prefixHandlers.put(TYPE_IMAGE, imageHandler);
             handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
@@ -241,7 +231,7 @@ public class RequestHandler {
                     public void run() {
                         AvnLog.i("RequestHandler: chartHandler thread is starting");
                         while (chartHandlerRunning) {
-                            gemfReader.updateChartList();
+                            gemfHandler.updateChartList();
                             try {
                                 synchronized (chartHandlerMonitor){
                                     chartHandlerMonitor.wait(5000);
@@ -259,39 +249,23 @@ public class RequestHandler {
         }
 
     }
-    private RouteHandler getRouteHandler(){
+    RouteHandler getRouteHandler(){
         return getGpsService().getRouteHandler();
     }
 
-    private File getWorkDir(){
+    protected File getWorkDir(){
         return AvnUtil.getWorkDir(getSharedPreferences(),activity);
     }
-    private GpsService getGpsService(){
-        return activity.gpsService;
+    GpsService getGpsService(){
+        return activity.getGpsService();
     }
-    SharedPreferences getSharedPreferences(){
-        return activity.sharedPrefs;
-    }
-
-    public static class ExtendedWebResourceResponse extends WebResourceResponse {
-        long length;
-        private HashMap<String,String> headers=new HashMap<String, String>();
-        public ExtendedWebResourceResponse(long length,String mime,String encoding,InputStream is){
-            super(mime,encoding,is);
-            this.length=length;
-        }
-        public long getLength(){
-            return length;
-        }
-        public void setHeader(String name,String value){
-            headers.put(name,value);
-        }
-        public HashMap<String,String> getHeaders() {
-            return headers;
-        }
+    public synchronized  SharedPreferences getSharedPreferences(){
+        if (preferences != null) return preferences;
+        preferences=AvnUtil.getSharedPreferences(activity);
+        return preferences;
     }
 
-    String mimeType(String fname){
+    public String mimeType(String fname){
         String ext=fname.replaceAll(".*\\.", "");
         String mimeType=mime.getMimeTypeFromExtension(ext);
         if (mimeType == null) {
@@ -301,21 +275,18 @@ public class RequestHandler {
     }
 
 
-    WebResourceResponse handleRequest(View view,String url){
+    public WebResourceResponse handleRequest(View view, String url){
         if (url.startsWith(URLPREFIX)){
             try {
                 String fname=url.substring(URLPREFIX.length());
                 if (fname.startsWith(NAVURL)){
                     return handleNavRequest(url,null);
                 }
-                if (fname.startsWith(Constants.CHARTPREFIX)){
-                    return handleChartRequest(fname);
-                }
-                DirectoryRequestHandler handler=getPrefixHandler(fname);
+                IDirectoryHandler handler=getPrefixHandler(fname);
                 if (handler != null){
                     return handler.handleDirectRequest(fname);
                 }
-                InputStream is=activity.assetManager.open(fname.replaceAll("\\?.*",""));
+                InputStream is=activity.getAssets().open(fname.replaceAll("\\?.*",""));
                 return new WebResourceResponse(mimeType(fname),"",is);
             } catch (Throwable e) {
                 e.printStackTrace();
@@ -328,11 +299,11 @@ public class RequestHandler {
         }
     }
 
-    String getStartPage(){
+    public String getStartPage(){
         InputStream input;
         String htmlPage=null;
         try {
-            input = activity.assetManager.open("viewer/avnav_viewer.html");
+            input = activity.getAssets().open("viewer/avnav_viewer.html");
 
             int size = input.available();
             byte[] buffer = new byte[size];
@@ -347,7 +318,7 @@ public class RequestHandler {
         return htmlPage;
     }
 
-    JSONObject handleUploadRequest(Uri uri,String postData) throws Exception{
+    JSONObject handleUploadRequest(Uri uri,PostVars postData) throws Exception{
         String dtype = uri.getQueryParameter("type");
         if (dtype == null ) throw new IOException("missing parameter type for upload");
         String ignoreExisting=uri.getQueryParameter("ignoreExisting");
@@ -368,10 +339,10 @@ public class RequestHandler {
         return null;
     }
 
-    ExtendedWebResourceResponse handleNavRequest(String url, String postData){
+    ExtendedWebResourceResponse handleNavRequest(String url, PostVars postData){
         return handleNavRequest(url,postData,null);
     }
-    ExtendedWebResourceResponse handleNavRequest(String url, String postData,ServerInfo serverInfo){
+    ExtendedWebResourceResponse handleNavRequest(String url, PostVars postData,ServerInfo serverInfo){
         Uri uri= Uri.parse(url);
         String type=uri.getQueryParameter("request");
         if (type == null) type="gps";
@@ -408,31 +379,11 @@ public class RequestHandler {
                 handled=true;
                 JSONObject out=new JSONObject();
                 try {
-                    out.put("status", "OK");
-                    JSONArray arr = new JSONArray();
-                    for (INavRequestHandler.IJsonObect item:gemfReader.handleList()){
-                        arr.put(item.toJson());
-                    }
-                    if (getSharedPreferences().getBoolean(Constants.SHOWDEMO,false)){
-                        String demoCharts[]=activity.assetManager.list("charts");
-                        for (String demo: demoCharts){
-                            if (! demo.endsWith(".xml")) continue;
-                            String name=demo.replaceAll("\\.xml$", "");
-                            AvnLog.d(Constants.LOGPRFX,"found demo chart "+demo);
-                            JSONObject e = new JSONObject();
-                            e.put("name", name);
-                            e.put("url", "/"+ Constants.CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
-                            e.put("charturl","/"+ Constants.CHARTPREFIX+"/"+DEMOCHARTS+"/" + name);
-                            arr.put(e);
-                        }
-                    }
-                    out.put("data", arr);
+                    fout=getReturn(new KeyValue<JSONArray>("data",gemfHandler.handleList()));
                 }catch (Exception e){
                     Log.e(Constants.LOGPRFX, "error reading chartlist: " + e.getLocalizedMessage());
-                    out.put("status","ERROR");
-                    out.put("info",e.getLocalizedMessage());
+                    fout=getErrorReturn(e.getLocalizedMessage());
                 }
-                fout=out;
             }
             if (type.equals("track")){
                 handled=true;
@@ -484,52 +435,20 @@ public class RequestHandler {
                 }
             }
             if (type.equals("routing")){
-                if (getRouteHandler() != null) {
-                    JSONObject o = new JSONObject();
-                    o.put("status", "OK");
-                    String command = uri.getQueryParameter("command");
-                    if (command.equals("getleg")){
-                        o=getRouteHandler().getLeg();
+                if (getGpsService() != null && getRouteHandler() != null) {
+                    JSONObject o=getRouteHandler().handleApiRequest(uri,postData);
+                    if (o != null){
                         handled=true;
+                        fout=o;
                     }
-                    if (command.equals("unsetleg")){
-                        getRouteHandler().unsetLeg();
-                        handled=true;
-                    }
-                    if(command.equals("setleg")) {
-                        String legData = uri.getQueryParameter("leg");
-                        if (legData == null) legData=postData;
-                        if (legData != null){
-                            try {
-                                getRouteHandler().setLeg(legData);
-                                getGpsService().timerAction();
-                            }catch (Exception e){
-                                o.put("status",e.getMessage());
-                            }
-                        }
-                        else{
-                            o.put("status","missing leg data");
-                        }
-                        handled = true;
-                    }
-                    if (handled) fout = o;
                 }
             }
             if (type.equals("listdir") || type.equals("list")){
                 String dirtype=uri.getQueryParameter("type");
                 INavRequestHandler handler=getHandler(dirtype);
-                JSONArray items=new JSONArray();
                 if (handler != null){
-                    for (INavRequestHandler.IJsonObect item:handler.handleList()){
-                        items.put(item.toJson());
-                    }
                     handled=true;
-                }
-                if (handled){
-                    JSONObject o=new JSONObject();
-                    o.put("status","OK");
-                    o.put("items",items);
-                    fout=o;
+                    fout=getReturn(new KeyValue<JSONArray>("items",handler.handleList()));
                 }
 
             }
@@ -650,16 +569,17 @@ public class RequestHandler {
                 String status=uri.getQueryParameter("status");
                 if (status != null && ! status.isEmpty()){
                     JSONObject rt=new JSONObject();
-                    if (status.matches(".*all.*")){
-                        rt=getGpsService().getAlarStatusJson();
-                    }
-                    else {
-                        Map <String,Alarm> alarmStatus=getGpsService().getAlarmStatus();
-                        String[] queryAlarms = status.split(",");
-                        for (String alarm:queryAlarms){
-                            Alarm ao=alarmStatus.get(alarm);
-                            if (ao != null){
-                                rt.put(alarm,ao.toJson());
+                    if (getGpsService() != null) {
+                        if (status.matches(".*all.*")) {
+                            rt = getGpsService().getAlarStatusJson();
+                        } else {
+                            Map<String, Alarm> alarmStatus = getGpsService().getAlarmStatus();
+                            String[] queryAlarms = status.split(",");
+                            for (String alarm : queryAlarms) {
+                                Alarm ao = alarmStatus.get(alarm);
+                                if (ao != null) {
+                                    rt.put(alarm, ao.toJson());
+                                }
                             }
                         }
                     }
@@ -703,7 +623,7 @@ public class RequestHandler {
                     String apiType = AvnUtil.getMandatoryParameter(uri, "type");
                     RequestHandler.LazyHandlerAccess handler = handlerMap.get(apiType);
                     if (handler == null || handler.getHandler() == null ) throw new Exception("no handler for api request "+apiType);
-                    JSONObject resp=handler.getHandler().handleApiRequest(uri);
+                    JSONObject resp=handler.getHandler().handleApiRequest(uri,postData);
                     if (resp == null){
                         fout=getErrorReturn("api request returned null");
                     }
@@ -731,84 +651,8 @@ public class RequestHandler {
         return new ExtendedWebResourceResponse(len,"application/json","UTF-8",is);
     }
 
-    ExtendedWebResourceResponse handleChartRequest(String fname){
-        fname=fname.substring(Constants.CHARTPREFIX.length()+1);
-        InputStream rt=null;
-        fname = fname.replaceAll("\\?.*", "");
-        String mimeType=mimeType(fname);
-        int len=0;
-        try {
-            if (fname.startsWith(DEMOCHARTS)){
-                fname=fname.substring(DEMOCHARTS.length()+1);
-                if (fname.endsWith(OVERVIEW)){
-                    AvnLog.d(Constants.LOGPRFX,"overview request "+fname);
-                    fname=fname.substring(0,fname.length()-OVERVIEW.length()-1); //just the pure name
-                    fname+=".xml";
-                    rt=activity.assetManager.open(Constants.CHARTPREFIX+"/"+fname);
-                    len=-1;
-                }
-                else throw new Exception("unable to handle demo request for "+fname);
-            }
-            if (fname.startsWith(Constants.REALCHARTS)) {
-                //the name will be REALCHARTS/index/type/name/param
-                //type being either avnav or gemf
-                String baseAndUrl[] = fname.split("/", 5);
-                if (baseAndUrl.length < 5) throw new Exception("invalid chart request "+fname);
-                String key=baseAndUrl[0]+"/"+baseAndUrl[1]+"/"+baseAndUrl[2]+"/"+baseAndUrl[3];
-                GemfChart chart= gemfReader.getChartDescription(key);
-                if (chart == null) throw new Exception("request a file that is not in the list: "+fname);
-                if (baseAndUrl[2].equals("gemf")) {
-                    if (baseAndUrl[4].equals(OVERVIEW)) {
-                        try {
-                            return chart.getOverview();
-                        }catch (Exception e){
-                            Log.e(Constants.LOGPRFX,"unable to read gemf file "+fname+": "+e.getLocalizedMessage());
-                        }
-                    } else {
-                        GemfHandler f = chart.getGemf();
-                        //we have source/z/x/y in baseAndUrl[1]
-                        String param[] = baseAndUrl[4].split("/");
-                        if (param.length < 4) {
-                            throw new Exception("invalid parameter for gemf call " + fname);
-                        }
-                        int z = Integer.parseInt(param[1]);
-                        int x = Integer.parseInt(param[2]);
-                        int y = Integer.parseInt(param[3].replaceAll("\\.png", ""));
-                        return f.getChartData(x,y,z,Integer.parseInt(param[0]));
-                    }
-                }
-                else if (baseAndUrl[2].equals("avnav")){
-                    if (!baseAndUrl[4].equals(OVERVIEW)){
-                        throw new Exception("only overview supported for xml files: "+fname);
-                    }
-                    return chart.getOverview();
-                }
-                else {
-                    Log.e(Constants.LOGPRFX,"invalid chart request "+fname);
-                }
-            }
-            if (rt == null){
-                Log.e(Constants.LOGPRFX,"unknown chart path "+fname);
 
-
-            }
-
-            return new ExtendedWebResourceResponse(len,mimeType,"",rt);
-        } catch (Exception e) {
-            Log.e(Constants.LOGPRFX, "chart file " + fname + " not found: " + e.getLocalizedMessage());
-        }
-        return null;
-    }
-
-
-
-
-
-
-
-
-
-    private boolean sendFile(String name, String type){
+    boolean sendFile(String name, String type){
         if (!type.equals("track") && ! type.equals("route") && ! type.equals("layout")){
             Log.e(Constants.LOGPRFX,"invalid type "+type+" for sendFile");
             return false;
@@ -844,214 +688,59 @@ public class RequestHandler {
         return true;
     }
 
-    public DirectoryRequestHandler getPrefixHandler(String url){
+    /**
+     * used by the JS API to trigger an upload
+     * see {@link JavaScriptApi#requestFile(String, int, boolean)}
+     * @param type the file type
+     * @param id the id that will be used by js to access the data later
+     * @param readImmediately if true, immediately read the file
+     * @return
+     */
+    public boolean startUpload(String type,int id,boolean readImmediately){
+        RequestHandler.KeyValue<Integer> title= RequestHandler.typeHeadings.get(type);
+        if (title == null){
+            AvnLog.e("unknown type for request file "+type);
+            return false;
+        }
+        if (uploadData != null) uploadData.interruptCopy(true);
+        uploadData=new UploadData(activity, prefixHandlers.get(type),id,readImmediately);
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        Resources res=activity.getResources();
+        try {
+            activity.startActivityForResult(
+                    Intent.createChooser(intent,
+                            //TODO: be more flexible for types...
+                            res.getText(title.value)),
+                    Constants.FILE_OPEN);
+        } catch (android.content.ActivityNotFoundException ex) {
+            // Potentially direct the user to the Market with a Dialog
+            Toast.makeText(activity.getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    public IDirectoryHandler getPrefixHandler(String url){
         if (url == null) return null;
-        for (DirectoryRequestHandler handler : prefixHandlers.values()){
+        for (IDirectoryHandler handler : prefixHandlers.values()){
             if (url.startsWith(handler.getUrlPrefix())) return handler;
         }
         return null;
     }
 
-    //potentially the Javascript interface code is called from the Xwalk app package
-    //so we have to be careful to always access the correct resource manager when accessing resources!
-    //to make this visible we pass a resource manager to functions called from here that open dialogs
-    protected class JavaScriptApi  {
-        private String returnStatus(String status){
-            JSONObject o=new JSONObject();
-            try {
-                o.put("status", status);
-            }catch (JSONException i){}
-            return o.toString();
-        }
-        private Resources getAppResources() {
-            Resources rt = null;
-            rt = activity.getResources();
-            return rt;
-        }
+    public Collection<IDirectoryHandler> getPrefixHandlers(){
+        return prefixHandlers.values();
+    }
 
 
-        @JavascriptInterface
-        public boolean downloadFile(String name,String type){
-            return sendFile(name,type);
-        }
-
-        /**
-         * replacement for the missing ability to intercept post requests
-         * will only work for small data provided here as a string
-         * basically it calls the request handler and returns the status as string
-         * @param url
-         * @param postvars
-         * @return status
-         */
-        @JavascriptInterface
-        public String handleUpload(String url,String postvars){
-            try {
-                JSONObject rt=handleUploadRequest(Uri.parse(url),postvars);
-                return rt.getString("status");
-            } catch (Exception e) {
-                AvnLog.e("error in upload request for "+url+":",e);
-                return e.getMessage();
-            }
-
-        }
-
-        /**
-         * request a file from the system
-         * this is some sort of a workaround for the not really working onOpenFileChooser
-         * in the onActivityResult (MainActivity) we do different things depending on the
-         * "readFile" flag
-         * If true we store the selected file and its name in the uploadData structure
-         * we limit the size of the file to 1M - this should be ok for our routes, layouts and similar
-         * the results will be retrieved via getFileName and getFileData
-         * when the file successfully has been fetched, we fire an {@link Constants#JS_UPLOAD_AVAILABLE} event to the JS with the id
-         *
-         * If false, we only store the Uri and wait for {@link #copyFile}
-         * In this case we fire an {@link Constants#JS_FILE_COPY_READY}
-         * the id is some minimal security to ensure that somenone later on can only access the file
-         * when knowing this id
-         * a new call to this API will empty/overwrite any older data being retrieved
-         * @param type one of the user data types (route|layout)
-         * @param id to identify the file
-         * @param readFile if true: read the file (used for small files), otherwise jsut keep the file url for later copy
-         */
-        @JavascriptInterface
-        public boolean requestFile(String type,int id,boolean readFile){
-            KeyValue<Integer> title=typeHeadings.get(type);
-            if (title == null){
-                AvnLog.e("unknown type for request file "+type);
-                return false;
-            }
-            if (uploadData != null) uploadData.interruptCopy(true);
-            RequestHandler.this.uploadData=new UploadData(activity,prefixHandlers.get(type),id,readFile);
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("*/*");
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            Resources res=getAppResources();
-            try {
-                activity.startActivityForResult(
-                        Intent.createChooser(intent,
-                                //TODO: be more flexible for types...
-                                res.getText(title.value)),
-                        Constants.FILE_OPEN);
-            } catch (android.content.ActivityNotFoundException ex) {
-                // Potentially direct the user to the Market with a Dialog
-                Toast.makeText(activity.getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
-                return false;
-            }
-            return true;
-        }
-
-        @JavascriptInterface
-        public String getFileName(int id){
-            if (uploadData==null || ! uploadData.isReady(id)) return null;
-            return uploadData.getName();
-        }
-
-        @JavascriptInterface
-        public String getFileData(int id){
-            if (uploadData==null || ! uploadData.isReady(id)) return null;
-            return uploadData.getFileData();
-        }
-
-        /**
-         * start a file copy operation for a file that previously has been requested by
-         * {@link #requestFile(String, int, boolean)}
-         * during the transfer we fire an {@link Constants#JS_FILE_COPY_PERCENT} event having the
-         * progress in % as id.
-         * When done we fire {@link Constants#JS_FILE_COPY_DONE} - with 0 for success, 1 for errors
-         * The target is determined by the type that we provided in requestFile
-         * @param id the id we used in {@link #requestFile(String, int, boolean)}
-         * @return true if the copy started successfully
-         */
-        @JavascriptInterface
-        public boolean copyFile(int id){
-            if (uploadData==null || ! uploadData.isReady(id)) return false;
-            return uploadData.copyFile();
-        }
-        @JavascriptInterface
-        public long getFileSize(int id){
-            if (uploadData==null || ! uploadData.isReady(id)) return -1;
-            return uploadData.getSize();
-        }
-
-        @JavascriptInterface
-        public boolean interruptCopy(int id){
-            if (uploadData==null || ! uploadData.isReady(id)) return false;
-            return uploadData.interruptCopy(false);
-        }
+    public JavaScriptApi getJavaScriptApi() {
+        return mJavaScriptApi;
+    }
 
 
-        @JavascriptInterface
-        public String setLeg(String legData){
-            if (getRouteHandler() == null) return returnStatus("not initialized");
-            try {
-                getRouteHandler().setLeg(legData);
-                getGpsService().timerAction();
-                return returnStatus("OK");
-            } catch (Exception e) {
-                AvnLog.i("unable to save leg "+e.getLocalizedMessage());
-                return returnStatus(e.getMessage());
-            }
-        }
-
-        @JavascriptInterface
-        public String unsetLeg(){
-            if (getRouteHandler() == null) return returnStatus("not initialized");
-            try {
-                getRouteHandler().unsetLeg();
-                getGpsService().timerAction();
-                return returnStatus("OK");
-            } catch (Exception e) {
-                AvnLog.i("unable to unset leg "+e.getLocalizedMessage());
-                return returnStatus(e.getMessage());
-            }
-        }
-
-        @JavascriptInterface
-        public void goBack(){
-            activity.backHandler.sendEmptyMessage(1);
-        }
-
-        @JavascriptInterface
-        public void acceptEvent(String key,int num){
-            if (key != null && key.equals("backPressed")) activity.goBackSequence=num;
-        }
-
-        @JavascriptInterface
-        public void showSettings(){
-            activity.showSettings(false);
-        }
-
-        @JavascriptInterface
-        public void applicationStarted(){
-            getSharedPreferences().edit().putBoolean(Constants.WAITSTART,false).commit();
-        }
-        @JavascriptInterface
-        public void externalLink(String url){
-            Intent goDownload = new Intent(Intent.ACTION_VIEW);
-            goDownload.setData(Uri.parse(url));
-            try {
-                activity.startActivity(goDownload);
-            } catch (Exception e) {
-                Toast.makeText(activity, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                return;
-            }
-        }
-        @JavascriptInterface
-        public String getVersion(){
-            try {
-                String versionName = activity.getPackageManager()
-                        .getPackageInfo(activity.getPackageName(), 0).versionName;
-                return versionName;
-            } catch (PackageManager.NameNotFoundException e) {
-                return "<unknown>";
-            }
-        }
-
-
-    };
-
-    void stop(){
+    public void stop(){
         synchronized (handlerMonitor) {
             if (chartHandler != null){
                 chartHandlerRunning=false;
@@ -1071,7 +760,7 @@ public class RequestHandler {
     /**
      * calles when settings changed
      */
-    void update() {
+    public void update() {
         synchronized (chartHandlerMonitor) {
             chartHandlerMonitor.notifyAll();
         }
@@ -1080,9 +769,10 @@ public class RequestHandler {
     }
 
 
-    void saveFile(Uri returnUri) {
+    public void saveFile(Uri returnUri) {
         if (uploadData == null) return;
         uploadData.saveFile(returnUri);
 
     }
+
 }

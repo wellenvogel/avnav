@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.content.Context;
 import android.location.Location;
@@ -29,11 +29,9 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.TimeZone;
 
 import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
 import de.wellenvogel.avnav.aislib.messages.sentence.Abk;

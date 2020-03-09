@@ -124,21 +124,6 @@ let RequestHandler={
         requestOptions.body=encodedBody;
         return handleJson(rurl,requestOptions,options);
     },
-    postJsonForm:(url,formData,options)=>{
-        let [rurl,requestOptions]=prepare(url,options);
-        requestOptions.method='POST';
-        if (formData instanceof FormData) {
-            requestOptions.body = formData;
-        }
-        else{
-            let requestData=new FormData();
-            for (let k in formData){
-                requestData.append(k,formData[k]);
-            }
-            requestOptions.body=requestData;
-        }
-        return handleJson(rurl,requestOptions,options);
-    },
     /**
      * do a json get request
      * @param url

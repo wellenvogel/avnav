@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.appapi;
 
 /**
  * Created by andreas on 21.11.15.

@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -6,8 +6,6 @@ import android.content.Context;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.Set;
 
 /**

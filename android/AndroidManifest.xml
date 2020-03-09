@@ -79,7 +79,7 @@
             />
 
         <service
-            android:name="de.wellenvogel.avnav.gps.GpsService"
+            android:name="de.wellenvogel.avnav.worker.GpsService"
             android:label="AvnavGps" />
 
         <provider

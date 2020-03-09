@@ -89,6 +89,7 @@ const fillDataServer=(type)=>{
         for (let i=0;i<json.items.length;i++){
             let fi=new FileInfo();
             assign(fi,json.items[i]);
+            if (fi.name === undefined) continue;
             fi.type=type;
             fi.server=true;
             if (fi.canDelete === undefined) fi.canDelete=false;
@@ -175,6 +176,7 @@ const changeType=(newType)=>{
 };
 
 const getExt=(name)=>{
+    if (!name) return;
     return name.replace(/.*\./,'').toLocaleLowerCase();
 };
 const allowedItemActions=(props)=>{

@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.support.annotation.Nullable;
 

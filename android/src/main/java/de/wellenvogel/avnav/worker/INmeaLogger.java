@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 /**
  * Created by andreas on 27.11.15.

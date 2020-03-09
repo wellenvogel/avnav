@@ -1,18 +1,17 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.appapi;
 
 import android.net.Uri;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Collection;
 
 public interface INavRequestHandler {
     interface IJsonObect{
         JSONObject toJson() throws JSONException;
     }
 
-    RequestHandler.ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception;
+    ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception;
 
     /**
      * upload json data
@@ -22,13 +21,13 @@ public interface INavRequestHandler {
      * @return true if the file has been stored
      * @throws Exception
      */
-    boolean handleUpload(String postData, String name,boolean ignoreExisting) throws Exception;
+    boolean handleUpload(PostVars postData, String name,boolean ignoreExisting) throws Exception;
 
     /**
      * list the items
      * @return a list of items
      */
-    Collection<? extends IJsonObect> handleList() throws Exception;
+    JSONArray handleList() throws Exception;
 
     /**
      * delet an item
@@ -39,7 +38,7 @@ public interface INavRequestHandler {
      */
     boolean handleDelete(String name, Uri uri) throws Exception;
 
-    JSONObject handleApiRequest(Uri uri) throws Exception;
+    JSONObject handleApiRequest(Uri uri, PostVars postData) throws Exception;
 
 
 }

@@ -1,9 +1,10 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
 
+import org.apache.http.HttpEntity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,17 +19,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.PostVars;
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.IMediaUpdater;
-import de.wellenvogel.avnav.main.INavRequestHandler;
-import de.wellenvogel.avnav.main.RequestHandler;
+import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 /**
  * Created by andreas on 12.12.14.
@@ -36,7 +39,7 @@ import de.wellenvogel.avnav.util.AvnLog;
 public class RouteHandler implements INavRequestHandler {
 
     @Override
-    public RequestHandler.ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
         String format=uri.getQueryParameter("format");
         String mimemtype="application/gpx+xml";
         //TODO: handle special case when we have a route in the "json" parameter but no route here...
@@ -55,12 +58,13 @@ public class RouteHandler implements INavRequestHandler {
             is=new FileInputStream(routeFile);
 
         }
-        return new RequestHandler.ExtendedWebResourceResponse(len,mimemtype,"",is);
+        return new ExtendedWebResourceResponse(len,mimemtype,"",is);
     }
 
+
     @Override
-    public boolean handleUpload(String postData, String name, boolean ignoreExisting) throws Exception {
-        Route rt = Route.fromJson(new JSONObject(postData));
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+        Route rt = Route.fromJson(new JSONObject(postData.getAsString()));
         try {
             saveRoute(rt, !ignoreExisting);
         }catch (Exception e){
@@ -71,12 +75,12 @@ public class RouteHandler implements INavRequestHandler {
     }
 
     @Override
-    public Collection<? extends IJsonObect> handleList() throws Exception {
-        ArrayList<RouteInfo> rt=new ArrayList<>();
+    public JSONArray handleList() throws Exception {
+        JSONArray rt=new JSONArray();
         for (RouteInfo i:getRouteInfo().values()){
             RouteInfo iv=i.clone();
             if (isCurrentRoute(iv.name)) iv.canDelete=false;
-            rt.add(iv);
+            rt.put(iv.toJson());
         }
         return rt;
     }
@@ -86,8 +90,33 @@ public class RouteHandler implements INavRequestHandler {
         return deleteRoute(name);
     }
 
+
     @Override
-    public JSONObject handleApiRequest(Uri uri) throws Exception {
+    public JSONObject handleApiRequest(Uri uri, PostVars postData) throws Exception {
+        JSONObject o = new JSONObject();
+        o.put("status", "OK");
+        String command = AvnUtil.getMandatoryParameter(uri,"command");
+        if (command.equals("getleg")){
+            return getLeg();
+        }
+        if (command.equals("unsetleg")){
+            unsetLeg();
+            return o;
+        }
+        if (command.equals("setleg")) {
+            String legData = uri.getQueryParameter("leg");
+            if (legData == null) {
+                legData = postData.getAsString();
+            }
+            try {
+                setLeg(legData);
+                update();
+            } catch (Exception e) {
+                o.put("status", e.getMessage());
+            }
+
+            return o;
+        }
         return null;
     }
 
@@ -96,7 +125,7 @@ public class RouteHandler implements INavRequestHandler {
     }
 
     private static final String LEGFILE="currentLeg.json";
-    private static final int MAXROUTESIZE=500000;
+    private static final long MAXROUTESIZE= Constants.MAXFILESIZE;
     private static final String header="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"+
             "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" version=\"1.1\" creator=\"avnav\"\n"+
             "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"+
@@ -674,7 +703,7 @@ public class RouteHandler implements INavRequestHandler {
             rt.put("status","legfile "+legFile.getAbsolutePath()+" not found");
             hasError=true;
         }
-        int maxlegsize=MAXROUTESIZE+2000;
+        long maxlegsize=MAXROUTESIZE+2000;
         if (! hasError && legFile.length() > maxlegsize){
             rt.put("status","legfile "+legFile.getAbsolutePath()+" too big, allowed "+maxlegsize);
             hasError=true;

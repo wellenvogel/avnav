@@ -1,10 +1,9 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.location.Location;
 import android.util.Log;
 import de.wellenvogel.avnav.aislib.messages.message.*;
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.AvnUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;

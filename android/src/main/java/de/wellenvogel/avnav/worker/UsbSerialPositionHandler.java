@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
@@ -12,14 +12,9 @@ import com.felhr.usbserial.UsbSerialInterface;
 
 import net.sf.marineapi.nmea.sentence.RMCSentence;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import de.wellenvogel.avnav.util.AvnLog;

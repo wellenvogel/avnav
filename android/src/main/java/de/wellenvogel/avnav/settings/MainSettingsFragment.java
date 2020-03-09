@@ -14,16 +14,11 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.provider.DocumentsContract;
-import android.support.annotation.NonNull;
-import android.widget.Toast;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.main.XwalkDownloadHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 

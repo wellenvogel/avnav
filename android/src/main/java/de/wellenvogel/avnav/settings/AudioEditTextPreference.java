@@ -30,16 +30,13 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
-import de.wellenvogel.avnav.gps.Alarm;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 
 import static android.app.Activity.RESULT_OK;
-import static android.content.Context.AUDIO_SERVICE;
 
 /**
  * Created by andreas on 11.12.16.

@@ -197,7 +197,7 @@ class WpaPage extends React.Component{
     wpaRequest(request,message,param){
         let self=this;
         Toast("sending "+message);
-        Requests.postJsonForm("?request=wpa&command="+request,
+        Requests.getJson("?request=wpa&command="+request,{},
             param
         ).then((json)=>{
 

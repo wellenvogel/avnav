@@ -30,7 +30,9 @@ import org.xwalk.core.XWalkActivity;
 import java.io.File;
 import java.util.List;
 
-import de.wellenvogel.avnav.gps.GpsService;
+import de.wellenvogel.avnav.appapi.IJsEventHandler;
+import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -71,7 +73,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     RequestHandler requestHandler=null;
     private boolean serviceNeedsRestart=false;
 
-    Handler backHandler=new Handler() {
+    public Handler backHandler=new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
@@ -166,15 +168,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
      */
     @Override
     public boolean onCancel(int dialogId) {
-        if (dialogId == XwalkDownloadHandler.DIALOGID){
-            sharedPrefs.edit().putString(Constants.RUNMODE,Constants.MODE_NORMAL).commit();
-            if (serviceNeedsRestart) {
-                stopGpsService(false);
-                startGpsService();
-            }
-            startFragmentOrActivity(false);
-
-        }
         return true;
     }
 
@@ -193,7 +186,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
      */
 
 
-    void showSettings(boolean initial){
+    public void showSettings(boolean initial){
         serviceNeedsRestart=true;
         Intent sintent= new Intent(this,SettingsActivity.class);
         sintent.putExtra(Constants.EXTRA_INITIAL,initial);
@@ -413,9 +406,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             //TODO: select right fragment based on mode
             Fragment fragment=null;
-            if (mode.equals(Constants.MODE_XWALK)){
-                fragment= new XwalkFragment();
-            }
             if (mode.equals(Constants.MODE_SERVER)){
                 fragment= new WebServerFragment();
             }
@@ -458,6 +448,10 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         waiter.start();
     }
 
+    public void jsGoBackAccepted(int id){
+        goBackSequence=id;
+    }
+
     /**
      * @param key
      * @param id
@@ -478,7 +472,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         sharedPrefs.edit().putString(Constants.RUNMODE,"").commit();
     }
 
-    RequestHandler getRequestHandler(){
+    public RequestHandler getRequestHandler(){
         return requestHandler;
     }
 
@@ -490,5 +484,9 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         Log.d(Constants.LOGPRFX,"mtp update for "+file);
         mediaUpdateHandler.sendMessage(msg);
     }
+    public GpsService getGpsService() {
+        return gpsService;
+    }
+
 
 }

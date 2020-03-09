@@ -1,10 +1,11 @@
-package de.wellenvogel.avnav.util;
+package de.wellenvogel.avnav.appapi;
 
 import android.app.Activity;
-import android.content.res.AssetManager;
 import android.net.Uri;
 import android.support.v4.content.FileProvider;
 
+import org.apache.http.HttpEntity;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,13 +15,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.INavRequestHandler;
-import de.wellenvogel.avnav.main.RequestHandler;
+import de.wellenvogel.avnav.util.AssetsProvider;
+import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 public class LayoutHandler implements INavRequestHandler{
     String systemDir=null; //base path at assets
@@ -51,27 +52,30 @@ public class LayoutHandler implements INavRequestHandler{
 
 
     @Override
-    public RequestHandler.ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
         InputStream layout=getLayoutForReading(name);
-        return new RequestHandler.ExtendedWebResourceResponse(-1,"application/json","",layout);
+        return new ExtendedWebResourceResponse(-1,"application/json","",layout);
     }
 
     @Override
-    public boolean handleUpload(String postData, String name, boolean ignoreExisting) throws Exception {
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+        if (postData == null) throw new Exception("no data");
         if (!userDir.isDirectory()) throw new IOException("user dir is no directory");
         String fileName = name + ".json";
         File of = new File(userDir, fileName);
         if (!userDir.canWrite()) throw new IOException("unable to write layout " + fileName);
         FileOutputStream os = new FileOutputStream(of);
-        os.write(postData.getBytes());
+        postData.writeTo(os);
         os.close();
         return true;
     }
 
     @Override
-    public Collection<? extends IJsonObect> handleList() throws Exception{
-            List<LayoutInfo> li=readDir(userDir,true);
-            li.addAll(readAssetsDir());
+    public JSONArray handleList() throws Exception{
+            JSONArray li=readDir(userDir,true);
+            for (IJsonObect o: readAssetsDir()){
+                li.put(o.toJson());
+            }
             return li;
     }
 
@@ -89,12 +93,16 @@ public class LayoutHandler implements INavRequestHandler{
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri) throws Exception {
+    public JSONObject handleApiRequest(Uri uri,PostVars postData) throws Exception {
+        String command= AvnUtil.getMandatoryParameter(uri,"command");
+        if (command.equals("list")){
+            RequestHandler.getReturn(new RequestHandler.KeyValue("data",handleList()));
+        }
         return null;
     }
 
-    private List<LayoutInfo> readAssetsDir() throws IOException {
-        ArrayList<LayoutInfo> rt=new ArrayList<>();
+    private ArrayList<IJsonObect> readAssetsDir() throws Exception {
+        ArrayList<IJsonObect> rt=new ArrayList<>();
         String [] list;
         list=activity.getAssets().list(systemDir);
         for (String name :list){
@@ -105,14 +113,14 @@ public class LayoutHandler implements INavRequestHandler{
         }
         return rt;
     }
-    private List<LayoutInfo> readDir(File dir,boolean canDelete){
-        ArrayList<LayoutInfo> rt=new ArrayList<>();
+    private JSONArray readDir(File dir,boolean canDelete) throws JSONException {
+        JSONArray rt=new JSONArray();
         if (!dir.isDirectory()) return rt;
         for (File f: dir.listFiles()){
             if (!f.getName().endsWith(".json")) continue;
             if (! f.isFile()) continue;
             LayoutInfo li=new LayoutInfo(f.getName().replaceAll("\\.json$",""),canDelete,f.lastModified());
-            rt.add(li);
+            rt.put(li.toJson());
         }
         return rt;
     }

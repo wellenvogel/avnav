@@ -24,11 +24,11 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.wellenvogel.avnav.gps.Alarm;
-import de.wellenvogel.avnav.gps.GpsService;
+import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.appapi.WebServer;
+import de.wellenvogel.avnav.worker.Alarm;
+import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.util.AvnLog;
-
-import java.io.IOException;
 
 /**
  * Created by andreas on 04.12.14.

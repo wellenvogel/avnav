@@ -1,9 +1,7 @@
 package de.wellenvogel.avnav.gemf;
 
 import android.app.Activity;
-import android.os.ParcelFileDescriptor;
 import android.support.v4.provider.DocumentFile;
-import android.view.inputmethod.ExtractedText;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,9 +11,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.INavRequestHandler;
-import de.wellenvogel.avnav.main.RequestHandler;
+import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 
 public class GemfChart implements INavRequestHandler.IJsonObect {
@@ -23,7 +21,7 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
     private Activity activity;
     private File realFile;
     private DocumentFile documentFile; //alternative to realFile
-    private GemfHandler gemf;
+    private GemfFileReader gemf;
     private  String key;
     private long lastModified;
     private long lastTouched;
@@ -45,16 +43,16 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
     public void setIsXml(){
         isXml=true;
     }
-    public synchronized  GemfHandler getGemf() throws IOException {
+    public synchronized GemfFileReader getGemf() throws IOException {
         if (isXml)
             throw new IOException("unable to get GEMF file from xml");
         if (gemf == null){
             AvnLog.i("RequestHandler","open gemf file "+key);
             if (documentFile != null){
-                gemf=new GemfHandler(new GEMFFile(documentFile, activity),key);
+                gemf=new GemfFileReader(new GEMFFile(documentFile, activity),key);
             }
             else {
-                gemf = new GemfHandler(new GEMFFile(realFile), key);
+                gemf = new GemfFileReader(new GEMFFile(realFile), key);
             }
         }
         this.lastTouched=System.currentTimeMillis();
@@ -96,20 +94,20 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
     public boolean isXml(){
         return isXml;
     }
-    public RequestHandler.ExtendedWebResourceResponse getOverview() throws IOException {
+    public ExtendedWebResourceResponse getOverview() throws IOException {
         if (isXml){
             if (realFile != null){
-                return new RequestHandler.ExtendedWebResourceResponse((int)realFile.length(),"text/xml","",new FileInputStream(realFile));
+                return new ExtendedWebResourceResponse((int)realFile.length(),"text/xml","",new FileInputStream(realFile));
             }
             else{
                 InputStream is=activity.getContentResolver().openInputStream(documentFile.getUri());
-                return new RequestHandler.ExtendedWebResourceResponse(-1,"text/xml","",is);
+                return new ExtendedWebResourceResponse(-1,"text/xml","",is);
             }
         }
         else{
-            GemfHandler f = getGemf();
+            GemfFileReader f = getGemf();
             InputStream rt=f.gemfOverview();
-            return new RequestHandler.ExtendedWebResourceResponse(-1,"text/xml","",rt);
+            return new ExtendedWebResourceResponse(-1,"text/xml","",rt);
         }
     }
 

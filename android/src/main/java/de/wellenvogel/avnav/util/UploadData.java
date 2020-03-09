@@ -6,18 +6,16 @@ import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import de.wellenvogel.avnav.appapi.IDirectoryHandler;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.DirectoryRequestHandler;
+import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.main.MainActivity;
-import de.wellenvogel.avnav.main.RequestHandler;
-
 
 
 public class UploadData{
@@ -29,11 +27,11 @@ public class UploadData{
     String fileData;
     Uri fileUri;
     MainActivity activity;
-    DirectoryRequestHandler targetHandler;
+    IDirectoryHandler targetHandler;
     Thread copyThread;
     boolean noResults=false;
     long size;
-    public UploadData(MainActivity activity, DirectoryRequestHandler targetHandler, int id, boolean doRead){
+    public UploadData(MainActivity activity, IDirectoryHandler targetHandler, int id, boolean doRead){
         this.id=id;
         this.doRead=doRead;
         this.activity=activity;
@@ -134,7 +132,7 @@ public class UploadData{
                         });
                     } catch (final Throwable e) {
                         try{
-                            targetHandler.handleDelete(df.getName(),null);
+                            targetHandler.deleteFile(df.getName());
                         }catch(Throwable t){}
                         activity.runOnUiThread(new Runnable() {
                             @Override

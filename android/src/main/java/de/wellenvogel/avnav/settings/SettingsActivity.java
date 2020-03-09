@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
@@ -24,35 +23,29 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import de.wellenvogel.avnav.gps.BluetoothPositionHandler;
-import de.wellenvogel.avnav.gps.GpsDataProvider;
-import de.wellenvogel.avnav.gps.UsbSerialPositionHandler;
+import de.wellenvogel.avnav.worker.BluetoothPositionHandler;
+import de.wellenvogel.avnav.worker.GpsDataProvider;
+import de.wellenvogel.avnav.worker.UsbSerialPositionHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.main.XwalkDownloadHandler;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 
 import static de.wellenvogel.avnav.main.Constants.MODE_INTERNAL;
-import static de.wellenvogel.avnav.main.Constants.MODE_NORMAL;
 
 /**
  * Created by andreas on 03.09.15.

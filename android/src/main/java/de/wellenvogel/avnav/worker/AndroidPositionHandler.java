@@ -1,21 +1,16 @@
-package de.wellenvogel.avnav.gps;
+package de.wellenvogel.avnav.worker;
 
 import android.content.Context;
 import android.location.*;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
-import net.sf.marineapi.nmea.parser.SentenceFactory;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
-import net.sf.marineapi.nmea.sentence.TalkerId;
-import net.sf.marineapi.nmea.util.*;
 
 import de.wellenvogel.avnav.util.AvnLog;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.*;
 import java.util.Date;
 
 /**

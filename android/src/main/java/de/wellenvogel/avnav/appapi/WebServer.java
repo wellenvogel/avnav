@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.main;
+package de.wellenvogel.avnav.appapi;
 
 /**
  * Created by andreas on 06.01.15.
@@ -8,10 +8,16 @@ package de.wellenvogel.avnav.main;
 
 import android.app.NotificationManager;
 import android.util.Log;
-import android.webkit.WebResourceResponse;
 
-import de.wellenvogel.avnav.util.AvnLog;
-import org.apache.http.*;
+import org.apache.http.ConnectionClosedException;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpServerConnection;
+import org.apache.http.HttpStatus;
+import org.apache.http.MethodNotSupportedException;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.DefaultHttpResponseFactory;
@@ -19,11 +25,33 @@ import org.apache.http.impl.DefaultHttpServerConnection;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
-import org.apache.http.protocol.*;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.BasicHttpProcessor;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpRequestHandler;
+import org.apache.http.protocol.HttpRequestHandlerRegistry;
+import org.apache.http.protocol.HttpService;
+import org.apache.http.protocol.ResponseConnControl;
+import org.apache.http.protocol.ResponseContent;
+import org.apache.http.protocol.ResponseDate;
+import org.apache.http.protocol.ResponseServer;
 
-import java.io.*;
-import java.net.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InterruptedIOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.URLDecoder;
 import java.util.Locale;
+
+import de.wellenvogel.avnav.main.MainActivity;
+import de.wellenvogel.avnav.util.AvnLog;
 
 public class WebServer {
 
@@ -62,27 +90,15 @@ public class WebServer {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
             url=url.replaceAll("^/*", "");
-            String postData=null;
-            if (httpRequest instanceof HttpEntityEnclosingRequest){
-                //currently we only support here simple unformatted data
-                String contentType=httpRequest.getFirstHeader("content-type").getValue().replaceAll(";.*","");
-                String contentLengthS=httpRequest.getFirstHeader("content-length").getValue();
-                if (!contentType.equalsIgnoreCase("application/json")) throw new MethodNotSupportedException("invalid content type for post: "+contentType);
-                int contentLength=0;
-                try{
-                    contentLength=Integer.parseInt(contentLengthS);
-                }catch (Exception e){}
-                if (contentLength <= 0 || contentLength > RequestHandler.ROUTE_MAX_SIZE) throw new MethodNotSupportedException("invalid content length");
-                HttpEntity entity = ((HttpEntityEnclosingRequest) httpRequest).getEntity();
-                InputStream inputStream = entity.getContent();
-                byte [] data=new byte[contentLength];
-                int bread=inputStream.read(data);
-                if (bread != contentLength) throw new IOException("not enough post data");
-                postData=new String(data);
+            HttpEntity postData=null;
+            if (httpRequest instanceof HttpEntityEnclosingRequest) {
+                postData = ((HttpEntityEnclosingRequest) httpRequest).getEntity();
             }
-            RequestHandler.ExtendedWebResourceResponse resp=null;
+            ExtendedWebResourceResponse resp=null;
             try {
-                resp = activity.getRequestHandler().handleNavRequest(url, postData, getServerInfo());
+                resp = activity.getRequestHandler().handleNavRequest(url,
+                        postData != null?new PostVars(postData):null,
+                        getServerInfo());
             }catch (Throwable t){
                 AvnLog.e("error handling request "+url,t);
                 throw new HttpException("error handling "+url,t);
@@ -109,35 +125,50 @@ public class WebServer {
     private NavRequestHandler navRequestHandler=new NavRequestHandler();
 
 
-    class ChartRequestHandler implements HttpRequestHandler{
 
+    class DirectoryRequestHandler implements HttpRequestHandler{
+
+        IDirectoryHandler handler;
+        DirectoryRequestHandler(IDirectoryHandler handler){
+            this.handler=handler;
+        }
         @Override
-        public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext) throws HttpException, IOException {
-            AvnLog.d(NAME,"chart request"+httpRequest.getRequestLine());
-            String url = URLDecoder.decode(httpRequest.getRequestLine().getUri());
-            String method = httpRequest.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
-            if (!method.equals("GET") && !method.equals("HEAD") ) {
-                throw new MethodNotSupportedException(method + " method not supported");
-            }
-            url=url.replaceAll("^/*","");
-            RequestHandler.ExtendedWebResourceResponse resp=activity.getRequestHandler().handleChartRequest(url);
-            if (resp != null){
-                httpResponse.setHeader("content-type",resp.getMimeType());
-                if (resp.getLength() < 0){
-                    httpResponse.setEntity(streamToEntity(resp.getData()));
+        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            AvnLog.d(NAME,"prefix request for "+handler.getUrlPrefix()+request.getRequestLine());
+            try {
+                String url = URLDecoder.decode(request.getRequestLine().getUri());
+                String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
+                url = url.replaceAll("^/*", "");
+                url = url.replaceAll("\\?.*", "");
+                if (method.equals("GET") || method.equals("HEAD")) {
+                    ExtendedWebResourceResponse resp = handler.handleDirectRequest(url);
+                    if (resp != null) {
+                        response.setHeader("content-type", resp.getMimeType());
+                        if (resp.getLength() < 0) {
+                            response.setEntity(streamToEntity(resp.getData()));
+                        } else {
+                            response.setEntity(new InputStreamEntity(resp.getData(), resp.getLength()));
+                        }
+                    } else {
+                        AvnLog.d(NAME, "no data for " + url);
+                        response.setStatusCode(404);
+                    }
+                } else {
+                    AvnLog.d(NAME, "invalid method " + method);
+                    response.setStatusCode(404);
                 }
-                else {
-                    httpResponse.setEntity(new InputStreamEntity(resp.getData(),resp.getLength()));
-                }
+            }catch(Throwable t){
+                response.setStatusCode(500);
+                response.setReasonPhrase(t.getLocalizedMessage());
+                AvnLog.e("http request processing error",t);
             }
-            else {
-                AvnLog.d(NAME,"no data for "+url);
-                httpResponse.setStatusCode(404);
-            }
+
+        }
+
+        String getPrefix(){
+            return handler.getUrlPrefix();
         }
     }
-
-    private ChartRequestHandler chartRequestHandler=new ChartRequestHandler();
 
     class BaseRequestHandler implements HttpRequestHandler{
 
@@ -156,21 +187,11 @@ public class WebServer {
             }
             url=url.replaceAll("^/*","");
             url=url.replaceAll("\\?.*","");
-            DirectoryRequestHandler handler=activity.getRequestHandler().getPrefixHandler(url);
-            if (handler != null ){
-                WebResourceResponse r=handler.handleDirectRequest(url);
-                if ( r != null){
-                    httpResponse.setStatusCode(HttpStatus.SC_OK);
-                    httpResponse.setEntity(streamToEntity(r.getData()));
-                    httpResponse.addHeader("content-type", r.getMimeType());
-                    return;
-                }
-            }
             //TODO: restrict access
             try {
-                InputStream is = activity.assetManager.open(url);
+                InputStream is=activity.getAssets().open(url);
                 httpResponse.setStatusCode(HttpStatus.SC_OK);
-                httpResponse.setEntity(streamToEntity(is));
+                httpResponse.setEntity(new InputStreamEntity(is));
                 httpResponse.addHeader("content-type", activity.getRequestHandler().mimeType(url));
 
             }catch (Exception e){
@@ -251,7 +272,10 @@ public class WebServer {
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
             registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
-            registry.register("/"+ Constants.CHARTPREFIX+"*",chartRequestHandler);
+            for (IDirectoryHandler h: activity.getRequestHandler().getPrefixHandlers()){
+                DirectoryRequestHandler handler=new DirectoryRequestHandler(h);
+                registry.register("/"+h.getUrlPrefix()+"/*",handler);
+            }
 
             registry.register("*",baseRequestHandler);
 
