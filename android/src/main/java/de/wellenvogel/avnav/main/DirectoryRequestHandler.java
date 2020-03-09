@@ -64,7 +64,13 @@ public class DirectoryRequestHandler implements INavRequestHandler {
 
     @Override
     public boolean handleUpload(String postData, String name, boolean ignoreExisting) throws Exception {
-        return false;
+        String safeName=safeName(name,true);
+        File out=new File(workDir,safeName);
+        if (out.exists() && ! ignoreExisting) return false;
+        FileOutputStream os=new FileOutputStream(out);
+        os.write(postData.getBytes());
+        os.close();
+        return true;
     }
 
     @Override

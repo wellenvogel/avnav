@@ -37,7 +37,9 @@ class AndroidEventHandler{
         return this.pubsub.unsubscribe(token);
     }
     handleEvent(event,id){
-        this.pubsub.publish(PSTOPIC+event,{event:event,id:id});
+        window.setTimeout(()=> {
+            this.pubsub.publish(PSTOPIC + event, {event: event, id: id});
+        },0);
     }
 }
 

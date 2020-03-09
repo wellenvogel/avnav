@@ -159,7 +159,7 @@ public class RequestHandler {
             new HashMap<>();
 
 
-    RequestHandler(MainActivity activity) throws IOException {
+    RequestHandler(MainActivity activity){
         this.activity=activity;
         this.gemfReader=new GemfReader(activity);
         ownMimeMap.put("js", "text/javascript");
@@ -190,22 +190,32 @@ public class RequestHandler {
                 return gemfReader;
             }
         });
-        prefixHandlers.put(TYPE_USER,new DirectoryRequestHandler(activity,TYPE_USER,
-                typeDirs.get(TYPE_USER).value,"user/viewer"));
-        handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return prefixHandlers.get(TYPE_USER);
-            }
-        });
-        prefixHandlers.put(TYPE_IMAGE,new DirectoryRequestHandler(activity,TYPE_IMAGE,
-                typeDirs.get(TYPE_IMAGE).value,"user/images"));
-        handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
-            @Override
-            public INavRequestHandler getHandler() {
-                return prefixHandlers.get(TYPE_IMAGE);
-            }
-        });
+        try{
+            final DirectoryRequestHandler userHandler=new DirectoryRequestHandler(activity,TYPE_USER,
+                    typeDirs.get(TYPE_USER).value,"user/viewer");
+            prefixHandlers.put(TYPE_USER,userHandler);
+            handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
+                @Override
+                public INavRequestHandler getHandler() {
+                    return userHandler;
+                }
+            });
+        }catch (Exception e){
+            AvnLog.e("unable to create user handler",e);
+        }
+        try {
+            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(activity, TYPE_IMAGE,
+                    typeDirs.get(TYPE_IMAGE).value, "user/images");
+            prefixHandlers.put(TYPE_IMAGE, imageHandler);
+            handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
+                @Override
+                public INavRequestHandler getHandler() {
+                    return imageHandler;
+                }
+            });
+        }catch(Exception e){
+            AvnLog.e("unable to create images handler",e);
+        }
 
     }
 
@@ -888,24 +898,28 @@ public class RequestHandler {
         /**
          * request a file from the system
          * this is some sort of a workaround for the not really working onOpenFileChooser
-         * in the onActivityResult (MainActivity) we store the selected file and its name
-         * in the uploadData structure
-         * so we limit the size of the file to 1M - this should be ok for our routes, layouts and similar
+         * in the onActivityResult (MainActivity) we do different things depending on the
+         * "readFile" flag
+         * If true we store the selected file and its name in the uploadData structure
+         * we limit the size of the file to 1M - this should be ok for our routes, layouts and similar
+         * the results will be retrieved via getFileName and getFileData
+         * when the file successfully has been fetched, we fire an {@link Constants#JS_UPLOAD_AVAILABLE} event to the JS with the id
+         *
+         * If false, we only store the Uri and wait for {@link #copyFile}
+         * In this case we fire an {@link Constants#JS_FILE_COPY_READY}
          * the id is some minimal security to ensure that somenone later on can only access the file
          * when knowing this id
-         * the results will be retrieved via getFileName and getFileData
          * a new call to this API will empty/overwrite any older data being retrieved
-         * when the file successfully has been fetched, we fire a uploadAvailable event to the JS with the id
          * @param type one of the user data types (route|layout)
          * @param id to identify the file
          * @param readFile if true: read the file (used for small files), otherwise jsut keep the file url for later copy
          */
         @JavascriptInterface
-        public void requestFile(String type,int id,boolean readFile){
+        public boolean requestFile(String type,int id,boolean readFile){
             KeyValue<Integer> title=typeHeadings.get(type);
             if (title == null){
                 AvnLog.e("unknown type for request file "+type);
-                return;
+                return false;
             }
             if (uploadData != null) uploadData.interruptCopy(true);
             RequestHandler.this.uploadData=new UploadData(activity,prefixHandlers.get(type),id,readFile);
@@ -922,7 +936,9 @@ public class RequestHandler {
             } catch (android.content.ActivityNotFoundException ex) {
                 // Potentially direct the user to the Market with a Dialog
                 Toast.makeText(activity.getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+                return false;
             }
+            return true;
         }
 
         @JavascriptInterface
@@ -937,6 +953,16 @@ public class RequestHandler {
             return uploadData.getFileData();
         }
 
+        /**
+         * start a file copy operation for a file that previously has been requested by
+         * {@link #requestFile(String, int, boolean)}
+         * during the transfer we fire an {@link Constants#JS_FILE_COPY_PERCENT} event having the
+         * progress in % as id.
+         * When done we fire {@link Constants#JS_FILE_COPY_DONE} - with 0 for success, 1 for errors
+         * The target is determined by the type that we provided in requestFile
+         * @param id the id we used in {@link #requestFile(String, int, boolean)}
+         * @return true if the copy started successfully
+         */
         @JavascriptInterface
         public boolean copyFile(int id){
             if (uploadData==null || ! uploadData.isReady(id)) return false;

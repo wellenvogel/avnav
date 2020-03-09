@@ -14,6 +14,7 @@ import android.support.annotation.Nullable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import de.wellenvogel.avnav.main.Constants;
@@ -93,11 +94,11 @@ public class AssetsProvider extends ContentProvider {
         return Uri.parse("content://"+Constants.ASSETS_PROVIDER_AUTHORITY+"/"+type+"/"+fileName);
     }
     private static String getPathFromUri(Uri uri){
-        String parts[]=uri.getPath().split("/");
-        if (parts.length != 2) return null;
-        String prefix=pathMap.get(parts[0]);
+        List<String> segments=uri.getPathSegments();
+        if (segments.size() != 2) return null;
+        String prefix=pathMap.get(segments.get(0));
         if (prefix == null) return null;
-        return prefix+"/"+parts[1];
+        return prefix+"/"+segments.get(1);
     }
 
 }

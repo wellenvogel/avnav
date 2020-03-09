@@ -9,6 +9,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -46,12 +47,15 @@ public class UploadData{
 
     public void saveFile(Uri uri) {
         try {
-            AvnLog.i("importing route: " + uri);
+            AvnLog.i("importing file: " + uri);
             fileUri=uri;
             DocumentFile df = DocumentFile.fromSingleUri(activity, uri);
+            ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(uri, "r");
+            if (pfd == null){
+                throw new IOException("unable to open "+uri.getLastPathSegment());
+            }
+            size = pfd.getStatSize();
             if (doRead) {
-                ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(uri, "r");
-                long size = pfd.getStatSize();
                 if (size > FILE_MAX_SIZE)
                     throw new Exception("file to big, allowed " + FILE_MAX_SIZE);
                 AvnLog.i("saving file " + uri.getLastPathSegment());
@@ -65,13 +69,16 @@ public class UploadData{
                 is.close();
                 fileData = data.toString();
             }
+            else{
+                pfd.close();
+            }
             name = df.getName();
             activity.sendEventToJs(doRead?
                             Constants.JS_UPLOAD_AVAILABLE:
                             Constants.JS_FILE_COPY_READY
                     , id);
         } catch (Throwable e) {
-            Toast.makeText(activity.getApplicationContext(), "unable to read file: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(activity.getApplicationContext(), "unable to copy file: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             Log.e(Constants.LOGPRFX, "unable to read file: " + e.getLocalizedMessage());
             return;
@@ -82,12 +89,12 @@ public class UploadData{
         if (doRead) return false;
         if (name == null || fileUri == null || targetHandler==null) return false;
         try {
-            DocumentFile df = DocumentFile.fromSingleUri(activity, fileUri);
+            final DocumentFile df = DocumentFile.fromSingleUri(activity, fileUri);
             final ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(fileUri, "r");
             if (pfd == null) {
                 throw new Exception("unable to open: " + fileUri.getLastPathSegment());
             }
-            size = pfd.getStatSize();
+            size = pfd.getStatSize(); //maybe it changed in between
             final FileOutputStream os=targetHandler.openForWrite(df.getName(),false);
             AvnLog.i("saving file " + fileUri.getLastPathSegment()+ " to "+targetHandler.getDirName());
             final long bufferSize=FILE_MAX_SIZE / 10;
@@ -102,9 +109,9 @@ public class UploadData{
                         long bytesRead=0;
                         long lastReport=0;
                         int rd = 0;
-                        StringBuilder data = new StringBuilder();
                         InputStream is = new FileInputStream(pfd.getFileDescriptor());
                         while ((rd = is.read(buffer)) > 0) {
+                            if (Thread.interrupted()) throw new Exception("interrupted");
                             os.write(buffer,0,rd);
                             bytesRead+=rd;
                             if (bytesRead > (lastReport+ri)){
@@ -125,8 +132,16 @@ public class UploadData{
                                 activity.sendEventToJs(Constants.JS_FILE_COPY_DONE,0);
                             }
                         });
-                    } catch (Exception e) {
-                        Toast.makeText(activity, "unable to copy: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    } catch (final Throwable e) {
+                        try{
+                            targetHandler.handleDelete(df.getName(),null);
+                        }catch(Throwable t){}
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(activity, "unable to copy: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        });
                         if (! noResults) activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {

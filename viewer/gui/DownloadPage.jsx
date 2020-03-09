@@ -466,8 +466,11 @@ const runUpload=(ev)=>{
             (error)=>{Toast(error)}
         )
     }
-    if (type == 'user' || type == 'images'){
+    if (type == 'user'){
         return uploadGeneric(type,ev.target);
+    }
+    if (type == 'images'){
+        return uploadGeneric(type,ev.target,ViewPage.IMAGES);
     }
     resetUpload();
 };
@@ -526,15 +529,19 @@ const uploadGeneric=(type,fileObject,opt_restrictedExtensions)=>{
 const UploadIndicator = Dynamic((info)=> {
     let props=info.uploadInfo;
     if (! props || !props.xhdr) return null;
-    let percentComplete = props.total ? 100 * props.loaded / props.total : 0;
-    if (props.loadedPercent) percentComplete=props.loaded||0;
+    let loaded=props.loaded;
+    let percentComplete = props.total ? 100 * loaded / props.total : 0;
+    if (props.loadedPercent) {
+        percentComplete=props.loaded||0;
+        loaded=(props.loaded*props.total)/100;
+    }
     let doneStyle = {
         width: percentComplete + "%"
     };
     return (
         <div className="downloadProgress">
             <div className="progressContainer">
-                <div className="progressInfo">{props.loaded||0 + "/" + props.total||0}</div>
+                <div className="progressInfo">{(loaded||0) + "/" + (props.total||0)}</div>
                 <div className="progressDisplay">
                     <div className="progressDone" style={doneStyle}></div>
                 </div>
@@ -1102,8 +1109,9 @@ class DownloadPage extends React.Component{
         this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyPercent",this.androidProgressHandler));
         this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyDone",this.androidProgressHandler));
     }
-    androidUploadHandler(event,id){
+    androidUploadHandler(eventData){
         if (!avnav.android) return;
+        let {id}=eventData;
         let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
         if (id != requestedId) return;
         //lets go back to the main thread as we had been called from android...
@@ -1127,35 +1135,46 @@ class DownloadPage extends React.Component{
 
     /**
      * called from android when the file selection is ready
-     * we now have to start the copy - showing the upload progressif (!avnav.android) return;
-        let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
-        if (id != requestedId) return;
-     * @param event
-     * @param id
+     * we now have to start the copy - showing the upload progress
+     * @param eventData
      */
-    androidCopyHandler(event,id){
+    androidCopyHandler(eventData){
         if (!avnav.android) return;
         let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
+        let {id}=eventData;
         if (id != requestedId) return;
+        let type=globalStore.getData(keys.gui.downloadpage.type);
+        if (type == 'images'){
+            let fileName=avnav.android.getFileName(id);
+            if (ViewPage.IMAGES.indexOf(getExt(fileName)) < 0){
+                Toast("only files of types: "+ViewPage.IMAGES.join(","));
+                return;
+            }
+        }
         let copyInfo={
-            xhr:{
-                abort:()=>{avnav.android.interruptCopy();}
+            xhdr:{
+                abort:()=>{
+                    avnav.android.interruptCopy(id);
+                }
             },
-            total:100,
+            total:avnav.android.getFileSize(id),
+            loaded:0,
             loadedPercent:true
         };
         globalStore.storeData(keys.gui.downloadpage.uploadInfo,copyInfo);
         avnav.android.copyFile(id);
+        //we update the file size as with copyFile it is fetched again
         globalStore.storeData(keys.gui.downloadpage.uploadInfo,assign({},copyInfo,{total:avnav.android.getFileSize(id)}));
 
     }
-    androidProgressHandler(event,value){
-        if (event == "fileCopyProgress"){
+    androidProgressHandler(eventData){
+        let {event,id}=eventData;
+        if (event == "fileCopyPercent"){
             let old=globalStore.getData(keys.gui.downloadpage.uploadInfo);
             if (!old.total) return; //no upload...
             globalStore.storeData(keys.gui.downloadpage.uploadInfo,
                 assign({},old,{
-                    loaded: value
+                    loaded: id
                 }));
         }
         else{
