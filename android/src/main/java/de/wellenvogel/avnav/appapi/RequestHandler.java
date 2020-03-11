@@ -609,7 +609,7 @@ public class RequestHandler {
                 handled=true;
                 JSONObject o=new JSONObject();
                 o.put("addons",false);
-                o.put("uploadCharts",false);
+                o.put("uploadCharts",true);
                 o.put("plugins",false);
                 o.put("uploadRoute",true);
                 o.put("uploadLayout",true);

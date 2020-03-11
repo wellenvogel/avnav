@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -162,13 +163,8 @@ public class GemfHandler implements INavRequestHandler, IDirectoryHandler {
 
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
-        String safeName= DirectoryRequestHandler.safeName(name,true);
-        File outFile=new File(getInternalChartsDir(),safeName);
-        if (outFile.exists() && ! ignoreExisting){
-            return false;
-        }
+        FileOutputStream os =openForWrite(name,!ignoreExisting);
         if (postData == null) throw new Exception("no data in file");
-        FileOutputStream os=new FileOutputStream(outFile);
         postData.writeTo(os);
         os.close();
         return true;
@@ -230,7 +226,19 @@ public class GemfHandler implements INavRequestHandler, IDirectoryHandler {
 
     @Override
     public FileOutputStream openForWrite(String name, boolean noOverwrite) throws Exception {
-        return null;
+        String safeName= DirectoryRequestHandler.safeName(name,true);
+        if (! safeName.endsWith(".gemf")) throw new Exception("only .gemf files allowed");
+        File outFile=new File(getInternalChartsDir(),safeName);
+        if (outFile.exists() && noOverwrite){
+            throw new Exception("file already exists");
+        }
+        return new FileOutputStream(outFile) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                updateChartList();
+            }
+        };
     }
 
     @Override

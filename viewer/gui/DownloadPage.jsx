@@ -189,7 +189,7 @@ const allowedItemActions=(props)=>{
         || props.type == 'layout'
         || props.type == 'user'
         || props.type == 'images'
-        || (props.url && props.url.match("^/gemf") && ! avnav.android) ) {
+        || (props.url && props.url.match("^/gemf") ) ) {
         showDownload=true;
     }
     let showDelete=!props.active;
@@ -1154,6 +1154,12 @@ class DownloadPage extends React.Component{
         if (type == 'images'){
             if (ViewPage.IMAGES.indexOf(getExt(fileName)) < 0){
                 Toast("only files of types: "+ViewPage.IMAGES.join(","));
+                return;
+            }
+        }
+        if (type == 'chart'){
+            if (getExt(fileName) != "gemf"){
+                Toast("only gemf files allowed");
                 return;
             }
         }
