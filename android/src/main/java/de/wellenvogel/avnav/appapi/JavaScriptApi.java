@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.appapi;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -10,19 +11,37 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import de.wellenvogel.avnav.fileprovider.UserFileProvider;
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.main.WebViewFragment;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.UploadData;
 
 //potentially the Javascript interface code is called from the Xwalk app package
 //so we have to be careful to always access the correct resource manager when accessing resources!
 //to make this visible we pass a resource manager to functions called from here that open dialogs
-class JavaScriptApi {
+public class JavaScriptApi {
+    private UploadData uploadData=null;
     private RequestHandler requestHandler;
+    private WebViewFragment fragment;
+    private boolean detached=false;
 
-    public JavaScriptApi(RequestHandler requestHandler) {
+    public JavaScriptApi(WebViewFragment fragment, RequestHandler requestHandler) {
         this.requestHandler = requestHandler;
+        this.fragment=fragment;
+    }
+
+    public void saveFile(Uri uri){
+        if (uploadData != null) uploadData.saveFile(uri);
+    }
+
+    public void onDetach(){
+        detached=true;
+        if (uploadData != null){
+            uploadData.interruptCopy(true);
+        }
     }
 
     private String returnStatus(String status){
@@ -34,8 +53,35 @@ class JavaScriptApi {
     }
 
     @JavascriptInterface
-    public boolean downloadFile(String name,String type){
-        return requestHandler.sendFile(name,type);
+    public boolean downloadFile(String name, String type) {
+        if (detached) return false;
+        if (requestHandler.typeDirs.get(type) == null) {
+            AvnLog.e("invalid type " + type + " for sendFile");
+            return false;
+        }
+        Uri data = null;
+        if (type.equals("layout")) {
+            data = LayoutHandler.getUriForLayout(name);
+        } else {
+            try {
+                data = UserFileProvider.createContentUri(type, name);
+            } catch (Exception e) {
+                AvnLog.e("unable to create content uri for " + name);
+            }
+        }
+        if (data == null) return false;
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, data);
+        shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        if (type.equals("layout")) {
+            shareIntent.setType("application/json");
+        } else {
+            shareIntent.setType("application/gpx+xml");
+        }
+        String title = requestHandler.activity.getText(R.string.selectApp) + " " + name;
+        requestHandler.activity.startActivity(Intent.createChooser(shareIntent, title));
+        return true;
     }
 
     /**
@@ -48,6 +94,7 @@ class JavaScriptApi {
      */
     @JavascriptInterface
     public String handleUpload(String url,String data){
+        if (detached) return null;
         try {
             JSONObject rt= requestHandler.handleUploadRequest(Uri.parse(url),new PostVars(data));
             return rt.getString("status");
@@ -79,19 +126,43 @@ class JavaScriptApi {
      */
     @JavascriptInterface
     public boolean requestFile(String type,int id,boolean readFile){
-        return requestHandler.startUpload(type,id,readFile);
+        if (detached) return false;
+        RequestHandler.KeyValue<Integer> title= RequestHandler.typeHeadings.get(type);
+        if (title == null){
+            AvnLog.e("unknown type for request file "+type);
+            return false;
+        }
+        if (uploadData != null) uploadData.interruptCopy(true);
+        if (fragment.getActivity() == null) return false;
+        uploadData=new UploadData(fragment, requestHandler.getHandlerByType(type),id,readFile);
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        Resources res=fragment.getResources();
+        try {
+            fragment.startActivityForResult(
+                    Intent.createChooser(intent,
+                            //TODO: be more flexible for types...
+                            res.getText(title.value)),
+                    Constants.FILE_OPEN);
+        } catch (android.content.ActivityNotFoundException ex) {
+            // Potentially direct the user to the Market with a Dialog
+            Toast.makeText(fragment.getActivity(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
     }
 
     @JavascriptInterface
     public String getFileName(int id){
-        if (requestHandler.uploadData==null || ! requestHandler.uploadData.isReady(id)) return null;
-        return requestHandler.uploadData.getName();
+        if (uploadData==null || ! uploadData.isReady(id)) return null;
+        return uploadData.getName();
     }
 
     @JavascriptInterface
     public String getFileData(int id){
-        if (requestHandler.uploadData==null || ! requestHandler.uploadData.isReady(id)) return null;
-        return requestHandler.uploadData.getFileData();
+        if (uploadData==null || ! uploadData.isReady(id)) return null;
+        return uploadData.getFileData();
     }
 
     /**
@@ -106,24 +177,26 @@ class JavaScriptApi {
      */
     @JavascriptInterface
     public boolean copyFile(int id){
-        if (requestHandler.uploadData==null || ! requestHandler.uploadData.isReady(id)) return false;
-        return requestHandler.uploadData.copyFile();
+        if (detached) return false;
+        if (uploadData==null || ! uploadData.isReady(id)) return false;
+        return uploadData.copyFile();
     }
     @JavascriptInterface
     public long getFileSize(int id){
-        if (requestHandler.uploadData==null || ! requestHandler.uploadData.isReady(id)) return -1;
-        return requestHandler.uploadData.getSize();
+        if (uploadData==null || ! uploadData.isReady(id)) return -1;
+        return uploadData.getSize();
     }
 
     @JavascriptInterface
     public boolean interruptCopy(int id){
-        if (requestHandler.uploadData==null || ! requestHandler.uploadData.isReady(id)) return false;
-        return requestHandler.uploadData.interruptCopy(false);
+        if (uploadData==null || ! uploadData.isReady(id)) return false;
+        return uploadData.interruptCopy(false);
     }
 
 
     @JavascriptInterface
     public String setLeg(String legData){
+        if (detached) return null;
         if (requestHandler.getRouteHandler() == null) return returnStatus("not initialized");
         try {
             requestHandler.getRouteHandler().setLeg(legData);
@@ -137,6 +210,7 @@ class JavaScriptApi {
 
     @JavascriptInterface
     public String unsetLeg(){
+        if (detached) return null;
         if (requestHandler.getRouteHandler() == null) return returnStatus("not initialized");
         try {
             requestHandler.getRouteHandler().unsetLeg();
@@ -149,26 +223,39 @@ class JavaScriptApi {
     }
 
     @JavascriptInterface
-    public void goBack(){
-        requestHandler.activity.backHandler.sendEmptyMessage(1);
+    public void goBack() {
+        if (detached) return;
+        requestHandler.activity.runOnUiThread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        requestHandler.activity.goBack();
+                    }
+                });
     }
 
     @JavascriptInterface
     public void acceptEvent(String key,int num){
-        if (key != null && key.equals("backPressed")) requestHandler.activity.jsGoBackAccepted(num);
+        if (detached) return;
+        if (key != null && key.equals("backPressed")) {
+           fragment.jsGoBackAccepted(num);
+        }
     }
 
     @JavascriptInterface
     public void showSettings(){
+        if (detached) return;
         requestHandler.activity.showSettings(false);
     }
 
     @JavascriptInterface
     public void applicationStarted(){
+        if (detached) return;
         requestHandler.getSharedPreferences().edit().putBoolean(Constants.WAITSTART,false).commit();
     }
     @JavascriptInterface
     public void externalLink(String url){
+        if (detached) return;
         Intent goDownload = new Intent(Intent.ACTION_VIEW);
         goDownload.setData(Uri.parse(url));
         try {
@@ -180,6 +267,7 @@ class JavaScriptApi {
     }
     @JavascriptInterface
     public String getVersion(){
+        if (detached) return null;
         try {
             String versionName = requestHandler.activity.getPackageManager()
                     .getPackageInfo(requestHandler.activity.getPackageName(), 0).versionName;

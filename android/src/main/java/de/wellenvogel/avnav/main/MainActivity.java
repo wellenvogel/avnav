@@ -30,7 +30,6 @@ import org.xwalk.core.XWalkActivity;
 import java.io.File;
 import java.util.List;
 
-import de.wellenvogel.avnav.appapi.IJsEventHandler;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.settings.SettingsActivity;
@@ -56,7 +55,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     public ActionBarHandler getToolbar(){
         return mToolbar;
     }
-    private IJsEventHandler jsEventHandler;
     private boolean exitRequested=false;
     private boolean running=false;
     private BroadcastReceiver broadCastReceiverStop;
@@ -72,15 +70,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     };
     RequestHandler requestHandler=null;
     private boolean serviceNeedsRestart=false;
-
-    public Handler backHandler=new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            goBack();
-        }
-    };
-
 
 
     public void updateMtp(File file){
@@ -98,16 +87,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-            case Constants.FILE_OPEN:
-                if (resultCode != RESULT_OK) {
-                    // Exit without doing anything else
-                    return;
-                } else {
-                    Uri returnUri = data.getData();
-                    if (requestHandler != null) requestHandler.saveFile(returnUri);
-                }
-                break;
-
             case Constants.SETTINGS_REQUEST:
                 if (resultCode != RESULT_OK){
                     endApp();
@@ -194,7 +173,7 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
     }
 
     //to be called e.g. from js
-    void goBack(){
+    public void goBack(){
         try {
             DialogBuilder.confirmDialog(this, 0, R.string.endApplication, new DialogInterface.OnClickListener() {
                 @Override
@@ -395,13 +374,11 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         if (mode.isEmpty() || startPendig || forceSettings){
             //TODO: show info dialog
             lastStartMode=null;
-            jsEventHandler=null;
             showSettings(false);
             return;
         }
         if (lastStartMode == null || !lastStartMode.equals(mode)){
             sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
-            jsEventHandler=null;
             FragmentManager fragmentManager = getFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             //TODO: select right fragment based on mode
@@ -409,7 +386,9 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             if (mode.equals(Constants.MODE_SERVER)){
                 fragment= new WebServerFragment();
             }
-            if (fragment == null) fragment=new WebViewFragment();
+            if (fragment == null) {
+                fragment=new WebViewFragment();
+            }
             fragmentTransaction.replace(R.id.webmain, fragment);
             fragmentTransaction.commit();
             lastStartMode=mode;
@@ -421,56 +400,26 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
 
     @Override
     public void onBackPressed(){
-        final int num=goBackSequence+1;
-        sendEventToJs(Constants.JS_BACK,num);
-        //as we cannot be sure that the JS code will for sure handle
-        //our back pressed (maybe a different page has been loaded) , we wait at most 200ms for it to ack this
-        //otherwise we really go back here
-        Thread waiter=new Thread(new Runnable() {
-            @Override
-            public void run() {
-                long wait=200;
-                while (wait>0) {
-                    long current = System.currentTimeMillis();
-                    if (goBackSequence == num) break;
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                    }
-                    wait-=10;
-                }
-                if (wait == 0) {
-                    Log.e(AvnLog.LOGPREFIX,"go back handler did not fire");
-                    backHandler.sendEmptyMessage(1);
-                }
-            }
-        });
-        waiter.start();
+        Fragment current=getFragmentManager().findFragmentById(R.id.webmain);
+        if (current instanceof WebViewFragment){
+            ((WebViewFragment) current).onBackPressed();
+            return;
+        }
+        goBack();
     }
 
-    public void jsGoBackAccepted(int id){
-        goBackSequence=id;
-    }
 
     /**
      * @param key
      * @param id
      */
     public void sendEventToJs(String key, int id){
-        if (jsEventHandler != null) jsEventHandler.sendEventToJs(key,id);
+        Fragment current=getFragmentManager().findFragmentById(R.id.webmain);
+        if (current instanceof WebViewFragment){
+            ((WebViewFragment)current).sendEventToJs(key,id);
+        }
     }
 
-    public void registerJsEventHandler(IJsEventHandler handler){
-        jsEventHandler=handler;
-    }
-    public void deregisterJsEventHandler(IJsEventHandler handler){
-        if (jsEventHandler == handler) jsEventHandler=null;
-    }
-
-    public void resetMode(){
-        //ensure that we start with a settings dialog
-        sharedPrefs.edit().putString(Constants.RUNMODE,"").commit();
-    }
 
     public RequestHandler getRequestHandler(){
         return requestHandler;

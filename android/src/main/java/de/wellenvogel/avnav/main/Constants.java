@@ -52,6 +52,7 @@ public class Constants {
     public static final String CHARTOVERVIEW="avnav.xml";
     public final static String FILE_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".provider";
     public final static String ASSETS_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".assetsprovider";
+    public final static String USER_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".userprovider";
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{

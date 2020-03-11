@@ -14,8 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 import de.wellenvogel.avnav.appapi.IDirectoryHandler;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
-import de.wellenvogel.avnav.main.MainActivity;
+import de.wellenvogel.avnav.main.WebViewFragment;
 
 
 public class UploadData{
@@ -26,17 +25,18 @@ public class UploadData{
     String name;
     String fileData;
     Uri fileUri;
-    MainActivity activity;
+    WebViewFragment fragment;
     IDirectoryHandler targetHandler;
     Thread copyThread;
     boolean noResults=false;
     long size;
-    public UploadData(MainActivity activity, IDirectoryHandler targetHandler, int id, boolean doRead){
+    public UploadData(WebViewFragment fragment, IDirectoryHandler targetHandler, int id, boolean doRead){
         this.id=id;
         this.doRead=doRead;
-        this.activity=activity;
+        this.fragment=fragment;
         this.targetHandler=targetHandler;
     }
+
     public boolean isReady(int id){
         if (id != this.id) return false;
         if (name == null || (fileData == null && doRead)) return false;
@@ -44,11 +44,12 @@ public class UploadData{
     }
 
     public void saveFile(Uri uri) {
+        if (noResults || fragment.getActivity() == null) return;
         try {
             AvnLog.i("importing file: " + uri);
             fileUri=uri;
-            DocumentFile df = DocumentFile.fromSingleUri(activity, uri);
-            ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(uri, "r");
+            DocumentFile df = DocumentFile.fromSingleUri(fragment.getActivity(), uri);
+            ParcelFileDescriptor pfd = fragment.getActivity().getContentResolver().openFileDescriptor(uri, "r");
             if (pfd == null){
                 throw new IOException("unable to open "+uri.getLastPathSegment());
             }
@@ -71,12 +72,12 @@ public class UploadData{
                 pfd.close();
             }
             name = df.getName();
-            activity.sendEventToJs(doRead?
+            fragment.sendEventToJs(doRead?
                             Constants.JS_UPLOAD_AVAILABLE:
                             Constants.JS_FILE_COPY_READY
                     , id);
         } catch (Throwable e) {
-            Toast.makeText(activity.getApplicationContext(), "unable to copy file: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(fragment.getActivity().getApplicationContext(), "unable to copy file: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             Log.e(Constants.LOGPRFX, "unable to read file: " + e.getLocalizedMessage());
             return;
@@ -86,14 +87,15 @@ public class UploadData{
     public boolean copyFile() {
         if (doRead) return false;
         if (name == null || fileUri == null || targetHandler==null) return false;
+        if (fragment.getActivity()==null) return false;
         try {
-            final DocumentFile df = DocumentFile.fromSingleUri(activity, fileUri);
-            final ParcelFileDescriptor pfd = activity.getContentResolver().openFileDescriptor(fileUri, "r");
+            final DocumentFile df = DocumentFile.fromSingleUri(fragment.getActivity(), fileUri);
+            final ParcelFileDescriptor pfd = fragment.getActivity().getContentResolver().openFileDescriptor(fileUri, "r");
             if (pfd == null) {
                 throw new Exception("unable to open: " + fileUri.getLastPathSegment());
             }
             size = pfd.getStatSize(); //maybe it changed in between
-            final FileOutputStream os=targetHandler.openForWrite(df.getName(),false);
+            final FileOutputStream os=targetHandler.openForWrite(df.getName(),true);
             AvnLog.i("saving file " + fileUri.getLastPathSegment()+ " to "+targetHandler.getDirName());
             final long bufferSize=FILE_MAX_SIZE / 10;
             final long reportInterval=size/20;
@@ -114,36 +116,37 @@ public class UploadData{
                             bytesRead+=rd;
                             if (bytesRead > (lastReport+ri)){
                                 final int percent=(int)((bytesRead*100)/size);
-                                activity.runOnUiThread(new Runnable() {
+                                fragment.getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        activity.sendEventToJs(Constants.JS_FILE_COPY_PERCENT,percent);
+                                        fragment.sendEventToJs(Constants.JS_FILE_COPY_PERCENT,percent);
                                     }
                                 });
                             }
                         }
                         is.close();
                         os.close();
-                        if (! noResults) activity.runOnUiThread(new Runnable() {
+                        if (! noResults) fragment.getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                activity.sendEventToJs(Constants.JS_FILE_COPY_DONE,0);
+                                fragment.sendEventToJs(Constants.JS_FILE_COPY_DONE,0);
                             }
                         });
                     } catch (final Throwable e) {
+                        if (fragment.getActivity() == null) return;
                         try{
                             targetHandler.deleteFile(df.getName());
                         }catch(Throwable t){}
-                        activity.runOnUiThread(new Runnable() {
+                        if (! noResults) fragment.getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(activity, "unable to copy: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                                Toast.makeText(fragment.getActivity(), "unable to copy: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                             }
                         });
-                        if (! noResults) activity.runOnUiThread(new Runnable() {
+                        if (! noResults) fragment.getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                activity.sendEventToJs(Constants.JS_FILE_COPY_DONE,1);
+                                fragment.sendEventToJs(Constants.JS_FILE_COPY_DONE,1);
                             }
                         });
                     }
@@ -152,7 +155,7 @@ public class UploadData{
             copyThread.setDaemon(true);
             copyThread.start();
         } catch (Throwable t) {
-            Toast.makeText(activity, "unable to copy: " + t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            if (! noResults) Toast.makeText(fragment.getActivity(), "unable to copy: " + t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             return false;
         }
         return true;

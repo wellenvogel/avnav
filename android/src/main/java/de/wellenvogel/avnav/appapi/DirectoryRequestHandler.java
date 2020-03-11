@@ -33,6 +33,7 @@ public class DirectoryRequestHandler implements INavRequestHandler, IDirectoryHa
             throw new IOException("directory "+workDir.getPath()+" does not exist and cannot be created");
         }
     }
+
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
         File found=findLocalFile(name);
@@ -147,7 +148,7 @@ public class DirectoryRequestHandler implements INavRequestHandler, IDirectoryHa
     }
     public static String safeName(String name,boolean throwError) throws Exception {
         if (name == null) throw new Exception("name is null");
-        String safeName=name.replaceAll("[^\\w.-]","");
+        String safeName=name.replaceAll("[^\\w. ()+-]","");
         if (!name.equals(safeName) && throwError) throw new Exception("illegal filename "+name);
         return safeName;
     }

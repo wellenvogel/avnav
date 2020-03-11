@@ -368,7 +368,7 @@ const download = (info)=> {
             || info.type == 'user'
             || info.type == 'images'
         )
-            startServerDownload(info.type, info.url ? info.url : info.name);
+            startServerDownload(info.type, info.name);
         else {
             if (info.type == "route") {
                 if (info.server) startServerDownload(info.type, info.name);
@@ -1146,8 +1146,12 @@ class DownloadPage extends React.Component{
         let {id}=eventData;
         if (id != requestedId) return;
         let type=globalStore.getData(keys.gui.downloadpage.type);
+        let fileName=avnav.android.getFileName(id);
+        if (entryExists(fileName)){
+            Toast("file "+fileName+" already exists");
+            return;
+        }
         if (type == 'images'){
-            let fileName=avnav.android.getFileName(id);
             if (ViewPage.IMAGES.indexOf(getExt(fileName)) < 0){
                 Toast("only files of types: "+ViewPage.IMAGES.join(","));
                 return;
@@ -1164,9 +1168,14 @@ class DownloadPage extends React.Component{
             loadedPercent:true
         };
         globalStore.storeData(keys.gui.downloadpage.uploadInfo,copyInfo);
-        avnav.android.copyFile(id);
-        //we update the file size as with copyFile it is fetched again
-        globalStore.storeData(keys.gui.downloadpage.uploadInfo,assign({},copyInfo,{total:avnav.android.getFileSize(id)}));
+        if (avnav.android.copyFile(id)) {
+            //we update the file size as with copyFile it is fetched again
+            globalStore.storeData(keys.gui.downloadpage.uploadInfo, assign({}, copyInfo, {total: avnav.android.getFileSize(id)}));
+        }
+        else{
+            Toast("unable to upload");
+            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
+        }
 
     }
     androidProgressHandler(eventData){

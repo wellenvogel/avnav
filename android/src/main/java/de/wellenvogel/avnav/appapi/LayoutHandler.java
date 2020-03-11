@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.net.Uri;
 import android.support.v4.content.FileProvider;
 
-import org.apache.http.HttpEntity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,11 +14,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
 
+import de.wellenvogel.avnav.fileprovider.UserFileProvider;
 import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.util.AssetsProvider;
+import de.wellenvogel.avnav.fileprovider.AssetsProvider;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
@@ -151,13 +150,13 @@ public class LayoutHandler implements INavRequestHandler{
         throw new IOException("neither system nor user layout: "+name);
     }
 
-    public Uri getUriForLayout(String name){
+    public static Uri getUriForLayout(String name){
         if (name.startsWith("system.")){
             return AssetsProvider.createContentUri("layout",name.replaceAll("^system\\.",""));
         }
         else{
             try {
-                Uri rt = FileProvider.getUriForFile(activity, Constants.FILE_PROVIDER_AUTHORITY, new File(userDir, name.replaceAll("^user\\.", "")));
+                Uri rt = UserFileProvider.createContentUri("layout",name.replaceAll("^user\\.",""));
                 return rt;
             }catch (Throwable t){
                 AvnLog.e("error creating uri for layout "+name,t);

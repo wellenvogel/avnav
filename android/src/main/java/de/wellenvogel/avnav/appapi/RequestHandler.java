@@ -1,18 +1,13 @@
 package de.wellenvogel.avnav.appapi;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.location.Location;
 import android.net.Uri;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.webkit.WebResourceResponse;
-import android.widget.Toast;
 
-import org.apache.http.HttpEntity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,7 +35,6 @@ import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
-import de.wellenvogel.avnav.util.UploadData;
 import de.wellenvogel.avnav.worker.Alarm;
 import de.wellenvogel.avnav.worker.GpsDataProvider;
 import de.wellenvogel.avnav.worker.GpsService;
@@ -51,12 +45,10 @@ import de.wellenvogel.avnav.worker.RouteHandler;
  */
 public class RequestHandler {
     public static final String URLPREFIX="file://android_asset/";
-    public static final long ROUTE_MAX_SIZE=100000; //see avnav_router.py
     protected static final String NAVURL="viewer/avnav_navi.php";
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     MainActivity activity;
     private SharedPreferences preferences;
-    protected JavaScriptApi mJavaScriptApi=new JavaScriptApi(this);
     private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
@@ -67,7 +59,6 @@ public class RequestHandler {
 
     private GemfHandler gemfHandler;
     private LayoutHandler layoutHandler;
-    UploadData uploadData=null;
 
     //file types from the js side
     public static String TYPE_ROUTE="route";
@@ -107,6 +98,7 @@ public class RequestHandler {
     public static TypeItemMap<File> typeDirs=new TypeItemMap<File>(
             new KeyValue<File>(TYPE_ROUTE,new File("routes")),
             new KeyValue<File>(TYPE_CHART,new File("charts")),
+            new KeyValue<File>(TYPE_TRACK,new File("tracks")),
             new KeyValue<File>(TYPE_LAYOUT,new File("layout")),
             new KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
             new KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images"))
@@ -344,6 +336,10 @@ public class RequestHandler {
     }
     ExtendedWebResourceResponse handleNavRequest(String url, PostVars postData,ServerInfo serverInfo){
         Uri uri= Uri.parse(url);
+        String remain=uri.getPath();
+        if (remain != null) {
+            remain=remain.substring(Math.min(remain.length(),NAVURL.length()+1));
+        }
         String type=uri.getQueryParameter("request");
         if (type == null) type="gps";
         Object fout=null;
@@ -483,7 +479,11 @@ public class RequestHandler {
                     byte[] o = ("file " + ((name != null) ? name : "<null>") + " not found").getBytes();
                     resp = new ExtendedWebResourceResponse(o.length, "application/octet-stream", "", new ByteArrayInputStream(o));
                 }
-                if (setAttachment) resp.setHeader("Content-Disposition", "attachment");
+                if (setAttachment) {
+                    String value="attachment";
+                    if (remain != null && ! remain.isEmpty()) value+="; filename=\""+remain+"\"";
+                    resp.setHeader("Content-Disposition", value);
+                }
                 resp.setHeader("Content-Type",resp.getMimeType());
                 return resp;
             }
@@ -652,75 +652,8 @@ public class RequestHandler {
     }
 
 
-    boolean sendFile(String name, String type){
-        if (!type.equals("track") && ! type.equals("route") && ! type.equals("layout")){
-            Log.e(Constants.LOGPRFX,"invalid type "+type+" for sendFile");
-            return false;
-        }
-        String dirname="tracks";
-        if (type.equals("route")) dirname="routes";
-        Uri data=null;
-        if (type.equals("layout")) {
-            data=layoutHandler.getUriForLayout(name);
-        }
-        else {
-            File dir = new File(getWorkDir(), dirname);
-            File file = new File(dir, name);
-            if (!file.isFile()) {
-                Log.e(Constants.LOGPRFX, "file " + name + " not found");
-                return false;
-            }
-            data = FileProvider.getUriForFile(activity, Constants.FILE_PROVIDER_AUTHORITY, file);
-        }
-        if (data == null) return false;
-        Intent shareIntent = new Intent();
-        shareIntent.setAction(Intent.ACTION_SEND);
-        shareIntent.putExtra(Intent.EXTRA_STREAM, data);
-        shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        if (type.equals("layout")) {
-            shareIntent.setType("application/json");
-        }
-        else{
-            shareIntent.setType("application/gpx+xml");
-        }
-        String title=activity.getText(R.string.selectApp)+" "+name;
-        activity.startActivity(Intent.createChooser(shareIntent, title));
-        return true;
-    }
 
-    /**
-     * used by the JS API to trigger an upload
-     * see {@link JavaScriptApi#requestFile(String, int, boolean)}
-     * @param type the file type
-     * @param id the id that will be used by js to access the data later
-     * @param readImmediately if true, immediately read the file
-     * @return
-     */
-    public boolean startUpload(String type,int id,boolean readImmediately){
-        RequestHandler.KeyValue<Integer> title= RequestHandler.typeHeadings.get(type);
-        if (title == null){
-            AvnLog.e("unknown type for request file "+type);
-            return false;
-        }
-        if (uploadData != null) uploadData.interruptCopy(true);
-        uploadData=new UploadData(activity, prefixHandlers.get(type),id,readImmediately);
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        Resources res=activity.getResources();
-        try {
-            activity.startActivityForResult(
-                    Intent.createChooser(intent,
-                            //TODO: be more flexible for types...
-                            res.getText(title.value)),
-                    Constants.FILE_OPEN);
-        } catch (android.content.ActivityNotFoundException ex) {
-            // Potentially direct the user to the Market with a Dialog
-            Toast.makeText(activity.getApplicationContext(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        return true;
-    }
+
 
     public IDirectoryHandler getPrefixHandler(String url){
         if (url == null) return null;
@@ -734,10 +667,10 @@ public class RequestHandler {
         return prefixHandlers.values();
     }
 
-
-    public JavaScriptApi getJavaScriptApi() {
-        return mJavaScriptApi;
+    public IDirectoryHandler getHandlerByType(String type){
+        return prefixHandlers.get(type);
     }
+
 
 
     public void stop(){
@@ -768,11 +701,5 @@ public class RequestHandler {
         startHandler();
     }
 
-
-    public void saveFile(Uri returnUri) {
-        if (uploadData == null) return;
-        uploadData.saveFile(returnUri);
-
-    }
 
 }

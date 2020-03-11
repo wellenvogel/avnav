@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.util;
+package de.wellenvogel.avnav.fileprovider;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.util.AvnLog;
 
 public class AssetsProvider extends ContentProvider {
     @Override
