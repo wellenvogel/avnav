@@ -77,7 +77,7 @@ const findAddon=(item)=>{
     if (! addons || !(addons instanceof Array)) return;
     for (let i in addons){
         let addon=addons[i];
-        if (addon.key == item.name){
+        if (addon.url == item.url){
             return addon;
         }
     }
@@ -701,8 +701,7 @@ class UserAppDialog extends React.Component{
     constructor(props){
         super(props);
         this.state=props.addon||{};
-        this.state.userFile=props.current.name;
-        if (! this.state.name) this.state.name=props.current.name;
+        this.state.url=props.current.url;
         this.state.dialog=undefined;
         this.state.iconList=[];
         this.showDialog=this.showDialog.bind(this);
@@ -716,7 +715,7 @@ class UserAppDialog extends React.Component{
                 let itemList=[];
                 if (data.items){
                     data.items.forEach((el)=>{
-                        if (ViewPage.IMAGES.indexOf(getExt(el.name)) >= 1){
+                        if (ViewPage.IMAGES.indexOf(getExt(el.name)) >= 0){
                             el.label=el.name;
                             itemList.push(el);
                         }
@@ -729,7 +728,7 @@ class UserAppDialog extends React.Component{
                 let itemList=[];
                 if (data.items) {
                     data.items.forEach((el)=> {
-                        if (ViewPage.IMAGES.indexOf(getExt(el.name)) >= 1) {
+                        if (ViewPage.IMAGES.indexOf(getExt(el.name)) >= 0) {
                             el.label=el.name;
                             itemList.push(el);
                         }
@@ -758,35 +757,33 @@ class UserAppDialog extends React.Component{
         let Dialog=this.state.dialog;
         return(
         <React.Fragment>
-        <div className="userAppDialog">
-            <h3 className="dialogTitle">{this.props.current.isAddon?'Modify User App':'Create User App'}</h3>
-            <div className="dialogRow">
+            <div className="userAppDialog">
+                <h3 className="dialogTitle">{this.props.current.isAddon ? 'Modify User App' : 'Create User App'}</h3>
                 <InputReadOnly
-                    label="fileName"
-                    value={this.props.current.name}/>
-            </div>
-            <div className="dialogRow">
+                    dialogRow={true}
+                    className="url"
+                    label="url"
+                    value={this.props.current.url}/>
                 <Input
+                    dialogRow={true}
                     label="title"
                     value={this.state.title}
                     onChange={(value)=>{self.setState({title:value})}}
                     />
-            </div>
-            <div className="dialogRow">
                 <InputSelect
+                    dialogRow={true}
                     label="icon"
-                    value={this.state.iconFile}
+                    value={this.state.icon}
                     list={this.state.iconList}
                     showDialogFunction={this.showDialog}
                     onChange={(selected)=>{this.setState({
-                        iconFile:selected.name,
-                        iconType:selected.type,
                         icon:selected.url
                     })}}
-                    />
-                {this.state.icon && <img className="appIcon" src={this.state.icon}/>}
-            </div>
-            <div className="dialogButtons dialogLine">
+                    >
+                    {this.state.icon && <img className="appIcon" src={this.state.icon}/>}
+                </InputSelect>
+
+                <div className="dialogButtons dialogLine">
                 <DB name="ok" onClick={()=>{
                     this.props.closeCallback();
                     this.props.okFunction(this.state)
@@ -819,10 +816,9 @@ const showUserAppDialog=(item)=>{
                 {...props}
                 okFunction={(addon)=>{
                    Requests.getJson("?request=api&type=addon&command=update",{},{
-                      userFile:addon.userFile,
-                      iconType:addon.iconType,
+                      url:addon.url,
                       title: addon.title,
-                      iconFile:addon.iconFile,
+                      icon:addon.icon,
                       name:addon.name
                    })
                    .then((data)=>{
@@ -835,7 +831,7 @@ const showUserAppDialog=(item)=>{
                 }}
                 removeFunction={(addon)=>{
                     Requests.getJson("?request=api&type=addon&command=delete",{},{
-                      name:addon.name
+                      name:addon.key
                    })
                    .then((data)=>{
                         readAddOns();

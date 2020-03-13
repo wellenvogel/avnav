@@ -17,14 +17,18 @@ const DEFAULT_TYPES={
     value: PropTypes.any.isRequired,
     label: PropTypes.string,
     className: PropTypes.string,
-    onChange: PropTypes.func
+    onChange: PropTypes.func,
+    dialogRow: PropTypes.bool
 };
 
 
 export const Input=(props)=>{
-    return <div className={props.className} key={props.key}>
+    let className=props.dialogRow?"dialogRow":"";
+    if (props.className) className+=" "+props.className;
+    return <div className={className} key={props.key}>
         <span className="inputLabel">{props.label}</span>
         <input type={props.type||"text"} value={props.value} onChange={(ev)=>props.onChange(ev.target.value)}/>
+        {props.children}
         </div>;
 };
 
@@ -35,13 +39,16 @@ Input.propTypes=assign({},DEFAULT_TYPES,{
 export const Checkbox=(props)=>{
     let className="checkBox";
     if (props.value) className+=" checked";
+    let frameClass=props.dialogRow?"dialogRow":"";
+    if (props.className) frameClass+=" "+props.className;
     let clickFunction=(ev)=>{
         if (props.onClick) return props.onClick(ev);
         if (props.onChange) props.onChange(!props.value);
     };
-    return <div className={props.className} onClick={clickFunction} key={props.key}>
+    return <div className={frameClass} onClick={clickFunction} key={props.key}>
         <span className="inputLabel">{props.label}</span>
         <span className= {className} ></span>
+        {props.children}
     </div>
 };
 
@@ -50,9 +57,12 @@ Checkbox.propTypes=assign({},DEFAULT_TYPES,{
 });
 
 export const InputReadOnly=(props)=>{
-    return <div className={props.className} key={props.key}>
+    let className=props.dialogRow?"dialogRow":"";
+    if (props.className) className+=" "+props.className;
+    return <div className={className} key={props.key}>
         <span className="inputLabel">{props.label}</span>
         <div className="input" onClick={props.onClick}>{props.value}</div>
+        {props.children}
         </div>
 };
 
@@ -111,11 +121,14 @@ export const ColorSelector=(props)=>{
         }
     }
     let style=props.style||{backgroundColor:props.value};
-    return <div className={props.className+ " colorSelector"}
+    let className=props.dialogRow?"dialogRow":"";
+    if (props.className) className+=" "+props.className;
+    return <div className={className+ " colorSelector"}
               onClick={onClick}>
             <span className="inputLabel">{props.label}</span>
             <div className="colorValue" style={style}></div>
             <div className="input">{props.value}</div>
+        {props.children}
   </div>;
 };
 ColorSelector.propTypes=assign({},DEFAULT_TYPES,{

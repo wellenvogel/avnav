@@ -29,12 +29,12 @@
 #
 ###############################################################################
 import StringIO
+import hashlib
 import shutil
 
 from avnav_config import *
 from avnav_nmea import *
 from avnav_worker import *
-from httpserver import AVNHTTPServer
 import avnav_handlerList
 
 class AVNAddonHandler(AVNWorker):
@@ -54,8 +54,7 @@ class AVNAddonHandler(AVNWorker):
         'url':None, #we replace $HOST...
         'title':'',
         'icon':None, #an icon below $datadir/user
-        'keepUrl':'', #auto detect
-        'key':None #uniq name
+        'keepUrl':'' #auto detect
       }
     if not child is None:
       return None
@@ -104,43 +103,52 @@ class AVNAddonHandler(AVNWorker):
       time.sleep(sleepTime)
 
 
+  def computeKey(self,entry):
+    md5=hashlib.md5()
+    for k in ('url','icon','title'):
+      v=entry.get(k)
+      if v is not None:
+        md5.update(v)
+    return md5.hexdigest()
+
   def fillList(self):
     data = []
+    alreadyFound=set()
     childlist = self.param.get(self.CHILDNAME)
-    i = 0
     if childlist is not None:
       for child in childlist:
-        i += 1
-        url = child.get('url')
+        url=child.get('url')
+        key=self.computeKey(child)
         if url is None:
+          child['key']=None
           continue
-        userFile=None
-        if url.startswith(self.userHandler.getPrefix()):
-          userFile = self.userHandler.getPathFromUrl(url, True)
-          if userFile is None:
-            AVNLog.error("error: user url %s not found", url)
+        else:
+          if key in alreadyFound:
+            AVNLog.error("duplicate user app found, ignoring %s",url)
+            child['key']=None
             continue
-        if child.get('key') is None:
-          if userFile is not None:
-            child['key']=userFile
           else:
-            child['key'] = "user:%d" % i
-        item = child.copy()
-        if userFile is not None:
-          item ['userFile'] = userFile
+            child['key']=key
+        item=child.copy()
         item['canDelete']=True
-        self.appendIfNotExisting(data, item)
+        data.append(item)
     serverAddons = self.httpServer.getParamValue(self.CHILDNAME)
     if serverAddons is not None:
       for addon in serverAddons:
-        i += 1
         newAddon = addon.copy()
-        if newAddon.get('key') is None:
-          newAddon['key'] = "addon:%d" % i
         newAddon['canDelete']=False
-        self.appendIfNotExisting(data, newAddon)
+        newAddon['key']=None
+        data.append(newAddon)
     outdata = []
     for addon in data:
+      url = addon.get('url')
+      if url is None:
+        continue
+      if not url.startswith("http"):
+        userFile = self.findFileForUrl(url)
+        if userFile is None:
+          AVNLog.error("error: user url %s not found", url)
+          continue
       if addon.get('title') == '':
         del addon['title']
       keepUrl = False
@@ -152,32 +160,30 @@ class AVNAddonHandler(AVNWorker):
           keepUrl = True
       addon['keepUrl'] = keepUrl
       icon = addon['icon']
-      if not icon.startswith("/user"):
-        icon="/user/"+icon
-        addon['icon']=icon
-      iconType = None
-      iconHandler = None
-      if icon.startswith(self.userHandler.getPrefix()):
-        iconType = 'user'
-        iconHandler = self.userHandler
-      elif icon.startswith(self.imagesHandler.getPrefix()):
-        iconType = 'images'
-        iconHandler = self.imagesHandler
-      if iconType is None:
-        iconpath = self.httpServer.tryExternalMappings(icon, None)
-        if iconpath is None or not os.path.exists(iconpath):
+      if not icon.startswith("http"):
+        if not icon.startswith("/user"):
+          icon="/user/"+icon
+          addon['icon']=icon
+        iconpath = self.findFileForUrl(icon)
+        if iconpath is None:
           AVNLog.error("icon path %s for %s not found, ignoring entry", icon, addon['url'])
           continue
-      else:
-        iconFile = iconHandler.getPathFromUrl(icon, True)
-        if iconFile is None:
-          AVNLog.error("icon path %s for %s not found, ignoring entry", icon, addon['url'])
-          continue
-        addon['iconType'] = iconType
-        addon['iconFile'] = iconFile
+      addon['name']=addon['key']
       outdata.append(addon)
     self.addonList=outdata
     return
+
+
+  def findFileForUrl(self,url):
+    if url is None:
+      return None
+    if url.startswith("http"):
+      return None
+    (path,query)=self.httpServer.pathQueryFromUrl(url)
+    filePath=self.httpServer.tryExternalMappings(path,query)
+    if filePath is None or not os.path.exists(filePath):
+      return None
+    return filePath
 
   def findChild(self,name,ignoreInvalid=False):
     children=self.param.get(self.CHILDNAME)
@@ -212,16 +218,6 @@ class AVNAddonHandler(AVNWorker):
     self.removeChildConfig(self.CHILDNAME,idx)
     self.fillList()
 
-  def appendIfNotExisting(self,list,entry):
-    if entry.get('url') is None:
-      return list
-    if entry.get('icon') is None:
-      return list
-    existing=filter(lambda el: el.get('key') == entry.get('key'),list)
-    if len(existing) > 0:
-      return list
-    list.append(entry)
-    return list
 
   def handleList(self,httpHandler):
     host = httpHandler.headers.get('host')
@@ -260,39 +256,46 @@ class AVNAddonHandler(AVNWorker):
       'title': title,
       'canDelete': False
     }
-    self.appendIfNotExisting(self.additionalAddOns,newAddon)
+    self.additionalAddOns.append(newAddon)
 
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
     if type == 'api':
-      command=AVNUtil.getHttpRequestParam(requestparam,'command')
-      name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
+      command=AVNUtil.getHttpRequestParam(requestparam,'command',True)
+      name=AVNUtil.getHttpRequestParam(requestparam,'name',False)
       if command == 'delete':
         self.handleDelete(name)
         return AVNUtil.getReturnData()
       elif command == 'list':
         return self.handleList(kwargs.get('handler'))
       elif command == 'update':
-        userFile=AVNUtil.getHttpRequestParam(requestparam,'userFile',True)
-        iconType=AVNUtil.getHttpRequestParam(requestparam,'iconType',True) #images,user
-        iconFile=AVNUtil.getHttpRequestParam(requestparam,'iconFile',True)
+        url=AVNUtil.getHttpRequestParam(requestparam,'url',True)
+        icon=AVNUtil.getHttpRequestParam(requestparam,'icon',True)
         title=AVNUtil.getHttpRequestParam(requestparam,'title')
-        param={'key':name}
-        if not self.userHandler.checkExists(userFile):
-          raise Exception("user file %s not found"%userFile)
-        param['url']=self.userHandler.nameToUrl(userFile)
-        iconHandler=None
-        if iconType == 'user':
-          iconHandler=self.userHandler
-        elif iconType == 'images':
-          iconHandler=self.imagesHandler
-        if iconHandler is None:
-          raise Exception("unknown icon type %s"%iconType)
-        if not iconHandler.checkExists(iconFile):
-          raise Exception("icon %s not found "%iconFile)
-        param['icon']=iconHandler.nameToUrl(iconFile)
-        param['title']=title
-        param['keepUrl']=False
+        param = {}
+        param['icon'] = icon
+        param['title'] = title
+        param['url'] = url
+        param['keepUrl'] = url.startswith("http")
+        doAdd=False
+        if name is None:
+          doAdd=True
+          name=self.computeKey(param)
+          #add
+          for entry in self.addonList:
+            if entry['key'] == name:
+              raise Exception("trying to add an already existing url %s"%url)
+        param['key']=name
+        if not url.startswith("http"):
+          userFile=self.findFileForUrl(url)
+          if userFile is None:
+            raise Exception("unable to find a local file for %s"%url)
+        if not icon.startswith("http"):
+          iconFile=self.findFileForUrl(icon)
+          if iconFile is None:
+            raise Exception("unable to find an icon file for %s"%icon)
         idx=self.findChild(name)
+        if idx < 0 and not doAdd:
+          raise Exception("did not find a user app with this key")
         for k in param.keys():
           idx=self.changeChildConfig(self.CHILDNAME,idx,k,param[k],True)
         self.writeConfigChanges()
@@ -304,7 +307,7 @@ class AVNAddonHandler(AVNWorker):
       return self.handleList(kwargs.get('handler'))
 
     if type == 'delete':
-      name = AVNUtil.getHttpRequestParam(requestparam, "name")
+      name = AVNUtil.getHttpRequestParam(requestparam, "name",True)
       self.handleDelete(name)
       return AVNUtil.getReturnData()
 

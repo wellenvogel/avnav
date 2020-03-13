@@ -28,6 +28,9 @@
 
 import SocketServer
 import BaseHTTPServer
+import posixpath
+import urllib
+
 import gemf_reader
 
 from httphandler import AVNHTTPHandler
@@ -358,6 +361,13 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       return path
     #pathmappings expect to have absolute pathes!
     return self.handlePathmapping(path)
+
+  @classmethod
+  def pathQueryFromUrl(cls,url):
+    (path, sep, query) = url.partition('?')
+    path = path.split('#', 1)[0]
+    path = posixpath.normpath(urllib.unquote(path).decode('utf-8'))
+    return (path,query)
 
   def tryExternalMappings(self,path,query):
     for prefix in self.externalHandlers.keys():

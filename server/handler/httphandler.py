@@ -133,9 +133,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
       """
       # abandon query parameters
-      (path,sep,query) = path.partition('?')
-      path = path.split('#',1)[0]
-      path = posixpath.normpath(urllib.unquote(path).decode('utf-8'))
+      (path,query) = self.server.pathQueryFromUrl(path)
       try:
         extPath=self.server.tryExternalMappings(path,query)
       except Exception as e:
