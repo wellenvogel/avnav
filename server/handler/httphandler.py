@@ -165,7 +165,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     try:
       path=path.replace("/gemf/","",1)
       parr=path.split("/")
-      gemfname=parr[0]
+      gemfname=parr[0]+".gemf"
       for g in self.server.gemflist.values():
         if g['name']==gemfname:
           AVNLog.debug("gemf file %s, request %s, lend=%d",gemfname,path,len(parr))
@@ -429,10 +429,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     rt['status']='OK'
     rt['data']=[]
     for gemfdata in self.server.gemflist.values():
+      url="/gemf/"+gemfdata['name'].replace(".gemf","")
       entry={
              'name':gemfdata['name'],
-             'url':"/gemf/"+gemfdata['name'],
-             'charturl':"/gemf/"+gemfdata['name'],
+             'url':url,
+             'charturl':url,
              'time': gemfdata['mtime'],
              'canDelete': True
       }
@@ -455,6 +456,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       if de==".":
         continue
       if de=="..":
+        continue
+      if de == "gemf":
         continue
       dpath=os.path.join(chartbaseDir,de)
       fname=os.path.join(dpath,self.server.navxml)
@@ -602,7 +605,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         handler.handleApiRequest("upload",type,requestParam,rfile=self.rfile,flen=rlen,handler=self)
         return json.dumps({'status': 'OK'})
       if type == "chart":
-        filename=self.getRequestParam(requestParam,"filename")
+        filename=self.getRequestParam(requestParam,"name")
         if filename is None:
           raise Exception("missing filename in upload request")
         filename=AVNUtil.clean_filename(filename)

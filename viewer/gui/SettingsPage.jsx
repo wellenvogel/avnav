@@ -17,7 +17,7 @@ import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
-import GuiHelpers from '../util/GuiHelpers.js';
+import Mob from '../components/Mob.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {Input,ColorSelector,Checkbox} from '../components/Inputs.jsx';
@@ -293,7 +293,7 @@ class SettingsPage extends React.Component{
                     toggle: keys.gui.global.layoutEditing
                 }
             },
-            GuiHelpers.mobDefinition,
+            Mob.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{

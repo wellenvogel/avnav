@@ -195,9 +195,6 @@ public class GEMFFile {
 
 
 
-	// ===========================================================
-	// Private Methods
-	// ===========================================================
 
 
 	/*
@@ -209,6 +206,14 @@ public class GEMFFile {
 		}
 	}
 
+	public int numFiles(){
+		return mFileNames.size();
+	}
+
+
+	// ===========================================================
+	// Private Methods
+	// ===========================================================
 
 	/*
 	 * Find all files composing this GEMF archive, open them as RandomAccessFile

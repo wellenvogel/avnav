@@ -50,7 +50,6 @@ public class Constants {
     public static final String CHARTPREFIX="charts";
     public static final String DEMOCHARTS="demo";
     public static final String CHARTOVERVIEW="avnav.xml";
-    public final static String FILE_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".provider";
     public final static String ASSETS_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".assetsprovider";
     public final static String USER_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".userprovider";
     //list of audio settings
@@ -62,17 +61,11 @@ public class Constants {
             MOBALARM
     };
     public static final String PREFNAME="AvNav";
-    //dummy file to make the media scanner see or directories...
-    public static final String EMPTY_FILE="EMPTY";
     //modes
     public static final String MODE_NORMAL="normal";
     public static final String MODE_XWALK="xwalk";
     public static final String MODE_SERVER ="server";
-    public static final String XWALKORIG="org.xwalk.core";
-    public static final String XWALKAPP="de.wellenvogel.xwalk";
-    public static final String XWALKVERSION="10.39.235.16";
     public static final String LOGPRFX="avnav";
-    public static final int    OSVERSION_XWALK=19;  //if below this version we should have xwalk
     //request codes in main activity
     public static final int SETTINGS_REQUEST=1;
     public static final int FILE_OPEN=100;
@@ -95,7 +88,6 @@ public class Constants {
     public static final String BC_RELOAD_DATA ="de.wellenvogel.avnav.RELOAD_DATA";
 
     public static final int LOCALNOTIFY=1;
-    public static final int LOCKNOTIFY=2;
 
     public static final long WATCHDOGTIME=30000; //ms
 

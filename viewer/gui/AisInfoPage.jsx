@@ -16,6 +16,7 @@ import AisHandler from '../nav/aisdata.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
+import Mob from '../components/Mob.js';
 
 const displayItems = [
     {name: 'mmsi', label: 'MMSI'},
@@ -90,7 +91,7 @@ class AisInfoPage extends React.Component{
                     history.replace('aispage');
                 }
             },
-            GuiHelpers.mobDefinition,
+            Mob.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

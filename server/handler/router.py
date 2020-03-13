@@ -797,7 +797,7 @@ class AVNRouter(AVNWorker):
       if route is None:
         raise Exception("no route found in file")
       rinfo=self.routeInfos.get(route.name)
-      ignoreExisting = self.getRequestParam(requestparam, 'ignoreExisting')
+      ignoreExisting = self.getRequestParam(requestparam, 'overwrite')
       if rinfo is not None and ignoreExisting == 'true':
         raise Exception("route with name "+route.name+" already exists")
       rinfo=AVNRouteInfo.fromRoute(route,AVNUtil.utcnow())

@@ -23,7 +23,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:name=".AvNavApp"
         android:hardwareAccelerated="true"
         android:icon="@drawable/sailboatr"
         android:theme="@style/AppTheme"
@@ -82,15 +81,6 @@
             android:name="de.wellenvogel.avnav.worker.GpsService"
             android:label="AvnavGps" />
 
-        <provider
-            android:name="android.support.v4.content.FileProvider"
-            android:authorities="${applicationId}.provider"
-            android:exported="false"
-            android:grantUriPermissions="true" >
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_provider_path" />
-        </provider>
         <provider
             android:name="de.wellenvogel.avnav.fileprovider.AssetsProvider"
             android:authorities="${applicationId}.assetsprovider"

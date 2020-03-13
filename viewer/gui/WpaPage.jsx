@@ -21,6 +21,7 @@ import Helper from '../util/helper.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
+import Mob from '../components/Mob.js';
 
 const ListEntry=(props)=>{
     let level=props.level;
@@ -139,7 +140,7 @@ class WpaPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
-            GuiHelpers.mobDefinition,
+            Mob.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

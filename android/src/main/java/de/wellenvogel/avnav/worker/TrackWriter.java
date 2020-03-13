@@ -77,6 +77,16 @@ public class TrackWriter implements INavRequestHandler {
         return null;
     }
 
+    @Override
+    public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException {
+        return null;
+    }
+
+    @Override
+    public String getPrefix() {
+        return null;
+    }
+
     public static class TrackInfo implements INavRequestHandler.IJsonObect{
         public String name;
         public long mtime;

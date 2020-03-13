@@ -28,6 +28,7 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.BasicHttpProcessor;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.protocol.HttpRequestHandlerRegistry;
 import org.apache.http.protocol.HttpService;
@@ -90,17 +91,23 @@ public class WebServer {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
             url=url.replaceAll("^/*", "");
-            HttpEntity postData=null;
+            PostVars postData=null;
             if (httpRequest instanceof HttpEntityEnclosingRequest) {
-                postData = ((HttpEntityEnclosingRequest) httpRequest).getEntity();
+                HttpEntity data = ((HttpEntityEnclosingRequest) httpRequest).getEntity();
+                if (data != null) postData= new PostVars(data);
             }
             ExtendedWebResourceResponse resp=null;
             try {
                 resp = activity.getRequestHandler().handleNavRequest(url,
-                        postData != null?new PostVars(postData):null,
+                        postData,
                         getServerInfo());
             }catch (Throwable t){
                 AvnLog.e("error handling request "+url,t);
+                if (postData != null) {
+                    postData.closeInput();
+                    HttpServerConnection con=(HttpServerConnection)httpContext.getAttribute(HttpCoreContext.HTTP_CONNECTION);
+                    con.close();
+                }
                 throw new HttpException("error handling "+url,t);
             }
             if (resp != null){
@@ -128,13 +135,13 @@ public class WebServer {
 
     class DirectoryRequestHandler implements HttpRequestHandler{
 
-        IDirectoryHandler handler;
-        DirectoryRequestHandler(IDirectoryHandler handler){
+        INavRequestHandler handler;
+        DirectoryRequestHandler(INavRequestHandler handler){
             this.handler=handler;
         }
         @Override
         public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
-            AvnLog.d(NAME,"prefix request for "+handler.getUrlPrefix()+request.getRequestLine());
+            AvnLog.d(NAME,"prefix request for "+handler.getPrefix()+request.getRequestLine());
             try {
                 String url = URLDecoder.decode(request.getRequestLine().getUri());
                 String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
@@ -166,7 +173,7 @@ public class WebServer {
         }
 
         String getPrefix(){
-            return handler.getUrlPrefix();
+            return handler.getPrefix();
         }
     }
 
@@ -272,9 +279,10 @@ public class WebServer {
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
             registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
-            for (IDirectoryHandler h: activity.getRequestHandler().getPrefixHandlers()){
+            for (INavRequestHandler h: activity.getRequestHandler().getHandlers()){
+                if (h.getPrefix() == null) continue;
                 DirectoryRequestHandler handler=new DirectoryRequestHandler(h);
-                registry.register("/"+h.getUrlPrefix()+"/*",handler);
+                registry.register("/"+h.getPrefix()+"/*",handler);
             }
 
             registry.register("*",baseRequestHandler);
@@ -388,7 +396,9 @@ public class WebServer {
             } catch (IOException ex) {
                 Log.e(NAME,"I/O error: " + ex.getMessage());
             } catch (HttpException ex) {
-                Log.e(NAME,"HTTP violation: " + ex.getMessage());
+                Log.e(NAME, "HTTP violation: " + ex.getMessage());
+            } catch (Throwable t){
+                Log.e(NAME,"HTTP worker exception: "+t.getMessage());
             } finally {
                 try {
                     this.conn.shutdown();

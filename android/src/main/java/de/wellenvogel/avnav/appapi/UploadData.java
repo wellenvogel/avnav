@@ -1,20 +1,23 @@
-package de.wellenvogel.avnav.util;
+package de.wellenvogel.avnav.appapi;
 
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+import android.support.annotation.NonNull;
 import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 
-import de.wellenvogel.avnav.appapi.IDirectoryHandler;
+import de.wellenvogel.avnav.appapi.INavRequestHandler;
+import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.WebViewFragment;
+import de.wellenvogel.avnav.util.AvnLog;
 
 
 public class UploadData{
@@ -26,11 +29,11 @@ public class UploadData{
     String fileData;
     Uri fileUri;
     WebViewFragment fragment;
-    IDirectoryHandler targetHandler;
+    INavRequestHandler targetHandler;
     Thread copyThread;
     boolean noResults=false;
     long size;
-    public UploadData(WebViewFragment fragment, IDirectoryHandler targetHandler, int id, boolean doRead){
+    public UploadData(WebViewFragment fragment, INavRequestHandler targetHandler, int id, boolean doRead){
         this.id=id;
         this.doRead=doRead;
         this.fragment=fragment;
@@ -95,37 +98,37 @@ public class UploadData{
                 throw new Exception("unable to open: " + fileUri.getLastPathSegment());
             }
             size = pfd.getStatSize(); //maybe it changed in between
-            final FileOutputStream os=targetHandler.openForWrite(df.getName(),false);
-            AvnLog.i("saving file " + fileUri.getLastPathSegment()+ " to "+targetHandler.getDirName());
-            final long bufferSize=FILE_MAX_SIZE / 10;
+            AvnLog.i("copying file " + fileUri.getLastPathSegment());
             final long reportInterval=size/20;
             copyThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    long ri=reportInterval;
-                    if (ri < bufferSize) ri=bufferSize-1;
                     try {
-                        byte buffer[] = new byte[(int) (FILE_MAX_SIZE / 10)];
-                        long bytesRead=0;
-                        long lastReport=0;
-                        int rd = 0;
-                        InputStream is = new FileInputStream(pfd.getFileDescriptor());
-                        while ((rd = is.read(buffer)) > 0) {
-                            if (Thread.interrupted()) throw new Exception("interrupted");
-                            os.write(buffer,0,rd);
-                            bytesRead+=rd;
-                            if (bytesRead > (lastReport+ri)){
-                                final int percent=(int)((bytesRead*100)/size);
-                                fragment.getActivity().runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        fragment.sendEventToJs(Constants.JS_FILE_COPY_PERCENT,percent);
+                        InputStream is = new FileInputStream(pfd.getFileDescriptor()){
+                            long bytesSinceReport=0;
+                            long bytesRead=0;
+                            @Override
+                            public int read(@NonNull byte[] b, int off, int len) throws IOException {
+                                if (Thread.interrupted()) throw new InterruptedIOException("interrupted");
+                                int numRead=super.read(b, off, len);
+                                if (numRead > 0) {
+                                    bytesSinceReport += numRead;
+                                    bytesRead += numRead;
+                                    if (bytesSinceReport >= reportInterval) {
+                                        bytesSinceReport=0;
+                                        final int percent = (int) ((bytesRead * 100) / size);
+                                        fragment.getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                fragment.sendEventToJs(Constants.JS_FILE_COPY_PERCENT, percent);
+                                            }
+                                        });
                                     }
-                                });
+                                }
+                                return numRead;
                             }
-                        }
-                        is.close();
-                        os.close();
+                        };
+                        targetHandler.handleUpload(new PostVars(is,size),name,false);
                         if (! noResults) fragment.getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -135,7 +138,7 @@ public class UploadData{
                     } catch (final Throwable e) {
                         if (fragment.getActivity() == null) return;
                         try{
-                            targetHandler.deleteFile(df.getName());
+                            targetHandler.handleDelete(df.getName(),null);
                         }catch(Throwable t){}
                         if (! noResults) fragment.getActivity().runOnUiThread(new Runnable() {
                             @Override

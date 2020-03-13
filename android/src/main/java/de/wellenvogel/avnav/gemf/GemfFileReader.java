@@ -68,6 +68,9 @@ public class GemfFileReader {
     public String getUrlName(){
         return urlName;
     }
+    public int numFiles(){
+        return gemf.numFiles();
+    }
     public void close(){
         try {
             gemf.close();

@@ -17,7 +17,7 @@ import AisFormatter from '../nav/aisformatter.jsx';
 import AisData from '../nav/aisdata.js';
 import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
-import GuiHelpers from '../util/GuiHelpers.js';
+import Mob from '../components/Mob.js';
 
 const aisInfos=[
     [
@@ -138,7 +138,7 @@ class AisPage extends React.Component{
                 onClick:sortDialog
 
             },
-            GuiHelpers.mobDefinition,
+            Mob.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

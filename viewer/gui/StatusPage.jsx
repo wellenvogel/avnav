@@ -16,6 +16,7 @@ import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
+import Mob from '../components/Mob.js';
 
 const statusTextToImageUrl=(text)=>{
     let rt=globalStore.getData(keys.properties.statusIcons[text]);
@@ -164,7 +165,7 @@ class StatusPage extends React.Component{
                         history.push('infopage')
                     }
                 },
-                GuiHelpers.mobDefinition,
+                Mob.mobDefinition,
                 {
                     name: 'Cancel',
                     onClick: ()=>{history.pop()}

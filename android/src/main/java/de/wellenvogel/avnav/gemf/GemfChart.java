@@ -84,10 +84,28 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
     }
 
     public boolean canDelete(){
-        return realFile != null;
+        //TODO: move delete handling to GEMFfile
+        try {
+            return realFile != null && (getGemf().numFiles() == 1);
+        }catch (Exception e){
+            AvnLog.e("unable to get num of gemf files",e);
+            return false;
+        }
     }
-    public File deleteFile(){
-        if (realFile == null) return null;
+
+    /**
+     * check if this chart file belongs to the internal chart with the name provided
+     * @param fileName
+     * @return
+     */
+    public boolean isName(String fileName){
+        if (realFile == null) return false;
+        if (realFile.getName().equals(fileName)) return true;
+        return false;
+    }
+    public File deleteFile() throws IOException {
+        if (!canDelete()) return null;
+        getGemf().close();
         realFile.delete();
         return realFile;
     }
@@ -113,11 +131,18 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
 
     public JSONObject toJson() throws JSONException {
         JSONObject e = new JSONObject();
+        int numFiles=0;
+        try {
+            numFiles=getGemf().numFiles();
+        }catch (Exception ex){
+            throw new JSONException(ex.getLocalizedMessage());
+        }
         e.put("name", key.replaceAll(".*/", ""));
         e.put("time", getLastModified() / 1000);
         e.put("url", "/"+ Constants.CHARTPREFIX + "/"+key);
         e.put("canDelete",canDelete());
-        e.put("canDownload",!isXml);
+        e.put("info",numFiles+" files");
+        e.put("canDownload",!isXml && (numFiles == 1));
         return e;
     }
 }

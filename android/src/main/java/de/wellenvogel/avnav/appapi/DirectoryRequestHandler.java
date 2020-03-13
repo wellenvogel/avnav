@@ -14,7 +14,7 @@ import java.net.URLEncoder;
 
 import de.wellenvogel.avnav.util.AvnUtil;
 
-public class DirectoryRequestHandler implements INavRequestHandler, IDirectoryHandler {
+public class DirectoryRequestHandler implements INavRequestHandler{
     private File subDir;
     private RequestHandler handler;
     private File workDir;
@@ -140,30 +140,25 @@ public class DirectoryRequestHandler implements INavRequestHandler, IDirectoryHa
         }
         return null;
     }
+
     @Override
-    public String getUrlPrefix(){
+    public String getPrefix() {
         return urlPrefix;
     }
+
+
     public static String safeName(String name,boolean throwError) throws Exception {
         if (name == null) throw new Exception("name is null");
         String safeName=name.replaceAll("[^\\w. ()+-]","");
         if (!name.equals(safeName) && throwError) throw new Exception("illegal filename "+name);
         return safeName;
     }
-    @Override
-    public FileOutputStream openForWrite(String name, boolean overwrite) throws Exception {
+
+    private FileOutputStream openForWrite(String name, boolean overwrite) throws Exception {
         String safeName=safeName(name,true);
         File outFile=new File(workDir,safeName);
         if (outFile.exists() && !overwrite) throw new Exception("file "+name+" already exists");
         return new FileOutputStream(outFile);
     }
-    @Override
-    public String getDirName(){
-        return workDir.getAbsolutePath();
-    }
 
-    @Override
-    public void deleteFile(String name) throws Exception {
-        handleDelete(name,null);
-    }
 }

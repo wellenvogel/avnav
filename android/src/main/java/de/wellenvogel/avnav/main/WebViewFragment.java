@@ -205,7 +205,7 @@ public class WebViewFragment extends Fragment {
      */
     public void sendEventToJs(String key, int id) {
         AvnLog.i("js event key="+key+", id="+id);
-        webView.loadUrl("javascript:avnav.android.receiveEvent('" + key + "'," + id + ")");
+        webView.loadUrl("javascript:if (avnav && avnav.android) avnav.android.receiveEvent('" + key + "'," + id + ")");
     }
 
     @Override

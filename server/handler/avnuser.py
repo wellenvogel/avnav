@@ -205,7 +205,7 @@ class AVNUserHandlerBase(AVNWorker):
     if type == 'upload':
       overwrite=AVNUtil.getHttpRequestParam(requestparam,'overwrite')
       overwrite=overwrite.lower()=='true' if overwrite is not None else False
-      filename = AVNUtil.getHttpRequestParam(requestparam, "filename")
+      filename = AVNUtil.getHttpRequestParam(requestparam, "name")
       if filename is None:
         raise Exception("missing filename in upload request")
       rlen=kwargs.get('flen')

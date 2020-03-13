@@ -13,8 +13,8 @@ import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
-import GuiHelpers from '../util/GuiHelpers.js';
 import InputMonitor from '../hoc/InputMonitor.jsx';
+import Mob from '../components/Mob.js';
 
 const readAddOns = function () {
     if (globalStore.getData(keys.gui.global.onAndroid, false)) return;
@@ -45,7 +45,7 @@ class AddOnPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
-            GuiHelpers.mobDefinition,
+            Mob.mobDefinition,
             {
                 name: 'Back',
                 onClick: ()=>{window.history.back();}

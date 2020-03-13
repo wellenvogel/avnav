@@ -124,6 +124,28 @@ let RequestHandler={
         requestOptions.body=encodedBody;
         return handleJson(rurl,requestOptions,options);
     },
+
+    postPlain:(url,body,options)=>{
+        let [rurl,requestOptions]=prepare(url,options);
+        requestOptions.method='POST';
+        if (!requestOptions.headers) requestOptions.headers={};
+        requestOptions.headers['content-type']='application/octet-string';
+        if (avnav.android){
+            return new Promise((resolve,reject)=> {
+                let status=avnav.android.handleUpload(rurl, body);
+                if (status == 'OK'){
+                    resolve({status:status});
+                    return;
+                }
+                else{
+                    reject(status);
+                    return;
+                }
+            });
+        }
+        requestOptions.body=body;
+        return handleJson(rurl,requestOptions,options);
+    },
     /**
      * do a json get request
      * @param url
@@ -206,6 +228,9 @@ let RequestHandler={
             });
             xhr.upload.addEventListener('progress',(event)=>{
                 if (param.progresshandler) param.progresshandler(param,event);
+            });
+            xhr.addEventListener('error',(event)=>{
+               if (param.errorhandler) param.errorhandler(param,"upload error");
             });
             if (param.starthandler) param.starthandler(param,xhr);
             xhr.send(file);

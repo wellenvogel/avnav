@@ -36,6 +36,7 @@ public class PostVars {
             byte buffer[] = new byte[(int) (Constants.MAXFILESIZE/10)];
             int rd = 0;
             while ((rd = is.read(buffer)) > 0) {
+                if (closed) throw new Exception("closed");
                 os.write(buffer,0,rd);
             }
             is.close();
@@ -44,11 +45,21 @@ public class PostVars {
         }
     }
 
+    public void closeInput() throws IOException {
+        //only set some interrupt - do not really close the stream as this would
+        //potentially just read out all the data
+        closed=true;
+    }
+
     public PostVars(String data){
         strValue=data;
     }
     public PostVars(HttpEntity entity) throws IOException {
         len=entity.getContentLength();
         is=entity.getContent();
+    }
+    public PostVars(InputStream is,long len){
+        this.len=len;
+        this.is=is;
     }
 }

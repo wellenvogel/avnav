@@ -24,7 +24,7 @@ import base from '../base.js';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import jsdownload from 'downloadjs';
-import GuiHelpers from '../util/GuiHelpers.js';
+import Mob from '../components/Mob.js';
 import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import ViewPage from './ViewPage.jsx';
@@ -381,7 +381,7 @@ const download = (info)=> {
                         });
                 }
             }
-            else startServerDownload(info.type, info.name + ".gemf", info.url);
+            else if (info.type == 'chart') startServerDownload(info.type, info.name, info.url);
         }
 
     }
@@ -449,7 +449,7 @@ const runUpload=(ev)=>{
     let type=globalStore.getData(keys.gui.downloadpage.type);
     if (! type) return;
     if (type == 'chart'){
-        return uploadChart(ev.target);
+        return uploadGeneric(type,ev.target,['gemf']);
     }
     if (type == 'route'){
         uploadFileReader(ev.target,".gpx").then((content)=> {
@@ -480,28 +480,6 @@ const runUpload=(ev)=>{
 const entryExists=(name)=>{
     let current=globalStore.getData(keys.gui.downloadpage.currentItems,[]);
     return findInfo(current,{name:name})>=0;
-};
-
-const uploadChart=(fileObject)=>{
-    if (fileObject.files && fileObject.files.length > 0) {
-        let file = fileObject.files[0];
-        if (! Helper.endsWith(file.name,".gemf")){
-            Toast("upload only for .gemf files");
-            resetUpload();
-            return;
-        }
-        let current=globalStore.getData(keys.gui.downloadpage.currentItems,[]);
-        for (let i=0;i<current.length;i++){
-            let fname=current[i].name+".gemf";
-            if (current[i].url && Helper.startsWith(current[i].url,"/gemf") && fname==file.name){
-                Toast("file "+file.name+" already exists");
-                resetUpload();
-                return;
-            }
-        }
-        resetUpload();
-        directUpload('chart',file);
-    }
 };
 
 const uploadGeneric=(type,fileObject,opt_restrictedExtensions)=>{
@@ -559,7 +537,7 @@ const UploadIndicator = Dynamic((info)=> {
    storeKeys:{uploadInfo: keys.gui.downloadpage.uploadInfo}
 });
 const directUpload=(type,file)=>{
-    let url=globalStore.getData(keys.properties.navUrl)+ "?request=upload&type="+type+"&filename=" + encodeURIComponent(file.name);
+    let url=globalStore.getData(keys.properties.navUrl)+ "?request=upload&type="+type+"&name=" + encodeURIComponent(file.name);
     Requests.uploadFile(url, file, {
         self: self,
         starthandler: function(param,xhdr){
@@ -1075,7 +1053,7 @@ const createItem=(type)=>{
                 return;
             }
             let data="";
-            Requests.postJson("?request=upload&type=" + type + "&filename=" + encodeURIComponent(name), data)
+            Requests.postPlain("?request=upload&type=" + type + "&name=" + encodeURIComponent(name), data)
                 .then((res)=>{fillData();})
                 .catch((error)=>{
                     Toast("creation failed: "+error);
@@ -1270,7 +1248,7 @@ class DownloadPage extends React.Component{
                     });
                 }
             },
-            GuiHelpers.mobDefinition,
+            Mob.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

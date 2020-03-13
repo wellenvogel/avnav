@@ -27,6 +27,7 @@ import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import navobjects from '../nav/navobjects.js';
 import DB from '../components/DialogButton.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
+import Mob from '../components/Mob.js';
 
 const editor=new RouteEdit(RouteEdit.MODES.PAGE);
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
@@ -247,7 +248,7 @@ class RoutePage extends React.Component{
                     });
                 }
             },
-            GuiHelpers.mobDefinition,
+            Mob.mobDefinition,
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

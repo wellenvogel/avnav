@@ -31,6 +31,7 @@ import LayoutHandler from './util/layouthandler.js';
 import assign from 'object-assign';
 import AlarmHandler from './nav/alarmhandler.js';
 import GuiHelpers from './util/GuiHelpers.js';
+import Mob from './components/Mob.js';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -136,13 +137,13 @@ class App extends React.Component {
             .then((layout)=>{})
             .catch((error)=>{Toast(error)});
         GuiHelpers.keyEventHandler(this,()=>{
-            GuiHelpers.controlMob(true);
+            Mob.controlMob(true);
         },'global','mobon');
         GuiHelpers.keyEventHandler(this,()=>{
-            GuiHelpers.controlMob(false);
+            Mob.controlMob(false);
         },'global','moboff');
         GuiHelpers.keyEventHandler(this,()=>{
-            GuiHelpers.toggleMob();
+            Mob.toggleMob();
         },'global','mobtoggle');
         GuiHelpers.keyEventHandler(this,(component,action)=>{
             let addon=parseInt(action);

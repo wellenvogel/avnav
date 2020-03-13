@@ -745,7 +745,7 @@ RouteData.prototype._handleLegResponse = function (serverData) {
 RouteData.prototype._remoteRouteOperation=function(operation, param) {
     let url = "?request="+operation+"&type=route";
     let data=undefined;
-    let opt=['name','format','ignoreExisting'];
+    let opt=['name','format','overwrite'];
     opt.forEach((rp)=>{
     if (param[rp] !== undefined)
         url += "&"+rp+"=" + encodeURIComponent(param[rp]);
@@ -926,7 +926,7 @@ RouteData.prototype._sendRoute=function(route, opt_callback,opt_ignoreExisting){
             if (opt_callback) showError=opt_callback(status);
             if (showError && globalStore.getData(keys.properties.routingServerError)) Toast("unable to send route to server:" + status);
         },
-        ignoreExisting:opt_ignoreExisting
+        overwrite:opt_ignoreExisting
     });
 };
 

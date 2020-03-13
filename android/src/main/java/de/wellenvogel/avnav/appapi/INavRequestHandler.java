@@ -6,6 +6,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
+
 public interface INavRequestHandler {
     interface IJsonObect{
         JSONObject toJson() throws JSONException;
@@ -40,5 +42,17 @@ public interface INavRequestHandler {
 
     JSONObject handleApiRequest(Uri uri, PostVars postData) throws Exception;
 
+    /**
+     * handle a direct request if our prefix matches
+     * @param url
+     * @return
+     * @throws FileNotFoundException
+     */
+    ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException;
 
+    /**
+     * get the prefix string we handle
+     * @return
+     */
+    String getPrefix();
 }

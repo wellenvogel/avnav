@@ -33,6 +33,7 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
+import Mob from '../components/Mob.js';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -274,7 +275,7 @@ class EditRoutePage extends React.Component{
                 },
                 editDisable: true
             },
-            GuiHelpers.mobDefinition,
+            Mob.mobDefinition,
             EditPageDialog.getButtonDef('editroutepage',
                 MapPage.PANELS,[LayoutHandler.OPTIONS.SMALL]),
             LayoutFinishedDialog.getButtonDef(),

@@ -15,6 +15,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -117,6 +118,16 @@ public class RouteHandler implements INavRequestHandler {
 
             return o;
         }
+        return null;
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException {
+        return null;
+    }
+
+    @Override
+    public String getPrefix() {
         return null;
     }
 
@@ -461,7 +472,6 @@ public class RouteHandler implements INavRequestHandler {
                             mustParse = true;
                         }
                         if (mustParse) {
-                            mustUpdate=true;
                             try {
                                 Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
                                 RouteInfo info = rt.getInfo();
@@ -471,6 +481,7 @@ public class RouteHandler implements INavRequestHandler {
                                 }
                                 info.mtime = f.lastModified();
                                 localList.put(name, info);
+                                mustUpdate=true;
                                 AvnLog.d("parsed route: " + info.toString());
                             } catch (Exception e) {
                                 Log.e(AvnLog.LOGPREFIX, "Exception parsing route " + f.getAbsolutePath() + ": " + e.getLocalizedMessage());

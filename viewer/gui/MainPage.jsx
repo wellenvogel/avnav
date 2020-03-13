@@ -20,6 +20,7 @@ import base from '../base.js';
 import chartImage from '../images/Chart60.png';
 import GuiHelper from '../util/GuiHelpers.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
+import Mob from '../components/Mob.js';
 
 const DynamicList = Dynamic(ItemList);
 
@@ -105,7 +106,7 @@ class MainPage extends React.Component {
                 },
                 editDisable: true
             },
-            GuiHelper.mobDefinition,
+            Mob.mobDefinition,
             LayoutFinishedDialog.getButtonDef(),
 
             {

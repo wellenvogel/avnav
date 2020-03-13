@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.appapi;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -13,11 +12,9 @@ import org.json.JSONObject;
 
 import de.wellenvogel.avnav.fileprovider.UserFileProvider;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.main.WebViewFragment;
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.UploadData;
 
 //potentially the Javascript interface code is called from the Xwalk app package
 //so we have to be careful to always access the correct resource manager when accessing resources!
@@ -134,7 +131,7 @@ public class JavaScriptApi {
         }
         if (uploadData != null) uploadData.interruptCopy(true);
         if (fragment.getActivity() == null) return false;
-        uploadData=new UploadData(fragment, requestHandler.getHandlerByType(type),id,readFile);
+        uploadData=new UploadData(fragment, requestHandler.getHandler(type),id,readFile);
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);

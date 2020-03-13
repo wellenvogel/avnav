@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -97,6 +98,16 @@ public class LayoutHandler implements INavRequestHandler{
         if (command.equals("list")){
             RequestHandler.getReturn(new RequestHandler.KeyValue("data",handleList()));
         }
+        return null;
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException {
+        return null;
+    }
+
+    @Override
+    public String getPrefix() {
         return null;
     }
 

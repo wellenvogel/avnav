@@ -13,7 +13,7 @@ import React from 'react';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
-import GuiHelpers from '../util/GuiHelpers.js';
+import Mob from '../components/Mob.js';
 import Toast,{hideToast} from '../components/Toast.jsx';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import keyhandler from '../util/keyhandler.js';
@@ -61,7 +61,7 @@ class ViewPage extends React.Component{
     buttons() {
         let self=this;
         return [
-            GuiHelpers.mobDefinition,
+            Mob.mobDefinition,
             {
                 name: 'ViewPageView',
                 visible: this.canChangeMode(),
@@ -115,7 +115,7 @@ class ViewPage extends React.Component{
                         }catch(e){
                         }
                     }
-                    Requests.postJson("?request=upload&type=" + self.type + "&overwrite=true&filename=" + encodeURIComponent(self.name), data)
+                    Requests.postPlain("?request=upload&type=" + self.type + "&overwrite=true&name=" + encodeURIComponent(self.name), data)
                         .then((result)=> {
                             this.setState({changed: false});
                         })

@@ -269,7 +269,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
                   AVNLog.error("unable to parse GEMF overview %s"%(govname,))
               if avnav is None:
                 avnav=self.getGemfInfo(gemf)
-              gemfdata={'name':newgemf.replace(".gemf",""),'gemf':gemf,'avnav':avnav,'mtime':gstat.st_mtime}
+              gemfdata={'name':newgemf,'gemf':gemf,'avnav':avnav,'mtime':gstat.st_mtime}
               self.gemflist[newgemf]=gemfdata
               AVNLog.info("successfully added gemf file %s %s",newgemf,unicode(gemf))
             except:
