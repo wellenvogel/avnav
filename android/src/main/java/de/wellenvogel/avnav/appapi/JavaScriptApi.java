@@ -53,7 +53,7 @@ public class JavaScriptApi {
     }
 
     @JavascriptInterface
-    public boolean downloadFile(String name, String type) {
+    public boolean downloadFile(String name, String type,String url) {
         if (detached) return false;
         if (requestHandler.typeDirs.get(type) == null) {
             AvnLog.e("invalid type " + type + " for sendFile");
@@ -64,7 +64,7 @@ public class JavaScriptApi {
             data = LayoutHandler.getUriForLayout(name);
         } else {
             try {
-                data = UserFileProvider.createContentUri(type, name);
+                data = UserFileProvider.createContentUri(type, name,url);
             } catch (Exception e) {
                 AvnLog.e("unable to create content uri for " + name);
             }

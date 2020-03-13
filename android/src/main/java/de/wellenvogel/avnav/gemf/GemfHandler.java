@@ -1,10 +1,12 @@
 package de.wellenvogel.avnav.gemf;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
+import android.os.ParcelFileDescriptor;
 import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 
@@ -13,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,11 +36,15 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
 import static de.wellenvogel.avnav.main.Constants.CHARTOVERVIEW;
+import static de.wellenvogel.avnav.main.Constants.CHARTPREFIX;
 import static de.wellenvogel.avnav.main.Constants.DEMOCHARTS;
+import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 
 
 public class GemfHandler implements INavRequestHandler, IDirectoryHandler {
     private static final String GEMFEXTENSION =".gemf";
+    public static final String INDEX_INTERNAL = "1";
+    public static final String INDEX_EXTERNAL = "2";
     private Activity activity;
     private RequestHandler handler;
     //mapping of url name to char descriptors
@@ -48,16 +55,69 @@ public class GemfHandler implements INavRequestHandler, IDirectoryHandler {
         activity=a;
 
     }
+
+    /**
+     * create the name part for the content provider uri
+     * @param fileName
+     * @param url REALCHARTS/index/type/name/
+     * @return
+     */
+    public static String uriPath(String fileName, String url) throws Exception {
+        if (url == null) return null;
+        if (url.startsWith("/")) url=url.substring(1);
+        String parts[]=url.split("/");
+        if (parts.length < 5) return null;
+        if (!parts[0].equals(CHARTPREFIX)) return null;
+        if (!parts[1].equals(REALCHARTS)) return null;
+        if (!parts[3].equals("gemf")) return null;
+        if (parts[2].equals(INDEX_EXTERNAL) || parts[2].equals(INDEX_INTERNAL)){
+            return parts[1]+"/"+parts[2]+"/"+parts[3]+"/"+DirectoryRequestHandler.safeName(parts[4],true);
+        }
+        return null;
+    }
+
+    /**
+     * open a file for download
+     * @param uriPart - corresponds to the path we returned from {@link #uriPath(String, String)}
+     *                REALCHARTS/index/type/name/
+     * @return
+     */
+    public static ParcelFileDescriptor getFileFromUri(String uriPart, Context ctx) throws Exception {
+        if (uriPart == null) return null;
+        if (uriPart.startsWith("/")) uriPart=uriPart.substring(1);
+        if (!uriPart.startsWith(Constants.REALCHARTS)) return null;
+        String parts[]=uriPart.split("/");
+        if (parts.length < 4) return null;
+        if (!parts[2].equals("gemf")) return null;
+        if (parts[1].equals(INDEX_INTERNAL)){
+            File chartBase=getInternalChartsDir(ctx);
+            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(parts[3],true)+GEMFEXTENSION);
+            if (!chartFile.exists() || ! chartFile.canRead()) return null;
+            return ParcelFileDescriptor.open(chartFile,ParcelFileDescriptor.MODE_READ_ONLY);
+        }
+        if (parts[1].equals(INDEX_EXTERNAL)){
+            String secondChartDirStr=AvnUtil.getSharedPreferences(ctx).getString(Constants.CHARTDIR,"");
+            if (secondChartDirStr.isEmpty()) return null;
+            if (!secondChartDirStr.startsWith("content:")) return null;
+            DocumentFile dirFile=DocumentFile.fromTreeUri(ctx,Uri.parse(secondChartDirStr));
+            DocumentFile chartFile=dirFile.findFile(DirectoryRequestHandler.safeName(parts[3],true));
+            if (chartFile == null) return null;
+            return ctx.getContentResolver().openFileDescriptor(chartFile.getUri(),"r");
+        }
+        return null;
+    }
+
+
     public synchronized void updateChartList(){
         HashMap<String, GemfChart> newGemfFiles=new HashMap<String, GemfChart>();
         SharedPreferences prefs=AvnUtil.getSharedPreferences(activity);
         File workDir=AvnUtil.getWorkDir(prefs,activity);
-        File chartDir = getInternalChartsDir();
-        readChartDir(chartDir.getAbsolutePath(),"1",newGemfFiles);
+        File chartDir = getInternalChartsDir(activity);
+        readChartDir(chartDir.getAbsolutePath(), INDEX_INTERNAL,newGemfFiles);
         String secondChartDirStr=prefs.getString(Constants.CHARTDIR,"");
         if (! secondChartDirStr.isEmpty()){
             if (! secondChartDirStr.equals(workDir.getAbsolutePath())){
-                readChartDir(secondChartDirStr,"2",newGemfFiles);
+                readChartDir(secondChartDirStr, INDEX_EXTERNAL,newGemfFiles);
             }
         }
         //now we have all current charts - compare to the existing list and create/delete entries
@@ -158,12 +218,18 @@ public class GemfHandler implements INavRequestHandler, IDirectoryHandler {
 
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
-        throw new Exception("download chart not supported");
+        String url=AvnUtil.getMandatoryParameter(uri,"url");
+        ParcelFileDescriptor fd=getFileFromUri(url,activity);
+        if (fd == null) return null;
+        return new ExtendedWebResourceResponse(fd.getStatSize(),
+                "application/octet-stream",
+                "",
+                new FileInputStream(fd.getFileDescriptor()));
     }
 
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
-        FileOutputStream os =openForWrite(name,!ignoreExisting);
+        FileOutputStream os =openForWrite(name,ignoreExisting);
         if (postData == null) throw new Exception("no data in file");
         postData.writeTo(os);
         os.close();
@@ -225,11 +291,11 @@ public class GemfHandler implements INavRequestHandler, IDirectoryHandler {
     }
 
     @Override
-    public FileOutputStream openForWrite(String name, boolean noOverwrite) throws Exception {
+    public FileOutputStream openForWrite(String name, boolean overwrite) throws Exception {
         String safeName= DirectoryRequestHandler.safeName(name,true);
         if (! safeName.endsWith(".gemf")) throw new Exception("only .gemf files allowed");
-        File outFile=new File(getInternalChartsDir(),safeName);
-        if (outFile.exists() && noOverwrite){
+        File outFile=new File(getInternalChartsDir(activity),safeName);
+        if (outFile.exists() && !overwrite){
             throw new Exception("file already exists");
         }
         return new FileOutputStream(outFile) {
@@ -246,15 +312,15 @@ public class GemfHandler implements INavRequestHandler, IDirectoryHandler {
         return handleChartRequest(url);
     }
 
-    public File getInternalChartsDir(){
-        File workDir=AvnUtil.getWorkDir(null,activity);
+    public static File getInternalChartsDir(Context ctx){
+        File workDir=AvnUtil.getWorkDir(null,ctx);
         File chartDir = new File(workDir, "charts");
         return chartDir;
     }
 
     @Override
     public String getDirName() {
-        return getInternalChartsDir().getAbsolutePath();
+        return getInternalChartsDir(activity).getAbsolutePath();
     }
 
     @Override

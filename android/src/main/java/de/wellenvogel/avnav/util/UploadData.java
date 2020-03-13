@@ -95,7 +95,7 @@ public class UploadData{
                 throw new Exception("unable to open: " + fileUri.getLastPathSegment());
             }
             size = pfd.getStatSize(); //maybe it changed in between
-            final FileOutputStream os=targetHandler.openForWrite(df.getName(),true);
+            final FileOutputStream os=targetHandler.openForWrite(df.getName(),false);
             AvnLog.i("saving file " + fileUri.getLastPathSegment()+ " to "+targetHandler.getDirName());
             final long bufferSize=FILE_MAX_SIZE / 10;
             final long reportInterval=size/20;

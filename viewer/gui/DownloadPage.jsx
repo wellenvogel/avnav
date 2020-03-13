@@ -184,7 +184,7 @@ const allowedItemActions=(props)=>{
     let showView=(props.type == 'user' || props.type=='images' || props.type == 'route' || props.type == 'track') && ViewPage.VIEWABLES.indexOf(ext)>=0;
     let showEdit=(props.type == 'user' && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE && ViewPage.EDITABLES.indexOf(ext) >=0);
     let showDownload=false;
-    if (props.type === "track"
+    if (props.canDownload || props.type === "track"
         || props.type === "route"
         || props.type == 'layout'
         || props.type == 'user'
@@ -345,7 +345,7 @@ const startServerDownload=(type,name,opt_url,opt_json)=>{
         //but this will not happen anyway...
         if (type == 'route') name+=".gpx";
         if (type == "layout") name+=".json";
-        return avnav.android.downloadFile(name,type);
+        return avnav.android.downloadFile(name,type,opt_url);
     }
 
     globalStore.storeData(keys.gui.downloadpage.downloadParameters,{

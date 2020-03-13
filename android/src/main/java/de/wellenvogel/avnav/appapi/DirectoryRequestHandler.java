@@ -48,7 +48,7 @@ public class DirectoryRequestHandler implements INavRequestHandler, IDirectoryHa
 
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
-        FileOutputStream os=openForWrite(name,!ignoreExisting);
+        FileOutputStream os=openForWrite(name,ignoreExisting);
         if (postData == null) throw new Exception("no data");
         postData.writeTo(os);
         os.close();
@@ -151,10 +151,10 @@ public class DirectoryRequestHandler implements INavRequestHandler, IDirectoryHa
         return safeName;
     }
     @Override
-    public FileOutputStream openForWrite(String name, boolean noOverwrite) throws Exception {
+    public FileOutputStream openForWrite(String name, boolean overwrite) throws Exception {
         String safeName=safeName(name,true);
         File outFile=new File(workDir,safeName);
-        if (outFile.exists() && noOverwrite) throw new Exception("file "+name+" already exists");
+        if (outFile.exists() && !overwrite) throw new Exception("file "+name+" already exists");
         return new FileOutputStream(outFile);
     }
     @Override

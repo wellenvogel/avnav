@@ -117,6 +117,7 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
         e.put("time", getLastModified() / 1000);
         e.put("url", "/"+ Constants.CHARTPREFIX + "/"+key);
         e.put("canDelete",canDelete());
+        e.put("canDownload",!isXml);
         return e;
     }
 }

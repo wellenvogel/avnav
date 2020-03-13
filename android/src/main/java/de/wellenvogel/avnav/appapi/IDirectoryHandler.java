@@ -7,7 +7,7 @@ import java.io.FileOutputStream;
 
 public interface IDirectoryHandler {
     public String getUrlPrefix();
-    FileOutputStream openForWrite(String name, boolean noOverwrite) throws Exception;
+    FileOutputStream openForWrite(String name, boolean overwrite) throws Exception;
     public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException;
 
     String getDirName();

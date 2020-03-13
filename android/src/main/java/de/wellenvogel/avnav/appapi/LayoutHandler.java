@@ -156,7 +156,7 @@ public class LayoutHandler implements INavRequestHandler{
         }
         else{
             try {
-                Uri rt = UserFileProvider.createContentUri("layout",name.replaceAll("^user\\.",""));
+                Uri rt = UserFileProvider.createContentUri("layout",name.replaceAll("^user\\.",""),null);
                 return rt;
             }catch (Throwable t){
                 AvnLog.e("error creating uri for layout "+name,t);
