@@ -101,7 +101,7 @@ class AddonConfigPage extends React.Component{
                 className={self.props.className}
                 style={self.props.style}
                 id="addonconfigpage"
-                title="UserApps"
+                title="Configure UserApps"
                 mainContent={
                             <MainContent
                                 items={self.state.addOns}
