@@ -28,16 +28,14 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
-import StringIO
 import hashlib
-import shutil
 
-from avnav_config import *
+import avnav_handlerList
 from avnav_nmea import *
 from avnav_worker import *
-import avnav_handlerList
 
-class AVNAddonHandler(AVNWorker):
+
+class AVNUserAppHandler(AVNWorker):
   '''
   handle the files in the user directory
   '''
@@ -102,8 +100,8 @@ class AVNAddonHandler(AVNWorker):
   def run(self):
     self.setName(self.getThreadPrefix())
     sleepTime=self.getFloatParam('interval')
+    self.setInfo('main', "starting", AVNWorker.Status.STARTED)
     self.fillList()
-    self.setInfo('main', "waiting", AVNWorker.Status.NMEA)
     while True:
       time.sleep(sleepTime)
 
@@ -181,6 +179,7 @@ class AVNAddonHandler(AVNWorker):
           AVNLog.error("icon path %s for %s not found, ignoring entry", icon, addon['url'])
           addon['invalid'] = True
     self.addonList=data
+    self.setInfo('main', "active, %d addons"%len(data), AVNWorker.Status.NMEA)
     return
 
 
@@ -271,6 +270,19 @@ class AVNAddonHandler(AVNWorker):
     }
     self.additionalAddOns.append(newAddon)
 
+
+  def deleteByUrl(self,url):
+    """
+    called by the user handler when a user file is deleted
+    @param url:
+    @return:
+    """
+    if url is None:
+      return
+    for addon in self.addonList:
+      if addon.get('canDelete') == True and addon.get('url') == url:
+        self.handleDelete(addon.get('name'))
+
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
     if type == 'api':
       command=AVNUtil.getHttpRequestParam(requestparam,'command',True)
@@ -332,5 +344,5 @@ class AVNAddonHandler(AVNWorker):
 
 
 
-avnav_handlerList.registerHandler(AVNAddonHandler)
+avnav_handlerList.registerHandler(AVNUserAppHandler)
 

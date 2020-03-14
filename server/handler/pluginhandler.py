@@ -36,7 +36,7 @@ from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
-from avnaddon import AVNAddonHandler
+from avnuserapps import AVNUserAppHandler
 from layouthandler import AVNLayoutHandler
 
 
@@ -138,7 +138,7 @@ class ApiImpl(AVNApi):
     self.phandler.setInfo(self.prefix,info,value)
 
   def registerUserApp(self, url, iconFile, title=None):
-    addonhandler=AVNWorker.findHandlerByName(AVNAddonHandler.getConfigName())
+    addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
     if addonhandler is None:
       raise Exception("no http server")
     if os.path.isabs(iconFile):

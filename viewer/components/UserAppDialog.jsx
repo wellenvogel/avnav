@@ -15,7 +15,7 @@ import GuiHelpers from '../util/GuiHelpers.js';
 export default class UserAppDialog extends React.Component{
     constructor(props){
         super(props);
-        this.state=props.addon||{};
+        this.state=assign({},props.addon,props.fixed);
         this.state.dialog=undefined;
         this.state.iconList=[];
         this.state.userFiles=[];
@@ -116,7 +116,7 @@ export default class UserAppDialog extends React.Component{
                         <React.Fragment>
                             {(canEdit && ! fixed.url) && <Checkbox
                                 dialogRow={true}
-                                label="internal url"
+                                label="internal"
                                 value={this.state.internal}
                                 onChange={(nv)=>{
                                     this.setState({internal:nv,url:undefined})
@@ -188,7 +188,7 @@ export default class UserAppDialog extends React.Component{
                             >Ok</DB>
                         <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                         {(fixed.name && this.state.canDelete && canEdit) && <DB name="delete" onClick={()=>{
-                            self.showDialog(OverlayDialog.createConfirmDialog("really delete addon?",
+                            self.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
                                 ()=>{
                                     this.props.closeCallback();
                                     this.props.removeFunction(fixed.name);

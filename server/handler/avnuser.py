@@ -72,6 +72,7 @@ class AVNUserHandlerBase(AVNWorker):
     self.baseDir=None
     self.type=type
     self.httpServer=None
+    self.addonHandler=None
 
   def start(self):
     self.httpServer=self.findHandlerByName('AVNHttpServer')
@@ -110,6 +111,12 @@ class AVNUserHandlerBase(AVNWorker):
     if not os.path.exists(filename):
       raise Exception("file %s not found" % filename)
     os.unlink(filename)
+    if self.addonHandler is not None:
+      try:
+        self.addonHandler.deleteByUrl(self.nameToUrl(name))
+      except Exception as e:
+        AVNLog.error("unable to delete addons for %s:%s",name,e)
+
 
   def handleList(self):
     data = []
@@ -257,6 +264,9 @@ class AVNUserHandler(AVNUserHandlerBase):
   def __init__(self,param):
     AVNUserHandlerBase.__init__(self,param,"user")
     self.baseDir = AVNConfig.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'viewer'))
+  def start(self):
+    self.addonHandler=self.findHandlerByName("AVNUserAppHandler")
+    AVNUserHandlerBase.start(self)
 
   def copyTemplates(self):
     httpserver=self.findHandlerByName("AVNHttpServer")
@@ -295,6 +305,7 @@ class AVNImagesHandler(AVNUserHandlerBase):
   def __init__(self,param):
     AVNUserHandlerBase.__init__(self,param,"images")
     self.baseDir = AVNConfig.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'images'))
+
 
   def handlePathRequest(self,path):
       return self.httpServer.plainUrlToPath("/viewer/images/" + path[len("images/"):])

@@ -279,6 +279,7 @@ class SettingsPage extends React.Component{
                 visible: globalStore.getData(keys.gui.global.onAndroid,false),
                 onClick:()=>{
                     confirmAbortOrDo().then(()=> {
+                        self.resetChanges();
                         history.pop();
                         avnav.android.showSettings();
                     });
@@ -297,6 +298,7 @@ class SettingsPage extends React.Component{
                 name: 'SettingsAddons',
                 onClick:()=>{
                     confirmAbortOrDo().then(()=>{
+                        self.resetChanges();
                         history.push("addonconfigpage");
                     });
                 }
@@ -326,12 +328,16 @@ class SettingsPage extends React.Component{
         if (! (this.props.options && this.props.options.returning)) {
             globalStore.storeData(keys.gui.settingspage.leftPanelVisible, true);
             this.leftVisible = true;
-            let values = globalStore.getMultiple(this.flattenedKeys);
-            globalStore.storeData(keys.gui.settingspage.values, values);
-            globalStore.storeData(keys.gui.settingspage.hasChanges, false);
+            this.resetChanges();
             globalStore.storeData(keys.gui.settingspage.section, 'Layer');
         }
 
+    }
+
+    resetChanges(){
+        let values = globalStore.getMultiple(this.flattenedKeys);
+        globalStore.storeData(keys.gui.settingspage.values, values);
+        globalStore.storeData(keys.gui.settingspage.hasChanges, false);
     }
 
     handleLayoutClick(){
@@ -368,7 +374,7 @@ class SettingsPage extends React.Component{
                 return;
             }
             confirmAbortOrDo().then(()=>{
-                this.resetData();
+                this.resetChanges();
                 startDialog();
             }).catch(()=>{});
         }

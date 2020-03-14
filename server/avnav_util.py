@@ -394,6 +394,7 @@ class AVNUtil():
     if whitelist is None:
       whitelist=valid_filename_chars
     # replace spaces
+    filename=unicode(filename)
     for r in replace:
       filename = filename.replace(r, '_')
 
