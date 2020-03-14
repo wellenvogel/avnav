@@ -158,6 +158,27 @@ const Dialogs = {
         return Dialog;
     },
 
+    createConfirmDialog: (text,okFunction,cancelFunction,opt_title) =>{
+        return (props)=> {
+            return (
+                <div className="inner">
+                    <h3 className="dialogTitle">{opt_title || ''}</h3>
+
+                    <div className="dialogText">{text}</div>
+                    <DB name="ok" onClick={()=>{
+                        if (okFunction) okFunction();
+                        if (props.closeCallback) props.closeCallback();
+                    }}>Ok</DB>
+                    <DB name="cancel" onClick={()=>{
+                        if (cancelFunction) cancelFunction();
+                        if (props.closeCallback) props.closeCallback();
+                    }}>Cancel</DB>
+                    <div className="clear"></div>
+                </div>
+            );
+        };
+    },
+
 /**
      * get the react elemnt that will handle all the dialogs
      */
@@ -223,25 +244,12 @@ const Dialogs = {
         return new Promise(function (resolve, reject) {
             let id = nextId();
             const okFunction = (el)=> {
-                removeDialog(id,true);
                 resolve(1);
             };
             const cancelFunction = (el)=> {
-                removeDialog(id,true);
                 reject();
             };
-            let html = function (props) {
-                return (
-                    <div className="inner">
-                        <h3 className="dialogTitle">{opt_title || ''}</h3>
-
-                        <div className="dialogText">{text}</div>
-                        <DB name="ok" onClick={okFunction}>Ok</DB>
-                        <DB name="cancel" onClick={cancelFunction}>Cancel</DB>
-                        <div className="clear"></div>
-                    </div>
-                );
-            };
+            let html = Dialogs.createConfirmDialog(text,okFunction,cancelFunction,opt_title);
             addDialog(id,html,opt_parent,()=> {
                     reject();
                 });

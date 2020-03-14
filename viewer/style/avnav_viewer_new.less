@@ -171,6 +171,10 @@ html,body {
     .nightBorderColorGR();
   }
 
+  .disabled .input{
+    .mdText2();
+  }
+
   label, {
     display: table-cell;
     text-align: right;
@@ -236,9 +240,6 @@ html,body {
     &.disabled{
       .mdText2();
     }
-  }
-  .disabled .input{
-    .mdText2();
   }
 
   .selectElement{
@@ -492,6 +493,14 @@ span.valuePrefix{
   background-image: url("../images/icons-new/@{url}");
   background-size: contain;
   display: inline-block;
+}
+
+//-- appIcon
+.appIcon{
+  width: 1.5em;
+  height: 1.5em;
+  display: inline-block;
+  margin-left: 0.5em;
 }
 
 
@@ -984,19 +993,10 @@ span.valuePrefix{
   }
 }
 .userAppDialog{
-  .appIcon{
-    width: 1.5em;
-    height: 1.5em;
-    display: inline-block;
-    margin-left: 0.5em;
-  }
    .input, input{
     width: auto;
      .flex(1);
     min-width: 10em;
-  }
-  .url .input{
-    .mdText2();
   }
 }
 
@@ -1121,6 +1121,21 @@ span.valuePrefix{
     background-color:  #eee;
     padding-right: 5px;
     padding-left: 0;
+  }
+}
+
+#addonconfigpage{
+  .appIcon{
+    margin-left: 0.5em;
+    margin-right: 1em;
+  }
+  .itemMain{
+    .flex(1);
+    .flex-display();
+    .flex-direction(column);
+    .itemTitle{
+      .mdText2();
+    }
   }
 }
 

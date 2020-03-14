@@ -293,6 +293,14 @@ class SettingsPage extends React.Component{
                     toggle: keys.gui.global.layoutEditing
                 }
             },
+            {
+                name: 'SettingsAddons',
+                onClick:()=>{
+                    confirmAbortOrDo().then(()=>{
+                        history.push("addonconfigpage");
+                    });
+                }
+            },
             Mob.mobDefinition,
             {
                 name: 'Cancel',

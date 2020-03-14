@@ -25,15 +25,25 @@ const DEFAULT_TYPES={
 export const Input=(props)=>{
     let className=props.dialogRow?"dialogRow":"";
     if (props.className) className+=" "+props.className;
+    let size=undefined;
+    if (props.minSize){
+        size=(props.value||"").length;
+        if (size < props.minSize) size=props.minSize;
+    }
+    if (size !== undefined && props.maxSize){
+        if (size > props.maxSize) size=props.maxSize;
+    }
     return <div className={className} key={props.key}>
         <span className="inputLabel">{props.label}</span>
-        <input type={props.type||"text"} value={props.value} onChange={(ev)=>props.onChange(ev.target.value)}/>
+        <input size={size} type={props.type||"text"} value={props.value} onChange={(ev)=>props.onChange(ev.target.value)}/>
         {props.children}
         </div>;
 };
 
 Input.propTypes=assign({},DEFAULT_TYPES,{
-    type: PropTypes.string //the type of the input element, default: text
+    type: PropTypes.string, //the type of the input element, default: text
+    minSize: PropTypes.number,
+    maxSize: PropTypes.number
 });
 
 export const Checkbox=(props)=>{
@@ -59,6 +69,7 @@ Checkbox.propTypes=assign({},DEFAULT_TYPES,{
 export const InputReadOnly=(props)=>{
     let className=props.dialogRow?"dialogRow":"";
     if (props.className) className+=" "+props.className;
+    if (! props.onClick) className+=" disabled";
     return <div className={className} key={props.key}>
         <span className="inputLabel">{props.label}</span>
         <div className="input" onClick={props.onClick}>{props.value}</div>

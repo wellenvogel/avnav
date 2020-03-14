@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -20,7 +21,8 @@ public class DirectoryRequestHandler implements INavRequestHandler{
     private File workDir;
     private String urlPrefix;
     private String type;
-    public DirectoryRequestHandler(RequestHandler handler, String type,File subDir,String urlPrefrix) throws IOException {
+    private IDeleteByUrl deleter;
+    public DirectoryRequestHandler(RequestHandler handler, String type,File subDir,String urlPrefrix,IDeleteByUrl deleter) throws IOException {
         this.handler=handler;
         this.type=type;
         this.subDir=subDir;
@@ -32,6 +34,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         if (!workDir.exists() || ! workDir.isDirectory()){
             throw new IOException("directory "+workDir.getPath()+" does not exist and cannot be created");
         }
+        this.deleter=deleter;
     }
 
     @Override
@@ -55,6 +58,10 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         return true;
     }
 
+    private String getUrlFromName(String name) throws UnsupportedEncodingException {
+       return "/"+urlPrefix+"/"+
+               URLEncoder.encode(name,"utf-8");
+    }
     @Override
     public JSONArray handleList() throws Exception {
         JSONArray rt=new JSONArray();
@@ -64,8 +71,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
                 el.put("name",localFile.getName());
                 el.put("size",localFile.length());
                 el.put("time",localFile.lastModified()/1000);
-                el.put("url",urlPrefix+"/"+
-                        URLEncoder.encode(localFile.getName(),"utf-8"));
+                el.put("url",getUrlFromName(localFile.getName()));
                 el.put("type",type);
                 el.put("canDelete",true);
                 rt.put(el);
@@ -78,7 +84,11 @@ public class DirectoryRequestHandler implements INavRequestHandler{
     public boolean handleDelete(String name, Uri uri) throws Exception {
         File localFile=findLocalFile(name);
         if (localFile == null) return false;
-        return localFile.delete();
+        boolean rt=localFile.delete();
+        if (rt && deleter != null){
+            deleter.deleteByUrl(getUrlFromName(localFile.getName()));
+        }
+        return rt;
     }
 
     @Override

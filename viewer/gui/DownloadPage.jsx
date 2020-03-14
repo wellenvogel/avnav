@@ -32,6 +32,9 @@ import {Input,InputSelect,InputReadOnly} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DialogContainer from '../components/OverlayDialogDisplay.jsx';
 import AndroidEventHandler from '../util/androidEventHandler.js';
+import Addons from '../components/Addons.js';
+import GuiHelpers from '../util/GuiHelpers.js';
+import UserAppDialog from '../components/UserAppDialog.jsx';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -74,13 +77,7 @@ class FileInfo{
 const findAddon=(item)=>{
     if (item.type !== 'user') return;
     let addons=globalStore.getData(keys.gui.downloadpage.addOns);
-    if (! addons || !(addons instanceof Array)) return;
-    for (let i in addons){
-        let addon=addons[i];
-        if (addon.url == item.url){
-            return addon;
-        }
-    }
+    return Addons.findAddonByUrl(addons,item.url);
 };
 
 const fillDataServer=(type)=>{
@@ -197,8 +194,8 @@ const allowedItemActions=(props)=>{
         showDelete=props.canDelete && ! props.active;
     }
     let showRename=(props.type == 'user' || props.type == 'images');
-    let showApp=(props.type == 'user' && ext == 'html');
-    let isApp=(props.type == 'user' && ext == 'html' && props.isAddon);
+    let showApp=(props.type == 'user' && ext == 'html' && globalStore.getData(keys.gui.capabilities.addons));
+    let isApp=(showApp && props.isAddon);
     return {
         showEdit:showEdit,
         showView:showView,
@@ -211,22 +208,12 @@ const allowedItemActions=(props)=>{
 };
 
 const readAddOns = function () {
-    if (globalStore.getData(keys.gui.global.onAndroid, false)) return;
-    if (!globalStore.getData(keys.gui.capabilities.addons)) return;
-    Requests.getJson("?request=list&type=addon").then((json)=>{
-            let items = [];
-            for (let e in json.items) {
-                let entry = json.items[e];
-                if (entry.key) {
-                    items.push(entry);
-                }
-            }
+    Addons.readAddOns(true)
+        .then((items)=>{
             globalStore.storeData(keys.gui.downloadpage.addOns, items);
             fillData();
-        },
-        (error)=>{
-            Toast("reading addons failed: " + error);
-        });
+        })
+        .catch(()=>{});
 };
 
 const DownloadItem=(props)=>{
@@ -472,7 +459,7 @@ const runUpload=(ev)=>{
         return uploadGeneric(type,ev.target);
     }
     if (type == 'images'){
-        return uploadGeneric(type,ev.target,ViewPage.IMAGES);
+        return uploadGeneric(type,ev.target,GuiHelpers.IMAGES);
     }
     resetUpload();
 };
@@ -697,155 +684,13 @@ class Callback{
     }
 }
 
-class UserAppDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state=props.addon||{};
-        this.state.url=props.current.url;
-        this.state.dialog=undefined;
-        this.state.iconList=[];
-        this.showDialog=this.showDialog.bind(this);
-        this.fillIconList();
-
-    }
-    fillIconList(){
-        let self=this;
-        Requests.getJson("?request=list&type=user")
-            .then((data)=>{
-                let itemList=[];
-                if (data.items){
-                    data.items.forEach((el)=>{
-                        if (ViewPage.IMAGES.indexOf(getExt(el.name)) >= 0){
-                            el.label=el.name;
-                            itemList.push(el);
-                        }
-                    });
-                    self.setState({iconList:self.state.iconList.concat(itemList)});
-                }
-            }).catch((error)=>{});
-        Requests.getJson("?request=list&type=images")
-            .then((data)=>{
-                let itemList=[];
-                if (data.items) {
-                    data.items.forEach((el)=> {
-                        if (ViewPage.IMAGES.indexOf(getExt(el.name)) >= 0) {
-                            el.label=el.name;
-                            itemList.push(el);
-                        }
-                    });
-                    self.setState({iconList: self.state.iconList.concat(itemList)});
-                }
-            })
-            .catch((error)=>{})
-    }
-    showDialog(Dialog){
-        let self=this;
-        this.setState({
-            dialog: (props)=>{
-                return(
-                    <Dialog
-                        {...props}
-                        closeCallback={()=>self.setState({dialog:undefined})}
-                        />
-                )
-            }
-        });
-    }
-
-    render(){
-        let self=this;
-        let Dialog=this.state.dialog;
-        return(
-        <React.Fragment>
-            <div className="userAppDialog">
-                <h3 className="dialogTitle">{this.props.current.isAddon ? 'Modify User App' : 'Create User App'}</h3>
-                <InputReadOnly
-                    dialogRow={true}
-                    className="url"
-                    label="url"
-                    value={this.props.current.url}/>
-                <Input
-                    dialogRow={true}
-                    label="title"
-                    value={this.state.title}
-                    onChange={(value)=>{self.setState({title:value})}}
-                    />
-                <InputSelect
-                    dialogRow={true}
-                    label="icon"
-                    value={this.state.icon}
-                    list={this.state.iconList}
-                    showDialogFunction={this.showDialog}
-                    onChange={(selected)=>{this.setState({
-                        icon:selected.url
-                    })}}
-                    >
-                    {this.state.icon && <img className="appIcon" src={this.state.icon}/>}
-                </InputSelect>
-
-                <div className="dialogButtons dialogLine">
-                <DB name="ok" onClick={()=>{
-                    this.props.closeCallback();
-                    this.props.okFunction(this.state)
-                    }}
-                    disabled={!this.state.icon}
-                >Ok</DB>
-                <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                {this.props.current.isAddon && <DB name="delete" onClick={()=>{
-                        this.props.closeCallback();
-                        this.props.removeFunction(this.state);
-                    }}>Delete</DB>}
-            </div>
-        </div>
-            {Dialog?
-                <DialogContainer
-                    className="nested"
-                    content={Dialog}
-                    onClick={()=>{this.setState({dialog:undefined})}}
-                    />:
-                null}
-        </React.Fragment>
-        );
-    }
-}
 
 const showUserAppDialog=(item)=>{
-    OverlayDialog.dialog((props)=>{
-        return(
-            <UserAppDialog
-                {...props}
-                okFunction={(addon)=>{
-                   Requests.getJson("?request=api&type=addon&command=update",{},{
-                      url:addon.url,
-                      title: addon.title,
-                      icon:addon.icon,
-                      name:addon.name
-                   })
-                   .then((data)=>{
-                        readAddOns();
-                   })
-                   .catch((error)=>{
-                    Toast("unable to create app entry: "+error);
-                    readAddOns();
-                    })
-                }}
-                removeFunction={(addon)=>{
-                    Requests.getJson("?request=api&type=addon&command=delete",{},{
-                      name:addon.key
-                   })
-                   .then((data)=>{
-                        readAddOns();
-                   })
-                   .catch((error)=>{
-                   Toast("unable to delete app entry: "+error);
-                   readAddOns();
-                   })
-                }}
-                addon={findAddon(item)}
-                current={item}
-                />
-        )
-    })
+    let addon=findAddon(item)||{};
+    let fixed={name:addon.name,url:item.url};
+    UserAppDialog.showUserAppDialog(addon,fixed,true)
+        .then((res)=>{readAddOns();})
+        .catch((error)=>{readAddOns()});
 };
 
 class FileDialog extends React.Component{
@@ -1126,8 +971,8 @@ class DownloadPage extends React.Component{
             return;
         }
         if (type == 'images'){
-            if (ViewPage.IMAGES.indexOf(getExt(fileName)) < 0){
-                Toast("only files of types: "+ViewPage.IMAGES.join(","));
+            if (GuiHelpers.IMAGES.indexOf(getExt(fileName)) < 0){
+                Toast("only files of types: "+GuiHelpers.IMAGES.join(","));
                 return;
             }
         }

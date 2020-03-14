@@ -20,6 +20,7 @@ import NavPage from './gui/NavPage.jsx';
 import EditRoutePage from './gui/EditRoutePage.jsx';
 import WarningPage from './gui/WarningPage.jsx';
 import ViewPage from './gui/ViewPage.jsx';
+import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -93,7 +94,8 @@ const pages={
     navpage: NavPage,
     editroutepage:EditRoutePage,
     warningpage:WarningPage,
-    viewpage:ViewPage
+    viewpage:ViewPage,
+    addonconfigpage: AddonConfigPage
 };
 class Router extends Component {
     render() {

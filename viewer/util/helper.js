@@ -104,6 +104,11 @@ Helper.filterObjectTree=function(source,filterFunction,opt_basepath){
     return rt;
 };
 
+Helper.getExt=(name)=>{
+    if (!name) return;
+    return name.replace(/.*\./,'').toLocaleLowerCase();
+};
+
 
 
 

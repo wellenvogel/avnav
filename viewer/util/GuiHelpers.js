@@ -183,6 +183,7 @@ const scrollInContainer=(parent, element)=> {
     return 0;
 };
 
+const IMAGES=['png','jpg','svg','bmp','tiff','gif'];
 
 
 
@@ -193,5 +194,6 @@ module.exports={
     lifecycleTimer,
     scrollInContainer,
     keyEventHandler,
-    nameKeyEventHandler
+    nameKeyEventHandler,
+    IMAGES
 };

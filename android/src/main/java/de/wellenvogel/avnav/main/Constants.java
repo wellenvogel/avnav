@@ -45,6 +45,7 @@ public class Constants {
     public static final String MOBALARM="alarm.mob";
     public static final String GPS_PERMISSION_REQUESTED="permissions.gps";
     public static final String STORAGE_PERMISSION_REQUESTED="permissions.storage";
+    public static final String ADDON_CONFIG="addon.config";
 
     public static final String REALCHARTS="charts";
     public static final String CHARTPREFIX="charts";

@@ -19,6 +19,7 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import keyhandler from '../util/keyhandler.js';
 import CodeFlask from 'codeflask';
 import Prism from 'prismjs';
+import GuiHelpers from '../util/GuiHelpers.js';
 
 //add all extensions here that we can edit
 //if set to undefined we will edit them but without highlighting
@@ -33,7 +34,6 @@ const languageMap={
 };
 const MAXEDITSIZE=50000;
 
-const IMAGES=['png','jpg','svg','bmp','tiff','gif'];
 
 class ViewPage extends React.Component{
     constructor(props){
@@ -149,7 +149,7 @@ class ViewPage extends React.Component{
     }
     isImage(){
         let ext=this.getExt().toLowerCase();
-        return (IMAGES.indexOf(ext) >= 0);
+        return (GuiHelpers.IMAGES.indexOf(ext) >= 0);
     }
     canChangeMode(){
         return this.getExt() == 'html';
@@ -225,9 +225,8 @@ class ViewPage extends React.Component{
     }
 }
 
-ViewPage.VIEWABLES=Object.keys(languageMap).concat(IMAGES);
+ViewPage.VIEWABLES=Object.keys(languageMap).concat(GuiHelpers.IMAGES);
 ViewPage.EDITABLES=Object.keys(languageMap);
-ViewPage.IMAGES=IMAGES;
 ViewPage.MAXEDITSIZE=MAXEDITSIZE;
 
 module.exports=ViewPage;

@@ -21,6 +21,7 @@ import chartImage from '../images/Chart60.png';
 import GuiHelper from '../util/GuiHelpers.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import Mob from '../components/Mob.js';
+import Addons from '../components/Addons.js';
 
 const DynamicList = Dynamic(ItemList);
 
@@ -290,27 +291,11 @@ const fillList = function () {
         });
 };
 const readAddOns = function () {
-    if (globalStore.getData(keys.gui.global.onAndroid, false)) return;
-    if (!globalStore.getData(keys.gui.capabilities.addons)) return;
-    Requests.getJson("?request=list&type=addon").then((json)=>{
-            let items = [];
-            for (let e in json.items) {
-                let button = json.items[e];
-                let entry = {
-                    key: button.key,
-                    url: button.url,
-                    icon: button.icon,
-                    title: button.title
-                };
-                if (entry.key) {
-                    items.push(entry);
-                }
-            }
+    Addons.readAddOns(true)
+        .then((items)=>{
             globalStore.storeData(keys.gui.mainpage.addOns, items);
-        },
-        (error)=>{
-            Toast("reading addons failed: " + error);
-        });
+        })
+        .catch(()=>{});
 };
 
 /**

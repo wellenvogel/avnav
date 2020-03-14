@@ -59,6 +59,7 @@ public class RequestHandler {
 
     private GemfHandler gemfHandler;
     private LayoutHandler layoutHandler;
+    private AddonHandler addonHandler;
 
     //file types from the js side
     public static String TYPE_ROUTE="route";
@@ -67,6 +68,7 @@ public class RequestHandler {
     public static String TYPE_TRACK="track";
     public static String TYPE_USER="user";
     public static String TYPE_IMAGE="images";
+    public static String TYPE_ADDON="addon";
 
     public static class KeyValue<VT>{
         String key;
@@ -142,6 +144,7 @@ public class RequestHandler {
     public RequestHandler(MainActivity activity){
         this.activity=activity;
         this.gemfHandler =new GemfHandler(activity,this);
+        this.addonHandler= new AddonHandler(activity,this);
         ownMimeMap.put("js", "text/javascript");
         startHandler();
         layoutHandler=new LayoutHandler(activity,"viewer/layout",
@@ -172,7 +175,7 @@ public class RequestHandler {
         });
         try{
             final DirectoryRequestHandler userHandler=new DirectoryRequestHandler(this,TYPE_USER,
-                    typeDirs.get(TYPE_USER).value,"user/viewer");
+                    typeDirs.get(TYPE_USER).value,"user/viewer",addonHandler);
             handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
                 @Override
                 public INavRequestHandler getHandler() {
@@ -184,7 +187,7 @@ public class RequestHandler {
         }
         try {
             final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(this, TYPE_IMAGE,
-                    typeDirs.get(TYPE_IMAGE).value, "user/images");
+                    typeDirs.get(TYPE_IMAGE).value, "user/images",null);
             handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
                 @Override
                 public INavRequestHandler getHandler() {
@@ -194,6 +197,12 @@ public class RequestHandler {
         }catch(Exception e){
             AvnLog.e("unable to create images handler",e);
         }
+        handlerMap.put(TYPE_ADDON, new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return addonHandler;
+            }
+        });
 
     }
 
@@ -613,7 +622,7 @@ public class RequestHandler {
                 //see keys.jsx in viewer - gui.capabilities
                 handled=true;
                 JSONObject o=new JSONObject();
-                o.put("addons",false);
+                o.put("addons",true);
                 o.put("uploadCharts",true);
                 o.put("plugins",false);
                 o.put("uploadRoute",true);
