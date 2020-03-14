@@ -43,6 +43,11 @@ class AVNAddonHandler(AVNWorker):
   '''
   CHILDNAME="UserTool"
   TYPE="addon"
+
+  @classmethod
+  def getStartupGroup(cls):
+    return 3
+
   @classmethod
   def getPrefix(cls):
     return None
@@ -108,7 +113,10 @@ class AVNAddonHandler(AVNWorker):
     for k in ('url','icon','title'):
       v=entry.get(k)
       if v is not None:
-        md5.update(v)
+        try:
+          md5.update(v.encode('utf-8'))
+        except Exception as e:
+          AVNLog.error("unable to compute md5 for %s: %s",v,e)
     return md5.hexdigest()
 
   def fillList(self):
@@ -132,6 +140,7 @@ class AVNAddonHandler(AVNWorker):
           alreadyFound.add(key)
         item=child.copy()
         item['canDelete']=True
+        item['source']='user'
         data.append(item)
     serverAddons = self.httpServer.getParamValue(self.CHILDNAME)
     nr=0
@@ -140,6 +149,7 @@ class AVNAddonHandler(AVNWorker):
         newAddon = addon.copy()
         newAddon['canDelete']=False
         newAddon['name']="server:%d"%nr
+        newAddon['source']='legacy'
         nr+=1
         data.append(newAddon)
     for addon in data:
@@ -256,7 +266,8 @@ class AVNAddonHandler(AVNWorker):
       'url': url,
       'icon': iconPath,
       'title': title,
-      'canDelete': False
+      'canDelete': False,
+      'source':'plugin'
     }
     self.additionalAddOns.append(newAddon)
 

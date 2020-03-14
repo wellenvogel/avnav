@@ -472,7 +472,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
              'name':de,
              'url':url,
              'charturl':charturl,
-             'time': os.path.getmtime(fname)
+             'time': os.path.getmtime(fname),
+             'canDelete': False
              }
       if os.path.exists(os.path.join(dpath,icon)):
         entry['icon']="/"+chartbaseUrl+"/"+icon

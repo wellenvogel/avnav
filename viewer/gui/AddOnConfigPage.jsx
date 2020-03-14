@@ -18,12 +18,15 @@ const AddonItem=(props)=>{
     let className="addonItem listEntry";
     if (props.invalid) className+=" invalid";
     if (props.className) className+=" "+props.className;
+    let source=props.source||'user';
+    if (props.invalid) source+=", invalid";
     return (
         <div className={className} onClick={props.onClick}>
             <img className="appIcon" src={props.icon}/>
             <div className="itemMain">
                 <div className="info">{props.url}</div>
                 {props.title && <div className="itemTitle">{props.title}</div>}
+                <div className="sourceInfo">{source}</div>
             </div>
             {!props.invalid &&<Button name="AddonConfigView" className="smallButton"
                                       onClick={(ev)=>{

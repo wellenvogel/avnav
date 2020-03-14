@@ -87,7 +87,7 @@ class AddOnPage extends React.Component{
                 rt.push(button);
             }
         }
-        return rt.concat(this.buttons);
+        return this.buttons.concat(rt);
     }
     render(){
         let self=this;

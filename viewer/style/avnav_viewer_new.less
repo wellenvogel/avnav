@@ -773,6 +773,9 @@ span.valuePrefix{
       .flex(1);
     }
   }
+  .buttonContainer{
+    overflow-y: auto;
+  }
 }
 
 #addresspage {
@@ -1135,6 +1138,15 @@ span.valuePrefix{
     .flex-direction(column);
     .itemTitle{
       .mdText2();
+    }
+    .sourceInfo {
+      .mdText2();
+    }
+    .sourceInfo:before{
+      content:"(";
+    }
+    .sourceInfo:after{
+      content:")";
     }
   }
 }

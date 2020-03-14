@@ -215,7 +215,12 @@ def main(argv):
   except:
     pass
   try:
-    for group in (1,2):
+    groups=set()
+    for handler in AVNWorker.getAllHandlers():
+      groups.add(handler.getStartupGroup())
+    grouplist=list(groups)
+    grouplist.sort()
+    for group in grouplist:
       for handler in AVNWorker.getAllHandlers():
         try:
           if handler.getStartupGroup() == group:

@@ -25,6 +25,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import codecs
 import shutil
 
 from avnav_util import *
@@ -355,10 +356,10 @@ class AVNConfig():
     tmpName=self.cfgfileName+".tmp"
     if os.path.exists(tmpName):
       os.unlink(tmpName)
-    fh=open(tmpName,"w")
+    fh=codecs.open(tmpName,"w",encoding="utf-8",errors='ignore')
     if fh is None:
       raise Exception("unable to open file %s"%tmpName)
-    self.domObject.writexml(fh)
+    self.domObject.writexml(fh, encoding="utf-8")
     fh.close()
     try:
       parser.parse(tmpName)
