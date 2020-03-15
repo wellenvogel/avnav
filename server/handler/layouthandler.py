@@ -164,7 +164,6 @@ class AVNLayoutHandler(AVNWorker):
         rt.append(v.toPlain())
       return {'status':'OK','items':rt}
     if type == 'upload':
-      #only json uploads with the data in _json
       name=AVNUtil.getHttpRequestParam(requestparam,'name')
       if name is None:
         raise Exception("missing parameter name")
@@ -174,10 +173,14 @@ class AVNLayoutHandler(AVNWorker):
       fname=os.path.join(userDir,name+".json")
       data=AVNUtil.getHttpRequestParam(requestparam,'_json')
       if data is None:
-        raise Exception("no data in upload layout")
-      with open(fname,"w") as fp:
-        fp.write(data)
-        fp.close()
+        handler=kwargs.get('handler')
+        if handler is None:
+          raise Exception("no data in upload layout")
+        handler.writeFileFromInput(fname,kwargs.get('flen'),True)
+      else:
+        with open(fname,"w") as fp:
+          fp.write(data)
+          fp.close()
       self.updateAllLayouts()
 
     if type == 'download':

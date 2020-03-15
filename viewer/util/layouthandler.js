@@ -227,7 +227,7 @@ class LayoutHandler{
                 resolve({status:'OK'});
                 return;
             }
-            Requests.postJson("?request=upload&type=layout&name=" + encodeURIComponent(name), layout).
+            Requests.postPlain("?request=upload&type=layout&name=" + encodeURIComponent(name), JSON.stringify(layout,undefined,2)).
                 then((result)=>{
                     if (isActive){
                         this.name=layoutName;
