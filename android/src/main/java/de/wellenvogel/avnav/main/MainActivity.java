@@ -345,17 +345,20 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
             showSettings(true);
             return;
         }
+        boolean restartHandler=serviceNeedsRestart;
         if (! handleRestart()){
             showSettings(true);
             return;
         }
         updateWorkDir(AvnUtil.getWorkDir(null,this));
         updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR,""));
-        if (requestHandler != null) {
+        if (requestHandler != null && restartHandler) {
             requestHandler.stop();
             requestHandler=null;
         }
-        requestHandler=new RequestHandler(this);
+        if (requestHandler == null) {
+            requestHandler = new RequestHandler(this);
+        }
         startFragmentOrActivity(false);
     }
 
