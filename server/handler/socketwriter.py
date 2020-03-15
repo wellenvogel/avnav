@@ -126,7 +126,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       socket.sendall("avnav_server %s\r\n"%(VERSION))
       while True:
         hasSend=False
-        seq,data=self.feeder.fetchFromHistory(seq,10,filter=filter,includeSource=True)
+        seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
         if len(data)>0:
           for line in data:
             if line.source in self.blackList:

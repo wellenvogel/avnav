@@ -71,7 +71,7 @@ class ApiImpl(AVNApi):
     if filter is not None:
       if not (isinstance(filter,list)):
         filter=[filter]
-    return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,filter=filter)
+    return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,nmeafilter=filter)
 
   def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None):
     if source is None:

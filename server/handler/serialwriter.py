@@ -185,7 +185,7 @@ class SerialWriter(SerialReader):
       while True and not self.doStop:
         bytes=0
         try:
-          seq,data=self.feeder.fetchFromHistory(seq,10,includeSource=True,filter=filter)
+          seq,data=self.feeder.fetchFromHistory(seq,10,includeSource=True,nmeafilter=filter)
           if len(data)>0:
             for line in data:
               if line.source in self.blackList:

@@ -435,7 +435,7 @@ class AVNGpsdFeeder(AVNGpsd):
   #only return entries with higher sequence
   #return a tuple (lastSequence,[listOfEntries])
   #when sequence == None or 0 - just fetch the topmost entries (maxEntries)
-  def fetchFromHistory(self,sequence,maxEntries=10,includeSource=False,waitTime=0.1,filter=None):
+  def fetchFromHistory(self,sequence,maxEntries=10,includeSource=False,waitTime=0.1,nmeafilter=None):
     seq=0
     list=[]
     if waitTime <=0:
@@ -469,9 +469,9 @@ class AVNGpsdFeeder(AVNGpsd):
     if len(list) < 1:
       return (seq,list)
     if includeSource:
-      if filter is None:
+      if nmeafilter is None:
         return (seq,list)
-      return (seq,filter(lambda el: NMEAParser.checkFilter(el.data,filter),list))
+      return (seq,filter(lambda el: NMEAParser.checkFilter(el.data,nmeafilter),list))
     else:
       rt=[]
       for le in list:
