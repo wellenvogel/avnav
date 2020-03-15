@@ -233,15 +233,13 @@ public class RouteReceiver extends Activity {
             return;
         }
         ListItem item=new ListItem(routeUri);
+        if (rt.name != null){
+            item.outName=rt.name+".gpx";
+        }
         if (!item.outName.endsWith(".gpx")){
-            if (rt.name != null){
-                item.outName=rt.name+".gpx";
-            }
-            else{
                 item.setError(getString(R.string.receiveOnlyGpx));
                 list.add(item);
                 return;
-            }
         }
         getAndCheckOutfile(item);
         list.add(item);
