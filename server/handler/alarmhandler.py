@@ -54,6 +54,7 @@ import avnav_handlerList
 
 
 class AVNAlarmHandler(AVNWorker):
+  CHANGE_KEY='alarm' #key for change counts
   """a handler for alarms"""
   def __init__(self,param):
     AVNWorker.__init__(self, param)
@@ -197,6 +198,7 @@ class AVNAlarmHandler(AVNWorker):
     if alarmid is None:
       alarmid=-1
     self.runningAlarms[name] = alarmid
+    self.navdata.updateChangeCounter(self.CHANGE_KEY)
     return True
 
   def stopAll(self):
@@ -218,6 +220,8 @@ class AVNAlarmHandler(AVNWorker):
       del self.runningAlarms[name]
     except:
       pass
+    if alarmid is not None:
+      self.navdata.updateChangeCounter(self.CHANGE_KEY)
     if alarmid is not None and alarmid >=0:
       self.commandHandler.stopCommand(alarmid)
     self.setInfo(name, "stopped", self.Status.INACTIVE)

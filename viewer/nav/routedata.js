@@ -201,6 +201,8 @@ let RouteData=function(){
     });
     globalStore.register(this.activeRouteChanged,activeRoute.getStoreKeys());
     globalStore.register(this.editingRouteChanged,editingRoute.getStoreKeys());
+    this.lastLegSequence=globalStore.getData(keys.nav.gps.updateleg);
+    this.currentRoutePage=undefined; //only if there is a page that handles a route we will query
 
     this._startQuery();
 };
@@ -797,31 +799,41 @@ RouteData.prototype._startQuery=function() {
         return;
     }
     else {
-        Requests.getJson(url,{checkOk:false}).then(
-            (data)=>{
-                let change = self._handleLegResponse(data);
-                base.log("leg data change=" + change);
-                self.timer = window.setTimeout(function () {
-                    self._startQuery();
-                }, timeout);
-            }
-        ).catch(
-            (error)=>{
-                base.log("query leg error");
-                self.routeErrors++;
-                if (self.routeErrors > 10) {
-                    base.log("lost route");
-                    self.serverConnected = false;
+        let currentLegSequence=globalStore.getData(keys.nav.gps.updateleg);
+        if (this.lastLegSequence === undefined || this.lastLegSequence !== currentLegSequence) {
+            this.lastLegSequence=currentLegSequence;
+            Requests.getJson(url, {checkOk: false}).then(
+                (data)=> {
+                    let change = self._handleLegResponse(data);
+                    base.log("leg data change=" + change);
+                    self.timer = window.setTimeout(function () {
+                        self._startQuery();
+                    }, timeout);
                 }
-                self.timer = window.setTimeout(function () {
-                    self._startQuery();
-                }, timeout);
-            }
-        );
+            ).catch(
+                (error)=> {
+                    base.log("query leg error");
+                    self.routeErrors++;
+                    if (self.routeErrors > 10) {
+                        base.log("lost route");
+                        self.serverConnected = false;
+                    }
+                    self.timer = window.setTimeout(function () {
+                        self._startQuery();
+                    }, timeout);
+                }
+            );
+        }
+        else{
+            self.timer = window.setTimeout(function () {
+                self._startQuery();
+            }, timeout);
+        }
     }
     //we only query the route separately if it is currently not active
     if (! this.isEditingActiveRoute()) {
         if (! editingRoute.hasRoute()) return;
+        if (this.currentRoutePage === undefined) return;
         //we always query the server to let him overwrite what we have...
         this._remoteRouteOperation("download",{
             format:'json',
@@ -995,6 +1007,16 @@ RouteData.prototype.dataChanged=function() {
         //TODO: send route.... if it was local before
     }
 };
+
+RouteData.prototype.setCurrentRoutePage=function(page){
+    this.currentRoutePage=page;
+};
+RouteData.prototype.unsetCurrentRoutePage=function(page){
+    if (this.currentRoutePage !== page) return;
+    this.currentRoutePage=undefined;
+};
+
+
 
 
 module.exports=RouteData;

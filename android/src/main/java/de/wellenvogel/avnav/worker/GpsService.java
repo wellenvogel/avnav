@@ -100,6 +100,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     long trackMintime;
     Alarm lastNotifiedAlarm=null;
     boolean notificationSend=false;
+    private long alarmSequence=System.currentTimeMillis();
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -794,6 +795,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         if (a != null && a.isPlaying){
             if (mediaPlayer != null) mediaPlayer.stop();
             mediaRepeatCount=0;
+            alarmSequence++;
         }
         alarmStatus.remove(type);
     }
@@ -824,6 +826,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         a.running=true;
         Alarm current=alarmStatus.get(a.name);
         if (current != null && current.running) return;
+        alarmSequence++;
         AvnLog.i("set alarm "+type);
         alarmStatus.put(type,a);
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
@@ -858,10 +861,21 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     public JSONObject getGpsData() throws JSONException{
+        JSONObject rt=null;
         for (GpsDataProvider provider: getAllProviders()){
-            if (isProviderActive(provider) && provider.handlesNmea()) return provider.getGpsData();
+            if (isProviderActive(provider) && provider.handlesNmea()){
+                rt=provider.getGpsData();
+                break;
+            }
         }
-        return null;
+        if (rt == null){
+            rt=new JSONObject();
+        }
+        rt.put("updatealarm",alarmSequence);
+        long legSequence=-1;
+        if (routeHandler != null) legSequence=routeHandler.getLegSequence();
+        rt.put("updateleg",legSequence);
+        return rt;
     }
 
     private Location getLocation(){

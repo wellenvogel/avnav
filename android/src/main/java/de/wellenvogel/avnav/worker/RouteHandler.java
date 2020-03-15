@@ -404,7 +404,7 @@ public class RouteHandler implements INavRequestHandler {
     private boolean stopParser;
     private Object parserLock=new Object();
     private RoutingLeg currentLeg;
-
+    private long legSequence=System.currentTimeMillis();
 
     public RouteHandler(File routedir,UpdateReceiver updater){
         this.routedir=routedir;
@@ -693,7 +693,16 @@ public class RouteHandler implements INavRequestHandler {
 
     public void setLeg(String data) throws Exception{
         AvnLog.i("setLeg");
-        currentLeg =new RoutingLeg(new JSONObject(data));
+        String old=(currentLeg!=null)?currentLeg.toJson().toString():null;
+        if (old == null){
+            if (data != null) legSequence++;
+        }
+        else {
+            if (!old.equals(data)) {
+                legSequence++;
+            }
+        }
+        currentLeg =(data != null)?new RoutingLeg(new JSONObject(data)):null;
         saveCurrentLeg();
     }
 
@@ -751,7 +760,12 @@ public class RouteHandler implements INavRequestHandler {
         AvnLog.i("unset leg");
         File legFile=new File(routedir,LEGFILE);
         if (legFile.isFile()) legFile.delete();
+        if (currentLeg != null) legSequence++;
         currentLeg =null;
+    }
+
+    public long getLegSequence(){
+        return legSequence;
     }
 
     private void resetLast(){

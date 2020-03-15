@@ -44,11 +44,12 @@ class AVNStore():
   # AIS messages we store
   knownAISTypes = (1, 2, 3, 5, 18, 19, 24)
   class DataEntry:
-    def __init__(self,value,source=None,priority=0):
+    def __init__(self,value,source=None,priority=0,keepAlways=False):
       self.value=value
       self.timestamp=AVNUtil.utcnow()
       self.source=source
       self.priority=priority
+      self.keepAlways=keepAlways
 
   class AisDataEntry:
     def __init__(self,data):
@@ -56,6 +57,7 @@ class AVNStore():
       self.timestamp = AVNUtil.utcnow()
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
+  CHANGE_COUNTER = ['alarm', 'leg', 'route']
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
     self.__list={}
     self.__aisList={}
@@ -75,6 +77,8 @@ class AVNStore():
     self.__keySources={}
     self.__lastAisSource=None
     self.__registerInternalKeys()
+    for ck in self.CHANGE_COUNTER:
+      self.updateChangeCounter(ck)
 
   def __registerInternalKeys(self):
     self.registerKey(self.BASE_KEY_AIS+".count","AIS count",self.__class__.__name__)
@@ -82,6 +86,8 @@ class AVNStore():
     self.registerKey(self.KEY_LAST_RECORD+".*","timestamp of last received record",self.__class__.__name__)
 
   def __isExpired(self, entry, now=None):
+    if entry.keepAlways:
+      return False
     if now is None:
       now=AVNUtil.utcnow()
     et = now - self.__expiryTime
@@ -91,6 +97,25 @@ class AVNStore():
       now=AVNUtil.utcnow()
     et=now - self.__aisExpiryTime
     return aisEntry.timestamp < et
+
+
+  def updateChangeCounter(self,name):
+    if not name in self.CHANGE_COUNTER:
+      return False
+    AVNLog.ld("AVNNavData update change %s", name)
+    listKey=self.BASE_KEY_GPS+".update"+name
+    self.__listLock.acquire()
+    try:
+      entry = self.__list.get(listKey)
+      if entry is None:
+        entry=AVNStore.DataEntry(AVNUtil.utcnow(),keepAlways=True)
+        self.__list[listKey]=entry
+      else:
+        entry.value+=1
+    except:
+      pass
+    self.__listLock.release()
+    return True
 
   def setValue(self,key,value,source=None,priority=0):
     """

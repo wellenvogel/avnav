@@ -36,7 +36,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 
 const RouteHandler=NavHandler.getRoutingHandler();
-
+const PAGENAME="editroutepage";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
@@ -96,7 +96,7 @@ const widgetClick=(item,data,panel,invertEditDirection)=>{
         }
         return;
     }
-    if (EditWidgetDialog.createDialog(item,'editroutepage',panel,invertEditDirection)) return;
+    if (EditWidgetDialog.createDialog(item,PAGENAME,panel,invertEditDirection)) return;
     if (panel == 'bottomRight'){
         if (! globalStore.getData(keys.nav.gps.valid)) return;
         let boatPos=globalStore.getData(keys.nav.gps.position);
@@ -111,7 +111,7 @@ const widgetClick=(item,data,panel,invertEditDirection)=>{
 
 
 const getPanelList=(panel)=>{
-    return LayoutHandler.getPanelData('editroutepage',panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL]));
+    return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL]));
 };
 
 const checkRouteWritable=function(){
@@ -149,6 +149,7 @@ class EditRoutePage extends React.Component{
         this.wpTimer=GuiHelpers.lifecycleTimer(this,()=>{
             globalStore.storeData(keys.gui.editroutepage.showWpButtons,false);
         },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
+        RouteHandler.setCurrentRoutePage(PAGENAME);
     }
     getWaypointButtons(){
         let self=this;
@@ -212,6 +213,7 @@ class EditRoutePage extends React.Component{
     componentWillUnmount(){
         MapHolder.setRoutingActive(false);
         MapHolder.setGpsLock(this.lastGpsLock);
+        RouteHandler.unsetCurrentRoutePage(PAGENAME);
     }
     componentDidMount(){
         MapHolder.setRoutingActive(true);
@@ -276,7 +278,7 @@ class EditRoutePage extends React.Component{
                 editDisable: true
             },
             Mob.mobDefinition,
-            EditPageDialog.getButtonDef('editroutepage',
+            EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,[LayoutHandler.OPTIONS.SMALL]),
             LayoutFinishedDialog.getButtonDef(),
             {
@@ -296,7 +298,7 @@ class EditRoutePage extends React.Component{
             <DynamicPage
                 className={self.props.className}
                 style={self.props.style}
-                id="editroutepage"
+                id={PAGENAME}
                 mapEventCallback={self.mapEvent}
                 onItemClick={widgetClick}
                 mapUrl={url}

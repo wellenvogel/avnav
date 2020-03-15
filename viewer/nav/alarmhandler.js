@@ -10,6 +10,7 @@ class AlarmHandler{
         this.timerFunction=this.timerFunction.bind(this);
         this.startTimer=this.startTimer.bind(this);
         this.timer=undefined;
+        this.lastSequence=globalStore.getData(keys.nav.gps.updatealarm);
     }
 
     start(){
@@ -38,17 +39,24 @@ class AlarmHandler{
         window.setTimeout(this.timerFunction,interval);
     }
     timerFunction(){
-        Requests.getJson("?request=alarm&status=all")
-            .then((json)=>{
-                this.startTimer();
-                let old=globalStore.getData(keys.nav.alarms.all);
-                if (this.compareAlarms(old,json.data)) return;
-                globalStore.storeData(keys.nav.alarms.all,json.data)
-            })
-            .catch((error)=>{
-                this.startTimer();
-                base.log("alarm query error: "+error);
-            });
+        let currentSequence=globalStore.getData(keys.nav.gps.updatealarm);
+        if (this.lastSequence === undefined || this.lastSequence != currentSequence) {
+            this.lastSequence=currentSequence;
+            Requests.getJson("?request=alarm&status=all")
+                .then((json)=> {
+                    this.startTimer();
+                    let old = globalStore.getData(keys.nav.alarms.all);
+                    if (this.compareAlarms(old, json.data)) return;
+                    globalStore.storeData(keys.nav.alarms.all, json.data)
+                })
+                .catch((error)=> {
+                    this.startTimer();
+                    base.log("alarm query error: " + error);
+                });
+        }
+        else{
+            this.startTimer();
+        }
     }
 
     stopAlarm(type){

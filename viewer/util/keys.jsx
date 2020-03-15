@@ -88,7 +88,9 @@ let keys={
             courseAverageOn: K,
             depthBelowTransducer: V,
             sequence: K, //will be incremented as last operation on each receive
-            connectionLost: K
+            connectionLost: K,
+            updatealarm: new D("update counter for alarms"),
+            updateleg: new D("update counter for leg")
         },
         alarms:{
             all:K,

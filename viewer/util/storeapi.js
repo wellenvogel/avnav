@@ -21,7 +21,7 @@ UpdateCallback.prototype.dataChanged=function(StoreApi){
 
  /**
  * a callback description
- * @param {UpdateCallback} callback the object having a "dataChanged" function
+ * @param {UpdateCallback||function} callback the object having a "dataChanged" function
  * @param {string[]||object} keys the keys (can be empty - call back for all)
   *       if it is an object it should have a __path property for the real key
   *       in this case it is considered to ba a prefix
@@ -54,6 +54,14 @@ CallbackDescriptor.prototype.isCallbackFor=function(keylist){
     }
     return false;
 };
+CallbackDescriptor.prototype.call=function(keys){
+    if (typeof(this.callback) === 'function'){
+        return this.callback(keys);
+    }
+    else{
+        return this.callback.dataChanged(keys);
+    }
+};
 /**
  * @class
  * @constructor
@@ -67,7 +75,7 @@ let StoreApi=function(){
 };
 /**
  * find a callback in the list of registered callbacks
- * @param {UpdateCallback} callback
+ * @param {UpdateCallback||function} callback
  * @returns {number} - -1 if not found
  * @private
  */
@@ -82,7 +90,7 @@ StoreApi.prototype._findCallback=function(callback){
 
 /**
  * register a callback handler
- * @param {UpdateCallback} callback
+ * @param {UpdateCallback||function} callback
  * @param list of keys, can be an object with the values being the keys or a keyNode - registering a prefix
  */
 StoreApi.prototype.register=function(callback/*,...*/){
@@ -116,7 +124,7 @@ StoreApi.prototype.register=function(callback/*,...*/){
 };
 /**
  * deregister a callback object
- * @param {UpdateCallback} callback
+ * @param {UpdateCallback||function} callback
  * @returns {boolean}
  */
 StoreApi.prototype.deregister=function(callback){
@@ -142,7 +150,7 @@ StoreApi.prototype.callCallbacks=function(keys,opt_omitHandler){
             }
         }
         if (cbItem.isCallbackFor(keys)){
-           cbItem.callback.dataChanged(keys);
+           cbItem.call(keys);
         }
     });
 };

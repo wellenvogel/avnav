@@ -5,6 +5,7 @@ import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import history from '../util/history.js';
+import LayoutHandler from '../util/layouthandler.js';
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);

@@ -27,14 +27,10 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import time
-import socket
-import threading
+import StringIO
 import os
 import sys
-import math
 
-import StringIO
 from __main__ import traceback
 
 from avnav_config import AVNConfig
@@ -42,14 +38,9 @@ from avnav_config import AVNConfig
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries"))
 import gpxpy098.gpx as gpx
 import gpxpy098.parser as gpxparser
-import gpxpy098.utils as gpxutils
 import gpxpy098.geo as geo
-import xml.etree.ElementTree as ET
 
-from avnav_util import *
-from avnav_nmea import *
 from avnav_worker import *
-from avnav_store import *
 from avnav_nmea import *
 import avnav_handlerList
 
@@ -257,8 +248,23 @@ class AVNRouter(AVNWorker):
   #as this is used by our util functions
   def wpToLatLon(self,wP):
     return (wP.latitude,wP.longitude)
-  
+
+
+  def legsEqual(self,leg1,leg2):
+    if leg1 is None:
+      return False if leg2 is not None else True
+    if leg2 is None:
+      return False
+    s1=json.dumps(self.leg2Json(leg1))
+    s2=json.dumps(self.leg2Json(leg2))
+    return (s1 == s2)
+
+  LEG_CHANGE_KEY='leg'
+
   def setCurrentLeg(self,leg):
+    changed=not self.legsEqual(self.currentLeg,leg)
+    if changed:
+      self.navdata.updateChangeCounter(self.LEG_CHANGE_KEY)
     self.currentLeg=leg
     if leg is None:
       if os.path.exists(self.currentLegFileName):

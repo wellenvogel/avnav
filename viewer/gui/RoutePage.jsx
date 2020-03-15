@@ -29,6 +29,7 @@ import DB from '../components/DialogButton.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import Mob from '../components/Mob.js';
 
+const PAGENAME="routepage";
 const editor=new RouteEdit(RouteEdit.MODES.PAGE);
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 
@@ -256,6 +257,7 @@ class RoutePage extends React.Component{
         ];
         this.storeRouteAndReturn=this.storeRouteAndReturn.bind(this);
         globalStore.storeData(keys.gui.routepage.initialName,editor.getRouteName());
+        RouteHandler.setCurrentRoutePage(PAGENAME);
     }
 
     componentDidMount(){
@@ -266,6 +268,9 @@ class RoutePage extends React.Component{
                 if (mode >= 1 || mode <= 2) el.scrollIntoView(mode==1);
             }
         }
+    }
+    componentWillUnmount(){
+        RouteHandler.unsetCurrentRoutePage(PAGENAME);
     }
 
 
@@ -329,7 +334,7 @@ class RoutePage extends React.Component{
         return (
             <DynamicPage
                 style={this.props.style}
-                id="routepage"
+                id={PAGENAME}
                 mainContent={
                             <MainContent
                                 storeKeys={editor.getStoreKeys()}
