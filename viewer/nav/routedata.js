@@ -1004,7 +1004,7 @@ RouteData.prototype.dataChanged=function() {
     this.connectMode=globalStore.getData(keys.properties.connectedMode);
     this.readOnlyServer=globalStore.getData(keys.properties.readOnlyServer);
     if (oldcon != this.connectMode && this.connectMode){
-        //TODO: send route.... if it was local before
+        this.lastLegSequence=undefined;
     }
 };
 
