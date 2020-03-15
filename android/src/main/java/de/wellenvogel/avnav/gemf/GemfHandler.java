@@ -280,7 +280,7 @@ public class GemfHandler implements INavRequestHandler {
                 e.put("url", "/"+ Constants.CHARTPREFIX+"/"+Constants.DEMOCHARTS+"/" + name);
                 e.put("charturl","/"+ Constants.CHARTPREFIX+"/"+Constants.DEMOCHARTS+"/" + name);
                 e.put("canDelete",false);
-                e.put("mtime", BuildConfig.TIMESTAMP/1000);
+                e.put("time", BuildConfig.TIMESTAMP/1000);
                 rt.put(e);
             }
         }
