@@ -144,6 +144,7 @@ public class RequestHandler {
     public RequestHandler(MainActivity activity){
         this.activity=activity;
         this.gemfHandler =new GemfHandler(activity,this);
+        this.gemfHandler.updateChartList();
         this.addonHandler= new AddonHandler(activity,this);
         ownMimeMap.put("js", "text/javascript");
         startHandler();
@@ -174,8 +175,8 @@ public class RequestHandler {
             }
         });
         try{
-            final DirectoryRequestHandler userHandler=new DirectoryRequestHandler(this,TYPE_USER,
-                    typeDirs.get(TYPE_USER).value,"user/viewer",addonHandler);
+            final DirectoryRequestHandler userHandler=new UserDirectoryRequestHandler(this,
+                    addonHandler);
             handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
                 @Override
                 public INavRequestHandler getHandler() {
@@ -707,16 +708,6 @@ public class RequestHandler {
         }
     }
 
-    /**
-     * calles when settings changed
-     */
-    public void update() {
-        synchronized (chartHandlerMonitor) {
-            chartHandlerMonitor.notifyAll();
-        }
-
-        startHandler();
-    }
 
 
 }

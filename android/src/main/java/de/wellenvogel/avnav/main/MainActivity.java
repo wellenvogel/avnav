@@ -267,7 +267,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
         serviceNeedsRestart=true;
-        requestHandler=new RequestHandler(this);
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
         IntentFilter filterStop=new IntentFilter(Constants.BC_STOPAPPL);
         broadCastReceiverStop=new BroadcastReceiver() {
@@ -352,6 +351,11 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         }
         updateWorkDir(AvnUtil.getWorkDir(null,this));
         updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR,""));
+        if (requestHandler != null) {
+            requestHandler.stop();
+            requestHandler=null;
+        }
+        requestHandler=new RequestHandler(this);
         startFragmentOrActivity(false);
     }
 
@@ -359,7 +363,6 @@ public class MainActivity extends XWalkActivity implements IDialogHandler,IMedia
         if (!serviceNeedsRestart) return true;
         AvnLog.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
         stopGpsService(false);
-        requestHandler.update();
         sendEventToJs(Constants.JS_RELOAD,0);
         return startGpsService();
     }

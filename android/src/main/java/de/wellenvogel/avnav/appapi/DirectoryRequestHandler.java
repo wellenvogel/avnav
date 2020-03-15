@@ -17,11 +17,11 @@ import de.wellenvogel.avnav.util.AvnUtil;
 
 public class DirectoryRequestHandler implements INavRequestHandler{
     private File subDir;
-    private RequestHandler handler;
-    private File workDir;
-    private String urlPrefix;
-    private String type;
-    private IDeleteByUrl deleter;
+    protected RequestHandler handler;
+    protected File workDir;
+    protected String urlPrefix;
+    protected String type;
+    protected IDeleteByUrl deleter;
     public DirectoryRequestHandler(RequestHandler handler, String type,File subDir,String urlPrefrix,IDeleteByUrl deleter) throws IOException {
         this.handler=handler;
         this.type=type;
