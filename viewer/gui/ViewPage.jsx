@@ -145,6 +145,8 @@ class ViewPage extends React.Component{
         this.setState({changed:true});
     }
     getExt(){
+        if (this.type == 'route') return "gpx";
+        if (this.type == 'layout') return 'json';
         return this.name.replace(/.*\./,'');
     }
     isImage(){
