@@ -98,9 +98,11 @@ public class WebServer {
             }
             ExtendedWebResourceResponse resp=null;
             try {
-                resp = activity.getRequestHandler().handleNavRequest(url,
-                        postData,
-                        getServerInfo());
+                if (activity.getRequestHandler() != null) {
+                    resp = activity.getRequestHandler().handleNavRequest(url,
+                            postData,
+                            getServerInfo());
+                }
             }catch (Throwable t){
                 AvnLog.e("error handling request "+url,t);
                 if (postData != null) {
