@@ -212,6 +212,12 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
             }
             saveAddons(addons);
         }
+        if (command.equals("delete")){
+            String name=AvnUtil.getMandatoryParameter(uri,"name");
+            boolean rt=handleDelete(name,uri);
+            if (rt) return RequestHandler.getReturn();
+            else return RequestHandler.getErrorReturn("delete failed");
+        }
         return RequestHandler.getReturn();
     }
 
