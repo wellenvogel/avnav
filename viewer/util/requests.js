@@ -13,7 +13,7 @@ const prepare=(url,options,defaults)=>{
     if ( !(ioptions && ioptions.useNavUrl !== undefined && !ioptions.useNavUrl)){
         url=globalStore.getData(keys.properties.navUrl)+url;
     }
-    if (ioptions.timeout === undefined) ioptions.timeout=parseInt(globalStore.getData(keys.properties.statusQueryTimeout));
+    if (ioptions.timeout === undefined) ioptions.timeout=parseInt(globalStore.getData(keys.properties.networkTimeout));
     let headers=undefined;
     if ( !(ioptions && ioptions.noCache !== undefined && !ioptions.noCache)){
         headers={};

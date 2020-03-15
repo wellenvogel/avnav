@@ -6,7 +6,7 @@ import Toast from './Toast.jsx';
 
 const readAddOns = function (opt_showToast,opt_includeInvalid) {
     return new Promise((resolve, reject)=> {
-        if (!globalStore.getData(keys.gui.capabilities.addons)) reject("disabled");
+        if (!globalStore.getData(keys.gui.capabilities.addons)) resolve([]);
         let req={
             type:"addon"
         };
