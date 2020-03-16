@@ -128,6 +128,96 @@
         }
       ]
     },
+    "gpspage3": {
+      "left": [
+        {
+          "name": "BRG",
+          "caption": "BRG",
+          "unit": "°",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "COG",
+          "caption": "COG",
+          "unit": "°",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "linGauge_Compass",
+          "caption": "COG",
+          "unit": "°",
+          "storeKeys": {
+            "value": "nav.gps.course"
+          },
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "radGauge_Compass",
+          "caption": "COG",
+          "unit": "°",
+          "storeKeys": {
+            "value": "nav.gps.course"
+          },
+          "formatterParameters": [
+            ""
+          ],
+          "drawValue": true,
+          "valueFontFactor": 12,
+          "weight": 3
+        }
+      ],
+      "right": [
+        {
+          "name": "DST",
+          "caption": "DST",
+          "unit": "nm",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "VMG",
+          "caption": "VMG",
+          "unit": "kn",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "SOG",
+          "caption": "SOG",
+          "unit": "kn",
+          "formatterParameters": [
+            ""
+          ]
+        },
+        {
+          "name": "radGauge_Speed",
+          "storeKeys": {
+            "value": "nav.gps.speed"
+          },
+          "formatterParameters": [
+            ""
+          ],
+          "drawValue": true,
+          "valueFontFactor": 12,
+          "colorPlate": "#fff",
+          "minValue": 0,
+          "maxValue": "10",
+          "colorHighlight": "rgba(200, 50, 50, .75)",
+          "startHighlight": "6",
+          "weight": 3,
+          "caption": "SOG",
+          "unit": "kn"
+        }
+      ]
+    },
     "navpage": {
       "left": [
         {
