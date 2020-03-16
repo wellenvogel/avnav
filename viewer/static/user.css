@@ -1,4 +1,14 @@
 /*
-    empty user.css file
-    put a user.css into your avnav/user/viewer directory to customize avnav
+  css file to adapt the avnav look and feel to your needs
+  use your browsers development tools to find out about the css classes of every element in the UI
+*/
+/*
+Assuming you would like to have a different symbol on the cancel button on every page:
+1. upload the image you want toe the "images" tab (Download page), in this case the name is alternateCancel.svg
+2. uncomment the entry below and reload avnav
+*/
+/*
+button.Cancel span {
+    background-image: url(/user/images/alternateCancel.svg);
+}
 */
