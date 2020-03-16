@@ -8,7 +8,7 @@
        title="Layer-7:18" 
        srs="OSGEO:41001" 
 	profile="global-mercator"
-       href="http://map01.eniro.no/geowebcache/service/tms1.0.0/nautical/" 
+       href="https://map01.eniro.no/geowebcache/service/tms1.0.0/nautical/"
        minzoom="7"
        maxzoom="18">
        

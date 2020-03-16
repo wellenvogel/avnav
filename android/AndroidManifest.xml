@@ -26,7 +26,8 @@
         android:hardwareAccelerated="true"
         android:icon="@drawable/sailboatr"
         android:theme="@style/AppTheme"
-        android:label="${label}">
+        android:label="${label}"
+        android:usesCleartextTraffic="true">
         <activity
 
             android:name=".MainActivity"
