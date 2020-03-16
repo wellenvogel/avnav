@@ -153,14 +153,14 @@ class NMEAParser():
   def nmeaPosToFloat(cls,pos,direction):
     posa=pos.split('.')
     if len(posa) < 2:
-      AVNLog.ld("invalid pos format",pos)
-      return None
+      AVNLog.ld("no decimal in pos",pos)
+      posa.append("0")
     grd=posa[0][-10:-2]
     min=posa[0][-2:]
     min=min+"."+posa[1]
-    rt=float(grd)+float(min)/60;
+    rt=float(grd)+float(min)/60
     if rt > 0 and (direction == 'S' or direction == 'W'):
-      rt=-rt;
+      rt=-rt
     AVNLog.ld("pos",pos,rt)
     return rt
 
