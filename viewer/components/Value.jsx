@@ -8,8 +8,8 @@ import PropTypes from 'prop-types';
  */
 const Value=function(props){
     if (! props.value) return null;
-    let prefix=props.value.replace(/[^ ].*/,'');
-    let remain=props.value.replace(/^ */,'');
+    let prefix=(props.value+"").replace(/[^ ].*/,'');
+    let remain=(props.value+"").replace(/^ */,'');
     return(
         <React.Fragment>
             <span className='valuePrefix'>{prefix.replace(/ /g,'0')}</span>

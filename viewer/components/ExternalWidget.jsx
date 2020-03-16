@@ -75,5 +75,9 @@ ExternalWidget.propTypes={
     renderHtml: PropTypes.func,
     renderCanvas: PropTypes.func
 };
+ExternalWidget.editableParameters={
+    caption:true,
+    unit:true
+};
 
 module.exports=ExternalWidget;

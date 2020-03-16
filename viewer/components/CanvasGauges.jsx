@@ -12,7 +12,7 @@ import base from '../base.js';
 import assign from 'object-assign';
 //refer to https://canvas-gauges.com/documentation/user-guide/configuration
 const defaultTranslateFunction=(props)=>{
-    let rt=assign({},props);
+    let rt=props;
     let textColorNames=['colorTitle','colorUnits','colorNumbers','colorStrokeTicks','colorMajorTicks','colorMinorTicks','colorValueText'];
     if (props.colorText !== undefined){
         textColorNames.forEach((cn)=>{
@@ -34,7 +34,8 @@ class Gauge extends React.Component{
         this.gauge=undefined;
     }
     getProps(){
-        let rt=this.props.translateFunction?defaultTranslateFunction(this.props.translateFunction(this.props)):defaultTranslateFunction(this.props);
+        let props=assign({},this.props);
+        let rt=this.props.translateFunction?defaultTranslateFunction(this.props.translateFunction(props)):defaultTranslateFunction(props);
         for (let k in rt){
             if (rt[k] === undefined) delete rt[k];
         }
@@ -82,6 +83,8 @@ class Gauge extends React.Component{
             rect = this.canvas.getBoundingClientRect();
         }
         let props=this.getProps();
+        if (props.minValue === undefined) return;
+        if (props.maxValue === undefined) return;
         let makeSquare=(props.makeSquare === undefined) || props.makeSquare;
         let width=rect.width;
         let height=rect.height;
@@ -108,8 +111,8 @@ class Gauge extends React.Component{
             value=props.formatter(value);
         }
         value=parseFloat(value);
-        if (value < 0) value=0;
-        if (value > 360) value=360;
+        if (value < props.minValue) value=props.minValue;
+        if (value > props.maxValue) value=props.maxValue;
         if (! this.gauge){
             try {
                 let options = assign({}, props, {renderTo: this.canvas,width:width,height:height,value:value});

@@ -3,7 +3,7 @@ import assign from 'object-assign';
 
 
 const temperatureTranslateFunction=(props)=>{
-    let rt=assign({},props);
+    let rt=props;
     if (props.minValue !== undefined && props.maxValue !== undefined){
         let inc=Math.floor((props.maxValue - props.minValue)/10);
         if (inc < 1) inc=1;
@@ -30,7 +30,7 @@ const temperatureTranslateFunction=(props)=>{
 };
 
 const voltageTranslateFunction=(props)=>{
-    let rt=assign({},props);
+    let rt=props;
     if (props.minValue !== undefined && props.maxValue !== undefined){
         let inc=Math.floor((props.maxValue - props.minValue)/10);
         if (inc < 1) inc=1;
@@ -109,7 +109,7 @@ export default ()=>{
         name:prefix+"Speed",
         type: 'radialGauge',
         translateFunction: (props)=>{
-            let rt=assign({},props);
+            let rt=props;
             if (props.minValue !== undefined && props.maxValue !== undefined){
                 let inc=Math.floor((props.maxValue-props.minValue)/10);
                 let majorTicks=[];
