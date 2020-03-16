@@ -142,7 +142,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
     @Override
     public void updated() {
-        timerAction();
+        handler.post(runnable);
         sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
 
     }
