@@ -24,6 +24,10 @@
    choco install -y InnoSetup
    choco install -y jdk8
    choco install -y nodejs
+   choco install -y curl
+   choco install -y git
+
+   add git path to env: c:\Program Files\Git\bin
    
 5. have a separate build dir with an own branch
 6. run the build in a VSStudio command prompt
