@@ -84,12 +84,21 @@ namespace AvChartConvert
             string gdaldata = Path.Combine(gdalpath, "gdal-data");
             string gdalpython = Path.Combine(myPath, "gdal", "Lib", "site-packages");
             StringDictionary environment = info.EnvironmentVariables;
+            if (environment.ContainsKey("GDAL_DATA")){
+                environment.Remove("GDAL_DATA");
+            }
             environment.Add("GDAL_DATA", gdaldata);
+            if (environment.ContainsKey("PYTHONPATH")){
+                environment.Remove("PYTHONPATH");
+            }
             environment.Add("PYTHONPATH", gdalpython);
             environment["PATH"] = environment["PATH"] + ";" + gdalpath;
             return info;
 #else
-            return new ProcessStartInfo("python.exe",command);
+            string python = Path.Combine(myPath, "python", "python.exe");
+            ProcessStartInfo info = new ProcessStartInfo(python, "\"" + command + "\"");
+            return info;
+
 #endif
 
         }

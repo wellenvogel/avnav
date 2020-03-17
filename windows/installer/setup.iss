@@ -59,7 +59,7 @@ Source: "..\avnav_server_home.xml"; DestDir: "{app}\windows"; DestName: "avnav_s
 Source: "..\downloadAndInstall.ps1"; DestDir: "{app}\windows"; DestName: "downloadAndInstall.ps1"
 Source: "..\..\server\*.py"; DestDir: "{app}\server"
 Source: "..\..\server\handler\*.py"; DestDir: "{app}\server\handler"
-Source: "..\..\chartconvert\*.py"; DestDir: "{app}\server"
+Source: "..\..\chartconvert\*.py"; DestDir: "{app}\chartconvert"
 Source: "..\..\chartconvert\tiler_tools\*.py"; DestDir: "{app}\chartconvert\tiler_tools"
 Source: "..\..\chartconvert\tiler_tools\*.csv"; DestDir: "{app}\chartconvert\tiler_tools"
 Source: "..\..\chartconvert\tiler_tools\*.html"; DestDir: "{app}\chartconvert\tiler_tools"
