@@ -25,18 +25,15 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
-import json
 import shutil
-import traceback
-
-import time
 import urllib
 
 import avnav_handlerList
-import gemf_reader
-from avnav_worker import AVNWorker
-from avnav_util import *
 import create_overview
+import gemf_reader
+import mbtiles_reader
+from avnav_util import *
+from avnav_worker import AVNWorker
 
 
 class AVNChartHandler(AVNWorker):
@@ -100,13 +97,13 @@ class AVNChartHandler(AVNWorker):
   def readChartDir(self,chartbaseDir):
     try:
       if not os.path.isdir(chartbaseDir):
-        AVNLog.debug("chartbase is no directory - no gemf handling")
+        AVNLog.debug("chartbase is no directory - no chart handling")
         return
       files = os.listdir(chartbaseDir)
       oldlist = self.chartlist.keys()
       currentlist = []
       for f in files:
-        if not f.endswith(".gemf") or f.endswith(".mbtiles"):
+        if not f.endswith(".gemf") and not  f.endswith(".mbtiles"):
           continue
         if not os.path.isfile(os.path.join(chartbaseDir, f)):
           continue
@@ -114,7 +111,7 @@ class AVNChartHandler(AVNWorker):
         currentlist.append(f)
       for old in oldlist:
         if not old in currentlist:
-          AVNLog.info("closing gemf file %s", old)
+          AVNLog.info("closing chart file %s", old)
           oldfile = self.chartlist.get(old)
           if oldfile is None:
             # maybe someone else already deleted...
@@ -147,7 +144,9 @@ class AVNChartHandler(AVNWorker):
             chart.open()
             avnav = self.getGemfInfo(chart)
           else:
-            #mbtiles
+            chart=mbtiles_reader.MBTilesFile(fname)
+            chart.open()
+            avnav=chart.getAvnavXml()
             pass
           try:
             chartdata = {'name': newchart, 'chart': chart, 'avnav': avnav, 'mtime': gstat.st_mtime}
