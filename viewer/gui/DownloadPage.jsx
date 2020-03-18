@@ -275,7 +275,7 @@ const DownloadItem=(props)=>{
 const sendDelete=(info)=>{
     let url = "?request=delete&type="+info.type;
     url+="&name="+encodeURIComponent(info.name);
-    if (info.type == "chart"){
+    if (info.url){
         url+="&url="+encodeURIComponent(info.url);
     }
     Requests.getJson(url).then((json)=>{
@@ -356,8 +356,9 @@ const download = (info)=> {
             || info.type == 'layout'
             || info.type == 'user'
             || info.type == 'images'
+            || info.type == 'chart'
         )
-            startServerDownload(info.type, info.name);
+            startServerDownload(info.type, info.name,info.url);
         else {
             if (info.type == "route") {
                 if (info.server) startServerDownload(info.type, info.name);
@@ -370,7 +371,6 @@ const download = (info)=> {
                         });
                 }
             }
-            else if (info.type == 'chart') startServerDownload(info.type, info.name, info.url);
         }
 
     }
@@ -438,7 +438,7 @@ const runUpload=(ev)=>{
     let type=globalStore.getData(keys.gui.downloadpage.type);
     if (! type) return;
     if (type == 'chart'){
-        return uploadGeneric(type,ev.target,['gemf']);
+        return uploadGeneric(type,ev.target,['gemf','mbtiles']);
     }
     if (type == 'route'){
         uploadFileReader(ev.target,".gpx").then((content)=> {
@@ -979,8 +979,8 @@ class DownloadPage extends React.Component{
             }
         }
         if (type == 'chart'){
-            if (getExt(fileName) != "gemf"){
-                Toast("only gemf files allowed");
+            if (['gemf','mbtiles'].indexOf(getExt(fileName))<0){
+                Toast("only gemf or mbtiles files allowed");
                 return;
             }
         }

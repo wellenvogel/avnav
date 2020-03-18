@@ -89,13 +89,9 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
                      "navurl":"/viewer/avnav_navi.php", #those must be absolute with /
                      "index":"/viewer/avnav_viewer.html",
                      "chartbase": "maps", #this is the URL without leading /!
-                     "chartbaseurl":"",   #if this is set to a non empty value, this will be prepended to the
-                                          #chart urls, set e.g. to http://$host/charts
                      "httpPort":"8080",
                      "numThreads":"5",
                      "httpHost":"",
-                     "upzoom":"2",         #number of "pseudo" layers created for gemf files
-                     "empty":"none"        #empty tile (OS path) - special name "none" to indicate no empty...
         }
     return rt
   
@@ -136,7 +132,6 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.type=AVNWorker.Type.HTTPSERVER
     self.handlers={}
     self.interfaceReader=None
-    self.gemfCondition=threading.Condition()
     self.addresslist=[]
     self.handlerMap={}
     self.externalHandlers={} #prefixes that will be handled externally
@@ -146,18 +141,6 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.setName(self.getThreadPrefix())
     AVNLog.info("HTTP server "+self.server_name+", "+unicode(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(unicode(self.server_port)),AVNWorker.Status.RUNNING)
-    self.gemfhandler=threading.Thread(target=self.handleGemfFiles)
-    self.gemfhandler.daemon=True
-    emptyname=self.getParamValue("empty", False)
-    self.emptytile=None
-    if emptyname is not None and emptyname != "none":
-      fname=os.path.join(self.basedir,emptyname)
-      AVNLog.info("HTTP server trying empty tile %s"%(fname))
-      if os.path.isfile(fname):
-        AVNLog.info("HTTP server reading empty tile %s"%(fname))
-        with open(fname,"rb") as f:
-          self.emptytile=f.read()
-    self.gemfhandler.start()
     if hasIfaces:
       self.interfaceReader=threading.Thread(target=self.readInterfaces)
       self.interfaceReader.daemon=True
@@ -177,126 +160,12 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
       return path
 
 
-  def waitOnGemfCondition(self,timeout):
-    self.gemfCondition.acquire()
-    try:
-      AVNLog.debug("gemf reader wait")
-      self.gemfCondition.wait(timeout)
-    except:
-      pass
-    AVNLog.debug("gemf reader wait end")
-    self.gemfCondition.release()
-
-  def notifyGemf(self):
-    self.gemfCondition.acquire()
-    try:
-      self.gemfCondition.notifyAll()
-    except:
-      pass
-    self.gemfCondition.release()
 
   def getChartBaseDir(self):
     chartbaseurl=self.getStringParam('chartbase')
     return self.handlePathmapping(chartbaseurl)
 
-  #check the list of open gemf files
-  def handleGemfFiles(self):
-    while True:
-      try:
-        chartbaseurl=self.getStringParam('chartbase')
-        if chartbaseurl is None:
-          AVNLog.debug("no chartbase defined - no gemf handling")
-          self.waitOnGemfCondition(5)
-          continue
-        chartbaseDir=self.getChartBaseDir()
-        if not os.path.isdir(chartbaseDir):
-          AVNLog.debug("chartbase is no directory - no gemf handling")
-          self.waitOnGemfCondition(5)
-          continue
-        files=os.listdir(chartbaseDir)
-        oldlist=self.gemflist.keys()
-        currentlist=[]
-        for f in files:
-          if not f.endswith(".gemf"):
-            continue
-          if not os.path.isfile(os.path.join(chartbaseDir,f)):
-            continue
-          AVNLog.debug("found gemf file %s",f)
-          currentlist.append(f)
-        for old in oldlist:
-          if not old in currentlist:
-            AVNLog.info("closing gemf file %s",old)
-            oldfile=self.gemflist.get(old)
-            if oldfile is None:
-              #maybe someone else already deleted...
-              continue
-            oldfile['gemf'].close()
-            try:
-              del self.gemflist[old]
-            except:
-              pass
-        for newgemf in currentlist:
-          fname=os.path.join(chartbaseDir,newgemf)
-          govname=fname.replace(".gemf",".xml")
-          gstat=os.stat(fname)
-          ovstat=None
-          if (os.path.isfile(govname)):
-            ovstat=os.stat(govname)
-          oldgemfFile=self.gemflist.get(newgemf)
-          if oldgemfFile is not None:
-            mtime=gstat.st_mtime
-            if ovstat is not None:
-              if ovstat.st_mtime > mtime:
-                mtime=ovstat.st_mtime
-            if mtime != oldgemfFile['mtime']:
-              AVNLog.info("closing gemf file %s due to changed timestamp",newgemf)
-              oldgemfFile['gemf'].close()
-              try:
-                del self.gemflist[newgemf]
-              except:
-                pass
-              oldgemfFile=None
-          if oldgemfFile is None:
-            AVNLog.info("trying to add gemf file %s",fname)
-            gemf=gemf_reader.GemfFile(fname)
-            try:
-              gemf.open()
-              avnav=None
-              if ovstat is not None:
-                #currently this is some hack - if there is an overview
-                #xml file we assume the gemf to have one source...
-                baseurl=gemf.sources[0].get('name')
-                AVNLog.info("using %s to create the GEMF overview, baseurl=%s"%(govname,baseurl))
-                avnav=create_overview.parseXml(govname,baseurl)
-                if avnav is None:
-                  AVNLog.error("unable to parse GEMF overview %s"%(govname,))
-              if avnav is None:
-                avnav=self.getGemfInfo(gemf)
-              gemfdata={'name':newgemf,'gemf':gemf,'avnav':avnav,'mtime':gstat.st_mtime}
-              self.gemflist[newgemf]=gemfdata
-              AVNLog.info("successfully added gemf file %s %s",newgemf,unicode(gemf))
-            except:
-              AVNLog.error("error while trying to open gemf file %s  %s",fname,traceback.format_exc())
-      except:
-        AVNLog.error("Exception in gemf handler %s, ignore",traceback.format_exc())
-      self.waitOnGemfCondition(5)
 
-  #get the avnav info from a gemf file
-  #we can nicely reuse here the stuff we have for MOBAC atlas files
-  def getGemfInfo(self,gemf):
-    try:
-      data=gemf.getSources()
-      options={}
-      options['upzoom']=self.getIntParam('upzoom')
-      rt=create_overview.getGemfInfo(data,options)
-      AVNLog.info("created GEMF overview for %s",gemf.filename)
-      AVNLog.debug("overview for %s:%s",gemf.filename,rt)
-      return rt
-
-    except:
-      AVNLog.error("error while trying to get the overview data for %s  %s",gemf.filename,traceback.format_exc())
-    return "<Dummy/>"
-  
   def getHandler(self,name):
     if self.handlers.get(name) is not None:
       return self.handlers.get(name)
@@ -369,14 +238,14 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     path = posixpath.normpath(urllib.unquote(path).decode('utf-8'))
     return (path,query)
 
-  def tryExternalMappings(self,path,query):
+  def tryExternalMappings(self,path,query,handler=None):
     for prefix in self.externalHandlers.keys():
       if path.startswith(prefix):
         # the external handler can either return a mapped path (already
         # converted in an OS path - e.g. using plainUrlToPath)
         # or just do the handling by its own and return None
         try:
-          return self.externalHandlers[prefix].handleApiRequest('path', path, query, server=self)
+          return self.externalHandlers[prefix].handleApiRequest('path', path, query, server=self,handler=handler)
         except:
           AVNLog.error("external mapping failed: %s",traceback.format_exc())
         return None

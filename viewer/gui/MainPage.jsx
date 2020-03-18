@@ -272,10 +272,10 @@ class MainPage extends React.Component {
 
 
 const fillList = function () {
-    Requests.getJson("?request=listCharts").then((json)=>{
+    Requests.getJson("?request=list&type=chart").then((json)=>{
             let items = [];
-            for (let e in json.data) {
-                let chartEntry = json.data[e];
+            for (let e in json.items) {
+                let chartEntry = json.items[e];
                 let listEntry = {
                     key: chartEntry.name,
                     name: chartEntry.name,
