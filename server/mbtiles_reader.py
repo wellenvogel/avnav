@@ -24,61 +24,75 @@
 #
 ###############################################################################
 # read mbtiles files and provide them for access via http
+import os
 import sqlite3
 import sys
-import os
-import struct
 import threading
-import time
 
 import create_overview
-from avnav_util import AVNLog, AVNUtil
+from avnav_util import AVNLog
 
 
 #mbtiles:
 #zoom_level => z
 #tile_column => x
 #tile_row => 2^^z-1-y
-class ConnectionMapEntry:
-  def __init__(self,threadid,connection):
-    self.threadid=threadid
-    self.connection=connection
-    self.time=AVNUtil.utcnow()
-  def getConnection(self):
-    self.time=AVNUtil.utcnow()
-    return self.connection
+
+class QueueEntry:
+  def __init__(self,tile):
+    self.cond=threading.Condition()
+    self.tile=tile
+    self.data=None
+    self.dataAvailable=False
+
+  def waitAndGet(self):
+    while True:
+      self.cond.acquire()
+      if self.dataAvailable:
+        self.cond.release()
+        return self.data
+      self.cond.wait(5)
+      self.cond.release()
+
+  def setData(self,data):
+    self.cond.acquire()
+    self.data=data
+    self.dataAvailable=True
+    self.cond.notify_all()
+    self.cond.release()
+
 
 
 class MBTilesFile():
   def __init__(self,filename,timeout=300):
     self.filename=filename
     self.isOpen=False
-    self.lock=threading.Lock()
+    self.cond=threading.Condition()
     self.connection=None
     self.zoomlevels=[]
     self.zoomLevelBoundings={}
     self.schemeXyz=True
-    self.connectionMap={}
+    self.requestQueue=[]
     self.timeout=timeout
     self.stop=False
-    self.closer=threading.Thread(target=self.closeConnections)
-    self.closer.setDaemon(True)
-    self.closer.start()
+    self.handler=threading.Thread(target=self.handleRequests)
+    self.handler.setDaemon(True)
+    self.handler.start()
 
-  def closeConnections(self):
+  def handleRequests(self):
+    connection=sqlite3.connect(self.filename)
     while not self.stop:
-      closeTime=AVNUtil.utcnow()-self.timeout
-      for c in self.connectionMap.keys():
-        con=self.connectionMap[c]
-        if con.time < closeTime:
-          self.lock.acquire()
-          try:
-            con.connection.close()
-            del self.connectionMap[c]
-          except Exception as e:
-            AVNLog.debug("error closing connection %s",e.message)
-          self.lock.release()
-      time.sleep(5)
+      self.cond.acquire()
+      request=None
+      if len(self.requestQueue) > 0:
+        request=self.requestQueue.pop(0)
+      else:
+        self.cond.wait(5)
+      self.cond.release()
+      if request is not None:
+        data=self.getTileDataInternal(request.tile,connection)
+        request.setData(data)
+    connection.close()
 
 
 
@@ -136,23 +150,25 @@ class MBTilesFile():
   def getTileData(self,tile,source):
     if not self.isOpen:
       raise Exception("not open")
-    self.lock.acquire()
-    id=threading.current_thread().ident
-    entry=self.connectionMap.get(id)
-    if entry is None:
-      try:
-        entry=ConnectionMapEntry(id,sqlite3.connect(self.filename))
-      except Exception as e:
-        AVNLog.error("unable to open connection for %s:$s",self.filename,e.message)
-        self.lock.release()
-        return None
-      self.connectionMap[id]=entry
+    request=QueueEntry(tile)
+    self.cond.acquire()
+    try:
+      self.requestQueue.append(request)
+      self.cond.notify_all()
+    except:
+      pass
+    self.cond.release()
+    AVNLog.debug("waiting for tile")
+    data=request.waitAndGet()
+    AVNLog.debug("tile received")
+    return data
+
+  def getTileDataInternal(self,tile,connection):
     cu=None
     try:
-      cu=entry.getConnection().execute("select tile_data from tiles where zoom_level=? and tile_column=? and tile_row=?",self.zxyToZoomColRow(tile))
+      cu=connection.execute("select tile_data from tiles where zoom_level=? and tile_column=? and tile_row=?",self.zxyToZoomColRow(tile))
       t=cu.fetchone()
       cu.close()
-      self.lock.release()
       return t[0]
     except Exception as e:
       if cu is not None:
@@ -160,7 +176,6 @@ class MBTilesFile():
           cu.close()
         except:
           pass
-        self.lock.release()
     return None
 
   def getAvnavXml(self):
@@ -181,9 +196,15 @@ class MBTilesFile():
     if not self.isOpen:
       return
     self.stop=True
-    for me in self.connectionMap.values():
+    #cancel all requests by returning None
+    self.cond.acquire()
+    requests=self.requestQueue
+    self.requestQueue=[]
+    self.cond.notify_all()
+    self.cond.release()
+    for rq in requests:
       try:
-        me.connection.close()
+        rq.setData(None)
       except:
         pass
 
